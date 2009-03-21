@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54598 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57854 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbZCQHo2 (ORCPT
+	with ESMTP id S1754127AbZCUMym (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 03:44:28 -0400
-Subject: Re: [rfc] Implement ath9k mesh point operation
+	Sat, 21 Mar 2009 08:54:42 -0400
+Subject: Re: [RFC][PATCH 4/5] ar9170: USB frontend driver
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <49BF2AE4.6010604@erley.org> (sfid-20090317_054538_067382_BE90214D)
-References: <49BED464.2010904@erley.org>  <49BF2AE4.6010604@erley.org>
-	 (sfid-20090317_054538_067382_BE90214D)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QjKCImabHDNWnDKheBF5"
-Date: Tue, 17 Mar 2009 08:44:22 +0100
-Message-Id: <1237275862.18086.4.camel@johannes.local> (sfid-20090317_084432_102072_787B6123)
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <200903211349.02761.mb@bu3sch.de>
+References: <200903170410.20261.chunkeey@web.de>
+	 <200903211220.29991.mb@bu3sch.de>
+	 <1237635266.5100.174.camel@johannes.local>
+	 <200903211349.02761.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AncwexqNL9ZTrD/he8bj"
+Date: Sat, 21 Mar 2009 13:54:39 +0100
+Message-Id: <1237640079.5100.185.camel@johannes.local> (sfid-20090321_135444_361251_3BA2DED4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-QjKCImabHDNWnDKheBF5
+--=-AncwexqNL9ZTrD/he8bj
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-03-17 at 00:45 -0400, Pat Erley wrote:
-> Also, I was able to do the development of this thanks to hardware=20
-> donated by Johannes Berg (b43 card that was used as a baseline known
-> working device) and an ath9k card donated by Oxford TEC[1].  What's=20
-> the best way to add this 'credit' to the commit, or is it not=20
-> appropriate?
+On Sat, 2009-03-21 at 13:49 +0100, Michael Buesch wrote:
 
-For all I'm personally concerned, it doesn't matter at all.
+> > > Well I think it would currently generate lots of errors, because we h=
+ave
+> > > code like this in the kernel:
+> > >=20
+> > > if (x)
+> > > 	mutex_lock();
+> > > ...
+> > > if (x)
+> > > 	mutex_unlock();
+> >=20
+> > That's sloppy code anyway. Not to be encouraged.
+>=20
+> That's not true. Sometimes it is the cleanest way to do things.
+> Look at drivers/ssb/main.c. To make this mutex-sparse compliant, we'd
+> need to introduce quite a few sub-functions.
+>=20
+> It simply is a limitation of sparse. Nothing else.
+
+No, I still think it's sloppy code; some future work will in most cases
+invariably move the conditions further apart, at which point it becomes
+more and more unlikely that the invariant that the "x" doesn't change
+inbetween is maintained.
 
 johannes
 
---=-QjKCImabHDNWnDKheBF5
+--=-AncwexqNL9ZTrD/he8bj
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJv1TTAAoJEKVg1VMiehFYqkIP/1dKK1GWtwqmOS7HXNSpdBMI
-8HLZnuj0in2KHuH5Xnrf0VVTBjpBOifBHJI4rnTBOiO2Kdyp0slLX/crCUDfzktx
-JdUKbEVL68PgOobVYkhM3QcbokZ1HzPZ0bKqgnQdCShosGuZDgcTOek9foVrR3xL
-z3XH16HRIwT63xGuZ0Emm2gNsuNvCzn8P+nCb4LByZp3R3qG9WigEPWmEq0eeso+
-F6P0Ek3Ee5Fn1S1VYmh+qMNOlVCwhisaTGZYU6h/4HUjptQ8c3GgypZ/JcqmFttv
-sEU1y6bbMoQO51lONVIj+SL1dZn4aZOgQIu1smmDOjwqBJq+SQT97+p+vD8iiejB
-tEELPg75tLIvZkG/5syPX32+HguN8mel0rGwO137gNo8vyqe2bSCcXiroHLn3x3u
-6GiXha8oSzeUV3zppgxDZhA6BljoJdjsy1Ph2QhUJIWkGQJ2By+yVdTt+2lQGYsf
-3nsCYvHt7tSSFEZuiroidQ4sbVB03AvNhr5Ig4u1Qu4J5Ua7gYw3syqdjbZglXx8
-90wQwO+Hj69SEa7LO+VguA9P8kF/+n+4jHCqcdUy0YtDraClWFCQrvza2M4rO49x
-pdDylRyJDS6Snb+MhQOEeNqK0bHBtQhFOHOL/vSd1lCFQ1wwgFKkSRfBn7Wk6JAy
-FsgaZz8V25CYkS/2ksmZ
-=9uVw
+iQIcBAABAgAGBQJJxOOMAAoJEKVg1VMiehFY42IP/2oDh0acpmFVhe7mx1C/fCsE
+GW8kbsk0SEnhj26k56gp6KxOPRdBQJKPYq6UYaa/wDS+P84C0MPtFKUyT92Q1QqO
+eNQ50XB1i/js7MzHScZgiVxf8u7EgLBDLe3Wf9V6ELwxEUZ/zGQuKzCX6+5Foov6
+qR77tMmIU/WHo19gXjjn5/C8Aqf9sza+arnDPFtSSOY66KIoQbrlXq6eBRbGMjxX
+B5ZxmmCQDX62J3Yp5uMYomlMcUvZ4Z88rnv1H6cVNG6y78nxIwtaomM7Vr7fuaJF
+q1P870gxiRDrVPcGVzXMQoWrNdbyEsgfIHAHazMrtHTsjUYhWst1CL7DQwfcYwv+
+7tiLWL76/bv7uqf7iR/dCEEoGNQQpwJnFxGWhHrP6X1mNmMg6Cf6vWiYlvdoUMgO
+g9XWFLE52JCLp7DYcfbUUVTs8beV1EYe3zoaJ/amuHSFiQW4LrF5/9+Gb9B0GWRh
+WFlqwxGY5oARK7GbvdyIytOpZA88I/7icgivsXvPwMV6m/4pw/U5lZxtkzIhLr69
+Kco9T/XMUZfOTpm0LmnnZNXoDQYfT3kTVvaXtMN/s0stNFLbguWTnSz9VmUnwTuT
+3pzQ8fIeJh0SMYzP7UnRwF3ZEjE4c+HvGL2jez/h8ONFRL94APJnxSBR6SJuxHN3
+1+9oApnslVbjF/rjXxBO
+=eZ1W
 -----END PGP SIGNATURE-----
 
---=-QjKCImabHDNWnDKheBF5--
+--=-AncwexqNL9ZTrD/he8bj--
 
