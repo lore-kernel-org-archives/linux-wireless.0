@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53802 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933AbZCSS4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 14:56:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: linux-next: Tree for March 19 (wireless/p54)
-Date: Thu, 19 Mar 2009 19:55:00 +0100
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903191850.17825.mb@bu3sch.de> <49C293CC.6020009@oracle.com>
-In-Reply-To: <49C293CC.6020009@oracle.com>
+Received: from yw-out-2324.google.com ([74.125.46.30]:25875 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbZCUEGa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 00:06:30 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1295683ywb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 21:06:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903191955.00718.mb@bu3sch.de> (sfid-20090319_195647_938265_FE74A6AC)
+In-Reply-To: <49C3CE8B.6070702@andrew.cmu.edu>
+References: <49C3CE8B.6070702@andrew.cmu.edu>
+Date: Fri, 20 Mar 2009 21:06:27 -0700
+Message-ID: <43e72e890903202106t105b4891x9c57d2f5eb5fd676@mail.gmail.com> (sfid-20090321_050651_908682_909D6F18)
+Subject: Re: [PATCH] compat.diff update for master-2009-03-19
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Josh Watzman <jwatzman@andrew.cmu.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 19 March 2009 19:49:48 Randy Dunlap wrote:
-> Michael Buesch wrote:
-> > On Thursday 19 March 2009 18:28:30 Randy Dunlap wrote:
-> >> Stephen Rothwell wrote:
-> >>> Hi all,
-> >>>
-> >>> Changes since 20090318:
-> >>
-> >> ERROR: "led_classdev_register" [drivers/net/wireless/p54/p54common.ko] undefined!
-> >> ERROR: "led_classdev_unregister" [drivers/net/wireless/p54/p54common.ko] undefined!
-> >>
-> >> One possible option (fix) is to have CONFIG_MAC80211_LEDS also select
-> >> LEDS_CLASS (that would build the missing functions).
-> > 
-> > Does p54 select CONFIG_MAC80211_LEDS? If that's the case, I think it should
-> 
->   No, it doesn't.  p54common.c just has a large block of code that is
-> surrounded by
-> #ifdef CONFIG_MAC80211_LEDS
-> ...
-> #endif
+On Fri, Mar 20, 2009 at 10:12 AM, Josh Watzman <jwatzman@andrew.cmu.edu> wrote:
+> A trivial fix to allow compat-wireless to apply against current wireless-testing.
+>
+> Signed-off-by: Josh Watzman <jwatzman@andrew.cmu.edu>
 
-Yeah. I do think that it'd be wrong for mac80211 to select LEDS_CLASS.
-mac80211 implements the triggers and the lowlevel drivers implement the LED class device.
-So mac80211 does not depend on LEDS_CLASS at all.
+Thanks, applied.
 
-So p54 should probably introduce an automagic config option like b43 does, or it should do
-something (ugly) like this:
+v2.6.29-rc8-18669-g77f1f84
+wireless-testing latest tag:
+master-2009-03-21
+This is compat-release:
+master-2009-03-21-1-gafc27eb
 
-#if defined(CONFIG_MAC80211_LEDS) && (defined(CONFIG_LEDS_CLASS) || defined(CONFIG_LEDS_CLASS_MODULE))
-...
-#endif
--- 
-Greetings, Michael.
+  Luis
