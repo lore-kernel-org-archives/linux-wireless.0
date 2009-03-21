@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:12533 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753002AbZC3I4q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 04:56:46 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so2347225rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 01:56:45 -0700 (PDT)
-Date: Mon, 30 Mar 2009 14:17:00 +0530
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: No need to abort Rx path when autosleep is enabled.
-Message-ID: <20090330084659.GB12822@myhost.users.atheros.com> (sfid-20090330_105650_777461_CE89E0A1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from suva.vyatta.com ([76.74.103.44]:36670 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760821AbZCUFsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:20 -0400
+Message-Id: <20090321053716.736316447@vyatta.com> (sfid-20090321_065218_331346_B5BC1151)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:22 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 55/77] netwave: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For chipsets supporting autosleep feature, there is no need to abort
-Rx engine since they are capable of automatically going back to sleep
-after receiving a packet.
+Also get rid of unneeded cast
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   29 ++++++++++++++++++-----------
- 1 files changed, 18 insertions(+), 11 deletions(-)
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 13d4e67..2aaa378 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2326,26 +2326,33 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	struct ieee80211_conf *conf = &hw->conf;
-+	struct ath_hw *ah = sc->sc_ah;
+
+--- a/drivers/net/wireless/netwave_cs.c	2009-03-20 22:14:37.954403178 -0700
++++ b/drivers/net/wireless/netwave_cs.c	2009-03-20 22:15:57.752963633 -0700
+@@ -355,6 +355,17 @@ static struct iw_statistics *netwave_get
+     return &priv->iw_stats;
+ }
  
- 	mutex_lock(&sc->mutex);
++static const struct net_device_ops netwave_netdev_ops = {
++	.ndo_open	 	= netwave_open,
++	.ndo_stop		= netwave_close,
++	.ndo_start_xmit		= netwave_start_xmit,
++	.ndo_set_multicast_list = set_multicast_list,
++	.ndo_tx_timeout		= netwave_watchdog,
++	.ndo_change_mtu		= eth_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ /*
+  * Function netwave_attach (void)
+  *
+@@ -403,16 +414,12 @@ static int netwave_probe(struct pcmcia_d
+     spin_lock_init(&priv->spinlock);
  
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		if (conf->flags & IEEE80211_CONF_PS) {
--			if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
--				sc->imask |= ATH9K_INT_TIM_TIMER;
--				ath9k_hw_set_interrupts(sc->sc_ah,
--						sc->imask);
-+			if (!(ah->caps.hw_caps &
-+			      ATH9K_HW_CAP_AUTOSLEEP)) {
-+				if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
-+					sc->imask |= ATH9K_INT_TIM_TIMER;
-+					ath9k_hw_set_interrupts(sc->sc_ah,
-+							sc->imask);
-+				}
-+				ath9k_hw_setrxabort(sc->sc_ah, 1);
- 			}
--			ath9k_hw_setrxabort(sc->sc_ah, 1);
- 			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
- 		} else {
- 			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
--			ath9k_hw_setrxabort(sc->sc_ah, 0);
--			sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
--			if (sc->imask & ATH9K_INT_TIM_TIMER) {
--				sc->imask &= ~ATH9K_INT_TIM_TIMER;
--				ath9k_hw_set_interrupts(sc->sc_ah,
--						sc->imask);
-+			if (!(ah->caps.hw_caps &
-+			      ATH9K_HW_CAP_AUTOSLEEP)) {
-+				ath9k_hw_setrxabort(sc->sc_ah, 0);
-+				sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
-+				if (sc->imask & ATH9K_INT_TIM_TIMER) {
-+					sc->imask &= ~ATH9K_INT_TIM_TIMER;
-+					ath9k_hw_set_interrupts(sc->sc_ah,
-+							sc->imask);
-+				}
- 			}
- 		}
- 	}
+     /* Netwave specific entries in the device structure */
+-    dev->hard_start_xmit = &netwave_start_xmit;
+-    dev->set_multicast_list = &set_multicast_list;
++    dev->netdev_ops = &netwave_netdev_ops;
+     /* wireless extensions */
+-    dev->wireless_handlers = (struct iw_handler_def *)&netwave_handler_def;
++    dev->wireless_handlers = &netwave_handler_def;
+ 
+-    dev->tx_timeout = &netwave_watchdog;
+     dev->watchdog_timeo = TX_TIMEOUT;
+ 
+-    dev->open = &netwave_open;
+-    dev->stop = &netwave_close;
+     link->irq.Instance = dev;
+ 
+     return netwave_pcmcia_config( link);
+
 -- 
-1.6.0.1
 
