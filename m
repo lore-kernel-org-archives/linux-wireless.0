@@ -1,31 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60382 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884AbZCUDxM (ORCPT
+Received: from fmailhost06.isp.att.net ([204.127.217.106]:43643 "EHLO
+	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179AbZCUPb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 23:53:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/5] cfg80211: few reg fixes and removes OLD_REG
-Date: Fri, 20 Mar 2009 23:53:03 -0400
-Message-Id: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045316_436771_A4A5D92C)
+	Sat, 21 Mar 2009 11:31:59 -0400
+Message-ID: <49C50711.9060206@lwfinger.net> (sfid-20090321_163212_347868_057F2F44)
+Date: Sat, 21 Mar 2009 10:26:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: Christian Lamparter <chunkeey@web.de>,
+	Michael Buesch <mb@bu3sch.de>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au>	<200903210057.47067.chunkeey@web.de> <87eiwre61a.fsf@litku.valot.fi>	<200903211322.01654.chunkeey@web.de> <873ad7dpru.fsf@litku.valot.fi>
+In-Reply-To: <873ad7dpru.fsf@litku.valot.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First two are bug fixes candidates for stable, the rest removes OLD_REG.
+Kalle Valo wrote:
+> 
+> In my opinion wireless.kernel.org is better place for the list.
 
-Luis R. Rodriguez (5):
-  cfg80211: force last_request to be set for OLD_REG if regdom is EU
-  cfg80211: fix incorrect assumption on last_request for 11d
-  cfg80211: make regdom module parameter available oustide of OLD_REG
-  cfg80211: remove code about country IE support with OLD_REG
-  cfg80211: remove CONFIG_WIRELESS_OLD_REGULATORY
-
- Documentation/feature-removal-schedule.txt |   34 +++--
- net/wireless/Kconfig                       |   33 -----
- net/wireless/nl80211.c                     |    6 -
- net/wireless/reg.c                         |  187 ++++------------------------
- 4 files changed, 46 insertions(+), 214 deletions(-)
-
+I agree as it is available to a much wider audience.
