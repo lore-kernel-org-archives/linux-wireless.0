@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet13.oracle.com ([148.87.113.125]:38247 "EHLO
-	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584AbZCDQu3 (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:38184 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752410AbZCUGgj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 11:50:29 -0500
-Message-ID: <49AEB18E.5050901@oracle.com> (sfid-20090304_175033_167451_D0ED6789)
-Date: Wed, 04 Mar 2009 08:51:26 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Sat, 21 Mar 2009 02:36:39 -0400
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au>
+	<49C293CC.6020009@oracle.com> <200903191955.00718.mb@bu3sch.de>
+	<200903210057.47067.chunkeey@web.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 21 Mar 2009 08:36:33 +0200
+In-Reply-To: <200903210057.47067.chunkeey@web.de> (Christian Lamparter's message of "Sat\, 21 Mar 2009 00\:57\:46 +0100")
+Message-ID: <87eiwre61a.fsf@litku.valot.fi> (sfid-20090321_073646_697104_BD36647C)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] b43: Fix compilation for devices without PCI core
-References: <200903041641.11302.mb@bu3sch.de>
-In-Reply-To: <200903041641.11302.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> This fixes compilation, if the PCI core is disabled.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> ---
+Christian Lamparter <chunkeey@web.de> writes:
 
-Ack. Thanks.
+> This patch fixes a compile problem when the MAC80211_LEDS
+> triggers are enabled but not LED class itself. 
+> (which is sort of pointless, but anyway...)
 
-> 
-> John, I think this is only needed for the next feature release, as the patch
-> that broke that was only merged for next, afaik.
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-03-04 16:35:07.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/b43/main.c	2009-03-04 16:36:08.000000000 +0100
-> @@ -4176,15 +4176,17 @@ static int b43_wireless_core_init(struct
->  			hf |= B43_HF_4318TSSI;
->  		if (phy->radio_rev < 6)
->  			hf |= B43_HF_VCORECALC;
->  	}
->  	if (sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW)
->  		hf |= B43_HF_DSCRQ; /* Disable slowclock requests from ucode. */
-> +#ifdef CONFIG_SSB_DRIVER_PCICORE
->  	if ((bus->bustype == SSB_BUSTYPE_PCI) &&
->  	    (bus->pcicore.dev->id.revision <= 10))
->  		hf |= B43_HF_PCISCW; /* PCI slow clock workaround. */
-> +#endif
->  	hf &= ~B43_HF_SKCFPUP;
->  	b43_hf_write(dev, hf);
->  
->  	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
->  			     B43_DEFAULT_LONG_RETRY_LIMIT);
->  	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
-> 
+[...]
 
+> @@ -17,31 +18,6 @@ config P54_USB
+>  	select CRC32
+>  	---help---
+>  	  This driver is for USB isl38xx based wireless cards.
+> -	  These are USB based adapters found in devices such as:
+> -
+> -	  3COM 3CRWE254G72
+> -	  SMC 2862W-G
+> -	  Accton 802.11g WN4501 USB
+> -	  Siemens Gigaset USB
+> -	  Netgear WG121
+> -	  Netgear WG111
+> -	  Medion 40900, Roper Europe
+> -	  Shuttle PN15, Airvast WM168g, IOGear GWU513
+> -	  Linksys WUSB54G
+> -	  Linksys WUSB54G Portable
+> -	  DLink DWL-G120 Spinnaker
+> -	  DLink DWL-G122
+> -	  Belkin F5D7050 ver 1000
+> -	  Cohiba Proto board
+> -	  SMC 2862W-G version 2
+> -	  U.S. Robotics U5 802.11g Adapter
+> -	  FUJITSU E-5400 USB D1700
+> -	  Sagem XG703A
+> -	  DLink DWL-G120 Cohiba
+> -	  Spinnaker Proto board
+> -	  Linksys WUSB54AG
+> -	  Inventel UR054G
+> -	  Spinnaker DUT
+
+This change wasn't mentioned in the commit log. Did this get included
+by accident?
 
 -- 
-~Randy
+Kalle Valo
