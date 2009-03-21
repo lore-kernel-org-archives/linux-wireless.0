@@ -1,37 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33755 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbZCJCHp (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:47144 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbZCUMWG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:07:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/3] cfg80211: regulatory netlink group
-Date: Mon,  9 Mar 2009 22:07:39 -0400
-Message-Id: <1236650862-17702-1-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032928_041072_C005B152)
+	Sat, 21 Mar 2009 08:22:06 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
+Date: Sat, 21 Mar 2009 13:22:01 +0100
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903210057.47067.chunkeey@web.de> <87eiwre61a.fsf@litku.valot.fi>
+In-Reply-To: <87eiwre61a.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903211322.01654.chunkeey@web.de> (sfid-20090321_132216_903133_8C2C66B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the regulatory netlink group. With this userspace can find
-out about cfg80211 regulatory changes including custom driver regulatory
-uses.
+On Saturday 21 March 2009 07:36:33 Kalle Valo wrote:
+> Christian Lamparter <chunkeey@web.de> writes:
+> 
+> > This patch fixes a compile problem when the MAC80211_LEDS
+> > triggers are enabled but not LED class itself. 
+> > (which is sort of pointless, but anyway...)
+> 
+> [...]
+> 
+> > @@ -17,31 +18,6 @@ config P54_USB
+> >  	select CRC32
+> >  	---help---
+> >  	  This driver is for USB isl38xx based wireless cards.
+> > -	  These are USB based adapters found in devices such as:
+> > -
+> > -	  3COM 3CRWE254G72
+> > -	  SMC 2862W-G
+> > -	  Accton 802.11g WN4501 USB
+> > -	  Siemens Gigaset USB
+> > -	  Netgear WG121
+> > -	  Netgear WG111
+> > -	  Medion 40900, Roper Europe
+> > -	  Shuttle PN15, Airvast WM168g, IOGear GWU513
+> > -	  Linksys WUSB54G
+> > -	  Linksys WUSB54G Portable
+> > -	  DLink DWL-G120 Spinnaker
+> > -	  DLink DWL-G122
+> > -	  Belkin F5D7050 ver 1000
+> > -	  Cohiba Proto board
+> > -	  SMC 2862W-G version 2
+> > -	  U.S. Robotics U5 802.11g Adapter
+> > -	  FUJITSU E-5400 USB D1700
+> > -	  Sagem XG703A
+> > -	  DLink DWL-G120 Cohiba
+> > -	  Spinnaker Proto board
+> > -	  Linksys WUSB54AG
+> > -	  Inventel UR054G
+> > -	  Spinnaker DUT
+> 
+> This change wasn't mentioned in the commit log. Did this get included
+> by accident?
+> 
+heh true... should I add them back? after all this list hasn't changed in years
+and we have a much nicer one on http://www.prism54.org/
+( http://wireless.kernel.org/en/users/Drivers/p54/devices )
 
-Luis R. Rodriguez (3):
-  cfg80211: remove REGDOM_SET_BY_INIT
-  cfg80211: move enum reg_set_by to nl80211.h
-  cfg80211: add regulatory netlink multicast group
-
- drivers/net/wireless/ath9k/main.c |    2 +-
- drivers/net/wireless/ath9k/regd.c |   32 +++++++------
- drivers/net/wireless/ath9k/regd.h |    3 +-
- include/linux/nl80211.h           |   67 +++++++++++++++++++++++++
- include/net/cfg80211.h            |   27 +---------
- net/wireless/core.c               |   13 +++++-
- net/wireless/core.h               |    3 +-
- net/wireless/nl80211.c            |   62 +++++++++++++++++++++++
- net/wireless/nl80211.h            |    5 ++
- net/wireless/reg.c                |   97 ++++++++++++++++++++++---------------
- 10 files changed, 228 insertions(+), 83 deletions(-)
-
+Regards,
+	Chr
