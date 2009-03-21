@@ -1,112 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:46385 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350AbZCWOht (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 10:37:49 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] p54: fix SoftLED compile dependencies
-Date: Mon, 23 Mar 2009 15:37:45 +0100
-Cc: Kalle Valo <kalle.valo@iki.fi>, Michael Buesch <mb@bu3sch.de>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903211322.01654.chunkeey@web.de> <20090323141320.GC3285@tuxdriver.com>
-In-Reply-To: <20090323141320.GC3285@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903231537.45716.chunkeey@web.de> (sfid-20090323_153754_573894_1962FB38)
+Received: from suva.vyatta.com ([76.74.103.44]:36739 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761166AbZCUFsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:30 -0400
+Message-Id: <20090321053718.224939952@vyatta.com> (sfid-20090321_065009_580489_78B01364)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:41 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, jkosina@suse.cz,
+	dstreba@suse.cz
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 74/77] ipw2200: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a compile problem when the MAC80211_LEDS
-triggers are enabled but not LED class itself. 
-(which is sort of pointless, but anyway...)
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-> > heh true... should I add them back? after all this list hasn't changed in years
-> > and we have a much nicer one on http://www.prism54.org/
-> > ( http://wireless.kernel.org/en/users/Drivers/p54/devices )
-> 
-> Getting rid of them is fine, but it should probably be done in a different patch.
-heh, "451 4.5.0 From MTA([127.0.0.1]:10025) during fwd-connect"...
-
-I guess no one got my last reply, right?
----
-diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
-index 0e344ac..ee1aaca 100644
---- a/drivers/net/wireless/p54/Kconfig
-+++ b/drivers/net/wireless/p54/Kconfig
-@@ -71,3 +71,8 @@ config P54_SPI
- 	  Nokia's N800/N810 Portable Internet Tablet.
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c	2009-03-20 21:17:26.008902901 -0700
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c	2009-03-20 21:17:55.282652680 -0700
+@@ -11529,6 +11529,15 @@ static int ipw_prom_hard_start_xmit(stru
+ 	return -EOPNOTSUPP;
+ }
  
- 	  If you choose to build a module, it'll be called p54spi.
++static const struct net_device_ops ipw_prom_netdev_ops = {
++	.ndo_open 		= ipw_prom_open,
++	.ndo_stop		= ipw_prom_stop,
++	.ndo_start_xmit		= ipw_prom_hard_start_xmit,
++	.ndo_change_mtu		= ieee80211_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
 +
-+config P54_LEDS
-+	bool
-+	depends on P54_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = P54_COMMON)
-+	default y
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 0a98983..0c1b057 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -21,9 +21,9 @@
- #include <linux/etherdevice.h>
- 
- #include <net/mac80211.h>
--#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- #include <linux/leds.h>
--#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
- 
- #include "p54.h"
- #include "p54common.h"
-@@ -2420,7 +2420,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
- 	return 0;
- }
- 
--#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- static void p54_led_brightness_set(struct led_classdev *led_dev,
- 				   enum led_brightness brightness)
+ static int ipw_prom_alloc(struct ipw_priv *priv)
  {
-@@ -2508,7 +2508,7 @@ static void p54_unregister_leds(struct ieee80211_hw *dev)
- 	if (priv->assoc_led.registered)
- 		led_classdev_unregister(&priv->assoc_led.led_dev);
- }
--#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
+ 	int rc = 0;
+@@ -11548,9 +11557,7 @@ static int ipw_prom_alloc(struct ipw_pri
+ 	memcpy(priv->prom_net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
  
- static const struct ieee80211_ops p54_ops = {
- 	.tx			= p54_tx,
-@@ -2592,11 +2592,11 @@ int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
- 		return err;
- 	}
+ 	priv->prom_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
+-	priv->prom_net_dev->open = ipw_prom_open;
+-	priv->prom_net_dev->stop = ipw_prom_stop;
+-	priv->prom_net_dev->hard_start_xmit = ipw_prom_hard_start_xmit;
++	priv->prom_net_dev->netdev_ops = &ipw_prom_netdev_ops;
  
--	#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- 	err = p54_init_leds(dev);
- 	if (err)
- 		return err;
--	#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
+ 	priv->prom_priv->ieee->iw_mode = IW_MODE_MONITOR;
+ 	SET_NETDEV_DEV(priv->prom_net_dev, &priv->pci_dev->dev);
+@@ -11578,6 +11585,17 @@ static void ipw_prom_free(struct ipw_pri
  
- 	dev_info(pdev, "is registered as '%s'\n", wiphy_name(dev->wiphy));
- 	return 0;
-@@ -2610,9 +2610,9 @@ void p54_free_common(struct ieee80211_hw *dev)
- 	kfree(priv->output_limit);
- 	kfree(priv->curve_data);
+ #endif
  
--	#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- 	p54_unregister_leds(dev);
--	#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
- }
- EXPORT_SYMBOL_GPL(p54_free_common);
++static const struct net_device_ops ipw_netdev_ops = {
++	.ndo_init		= ipw_net_init,
++	.ndo_open		= ipw_net_open,
++	.ndo_stop		= ipw_net_stop,
++	.ndo_set_multicast_list	= ipw_net_set_multicast_list,
++	.ndo_set_mac_address	= ipw_net_set_mac_address,
++	.ndo_start_xmit		= ieee80211_xmit,
++	.ndo_change_mtu		= ieee80211_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
  
+ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 				   const struct pci_device_id *ent)
+@@ -11679,11 +11697,7 @@ static int __devinit ipw_pci_probe(struc
+ 	priv->ieee->perfect_rssi = -20;
+ 	priv->ieee->worst_rssi = -85;
+ 
+-	net_dev->open = ipw_net_open;
+-	net_dev->stop = ipw_net_stop;
+-	net_dev->init = ipw_net_init;
+-	net_dev->set_multicast_list = ipw_net_set_multicast_list;
+-	net_dev->set_mac_address = ipw_net_set_mac_address;
++	net_dev->netdev_ops = &ipw_netdev_ops;
+ 	priv->wireless_data.spy_data = &priv->ieee->spy_data;
+ 	net_dev->wireless_data = &priv->wireless_data;
+ 	net_dev->wireless_handlers = &ipw_wx_handler_def;
+
+-- 
+
