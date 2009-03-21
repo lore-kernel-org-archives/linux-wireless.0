@@ -1,44 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:34975 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbZCBPUK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 10:20:10 -0500
-Received: by gxk22 with SMTP id 22so4616524gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 07:20:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090302130728.GB30293@jm.kir.nu>
-References: <20090302130728.GB30293@jm.kir.nu>
-Date: Mon, 2 Mar 2009 10:20:07 -0500
-Message-ID: <b6c5339f0903020720x3b2b8ef8ldf726d99c32a5202@mail.gmail.com> (sfid-20090302_162016_255187_04410EE0)
-Subject: Re: [PATCH] ath9k: Remove unused key xoring
-From: Bob Copeland <me@bobcopeland.com>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from suva.vyatta.com ([76.74.103.44]:36711 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760792AbZCUFsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:24 -0400
+Message-Id: <20090321053717.765575826@vyatta.com> (sfid-20090321_064931_119460_6DD9F7A0)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:35 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, mcgrof@gmail.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 68/77] prism54: convert to internal net_device_stats
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> - =A0 =A0 =A0 key0 =3D get_unaligned_le32(k->kv_val + 0) ^ xorMask;
-> - =A0 =A0 =A0 key1 =3D (get_unaligned_le16(k->kv_val + 4) ^ xorMask) =
-& 0xffff;
-> - =A0 =A0 =A0 key2 =3D get_unaligned_le32(k->kv_val + 6) ^ xorMask;
-> - =A0 =A0 =A0 key3 =3D (get_unaligned_le16(k->kv_val + 10) ^ xorMask)=
- & 0xffff;
-> - =A0 =A0 =A0 key4 =3D get_unaligned_le32(k->kv_val + 12) ^ xorMask;
-> + =A0 =A0 =A0 key0 =3D get_unaligned_le32(k->kv_val + 0);
-> + =A0 =A0 =A0 key1 =3D get_unaligned_le16(k->kv_val + 4);
-> + =A0 =A0 =A0 key2 =3D get_unaligned_le32(k->kv_val + 6);
-> + =A0 =A0 =A0 key3 =3D get_unaligned_le16(k->kv_val + 10) & 0xffff;
-> + =A0 =A0 =A0 key4 =3D get_unaligned_le32(k->kv_val + 12);
+Also, make ethtool_ops const as it should be, and get rid
+of useless cast.
 
-key1 lost the mask but key3 kept it?
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+ drivers/net/wireless/prism54/islpci_dev.c |   14 --------------
+ drivers/net/wireless/prism54/islpci_dev.h |    3 ---
+ drivers/net/wireless/prism54/islpci_eth.c |   13 ++++++-------
+ 3 files changed, 6 insertions(+), 24 deletions(-)
+
+--- a/drivers/net/wireless/prism54/islpci_dev.c	2009-03-20 18:37:36.129838594 -0700
++++ b/drivers/net/wireless/prism54/islpci_dev.c	2009-03-20 18:37:36.137839156 -0700
+@@ -43,7 +43,6 @@
+ 
+ static int prism54_bring_down(islpci_private *);
+ static int islpci_alloc_memory(islpci_private *);
+-static struct net_device_stats *islpci_statistics(struct net_device *);
+ 
+ /* Temporary dummy MAC address to use until firmware is loaded.
+  * The idea there is that some tools (such as nameif) may query
+@@ -614,18 +613,6 @@ islpci_reset(islpci_private *priv, int r
+ 	return rc;
+ }
+ 
+-static struct net_device_stats *
+-islpci_statistics(struct net_device *ndev)
+-{
+-	islpci_private *priv = netdev_priv(ndev);
+-
+-#if VERBOSE > SHOW_ERROR_MESSAGES
+-	DEBUG(SHOW_FUNCTION_CALLS, "islpci_statistics\n");
+-#endif
+-
+-	return &priv->statistics;
+-}
+-
+ /******************************************************************************
+     Network device configuration functions
+ ******************************************************************************/
+@@ -811,7 +798,6 @@ static const struct ethtool_ops islpci_e
+ static const struct net_device_ops islpci_netdev_ops = {
+ 	.ndo_open 		= islpci_open,
+ 	.ndo_stop		= islpci_close,
+-	.ndo_get_stats		= islpci_statistics,
+ 	.ndo_do_ioctl		= prism54_ioctl,
+ 	.ndo_start_xmit		= islpci_eth_transmit,
+ 	.ndo_tx_timeout		= islpci_eth_tx_timeout,
+--- a/drivers/net/wireless/prism54/islpci_dev.h	2009-03-20 18:36:43.697901654 -0700
++++ b/drivers/net/wireless/prism54/islpci_dev.h	2009-03-20 18:37:36.137839156 -0700
+@@ -158,9 +158,6 @@ typedef struct {
+ 	dma_addr_t pci_map_tx_address[ISL38XX_CB_TX_QSIZE];
+ 	dma_addr_t pci_map_rx_address[ISL38XX_CB_RX_QSIZE];
+ 
+-	/* driver network interface members */
+-	struct net_device_stats statistics;
+-
+ 	/* wait for a reset interrupt */
+ 	wait_queue_head_t reset_done;
+ 
+--- a/drivers/net/wireless/prism54/islpci_eth.c	2009-03-20 18:37:59.821964445 -0700
++++ b/drivers/net/wireless/prism54/islpci_eth.c	2009-03-20 18:38:59.740714710 -0700
+@@ -231,8 +231,8 @@ islpci_eth_transmit(struct sk_buff *skb,
+ 
+ 	/* set the transmission time */
+ 	ndev->trans_start = jiffies;
+-	priv->statistics.tx_packets++;
+-	priv->statistics.tx_bytes += skb->len;
++	ndev->stats.tx_packets++;
++	ndev->stats.tx_bytes += skb->len;
+ 
+ 	/* trigger the device */
+ 	islpci_trigger(priv);
+@@ -243,7 +243,7 @@ islpci_eth_transmit(struct sk_buff *skb,
+ 	return 0;
+ 
+       drop_free:
+-	priv->statistics.tx_dropped++;
++	ndev->stats.tx_dropped++;
+ 	spin_unlock_irqrestore(&priv->slock, flags);
+ 	dev_kfree_skb(skb);
+ 	return err;
+@@ -408,8 +408,8 @@ islpci_eth_receive(islpci_private *priv)
+ 		skb->protocol = eth_type_trans(skb, ndev);
+ 	}
+ 	skb->ip_summed = CHECKSUM_NONE;
+-	priv->statistics.rx_packets++;
+-	priv->statistics.rx_bytes += size;
++	ndev->stats.rx_packets++;
++	ndev->stats.rx_bytes += size;
+ 
+ 	/* deliver the skb to the network layer */
+ #ifdef ISLPCI_ETH_DEBUG
+@@ -497,10 +497,9 @@ void
+ islpci_eth_tx_timeout(struct net_device *ndev)
+ {
+ 	islpci_private *priv = netdev_priv(ndev);
+-	struct net_device_stats *statistics = &priv->statistics;
+ 
+ 	/* increment the transmit error counter */
+-	statistics->tx_errors++;
++	ndev->stats.tx_errors++;
+ 
+ 	if (!priv->reset_task_pending) {
+ 		printk(KERN_WARNING
+
+-- 
+
