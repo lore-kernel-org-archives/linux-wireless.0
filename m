@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:8347 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbZCGDFd (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:46711 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753705AbZCVU3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 22:05:33 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so871153wfa.4
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 19:05:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903061409h1cc9f1a2r501fd44a05b8c786@mail.gmail.com>
-References: <1236316387-9718-1-git-send-email-lrodriguez@atheros.com>
-	 <1236316387-9718-2-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890903061409h1cc9f1a2r501fd44a05b8c786@mail.gmail.com>
-Date: Fri, 6 Mar 2009 19:05:30 -0800
-Message-ID: <43e72e890903061905g6a2bff1bld0232e05409643b9@mail.gmail.com> (sfid-20090307_040542_856100_A2F9C684)
-Subject: Re: [PATCH 2/2] mac80211_hwsim: add regulatory_hint support
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: j@w1.fi, linville@tuxdriver.com
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Sun, 22 Mar 2009 16:29:23 -0400
+Received: by fxm2 with SMTP id 2so1541342fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 13:29:20 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH v4 0/5] mac80211: beacon filtering
+References: <20090322195619.26460.48292.stgit@tikku>
+	<1237752930.19647.5.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 22 Mar 2009 22:29:18 +0200
+In-Reply-To: <1237752930.19647.5.camel@johannes.local> (Johannes Berg's message of "Sun\, 22 Mar 2009 21\:15\:30 +0100")
+Message-ID: <87hc1lfgip.fsf@litku.valot.fi> (sfid-20090322_212926_840887_0983C0A4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 6, 2009 at 2:09 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Mar 5, 2009 at 9:13 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> ACME Inc. only sells these in Finland.
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+> On Sun, 2009-03-22 at 21:56 +0200, Kalle Valo wrote:
+>> Here's my proposal how to implement beacon filtering in mac80211. The
+>> basic idea is simple, the driver enables filtering whenever mac80211
+>> enables power save and the driver calls ieee80211_beacon_loss()
+>> whenever hardware informs about beacon loss.
+>> 
+>> I have tested this with stlc45xx (with beacon filtering) and iwl3945
+>> (without beacon filtering) and based on simple tests this seems to
+>> work. For reference I'll send the stlc45xx patch as a followup.
 >
-> On second thought this is not such a good idea as simply loading it
-> would change your regulatory domain which is not the desired effect
-> for testing purposes. I will resend with some other things to avoid
-> undesired regulatory changes.
+> I'm getting bored saying this again and again ;) Looks good to me.
 
-I see this was merged already - its ok, I'll just send a patch on top.
+Sorry, I _had_ to fix the ieee80211_beacon_loss() interface ;)
 
-  Luis
+Oh yeah, forgot to mention that I did some quick measurements and with
+these patches I was able get 25% system power consumption decrease
+with stlc45xx on Nokia N800 in the wlan idle case (associated to the
+AP, no data traffic, display off). I'll do more measurements later.
+
+-- 
+Kalle Valo
