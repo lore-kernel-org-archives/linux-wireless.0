@@ -1,268 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57755 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752335AbZCREq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 00:46:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohames Abbas <mohames.abbas@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/13] iwlagn: use changed in mac_config
-Date: Tue, 17 Mar 2009 21:51:41 -0700
-Message-Id: <1237351913-19202-2-git-send-email-reinette.chatre@intel.com> (sfid-20090318_054713_873938_6F180D68)
-In-Reply-To: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
-References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.122.233]:51730 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbZCVT5c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2009 15:57:32 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v4 0/5] mac80211: beacon filtering
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 22 Mar 2009 21:56:59 +0200
+Message-ID: <20090322195619.26460.48292.stgit@tikku> (sfid-20090322_205736_404068_42654ECD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohames Abbas <mohames.abbas@intel.com>
+Here's my proposal how to implement beacon filtering in mac80211. The
+basic idea is simple, the driver enables filtering whenever mac80211
+enables power save and the driver calls ieee80211_beacon_loss()
+whenever hardware informs about beacon loss.
 
-In function iwl_mac_config use changed flag to call only
-the affected functions. This patch also allow user to cache
-channel, txpower and power value when the interface is not
-ready and apply the changes once the interface ready.
+I have tested this with stlc45xx (with beacon filtering) and iwl3945
+(without beacon filtering) and based on simple tests this seems to
+work. For reference I'll send the stlc45xx patch as a followup.
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+v4:
+
+o remove hw parameter from ieee80211_beacon_loss()
+o don't call the patchset RFC anymore
+
+v3:
+o rebase to 2.6.29-rc8-wl
+o add cfg80211_hold_bss() and cfg80211_unhold_bss() to avoid loosing
+  the bss struct when beacon filter is enabled
+o fix bug to use !IEEE80211_HW_PS_NULLFUNC_STACK both in
+  ieee80211_scan_ps_enable() and ieee80211_scan_ps_disable(), also
+  improve comments
+o fix the indentation in ieee80211_associated(), not visible in patch
+  anymore:
+
+    mod_timer(&ifmgd->timer, jiffies +
+    -				      IEEE80211_MONITORING_INTERVAL);
+    +			  IEEE80211_MONITORING_INTERVAL);
+
+o add vif parameter to void ieee80211_beacon_loss()
+o more documentation about filtering, and especially about
+  checksumming
+o document why multicast check is needed in ieee80211_sta_rx_notify()
+o beacon filter is only enabled when power save is enabled, take this
+  into account in ieee80211_associated()
+
+v2:
+o rebase to 2.6.29-rc7-wl
+o rename ieee80211_rx_trigger() to ieee80211_sta_rx_notify()
+o move check for sta mode in ieee80211_sta_rx_notify() to rx.c
+o move unicast check from rx.c to ieee80211_sta_rx_notify()
+o add comment for setting last_beacon in ieee80211_rx_mgmt_assoc_resp()
+o rename IEEE80211_HW_BEACON_FILTERING to IEEE80211_HW_BEACON_FILTER
+o send probe request from ieee80211_beacon_loss_work()
+o API documentation
+o enable beacon filtering only when power save is enabled
+o disable power save (and hence beacon filtering) while scanning to make 
+  it possible to have reliable scan results even when beacon filtering
+  is enabled
+
+TODO: 
+
+(none)
+
+For the future:
+
+o configuration for beacon filter (beacon misses * beacon interval
+  should be constant?)
+o don't run ieee80211_associated() in data idle period
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c  |  161 ++++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-core.c |    4 +
- 2 files changed, 85 insertions(+), 80 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 0db3bc0..4d2ed52 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1567,9 +1567,8 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 	if (iwl_is_associated(priv)) {
- 		struct iwl_rxon_cmd *active_rxon =
- 				(struct iwl_rxon_cmd *)&priv->active_rxon;
--
--		memcpy(&priv->staging_rxon, &priv->active_rxon,
--		       sizeof(priv->staging_rxon));
-+		/* apply any changes in staging */
-+		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	} else {
- 		/* Initialize our rx_config data */
-@@ -2184,110 +2183,112 @@ static int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	struct iwl_priv *priv = hw->priv;
- 	const struct iwl_channel_info *ch_info;
- 	struct ieee80211_conf *conf = &hw->conf;
--	unsigned long flags;
-+	unsigned long flags = 0;
- 	int ret = 0;
--	u16 channel;
-+	u16 ch;
-+	int scan_active = 0;
- 
- 	mutex_lock(&priv->mutex);
--	IWL_DEBUG_MAC80211(priv, "enter to channel %d\n", conf->channel->hw_value);
--
--	priv->current_ht_config.is_ht = conf_is_ht(conf);
-+	IWL_DEBUG_MAC80211(priv, "enter to channel %d changed 0x%X\n",
-+					conf->channel->hw_value, changed);
- 
--	if (conf->radio_enabled && iwl_radio_kill_sw_enable_radio(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF-KILL - waiting for uCode\n");
--		goto out;
-+	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
-+			test_bit(STATUS_SCANNING, &priv->status))) {
-+		scan_active = 1;
-+		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
- 	}
- 
--	if (!conf->radio_enabled)
--		iwl_radio_kill_sw_disable_radio(priv);
- 
--	if (!iwl_is_ready(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
--		ret = -EIO;
--		goto out;
--	}
-+	/* during scanning mac80211 will delay channel setting until
-+	 * scan finish with changed = 0
-+	 */
-+	if (!changed || (changed & IEEE80211_CONF_CHANGE_CHANNEL)) {
-+		if (scan_active)
-+			goto set_ch_out;
-+
-+		ch = ieee80211_frequency_to_channel(conf->channel->center_freq);
-+		ch_info = iwl_get_channel_info(priv, conf->channel->band, ch);
-+		if (!is_channel_valid(ch_info)) {
-+			IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
-+			ret = -EINVAL;
-+			goto set_ch_out;
-+		}
- 
--	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
--		     test_bit(STATUS_SCANNING, &priv->status))) {
--		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
--		mutex_unlock(&priv->mutex);
--		return 0;
--	}
-+		if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
-+			!is_channel_ibss(ch_info)) {
-+			IWL_ERR(priv, "channel %d in band %d not "
-+				"IBSS channel\n",
-+				conf->channel->hw_value, conf->channel->band);
-+			ret = -EINVAL;
-+			goto set_ch_out;
-+		}
- 
--	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
--	ch_info = iwl_get_channel_info(priv, conf->channel->band, channel);
--	if (!is_channel_valid(ch_info)) {
--		IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
--		ret = -EINVAL;
--		goto out;
--	}
-+		priv->current_ht_config.is_ht = conf_is_ht(conf);
- 
--	if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
--	    !is_channel_ibss(ch_info)) {
--		IWL_ERR(priv, "channel %d in band %d not IBSS channel\n",
--			conf->channel->hw_value, conf->channel->band);
--		ret = -EINVAL;
--		goto out;
--	}
-+		spin_lock_irqsave(&priv->lock, flags);
- 
--	spin_lock_irqsave(&priv->lock, flags);
- 
-+		/* if we are switching from ht to 2.4 clear flags
-+		 * from any ht related info since 2.4 does not
-+		 * support ht */
-+		if ((le16_to_cpu(priv->staging_rxon.channel) != ch))
-+			priv->staging_rxon.flags = 0;
- 
--	/* if we are switching from ht to 2.4 clear flags
--	 * from any ht related info since 2.4 does not
--	 * support ht */
--	if ((le16_to_cpu(priv->staging_rxon.channel) != channel)
--#ifdef IEEE80211_CONF_CHANNEL_SWITCH
--	    && !(conf->flags & IEEE80211_CONF_CHANNEL_SWITCH)
--#endif
--	)
--		priv->staging_rxon.flags = 0;
-+		iwl_set_rxon_channel(priv, conf->channel);
-+
-+		iwl_set_flags_for_band(priv, conf->channel->band);
-+		spin_unlock_irqrestore(&priv->lock, flags);
-+ set_ch_out:
-+		/* The list of supported rates and rate mask can be different
-+		 * for each band; since the band may have changed, reset
-+		 * the rate mask to what mac80211 lists */
-+		iwl_set_rate(priv);
-+	}
- 
--	iwl_set_rxon_channel(priv, conf->channel);
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		if (conf->flags & IEEE80211_CONF_PS)
-+			ret = iwl_power_set_user_mode(priv, IWL_POWER_INDEX_3);
-+		else
-+			ret = iwl_power_set_user_mode(priv, IWL_POWER_MODE_CAM);
-+		if (ret)
-+			IWL_DEBUG_MAC80211(priv, "Error setting power level\n");
- 
--	iwl_set_flags_for_band(priv, conf->channel->band);
-+	}
- 
--	/* The list of supported rates and rate mask can be different
--	 * for each band; since the band may have changed, reset
--	 * the rate mask to what mac80211 lists */
--	iwl_set_rate(priv);
-+	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-+		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
-+			priv->tx_power_user_lmt, conf->power_level);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+		iwl_set_tx_power(priv, conf->power_level, false);
-+	}
- 
--#ifdef IEEE80211_CONF_CHANNEL_SWITCH
--	if (conf->flags & IEEE80211_CONF_CHANNEL_SWITCH) {
--		iwl_hw_channel_switch(priv, conf->channel);
--		goto out;
-+	/* call to ensure that 4965 rx_chain is set properly in monitor mode */
-+	iwl_set_rxon_chain(priv);
-+
-+	if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED) {
-+		if (conf->radio_enabled &&
-+			iwl_radio_kill_sw_enable_radio(priv)) {
-+			IWL_DEBUG_MAC80211(priv, "leave - RF-KILL - "
-+						"waiting for uCode\n");
-+			goto out;
-+		}
-+
-+		if (!conf->radio_enabled)
-+			iwl_radio_kill_sw_disable_radio(priv);
- 	}
--#endif
- 
- 	if (!conf->radio_enabled) {
- 		IWL_DEBUG_MAC80211(priv, "leave - radio disabled\n");
- 		goto out;
- 	}
- 
--	if (iwl_is_rfkill(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF kill\n");
--		ret = -EIO;
-+	if (!iwl_is_ready(priv)) {
-+		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		goto out;
- 	}
- 
--	if (conf->flags & IEEE80211_CONF_PS)
--		ret = iwl_power_set_user_mode(priv, IWL_POWER_INDEX_3);
--	else
--		ret = iwl_power_set_user_mode(priv, IWL_POWER_MODE_CAM);
--	if (ret)
--		IWL_DEBUG_MAC80211(priv, "Error setting power level\n");
--
--	IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
--			   priv->tx_power_user_lmt, conf->power_level);
--
--	iwl_set_tx_power(priv, conf->power_level, false);
--
--	iwl_set_rate(priv);
--
--	/* call to ensure that 4965 rx_chain is set properly in monitor mode */
--	iwl_set_rxon_chain(priv);
-+	if (scan_active)
-+		goto out;
- 
- 	if (memcmp(&priv->active_rxon,
- 		   &priv->staging_rxon, sizeof(priv->staging_rxon)))
-@@ -2295,9 +2296,9 @@ static int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	else
- 		IWL_DEBUG_INFO(priv, "No re-sending same RXON configuration.\n");
- 
--	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- out:
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
- 	mutex_unlock(&priv->mutex);
- 	return ret;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 085e9cf..bcdecb1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1437,6 +1437,10 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- 
- 	priv->tx_power_user_lmt = tx_power;
- 
-+	/* if nic is not up don't send command */
-+	if (!iwl_is_ready_rf(priv))
-+		return ret;
-+
- 	if (force && priv->cfg->ops->lib->send_tx_power)
- 		ret = priv->cfg->ops->lib->send_tx_power(priv);
- 
--- 
-1.5.6.3
+Kalle Valo (5):
+      mac80211: add beacon filtering support
+      cfg80211: add feature to hold bss
+      mac80211: disable power save when scanning
+      mac80211: track beacons separately from the rx path activity
+      mac80211: decrease execution of the associated timer
+
+
+ Documentation/DocBook/mac80211.tmpl |    6 ++
+ include/net/cfg80211.h              |   18 +++++
+ include/net/mac80211.h              |   45 ++++++++++-
+ net/mac80211/ieee80211_i.h          |    5 +
+ net/mac80211/iface.c                |    3 +
+ net/mac80211/mlme.c                 |  139 +++++++++++++++++++++++++++--------
+ net/mac80211/rx.c                   |    9 ++
+ net/mac80211/scan.c                 |   64 ++++++++++++++++
+ net/wireless/core.h                 |    2 +
+ net/wireless/scan.c                 |   27 +++++++
+ 10 files changed, 278 insertions(+), 40 deletions(-)
 
