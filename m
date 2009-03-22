@@ -1,108 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:44685 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343AbZCWXme convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 19:42:34 -0400
-Received: by bwz17 with SMTP id 17so1996032bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 16:42:31 -0700 (PDT)
-From: Marek Vasut <marek.vasut@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Marvell CF8381
-Date: Tue, 24 Mar 2009 00:42:40 +0100
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-References: <200903220127.21836.marek.vasut@gmail.com> <200903232258.57323.marek.vasut@gmail.com> <1237849710.26204.17.camel@localhost.localdomain>
-In-Reply-To: <1237849710.26204.17.camel@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:48745 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750933AbZCVPLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2009 11:11:00 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: Kernel panic with zd1211rw and today's compat-wireless
+Date: Sun, 22 Mar 2009 16:09:26 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Alexander E. Patrakov" <patrakov@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <20090322174515.22f11d92@home.aephome.ru> <1237726612.19647.2.camel@johannes.local> <b6c5339f0903220749j5373d132gdf24edc4d6ac610c@mail.gmail.com>
+In-Reply-To: <b6c5339f0903220749j5373d132gdf24edc4d6ac610c@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903240042.41054.marek.vasut@gmail.com> (sfid-20090324_004241_928665_A65A6CF4)
+  charset="iso-8859-1"
+Message-Id: <200903221609.26412.mb@bu3sch.de> (sfid-20090322_161106_935894_4DC4BA20)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, here is another version, hopefully last one.
+On Sunday 22 March 2009 15:49:50 Bob Copeland wrote:
+> On Sun, Mar 22, 2009 at 8:56 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2009-03-22 at 17:45 +0500, Alexander E. Patrakov wrote:
+> >
+> >> There are several different panic messages,
+> >> the common thing is "Fatal exception in interrupt". Without uvesafb,
+> >> they also include "zd_op_tx+0x98/0x1cc [zd1211rw]" as the last line,
+> >
+> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=3b23889bb2366c1b10f69bcca16cf53426b5e309
+> >
+> >> but with uvesafb, this sometimes changes to
+> >> "rate_control_get_rate+0xb7/0xc3 [mac80211]".
+> 
+> Hmm, I've seen the rate_control one before, and there's a guy
+> with ath5k who can reproduce it easily.  Looks like minstrel
+> somehow gets confused about the rate table and eventually tries
+> to use -1 as a valid rate index.  Neither I nor Felix could come
+> up with a logical explanation, though (I am completely lost in
+> the RC code, so that's not saying much for me).
 
->From a7522df9d610702cfc3066861a2e315552e29086 Mon Sep 17 00:00:00 2001
-From: Marek Vasut <marek.vasut@gmail.com>
-Date: Tue, 24 Mar 2009 00:40:44 +0100
-Subject: [PATCH] Add support for CF8381 WiFi card.
- A detection function was added for identifying CF8381.
+There are also strange warnings in the RX path where an invalid rate_idx is
+passed with the received packet. I'm pretty sure the driver does not
+put an invalid rate_idx. So maybe this is related? Is it possible that
+the skb->cb (where I guess the RX status and TX status are stored) is getting
+corrupted after the skb got queued by the driver for processing in the
+RX or TXstatus tasklet?
 
-Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
----
- drivers/net/wireless/libertas/if_cs.c |   34 +++++++++++++++++++++++++++++++-
- 1 files changed, 32 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_cs.c 
-b/drivers/net/wireless/libertas/if_cs.c
-index 3f02e6a..1da23e5 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -273,7 +273,28 @@ static int if_cs_poll_while_fw_download(struct if_cs_card 
-*card, uint addr, u8 r
-  */
- #define IF_CS_PRODUCT_ID               0x0000001C
- #define IF_CS_CF8385_B1_REV            0x12
-+#define IF_CS_CF8381_B3_REV            0x04
-
-+/*
-+ * Used to detect other cards than CF8385 since their revisions of silicon
-+ * doesn't match those from CF8385, eg. CF8381 B3 works with this driver.
-+ */
-+#define CF8381_MANFID          0x02db
-+#define CF8381_CARDID          0x6064
-+#define CF8385_MANFID          0x02df
-+#define CF8385_CARDID          0x8103
-+
-+static inline int if_cs_hw_is_cf8381(struct pcmcia_device *p_dev)
-+{
-+       return (p_dev->manf_id == CF8381_MANFID &&
-+               p_dev->card_id == CF8381_CARDID);
-+}
-+
-+static inline int if_cs_hw_is_cf8385(struct pcmcia_device *p_dev)
-+{
-+       return (p_dev->manf_id == CF8385_MANFID &&
-+               p_dev->card_id == CF8385_CARDID);
-+}
-
- /********************************************************************/
- /* I/O and interrupt handling                                       */
-@@ -757,6 +778,7 @@ static void if_cs_release(struct pcmcia_device *p_dev)
- static int if_cs_probe(struct pcmcia_device *p_dev)
- {
-        int ret = -ENOMEM;
-+       unsigned int prod_id;
-        struct lbs_private *priv;
-        struct if_cs_card *card;
-        /* CIS parsing */
-@@ -859,7 +881,14 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
-               p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
-
-        /* Check if we have a current silicon */
--       if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
-+       prod_id = if_cs_read8(card, IF_CS_PRODUCT_ID);
-+       if (if_cs_hw_is_cf8381(p_dev) && prod_id < IF_CS_CF8381_B3_REV) {
-+               lbs_pr_err("old chips like 8381 rev B3 aren't supported\n");
-+               ret = -ENODEV;
-+               goto out2;
-+       }
-+
-+       if (if_cs_hw_is_cf8385(p_dev) && prod_id < IF_CS_CF8385_B1_REV) {
-                lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
-                ret = -ENODEV;
-                goto out2;
-@@ -950,7 +979,8 @@ static void if_cs_detach(struct pcmcia_device *p_dev)
- /********************************************************************/
-
- static struct pcmcia_device_id if_cs_ids[] = {
--       PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
-+       PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
-+       PCMCIA_DEVICE_MANF_CARD(CF8385_MANFID, CF8385_CARDID),
-        PCMCIA_DEVICE_NULL,
- };
- MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
---
-1.6.2
-
+-- 
+Greetings, Michael.
