@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35791 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752598AbZC1AzG (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2836 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756373AbZCVWHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 20:55:06 -0400
-Date: Fri, 27 Mar 2009 21:55:01 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill-input: remove unused code
-Message-ID: <20090328005501.GB7439@khazad-dum.debian.net> (sfid-20090328_015511_590617_59FA7C78)
-References: <1238159804.4452.4.camel@johannes.local> <20090327143608.GB24288@khazad-dum.debian.net> <1238166712.4452.11.camel@johannes.local>
+	Sun, 22 Mar 2009 18:07:01 -0400
+Date: Sun, 22 Mar 2009 18:04:21 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Alexander E. Patrakov" <patrakov@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Kernel panic with zd1211rw and today's compat-wireless
+Message-ID: <20090322220421.GG18141@hash.localnet> (sfid-20090322_230724_653450_00E96449)
+References: <20090322174515.22f11d92@home.aephome.ru> <1237726612.19647.2.camel@johannes.local> <b6c5339f0903220749j5373d132gdf24edc4d6ac610c@mail.gmail.com> <200903221609.26412.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1238166712.4452.11.camel@johannes.local>
+In-Reply-To: <200903221609.26412.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Mar 2009, Johannes Berg wrote:
-> > Because that codepath is _not_ the most obvious thing in the world to
-> > reimplement without hitting a pitfall, so people better look how it was done
-> > once in time...
-> 
-> Works for me. Do we expect it to be needed though?
+On Sun, Mar 22, 2009 at 04:09:26PM +0100, Michael Buesch wrote:
+> Is it possible that the skb->cb (where I guess the RX status and TX status
+> are stored) is getting corrupted after the skb got queued by the driver for
+> processing in the RX or TX status tasklet?
 
-Well, that depends.  Did anyone produce a device with a
-switch/push-button labelled "bluetooth", "wimax", "uwb" (instead of
-just using a normal key)?  Because if anyone does, we need EV_SW
-SW_<whatever>, and that code to handle it in rfkill-input.
+Hmm, that's an interesting possibility, and yeah that is stored in cb, for
+TX at least:
+    
+>    struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 
-I *certainly* don't know of any such device, or I'd have asked for the
-EV_SW SW_foo codepoints already, and uncommented that code :-)  People
-like the "kill all radios" push-button/switch, but one for a specific
-type of transmitter I haven't seen yet.
+I did debug it on the driver side and the rates I was sending back to the 
+RC were fine.  
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Bob Copeland %% www.bobcopeland.com
+
