@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:35051 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756067AbZCYNgX (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43771
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753971AbZCVFyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 09:36:23 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH 2/2 v2] p54spi: fix p54spi_upload_firmware
-Date: Wed, 25 Mar 2009 14:42:58 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903251345.01608.chunkeey@web.de> <73aaf0dd0903250550x37e6847x38be1f0dcc4b1bb3@mail.gmail.com>
-In-Reply-To: <73aaf0dd0903250550x37e6847x38be1f0dcc4b1bb3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903251442.58712.chunkeey@web.de> (sfid-20090325_143633_078869_2090AA92)
+	Sun, 22 Mar 2009 01:54:07 -0400
+Date: Sat, 21 Mar 2009 22:53:54 -0700 (PDT)
+Message-Id: <20090321.225354.13734304.davem@davemloft.net> (sfid-20090322_065413_976866_DDF700D8)
+To: shemminger@vyatta.com
+Cc: mcgrof@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 68/77] prism54: convert to internal net_device_stats
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090321053717.765575826@vyatta.com>
+References: <20090321053527.316395697@vyatta.com>
+	<20090321053717.765575826@vyatta.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 25 March 2009 13:50:44 Max Filippov wrote:
-> >> Sorry, I haven't been used to checkpatch.
-> > But your PATCH 1/2 sailed through without any complains. ;-)
-> Mere coincidence (:
+From: Stephen Hemminger <shemminger@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:35 -0700
+
+> Also, make ethtool_ops const as it should be, and get rid
+> of useless cast.
 > 
-> > BTW: does p54spi really work now?
-> I haven't tested your patch yet, but with the one that I sent it does
-> work in IBSS mode.
-> My aim is to wind it up in mesh mode. This doesn't work, it cannot
-> establish peer link.
-> I'm going to investigate it. Does mesh mode work on conventional pci/usb p54?
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-hmm, yes... at least with wireless-testing from yesterday. (beaconing works too)
-
-[ 9862.704138] mesh: running mesh housekeeping
-[ 9906.580204] phy3: Allocated STA 00:14:a5:45:33:ff
-[ 9906.581566] phy3: Inserted STA 00:14:a5:45:33:ff
-[ 9906.581581] Mesh plink: starting establishment with 00:14:a5:45:33:ff
-[ 9906.634055] Mesh plink (peer, state, llid, plid, event): 00:14:a5:45:33:ff 1 28312 0 1
-[ 9906.636888] Mesh plink (peer, state, llid, plid, event): 00:14:a5:45:33:ff 2 28312 55519 4
-[ 9906.636895] Mesh plink with 00:14:a5:45:33:ff ESTABLISHED
-
-64 bytes from 10.0.0.2: icmp_seq=449 ttl=64 time=1.81 ms
-64 bytes from 10.0.0.2: icmp_seq=450 ttl=64 time=1.41 ms
-64 bytes from 10.0.0.2: icmp_seq=451 ttl=64 time=3.52 ms
-...
-
-both peers have a p54 (one is pci, the other one usb)... I'll see if I can
-get my old ath5k back to verify that it works with other devices as well.
-
-Regards,
-	Chr
+Applied.
