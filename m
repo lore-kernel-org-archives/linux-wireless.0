@@ -1,39 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:34464 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbZC0OVh (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43755
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753434AbZCVFxn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 10:21:37 -0400
-Received: by ti-out-0910.google.com with SMTP id i7so824702tid.23
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 07:21:34 -0700 (PDT)
-From: Huang Weiyi <weiyi.huang@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
-Subject: [PATCH 2/3] cfg80211: remove duplicated #include
-Date: Fri, 27 Mar 2009 22:20:27 +0800
-Message-Id: <1238163627-1148-1-git-send-email-weiyi.huang@gmail.com> (sfid-20090327_152141_536909_064D0A36)
+	Sun, 22 Mar 2009 01:53:43 -0400
+Date: Sat, 21 Mar 2009 22:53:31 -0700 (PDT)
+Message-Id: <20090321.225331.00243159.davem@davemloft.net> (sfid-20090322_065356_154201_54023858)
+To: shemminger@vyatta.com
+Cc: pe1rxq@amsat.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 64/77] zd1201: convert to internal net_device_stats
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090321053717.440414565@vyatta.com>
+References: <20090321053527.316395697@vyatta.com>
+	<20090321053717.440414565@vyatta.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove duplicated #include in include/net/cfg80211.h.
+From: Stephen Hemminger <shemminger@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:31 -0700
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
----
- include/net/cfg80211.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 50f3fd9..e7e1f1b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -10,7 +10,6 @@
- #include <net/iw_handler.h>
- #include <net/genetlink.h>
- /* remove once we remove the wext stuff */
--#include <net/iw_handler.h>
- 
- /*
-  * 802.11 configuration in-kernel interface
--- 
-1.6.1.3
-
+Applied.
