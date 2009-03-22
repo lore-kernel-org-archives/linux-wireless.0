@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43738
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752631AbZCVFuD (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:46032 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbZCVMpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:50:03 -0400
-Date: Sat, 21 Mar 2009 22:49:50 -0700 (PDT)
-Message-Id: <20090321.224950.114687051.davem@davemloft.net> (sfid-20090322_065010_849937_0A9F630E)
-To: johannes@sipsolutions.net
-Cc: shemminger@vyatta.com, j@w1.fi, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 66/77] mac80211_hwsim: convert to internal
- net_device_stats
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1237633705.5100.172.camel@johannes.local>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053717.601771143@vyatta.com>
-	<1237633705.5100.172.camel@johannes.local>
+	Sun, 22 Mar 2009 08:45:18 -0400
+Received: by fxm2 with SMTP id 2so1437218fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 05:45:15 -0700 (PDT)
+Date: Sun, 22 Mar 2009 17:45:15 +0500
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Kernel panic with zd1211rw and today's compat-wireless
+Message-ID: <20090322174515.22f11d92@home.aephome.ru> (sfid-20090322_134524_211033_029824A8)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sat, 21 Mar 2009 12:08:25 +0100
+Hello.
 
-> On Fri, 2009-03-20 at 22:36 -0700, Stephen Hemminger wrote:
-> > plain text document attachment (hwsim.patch)
-> > Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
-> > 
-> > 
-> > --- a/drivers/net/wireless/mac80211_hwsim.c	2009-03-20 21:45:40.802964051 -0700
-> > +++ b/drivers/net/wireless/mac80211_hwsim.c	2009-03-20 22:26:02.959027480 -0700
-> > @@ -739,10 +739,16 @@ static struct device_driver mac80211_hws
-> >  	.name = "mac80211_hwsim"
-> >  };
-> >  
-> > +static const struct net_device_ops hwsim_netdev_ops = {
-> 
-> this, and a few others I think, have wrong subjects.
+Today I tried to use wpa_supplicant version 0.6.8 with -Dnl80211
+switch, in order to confirm that setting the country code in the
+configuration file works. My zd1211rw-based card works for a short
+time, and then I get a kernel panic. Sometimes the bug can be reproduced
+with just a few seconds of flood ping, and sometimes the card survives
+100 MB of data transfer. The problem didn't exist with the stock driver
+included in linux-2.6.28.
 
-I'll fix it up, as needed.
+There are several different panic messages,
+the common thing is "Fatal exception in interrupt". Without uvesafb,
+they also include "zd_op_tx+0x98/0x1cc [zd1211rw]" as the last line,
+but with uvesafb, this sometimes changes to
+"rate_control_get_rate+0xb7/0xc3 [mac80211]". Sometimes the kernel
+becomes tainted with G and W flags (what do they mean?), but there were
+two untainted cases.
+
+The card is in ad-hoc mode, if that matters, and the rate control
+algorithm is minstrel. WEP is used, because WPA+ad-hoc doesn't work
+with this card (should it?).
+
+Screen photos from all cases of panic are available at the following
+URL:
+
+http://picasaweb.google.com/patrakov/KernelPanic?authkey=Gv1sRgCKn5ne2jqbLYpAE&feat=directlink
+
+-- 
+Alexander E. Patrakov
