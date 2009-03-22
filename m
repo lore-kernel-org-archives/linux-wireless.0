@@ -1,164 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:28053 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753608AbZCWA7E (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:51756 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755350AbZCVT5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 20:59:04 -0400
-Message-ID: <49C6DF39.1020509@oracle.com> (sfid-20090323_015911_979689_A939C4A4)
-Date: Sun, 22 Mar 2009 18:00:41 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Sun, 22 Mar 2009 15:57:43 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v4 3/5] mac80211: disable power save when scanning
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 22 Mar 2009 21:57:21 +0200
+Message-ID: <20090322195720.26460.66178.stgit@tikku> (sfid-20090322_205745_396808_1034067F)
+In-Reply-To: <20090322195619.26460.48292.stgit@tikku>
+References: <20090322195619.26460.48292.stgit@tikku>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C293CC.6020009@oracle.com> <200903191955.00718.mb@bu3sch.de> <200903210057.47067.chunkeey@web.de>
-In-Reply-To: <200903210057.47067.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch fixes a compile problem when the MAC80211_LEDS
-> triggers are enabled but not LED class itself. 
-> (which is sort of pointless, but anyway...)
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> mb, thank you for the tips!
-> 
-> Randy Dunlap can you please give this patch a try?
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+When software scanning we need to disable power save so that all possible
+probe responses and beacons are received. For hardware scanning assume that
+hardware will take care of that and document that assumption.
 
-Thanks.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-> John, do you know where the patch form 
-> Geert Uytterhoeven <geert@linux-m68k.org> went?
-> ---
-> diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
-> index 0e344ac..ee1aaca 100644
-> --- a/drivers/net/wireless/p54/Kconfig
-> +++ b/drivers/net/wireless/p54/Kconfig
-> @@ -1,9 +1,10 @@
->  config P54_COMMON
->  	tristate "Softmac Prism54 support"
-> -	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
-> +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-> +	select FW_LOADER
->  	---help---
-> -	  This is common code for isl38xx based cards.
-> -	  This module does nothing by itself - the USB/PCI frontends
-> +	  This is common code for isl38xx/stlc45xx based modules.
-> +	  This module does nothing by itself - the USB/PCI/SPI frontends
->  	  also need to be enabled in order to support any devices.
->  
->  	  These devices require softmac firmware which can be found at
-> @@ -17,31 +18,6 @@ config P54_USB
->  	select CRC32
->  	---help---
->  	  This driver is for USB isl38xx based wireless cards.
-> -	  These are USB based adapters found in devices such as:
-> -
-> -	  3COM 3CRWE254G72
-> -	  SMC 2862W-G
-> -	  Accton 802.11g WN4501 USB
-> -	  Siemens Gigaset USB
-> -	  Netgear WG121
-> -	  Netgear WG111
-> -	  Medion 40900, Roper Europe
-> -	  Shuttle PN15, Airvast WM168g, IOGear GWU513
-> -	  Linksys WUSB54G
-> -	  Linksys WUSB54G Portable
-> -	  DLink DWL-G120 Spinnaker
-> -	  DLink DWL-G122
-> -	  Belkin F5D7050 ver 1000
-> -	  Cohiba Proto board
-> -	  SMC 2862W-G version 2
-> -	  U.S. Robotics U5 802.11g Adapter
-> -	  FUJITSU E-5400 USB D1700
-> -	  Sagem XG703A
-> -	  DLink DWL-G120 Cohiba
-> -	  Spinnaker Proto board
-> -	  Linksys WUSB54AG
-> -	  Inventel UR054G
-> -	  Spinnaker DUT
->  
->  	  These devices require softmac firmware which can be found at
->  	  http://prism54.org/
-> @@ -71,3 +47,8 @@ config P54_SPI
->  	  Nokia's N800/N810 Portable Internet Tablet.
->  
->  	  If you choose to build a module, it'll be called p54spi.
-> +
-> +config P54_LEDS
-> +	bool
-> +	depends on P54_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = P54_COMMON)
-> +	default y
-> diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> index 0a98983..0c1b057 100644
-> --- a/drivers/net/wireless/p54/p54common.c
-> +++ b/drivers/net/wireless/p54/p54common.c
-> @@ -21,9 +21,9 @@
->  #include <linux/etherdevice.h>
->  
->  #include <net/mac80211.h>
-> -#ifdef CONFIG_MAC80211_LEDS
-> +#ifdef CONFIG_P54_LEDS
->  #include <linux/leds.h>
-> -#endif /* CONFIG_MAC80211_LEDS */
-> +#endif /* CONFIG_P54_LEDS */
->  
->  #include "p54.h"
->  #include "p54common.h"
-> @@ -2420,7 +2420,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
->  	return 0;
->  }
->  
-> -#ifdef CONFIG_MAC80211_LEDS
-> +#ifdef CONFIG_P54_LEDS
->  static void p54_led_brightness_set(struct led_classdev *led_dev,
->  				   enum led_brightness brightness)
->  {
-> @@ -2508,7 +2508,7 @@ static void p54_unregister_leds(struct ieee80211_hw *dev)
->  	if (priv->assoc_led.registered)
->  		led_classdev_unregister(&priv->assoc_led.led_dev);
->  }
-> -#endif /* CONFIG_MAC80211_LEDS */
-> +#endif /* CONFIG_P54_LEDS */
->  
->  static const struct ieee80211_ops p54_ops = {
->  	.tx			= p54_tx,
-> @@ -2592,11 +2592,11 @@ int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
->  		return err;
->  	}
->  
-> -	#ifdef CONFIG_MAC80211_LEDS
-> +#ifdef CONFIG_P54_LEDS
->  	err = p54_init_leds(dev);
->  	if (err)
->  		return err;
-> -	#endif /* CONFIG_MAC80211_LEDS */
-> +#endif /* CONFIG_P54_LEDS */
->  
->  	dev_info(pdev, "is registered as '%s'\n", wiphy_name(dev->wiphy));
->  	return 0;
-> @@ -2610,9 +2610,9 @@ void p54_free_common(struct ieee80211_hw *dev)
->  	kfree(priv->output_limit);
->  	kfree(priv->curve_data);
->  
-> -	#ifdef CONFIG_MAC80211_LEDS
-> +#ifdef CONFIG_P54_LEDS
->  	p54_unregister_leds(dev);
-> -	#endif /* CONFIG_MAC80211_LEDS */
-> +#endif /* CONFIG_P54_LEDS */
->  }
->  EXPORT_SYMBOL_GPL(p54_free_common);
->  
+ include/net/mac80211.h |   12 +++++----
+ net/mac80211/scan.c    |   64 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 69 insertions(+), 7 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index daa539a..174dc1d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1307,11 +1307,13 @@ enum ieee80211_ampdu_mlme_action {
+  *
+  * @hw_scan: Ask the hardware to service the scan request, no need to start
+  *	the scan state machine in stack. The scan must honour the channel
+- *	configuration done by the regulatory agent in the wiphy's registered
+- *	bands. When the scan finishes, ieee80211_scan_completed() must be
+- *	called; note that it also must be called when the scan cannot finish
+- *	because the hardware is turned off! Anything else is a bug!
+- *	Returns a negative error code which will be seen in userspace.
++ *	configuration done by the regulatory agent in the wiphy's
++ *	registered bands. The hardware (or the driver) needs to make sure
++ *	that power save is disabled. When the scan finishes,
++ *	ieee80211_scan_completed() must be called; note that it also must
++ *	be called when the scan cannot finish because the hardware is
++ *	turned off! Anything else is a bug! Returns a negative error code
++ *	which will be seen in userspace.
+  *
+  * @sw_scan_start: Notifier function that is called just before a software scan
+  *	is started. Can be NULL, if the driver doesn't need this notification.
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 46f35dc..3bf9839 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -214,6 +214,66 @@ void ieee80211_scan_failed(struct ieee80211_local *local)
+ 	local->scan_req = NULL;
+ }
+ 
++/*
++ * inform AP that we will go to sleep so that it will buffer the frames
++ * while we scan
++ */
++static void ieee80211_scan_ps_enable(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	bool ps = false;
++
++	/* FIXME: what to do when local->pspolling is true? */
++
++	del_timer_sync(&local->dynamic_ps_timer);
++	cancel_work_sync(&local->dynamic_ps_enable_work);
++
++	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
++		ps = true;
++		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++
++	if (!ps || !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
++		/*
++		 * If power save was enabled, no need to send a nullfunc
++		 * frame because AP knows that we are sleeping. But if the
++		 * hardware is creating the nullfunc frame for power save
++		 * status (ie. IEEE80211_HW_PS_NULLFUNC_STACK is not
++		 * enabled) and power save was enabled, the firmware just
++		 * sent a null frame with power save disabled. So we need
++		 * to send a new nullfunc frame to inform the AP that we
++		 * are again sleeping.
++		 */
++		ieee80211_send_nullfunc(local, sdata, 1);
++}
++
++/* inform AP that we are awake again, unless power save is enabled */
++static void ieee80211_scan_ps_disable(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++
++	if (!local->powersave)
++		ieee80211_send_nullfunc(local, sdata, 0);
++	else {
++		/*
++		 * In !IEEE80211_HW_PS_NULLFUNC_STACK case the hardware
++		 * will send a nullfunc frame with the powersave bit set
++		 * even though the AP already knows that we are sleeping.
++		 * This could be avoided by sending a null frame with power
++		 * save bit disabled before enabling the power save, but
++		 * this doesn't gain anything.
++		 *
++		 * When IEEE80211_HW_PS_NULLFUNC_STACK is enabled, no need
++		 * to send a nullfunc frame because AP already knows that
++		 * we are sleeping, let's just enable power save mode in
++		 * hardware.
++		 */
++		local->hw.conf.flags |= IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++}
++
+ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -268,7 +328,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 		/* Tell AP we're back */
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED) {
+-				ieee80211_send_nullfunc(local, sdata, 0);
++				ieee80211_scan_ps_disable(sdata);
+ 				netif_tx_wake_all_queues(sdata->dev);
+ 			}
+ 		} else
+@@ -441,7 +501,7 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED) {
+ 				netif_tx_stop_all_queues(sdata->dev);
+-				ieee80211_send_nullfunc(local, sdata, 1);
++				ieee80211_scan_ps_enable(sdata);
+ 			}
+ 		} else
+ 			netif_tx_stop_all_queues(sdata->dev);
 
--- 
-~Randy
