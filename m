@@ -1,274 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:29382 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750798AbZCREyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 00:54:07 -0400
-Subject: [PATCH 01/13 v2] iwlagn: use changed in mac_config
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-In-Reply-To: <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
-References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
-	 <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Tue, 17 Mar 2009 21:59:18 -0700
-Message-Id: <1237352358.32334.9.camel@rc-desk> (sfid-20090318_055411_759827_77932698)
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.230]:22184 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755168AbZCVT5i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2009 15:57:38 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v4 1/5] mac80211: decrease execution of the associated timer
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 22 Mar 2009 21:57:06 +0200
+Message-ID: <20090322195706.26460.76476.stgit@tikku> (sfid-20090322_205740_371062_892790B1)
+In-Reply-To: <20090322195619.26460.48292.stgit@tikku>
+References: <20090322195619.26460.48292.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+From: Kalle Valo <kalle.valo@nokia.com>
 
-In function iwl_mac_config use changed flag to call only
-the affected functions. This patch also allow user to cache
-channel, txpower and power value when the interface is not
-ready and apply the changes once the interface ready.
+Currently the timer is triggering every two seconds
+(IEEE80211_MONITORING_INTERVAL). Decrease the timer to only trigger during
+data idle periods to avoid waking up CPU unnecessary. The timer will
+still trigger during idle periods, that needs to be fixed later.
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+There's also a functional change that probe requests are sent only when the
+data path is idle, earlier they were sent also while there was activity
+on the data path.
+
+This is also preparation for the beacon filtering support. Thanks to
+Johannes Berg for the idea.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
-v2 fix "From:" email address
 
- drivers/net/wireless/iwlwifi/iwl-agn.c  |  161 ++++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-core.c |    4 +
- 2 files changed, 85 insertions(+), 80 deletions(-)
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |   15 +++++++++++++++
+ net/mac80211/rx.c          |    3 +++
+ 3 files changed, 20 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 0db3bc0..4d2ed52 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1567,9 +1567,8 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 	if (iwl_is_associated(priv)) {
- 		struct iwl_rxon_cmd *active_rxon =
- 				(struct iwl_rxon_cmd *)&priv->active_rxon;
--
--		memcpy(&priv->staging_rxon, &priv->active_rxon,
--		       sizeof(priv->staging_rxon));
-+		/* apply any changes in staging */
-+		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	} else {
- 		/* Initialize our rx_config data */
-@@ -2184,110 +2183,112 @@ static int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	struct iwl_priv *priv = hw->priv;
- 	const struct iwl_channel_info *ch_info;
- 	struct ieee80211_conf *conf = &hw->conf;
--	unsigned long flags;
-+	unsigned long flags = 0;
- 	int ret = 0;
--	u16 channel;
-+	u16 ch;
-+	int scan_active = 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f69e84a..a7b13ea 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1084,6 +1084,8 @@ void ieee80211_dynamic_ps_timer(unsigned long data);
+ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     struct ieee80211_sub_if_data *sdata,
+ 			     int powersave);
++void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_hdr *hdr);
  
- 	mutex_lock(&priv->mutex);
--	IWL_DEBUG_MAC80211(priv, "enter to channel %d\n", conf->channel->hw_value);
--
--	priv->current_ht_config.is_ht = conf_is_ht(conf);
-+	IWL_DEBUG_MAC80211(priv, "enter to channel %d changed 0x%X\n",
-+					conf->channel->hw_value, changed);
- 
--	if (conf->radio_enabled && iwl_radio_kill_sw_enable_radio(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF-KILL - waiting for uCode\n");
--		goto out;
-+	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
-+			test_bit(STATUS_SCANNING, &priv->status))) {
-+		scan_active = 1;
-+		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
- 	}
- 
--	if (!conf->radio_enabled)
--		iwl_radio_kill_sw_disable_radio(priv);
- 
--	if (!iwl_is_ready(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
--		ret = -EIO;
--		goto out;
--	}
-+	/* during scanning mac80211 will delay channel setting until
-+	 * scan finish with changed = 0
-+	 */
-+	if (!changed || (changed & IEEE80211_CONF_CHANGE_CHANNEL)) {
-+		if (scan_active)
-+			goto set_ch_out;
-+
-+		ch = ieee80211_frequency_to_channel(conf->channel->center_freq);
-+		ch_info = iwl_get_channel_info(priv, conf->channel->band, ch);
-+		if (!is_channel_valid(ch_info)) {
-+			IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
-+			ret = -EINVAL;
-+			goto set_ch_out;
-+		}
- 
--	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
--		     test_bit(STATUS_SCANNING, &priv->status))) {
--		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
--		mutex_unlock(&priv->mutex);
--		return 0;
--	}
-+		if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
-+			!is_channel_ibss(ch_info)) {
-+			IWL_ERR(priv, "channel %d in band %d not "
-+				"IBSS channel\n",
-+				conf->channel->hw_value, conf->channel->band);
-+			ret = -EINVAL;
-+			goto set_ch_out;
-+		}
- 
--	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
--	ch_info = iwl_get_channel_info(priv, conf->channel->band, channel);
--	if (!is_channel_valid(ch_info)) {
--		IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
--		ret = -EINVAL;
--		goto out;
--	}
-+		priv->current_ht_config.is_ht = conf_is_ht(conf);
- 
--	if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
--	    !is_channel_ibss(ch_info)) {
--		IWL_ERR(priv, "channel %d in band %d not IBSS channel\n",
--			conf->channel->hw_value, conf->channel->band);
--		ret = -EINVAL;
--		goto out;
--	}
-+		spin_lock_irqsave(&priv->lock, flags);
- 
--	spin_lock_irqsave(&priv->lock, flags);
- 
-+		/* if we are switching from ht to 2.4 clear flags
-+		 * from any ht related info since 2.4 does not
-+		 * support ht */
-+		if ((le16_to_cpu(priv->staging_rxon.channel) != ch))
-+			priv->staging_rxon.flags = 0;
- 
--	/* if we are switching from ht to 2.4 clear flags
--	 * from any ht related info since 2.4 does not
--	 * support ht */
--	if ((le16_to_cpu(priv->staging_rxon.channel) != channel)
--#ifdef IEEE80211_CONF_CHANNEL_SWITCH
--	    && !(conf->flags & IEEE80211_CONF_CHANNEL_SWITCH)
--#endif
--	)
--		priv->staging_rxon.flags = 0;
-+		iwl_set_rxon_channel(priv, conf->channel);
-+
-+		iwl_set_flags_for_band(priv, conf->channel->band);
-+		spin_unlock_irqrestore(&priv->lock, flags);
-+ set_ch_out:
-+		/* The list of supported rates and rate mask can be different
-+		 * for each band; since the band may have changed, reset
-+		 * the rate mask to what mac80211 lists */
-+		iwl_set_rate(priv);
-+	}
- 
--	iwl_set_rxon_channel(priv, conf->channel);
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		if (conf->flags & IEEE80211_CONF_PS)
-+			ret = iwl_power_set_user_mode(priv, IWL_POWER_INDEX_3);
-+		else
-+			ret = iwl_power_set_user_mode(priv, IWL_POWER_MODE_CAM);
-+		if (ret)
-+			IWL_DEBUG_MAC80211(priv, "Error setting power level\n");
- 
--	iwl_set_flags_for_band(priv, conf->channel->band);
-+	}
- 
--	/* The list of supported rates and rate mask can be different
--	 * for each band; since the band may have changed, reset
--	 * the rate mask to what mac80211 lists */
--	iwl_set_rate(priv);
-+	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-+		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
-+			priv->tx_power_user_lmt, conf->power_level);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+		iwl_set_tx_power(priv, conf->power_level, false);
-+	}
- 
--#ifdef IEEE80211_CONF_CHANNEL_SWITCH
--	if (conf->flags & IEEE80211_CONF_CHANNEL_SWITCH) {
--		iwl_hw_channel_switch(priv, conf->channel);
--		goto out;
-+	/* call to ensure that 4965 rx_chain is set properly in monitor mode */
-+	iwl_set_rxon_chain(priv);
-+
-+	if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED) {
-+		if (conf->radio_enabled &&
-+			iwl_radio_kill_sw_enable_radio(priv)) {
-+			IWL_DEBUG_MAC80211(priv, "leave - RF-KILL - "
-+						"waiting for uCode\n");
-+			goto out;
-+		}
-+
-+		if (!conf->radio_enabled)
-+			iwl_radio_kill_sw_disable_radio(priv);
- 	}
--#endif
- 
- 	if (!conf->radio_enabled) {
- 		IWL_DEBUG_MAC80211(priv, "leave - radio disabled\n");
- 		goto out;
- 	}
- 
--	if (iwl_is_rfkill(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF kill\n");
--		ret = -EIO;
-+	if (!iwl_is_ready(priv)) {
-+		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		goto out;
- 	}
- 
--	if (conf->flags & IEEE80211_CONF_PS)
--		ret = iwl_power_set_user_mode(priv, IWL_POWER_INDEX_3);
--	else
--		ret = iwl_power_set_user_mode(priv, IWL_POWER_MODE_CAM);
--	if (ret)
--		IWL_DEBUG_MAC80211(priv, "Error setting power level\n");
--
--	IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
--			   priv->tx_power_user_lmt, conf->power_level);
--
--	iwl_set_tx_power(priv, conf->power_level, false);
--
--	iwl_set_rate(priv);
--
--	/* call to ensure that 4965 rx_chain is set properly in monitor mode */
--	iwl_set_rxon_chain(priv);
-+	if (scan_active)
-+		goto out;
- 
- 	if (memcmp(&priv->active_rxon,
- 		   &priv->staging_rxon, sizeof(priv->staging_rxon)))
-@@ -2295,9 +2296,9 @@ static int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	else
- 		IWL_DEBUG_INFO(priv, "No re-sending same RXON configuration.\n");
- 
--	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- out:
-+	IWL_DEBUG_MAC80211(priv, "leave\n");
- 	mutex_unlock(&priv->mutex);
- 	return ret;
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b0808ef..ce1ad7c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -910,6 +910,21 @@ static void ieee80211_associate(struct ieee80211_sub_if_data *sdata)
+ 	mod_timer(&ifmgd->timer, jiffies + IEEE80211_ASSOC_TIMEOUT);
  }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 085e9cf..bcdecb1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1437,6 +1437,10 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
  
- 	priv->tx_power_user_lmt = tx_power;
++void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_hdr *hdr)
++{
++	/*
++	 * We can postpone the mgd.timer whenever receiving unicast frames
++	 * from AP because we know that the connection is working both ways
++	 * at that time. But multicast frames (and hence also beacons) must
++	 * be ignored here, because we need to trigger the timer during
++	 * data idle periods for sending the periodical probe request to
++	 * the AP.
++	 */
++	if (!is_multicast_ether_addr(hdr->addr1))
++		mod_timer(&sdata->u.mgd.timer,
++			  jiffies + IEEE80211_MONITORING_INTERVAL);
++}
  
-+	/* if nic is not up don't send command */
-+	if (!iwl_is_ready_rf(priv))
-+		return ret;
+ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fcc0a59..4298e86 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -856,6 +856,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_CONTINUE;
+ 
++	if (rx->sdata->vif.type == NL80211_IFTYPE_STATION)
++		ieee80211_sta_rx_notify(rx->sdata, hdr);
 +
- 	if (force && priv->cfg->ops->lib->send_tx_power)
- 		ret = priv->cfg->ops->lib->send_tx_power(priv);
- 
--- 
-1.5.6.3
-
-
+ 	sta->rx_fragments++;
+ 	sta->rx_bytes += rx->skb->len;
+ 	sta->last_signal = rx->status->signal;
 
