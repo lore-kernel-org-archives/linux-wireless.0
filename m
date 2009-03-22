@@ -1,76 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:58305 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180AbZCVAeC convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22201 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755320AbZCVT6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 20:34:02 -0400
-Received: by ewy9 with SMTP id 9so1152461ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2009 17:34:00 -0700 (PDT)
+	Sun, 22 Mar 2009 15:58:09 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v4 4/5] cfg80211: add feature to hold bss
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 22 Mar 2009 21:57:28 +0200
+Message-ID: <20090322195727.26460.70624.stgit@tikku> (sfid-20090322_205812_294340_9782D708)
+In-Reply-To: <20090322195619.26460.48292.stgit@tikku>
+References: <20090322195619.26460.48292.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <69e28c910903201406o1e908214s4f0ab8cfa28392f1@mail.gmail.com>
-References: <49C12DFA.80308@giuppi.com>
-	 <3ace41890903191439q1c375925md2e4227f79147399@mail.gmail.com>
-	 <49C2D537.6080406@giuppi.com>
-	 <3ace41890903191856s234118c9j2f4de15486cb37a9@mail.gmail.com>
-	 <49C39A83.5090004@giuppi.com>
-	 <69e28c910903201406o1e908214s4f0ab8cfa28392f1@mail.gmail.com>
-Date: Sun, 22 Mar 2009 01:33:59 +0100
-Message-ID: <fcf1801b0903211733l3e0e7d9eu60e5c93be8026b04@mail.gmail.com> (sfid-20090322_013414_392705_E8EF1C75)
-Subject: Re: rtl8187 bug report
-From: "Info[at]Giuppi" <info@giuppi.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <gst@remote-exploit.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Hi!
->
-> Could you please test if you can see packets originating from your
-> network in Kismet or Wireshark?
-> Also, did you use the included airmon-ng script to enable monitor
-> mode, or did you just do "ifconfig wlan0 down; iwconfig wlan0 mode
-> monitor, ifconfig wlan0 up"? (The two are significantly different, as
-> airmon-ng uses iw/nl80211 to enable monitor mode on a separate
-> interface - it would be good if you tried it both ways.)
->
-> Thanks,
-> G=E1bor (.NetRolller 3D)
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
+From: Kalle Valo <kalle.valo@nokia.com>
 
-A short summary of my first quick test.
+In beacon filtering there needs to be a way to not expire the BSS even
+when no beacons are received. Add an interface to cfg80211 to hold
+BSS and make sure that it's not expired.
 
-I use airmon-ng script to enable monitor mode. iw tool is version
-0.9.9-nogit. No beacons from wep networks are shown. I've downloaded a
-couple of so called "security distros", backtrack4 and nubuntu,
-shipped with rtl8187. Same behaviour about weps.
-I haven't had the time to investigate the "old way" of enabling
-monitor mode on those live cd.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-I've followed your advice about "ifconfig wlan0 down; iwconfig wlan0 mo=
-de
-monitor, ifconfig wlan0 up" on my ubuntu installation. My surprise to
-see beacons growing from the wep network.
-Kismet works fine, too.
+ include/net/cfg80211.h |   18 ++++++++++++++++++
+ net/wireless/core.h    |    2 ++
+ net/wireless/scan.c    |   27 ++++++++++++++++++++++++++-
+ 3 files changed, 46 insertions(+), 1 deletions(-)
 
-With wlan0 in monitor mode, I've used airmon-ng to create a mon0
-monitor interface, just to see what could happen. And the result was
-mon0 worked fine, too.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index dca4a6b..5389afd 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -539,6 +539,7 @@ enum cfg80211_signal_type {
+  *	is no guarantee that these are well-formed!)
+  * @len_information_elements: total length of the information elements
+  * @signal: signal strength value (type depends on the wiphy's signal_type)
++ * @hold: BSS should not expire
+  * @free_priv: function pointer to free private data
+  * @priv: private area for driver use, has at least wiphy->bss_priv_size bytes
+  */
+@@ -940,4 +941,21 @@ void cfg80211_send_rx_deauth(struct net_device *dev, const u8 *buf,
+ void cfg80211_send_rx_disassoc(struct net_device *dev, const u8 *buf,
+ 			       size_t len);
+ 
++/**
++ * cfg80211_hold_bss - exclude bss from expiration
++ * @bss: bss which should not expire
++ *
++ * In a case when the BSS is not updated but it shouldn't expire this
++ * function can be used to mark the BSS to be excluded from expiration.
++ */
++void cfg80211_hold_bss(struct cfg80211_bss *bss);
++
++/**
++ * cfg80211_unhold_bss - remove expiration exception from the BSS
++ * @bss: bss which can expire again
++ *
++ * This function marks the BSS to be expirable again.
++ */
++void cfg80211_unhold_bss(struct cfg80211_bss *bss);
++
+ #endif /* __NET_CFG80211_H */
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 6acd483..97a6fd8 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -90,6 +90,8 @@ struct cfg80211_internal_bss {
+ 	struct rb_node rbn;
+ 	unsigned long ts;
+ 	struct kref ref;
++	bool hold;
++
+ 	/* must be last because of priv member */
+ 	struct cfg80211_bss pub;
+ };
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 280dbcd..2a00e36 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -80,7 +80,8 @@ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
+ 	bool expired = false;
+ 
+ 	list_for_each_entry_safe(bss, tmp, &dev->bss_list, list) {
+-		if (!time_after(jiffies, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE))
++		if (bss->hold ||
++		    !time_after(jiffies, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE))
+ 			continue;
+ 		list_del(&bss->list);
+ 		rb_erase(&bss->rbn, &dev->bss_tree);
+@@ -471,6 +472,30 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
+ }
+ EXPORT_SYMBOL(cfg80211_unlink_bss);
+ 
++void cfg80211_hold_bss(struct cfg80211_bss *pub)
++{
++	struct cfg80211_internal_bss *bss;
++
++	if (!pub)
++		return;
++
++	bss = container_of(pub, struct cfg80211_internal_bss, pub);
++	bss->hold = true;
++}
++EXPORT_SYMBOL(cfg80211_hold_bss);
++
++void cfg80211_unhold_bss(struct cfg80211_bss *pub)
++{
++	struct cfg80211_internal_bss *bss;
++
++	if (!pub)
++		return;
++
++	bss = container_of(pub, struct cfg80211_internal_bss, pub);
++	bss->hold = false;
++}
++EXPORT_SYMBOL(cfg80211_unhold_bss);
++
+ #ifdef CONFIG_WIRELESS_EXT
+ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			  struct iw_request_info *info,
 
-So I've disconnected the usb dongle and unloaded possible related
-modules by hand and by "make unload" from compat wireless setup
-scripts.
-Then I've reconnected the usb device and created the mon0 interface
-with airmon-ng, this time without enabling monitor mode on wlan0. mon0
-still worked fine. I'll check again after a system reboot.
-
-I hope that makes any sense to you. Thanks for your reply
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
