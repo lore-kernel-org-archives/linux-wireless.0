@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59399 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637AbZC1R3A (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.186]:20137 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbZCVNBw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 13:29:00 -0400
-Subject: Re: [PATCH 5/8] mac80211: unify and fix TX aggregation start
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890903272001h3e2fb2f0yf6a150f5e22d7039@mail.gmail.com> (sfid-20090328_040126_100483_B33FDA3B)
-References: <20090323162834.154525349@sipsolutions.net>
-	 <20090323163052.823346545@sipsolutions.net>
-	 <20090328022659.GD5543@bombadil.infradead.org>
-	 <43e72e890903272001h3e2fb2f0yf6a150f5e22d7039@mail.gmail.com>
-	 (sfid-20090328_040126_100483_B33FDA3B)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+pi5kcwRcjOqpuavxFq1"
-Date: Sat, 28 Mar 2009 18:28:48 +0100
-Message-Id: <1238261328.4217.0.camel@johannes.local> (sfid-20090328_182907_905468_66DBE8FA)
-Mime-Version: 1.0
+	Sun, 22 Mar 2009 09:01:52 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so597516muf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 06:01:49 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] Marvell CF8381
+Date: Sun, 22 Mar 2009 14:01:58 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	hs4233@mail.mn-solutions.de
+References: <200903220127.21836.marek.vasut@gmail.com> <200903220511.50229.marek.vasut@gmail.com> <1237709048.5100.682.camel@johannes.local>
+In-Reply-To: <1237709048.5100.682.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903221401.58743.marek.vasut@gmail.com> (sfid-20090322_140154_943366_3BEED43D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-+pi5kcwRcjOqpuavxFq1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-03-27 at 20:01 -0700, Luis R. Rodriguez wrote:
-
-> >> Unfortunately, 1) and 3) are only done if the driver is first to
-> >> reply to the aggregation request, it is, however, possible that the
-> >> remote station replies before the driver! Thus, unify the code for
-> >> this and call the new function ieee80211_agg_tx_operational in both
-> >> places where TX aggregation can become operational.
-> >>
-> >> Additionally, rename the driver notification from
-> >> IEEE80211_AMPDU_TX_RESUME to IEEE80211_AMPDU_TX_OPERATIONAL.
-> >>
-> >> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Sunday 22 of March 2009 09:04:08 Johannes Berg wrote:
+> On Sun, 2009-03-22 at 05:11 +0100, Marek Vasut wrote:
+> > One more thing - I also had to apply the following patch in order to get
+> > region code detected properly.
 > >
-> > Nice catch man!
+> > le16_to_cpu(cmd.regioncode) = 0x3031 for me and Im definitelly not in
+> > spain, but 0x30 (eu) looks reasonable.
 > >
-> > Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->=20
-> Hm, maybe also a backported version could go to stable? Perhaps we can
-> trigger a panic on a UP box?
+> > diff --git a/drivers/net/wireless/libertas/cmd.c
+> > b/drivers/net/wireless/libertas/cmd.c
+> > index 639dd02..ce32bc9 100644
+> > --- a/drivers/net/wireless/libertas/cmd.c
+> > +++ b/drivers/net/wireless/libertas/cmd.c
+> > @@ -123,7 +123,7 @@ int lbs_update_hw_spec(struct lbs_private *priv)
+> >          * only ever be 8-bit, even though the field size is 16-bit. 
+> > Some firmware
+> >          * returns non-zero high 8 bits here.
+> >          */
+> > -       priv->regioncode = le16_to_cpu(cmd.regioncode) & 0xFF;
+> > +       priv->regioncode = (le16_to_cpu(cmd.regioncode) & 0xFF00) >> 8;
+>
+> I'd be more inclined to think that this was an endian bug? Does your
+> machine happen to be big endian?
 
-No need -- ath9k always replies _instantly_, and iwlwifi doesn't support
-aggregation in stable.
+intel pxa270 (little endian). Btw. that macro le16_to_cpu should handle the 
+endianness, shouldn't it ?
 
-johannes
+>
+> johannes
 
---=-+pi5kcwRcjOqpuavxFq1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzl5OAAoJEKVg1VMiehFYeG0P/iCz5toRoVx5HI/QMuv4DkgJ
-RMLwZYgMSynYkIU5cWN9xr4O92aaUxZ1+VuhrFxFEL9wXdNLXZUzYjzZkiTGCOO6
-/OCNfULUWETmCxcxFiSYGlBWbn3I0GC0TonN+anJExOToFy2d/0Ux97+5rgbqvNt
-+SjFQLw93x4eJFhNi3G8EHo7LVFzslA82obCp1tTf3K9k2Scq5uj3eVxhMp3Belw
-6jbKTJW7drRGTcezAb6wDb6u+VsPc4hGje5KDrN1tpvtHA2mN5c2pilD5hztcZpM
-Z4llsR/Lxm/DPlrLu/2a/Z6aHSfzk083OJ4mIJEh0LSNILsPL79ZV93pdVe5VKsr
-M1mZDhVg+846fx4MdvRZveNEnB6rhLGm/l5/SjH8I5y547hnniB0n0iKuUsGv6K/
-e6NWUHqVM8iJbqZd5aYG9IzFrO8e3yefdkPiXH/1hIU+LC3OOyiAJs0HDfFrxMVr
-TB+9hzsPomV74cgvIvNjHA+HNAHSGJkLKFOHjmKjL7exkm0MOiGxsA2o7lfA5x7L
-/SFI3Z03xy262mpa5plf9mBP299mG2zBAYLvZtdNKb0EXWNwG9Cpk+aWS52rALvx
-dGevYsTgEoet5z6K4UjbUhiXmTckWLwm+MipKCMTqCFprUu3RE+skiM4/7KcXOiW
-/73fHqDXluMehmg7NlCs
-=Uyow
------END PGP SIGNATURE-----
-
---=-+pi5kcwRcjOqpuavxFq1--
 
