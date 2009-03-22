@@ -1,68 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60385 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006AbZCUDxM (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:52300 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753750AbZCVA1f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 23:53:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH 2/5] cfg80211: fix incorrect assumption on last_request for 11d
-Date: Fri, 20 Mar 2009 23:53:05 -0400
-Message-Id: <1237607588-6316-3-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045325_125679_2AAAAF92)
-In-Reply-To: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
-References: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 21 Mar 2009 20:27:35 -0400
+Received: by ewy9 with SMTP id 9so1151520ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2009 17:27:32 -0700 (PDT)
+From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Subject: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
+Date: Sun, 22 Mar 2009 01:41:13 +0100
+Message-Id: <1237682473-5994-1-git-send-email-tuliom@gmail.com> (sfid-20090322_012737_270733_C2DDA439)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The incorrect assumption is the last regulatory request
-(last_request) is always a country IE when processing
-country IEs. Although this is true 99% of the time the
-first time this happens this could not be true.
+Add vendor ID for Quanta Microsystems and update the led table with the reported device.
 
-This fixes an oops in the branch check for the last_request
-when accessing drv_last_ie. The access was done under the
-assumption the struct won't be null.
+Reported-by: Scott Barnes <nekoreeve@gmail.com>
 
-Note to stable: to port to 29 replace as follows, only 29 has
-country IE code:
-
-s|NL80211_REGDOM_SET_BY_COUNTRY_IE|REGDOM_SET_BY_COUNTRY_IE
-
-Cc: stable@kernel.org
-Reported-by: Quentin Armitage <Quentin@armitage.org.uk>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
 ---
- net/wireless/reg.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath5k/led.c |    2 ++
+ include/linux/pci_ids.h          |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ead9dcc..9afc916 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1601,6 +1601,10 @@ static bool reg_same_country_ie_hint(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/ath5k/led.c b/drivers/net/wireless/ath5k/led.c
+index 0686e12..19555fb 100644
+--- a/drivers/net/wireless/ath5k/led.c
++++ b/drivers/net/wireless/ath5k/led.c
+@@ -65,6 +65,8 @@ static const struct pci_device_id ath5k_led_devices[] = {
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422), ATH_LED(1, 1) },
+ 	/* E-machines E510 (tuliom@gmail.com) */
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428), ATH_LED(3, 0) },
++	/* Acer Extensa 5620z (nekoreeve@gmail.com) */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
+ 	{ }
+ };
  
- 	assert_cfg80211_lock();
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 5207160..1702acb 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2267,6 +2267,8 @@
+ #define PCI_DEVICE_ID_KORENIX_JETCARDF0	0x1600
+ #define PCI_DEVICE_ID_KORENIX_JETCARDF1	0x16ff
  
-+	if (unlikely(last_request->initiator !=
-+	    NL80211_REGDOM_SET_BY_COUNTRY_IE))
-+		return false;
++#define PCI_VENDOR_ID_QMI		0x1a32
 +
- 	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
  
- 	if (!request_wiphy)
-@@ -1663,7 +1667,9 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	 * we optimize an early check to exit out early if we don't have to
- 	 * do anything
- 	 */
--	if (likely(wiphy_idx_valid(last_request->wiphy_idx))) {
-+	if (likely(last_request->initiator ==
-+	    NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    wiphy_idx_valid(last_request->wiphy_idx))) {
- 		struct cfg80211_registered_device *drv_last_ie;
- 
- 		drv_last_ie =
 -- 
-1.6.0.6
+1.6.0.2
 
