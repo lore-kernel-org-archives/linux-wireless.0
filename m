@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from durandal.kismetwireless.net ([199.201.145.179]:43662 "EHLO
-	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756828AbZCXUZi (ORCPT
+Received: from static-220-247-10-204.b-man.svips.gol.ne.jp ([220.247.10.204]:45767
+	"EHLO smtp.kamineko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071AbZCVBPU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 16:25:38 -0400
-Received: from localhost (durandal.nerv-un.net [199.201.145.179])
-	by durandal.nerv-un.net (Postfix) with ESMTP id 54EAFBC021
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 12:19:00 -0400 (EDT)
-Date: Tue, 24 Mar 2009 16:26:33 -0400
-From: Mike Kershaw <dragorn@kismetwireless.net>
-To: linux-wireless@vger.kernel.org
-Subject: ar9170 - Cace Airpcap NX
-Message-ID: <20090324202633.GA21202@drd1813.lan> (sfid-20090324_212540_991306_63BEE81D)
-Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
+	Sat, 21 Mar 2009 21:15:20 -0400
+Date: Sun, 22 Mar 2009 10:15:17 +0900
+From: Mattia Dongili <malattia@linux.it>
+To: Abhi Kolekar <kolekar.a@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	reinette.chatre@intel.com, yi.zhu@intel.com, linville@tuxdriver.com
+Subject: Re: iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after
+	500ms
+Message-ID: <20090322011517.GA17905@kamineko.org> (sfid-20090322_021524_386037_53EA2402)
+References: <20090321065006.GF3834@kamineko.org> <178fec830903211130x7aa2d266u5f249625c4436fd0@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3MwIy2ne0vdjdPXF"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <178fec830903211130x7aa2d266u5f249625c4436fd0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Mar 21, 2009 at 11:30:29AM -0700, Abhi Kolekar wrote:
+> On Fri, Mar 20, 2009 at 11:50 PM, Mattia Dongili <malattia@linux.it> =
+wrote:
+> > Hello,
+> >
+> > I get this error consistently with all the recent kernels:
+> > [ =A0338.476057] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: tim=
+e out after 500ms.
+> > [ =A0458.976089] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: tim=
+e out after 500ms.
+> > [ =A0598.885036] iwl3945: Microcode SW error detected. =A0Restartin=
+g 0x82000008.
+> > [ =A0598.885050] iwl3945: Error Reply type 0x00000005 cmd REPLY_TX =
+(0x1C) seq 0x02AC ser 0x0000004E
+> > [ =A0601.869319] iwl3945: Can't stop Rx DMA.
+> > then the wifi connection becomes useless and I have to re-associate=
+ to
+> > the AP or sometimes to unload and reload the module to get my conne=
+ction
+> > back.
+> >
+> > The above is on 2.6.29-rc8 but I get it since 2.6.28 (apologies for=
+ not
+> > reporting it earlier). =A0Both my thinkpad x60s and my vaio sz72b a=
+re
+> > affected.
+> > Reproducing it is very easy, I just need to download even a small f=
+ile.
+> >
+> > After reading some older bug submissions I rebuilt the driver with =
+debug
+> > support and loaded it with debug=3D0x43fff, the log is here:
+> > http://kamineko.org/kernel/kern.log
+> > The beginning of the log is 2.6.28 with no debug, then you can see =
+a
+> > reboot and the module loaded with the debug option on 2.6.29-rc8.
+> >
+> > Is this a known problem? Is there any other information I can provi=
+de to
+> > help fixing it?
+>=20
+> Hello Mattia,
+>    Do you have 64 bit kernel?
 
---3MwIy2ne0vdjdPXF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-The Cace Airpcap NX device is an atheros 9170 USB device (sold with custom=
-=20
-windows drivers for rfmon in windows).
-
-Works fine once the USB device id is added to ar9170, device 0xCACE,0x0300
-
--m
+No, both laptops  are running 32bit kernels
 
 --=20
-Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
-GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
-
-Supercollider Programming: The art of debugging your program by=20
-letting it crash and looking at what remains.
-
---3MwIy2ne0vdjdPXF
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAknJQfkACgkQ17KIInOLvbGxpACcDKu8UHtTPGblIokAMxJpuBg/
-k64AoI+hVk03CMXIn/PFzY4hLAIW1GsW
-=HbGJ
------END PGP SIGNATURE-----
-
---3MwIy2ne0vdjdPXF--
+mattia
+:wq!
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
