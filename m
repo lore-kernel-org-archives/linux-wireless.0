@@ -1,40 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:55243 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756158AbZC1POU (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:37076 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbZCVA1P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 11:14:20 -0400
-Date: Sat, 28 Mar 2009 12:14:16 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [RFC] rfkill/rfkill-input userspace API
-Message-ID: <20090328151416.GA8437@khazad-dum.debian.net> (sfid-20090328_161426_518254_D66448CE)
-References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> <20090327221147.GA499@srcf.ucam.org> <20090328123645.GD7439@khazad-dum.debian.net> <20090328124719.GF7439@khazad-dum.debian.net> <20090328125301.GA26537@srcf.ucam.org> <20090328144823.GA6420@khazad-dum.debian.net> <20090328150202.GD27812@srcf.ucam.org>
+	Sat, 21 Mar 2009 20:27:15 -0400
+Received: by fxm2 with SMTP id 2so1337150fxm.37
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2009 17:27:12 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: [PATCH] Marvell CF8381
+Date: Sun, 22 Mar 2009 01:27:21 +0100
+Cc: hs4233@mail.mn-solutions.de
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090328150202.GD27812@srcf.ucam.org>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_pXYxJkOHNM+nfA1"
+Message-Id: <200903220127.21836.marek.vasut@gmail.com> (sfid-20090322_012719_657905_493252C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 28 Mar 2009, Matthew Garrett wrote:
-> On Sat, Mar 28, 2009 at 11:48:23AM -0300, Henrique de Moraes Holschuh wrote:
-> > I can live with that.  Very well, I will hunt down what version of
-> > evdev we have in Debian stable and unstable, what version of evdev
-> > stopped doing grab-by-default, and document this in a few places.
-> 
-> The change was in commit 4912e2aa7f867a86d383010023b8426c881fb3b0 which 
-> was on October 16th of last year. It does depend on having an X server 
-> that sets the console into raw mode - the only reason evdev was ever 
-> doing the grabs was because that particular bit of magic had ended up in 
-> the legacy keyboard driver rather than being in the server core, and 
-> everybody had forgotten how this stuff worked.
+--Boundary-00=_pXYxJkOHNM+nfA1
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-What version of the X server does this?  This kind of thing will
-probably need to end up in the rfkill-input docs :-(
+Hi,
+I've finally got this card working ...
+See the patches below.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+--Boundary-00=_pXYxJkOHNM+nfA1
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="0002-Add-support-for-CF8381-WiFi-card.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0002-Add-support-for-CF8381-WiFi-card.patch"
+
+=46rom 31724e385f974b334b3a77949ab8aca1cad97e6e Mon Sep 17 00:00:00 2001
+=46rom: Marek Vasut <marek.vasut@gmail.com>
+Date: Sat, 21 Mar 2009 20:53:25 +0100
+Subject: [PATCH 2/2] Add support for CF8381 WiFi card
+
+Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+=2D--
+ drivers/net/wireless/libertas/if_cs.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/l=
+ibertas/if_cs.c
+index 3f02e6a..6d00d82 100644
+=2D-- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -273,7 +273,14 @@ static int if_cs_poll_while_fw_download(struct if_cs_c=
+ard *card, uint addr, u8 r
+  */
+ #define IF_CS_PRODUCT_ID		0x0000001C
+ #define IF_CS_CF8385_B1_REV		0x12
++#define	IF_CS_CF8381_B3_REV		0x04
+=20
++/*
++ * Used to detect other cards than CF8385 since their revisions of silicon
++ * doesn't match those from CF8385, eg. CF8381 B3 works with this driver.
++ */
++#define	CF8381_MANFID		0x02db
++#define	CF8381_CARDID		0x6064
+=20
+ /********************************************************************/
+ /* I/O and interrupt handling                                       */
+@@ -859,7 +866,9 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 	       p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
+=20
+ 	/* Check if we have a current silicon */
+=2D	if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
++	if (!(p_dev->manf_id =3D=3D CF8381_MANFID &&
++		p_dev->card_id =3D=3D CF8381_CARDID) &&
++		(if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV)) {
+ 		lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
+ 		ret =3D -ENODEV;
+ 		goto out2;
+@@ -950,6 +959,7 @@ static void if_cs_detach(struct pcmcia_device *p_dev)
+ /********************************************************************/
+=20
+ static struct pcmcia_device_id if_cs_ids[] =3D {
++	PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
+ 	PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
+ 	PCMCIA_DEVICE_NULL,
+ };
+=2D-=20
+1.6.2
+
+
+--Boundary-00=_pXYxJkOHNM+nfA1
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="0001-Correct-return-value-of-firmware-loading-functions-h.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0001-Correct-return-value-of-firmware-loading-functions-h.patch"
+
+=46rom f87515bca27571370323292f07526820823b0553 Mon Sep 17 00:00:00 2001
+=46rom: Marek Vasut <marek.vasut@gmail.com>
+Date: Sat, 21 Mar 2009 19:20:30 +0100
+Subject: [PATCH 1/2] Correct return value of firmware loading functions han=
+dling bug
+
+Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+=2D--
+ drivers/net/wireless/libertas/if_cs.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/l=
+ibertas/if_cs.c
+index 842a08d..3f02e6a 100644
+=2D-- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -867,9 +867,9 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+=20
+ 	/* Load the firmware early, before calling into libertas.ko */
+ 	ret =3D if_cs_prog_helper(card);
+=2D	if (ret =3D=3D 0)
++	if (ret >=3D 0)
+ 		ret =3D if_cs_prog_real(card);
+=2D	if (ret)
++	if (ret < 0)
+ 		goto out2;
+=20
+ 	/* Make this card known to the libertas driver */
+=2D-=20
+1.6.2
+
+
+--Boundary-00=_pXYxJkOHNM+nfA1--
