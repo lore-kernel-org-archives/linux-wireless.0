@@ -1,48 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51403 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752324AbZCIXtt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 19:49:49 -0400
-Content-Type: text/plain; charset=iso-8859-1
-Date: Tue, 10 Mar 2009 00:49:46 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090309234946.99940@gmx.net> (sfid-20090310_004959_479397_69FBF9DA)
-MIME-Version: 1.0
-Subject: [PATCH] mac80211: ieee80211_ibss_commit() cleanup
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39616
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753193AbZCVF53 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2009 01:57:29 -0400
+Date: Sat, 21 Mar 2009 22:57:16 -0700 (PDT)
+Message-Id: <20090321.225716.119285539.davem@davemloft.net> (sfid-20090322_065732_897959_636B4274)
+To: shemminger@vyatta.com
+Cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 75/77] hostap: convert to internal net_device_stats
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090321053718.302886142@vyatta.com>
+References: <20090321053527.316395697@vyatta.com>
+	<20090321053718.302886142@vyatta.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't call ieee80211_sta_find_ibss() directly, like it's done in STA mo=
-de, so that the commit() call is more harmless respectively has less si=
-te-effects.
+From: Stephen Hemminger <shemminger@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:42 -0700
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index f4becc1..3201e1f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -812,8 +812,9 @@ int ieee80211_ibss_commit(struct ieee80211_sub_if_d=
-ata *sdata)
-=20
- 	ifibss->ibss_join_req =3D jiffies;
- 	ifibss->state =3D IEEE80211_IBSS_MLME_SEARCH;
-+	set_bit(IEEE80211_IBSS_REQ_RUN, &ifibss->request);
-=20
--	return ieee80211_sta_find_ibss(sdata);
-+	return 0;
- }
-=20
- int ieee80211_ibss_set_ssid(struct ieee80211_sub_if_data *sdata, char =
-*ssid, size_t len)
+> Use pre-existing net_device_stats in network_device struct.
+> 
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applied.
