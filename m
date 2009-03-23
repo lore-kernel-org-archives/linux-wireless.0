@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41850 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754722AbZCTPag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 11:30:36 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 08:30:35 -0700
-Date: Fri, 20 Mar 2009 07:29:57 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:51723 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbZCWXDa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 19:03:30 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 3/6] mac80211: check if HT40+/- is allowed before
-	sending assoc
-Message-ID: <20090320142957.GA8120@tesla> (sfid-20090320_163039_795162_10DBC68F)
-References: <1237444886-24530-1-git-send-email-lrodriguez@atheros.com> <1237546136.5100.147.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1237546136.5100.147.camel@johannes.local>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/2] ath9k: AR9280 PCI devices must serialize IO as well
+Date: Mon, 23 Mar 2009 19:03:27 -0400
+Message-Id: <1237849407-17273-2-git-send-email-lrodriguez@atheros.com> (sfid-20090324_000337_045495_A069EDEC)
+In-Reply-To: <1237849407-17273-1-git-send-email-lrodriguez@atheros.com>
+References: <1237849407-17273-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 20, 2009 at 03:48:56AM -0700, Johannes Berg wrote:
-> On Thu, 2009-03-19 at 02:41 -0400, Luis R. Rodriguez wrote:
-> > We weren't checking this at all.
-> 
-> The question is whether we really want that. In other places, we trust
-> the AP, why not here as well?
+This is a port of:
+commit SHA1 5ec905a8df3fa877566ba98298433fbfb3d688cc
+for 2.6.28
 
-Its not about trust its also about if it will logistically make sense, for
-example you simply cannot use HT40- on channel 11 if yuo don't have
-a channel 7. The NO_HT40- would indicate this to us so we don't bother.
-The example I give is lousy as its not something that would occur usually
-but with 5 GHz and regulatory rules changing things could be a bit
-different.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> 
-> johannes
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 82ead1b..f392aa0 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -3311,7 +3311,8 @@ static struct ath_hal *ath9k_hw_do_attach(u16 devid,
+ 	}
+ 
+ 	if (ah->ah_config.serialize_regmode == SER_REG_MODE_AUTO) {
+-		if (ah->ah_macVersion == AR_SREV_VERSION_5416_PCI) {
++		if (ah->ah_macVersion == AR_SREV_VERSION_5416_PCI ||
++		    (AR_SREV_9280(ah) && !ah->ah_isPciExpress)) {
+ 			ah->ah_config.serialize_regmode =
+ 				SER_REG_MODE_ON;
+ 		} else {
+-- 
+1.5.6.4
 
-
-  Luis
