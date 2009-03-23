@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36941 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752762AbZCTIYw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45513 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757044AbZCWOPn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 04:24:52 -0400
-Subject: Re: nl80211 data prior to nested attributes funky
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	pat-lkml <pat-lkml@erley.org>
-In-Reply-To: <43e72e890903191805x19344034w2bb8be34a9000a89@mail.gmail.com> (sfid-20090320_020540_946048_35E7FC12)
-References: <43e72e890903191805x19344034w2bb8be34a9000a89@mail.gmail.com>
-	 (sfid-20090320_020540_946048_35E7FC12)
-Content-Type: text/plain
-Date: Fri, 20 Mar 2009 09:24:46 +0100
-Message-Id: <1237537486.5100.128.camel@johannes.local> (sfid-20090320_092456_185228_EF5AEDBD)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 10:15:43 -0400
+Date: Mon, 23 Mar 2009 10:14:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
+Message-ID: <20090323141449.GD3285@tuxdriver.com> (sfid-20090323_151552_085276_D277AB2A)
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C293CC.6020009@oracle.com> <200903191955.00718.mb@bu3sch.de> <200903210057.47067.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200903210057.47067.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-03-19 at 18:05 -0700, Luis R. Rodriguez wrote:
-> If you try to rename a wiphy multiple times with iw you will get
-> something like this:
+On Sat, Mar 21, 2009 at 12:57:46AM +0100, Christian Lamparter wrote:
+> This patch fixes a compile problem when the MAC80211_LEDS
+> triggers are enabled but not LED class itself. 
+> (which is sort of pointless, but anyway...)
 > 
-> wiphy rename: phy #1 to 2
-> wiphy rename: phy #1 to 3
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> mb, thank you for the tips!
+> 
+> Randy Dunlap can you please give this patch a try?
+> 
+> John, do you know where the patch form 
+> Geert Uytterhoeven <geert@linux-m68k.org> went?
+> ---
+> diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
+> index 0e344ac..ee1aaca 100644
+> --- a/drivers/net/wireless/p54/Kconfig
+> +++ b/drivers/net/wireless/p54/Kconfig
+> @@ -1,9 +1,10 @@
+>  config P54_COMMON
+>  	tristate "Softmac Prism54 support"
+> -	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
+> +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
+> +	select FW_LOADER
+>  	---help---
+> -	  This is common code for isl38xx based cards.
+> -	  This module does nothing by itself - the USB/PCI frontends
+> +	  This is common code for isl38xx/stlc45xx based modules.
+> +	  This module does nothing by itself - the USB/PCI/SPI frontends
+>  	  also need to be enabled in order to support any devices.
+>  
+>  	  These devices require softmac firmware which can be found at
 
-I don't see any error?
+This hunk looks unrelated to the changelog as well...?
 
-# iw phy phy0 set name falafel
-# iw phy falafel set name guacamole
-# iw phy guacamole set name phy1
-command failed: Invalid argument (-22)
-# iw phy guacamole set name phy0
-
-where I will get in iw event:
-
-$ iw event
-wiphy rename: phy #0 to falafel
-wiphy rename: phy #0 to guacamole
-wiphy rename: phy #0 to phy0
-
-were you expecting the old name, rather than the index?
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
