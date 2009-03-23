@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:37284 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755979AbZCEU3B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 15:29:01 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/7] p54: completely ignore rx'd frames with bad FCS
-Date: Thu, 5 Mar 2009 21:28:57 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
+Received: from mail.atheros.com ([12.36.123.2]:53218 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754218AbZCXAc1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 20:32:27 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 17:32:26 -0700
+Date: Mon, 23 Mar 2009 16:31:49 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH v2] ath9k: fix dma mapping leak of rx buffer upon rmmod
+Message-ID: <20090323233149.GL5740@tesla> (sfid-20090324_013230_263453_97470AA9)
+References: <1237847101-30199-1-git-send-email-lrodriguez@atheros.com> <20090324092128A.fujita.tomonori@lab.ntt.co.jp>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903052128.58173.chunkeey@web.de> (sfid-20090305_212922_580404_91190E3E)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090324092128A.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Passing frames with a bad FCS to the user is an optional feature.
-However it doesn't work reliable and strangely not in the native monitor mode?!
+On Mon, Mar 23, 2009 at 05:21:28PM -0700, FUJITA Tomonori wrote:
+> On Mon, 23 Mar 2009 18:25:01 -0400
+> "Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+> 
+> > We were claiming DMA buffers on the RX tasklet but never
+> > upon a simple module removal.
+> >
+> > Cc: stable@kernel.org
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >
+> > Sorry, forgot to CC stable
+> >
+> >  drivers/net/wireless/ath9k/recv.c |    7 ++++++-
+> >  1 files changed, 6 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+> > index 917bac7..71cb18d 100644
+> > --- a/drivers/net/wireless/ath9k/recv.c
+> > +++ b/drivers/net/wireless/ath9k/recv.c
+> > @@ -344,8 +344,13 @@ void ath_rx_cleanup(struct ath_softc *sc)
+> >
+> >       list_for_each_entry(bf, &sc->rx.rxbuf, list) {
+> >               skb = bf->bf_mpdu;
+> > -             if (skb)
+> > +             if (skb) {
+> > +                     dma_unmap_single(sc->dev,
+> > +                                      bf->bf_buf_addr,
+> > +                                      sc->rx.bufsize,
+> > +                                      DMA_FROM_DEVICE);
+> >                       dev_kfree_skb(skb);
+> > +             }
+> >       }
+> 
+> ath9k uses pci_map/unmap_* families so using dma_map/unmap looks
+> inconsistent. It works though.
+> 
+> I think that my original patch is fine:
+> 
+> http://marc.info/?l=linux-kernel&m=123725029228065&w=2
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-John, this patch series is > 2.6.31+ material.
-There's no hurry.
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2009-03-04 22:15:45.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2009-03-04 22:18:49.000000000 +0100
-@@ -735,10 +735,7 @@ static int p54_rx_data(struct ieee80211_
- 		return 0;
- 
- 	if (!(hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_IN_FCS_GOOD))) {
--		if (priv->filter_flags & FIF_FCSFAIL)
--			rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
--		else
--			return 0;
-+		return 0;
- 	}
- 
- 	if (hdr->decrypt_status == P54_DECRYPT_OK)
-@@ -2211,9 +2208,7 @@ static void p54_configure_filter(struct 
- 	struct p54_common *priv = dev->priv;
- 
- 	*total_flags &= FIF_PROMISC_IN_BSS |
--			FIF_OTHER_BSS |
--			(*total_flags & FIF_PROMISC_IN_BSS ?
--				FIF_FCSFAIL : 0);
-+			FIF_OTHER_BSS;
- 
- 	priv->filter_flags = *total_flags;
- 
+Noted -- the ported patch for 2.6.29 will use pci_unmap_single() however
+this patch was for 2.6.30 where we now have bus-agnostic routines. To
+get a better idea of how this looks feel free to check out ath9k from
+the wireless-testing git tree.
 
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+  Luis
