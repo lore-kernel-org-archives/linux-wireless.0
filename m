@@ -1,86 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42591 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472AbZCNPTB (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:57427 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759331AbZCWP7m convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 11:19:01 -0400
-Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090314144405.670.16447.stgit@tikku>
-References: <20090314144405.670.16447.stgit@tikku>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XuGaEgnAPdvejzTbizzv"
-Date: Sat, 14 Mar 2009 16:18:51 +0100
-Message-Id: <1237043931.5235.67.camel@johannes.local> (sfid-20090314_161906_135050_25275FC9)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 11:59:42 -0400
+Received: by fxm2 with SMTP id 2so1864991fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 08:59:39 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: Re: [PATCH1/2] Fix return value handling
+Date: Mon, 23 Mar 2009 16:59:48 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+References: <200903220127.21836.marek.vasut@gmail.com> <200903231313.10699.hs4233@mail.mn-solutions.de> <200903231657.24399.marek.vasut@gmail.com>
+In-Reply-To: <200903231657.24399.marek.vasut@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903231659.48903.marek.vasut@gmail.com> (sfid-20090323_165951_868328_92E2B377)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 23 of March 2009 16:57:24 Marek Vasut wrote:
+> Hi,
+> here is a resend. One patch per mail.
+sorry, inlining
 
---=-XuGaEgnAPdvejzTbizzv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>From fd2e610a87a8372cbc513e336fa71e3438742c9d Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marek.vasut@gmail.com>
+Date: Mon, 23 Mar 2009 15:57:11 +0100
+Subject: [PATCH 1/2] Firmware loading functions can return possitive values
+ This is not a bug, but take it into consideration and handle it properly.
 
-On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
-> ieee80211_tx_h_check_assoc() was dropping everything else than probe
-> requests during software scan. So the null frame with the power save
-> bit was dropped and AP never received it. This meant that AP never
-> buffered any frames for the station during software scan.
->=20
-> Fix this by allowing to transmit both probe request and null frames
-> during software scan. Tested with stlc45xx.
+Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+---
+ drivers/net/wireless/libertas/if_cs.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Would it make sense to reorder the scan code instead?
+diff --git a/drivers/net/wireless/libertas/if_cs.c 
+b/drivers/net/wireless/libertas/if_cs.c
+index 842a08d..3f02e6a 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -867,9 +867,9 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 
+ 	/* Load the firmware early, before calling into libertas.ko */
+ 	ret = if_cs_prog_helper(card);
+-	if (ret == 0)
++	if (ret >= 0)
+ 		ret = if_cs_prog_real(card);
+-	if (ret)
++	if (ret < 0)
+ 		goto out2;
+ 
+ 	/* Make this card known to the libertas driver */
+-- 
+1.6.2
 
-johannes
-
-> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-> ---
->=20
->  net/mac80211/tx.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index c3f0e95..f2494fc 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -193,7 +193,8 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *=
-tx)
->  		return TX_CONTINUE;
-> =20
->  	if (unlikely(tx->local->sw_scanning) &&
-> -	    !ieee80211_is_probe_req(hdr->frame_control))
-> +	    !ieee80211_is_probe_req(hdr->frame_control) &&
-> +	    !ieee80211_is_nullfunc(hdr->frame_control))
->  		return TX_DROP;
-> =20
->  	if (tx->sdata->vif.type =3D=3D NL80211_IFTYPE_MESH_POINT)
->=20
->=20
-
---=-XuGaEgnAPdvejzTbizzv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJu8rXAAoJEKVg1VMiehFYwHkQAI0G3WWvlpKLWFnnUgad9w9w
-YqHDYmJ9ah5doa3PXOGIl5ho9Pvcs//bKfn1oiaQJAyVnX8yRWoCJOKfffi7VqUE
-Dl1YR9KSiPDFWR8UEDgWj4NvydnjLKbx6GuUXI4PELGmBTFPz55j9qt1P/Dc86fx
-QqYvnRIAtrUKPr45vFnllczH9E4t3XDXqQbXaN55s5s9db9RO9V9dbEsUMz9hSgS
-RA3X2fAfRn3s5BRSmYh8VsHrhIlHWqJ2xYrCwwKLc5YTL4e520OK2aQPxjVLpuYI
-gm/Jevc0Pe+f6LoGTqBtOcnH1vVA6cF+6+aCS5Q2bgGuFMzkcXaMpNtfzaEbiFHl
-vzxyIRD+uj+AeWUZuCMOvZ2MVIN56hPzv1896zpG7Nk+JxHmwfU4OFFzzMRgzdqy
-VuDcrd19hBs3eQPNjhjWVBqmnlmRiVU6nykDXUk33fbUn1hqoyiAh334hmShscOt
-enyz6+NJ2MdGcaZa5aKgJ1BSfmsy0KUy7fdpjyCoFv/hwoOKikGWZARSQoBf7OA6
-1dyfXpawmYMmBAsCnAmKOSfnUCsOX4sP0Om7VrubJsOeVuFF7/bA3ic2jo3Ah6uS
-kFw6M5x2Lt0o0GnJnnoO/YxI3t/ZvANhjiDNo9fVqchjMCAuzbSv7Gsk316SWT68
-Joxk3mrG4LgtA3nrskpw
-=UdCM
------END PGP SIGNATURE-----
-
---=-XuGaEgnAPdvejzTbizzv--
 
