@@ -1,70 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:43190 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656AbZCOUIk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59600 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757524AbZCWQcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 16:08:40 -0400
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v2] mac80211: don't drop null frames during software scan
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Sun, 15 Mar 2009 22:07:39 +0200
-Message-ID: <20090315200738.17370.29374.stgit@tikku> (sfid-20090315_210843_679772_0C91E0A5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 23 Mar 2009 12:32:35 -0400
+Message-Id: <20090323163052.823346545@sipsolutions.net> (sfid-20090323_173236_879466_D1363235)
+References: <20090323162834.154525349@sipsolutions.net>
+Date: Mon, 23 Mar 2009 17:28:39 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/8] mac80211: unify and fix TX aggregation start
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_tx_h_check_assoc() was dropping everything else than probe
-requests during software scan. So the null frame with the power save
-bit was dropped and AP never received it. This meant that AP never
-buffered any frames for the station during software scan.
+When TX aggregation becomes operational, we do a number of steps:
+ 1) print a debug message
+ 2) wake the virtual queue
+ 3) notify the driver
 
-Fix this by allowing to transmit both probe request and null frames
-during software scan. Tested with stlc45xx.
+Unfortunately, 1) and 3) are only done if the driver is first to
+reply to the aggregation request, it is, however, possible that the
+remote station replies before the driver! Thus, unify the code for
+this and call the new function ieee80211_agg_tx_operational in both
+places where TX aggregation can become operational.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Additionally, rename the driver notification from
+IEEE80211_AMPDU_TX_RESUME to IEEE80211_AMPDU_TX_OPERATIONAL.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ drivers/net/wireless/ath9k/main.c |    2 -
+ include/net/mac80211.h            |    4 +-
+ net/mac80211/agg-tx.c             |   63 ++++++++++++++++----------------------
+ 3 files changed, 30 insertions(+), 39 deletions(-)
 
- net/mac80211/scan.c |    5 +++++
- net/mac80211/tx.c   |    9 ++++++++-
- 2 files changed, 13 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 0e81e16..fae18c3 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -397,6 +397,11 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 		return 0;
- 	}
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-03-23 13:59:19.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-03-23 14:03:46.000000000 +0100
+@@ -404,6 +404,27 @@ int ieee80211_start_tx_ba_session(struct
+ }
+ EXPORT_SYMBOL(ieee80211_start_tx_ba_session);
  
-+	/*
-+	 * While local->sw_scanning is true everything else but null
-+	 * frames and probe requests will be dropped in
-+	 * ieee80211_tx_h_check_assoc().
-+	 */
- 	local->sw_scanning = true;
- 	if (local->ops->sw_scan_start)
- 		local->ops->sw_scan_start(local_to_hw(local));
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c3f0e95..bfe6ecd 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -193,7 +193,14 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 		return TX_CONTINUE;
- 
- 	if (unlikely(tx->local->sw_scanning) &&
--	    !ieee80211_is_probe_req(hdr->frame_control))
-+	    !ieee80211_is_probe_req(hdr->frame_control) &&
-+	    !ieee80211_is_nullfunc(hdr->frame_control))
++static void ieee80211_agg_tx_operational(struct ieee80211_local *local,
++					 struct sta_info *sta, u16 tid)
++{
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "Aggregation is on for tid %d \n", tid);
++#endif
++
++	if (local->hw.ampdu_queues) {
 +		/*
-+		 * When software scanning only null frames (to notify the
-+		 * sleep state to the AP) and probe requests (for the
-+		 * active scan) are allowed, everything else should be
-+		 * dropped.
++		 * Wake up the A-MPDU queue, we stopped it earlier,
++		 * this will in turn wake the entire AC.
 +		 */
- 		return TX_DROP;
++		ieee80211_wake_queue_by_reason(&local->hw,
++			local->hw.queues + sta->tid_to_tx_q[tid],
++			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
++	}
++
++	local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_OPERATIONAL,
++				 &sta->sta, tid, NULL);
++}
++
+ void ieee80211_start_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -446,20 +467,8 @@ void ieee80211_start_tx_ba_cb(struct iee
  
- 	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 	*state |= HT_ADDBA_DRV_READY_MSK;
+ 
+-	if (*state == HT_AGG_STATE_OPERATIONAL) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		printk(KERN_DEBUG "Aggregation is on for tid %d \n", tid);
+-#endif
+-		if (hw->ampdu_queues) {
+-			/*
+-			 * Wake up this queue, we stopped it earlier,
+-			 * this will in turn wake the entire AC.
+-			 */
+-			ieee80211_wake_queue_by_reason(hw,
+-				hw->queues + sta->tid_to_tx_q[tid],
+-				IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+-		}
+-	}
++	if (*state == HT_AGG_STATE_OPERATIONAL)
++		ieee80211_agg_tx_operational(local, sta, tid);
+ 
+  out:
+ 	spin_unlock_bh(&sta->lock);
+@@ -646,9 +655,7 @@ void ieee80211_process_addba_resp(struct
+ 				  struct ieee80211_mgmt *mgmt,
+ 				  size_t len)
+ {
+-	struct ieee80211_hw *hw = &local->hw;
+-	u16 capab;
+-	u16 tid, start_seq_num;
++	u16 capab, tid;
+ 	u8 *state;
+ 
+ 	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
+@@ -682,26 +689,10 @@ void ieee80211_process_addba_resp(struct
+ 
+ 		*state |= HT_ADDBA_RECEIVED_MSK;
+ 
+-		if (hw->ampdu_queues && *state != curstate &&
+-		    *state == HT_AGG_STATE_OPERATIONAL) {
+-			/*
+-			 * Wake up this queue, we stopped it earlier,
+-			 * this will in turn wake the entire AC.
+-			 */
+-			ieee80211_wake_queue_by_reason(hw,
+-				hw->queues + sta->tid_to_tx_q[tid],
+-				IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+-		}
+-		sta->ampdu_mlme.addba_req_num[tid] = 0;
++		if (*state != curstate && *state == HT_AGG_STATE_OPERATIONAL)
++			ieee80211_agg_tx_operational(local, sta, tid);
+ 
+-		if (local->ops->ampdu_action) {
+-			(void)local->ops->ampdu_action(hw,
+-					       IEEE80211_AMPDU_TX_RESUME,
+-					       &sta->sta, tid, &start_seq_num);
+-		}
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		printk(KERN_DEBUG "Resuming TX aggregation for tid %d\n", tid);
+-#endif /* CONFIG_MAC80211_HT_DEBUG */
++		sta->ampdu_mlme.addba_req_num[tid] = 0;
+ 	} else {
+ 		sta->ampdu_mlme.addba_req_num[tid]++;
+ 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
+--- wireless-testing.orig/include/net/mac80211.h	2009-03-23 14:00:12.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-03-23 14:03:46.000000000 +0100
+@@ -1213,14 +1213,14 @@ enum ieee80211_filter_flags {
+  * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
+  * @IEEE80211_AMPDU_TX_START: start Tx aggregation
+  * @IEEE80211_AMPDU_TX_STOP: stop Tx aggregation
+- * @IEEE80211_AMPDU_TX_RESUME: resume TX aggregation
++ * @IEEE80211_AMPDU_TX_OPERATIONAL: TX aggregation has become operational
+  */
+ enum ieee80211_ampdu_mlme_action {
+ 	IEEE80211_AMPDU_RX_START,
+ 	IEEE80211_AMPDU_RX_STOP,
+ 	IEEE80211_AMPDU_TX_START,
+ 	IEEE80211_AMPDU_TX_STOP,
+-	IEEE80211_AMPDU_TX_RESUME,
++	IEEE80211_AMPDU_TX_OPERATIONAL,
+ };
+ 
+ /**
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-23 13:59:19.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-23 14:03:46.000000000 +0100
+@@ -2730,7 +2730,7 @@ static int ath9k_ampdu_action(struct iee
+ 
+ 		ieee80211_stop_tx_ba_cb_irqsafe(hw, sta->addr, tid);
+ 		break;
+-	case IEEE80211_AMPDU_TX_RESUME:
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
+ 		ath_tx_aggr_resume(sc, sta, tid);
+ 		break;
+ 	default:
+
+-- 
 
