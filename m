@@ -1,166 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46105 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33473 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbZCJHNl (ORCPT
+	with ESMTP id S1756781AbZCWNKc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 03:13:41 -0400
-Subject: Re: Userspace (wpa_supplicant) not notified on interface down with
-	2.6.29/wireless-testing
+	Mon, 23 Mar 2009 09:10:32 -0400
+Subject: [PATCH] mac80211: rate control status only for controlled packets
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200903091850.01604.herton@mandriva.com.br>
-References: <200903091850.01604.herton@mandriva.com.br>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2Rm8FAHxFEWRVb1Xl7Hm"
-Date: Tue, 10 Mar 2009 08:13:34 +0100
-Message-Id: <1236669214.9658.28.camel@johannes.local> (sfid-20090310_081345_928159_30989034)
+To: John Linville <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 23 Mar 2009 14:10:22 +0100
+Message-Id: <1237813822.6147.14.camel@johannes.local> (sfid-20090323_141059_018830_D293F562)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch changes mac80211 to not notify the rate control algorithm's
+tx_status() method when reporting status for a packet that didn't go
+through the rate control algorithm's get_rate() method.
 
---=-2Rm8FAHxFEWRVb1Xl7Hm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    4 ++++
+ net/mac80211/rate.c    |    6 ++++--
+ net/mac80211/rate.h    |    4 +++-
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-On Mon, 2009-03-09 at 18:50 -0300, Herton Ronaldo Krzesinski wrote:
-> I have the problem when using 2.6.29 and judging by the code the situatio=
-n
-> stays the same with wireless-testing, even after the fix "mac80211: deaut=
-h when
-> interface is marked down" (the fix doesn't work with kernel 2.6.28 or lat=
-er, as
-> I'll explain).
->=20
-> The problem is, with latest kernels wpa_supplicant isn't still notified w=
-hen
-> interface goes down, even after commit "mac80211: deauth when interface i=
-s
-> marked down" (e327b847 on Linus tree). There isn't a problem with this co=
-mmit,
-> but because of other code changes it doesn't work on latest kernels (but =
-works
-> if I apply same/similar change on 2.6.27 for example).
->=20
-> The issue is as follows: after commit "mac80211: restructure disassoc/dea=
-uth
-> flows" in 2.6.28, the call to ieee80211_sta_deauthenticate added by commi=
-t
-> e327b847 will not work: because we do sta_info_flush(local, sdata); insid=
-e
-> ieee80211_stop (iface.c), all stations in interface are cleared, so when =
-calling
->  ieee80211_sta_deauthenticate->ieee80211_set_disassoc (mlme.c), inside
-> ieee80211_set_disassoc we have this in the beginning:
->=20
->         sta =3D sta_info_get(local, ifsta->bssid);
->         if (!sta) {
->=20
-> the !sta check triggers, so the function returns early and
-> ieee80211_sta_send_apinfo(sdata, ifsta); later isn't called, so wpa_suppl=
-icant
-> isn't notified with SIOCGIWAP
+--- wireless-testing.orig/include/net/mac80211.h	2009-03-23 13:59:31.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-03-23 14:00:12.000000000 +0100
+@@ -245,6 +245,9 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_CTL_RATE_CTRL_PROBE: internal to mac80211, can be
+  *	set by rate control algorithms to indicate probe rate, will
+  *	be cleared for fragmented frames (except on the last fragment)
++ * @IEEE80211_TX_INTFL_RCALGO: mac80211 internal flag, do not test or
++ *	set this flag in the driver; indicates that the rate control
++ *	algorithm was used and should be notified of TX status
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+@@ -260,6 +263,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_STAT_AMPDU			= BIT(10),
+ 	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(11),
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
++	IEEE80211_TX_INTFL_RCALGO		= BIT(13),
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/rate.c	2009-03-23 14:00:59.000000000 +0100
++++ wireless-testing/net/mac80211/rate.c	2009-03-23 14:01:17.000000000 +0100
+@@ -219,10 +219,12 @@ void rate_control_get_rate(struct ieee80
+ 		info->control.rates[i].count = 1;
+ 	}
+ 
+-	if (sta && sdata->force_unicast_rateidx > -1)
++	if (sta && sdata->force_unicast_rateidx > -1) {
+ 		info->control.rates[0].idx = sdata->force_unicast_rateidx;
+-	else
++	} else {
+ 		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
++		info->flags |= IEEE80211_TX_INTFL_RCALGO;
++	}
+ 
+ 	/*
+ 	 * try to enforce the maximum rate the user wanted
+--- wireless-testing.orig/net/mac80211/rate.h	2009-03-23 14:00:19.000000000 +0100
++++ wireless-testing/net/mac80211/rate.h	2009-03-23 14:00:50.000000000 +0100
+@@ -44,8 +44,10 @@ static inline void rate_control_tx_statu
+ 	struct rate_control_ref *ref = local->rate_ctrl;
+ 	struct ieee80211_sta *ista = &sta->sta;
+ 	void *priv_sta = sta->rate_ctrl_priv;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+-	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
++	if (likely(info->flags & IEEE80211_TX_INTFL_RCALGO))
++		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
+ }
+ 
+ 
 
-Interesting problem.
-
-> One possible fix is moving sta_info_flush, to avoid !sta, and seems good,=
- like
-> the following:
->=20
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 2acc416..0929581 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -370,25 +370,6 @@ static int ieee80211_stop(struct net_device *dev)
->  	rcu_read_unlock();
-> =20
->  	/*
-> -	 * Remove all stations associated with this interface.
-> -	 *
-> -	 * This must be done before calling ops->remove_interface()
-> -	 * because otherwise we can later invoke ops->sta_notify()
-> -	 * whenever the STAs are removed, and that invalidates driver
-> -	 * assumptions about always getting a vif pointer that is valid
-> -	 * (because if we remove a STA after ops->remove_interface()
-> -	 * the driver will have removed the vif info already!)
-> -	 *
-> -	 * We could relax this and only unlink the stations from the
-> -	 * hash table and list but keep them on a per-sdata list that
-> -	 * will be inserted back again when the interface is brought
-> -	 * up again, but I don't currently see a use case for that,
-> -	 * except with WDS which gets a STA entry created when it is
-> -	 * brought up.
-> -	 */
-> -	sta_info_flush(local, sdata);
-> -
-> -	/*
->  	 * Don't count this interface for promisc/allmulti while it
->  	 * is down. dev_mc_unsync() will invoke set_multicast_list
->  	 * on the master interface which will sync these down to the
-> @@ -539,6 +520,26 @@ static int ieee80211_stop(struct net_device *dev)
->  		conf.mac_addr =3D dev->dev_addr;
->  		/* disable all keys for as long as this netdev is down */
->  		ieee80211_disable_keys(sdata);
-> +
-> +		/*
-> +		 * Remove all stations associated with this interface.
-> +		 *
-> +		 * This must be done before calling ops->remove_interface()
-> +		 * because otherwise we can later invoke ops->sta_notify()
-> +		 * whenever the STAs are removed, and that invalidates driver
-> +		 * assumptions about always getting a vif pointer that is valid
-> +		 * (because if we remove a STA after ops->remove_interface()
-> +		 * the driver will have removed the vif info already!)
-> +		 *
-> +		 * We could relax this and only unlink the stations from the
-> +		 * hash table and list but keep them on a per-sdata list that
-> +		 * will be inserted back again when the interface is brought
-> +		 * up again, but I don't currently see a use case for that,
-> +		 * except with WDS which gets a STA entry created when it is
-> +		 * brought up.
-> +		 */
-> +		sta_info_flush(local, sdata);
-> +
->  		local->ops->remove_interface(local_to_hw(local), &conf);
->  	}
-> =20
-> My question is, is the patch above safe? that is, do we need to always
-> call sta_info_flush on interface down like currently, or just for the cas=
-e we
-> call remove_interface, like the comment states? if the latter, patch abov=
-e
-> is good, and solves the wpa_supplicant/userspace issue.
-
-The comment states it must be before remove_interface, not that it
-doesn't need to be called unless that is called, and this code moving is
-incorrect for AP_VLAN devices.
-
-You could move the disassoc part out of the switch to before this.
-
-johannes
-
---=-2Rm8FAHxFEWRVb1Xl7Hm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJthMbAAoJEKVg1VMiehFYqJIP/R9DwOA2VZYM6i6QWqQnHICX
-nLwUZgALJ25pqhnm9fky8lN1BGbfsDeMOeDZuSg7UiVlr+j2uoNrxQ1FEa5honvp
-m+3GeeQ74aRUplHvCwCPXDihxlHL/O/By73aJSrf2HE4m24O6ZBLIATsnCfaExZi
-RYYmn4+3IhzOeQWkm/BZN4Xj/lr6z9Ky89EQcSPuOBXeqde/oYgyAuavFyz5dGL+
-R+4b5RgFiFWt4cPD5pLG/kHcma243AGSJmhghHfWK3Tztm3J3dx9Y8zXc+2gSlgA
-QzdwrVrlfxImxOgbSbQPI7GFDQeBRKptoFZupRHqhoqpOSsP1br3VUGKwlXsUjjd
-HBgax7/YKKoB13Kh+NwyW33m2jMV7plvnfAZVU2cAB8mxCprdmbVEeFB6wjD/QhM
-NRTNOL+AS4DEB+cimUWtYbjECivmXOyySZLCJco4UaQXLGi9sLciU0jDzt7D0yPc
-p4P/1JdLgVnbJJ+U1qeO2G9rOILYa4mufAhuk9AyDxdoLRu1zd8M2C6k15yxwsGp
-A2uSpBL54byfewEmKAznTZ43UDWEU8aGY/vzJHgXsHzbODRsUyPJzwqZGUbzhIqX
-3M3q0SaiUtXUwjpDVPxOg7pt0pYL/dep5C1287400xxzv+qcv/lG/wnqt602P8Ls
-09h6dgK2pYjggfVUmsgA
-=Kk7a
------END PGP SIGNATURE-----
-
---=-2Rm8FAHxFEWRVb1Xl7Hm--
 
