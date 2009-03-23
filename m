@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57894 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753134AbZCPKQY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45511 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757127AbZCWOPn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 06:16:24 -0400
-Subject: Re: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andreas Mohr <andi@lisas.de>
-Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
-	maximlevitsky@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <20090316100447.GA13819@rhlx01.hs-esslingen.de> (sfid-20090316_111434_456961_07BF0A63)
-References: <1230840105-30960-1-git-send-email-me@bobcopeland.com>
-	 <20090111131015.GA31037@rhlx01.hs-esslingen.de>
-	 <20090111144227.GB13109@hash.localnet>
-	 <20090316100447.GA13819@rhlx01.hs-esslingen.de>
-	 (sfid-20090316_111434_456961_07BF0A63)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iyHigqJVcTpHIIbn8ZCg"
-Date: Mon, 16 Mar 2009 11:16:17 +0100
-Message-Id: <1237198577.27769.9.camel@johannes.local> (sfid-20090316_111628_437663_3C8FFA9E)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 10:15:43 -0400
+Date: Mon, 23 Mar 2009 10:13:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Kalle Valo <kalle.valo@iki.fi>, Michael Buesch <mb@bu3sch.de>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
+Message-ID: <20090323141320.GC3285@tuxdriver.com> (sfid-20090323_151554_558618_71773C79)
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903210057.47067.chunkeey@web.de> <87eiwre61a.fsf@litku.valot.fi> <200903211322.01654.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200903211322.01654.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Mar 21, 2009 at 01:22:01PM +0100, Christian Lamparter wrote:
+> On Saturday 21 March 2009 07:36:33 Kalle Valo wrote:
+> > Christian Lamparter <chunkeey@web.de> writes:
+> > 
+> > > This patch fixes a compile problem when the MAC80211_LEDS
+> > > triggers are enabled but not LED class itself. 
+> > > (which is sort of pointless, but anyway...)
+> > 
+> > [...]
+> > 
+> > > @@ -17,31 +18,6 @@ config P54_USB
+> > >  	select CRC32
+> > >  	---help---
+> > >  	  This driver is for USB isl38xx based wireless cards.
+> > > -	  These are USB based adapters found in devices such as:
+> > > -
+> > > -	  3COM 3CRWE254G72
+> > > -	  SMC 2862W-G
+> > > -	  Accton 802.11g WN4501 USB
+> > > -	  Siemens Gigaset USB
+> > > -	  Netgear WG121
+> > > -	  Netgear WG111
+> > > -	  Medion 40900, Roper Europe
+> > > -	  Shuttle PN15, Airvast WM168g, IOGear GWU513
+> > > -	  Linksys WUSB54G
+> > > -	  Linksys WUSB54G Portable
+> > > -	  DLink DWL-G120 Spinnaker
+> > > -	  DLink DWL-G122
+> > > -	  Belkin F5D7050 ver 1000
+> > > -	  Cohiba Proto board
+> > > -	  SMC 2862W-G version 2
+> > > -	  U.S. Robotics U5 802.11g Adapter
+> > > -	  FUJITSU E-5400 USB D1700
+> > > -	  Sagem XG703A
+> > > -	  DLink DWL-G120 Cohiba
+> > > -	  Spinnaker Proto board
+> > > -	  Linksys WUSB54AG
+> > > -	  Inventel UR054G
+> > > -	  Spinnaker DUT
+> > 
+> > This change wasn't mentioned in the commit log. Did this get included
+> > by accident?
+> > 
+> heh true... should I add them back? after all this list hasn't changed in years
+> and we have a much nicer one on http://www.prism54.org/
+> ( http://wireless.kernel.org/en/users/Drivers/p54/devices )
 
---=-iyHigqJVcTpHIIbn8ZCg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Getting rid of them is fine, but it should probably be done in a different patch.
 
-On Mon, 2009-03-16 at 11:04 +0100, Andreas Mohr wrote:
-
-> On Sun, Jan 11, 2009 at 09:42:27AM -0500, Bob Copeland wrote:
-> > > My LED is dead again on 2.6.29-rc1 (reason: doesn't contain this patc=
-h).
-> >=20
-> > It's in wireless-testing, it just hasn't made it through the pipeline y=
-et.
->=20
-> Just installed -rc8; would be truly sad to see this really small
-> but important patch (several million machines) not included in .29 proper=
-...
-> (or would it later get merged via .29 -stable? Then I'm fine with it...)
-
-I don't think "my LED doesn't blink" really counts as important...
-
-johannes
-
---=-iyHigqJVcTpHIIbn8ZCg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJvibuAAoJEKVg1VMiehFYs7QP/1vtYu3X9YdkTQppWjlpPjKZ
-Z/AaGT+zngBfEgx/zndeAyM7r6lEZ2RMdYISy/vgVfmdV6P2e1dkxPv9+6jvOnHH
-Q6t0pIZc1qTITeqeRxsPnUQd+90WRZ2aFNOe5EBCI8mUx7ElZSgAjuH1IbRLZ9wT
-7Llq153LccjGS3iv/FKakqIwuzTzcGkN8MO4Qiowz/ExIMvNmH0ZTmrPPunjbyji
-zQxVZXwp0162F18bKBUHq9gkcXvKgMC5yvV6oX43qTF7x0WfwAPQ7zCY3JTGyXHl
-fts6+Mfb1yBry9m+vuRu/wBN9/LCCb+bgfDF2nAawMzAeNSpQl5l+XqtS700tL+S
-YxnZuqYJh8StaoIalxEJY4jfx793lqxObB1AkeNl2wdEAcpLllBfJPYi7k85TNVA
-Ap6xJP6uKvnego+YAI9I7tt22XRfA40tEdzceMJHnNEuLsxoOHFnulDSve4hbD89
-yiZjLK3rUNr8dwi2KQa6Iw9idRVv3yizFfAY/5c5/Cg8n8HRaMMubFs+FGCX9eIW
-SY3PwzPW9pEOwdHCWrQSFw2qj3Ke5+6wi8s/TZMYyh38Y82RTWnzEmU6y3H5/+gT
-onKMuXZIpogv2CvtsIQqocF4cmwfMQbh/FlAOMMfY5232s9BUaVHOj17j5rJx7fs
-I++GqGURBQCYsupTKKAB
-=CF4f
------END PGP SIGNATURE-----
-
---=-iyHigqJVcTpHIIbn8ZCg--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
