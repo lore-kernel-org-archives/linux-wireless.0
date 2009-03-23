@@ -1,72 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58999 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757832AbZCYRlS (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:44685 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343AbZCWXme convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 13:41:18 -0400
-Subject: Re: [renamed] Debian crda?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kel Modderman <kel@otaku42.de>
-Cc: debian-devel@lists.debian.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-In-Reply-To: <200903260337.37783.kel@otaku42.de> (sfid-20090325_183755_097258_8D534C5D)
-References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
-	 <43e72e890903250047o6a4ed5cfm4ebb849013e9d571@mail.gmail.com>
-	 <43e72e890903250051j44955276j42fce045c5079b87@mail.gmail.com>
-	 <200903260337.37783.kel@otaku42.de> (sfid-20090325_183755_097258_8D534C5D)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VdU59DXui1eUCziUIj3B"
-Date: Wed, 25 Mar 2009 18:40:29 +0100
-Message-Id: <1238002829.4320.162.camel@johannes.local> (sfid-20090325_184122_478062_CB127BF2)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 19:42:34 -0400
+Received: by bwz17 with SMTP id 17so1996032bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 16:42:31 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Marvell CF8381
+Date: Tue, 24 Mar 2009 00:42:40 +0100
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+References: <200903220127.21836.marek.vasut@gmail.com> <200903232258.57323.marek.vasut@gmail.com> <1237849710.26204.17.camel@localhost.localdomain>
+In-Reply-To: <1237849710.26204.17.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903240042.41054.marek.vasut@gmail.com> (sfid-20090324_004241_928665_A65A6CF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ok, here is another version, hopefully last one.
 
---=-VdU59DXui1eUCziUIj3B
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>From a7522df9d610702cfc3066861a2e315552e29086 Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marek.vasut@gmail.com>
+Date: Tue, 24 Mar 2009 00:40:44 +0100
+Subject: [PATCH] Add support for CF8381 WiFi card.
+ A detection function was added for identifying CF8381.
 
-On Thu, 2009-03-26 at 03:37 +1000, Kel Modderman wrote:
+Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+---
+ drivers/net/wireless/libertas/if_cs.c |   34 +++++++++++++++++++++++++++++++-
+ 1 files changed, 32 insertions(+), 2 deletions(-)
 
-> > And as its probably best to coordinate with Ubuntu, they have a
-> > wireless-crda package which combines both into one package. Its
-> > shipping for Jaunty.
->=20
-> And that's the only way to sanely package it (by combining the two pieces
-> upstream splits) as show by Fedora also choosing that route.
->=20
-> Luis why can't CRDA and regd simply be released in same tarball consideri=
-ng
-> they have such a strong relationship with eachother due to the openssl st=
-uff?
+diff --git a/drivers/net/wireless/libertas/if_cs.c 
+b/drivers/net/wireless/libertas/if_cs.c
+index 3f02e6a..1da23e5 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -273,7 +273,28 @@ static int if_cs_poll_while_fw_download(struct if_cs_card 
+*card, uint addr, u8 r
+  */
+ #define IF_CS_PRODUCT_ID               0x0000001C
+ #define IF_CS_CF8385_B1_REV            0x12
++#define IF_CS_CF8381_B3_REV            0x04
 
-I thought regdb was supposed to be a candidate for volatile.
++/*
++ * Used to detect other cards than CF8385 since their revisions of silicon
++ * doesn't match those from CF8385, eg. CF8381 B3 works with this driver.
++ */
++#define CF8381_MANFID          0x02db
++#define CF8381_CARDID          0x6064
++#define CF8385_MANFID          0x02df
++#define CF8385_CARDID          0x8103
++
++static inline int if_cs_hw_is_cf8381(struct pcmcia_device *p_dev)
++{
++       return (p_dev->manf_id == CF8381_MANFID &&
++               p_dev->card_id == CF8381_CARDID);
++}
++
++static inline int if_cs_hw_is_cf8385(struct pcmcia_device *p_dev)
++{
++       return (p_dev->manf_id == CF8385_MANFID &&
++               p_dev->card_id == CF8385_CARDID);
++}
 
-johannes
+ /********************************************************************/
+ /* I/O and interrupt handling                                       */
+@@ -757,6 +778,7 @@ static void if_cs_release(struct pcmcia_device *p_dev)
+ static int if_cs_probe(struct pcmcia_device *p_dev)
+ {
+        int ret = -ENOMEM;
++       unsigned int prod_id;
+        struct lbs_private *priv;
+        struct if_cs_card *card;
+        /* CIS parsing */
+@@ -859,7 +881,14 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+               p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
 
---=-VdU59DXui1eUCziUIj3B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+        /* Check if we have a current silicon */
+-       if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
++       prod_id = if_cs_read8(card, IF_CS_PRODUCT_ID);
++       if (if_cs_hw_is_cf8381(p_dev) && prod_id < IF_CS_CF8381_B3_REV) {
++               lbs_pr_err("old chips like 8381 rev B3 aren't supported\n");
++               ret = -ENODEV;
++               goto out2;
++       }
++
++       if (if_cs_hw_is_cf8385(p_dev) && prod_id < IF_CS_CF8385_B1_REV) {
+                lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
+                ret = -ENODEV;
+                goto out2;
+@@ -950,7 +979,8 @@ static void if_cs_detach(struct pcmcia_device *p_dev)
+ /********************************************************************/
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJymyIAAoJEKVg1VMiehFY+2EQALks00HFrtZ0JnnRN8E982i9
-t0qG78OpG7lyhtmOCEG2BU0laE2OvQeigxSX2tXueix8WCuiv+KqEg2fb8DqX9gh
-rrBSUr2WGrDI+1oqRSPmW8mj4DCy7MapMPbF/ZHtsf7JHK4ljN4tyuluJyn+YOs4
-evk9pDsVnKBFjFmc2MolQ93jz15e/STnWYeF3ZQ6XjZ2qzn72QCgd05fj0TgUUhd
-5959OWNOjUhumD+bqXG4yGI08fZvpyPtlWr05sbfbPxXqcpTH9WKADJepT/q+5FG
-4p9MOtkZd0D1nC3dHa9k4xzVF55XgtdtR0V4UFCLqeM86VMUfoMel4opaAb4KD5K
-8Zj/rc1hb3LC3EsCZVJMVvYhBI/h3YuAu7GR1bkRhG6jkUG7Gfp54VgpbA6ahJD1
-1ihR477Co94yZ/60TnnW6Wu/6wYf2J0BUwEnyoqcKuTU5La5wonaCVIhCyb2+zxz
-RTUKIyTsRtXup+tvOVOuOrW5OOgcWHG3F6np5/YyUcXjTepM7vWhpfkah1i5+/ym
-6ZMZKhIjShGM5dU+BFykfzOB5bsoLUsq/7mPZNeZHl+16Nb/5Dklfca7zVvKEDJF
-74kqRG4+Sx3aXz42O0efgy/kteDFDD2L+QHITQ2MoIW4CkZLmOyBg4eh+tbhT2ap
-91dwOovKVa4LpzPrBIxY
-=aIP6
------END PGP SIGNATURE-----
-
---=-VdU59DXui1eUCziUIj3B--
+ static struct pcmcia_device_id if_cs_ids[] = {
+-       PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
++       PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
++       PCMCIA_DEVICE_MANF_CARD(CF8385_MANFID, CF8385_CARDID),
+        PCMCIA_DEVICE_NULL,
+ };
+ MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
+--
+1.6.2
 
