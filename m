@@ -1,35 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48869 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753596AbZCMPAe (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:46385 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350AbZCWOht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 11:00:34 -0400
-Date: Fri, 13 Mar 2009 10:54:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: drop wext channel list if too long
-Message-ID: <20090313145445.GC5551@tuxdriver.com> (sfid-20090313_160049_316222_72658912)
-References: <1236882244.25931.5.camel@johannes.local>
+	Mon, 23 Mar 2009 10:37:49 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] p54: fix SoftLED compile dependencies
+Date: Mon, 23 Mar 2009 15:37:45 +0100
+Cc: Kalle Valo <kalle.valo@iki.fi>, Michael Buesch <mb@bu3sch.de>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903211322.01654.chunkeey@web.de> <20090323141320.GC3285@tuxdriver.com>
+In-Reply-To: <20090323141320.GC3285@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1236882244.25931.5.camel@johannes.local>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903231537.45716.chunkeey@web.de> (sfid-20090323_153754_573894_1962FB38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2009 at 07:24:04PM +0100, Johannes Berg wrote:
-> wext limits the number of channels it can list to 32, we obey
-> that limitation but show a partial list which is confusing.
-> Thus, when going over the limit, drop the list completely to
-> make the users aware that something is wrong and hopefully
-> prompt them to use iw instead. We still let iwlist print out
-> the total number of available channels.
+This patch fixes a compile problem when the MAC80211_LEDS
+triggers are enabled but not LED class itself. 
+(which is sort of pointless, but anyway...)
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+> > heh true... should I add them back? after all this list hasn't changed in years
+> > and we have a much nicer one on http://www.prism54.org/
+> > ( http://wireless.kernel.org/en/users/Drivers/p54/devices )
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Getting rid of them is fine, but it should probably be done in a different patch.
+heh, "451 4.5.0 From MTA([127.0.0.1]:10025) during fwd-connect"...
 
-Will this make wpa_supplicant or Networkmanager barf?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I guess no one got my last reply, right?
+---
+diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
+index 0e344ac..ee1aaca 100644
+--- a/drivers/net/wireless/p54/Kconfig
++++ b/drivers/net/wireless/p54/Kconfig
+@@ -71,3 +71,8 @@ config P54_SPI
+ 	  Nokia's N800/N810 Portable Internet Tablet.
+ 
+ 	  If you choose to build a module, it'll be called p54spi.
++
++config P54_LEDS
++	bool
++	depends on P54_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = P54_COMMON)
++	default y
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 0a98983..0c1b057 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -21,9 +21,9 @@
+ #include <linux/etherdevice.h>
+ 
+ #include <net/mac80211.h>
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ #include <linux/leds.h>
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 
+ #include "p54.h"
+ #include "p54common.h"
+@@ -2420,7 +2420,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ static void p54_led_brightness_set(struct led_classdev *led_dev,
+ 				   enum led_brightness brightness)
+ {
+@@ -2508,7 +2508,7 @@ static void p54_unregister_leds(struct ieee80211_hw *dev)
+ 	if (priv->assoc_led.registered)
+ 		led_classdev_unregister(&priv->assoc_led.led_dev);
+ }
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 
+ static const struct ieee80211_ops p54_ops = {
+ 	.tx			= p54_tx,
+@@ -2592,11 +2592,11 @@ int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
+ 		return err;
+ 	}
+ 
+-	#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ 	err = p54_init_leds(dev);
+ 	if (err)
+ 		return err;
+-	#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 
+ 	dev_info(pdev, "is registered as '%s'\n", wiphy_name(dev->wiphy));
+ 	return 0;
+@@ -2610,9 +2610,9 @@ void p54_free_common(struct ieee80211_hw *dev)
+ 	kfree(priv->output_limit);
+ 	kfree(priv->curve_data);
+ 
+-	#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ 	p54_unregister_leds(dev);
+-	#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ }
+ EXPORT_SYMBOL_GPL(p54_free_common);
+ 
