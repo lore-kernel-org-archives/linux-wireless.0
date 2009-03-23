@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41024 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbZCNSK4 (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:59229 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755640AbZCWRJg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 14:10:56 -0400
-Subject: [PATCH] ieee80211: document DS bit usage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 14 Mar 2009 19:10:51 +0100
-Message-Id: <1237054251.5235.106.camel@johannes.local> (sfid-20090314_191100_730708_EB5EF7E8)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 13:09:36 -0400
+Received: by fxm2 with SMTP id 2so1896486fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 10:09:32 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: Re: [PATCH] Marvell CF8381 and CF8305
+Date: Mon, 23 Mar 2009 18:09:42 +0100
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+References: <200903220127.21836.marek.vasut@gmail.com> <200903231700.21627.marek.vasut@gmail.com> <200903231706.16489.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200903231706.16489.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903231809.42587.marek.vasut@gmail.com> (sfid-20090323_180938_980331_5CD658DD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I keep needing this because I'm too stupid to remember it.
-Everybody else can probably remember, but who knows :)
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/ieee80211.h |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
---- wireless-testing.orig/include/linux/ieee80211.h	2009-03-14 18:58:35.000000000 +0100
-+++ wireless-testing/include/linux/ieee80211.h	2009-03-14 19:03:03.000000000 +0100
-@@ -18,6 +18,22 @@
- #include <linux/types.h>
- #include <asm/byteorder.h>
- 
-+/*
-+ * DS bit usage
-+ *
-+ * TA = transmitter address
-+ * RA = receiver address
-+ * DA = destination address
-+ * SA = source address
-+ *
-+ * ToDS    FromDS  A1(RA)  A2(TA)  A3      A4      Use
-+ * -----------------------------------------------------------------
-+ *  0       0       DA      SA      BSSID   -       IBSS/DLS
-+ *  0       1       DA      BSSID   SA      -       AP -> STA
-+ *  1       0       BSSID   SA      DA      -       AP <- STA
-+ *  1       1       RA      TA      DA      SA      unspecified (WDS)
-+ */
-+
- #define FCS_LEN 4
- 
- #define IEEE80211_FCTL_VERS		0x0003
+On Monday 23 of March 2009 17:06:16 Holger Schurig wrote:
+> > +#define CF8305_MANFID		0x02db
+> > +#define CF8305_CARDID		0x8103
+>
+> It's 8385, not 8305.
+it's 8305 ... that's even older card ;)
+>
+> >  	/* Check if we have a current silicon */
+> > -	if (if_cs_read8(card, IF_CS_PRODUCT_ID) <
+> > IF_CS_CF8385_B1_REV) { -		lbs_pr_err("old chips like 8385 rev
+> > B1 aren't supported\n"); +	prod_id = if_cs_read8(card,
+> > IF_CS_PRODUCT_ID);
+> > +	if (!(if_cs_hw_is_cf8305(p_dev) ||
+> > +		(if_cs_hw_is_cf8381(p_dev) &&
+> > +		prod_id >= IF_CS_CF8381_B3_REV)) &&
+> > +		(prod_id < IF_CS_CF8385_B1_REV)) {
+> > +		lbs_pr_err("old chips like 8385 rev B1 or "
+> > +			"8381 rev B3 aren't supported\n");
+>
+> I still find this if hard to read. Why not something like this:
+>
+> if ((if_cs_is_8385() && prod_id < IF_CS_CF8385_B1_REV) ||
+>     (if_cs_Is_8381() && prod_id < IF_CS_CF8381_B3_REV)) {
+>       ....
+> }
+>
+> >  static struct pcmcia_device_id if_cs_ids[] = {
+> > +	PCMCIA_DEVICE_MANF_CARD(CF8305_MANFID, CF8305_CARDID),
+> > +	PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
+> >  	PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
+> >  	PCMCIA_DEVICE_NULL,
+> >  };
+>
+> Now we end with two entries of 0x02df, 0x8103 :-/
 
 
