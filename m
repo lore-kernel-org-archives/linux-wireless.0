@@ -1,27 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39608
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753205AbZCVF5O (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:57112 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754543AbZCWS6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:57:14 -0400
-Date: Sat, 21 Mar 2009 22:57:00 -0700 (PDT)
-Message-Id: <20090321.225700.223311684.davem@davemloft.net> (sfid-20090322_065718_470788_B1A5FE0B)
-To: shemminger@vyatta.com
-Cc: jkosina@suse.cz, dstreba@suse.cz, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 73/77] ipw2100: convert to net_device_ops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090321053718.145743314@vyatta.com>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053718.145743314@vyatta.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 23 Mar 2009 14:58:34 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so2965184wff.4
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 11:58:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1237682473-5994-1-git-send-email-tuliom@gmail.com>
+References: <1237682473-5994-1-git-send-email-tuliom@gmail.com>
+Date: Mon, 23 Mar 2009 14:58:32 -0400
+Message-ID: <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com> (sfid-20090323_195841_898196_3DC5EA73)
+Subject: Re: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
+From: Bob Copeland <me@bobcopeland.com>
+To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:40 -0700
+On Sat, Mar 21, 2009 at 8:41 PM, Tulio Magno Quites Machado Filho
+<tuliom@gmail.com> wrote:
+> Add vendor ID for Quanta Microsystems and update the led table with the reported device.
+>
+> Reported-by: Scott Barnes <nekoreeve@gmail.com>
+>
+> Signed-off-by: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
-Applied.
+I have another one to send, for the "Fukato Datacask Jupiter" but I
+couldn't figure out who owns the subvendor ID (0x1a3b).  I guess I'll
+assume it is Fukato unless anyone knows a reliable source for looking
+those up besides Google...
+
+-- 
+Bob Copeland %% www.bobcopeland.com
