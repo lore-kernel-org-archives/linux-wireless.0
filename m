@@ -1,56 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58772 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:51724 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694AbZCLWSx (ORCPT
+	with ESMTP id S1751398AbZCWXDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 18:18:53 -0400
+	Mon, 23 Mar 2009 19:03:30 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v6 0/3] ath9k: SMP fixes
-Date: Thu, 12 Mar 2009 18:18:48 -0400
-Message-Id: <1236896331-5026-1-git-send-email-lrodriguez@atheros.com> (sfid-20090312_231856_795469_9560EC9E)
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] ath9k: implement IO serialization
+Date: Mon, 23 Mar 2009 19:03:26 -0400
+Message-Id: <1237849407-17273-1-git-send-email-lrodriguez@atheros.com> (sfid-20090324_000334_207103_5A200E41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This v6 removes the hotplug CPU stuff which although it technically
-would be correct is more cruft and highly unlikely. The down side
-is you will get serialization applied even if you only have one
-CPU but who cares, I doubt those nutty SGI guys are toying with
-ath9k in the lab.
+This is a port of:
+commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
+for 2.6.28.
 
-Yesterday I started mucking with an alternative approach to
-serialization which worked. I added just 5 udelay()s in key places
-where we had a lot of consecutive IO read/writes issued and that
-resolved the issue at least for STA mode but it didn't do the trick
-for AP mode. Technically it should be possible to groom all hardware
-access routines to do the same but I'm tired of this issue and want
-to a fix merged today not a few weeks from now. Anyway if you are
-curious you can check out that patch replacement approach for
-serialization here:
+All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
+serialization of IO when on non-uniprocessor systems. PCI
+express devices not not require this.
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/smp-udelay-fix.patch
+This should fix our only last standing open ath9k kernel.org
+bugzilla bug report:
 
-Note that AP won't work though so if you have a lot of time in your
-hands and have an SMP box with PCI Atheros 11n and are seeing the hangs
-and want a neat alternative to the current serialization implementation
-try adding udelays like the ones in the patch in places where we do a lot
-of io read/writes. Send me the results :)
+http://bugzilla.kernel.org/show_bug.cgi?id=12110
 
-The compromise is to keep serialization conditional -- we do not want to
-do it for every read/write regardless of the type of card you have, the
-code overhead is not great and we maintain this anyway. Adding it for all
-cases would just not be optimal.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    4 ++--
+ drivers/net/wireless/ath9k/core.c  |    1 +
+ drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
+ 4 files changed, 55 insertions(+), 2 deletions(-)
 
-Luis R. Rodriguez (3):
-  ath9k: implement IO serialization
-  ath9k: AR9280 PCI devices must serialize IO as well
-  ath9k: remove dummy PCI "retry timeout" fix
-
- drivers/net/wireless/ath9k/ath9k.h |   34 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/hw.c    |   28 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath9k/hw.h    |    4 ++--
- drivers/net/wireless/ath9k/main.c  |    1 +
- drivers/net/wireless/ath9k/pci.c   |   18 ------------------
- 5 files changed, 64 insertions(+), 21 deletions(-)
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index accace5..86025f6 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -590,8 +590,8 @@ struct ath9k_country_entry {
+ 	u8 iso[3];
+ };
+ 
+-#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
+-#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
++#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
++#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
+ 
+ #define SM(_v, _f)  (((_v) << _f##_S) & _f)
+ #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index c5033f6..cbe32aa 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -1089,6 +1089,7 @@ int ath_init(u16 devid, struct ath_softc *sc)
+ 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
+ 
+ 	spin_lock_init(&sc->sc_resetlock);
++	spin_lock_init(&sc->sc_serial_rw);
+ 
+ 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
+ 	if (ah == NULL) {
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index cb3e61e..9fe7183 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -1040,6 +1040,7 @@ struct ath_softc {
+ 	spinlock_t sc_rxbuflock;
+ 	spinlock_t sc_txbuflock;
+ 	spinlock_t sc_resetlock;
++	spinlock_t sc_serial_rw;
+ 	spinlock_t node_lock;
+ 
+ 	/* LEDs */
+@@ -1081,4 +1082,36 @@ void ath_get_currentCountry(struct ath_softc *sc,
+ 	struct ath9k_country_entry *ctry);
+ u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp);
+ 
++/*
++ * Read and write, they both share the same lock. We do this to serialize
++ * reads and writes on Atheros 802.11n PCI devices only. This is required
++ * as the FIFO on these devices can only accept sanely 2 requests. After
++ * that the device goes bananas. Serializing the reads/writes prevents this
++ * from happening.
++ */
++
++static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
++{
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++}
++
++static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
++{
++	u32 val;
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++	return val;
++}
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 98bc25c..82ead1b 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -346,6 +346,25 @@ static void ath9k_hw_set_defaults(struct ath_hal *ah)
+ 	}
+ 
+ 	ah->ah_config.intr_mitigation = 0;
++
++	/*
++	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
++	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
++	 * This means we use it for all AR5416 devices, and the few
++	 * minor PCI AR9280 devices out there.
++	 *
++	 * Serialization is required because these devices do not handle
++	 * well the case of two concurrent reads/writes due to the latency
++	 * involved. During one read/write another read/write can be issued
++	 * on another CPU while the previous read/write may still be working
++	 * on our hardware, if we hit this case the hardware poops in a loop.
++	 * We prevent this by serializing reads and writes.
++	 *
++	 * This issue is not present on PCI-Express devices or pre-AR5416
++	 * devices (legacy, 802.11abg).
++	 */
++       if (num_possible_cpus() > 1)
++               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
+ }
+ 
+ static void ath9k_hw_override_ini(struct ath_hal *ah,
+-- 
+1.5.6.4
 
