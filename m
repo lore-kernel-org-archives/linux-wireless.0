@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43982 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:51730 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbZCJCFH (ORCPT
+	with ESMTP id S1752210AbZCWXDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:05:07 -0400
+	Mon, 23 Mar 2009 19:03:32 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/4] wireless: use channel bandwidth
-Date: Mon,  9 Mar 2009 22:04:55 -0400
-Message-Id: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com> (sfid-20090310_030513_132536_B7949C08)
+Subject: [PATCH 2/2] ath9k: AR9280 PCI devices must serialize IO as well
+Date: Mon, 23 Mar 2009 19:03:30 -0400
+Message-Id: <1237849410-17314-2-git-send-email-lrodriguez@atheros.com> (sfid-20090324_000336_918608_EE05E19A)
+In-Reply-To: <1237849410-17314-1-git-send-email-lrodriguez@atheros.com>
+References: <1237849410-17314-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Few patches which actually make use of the channel bandwidth, lets
-also send this to userspace as it useful to tell which channels you'll
-be able to use HT40 or not on as a client.
+This is a port of:
+commit SHA1 5ec905a8df3fa877566ba98298433fbfb3d688cc
+for 2.6.27
 
-Luis R. Rodriguez (4):
-  cfg80211: check allowed channel max bandwidth before setting HT40
-  mac80211: move early error branch check on ieee80211_set_freq()
-  mac80211: disallow HT40 if max channel bandwidth is less than 40 MHz
-  cfg80211: send channel max bandwidth to userspace
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- include/linux/nl80211.h |    3 +++
- net/mac80211/util.c     |   30 +++++++++++++++++-------------
- net/wireless/nl80211.c  |    9 ++++++++-
- 3 files changed, 28 insertions(+), 14 deletions(-)
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 4a35266..c40b677 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -3313,7 +3313,8 @@ static struct ath_hal *ath9k_hw_do_attach(u16 devid,
+ 	}
+ 
+ 	if (ah->ah_config.serialize_regmode == SER_REG_MODE_AUTO) {
+-		if (ah->ah_macVersion == AR_SREV_VERSION_5416_PCI) {
++		if (ah->ah_macVersion == AR_SREV_VERSION_5416_PCI ||
++		    (AR_SREV_9280(ah) && !ah->ah_isPciExpress)) {
+ 			ah->ah_config.serialize_regmode =
+ 				SER_REG_MODE_ON;
+ 		} else {
+-- 
+1.5.6.4
 
