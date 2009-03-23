@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54259 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbZCKJKQ (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:32892 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbZCWVwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 05:10:16 -0400
-Subject: Re: [PATCH v5 1/4] ath9k: implement IO serialization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1236739953-17701-2-git-send-email-lrodriguez@atheros.com> (sfid-20090311_035323_043986_25539888)
-References: <1236739953-17701-1-git-send-email-lrodriguez@atheros.com>
-	 <1236739953-17701-2-git-send-email-lrodriguez@atheros.com>
-	 (sfid-20090311_035323_043986_25539888)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J90tW8nuj23VMHLQEM5q"
-Date: Wed, 11 Mar 2009 10:10:11 +0100
-Message-Id: <1236762611.9658.87.camel@johannes.local> (sfid-20090311_101020_756321_54782647)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 17:52:23 -0400
+Received: by fxm2 with SMTP id 2so2010027fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 14:52:20 -0700 (PDT)
+Date: Mon, 23 Mar 2009 23:08:43 +0100
+From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville <linville@tuxdriver.com>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
+Message-ID: <20090323220843.GA8075@joutaro.rooms.iriga> (sfid-20090323_225227_296211_6DB87E74)
+References: <1237682473-5994-1-git-send-email-tuliom@gmail.com> <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 23, 2009 at 02:58:32PM -0400, Bob Copeland wrote:
+> I have another one to send, for the "Fukato Datacask Jupiter" but I
+> couldn't figure out who owns the subvendor ID (0x1a3b).  I guess I'll
+> assume it is Fukato unless anyone knows a reliable source for looking
+> those up besides Google...
 
---=-J90tW8nuj23VMHLQEM5q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This website (http://www.modem-help.co.uk/search.php?id=PCI\VEN_1814%26DEV_0781%26SUBSYS_10591A3B) identifies it as ASUSTek.
 
-On Tue, 2009-03-10 at 22:52 -0400, Luis R. Rodriguez wrote:
+Maybe Fukato notebooks are manufactured by ASUSTek.
+Do you have it's MAC address?
 
-> +	if (ah->config.serialize_regmode =3D=3D SER_REG_MODE_ON) {
-> +		unsigned long flags;
-> +		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-> +		iowrite32(val, ah->ah_sc->mem + reg_offset);
-> +		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-> +	} else
-> +		iowrite32(val, ah->ah_sc->mem + reg_offset);
-
-This is utterly insane. Just make it _always_ do the spinlock, and get
-rid of the hotplug notifier and all that crap.
-
-johannes
-
---=-J90tW8nuj23VMHLQEM5q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJt3/wAAoJEKVg1VMiehFYgagQAJ8myrHAKpwUGuKpDgIxPqNS
-HI6sEo2L1A4IkguxMXaKdKcKTQk9e0Yr3vcC+5q0Wr8S2xin/XZfgdZqzJOtwnWk
-saDM4MEz/uAS9xKKD/RtfJNHBNHZSi38RHm2gQYxQJotLVTXPZ77DPOkzgjv3lxP
-xGp8rSHk9+rJFbGS7jlihx4hoizibc1KcSvBmfpLdy1QJ/NVMgNfeCqeJ29br8bP
-hyIz4JhQloSWl55nxufEpulo84k/8dFcTkFaI3lCkwZAadNdTnkFQBPAlQ3h1Q9E
-VDX1j+vm3OSQfMxW0eulPzSWv8LaCDsiLbPYDlwLQmwVlIizMZK+yJVpVDwTMQOK
-ingauohxmjS/jPdzTU+S17lkBMQ9Jp0kaNNNpMUEUv2erc/Bx5bEqEjSg3TIw+aJ
-b5kmdfOD0oa34ekJ1JT0+SmDfMSzebbB7mgGY3y7Fbk0aYNlBxU/ukz1jgMF5FsT
-vS9AazYfXM1Cj4tGhRyvFK0SbuUGa5dw2TRtkPojq19lg/NLpAPAYhDqoPrWqIvT
-w/IyKnaBdZTDHlCsYeFi7Io59URwKRzFGEuCPDNdJpdYt3BnN9GB6xzuMffNMdYS
-u/q+oM9n05Hd9C6cQMLUMywjLiQRBixF+GVeqwBt4PrW081Niwc27YfijN1xS9My
-Uued5yGS9qVP+O/L3iXB
-=/njE
------END PGP SIGNATURE-----
-
---=-J90tW8nuj23VMHLQEM5q--
+-- 
+Tulio Magno
 
