@@ -1,66 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:36920 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757895AbZCPI6A (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:63649 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594AbZCWXK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 04:58:00 -0400
-Date: Mon, 16 Mar 2009 10:57:41 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: don't drop null frames during software
-	scan
-Message-ID: <20090316085741.GA29986@jm.kir.nu> (sfid-20090316_095804_901192_38BEC3B2)
-References: <20090315200738.17370.29374.stgit@tikku>
+	Mon, 23 Mar 2009 19:10:26 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so2325662yxl.1
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 16:10:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090315200738.17370.29374.stgit@tikku>
+In-Reply-To: <1237849455.16745.41.camel@marvin>
+References: <1237849455.16745.41.camel@marvin>
+Date: Mon, 23 Mar 2009 16:10:08 -0700
+Message-ID: <43e72e890903231610k54ba0f15hf1e3146290c7d67a@mail.gmail.com> (sfid-20090324_001029_733150_B5308740)
+Subject: Re: [BUG] rtl8187, cfg80211 - unable to handle kernel NULL pointer
+	dereference
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Martin Capitanio <martin@capitanio.org>
+Cc: Larry.Finger@lwfinger.net, herton@mandriva.com.br,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 15, 2009 at 10:07:39PM +0200, Kalle Valo wrote:
-> ieee80211_tx_h_check_assoc() was dropping everything else than probe
-> requests during software scan. So the null frame with the power save
-> bit was dropped and AP never received it. This meant that AP never
-> buffered any frames for the station during software scan.
-> 
-> Fix this by allowing to transmit both probe request and null frames
-> during software scan. Tested with stlc45xx.
+On Mon, Mar 23, 2009 at 4:04 PM, Martin Capitanio <martin@capitanio.org> wrote:
+> Setting the EU or DE regulatory domain (cfg80211 ieee80211_regdom=EU)
+> seems to be working, but afterwards inserting the rtl8187 driver causes crash:
 
-I would assume the nullfunc frames are sent only just before the scan
-and just after the scan, not really "during" the scan. Or am I missing
-something here?
+Please try with today's wireless-testing a set of fixes went in to
+address a bug with "EU". Mind you, "EU" is an invalid ISO3166-alpha2
+so you may want to consider start using your own valid country alpha2
+code. If you use "EU" now you'll world roam.
 
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -193,7 +193,14 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
->  		return TX_CONTINUE;
->  
->  	if (unlikely(tx->local->sw_scanning) &&
-> -	    !ieee80211_is_probe_req(hdr->frame_control))
-> +	    !ieee80211_is_probe_req(hdr->frame_control) &&
-> +	    !ieee80211_is_nullfunc(hdr->frame_control))
-> +		/*
-> +		 * When software scanning only null frames (to notify the
-> +		 * sleep state to the AP) and probe requests (for the
-> +		 * active scan) are allowed, everything else should be
-> +		 * dropped.
-> +		 */
->  		return TX_DROP;
-
-While this is probably the easiest way of fixing the issue you are
-seeing, the more correct operation would be to allow nullfunc frames
-only at the beginning and end of the scan operation, not during it,
-i.e., there is no point allowing those frames to go out when we are not
-on our operational channel. I would hope we do not currently send those
-frames at such time, so this should not matter much, but the comment
-could be made more clear about the different needs for nullfunc frames
-(please also s/null frames/nullfunc frames/) and probe request frames.
-The former are sent only on the operational channel in the beginning and
-end of scan while the latter are sent on the channels to be scanned
-during an active scan.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
