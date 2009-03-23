@@ -1,59 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63130 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbZCLEv5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 00:51:57 -0400
-Received: from mail.atheros.com ([10.10.20.86])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 21:51:56 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18872.37875.417055.649869@gargle.gargle.HOWL> (sfid-20090312_055200_703560_2D7BFF62)
-Date: Thu, 12 Mar 2009 10:17:47 +0530
-To: Vladimir Senkov <hangup@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k panic when connecting to 802.11n-enabled AP
-In-Reply-To: <14df1c3e0903112141w645c716bu47e2309353527535@mail.gmail.com>
-References: <14df1c3e0903112141w645c716bu47e2309353527535@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59597 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755105AbZCWQcc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 12:32:32 -0400
+Message-Id: <20090323163052.569487987@sipsolutions.net> (sfid-20090323_173234_371105_420F4773)
+References: <20090323162834.154525349@sipsolutions.net>
+Date: Mon, 23 Mar 2009 17:28:38 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/8] mac80211: clean up __ieee80211_tx args
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Senkov wrote:
-> My client machine (running wireless-testing kernel updated with git
-> today) panics when connecting to a hostapd access point (also running
-> ath9k) only when 802.11n is enabled on the access point.
-> More specifically, here is the hostapd configuration that causes the
-> client to crash:
-> ieee80211n=0
-> ht_capab=[HT40+][SHORT-GI-40][DSSS_CCK-40]
+__ieee80211_tx takes a struct ieee80211_tx_data argument, but only
+uses a few of its members, namely 'skb' and 'sta'. Make that explicit,
+so that less internal knowledge is required in ieee80211_tx_pending
+and the possibility of introducing errors here is removed.
 
-ieee80211n should be 1 to enable 11n.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |   31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-> If I disable 802.11n on the access point everything works ok.
-> Interesting enough, access point machine never crashes. At one point
-> both access point and client machine ran identical code and client
-> would always crash while the access point box would stay up. So
-> upgraded client to the latest and greatest and tried a few versions in
-> between, this panic has been very consistent. It always panics right
-> after 1st attempt to associate.
-> 
-> I was able to narrow down the panic to this assert ath_rc_ratefind_ht() in rc.c:
->         ASSERT((rate_table->info[rate].valid && !ath_rc_priv->single_stream) ||
->                (rate_table->info[rate].valid_single_stream &&
->                 ath_rc_priv->single_stream));
-> When I ifdef'ed this assert panic went away and everything sort of
-> worked (haven't tested it heavily), but the performance dropped to
-> about 700Kbps. I usually get 10x when 802.11n is off and there is no
-> panic.
-> 
-> Has anyone else seen this?
+--- wireless-testing.orig/net/mac80211/tx.c	2009-03-23 14:03:45.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-03-23 14:03:46.000000000 +0100
+@@ -1084,9 +1084,10 @@ static int ieee80211_tx_prepare(struct i
+ }
+ 
+ static int __ieee80211_tx(struct ieee80211_local *local,
+-			  struct ieee80211_tx_data *tx)
++			  struct sk_buff **skbp,
++			  struct sta_info *sta)
+ {
+-	struct sk_buff *skb = tx->skb, *next;
++	struct sk_buff *skb = *skbp, *next;
+ 	struct ieee80211_tx_info *info;
+ 	int ret;
+ 	bool fragm = false;
+@@ -1111,23 +1112,23 @@ static int __ieee80211_tx(struct ieee802
+ 		 * We will later move this down into the only driver that
+ 		 * needs it, iwlwifi.
+ 		 */
+-		if (tx->sta && local->hw.ampdu_queues &&
++		if (sta && local->hw.ampdu_queues &&
+ 		    info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 			unsigned long flags;
+ 			u8 *qc = ieee80211_get_qos_ctl((void *) skb->data);
+ 			int tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+ 
+-			spin_lock_irqsave(&tx->sta->lock, flags);
++			spin_lock_irqsave(&sta->lock, flags);
+ 			skb_set_queue_mapping(skb, local->hw.queues +
+-						   tx->sta->tid_to_tx_q[tid]);
+-			spin_unlock_irqrestore(&tx->sta->lock, flags);
++						   sta->tid_to_tx_q[tid]);
++			spin_unlock_irqrestore(&sta->lock, flags);
+ 		}
+ 
+ 		next = skb->next;
+ 		ret = local->ops->tx(local_to_hw(local), skb);
+ 		if (ret != NETDEV_TX_OK)
+ 			return IEEE80211_TX_AGAIN;
+-		tx->skb = skb = next;
++		*skbp = skb = next;
+ 		ieee80211_led_tx(local, 1);
+ 		fragm = true;
+ 	}
+@@ -1223,7 +1224,7 @@ static int ieee80211_tx(struct net_devic
+ 
+ 	retries = 0;
+  retry:
+-	ret = __ieee80211_tx(local, &tx);
++	ret = __ieee80211_tx(local, &tx.skb, tx.sta);
+ 	switch (ret) {
+ 	case IEEE80211_TX_OK:
+ 		break;
+@@ -1831,7 +1832,6 @@ void ieee80211_tx_pending(unsigned long 
+ 	struct net_device *dev = local->mdev;
+ 	struct ieee80211_hdr *hdr;
+ 	unsigned long flags;
+-	struct ieee80211_tx_data tx;
+ 	int i, ret;
+ 	bool next;
+ 
+@@ -1862,14 +1862,15 @@ void ieee80211_tx_pending(unsigned long 
+ 		netif_start_subqueue(local->mdev, i);
+ 
+ 		while (!skb_queue_empty(&local->pending[i])) {
+-			tx.flags = 0;
+-			tx.skb = skb_dequeue(&local->pending[i]);
+-			hdr = (struct ieee80211_hdr *)tx.skb->data;
+-			tx.sta = sta_info_get(local, hdr->addr1);
++			struct sk_buff *skb = skb_dequeue(&local->pending[i]);
++			struct sta_info *sta;
++
++			hdr = (struct ieee80211_hdr *)skb->data;
++			sta = sta_info_get(local, hdr->addr1);
+ 
+-			ret = __ieee80211_tx(local, &tx);
++			ret = __ieee80211_tx(local, &skb, sta);
+ 			if (ret != IEEE80211_TX_OK) {
+-				skb_queue_head(&local->pending[i], tx.skb);
++				skb_queue_head(&local->pending[i], skb);
+ 				break;
+ 			}
+ 		}
 
-A couple of bugs were fixed dealing with this issue, but looks like more
-lurk around. Can you attach the hostapd.conf, hostapd logs (hostapd -d),
-client side kernel logs [1] ?, from loading the driver to the point when you associate
-and get the panic.
+-- 
 
-[1]: See http://wireless.kernel.org/en/users/Drivers/ath9k on how to enable debug.
-
-Sujith
