@@ -1,55 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:45750 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751269AbZCDOaJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:51728 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417AbZCWXDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 09:30:09 -0500
-Received: by ti-out-0910.google.com with SMTP id d10so3480320tib.23
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 06:30:06 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18862.36931.112561.497768@gargle.gargle.HOWL> (sfid-20090304_153014_025858_A59021B7)
-Date: Wed, 4 Mar 2009 19:59:23 +0530
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k: use correct init values for ar9100
-	devices
-In-Reply-To: <49AE851B.2070709@openwrt.org>
-References: <1236103846-1672-1-git-send-email-juhosg@openwrt.org>
-	<18862.1025.217829.656599@gargle.gargle.HOWL>
-	<49AE851B.2070709@openwrt.org>
+	Mon, 23 Mar 2009 19:03:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] ath9k: implement IO serialization
+Date: Mon, 23 Mar 2009 19:03:29 -0400
+Message-Id: <1237849410-17314-1-git-send-email-lrodriguez@atheros.com> (sfid-20090324_000337_170722_B604B623)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos wrote:
-> >> +#define AR_SREV_5416(_ah) \
-> >> +       (((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) || \
-> >> +       ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI))
-> >> +#define AR_SREV_5416_V20_OR_LATER(_ah) \
-> >> +       (((_ah)->hw_version.macVersion > AR_SREV_VERSION_5416_PCIE) || \
-> >> +       ((AR_SREV_5416(_ah)) && \
-> >> +       ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)))
-> >> +#define AR_SREV_5416_V22_OR_LATER(_ah) \
-> >> +       (((_ah)->hw_version.macVersion > AR_SREV_VERSION_5416_PCIE) || \
-> >> +       ((AR_SREV_5416(_ah)) && \
-> >> +       ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)))
-> >> +
-> > 
-> > Hm, the 5416_V1, 5416_V2 macros have to check 3 different HW (5416, 9100, 9160).
-> 
-> I don't see any 5416_V1 macro here. The AR_SREV_5416 should check the silicon
-> revision of the AR5416 cards only. But if we would be consistent, we should have
-> a _V10_OR_LATER although i don't see where it would be useful. The _V20_OR_LATER
-> and the _V22_OR_LATER macro I proposed above will cover the 9100 and 9160 chips.
-> 
+This is a port of:
+commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
+for 2.6.27
 
-I meant the AR_SREV_5416_V20_OR_LATER and AR_SREV_5416_V22_OR_LATER macros.
-Yes, the naming implies that they are meant for AR5416 chipsets only, but they
-do handle AR9100 and AR9160 chipsets.
+All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
+serialization of IO when on non-uniprocessor systems. PCI
+express devices not not require this.
 
-The proposed macros don't have the AR9100 and AR9160 macVersion checks, no ?
+This should fix our only last standing open ath9k kernel.org
+bugzilla bug report:
 
-Sujith
+http://bugzilla.kernel.org/show_bug.cgi?id=12110
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    4 ++--
+ drivers/net/wireless/ath9k/core.c  |    1 +
+ drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
+ 4 files changed, 55 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index d1b0fba..8ccf374 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -591,8 +591,8 @@ struct ath9k_country_entry {
+ 	u8 iso[3];
+ };
+ 
+-#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
+-#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
++#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
++#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
+ 
+ #define SM(_v, _f)  (((_v) << _f##_S) & _f)
+ #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index 87e37bc..e50ba6d 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -1120,6 +1120,7 @@ int ath_init(u16 devid, struct ath_softc *sc)
+ 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
+ 
+ 	spin_lock_init(&sc->sc_resetlock);
++	spin_lock_init(&sc->sc_serial_rw);
+ 
+ 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
+ 	if (ah == NULL) {
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 88f4cc3..51ef315 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -1022,6 +1022,7 @@ struct ath_softc {
+ 	spinlock_t sc_rxbuflock;
+ 	spinlock_t sc_txbuflock;
+ 	spinlock_t sc_resetlock;
++	spinlock_t sc_serial_rw;
+ 	spinlock_t node_lock;
+ };
+ 
+@@ -1069,4 +1070,36 @@ void ath_skb_unmap_single(struct ath_softc *sc,
+ void ath_mcast_merge(struct ath_softc *sc, u32 mfilt[2]);
+ enum ath9k_ht_macmode ath_cwm_macmode(struct ath_softc *sc);
+ 
++/*
++ * Read and write, they both share the same lock. We do this to serialize
++ * reads and writes on Atheros 802.11n PCI devices only. This is required
++ * as the FIFO on these devices can only accept sanely 2 requests. After
++ * that the device goes bananas. Serializing the reads/writes prevents this
++ * from happening.
++ */
++
++static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
++{
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++}
++
++static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
++{
++	u32 val;
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++	return val;
++}
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 69120b5..4a35266 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -369,6 +369,25 @@ static void ath9k_hw_set_defaults(struct ath_hal *ah)
+ 	}
+ 
+ 	ah->ah_config.intr_mitigation = 0;
++
++	/*
++	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
++	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
++	 * This means we use it for all AR5416 devices, and the few
++	 * minor PCI AR9280 devices out there.
++	 *
++	 * Serialization is required because these devices do not handle
++	 * well the case of two concurrent reads/writes due to the latency
++	 * involved. During one read/write another read/write can be issued
++	 * on another CPU while the previous read/write may still be working
++	 * on our hardware, if we hit this case the hardware poops in a loop.
++	 * We prevent this by serializing reads and writes.
++	 *
++	 * This issue is not present on PCI-Express devices or pre-AR5416
++	 * devices (legacy, 802.11abg).
++	 */
++       if (num_possible_cpus() > 1)
++               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
+ }
+ 
+ static inline void ath9k_hw_override_ini(struct ath_hal *ah,
+-- 
+1.5.6.4
+
