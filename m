@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:27168 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbZCZE7l convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59603 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757558AbZCWQcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 00:59:41 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so425846rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 21:59:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903252119r56043c93h954ad1cdcc69ad33@mail.gmail.com>
-References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
-	 <200903260337.37783.kel@otaku42.de>
-	 <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
-	 <200903260442.36251.kel@otaku42.de>
-	 <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
-	 <e13a36b30903252008i72caad77y32e31f625b7cb842@mail.gmail.com>
-	 <43e72e890903252119r56043c93h954ad1cdcc69ad33@mail.gmail.com>
-Date: Thu, 26 Mar 2009 13:59:39 +0900
-Message-ID: <e13a36b30903252159r1dc5cdc7p244f39e75816f04@mail.gmail.com> (sfid-20090326_055944_646933_9EACBCE8)
-Subject: Re: [renamed] Debian crda?
-From: Paul Wise <pabs@debian.org>
-To: debian-devel@lists.debian.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 23 Mar 2009 12:32:36 -0400
+Message-Id: <20090323163053.073748867@sipsolutions.net> (sfid-20090323_173238_689679_6195D70E)
+References: <20090323162834.154525349@sipsolutions.net>
+Date: Mon, 23 Mar 2009 17:28:40 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/8] mac80211: add skb length sanity checking
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 26, 2009 at 1:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> w=
-rote:
+We just found a bug in zd1211rw where it would reject
+packets in the ->tx() method but leave them modified,
+which would cause retransmit attempts with completely
+bogus skbs, eventually leading to a panic due to not
+having enough headroom in those.
 
->> Brainwave: no need to add a second public key to CRDA itself, the
->> wireless-regdb could install the public key corresponding to the
->> private key it was built with.
->
-> Can you elaborate on what you mean? Do you mean for wireless-regdb to
-> put the actual pubkey into the users' system somewhere? Otherwise not
-> sure what you mean.
+This patch adds a sanity check to mac80211 to catch
+such driver mistakes; in this case we warn and drop
+the skb.
 
-The crda package would contain the default upstream public key.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-The wireless-regdb would ship the Debian maintainer's pubkey as
-debian/pubkeys/debian.pem in the source package and
-/lib/crda/pubkeys/debian.pub.pem (or similar) in the binary package.
+--- wireless-testing.orig/net/mac80211/tx.c	2009-03-23 14:03:46.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-03-23 14:03:47.000000000 +0100
+@@ -1089,7 +1089,7 @@ static int __ieee80211_tx(struct ieee802
+ {
+ 	struct sk_buff *skb = *skbp, *next;
+ 	struct ieee80211_tx_info *info;
+-	int ret;
++	int ret, len;
+ 	bool fragm = false;
+ 
+ 	local->mdev->trans_start = jiffies;
+@@ -1125,7 +1125,12 @@ static int __ieee80211_tx(struct ieee802
+ 		}
+ 
+ 		next = skb->next;
++		len = skb->len;
+ 		ret = local->ops->tx(local_to_hw(local), skb);
++		if (WARN_ON(ret != NETDEV_TX_OK && skb->len != len)) {
++			dev_kfree_skb(skb);
++			ret = NETDEV_TX_OK;
++		}
+ 		if (ret != NETDEV_TX_OK)
+ 			return IEEE80211_TX_AGAIN;
+ 		*skbp = skb = next;
 
-Ubuntu would add their pubkey in a similar way.
+-- 
 
-When wireless-regdb is built, it would:
-
-check the sha1sum/sha256sum of db.txt (alternatively upstream could
-add a detached signature if possible to the tarball/git repo)
-
-if the db.txt is identical to the upstream one (or signed by
-upstream), ship the upstream regulatory.bin file
-
-if the db.txt has been modified:
-
-if no private key is available, generate one automatically
-
-rebuild the regulatory.bin file using the private key
-
-create the corresponding public key and install it in the package as
-/lib/crda/pubkeys/custom.pub.pem when it is not the same public key as
-one of the ones in debian/pubkeys/*.pem (avoids shipping two copies of
-the Debian pubkey)
-
-this scheme requires standard locations for the private key. I would
-suggest either ~/.debian-wireless-regdb.priv.pem or
-debian-wireless-regdb.priv.pem in the package build directory.
-
->>> It is possible for users to add more public keys to the CRDA =C2=A0=
-pubkeys
->>> dir and build their own wireless-regdb using their own private key.
->>
->> The above simplification makes this much easier.
->
-> Not sure what you mean, but the idea with the pubkeys directory
-
-The above scheme would allow users who apt-get source wireless-regdb,
-edit db.txt, debuild, debi to automatically trust their own key, as
-well as trusting Debian's key and the upstream key.
-
-I wonder if any of this would be even remotely acceptable to
-regulatory authorities.
-
---=20
-bye,
-pabs
-
-http://wiki.debian.org/PaulWise
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
