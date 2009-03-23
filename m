@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:56124 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834AbZCNTdM convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36431 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754771AbZCWTvS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 15:33:12 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1105729wfa.4
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 12:33:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49BBFB78.6070708@nokia.com>
-References: <20090314171234.11126.21125.stgit@tikku>
-	 <20090314171431.11126.51242.stgit@tikku>
-	 <1237051084.5235.97.camel@johannes.local> <49BBFB78.6070708@nokia.com>
-Date: Sat, 14 Mar 2009 12:33:10 -0700
-Message-ID: <43e72e890903141233i506328fbwc927d3d3ec06bdc9@mail.gmail.com> (sfid-20090314_203317_862323_C78C4C67)
-Subject: Re: [RFC PATCH v2 1/4] mac80211: decrease execution of the associated
-	timer
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 23 Mar 2009 15:51:18 -0400
+Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20090323194313.GG3285@tuxdriver.com>
+References: <1236939917.5235.7.camel@johannes.local>
+	 <1236941058.5235.12.camel@johannes.local>
+	 <20090320160308.GB28965@jm.kir.nu>
+	 <1237622383.5100.162.camel@johannes.local>
+	 <20090323194313.GG3285@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FLvPxTGGcUXM7x3XzFVf"
+Date: Mon, 23 Mar 2009 20:50:53 +0100
+Message-Id: <1237837853.6147.19.camel@johannes.local> (sfid-20090323_205122_191522_71A9617E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 14, 2009 at 11:46 AM, Kalle Valo <kalle.valo@nokia.com> wro=
-te:
-> Johannes Berg wrote:
->>
->> On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
->>
->>> +void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
->>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ieee80211_hdr *hdr)
->>> +{
->>> + =C2=A0 =C2=A0 =C2=A0 /* timer triggers only when there is no unic=
-ast traffic */
->>> + =C2=A0 =C2=A0 =C2=A0 if (!is_multicast_ether_addr(hdr->addr1))
->>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mod_timer(&sdata=
-->u.mgd.timer,
->>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 jiffies + IEEE80211_MONITORING_INTERVAL);
->>> +}
->>
->> Do we really need the multicast check? The frame will be coming from=
- the
->> AP in managed mode in both cases, so why regard the data path as idl=
-e
->> when we're receiving multicast traffic?
->
-> It seems that I had a good vacation because I can't remember anymore =
-why I
-> added the check :D Too bad that even the comment I wrote was next to
-> useless.
->
-> I'll remove the multicast check because I don't see the point for it.=
- And if
-> in case I finally recall the reason I'll definitely add a better comm=
-ent.
->
-> Thanks for all the review!
 
-If that's the case better just remove a whole routine just for that.
+--=-FLvPxTGGcUXM7x3XzFVf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 2009-03-23 at 15:43 -0400, John W. Linville wrote:
+
+> > Indeed, this file should depend on CONFIG_PM too I suppose, will fix
+> > that. OTOH, a future patch I have will require _resume to always be
+> > present, so I'm inclined to just always put the code in. I'll come up
+> > with a fix in any case.
+>=20
+> I fixed this in wireless-testing.  Feel free to change it as you like it.
+
+Yeah, I saw, thanks, good for now. I'll fix it with the hw-recover patch
+I have.
+
+johannes
+
+--=-FLvPxTGGcUXM7x3XzFVf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJx+gbAAoJEKVg1VMiehFYAX8QAK+pf0fKZxujSNKSpkUjIaBk
+QSkcFr5wHjSbc9I0RaAms440bc0lVRgvspixsM2YIAIg2sh5NTZsHGI9YjK0t02p
+BkX8OkwMaQZaHpSRiDTq1hZ7X/kP5ovwpy281rVGgbDQfEWoz7VrMUDOvv0apGT3
+OpMSGhu643Ssf5+HhvX59m2NZtzV0tgBr1+w7eiN37vjEC3FKPnKzTQBugwLNDAO
+epTEpcfEL/DKZadbaiFxTEZUXdRVxfZ3XSQ91GayjJVum0oSoviYB6P/oljALUyc
+IcmjaTq2TCEucjsnvnOo/J+fF/u3lAj0DQ1VxWTg1IRSjhr5iSCMQ9A6m7dowPwn
+uWxaECu1CuNPzgM3FeK13f+if2M1ioBTOzyg5iKvsPEaKL/SwlsPH15aY0Dmwjxk
+/xd2Iy6aX1SeTJG4X2jx40NfEsOzTT3b5wqd6IxbULHcTKtqtHXhtP3Oc9BSvTFe
+B7bAPeQBKawdEltcj/Cj3ixypD7VWmq/n0ZM8Xh70JWwQg6gVy8f/eEWXI8TKORc
+UhJb6JTp0/xkHxW7X0IGAhdWRwfCmN33Jm9O6K3XqXITxyv1A0gkDRSuqXfpxEvT
+niBLNPgNW7IMheofzI+XiJ1F8+vnUY3EuFGtsn7m2oKsZwLSC8wdiehm264wHadV
+Nuu9wraJ9gxEESIS/RLm
+=wETQ
+-----END PGP SIGNATURE-----
+
+--=-FLvPxTGGcUXM7x3XzFVf--
+
