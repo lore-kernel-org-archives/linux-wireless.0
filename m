@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55344 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbZCMKUU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 06:20:20 -0400
-Subject: [PATCH] mac80211: fix warnings in ieee80211_if_config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:52142 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754941AbZCWRWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 13:22:13 -0400
+Subject: Re: [PATCH] Marvell CF8381 and CF8305
+From: Dan Williams <dcbw@redhat.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <200903231809.42587.marek.vasut@gmail.com>
+References: <200903220127.21836.marek.vasut@gmail.com>
+	 <200903231700.21627.marek.vasut@gmail.com>
+	 <200903231706.16489.hs4233@mail.mn-solutions.de>
+	 <200903231809.42587.marek.vasut@gmail.com>
 Content-Type: text/plain
-Date: Fri, 13 Mar 2009 11:19:45 +0100
-Message-Id: <1236939585.5235.2.camel@johannes.local> (sfid-20090313_112023_202648_DEE8F491)
+Date: Mon, 23 Mar 2009 13:19:55 -0400
+Message-Id: <1237828795.14758.51.camel@localhost.localdomain> (sfid-20090323_182216_288897_C44E782A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The last warning can never trigger, and the explicit AP_VLAN
-check is pointless if we move the config_interface check down,
-in practice config_interface is required anyway.
+On Mon, 2009-03-23 at 18:09 +0100, Marek Vasut wrote:
+> On Monday 23 of March 2009 17:06:16 Holger Schurig wrote:
+> > > +#define CF8305_MANFID		0x02db
+> > > +#define CF8305_CARDID		0x8103
+> >
+> > It's 8385, not 8305.
+> it's 8305 ... that's even older card ;)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |   12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+v4 firmware or v5?
 
---- wireless-testing.orig/net/mac80211/main.c	2009-03-13 10:44:41.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2009-03-13 10:45:22.000000000 +0100
-@@ -161,12 +161,6 @@ int ieee80211_if_config(struct ieee80211
- 	if (WARN_ON(!netif_running(sdata->dev)))
- 		return 0;
- 
--	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
--		return -EINVAL;
--
--	if (!local->ops->config_interface)
--		return 0;
--
- 	memset(&conf, 0, sizeof(conf));
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-@@ -183,6 +177,9 @@ int ieee80211_if_config(struct ieee80211
- 		return -EINVAL;
- 	}
- 
-+	if (!local->ops->config_interface)
-+		return 0;
-+
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-@@ -224,9 +221,6 @@ int ieee80211_if_config(struct ieee80211
- 		}
- 	}
- 
--	if (WARN_ON(!conf.bssid && (changed & IEEE80211_IFCC_BSSID)))
--		return -EINVAL;
--
- 	conf.changed = changed;
- 
- 	return local->ops->config_interface(local_to_hw(local),
+Dan
 
+> >
+> > >  	/* Check if we have a current silicon */
+> > > -	if (if_cs_read8(card, IF_CS_PRODUCT_ID) <
+> > > IF_CS_CF8385_B1_REV) { -		lbs_pr_err("old chips like 8385 rev
+> > > B1 aren't supported\n"); +	prod_id = if_cs_read8(card,
+> > > IF_CS_PRODUCT_ID);
+> > > +	if (!(if_cs_hw_is_cf8305(p_dev) ||
+> > > +		(if_cs_hw_is_cf8381(p_dev) &&
+> > > +		prod_id >= IF_CS_CF8381_B3_REV)) &&
+> > > +		(prod_id < IF_CS_CF8385_B1_REV)) {
+> > > +		lbs_pr_err("old chips like 8385 rev B1 or "
+> > > +			"8381 rev B3 aren't supported\n");
+> >
+> > I still find this if hard to read. Why not something like this:
+> >
+> > if ((if_cs_is_8385() && prod_id < IF_CS_CF8385_B1_REV) ||
+> >     (if_cs_Is_8381() && prod_id < IF_CS_CF8381_B3_REV)) {
+> >       ....
+> > }
+> >
+> > >  static struct pcmcia_device_id if_cs_ids[] = {
+> > > +	PCMCIA_DEVICE_MANF_CARD(CF8305_MANFID, CF8305_CARDID),
+> > > +	PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
+> > >  	PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
+> > >  	PCMCIA_DEVICE_NULL,
+> > >  };
+> >
+> > Now we end with two entries of 0x02df, 0x8103 :-/
+> 
+> 
+> 
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
 
