@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:42139 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134AbZCUUIA (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46709 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235AbZCWWY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 16:08:00 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so322545fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2009 13:07:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903211246r5e5aa2cev7ad3e790716966ed@mail.gmail.com>
-References: <1237646363.5100.209.camel@johannes.local> <43e72e890903211246r5e5aa2cev7ad3e790716966ed@mail.gmail.com>
-Date: Sat, 21 Mar 2009 21:07:42 +0100
-Message-ID: <69e28c910903211307h182b2beau956878b35e343774@mail.gmail.com> (sfid-20090321_210805_605237_9B164A1D)
-Subject: Re: Japan regulations
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 23 Mar 2009 18:24:27 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ath9k: fix dma mapping leak of rx buffer upon rmmod
+Date: Mon, 23 Mar 2009 18:24:23 -0400
+Message-Id: <1237847063-30083-1-git-send-email-lrodriguez@atheros.com> (sfid-20090323_232430_743987_5B16A9FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 21, 2009 at 8:46 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> Channel 14 only allows OFDM.
-Only allows CCK, perhaps.
+We were claiming DMA buffers on the RX tasklet but never
+upon a simple module removal.
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/recv.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 917bac7..71cb18d 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -344,8 +344,13 @@ void ath_rx_cleanup(struct ath_softc *sc)
+ 
+ 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
+ 		skb = bf->bf_mpdu;
+-		if (skb)
++		if (skb) {
++			dma_unmap_single(sc->dev,
++					 bf->bf_buf_addr,
++					 sc->rx.bufsize,
++					 DMA_FROM_DEVICE);
+ 			dev_kfree_skb(skb);
++		}
+ 	}
+ 
+ 	if (sc->rx.rxdma.dd_desc_len != 0)
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.5.6.4
+
