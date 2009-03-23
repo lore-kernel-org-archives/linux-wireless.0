@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53806 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753667AbZCQJJ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 05:09:29 -0400
-Date: Tue, 17 Mar 2009 11:09:22 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] fix wireless-regdb enforcement oddities
-Message-ID: <20090317090922.GA2721@jm.kir.nu> (sfid-20090317_100932_510983_1DD20C90)
-References: <49BEE56C.9050202@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49BEE56C.9050202@gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:44923 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759444AbZCWQRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 12:17:44 -0400
+Subject: Re: [PATCH] Marvell CF8381
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	Marek Vasut <marek.vasut@gmail.com>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <200903231327.18890.hs4233@mail.mn-solutions.de>
+References: <200903220127.21836.marek.vasut@gmail.com>
+	 <200903220511.50229.marek.vasut@gmail.com>
+	 <200903231327.18890.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 23 Mar 2009 12:15:27 -0400
+Message-Id: <1237824927.14758.20.camel@localhost.localdomain> (sfid-20090323_171801_649155_384AF803)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 07:49:00PM -0400, Richard Farina wrote:
+On Mon, 2009-03-23 at 13:27 +0100, Holger Schurig wrote:
+> > -       priv->regioncode = le16_to_cpu(cmd.regioncode) & 0xFF;
+> > +       priv->regioncode = (le16_to_cpu(cmd.regioncode) & 
+> 0xFF00) >> 8;
+> 
+> Hmm, the change that this breaks 8385 is quite high, maybe 100
+> percent.
 
-> For the sake of sanity, I think that the way rules from wireless-regdb  
-> are enforced needs to be changed. An example:
->
-> country US:
->        (5170 - 5250 @ 40), (3, 17)
->        (5250 - 5330 @ 40), (3, 20), DFS
->
-> In this case, you will see that I have removed all of the rules that I  
-> do not intend to cite to lower the complexity of the ruleset.
->
-> Take for example, channel 48, center frequency 5240.  A standard 20 mhz  
-> mode will work as expected, as well as HT40-, however HT40+ cannot be  
-> set because it would need to cross the rule boundary.  Each line of a  
-> regulatory domain section is enforced by itself.  Channel 52 has a  
-> similiar problem where 20 and HT40+ work but HT40- will not.
+The cf8385-5.0.16.p0-26306 (gumstix) driver has:
 
-Channel 48 with HT40+ would not work regardless of the regulatory rules;
-(48,52) is not one of the allowed HT40 channel pairs. You can use
-(36,40), (44,48), (52,56), and (60,64), but not (40,44), (48,52),
-(56,60). This is not really a regulatory limit but restriction stated in
-IEEE 802.11n Annex J. And same applies to channel 52 with HT40-.
+	Adapter->RegionCode = wlan_le16_to_cpu(hwspec->RegionCode) >> 8;
 
-There may be some other examples where the processing of the ruleset
-could be improved, but this particular example does not look like
-something that would benefit much from a change here.
+So it appears there's precedent for this even on 8385 parts.
 
-> As this specific example includes frequencies in the DFS range, you can  
-> obviously see why no one has noticed this failing before.  The obviously  
-> expected result is that if two rules abut and a channel is requested  
-> that stradles them, it should take the most restrictive mix between the  
-> two.  For instance, if I set channel 48 in HT40+ mode (and we have DFS  
-> support) the rule would be enforced as (3, 17), DFS; while HT40- would  
-> be enforced as the standard (3, 17).
+Dan
 
-If the channel pair (48,52) were allowed by IEEE 802.11n and we
-supported DFS, yes, I would agree with this. However, neither of those
-are the case at the moment (and I don't see the former changing in the
-future either).
+> It could simply be the case that your firmware returns the value
+> in a different order than mine. So we either need to test for the
+> firmware version or for the hardware before getting the value via
+> one or the other method.
+> 
+> Maybe it's worthwhile to create some hw_is_8381() function and 
+> then do the things that need to be differently based on it's 
+> return value?
+> 
+> 
+> 
+> The documentation for CMG_GET_HW_SPEC that I have says
+> 
+> RegionCode   UINT16    Set to 0
+> 
+> so I see no indicator that we have two 8 bit values here. But
+> we've seen bugs in docs before :-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
