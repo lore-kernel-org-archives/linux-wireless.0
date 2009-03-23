@@ -1,66 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45094 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757662AbZC3JGd (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:56903 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757467AbZCWV6w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 05:06:33 -0400
-Subject: Re: [RFC] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <1238349195.24972.5.camel@johannes.local> (sfid-20090329_195345_745378_2F2074B3)
-References: <1238349195.24972.5.camel@johannes.local>
-	 (sfid-20090329_195345_745378_2F2074B3)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-p+4fP+fywChXV5SoXlfl"
-Date: Mon, 30 Mar 2009 11:06:27 +0200
-Message-Id: <1238403987.24972.14.camel@johannes.local> (sfid-20090330_110653_764519_C0EFDC45)
-Mime-Version: 1.0
+	Mon, 23 Mar 2009 17:58:52 -0400
+Received: by fxm2 with SMTP id 2so2012200fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 14:58:49 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Marvell CF8381
+Date: Mon, 23 Mar 2009 22:58:57 +0100
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+References: <200903220127.21836.marek.vasut@gmail.com> <200903231327.18890.hs4233@mail.mn-solutions.de> <1237824927.14758.20.camel@localhost.localdomain>
+In-Reply-To: <1237824927.14758.20.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903232258.57323.marek.vasut@gmail.com> (sfid-20090323_225855_409197_71D2D74A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 23 of March 2009 17:15:27 Dan Williams wrote:
+> On Mon, 2009-03-23 at 13:27 +0100, Holger Schurig wrote:
+> > > -       priv->regioncode = le16_to_cpu(cmd.regioncode) & 0xFF;
+> > > +       priv->regioncode = (le16_to_cpu(cmd.regioncode) &
+> >
+> > 0xFF00) >> 8;
+> >
+> > Hmm, the change that this breaks 8385 is quite high, maybe 100
+> > percent.
+>
+> The cf8385-5.0.16.p0-26306 (gumstix) driver has:
+>
+> 	Adapter->RegionCode = wlan_le16_to_cpu(hwspec->RegionCode) >> 8;
+>
+> So it appears there's precedent for this even on 8385 parts.
+>
+> Dan
+>
+> > It could simply be the case that your firmware returns the value
+> > in a different order than mine. So we either need to test for the
+> > firmware version or for the hardware before getting the value via
+> > one or the other method.
+> >
+> > Maybe it's worthwhile to create some hw_is_8381() function and
+> > then do the things that need to be differently based on it's
+> > return value?
+> >
+> >
+> >
+> > The documentation for CMG_GET_HW_SPEC that I have says
+> >
+> > RegionCode   UINT16    Set to 0
+> >
+> > so I see no indicator that we have two 8 bit values here. But
+> > we've seen bugs in docs before :-)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> > in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=-p+4fP+fywChXV5SoXlfl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok, so this should be it. I dropped the 8305 support since I found I have some 
+issues with it still.
 
-On Sun, 2009-03-29 at 19:53 +0200, Johannes Berg wrote:
-> This patch completely rewrites the rfkill core to address
-> the following deficiencies:
->=20
->  * all rfkill drivers need to implement polling where necessary
->    rather than having one central implementation
+>From 3ac8f34db9c4d96197fbdc2776ebbcd571e3fbbe Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marek.vasut@gmail.com>
+Date: Mon, 23 Mar 2009 22:55:51 +0100
+Subject: [PATCH] Add support for CF8381 WiFi card.
+ A detection function was added for identifying CF8381.
 
-One thing I was wondering about -- should we just implement polling via
-a single work struct that iterates all those rfkill drivers that need
-polling? I've given them each an own right now, but that seems
-unnecessary.
+Signed-off-by: <marek.vasut@gmail.com>
+---
+ drivers/net/wireless/libertas/if_cs.c |   24 +++++++++++++++++++++++-
+ 1 files changed, 23 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/libertas/if_cs.c 
+b/drivers/net/wireless/libertas/if_cs.c
+index 3f02e6a..56b6475 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -273,7 +273,20 @@ static int if_cs_poll_while_fw_download(struct if_cs_card 
+*card, uint addr, u8 r
+  */
+ #define IF_CS_PRODUCT_ID               0x0000001C
+ #define IF_CS_CF8385_B1_REV            0x12
++#define IF_CS_CF8381_B3_REV            0x04
 
---=-p+4fP+fywChXV5SoXlfl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
++/*
++ * Used to detect other cards than CF8385 since their revisions of silicon
++ * doesn't match those from CF8385, eg. CF8381 B3 works with this driver.
++ */
++#define CF8381_MANFID          0x02db
++#define CF8381_CARDID          0x6064
++
++static inline int if_cs_hw_is_cf8381(struct pcmcia_device *p_dev)
++{
++       return (p_dev->manf_id == CF8381_MANFID &&
++               p_dev->card_id == CF8381_CARDID);
++}
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+ /********************************************************************/
+ /* I/O and interrupt handling                                       */
+@@ -757,6 +770,7 @@ static void if_cs_release(struct pcmcia_device *p_dev)
+ static int if_cs_probe(struct pcmcia_device *p_dev)
+ {
+        int ret = -ENOMEM;
++       unsigned int prod_id;
+        struct lbs_private *priv;
+        struct if_cs_card *card;
+        /* CIS parsing */
+@@ -859,7 +873,14 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+               p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
 
-iQIcBAABAgAGBQJJ0IuQAAoJEKVg1VMiehFY1zsP/2V2jogdcMqqRZzrPuZpPDSX
-9e88Le0T/MJORMbxFSpb/TRv/8TB2n78U77XrsrU9ccHeIMzufm6k+B+ZnMjBh2V
-Bs3v+eveRXpYvhDgQO0wfxXCRtZPOOEKEXoG3Qz0zq7eZoVA/chdD9L3NjlpvBwU
-RE4Kff0pEPR9UdaoviK4pZ0HCCpu5la05zka+QHTdZwgwsm8RKLM7vtd15zLqlfa
-T8A2IQ8FcZNN9i9MRIQH2N9n5FAWbXXMJCFVnDUeYX4LB20wUwP6grb49hIofGY5
-aBAInYr2MJtRYYNCw2yFs79rP8Usc9pVVE4UitPxOTAu/tH++KvjK8bUAQKpo4k6
-qRstY6wcOKDKMOjpC3aR5AEBIxeChX3NphCjRASPZnqaBCwNocE7Zv7gRMgEkvRf
-HvsKot3wypXRoWGMZs/JUs6ZTvrTZR+1KSMR3UBCQzThCagdo76M7OT9lWJ9p2b5
-M6aW4tQw67lpoatFgr9vBP370XYusaee1DhFha4zjxSzjsXrCH476tvBKtTgQYz2
-B3oNle/FzK8pWaixO5cLfKJxmYff0cLGCi7JXJ4FFv5qjyOgfar92f93NA31aGOC
-zpAXfxzM+mE0PQGdPdB3DLmmnJ6kKDgMu0IkAuIDk0reg4B0cJl0b0RsTnIt71RL
-hFr+tJ9djmDI8Gkg8+hb
-=HnJT
------END PGP SIGNATURE-----
+        /* Check if we have a current silicon */
+-       if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
++       prod_id = if_cs_read8(card, IF_CS_PRODUCT_ID);
++       if (if_cs_hw_is_cf8381(p_dev) && prod_id < IF_CS_CF8381_B3_REV) {
++               lbs_pr_err("old chips like 8381 rev B3 aren't supported\n");
++               ret = -ENODEV;
++               goto out2;
++       }
++
++       if (prod_id < IF_CS_CF8385_B1_REV) {
+                lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
+                ret = -ENODEV;
+                goto out2;
+@@ -950,6 +971,7 @@ static void if_cs_detach(struct pcmcia_device *p_dev)
+ /********************************************************************/
 
---=-p+4fP+fywChXV5SoXlfl--
+ static struct pcmcia_device_id if_cs_ids[] = {
++       PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
+        PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
+        PCMCIA_DEVICE_NULL,
+ };
+--
+1.6.2
 
