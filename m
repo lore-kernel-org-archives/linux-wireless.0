@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48692 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751956AbZCPIu5 (ORCPT
+Received: from ajax.nicta.com.au ([221.199.217.11]:38060 "EHLO
+	ajax.nicta.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758885AbZCWS0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 04:50:57 -0400
-Date: Mon, 16 Mar 2009 10:50:36 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
-Message-ID: <20090316085036.GA29705@jm.kir.nu> (sfid-20090316_095102_202208_B6A187A4)
-References: <20090314171234.11126.21125.stgit@tikku> <20090314171452.11126.11618.stgit@tikku> <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com> <87r60z1c8x.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r60z1c8x.fsf@nokia.com>
+	Mon, 23 Mar 2009 14:26:10 -0400
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Subrata Modak <subrata@linux.vnet.ibm.com>,
+	Qasim Javed <qasimj@gmail.com>,
+	Till Kamppeter <till.kamppeter@gmail.com>
+Message-Id: <39216BC3-63F5-4039-878C-3D874D596EB7@nicta.com.au> (sfid-20090323_192614_842047_6EBDE4A3)
+From: Max Ott <Max.Ott@nicta.com.au>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <43e72e890903201843x23351982xe71851a634a1b13c@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Date: Tue, 24 Mar 2009 05:11:43 +1100
+References: <20090320213920.GC8120@tesla> <43e72e890903201843x23351982xe71851a634a1b13c@mail.gmail.com>
+Subject: Re: Google Summer of Code 2009 -- Linux wireless testing project
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 15, 2009 at 09:22:38AM +0200, Kalle Valo wrote:
+Yes it is, but please use
 
-> In my opinion also 2.4 GHz band needs checksum support. At least ERP
-> protection changes come to my mind, but maybe there are also others.
+http://omf.mytestbed.net
 
-Johannes mentioned Quiet IE as one such example. WMM can also change its
-parameters dynamically. Both of these need to be detected from Beacon
-frames. In addition, Channel Switch Announcement can be used to move the
-BSS to another channel, even on 2.4 GHz band.
+as the 'www' will change into something else.
 
-> Other option is that the hardware which does not support checksumming
-> would just pass beacons periodically to the stack, for example every 5
-> seconds. Even though beacon filter is enabled in mac80211 it does not
-> prevent hardware from sending beacons. This is not the most optimal
-> solution, but there's not much choices if the hardware doesn't support
-> checksumming.
+Cheers,
 
-While it would be possible to do that, it does not really solve many of
-the use cases where Beacon contents can change and the STA is required
-to take some action. For example, Channel Switch Announcement IEs would
-likely be missed if a Beacon frames is passed through that infrequently.
-I would assume the driver could enable this even if the hardware does
-not use checksumming to detect Beacon changes, but this may severely
-limit functionality in number of cases, so I'm not sure I would
-recommend this to be done in general.
+-max
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+On 21/03/2009, at 12:43 PM, Luis R. Rodriguez wrote:
+
+> On Fri, Mar 20, 2009 at 2:39 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>
+>> To start becoming familiar with the Orbit testbed and using OMF you  
+>> can
+>> read their tutorials [8]. I think OMF is completely open source, Maxx
+>> correct me if I'm wrong.
+>
+> Yay, OMF is open source:
+>
+> http://www.mytestbed.net/
+>
+>  Luis
+
