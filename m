@@ -1,125 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51225 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752541AbZCTKBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 06:01:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 03:01:49 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 1/2] ath9k: Fix bug in reporting status of tx rate
-Date: Fri, 20 Mar 2009 15:27:49 +0530
-Message-ID: <1237543070-25471-1-git-send-email-vasanth@atheros.com> (sfid-20090320_110154_081438_FEF38F05)
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:39187 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755049AbZCWRjX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 13:39:23 -0400
+Received: by bwz17 with SMTP id 17so1867849bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 10:39:20 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Marvell CF8381 and CF8305
+Date: Mon, 23 Mar 2009 18:39:30 +0100
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+References: <200903220127.21836.marek.vasut@gmail.com> <200903231809.42587.marek.vasut@gmail.com> <1237828795.14758.51.camel@localhost.localdomain>
+In-Reply-To: <1237828795.14758.51.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903231839.30193.marek.vasut@gmail.com> (sfid-20090323_183938_329678_4E0A23D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch updates count of every hw tried rate with
-appropriate tries before reporting tx status of a frame.
+On Monday 23 of March 2009 18:19:55 Dan Williams wrote:
+> On Mon, 2009-03-23 at 18:09 +0100, Marek Vasut wrote:
+> > On Monday 23 of March 2009 17:06:16 Holger Schurig wrote:
+> > > > +#define CF8305_MANFID		0x02db
+> > > > +#define CF8305_CARDID		0x8103
+> > >
+> > > It's 8385, not 8305.
+> >
+> > it's 8305 ... that's even older card ;)
+>
+> v4 firmware or v5?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/xmit.c |   35 ++++++++++++++++++++++-------------
- 1 files changed, 22 insertions(+), 13 deletions(-)
+8381 is v4, 8305 is v3
 
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index f287719..21e90bc 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -67,7 +67,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf);
- static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
- 			      int txok);
- static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds,
--			     int nbad, int txok);
-+			     int nbad, int txok, bool update_rc);
- 
- /*********************/
- /* Aggregation logic */
-@@ -370,11 +370,13 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			ath_tx_update_baw(sc, tid, bf->bf_seqno);
- 			spin_unlock_bh(&txq->axq_lock);
- 
--			if (rc_update)
--				if (acked_cnt == 1 || txfail_cnt == 1) {
--					ath_tx_rc_status(bf, ds, nbad, txok);
--					rc_update = false;
--				}
-+			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
-+				ath_tx_rc_status(bf, ds, nbad, txok, true);
-+				rc_update = false;
-+			} else {
-+				ath_tx_rc_status(bf, ds, nbad, txok, false);
-+			}
-+
- 			ath_tx_complete_buf(sc, bf, &bf_head, !txfail, sendbar);
- 		} else {
- 			/* retry the un-acked ones */
-@@ -1779,8 +1781,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
- 	}
- 
--	tx_info->status.rates[0].count = tx_status->retries + 1;
--
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
- 	padsize = hdrlen & 3;
- 	if (padsize && hdrlen >= 24) {
-@@ -1867,30 +1867,39 @@ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
- }
- 
- static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds,
--			     int nbad, int txok)
-+			     int nbad, int txok, bool update_rc)
- {
- 	struct sk_buff *skb = (struct sk_buff *)bf->bf_mpdu;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ath_tx_info_priv *tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
-+	struct ieee80211_hw *hw = tx_info_priv->aphy->hw;
-+	u8 i, tx_rateindex;
- 
- 	if (txok)
- 		tx_info->status.ack_signal = ds->ds_txstat.ts_rssi;
- 
--	tx_info_priv->update_rc = false;
-+	tx_rateindex = ds->ds_txstat.ts_rateindex;
-+	WARN_ON(tx_rateindex >= hw->max_rates);
-+
-+	tx_info_priv->update_rc = update_rc;
- 	if (ds->ds_txstat.ts_status & ATH9K_TXERR_FILT)
- 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 
- 	if ((ds->ds_txstat.ts_status & ATH9K_TXERR_FILT) == 0 &&
--	    (bf->bf_flags & ATH9K_TXDESC_NOACK) == 0) {
-+	    (bf->bf_flags & ATH9K_TXDESC_NOACK) == 0 && update_rc) {
- 		if (ieee80211_is_data(hdr->frame_control)) {
- 			memcpy(&tx_info_priv->tx, &ds->ds_txstat,
- 			       sizeof(tx_info_priv->tx));
- 			tx_info_priv->n_frames = bf->bf_nframes;
- 			tx_info_priv->n_bad_frames = nbad;
--			tx_info_priv->update_rc = true;
- 		}
- 	}
-+
-+	for (i = tx_rateindex + 1; i < hw->max_rates; i++)
-+		tx_info->status.rates[i].count = 0;
-+
-+	tx_info->status.rates[tx_rateindex].count = bf->bf_retries + 1;
- }
- 
- static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
-@@ -2009,7 +2018,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 			bf->bf_retries = ds->ds_txstat.ts_longretry;
- 			if (ds->ds_txstat.ts_status & ATH9K_TXERR_XRETRY)
- 				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(bf, ds, 0, txok);
-+			ath_tx_rc_status(bf, ds, 0, txok, true);
- 		}
- 
- 		if (bf_isampdu(bf))
--- 
-1.5.5.1
+>
+> Dan
+>
+> > > >  	/* Check if we have a current silicon */
+> > > > -	if (if_cs_read8(card, IF_CS_PRODUCT_ID) <
+> > > > IF_CS_CF8385_B1_REV) { -		lbs_pr_err("old chips like 8385 rev
+> > > > B1 aren't supported\n"); +	prod_id = if_cs_read8(card,
+> > > > IF_CS_PRODUCT_ID);
+> > > > +	if (!(if_cs_hw_is_cf8305(p_dev) ||
+> > > > +		(if_cs_hw_is_cf8381(p_dev) &&
+> > > > +		prod_id >= IF_CS_CF8381_B3_REV)) &&
+> > > > +		(prod_id < IF_CS_CF8385_B1_REV)) {
+> > > > +		lbs_pr_err("old chips like 8385 rev B1 or "
+> > > > +			"8381 rev B3 aren't supported\n");
+> > >
+> > > I still find this if hard to read. Why not something like this:
+> > >
+> > > if ((if_cs_is_8385() && prod_id < IF_CS_CF8385_B1_REV) ||
+> > >     (if_cs_Is_8381() && prod_id < IF_CS_CF8381_B3_REV)) {
+> > >       ....
+> > > }
+> > >
+> > > >  static struct pcmcia_device_id if_cs_ids[] = {
+> > > > +	PCMCIA_DEVICE_MANF_CARD(CF8305_MANFID, CF8305_CARDID),
+> > > > +	PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
+> > > >  	PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
+> > > >  	PCMCIA_DEVICE_NULL,
+> > > >  };
+> > >
+> > > Now we end with two entries of 0x02df, 0x8103 :-/
+> >
+> > _______________________________________________
+> > libertas-dev mailing list
+> > libertas-dev@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/libertas-dev
+
 
