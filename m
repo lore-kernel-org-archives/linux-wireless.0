@@ -1,102 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46227 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757539AbZC1Ru5 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:28813 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374AbZCXWFS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 13:50:57 -0400
-Subject: Re: rfkill-input madness
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090328005214.GA7439@khazad-dum.debian.net>
-References: <1238159196.4452.1.camel@johannes.local>
-	 <20090327143007.GA24288@khazad-dum.debian.net>
-	 <1238188237.4452.17.camel@johannes.local>
-	 <20090328005214.GA7439@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-w3uoiY0u2uphtTnRrnwL"
-Date: Sat, 28 Mar 2009 18:50:51 +0100
-Message-Id: <1238262651.4217.21.camel@johannes.local> (sfid-20090328_185107_960355_4543BE76)
-Mime-Version: 1.0
+	Tue, 24 Mar 2009 18:05:18 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so2764370yxl.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 15:05:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1237926664.4320.131.camel@johannes.local>
+References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com>
+	<20090324184100.GA29268@tesla> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
+	<43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com>
+	<1237926664.4320.131.camel@johannes.local>
+Date: Tue, 24 Mar 2009 15:04:59 -0700
+Message-ID: <43e72e890903241504u4dfb5c76kbcb11a096bba72fc@mail.gmail.com> (sfid-20090324_230522_487413_5B41CE1D)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Christian Lamparter <chunkeey@web.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 24, 2009 at 1:31 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-03-24 at 13:10 -0700, Luis R. Rodriguez wrote:
+>
+>> > Channel list is a good hint, maybe
+>> > it's time to fix iw/nl80211 to send back all the channels :)
+>>
+>> So that is the other option. I tried looking at that yesterday but
+>> wasn't able to find a way to do this. I went through the netlink
+>> documenation and even tried modifying the skb on the kernel side as
+>> its a dump. Not sure what to do here to fix this.
+>
+> I looked into yesterday actually, and it's completely non-trivial and
+> requires userspace interface changes.
 
---=-w3uoiY0u2uphtTnRrnwL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Heh, there goes that idea then. Then in that case I'd advocate even
+more trimming the channels down.
 
-On Fri, 2009-03-27 at 21:52 -0300, Henrique de Moraes Holschuh wrote:
-
-> > Indeed, but that's useless since almost all drivers disable userspace
-> > claiming... I'll re-implement it later for only the software state.
->=20
-> I think we can remove the "disable userspace claiming" stuff entirely,
-> and retain user_claim.  user_claim just means rfkill_input won't touch
-> a rfkill controller, there is no problem if the state changes because
-> the rfkill controller's driver had to do a rfkill_force_state() for
-> some reason.
-
-No -- the problem here is that despite the driver having hard-killed it
-still needs to be able to handle the soft state thingie. Which is why
-user_claim_unsupported was added. Yes, agree with you, but only a little
--- we just need to make the rfkill core smarter.
-
-> Sure: all that matters is that you won't have two different actors
-> trying to implement handling for, e.g. EV_KEY KEY_BLUETOOTH, by
-> complementing the state of a rfkill switch.  If you do, actor A
-> complements, then B complements, and the net effect is that no change
-> happened :)
-
-Indeed. But by disabling user claiming we have removed that problem
-entirely ;) No, like I said, I don't disagree, but the implementation
-sucks. I'm going to add this back in a way that drivers don't need to do
-special handling.
-
-> > > Anyway, I got sidetracked because I was Not Happy with the userspace =
-ABI but
-> > > couldn't come up with anything better.
-> >=20
-> > It's not like we can change it now...
->=20
-> I don't mean the rfkill core API that is already in place...  I mean
-> the new one in the "RFC" patchset I just posted.
-
-Ok so you want to add "global" states mostly -- that's fine, but not all
-that useful since userspace cannot really claim globally. I also don't
-see a point -- if userspace wanted to do global stuff it might just as
-well do nothing.
-
-> Yes.  But the exclusive grab _is_ needed for regular keyboards,
-> otherwise anyone can snoop on what you type.  But it is not what one
-> would like to happen to hotkey input devices... most of the time.
-> It is confusing as heck.
-
-I see you've figured this out already over in another part of the
-thread.
-
-johannes
-
---=-w3uoiY0u2uphtTnRrnwL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzmN4AAoJEKVg1VMiehFYeboP/0WRpkqWPhf2K+SlB0Zbs32q
-uHorDwfoGPPBDHZGPbBfeer4qv6mvloXnJ+nKpIl0/nhSzXOtyVTc6eZDd3aqOmH
-g/1czTEX00JnPwrQJAct+NihCrVEOjgRHNoMAN8pw/vh0iFit5Emwqz6Q8LCNq3o
-UdaALiU0VYbpzTUKbAr6oe6S3Atn1ZdW2JH1jkt7Y29nWg0xNTcEDvDOTA3mooxe
-oXsL2xhzJYAHuvgcGyyA74bQ+dBPc97SfoWZHaKf5w1sBMmNOx+4o7L9DksZ2fd6
-U5pFxs8PpfuKw25Qmg5ZGANTwCR8W+oywLo5PBPLnAmiu0U5sdI08c4g6pTTa0GQ
-lYDTb2t3F6R4eBJWVOuqpzEi5kmWQM6SASUylLw08RqickZ7VfxEOJLjPJtyiAoA
-hlUBccZxWr8ogmvjcDTaiQ3jumg7Bl3AYbu5gFrbgsKMj7/cOZ+hns6af0y7Xwd0
-cfkaesTk/GUVktpCrGrXMZGJmTnl438KqaMT6kE5xbdrRyeMtnPyt9mijY9a9CoK
-HMT4SZNeWiyFs7wVJnFYXX1We2Kjd25UogJMoqpd3D1dYdxd09+VYc0mfUVUgKgD
-0LuwifCGpGo1H60XoHaVteUQ3HOJGvsgFbghiuEfNnZd/T0mMw6HPhkzJ92SR9fb
-1iGc7jZ4hlO9FKmThG6c
-=sou5
------END PGP SIGNATURE-----
-
---=-w3uoiY0u2uphtTnRrnwL--
-
+  Luis
