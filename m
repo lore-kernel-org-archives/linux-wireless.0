@@ -1,131 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:50350 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755318AbZCDSxG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 13:53:06 -0500
-Received: by rv-out-0506.google.com with SMTP id g37so3442320rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 10:53:04 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:58907 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751130AbZCXBry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 21:47:54 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 18:47:53 -0700
+Date: Mon, 23 Mar 2009 17:47:16 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Lockdep complaint between drv->mtx and cfg80211_mutex
+Message-ID: <20090324004716.GA22925@tesla> (sfid-20090324_024813_010108_D99AE49D)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890903031852u755677a9se177f6177ef13633@mail.gmail.com>
-References: <49ADEB0D.6070100@impulze.org>
-	 <43e72e890903031852u755677a9se177f6177ef13633@mail.gmail.com>
-Date: Wed, 4 Mar 2009 10:53:04 -0800
-Message-ID: <43e72e890903041053m3a8f2de4hf4b04ab08f665d77@mail.gmail.com> (sfid-20090304_195316_108975_616B1B9D)
-Subject: Re: CRDA_PATH fixes for wireless-regdb.git
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Daniel Mierswa <impulze@impulze.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 3, 2009 at 6:52 PM, Luis R. Rodriguez <mcgrof@gmail.com> wr=
-ote:
-> On Tue, Mar 3, 2009 at 6:44 PM, Daniel Mierswa <impulze@impulze.org> =
-wrote:
->> Heya, i just found that there was a typo in your Makefile and
->> debian-examples dir.
->> I fixed those plus also give the user the chance to override CRDA_PA=
-TH
->> (I use /lib64 since I like the idea of having all necessary stuff to=
- get
->> wireless connected in superuser reach). :)
->> Feedback welcomed.
->>
->> --
->> Mierswa, Daniel
->>
->> If you still don't like it, that's ok: that's why I'm boss. I simply
->> know better than you do.
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 --- Linus Torvalds,=
- comp.os.linux.advocacy, 1996/07/22
->>
->>
->>
->> From 14a0da690de4e8803809f5da970b42c953990f03 Mon Sep 17 00:00:00 20=
-01
->> From: Daniel Mierswa <impulze@impulze.org>
->> Date: Thu, 5 Feb 2009 02:11:41 +0100
->> Subject: [PATCH] CDRA_PATH typo, also let user override CRDA_PATH
->>
->> ---
->> =C2=A0Makefile =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=
-=A06 +++---
->> =C2=A0debian-example/rules | =C2=A0 =C2=A06 +++---
->> =C2=A02 files changed, 6 insertions(+), 6 deletions(-)
->>
->> diff --git a/Makefile b/Makefile
->> index a719f59..32626a1 100644
->> --- a/Makefile
->> +++ b/Makefile
->> @@ -1,6 +1,6 @@
->> =C2=A0# Install prefix
->> =C2=A0PREFIX =3D /usr
->> -CDRA_PATH =3D $(PREFIX)/lib/crda
->> +CRDA_PATH ?=3D $(PREFIX)/lib/crda
->>
->> =C2=A0MANDIR ?=3D $(PREFIX)/share/man/
->>
->> @@ -32,7 +32,7 @@ key.priv.pem:
->> =C2=A0# Distributions wishing to just use John's database
->> =C2=A0# can just call make install.
->> =C2=A0install: regulatory.bin.5.gz
->> - =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 755 -d $(DESTDIR)/$(CDRA=
-_PATH)
->> - =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 644 regulatory.bin $(DES=
-TDIR)/$(CDRA_PATH)/regulatory.bin
->> + =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 755 -d $(DESTDIR)/$(CRDA=
-_PATH)
->> + =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 644 regulatory.bin $(DES=
-TDIR)/$(CRDA_PATH)/regulatory.bin
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0mkdir -p $(DESTDIR)/$(MANDIR)/man5/
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0install -m 644 -t $(DESTDIR)/$(MANDIR)/ma=
-n5/ regulatory.bin.5.gz
->> diff --git a/debian-example/rules b/debian-example/rules
->> index dab9255..34a08a5 100755
->> --- a/debian-example/rules
->> +++ b/debian-example/rules
->> @@ -3,8 +3,8 @@
->> =C2=A0include /usr/share/cdbs/1/rules/debhelper.mk
->>
->> =C2=A0PREFIX =3D /usr
->> -CDRA_LIB =3D $(PREFIX)/lib/crda
->> +CRDA_LIB ?=3D $(PREFIX)/lib/crda
->>
->> =C2=A0install/wireless-regdb::
->> - =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 755 -d debian/$(cdbs_cur=
-pkg)/$(CDRA_LIB)
->> - =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 644 regulatory.bin debia=
-n/$(cdbs_curpkg)/$(CDRA_LIB)/regulatory.bin
->> + =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 755 -d debian/$(cdbs_cur=
-pkg)/$(CRDA_LIB)
->> + =C2=A0 =C2=A0 =C2=A0 install -o 0 -g 0 -m 644 regulatory.bin debia=
-n/$(cdbs_curpkg)/$(CRDA_LIB)/regulatory.bin
->> --
->
-> Patch doesn't apply.
->
-> mcgrof@tesla ~/devel/crda (git::master)$ git describe
-> v1.0.1-10-g479ca1d
->
-> mcgrof@tesla ~/devel/crda (git::master)$ patch -p1 <
-> ../../patches/crda-fix-path.patch
-> patching file Makefile
-> Hunk #1 FAILED at 1.
-> Hunk #2 FAILED at 32.
-> 2 out of 2 hunks FAILED -- saving rejects to file Makefile.rej
-> patching file debian-example/rules
-> Hunk #1 FAILED at 3.
-> 1 out of 1 hunk FAILED -- saving rejects to file debian-example/rules=
-=2Erej
+What I had done was load mac80211_hwsim with the module parameters regtest=4 radios=2.
+Then I spawn hostapd for wlan0, bring up wlan1, trigger a scan using iw, and then
+I rename wlan1.
 
-This patch is for John, not me.
+[ 1098.897030] =======================================================
+[ 1098.897060] [ INFO: possible circular locking dependency detected ]
+[ 1098.897081] 2.6.29-rc8-wl #23
+[ 1098.897092] -------------------------------------------------------
+[ 1098.897111] iw/6409 is trying to acquire lock:
+[ 1098.897126]  (cfg80211_mutex){--..}, at: [<ffffffffa03dd8b8>] cfg80211_dev_rename+0x28/0x1d0 [cfg80211]
+[ 1098.897175]
+[ 1098.897176] but task is already holding lock:
+[ 1098.897196]  (&drv->mtx){--..}, at: [<ffffffffa03ddbfb>] cfg80211_get_dev_from_info+0xfb/0x150 [cfg80211]
+[ 1098.897240]
+[ 1098.897241] which lock already depends on the new lock.
+[ 1098.897242]
+[ 1098.897268]
+[ 1098.897269] the existing dependency chain (in reverse order) is:
+[ 1098.897292]
+[ 1098.897292] -> #1 (&drv->mtx){--..}:
+[ 1098.897318]        [<ffffffff8026e3dc>] __lock_acquire+0xeec/0x1370
+[ 1098.897346]        [<ffffffff8026e8b6>] lock_acquire+0x56/0x80
+[ 1098.897391]        [<ffffffff8053fc43>] __mutex_lock_common+0xa3/0x470
+[ 1098.897430]        [<ffffffff805400ea>] mutex_lock_nested+0x3a/0x50
+[ 1098.897474]        [<ffffffffa03ddbfb>] cfg80211_get_dev_from_info+0xfb/0x150 [cfg80211]
+[ 1098.897537]        [<ffffffffa03e4aef>] nl80211_new_interface+0x5f/0x1f0 [cfg80211]
+[ 1098.897604]        [<ffffffff804cb766>] genl_rcv_msg+0x1b6/0x1f0
+[ 1098.897640]        [<ffffffff804c99f9>] netlink_rcv_skb+0x89/0xb0
+[ 1098.897684]        [<ffffffff804cb599>] genl_rcv+0x29/0x40
+[ 1098.897726]        [<ffffffff804c979c>] netlink_unicast+0x2cc/0x2e0
+[ 1098.897768]        [<ffffffff804ca8d4>] netlink_sendmsg+0x214/0x300
+[ 1098.897811]        [<ffffffff8049dcb7>] sock_sendmsg+0x107/0x130
+[ 1098.897855]        [<ffffffff8049de25>] sys_sendmsg+0x145/0x280
+[ 1098.897897]        [<ffffffff8020c7db>] system_call_fastpath+0x16/0x1b
+[ 1098.897942]        [<ffffffffffffffff>] 0xffffffffffffffff
+[ 1098.898014]
+[ 1098.898015] -> #0 (cfg80211_mutex){--..}:  
+[ 1098.898067]        [<ffffffff8026e4bb>] __lock_acquire+0xfcb/0x1370
+[ 1098.898103]        [<ffffffff8026e8b6>] lock_acquire+0x56/0x80
+[ 1098.898144]        [<ffffffff8053fc43>] __mutex_lock_common+0xa3/0x470
+[ 1098.898187]        [<ffffffff805400ea>] mutex_lock_nested+0x3a/0x50
+[ 1098.898229]        [<ffffffffa03dd8b8>] cfg80211_dev_rename+0x28/0x1d0 [cfg80211]
+[ 1098.898291]        [<ffffffffa03e4cc2>] nl80211_set_wiphy+0x42/0x300 [cfg80211]
+[ 1098.898358]        [<ffffffff804cb766>] genl_rcv_msg+0x1b6/0x1f0
+[ 1098.898399]        [<ffffffff804c99f9>] netlink_rcv_skb+0x89/0xb0
+[ 1098.898441]        [<ffffffff804cb599>] genl_rcv+0x29/0x40
+[ 1098.898482]        [<ffffffff804c979c>] netlink_unicast+0x2cc/0x2e0
+[ 1098.898524]        [<ffffffff804ca8d4>] netlink_sendmsg+0x214/0x300
+[ 1098.898567]        [<ffffffff8049dcb7>] sock_sendmsg+0x107/0x130
+[ 1098.898618]        [<ffffffff8049de25>] sys_sendmsg+0x145/0x280
+[ 1098.898652]        [<ffffffff8020c7db>] system_call_fastpath+0x16/0x1b
+[ 1098.898697]        [<ffffffffffffffff>] 0xffffffffffffffff
+[ 1098.898734]
+[ 1098.898735] other info that might help us debug this:
+[ 1098.898736]
+[ 1098.898804] 2 locks held by iw/6409:
+[ 1098.898838]  #0:  (genl_mutex){--..}, at: [<ffffffff804cb58a>] genl_rcv+0x1a/0x40
+[ 1098.898898]  #1:  (&drv->mtx){--..}, at: [<ffffffffa03ddbfb>] cfg80211_get_dev_from_info+0xfb/0x150 [cfg80211]
+[ 1098.898981]
+[ 1098.898981] stack backtrace:
+[ 1098.899033] Pid: 6409, comm: iw Not tainted 2.6.29-rc8-wl #23
+[ 1098.899072] Call Trace:
+[ 1098.899108]  [<ffffffff8026bf64>] print_circular_bug_tail+0xa4/0x100
+[ 1098.899149]  [<ffffffff8026e4bb>] __lock_acquire+0xfcb/0x1370
+[ 1098.899188]  [<ffffffff8026e8b6>] lock_acquire+0x56/0x80
+[ 1098.899232]  [<ffffffffa03dd8b8>] ? cfg80211_dev_rename+0x28/0x1d0 [cfg80211]
+[ 1098.899273]  [<ffffffff8053fc43>] __mutex_lock_common+0xa3/0x470
+[ 1098.899317]  [<ffffffffa03dd8b8>] ? cfg80211_dev_rename+0x28/0x1d0 [cfg80211]
+[ 1098.899358]  [<ffffffff8053fee1>] ? __mutex_lock_common+0x341/0x470
+[ 1098.899401]  [<ffffffffa03dd8b8>] ? cfg80211_dev_rename+0x28/0x1d0 [cfg80211]
+[ 1098.899445]  [<ffffffff805400ea>] mutex_lock_nested+0x3a/0x50
+[ 1098.899482]  [<ffffffffa03dd8b8>] cfg80211_dev_rename+0x28/0x1d0 [cfg80211]
+[ 1098.899518]  [<ffffffff8053f9b9>] ? mutex_unlock+0x9/0x10
+[ 1098.899555]  [<ffffffffa03e4cc2>] nl80211_set_wiphy+0x42/0x300 [cfg80211]
+[ 1098.899596]  [<ffffffff804cb238>] ? validate_nla+0xa8/0x1c0
+[ 1098.899636]  [<ffffffff804cb43f>] ? nla_parse+0xef/0x110
+[ 1098.899668]  [<ffffffff804cb766>] genl_rcv_msg+0x1b6/0x1f0
+[ 1098.899700]  [<ffffffff804cb5b0>] ? genl_rcv_msg+0x0/0x1f0
+[ 1098.899733]  [<ffffffff804c99f9>] netlink_rcv_skb+0x89/0xb0
+[ 1098.899769]  [<ffffffff804cb599>] genl_rcv+0x29/0x40
+[ 1098.899799]  [<ffffffff804c979c>] netlink_unicast+0x2cc/0x2e0
+[ 1098.899845]  [<ffffffff804a41ee>] ? __alloc_skb+0x6e/0x140
+[ 1098.899876]  [<ffffffff804ca8d4>] netlink_sendmsg+0x214/0x300
+[ 1098.899922]  [<ffffffff8029a8bd>] ? __rcu_read_unlock+0xad/0xd0
+[ 1098.899954]  [<ffffffff8049dcb7>] sock_sendmsg+0x107/0x130
+[ 1098.899998]  [<ffffffff80269604>] ? get_lock_stats+0x34/0x80
+[ 1098.900039]  [<ffffffff80259c70>] ? autoremove_wake_function+0x0/0x40
+[ 1098.900073]  [<ffffffff80269604>] ? get_lock_stats+0x34/0x80
+[ 1098.900110]  [<ffffffff8026965e>] ? put_lock_stats+0xe/0x30
+[ 1098.900153]  [<ffffffff8049d587>] ? move_addr_to_kernel+0x57/0x60
+[ 1098.900193]  [<ffffffff804a6f9f>] ? verify_iovec+0x3f/0xe0
+[ 1098.900224]  [<ffffffff8049de25>] sys_sendmsg+0x145/0x280
+[ 1098.900260]  [<ffffffff80269604>] ? get_lock_stats+0x34/0x80
+[ 1098.900298]  [<ffffffff8026965e>] ? put_lock_stats+0xe/0x30
+[ 1098.900335]  [<ffffffff8026d232>] ? trace_hardirqs_on_caller+0x162/0x1b0
+[ 1098.900383]  [<ffffffff80291f3f>] ? audit_syscall_entry+0x17f/0x1b0
+[ 1098.900423]  [<ffffffff8054162f>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[ 1098.900457]  [<ffffffff8020c7db>] system_call_fastpath+0x16/0x1b
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
