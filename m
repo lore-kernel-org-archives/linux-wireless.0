@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58966 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753364AbZCHR7d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 13:59:33 -0400
-Date: Sun, 8 Mar 2009 19:59:14 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix WMM ACM parsing and AC downgrade
-	operation
-Message-ID: <20090308175914.GA18800@jm.kir.nu> (sfid-20090308_185941_879061_F32BFAB3)
-References: <20090305152346.GA30029@jm.kir.nu> <1236515287.4205.11.camel@johannes.local> <20090308141703.GA10782@jm.kir.nu> <1236522333.4205.37.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1236522333.4205.37.camel@johannes.local>
+Received: from mga01.intel.com ([192.55.52.88]:52872 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753569AbZCXSDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 14:03:53 -0400
+Subject: Re: New firmware available for Intel PRO/Wireless 2200BG and
+ 2915ABG
+From: reinette chatre <reinette.chatre@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200903241855.06916.helmut.schaa@gmail.com>
+References: <1237916524.455.18.camel@rc-desk>
+	 <200903241855.06916.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 24 Mar 2009 11:09:18 -0700
+Message-Id: <1237918158.455.26.camel@rc-desk> (sfid-20090324_190357_638316_6E4B03D3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 08, 2009 at 03:25:33PM +0100, Johannes Berg wrote:
-> On Sun, 2009-03-08 at 16:17 +0200, Jouni Malinen wrote:
-> > On Sun, Mar 08, 2009 at 01:28:07PM +0100, Johannes Berg wrote:
-> > > On Thu, 2009-03-05 at 17:23 +0200, Jouni Malinen wrote:
-> > > > @@ -99,10 +99,13 @@ static u16 classify80211(struct ieee8021
-> > > >  	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
-> > > >  		if (wme_downgrade_ac(skb)) {
+Hi Helmut,
 
-> > > > -			return 0;
-> > > > +			break;
+On Tue, 2009-03-24 at 10:55 -0700, Helmut Schaa wrote:
+> Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
+> > A new version (3.1) of firmware for Intel=C2=AE PRO/Wireless 2200BG=
+ and
+> > 2915ABG Drivers is now available for download from
+> > http://ipw2200.sourceforge.net/firmware.php.
+>=20
+> I couldn't find a changelog for the new firmware. Could you point me =
+to
+> a changelog or provide a short summary of what changed since 3.0?
 
-> > > It seems to me that return 0 here was incorrect, or wme_downgrade_ac
-> > > needs changes?
+I am sorry, we were unable to obtain this information.
 
-> > Yes, this return 0 was incorrect and that's why I'm fixing it to not
-> > return 0 in this patch.. ;-) 
+Reinette
 
-> Sorry, I meant correct. Why is it not correct? wme_downgrade_ac doesn't
-> modify the skb when it returns an error.
-
-Ah, okay, that's a more sensible comment and I can even try to provide a
-more useful reply after having understood your point ;-). The failed
-call to wme_downgrade_ac() does not modify the skb, but the previous
-call(s) did (if there was one and there likely was). In other words, the
-loop of calling wme_downgrade_ac() will end up downgrading the skb all
-the way to using skb->priority = 2 which maps to AC_BK.
-
-classify80211() returns the queue number based on the 802.1d tag (= UP)
-and the old code was returning 0 in the error case (could not
-downgrade). If you take a look at the ieee802_1d_to_ac[] array in the
-beginning of wme.c you can see that the value 0 is used for UP values 6
-and 7, i.e., something that maps to AC_VO, while we really should return
-ieee802_1d_to_ac[2] = 3 (AC_BK) here. Breaking the loop on error makes
-the classify80211() look up the proper queue number from
-ieee802_1d_to_ac[] based on the downgraded skb->priority, not by using a
-hardcoded value here, and ends up returning the desired value here
-(lowest priority queue, not highest as the current code does).
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
