@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 27.mail-out.ovh.net ([91.121.30.210]:40238 "HELO
-	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751623AbZCKO5Z (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51840 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbZCXUAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 10:57:25 -0400
-Date: Wed, 11 Mar 2009 15:52:16 +0100
-From: Samuel Ortiz <samuel@sortiz.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alina Friedrichsen <x-alina@gmx.net>,
-	linux-wireless@vger.kernel.org, j@w1.fi
-Subject: Re: configuring while interface is down
-Message-ID: <20090311145216.GB6986@sortiz.org> (sfid-20090311_155803_370987_68CC0FE5)
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-References: <1236774973.20266.13.camel@johannes.local> <20090311134329.269810@gmx.net> <1236779314.20266.22.camel@johannes.local>
+	Tue, 24 Mar 2009 16:00:42 -0400
+Date: Tue, 24 Mar 2009 15:48:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/8] mac80211 aggregation improvements
+Message-ID: <20090324194847.GC19335@tuxdriver.com> (sfid-20090324_210045_240765_12925B51)
+References: <20090323162834.154525349@sipsolutions.net> <1237883293.6278.9.camel@johannes.local> <43e72e890903240913iee51dcbnfa2409e01d4dd5c0@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1236779314.20266.22.camel@johannes.local>
+In-Reply-To: <43e72e890903240913iee51dcbnfa2409e01d4dd5c0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2009 at 02:48:34PM +0100, Johannes Berg wrote:
-> On Wed, 2009-03-11 at 14:43 +0100, Alina Friedrichsen wrote:
-> > Hello!
-> > 
-> > > For cfg80211's assoc/ibss calls, I think we should reject them outright
-> > > when the interface is down, any objections?
-> > 
-> > How should assoc in cfg80211 work?
+On Tue, Mar 24, 2009 at 09:13:21AM -0700, Luis R. Rodriguez wrote:
+> On Tue, Mar 24, 2009 at 1:28 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2009-03-23 at 17:28 +0100, Johannes Berg wrote:
+> >
+> >> Here's my patch set for improving aggregation
+> >
+> > John, can I convince you to put this on track for .30 despite being
+> > posted just hours before the merge window officially opened? The reason
+> > I'm asking is that otherwise I'll have to support two code bases with
+> > rather different ways to have aggregation working for iwlwifi again,
+> > with different sets of bugs and different ways to fix it. This patch set
+> > has also been tested fairly extensively already [1] inside Intel for
+> > iwlwifi hardware and by Sujith for ath9k (and myself for both).
 > 
-> see Jouni's patches.
-> 
-> > For WEXT I like collecting all changes while the interface is down and
-> > the if it's up again apply them in one step. That is the reason why I
-> > want call "*_commit()" on interface up.
-> 
-> which is what we'll continue doing in cfg80211, but I think we shouldn't
-> bother the driver/mac80211 with it until the netdev is up, and thus
-> reject things from nl80211.
-That is quite reasonable, please go for it.
+> It is not accurate to say Sujith has extensively tested this for
+> ath9k, he probably just ran it a few times. So I cannot say we are as
+> comfortable with the patches as you or Intel seem to be already.
 
-Cheers,
-Samuel.
+Johannes,
 
+Given Luis's objection I'm inclined to delay.  I have asked
+him to try to "get comfortable" with this patch series over the next
+few days.  If that happens, then I'll try to get this merged during
+the window.
 
+John
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
