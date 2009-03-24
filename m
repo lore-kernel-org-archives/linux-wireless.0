@@ -1,94 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:39010 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbZCYUIf (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:34125 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753082AbZCXUdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 16:08:35 -0400
-Received: by bwz17 with SMTP id 17so216553bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 13:08:32 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 0/5] mac80211: beacon filtering
-References: <20090322195619.26460.48292.stgit@tikku>
-	<1237900276.4320.86.camel@johannes.local>
-	<87iqly0ydm.fsf@litku.valot.fi>
-	<1237973445.4320.135.camel@johannes.local>
-	<87eiwl1jo2.fsf@litku.valot.fi>
-	<1238010031.4320.164.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 25 Mar 2009 22:08:29 +0200
-In-Reply-To: <1238010031.4320.164.camel@johannes.local> (Johannes Berg's message of "Wed\, 25 Mar 2009 20\:40\:31 +0100")
-Message-ID: <871vsl1i2q.fsf@litku.valot.fi> (sfid-20090325_210839_150490_ED6C86DA)
+	Tue, 24 Mar 2009 16:33:32 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+Date: Tue, 24 Mar 2009 21:33:27 +0100
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com> <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com>
+In-Reply-To: <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903242133.28405.chunkeey@web.de> (sfid-20090324_213334_581898_A7C12C9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Tuesday 24 March 2009 21:10:21 Luis R. Rodriguez wrote:
+> On Tue, Mar 24, 2009 at 1:03 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> > On Tue, Mar 24, 2009 at 2:41 PM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> >> Do any of you guys have time to pick it up?
+> >
+> > Well my patch #2 is pretty similar to what Christian has, and I'd like to
+> > upstream the first few patches soon (especially the ath.ko creation, it is a
+> > beast to rebase as you saw).  That would bring up the first contentious
+> > point of the merge: is "ath/ath.ko" ok with everyone?
+> 
+> Yes.
+Yes.
 
-> On Wed, 2009-03-25 at 21:34 +0200, Kalle Valo wrote:
->
->> > It has to be dynamic, no? Much of the information in there would be
->> > things wpa_supplicant is only interested in. If it was just the kernel
->> > code -- yes, we could just have a static list somewhere -- but much of
->> > the 11k things for instance are only useful for wpa_supplicant.
->> 
->> But if we already know what wpa_supplicant needs, can't we do the
->> first implementation with a static list? Sure, the dynamic list is
->> something we should aim for.
->
-> True. The userspace part is easy to add though, just make it part of the
-> assoc() nl80211 command. So we just need the static list for the
-> mac80211 part.
+> > ath5k/9k specific
+> > bits can eventually go in ath/{5k,9k} subdirs... not sure where 9170
+> > lives then :)
+> 
+> Wherever Christian wants it. If he finds re-usable bits then great.
+maybe ath/9kusb ?
+ 
+> > I probably can't get to it until the weekend, but if you have more time,
+> > Christian, feel free to adopt whatever you want from mine.  Otherwise I'll
+> > pick up where Luis left off on the weekend.
+Done! Patch attached, please add to the tree ;)
 
-Sounds easy enough.
+> > I didn't push it yet because ath5k was having problems once I turned it
+> > on for ath5k,
+> 
+> So this is why I recommend to trim the channel list down of ath5k. The
+> other reason is you won't have users spending what may be 3/4 of their
+> time scanning on channels that they won't ever find APs in. What can
+> be done here is add  flag or command as we had reviewed a while back
+> to allow the user to enable these channels if he knows what he is
+> doing so that way we know we don't mind bothering scanning on the
+> gazillion channels. But that is just my advice. My concern first is to
+> get users working happily and quickly associated to an AP and I think
+> that parallels those goals and puts as secondary the bells and
+> whistles of adding every single possible channel.
+> 
+> > and I have no other hardware to test with so wanted to
+> > figure out what was broken first.
+> > Channel list is a good hint, maybe
+> > it's time to fix iw/nl80211 to send back all the channels :)
+> 
+> So that is the other option. I tried looking at that yesterday but
+> wasn't able to find a way to do this. I went through the netlink
+> documenation and even tried modifying the skb on the kernel side as
+> its a dump. Not sure what to do here to fix this.
+> 
+> So yes, both are possible options. Just keep in mind that without
+> being able to see the channel list with 'iw list' debugging regulatory
+> is a real royal pain in the ass. So I'd try to fix that first either
+> through channel reduction (you get another bonus enhancement for
+> scanning time for users) or through fixing this through iw/nl80211.
+> 
+> Johannes probably can advise best on the second path.
+> 
+>   Luis
+---
+From: Christian Lamparter <chunkeey@web.de>
+Date: Tue, 24 Mar 2009 21:24:14 +0100
+Subject: [PATCH] ar9170: use regulatory infrastructure
+To: linux-wireless@vger.kernel.org
 
->> Do we have any knowledge how different hardware support beacon
->> checksumming? I only know how stlc45xx does it.
->
-> Not really... how about wl12xx?
+Make ar9170 select the ath module and add in the hooks to make the
+eeprom regulatory hint and reg notifier take effect.
 
-Heh, I'm so focused on my thesis right now that forgot wl12xx
-altogether :)
-
-I haven't investigate wl12xx beacon filtering in detail yet, but below
-is what I quickly found from the firmware interface header files.
-Looks like just what we would have expected.
-
-
-Name:       ACX_BEACON_FILTER_TABLE
-
-Desc: This information element configures beacon filtering handling
-      for the set of information elements. An information element in a
-      beacon can be set to be: ignored (never compared, and changes
-      will not cause beacon transfer), checked (compared, and
-      transferred in case of a change), or transferred (transferred to
-      the host for each appearance or disappearance).
-
-      The table contains all information elements that are subject to
-      monitoring for host transfer.
-
-      All information elements that are not in the table should be
-      ignored for monitoring.
-
-      This functionality is only enabled when beacon filtering is enabled by 
-      ACX_BEACON_FILTER_OPT.
-
-         Type:   Filtering Configuration
-
-         Access: Write Only
-
-         Length: 101
-
-         Notes:  the field measuring the value of received beacons for
-                 which the device wakes up the host in
-                 ACX_BEACON_FILTER_OPT does not affect this
-                 information element.
-
-http://android.git.kernel.org/?p=platform/system/wlan/ti.git;a=blob;f=sta_dk_4_0_4_32/common/src/hal/FirmwareApi/public_infoele.h;h=9a7d1c1203de4db83f700d8cc961cee04e7e5de9;hb=HEAD#l720
-
--- 
-Kalle Valo
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ar9170/Kconfig b/drivers/net/wireless/ar9170/Kconfig
+index de4281f..b99e326 100644
+--- a/drivers/net/wireless/ar9170/Kconfig
++++ b/drivers/net/wireless/ar9170/Kconfig
+@@ -2,6 +2,7 @@ config AR9170_USB
+ 	tristate "Atheros AR9170 802.11n USB support"
+ 	depends on USB && MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	select FW_LOADER
++	select ATH_COMMON
+ 	help
+ 	  This is a driver for the Atheros "otus" 802.11n USB devices.
+ 
+diff --git a/drivers/net/wireless/ar9170/ar9170.h b/drivers/net/wireless/ar9170/ar9170.h
+index f4fb2e9..87c1985 100644
+--- a/drivers/net/wireless/ar9170/ar9170.h
++++ b/drivers/net/wireless/ar9170/ar9170.h
+@@ -48,6 +48,8 @@
+ #include "eeprom.h"
+ #include "hw.h"
+ 
++#include "../ath/regd.h"
++
+ #define PAYLOAD_MAX	(AR9170_MAX_CMD_LEN/4 - 1)
+ 
+ enum ar9170_bw {
+@@ -151,6 +153,7 @@ struct ar9170 {
+ 
+ 	/* EEPROM */
+ 	struct ar9170_eeprom eeprom;
++	struct ath_regulatory regulatory;
+ 
+ 	/* global tx status for unregistered Stations. */
+ 	struct sk_buff_head global_tx_status;
+diff --git a/drivers/net/wireless/ar9170/main.c b/drivers/net/wireless/ar9170/main.c
+index 5996ff9..4a251fc 100644
+--- a/drivers/net/wireless/ar9170/main.c
++++ b/drivers/net/wireless/ar9170/main.c
+@@ -1619,12 +1619,24 @@ static int ar9170_read_eeprom(struct ar9170 *ar)
+ 	else
+ 		ar->hw->channel_change_time = 80 * 1000;
+ 
++	ar->regulatory.current_rd = le16_to_cpu(ar->eeprom.reg_domain[0]);
++	ar->regulatory.current_rd_ext = le16_to_cpu(ar->eeprom.reg_domain[1]);
++
+ 	/* second part of wiphy init */
+ 	SET_IEEE80211_PERM_ADDR(ar->hw, addr);
+ 
+ 	return bands ? 0 : -EINVAL;
+ }
+ 
++int ar9170_reg_notifier(struct wiphy *wiphy,
++			struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct ar9170 *ar = hw->priv;
++
++	return ath_reg_notifier_apply(wiphy, request, &ar->regulatory);
++}
++
+ int ar9170_register(struct ar9170 *ar, struct device *pdev)
+ {
+ 	int err;
+@@ -1634,10 +1646,16 @@ int ar9170_register(struct ar9170 *ar, struct device *pdev)
+ 	if (err)
+ 		goto err_out;
+ 
++	err = ath_regd_init(&ar->regulatory, ar->hw->wiphy,
++			    ar9170_reg_notifier);
++
+ 	err = ieee80211_register_hw(ar->hw);
+ 	if (err)
+ 		goto err_out;
+ 
++	if (!ath_is_world_regd(&ar->regulatory))
++		regulatory_hint(ar->hw->wiphy, ar->regulatory.alpha2);
++
+ 	err = ar9170_init_leds(ar);
+ 	if (err)
+ 		goto err_unreg;
