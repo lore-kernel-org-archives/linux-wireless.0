@@ -1,104 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:54192 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864AbZC0OGP (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3988 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860AbZCXDgA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 10:06:15 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: p54spi - mesh mode summary
-Date: Fri, 27 Mar 2009 15:06:10 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <1238055167.4331.3.camel@johannes.local> <200903270803.54820.jcmvbkbc@gmail.com>
-In-Reply-To: <200903270803.54820.jcmvbkbc@gmail.com>
+	Mon, 23 Mar 2009 23:36:00 -0400
+Date: Mon, 23 Mar 2009 23:35:37 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, mickflemm@gmail.com,
+	jirislaby@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: properly drop packets from ops->tx
+Message-ID: <20090324033537.GA9333@hash.localnet> (sfid-20090324_043604_911288_9B094E6B)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903271506.10614.chunkeey@web.de> (sfid-20090327_150617_748617_A03AE9DE)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 March 2009 06:03:54 Max Filippov wrote:
-> > > 4) Pings don't go, because MPs don't answer ARP requests sent to it.
-> > > Haven't tested for the root cause yet.
-> >
-> > Maybe some multicast issue?
-> 
-> ARP requests get filtered out by LMAC.
-> Can anyone explain why? My 802.11s comprehension is quite weak.
-> Here's the packet:
-> 
-> IEEE 802.11 Data, Flags: ......FT
->     Type/Subtype: Data (0x20)
->     Frame Control: 0x0308 (Normal)
->         Version: 0
->         Type: Data frame (2)
->         Subtype: 0
->         Flags: 0x3
->             DS status: WDS (AP to AP) or Mesh (MP to MP) Frame (To DS: 1 From DS: 1) (0x03)
->             .... .0.. = More Fragments: This is the last fragment
->             .... 0... = Retry: Frame is not being retransmitted
->             ...0 .... = PWR MGT: STA will stay up
->             ..0. .... = More Data: No data buffered
->             .0.. .... = Protected flag: Data is not protected
->             0... .... = Order flag: Not strictly ordered
->     Duration: 0
->     Receiver address: Broadcast (ff:ff:ff:ff:ff:ff)
->     Transmitter address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
->     Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
->     Fragment number: 0
->     Sequence number: 2
->     Source address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
->     Mesh Header
->         Address Extension 0
->         Mesh TTL: 5
->         Mesh Seq: 0
-> Logical-Link Control
->     DSAP: SNAP (0xaa)
->     IG Bit: Individual
->     SSAP: SNAP (0xaa)
->     CR Bit: Command
->     Control field: U, func=UI (0x03)
->         000. 00.. = Command: Unnumbered Information (0x00)
->         .... ..11 = Frame type: Unnumbered frame (0x03)
->     Organization Code: Encapsulated Ethernet (0x000000)
->     Type: ARP (0x0806)
-> Address Resolution Protocol (request)
->     Hardware type: Ethernet (0x0001)
->     Protocol type: IP (0x0800)
->     Hardware size: 6
->     Protocol size: 4
->     Opcode: request (0x0001)
->     Sender MAC address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
->     Sender IP address: 192.168.4.13 (192.168.4.13)
->     Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
->     Target IP address: 192.168.4.14 (192.168.4.14)
-> 
-> 
-> I'm tempted to do something like this in p54_setup_mac:
-> 
-> -               case NL80211_IFTYPE_MESH_POINT:
->                         mode = P54_FILTER_TYPE_IBSS;
->                         break;
-> +               case NL80211_IFTYPE_MESH_POINT:
-> +                       mode = P54_FILTER_TYPE_IBSS | P54_FILTER_TYPE_TRANSPARENT;
-> +                       break;
-> 
-> But I guess that's bad solution, at least for pci/usb drivers.
-> Christian, Johannes, what would you suggest?
-That's odd.
+We shouldn't return NETDEV_TX_BUSY from the TX callback, especially
+after we've mucked with the sk_buffs.  Drop the packets and return
+NETDEV_TX_OK.
 
-P54_FILTER_TYPE_TRANSPARENT should be already set for mesh mode.
+Changes-licensed-under: 3-Clause-BSD
 
-The reason is that mesh mode will automatically set the FIF_OTHER_BSS flag,
-(file:net/mac80211/iface.c func:ieee80211_open lines:251 f) 
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-which in turn ORs the P54_FILTER_TYPE_TRANSPARENT flag to the mode...
-(file:drivers/net/wireless/p54/p54common.c func: p54_setup_mac lines: 1691 f)
+ath5k seems to have the same issue identified in zd1211rw of attempting
+retries after modifying the skb's.. and TX_BUSY isn't supposed to be
+used anyway.
 
-So, there's no need to OR a flag that gets ORed anyway?
+ drivers/net/wireless/ath5k/base.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Regards,
-	Chr
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 6580df2..5d57d77 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2562,7 +2562,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		if (skb_headroom(skb) < padsize) {
+ 			ATH5K_ERR(sc, "tx hdrlen not %%4: %d not enough"
+ 				  " headroom to pad %d\n", hdrlen, padsize);
+-			return NETDEV_TX_BUSY;
++			goto drop_packet;
+ 		}
+ 		skb_push(skb, padsize);
+ 		memmove(skb->data, skb->data+padsize, hdrlen);
+@@ -2573,7 +2573,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ATH5K_ERR(sc, "no further txbuf available, dropping packet\n");
+ 		spin_unlock_irqrestore(&sc->txbuflock, flags);
+ 		ieee80211_stop_queue(hw, skb_get_queue_mapping(skb));
+-		return NETDEV_TX_BUSY;
++		goto drop_packet;
+ 	}
+ 	bf = list_first_entry(&sc->txbuf, struct ath5k_buf, list);
+ 	list_del(&bf->list);
+@@ -2590,10 +2590,12 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		list_add_tail(&bf->list, &sc->txbuf);
+ 		sc->txbuf_len++;
+ 		spin_unlock_irqrestore(&sc->txbuflock, flags);
+-		dev_kfree_skb_any(skb);
+-		return NETDEV_TX_OK;
++		goto drop_packet;
+ 	}
++	return NETDEV_TX_OK;
+ 
++drop_packet:
++	dev_kfree_skb_any(skb);
+ 	return NETDEV_TX_OK;
+ }
+ 
+-- 
+1.6.0.6
+
+
