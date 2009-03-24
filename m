@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37529 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756117AbZCJRXM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 13:23:12 -0400
-Subject: Re: [PATCH 00/15] ath9k: Virtual interfaces and radios
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "Stephen Gutknecht (hilltx)" <stephen@hilltx.com>,
-	linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-In-Reply-To: <20090310170304.GA18634@jm.kir.nu> (sfid-20090310_180327_357164_9E7CF7A6)
-References: <eef88e5b0903100543l22622769u5951003099eef312@mail.gmail.com>
-	 <20090310170304.GA18634@jm.kir.nu> (sfid-20090310_180327_357164_9E7CF7A6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SjO3Rsaj7r8gcrjgK6zx"
-Date: Tue, 10 Mar 2009 18:23:07 +0100
-Message-Id: <1236705787.9658.51.camel@johannes.local> (sfid-20090310_182325_024160_413C5283)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:46811 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1761087AbZCXUYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 16:24:10 -0400
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=iso-8859-1
+Date: Tue, 24 Mar 2009 21:24:06 +0100
+From: "Martin Bammer" <MrB74@gmx.at>
+In-Reply-To: <b6c5339f0903231514j1e248b21ofbd8655aeb42f0b8@mail.gmail.com>
+Message-ID: <20090324202406.10830@gmx.net> (sfid-20090324_212419_225401_AD725D34)
+MIME-Version: 1.0
+References: <1237682473-5994-1-git-send-email-tuliom@gmail.com>	
+ <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com>	
+ <20090323220843.GA8075@joutaro.rooms.iriga>
+ <b6c5339f0903231514j1e248b21ofbd8655aeb42f0b8@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
+To: Bob Copeland <me@bobcopeland.com>, tuliom@gmail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+MAC: 00:22:43...
 
---=-SjO3Rsaj7r8gcrjgK6zx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+-------- Original-Nachricht --------
+> Datum: Mon, 23 Mar 2009 18:14:48 -0400
+> Von: Bob Copeland <me@bobcopeland.com>
+> An: Tulio Magno Quites Machado Filho <tuliom@gmail.com>, mrb74@gmx.at
+> CC: linville <linville@tuxdriver.com>, ath5k-devel <ath5k-devel@lists=
+=2Eath5k.org>, linux-wireless <linux-wireless@vger.kernel.org>
+> Betreff: Re: [PATCH] ath5k: Support LED\'s on Acer Extensa 5620z
 
-On Tue, 2009-03-10 at 19:03 +0200, Jouni Malinen wrote:
+> On Mon, Mar 23, 2009 at 6:08 PM, Tulio Magno Quites Machado Filho
+> <tuliom@gmail.com> wrote:
+> > This website
+> (http://www.modem-help.co.uk/search.php?id=3DPCI\VEN_1814%26DEV_0781%=
+26SUBSYS_10591A3B) identifies it as ASUSTek.
+> > Maybe Fukato notebooks are manufactured by ASUSTek.
+>=20
+> Probably.
+>=20
+> > Do you have it's MAC address?
+>=20
+> No, but that's a good idea.
+>=20
+> Martin, would you mind posting the first three octets of your MAC
+> address for the atheros card so we can get the vendor name correct?
+>=20
+> (bugzilla was here: http://bugzilla.kernel.org/show_bug.cgi?id=3D1284=
+1)
+>=20
+> --=20
+> Bob Copeland %% www.bobcopeland.com
 
-> They went already in into wireless-testing git tree. I would certainly
-> be interested in see test reports if people are doing some experiments
-> with the new code. There are still number of areas that can benefit from
-> optimizations and combinations that do not probably work yet, so it will
-> be useful to know if these show up in a configuration that someone would
-> like to use.
-
-Speaking of which -- has anyone ever tested WDS with mac80211?
-
-johannes
-
---=-SjO3Rsaj7r8gcrjgK6zx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJtqH5AAoJEKVg1VMiehFYrk0P/iu+KP+bADpMupbDDAGkNrN9
-OlJBj/WFxTmM6eLi0wIwDbi1mt4Sj/NzGWDSxdmb9t4RevwHTx4a7rkKJdzH47ww
-QF74iJObtMEdTQNrlQGShzKxKfrKm0hG076sA9SIETvvOUFSEMDcZU2YN4IgtWyM
-70HiImjgpTEYvhZ1mi/HDLQI/Zm3PqvU49eDkoeWbGZ6NJuf1S0CXB/zdVndtKe9
-XVPmtCL4ib/Py9pQQNCxMHQdRfT4MEF9diie0tb2g7vIgmw6J0ei/2ytu5Giytji
-hSHPnVSi+dFm7H4jSH8Tg/ZK43Ovhpd6JuB7oMS3UW1JYP3p1IfQtTzP+MBgImsQ
-qfDGlUfGER4Bu4SxXXZyvVVCFSpidJRALEgI7km/Mgk7SO+KYCVVTFY4vKhTDJoF
-tq29CMrG8mwbhF9zY1H8/JndkxmuFdycmSAz1BBaZQlFs3X/8uJkOr2ZItiwsdqp
-a3x2UeX0sbpC7sBvkSf48FfOa16oCUVYPURqhqh5SYKGj4ti4wP891WGy6ciCsQe
-SlBEs6ZG7Mk46GiJu1oS8RPVGCHPIqCHscvWD6oix3wx+x0V+I0namyDscPw0GRt
-+JSfUcJppwipCY9mWoDEcBcz+caFmDnhWyY6ZFuxSqegMUHnLosggEVXBhMx7tY5
-LzbMOKNyN3e+ywVD2aIq
-=FErP
------END PGP SIGNATURE-----
-
---=-SjO3Rsaj7r8gcrjgK6zx--
-
+--=20
+Aufgepasst: Sind Ihre Daten beim Online-Banking auch optimal gesch=FCtz=
+t?
+Jetzt absichern: https://homebanking.gmx.net/?mc=3Dmail@footer.hb
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
