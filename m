@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265AbZCYI5m (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:12719 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391AbZCXKgU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 04:57:42 -0400
-Subject: Re: Adhoc-demo support in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ming li <mingli@cs.umass.edu>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <c03d7e680903241358ya809dabhcc75eeca14782ff3@mail.gmail.com> (sfid-20090324_215825_944080_2BF8E074)
-References: <c03d7e680903240959s51aa4864uaad281bd7487e823@mail.gmail.com>
-	 <871vsmrekh.fsf@litku.valot.fi>
-	 <c03d7e680903241348x27363902m764c25a9a439d419@mail.gmail.com>
-	 <1237928031.4320.133.camel@johannes.local>
-	 <c03d7e680903241358ya809dabhcc75eeca14782ff3@mail.gmail.com>
-	 (sfid-20090324_215825_944080_2BF8E074)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gmdPo9b6XrDikX037nnn"
-Date: Wed, 25 Mar 2009 09:57:04 +0100
-Message-Id: <1237971424.4320.134.camel@johannes.local> (sfid-20090325_095745_928776_13B8381A)
-Mime-Version: 1.0
+	Tue, 24 Mar 2009 06:36:20 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: Google Summer of Code 2009 -- Linux wireless roaming project
+Date: Tue, 24 Mar 2009 11:36:03 +0100
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	Mircea Gherzan <mgherzan@gmail.com>
+References: <20090320215705.GE8120@tesla> <200903241006.43512.hs4233@mail.mn-solutions.de> <200903241115.29868.helmut.schaa@gmail.com>
+In-Reply-To: <200903241115.29868.helmut.schaa@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903241136.03991.hs4233@mail.mn-solutions.de> (sfid-20090324_113624_832939_5EC3ADBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> Got your point. My concern was not about the AP selection ;).
 
---=-gmdPo9b6XrDikX037nnn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, I now realized that we talked about different thresholds:
 
-On Tue, 2009-03-24 at 16:58 -0400, ming li wrote:
-> Yes, I have to disable beaconing. Is there any easy way to disable
-> them? Will this confuse the state machine in mac80211?
+a) when to do scanning
+b) what AP to select
 
-Not really, it should work, with the expected problems.
+and on top of this b) with absolute and relative meaning :-)
 
-I'm not going to support it in mac80211 though -- so you're going to
-rely on a patch to the kernel forever forward.
 
-johannes
+> Hmm, quick example: AP1 - STA - AP2
+>
+> We cannot consider the signal strength as constant as it
+> varies over time even when neither the STA nor the AP are
+> moving. Assume a threshold value of t=40. Furthermore, the
+> signal strength of AP1 and AP2 might alter between 35-50 which
+> means we have an average signal strength of 42,5 > t.
+> Nevertheless that would result in ping-pongs between AP1 and
+> AP2 because the signal might drop below t on both APs, while
+> it would be better to stick to one AP as the signal is already
+> quite bad (but still good enough to do some communication).
 
---=-gmdPo9b6XrDikX037nnn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Yeah, but if the client is moving, you have to live with that, 
+more or less.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+And if the client is not moving (and roaming is a loadable kernel 
+module), then simply don't load it :-)
 
-iQIcBAABAgAGBQJJyfHeAAoJEKVg1VMiehFYicMP/0PYelUsjbwhbMf02F5knE3r
-5XpWPfXX9NW34cKcpI9aPxSaOpxmifPadzSHWt57+P5UvALPcAJmmBT985k7sHQf
-LKZptaJWnLAoBqd41gEolXvl04aAhbBTHOtFfIBA5dGZdWzSrPi4+iAVpAPiPTQl
-+BKEmZ/R07On54nWa7iphxnR84PbXN4P+Kjegb7YI/a6L2DoD+0t8zPwCyoJessy
-fm4HgDQ1H14pMQnP8Y0uaIJWgngzXWsp0WpawgtM1vRZZOJijR+3txruHGe/qeiE
-07tCOSttLrTFO2AQI1xXJjnbpwcJqmpWXV4+AGFq3SrIcSBsHRuIsoUuRW61ZncW
-eYRoGK/fhDSAAaokAs7ManwlZH2na5ZstbYoGNu4fm3OEu/ce1dQURJJXm4Z2X7R
-ri10Ea7skQK8MLoaSB8lmL5GjTBoIH3AWEdF3qxNqr10T6iygqbJYV5SpDw6LN3W
-WJFZFIRXs6LHhCB7XQMJ0oRPVxLXQZqyw7657aSvWXTYIk65TsPX0X/JUOjwg/A3
-cNtvN/hHrpu9RVFGG7ogFQUxEFKd5DwwF7u1purc12PNztwJrJdvKtENy1ez1tOj
-MLqZgBzc4qokP76cXlzdu/tLkMMgYGTamwVU7Eu+zqpwFNPuK1bZLYhPVnPbT8pi
-qdJ3QRpieOotMwDOY4a6
-=fV5b
------END PGP SIGNATURE-----
 
---=-gmdPo9b6XrDikX037nnn--
+My ad-hoc approach that I already implemented (for non-mac80211) 
+shows a quite number of scannings. But that is ok for my 
+use-case (e.g. telnet connection via WLAN). "Connection lost" is 
+way worse than one scanning/reassociation too much, especially 
+if the scanning/association is done intelligently.
 
+So for now I wouldn't optimize here, but make non-sucking roaming 
+possible in the first place. We can build upon this anyway.
+
+
+
+BTW, I actually looked once into mac80211, to see if I can get a 
+roaming similar to what madwifi with a little patch does now. 
+However, I quickly was lost in the djungle of cfg80211, nl80211, 
+mac80211. I found it overly complex just to add one additional 
+netlink-message, e.g. to specify the threshold via "iw". Maybe 
+I've done something wrong (e.g. not stared long enought at the 
+source-code), but I think it was necessary to change 80-100 
+lines just to get one value from "iw" into mac80211.
