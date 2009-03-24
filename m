@@ -1,117 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:49547 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbZC3Nz2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752968AbZCXI2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 09:55:28 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [PATCH] p54spi: fix locking warning in p54spi_op_tx
-Date: Mon, 30 Mar 2009 15:55:24 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903301555.24267.chunkeey@web.de> (sfid-20090330_155531_235392_49DD89C6)
+	Tue, 24 Mar 2009 04:28:18 -0400
+Subject: Re: [PATCH 0/8] mac80211 aggregation improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090323162834.154525349@sipsolutions.net> (sfid-20090323_173225_411533_528EB86B)
+References: <20090323162834.154525349@sipsolutions.net>
+	 (sfid-20090323_173225_411533_528EB86B)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-71myUTzeQj7SDzJYJHTH"
+Date: Tue, 24 Mar 2009 09:28:13 +0100
+Message-Id: <1237883293.6278.9.camel@johannes.local> (sfid-20090324_092822_038866_C439D2FE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following waring:
-> ------------[ cut here ]------------
->WARNING: at kernel/softirq.c:138 local_bh_enable+0x54/0xbc()
->Modules linked in: p54spi
->[<c0034ff8>] (dump_stack+0x0/0x14)
->[<c005b1a4>] (warn_on_slowpath+0x0/0x68)
->[<c00604c8>] (local_bh_enable+0x0/0xbc)
->[<bf000000>] (p54spi_op_tx+0x0/0x4c [p54spi])
->[<c01a4d34>] (p54_sta_unlock+0x0/0x78)
 
-p54spi_op_tx needs to be called from different locking contexts.
-Therefore we have to protect the linked list with irqsave spinlocks.
+--=-71myUTzeQj7SDzJYJHTH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Max Filippov <jcmvbkbc@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index 155f453..5202312 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -469,9 +469,10 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
- 	struct ieee80211_tx_info *info;
- 	struct p54_tx_info *minfo;
- 	struct p54s_tx_info *dinfo;
-+	unsigned long flags;
- 	int ret = 0;
- 
--	spin_lock_bh(&priv->tx_lock);
-+	spin_lock_irqsave(&priv->tx_lock, flags);
- 
- 	while (!list_empty(&priv->tx_pending)) {
- 		entry = list_entry(priv->tx_pending.next,
-@@ -479,7 +480,7 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
- 
- 		list_del_init(&entry->tx_list);
- 
--		spin_unlock_bh(&priv->tx_lock);
-+		spin_unlock_irqrestore(&priv->tx_lock, flags);
- 
- 		dinfo = container_of((void *) entry, struct p54s_tx_info,
- 				     tx_list);
-@@ -491,16 +492,14 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
- 
- 		ret = p54spi_tx_frame(priv, skb);
- 
--		spin_lock_bh(&priv->tx_lock);
--
- 		if (ret < 0) {
- 			p54_free_skb(priv->hw, skb);
--			goto out;
-+			return ret;
- 		}
--	}
- 
--out:
--	spin_unlock_bh(&priv->tx_lock);
-+		spin_lock_irqsave(&priv->tx_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&priv->tx_lock, flags);
- 	return ret;
- }
- 
-@@ -510,12 +509,13 @@ static void p54spi_op_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct p54_tx_info *mi = (struct p54_tx_info *) info->rate_driver_data;
- 	struct p54s_tx_info *di = (struct p54s_tx_info *) mi->data;
-+	unsigned long flags;
- 
- 	BUILD_BUG_ON(sizeof(*di) > sizeof((mi->data)));
- 
--	spin_lock_bh(&priv->tx_lock);
-+	spin_lock_irqsave(&priv->tx_lock, flags);
- 	list_add_tail(&di->tx_list, &priv->tx_pending);
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_unlock_irqrestore(&priv->tx_lock, flags);
- 
- 	queue_work(priv->hw->workqueue, &priv->work);
- }
-@@ -616,6 +616,7 @@ out:
- static void p54spi_op_stop(struct ieee80211_hw *dev)
- {
- 	struct p54s_priv *priv = dev->priv;
-+	unsigned long flags;
- 
- 	if (mutex_lock_interruptible(&priv->mutex)) {
- 		/* FIXME: how to handle this error? */
-@@ -627,9 +628,9 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
- 	cancel_work_sync(&priv->work);
- 
- 	p54spi_power_off(priv);
--	spin_lock_bh(&priv->tx_lock);
-+	spin_lock_irqsave(&priv->tx_lock, flags);
- 	INIT_LIST_HEAD(&priv->tx_pending);
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_unlock_irqrestore(&priv->tx_lock, flags);
- 
- 	priv->fw_state = FW_STATE_OFF;
- 	mutex_unlock(&priv->mutex);
+On Mon, 2009-03-23 at 17:28 +0100, Johannes Berg wrote:
+  =20
+> Here's my patch set for improving aggregation
+
+John, can I convince you to put this on track for .30 despite being
+posted just hours before the merge window officially opened? The reason
+I'm asking is that otherwise I'll have to support two code bases with
+rather different ways to have aggregation working for iwlwifi again,
+with different sets of bugs and different ways to fix it. This patch set
+has also been tested fairly extensively already [1] inside Intel for
+iwlwifi hardware and by Sujith for ath9k (and myself for both).
+
+The decision isn't mine to make, obviously, and I'll put up with
+whatever you decide is best, even if that means supporting both code
+bases.
+
+johannes
+
+[1] unlike that patch to remove the superfluous code, sorry about that
+
+--=-71myUTzeQj7SDzJYJHTH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJyJmbAAoJEKVg1VMiehFYqTMP/1fnjr07yY6+b61Cvobk9doc
+g1x2f0X+gfJpur2NsVkAJb+kfycE2bNw1GWZH9ZlqzcHNIeaAzmnU93rz+F/MrDF
+d6H6y0dzsdNfiDNF+KqAC3ob9hwAQDCv8vs3Vmjas7M3ceqWxm6vvQ6D2Ispb4bh
+2qb8LIBL5mvU2ZD1X4ikUsS92bCn1do9gSwz0odTOsFbUpOjSlUrqS7kaxy3Y0eV
+Zxx08hxNwWbUltOcne+VGzTZeXRpXz2EjV0T+ilUJTXVVN+WYFuDYhALjVkKKrh9
+C6Ymk17wuVbyBdnQSz+kHzckjPXAS3rUEMT+Z2Xy06Jdr0FiS86aBgACljPeTk4+
+3NRzUc6lBBkDsnZCm8JbEY0IOtd9m55DyGuV1ND4yoKTM5gaiyA4Spz2pXMDMmDZ
+hp1AfqFccaX8Ws5QhIiej2rsOrbSRCO3w1q3YBSuuJOgvb8y9im0rbEXKmedvDKo
+3+rSALHCU7lUKbOG30WnTaYyRGHVNQTdF54wSdlZTOWDCiaSrGWjkaL3+XSNr/6d
+bYjJDrWNse2tAm92wGwfrJzOyqlZTZUAdh+4qIDSaXL1wUm3Foq12bEpEs2o6Fg+
+Y5GaBynZqc9sNkXpkdtNzdhOIz3yPZSwFCZsNNG1Gzahq/E18pNV/Ylus9W5lYgG
+e06d6JOdxwDaZRS/s6D/
+=YihW
+-----END PGP SIGNATURE-----
+
+--=-71myUTzeQj7SDzJYJHTH--
+
