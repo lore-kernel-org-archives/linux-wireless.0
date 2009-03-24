@@ -1,30 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f175.google.com ([209.85.218.175]:43114 "EHLO
-	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239AbZCOUrG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56672 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756102AbZCXUPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 16:47:06 -0400
-Received: by bwz23 with SMTP id 23so736167bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 13:47:01 -0700 (PDT)
-Message-ID: <49BD6943.7060609@gmail.com> (sfid-20090315_214709_103185_0F39221A)
-Date: Sun, 15 Mar 2009 21:46:59 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Tue, 24 Mar 2009 16:15:42 -0400
+Date: Tue, 24 Mar 2009 16:01:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] Marvell CF8381
+Message-ID: <20090324200118.GD19335@tuxdriver.com> (sfid-20090324_211546_303953_B37A78A2)
+References: <200903220127.21836.marek.vasut@gmail.com> <200903232258.57323.marek.vasut@gmail.com> <1237849710.26204.17.camel@localhost.localdomain> <200903240042.41054.marek.vasut@gmail.com> <1237890387.25734.9.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 2/3] ath5k: Convert chip specific calibration data to
- a  generic format
-References: <20090315201704.GB5246@makis> <49BD65D2.1040608@gmail.com> <40f31dec0903151344x5a7ddfacwd5c267a7609ff9f5@mail.gmail.com>
-In-Reply-To: <40f31dec0903151344x5a7ddfacwd5c267a7609ff9f5@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1237890387.25734.9.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15.3.2009 21:44, Nick Kossifidis wrote:
->> Otherwise it looks good, thanks.
->
-> Do you want me to resend or is it ok by you ?
+On Tue, Mar 24, 2009 at 06:26:27AM -0400, Dan Williams wrote:
+> On Tue, 2009-03-24 at 00:42 +0100, Marek Vasut wrote:
+> > Ok, here is another version, hopefully last one.
+> > 
+> > From a7522df9d610702cfc3066861a2e315552e29086 Mon Sep 17 00:00:00 2001
+> > From: Marek Vasut <marek.vasut@gmail.com>
+> > Date: Tue, 24 Mar 2009 00:40:44 +0100
+> > Subject: [PATCH] Add support for CF8381 WiFi card.
+> >  A detection function was added for identifying CF8381.
+> > 
+> > Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+> 
+> Acked-by: Dan Williams <dcbw@redhat.com>
 
-Oh, do not resend because of this, indeed.
+The patch is whitespace-damaged.  Please resubmit w/o whitespace
+damage in a separate email.
+
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
