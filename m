@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jenny.ondioline.org ([66.220.1.122]:33747 "EHLO
-	jenny.ondioline.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbZC2JAU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34644 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887AbZCXHlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 05:00:20 -0400
-From: Paul Collins <paul@burly.ondioline.org>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: soft lockup apparently in ath5k_hw_update_mib_counters (or ioread32?) with 2.6.29
-References: <87tz5ckfye.fsf@burly.wgtn.ondioline.org>
-	<49CF316D.6040903@gmail.com>
-Date: Sun, 29 Mar 2009 22:00:18 +1300
-In-Reply-To: <49CF316D.6040903@gmail.com> (Jiri Slaby's message of "Sun, 29
-	Mar 2009 10:29:33 +0200")
-Message-ID: <87prg0k8kd.fsf@burly.wgtn.ondioline.org> (sfid-20090329_110026_532221_DEA19667)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 24 Mar 2009 03:41:06 -0400
+Subject: Re: [PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <200903240126.12692.chunkeey@web.de>
+References: <200903212311.49348.chunkeey@web.de>
+	 <1237818551.6147.15.camel@johannes.local>
+	 <200903240126.12692.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6cVclrpUf8Rj+C5B1MTV"
+Date: Tue, 24 Mar 2009 08:41:01 +0100
+Message-Id: <1237880461.6147.24.camel@johannes.local> (sfid-20090324_084109_905816_3780C05B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby <jirislaby@gmail.com> writes:
 
-> On 03/29/2009 08:20 AM, Paul Collins wrote:
->> After about two days of uptime with 2.6.29 I got this:
->> 
->> BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
->> Modules linked in: ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables vfat fat usb_storage sch_sfq i915 drm i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect btusb rfcomm hidp l2cap bluetooth tun cpufreq_stats rpcsec_gss_krb5 nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc fuse cbc aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod fbcon font bitblit softcursor fb kvm_intel kvm acpi_cpufreq firewire_sbp2 loop snd_hda_intel snd_pcm arc4 snd_seq_midi snd_rawmidi ecb snd_seq_midi_event snd_seq snd_timer ath5k snd_seq_device snd mac80211 soundcore firewire_ohci firewire_core thermal snd_page_alloc cfg80211 i2c_i801 crc_itu_t button processor evdev
->> CPU 0:
->> Modules linked in: ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables vfat fat usb_storage sch_sfq i915 drm i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect btusb rfcomm hidp l2cap bluetooth tun cpufreq_stats rpcsec_gss_krb5 nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc fuse cbc aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod fbcon font bitblit softcursor fb kvm_intel kvm acpi_cpufreq firewire_sbp2 loop snd_hda_intel snd_pcm arc4 snd_seq_midi snd_rawmidi ecb snd_seq_midi_event snd_seq snd_timer ath5k snd_seq_device snd mac80211 soundcore firewire_ohci firewire_core thermal snd_page_alloc cfg80211 i2c_i801 crc_itu_t button processor evdev
->> Pid: 0, comm: swapper Not tainted 2.6.29-00003-g0be8685 #163 Macmini2,1
->> RIP: 0010:[<ffffffff803950f0>]  [<ffffffff803950f0>] ioread32+0xf/0x32
->
-> Huh. I see no reason for this to happen. I suppose this is a regression,
-> which kernel worked?
+--=-6cVclrpUf8Rj+C5B1MTV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I had a previous instance of the problem with v2.6.29-rc8 after about
-six days of uptime.  The kernel before that was 2.6.29-rc7ish, ran OK
-for a couple of days.  But since I don't know how to reproduce it
-reliably it's hard to say which kernel is truly good.
+On Tue, 2009-03-24 at 01:26 +0100, Christian Lamparter wrote:
 
-> There is nothing like "too many interrupts, giving up for now" in dmesg,
-> right?
+> Shh, there's a secret plan, see ar9170/main.c
+>=20
+> /*
+>  * BIG FAT TODO:
+>  *
+>  * By the looks of things: these devices share a lot of things like
+>  * EEPROM layout/design and PHY code with other Atheros WIFI products.
+>  * So this driver/library will eventually become ath9k code... or vice ve=
+rsa ;-)
+>  */
+>=20
+> And the ath5k<->ath9k merge could provide some "helper" function for this
+> driver as well... (wishful thinking, but anyway...)
 
-No, no messages like that.  I do however get timing-related errors at
-about the time the soft lockup detector indicates the problem began.
+_Very_ wishful thinking -- only very small parts of the design are
+really shared, the PHY stuff, which happens to be relevant to the
+eeprom.
 
-With 2.6.29 I got
+> Meanwhile, what about a config option that can be enabled to
+> integrate everything into the front-end module (ar9170usb)?
+> ( However, I don't think this config solution will stand a chance ;-)=20
+>   and we all come to the same "all-in-one works best" conclusion.  )
 
-        Mar 29 18:45:48 burly kernel: Clocksource tsc unstable (delta = 532189008 ns)
-        Mar 29 18:46:11 burly kernel: wlan0: No ProbeResp from current AP 00:1a:70:ee:7c:d6 - assume out of range
-        Mar 29 18:46:34 burly kernel: BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
+This seems like a pointless option. Why not just change the Kconfig file
+to remove the common option and link both files into one binary,
+removing all EXPORT_SYMBOLs?
 
-and with 2.6.29-rc8 I got
+johannes
 
-        Mar 20 21:19:59 burly kernel: CE: hpet increasing min_delta_ns to 22500 nsec
-        Mar 20 21:21:02 burly kernel: BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
+--=-6cVclrpUf8Rj+C5B1MTV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-but maybe these just symptoms.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
-Paul Collins
-Wellington, New Zealand
+iQIcBAABAgAGBQJJyI6LAAoJEKVg1VMiehFYf/8P/0lHVSGB9+QwXHvcRXtXm5Mt
+V9kb208zMurgbFOpv7UcbifZLpqlZmk0C5sC6J7dbILSjLVJnWy8O1eAQ9bUN8Ns
+DJJw8cUwJQSZG1X7qweb6RXOdbj33CfMS2tQauvK9tK820Br5gY99XvIKsrzxmTE
+XIg4MYvRHrD4PX2SWX2n0GE2pKh6zpFia4iQSyUnAblcDpbiWcgxq37/EV0tlLsU
+TYgb2QQff82xSNEngwEeD/sWoMDEzzWRTJAjMjQH7R9AlN0rXBsDlUJzji9lQHcB
+ZZTMN2wp4yC5hBuml2OvJaGQP/Hd6rnCZ10R+urcPXl08bY/fJOuKN5yiL5vCZGc
+QxwIRWXMgtWhYovzuyh8L8aJlb+HalGY6iRTZ8wL7MCaPDe+P+QFpu7Vumv1kYll
+VdAf5zcS24JihGOaKUIVviv+SkfpK0TvThqn5aHtJB7AyAPYKGGnZGc6hFxGdkwU
+dlpvILzOxCAQMcszLpxDiNL6E0jDgKlMIbOUJwPOxdD4FfM1aNXe2BnfZYDFg3ww
+VoSU/k6oGXb3oTBTzyq9skKEWH96TSF8aDc368vXsexp+3+9D44aDugvDc6lxvJk
+s68N/pQSu4bGsTtdc2Lp4KwZqZ9WZCr7IiiAA9g4AQ5ADDMldBPU2eWlUmDdHjMO
+F1+SM7YPcPgX64bIqjEV
+=8w9/
+-----END PGP SIGNATURE-----
 
-Dag vijandelijk luchtschip de huismeester is dood
+--=-6cVclrpUf8Rj+C5B1MTV--
+
