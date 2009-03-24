@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:53107 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322AbZCNRz1 (ORCPT
+Received: from mail-qy0-f118.google.com ([209.85.221.118]:61998 "EHLO
+	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719AbZCXUpi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:55:27 -0400
-Message-ID: <49BBEF78.4030306@nokia.com> (sfid-20090314_185546_318483_80E8BFF3)
-Date: Sat, 14 Mar 2009 19:55:04 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Tue, 24 Mar 2009 16:45:38 -0400
+Received: by qyk16 with SMTP id 16so3671503qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 13:45:36 -0700 (PDT)
 MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
-References: <20090314171234.11126.21125.stgit@tikku>	 <20090314171452.11126.11618.stgit@tikku> <1237051725.5235.104.camel@johannes.local>
-In-Reply-To: <1237051725.5235.104.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20090324202406.10830@gmx.net>
+References: <1237682473-5994-1-git-send-email-tuliom@gmail.com>
+	 <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com>
+	 <20090323220843.GA8075@joutaro.rooms.iriga>
+	 <b6c5339f0903231514j1e248b21ofbd8655aeb42f0b8@mail.gmail.com>
+	 <20090324202406.10830@gmx.net>
+Date: Tue, 24 Mar 2009 16:45:32 -0400
+Message-ID: <b6c5339f0903241345p7c4e1a18s1b88c748397093c@mail.gmail.com> (sfid-20090324_214542_021209_C0543F0F)
+Subject: Re: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
+From: Bob Copeland <me@bobcopeland.com>
+To: Martin Bammer <MrB74@gmx.at>
+Cc: tuliom@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
-> 
->> +void ieee80211_beacon_loss(struct ieee80211_hw *hw)
->> +{
->> +	struct ieee80211_local *local = hw_to_local(hw);
->> +	struct ieee80211_sub_if_data *sdata;
->> +
->> +	rcu_read_lock();
->> +	list_for_each_entry(sdata, &local->interfaces, list) {
->> +		if (sdata->vif.type != NL80211_IFTYPE_STATION)
->> +			continue;
->> +
->> +		queue_work(local->hw.workqueue,
->> +			   &sdata->u.mgd.beacon_loss_work);
->> +	}
->> +	rcu_read_unlock();
->> +}
->> +EXPORT_SYMBOL(ieee80211_beacon_loss);
-> 
-> Shouldn't the driver just pass the relevant vif pointer?
+On Tue, Mar 24, 2009 at 4:24 PM, Martin Bammer <MrB74@gmx.at> wrote:
+> MAC: 00:22:43...
+>
 
-Nice, that way the implementation would be a lot simpler and consistent 
-with the rest of the driver interface. Yes, I'll change it to use vif 
-pointer.
+Thanks!
 
-Kalle
+00-22-43   (hex)		AzureWave Technologies, Inc.
+
+They seem to be an affiliate or subsidiary of ASUS Tek, according
+to google.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
