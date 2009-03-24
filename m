@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52036 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757767AbZCRVpt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59910 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764038AbZCXUYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 17:45:49 -0400
-Date: Wed, 18 Mar 2009 17:37:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Arnaud Patard <apatard@mandriva.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH v2] Fix SLAB corruption during rmmod
-Message-ID: <20090318213748.GE3527@tuxdriver.com> (sfid-20090318_224612_029533_288BD6B8)
-References: <200903161925.41102.IvDoorn@gmail.com> <200903172256.35485.IvDoorn@gmail.com> <20090318130207.GA3527@tuxdriver.com> <200903181432.25098.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903181432.25098.IvDoorn@gmail.com>
+	Tue, 24 Mar 2009 16:24:45 -0400
+Subject: Re: [PATCH 0/8] mac80211 aggregation improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090324194847.GC19335@tuxdriver.com>
+References: <20090323162834.154525349@sipsolutions.net>
+	 <1237883293.6278.9.camel@johannes.local>
+	 <43e72e890903240913iee51dcbnfa2409e01d4dd5c0@mail.gmail.com>
+	 <20090324194847.GC19335@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SFMcqqoPdlYPDOAtYW/R"
+Date: Tue, 24 Mar 2009 21:24:38 +0100
+Message-Id: <1237926278.4320.129.camel@johannes.local> (sfid-20090324_212510_376573_7C8CAC25)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 18, 2009 at 02:32:24PM +0100, Ivo van Doorn wrote:
-> On Wednesday 18 March 2009, John W. Linville wrote:
 
-> > It's just that the merge conflicts created by this patch were awful.
-> > With 2.6.29's release presumably close, maybe this is a candidate
-> > for the stable tree?
-> 
-> That would be fine as well. :)
-> Should I resend it to -stable when 2.6.29 final is out?
+--=-SFMcqqoPdlYPDOAtYW/R
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Honestly, I think that is the best bet.  Please do so!
+On Tue, 2009-03-24 at 15:48 -0400, John W. Linville wrote:
 
-Thanks,
+> > It is not accurate to say Sujith has extensively tested this for
+> > ath9k, he probably just ran it a few times. So I cannot say we are as
+> > comfortable with the patches as you or Intel seem to be already.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Indeed, both Sujith and I just gave it a few test runs. Given that ath9k
+enables aggregation on the first packet always though, the code was
+definitely exercised.
+
+> Given Luis's objection I'm inclined to delay.  I have asked
+> him to try to "get comfortable" with this patch series over the next
+> few days.  If that happens, then I'll try to get this merged during
+> the window.
+
+Fair enough.
+
+johannes
+
+--=-SFMcqqoPdlYPDOAtYW/R
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJyUGEAAoJEKVg1VMiehFYvQIQAINBQ3rcZuQSwcDnklCXrX3z
+dX/t/7gohy5pXywWOR/RJ2B0923btx+k1rIaF0CRbf5NI+wF5F9N7kWykvMxFW/l
+hkQQ/s2UEkE0WZNR/w4G3lggDYFi7Zf+oNi9lRJ6mojGcxMdLBGqdVl+q7TwLhFA
+sBlE9JM8lseWgBM8I+HOwa3f4OTjZM6UGn4iVmPNpmbBfhzSq//QYnqJ0gB0FF5P
+VqTrUmM87vD60m/qQ5s32Jtz5EwsfeS/awkbhiNQUVE/3sPJluyyjh0+v+OP8NZp
+MG2S5RZPZzGsvRH9wlXPXf1qmakl3/qMEEKPqXbz2KTwUou3yGtH9TGQa1UmFjZD
+qHcV2L3u25Z3h8/NXzd1ypKQltENbUx7LIE7vdey8GPpZ4cIb8vfxhBuo2z0l5q0
+o8BlLnSuUoEFRxM+zN/328Or7EVs1EbI3IzEDmGQY2Slpuhi8coeiff9HxxkUKG5
+U8KKvpOW0Y4K9lHKySl1TbmXjxM7jq+EbUlgh2KIkTCQjJNs2mX7w/WBdPpEEQF4
+2CHf/o3FJgzhx2vxscq3jt7z8AOcigpkBxAdaWm7DLq+TGoQ4RTo0rFhryo0Tlfs
+2RGCvBe6a8ihEbAXqVplw7DepPLD5ALZaTi57DZZ6RUrs6+sCL4z+qLSl1VHSfRK
+y38dCBvQv6NaAj6jC9Xj
+=SaOs
+-----END PGP SIGNATURE-----
+
+--=-SFMcqqoPdlYPDOAtYW/R--
+
