@@ -1,80 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24282 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751877AbZCKVwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 17:52:38 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 14:52:37 -0700
-Date: Wed, 11 Mar 2009 13:51:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Christian Lamparter <chunkeey@web.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH v5 1/4] ath9k: implement IO serialization
-Message-ID: <20090311205157.GI5669@tesla> (sfid-20090311_225241_487580_BDDAEB5F)
-References: <1236739953-17701-1-git-send-email-lrodriguez@atheros.com> <1236792616.20266.39.camel@johannes.local> <43e72e890903111408n1af65629s4d3b6f4b1c6fbb44@mail.gmail.com> <200903112238.24116.chunkeey@web.de>
+Received: from fg-out-1718.google.com ([72.14.220.158]:55677 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753729AbZCXRvW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 13:51:22 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so591976fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 10:51:19 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: TJ <ubuntu@tjworld.net>
+Subject: Re: iwl3945: Don't queue rfkill_poll work when module is exiting
+Date: Tue, 24 Mar 2009 18:51:11 +0100
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+References: <1237909459.5365.16.camel@hephaestion>
+In-Reply-To: <1237909459.5365.16.camel@hephaestion>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200903112238.24116.chunkeey@web.de>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200903241851.11949.helmut.schaa@gmail.com> (sfid-20090324_185126_285363_7F36121F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2009 at 02:38:24PM -0700, Christian Lamparter wrote:
-> On Wednesday 11 March 2009 22:08:43 Luis R. Rodriguez wrote:
-> > On Wed, Mar 11, 2009 at 10:30 AM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > > On Wed, 2009-03-11 at 10:20 -0700, Luis R. Rodriguez wrote:
-> > >
-> > >> > Hmm. I really don't understand this at all. Most operations won't be
-> > >> > single writes and reads, and if you need multiple like a write+read for
-> > >> > indirect register accesses then I'm sure you need to serialise them
-> > >> > against each other in some other way too, no?
-> > >>
-> > >> The issue is not serializing against separate routines calling some
-> > >> reads or writes, this serialization prevents the PCI hardware FIFO
-> > >> queue from getting more than two requests as otherwise the hardware
-> > >> poops out. But as you can see this is only an issue with PCI devices,
-> > >> not PCI express devices.
-> > >
-> > > Well yes, but if you ever do multi-read/write operations then you need
-> > > to synchronise at a higher level anyway -- hence I don't quite
-> > > understand why this is necessary at all.
-> >
-> > Agreed as the PCI FIFO issue should be visible on even UP boxes too. I
-> > was trying to find out out exactly why in an SMP system this would
-> > occur and it seems the only thing that would cause this is two
-> > separate threads reading/writing. I did review this but I was unable
-> > to find a specific synchronization issue. Technically the most obvious
-> > case is where we handle the beacon tasklet on one CPU and then the
-> > RX/TX tasklet (this is done in just one tasklet) in another but we
-> > don't handle the beaconing tasklet in STA mode and this issue is seen
-> > immediately upon association as a STA. I've been unable to locate that
-> > source of possible synchronization issue. If you get an idea let me
-> > know.
-> 
-> maybe it's down to the simple fact that most mainboard nowadays
-> queue up pci writes?
+Am Dienstag, 24. M=E4rz 2009 schrieb TJ:
+> Tim Gardner suggested I forward this as a possible stable-release
+> update. I found the problem in our current Ubuntu Jaunty tree - iwlwi=
+fi
+> version 1.2.26k. What follows is a copy of the patch for Jaunty
+> (2.6.28).
 
-The issue is not the PCI host controller queuing these up, the issue
-is actually having the PCI host controller send too many requests.
-For example when the device is still working on one PCI write and its
-own device queue is already full to the capicity it supports (say 2)
-and it tells the PCI bus to retry if the device is taking a little
-longer than expected to do some specific operation and the queue is
-still full upon the next request it will poo. An alternative I was
-looking for was to increase a udelay() somewhere guessing that perhaps
-that would cure this as well. This could potentiall work as well but
-I haven't found that spot yet or know for sure if any does exist for
-sure.
+The patch that introduced the rfkill polling did not hit mainline yet. =
+It
+should pop up in 2.6.30, hence this patch is not needed for any stable
+series.
 
-> what happends when you always read the
-> register after it was updated?
+I wasn't able to reproduce the issue by unloading iwl3945 here. Any hin=
+ts
+on how to reproduce this issue?
 
-Not sure what you mean. Keep in mind some registers do not keep the
-data we write to it.
+Thanks,
+Helmut
 
-  Luis
+> ----------
+> Bug: #345710
+>=20
+> When the wireless interface is active and the iwl3945 module is unloa=
+ded the
+> call to ieee80211_unregister_hw() would call iwl3945_mac_stop() which=
+ would
+> restart the delayed workqueue for rfkill_poll. That workqueue had alr=
+eady been
+> cancelled so when the next work item was run (2 seconds later) the sy=
+stem would
+> suffer a hard lock-up because the module had been unloaded by then.
+>=20
+> This patch implements STATUS_EXIT_PENDING checks in places where the =
+rfkill_poll
+> work is scheduled, and moves the final workqueue cancellation to occu=
+r after the
+> call to ieee80211_unregister_hw().
+>=20
+> Bug discovered, experienced and fix tested on my PC.
+>=20
+> Signed-off-by: TJ <ubuntu@tjworld.net>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 +++++++++++++---
+>  1 files changed, 13 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/ne=
+t/wireless/iwlwifi/iwl3945-base.c
+> index bb92db2..acaf038 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -6062,7 +6062,9 @@ static void iwl3945_rfkill_poll(struct work_str=
+uct *data)
+>  	if (test_bit(STATUS_RF_KILL_HW, &status) !=3D test_bit(STATUS_RF_KI=
+LL_HW, &priv->status))
+>  	   queue_work(priv->workqueue, &priv->rf_kill);
+> =20
+> -	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+> +	/* only queue if module isn't exiting */
+> +	if (! test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +		queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+>  						   round_jiffies_relative(2 * HZ));
+> =20
+>  }
+> @@ -6588,7 +6590,10 @@ static void iwl3945_mac_stop(struct ieee80211_=
+hw *hw)
+>  	flush_workqueue(priv->workqueue);
+> =20
+>  	/* start polling the killswitch state again */
+> -	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+> +
+> +	/* only queue if module isn't exiting */
+> +	if (! test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +		queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+>  						   round_jiffies_relative(2 * HZ));
+> =20
+>  	IWL_DEBUG_MAC80211("leave\n");
+> @@ -8166,7 +8171,6 @@ static void __devexit iwl3945_pci_remove(struct=
+ pci_dev *pdev)
+>  	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+> =20
+>  	iwl3945_rfkill_unregister(priv);
+> -	cancel_delayed_work(&priv->rfkill_poll);
+>  	iwl3945_dealloc_ucode_pci(priv);
+> =20
+>  	if (priv->rxq.bd)
+> @@ -8182,6 +8186,12 @@ static void __devexit iwl3945_pci_remove(struc=
+t pci_dev *pdev)
+>  	/*netif_stop_queue(dev); */
+>  	flush_workqueue(priv->workqueue);
+> =20
+> +	/* ieee80211_unregister_hw calls iwl3945_mac_stop which used to res=
+tart the rfkill
+> +	   polling. Although that now checks STATUS_EXIT_PENDING do cancel =
+and wait for any
+> +	   pending work to complete */
+> +	cancel_delayed_work(&priv->rfkill_poll);
+> +	cancel_work_sync(&priv->rfkill_poll);
+> +
+>  	/* ieee80211_unregister_hw calls iwl3945_mac_stop, which flushes
+>  	 * priv->workqueue... so we can't take down the workqueue
+>  	 * until now... */
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
