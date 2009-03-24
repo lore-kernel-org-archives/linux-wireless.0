@@ -1,89 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40726 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbZCKCwi (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.26]:34839 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758444AbZCXUKj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 22:52:38 -0400
+	Tue, 24 Mar 2009 16:10:39 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so2370502qwh.37
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 13:10:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
+References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com>
+	<20090324184100.GA29268@tesla> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
+Date: Tue, 24 Mar 2009 13:10:21 -0700
+Message-ID: <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com> (sfid-20090324_211042_909907_2DF74DC6)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v5 4/4] ath9k: remove dummy PCI "retry timeout" fix
-Date: Tue, 10 Mar 2009 22:52:33 -0400
-Message-Id: <1236739953-17701-5-git-send-email-lrodriguez@atheros.com> (sfid-20090311_035321_578363_660421CC)
-In-Reply-To: <1236739953-17701-1-git-send-email-lrodriguez@atheros.com>
-References: <1236739953-17701-1-git-send-email-lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the PCI retry timeout code as that was just taken from ipw2100
-due to historical reasons but in reality its a no-op, additionally its
-simply incorrect as each PCI devices has its own custom PCI configuration
-space on PCI config space >= 0x40. Not to mention we were trying to write
-0 to a place that already has 0 on it.
+On Tue, Mar 24, 2009 at 1:03 PM, Bob Copeland <me@bobcopeland.com> wrot=
+e:
+> On Tue, Mar 24, 2009 at 2:41 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> Do any of you guys have time to pick it up?
+>
+> Well my patch #2 is pretty similar to what Christian has, and I'd lik=
+e to
+> upstream the first few patches soon (especially the ath.ko creation, =
+it is a
+> beast to rebase as you saw). =C2=A0That would bring up the first cont=
+entious
+> point of the merge: is "ath/ath.ko" ok with everyone?
 
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Ben Cahill <ben.m.cahill@intel.com>
-Cc: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
-Tested-by: Adel Gadllah <adel.gadllah@gmail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath9k/pci.c |   18 ------------------
- 1 files changed, 0 insertions(+), 18 deletions(-)
+Yes.
 
-diff --git a/drivers/net/wireless/ath9k/pci.c b/drivers/net/wireless/ath9k/pci.c
-index c1ba207..a1a9b90 100644
---- a/drivers/net/wireless/ath9k/pci.c
-+++ b/drivers/net/wireless/ath9k/pci.c
-@@ -87,7 +87,6 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct ath_softc *sc;
- 	struct ieee80211_hw *hw;
- 	u8 csz;
--	u32 val;
- 	int ret = 0;
- 	struct ath_hw *ah;
- 
-@@ -134,14 +133,6 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	pci_set_master(pdev);
- 
--	/*
--	 * Disable the RETRY_TIMEOUT register (0x41) to keep
--	 * PCI Tx retries from interfering with C3 CPU state.
--	 */
--	pci_read_config_dword(pdev, 0x40, &val);
--	if ((val & 0x0000ff00) != 0)
--		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
--
- 	ret = pci_request_region(pdev, 0, "ath9k");
- 	if (ret) {
- 		dev_err(&pdev->dev, "PCI memory region reserve error\n");
-@@ -257,21 +248,12 @@ static int ath_pci_resume(struct pci_dev *pdev)
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
--	u32 val;
- 	int err;
- 
- 	err = pci_enable_device(pdev);
- 	if (err)
- 		return err;
- 	pci_restore_state(pdev);
--	/*
--	 * Suspend/Resume resets the PCI configuration space, so we have to
--	 * re-disable the RETRY_TIMEOUT register (0x41) to keep
--	 * PCI Tx retries from interfering with C3 CPU state
--	 */
--	pci_read_config_dword(pdev, 0x40, &val);
--	if ((val & 0x0000ff00) != 0)
--		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 
- 	/* Enable LED */
- 	ath9k_hw_cfg_output(sc->sc_ah, ATH_LED_PIN,
--- 
-1.6.0.6
+> ath5k/9k specific
+> bits can eventually go in ath/{5k,9k} subdirs... not sure where 9170
+> lives then :)
 
+Wherever Christian wants it. If he finds re-usable bits then great.
+
+> I probably can't get to it until the weekend, but if you have more ti=
+me,
+> Christian, feel free to adopt whatever you want from mine. =C2=A0Othe=
+rwise I'll
+> pick up where Luis left off on the weekend.
+>
+> I didn't push it yet because ath5k was having problems once I turned =
+it
+> on for ath5k,
+
+So this is why I recommend to trim the channel list down of ath5k. The
+other reason is you won't have users spending what may be 3/4 of their
+time scanning on channels that they won't ever find APs in. What can
+be done here is add  flag or command as we had reviewed a while back
+to allow the user to enable these channels if he knows what he is
+doing so that way we know we don't mind bothering scanning on the
+gazillion channels. But that is just my advice. My concern first is to
+get users working happily and quickly associated to an AP and I think
+that parallels those goals and puts as secondary the bells and
+whistles of adding every single possible channel.
+
+> and I have no other hardware to test with so wanted to
+> figure out what was broken first.
+> Channel list is a good hint, maybe
+> it's time to fix iw/nl80211 to send back all the channels :)
+
+So that is the other option. I tried looking at that yesterday but
+wasn't able to find a way to do this. I went through the netlink
+documenation and even tried modifying the skb on the kernel side as
+its a dump. Not sure what to do here to fix this.
+
+So yes, both are possible options. Just keep in mind that without
+being able to see the channel list with 'iw list' debugging regulatory
+is a real royal pain in the ass. So I'd try to fix that first either
+through channel reduction (you get another bonus enhancement for
+scanning time for users) or through fixing this through iw/nl80211.
+
+Johannes probably can advise best on the second path.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
