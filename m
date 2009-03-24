@@ -1,66 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41208 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:46130 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750943AbZCLUTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 16:19:17 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 13:19:16 -0700
-Subject: Re: [PATCH 00/15] ath9k: Virtual interfaces and radios
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: Florian Fainelli <florian@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200903071456.03827.florian@openwrt.org>
-References: <20090303172325.437810138@atheros.com>
-	 <200903071456.03827.florian@openwrt.org>
+	id S1755269AbZCXKwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 06:52:08 -0400
+Subject: Re: Google Summer of Code 2009 -- Linux wireless roaming project
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <j@w1.fi>, Mircea Gherzan <mgherzan@gmail.com>
+In-Reply-To: <200903241146.51795.hs4233@mail.mn-solutions.de>
+References: <20090320215705.GE8120@tesla>
+	 <200903241006.43512.hs4233@mail.mn-solutions.de>
+	 <200903241115.29868.helmut.schaa@gmail.com>
+	 <200903241146.51795.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Thu, 12 Mar 2009 22:19:12 +0200
-Message-ID: <1236889152.16569.27.camel@jm-desktop> (sfid-20090312_211921_282822_98BB804A)
-MIME-Version: 1.0
+Date: Tue, 24 Mar 2009 06:49:53 -0400
+Message-Id: <1237891793.25734.27.camel@localhost.localdomain> (sfid-20090324_115211_722921_B38C5096)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-03-07 at 05:56 -0800, Florian Fainelli wrote:
-> I am only commenting from a user point of view this feature. This definitively
-> is very useful since quite a lot of people stick to madwifi instead of using
-> ath5k or ath9k since there was not real support before this patch for virtual
-> interfaces.
-
-The set of patches that went in should take care of the virtual station
-side. The patch I just sent out will add multi-BSSID support for AP mode
-(it will require an update to hostapd, too), so this should provide
-support for quite complete set of virtual interface configurations.
-
-> One thing that I did not like with wlanconfig and I would like not to find
-> with mac80211/cfg80211 is the incompatibility of some setups (i.e: AP should
-> be created first, STA interface later with nosbeacon), not sure this is
-> possible, but if it is, one should be able to add a virtual interface without
-> knowing the state of the other interfaces before.
-
-The goal is certainly to be able to add and remove virtual interfaces in
-any order and at any time. There may be some limitations in the current
-version, i.e., something might end up not working, but the configuration
-part itself is not prevented. If someone finds a sequence that does not
-work, I would hope it can be resolved.
-
-> I really like the way we can create mesh point interfaces with iw, so this
-> could be the user interface to configure virtual interfaces, say like this :
+On Tue, 2009-03-24 at 11:46 +0100, Holger Schurig wrote:
+> > Yes, that's a good idea. There are some more scenarios where
+> > different roaming algorithms might make sense. However, I'm
+> > still not sure where the roaming decision should be made (and
+> > thus where the algorithm should be implemented). In user space
+> > (wpa_supplicant) or in mac80211. Having it in user space would
+> > allow non-mac80211-drivers to benefit too but the driver would
+> > have to provide the necessary information.
 > 
-> iw dev wlan0 interface add sta0 type sta
-> iw dev wlan0 interface add ap0 type master
+> User-space is often easier to change *)
+> 
+> 
+> However, if you want to use beacon-information, then user-space 
+> doesn't spring to my mind so quickly. Beacons come in quite 
+> fast, and I'd if I have to transport all of this to 
+> user-space ...
+> 
+> 
+> Or we divide it: if user-spaces tells the kernel, then the kernel 
+> maintains a bss-list and whenever the kernel modifies the 
+> list "considerably", kernel pushes a nl80211 message to 
+> user-space, notifying it about the new state "once in a while". 
+> Then data gathering is in kernel, but decision making is in 
+> user-space. However, we need a good defintion for "considerably" 
+> and "once in a while", thought :-)
 
-The multi-channel operation with virtual radio (wiphy) is at somewhat
-different layer than the mesh interface (vif). Anyway, if nl80211 is
-extended with a command that can be used to add a new virtual wiphy,
-similar iw command could be added for this use, too. Here standard
-commands (iwconfig/wpa_supplicant/hostapd) can change the interface
-mode, so it does not need to be specified at wiphy creation time.
+Right now the kernel will only keep the list for 10 seconds or so.
+That's not enough to determine "considerably" really.  Since of course
+not every AP shows up every scan, if you don't keep some scan history
+there's no good way to know what "considerably" really means...  So
+yeah, it would mean keeping a larger BSS list around in the kernel, or
+even the last few BSS lists and a timestamp for each one, and figuring
+out an algorithm to 'diff' the scan lists and come up with a threshold
+for when that 'diff' is large enough to warrant a signal.
 
-As far as multi-BSSID configuration of AP mode on the same channel is
-concerned, those virtual interfaces are vifs and hostapd generates them
-dynamically using the same mechanism as the iw commands above.
+Dan
 
-- Jouni
-
+> 
+> 
+> 
+> 
+> *) EXCEPT if we're talking wpa_supplicant. Not everyone find 
+> wpa_supplicant easy to modify, because of the number of 
+> interwoven state-machines and handled corner-cases.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
