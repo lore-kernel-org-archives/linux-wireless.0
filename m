@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:39030 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830AbZCOUM4 (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:25132 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753159AbZCXTtu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 16:12:56 -0400
-Message-ID: <49BD611F.9010100@nokia.com> (sfid-20090315_211258_442417_3C3D2954)
-Date: Sun, 15 Mar 2009 22:12:15 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Tue, 24 Mar 2009 15:49:50 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so2358824qwh.37
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 12:49:48 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+In-Reply-To: <1237918158.455.26.camel@rc-desk>
+References: <1237916524.455.18.camel@rc-desk> <200903241855.06916.helmut.schaa@gmail.com>
+	<1237918158.455.26.camel@rc-desk>
+Date: Tue, 24 Mar 2009 12:49:32 -0700
+Message-ID: <43e72e890903241249n3b7b07d3p4a52063504ad6fea@mail.gmail.com> (sfid-20090324_204953_951350_CD70CC8F)
+Subject: Re: New firmware available for Intel PRO/Wireless 2200BG and 2915ABG
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
-References: <20090314144405.670.16447.stgit@tikku>	 <1237043931.5235.67.camel@johannes.local>  <49BBCE18.4090606@nokia.com>	 <1237046839.5235.86.camel@johannes.local>	 (sfid-20090314_170734_362051_D492D2DA) <1237046957.5235.88.camel@johannes.local>
-In-Reply-To: <1237046957.5235.88.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-03-14 at 17:07 +0100, Johannes Berg wrote:
->> On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
+On Tue, Mar 24, 2009 at 11:09 AM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> Hi Helmut,
+>
+> On Tue, 2009-03-24 at 10:55 -0700, Helmut Schaa wrote:
+>> Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
+>> > A new version (3.1) of firmware for Intel=C2=AE PRO/Wireless 2200B=
+G and
+>> > 2915ABG Drivers is now available for download from
+>> > http://ipw2200.sourceforge.net/firmware.php.
 >>
->>> Perhaps. I chose this path only because it was simple to implement :) 
->>> I'll take a look at the scan code in more detail and fix it there.
->> You're kinda right too, we want to disable the queues first, then set
->> sw_scanning/notify the driver, and then send the nullfunc, I think. So
->> it's either this patch, or iterating the interface list twice.
-> 
-> Similarly for the beacon disable part, that _needs_ to be done after
-> sw_scanning=true otherwise it won't actually work...
-> 
-> I think I prefer your patch over that complexity, but would like to have
-> a good comment explaining it, and possibly one in
-> scan.c:ieee80211_start_scan that points to that code.
+>> I couldn't find a changelog for the new firmware. Could you point me=
+ to
+>> a changelog or provide a short summary of what changed since 3.0?
+>
+> I am sorry, we were unable to obtain this information.
 
-I just sent v2. If you have time, please take a look and comment.
+Can this be pushed into the linux-firmware git tree? Or does this one
+have that funky license?
 
-Kalle
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
