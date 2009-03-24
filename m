@@ -1,83 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:38978 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753739AbZCKWZ2 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:57347 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757305AbZCXT42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 18:25:28 -0400
-Message-ID: <49B83A53.2000902@lwfinger.net> (sfid-20090311_232541_801420_183A66A8)
-Date: Wed, 11 Mar 2009 17:25:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 24 Mar 2009 15:56:28 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so3598713wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 12:56:26 -0700 (PDT)
 MIME-Version: 1.0
-To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8187 - nice work!
-References: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk>    <49B813E9.8050108@lwfinger.net> <41788.82.152.175.172.1236803718.squirrel@www.phantomjinx.co.uk>
-In-Reply-To: <41788.82.152.175.172.1236803718.squirrel@www.phantomjinx.co.uk>
-Content-Type: multipart/mixed;
- boundary="------------060503090109030909060408"
+In-Reply-To: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com>
+References: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com>
+Date: Tue, 24 Mar 2009 12:56:11 -0700
+Message-ID: <43e72e890903241256l39f5b1f9i49ce2b7a6e8099c3@mail.gmail.com> (sfid-20090324_205631_730408_17D74C12)
+Subject: Re: GSoC '09 applicant : Introduction
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: k roy <kroykroy@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jussi Kukkonen <jku@linux.intel.com>,
+	Till Kamppeter <till.kamppeter@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060503090109030909060408
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Tue, Mar 24, 2009 at 11:08 AM, k roy <kroykroy@gmail.com> wrote:
+> Hello,
+>
+> I guess that I am pretty late at introducing myself in this mailing
+> list but I will do it nevertheless. My name is Kalpana Roy, a final
+> year student from India, pursuing her B.Tech(I.T.) degree. Inspite of
+> being in my final year this will be my first (probably the last too)
+> attempt at GSoC. I was introduced to the wonderful world of FOSS by
+> another FOSS enthusist who also successfully completed his GSoC
+> project last year. Uptil then, my only interaction with FOSS was using
+> the softwares but now I am looking into development aspects and want
+> to contribute as well.
+> I worked on an open-source project last year and created a
+> GUI-cum-editor for VPython. As I did not interact with the core
+> developers, my work could never be included in the VPython module. I
+> learned this through GSoC, that communication is as important as
+> contribution, and that the work you do is of no use if you just keep
+> it to yourself.
+> My skill-set includes working in languages C++,PHP and familiarity
+> with PyGtk, Java, MySQL. I mostly work on Linux systems (Ubuntu and
+> Fedora being my distros of choice) though I have a dual boot machine
+> with Windows installed as well.
+> The project which I would like to work on, under Linux Foundations is
+> Integration of Geoclue with linux kernel and gnome-desktop. As
+> suggested by Luis R. Rodriguez, who has agreed to comentor this
+> project, it will be a combined project under both Linux Foundations
+> and Gnome developers. Under the Gnome-desktop cover, I would work to
+> include location-sensitivity functionality to various gnome
+> applications like Tracker, Empathy, Gwibber, Evolution, Clock and use
+> of OpenStreetMap and libchamplain library to display a map of the
+> locality. The comments which I receive for the above proposal was that
+> it was too short compared to GSoC and it only included submitting
+> patches to a few gnome applications. Now since, the project will
+> include providing Geoclue information to the Network Manager and
+> currectly deducing the country based on the timezone provided by the
+> user using Geoclue, I guess the project is big enough. Infact Geoclue
+> does the automatic finding of the location (Geotargetting) based on IP
+> address. It uses the database of hostip.info site for the same.
+> I conversed about the merging of the two project ideas with Jussi
+> Kukkonen, who is the major developer of Geoclue, and he expressed his
+> views about it being a great idea but he said that geoclue cannot (in
+> many cases) make guarantees on the correctness of results so using
+> them for "regulatory compliance" should be done with understanding
+> that. Example: wlan positioning is based on access point MAC address
+> and the manufacturers are known to make mistakes with those, so there
+> may be two devices out there with the same MAC address but totally
+> different locations. If the afore-mentioned is acceptable then it is a
+> great idea.
 
-P.G. Richardson wrote:
-> phy0: Selected rate control algorithm 'pid'
-> 
-> which is a first as it has always been 'mistral'. The only difference with
-> compiling last night was I was not running the kernel I compiled against.
-> I used 'make KLIB=/usr/src/{my new kernel} KLIB_BUILD=/usr/src/{my new
-> kernel}' instead.
-> 
-> Just recompiled while running {my new kernel} and mistral correctly
-> selected as rate control algorithm. Once installed, it does correctly auto
-> select rate as expected.
-> 
-> iperf shows Mb performance has dropped though but gets improved by again
-> fixing the rate at 11Mb.
-> 
-> So cheers for the info.
+This is reasonable so long as the user gets some sort of pop-up to
+tell them the country GeoClue has determined we want to set on the
+GNOME desktop. If he clicks yes then its just as equal as what we have
+now with iw or wpa_supplicant.
 
-Minstrel is definitely a better choice than pid.
+> I am planning to submit the project proposal under both
+> Gnome as well as Linux Foundations, however if accepted under any, it
+> will needed to be comentored by both the organisation's developers. I
+> am working on the application and it should be ready within 1-2 days
+> span. I am also looking forward to any comments/suggestions regarding
+> the project.
+> My contact details are as follows:
+> email : kroykroy@gmail.com
+> IM (XMPP) : kroykroy@gmail.com
+> IRC nick : kr0y
+> weblog : http://wannabe-a-geek.blogspot.com/
+>
+> Looking forward to hearing from you,
 
-There is one thing that might make your interface work better. For performance
-reasons, I chose not to pause the mac80211 queues at one point in the driver.
-For my device, it did not make a difference, but it might for you. Please try
-the attached patch.
+Sounds great, glad to know we have a student interested. We can
+certainly split this GSoC up, I am up to help mentor the Linux
+wireless part. I just do not know anything about GNOME so if we can
+collaborate with Jussi to handle that it would be appreciated. We may
+need some feedback from Dan Williams too, for example, on how he'd
+like to see this become exposed to NM. Or from Marcel for Connman.
 
-Thanks,
+I suppose the first part will be the GNOME part, and the final piece
+will be to inform applications somehow or let applications register
+for this in some form of a multicast group. I don't speak userspace
+though so beats me how this is accomplished nowadays.
 
-Larry
-
-
---------------060503090109030909060408
-Content-Type: text/plain;
- name="rtl8187_queue_pause"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="rtl8187_queue_pause"
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -216,6 +216,7 @@ static void rtl8187_tx_cb(struct urb *ur
- 		 * here, thus queue the skb and finish on a work queue. */
- 		skb_queue_tail(&priv->b_tx_status.queue, skb);
- 		queue_delayed_work(hw->workqueue, &priv->work, 0);
-+		ieee80211_stop_queues(hw);
- 	}
- }
- 
-@@ -898,6 +899,7 @@ static void rtl8187_work(struct work_str
- 	}
- 	retry = tmp;
- 	mutex_unlock(&priv->conf_mutex);
-+	ieee80211_wake_queues(dev);
- }
- 
- static int rtl8187_start(struct ieee80211_hw *dev)
-
---------------060503090109030909060408--
+  Luis
