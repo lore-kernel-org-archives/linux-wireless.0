@@ -1,80 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:48159 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753141AbZCCW5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 17:57:18 -0500
-Date: Tue, 3 Mar 2009 14:55:34 -0800 (PST)
-From: david@lang.hm
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Theodore Tso <tytso@mit.edu>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus'
- tree"
-In-Reply-To: <43e72e890903031043m1fe417eay4420e734064a5882@mail.gmail.com>
-Message-ID: <alpine.DEB.1.10.0903031454010.30837@asgard.lang.hm> (sfid-20090303_235722_551456_B932BAC5)
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>  <49ACC6B0.409@garzik.org>  <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>  <20090303072637.GB4440@kroah.com>  <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
-  <49AD4C74.1060704@s5r6.in-berlin.de>  <43e72e890903030923v27c47f5anc184c0e8085bc5c1@mail.gmail.com>  <49AD7361.308@s5r6.in-berlin.de> <43e72e890903031043m1fe417eay4420e734064a5882@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="680960-2025645448-1236120935=:30837"
+Received: from xc.sipsolutions.net ([83.246.72.84]:53041 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbZCXIVe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 04:21:34 -0400
+Subject: Re: Lockdep complaint between drv->mtx and cfg80211_mutex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090324004716.GA22925@tesla>
+References: <20090324004716.GA22925@tesla>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3O/QCTO7QXygdva8YJr4"
+Date: Tue, 24 Mar 2009 09:21:28 +0100
+Message-Id: <1237882888.6278.2.camel@johannes.local> (sfid-20090324_092137_909024_39E4F970)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---680960-2025645448-1236120935=:30837
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+--=-3O/QCTO7QXygdva8YJr4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 3 Mar 2009, Luis R. Rodriguez wrote:
+On Mon, 2009-03-23 at 17:47 -0700, Luis R. Rodriguez wrote:
+> What I had done was load mac80211_hwsim with the module parameters regtes=
+t=3D4 radios=3D2.
+> Then I spawn hostapd for wlan0, bring up wlan1, trigger a scan using iw, =
+and then
+> I rename wlan1.
 
-> On Tue, Mar 3, 2009 at 10:13 AM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
->> Luis R. Rodriguez wrote:
->>> On Tue, Mar 3, 2009 at 7:27 AM, Stefan Richter
->>> <stefanr@s5r6.in-berlin.de> wrote:
->>>> Luis R. Rodriguez wrote:
->>>>> OK small silly example is convincing distributions it may be a good
->>>>> idea to carry linux-next kernel packages as options to users to
->>>>> hopefully down the road reduce the delta between what they carry and
->>>>> what is actually upstream.
->>>> Distros would do their users a bigger favour if [...]
->>>
->>> I don't think I was very clear in what I meant about "carrying
->>> linux-next kernel packages as an option". What I meant was carrying it
->>> just as an option for those users who want to test bleeding edge
->>> without compiling their own linux-next, _not_ to merge linux-next
->>> things into their own default kernel release and shove it down users
->>> throats.
->>
->> Sorry, I meant "bigger favour" relative to carrying an own delta of
->> considerable size.
->>
->> Packaging linux-next would be fine if the workload isn't a problem for
->> the packager.  As pointed out elsewhere, there are caveats with
->> linux-next (e.g. a functionality which was in it yesterday could be gone
->> today because of a merge issue), but that's the nature of bleeding edge
->> of course.
->
-> Sure, understood. That's all I meant really.
->
-> My argument here I guess is that the reasons used to support the
-> "equivalent fix" policy for patches upstream makes it apparent why
-> linux-next is so important and my hope would be to get it more
-> exposure by having distributions let users test it (as an option to go
-> with bleeding edge) and this in turn help stabilize code in our next
-> release.
+No need to do anything that complicated, the rename alone triggers it :)
 
-what does "equivalent fix" in the linus tree have to do with -next?
+I'm testing a patch, will send after that.
 
-patches don't go always go through -next to get to linus, things that are 
-in -next don't nessasarily _ever_ get to linus.
+johannes
 
-you are mixing issues here.
+--=-3O/QCTO7QXygdva8YJr4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-David Lang
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---680960-2025645448-1236120935=:30837--
+iQIcBAABAgAGBQJJyJgFAAoJEKVg1VMiehFYMzkP/0J/3Lv2n7RTxO//EpEaNCco
+PZpwoxZEEMRH6JdFBFRQK3TB1BdauLm3sssRDyRnNyVnhm/wzCXnCdwChwEWXB1g
+kY5Mj5rIdMXKtvKpKghtnn8LsibityVLHFNx/bCtORCTS65MabeSeooJWQBAPsgs
+hbY6MCHVjbhZlJ7L6VDEA5/ewC0ugxIc6rNlQf1teOGVxI+8PFZK7gBniqmpFwMF
+S7aLIJFD3CS2fAWMituYp9Br7tledqO/Cl68/FCaHTXDyztgHTcLz8YkegclqphZ
+D0Sf2Tmmc5E4djvorMLmcs5baWxbvpyxW7h9JC04ePsHc4554ymFFqrfw19jzwHp
+WLTFz44HuXKVa7OJ1nPaXrbOcHRr6PZ11j1Cyg9RgcNv+D7Kz37v5sWoR3k0jK1x
+N3YmYvnLblw8UqjOgYIsMhpDOYq3xmuP1KYjK/FCAG4ipCwAnlGBsOoJ/u+n5VKh
+/9JC6TBWNqD7cJWyGP2avYibKpF3SsKX+NJn8BYpRTlIr83cJSNr3I7IUirN8RjC
+QFMjO2gr/tzM37GwobSMrGTN7Uy+kS0RFaqejsrhTwv2xfg8JWoO+wdtyZFxj6DW
+IQj2XIMpm2hK5yWxuZ8BGKyXl0rb11QGKcESK2k9MPx/vFW7Cu8oDTLR9RY7v2Tr
+71dbLPwXcq0qFvVsVfe0
+=y+t9
+-----END PGP SIGNATURE-----
+
+--=-3O/QCTO7QXygdva8YJr4--
+
