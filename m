@@ -1,132 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40704 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625AbZCSTAD (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42089 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753735AbZCXQDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 15:00:03 -0400
-Subject: Re: [PATCH 4/4] nl80211: Add MLME primitives to support external
- SME
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <20090319114808.301521477@atheros.com>
-References: <20090319113918.555693846@atheros.com>
-	 <20090319114808.301521477@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1c7nCEszFSSuEuVqLDgq"
-Date: Thu, 19 Mar 2009 19:59:57 +0100
-Message-Id: <1237489197.5100.112.camel@johannes.local> (sfid-20090319_200007_692205_1C21AAC0)
+	Tue, 24 Mar 2009 12:03:01 -0400
+Subject: Re: wireless powersaving (in NM?)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <1237891149.4320.73.camel@johannes.local>
+References: <1237891149.4320.73.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 24 Mar 2009 11:32:14 +0100
+Message-Id: <1237890734.4740.7.camel@localhost.localdomain> (sfid-20090324_170304_872737_856A292C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-1c7nCEszFSSuEuVqLDgq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> We're looking into turning on powersaving by default at least when on
+> battery power, and I think that it needs to be done in userspace, simply
+> by calling the equivalent of "iwconfig wlan0 power on".
+> 
+> iwlwifi currently supports 5 or 6 power saving levels, and some people
+> think we should allow those to be exposed to "iwconfig wlan0 power
+> saving <N>", but as I've said before I don't see how the user can
+> possibly make an informed choice. Essentially it seems to me that the
+> best way for the user to determine the level would be to roll a dice and
+> see if applications still work as expected. It is also specific to a
+> single driver, and other drivers would expose similar values with
+> completely different semantics -- in one word: useless. Yes, Windows
+> exposes this, but that doesn't mean it's meaningful. Quite the contrary,
+> in fact, many (most? all?) of the things Windows exposes related to
+> power management are absolutely _not_ meaningful and hurt overall
+> usability [1].
+> 
+> Therefore, I think the "power saving level" needs to be determined by
+> pm_qos. The design of how to do that, however, is still up in the air.
+> One question, for example, is whether the driver should be adjusting the
+> power savings parameters, with mac80211 only asking for it to be enabled
+> or disabled. I'm thinking that the driver is in the best position to do
+> so since various drivers have various parameters that can be tweaked.
+> This would depend on pm_qos notifications being used in the driver, when
+> power saving is enabled by mac80211.
+> 
+> The alternative would be to expose all the possible parameters and/or
+> levels to mac80211 and have it make choices based on pm_qos, but it
+> seems that this interface would rapidly become extremely complex,
+> fragile and buggy.
+> 
+> Kalle, there's a related question here -- what's the value of exposing
+> the sleep timeout to users? It seems to be quite unnecessary, since you
+> seem to be using a fixed value of 500ms anyway. Can we remove that,
+> leaving wext only with turning on/off power saving? [2][3]
+> 
+> Ultimately, power saving mode should always be enabled unless the user
+> specifically requires it being turned off (why?), regardless of AC power
+> status; there's no reason not to do that if we integrate it into the
+> entire system well enough so that things "just work". But that requires
+> applications to change to register their network latency/throughput
+> requirements.
 
-On Thu, 2009-03-19 at 13:39 +0200, Jouni Malinen wrote:
+I agree that we should always enable power saving by default. Maybe in
+the beginning have a kernel option that selects the default value (like
+USB does at the moment).
 
-> +	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
-> +		req.chan =3D ieee80211_get_channel(
-> +			wiphy,
-> +			nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-> +		if (!req.chan) {
-> +			err =3D -EINVAL;
-> +			goto out;
-> +		}
-> +	}
+> However, by putting the burden onto drivers, drivers can choose a
+> conservative power saving level when no application has registered its
+> pm_qos requirements, and once applications start using the it deeper
+> power levels can be chosen as appropriate. This still requires some
+> userspace to turn on power saving to start with, which I think would be
+> appropriately placed in NM (or connman, of course).
 
-Validate the channel is permitted?
+I prefer that we not export this over WEXT at all and only via nl80211
+so we get async notification if some one changes it. We should extend
+wpa_supplicant with an option to set power saving on/off/default and
+then make sure it gets exported via its CLI or D-Bus. So if Network
+Manger or ConnMan cares to change these values they can.
 
-> +	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
-> +		req.auth_type =3D
-> +			nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
-> +	}
+However personally I think the need for enabling or disabling power
+savings is not really useful except for testing purposes. In a real life
+deployed system it should be enabled all the time. Broken drivers or
+hardware that is limited can disable it on kernel level, but for
+userspace we only need this for debugging.
 
-We should validate the auth type is one of the four valid ones, I think.
+Regards
 
-> +	if (nla_len(info->attrs[NL80211_ATTR_SSID]) > IEEE80211_MAX_SSID_LEN) {
-> +		err =3D -EINVAL;
-> +		goto out;
-> +	}
+Marcel
 
-That seems unnecessary since your netlink policy restricts it already.
-
-> +	if (info->attrs[NL80211_ATTR_REASON_CODE])
-> +		req.reason_code =3D
-> +			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-
-Should probably require non-zero? Same in disassoc, I guess.
-
-Since disassoc and deauth are really almost the same, maybe use one
-function and multiplex like nl80211_addset_beacon?
-
-
-> +static int ieee80211_auth(struct wiphy *wiphy, struct net_device *dev,
-> +			  struct cfg80211_auth_request *req)
-> +{
-> +	struct ieee80211_sub_if_data *sdata;
-> +
-> +	if (!netif_running(dev))
-> +		return -ENETDOWN;
-
-Should probably be in cfg80211 directly, I think, to enforce this across
-drivers.
-
-> +	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +
-> +	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> +		return -EOPNOTSUPP;
-
-That too.
-
-> +	switch (req->auth_type) {
-> +	case NL80211_AUTHTYPE_OPEN_SYSTEM:
-> +		sdata->u.mgd.auth_algs =3D IEEE80211_AUTH_ALG_OPEN;
-> +		break;
-> +	case NL80211_AUTHTYPE_SHARED_KEY:
-> +		sdata->u.mgd.auth_algs =3D IEEE80211_AUTH_ALG_SHARED_KEY;
-> +		break;
-> +	case NL80211_AUTHTYPE_FT:
-> +		sdata->u.mgd.auth_algs =3D IEEE80211_AUTH_ALG_FT;
-> +		break;
-> +	case NL80211_AUTHTYPE_NETWORK_EAP:
-> +		sdata->u.mgd.auth_algs =3D IEEE80211_AUTH_ALG_LEAP;
-> +		break;
-> +	default:
-> +		return -EOPNOTSUPP;
-
-and I already said the "default" part here should be too (though it
-should stick around here if we ever add new mechanisms)
-
-Similarly in assoc, of course.
-
-otherwise looks good.
-
-johannes
-
---=-1c7nCEszFSSuEuVqLDgq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJwpYqAAoJEKVg1VMiehFYqwkQALhJ3G7UtXZ8etZe+jq8Oy0Z
-o9yP4XjX/iUPyM4C2MtwzqNc492cPyglD95CfHq8KHJWfsR23xb+ZNa4Kgv24AA9
-MhnQscgDEAWg356hgP9PIAztGlnGx5LENht2CEy08sbVvuKxf30PezG/JTnH+HX2
-l07DXnSVP9j2wpMQzeeJXAuK2Sn9dxzUMRM32tYiZhY4Q+sx8eHUGARd4LYBvlQU
-B1IKZcaE4EEEK6Ifr0uZKBgfcyvB7EzguglmYkWvDVD3Tz3zaIPIy50c13dNTt/j
-E1teoAqdVEQ/zQ8Hl0+Gu8KUDkVimJ1eFkuZaGArIoBLwkJ4sTltdra43UNYbFaP
-8MHDD74iHmjCyvzbZ7qf8bNvy4W0VWnaPBexQiEguDxkqUHbLr+kmc01GeaMc5AT
-h8QoeVdddbD9zQcGc8Dse/GRUYcyZdF4RwFQ7odZ4cEbk4Jfb/ueBhofIf4i+LBR
-kCpOTSMHi+bgQn9NRhQGgac+zU85P0CweegTuGL9t/SToHuDCS52XU1rODOFPO8O
-/vqrWEqegGrC3WJs258Kt7YgCAQdh3wjW284srMisMrRJvVPqq0fzn5himHI3UyW
-PNat40hZwNRQaE77fUWhLoN8hZVDr7OFlrjD1PT4hE4JnZxMviWRvZJZcJwWS51x
-R876PAfatPNxEH3VxCAD
-=vNvb
------END PGP SIGNATURE-----
-
---=-1c7nCEszFSSuEuVqLDgq--
 
