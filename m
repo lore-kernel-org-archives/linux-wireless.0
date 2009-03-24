@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46416 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753425AbZCTPsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 11:48:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] ssb: remove EXPERIMENTAL dependencies.
-Date: Fri, 20 Mar 2009 16:43:20 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from wf-out-1314.google.com ([209.85.200.169]:62643 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbZCXS7j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 14:59:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so3574250wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 11:59:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903201643.20500.mb@bu3sch.de> (sfid-20090320_164819_323652_57A08BD7)
+In-Reply-To: <200903241938.47155.chunkeey@web.de>
+References: <200903241938.47155.chunkeey@web.de>
+Date: Tue, 24 Mar 2009 14:59:37 -0400
+Message-ID: <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com> (sfid-20090324_195944_546744_4A695B82)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: Bob Copeland <me@bobcopeland.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb is not experimental anymore.
+On Tue, Mar 24, 2009 at 2:38 PM, Christian Lamparter <chunkeey@web.de> wrote:
+> Hi Luis,
+>
+> This is more or less what I need from ath9k's regulatory domain code.
+> What's your opinion? Would you accept the changes, or do you see
+> a potential conflict/problem with the design?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+FWIW I had done a small bit of rework for sharing with ath5k, and
+Luis has those patches now in somewhat better shape.  The last
+patch set I made is here:
 
----
-
-John, please queue for the next feature release.
-
-
-Index: wireless-testing/drivers/ssb/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/ssb/Kconfig	2009-03-20 16:40:14.000000000 +0100
-+++ wireless-testing/drivers/ssb/Kconfig	2009-03-20 16:40:59.000000000 +0100
-@@ -53,11 +53,11 @@ config SSB_B43_PCI_BRIDGE
- 
- config SSB_PCMCIAHOST_POSSIBLE
- 	bool
--	depends on SSB && (PCMCIA = y || PCMCIA = SSB) && EXPERIMENTAL
-+	depends on SSB && (PCMCIA = y || PCMCIA = SSB)
- 	default y
- 
- config SSB_PCMCIAHOST
--	bool "Support for SSB on PCMCIA-bus host (EXPERIMENTAL)"
-+	bool "Support for SSB on PCMCIA-bus host"
- 	depends on SSB_PCMCIAHOST_POSSIBLE
- 	select SSB_SPROM
- 	help
-@@ -107,14 +107,14 @@ config SSB_DRIVER_PCICORE
- 	  If unsure, say Y
- 
- config SSB_PCICORE_HOSTMODE
--	bool "Hostmode support for SSB PCI core (EXPERIMENTAL)"
--	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && EXPERIMENTAL
-+	bool "Hostmode support for SSB PCI core"
-+	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
- 	help
- 	  PCIcore hostmode operation (external PCI bus).
- 
- config SSB_DRIVER_MIPS
--	bool "SSB Broadcom MIPS core driver (EXPERIMENTAL)"
--	depends on SSB && MIPS && EXPERIMENTAL
-+	bool "SSB Broadcom MIPS core driver"
-+	depends on SSB && MIPS
- 	select SSB_SERIAL
- 	help
- 	  Driver for the Sonics Silicon Backplane attached
-@@ -129,8 +129,8 @@ config SSB_EMBEDDED
- 	default y
- 
- config SSB_DRIVER_EXTIF
--	bool "SSB Broadcom EXTIF core driver (EXPERIMENTAL)"
--	depends on SSB_DRIVER_MIPS && EXPERIMENTAL
-+	bool "SSB Broadcom EXTIF core driver"
-+	depends on SSB_DRIVER_MIPS
- 	help
- 	  Driver for the Sonics Silicon Backplane attached
- 	  Broadcom EXTIF core.
+http://bobcopeland.com/kernel/wl/20090309/
 
 -- 
-Greetings, Michael.
+Bob Copeland %% www.bobcopeland.com
