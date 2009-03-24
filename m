@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27092 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757715AbZCSVoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 17:44:46 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 14:44:45 -0700
-Date: Thu, 19 Mar 2009 13:44:06 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/6] Use the regulatory bandwidth and export HT40
-	stuff
-Message-ID: <20090319204406.GA14753@tesla> (sfid-20090319_224449_168749_05993BD1)
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com> <1237491647.5100.114.camel@johannes.local> <43e72e890903191328j15a53a5au1f0162e53daa2a14@mail.gmail.com> <1237498852.5100.121.camel@johannes.local>
+Received: from mail-gx0-f208.google.com ([209.85.217.208]:60817 "EHLO
+	mail-gx0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288AbZCXUtC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 16:49:02 -0400
+Received: by gxk4 with SMTP id 4so6906733gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 13:49:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1237498852.5100.121.camel@johannes.local>
+In-Reply-To: <871vsmrekh.fsf@litku.valot.fi>
+References: <c03d7e680903240959s51aa4864uaad281bd7487e823@mail.gmail.com>
+	 <871vsmrekh.fsf@litku.valot.fi>
+Date: Tue, 24 Mar 2009 16:48:59 -0400
+Message-ID: <c03d7e680903241348x27363902m764c25a9a439d419@mail.gmail.com> (sfid-20090324_214907_712583_E14D9763)
+Subject: Re: Adhoc-demo support in mac80211
+From: ming li <mingli@cs.umass.edu>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 02:40:52PM -0700, Johannes Berg wrote:
-> On Thu, 2009-03-19 at 13:28 -0700, Luis R. Rodriguez wrote:
-> > On Thu, Mar 19, 2009 at 12:40 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > > John,
-> > >
-> > > please back out this series, I'm not sure I agree with the concept and
-> > > I'm sure there are potential bugs that can make it segfault.
-> > 
-> > Can you be more elaborate?
-> 
-> reg_process_ht_flags_channel doesn't initialise channel_before and
-> channel_after.
+Hi,
 
-I can fix that, two lines.
+The adhoc-demo mode is also called pseudo-adhoc mode. It is simply the
+ad-hoc mode without control pkts. It does not probe for or associate
+to adjacent adhoc networks. The user has to set all the nodes to the
+same channel manually. The good thing of adhoc-demo is that it does
+not have the beaconing overhead or the IBSS merging/splitting problem.
 
-  Luis
+We used adhoc-demo mode under madwifi for long time and it worked
+perfectly. Now we have to shift to ath9k but found out the mode is not
+supported. I am just wondering if there is an easy way to hack adhoc
+mode to disable beaconing and association.
+
+Thanks,
+
+Ming
+
+
+On Tue, Mar 24, 2009 at 1:55 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> ming li <mingli@cs.umass.edu> writes:
+>
+>> I am wondering how hard it is to add support for ahdemo mode in mac80211.
+>> My understanding of ahdemo is that it does not have the beacons or the
+>> association process as in adhoc mode.
+>
+> Can you provide more information about this Adhoc-demo mode? I have
+> never heard of it.
+>
+> --
+> Kalle Valo
+>
