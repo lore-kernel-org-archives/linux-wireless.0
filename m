@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45315 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750770AbZCKP6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 11:58:19 -0400
-Cc: j@w1.fi, samuel@sortiz.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Wed, 11 Mar 2009 16:58:12 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1236779314.20266.22.camel@johannes.local>
-Message-ID: <20090311155812.269850@gmx.net> (sfid-20090311_165927_403368_FB4B61FF)
+Received: from wf-out-1314.google.com ([209.85.200.173]:35994 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250AbZCXXOM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 19:14:12 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so3682850wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 16:14:10 -0700 (PDT)
 MIME-Version: 1.0
-References: <1236774973.20266.13.camel@johannes.local>	
- <20090311134329.269810@gmx.net> (sfid-20090311_144435_584837_2198C4E4)
- <1236779314.20266.22.camel@johannes.local>
-Subject: Re: configuring while interface is down
-To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20090324223022.M51759@bobcopeland.com>
+References: <200903241938.47155.chunkeey@web.de> <200903242133.28405.chunkeey@web.de>
+	<20090324205847.GB29268@tesla> <200903242324.33485.chunkeey@web.de>
+	<20090324223022.M51759@bobcopeland.com>
+Date: Tue, 24 Mar 2009 16:13:55 -0700
+Message-ID: <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com> (sfid-20090325_001416_607585_169D5CB4)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
+On Tue, Mar 24, 2009 at 3:30 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, 24 Mar 2009 23:24:33 +0100, Christian Lamparter wrote
+>
+>> > Nice....... so it seems all we need now is ath5k figured out and properly
+>> > tested.
+>> uhh, looks like ath5k/regd.c got dropped by accident?!
+>
+> Well, it wasn't working when I had it either :)
 
-> which is what we'll continue doing in cfg80211, but I think we should=
-n't
-> bother the driver/mac80211 with it until the netdev is up, and thus
-> reject things from nl80211.
+My brain is fuzzy here but I think I had decided to not have an
+ath5k/regd.c. Hm but I see the file there now in my tree.
 
-Do you think WEXT should only be a wrapper around cfg80211? If yes, I w=
-ould agree.
+Anyway we should get a newer shinier patch which has all these changes
+so far + ar9170 changes and test them. Whoever gets to it first please
+post one.
 
-Regards
-Alina
-
---=20
-Nur bis 16.03.! DSL-Komplettanschluss inkl. WLAN-Modem f=FCr nur=20
-17,95 =BF/mtl. + 1 Monat gratis!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1=
-1308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
