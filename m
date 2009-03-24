@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43395 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753590AbZCWQNe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 12:13:34 -0400
-Subject: Re: [PATCH1/2] Fix return value handling
-From: Dan Williams <dcbw@redhat.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200903231659.48903.marek.vasut@gmail.com>
-References: <200903220127.21836.marek.vasut@gmail.com>
-	 <200903231313.10699.hs4233@mail.mn-solutions.de>
-	 <200903231657.24399.marek.vasut@gmail.com>
-	 <200903231659.48903.marek.vasut@gmail.com>
-Content-Type: text/plain
-Date: Mon, 23 Mar 2009 12:11:09 -0400
-Message-Id: <1237824669.14758.16.camel@localhost.localdomain> (sfid-20090323_171338_526696_55D87994)
-Mime-Version: 1.0
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:37539 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754995AbZCXPD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 11:03:29 -0400
+Received: by bwz17 with SMTP id 17so2261188bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 08:03:26 -0700 (PDT)
+To: "Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: wireless powersaving (in NM?)
+References: <1237891149.4320.73.camel@johannes.local>
+	<1237902786.4320.92.camel@johannes.local>
+	<E9954878DD1FB34FAE5187FB88C58A3546DA95D4@orsmsx506.amr.corp.intel.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 24 Mar 2009 17:03:24 +0200
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3546DA95D4@orsmsx506.amr.corp.intel.com> (Wey-Yi W. Guy's message of "Tue\, 24 Mar 2009 07\:47\:46 -0700")
+Message-ID: <8763hzq7yb.fsf@litku.valot.fi> (sfid-20090324_160333_006399_247E410F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-03-23 at 16:59 +0100, Marek Vasut wrote:
-> On Monday 23 of March 2009 16:57:24 Marek Vasut wrote:
-> > Hi,
-> > here is a resend. One patch per mail.
-> sorry, inlining
-> 
-> From fd2e610a87a8372cbc513e336fa71e3438742c9d Mon Sep 17 00:00:00 2001
-> From: Marek Vasut <marek.vasut@gmail.com>
-> Date: Mon, 23 Mar 2009 15:57:11 +0100
-> Subject: [PATCH 1/2] Firmware loading functions can return possitive values
->  This is not a bug, but take it into consideration and handle it properly.
+"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com> writes:
 
-This patch should no longer be required, since the patch "libertas: fix
-CF firmware loading for some cards" was applied.  The firmware helpers
-should only return an error (< 0) or 0 (success).
+> Hi Johannes,
 
-Dan
+Hello,
 
-> Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
-> ---
->  drivers/net/wireless/libertas/if_cs.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_cs.c 
-> b/drivers/net/wireless/libertas/if_cs.c
-> index 842a08d..3f02e6a 100644
-> --- a/drivers/net/wireless/libertas/if_cs.c
-> +++ b/drivers/net/wireless/libertas/if_cs.c
-> @@ -867,9 +867,9 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
->  
->  	/* Load the firmware early, before calling into libertas.ko */
->  	ret = if_cs_prog_helper(card);
-> -	if (ret == 0)
-> +	if (ret >= 0)
->  		ret = if_cs_prog_real(card);
-> -	if (ret)
-> +	if (ret < 0)
->  		goto out2;
->  
->  	/* Make this card known to the libertas driver */
+> Especially for Netbook and Handle devices with newer processor.
+> Putting system into lower C-state and having longer battery life is
+> very important. I think letting driver making the default choice based
+> on the power source is the right way to go, but always can be
+> overwritten by upper layer (mac80211 or NM?).
 
+You mean that the driver knows if the AC is connected or not?
+Definitely not, the AC connection logic is a policy decision and needs
+to be in userspace. It should not be in kernel, it would just
+complicate the implementation.
+
+> I do not think we need to expose all the power levels to user space;
+> those should be internal decision (mac80211 or driver). User space can
+> make the choice of turn power saving mode on/off and leave the detail
+> decision to the lower layer which has better knowledge of how to
+> balance the power and performance.
+
+mac80211 or the driver doesn't have all the needed knowledge. For
+example, how to enable more aggressive power save when the display is
+off? The driver certainly doesn't (and shouldn't) know that.
+
+-- 
+Kalle Valo
