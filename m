@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60386 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754351AbZCUDxN (ORCPT
+Received: from fmailhost03.isp.att.net ([207.115.11.53]:34323 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758211AbZCXOrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 23:53:13 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH 1/5] cfg80211: force last_request to be set for OLD_REG if regdom is EU
-Date: Fri, 20 Mar 2009 23:53:04 -0400
-Message-Id: <1237607588-6316-2-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045324_871863_36895D53)
-In-Reply-To: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
-References: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 24 Mar 2009 10:47:20 -0400
+Message-ID: <49C8F240.500@lwfinger.net> (sfid-20090324_154743_238636_F98D83E3)
+Date: Tue, 24 Mar 2009 09:46:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix RX path
+References: <1237880817.6147.26.camel@johannes.local>
+In-Reply-To: <1237880817.6147.26.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although EU is a bogus alpha2 we need to process the send request
-as our code depends on last_request being set.
+Johannes Berg wrote:
+> My previous patch ("mac80211: remove mixed-cell and userspace MLME code")
+> was too obvious to me, so obvious that a stupid bug crept in. The IBSS
+> RX function must be invoked for IBSS, of course, not anything != IBSS.
+> 
+> Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Cc: stable@kernel.org
-Reported-by: Quentin Armitage <Quentin@armitage.org.uk>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index eb8b8ed..ead9dcc 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2135,11 +2135,14 @@ int regulatory_init(void)
- 	/*
- 	 * The old code still requests for a new regdomain and if
- 	 * you have CRDA you get it updated, otherwise you get
--	 * stuck with the static values. We ignore "EU" code as
--	 * that is not a valid ISO / IEC 3166 alpha2
-+	 * stuck with the static values. Since "EU" is not a valid
-+	 * ISO / IEC 3166 alpha2 code we can't expect userpace to
-+	 * give us a regulatory domain for it. We need last_request
-+	 * iniitalized though so lets just send a request which we
-+	 * know will be ignored... this crap will be removed once
-+	 * OLD_REG dies.
- 	 */
--	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
--		err = regulatory_hint_core(ieee80211_regdom);
-+	err = regulatory_hint_core(ieee80211_regdom);
- #else
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
--- 
-1.6.0.6
+It now works.
 
+Larry
