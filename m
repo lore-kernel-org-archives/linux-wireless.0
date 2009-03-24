@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:38138 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759886AbZCMQsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 12:48:13 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2DGjcWp012731
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 12:45:38 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2DGmAob163638
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 12:48:10 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2DGm9pp022134
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 12:48:10 -0400
-Subject: Re: [LTP] Support of WIFI and W-LAN test cases in LTP
-From: Subrata Modak <subrata@linux.vnet.ibm.com>
-Reply-To: subrata@linux.vnet.ibm.com
-To: rahul Baliyan <rahul.lpt@gmail.com>
-Cc: ltp-list@lists.sf.net, Jouni Malinen <j@w1.fi>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-In-Reply-To: <9a14a0630903130632s36a7f059hd093d30e97f894eb@mail.gmail.com>
-References: <9a14a0630903130632s36a7f059hd093d30e97f894eb@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 13 Mar 2009 22:17:54 +0530
-Message-Id: <1236962876.7439.3.camel@subratamodak.linux.ibm.com> (sfid-20090313_174819_350560_02BFD4D5)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.153]:16192 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735AbZCXDAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2009 23:00:20 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so482738fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 20:00:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1237859527.5714.60.camel@marvin>
+References: <1237849455.16745.41.camel@marvin>
+	 <43e72e890903231610k54ba0f15hf1e3146290c7d67a@mail.gmail.com>
+	 <1237859527.5714.60.camel@marvin>
+Date: Tue, 24 Mar 2009 03:00:17 +0000
+Message-ID: <3ace41890903232000r165ed962o4a024050cd6c1a31@mail.gmail.com> (sfid-20090324_040028_582850_83410B35)
+Subject: Re: [BUG] rtl8187, cfg80211 - unable to handle kernel NULL pointer
+	dereference
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Martin Capitanio <martin@capitanio.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, Larry.Finger@lwfinger.net,
+	herton@mandriva.com.br, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 24, 2009 at 1:52 AM, Martin Capitanio <martin@capitanio.org> wrote:
+> Am Montag, den 23.03.2009, 16:10 -0700 schrieb Luis R. Rodriguez:
+>> On Mon, Mar 23, 2009 at 4:04 PM, Martin Capitanio <martin@capitanio.org> wrote:
+>> > Setting the EU or DE regulatory domain (cfg80211 ieee80211_regdom=EU)
+>> > seems to be working, but afterwards inserting the rtl8187 driver causes crash:
+>>
+>> Please try with today's wireless-testing a set of fixes went in to
+>
+> Sure, I tried "DE" with the same result as well.
+>
+> Fortunately, wireless-testing doesn't crash during the rtl8187 driver load
+> anymore, but changing the regulatory domain seems to be no-op (see below).
+<snipped>
 
-On Fri, 2009-03-13 at 19:02 +0530, rahul Baliyan wrote:
-> Hi,
-> 
-> Pl.  confirm if LTP contains the test cases of W-LAN and WI-FI.
+I have yesterday's compat-wireless (v2.6.29-rc8-18669-g77f1f84), and
+setting EU seems to make it stop responding to setting anything else
+(no more CRDA dmesg messages after the EU entry) - the driver is still
+operational though...
+will give today's wireless-testing a try :-).
 
-Nope. We do not have till now. However, we initiated some discussion
-some 6 months back in the same mailing list regarding Wireless Mesh
-Netwoking tests. Please follow the following thread:
-
-http://marc.info/?t=121969812900007&r=1&w=2&n=4,
-
-There are some tests already avilable. We need somebody to volunteer to
-bring them to some shape so that they can be automated and then
-integrated inside LTP. Would you be ready to do that ?
-
-Regards--
-Subrata
-
-> 
-> if so, please share the location in LTP package.
-> 
-> 
-> Regards,
-> Rahul
-> ------------------------------------------------------------------------------
-> Apps built with the Adobe(R) Flex(R) framework and Flex Builder(TM) are
-> powering Web 2.0 with engaging, cross-platform capabilities. Quickly and
-> easily build your RIAs with Flex Builder, the Eclipse(TM)based development
-> software that enables intelligent coding and step-through debugging.
-> Download the free 60 day trial. http://p.sf.net/sfu/www-adobe-com
-> _______________________________________________ Ltp-list mailing list Ltp-list@lists.sourceforge.net https://lists.sourceforge.net/lists/listinfo/ltp-list
-
+cfg80211: Calling CRDA for country: DE
+cfg80211: Regulatory domain changed to country: DE
+	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+	(2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+	(5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
+	(5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+cfg80211: Calling CRDA for country: US
+cfg80211: Regulatory domain changed to country: US
+	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+	(2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+	(5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+	(5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+	(5490000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+	(5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: EU
