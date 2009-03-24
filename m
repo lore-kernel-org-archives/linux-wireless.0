@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40018 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758022AbZCCEuz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 23:50:55 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 20:50:54 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from yx-out-2324.google.com ([74.125.44.28]:4066 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbZCXU60 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 16:58:26 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so2737853yxl.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 13:58:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18860.46657.951020.582721@gargle.gargle.HOWL> (sfid-20090303_055114_122109_A42FF969)
-Date: Tue, 3 Mar 2009 10:16:57 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 6/7] ath9k: Lock config_interface() callback with a mutex
+In-Reply-To: <1237928031.4320.133.camel@johannes.local>
+References: <c03d7e680903240959s51aa4864uaad281bd7487e823@mail.gmail.com>
+	 <871vsmrekh.fsf@litku.valot.fi>
+	 <c03d7e680903241348x27363902m764c25a9a439d419@mail.gmail.com>
+	 <1237928031.4320.133.camel@johannes.local>
+Date: Tue, 24 Mar 2009 16:58:23 -0400
+Message-ID: <c03d7e680903241358ya809dabhcc75eeca14782ff3@mail.gmail.com> (sfid-20090324_215827_803135_B1863E1C)
+Subject: Re: Adhoc-demo support in mac80211
+From: ming li <mingli@cs.umass.edu>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+Yes, I have to disable beaconing. Is there any easy way to disable
+them? Will this confuse the state machine in mac80211?
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index ee72a0c..4f68e30 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2316,6 +2316,8 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 	u32 rfilt = 0;
- 	int error, i;
- 
-+	mutex_lock(&sc->mutex);
-+
- 	/* TODO: Need to decide which hw opmode to use for multi-interface
- 	 * cases */
- 	if (vif->type == NL80211_IFTYPE_AP &&
-@@ -2371,8 +2373,10 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 
- 			error = ath_beacon_alloc(sc, 0);
--			if (error != 0)
-+			if (error != 0) {
-+				mutex_unlock(&sc->mutex);
- 				return error;
-+			}
- 
- 			ath_beacon_config(sc, 0);
- 		}
-@@ -2391,6 +2395,8 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 	if (vif->type == NL80211_IFTYPE_ADHOC)
- 		ath_update_chainmask(sc, 0);
- 
-+	mutex_unlock(&sc->mutex);
-+
- 	return 0;
- }
- 
--- 
-1.6.1
+BTW, even if you do "iwconfig wlan0 ap..." the IBSS domain still might
+split when the link loss rate is high, right?
 
+On Tue, Mar 24, 2009 at 4:53 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-03-24 at 16:48 -0400, ming li wrote:
+>
+>> The adhoc-demo mode is also called pseudo-adhoc mode. It is simply t=
+he
+>> ad-hoc mode without control pkts. It does not probe for or associate
+>> to adjacent adhoc networks. The user has to set all the nodes to the
+>> same channel manually. The good thing of adhoc-demo is that it does
+>> not have the beaconing overhead or the IBSS merging/splitting proble=
+m.
+>
+> Do you really need to disable beaconing, or would it be sufficient fo=
+r
+> you to just fix the BSSID and the channel? You can do those two alrea=
+dy
+> easily, something like
+> =A0 =A0 =A0 =A0iwconfig wlan0 ap ...
+> =A0 =A0 =A0 =A0iwconfig wlan0 channel ...
+>
+> johannes
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
