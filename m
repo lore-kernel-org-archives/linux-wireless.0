@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12888 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752155AbZCKXEp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 19:04:45 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] cfg80211/nl80211: remove usage of CONFIG_NL80211
-Date: Wed, 11 Mar 2009 16:09:48 -0700
-Message-Id: <1236812988-31827-1-git-send-email-reinette.chatre@intel.com> (sfid-20090312_000450_221596_154D6DA1)
+Received: from fmmailgate03.web.de ([217.72.192.234]:38520 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755943AbZCYCJG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2009 22:09:06 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: replace MAC80211_LEDS with P54_LEDS in p54.h
+Date: Wed, 25 Mar 2009 03:11:44 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903250311.45352.chunkeey@web.de> (sfid-20090325_030911_552644_B36C7B4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+I'm very sorry, as this change belongs to the other patch:
+"[PATCH] p54: fix SoftLED compile dependencies".
+however I must have somehow lost "git add" for that file.
 
-The scan capability added to cfg80211/nl80211 introduced a
-dependency on nl80211 by cfg80211. We can thus no longer have
-just cfg80211 without nl80211. Specifically, cfg80211_scan_done()
-calls nl80211_send_scan_aborted() or nl80211_send_scan_done().
-
-Now we remove the option for user to select nl80211. It will always
-be compiled if user selects cfg80211.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- net/wireless/Kconfig   |   13 -------------
- net/wireless/Makefile  |    3 +--
- net/wireless/nl80211.h |    2 --
- 3 files changed, 1 insertions(+), 17 deletions(-)
-
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index e28e2b8..8f779a2 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -10,19 +10,6 @@ config CFG80211_REG_DEBUG
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+index 2dda5fe..ecf8b6e 100644
+--- a/drivers/net/wireless/p54/p54.h
++++ b/drivers/net/wireless/p54/p54.h
+@@ -14,9 +14,9 @@
+  * published by the Free Software Foundation.
+  */
  
- 	  If unsure, say N.
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ #include <linux/leds.h>
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
  
--config NL80211
--	bool "nl80211 new netlink interface support"
--	depends on CFG80211
--	default y
--	---help---
--	  This option turns on the new netlink interface
--	  (nl80211) support in cfg80211.
--
--	  If =n, drivers using mac80211 will be configured via
--	  wireless extension support provided by that subsystem.
--
--	  If unsure, say Y.
--
- config WIRELESS_OLD_REGULATORY
- 	bool "Old wireless static regulatory definitions"
- 	default y
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index dad43c2..c157b4d 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -5,8 +5,7 @@ obj-$(CONFIG_LIB80211_CRYPT_WEP) += lib80211_crypt_wep.o
- obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
- obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
+ enum p54_control_frame_types {
+ 	P54_CONTROL_TYPE_SETUP = 0,
+@@ -116,7 +116,7 @@ enum fw_state {
+ 	FW_STATE_RESETTING,
+ };
  
--cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o
-+cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
- cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
--cfg80211-$(CONFIG_NL80211) += nl80211.o
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
  
- ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 69787b6..c9ca6c4 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -3,7 +3,6 @@
+ #define P54_LED_MAX_NAME_LEN 31
  
- #include "core.h"
+@@ -129,7 +129,7 @@ struct p54_led_dev {
+ 	unsigned int registered;
+ };
  
--#ifdef CONFIG_NL80211
- extern int nl80211_init(void);
- extern void nl80211_exit(void);
- extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
-@@ -31,6 +30,5 @@ static inline void nl80211_send_scan_aborted(
- 					struct cfg80211_registered_device *rdev,
- 					struct net_device *netdev)
- {}
--#endif /* CONFIG_NL80211 */
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
  
- #endif /* __NET_WIRELESS_NL80211_H */
--- 
-1.5.6.3
-
+ struct p54_common {
+ 	struct ieee80211_hw *hw;
+@@ -177,10 +177,10 @@ struct p54_common {
+ 	u8 privacy_caps;
+ 	u8 rx_keycache_size;
+ 	/* LED management */
+-	#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ 	struct p54_led_dev assoc_led;
+ 	struct p54_led_dev tx_led;
+-	#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 	u16 softled_state;		/* bit field of glowing LEDs */
+ };
+ 
