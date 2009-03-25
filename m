@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:41613 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbZCTKh1 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:64005 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbZCYHv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 06:37:27 -0400
-Received: by fxm2 with SMTP id 2so846593fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 03:37:24 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC PATCH v2 1/4] mac80211: decrease execution of the associated timer
-References: <20090314171234.11126.21125.stgit@tikku>
-	<20090314171431.11126.51242.stgit@tikku>
-	<1237051084.5235.97.camel@johannes.local> <49BBFB78.6070708@nokia.com>
-	<87zlfglfa2.fsf@litku.valot.fi>
-	<1237542166.5100.137.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 20 Mar 2009 12:37:21 +0200
-In-Reply-To: <1237542166.5100.137.camel@johannes.local> (Johannes Berg's message of "Fri\, 20 Mar 2009 10\:42\:46 +0100")
-Message-ID: <87vdq4lbtq.fsf@litku.valot.fi> (sfid-20090320_113731_723258_63088C2A)
+	Wed, 25 Mar 2009 03:51:58 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so3909118wff.4
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 00:51:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890903250047o6a4ed5cfm4ebb849013e9d571@mail.gmail.com>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
+	<e13a36b30903250039h55c8a01cg9dada9256bc8b1ae@mail.gmail.com>
+	<43e72e890903250047o6a4ed5cfm4ebb849013e9d571@mail.gmail.com>
+Date: Wed, 25 Mar 2009 00:51:41 -0700
+Message-ID: <43e72e890903250051j44955276j42fce045c5079b87@mail.gmail.com> (sfid-20090325_085200_937979_9E7759DB)
+Subject: Re: [renamed] Debian crda?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Debian Devel <debian-devel@lists.debian.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Tim Gardner <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Fri, 2009-03-20 at 11:22 +0200, Kalle Valo wrote:
+On Wed, Mar 25, 2009 at 12:47 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Mar 25, 2009 at 12:39 AM, Paul Wise <pabs@debian.org> wrote:
+>> On Wed, Mar 25, 2009 at 4:09 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>
+>>> Last time I poked them it seemed it was not easy to figure out how to
+>>> deal with, if at all, the optional but recommended RSA signature stuff
+>>> [1] with the DFSG.
+>>>
+>>> [1] http://wireless.kernel.org/en/developers/Regulatory#RSADigitalSignature
+>>
+>> What is the percieved DFSG/RSA conflict? I can't detect any based on
+>> that section of the page.
 >
->> Now I remember what this test was about. In ieee80211_associated()
->> there are two tests: probe request check after an data idle period
->> (currently 60 secs) and beacon loss check for drivers not supporting
->> filtering (2 secs).
->> 
->> The former test has been originally (even before my beacon filter
->> patches) implemented so that the probe request is sent even though we
->> are receiving beacons. mod_timer() is called only for unicast traffic
->> so that the probe request test will trigger when we are still
->> receiving beacons.
->
-> Why would we not want to change that? I don't see a reason to send a
-> probe request when we're still receiving beacons. It was meant to be
-> used when beacons got lost _during_ a data idle period to verify that
-> the AP is still there, afaict.
+> Thanks Paul, then its just a matter of packaging. There is an
+> debian-example/ directory with a cdbs example of how to package for
+> wireless-regdb and crda if anyone is up for it.
 
-The original (or current) implementation sends probe requests even
-when beacons are received or there is unicast traffic going on. My
-patches change this so that the probe request is only sent when there
-is data idle period (ie. no unicast traffic).
+And as its probably best to coordinate with Ubuntu, they have a
+wireless-crda package which combines both into one package. Its
+shipping for Jaunty.
 
-Like we discussed earlier, I think the most optimal solution would be
-to send nullfunc frames during data idle periods just to check that the
-connection is working bothways.
-
-What should AP do if it receives a nullfunc frame from a station which
-is not associated? Send a deauth frame back to the station? It would
-be nice to check the association state also during the data idle
-period. Sometimes I have noticed that AP might deauthenticate the
-station without station noticing it. It would be just perfect if
-nullfunc frame would do the assocition also during data idle periods.
-
->> I'll add a proper comment explaining all this.
->> 
->> Also currently ieee80211_associated() is called every two seconds, we
->> need to fix this in future to avoid waking up cpu needlessly. I don't
->> want to make too intrusive changes right now.
->
-> I thought you already did that too :)
-
-Sorry, I did that only for the period when there is data transmission.
-To get rid of unncessary wakeups altogether I need to do something
-more advanced, like using two timers or something. I haven't thought
-that yet.
-
-I'll mention this in the commit logs.
-
--- 
-Kalle Valo
+  Luis
