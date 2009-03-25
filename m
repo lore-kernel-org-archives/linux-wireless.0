@@ -1,95 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:37410 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbZC0FL5 (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:59787 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbZCYHnK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 01:11:57 -0400
-Received: by fxm2 with SMTP id 2so860532fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 22:11:54 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: p54spi - mesh mode summary
-Date: Fri, 27 Mar 2009 08:03:54 +0300
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903260922.48489.jcmvbkbc@gmail.com> <1238055167.4331.3.camel@johannes.local>
-In-Reply-To: <1238055167.4331.3.camel@johannes.local>
+	Wed, 25 Mar 2009 03:43:10 -0400
+Received: by ewy9 with SMTP id 9so2395444ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 00:43:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903270803.54820.jcmvbkbc@gmail.com> (sfid-20090327_061204_890075_725A5E8F)
+In-Reply-To: <c1e027750903250041qfb28bb5g69bc219da57736c0@mail.gmail.com>
+References: <c1e027750903250041qfb28bb5g69bc219da57736c0@mail.gmail.com>
+Date: Wed, 25 Mar 2009 13:13:07 +0530
+Message-ID: <c1e027750903250043n1e6bfffdnd6a6a3889a1f68d6@mail.gmail.com> (sfid-20090325_084315_988851_2D5CBF51)
+Subject: Scan in compat-wireless
+From: Venkat Ch <venkatch@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > 4) Pings don't go, because MPs don't answer ARP requests sent to it.
-> > Haven't tested for the root cause yet.
->
-> Maybe some multicast issue?
+Hi All,
 
-ARP requests get filtered out by LMAC.
-Can anyone explain why? My 802.11s comprehension is quite weak.
-Here's the packet:
+=A0Last week I have downloaded compat-wireless driver. I have installed
+the same into my laptop which has AR242x based WiFi card. Though the
+drivers are loaded correctly, the STA (my laptop) did not associate
+with the nearby AP. This used to happen well with madwifi driver.
 
-IEEE 802.11 Data, Flags: ......FT
-    Type/Subtype: Data (0x20)
-    Frame Control: 0x0308 (Normal)
-        Version: 0
-        Type: Data frame (2)
-        Subtype: 0
-        Flags: 0x3
-            DS status: WDS (AP to AP) or Mesh (MP to MP) Frame (To DS: 1 From DS: 1) (0x03)
-            .... .0.. = More Fragments: This is the last fragment
-            .... 0... = Retry: Frame is not being retransmitted
-            ...0 .... = PWR MGT: STA will stay up
-            ..0. .... = More Data: No data buffered
-            .0.. .... = Protected flag: Data is not protected
-            0... .... = Order flag: Not strictly ordered
-    Duration: 0
-    Receiver address: Broadcast (ff:ff:ff:ff:ff:ff)
-    Transmitter address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
-    Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
-    Fragment number: 0
-    Sequence number: 2
-    Source address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
-    Mesh Header
-        Address Extension 0
-        Mesh TTL: 5
-        Mesh Seq: 0
-Logical-Link Control
-    DSAP: SNAP (0xaa)
-    IG Bit: Individual
-    SSAP: SNAP (0xaa)
-    CR Bit: Command
-    Control field: U, func=UI (0x03)
-        000. 00.. = Command: Unnumbered Information (0x00)
-        .... ..11 = Frame type: Unnumbered frame (0x03)
-    Organization Code: Encapsulated Ethernet (0x000000)
-    Type: ARP (0x0806)
-Address Resolution Protocol (request)
-    Hardware type: Ethernet (0x0001)
-    Protocol type: IP (0x0800)
-    Hardware size: 6
-    Protocol size: 4
-    Opcode: request (0x0001)
-    Sender MAC address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
-    Sender IP address: 192.168.4.13 (192.168.4.13)
-    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
-    Target IP address: 192.168.4.14 (192.168.4.14)
+With my past experience with the details of madwifi driver, I have
+browsed through the code base of compat-wireless driver. I observed
+that with madwifi driver when the device is made up, the scan process
+is kicked off. Where as the same is not happening in compat-wireless.
+Does not the scan process need to be kicked off at the end of
+ieee80211_open (net/mac80211/iface.c)?
+
+Also for ath5k driver, both the hw_scan and sw_scan_start are not
+defined. These two functions are used in ieee80211_start_scan to start
+the scan process (net/mac80211/scan.c). I observed that the scan
+process is not started because the above two functions are not
+defined.
+
+Is the scan functionlaity yet to be added? I have verified the TODO
+list of linux-wireless page. I did not find scan in the agenda. Is
+some one already implementing the functionality? Please let me know if
+I need to provide further details.
 
 
-I'm tempted to do something like this in p54_setup_mac:
+Thanks & Regards
+Venkat
 
--               case NL80211_IFTYPE_MESH_POINT:
-                        mode = P54_FILTER_TYPE_IBSS;
-                        break;
-+               case NL80211_IFTYPE_MESH_POINT:
-+                       mode = P54_FILTER_TYPE_IBSS | P54_FILTER_TYPE_TRANSPARENT;
-+                       break;
-
-But I guess that's bad solution, at least for pci/usb drivers.
-Christian, Johannes, what would you suggest?
-
--- 
-Thanks.
--- Max
+--
+Peace is its own reward
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
