@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49505 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750695AbZCaEBw (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:35051 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756067AbZCYNgX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 00:01:52 -0400
-Date: Tue, 31 Mar 2009 00:01:47 -0400
-From: Kyle McMartin <kyle@mcmartin.ca>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>,
-	Jason Andryuk <jandryuk@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] at76_usb: convert to use linux/ieee80211.h
-Message-ID: <20090331040147.GA15550@bombadil.infradead.org> (sfid-20090331_060153_728596_E856FC63)
-References: <20090222120434.20821.88974.stgit@tikku>
+	Wed, 25 Mar 2009 09:36:23 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Subject: Re: [PATCH 2/2 v2] p54spi: fix p54spi_upload_firmware
+Date: Wed, 25 Mar 2009 14:42:58 +0100
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903251345.01608.chunkeey@web.de> <73aaf0dd0903250550x37e6847x38be1f0dcc4b1bb3@mail.gmail.com>
+In-Reply-To: <73aaf0dd0903250550x37e6847x38be1f0dcc4b1bb3@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090222120434.20821.88974.stgit@tikku>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903251442.58712.chunkeey@web.de> (sfid-20090325_143633_078869_2090AA92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2009 at 02:04:34PM +0200, Kalle Valo wrote:
-> Jason Andryuk noticed that at76_usb won't compile with current
-> wireless-testing tree. This is because net/ieee80211.h was missing.
+On Wednesday 25 March 2009 13:50:44 Max Filippov wrote:
+> >> Sorry, I haven't been used to checkpatch.
+> > But your PATCH 1/2 sailed through without any complains. ;-)
+> Mere coincidence (:
 > 
-> net/ieee80211.h will be removed soon and at76_usb won't compile then that
-> happens. Preprare for that by using instead linux/ieee80211.h and copying
-> some structures not available.
-> 
-> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+> > BTW: does p54spi really work now?
+> I haven't tested your patch yet, but with the one that I sent it does
+> work in IBSS mode.
+> My aim is to wind it up in mesh mode. This doesn't work, it cannot
+> establish peer link.
+> I'm going to investigate it. Does mesh mode work on conventional pci/usb p54?
 
-Ping? This is still an issue in git head... Should probably go in via
-the staging tree...
+hmm, yes... at least with wireless-testing from yesterday. (beaconing works too)
 
-regards, Kyle
+[ 9862.704138] mesh: running mesh housekeeping
+[ 9906.580204] phy3: Allocated STA 00:14:a5:45:33:ff
+[ 9906.581566] phy3: Inserted STA 00:14:a5:45:33:ff
+[ 9906.581581] Mesh plink: starting establishment with 00:14:a5:45:33:ff
+[ 9906.634055] Mesh plink (peer, state, llid, plid, event): 00:14:a5:45:33:ff 1 28312 0 1
+[ 9906.636888] Mesh plink (peer, state, llid, plid, event): 00:14:a5:45:33:ff 2 28312 55519 4
+[ 9906.636895] Mesh plink with 00:14:a5:45:33:ff ESTABLISHED
+
+64 bytes from 10.0.0.2: icmp_seq=449 ttl=64 time=1.81 ms
+64 bytes from 10.0.0.2: icmp_seq=450 ttl=64 time=1.41 ms
+64 bytes from 10.0.0.2: icmp_seq=451 ttl=64 time=3.52 ms
+...
+
+both peers have a p54 (one is pci, the other one usb)... I'll see if I can
+get my old ath5k back to verify that it works with other devices as well.
+
+Regards,
+	Chr
