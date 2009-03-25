@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762143AbZC3WJ1 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58643 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756733AbZCYBVM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 18:09:27 -0400
-Subject: Re: [RFC] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <1238406057.24972.23.camel@johannes.local> (sfid-20090330_114105_983781_83388221)
-References: <1238349195.24972.5.camel@johannes.local>
-	 (sfid-20090329_195345_745378_2F2074B3)  <1238406057.24972.23.camel@johannes.local>
-	 (sfid-20090330_114105_983781_83388221)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FwOSINpEgxVuGMrzrqaw"
-Date: Tue, 31 Mar 2009 00:08:54 +0200
-Message-Id: <1238450934.5970.55.camel@johannes.local> (sfid-20090331_000943_320116_AF1C5069)
-Mime-Version: 1.0
+	Tue, 24 Mar 2009 21:21:12 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
+Subject: [PATCH] cfg80211: fix NULL pointer deference in reg_device_remove()
+Date: Tue, 24 Mar 2009 21:21:08 -0400
+Message-Id: <1237944068-3682-2-git-send-email-lrodriguez@atheros.com> (sfid-20090325_022118_865117_2D496177)
+In-Reply-To: <1237944068-3682-1-git-send-email-lrodriguez@atheros.com>
+References: <1237944068-3682-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We won't ever get here as regulatory_hint_core() can only fail
+on -ENOMEM and in that case we don't initialize cfg80211 but this is
+technically correct code.
 
---=-FwOSINpEgxVuGMrzrqaw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is actually good for stable, where we don't check for -ENOMEM
+failure on __regulatory_hint()'s failure.
 
-On Mon, 2009-03-30 at 11:40 +0200, Johannes Berg wrote:
+Cc: stable@kernel.org
+Reported-by: Quentin Armitage <Quentin@armitage.org.uk>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
->  * tosa - done now in new patch, but not even compile-tested
->    (http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-rfkill=
--rewrite.patch)
-
-One problem here remains -- the LED trigger name was forced to be
-"tosa-bt" in that code -- that is no longer possible now that struct
-rfkill is opaque. I think we should simply standardise the name to
-something like
-	"<rfkill-name>-radio"
-
-Thoughts? I don't want to call it <..>-rfkill or rfkill-<..> because
-that would seem to imply inverted polarity.
-
-johannes
-
---=-FwOSINpEgxVuGMrzrqaw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ0UL0AAoJEKVg1VMiehFY+kEP/AqbA7G9cL9TCZchQ4dIncJK
-dB/IEm2undCsPzljvA++OGqlIAPGQehBcRkLKWh9Rg2SsmwMCjDL5NNAMBLWAciP
-cpr0/GgyycVeF0Y9LKVA1VgdS6tne3K/496Vth+4XmnSDM29jEZ14k4DEP8ZLn0W
-SnVfeCYn9gSWTlDPsJw+0dO1o61v4BTgoBxArnoN8E+bPoBBInG9v6QEYiNjyvXe
-a7Kz3xx7yzkGuDtwK+v+IcyYTDkl7C7onyqSR+QHgbv1JpsIdGts/xza0Je6H5xF
-BixhD+E2WBnE79jqHv0u3lAQI3zbRtNhdvCnKuwfJm1bOdC2zkwBidU3wlX6iyyx
-QBu85llR8cnAum7m1WuUm3tV0kyZLge4rvFVhcE6yfTts6rjEXdCljCD+3oVMYpo
-c7fxB4E4X2J//+TjY47XA2q/rrWEs9HQlX18mnbFXpo4cQOiaAZ9TftpahT2X8OA
-mZibSg2x2OiCGA56dSgZ00O2Hoqxga9G/xsMmgnGTW4ZHzRw/4t8b/VhB1Iza9Js
-PHjl5wlfcQ2xDNbl3vm9NF1kWgwMED+7wg9ecuI0GfUEOktuapITHzIoV4wSgJDC
-YjxUoaffnTr6oRRYFFozQNQ/7fBKg62wpa9ZCTAknwlLdqbXO7NW7jFHTOkEa1do
-gyY71WEHrexP+iXPN6Jd
-=sUrH
------END PGP SIGNATURE-----
-
---=-FwOSINpEgxVuGMrzrqaw--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6327e16..6c1993d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2095,11 +2095,12 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ /* Caller must hold cfg80211_mutex */
+ void reg_device_remove(struct wiphy *wiphy)
+ {
+-	struct wiphy *request_wiphy;
++	struct wiphy *request_wiphy = NULL;
+ 
+ 	assert_cfg80211_lock();
+ 
+-	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
++	if (last_request)
++		request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ 
+ 	kfree(wiphy->regd);
+ 	if (!last_request || !request_wiphy)
+-- 
+1.6.0.6
 
