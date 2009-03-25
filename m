@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27552 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191AbZCJD0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 23:26:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2009 20:26:10 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from yw-out-2324.google.com ([74.125.46.30]:3504 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757198AbZCYU2E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 16:28:04 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so205849ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 13:28:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18869.56538.642763.326813@gargle.gargle.HOWL> (sfid-20090310_042615_251749_6AFFAA59)
-Date: Tue, 10 Mar 2009 08:52:02 +0530
-To: Luis Rodriguez <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ath9k: make few eeprom and calib items static
-In-Reply-To: <1236650982-11520-3-git-send-email-lrodriguez@atheros.com>
-References: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
-	<1236650982-11520-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <43e72e890903251325k7b435c18v988f9206eb784831@mail.gmail.com>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
+	<200903260337.37783.kel@otaku42.de> <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
+	<200903260442.36251.kel@otaku42.de> <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
+	<43e72e890903251325k7b435c18v988f9206eb784831@mail.gmail.com>
+Date: Wed, 25 Mar 2009 13:27:46 -0700
+Message-ID: <43e72e890903251327w18e4b8a1nd7bd125b4c6329a5@mail.gmail.com> (sfid-20090325_212820_038179_079869E8)
+Subject: Re: [renamed] Debian crda?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: debian-devel@lists.debian.org
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis Rodriguez wrote:
-> This fixes the sparse complaints:
-> 
-> drivers/net/wireless/ath9k/eeprom.c:1407:5: warning: symbol
-> 'ath9k_hw_4k_get_spur_channel' was not declared. Should it be static?
-> drivers/net/wireless/ath9k/eeprom.c:1436:19: warning: symbol
-> 'eep_4k_ops' was not declared. Should it be static?
-> drivers/net/wireless/ath9k/eeprom.c:2808:5: warning: symbol
-> 'ath9k_hw_def_get_spur_channel' was not declared. Should it be static?
-> drivers/net/wireless/ath9k/eeprom.c:2837:19: warning: symbol
-> 'eep_def_ops' was not declared. Should it be static?
->   CC [M]  drivers/net/wireless/ath9k/eeprom.o
->   CHECK   drivers/net/wireless/ath9k/mac.c
->   CC [M]  drivers/net/wireless/ath9k/mac.o
->   CHECK   drivers/net/wireless/ath9k/calib.c
-> drivers/net/wireless/ath9k/calib.c:883:6: warning: symbol 'ar9285_clc'
-> was not declared. Should it be static?
+On Wed, Mar 25, 2009 at 1:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-Commit 93f726a90d1446c9e5a40fe8f88086542b273e7c in net-next-2.6 fixes a couple
-of warnings (in eeprom.c).
+> Actually technically it could be a different person. I maintain crda
+> upstream and John maintains wireless-regdb upstream, for example. I
+> just need John's pubkey file which is non-binary. CRDA just reads the
+> regulatory.bin which wireless-regdb provides.
 
-Sujith
+Let me be a little bit more clear on this last sentence. By provides I
+mean that John generated his pubkey using it and then e-mailed it to
+me. I then just merged it as part of CRDA so that by default CRDA
+trusts the regulatory.bin files he puts out.
+
+  Luis
