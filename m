@@ -1,66 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:9304 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbZCMPCN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 11:02:13 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so851198fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 08:02:09 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:60963 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753339AbZCYK5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 06:57:36 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 03:57:35 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Fix bug in getting rx status for frames pending in reorder buffer
+Date: Wed, 25 Mar 2009 16:23:27 +0530
+Message-ID: <1237978407-5397-1-git-send-email-vasanth@atheros.com> (sfid-20090325_115739_868785_629E782F)
 MIME-Version: 1.0
-In-Reply-To: <69e28c910902091056h119b3fa4g460e5e18288c1c3c@mail.gmail.com>
-References: <69e28c910902091056h119b3fa4g460e5e18288c1c3c@mail.gmail.com>
-Date: Fri, 13 Mar 2009 16:02:09 +0100
-Message-ID: <69e28c910903130802t1bd879av50e3d51c075f6e2c@mail.gmail.com> (sfid-20090313_160215_269434_88A181AB)
-Subject: [Resend] Proposal: Add a new flag to the proposed TX flags field to
-	control the sequence number of injected packets
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: radiotap@radiotap.org, Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the TX Flags field is defined as a bitmap containing:
-0x0001 Transmission failed due to excessive retries
-0x0002 Transmission used CTS-to-self protection
-0x0004 Transmission used RTS/CTS handshake
-0x0008 Transmission shall not expect an ACK frame and not retry when
-no ACK is received
+Currently rx status for frames which are completed from reorder buffer
+is taken from it's cb area which is wrong, cb is not holding the rx status.
+This results in dropping almost all frames from reorder buffer when security
+is enabled by doing double decryption (first in hw, second in sw because of wrong
+rx status). This patch copies rx status into cb area before the frame is put
+into reorder buffer. After this patch, there is a significant improvement in
+throughput with ath9k + WPA2(AES).
 
-I'd like to propose the following additional bit:
-0x0010 Transmission has the sequence and fragment numbers pre-set from
-userspace and should not be renumbered
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ net/mac80211/rx.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-This bit is useful for packet injection, where userspace injectors
-might want to control the sequence and fragment numbers of the packets
-it injects. A particular example is aireplay-ng's -5 mode
-(fragmentation attack), where userspace injects pre-made fragments
-one-by-one. The wireless stack usually can't recognize that the
-injected packets are fragments, and instead treats them as complete
-packets, assigning a new sequence number to each fragment, preventing
-the receiving party from correctly reassembling the fragmented packet.
-The userspace does however know that the packets being injected are
-fragments, and such can produce much more correct sequence numbers for
-them. So, userspace can in these cases set TX_FLAGS |=3D3D 0x0010 and p=
-ut
-pre-generated sequence numbers on the packets it injects.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 64ebe66..5fa7aed 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -29,6 +29,7 @@
+ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 					   struct tid_ampdu_rx *tid_agg_rx,
+ 					   struct sk_buff *skb,
++					   struct ieee80211_rx_status *status,
+ 					   u16 mpdu_seq_num,
+ 					   int bar_req);
+ /*
+@@ -1688,7 +1689,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
+ 		/* manage reordering buffer according to requested */
+ 		/* sequence number */
+ 		rcu_read_lock();
+-		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL,
++		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL, NULL,
+ 						 start_seq_num, 1);
+ 		rcu_read_unlock();
+ 		return RX_DROP_UNUSABLE;
+@@ -2293,6 +2294,7 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
+ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 					   struct tid_ampdu_rx *tid_agg_rx,
+ 					   struct sk_buff *skb,
++					   struct ieee80211_rx_status *rxstatus,
+ 					   u16 mpdu_seq_num,
+ 					   int bar_req)
+ {
+@@ -2374,6 +2376,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 
+ 	/* put the frame in the reordering buffer */
+ 	tid_agg_rx->reorder_buf[index] = skb;
++	memcpy(tid_agg_rx->reorder_buf[index]->cb, rxstatus,
++	       sizeof(*rxstatus));
+ 	tid_agg_rx->stored_mpdu_num++;
+ 	/* release the buffer until next missing frame */
+ 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
+@@ -2399,7 +2403,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ }
+ 
+ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+-				     struct sk_buff *skb)
++				     struct sk_buff *skb,
++				     struct ieee80211_rx_status *status)
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -2448,7 +2453,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+ 
+ 	/* according to mpdu sequence number deal with reordering buffer */
+ 	mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
+-	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb,
++	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb, status,
+ 						mpdu_seq_num, 0);
+  end_reorder:
+ 	return ret;
+@@ -2512,7 +2517,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		return;
+ 	}
+ 
+-	if (!ieee80211_rx_reorder_ampdu(local, skb))
++	if (!ieee80211_rx_reorder_ampdu(local, skb, status))
+ 		__ieee80211_rx_handle_packet(hw, skb, status, rate);
+ 
+ 	rcu_read_unlock();
+-- 
+1.5.5.1
 
-Similar to how 0x0008 works, this bit also should be used when packets
-are being sent, as opposed to when they are being reported as having
-been sent (like the first 3 bits).
-
-I have posted a reference implementation on the linux-wireless mailing
-list about a month ago, and it is also available here:
-http://trac.aircrack-ng.org/svn/trunk/patches/mac80211_2.6.28-rc8-wl_fr=
-ag+a=3D
-ck_radiotap.patch
-(Note that this patch may not clearly apply to 2.6.29-rc2 or the
-current wireless-testing kernel, as it was made against the
-master-2008-12-17 tag of wireless-testing.)
-
-G=E1bor
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
