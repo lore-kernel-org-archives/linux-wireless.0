@@ -1,86 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out11.libero.it ([212.52.84.111]:43653 "EHLO
-	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348AbZCaKHK (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:29171 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753260AbZCYMAg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 06:07:10 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: linville@tuxdriver.com
-Subject: [PATCH] ath5k: fix interpolation with equal power levels
-Date: Tue, 31 Mar 2009 11:59:56 +0200
-Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	jirislaby@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org
+	Wed, 25 Mar 2009 08:00:36 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so713883fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 05:00:33 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200903311159.57449.rossi.f@inwind.it> (sfid-20090331_120713_876366_2C1F26C1)
-Content-Type: text/plain;
-  charset="utf-8"
+In-Reply-To: <200903251221.38912.chunkeey@web.de>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
+	 <1237959016-17311-2-git-send-email-jcmvbkbc@gmail.com>
+	 <200903251221.38912.chunkeey@web.de>
+Date: Wed, 25 Mar 2009 15:00:33 +0300
+Message-ID: <73aaf0dd0903250500g51494e04iab9382e23d44f695@mail.gmail.com> (sfid-20090325_130040_156332_A33F41C0)
+Subject: Re: [PATCH 2/2] p54spi: fix p54_upload_firmware
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the EEPROM contains weird values for the power levels we have to
-fix the interpolation process.
+> checkpatch.pl complains
+>
+> WARNING: line over 80 characters
+> #94: FILE: drivers/net/wireless/p54/p54spi.c:269:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 void *fw =3D kmemdup(pr=
+iv->firmware->data, _fw_len, GFP_KERNEL);
+>
+> ERROR: that open brace { should be on the previous line
+> #95: FILE: drivers/net/wireless/p54/p54spi.c:270:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (fw)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 {
+>
+Sorry, I haven't been used to checkpatch.
 
-Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
----
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index 9e2faae..0e3e0e0 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1487,28 +1487,35 @@ ath5k_get_linear_pcdac_min(const u8 *stepL, const u8 *stepR,
- {
- 	s8 tmp;
- 	s16 min_pwrL, min_pwrR;
--	s16 pwr_i = pwrL[0];
--
--	do {
--		pwr_i--;
--		tmp = (s8) ath5k_get_interpolated_value(pwr_i,
--						pwrL[0], pwrL[1],
--						stepL[0], stepL[1]);
--
--	} while (tmp > 1);
--
--	min_pwrL = pwr_i;
--
--	pwr_i = pwrR[0];
--	do {
--		pwr_i--;
--		tmp = (s8) ath5k_get_interpolated_value(pwr_i,
--						pwrR[0], pwrR[1],
--						stepR[0], stepR[1]);
--
--	} while (tmp > 1);
-+	s16 pwr_i;
-+
-+	if (pwrL[0] == pwrL[1])
-+		min_pwrL = pwrL[0];
-+	else {
-+		pwr_i = pwrL[0];
-+		do {
-+			pwr_i--;
-+			tmp = (s8) ath5k_get_interpolated_value(pwr_i,
-+							pwrL[0], pwrL[1],
-+							stepL[0], stepL[1]);
-+		} while (tmp > 1);
-+
-+		min_pwrL = pwr_i;
-+	}
- 
--	min_pwrR = pwr_i;
-+	if (pwrR[0] == pwrR[1])
-+		min_pwrR = pwrR[0];
-+	else {
-+		pwr_i = pwrR[0];
-+		do {
-+			pwr_i--;
-+			tmp = (s8) ath5k_get_interpolated_value(pwr_i,
-+							pwrR[0], pwrR[1],
-+							stepR[0], stepR[1]);
-+		} while (tmp > 1);
-+ 
-+		min_pwrR = pwr_i;
-+	}
- 
- 	/* Keep the right boundary so that it works for both curves */
- 	return max(min_pwrL, min_pwrR);
+> what do you think about the attached proposal?
+
+It looks generally better. But (fw + offset) wouldn't compile, because
+fw is void*.
+
+--=20
+Max
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
