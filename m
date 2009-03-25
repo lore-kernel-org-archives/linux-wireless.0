@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33674 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbZCJCHG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33042 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333AbZCYSPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:07:06 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH 2/4] ath9k: AR9280 PCI devices must serialize IO as well
-Date: Mon,  9 Mar 2009 22:07:02 -0400
-Message-Id: <1236650824-9568-3-git-send-email-lrodriguez@atheros.com> (sfid-20090310_030713_252294_58C4F4D0)
-In-Reply-To: <1236650824-9568-1-git-send-email-lrodriguez@atheros.com>
-References: <1236650824-9568-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 25 Mar 2009 14:15:45 -0400
+Date: Wed, 25 Mar 2009 14:12:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kel Modderman <kel@otaku42.de>
+Cc: debian-devel@lists.debian.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [renamed] Debian crda?
+Message-ID: <20090325181232.GA6882@tuxdriver.com> (sfid-20090325_191548_486884_52D69417)
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com> <e13a36b30903250039h55c8a01cg9dada9256bc8b1ae@mail.gmail.com> <200903260345.30678.kel@otaku42.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200903260345.30678.kel@otaku42.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/hw.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+On Thu, Mar 26, 2009 at 03:45:30AM +1000, Kel Modderman wrote:
+> On Wednesday 25 March 2009 17:39:03 Paul Wise wrote:
+> > On Wed, Mar 25, 2009 at 4:09 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > 
+> > > Last time I poked them it seemed it was not easy to figure out how to
+> > > deal with, if at all, the optional but recommended RSA signature stuff
+> > > [1] with the DFSG.
+> > >
+> > > [1] http://wireless.kernel.org/en/developers/Regulatory#RSADigitalSignature
+> > 
+> > What is the percieved DFSG/RSA conflict? I can't detect any based on
+> > that section of the page.
+> 
+> Hi Paul,
+> 
+> By default the upstream wireless-regdb tarball contains and installs a
+> pre-built wireless regulatory information binary signed by John Linville's
+> openssl snakeoil. It is my understanding that in Debian we would prefer to
+> build the binary from its source code. That presents a problem because CRDA
+> expects to see John Linville's openssl stuff. One way to work around this
+> is to munge CRDA and regdb together, generate our own openssl stuff and build
+> CRDA and wireless-redb at the same time. Another way to go is to do away with
+> the openssl stuff during build altogether, but Luis doesn't like that, and the
+> build system's need patching to support it last time I checked.
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index c6e6899..05df570 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -660,8 +660,15 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 		goto bad;
- 	}
- 
-+	/*
-+	 * All PCI devices should be put here.
-+	 * XXX: remove ah->is_pciexpress and use pdev->is_pcie, then
-+	 * we can just check for !pdev->is_pcie here, but
-+	 * consideration must be taken for handling AHB as well.
-+	 */
- 	if (ah->config.serialize_regmode == SER_REG_MODE_AUTO) {
--		if (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) {
-+		if (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCI ||
-+		    (AR_SREV_9280(ah) && !ah->is_pciexpress)) {
- 			ah->config.serialize_regmode =
- 				SER_REG_MODE_ON;
- 		} else {
+You could also patch-in support for your own signing key, provided
+that would comply with whatever policies Debian has about signing keys.
+
+Hth...
+
+John
 -- 
-1.6.0.6
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
