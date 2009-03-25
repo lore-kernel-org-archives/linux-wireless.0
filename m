@@ -1,151 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:37324 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368AbZCQDYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 23:24:23 -0400
-Received: from mail.atheros.com ([10.10.20.86])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 20:24:22 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18879.5862.135522.858638@gargle.gargle.HOWL> (sfid-20090317_042426_627871_CDE9F27A)
-Date: Tue, 17 Mar 2009 08:50:06 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<me@bobcopeland.com>
-Subject: [PATCH v3] mac80211: Tear down aggregation sessions for suspend/resume
+Received: from xc.sipsolutions.net ([83.246.72.84]:37647 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbZCYMRa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 08:17:30 -0400
+Subject: Re: [PATCH V2] mac80211: Fix bug in getting rx status for frames
+ pending in reorder buffer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1237982651-6761-1-git-send-email-vasanth@atheros.com>
+References: <1237982651-6761-1-git-send-email-vasanth@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DPN/aVhmsxBruhAxPjKw"
+Date: Wed, 25 Mar 2009 13:16:48 +0100
+Message-Id: <1237983408.4320.159.camel@johannes.local> (sfid-20090325_131734_761136_1F254538)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the driver has been notified with a STA_REMOVE, it tears down
-the internal ADDBA state. On resume, trying to initiate aggregation would
-fail because mac80211 has not cleared the operational state for that <TID,STA>.
-This can be fixed by tearing down the existing sessions on a suspend.
 
-Also, the driver can initiate a new BA session when suspend is in progress.
-This is fixed by marking the station as being in suspend state and
-denying ADDBA requests for such STAs.
+--=-DPN/aVhmsxBruhAxPjKw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
-v2:
----
-* Deny ADDBA requests if suspend is in progress.
+On Wed, 2009-03-25 at 17:34 +0530, Vasanthakumar Thiagarajan wrote:
+> Currently rx status for frames which are completed from reorder buffer
+> is taken from it's cb area which is not always right, cb is not holding
+> the rx status when driver uses mac80211's non-irq rx handler to pass it's
+> received frames. This results in dropping almost all frames from reorder=20
+> buffer when security is enabled by doing double decryption (first in hw,=20
+> second in sw because of wrong rx status). This patch copies rx status int=
+o=20
+> cb area before the frame is put into reorder buffer. After this patch,=20
+> there is a significant improvement in throughput with ath9k + WPA2(AES).
+>=20
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-v3:
----
-* Use RCU protection when shutting down BA sessions for STAs.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
- net/mac80211/agg-rx.c   |    8 ++++++++
- net/mac80211/agg-tx.c   |    9 +++++++++
- net/mac80211/pm.c       |   25 +++++++++++++++++++++++++
- net/mac80211/sta_info.h |    3 +++
- 4 files changed, 45 insertions(+), 0 deletions(-)
+I'll look at putting it there in the drivers right away for .31, this
+should probably get a Cc: stable@kernel.org too.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a95affc..07656d8 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -197,6 +197,14 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 
- 	status = WLAN_STATUS_REQUEST_DECLINED;
- 
-+	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "Suspend in progress. "
-+		       "Denying ADDBA request\n");
-+#endif
-+		goto end_no_lock;
-+	}
-+
- 	/* sanity check for incoming parameters:
- 	 * check if configuration can support the BA policy
- 	 * and if buffer size does not exceeds max value */
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 1df116d..e5776ef 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -257,6 +257,15 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
- 		goto unlock;
- 	}
- 
-+	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "Suspend in progress. "
-+		       "Denying BA session request\n");
-+#endif
-+		ret = -EINVAL;
-+		goto unlock;
-+	}
-+
- 	spin_lock_bh(&sta->lock);
- 
- 	sdata = sta->sdata;
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index f845601..0273023 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -21,6 +21,19 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
- 	list_for_each_entry(sdata, &local->interfaces, list)
- 		ieee80211_disable_keys(sdata);
- 
-+	/* Tear down aggregation sessions */
-+
-+	rcu_read_lock();
-+
-+	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
-+		list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+			set_sta_flags(sta, WLAN_STA_SUSPEND);
-+			ieee80211_sta_tear_down_BA_sessions(sta);
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+
- 	/* remove STAs */
- 	if (local->ops->sta_notify) {
- 		spin_lock_irqsave(&local->sta_lock, flags);
-@@ -102,6 +115,18 @@ int __ieee80211_resume(struct ieee80211_hw *hw)
- 		spin_unlock_irqrestore(&local->sta_lock, flags);
- 	}
- 
-+	/* Clear Suspend state so that ADDBA requests can be processed */
-+
-+	rcu_read_lock();
-+
-+	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
-+		list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+			clear_sta_flags(sta, WLAN_STA_SUSPEND);
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+
- 	/* add back keys */
- 	list_for_each_entry(sdata, &local->interfaces, list)
- 		if (netif_running(sdata->dev))
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 1f45573..5b223b2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -35,6 +35,8 @@
-  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
-  *	frame to this station is transmitted.
-  * @WLAN_STA_MFP: Management frame protection is used with this STA.
-+ * @WLAN_STA_SUSPEND: Set/cleared during a suspend/resume cycle.
-+ *	Used to deny ADDBA requests (both TX and RX).
-  */
- enum ieee80211_sta_info_flags {
- 	WLAN_STA_AUTH		= 1<<0,
-@@ -48,6 +50,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_PSPOLL		= 1<<8,
- 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
- 	WLAN_STA_MFP		= 1<<10,
-+	WLAN_STA_SUSPEND	= 1<<11
- };
- 
- #define STA_TID_NUM 16
--- 
-1.6.2
+johannes
+
+> ---
+> v2
+> ---
+> As issue lies only in non-irq rx handler path, change
+> the commit log accordingly.
+>=20
+>  net/mac80211/rx.c |   13 +++++++++----
+>  1 files changed, 9 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 64ebe66..5fa7aed 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -29,6 +29,7 @@
+>  static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+>  					   struct tid_ampdu_rx *tid_agg_rx,
+>  					   struct sk_buff *skb,
+> +					   struct ieee80211_rx_status *status,
+>  					   u16 mpdu_seq_num,
+>  					   int bar_req);
+>  /*
+> @@ -1688,7 +1689,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
+>  		/* manage reordering buffer according to requested */
+>  		/* sequence number */
+>  		rcu_read_lock();
+> -		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL,
+> +		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL, NULL,
+>  						 start_seq_num, 1);
+>  		rcu_read_unlock();
+>  		return RX_DROP_UNUSABLE;
+> @@ -2293,6 +2294,7 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
+>  static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+>  					   struct tid_ampdu_rx *tid_agg_rx,
+>  					   struct sk_buff *skb,
+> +					   struct ieee80211_rx_status *rxstatus,
+>  					   u16 mpdu_seq_num,
+>  					   int bar_req)
+>  {
+> @@ -2374,6 +2376,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct i=
+eee80211_hw *hw,
+> =20
+>  	/* put the frame in the reordering buffer */
+>  	tid_agg_rx->reorder_buf[index] =3D skb;
+> +	memcpy(tid_agg_rx->reorder_buf[index]->cb, rxstatus,
+> +	       sizeof(*rxstatus));
+>  	tid_agg_rx->stored_mpdu_num++;
+>  	/* release the buffer until next missing frame */
+>  	index =3D seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
+> @@ -2399,7 +2403,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct i=
+eee80211_hw *hw,
+>  }
+> =20
+>  static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+> -				     struct sk_buff *skb)
+> +				     struct sk_buff *skb,
+> +				     struct ieee80211_rx_status *status)
+>  {
+>  	struct ieee80211_hw *hw =3D &local->hw;
+>  	struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *) skb->data;
+> @@ -2448,7 +2453,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee802=
+11_local *local,
+> =20
+>  	/* according to mpdu sequence number deal with reordering buffer */
+>  	mpdu_seq_num =3D (sc & IEEE80211_SCTL_SEQ) >> 4;
+> -	ret =3D ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb,
+> +	ret =3D ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb, status,
+>  						mpdu_seq_num, 0);
+>   end_reorder:
+>  	return ret;
+> @@ -2512,7 +2517,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct=
+ sk_buff *skb,
+>  		return;
+>  	}
+> =20
+> -	if (!ieee80211_rx_reorder_ampdu(local, skb))
+> +	if (!ieee80211_rx_reorder_ampdu(local, skb, status))
+>  		__ieee80211_rx_handle_packet(hw, skb, status, rate);
+> =20
+>  	rcu_read_unlock();
+
+--=-DPN/aVhmsxBruhAxPjKw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJyiCtAAoJEKVg1VMiehFYkucP/RYRXtQ5NCDLNKVbWJi24WbG
+Z4q4SemQeoGxy8x6zTMFQHAYbXTC2LCxy6daGXv2Y9YCARA1dqU/Nf3KWdWUfhrd
+nkZ2MOONNKe2nzdqZSZyFeFeVPqp7Jzt4HXenx/jD1lRRTpkGyXGOu9+Q5G3kIly
+u5EPbskd1DsYTMgMhiGY/wd6DIBgl4czv0xkQlU02Z9O/rYybVor901xUpTBH4YA
+Q9m4GOxioBRogLQqaxUdd1NVBAhEEPasK6fzSirRJ+/X9DCb+pgyuVecpDbKMcbG
+E+tVEo8zUplpvY/QFq1beqmK7ldtbIL6EFsEEXQoq8eSHYee2eP1SQt2Yvl8a5qC
+weeiGXeiVbUAYoeNVzm4bke2OPQ7L4MQAwEqWEf4L40TFqw0bt7BkvFwp3SPcn9a
+/ovDvH4p4Gjb6e9okn+k3IvOZMkcAxGB0SN3wV350ZMB2BoFTxkhCvPTl5rGzSqZ
+q5NP8QHKkXBGjmlbD+yBJTHZGxAnW6CzIUU3zOLF7Q1kxW0MoXFngKfxGChYsP3h
+BRIaw8P4vHjlSqd/nSYL613BP1U2HIkjzWtOg1jCPKOuwWYqwfC5pj7qJwV4Z0sC
+opfaZdq4wWEzHD5BBVYHXlYkO+/0ZhRHNqYGzKczUbogYgHVQWlJyuUloexBj2OI
+h24ErxsnD6xy9+B6Ia3z
+=sIEh
+-----END PGP SIGNATURE-----
+
+--=-DPN/aVhmsxBruhAxPjKw--
 
