@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:42900 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545AbZC0S0V (ORCPT
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:48382 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754121AbZCYDd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 14:26:21 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so1453804wff.4
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 11:26:19 -0700 (PDT)
+	Tue, 24 Mar 2009 23:33:28 -0400
+Message-ID: <49C9A5D8.20408@lwfinger.net> (sfid-20090325_043330_877561_0666AAC4)
+Date: Tue, 24 Mar 2009 22:32:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <49CD0FCF.3060706@gmail.com>
-References: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com>
-	<43e72e890903241256l39f5b1f9i49ce2b7a6e8099c3@mail.gmail.com>
-	<49CD0FCF.3060706@gmail.com>
-Date: Fri, 27 Mar 2009 11:26:04 -0700
-Message-ID: <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com> (sfid-20090327_192632_607283_79C9AA9D)
-Subject: Re: GSoC '09 applicant : Introduction
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Jussi Kukkonen <jku@linux.intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/3] p54: more SoftLED updates
+References: <200903250312.18264.chunkeey@web.de>
+In-Reply-To: <200903250312.18264.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 27, 2009 at 10:41 AM, Till Kamppeter
-<till.kamppeter@gmail.com> wrote:
-> Kalpana Roy has now applied officially for his project. To get access to the
-> application, add comments and ratings and also to add yourself as a mentor
-> for him, you must at first apply for being a mentor for the Linux
-> Foundation. Go to http://socghop.appspot.com/, log in with your Google
-> account (create one if you have none), fill in your profile and apply for
-> being a mentor for the Linux Foundation (link ID of the Linux Foundation is
-> "LF"). I will approve you as mentor and then you will be asked to fill in
-> your mentor profile after having done so, you get official mentor (but not
-> yet assigned to any student) and will have access to the application.
+Christian Lamparter wrote:
+> This patch hopefully finishes the SoftLED code:
+> - It adds two more LEDs (rx and radio). 
+>   (the FW claims it can support up to 16 LEDs,
+>    but I doubt that any vendor put more than 4 on a board)
+> - update the LEDs in a _delayed_ workqueue.
+>   No one reported any more crashes. 
+>   (see: "PATCH] p54: fix race condition in memory management")
+>   So we can stop burning the mm code.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
 
-I've put in a private review and scored it.
+My device has 2 LED's - one for power and one blinks on TX(?). No messages in logs.
 
-Thanks!
-
-  Luis
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
