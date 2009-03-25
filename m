@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:37285 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755193AbZCZRuV convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3235 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753967AbZCYBIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:50:21 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so256045fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 10:50:18 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
-Date: Thu, 26 Mar 2009 18:50:08 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>
-References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> <1238087650-26993-2-git-send-email-reinette.chatre@intel.com> <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
+	Tue, 24 Mar 2009 21:08:19 -0400
+Date: Tue, 24 Mar 2009 21:06:26 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+Message-ID: <20090325010626.GA8528@hash.localnet> (sfid-20090325_020821_987647_6369B00A)
+References: <200903241938.47155.chunkeey@web.de> <200903242133.28405.chunkeey@web.de> <20090324205847.GB29268@tesla> <200903242324.33485.chunkeey@web.de> <20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com> <43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com> <43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200903261850.09869.helmut.schaa@gmail.com> (sfid-20090326_185025_458179_8263BE62)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 24, 2009 at 04:52:09PM -0700, Luis R. Rodriguez wrote:
+> Alright here's a quick concat of all these patches (also one small
+> sparse fix on Christian's last patch). It also now throws ath5k, ath9k
+> and ar9170 into ath/. We can rename the drivers after, was lazy to do
+> that. Think its easier for review to separate that too.
+> 
+> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v3.patch.txt
+> 
+> Bob, where was that switch break error?
 
-Am Donnerstag, 26. M=E4rz 2009 schrieb Reinette Chatre:
-> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
->=20
-> Remove STATUS_ALIVE checking when HW RF KILL disabled, the bit get
-> clear in __iwl_down() function; the additional checking will fail and
-> cause RF can not be turn back on.
+1st patch:
 
-Are you sure this is needed? I'd argue we should only restart the adapt=
-er
-if it was alive when it got rf_killed. In case the adapter was rf_kille=
-d
-while the interface was down I don't think we want to restart the adapt=
-er
-immediately but first when the interface is taken up again.
+> +	switch (band) {
+> +	case IEEE80211_BAND_2GHZ:
+> +		ctl = ah->regulatory.regpair->reg_2ghz_ctl;
+> +	case IEEE80211_BAND_5GHZ:
+> +		ctl = ah->regulatory.regpair->reg_5ghz_ctl;
+> +	default:
+> +		ctl = NO_CTL;
+> +	}
+> +	return ctl;
+> +}
 
-Helmut
+I think I had it like the following and changed it -- actually with
+the returns it's probably better...
 
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wi=
-reless/iwlwifi/iwl-core.c
-> index e1b5472..7560d6f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -2056,8 +2056,7 @@ void iwl_bg_rf_kill(struct work_struct *work)
->  		IWL_DEBUG_RF_KILL(priv,
->  			  "HW and/or SW RF Kill no longer active, restarting "
->  			  "device\n");
-> -		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
-> -		    test_bit(STATUS_ALIVE, &priv->status))
-> +		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
->  			queue_work(priv->workqueue, &priv->restart);
->  	} else {
->  		/* make sure mac80211 stop sending Tx frame */
+switch (band) {
+case XXX:
+        return ah->...;
+case YYY:
+...
+}
 
+-- 
+Bob Copeland %% www.bobcopeland.com
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
