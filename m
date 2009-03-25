@@ -1,37 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2836 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756373AbZCVWHB (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.245]:51512 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276AbZCYDqL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 18:07:01 -0400
-Date: Sun, 22 Mar 2009 18:04:21 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Alexander E. Patrakov" <patrakov@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel panic with zd1211rw and today's compat-wireless
-Message-ID: <20090322220421.GG18141@hash.localnet> (sfid-20090322_230724_653450_00E96449)
-References: <20090322174515.22f11d92@home.aephome.ru> <1237726612.19647.2.camel@johannes.local> <b6c5339f0903220749j5373d132gdf24edc4d6ac610c@mail.gmail.com> <200903221609.26412.mb@bu3sch.de>
+	Tue, 24 Mar 2009 23:46:11 -0400
+Received: by an-out-0708.google.com with SMTP id d14so2208264and.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 20:46:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903221609.26412.mb@bu3sch.de>
+In-Reply-To: <43e72e890903242015l449f0835v5602694c735f9b96@mail.gmail.com>
+References: <200903241938.47155.chunkeey@web.de> <200903242324.33485.chunkeey@web.de>
+	<20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com>
+	<43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com>
+	<43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
+	<20090325010626.GA8528@hash.localnet> <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com>
+	<43e72e890903241959x51dc9278oc424bfa85cff9e0f@mail.gmail.com>
+	<43e72e890903242015l449f0835v5602694c735f9b96@mail.gmail.com>
+Date: Tue, 24 Mar 2009 20:45:53 -0700
+Message-ID: <43e72e890903242045n520842c3q9392f75651a6b905@mail.gmail.com> (sfid-20090325_044613_187380_AA4D5466)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 22, 2009 at 04:09:26PM +0100, Michael Buesch wrote:
-> Is it possible that the skb->cb (where I guess the RX status and TX status
-> are stored) is getting corrupted after the skb got queued by the driver for
-> processing in the RX or TX status tasklet?
+On Tue, Mar 24, 2009 at 8:15 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Mar 24, 2009 at 7:59 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Tue, Mar 24, 2009 at 7:30 PM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>>> On Tue, Mar 24, 2009 at 6:06 PM, Bob Copeland <me@bobcopeland.com> =
+wrote:
+>>>> On Tue, Mar 24, 2009 at 04:52:09PM -0700, Luis R. Rodriguez wrote:
+>>>>> Alright here's a quick concat of all these patches (also one smal=
+l
+>>>>> sparse fix on Christian's last patch). It also now throws ath5k, =
+ath9k
+>>>>> and ar9170 into ath/. We can rename the drivers after, was lazy t=
+o do
+>>>>> that. Think its easier for review to separate that too.
+>>>>>
+>>>>> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v3.p=
+atch.txt
+>>>>>
+>>>>> Bob, where was that switch break error?
+>>>>
+>>>> 1st patch:
+>>>>
+>>>>> + =C2=A0 =C2=A0 switch (band) {
+>>>>> + =C2=A0 =C2=A0 case IEEE80211_BAND_2GHZ:
+>>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulator=
+y.regpair->reg_2ghz_ctl;
+>>>>> + =C2=A0 =C2=A0 case IEEE80211_BAND_5GHZ:
+>>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulator=
+y.regpair->reg_5ghz_ctl;
+>>>>> + =C2=A0 =C2=A0 default:
+>>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D NO_CTL;
+>>>>> + =C2=A0 =C2=A0 }
+>>>>> + =C2=A0 =C2=A0 return ctl;
+>>>>> +}
+>>>>
+>>>> I think I had it like the following and changed it -- actually wit=
+h
+>>>> the returns it's probably better...
+>>>>
+>>>> switch (band) {
+>>>> case XXX:
+>>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0return ah->...;
+>>>> case YYY:
+>>>> ...
+>>>> }
+>>>
+>>> Alright thanks, I've fixed that here, it also now does not introduc=
+e
+>>> any new checkpatch or sparse complaints.
+>>>
+>>> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v4.pat=
+ch.txt
+>>>
+>>> My shiny new wl rebased on 29 kernel is compiling, will let you kno=
+w
+>>> in the morning how it goes.
+>>
+>> Ah poo, ath5k_reg_notifier() got lost.
+>
+> Fixed..
+>
+> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v5.patch=
+=2Etxt
 
-Hmm, that's an interesting possibility, and yeah that is stored in cb, for
-TX at least:
-    
->    struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+Nope.. no luck, something got messed up along the way... needs a closer=
+ look.
 
-I did debug it on the driver side and the rates I was sending back to the 
-RC were fine.  
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
