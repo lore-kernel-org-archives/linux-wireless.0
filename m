@@ -1,82 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:34235 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755094AbZC1VwJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 17:52:09 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: p54spi - mesh mode summary
-Date: Sat, 28 Mar 2009 22:51:42 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903271506.10614.chunkeey@web.de> <200903280621.02362.jcmvbkbc@gmail.com>
-In-Reply-To: <200903280621.02362.jcmvbkbc@gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:51532 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763825AbZCYRhr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 13:37:47 -0400
+From: Kel Modderman <kel@otaku42.de>
+To: debian-devel@lists.debian.org
+Subject: Re: [renamed] Debian crda?
+Date: Thu, 26 Mar 2009 03:37:37 +1000
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com> <43e72e890903250047o6a4ed5cfm4ebb849013e9d571@mail.gmail.com> <43e72e890903250051j44955276j42fce045c5079b87@mail.gmail.com>
+In-Reply-To: <43e72e890903250051j44955276j42fce045c5079b87@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200903282251.42585.chunkeey@web.de> (sfid-20090328_225213_096337_40D3AD31)
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903260337.37783.kel@otaku42.de> (sfid-20090325_183755_097258_8D534C5D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 28 March 2009 04:21:02 Max Filippov wrote:
-> > That's odd.
+On Wednesday 25 March 2009 17:51:41 Luis R. Rodriguez wrote:
+> On Wed, Mar 25, 2009 at 12:47 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Wed, Mar 25, 2009 at 12:39 AM, Paul Wise <pabs@debian.org> wrote:
+> >> On Wed, Mar 25, 2009 at 4:09 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >>
+> >>> Last time I poked them it seemed it was not easy to figure out how to
+> >>> deal with, if at all, the optional but recommended RSA signature stuff
+> >>> [1] with the DFSG.
+> >>>
+> >>> [1] http://wireless.kernel.org/en/developers/Regulatory#RSADigitalSignature
+> >>
+> >> What is the percieved DFSG/RSA conflict? I can't detect any based on
+> >> that section of the page.
 > >
-> > P54_FILTER_TYPE_TRANSPARENT should be already set for mesh mode.
-> >
-> > The reason is that mesh mode will automatically set the FIF_OTHER_B=
-SS flag,
-> > (file:net/mac80211/iface.c func:ieee80211_open lines:251 f)
-> >
-> > which in turn ORs the P54_FILTER_TYPE_TRANSPARENT flag to the mode.=
-=2E.
-> > (file:drivers/net/wireless/p54/p54common.c func: p54_setup_mac line=
-s: 1691
-> > f)
-> >
-> > So, there's no need to OR a flag that gets ORed anyway?
->=20
-> Found the problem, that's my fault at merge of omap and wireless-test=
-ing=20
-> trees:
-> p54_configure_filter that I tested with has the following code:
->=20
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 *total_flags &=3D FIF_PROMISC_IN_BSS |
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 FIF_OTHER_BSS |
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 (*total_flags & FIF_PROMISC_IN_BSS) ?
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 FIF_FCSFAIL : 0;
->=20
-> which does not what it is intended to. '|' operator has higher preced=
-ence=20
-> than '? :'
-> thus it is equivalent to *total_flags &=3D FIF_FCSFAIL; which never y=
-ields=20
-> neither
-> FIF_PROMISC_IN_BSS nor FIF_OTHER_BSS.
->=20
-> Current wireless-testing head has=20
->=20
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 *total_flags &=3D FIF_PROMISC_IN_BSS |
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 FIF_OTHER_BSS;
->=20
-> at this place, which work fine.
-Yup that was fixed by "p54: misplaced parentheses"
-( c1359ddff01dc63b2770f876a94b6dd97e0473f6 )
-and FCS_FAIL was removed by "p54: completely ignore rx'd frames with ba=
-d FCS"
-( adda7e08403adf0980efb69ffe339567df8eb8d1 )=20
+> > Thanks Paul, then its just a matter of packaging. There is an
+> > debian-example/ directory with a cdbs example of how to package for
+> > wireless-regdb and crda if anyone is up for it.
 
-your last patches had some offset, do you have more code fixes or
-does everything work (properly)?
+The example packaging needs some love, I think. I don't see it as a great
+reference to the eventual packaging material that would enter Debian.
 
-Regards,
-	Chr
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> And as its probably best to coordinate with Ubuntu, they have a
+> wireless-crda package which combines both into one package. Its
+> shipping for Jaunty.
+
+And that's the only way to sanely package it (by combining the two pieces
+upstream splits) as show by Fedora also choosing that route.
+
+Luis why can't CRDA and regd simply be released in same tarball considering
+they have such a strong relationship with eachother due to the openssl stuff?
+
+Thanks, Kel.
