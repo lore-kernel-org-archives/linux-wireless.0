@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:52300 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753750AbZCVA1f (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35896 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759643AbZCYQcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 20:27:35 -0400
-Received: by ewy9 with SMTP id 9so1151520ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2009 17:27:32 -0700 (PDT)
-From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Subject: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
-Date: Sun, 22 Mar 2009 01:41:13 +0100
-Message-Id: <1237682473-5994-1-git-send-email-tuliom@gmail.com> (sfid-20090322_012737_270733_C2DDA439)
+	Wed, 25 Mar 2009 12:32:35 -0400
+Date: Wed, 25 Mar 2009 18:32:25 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl80211: Optional IEs into scan request
+Message-ID: <20090325163225.GA28509@jm.kir.nu> (sfid-20090325_173249_908415_C1606549)
+References: <20090213105306.GA18754@jm.kir.nu> <1234522804.4219.13.camel@johannes.local> <20090213111523.GA22438@jm.kir.nu> <1ba2fa240902150509i5df08adcg214901548d3cd538@mail.gmail.com> <20090215154408.GA6845@jm.kir.nu> <1ba2fa240902151240v3bbe2885l4ef4d90e5d78b0a7@mail.gmail.com> <1ba2fa240903250838qab8acb1v3abffe06c5384d13@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240903250838qab8acb1v3abffe06c5384d13@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add vendor ID for Quanta Microsystems and update the led table with the reported device.
+On Wed, Mar 25, 2009 at 05:38:11PM +0200, Tomas Winkler wrote:
 
-Reported-by: Scott Barnes <nekoreeve@gmail.com>
+> After reading the WPS spec again and specifically the section 10.3
+> that talks about PBC, it looks like for PBC you will need to have the
+> WPS IE in the Probe request for it to function correctly. So it
+> doesn't look optional to mee
+> 
+> The WPS IE in the Probe Request will indicate that the device is in
+> PBC mode. The WPS IE is also used for Registrars to see if multiple
+> requests were received within the PBC Monitor time.
 
-Signed-off-by: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
----
- drivers/net/wireless/ath5k/led.c |    2 ++
- include/linux/pci_ids.h          |    2 ++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+It is not ideal to work without including the WPS IE in Probe Request,
+but the Registrar should be able to do similar detection for session
+overlap using M1. If you want something better, all you need to do is to
+move from using WEXT to nl80211.. ;-)
 
-diff --git a/drivers/net/wireless/ath5k/led.c b/drivers/net/wireless/ath5k/led.c
-index 0686e12..19555fb 100644
---- a/drivers/net/wireless/ath5k/led.c
-+++ b/drivers/net/wireless/ath5k/led.c
-@@ -65,6 +65,8 @@ static const struct pci_device_id ath5k_led_devices[] = {
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422), ATH_LED(1, 1) },
- 	/* E-machines E510 (tuliom@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428), ATH_LED(3, 0) },
-+	/* Acer Extensa 5620z (nekoreeve@gmail.com) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
- 	{ }
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 5207160..1702acb 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2267,6 +2267,8 @@
- #define PCI_DEVICE_ID_KORENIX_JETCARDF0	0x1600
- #define PCI_DEVICE_ID_KORENIX_JETCARDF1	0x16ff
- 
-+#define PCI_VENDOR_ID_QMI		0x1a32
-+
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
+The spec is somewhat unclear on this, but there are couple of places
+which indicate that the WPS IE may not always be included in Probe
+Request (e.g., APs must not reject WPS based on missing WPS IE in Probe
+Request).
+
 -- 
-1.6.0.2
-
+Jouni Malinen                                            PGP id EFC895FA
