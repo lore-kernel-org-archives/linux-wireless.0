@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38624 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429AbZC3J53 (ORCPT
+Received: from mail-gx0-f160.google.com ([209.85.217.160]:35220 "EHLO
+	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762163AbZCYRls (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 05:57:29 -0400
-Subject: Re: [RFC] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <200903301154.10067.mb@bu3sch.de> (sfid-20090330_115542_001932_2A670424)
-References: <1238349195.24972.5.camel@johannes.local>
-	 <1238403987.24972.14.camel@johannes.local>
-	 <200903301154.10067.mb@bu3sch.de> (sfid-20090330_115542_001932_2A670424)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Wtf3eIkpkF49CjDXfdQ1"
-Date: Mon, 30 Mar 2009 11:57:23 +0200
-Message-Id: <1238407043.24972.25.camel@johannes.local> (sfid-20090330_115732_529983_0928B643)
-Mime-Version: 1.0
+	Wed, 25 Mar 2009 13:41:48 -0400
+Received: by gxk4 with SMTP id 4so352537gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 10:41:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200903260337.37783.kel@otaku42.de>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
+	<43e72e890903250047o6a4ed5cfm4ebb849013e9d571@mail.gmail.com>
+	<43e72e890903250051j44955276j42fce045c5079b87@mail.gmail.com>
+	<200903260337.37783.kel@otaku42.de>
+Date: Wed, 25 Mar 2009 10:41:30 -0700
+Message-ID: <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com> (sfid-20090325_184153_425610_40C0BB72)
+Subject: Re: [renamed] Debian crda?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Kel Modderman <kel@otaku42.de>
+Cc: debian-devel@lists.debian.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Mar 25, 2009 at 10:37 AM, Kel Modderman <kel@otaku42.de> wrote:
+> On Wednesday 25 March 2009 17:51:41 Luis R. Rodriguez wrote:
+>> On Wed, Mar 25, 2009 at 12:47 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> > On Wed, Mar 25, 2009 at 12:39 AM, Paul Wise <pabs@debian.org> wrote:
+>> >> On Wed, Mar 25, 2009 at 4:09 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> >>
+>> >>> Last time I poked them it seemed it was not easy to figure out how to
+>> >>> deal with, if at all, the optional but recommended RSA signature stuff
+>> >>> [1] with the DFSG.
+>> >>>
+>> >>> [1] http://wireless.kernel.org/en/developers/Regulatory#RSADigitalSignature
+>> >>
+>> >> What is the percieved DFSG/RSA conflict? I can't detect any based on
+>> >> that section of the page.
+>> >
+>> > Thanks Paul, then its just a matter of packaging. There is an
+>> > debian-example/ directory with a cdbs example of how to package for
+>> > wireless-regdb and crda if anyone is up for it.
+>
+> The example packaging needs some love, I think. I don't see it as a great
+> reference to the eventual packaging material that would enter Debian.
+>
+>>
+>> And as its probably best to coordinate with Ubuntu, they have a
+>> wireless-crda package which combines both into one package. Its
+>> shipping for Jaunty.
+>
+> And that's the only way to sanely package it (by combining the two pieces
+> upstream splits) as show by Fedora also choosing that route.
 
---=-Wtf3eIkpkF49CjDXfdQ1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well I actually disagree.
 
-On Mon, 2009-03-30 at 11:54 +0200, Michael Buesch wrote:
-> On Monday 30 March 2009 11:06:27 Johannes Berg wrote:
-> > On Sun, 2009-03-29 at 19:53 +0200, Johannes Berg wrote:
-> > > This patch completely rewrites the rfkill core to address
-> > > the following deficiencies:
-> > >=20
-> > >  * all rfkill drivers need to implement polling where necessary
-> > >    rather than having one central implementation
-> >=20
-> > One thing I was wondering about -- should we just implement polling via
-> > a single work struct that iterates all those rfkill drivers that need
-> > polling? I've given them each an own right now, but that seems
-> > unnecessary.
->=20
-> If it doesn't add new locking problems (global locks, etc...) that'd be O=
-K.
+> Luis why can't CRDA and regd simply be released in same tarball considering
+> they have such a strong relationship with eachother due to the openssl stuff?
 
-Hm, indeed, it probably would -- rfkill_register needs a global lock
-while being called from the driver, and the polling would need the same
-lock while calling into the driver.
+Openssl stuff is optional and in fact not the lib chosen by default,
+libgcrypt is the default though.
 
-johannes
+The point is that crda won't be updated regularly but the
+wireless-regdb will be. No point in updating a binary when only the
+file it reads is the one that changes.
 
---=-Wtf3eIkpkF49CjDXfdQ1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ0JeAAAoJEKVg1VMiehFYjOcQAIqNJhXnKd6wo679m377R9lm
-JVT5i3Ma5KNUrDUx4Oeiqswb8FweIgV55fdhmyzboavvm0oXY5Hu1Bf4mfs8cSPh
-FXZQhOSaym473yNyQmu3+1i5+y1Z6fkApilQiZmL/MiDnpWMmx+wLWMUjQeEu/yx
-SX8vP0iDeSw2eEgiv9WsIrmxQZmiiNgKa5Go/QPFN9lEaYC3R5HMqsZ+a2kJVIQB
-cNaYP1azUyaRrM6briCPxAzkGcBknkCZaaitTIJIxxkyrZflrW2O/4kexjlcKM+M
-xAjQ+MnzdXZPRIwu660B0VeT/CqscnU294b2BBsldRWrPR+QH5FUEDFVQNbk9Mmq
-XYse+w3TDPhA9eTvfzjnshW62zRfCwNbeP959lY1mVXIiOncSg1Lq0epYduFwmn6
-wE1DFM1xXSV8Ymg9UDhaz4LC98/4YxF0e6jHo0A6frRjor/RPuYjT0q6m5qDh8Ue
-e7RUG9pSID97fZRQ0fJcjnTzqzwpVYdADg7QP256cIETThtS386p5gIzG4hHEzRR
-ToGRDGtM11g9Lzxvw87JxFcw5HOuXK1ePD1Jd8rczhFrXlhHx2mCjBTsMu9SYn7x
-PajV/Vu8NC9CLaeFHTSJDpRQrVVTmFQQe8Ahj1dVfK4F8iSYH8MH5Cp0fRTPC0ef
-JzfsUy8RhsP51XVpkTEJ
-=VpGQ
------END PGP SIGNATURE-----
-
---=-Wtf3eIkpkF49CjDXfdQ1--
-
+  Luis
