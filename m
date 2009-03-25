@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:64467 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:18387 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822AbZCXV7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 17:59:24 -0400
+	id S1755753AbZCYMmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 08:42:07 -0400
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 14:59:23 -0700
-Date: Tue, 24 Mar 2009 13:58:47 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Christian Lamparter <chunkeey@web.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-Message-ID: <20090324205847.GB29268@tesla> (sfid-20090324_225928_317956_271072A7)
-References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com> <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com> <200903242133.28405.chunkeey@web.de>
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 05:42:06 -0700
+Date: Wed, 25 Mar 2009 18:11:53 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH V3] mac80211: Fix bug in getting rx status for frames
+	pending in reorder buffer
+Message-ID: <20090325124153.GB29348@vasanth-laptop> (sfid-20090325_134212_040029_32F25232)
+References: <1237984249-7177-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200903242133.28405.chunkeey@web.de>
+In-Reply-To: <1237984249-7177-1-git-send-email-vasanth@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 24, 2009 at 01:33:27PM -0700, Christian Lamparter wrote:
-> On Tuesday 24 March 2009 21:10:21 Luis R. Rodriguez wrote:
-> > On Tue, Mar 24, 2009 at 1:03 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> > > On Tue, Mar 24, 2009 at 2:41 PM, Luis R. Rodriguez
-> > > <lrodriguez@atheros.com> wrote:
-> > >> Do any of you guys have time to pick it up?
-> > >
-> > > Well my patch #2 is pretty similar to what Christian has, and I'd like to
-> > > upstream the first few patches soon (especially the ath.ko creation, it is a
-> > > beast to rebase as you saw).  That would bring up the first contentious
-> > > point of the merge: is "ath/ath.ko" ok with everyone?
-> >
-> > Yes.
-> Yes.
+On Wed, Mar 25, 2009 at 06:00:49PM +0530, Vasanth Thiagarajan wrote:
+> Currently rx status for frames which are completed from reorder buffer
+> is taken from it's cb area which is not always right, cb is not holding
+> the rx status when driver uses mac80211's non-irq rx handler to pass it's
+> received frames. This results in dropping almost all frames from reorder
+> buffer when security is enabled by doing double decryption (first in hw,
+> second in sw because of wrong rx status). This patch copies rx status into
+> cb area before the frame is put into reorder buffer. After this patch,
+> there is a significant improvement in throughput with ath9k + WPA2(AES).
 > 
-> > > ath5k/9k specific
-> > > bits can eventually go in ath/{5k,9k} subdirs... not sure where 9170
-> > > lives then :)
-> >
-> > Wherever Christian wants it. If he finds re-usable bits then great.
-> maybe ath/9kusb ?
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> Cc: stable@kernel.org
+> ---
 
-In that case maybe 9170/, we do have future USB plans.
+oops, forgot to add Acked by
 
-> > > I probably can't get to it until the weekend, but if you have more time,
-> > > Christian, feel free to adopt whatever you want from mine.  Otherwise I'll
-> > > pick up where Luis left off on the weekend.
-> Done! Patch attached, please add to the tree ;)
-
-Nice....... so it seems all we need now is ath5k figured out and properly
-tested.
-
-  Luis
+vasanth
