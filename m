@@ -1,103 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:44267 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbZCPMWF (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:57443 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755996AbZCYCKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 08:22:05 -0400
-Received: by fxm24 with SMTP id 24so3457291fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 05:22:01 -0700 (PDT)
-Subject: Re: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Andreas Mohr <andi@lisas.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
-	maximlevitsky@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <20090316104433.GA24968@rhlx01.hs-esslingen.de>
-References: <1230840105-30960-1-git-send-email-me@bobcopeland.com>
-	 <20090111131015.GA31037@rhlx01.hs-esslingen.de>
-	 <20090111144227.GB13109@hash.localnet>
-	 <20090316100447.GA13819@rhlx01.hs-esslingen.de>
-	 <1237198577.27769.9.camel@johannes.local>
-	 <20090316104433.GA24968@rhlx01.hs-esslingen.de>
-Content-Type: text/plain
-Date: Mon, 16 Mar 2009 14:21:57 +0200
-Message-Id: <1237206117.15040.7.camel@localhost> (sfid-20090316_132209_362174_56B05751)
-Mime-Version: 1.0
+	Tue, 24 Mar 2009 22:10:09 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] p54: add beacon filtering support
+Date: Wed, 25 Mar 2009 03:12:49 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903250312.49624.chunkeey@web.de> (sfid-20090325_031020_307226_B0B42381)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-03-16 at 11:44 +0100, Andreas Mohr wrote:
-> Hi,
-> 
-> On Mon, Mar 16, 2009 at 11:16:17AM +0100, Johannes Berg wrote:
-> > On Mon, 2009-03-16 at 11:04 +0100, Andreas Mohr wrote:
-> > 
-> > > On Sun, Jan 11, 2009 at 09:42:27AM -0500, Bob Copeland wrote:
-> > > > > My LED is dead again on 2.6.29-rc1 (reason: doesn't contain this patch).
-> > > > 
-> > > > It's in wireless-testing, it just hasn't made it through the pipeline yet.
-> > > 
-> > > Just installed -rc8; would be truly sad to see this really small
-> > > but important patch (several million machines) not included in .29 proper...
-> > > (or would it later get merged via .29 -stable? Then I'm fine with it...)
-> > 
-> > I don't think "my LED doesn't blink" really counts as important...
-> 
-> Given that "NOTHING" (*) worked initially with this machine
-> which has been sold a couple million times, one could have the opinion
-> that ANY newly working component whatsoever counts...
-> 
-> Thanks,
-> 
-> Andreas Mohr
-> 
-> *):
-> - SD-card hotplug suspend/resume lockup
-> - SD-card filesystem _corruption_ after resume
-> - microphone in most cases not working due to suspected ALSA lib bug
-> - General Intel-HDA codec dodginess such as randomly toggling
->   high noise level in speakers etc.
-> - X.org wrong dpi issues (now fixed, thanks!)
-> - X.org i915 suspend/resume lockup / VT switch issues (about to be fixed)
-> - ath5k suspend/resume issues (fixed)
-> - ath5k noise level calibration issues (fixed?)
-> - NetworkManager catastrophy (ongoing nerve corruption)
-> - libata performance loss down to UDMA/33 upon resume (fixed, (semi-)personally)
-> - Intel firmware module suspend/resume lockup (fixed, semi-personally)
-> - non-supported WLAN LED (would-be-fixed, semi-personally)
-> - flexible fan control not supported in-kernel (support in progress,
->   thanks a lot!)
-> - suspected non-optimal SSD I/O scheduler support
-> - several very annoying CUPS non-working print issues,
->   including an entirely locking-up interfacing to _ALL_ [suspected]
->   HP JetDirect servers, whether builtin or not (fixed, semi-personally)
-> - and probably several others... (e.g. Ubuntu userspace bugs)
-> 
-> See also LKML monster thread "Bugs on aspire one A150"...
+This patch adds beacon filtering support to p54.
 
-
-Well thats the living in linux... :-)
-I think this notebook is perfect since, all these bugs were fixed.
-Now it is almost perfect.
-
-On the other hand think about my main notebook, acer 5720.
-There suspend to ram doesn't work, and no this isn't due to GFX driver,
-or anything like that. It just that BIOS doesn't pass control to linux
-on resume. It doesn't like something in hardware....
-This would I call a NOTHING...
-
-
-
-I recommend to to install (if you didn't do that yet) the
-compat-wireless package, or even better compile wireless-testing.
-
-You could also patch in latest patches that fix TX power for ath5k, or
-wait few days till they are in wireless-testings (maybe they are there
-already...)
-
-
-
-Best regards,
-	Maxim Levitsky
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+index 0954044..53d3ed8 100644
+--- a/drivers/net/wireless/p54/p54.h
++++ b/drivers/net/wireless/p54/p54.h
+@@ -134,6 +134,7 @@ struct p54_led_dev {
+ 
+ struct p54_common {
+ 	struct ieee80211_hw *hw;
++	struct ieee80211_vif *vif;
+ 	void (*tx)(struct ieee80211_hw *dev, struct sk_buff *skb);
+ 	int (*open)(struct ieee80211_hw *dev);
+ 	void (*stop)(struct ieee80211_hw *dev);
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 3766d33..b6ebd48 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -1044,6 +1044,7 @@ static void p54_rx_stats(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 
+ static void p54_rx_trap(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
++	struct p54_common *priv = dev->priv;
+ 	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
+ 	struct p54_trap *trap = (struct p54_trap *) hdr->data;
+ 	u16 event = le16_to_cpu(trap->event);
+@@ -1057,6 +1058,8 @@ static void p54_rx_trap(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 			wiphy_name(dev->wiphy), freq);
+ 		break;
+ 	case P54_TRAP_NO_BEACON:
++		if (priv->vif)
++			ieee80211_beacon_loss(priv->vif);
+ 		break;
+ 	case P54_TRAP_SCAN:
+ 		break;
+@@ -1939,7 +1942,8 @@ static int p54_set_ps(struct ieee80211_hw *dev)
+ 	int i;
+ 
+ 	if (dev->conf.flags & IEEE80211_CONF_PS)
+-		mode = P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC;
++		mode = P54_PSM | P54_PSM_BEACON_TIMEOUT | P54_PSM_DTIM |
++		       P54_PSM_CHECKSUM | P54_PSM_MCBC;
+ 	else
+ 		mode = P54_PSM_CAM;
+ 
+@@ -1957,9 +1961,10 @@ static int p54_set_ps(struct ieee80211_hw *dev)
+ 		psm->intervals[i].periods = cpu_to_le16(1);
+ 	}
+ 
+-	psm->beacon_rssi_skip_max = 60;
++	psm->beacon_rssi_skip_max = 200;
+ 	psm->rssi_delta_threshold = 0;
+-	psm->nr = 0;
++	psm->nr = 10;
++	psm->exclude[0] = 0;
+ 
+ 	priv->tx(dev, skb);
+ 
+@@ -2114,6 +2119,8 @@ static int p54_add_interface(struct ieee80211_hw *dev,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	priv->vif = conf->vif;
++
+ 	switch (conf->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+@@ -2138,6 +2145,7 @@ static void p54_remove_interface(struct ieee80211_hw *dev,
+ 	struct p54_common *priv = dev->priv;
+ 
+ 	mutex_lock(&priv->conf_mutex);
++	priv->vif = NULL;
+ 	if (priv->cached_beacon)
+ 		p54_tx_cancel(dev, priv->cached_beacon);
+ 	priv->mode = NL80211_IFTYPE_MONITOR;
+@@ -2592,7 +2600,8 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+ 		     IEEE80211_HW_SUPPORTS_PS |
+ 		     IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		     IEEE80211_HW_SIGNAL_DBM |
+-		     IEEE80211_HW_NOISE_DBM;
++		     IEEE80211_HW_NOISE_DBM |
++		     IEEE80211_HW_BEACON_FILTER;
+ 
+ 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				      BIT(NL80211_IFTYPE_ADHOC) |
