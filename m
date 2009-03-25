@@ -1,37 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:49397 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754859AbZCNPdQ (ORCPT
+Received: from durandal.kismetwireless.net ([199.201.145.179]:57211 "EHLO
+	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760794AbZCYPm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 11:33:16 -0400
-Message-ID: <49BBCE18.4090606@nokia.com> (sfid-20090314_163320_627684_A72A886B)
-Date: Sat, 14 Mar 2009 17:32:40 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Wed, 25 Mar 2009 11:42:27 -0400
+Date: Wed, 25 Mar 2009 11:43:21 -0400
+From: Mike Kershaw <dragorn@kismetwireless.net>
+To: G?bor Stefanik <gst@remote-exploit.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ar9170 - Cace Airpcap NX
+Message-ID: <20090325154321.GA4368@drd1813.lan> (sfid-20090325_164232_948249_34C40529)
+Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
+References: <20090324202633.GA21202@drd1813.lan> <69e28c910903241614s5502a7ffoe85bba0515b8c223@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
-References: <20090314144405.670.16447.stgit@tikku> <1237043931.5235.67.camel@johannes.local>
-In-Reply-To: <1237043931.5235.67.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
+In-Reply-To: <69e28c910903241614s5502a7ffoe85bba0515b8c223@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
->> ieee80211_tx_h_check_assoc() was dropping everything else than probe
->> requests during software scan. So the null frame with the power save
->> bit was dropped and AP never received it. This meant that AP never
->> buffered any frames for the station during software scan.
->>
->> Fix this by allowing to transmit both probe request and null frames
->> during software scan. Tested with stlc45xx.
-> 
-> Would it make sense to reorder the scan code instead?
 
-Perhaps. I chose this path only because it was simple to implement :) 
-I'll take a look at the scan code in more detail and fix it there.
+--k+w/mQv8wyuph6w0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Kalle
+On Wed, Mar 25, 2009 at 12:14:34AM +0100, G?bor Stefanik wrote:
+> On Tue, Mar 24, 2009 at 9:26 PM, Mike Kershaw
+> <dragorn@kismetwireless.net> wrote:
+> > The Cace Airpcap NX device is an atheros 9170 USB device (sold with cus=
+tom
+> > windows drivers for rfmon in windows).
+> >
+> > Works fine once the USB device id is added to ar9170, device 0xCACE,0x0=
+300
+> >
+> > -m
+> >
+> > --
+> > Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
+> > GPG Fingerprint: 3546 89DF 3C9D ED80 3381 ?A661 D7B2 8822 738B BDB1
+> >
+> > Supercollider Programming: The art of debugging your program by
+> > letting it crash and looking at what remains.
+> >
+>=20
+> On a related note, the Cace AirPcap N (PCI/Cardbus/PCIE) is an AR5008,
+> with the PCI ID CACE:0023 (PCI/Cardbus)/CACE:0024 (PCIE). Someone with
+> an AirPcap N should test if adding this ID to ath9k works.
+>=20
+> -G?bor
 
+Works with CACE:0023, don't have a 24 to test with.
+
+-m
+
+--=20
+Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
+GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
+
+If you can keep your head, while all others around you are loosing theirs,
+then you must be the one holding the axe.  -- Anonymous
+
+--k+w/mQv8wyuph6w0
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAknKURkACgkQ17KIInOLvbHY7wCeInO+Li/WD/lzJY+ztijcbrti
+L9UAoJzn3QzidGesfE43ZWsMAmhTaPj0
+=I+wo
+-----END PGP SIGNATURE-----
+
+--k+w/mQv8wyuph6w0--
