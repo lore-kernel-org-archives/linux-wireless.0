@@ -1,112 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35218 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755405AbZCXK2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 06:28:53 -0400
-Subject: Re: [PATCH] Marvell CF8381
-From: Dan Williams <dcbw@redhat.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <200903240042.41054.marek.vasut@gmail.com>
-References: <200903220127.21836.marek.vasut@gmail.com>
-	 <200903232258.57323.marek.vasut@gmail.com>
-	 <1237849710.26204.17.camel@localhost.localdomain>
-	 <200903240042.41054.marek.vasut@gmail.com>
-Content-Type: text/plain
-Date: Tue, 24 Mar 2009 06:26:27 -0400
-Message-Id: <1237890387.25734.9.camel@localhost.localdomain> (sfid-20090324_112856_591775_B04D20F7)
-Mime-Version: 1.0
+Received: from fk-out-0910.google.com ([209.85.128.187]:31652 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753791AbZCYUWp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 16:22:45 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so99118fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 13:22:42 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: wireless powersaving (in NM?)
+References: <1237891149.4320.73.camel@johannes.local>
+	<87ab7bqa21.fsf@litku.valot.fi>
+	<1237978630.4320.150.camel@johannes.local>
+	<87ab791isj.fsf@litku.valot.fi>
+	<1238011579.4320.169.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 25 Mar 2009 22:22:39 +0200
+In-Reply-To: <1238011579.4320.169.camel@johannes.local> (Johannes Berg's message of "Wed\, 25 Mar 2009 21\:06\:19 +0100")
+Message-ID: <87wsadz71s.fsf@litku.valot.fi> (sfid-20090325_212303_321083_C150A645)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-03-24 at 00:42 +0100, Marek Vasut wrote:
-> Ok, here is another version, hopefully last one.
-> 
-> From a7522df9d610702cfc3066861a2e315552e29086 Mon Sep 17 00:00:00 2001
-> From: Marek Vasut <marek.vasut@gmail.com>
-> Date: Tue, 24 Mar 2009 00:40:44 +0100
-> Subject: [PATCH] Add support for CF8381 WiFi card.
->  A detection function was added for identifying CF8381.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+> On Wed, 2009-03-25 at 21:53 +0200, Kalle Valo wrote:
+>
+>> > I'm just worried that we'll require a whole bunch of different
+>> > interfaces. Yes, in theory there isn't much to control, but iwlwifi
+>> > firmware for example can, as far as I interpret the code, dynamically
+>> > vary the listen interval.
+>> 
+>> You mean the wakeup interval? For me, listen interval means the
+>> maximum time AP is willing to buffer frames for a STA.
+>
+> No, I mean the listen interval in the assoc request frame.
 
-> ---
->  drivers/net/wireless/libertas/if_cs.c |   34 +++++++++++++++++++++++++++++++-
->  1 files changed, 32 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_cs.c 
-> b/drivers/net/wireless/libertas/if_cs.c
-> index 3f02e6a..1da23e5 100644
-> --- a/drivers/net/wireless/libertas/if_cs.c
-> +++ b/drivers/net/wireless/libertas/if_cs.c
-> @@ -273,7 +273,28 @@ static int if_cs_poll_while_fw_download(struct if_cs_card 
-> *card, uint addr, u8 r
->   */
->  #define IF_CS_PRODUCT_ID               0x0000001C
->  #define IF_CS_CF8385_B1_REV            0x12
-> +#define IF_CS_CF8381_B3_REV            0x04
-> 
-> +/*
-> + * Used to detect other cards than CF8385 since their revisions of silicon
-> + * doesn't match those from CF8385, eg. CF8381 B3 works with this driver.
-> + */
-> +#define CF8381_MANFID          0x02db
-> +#define CF8381_CARDID          0x6064
-> +#define CF8385_MANFID          0x02df
-> +#define CF8385_CARDID          0x8103
-> +
-> +static inline int if_cs_hw_is_cf8381(struct pcmcia_device *p_dev)
-> +{
-> +       return (p_dev->manf_id == CF8381_MANFID &&
-> +               p_dev->card_id == CF8381_CARDID);
-> +}
-> +
-> +static inline int if_cs_hw_is_cf8385(struct pcmcia_device *p_dev)
-> +{
-> +       return (p_dev->manf_id == CF8385_MANFID &&
-> +               p_dev->card_id == CF8385_CARDID);
-> +}
-> 
->  /********************************************************************/
->  /* I/O and interrupt handling                                       */
-> @@ -757,6 +778,7 @@ static void if_cs_release(struct pcmcia_device *p_dev)
->  static int if_cs_probe(struct pcmcia_device *p_dev)
->  {
->         int ret = -ENOMEM;
-> +       unsigned int prod_id;
->         struct lbs_private *priv;
->         struct if_cs_card *card;
->         /* CIS parsing */
-> @@ -859,7 +881,14 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
->                p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
-> 
->         /* Check if we have a current silicon */
-> -       if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
-> +       prod_id = if_cs_read8(card, IF_CS_PRODUCT_ID);
-> +       if (if_cs_hw_is_cf8381(p_dev) && prod_id < IF_CS_CF8381_B3_REV) {
-> +               lbs_pr_err("old chips like 8381 rev B3 aren't supported\n");
-> +               ret = -ENODEV;
-> +               goto out2;
-> +       }
-> +
-> +       if (if_cs_hw_is_cf8385(p_dev) && prod_id < IF_CS_CF8385_B1_REV) {
->                 lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
->                 ret = -ENODEV;
->                 goto out2;
-> @@ -950,7 +979,8 @@ static void if_cs_detach(struct pcmcia_device *p_dev)
->  /********************************************************************/
-> 
->  static struct pcmcia_device_id if_cs_ids[] = {
-> -       PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
-> +       PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
-> +       PCMCIA_DEVICE_MANF_CARD(CF8385_MANFID, CF8385_CARDID),
->         PCMCIA_DEVICE_NULL,
->  };
->  MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
-> --
-> 1.6.2
-> 
+It only tells the AP maximum time it should buffer the frames for use.
+We can set it 10 but still wake every second beacon. So listen
+interval has merely informative value.
 
+>> I assume you mean sleep_interval here:
+>> 
+>> #define IWL_POWER_VEC_SIZE 5
+>> 
+>> struct iwl_powertable_cmd {
+>> 	__le16 flags;
+>> 	u8 keep_alive_seconds;		/* 3945 reserved */
+>> 	u8 debug_flags;			/* 3945 reserved */
+>> 	__le32 rx_data_timeout;
+>> 	__le32 tx_data_timeout;
+>> 	__le32 sleep_interval[IWL_POWER_VEC_SIZE];
+>> 	__le32 keep_alive_beacons;
+>> } __attribute__ ((packed));
+>> 
+>> So there's an array sleep/wakeup interval, which firmware most
+>> probably rotates periodically. 
+>
+> I don't actually know what the sleep interval here is...
+
+I think it determines how often the firmware will wakeup for beacons.
+At least stlc45xx had something similar.
+
+>> I think stlc45xx/p54 even had something
+>> similar. But honestly, I don't know if this kind of trickery is
+>> useful. Why not directly go to the longest wakeup interval
+>> immediately?
+>
+> But listen interval * beacon interval determines latency.
+
+Yeah. I just wouldn't use the listen interval, because it's
+a bit misleading. I have used the term wakeup interval here.
+
+>> My view is that the decision to change wakeup interval should be done
+>> in host, preferably userspace. Userspace has the best knowledge, it
+>> should make the decision as well.
+>
+> What's the wakeup interval?
+
+That's my own invention, again :) It's the interval how often firmware
+wakes up for beacons, and unit is beacon interval. For example, if
+wakeup interval is three and beacon interval 100 msec, the firmware
+would wakeup for beacons every 300 ms.
+
+>> > Some of the decisions might also depend on the hardware, I could
+>> > imagine, the point where turning off power saving is required might be
+>> > different depending on hardware due to wakeup time maybe?
+>> 
+>> Yes, there might be some differences.
+>
+> How would we capture these?
+
+I was thinking that it's the responsibility of the driver's author to
+map these to the hardware.
+
+-- 
+Kalle Valo
