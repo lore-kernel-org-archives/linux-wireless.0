@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:43498 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbZC0GZq convert rfc822-to-8bit (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:51436 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027AbZCYBFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 02:25:46 -0400
-Received: by bwz17 with SMTP id 17so849752bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 23:25:43 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
-Date: Fri, 27 Mar 2009 07:25:34 +0100
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> <200903262158.52601.helmut.schaa@gmail.com> <1238110011.10348.19.camel@rc-desk>
-In-Reply-To: <1238110011.10348.19.camel@rc-desk>
+	Tue, 24 Mar 2009 21:05:24 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so3728744wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 18:05:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200903270725.35166.helmut.schaa@gmail.com> (sfid-20090327_072549_180364_0789B09A)
+In-Reply-To: <loom.20090324T220312-187@post.gmane.org>
+References: <1237224184.5027.600.camel@samson.armitage.org.uk>
+	<43e72e890903191800y7f30a58fheeb1b8f25eb6d7f2@mail.gmail.com>
+	<loom.20090324T220312-187@post.gmane.org>
+Date: Tue, 24 Mar 2009 18:05:07 -0700
+Message-ID: <43e72e890903241805i464997d3x3da89b3e1584d60a@mail.gmail.com> (sfid-20090325_020528_067581_9C1070D1)
+Subject: Re: Oops and other problems in cfg80211
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Quentin Armitage <Quentin@armitage.org.uk>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 24, 2009 at 3:18 PM, Quentin Armitage
+<Quentin@armitage.org.uk> wrote:
+> Luis R. Rodriguez <mcgrof@...> writes:
+>
+>> > If reg_is_world_roaming is modified to check for last_request not being
+>> > NULL, e.g.
+>> > if (last_request && last_request->initiator != REGDOM_SET_BY_COUNTRY_IE
+>> > &&
+>> > then I also get an oops in reg_device_remove where last_request is
+>> > referenced and there is only a subsequent check for it being NULL.
+> Following the commits included in master-2009-03-23, in function
+> reg_device_remove in net/wireless/reg.c there is still a dereference via
+> last_request (request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);)
+> prior to the test for last_request != NULL (if (!last_request || !request_wiphy)
+> )
+> I suspect that following the patches applied, last_request cannot be NULL, and
+> therefore the check !last_request is not required; otherwise the check needs to
+> be made before the call to wiphy_idx_to_wiphy.
+> One way or the other, as it stands the code looks wrong.
 
-Am Freitag, 27. M=C3=A4rz 2009 schrieb reinette chatre:
-> On Thu, 2009-03-26 at 13:58 -0700, Helmut Schaa wrote:
-> > Assume the following situation:
-> >=20
-> > You only have one killswitch for both, wireless and bluetooth. The =
-wireless
-> > interface is down because it is unused and the user wants to use bl=
-uetooth
-> > and enables it via the killswitch which also means that wireless ge=
-ts
-> > unkilled. Now restarting the adapter needs more power then keeping =
-the
-> > adapter down. In short: if the interface is down the user (space) d=
-oes not
-> > want to use the interface and probably wants to save power as well.
->=20
-> Your measurements are very fine grained :) Will this be measureable?
+Heh yeah its impossible to get that but I'll send a patch. Thanks.
 
-Heh, you know the internals of the devive ;) but I guess waking up the
-adapter (and thus starting the firmware) even if the interface is unuse=
-d
-will surely need more power than not doing so.
-
-Helmut
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
