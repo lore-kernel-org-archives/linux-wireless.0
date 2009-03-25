@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:19523 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756304AbZCRBYd (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:20740 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbZCYCVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 21:24:33 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so315776wff.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 18:24:31 -0700 (PDT)
+	Tue, 24 Mar 2009 22:21:30 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so2851945ywb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 19:21:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <af5afd160903171817v6a6ec50al6e933985628e7674@mail.gmail.com>
-References: <af5afd160903171817v6a6ec50al6e933985628e7674@mail.gmail.com>
-Date: Wed, 18 Mar 2009 12:24:31 +1100
-Message-ID: <646765f40903171824t7854e0d4wc2c3de9752ad6370@mail.gmail.com> (sfid-20090318_022437_657629_B762E920)
-Subject: Re: compile error.
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Dennis Kavadas <ipguy@kavadas.org>
-Cc: linux-wireless@vger.kernel.org
+Reply-To: paul.boillot@gmail.com
+Date: Tue, 24 Mar 2009 22:21:28 -0400
+Message-ID: <8d8077ac0903241921i561f2c31qb83bac154e49b6b4@mail.gmail.com> (sfid-20090325_032133_778796_A1A4EA52)
+Subject: compat-wireless causing kernel panics?
+From: Paul D Boillot <paul.boillot@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 18, 2009 at 12:17, Dennis Kavadas <ipguy@kavadas.org> wrote:
-> hi all
->
-> i'm currently running a CentOS5 server with kernel version 2.6.18-92.1.22.el5
-[snip]
-> error: #error Compat-wireless requirement: Linux >= 2,6,21
+Hi, I don't know if this is the right format/forum for this, but I'm
+having problems with compat-wireless.
 
-Your kernel is too old, as it says here, you need a version greater or
-equal to 2.6.21.
+I've set up ubuntu 8.10 installs on two different computers, as well
+as compat-wireless and hostapd. On both computers, I would get
+seemingly random system freezes after installing these tools. The
+crashes have increased in frequency to the point that immediately
+post-log in, or during the log in process, they crash.
 
-Thanks,
+The only common denominator, besides ubuntu 8.10, between them is
+compat-wireless/hostapd.
 
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+Let me know if you need more information, or if this is in fact the
+appropriate forum for this.
