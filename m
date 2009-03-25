@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:36703 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760920AbZCUFsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 01:48:23 -0400
-Message-Id: <20090321053717.514936473@vyatta.com> (sfid-20090321_065121_264448_94DAF6F3)
-References: <20090321053527.316395697@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:32 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>, pe1rxq@amsat.org
-Cc: netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 65/77] zd1201: convert to net_device_ops
+Received: from mu-out-0910.google.com ([209.85.134.190]:61442 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752891AbZCYFiJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2009 01:38:09 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so1066397muf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 22:38:05 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Subject: [PATCH 2/2] p54spi: fix p54_upload_firmware
+Date: Wed, 25 Mar 2009 08:30:16 +0300
+Message-Id: <1237959016-17311-2-git-send-email-jcmvbkbc@gmail.com> (sfid-20090325_063817_048282_7C0E9678)
+In-Reply-To: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
+References: <>
+ <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+ Instead of firmware itself p54_upload_firmware was sending to the device content of struct firmware
+ and the following random garbage. Notice '&' before priv->firmware->data at p54spi_spi_write.
+ But simple removing of '&' sign triggered BUG_ON at dma_cache_maint. Thus kmemdup - kfree workaround.
 
+Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+---
+ drivers/net/wireless/p54/p54spi.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
---- a/drivers/net/wireless/zd1201.c	2009-03-20 22:26:00.356902321 -0700
-+++ b/drivers/net/wireless/zd1201.c	2009-03-20 22:26:01.715027053 -0700
-@@ -1717,6 +1717,18 @@ static const struct iw_handler_def zd120
- 	.get_wireless_stats	= zd1201_get_wireless_stats,
- };
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index d13268f..4ef57c5 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -265,8 +265,15 @@ static int p54spi_upload_firmware(struct ieee80211_hw *dev)
+ 		p54spi_write32(priv, SPI_ADRS_DMA_WRITE_BASE,
+ 			       cpu_to_le32(fw_addr));
  
-+static const struct net_device_ops zd1201_netdev_ops = {
-+	.ndo_open		= zd1201_net_open,
-+	.ndo_stop		= zd1201_net_stop,
-+	.ndo_start_xmit		= zd1201_hard_start_xmit,
-+	.ndo_tx_timeout		= zd1201_tx_timeout,
-+	.ndo_set_multicast_list = zd1201_set_multicast,
-+	.ndo_set_mac_address	= zd1201_set_mac_address,
-+	.ndo_change_mtu		= eth_change_mtu,
-+	.ndo_set_mac_address 	= eth_mac_addr,
-+	.ndo_validate_addr	= eth_validate_addr,
-+};
-+
- static int zd1201_probe(struct usb_interface *interface,
- 			const struct usb_device_id *id)
- {
-@@ -1769,14 +1781,9 @@ static int zd1201_probe(struct usb_inter
- 	if (err)
- 		goto err_start;
+-		p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
+-				 &priv->firmware->data, _fw_len);
++		{
++			void *fw = kmemdup(priv->firmware->data, _fw_len, GFP_KERNEL);
++			if (fw)
++			{
++				p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
++						 fw, _fw_len);
++				kfree(fw);
++			}
++		}
  
--	dev->open = zd1201_net_open;
--	dev->stop = zd1201_net_stop;
-+	dev->netdev_ops = &zd1201_netdev_ops;
- 	dev->wireless_handlers = &zd1201_iw_handlers;
--	dev->hard_start_xmit = zd1201_hard_start_xmit;
- 	dev->watchdog_timeo = ZD1201_TX_TIMEOUT;
--	dev->tx_timeout = zd1201_tx_timeout;
--	dev->set_multicast_list = zd1201_set_multicast;
--	dev->set_mac_address = zd1201_set_mac_address;
- 	strcpy(dev->name, "wlan%d");
- 
- 	err = zd1201_getconfig(zd, ZD1201_RID_CNFOWNMACADDR, 
-
+ 		fw_len -= _fw_len;
+ 		fw_addr += _fw_len;
 -- 
+1.5.4.3
 
