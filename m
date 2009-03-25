@@ -1,29 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:35196 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755141AbZCNTdd (ORCPT
+Received: from fmailhost03.isp.att.net ([207.115.11.53]:52930 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754158AbZCYDZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 15:33:33 -0400
-Received: by ewy25 with SMTP id 25so2974572ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 12:33:30 -0700 (PDT)
-Message-ID: <49BC0688.2020902@gmail.com> (sfid-20090314_203334_844388_23966C68)
-Date: Sat, 14 Mar 2009 20:33:28 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Tue, 24 Mar 2009 23:25:41 -0400
+Message-ID: <49C9A406.9010602@lwfinger.net> (sfid-20090325_042545_677995_3CBD7657)
+Date: Tue, 24 Mar 2009 22:24:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: realtek 802.11n driver ?
-Content-Type: text/plain; charset=ISO-8859-15
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/3] p54: clean up p54.h's struct p54_common
+References: <200903250311.58614.chunkeey@web.de>
+In-Reply-To: <200903250311.58614.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Christian Lamparter wrote:
+> This patch rearrange and regroups most elements in p54_common.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> this is testing material... especially 3/3!
+> ---
 
+I'm not really happy about the elements that were moved around, but I don't veto
+it on that basis.
 
-Is there a driver for RTL819? 802.11n ( http://www.realtek.com.tw/products/productsView.aspx?Langid=1&PNid=21&PFid=41&Level=5&Conn=4 ) ?
+Acked-by: Larry Finger<Larry.Finger@lwfinger.net>
 
--thanks-
-
-
-regards,
--- 
-Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
