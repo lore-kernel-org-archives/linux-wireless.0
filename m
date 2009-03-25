@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:42343 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346AbZCLVV0 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:4012 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbZCYCmK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 17:21:26 -0400
-Received: by fxm24 with SMTP id 24so2308687fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 14:21:23 -0700 (PDT)
-Subject: Re: [ipw3945-devel] [PATCH 3/8] iwl3945 : fix rate scaling
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1236880246.13699.17.camel@rc-desk>
-References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-2-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-3-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-4-git-send-email-reinette.chatre@intel.com>
-	 <1236821360.9581.78.camel@maxim-laptop>
-	 <1236824994.7177.3.camel@maxim-laptop>  <1236880246.13699.17.camel@rc-desk>
-Content-Type: text/plain
-Date: Thu, 12 Mar 2009 23:21:19 +0200
-Message-Id: <1236892879.30325.7.camel@maxim-laptop> (sfid-20090312_222130_644174_D2BAFA99)
-Mime-Version: 1.0
+	Tue, 24 Mar 2009 22:42:10 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so3770497wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 19:42:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <8d8077ac0903241921i561f2c31qb83bac154e49b6b4@mail.gmail.com>
+References: <8d8077ac0903241921i561f2c31qb83bac154e49b6b4@mail.gmail.com>
+Date: Tue, 24 Mar 2009 19:41:53 -0700
+Message-ID: <43e72e890903241941i50b82916j6e96b8aeed5b6fa2@mail.gmail.com> (sfid-20090325_034214_898438_6AE45D2C)
+Subject: Re: compat-wireless causing kernel panics?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: paul.boillot@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-03-12 at 10:50 -0700, reinette chatre wrote:
-> On Wed, 2009-03-11 at 19:29 -0700, Maxim Levitsky wrote:
-> > On Thu, 2009-03-12 at 03:29 +0200, Maxim Levitsky wrote:
-> > > On Wed, 2009-03-11 at 11:17 -0700, Reinette Chatre wrote:
-> > > > From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > > > 
-> > > > Patch fixes the bug 1900 at
-> > > > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1900
-> > > > 
-> > > > Issues:
-> > > > Throughput and success ratio calculations were not done properly.
-> > > > Number of retries were exceeding 16.
-> > > 
-> > > ether.
-> > > 
-> > > On the other omitting  the 'disable_hw_scan=1' option (which appears to
-> > > work once again, since  few days ago it broke s2disk with hung scan) -
-> > 
-> > Ah , I remember now. The disable_hw_scan=0 breaks (!) 
-> > the rfkill support.
-> 
-> Could you please provide more details about this issue? We are
-> interested in steps to reproduce and logs you may have.
+On Tue, Mar 24, 2009 at 7:21 PM, Paul D Boillot <paul.boillot@gmail.com> wrote:
+> Hi, I don't know if this is the right format/forum for this, but I'm
+> having problems with compat-wireless.
+>
+> I've set up ubuntu 8.10 installs on two different computers, as well
+> as compat-wireless and hostapd. On both computers, I would get
+> seemingly random system freezes after installing these tools. The
+> crashes have increased in frequency to the point that immediately
+> post-log in, or during the log in process, they crash.
+>
+> The only common denominator, besides ubuntu 8.10, between them is
+> compat-wireless/hostapd.
+>
+> Let me know if you need more information, or if this is in fact the
+> appropriate forum for this.
 
-A way to reproduce (without NM):
+There was typo in a patch submitted to wl (wireless-testing) the day
+before and it caused panics for everyone too. I just forced an update.
 
-* Start scanning in a loop
-while true ; do sudo iwlist scan ; done
+v2.6.29-20318-g9aa4755
+wireless-testing latest tag:
+master-2009-03-24
+This is compat-release:
+master-2009-03-24
 
-* press rfkill - scan hangs forever.
-* press rfkill again - doesn't help
-
-I have acer 5720G with hardware rfkill.
-
-
-The problem seems to be that if user presses rfkill during scan, it
-hangs.
-
-
-How about rate control issues I still see, do you know why upload is
-slower that download?
-
-Best regards,
-	Maxim Levitsky
-
+  Luis
