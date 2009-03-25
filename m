@@ -1,165 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:13490 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbZCFAdj convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:13130 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754080AbZCYC7g convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 19:33:39 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so222933wfa.4
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 16:33:37 -0800 (PST)
+	Tue, 24 Mar 2009 22:59:36 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so2604010rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 19:59:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <49B06DA6.7070000@canonical.com>
-References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>
-	 <1236275668.6612.134.camel@rc-desk>
-	 <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com>
-	 <49B056FA.2020605@canonical.com>
-	 <43e72e890903051513n44cf5281y32cc11e06754aa3@mail.gmail.com>
-	 <49B06DA6.7070000@canonical.com>
-Date: Thu, 5 Mar 2009 16:33:37 -0800
-Message-ID: <43e72e890903051633w7880648djdd798c5a28285a6b@mail.gmail.com> (sfid-20090306_013343_271980_3610C430)
-Subject: Re: Please apply to stable: cfg80211: add support for custom firmware
-	regulatory solutions
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: tim.gardner@canonical.com
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com>
+References: <200903241938.47155.chunkeey@web.de> <200903242133.28405.chunkeey@web.de>
+	<20090324205847.GB29268@tesla> <200903242324.33485.chunkeey@web.de>
+	<20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com>
+	<43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com>
+	<43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
+	<20090325010626.GA8528@hash.localnet> <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com>
+Date: Tue, 24 Mar 2009 19:59:19 -0700
+Message-ID: <43e72e890903241959x51dc9278oc424bfa85cff9e0f@mail.gmail.com> (sfid-20090325_035938_948017_B9C07CA0)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 5, 2009 at 4:26 PM, Tim Gardner <tim.gardner@canonical.com>=
- wrote:
-> Luis R. Rodriguez wrote:
->> On Thu, Mar 5, 2009 at 2:49 PM, Tim Gardner <tim.gardner@canonical.c=
-om> wrote:
->>> Luis R. Rodriguez wrote:
->>>> On Thu, Mar 5, 2009 at 9:54 AM, reinette chatre
->>>> <reinette.chatre@intel.com> wrote:
->>>>> On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
->>>>>> Forgot to Cc: stable@kernel.org for this patch during its submis=
-sion,
->>>>>> this is needed on 2.6.28 as otherwise there is an issue for Inte=
-l
->>>>>> cards which get their channels 5 GHz disabled if OLD_REG is set =
-to no
->>>>>> (this is not the default) or the channels 12-14 are disabled if
->>>>>> OLD_REG is set to yes (default) set to no and the ieee80211_modu=
-le
->>>>>> parameter is not used. The later issue is resolved by userspace =
-as
->>>>>> well but we cannot yet expect 2.6.28 kernels to have enough user=
-space
->>>>>> interfaces to set the regulatory domain just yet. This is why OL=
-D_REG
->>>>>> is still set to default with 2.6.28.
->>>>>>
->>>>>> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
->>>>>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
->>>>>> Date: =C2=A0 Wed Nov 12 14:22:03 2008 -0800
->>>>>>
->>>>>> =C2=A0 =C2=A0cfg80211: add support for custom firmware regulator=
-y solutions
->>>>>>
->>>>>> =C2=A0 =C2=A0This adds API to cfg80211 to allow wireless drivers=
- to inform
->>>>>> =C2=A0 =C2=A0us if their firmware can handle regulatory consider=
-ations *and*
->>>>>> =C2=A0 =C2=A0they cannot map these regulatory domains to an ISO =
-/ IEC 3166
->>>>>> =C2=A0 =C2=A0alpha2. In these cases we skip the first regulatory=
- hint instead
->>>>>> =C2=A0 =C2=A0of expecting the driver to build their own regulato=
-ry structure,
->>>>>> =C2=A0 =C2=A0providing us with an alpha2, or using the reg_notif=
-ier().
->>>>>>
->>>>>> =C2=A0 =C2=A0Signed-off-by: Luis R. Rodriguez <lrodriguez@athero=
-s.com>
->>>>>> =C2=A0 =C2=A0Acked-by: Zhu Yi <yi.zhu@intel.com>
->>>>>> =C2=A0 =C2=A0Signed-off-by: John W. Linville <linville@tuxdriver=
-=2Ecom>
->>>>> Could you please also add commit
->>>>> ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
->>>>> enables the Intel cards to take advantage of the parameter introd=
-uced in
->>>>> previous commit.
->>>>>
->>>>> commit ea4a82dceec7b5782b1259079c8de508d0afe33a
->>>>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
->>>>> Date: =C2=A0 Wed Nov 12 14:22:04 2008 -0800
->>>>>
->>>>> =C2=A0 =C2=A0iwlwifi: enable custom fw regulatory solution
->>>>>
->>>>> =C2=A0 =C2=A0This enables the custom firmware regulatory solution=
- option
->>>>> =C2=A0 =C2=A0on iwlwifi drivers. These devices are uncapable of m=
-apping their
->>>>> =C2=A0 =C2=A0EEPROM regulatory domain to a specific ISO / IEC alp=
-ha2.
->>>>> =C2=A0 =C2=A0Although the new 11n devices (>=3D iwl 5000) have on=
-ly
->>>>> =C2=A0 =C2=A03 regultaory SKUs -- MOW, ABG (no N) and BG -- the o=
-lder
->>>>> =C2=A0 =C2=A0devices (3945 and 4965) have a more complex SKU arra=
-ngement
->>>>> =C2=A0 =C2=A0and therefore its not practical to move this to the =
-driver.
->>>>>
->>>>> =C2=A0 =C2=A0Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros=
-=2Ecom>
->>>>> =C2=A0 =C2=A0Acked-by: Zhu Yi <yi.zhu@intel.com>
->>>>> =C2=A0 =C2=A0Signed-off-by: John W. Linville <linville@tuxdriver.=
-com>
->>>> Doh yes that would be required or it would make this pointless.
->>>>
->>>> =C2=A0 Luis
->>>>
->>> Looks like it requires a preparatory commit:
+On Tue, Mar 24, 2009 at 7:30 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Mar 24, 2009 at 6:06 PM, Bob Copeland <me@bobcopeland.com> wr=
+ote:
+>> On Tue, Mar 24, 2009 at 04:52:09PM -0700, Luis R. Rodriguez wrote:
+>>> Alright here's a quick concat of all these patches (also one small
+>>> sparse fix on Christian's last patch). It also now throws ath5k, at=
+h9k
+>>> and ar9170 into ath/. We can rename the drivers after, was lazy to =
+do
+>>> that. Think its easier for review to separate that too.
 >>>
->>> commit f3b407fba52e1b86ca286ee7c218a4fb00bd29e0
->>> Author: Johannes Berg <johannes@sipsolutions.net>
->>> Date: =C2=A0 Tue Oct 21 09:57:41 2008 +0200
+>>> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v3.pat=
+ch.txt
 >>>
->>> =C2=A0 =C2=A0wireless: remove cfg80211_reg_mutex
->>>
->>> =C2=A0 =C2=A0This mutex is wrong, we use cfg80211_drv_mutex (which =
-should
->>> =C2=A0 =C2=A0possibly be renamed to just cfg80211_mutex) everywhere=
- except
->>> =C2=A0 =C2=A0in one place, fix that and get rid of the extra mutex.
->>>
->>> =C2=A0 =C2=A0Also get rid of a spurious regulatory_requests list de=
-finition.
->>>
->>> =C2=A0 =C2=A0Signed-off-by: Johannes Berg <johannes@sipsolutions.ne=
-t>
->>> =C2=A0 =C2=A0Signed-off-by: John W. Linville <linville@tuxdriver.co=
-m>
+>>> Bob, where was that switch break error?
 >>
->> Ah crap. This may be too much for stable. Did you get a hang without
->> it? Or is it not applying cleanly? If the later then a port may be
->> required.
+>> 1st patch:
 >>
->> =C2=A0 Luis
+>>> + =C2=A0 =C2=A0 switch (band) {
+>>> + =C2=A0 =C2=A0 case IEEE80211_BAND_2GHZ:
+>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulatory.=
+regpair->reg_2ghz_ctl;
+>>> + =C2=A0 =C2=A0 case IEEE80211_BAND_5GHZ:
+>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulatory.=
+regpair->reg_5ghz_ctl;
+>>> + =C2=A0 =C2=A0 default:
+>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D NO_CTL;
+>>> + =C2=A0 =C2=A0 }
+>>> + =C2=A0 =C2=A0 return ctl;
+>>> +}
+>>
+>> I think I had it like the following and changed it -- actually with
+>> the returns it's probably better...
+>>
+>> switch (band) {
+>> case XXX:
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0return ah->...;
+>> case YYY:
+>> ...
+>> }
 >
-> I spoke too soon. Its doesn't compile even with
-> f3b407fba52e1b86ca286ee7c218a4fb00bd29e0 applied.
+> Alright thanks, I've fixed that here, it also now does not introduce
+> any new checkpatch or sparse complaints.
 >
-> What is the downside of just turning OLD_REG back on for 2.6.28?
+> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v4.patch=
+=2Etxt
+>
+> My shiny new wl rebased on 29 kernel is compiling, will let you know
+> in the morning how it goes.
 
-You default to the "US" regulatory domain so channels 12-14 will not
-be available by default. This is also why we offloaded regulatory crap
-to userspace in the first place, so you won't have to upgrade your
-kernel based on reg changes or fixes.
-
-I'll send a patch to enable passive scan on channels 12-14 for the
-world regulatory domain. That and the 5 GHz patch should at least let
-you see channels 12-14 with a fix from userspace. This can also go
-into 28 for the world regulatory domain and since it would be fixing
-an issue maybe we should consider it.
-
-Thoughts John?
+Ah poo, ath5k_reg_notifier() got lost.
 
   Luis
 --
