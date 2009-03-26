@@ -1,163 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53824 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753811AbZCEPzY (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:65356 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786AbZCZCeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 10:55:24 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH] ath9k: create a common debugfs_root for all device instances
-Date: Thu,  5 Mar 2009 16:55:18 +0100
-Message-Id: <1236268518-31873-1-git-send-email-juhosg@openwrt.org> (sfid-20090305_165527_366302_C4903C7A)
+	Wed, 25 Mar 2009 22:34:05 -0400
+Received: by fxm2 with SMTP id 2so343204fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 19:34:01 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2 v2] p54spi: fix p54spi_upload_firmware
+Date: Thu, 26 Mar 2009 05:26:12 +0300
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <73aaf0dd0903250550x37e6847x38be1f0dcc4b1bb3@mail.gmail.com> <1237985781.4320.160.camel@johannes.local>
+In-Reply-To: <1237985781.4320.160.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903260526.12476.jcmvbkbc@gmail.com> (sfid-20090326_033411_629003_FAD930BA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver are trying to create an 'ath9k' directory in debugfs for each
-device currently. If there are more than one device in the system, the
-second try will always fail.
+> > > BTW: does p54spi really work now?
+> >
+> > I haven't tested your patch yet, but with the one that I sent it does
+> > work in IBSS mode.
+>
+> Nice.
+Not that nice, actually. It works till first beacon resubmission. After beacon resubmission beaconing continues,
+but timestamp in outgoing frames constantly gets reset:
 
-Changes-licensed-under: ISC
+<7>[  280.959311] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x23ac519 BCN=0x1c521e2 diff=7709495 @4294959513
+<7>[  281.061780] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x23c552d BCN=0x1c6b1f6 diff=7709495 @4294959526
+<7>[  283.992749] phy0: Removed STA 00:1d:6e:9b:ee:6d
+<7>[  284.008374] phy0: Destroyed STA 00:1d:6e:9b:ee:6d
+<7>[  284.008435] wlan0: deauthenticating by local choice (reason=3)
+<7>[  288.948834] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x1c3e1 BCN=0x23f034a diff=-37568361 @4294960536
+<7>[  288.948895] wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID 7e:2e:03:09:31:25
+<7>[  288.949139] phy0: Adding new IBSS station 00:1d:6e:9b:ee:6d (dev=wlan0)
+<7>[  288.949230] phy0: Allocated STA 00:1d:6e:9b:ee:6d
+<7>[  288.949322] phy0: Inserted STA 00:1d:6e:9b:ee:6d
+<7>[  289.050906] wlan0: updated supp_rates set for 00:1d:6e:9b:ee:6d based on beacon info (0x1 | 0xfff -> 0xfff)
+<7>[  289.050997] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x3528d BCN=0x24091f6 diff=-37568361 @4294960549
+<7>[  289.051058] wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID 7e:2e:03:09:31:25
+<7>[  289.051150] phy0: Removed STA 00:1d:6e:9b:ee:6d
+<7>[  289.063052] phy0: Destroyed STA 00:1d:6e:9b:ee:6d
+<7>[  289.071679] phy0: Adding new IBSS station 00:1d:6e:9b:ee:6d (dev=wlan0)
+<7>[  289.071770] phy0: Allocated STA 00:1d:6e:9b:ee:6d
+<7>[  289.074486] phy0: Inserted STA 00:1d:6e:9b:ee:6d
+<7>[  289.153774] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x4e459 BCN=0x24223c2 diff=-37568361 @4294960562
+<7>[  289.153835] wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID 7e:2e:03:09:31:25
+<7>[  289.153896] phy0: Removed STA 00:1d:6e:9b:ee:6d
+<7>[  289.154140] phy0: Adding new IBSS station 00:1d:6e:9b:ee:6d (dev=wlan0)
+<7>[  289.154232] phy0: Allocated STA 00:1d:6e:9b:ee:6d
+<7>[  289.157107] phy0: Inserted STA 00:1d:6e:9b:ee:6d
+<7>[  289.172445] phy0: Destroyed STA 00:1d:6e:9b:ee:6d
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/debug.c |   24 ++++++++++++++++++------
- drivers/net/wireless/ath9k/debug.h |   12 +++++++++++-
- drivers/net/wireless/ath9k/main.c  |   13 ++++++++++++-
- 3 files changed, 41 insertions(+), 8 deletions(-)
+Here's what's on the air (tshark -T fields -e wlan.sa -e wlan.seq -e wlan_mgt.fixed.timestamp):
 
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index 0c422c5..3b645ee 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -19,6 +19,8 @@
- static unsigned int ath9k_debug = DBG_DEFAULT;
- module_param_named(debug, ath9k_debug, uint, 0);
- 
-+static struct dentry *ath9k_debugfs_root;
-+
- void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...)
- {
- 	if (!sc)
-@@ -334,12 +336,8 @@ int ath9k_init_debug(struct ath_softc *sc)
- {
- 	sc->debug.debug_mask = ath9k_debug;
- 
--	sc->debug.debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
--	if (!sc->debug.debugfs_root)
--		goto err;
--
- 	sc->debug.debugfs_phy = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
--						      sc->debug.debugfs_root);
-+						      ath9k_debugfs_root);
- 	if (!sc->debug.debugfs_phy)
- 		goto err;
- 
-@@ -374,5 +372,19 @@ void ath9k_exit_debug(struct ath_softc *sc)
- 	debugfs_remove(sc->debug.debugfs_interrupt);
- 	debugfs_remove(sc->debug.debugfs_dma);
- 	debugfs_remove(sc->debug.debugfs_phy);
--	debugfs_remove(sc->debug.debugfs_root);
-+}
-+
-+int ath9k_debug_create_root(void)
-+{
-+	ath9k_debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
-+	if (!ath9k_debugfs_root)
-+		return -ENOENT;
-+
-+	return 0;
-+}
-+
-+void ath9k_debug_remove_root(void)
-+{
-+	debugfs_remove(ath9k_debugfs_root);
-+	ath9k_debugfs_root = NULL;
- }
-diff --git a/drivers/net/wireless/ath9k/debug.h b/drivers/net/wireless/ath9k/debug.h
-index 01681f2..89ba818 100644
---- a/drivers/net/wireless/ath9k/debug.h
-+++ b/drivers/net/wireless/ath9k/debug.h
-@@ -102,7 +102,6 @@ struct ath_stats {
- 
- struct ath9k_debug {
- 	int debug_mask;
--	struct dentry *debugfs_root;
- 	struct dentry *debugfs_phy;
- 	struct dentry *debugfs_dma;
- 	struct dentry *debugfs_interrupt;
-@@ -113,6 +112,8 @@ struct ath9k_debug {
- void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...);
- int ath9k_init_debug(struct ath_softc *sc);
- void ath9k_exit_debug(struct ath_softc *sc);
-+int ath9k_debug_create_root(void);
-+void ath9k_debug_remove_root(void);
- void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
- void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb);
- void ath_debug_stat_retries(struct ath_softc *sc, int rix,
-@@ -134,6 +135,15 @@ static inline void ath9k_exit_debug(struct ath_softc *sc)
- {
- }
- 
-+static inline int ath9k_debug_create_root(void)
-+{
-+	return 0;
-+}
-+
-+static inline void ath9k_debug_remove_root(void)
-+{
-+}
-+
- static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
- 					    enum ath9k_int status)
- {
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 28200ce..d37924a 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2712,12 +2712,20 @@ static int __init ath9k_init(void)
- 		goto err_out;
- 	}
- 
-+	error = ath9k_debug_create_root();
-+	if (error) {
-+		printk(KERN_ERR
-+			"ath9k: Unable to create debugfs root: %d\n",
-+			error);
-+		goto err_rate_unregister;
-+	}
-+
- 	error = ath_pci_init();
- 	if (error < 0) {
- 		printk(KERN_ERR
- 			"ath9k: No PCI devices found, driver not installed.\n");
- 		error = -ENODEV;
--		goto err_rate_unregister;
-+		goto err_remove_root;
- 	}
- 
- 	error = ath_ahb_init();
-@@ -2731,6 +2739,8 @@ static int __init ath9k_init(void)
-  err_pci_exit:
- 	ath_pci_exit();
- 
-+ err_remove_root:
-+	ath9k_debug_remove_root();
-  err_rate_unregister:
- 	ath_rate_control_unregister();
-  err_out:
-@@ -2742,6 +2752,7 @@ static void __exit ath9k_exit(void)
- {
- 	ath_ahb_exit();
- 	ath_pci_exit();
-+	ath9k_debug_remove_root();
- 	ath_rate_control_unregister();
- 	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
- }
+00:1d:6e:9b:ee:6d       179     0x00000000023BE296
+00:1d:6e:9b:ee:6d       180     0x00000000023D720A
+00:1d:6e:9b:ee:6d       181     0x00000000023F034A
+00:1d:6e:9b:ee:6d       182     0x00000000024091F6
+00:1d:6e:9b:ee:6c       0       0x00000000000002D5
+00:1d:6e:9b:ee:6c       1       0x00000000000003FB
+00:1d:6e:9b:ee:6d       183     0x00000000024223C2
+00:1d:6e:9b:ee:6c       2       0x0000000000000332
+00:1d:6e:9b:ee:6d       184     0x000000000243B296
+00:1d:6e:9b:ee:6c       3       0x000000000000054D
+00:1d:6e:9b:ee:6c       4       0x0000000000000798
+
+It gets back in sync only after beacon resubmission stops:
+
+<7>[  353.579189] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x4aaa81 BCN=0x618f1f6 diff=-97404789 @1513
+<7>[  353.579250] wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID 7e:2e:03:09:31:25
+<7>[  353.579311] phy0: Removed STA 00:1d:6e:9b:ee:6d
+<7>[  353.579555] phy0: Adding new IBSS station 00:1d:6e:9b:ee:6d (dev=wlan0)
+<7>[  353.579616] phy0: Allocated STA 00:1d:6e:9b:ee:6d
+<7>[  353.582332] phy0: Inserted STA 00:1d:6e:9b:ee:6d
+<7>[  353.594254] phy0: Destroyed STA 00:1d:6e:9b:ee:6d
+<7>[  353.682026] RX beacon SA=00:1d:6e:9b:ee:6d BSSID=7e:2e:03:09:31:25 TSF=0x4c3c89 BCN=0x61a83fe diff=-97404789 @1526
+<7>[  353.682087] wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID 7e:2e:03:09:31:25
+<7>[  353.682148] phy0: Removed STA 00:1d:6e:9b:ee:6d
+<7>[  353.682392] phy0: Adding new IBSS station 00:1d:6e:9b:ee:6d (dev=wlan0)
+<7>[  353.682453] phy0: Allocated STA 00:1d:6e:9b:ee:6d
+<7>[  353.685169] phy0: Inserted STA 00:1d:6e:9b:ee:6d
+<7>[  353.695728] phy0: Destroyed STA 00:1d:6e:9b:ee:6d
+
+At this point my n810 freezes. Here's what's on the air at the same time:
+
+00:1d:6e:9b:ee:6d       809     0x0000000006176282
+00:1d:6e:9b:ee:6c       59      0x000000000000051F
+00:1d:6e:9b:ee:6c       60      0x00000000000006F7
+00:1d:6e:9b:ee:6d       810     0x000000000618F1F6
+00:1d:6e:9b:ee:6c       61      0x000000000000041D
+00:1d:6e:9b:ee:6c       62      0x000000000000037B
+00:1d:6e:9b:ee:6d       811     0x00000000061A83FE
+00:1d:6e:9b:ee:6c       63      0x0000000000000585
+00:1d:6e:9b:ee:6c       64      0x00000000000006BF
+00:1d:6e:9b:ee:6d       812     0x00000000061C1372
+00:1d:6e:9b:ee:6c       65      0x00000000061DA1E3
+00:1d:6e:9b:ee:6d       813     0x00000000061F321E
+00:1d:6e:9b:ee:6c       66      0x000000000620C2E6
+00:1d:6e:9b:ee:6c       67      0x00000000062252BE
+00:1d:6e:9b:ee:6c       68      0x000000000623E2E6
+00:1d:6e:9b:ee:6d       814     0x000000000625739A
+
+I can conduct additional tests or provide additional logs/pcaps.
+Any suggestions?
+
 -- 
-1.5.3.2
-
+Thanks.
+-- Max
