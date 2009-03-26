@@ -1,57 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:43745 "EHLO
-	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbZCFJmy (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:39966 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757758AbZCZIkX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 04:42:54 -0500
-Date: Fri, 6 Mar 2009 09:42:49 +0000
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090306094249.GA10236@silver.sucs.org> (sfid-20090306_104258_535164_1FBB03C1)
-References: <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090304120759.GA6519@hash.localnet>
+	Thu, 26 Mar 2009 04:40:23 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so520186rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 01:40:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87iqlw4rx7.fsf@litku.valot.fi>
+References: <1237891149.4320.73.camel@johannes.local> <1237910398.9082.7.camel@localhost.localdomain>
+	<1237979070.4320.156.camel@johannes.local> <1237995072.18896.9.camel@localhost.localdomain>
+	<1237996137.4320.161.camel@johannes.local> <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com>
+	<87iqlw4rx7.fsf@litku.valot.fi>
+Date: Thu, 26 Mar 2009 01:40:04 -0700
+Message-ID: <43e72e890903260140i751ca59dg7ec9c8d870da0006@mail.gmail.com> (sfid-20090326_094044_222514_0FB50AFA)
+Subject: Re: wireless powersaving (in NM?)
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 04, 2009 at 07:07:59AM -0500, Bob Copeland wrote:
-> On Tue, Mar 03, 2009 at 08:03:52PM +0000, Sitsofe Wheeler wrote:
-> 
-> None.  Perhaps it's wishful thinking but a function trace for the few
-> minutes prior to the poison would be useful.  A good replicator might
-> be to run a sequence of automatic suspend/resume with pm_test, in 
-> parallel with iwlist wlan0 scan (as root, so scans are actually 
-> performed), in parallel with iperf or ping.  I didn't personally have
-> luck with that workload, though.
+On Thu, Mar 26, 2009 at 1:19 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+>
+>> On Wed, Mar 25, 2009 at 8:48 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> On Wed, 2009-03-25 at 11:31 -0400, Dan Williams wrote:
+>>>
+>>>> Yeah, sounds OK. =C2=A0Just to be clear, problems with this code w=
+ill appear
+>>>> on a *per-AP* basis, not a per-card basis, right? =C2=A0ie there a=
+re some
+>>>> stupid APs that won't work with it, but it won't be the case that =
+a
+>>>> chipset will be broken for all APs, right?
+>>>
+>>> Right. If a particular chipset doesn't properly supported PS then w=
+e
+>>> shouldn't actually support it at all -- but we cannot know if the A=
+P is
+>>> broken.
+>>
+>> How about leaving it to the supplicant to guess if the AP is borked =
+or not.
+>
+> Very difficult and not worth the trouble IMHO.
+>
+>> Kalle, what would happen with these broken APs?
+>
+> Usually there's packet loss and for the user it shows as data
+> connections not working reliably.
+>
+>> If we can determine this through some heuristics then we can label
+>> such BSSes as borked in the supplicant and then the user won't have =
+to
+>> worry about this. This would only be dealt with each BSS once at mos=
+t
+>> as we would have saved the AP's power save borkedness after our firs=
+t
+>> determination of this.
+>>
+>> If one wants to do manual debugging you can simple add the flag
+>> through the supplicant for the bss. Just don't see the need to confu=
+se
+>> a user with an option if we can get away with figuring it out if
+>> possible.
+>
+> If the ui option to disable power is disliked, just hide it somewhere=
+=2E
+> For example, a gconf flag which can be enabled with a command line
+> tool.
 
-Forcing the scans and pings didn't seem to make the issue occur.
-Unfortunately I can't quite provide you what you were asking for...  I
-started the function_tracer feature in /sys/kernel/debug/tracing and put
-the buffer size to 153600kb (previously I had set it higher and
-successfully OOMd my box : ). Unfortunately I had no filter so this was
-not enough for all that long of a log (maybe about 6 seconds). I had a
-small script that did the following:
+Oh I don't care for it, I just don't think its a good idea to be
+adding more knobs and agree with the general sentiment to always focus
+on saving power.
 
-watch -n1 'if `tail -1000 /var/log/kern.log | grep -q Poison`; then echo
-0 > /sys/kernel/debug/tracing/tracing_on; cat
-/sys/kernel/debug/tracing/trace | gzip > /tmp/trace.txt.gz ; fi'
-
-(the script is obviously flawed but it did the job)
-
-I've put up results on http://sucs.org/~sits/test/eeepc-debug/20090306/
-and I think the type that kmalloc notices is 4154504125.579778 . There
-is also a pre grepped log of (ieee|ath5k) in that directory.
-
-I'll try and act on your filtering suggestions next time but I didn't
-have too much time to get this going...
-
--- 
-Sitsofe | http://sucs.org/~sits/
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
