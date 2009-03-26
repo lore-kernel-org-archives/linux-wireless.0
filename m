@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:4717 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbZC2SQL (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:58686 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754199AbZCZBfO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 14:16:11 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so518244eyf.37
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 11:16:08 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] rfkill: rewrite
-Date: Sun, 29 Mar 2009 20:16:02 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-References: <1238349195.24972.5.camel@johannes.local>
-In-Reply-To: <1238349195.24972.5.camel@johannes.local>
+	Wed, 25 Mar 2009 21:35:14 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so365513wff.4
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 18:35:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903292016.05470.IvDoorn@gmail.com> (sfid-20090329_201616_721337_9779E4AE)
+In-Reply-To: <43e72e890903251821i7b582601r877662790ceb747c@mail.gmail.com>
+References: <20090323162834.154525349@sipsolutions.net> <20090323163051.784425387@sipsolutions.net>
+	<43e72e890903251821i7b582601r877662790ceb747c@mail.gmail.com>
+Date: Wed, 25 Mar 2009 18:34:58 -0700
+Message-ID: <43e72e890903251834i5e78bb7p3c96f2f5537f955c@mail.gmail.com> (sfid-20090326_023517_783011_E822134F)
+Subject: Re: [PATCH 1/8] mac80211: rewrite fragmentation
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 29 March 2009, Johannes Berg wrote:
-> This patch completely rewrites the rfkill core to address
-> the following deficiencies:
-> 
->  * all rfkill drivers need to implement polling where necessary
->    rather than having one central implementation
-> 
->  * updating the rfkill state cannot be done from any context,
->    forcing drivers to use schedule_work and requiring lots of
->    code
-> 
->  * rfkill drivers need to keep track of soft/hard blocked
->    internally -- the core should do this
-> 
->  * the rfkill API has many unexpected quirks, for example being
->    asymmetric wrt. alloc/free and register/unregister
-> 
->  * rfkill can call back into a driver from within a function the
->    driver called -- this is prone to deadlocks and generally
->    should be avoided
-> 
->  * rfkill-input pointlessly is a separate module
-> 
->  * drivers need to #ifdef rfkill functions (unless they want to
->    depend on or select RFKILL) -- rfkill should provide inlines
->    that do nothing if it isn't compiled in
-> 
->  * the rfkill structure, despite containing almost only internal
->    variables, is not opaque -- and drivers need to initialise it
->    correctly (lots of sanity checking code required) -- instead
->    force drivers to pass the right variables to rfkill_alloc()
-> 
->  * the documentation is hard to read because it always assumes
->    the reader is completely clueless and contains way to many CAPS
-> 
->  * the rfkill code needlessly uses a lot of locks and atomic
->    operations in locked sections
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> RFC only because I haven't fixed all drivers yet, still missing are
-> toshiba, thinkpad, wimax and tosa.
-> 
-> Let the flames begin! (or if you like it feel free to chime in too)
+On Wed, Mar 25, 2009 at 6:21 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> I see only one possible regression with this patch and that is that it
+> seems you forgot to update the mdev->trans_start in the new loop on
+> each fragment.
+>
+> As far as I can tell this would only introduce a regression with if
+> someone is using a netdev watchdog on the mdev, if we don't care about
+> that and I'm not missing any other case where this could be affected
+> we might as well remove that first update as at least for mac80211 its
+> completely untouched.
+>
+> Other than that:
+>
+> Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Just for the record, as long as you (or somebody else) takes over maintainership
-over rfkill after these changes, I have no objections against the changes. Luckily
-you already updated the Maintainers entry, so I'm happy. :)
+Above is my actual reply, seems gmail stored it properly... hmm.......
 
-I know rfkill was poorly designed and I simply lacked the time (and perhaps
-some interest as well) to continue with it. The changes you propose sound
-reasonable so I hope it will turn rfkill really into something which it was supposed
-to be from the start.
-
-Ivo
+  Luis
