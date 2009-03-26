@@ -1,75 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20046 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbZCOHWx (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:48325 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932587AbZCZTt3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 03:22:53 -0400
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
-References: <20090314171234.11126.21125.stgit@tikku>
-	<20090314171452.11126.11618.stgit@tikku>
-	<43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sun, 15 Mar 2009 09:22:38 +0200
-In-Reply-To: <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com> (ext Luis R. Rodriguez's message of "Sat\, 14 Mar 2009 21\:18\:14 +0100")
-Message-ID: <87r60z1c8x.fsf@nokia.com> (sfid-20090315_082320_267807_7BB45258)
+	Thu, 26 Mar 2009 15:49:29 -0400
+Received: by fxm2 with SMTP id 2so731709fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 12:49:27 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
+Date: Thu, 26 Mar 2009 20:49:17 +0100
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> <200903262011.50118.helmut.schaa@gmail.com> <1238095859.25000.54.camel@rc-desk>
+In-Reply-To: <1238095859.25000.54.camel@rc-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200903262049.18049.helmut.schaa@gmail.com> (sfid-20090326_204956_475372_57D28EE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> On Thu, 2009-03-26 at 12:11 -0700, Helmut Schaa wrote:
+> > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> > > On Thu, 2009-03-26 at 10:50 -0700, Helmut Schaa wrote:
+> > > > Hi,
+> > > >=20
+> > > > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb Reinette Chatre:
+> > > > > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > > >=20
+> > > > > Remove STATUS_ALIVE checking when HW RF KILL disabled, the bi=
+t get
+> > > > > clear in __iwl_down() function; the additional checking will =
+fail and
+> > > > > cause RF can not be turn back on.
+> > > >=20
+> > > > Are you sure this is needed? I'd argue we should only restart t=
+he adapter
+> > > > if it was alive when it got rf_killed. In case the adapter was =
+rf_killed
+> > > > while the interface was down I don't think we want to restart t=
+he adapter
+> > > > immediately but first when the interface is taken up again.
+> > >=20
+> > > We also need to consider if a suspend/resume happens in the middl=
+e.
+> > > Without the patch, if you enable rfkill, suspend, resume, disable
+> > > rfkill, then your interface cannot be brought up.
+> >=20
+> > I guess you refer to the situation where the interface is up, right=
+?
+> > Something like:
+> >=20
+> > - ifconfig wlan0 up
+> > - press killswitch (kill wireless)
+> > - suspend
+> > - resume
+> > - press killswitch (enable wireless)
+> > - here the interface should still be up
+> >=20
+> > As the interface is/was up, mac80211's resume handler should restar=
+t the
+> > adapter and thus we wouldn't need to restart the adapter in the
+> > rfkill-handler, or did I miss anything?
+>=20
+> Yes, the resume handler will start the adapter (call "start"), but th=
+e
+> actions done by it will exit early because of rfkill being enabled. T=
+he
+> STATUS_ALIVE bit will thus not be set after this is completed. Later,
+> when user disables rfkill, we want to restart the adapter to get all
+> this corrected, but this call currently fails because of this check.
 
-> Last we reviewed this it seemed we were set on only allowing this for
-> hardware which supports beacon filtering with support for checksumming
-> of the beacons. Reason checksumming is important is for considerations
-> of DFS with the channel switch announcements, HT with with channel width
-> changes. In fact I'm curious why checksumming would be required for 2.4 GHz
-> single band devices. Kalle, do you happen to know?
+Got it, thanks for the explanation.
 
-In my opinion also 2.4 GHz band needs checksum support. At least ERP
-protection changes come to my mind, but maybe there are also others.
+Nevertheless, removing the check will result in restarting the adapter =
+even
+if the interface is down. So, I agree that we have a problem here but I=
+ do
+not agree with the solution ;)
 
-> Considering that power saving features are important I think its
-> worth to revisit this position in detail.
->
-> An alternative to this above position is that if the devices do not
-> support checksumming of the beacons to let the driver figure when
-> this should be enabled dynamically. For example if devices do not
-> support checksumming but are single 2.4 GHz band non-HT capable
-> devices we should let drivers enable this feature.
->
-> Other devices which do not support checksumming should only enable this only
-> when associating to an AP on non-DFS channels and when not using HT.
+Maybe taking the interface up (not only pseudo-up, as done currently) s=
+hould
+be allowed even if wireless is killed? We already allow the interface t=
+o
+stay up when the adapter gets rfkilled.
 
-I'm not fully convinced about this.
-
-> In practice this would mean allowing both ath5k and ath9k to take advantage
-> of this feature.
-
-Do you mean that they have beacon filter support but do not do any
-checksumming in hardware?
-
-Other option is that the hardware which does not support checksumming
-would just pass beacons periodically to the stack, for example every 5
-seconds. Even though beacon filter is enabled in mac80211 it does not
-prevent hardware from sending beacons. This is not the most optimal
-solution, but there's not much choices if the hardware doesn't support
-checksumming.
-
-> Technically we could move the conditional logic check when this
-> should be enabled to mac80211 as well. When we reviewed this it was
-> seen as unnecessary complexity, I actually don't see it as too
-> complex and think the the advantage is worth to consider.
->
-> Thoughts?
-
-I think this is future stuff, I would like to get the basic (and the
-simplest) implementation to the tree first and then we can start
-improving and extending it.
-
--- 
-Kalle Valo
+Helmut
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
