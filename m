@@ -1,131 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61041 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:46103 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754205AbZC0QWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 12:22:47 -0400
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+	id S1755155AbZCZXVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 19:21:23 -0400
+Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
 From: reinette chatre <reinette.chatre@intel.com>
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1237768621.8764.13.camel@rainbow>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <1236649234.6685.9.camel@rainbow> <1236661466.15923.53.camel@rc-desk>
-	 <1236742805.6267.9.camel@rainbow>
-	 <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com>
-	 <c4d76b3b0903160510i5afc6cd6t856b63383a275fca@mail.gmail.com>
-	 <1237254243.13077.33.camel@rainbow> <1237427568.6943.13.camel@rainbow>
-	 <c4d76b3b0903191822l5494f268h395acc4a14608239@mail.gmail.com>
-	 <1237581564.21165.5.camel@abhi-desktop>
-	 <c4d76b3b0903221029r21282bbbs13a8af06f9d8ce2@mail.gmail.com>
-	 <1237768621.8764.13.camel@rainbow>
-Content-Type: text/plain
-Date: Fri, 27 Mar 2009 09:28:16 -0700
-Message-Id: <1238171296.25568.21.camel@rc-desk> (sfid-20090327_172250_452468_D97571F0)
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <200903262158.52601.helmut.schaa@gmail.com>
+References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
+	 <200903262049.18049.helmut.schaa@gmail.com>
+	 <1238099847.25000.63.camel@rc-desk>
+	 <200903262158.52601.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 26 Mar 2009 16:26:51 -0700
+Message-Id: <1238110011.10348.19.camel@rc-desk> (sfid-20090327_002127_033746_FBB392B9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jason,
+Hi Helmut,
 
-I thought you may want to hear an update since it is almost a week since
-your last message ...
+On Thu, 2009-03-26 at 13:58 -0700, Helmut Schaa wrote:
+> Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> > On Thu, 2009-03-26 at 12:49 -0700, Helmut Schaa wrote:
+> > > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> > > > On Thu, 2009-03-26 at 12:11 -0700, Helmut Schaa wrote:
+> > > > > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> > > > > > On Thu, 2009-03-26 at 10:50 -0700, Helmut Schaa wrote:
+> > > > > > > Hi,
+> > > > > > >=20
+> > > > > > > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb Reinette Chatre=
+:
+> > > > > > > > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > > > > > >=20
+> > > > > > > > Remove STATUS_ALIVE checking when HW RF KILL disabled, =
+the bit get
+> > > > > > > > clear in __iwl_down() function; the additional checking=
+ will fail and
+> > > > > > > > cause RF can not be turn back on.
+> > > > > > >=20
+> > > > > > > Are you sure this is needed? I'd argue we should only res=
+tart the adapter
+> > > > > > > if it was alive when it got rf_killed. In case the adapte=
+r was rf_killed
+> > > > > > > while the interface was down I don't think we want to res=
+tart the adapter
+> > > > > > > immediately but first when the interface is taken up agai=
+n.
+> > > > > >=20
+> > > > > > We also need to consider if a suspend/resume happens in the=
+ middle.
+> > > > > > Without the patch, if you enable rfkill, suspend, resume, d=
+isable
+> > > > > > rfkill, then your interface cannot be brought up.
+> > > > >=20
+> > > > > I guess you refer to the situation where the interface is up,=
+ right?
+> > > > > Something like:
+> > > > >=20
+> > > > > - ifconfig wlan0 up
+> > > > > - press killswitch (kill wireless)
+> > > > > - suspend
+> > > > > - resume
+> > > > > - press killswitch (enable wireless)
+> > > > > - here the interface should still be up
+> > > > >=20
+> > > > > As the interface is/was up, mac80211's resume handler should =
+restart the
+> > > > > adapter and thus we wouldn't need to restart the adapter in t=
+he
+> > > > > rfkill-handler, or did I miss anything?
+> > > >=20
+> > > > Yes, the resume handler will start the adapter (call "start"), =
+but the
+> > > > actions done by it will exit early because of rfkill being enab=
+led. The
+> > > > STATUS_ALIVE bit will thus not be set after this is completed. =
+Later,
+> > > > when user disables rfkill, we want to restart the adapter to ge=
+t all
+> > > > this corrected, but this call currently fails because of this c=
+heck.
+> > >=20
+> > > Got it, thanks for the explanation.
+> > >=20
+> > > Nevertheless, removing the check will result in restarting the ad=
+apter even
+> > > if the interface is down. So, I agree that we have a problem here=
+ but I do
+> > > not agree with the solution ;)
+> >=20
+> > I agree that it is not efficient ... but it seems harmless.
+>=20
+> Assume the following situation:
+>=20
+> You only have one killswitch for both, wireless and bluetooth. The wi=
+reless
+> interface is down because it is unused and the user wants to use blue=
+tooth
+> and enables it via the killswitch which also means that wireless gets
+> unkilled. Now restarting the adapter needs more power then keeping th=
+e
+> adapter down. In short: if the interface is down the user (space) doe=
+s not
+> want to use the interface and probably wants to save power as well.
 
-Thanks to your digging I was able to reproduce the SYSASSERT and find
-the issues you discovered through your analysis. I am working on a
-different solution that has tx buffers working again. I am still
-scratching my head with a rx buffer issue and will send out a patch as
-soon as that is resolved.
+Your measurements are very fine grained :) Will this be measureable?
+Right now things do not work and this patch fixes it.=20
 
-More below ...
+> > > Maybe taking the interface up (not only pseudo-up, as done curren=
+tly) should
+> > > be allowed even if wireless is killed? We already allow the inter=
+face to
+> > > stay up when the adapter gets rfkilled.
+> >=20
+> > Knowing that rfkill is enabled enables us to save power by not brin=
+ging
+> > everything up.
+>=20
+> Yes, but user (space) knows that the wireless card consumes more powe=
+r if the
+> interface is up. And if you use NM for example it will just take the =
+interface
+> down when the killswitch gets activated.
 
-On Sun, 2009-03-22 at 17:37 -0700, Jason Andryuk wrote:
-> On Sun, 2009-03-22 at 13:29 -0400, Jason Andryuk wrote:
-> > The patch did not work.
-> > 
-> > However, I do not think it's an alignment issue.
-> > 
-> > pci_map_single on x86_64 with >3G memory and no IOMMU uses the swiotlb
-> > by default.  swiotlb provides "bounce buffers" for physical addresses
-> > over 4GB.  So for memory where the kmalloc value is at a physical
-> > address over 2**32, pci_map_single will copy to a swiotlb slot.  That
-> > means the dma_handle return value of pci_map_single is not necessarily
-> > the physical address of the virtual address.
-> > 
-> > In iwl3945_tx_skb (iwl3945-base.c line 1099) use the pci_map_single
-> > which copies the memory of out_cmd at that time.  However,
-> > iwl3945_build_tx_cmd_basic, iwl3945_hw_build_tx_cmd_rate, and
-> > iwl3945_build_tx_cmd_hwcrypto are all passed out_cmd and modify memory
-> > located there.  These modifications are not reflected in the memory
-> > located at txcmd_phys.
-> > 
-> > pci_map_single should only be called once the tx command structures
-> > are completely written.
-> > 
-> > Additionally, pci_unmap_single should be called once the memory is no
-> > longer needed to free the swiotlb entry for that command.  I am not
-> > sure if this is currently handled for all cases.
-> > 
-> > Previous use of pci_alloc_coherent meant that memory would allocated
-> > at an physical address below 4GB and kept in-sync both the device and
-> > cpu.
-> > 
-> > Refer to Documentation/x86/x86_64/boot-options.txt and lib/swiotlb.c
-> > for information on IOMMU and swiotlb
-> > 
-> > Jason
-> 
-> I hacked up an inelegant patch that does get the driver working.
-> 
-> We call pci_dma_sync_single_for_device to ensure the correct contents
-> are visible to the device.  That is, we copy out_cmd to phys_addr, so
-> the desired contents are viewable for the device.
-> 
+> Another solution would be to
+> 1) not allow the interface to go up when it is rfkilled, and
 
-I don't think this is necessary ... we should just take care to have
-data complete before handing it to device. In the iwlagn driver we have
-to do this because the command actually contains the dma address ... so
-we first need to map the data, get the address, take buffer back, and
-then be able to update command with that address ... 
+We currently do this.
 
-> I tried moving the pci_map_single call to right before the call to
-> iwl_txq_update_write_ptr, but I never got that working successfully.
-> Presumably that is how the problem should be fixed.  
+> 2) take the interface down when it gets rfkilled
+>=20
+> However, I'm not sure if 2 is possible without help of mac80211 and i=
+f it
+> makes sense to change an interface state from within the driver.
 
-I did something similar and it seems to work ...
-
-> Another failed
-> attempt was to map from "out_cmd + offsetof(struck iwl_cmd, hdr)"
-> instead of out_cmd.  The phys_addr + offsetof(struck iwl_cmd, hdr) is
-> what is passed to txq_attach_buf_to_tfd, so I thought that should work.
-
-I think this is necessary, and I also do something similar in my patch.
-The problem here is that the meta data in the command contains the bus
-address. If we map that to the device then it introduces a problem ...
-at the time we need to unmap the data we need to access the address in
-the mapped data. We should thus only map the data starting from the
-header.
-
-> Unfortunately it did not.  The added benefit would have been that it
-> moved "len" and "mapping" of struct iwl_cmd_meta out of the mapped area.
-> Then losing them since they were written after the mapping would not
-> have been a problem. 
-
-yup ... but this does cause a problem at unmap time.
-
-> 
-> If struct iwl_cmd_meta's len and mapping members are read by one of the
-> "reclaim" functions, then they should probably be sync'ed with
-> pci_dma_sync_single_for_cpu beforehand.
-> 
-
-... but which address to give this function? Rather just not map it in
-the first place. This should be possible.
-
-I hope to have a patch for you soon.
+Like you say ... probably not the driver's place to do this.
 
 Reinette
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
