@@ -1,233 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33215 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754149AbZCPTSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 15:18:02 -0400
-Subject: Re: [PATCH] Fix SLAB corruption during
-From: Dan Williams <dcbw@redhat.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Arnaud Patard <apatard@mandriva.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-In-Reply-To: <200903161925.41102.IvDoorn@gmail.com>
-References: <200903161925.41102.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Mon, 16 Mar 2009 15:15:30 -0400
-Message-Id: <1237230930.16956.66.camel@localhost.localdomain> (sfid-20090316_201807_827674_5CF02304)
-Mime-Version: 1.0
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:36454 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbZCZPbW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 11:31:22 -0400
+Message-ID: <49CB9F99.2030505@lwfinger.net> (sfid-20090326_163125_014213_2D6FE3C0)
+Date: Thu, 26 Mar 2009 10:30:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "RuXu W." <wrxzzj@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: b43 make kernel 2.6.29 crashed, help!
+References: <737c90be0903240006q2066c53bl1ce50eadd45e893b@mail.gmail.com>	 <49C8F476.5070500@lwfinger.net>	 <737c90be0903241851kc948f39q2cd9502a35c4c3ac@mail.gmail.com>	 <49C99FF8.6090509@lwfinger.net>	 <737c90be0903242026j3906bcbdp3da287713eb2962@mail.gmail.com>	 <49C9AE04.5090003@lwfinger.net> <737c90be0903242117k7ec7e2a9rdfb6df7d10c849c5@mail.gmail.com>
+In-Reply-To: <737c90be0903242117k7ec7e2a9rdfb6df7d10c849c5@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-03-16 at 19:25 +0100, Ivo van Doorn wrote:
-> At rmmod stage, the code path is the following one :
+RuXu W. wrote:
+> No, I havn't reset my card.
+> after i got connected  with AP, after several minutes, kernel hangup.
+> some kernel panic message, I writen from screen.
 > 
-> rt2x00lib_remove_dev
->   ->  rt2x00lib_uninitialize()
->         -> rt2x00rfkill_unregister()
->              -> rfkill_unregister()
->         -> rt2x00rfkill_free()
->              -> rfkill_free()
+> Caused by (from SRR1 = 149030) : Transfer error ack signal
+> Opps: Machine check, sig: 7[#1]
 > 
-> The problem is that rfkill_free should not be called after rfkill_free
-> otherwise put_device(&rfkill->dev) will be called 2 times. This patch
-> fix this by removing the call to rfkill_free
+> ioread <==  ssb_pci_read32 <==  __do_softirq <==  b43_interrupt_handler
+> 
+> I load b43 module with qos=0
 
-Needs a better patch title :)  During what?  And I assume you mean
-"rfkill_free() should not be called after rfkill_unregister(), right?
+When I post a message with the mailing list Cc'd, please do a reply to all. That
+way everyone can see the exchange. In addition, people that know more than I do
+can post an answer.
 
-Dan
-
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Tested-by: Arnaud Patard <apatard@mandriva.com>
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> ---
-> John, this patch is for 2.6.29 and only 2.6.29 since rfkill support itself
-> was removed from later versions (replaced by input_polldev).
-> The patch is quite big to be merged in a late state of the release cycle,
-> but since the SLAB corruption is a serious problem, I hope this can get in regardless.
-> 
-> Thanks.
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 39ecf3b..820fdb2 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -687,8 +687,7 @@ struct rt2x00_dev {
->  	 */
->  #ifdef CONFIG_RT2X00_LIB_RFKILL
->  	unsigned long rfkill_state;
-> -#define RFKILL_STATE_ALLOCATED		1
-> -#define RFKILL_STATE_REGISTERED		2
-> +#define RFKILL_STATE_REGISTERED		1
->  	struct rfkill *rfkill;
->  	struct delayed_work rfkill_work;
->  #endif /* CONFIG_RT2X00_LIB_RFKILL */
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 87c0f2c..e694bb7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1105,7 +1105,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
->  	 * Register extra components.
->  	 */
->  	rt2x00leds_register(rt2x00dev);
-> -	rt2x00rfkill_allocate(rt2x00dev);
->  	rt2x00debug_register(rt2x00dev);
->  
->  	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
-> @@ -1137,7 +1136,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
->  	 * Free extra components
->  	 */
->  	rt2x00debug_deregister(rt2x00dev);
-> -	rt2x00rfkill_free(rt2x00dev);
->  	rt2x00leds_unregister(rt2x00dev);
->  
->  	/*
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> index 86cd26f..49309d4 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> @@ -260,8 +260,6 @@ static inline void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
->  #ifdef CONFIG_RT2X00_LIB_RFKILL
->  void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev);
->  void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev);
-> -void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev);
-> -void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev);
->  #else
->  static inline void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
->  {
-> @@ -270,14 +268,6 @@ static inline void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
->  static inline void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
->  {
->  }
-> -
-> -static inline void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
-> -{
-> -}
-> -
-> -static inline void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
-> -{
-> -}
->  #endif /* CONFIG_RT2X00_LIB_RFKILL */
->  
->  /*
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> index 3298cae..08ffc6d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> @@ -94,14 +94,50 @@ static void rt2x00rfkill_poll(struct work_struct *work)
->  			   &rt2x00dev->rfkill_work, RFKILL_POLL_INTERVAL);
->  }
->  
-> +static int rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
-> +{
-> +	struct device *dev = wiphy_dev(rt2x00dev->hw->wiphy);
-> +
-> +	rt2x00dev->rfkill = rfkill_allocate(dev, RFKILL_TYPE_WLAN);
-> +	if (!rt2x00dev->rfkill)
-> +		return -ENOMEM;
-> +
-> +	rt2x00dev->rfkill->name = rt2x00dev->ops->name;
-> +	rt2x00dev->rfkill->data = rt2x00dev;
-> +	rt2x00dev->rfkill->toggle_radio = rt2x00rfkill_toggle_radio;
-> +	if (test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags)) {
-> +		rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
-> +		rt2x00dev->rfkill->state =
-> +			rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
-> +			    RFKILL_STATE_SOFT_BLOCKED : RFKILL_STATE_UNBLOCKED;
-> +	} else {
-> +		rt2x00dev->rfkill->state = RFKILL_STATE_UNBLOCKED;
-> +	}
-> +
-> +	INIT_DELAYED_WORK(&rt2x00dev->rfkill_work, rt2x00rfkill_poll);
-> +
-> +	return 0;
-> +}
-> +
-> +static void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
-> +{
-> +	rfkill_free(rt2x00dev->rfkill);
-> +	rt2x00dev->rfkill = NULL;
-> +}
-> +
->  void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
->  {
-> -	if (!test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state) ||
-> -	    test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
-> +	if (test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
-> +		return;
-> +
-> +	if (rt2x00rfkill_allocate(rt2x00dev)) {
-> +		ERROR(rt2x00dev, "Failed to allocate rfkill handler.\n");
->  		return;
-> +	}
->  
->  	if (rfkill_register(rt2x00dev->rfkill)) {
->  		ERROR(rt2x00dev, "Failed to register rfkill handler.\n");
-> +		rt2x00rfkill_free(rt2x00dev);
->  		return;
->  	}
->  
-> @@ -117,8 +153,7 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
->  
->  void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
->  {
-> -	if (!test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state) ||
-> -	    !test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
-> +	if (!test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
->  		return;
->  
->  	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
-> @@ -127,46 +162,3 @@ void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
->  
->  	__clear_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state);
->  }
-> -
-> -void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
-> -{
-> -	struct device *dev = wiphy_dev(rt2x00dev->hw->wiphy);
-> -
-> -	if (test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
-> -		return;
-> -
-> -	rt2x00dev->rfkill = rfkill_allocate(dev, RFKILL_TYPE_WLAN);
-> -	if (!rt2x00dev->rfkill) {
-> -		ERROR(rt2x00dev, "Failed to allocate rfkill handler.\n");
-> -		return;
-> -	}
-> -
-> -	__set_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state);
-> -
-> -	rt2x00dev->rfkill->name = rt2x00dev->ops->name;
-> -	rt2x00dev->rfkill->data = rt2x00dev;
-> -	rt2x00dev->rfkill->toggle_radio = rt2x00rfkill_toggle_radio;
-> -	if (test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags)) {
-> -		rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
-> -		rt2x00dev->rfkill->state =
-> -			rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
-> -			    RFKILL_STATE_SOFT_BLOCKED : RFKILL_STATE_UNBLOCKED;
-> -	} else {
-> -		rt2x00dev->rfkill->state = RFKILL_STATE_UNBLOCKED;
-> -	}
-> -
-> -	INIT_DELAYED_WORK(&rt2x00dev->rfkill_work, rt2x00rfkill_poll);
-> -
-> -	return;
-> -}
-> -
-> -void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
-> -{
-> -	if (!test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
-> -		return;
-> -
-> -	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
-> -
-> -	rfkill_free(rt2x00dev->rfkill);
-> -	rt2x00dev->rfkill = NULL;
-> -}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The above error message certainly looks like a hardware error to me.
 
