@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60582 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752270AbZCPOkV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 10:40:21 -0400
-Message-ID: <49BE64CF.8020407@lwfinger.net> (sfid-20090316_154024_719314_A3151F07)
-Date: Mon, 16 Mar 2009 09:40:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Adrian Bassett <adrian.bassett@hotmail.co.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8180 Bit Rate regression in 2.6.29
-References: <COL113-W348B209977311F6BB460ADCB9B0@phx.gbl>
-In-Reply-To: <COL113-W348B209977311F6BB460ADCB9B0@phx.gbl>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga01.intel.com ([192.55.52.88]:52598 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932515AbZCZTdn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 15:33:43 -0400
+Subject: Re: iwl3945: Don't queue rfkill_poll work when module is exiting
+From: reinette chatre <reinette.chatre@intel.com>
+To: TJ <ubuntu@tjworld.net>
+Cc: Huaxu Wan <huaxu.wan@linux.intel.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1237955476.4388.6.camel@hephaestion>
+References: <1237909459.5365.16.camel@hephaestion>
+	 <200903241851.11949.helmut.schaa@gmail.com>
+	 <1237929739.5365.21.camel@hephaestion>  <20090325034121.GA4792@owl>
+	 <1237955476.4388.6.camel@hephaestion>
+Content-Type: text/plain
+Date: Thu, 26 Mar 2009 12:39:03 -0700
+Message-Id: <1238096343.25000.57.camel@rc-desk> (sfid-20090326_203346_102601_969B30F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Bassett wrote:
+On Tue, 2009-03-24 at 21:31 -0700, TJ wrote:
+> On Wed, 2009-03-25 at 11:41 +0800, Huaxu Wan wrote:
+> > Hi,
+> > 
+> > This issue is confirmed here too. But during compile, there is warning about
+> > cancel_work_sync(), cancel_delayed_work_sync() should be used instead.
+> > 
+> > And, without the modification in iwl3945_rfkill_poll() and 
+> > iwl3945_mac_stop(), just with one line cancel_delayed_work_sync(), this issue
+> > is also fixed in my testing.
 > 
-> (I'm not currently subscribed so please Cc: in any response ...)
+> Originally I did try adding just cancel_delayed_work_sync() although I
+> put it immediately following:
 > 
-> Using PCI device 1799:700f and the rtl8180 kernel wireless driver.
+>         iwl3945_rfkill_unregister(priv);
+>         cancel_delayed_work(&priv->rfkill_poll);
 > 
-> With the vanilla 2.6.29-rc releases (rc8 most recently but also with predecessors) I've noticed that the Bit Rate of my wireless device appears to be more or less fixed at 1 Mb/s.  Occasionally, iwconfig reports higher values but, as the stats below show, no attempts are successful at higher Bit Rates with this kernel version.
+> Wondered why that didn't work and hunted down the unnecessary calls to
+> queue_delayed_work() that were causing the issue and made them
+> conditional on STATUS_EXIT_PENDING.
 > 
-> With the 2.6.28 series, however, the Bit Rate will vary in the normal way, with the majority of the network activity happening at the higher end, if not the highest(54 Mb /s) point, of the range supported by this device.
+> Then I decided to be absolutely sure and moved cancel_delayed_work()
+> further down and for some reason mis-used cancel_work_sync() instead of
+> cancel_delayed_work_sync() - not paying attention I guess!
 
-It would be immensely helpful if you, or someone else with this hardware and the
-problem, could use git to download the mainline tree and find the bad commit
-using bisection. In a review of the commit log, I found only one change in the
-rtl8180 code in the 2.6.28 to 2.6.29-rcX range, and without it the rtl8180 would
-not work at all. As a result, I cannot suggest a trial patch.
+Sounds like this can be done in one line ... could you please resubmit?
 
-My system says that there are 6172 commits between 2.6.29-rc8 and 2.6.28, thus
-it will take roughly 13 kernel builds to bisect the problem.
+Thanks
 
-Larry
+Reinette
+
