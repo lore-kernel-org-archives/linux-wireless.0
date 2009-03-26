@@ -1,41 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46059 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751049AbZCUDqT (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:64942 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754024AbZCZB0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 23:46:19 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, j@w1.fi
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] mac80211_hwsim: let the reg workqueue breathe when regtest is set
-Date: Fri, 20 Mar 2009 23:46:11 -0400
-Message-Id: <1237607171-3516-1-git-send-email-lrodriguez@atheros.com> (sfid-20090321_044658_206561_30CB6ADC)
+	Wed, 25 Mar 2009 21:26:33 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so331522rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 18:26:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890903251821i7b582601r877662790ceb747c@mail.gmail.com>
+References: <20090323162834.154525349@sipsolutions.net> <20090323163051.784425387@sipsolutions.net>
+	<43e72e890903251821i7b582601r877662790ceb747c@mail.gmail.com>
+Date: Thu, 26 Mar 2009 12:26:16 +1100
+Message-ID: <646765f40903251826l535e90f2nea8cf64808711dd4@mail.gmail.com> (sfid-20090326_022635_510835_2465DF72)
+Subject: Re: [PATCH 1/8] mac80211: rewrite fragmentation
+From: Julian Calaby <julian.calaby@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this the regulatory domain isn't seen and we end up
-intersecting for each request (each radio).
+2009/3/26 Luis R. Rodriguez <mcgrof@gmail.com>:
+> T24gTW9uLCBNYXIgMjMsIDIwMDkgYXQgOToyOCBBTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+> c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gRnJhZ21lbnRhdGlvbiBjdXJyZW50bHkgdXNlcyBh
+> biBhbGxvY2F0ZWQgYXJyYXkgdG8gc3RvcmUgdGhlCj4gZnJhZ21lbnQgc2ticywgYW5kIHRoZW4g
+> a2VlcHMgdHJhY2sgb2Ygd2hpY2ggaGF2ZSBiZWVuIHNlbnQKPiBhbmQgd2hpY2ggYXJlIHN0aWxs
+> IHBlbmRpbmcgZXRjLiBUaGlzIGlzIHJhdGhlciBjb21wbGljYXRlZDsKPiBtYWtlIGl0IHNpbXBs
+> ZXIgYnkganVzdCBjaGFpbmluZyB0aGUgZnJhZ21lbnRzIGludG8gc2tiLT5uZXh0Cj4gYW5kIHJl
+> bW92aW5nIGZyb20gdGhhdCBsaXN0IHdoZW4gc2VudC4gQWxzbyBzaW1wbGlmaWVzIGFsbAo+IGNv
+> ZGUgdGhhdCBuZWVkcyB0byB0b3VjaCBmcmFnbWVudHMsIHNpbmNlIGl0IG5vdyBvbmx5IG5lZWRz
+> Cj4gdG8gd2FsayB0aGUgc2tiLT5uZXh0IGxpc3QuCj4KPiBUaGlzIGlzIGEgcHJlcmVxdWlzaXRl
+> IGZvciBmaXhpbmcgdGhlIHN0b3JlZCBwYWNrZXQgY29kZSwKPiB3aGljaCBJIG5lZWQgdG8gZG8g
+> Zm9yIHByb3BlciBhZ2dyZWdhdGlvbiBwYWNrZXQgc3RvcmluZy4KPgo+IFNpZ25lZC1vZmYtYnk6
+> IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+Cgo8LS0gc25pcCAtLT4K
+> Cj4gQEAgLTEwOTksNDUgKzEwODgsMzYgQEAgc3RhdGljIGludCBpZWVlODAyMTFfdHhfcHJlcGFy
+> ZShzdHJ1Y3QgaQo+IMKgIMKgIMKgIMKgcmV0dXJuIDA7Cj4gwqB9Cj4KPiAtc3RhdGljIGludCBf
+> X2llZWU4MDIxMV90eChzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCwgc3RydWN0IHNrX2J1
+> ZmYgKnNrYiwKPiArc3RhdGljIGludCBfX2llZWU4MDIxMV90eChzdHJ1Y3QgaWVlZTgwMjExX2xv
+> Y2FsICpsb2NhbCwKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHN0cnVj
+> dCBpZWVlODAyMTFfdHhfZGF0YSAqdHgpCj4gwqB7Cj4gKyDCoCDCoCDCoCBzdHJ1Y3Qgc2tfYnVm
+> ZiAqc2tiID0gdHgtPnNrYiwgKm5leHQ7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3QgaWVlZTgwMjExX3R4
+> X2luZm8gKmluZm87Cj4gLSDCoCDCoCDCoCBpbnQgcmV0LCBpOwo+ICsgwqAgwqAgwqAgaW50IHJl
+> dDsKPiArIMKgIMKgIMKgIGJvb2wgZnJhZ20gPSBmYWxzZTsKPgo+IC0gwqAgwqAgwqAgaWYgKHNr
+> Yikgewo+ICsgwqAgwqAgwqAgbG9jYWwtPm1kZXYtPnRyYW5zX3N0YXJ0ID0gamlmZmllczsKPiAr
+> Cj4gKyDCoCDCoCDCoCB3aGlsZSAoc2tiKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAo
+> aWVlZTgwMjExX3F1ZXVlX3N0b3BwZWQoJmxvY2FsLT5odywKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
+> oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNrYl9nZXRfcXVl
+> dWVfbWFwcGluZyhza2IpKSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHJl
+> dHVybiBJRUVFODAyMTFfVFhfUEVORElORzsKPgo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0
+> ID0gbG9jYWwtPm9wcy0+dHgobG9jYWxfdG9faHcobG9jYWwpLCBza2IpOwo+IC0gwqAgwqAgwqAg
+> wqAgwqAgwqAgwqAgaWYgKHJldCkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+> IHJldHVybiBJRUVFODAyMTFfVFhfQUdBSU47Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBsb2Nh
+> bC0+bWRldi0+dHJhbnNfc3RhcnQgPSBqaWZmaWVzOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+> aWVlZTgwMjExX2xlZF90eChsb2NhbCwgMSk7Cj4gLSDCoCDCoCDCoCB9Cj4gLSDCoCDCoCDCoCBp
+> ZiAodHgtPmV4dHJhX2ZyYWcpIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZvciAoaSA9IDA7
+> IGkgPCB0eC0+bnVtX2V4dHJhX2ZyYWc7IGkrKykgewo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+> wqAgwqAgwqAgwqAgaWYgKCF0eC0+ZXh0cmFfZnJhZ1tpXSkKPiAtIMKgIMKgIMKgIMKgIMKgIMKg
+> IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNvbnRpbnVlOwo+IC0gwqAgwqAgwqAgwqAgwqAg
+> wqAgwqAgwqAgwqAgwqAgwqAgaW5mbyA9IElFRUU4MDIxMV9TS0JfQ0IodHgtPmV4dHJhX2ZyYWdb
+> aV0pOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGZyYWdtKSB7Cj4gKyDCoCDCoCDCoCDC
+> oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpbmZvID0gSUVFRTgwMjExX1NLQl9DQihza2IpOwo+IMKg
+> IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaW5mby0+ZmxhZ3MgJj0gfihJRUVFODAy
+> MTFfVFhfQ1RMX0NMRUFSX1BTX0ZJTFQgfAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+> IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIElFRUU4MDIxMV9UWF9DVExfRklSU1RfRlJB
+> R01FTlQpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGllZWU4MDIx
+> MV9xdWV1ZV9zdG9wcGVkKCZsb2NhbC0+aHcsCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+> oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBza2JfZ2V0X3F1ZXVlX21hcHBpbmcodHgt
+> PmV4dHJhX2ZyYWdbaV0pKSkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+> IMKgIMKgIMKgIHJldHVybiBJRUVFODAyMTFfVFhfRlJBR19BR0FJTjsKPiAtCj4gLSDCoCDCoCDC
+> oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXQgPSBsb2NhbC0+b3BzLT50eChsb2NhbF90b19o
+> dyhsb2NhbCksCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+> oCDCoCDCoCDCoCDCoCDCoCDCoCB0eC0+ZXh0cmFfZnJhZ1tpXSk7Cj4gLSDCoCDCoCDCoCDCoCDC
+> oCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAocmV0KQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+> wqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0dXJuIElFRUU4MDIxMV9UWF9GUkFHX0FHQUlOOwo+IC0g
+> wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbG9jYWwtPm1kZXYtPnRyYW5zX3N0YXJ0
+> ID0gamlmZmllczsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGllZWU4MDIx
+> MV9sZWRfdHgobG9jYWwsIDEpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+> dHgtPmV4dHJhX2ZyYWdbaV0gPSBOVUxMOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfQo+IC0g
+> wqAgwqAgwqAgwqAgwqAgwqAgwqAga2ZyZWUodHgtPmV4dHJhX2ZyYWcpOwo+IC0gwqAgwqAgwqAg
+> wqAgwqAgwqAgwqAgdHgtPmV4dHJhX2ZyYWcgPSBOVUxMOwo+ICsKPiArIMKgIMKgIMKgIMKgIMKg
+> IMKgIMKgIG5leHQgPSBza2ItPm5leHQ7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXQgPSBs
+> b2NhbC0+b3BzLT50eChsb2NhbF90b19odyhsb2NhbCksIHNrYik7Cj4gKyDCoCDCoCDCoCDCoCDC
+> oCDCoCDCoCBpZiAocmV0ICE9IE5FVERFVl9UWF9PSykKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+> IMKgIMKgIMKgIMKgIHJldHVybiBJRUVFODAyMTFfVFhfQUdBSU47Cj4gKyDCoCDCoCDCoCDCoCDC
+> oCDCoCDCoCB0eC0+c2tiID0gc2tiID0gbmV4dDsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGll
+> ZWU4MDIxMV9sZWRfdHgobG9jYWwsIDEpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZnJhZ20g
+> PSB0cnVlOwo+IMKgIMKgIMKgIMKgfQo+ICsKPiDCoCDCoCDCoCDCoHJldHVybiBJRUVFODAyMTFf
+> VFhfT0s7Cj4gwqB9Cj4KCkkgc2VlIG9ubHkgb25lIHBvc3NpYmxlIHJlZ3Jlc3Npb24gd2l0aCB0
+> aGlzIHBhdGNoIGFuZCB0aGF0IGlzIHRoYXQgaXQKc2VlbXMgeW91IGZvcmdvdCB0byB1cGRhdGUg
+> dGhlIG1kZXYtPnRyYW5zX3N0YXJ0IGluIHRoZSBuZXcgbG9vcCBvbgplYWNoIGZyYWdtZW50LgoK
+> QXMgZmFyIGFzIEkgY2FuIHRlbGwgdGhpcyB3b3VsZCBvbmx5IGludHJvZHVjZSBhIHJlZ3Jlc3Np
+> b24gd2l0aCBpZgpzb21lb25lIGlzIHVzaW5nIGEgbmV0ZGV2IHdhdGNoZG9nIG9uIHRoZSBtZGV2
+> LCBpZiB3ZSBkb24ndCBjYXJlIGFib3V0CnRoYXQgYW5kIEknbSBub3QgbWlzc2luZyBhbnkgb3Ro
+> ZXIgY2FzZSB3aGVyZSB0aGlzIGNvdWxkIGJlIGFmZmVjdGVkCndlIG1pZ2h0IGFzIHdlbGwgcmVt
+> b3ZlIHRoYXQgZmlyc3QgdXBkYXRlIGFzIGF0IGxlYXN0IGZvciBtYWM4MDIxMSBpdHMKY29tcGxl
+> dGVseSB1bnRvdWNoZWQuCgpPdGhlciB0aGFuIHRoYXQ6CgpSZXZpZXdlZC1ieTogTHVpcyBSLiBS
+> b2RyaWd1ZXogPGxyb2RyaWd1ZXpAYXRoZXJvcy5jb20+CgogIEx1aXMK
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+W T F..............?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a15078b..1a680cb 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1035,6 +1035,9 @@ static int __init init_mac80211_hwsim(void)
- 			break;
- 		}
- 
-+		/* give the regulatory workqueue a chance to run */
-+		if (regtest)
-+			schedule_timeout_interruptible(1);
- 		err = ieee80211_register_hw(hw);
- 		if (err < 0) {
- 			printk(KERN_DEBUG "mac80211_hwsim: "
 -- 
-1.6.0.6
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
