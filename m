@@ -1,92 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:34839 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758444AbZCXUKj convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32833 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbZCZRb1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 16:10:39 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so2370502qwh.37
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 13:10:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
-References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com>
-	<20090324184100.GA29268@tesla> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
-Date: Tue, 24 Mar 2009 13:10:21 -0700
-Message-ID: <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com> (sfid-20090324_211042_909907_2DF74DC6)
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 26 Mar 2009 13:31:27 -0400
+Subject: [PATCH] mac80211: pass all probe request IEs to driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 26 Mar 2009 18:30:52 +0100
+Message-Id: <1238088652.4331.69.camel@johannes.local> (sfid-20090326_183130_334194_419B76DE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 24, 2009 at 1:03 PM, Bob Copeland <me@bobcopeland.com> wrot=
-e:
-> On Tue, Mar 24, 2009 at 2:41 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> Do any of you guys have time to pick it up?
->
-> Well my patch #2 is pretty similar to what Christian has, and I'd lik=
-e to
-> upstream the first few patches soon (especially the ath.ko creation, =
-it is a
-> beast to rebase as you saw). =C2=A0That would bring up the first cont=
-entious
-> point of the merge: is "ath/ath.ko" ok with everyone?
+Instead of just passing the cfg80211-requested IEs, pass
+the locally generated ones as well.
 
-Yes.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h     |   13 +++++---
+ net/mac80211/ieee80211_i.h |    6 +++
+ net/mac80211/main.c        |    8 +----
+ net/mac80211/scan.c        |   21 ++++++++++++-
+ net/mac80211/util.c        |   72 ++++++++++++++++++++++++++-------------------
+ 5 files changed, 79 insertions(+), 41 deletions(-)
 
-> ath5k/9k specific
-> bits can eventually go in ath/{5k,9k} subdirs... not sure where 9170
-> lives then :)
+--- wireless-testing.orig/include/net/mac80211.h	2009-03-26 17:19:39.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-03-26 17:21:47.000000000 +0100
+@@ -1330,11 +1330,14 @@ enum ieee80211_ampdu_mlme_action {
+  *	the scan state machine in stack. The scan must honour the channel
+  *	configuration done by the regulatory agent in the wiphy's
+  *	registered bands. The hardware (or the driver) needs to make sure
+- *	that power save is disabled. When the scan finishes,
+- *	ieee80211_scan_completed() must be called; note that it also must
+- *	be called when the scan cannot finish because the hardware is
+- *	turned off! Anything else is a bug! Returns a negative error code
+- *	which will be seen in userspace.
++ *	that power save is disabled.
++ *	The @req ie/ie_len members are rewritten by mac80211 to contain the
++ *	entire IEs after the SSID, so that drivers need not look at these
++ *	at all but just send them after the SSID -- mac80211 includes the
++ *	(extended) supported rates and HT information (where applicable).
++ *	When the scan finishes, ieee80211_scan_completed() must be called;
++ *	note that it also must be called when the scan cannot finish due to
++ *	any error unless this callback returned a negative error code.
+  *
+  * @sw_scan_start: Notifier function that is called just before a software scan
+  *	is started. Can be NULL, if the driver doesn't need this notification.
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-26 17:37:21.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-26 18:21:59.000000000 +0100
+@@ -51,6 +51,10 @@ struct ieee80211_local;
+  * increased memory use (about 2 kB of RAM per entry). */
+ #define IEEE80211_FRAGMENT_MAX 4
+ 
++/* cfg80211 only supports 32 rates */
++#define MAC80211_PREQ_IE_LEN	( 2 + 32 /* SSID */\
++				+ 4 + 32 /* (ext) supp rates */)
++
+ /*
+  * Time after which we ignore scan results and no longer report/use
+  * them in any way.
+@@ -1093,6 +1097,8 @@ void ieee80211_send_auth(struct ieee8021
+ 			 u16 transaction, u16 auth_alg,
+ 			 u8 *extra, size_t extra_len,
+ 			 const u8 *bssid, int encrypt);
++int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
++			     u8 *ie, size_t ie_len);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      u8 *ssid, size_t ssid_len,
+ 			      u8 *ie, size_t ie_len);
+--- wireless-testing.orig/net/mac80211/util.c	2009-03-26 17:22:38.000000000 +0100
++++ wireless-testing/net/mac80211/util.c	2009-03-26 18:21:59.000000000 +0100
+@@ -832,16 +832,54 @@ void ieee80211_send_auth(struct ieee8021
+ 	ieee80211_tx_skb(sdata, skb, encrypt);
+ }
+ 
++int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
++			     u8 *ie, size_t ie_len)
++{
++	struct ieee80211_supported_band *sband;
++	u8 *pos, *supp_rates_len, *esupp_rates_len = NULL;
++	int i;
++
++	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++
++	pos = buffer;
++
++	*pos++ = WLAN_EID_SUPP_RATES;
++	supp_rates_len = pos;
++	*pos++ = 0;
++
++	for (i = 0; i < sband->n_bitrates; i++) {
++		struct ieee80211_rate *rate = &sband->bitrates[i];
++
++		if (esupp_rates_len) {
++			*esupp_rates_len += 1;
++		} else if (*supp_rates_len == 8) {
++			*pos++ = WLAN_EID_EXT_SUPP_RATES;
++			esupp_rates_len = pos;
++			*pos++ = 1;
++		} else
++			*supp_rates_len += 1;
++
++		*pos++ = rate->bitrate / 5;
++	}
++
++	/* if adding more here, adjust MAC80211_PREQ_IE_LEN */
++
++	if (ie) {
++		memcpy(pos, ie, ie_len);
++		pos += ie_len;
++	}
++
++	return pos - buffer;
++}
++
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      u8 *ssid, size_t ssid_len,
+ 			      u8 *ie, size_t ie_len)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	u8 *pos, *supp_rates, *esupp_rates = NULL;
+-	int i;
++	u8 *pos;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) + 200 +
+ 			    ie_len);
+@@ -868,33 +906,9 @@ void ieee80211_send_probe_req(struct iee
+ 	*pos++ = WLAN_EID_SSID;
+ 	*pos++ = ssid_len;
+ 	memcpy(pos, ssid, ssid_len);
++	pos += ssid_len;
+ 
+-	supp_rates = skb_put(skb, 2);
+-	supp_rates[0] = WLAN_EID_SUPP_RATES;
+-	supp_rates[1] = 0;
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-
+-	for (i = 0; i < sband->n_bitrates; i++) {
+-		struct ieee80211_rate *rate = &sband->bitrates[i];
+-		if (esupp_rates) {
+-			pos = skb_put(skb, 1);
+-			esupp_rates[1]++;
+-		} else if (supp_rates[1] == 8) {
+-			esupp_rates = skb_put(skb, 3);
+-			esupp_rates[0] = WLAN_EID_EXT_SUPP_RATES;
+-			esupp_rates[1] = 1;
+-			pos = &esupp_rates[2];
+-		} else {
+-			pos = skb_put(skb, 1);
+-			supp_rates[1]++;
+-		}
+-		*pos = rate->bitrate / 5;
+-	}
+-
+-	/* if adding more here, adjust max_scan_ie_len */
+-
+-	if (ie)
+-		memcpy(skb_put(skb, ie_len), ie, ie_len);
++	skb_put(skb, ieee80211_build_preq_ies(local, pos, ie, ie_len));
+ 
+ 	ieee80211_tx_skb(sdata, skb, 0);
+ }
+--- wireless-testing.orig/net/mac80211/main.c	2009-03-26 17:39:50.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-03-26 17:41:48.000000000 +0100
+@@ -728,12 +728,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	if (!ops->hw_scan) {
+ 		/* For hw_scan, driver needs to set these up. */
+ 		wiphy->max_scan_ssids = 4;
+-
+-		/* we support a maximum of 32 rates in cfg80211 */
+-		wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN
+-					 - 2 - 32 /* SSID */
+-					 - 4 - 32 /* (ext) supp rates */;
+-
++		wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN -
++					 MAC80211_PREQ_IE_LEN;
+ 	}
+ 
+ 	/* Yes, putting cfg80211_bss into ieee80211_bss is a hack */
+--- wireless-testing.orig/net/mac80211/scan.c	2009-03-26 17:41:58.000000000 +0100
++++ wireless-testing/net/mac80211/scan.c	2009-03-26 17:47:08.000000000 +0100
+@@ -286,6 +286,12 @@ void ieee80211_scan_completed(struct iee
+ 	if (WARN_ON(!local->scan_req))
+ 		return;
+ 
++	if (local->hw_scanning) {
++		kfree(local->scan_req->ie);
++		local->scan_req->ie = NULL;
++		local->scan_req->ie_len = 0;
++	}
++
+ 	if (local->scan_req != &local->int_scan_req)
+ 		cfg80211_scan_done(local->scan_req, aborted);
+ 	local->scan_req = NULL;
+@@ -456,12 +462,25 @@ int ieee80211_start_scan(struct ieee8021
+ 	}
+ 
+ 	if (local->ops->hw_scan) {
+-		int rc;
++		u8 *ies;
++		int rc, ielen;
++
++		ies = kmalloc(MAC80211_PREQ_IE_LEN + req->ie_len, GFP_KERNEL);
++		if (!ies)
++			return -ENOMEM;
++
++		ielen = ieee80211_build_preq_ies(local, ies,
++						 req->ie, req->ie_len);
++		req->ie = ies;
++		req->ie_len = ielen;
+ 
+ 		local->hw_scanning = true;
+ 		rc = drv_hw_scan(local, req);
+ 		if (rc) {
+ 			local->hw_scanning = false;
++			kfree(ies);
++			req->ie_len = 0;
++			req->ie = NULL;
+ 			return rc;
+ 		}
+ 		local->scan_sdata = scan_sdata;
 
-Wherever Christian wants it. If he finds re-usable bits then great.
 
-> I probably can't get to it until the weekend, but if you have more ti=
-me,
-> Christian, feel free to adopt whatever you want from mine. =C2=A0Othe=
-rwise I'll
-> pick up where Luis left off on the weekend.
->
-> I didn't push it yet because ath5k was having problems once I turned =
-it
-> on for ath5k,
-
-So this is why I recommend to trim the channel list down of ath5k. The
-other reason is you won't have users spending what may be 3/4 of their
-time scanning on channels that they won't ever find APs in. What can
-be done here is add  flag or command as we had reviewed a while back
-to allow the user to enable these channels if he knows what he is
-doing so that way we know we don't mind bothering scanning on the
-gazillion channels. But that is just my advice. My concern first is to
-get users working happily and quickly associated to an AP and I think
-that parallels those goals and puts as secondary the bells and
-whistles of adding every single possible channel.
-
-> and I have no other hardware to test with so wanted to
-> figure out what was broken first.
-> Channel list is a good hint, maybe
-> it's time to fix iw/nl80211 to send back all the channels :)
-
-So that is the other option. I tried looking at that yesterday but
-wasn't able to find a way to do this. I went through the netlink
-documenation and even tried modifying the skb on the kernel side as
-its a dump. Not sure what to do here to fix this.
-
-So yes, both are possible options. Just keep in mind that without
-being able to see the channel list with 'iw list' debugging regulatory
-is a real royal pain in the ass. So I'd try to fix that first either
-through channel reduction (you get another bonus enhancement for
-scanning time for users) or through fixing this through iw/nl80211.
-
-Johannes probably can advise best on the second path.
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
