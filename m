@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:50477 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764898AbZC0Xvb convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:37285 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755193AbZCZRuV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 19:51:31 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so542419fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 16:51:28 -0700 (PDT)
+	Thu, 26 Mar 2009 13:50:21 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so256045fga.17
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 10:50:18 -0700 (PDT)
 From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH] iwlwifi: change check triggering device restart after rfkill change
-Date: Sat, 28 Mar 2009 00:51:19 +0100
+Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
+Date: Thu, 26 Mar 2009 18:50:08 +0100
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-References: <1238183130-31461-1-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1238183130-31461-1-git-send-email-reinette.chatre@intel.com>
+	ipw3945-devel@lists.sourceforge.net,
+	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>
+References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> <1238087650-26993-2-git-send-email-reinette.chatre@intel.com> <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200903280051.20450.helmut.schaa@gmail.com> (sfid-20090328_005140_794496_6FD1F2E5)
+Message-Id: <200903261850.09869.helmut.schaa@gmail.com> (sfid-20090326_185025_458179_8263BE62)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 27. M=E4rz 2009 schrieb Reinette Chatre:
-> The STATUS_ALIVE value cannot be used because it is cleared when
-> interface is brought down and will not be set if rfkill is enabled wh=
-en
-> interface is started again. The interface can thus not be brought up =
-if
-> rfkill was enabled before stopping the interface and disabled after
-> starting the interface.
+Hi,
+
+Am Donnerstag, 26. M=E4rz 2009 schrieb Reinette Chatre:
+> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 >=20
-> Change the test to use priv->is_open instead, this will be set when
-> interface is started whether rfkill is enabled or not.
->=20
-> Thanks to Helmut Schaa for the suggested fix.
->=20
+> Remove STATUS_ALIVE checking when HW RF KILL disabled, the bit get
+> clear in __iwl_down() function; the additional checking will fail and
+> cause RF can not be turn back on.
+
+Are you sure this is needed? I'd argue we should only restart the adapt=
+er
+if it was alive when it got rf_killed. In case the adapter was rf_kille=
+d
+while the interface was down I don't think we want to restart the adapt=
+er
+immediately but first when the interface is taken up again.
+
+Helmut
+
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> CC: Helmut Schaa <helmut.schaa@googlemail.com>
-
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-Looks good to me. Thanks Reinette.
-
 > ---
->  drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
 >=20
 > diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wi=
 reless/iwlwifi/iwl-core.c
-> index 18ef713..970c4fd 100644
+> index e1b5472..7560d6f 100644
 > --- a/drivers/net/wireless/iwlwifi/iwl-core.c
 > +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -2058,7 +2058,7 @@ void iwl_bg_rf_kill(struct work_struct *work)
+> @@ -2056,8 +2056,7 @@ void iwl_bg_rf_kill(struct work_struct *work)
+>  		IWL_DEBUG_RF_KILL(priv,
 >  			  "HW and/or SW RF Kill no longer active, restarting "
 >  			  "device\n");
->  		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+> -		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
 > -		    test_bit(STATUS_ALIVE, &priv->status))
-> +		    priv->is_open)
+> +		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
 >  			queue_work(priv->workqueue, &priv->restart);
 >  	} else {
 >  		/* make sure mac80211 stop sending Tx frame */
