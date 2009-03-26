@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46316 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbZC1FEQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 01:04:16 -0400
-Date: Sat, 28 Mar 2009 01:04:13 -0400
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Reinette Chattre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 8/8] mac80211/iwlwifi: move virtual A-MDPU queue
-	bookkeeping to iwlwifi
-Message-ID: <20090328050413.GG5543@bombadil.infradead.org> (sfid-20090328_060419_242630_B0271EFE)
-References: <20090323162834.154525349@sipsolutions.net> <20090323163053.563402186@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090323163053.563402186@sipsolutions.net>
+Received: from mga09.intel.com ([134.134.136.24]:21300 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757412AbZCZRIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 13:08:43 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
+Date: Thu, 26 Mar 2009 10:14:09 -0700
+Message-Id: <1238087650-26993-3-git-send-email-reinette.chatre@intel.com> (sfid-20090326_180848_474402_415390F1)
+In-Reply-To: <1238087650-26993-2-git-send-email-reinette.chatre@intel.com>
+References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
+ <1238087650-26993-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 05:28:42PM +0100, Johannes Berg wrote:
-> This patch removes all the virtual A-MPDU-queue bookkeeping from
-> mac80211. Curiously, iwlwifi already does its own bookkeeping, so
-> it doesn't require much changes except where it needs to handle
-> starting and stopping the queues in mac80211.
-> 
-> To handle the queue stop/wake properly, we rewrite the software
-> queue number for aggregation frames and internally to iwlwifi keep
-> track of the queues that map into the same AC queue, and only talk
-> to mac80211 about the AC queue. The implementation requires calling
-> two new functions, iwl_stop_queue and iwl_wake_queue instead of the
-> mac80211 counterparts.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Reinette Chattre <reinette.chatre@intel.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-This one I enjoyed the most. Fucking awesome.
+Remove STATUS_ALIVE checking when HW RF KILL disabled, the bit get
+clear in __iwl_down() function; the additional checking will fail and
+cause RF can not be turn back on.
 
-Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index e1b5472..7560d6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2056,8 +2056,7 @@ void iwl_bg_rf_kill(struct work_struct *work)
+ 		IWL_DEBUG_RF_KILL(priv,
+ 			  "HW and/or SW RF Kill no longer active, restarting "
+ 			  "device\n");
+-		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+-		    test_bit(STATUS_ALIVE, &priv->status))
++		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 			queue_work(priv->workqueue, &priv->restart);
+ 	} else {
+ 		/* make sure mac80211 stop sending Tx frame */
+-- 
+1.5.6.3
+
