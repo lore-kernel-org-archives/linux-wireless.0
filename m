@@ -1,106 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f178.google.com ([209.85.218.178]:38765 "EHLO
-	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755928AbZCLNEw (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:49919 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754413AbZCZSAG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 09:04:52 -0400
-Received: by bwz26 with SMTP id 26so174348bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 06:04:49 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: start pending scan after probe/auth/assoc timed out
-Date: Thu, 12 Mar 2009 14:04:34 +0100
+	Thu, 26 Mar 2009 14:00:06 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so771990qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 11:00:03 -0700 (PDT)
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903121404.34716.helmut.schaa@gmail.com> (sfid-20090312_140456_967338_C258FB46)
+In-Reply-To: <1238065059.4331.28.camel@johannes.local>
+References: <1237712542.5100.766.camel@johannes.local> <1238065059.4331.28.camel@johannes.local>
+Date: Thu, 26 Mar 2009 10:59:48 -0700
+Message-ID: <43e72e890903261059m386b3614u40db8a1a1913c25c@mail.gmail.com> (sfid-20090326_190010_430251_809877E1)
+Subject: Re: [RFC] regulatory information interpretation rules
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Richard Farina <sidhayn@gmail.com>,
+	David Quan <David.Quan@atheros.com>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a scan is queued in STA mode while the interface is in state direct
-probe, authenticate or associate the scan is delayed until the interface
-enters disabled or associated state. But in case of direct probe-,
-authentication- or association- timeout sta_work will not be scheduled
-anymore (without external trigger) and thus the pending scan is not
-executed and prevents a new scan from being triggered (-EBUSY).
+On Thu, Mar 26, 2009 at 3:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2009-03-22 at 10:02 +0100, Johannes Berg wrote:
+>> Ok, so I'm thinking about the interpretation rules for the regulator=
+y
+>> information. I even dreamt about this tonight, unfortunately...
+>
+> [...]
+>
+>> Now how should you interpret this? I'll propose the following
+>> interpretation rules (and show how you arrive at the required
+>> interpretation from above):
+>>
+>> =C2=A01) MIN values are really something like MIN+, i.e. approaching=
+ the MIN
+>> =C2=A0 =C2=A0 from above, that means that the value "2452 MHz" falls=
+ into the
+>> =C2=A0 =C2=A0 first of the ranges, not the second [3]
+>>
+>> =C2=A02) The entire band a channel occupies needs to be covered by (=
+any
+>> =C2=A0 =C2=A0 number of) contiguous rules.
+>>
+>> =C2=A03) The MAXBW value specifies what maximum bandwidth a channel =
+can use
+>> =C2=A0 =C2=A0 which has its center frequency (!) falling into the gi=
+ven range.
+>>
+>> =C2=A04) The FLAGS specify restrictions that any channel _overlappin=
+g_ the
+>> =C2=A0 =C2=A0 given range has to operate under.
+>>
+>> That is all. Now let me show how to interpret this.
+>
+> Let me rewrite those rules, more formally.
+>
+> Let's take an example regdomain with "n" rules:
+>
+> country EX:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0(MIN_1 - MAX_1 @ BW_1), (MAXAG_1, TXPWR_1)=
+, FLAGS_1
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0...
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0(MIN_n - MAX_n @ BW_n), (MAXAG_n, TXPWR_n)=
+, FLAGS_n
+>
+> And let's say we need to determine whether a channel, which
+> (disregarding modulation for a moment) is determined by its center
+> frequency and bandwidth:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0CHANNEL =3D (CENTER, BW)
+>
+> Then the rules are as follows, now using the notation outlined here:
+> http://en.wikipedia.org/wiki/Interval_(mathematics)#Notations_for_int=
+ervals (I'd use latex notation if I knew everybody was familiar with it=
+, you have to do with some words instead)
+>
+> =C2=A00) (stated outside rules before) for all 1 <=3D k < n : MAX_k <=
+=3D MIN_{k+1}
+> =C2=A0 =C2=A0[1]
+>
+> =C2=A01) each rule in the regdomain covers the frequency range (MIN_1=
+, MAX_1]
+> =C2=A0 =C2=A0[2]
+>
+> =C2=A02) given C =3D union (over all k =3D 1 .. n) of (MIN_k, MAX_k] =
+it must be
+> =C2=A0 =C2=A0true that (CENTER - BW/2, CENTER + BW/2) is a subset of =
+C
+>
+> =C2=A03) it must be true for all 1 <=3D k <=3D n:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if CENTER in (MIN_k, MAX_k] : BW <=3D BW_k=
+ =C2=A0 [3]
+>
+> =C2=A04) This is easier to formulate algorithmically:
+> =C2=A0 =C2=A0USE_FLAGS =3D 0
+> =C2=A0 =C2=A0for k =3D 1 .. n
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if CENTER in (MIN_k, MAX_k]:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0USE_FLAGS |=3D FLAGS_k
+>
+> johannes
+>
+> [1] this says "no overlap" but also "must be sorted" which can be
+> =C2=A0 =C2=A0beneficial
+> [2] this is a useless rule given the way I formulated rules 3 and 4, =
+but
+> =C2=A0 =C2=A0it helps think about how it works
+> [3] given rule 0) the if only matches (at most) once
 
-Fix this by queueing the sta work again after direct probe-, authentication-
-and association- timeout.
+This helps a lot :), looks good to me! If anyone has a case where
+overlapping regulatory rules _should_ exist now would be a great time
+to give an example. Otherwise they go away.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
-
-Johannes, I'm not completely sure if this fixes the issue I've got on monday
-as I was unable to trigger it again :(. Nevertheless I guess this patch is
-correct. I'll keep some debug output in mac80211 as well (locally) to see
-if the issue happens again and to see if it is fixed.
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6e92674..feb8340 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -682,6 +682,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- static void ieee80211_direct_probe(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	ifmgd->direct_probe_tries++;
- 	if (ifmgd->direct_probe_tries > IEEE80211_AUTH_MAX_TRIES) {
-@@ -697,6 +698,13 @@ static void ieee80211_direct_probe(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
- 				sdata->local->hw.conf.channel->center_freq,
- 				ifmgd->ssid, ifmgd->ssid_len);
-+
-+		/*
-+		 * We might have a pending scan which had no chance to run yet
-+		 * due to state == IEEE80211_STA_MLME_DIRECT_PROBE.
-+		 * Hence, queue the STAs work again
-+		 */
-+		queue_work(local->hw.workqueue, &ifmgd->work);
- 		return;
- 	}
- 
-@@ -721,6 +729,7 @@ static void ieee80211_direct_probe(struct ieee80211_sub_if_data *sdata)
- static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	ifmgd->auth_tries++;
- 	if (ifmgd->auth_tries > IEEE80211_AUTH_MAX_TRIES) {
-@@ -732,6 +741,13 @@ static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
- 				sdata->local->hw.conf.channel->center_freq,
- 				ifmgd->ssid, ifmgd->ssid_len);
-+
-+		/*
-+		 * We might have a pending scan which had no chance to run yet
-+		 * due to state == IEEE80211_STA_MLME_AUTHENTICATE.
-+		 * Hence, queue the STAs work again
-+		 */
-+		queue_work(local->hw.workqueue, &ifmgd->work);
- 		return;
- 	}
- 
-@@ -878,6 +894,7 @@ static int ieee80211_privacy_mismatch(struct ieee80211_sub_if_data *sdata)
- static void ieee80211_associate(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	ifmgd->assoc_tries++;
- 	if (ifmgd->assoc_tries > IEEE80211_ASSOC_MAX_TRIES) {
-@@ -889,6 +906,12 @@ static void ieee80211_associate(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
- 				sdata->local->hw.conf.channel->center_freq,
- 				ifmgd->ssid, ifmgd->ssid_len);
-+		/*
-+		 * We might have a pending scan which had no chance to run yet
-+		 * due to state == IEEE80211_STA_MLME_ASSOCIATE.
-+		 * Hence, queue the STAs work again
-+		 */
-+		queue_work(local->hw.workqueue, &ifmgd->work);
- 		return;
- 	}
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
