@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41021 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755278AbZCQNPf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 09:15:35 -0400
-Date: Tue, 17 Mar 2009 09:02:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@Atheros.com
-Subject: Re: Missing commits in wireless-testing
-Message-ID: <20090317130228.GA3549@tuxdriver.com> (sfid-20090317_141539_224317_A59BFF15)
-References: <18879.15297.344575.231076@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <18879.15297.344575.231076@gargle.gargle.HOWL>
+Received: from mga09.intel.com ([134.134.136.24]:51901 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753215AbZCZRIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 13:08:42 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/3] iwlwifi driver updates 03/26/2009
+Date: Thu, 26 Mar 2009 10:14:07 -0700
+Message-Id: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> (sfid-20090326_180845_964296_09ECFB38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 17, 2009 at 11:27:21AM +0530, Sujith wrote:
+In this series we improve support for suspend/resume by making use of
+infrastructure already in place in mac80211. We fix the problem where
+device cannot come back up if rfkill was enabled during ifdown. The 3945
+is a porting patch but through this also fixes a locking issue that was
+present in iwl3945 but not in iwlagn (see
+https://bugzilla.redhat.com/show_bug.cgi?id=492116).
 
-> Luis' serialization patches have been merged in wireless-testing,
-> but the commit IDs are missing. I did a git pull today and
-> git-describe shows: v2.6.29-rc8-18593-gef1cb6f
-> 
-> No compilation breakage, though.
+[PATCH 1/3] iwlwifi: merge and better support of suspend/resume for iwlagn and iwl3945
+[PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
+[PATCH 3/3] iwl3945: use iwl_mac_conf_tx
 
-I just went through a (very painful) pseudo-rebase to 2.6.29-rc8
-last night.  I'm fairly confident that what is there now matches what
-was there before.
 
-What commit do you think is missing?  What is it's subject line?
+Thank you
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Reinette
+
