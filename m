@@ -1,90 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:41170 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbZCaDwp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57988 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753888AbZCZINX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 23:52:45 -0400
-Date: Tue, 31 Mar 2009 09:21:40 +0530
-From: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Dhaval Giani <dhaval.lists@thegianis.in>,
-	linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090331035140.GC4199@linux.vnet.ibm.com> (sfid-20090331_055250_289362_CA8A0659)
-Reply-To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-References: <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com> <20090215134702.GA10180@hash.localnet> <49A9C3D7.8060706@gmail.com> <20090330085952.GB3837@linux.vnet.ibm.com> <b6c5339f0903300958m587cde69o44ae24d0609228ba@mail.gmail.com> <20090330175951.GB4199@linux.vnet.ibm.com> <b6c5339f0903301113y6cb0b8bu1eaa55439eb18d97@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <b6c5339f0903301113y6cb0b8bu1eaa55439eb18d97@mail.gmail.com>
+	Thu, 26 Mar 2009 04:13:23 -0400
+Subject: Re: p54spi - mesh mode summary
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200903260922.48489.jcmvbkbc@gmail.com> (sfid-20090326_073111_119238_390C7128)
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
+	 <200903251442.58712.chunkeey@web.de> <200903251534.29549.chunkeey@web.de>
+	 <200903260922.48489.jcmvbkbc@gmail.com>
+	 (sfid-20090326_073111_119238_390C7128)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s+RfOfn1Kli4Z5Ko4reS"
+Date: Thu, 26 Mar 2009 09:12:47 +0100
+Message-Id: <1238055167.4331.3.camel@johannes.local> (sfid-20090326_091327_686389_4179F11E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 30, 2009 at 02:13:35PM -0400, Bob Copeland wrote:
-> On Mon, Mar 30, 2009 at 1:59 PM, Dhaval Giani <dhaval@linux.vnet.ibm.=
-com> wrote:
-> > ok, so my kernel does hve this patch applied, and this is what I ge=
-t,
-> >
-> > =A0------------[ cut here ]------------
-> > =A0WARNING: at include/net/mac80211.h:1956 minstrel_get_rate+0xa1/0=
-x4b9 [mac80211]()
->=20
-> I believe this is something different (tx path not rx).  I think it's
-> that minstrel rate table bug again, which we never solved for ath5k.
->=20
-> Are you using adhoc or managed mode?  Do you have the slab/slub debug=
-ging
-> options turned on?  Any steps that consistently reproduce it?  Do you
-> get any warnings with PID controller?
->=20
 
-[dhaval@gondor ~]$ iwconfig wlan0
-wlan0     IEEE 802.11abg  ESSID:"linksys_SES_62338"
-          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1A:70:D6:=
-2D:06
-          Bit Rate=3D36 Mb/s   Tx-Power=3D23 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=3D2352 B
-          Power Management:off
-          Link Quality=3D100/100  Signal level:-49 dBm  Noise level=3D-=
-96 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+--=-s+RfOfn1Kli4Z5Ko4reS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[dhaval@gondor ~]$
+On Thu, 2009-03-26 at 09:22 +0300, Max Filippov wrote:
 
-[dhaval@gondor linux-2.6]$ grep -i slub .config
-CONFIG_SLUB_DEBUG=3Dy
-CONFIG_SLUB=3Dy
-# CONFIG_SLUB_DEBUG_ON is not set
-# CONFIG_SLUB_STATS is not set
-[dhaval@gondor linux-2.6]$
+> 3) Beaconing works, but not the way it should: like MPs don't hear each o=
+ther. Timestamps never get in sync
+> and both MPs issue beacon during 0.1s beacon interval.
 
-Am not sure what the PID controller is, and google gave me a number of
-results, which did not make too much sense in the context.
+That's perfectly fine for mesh. You're thinking of IBSS.
 
-Yes, I think I know how to reproduce it, but I am not sure what is the
-real cause.
+> 4) Pings don't go, because MPs don't answer ARP requests sent to it. Have=
+n't tested for the root cause yet.
 
-One way I have found of reproducing it is to connect to open networks,
-but it does not happen always. At home, when my network is set to open,
-I do not see this issue, whereas at the airport, kaboom.
+Maybe some multicast issue?
 
-I've also seen it on LEAP networks, but there were also a few open
-networks around. This warning is generally accompanied by a disconnect
-from the LEAP connected network, and then the system reconnects. Let me
-know if you have patches, I can give them a run and report back.
+> Are there other sources of information regarding LMAC interaction except
+> http://wireless.kernel.org/en/developers/Documentation/specs?action=3DAtt=
+achFile&do=3Dget&target=3DSTSW45x0C_LMAC_API_ED1P4.pdf ?
 
-Thanks,
---=20
-regards,
-Dhaval
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No; well, the header file.
+
+> Who should be contacted with questions about firmware behavior?
+
+I don't think we have any contact.
+
+johannes
+
+--=-s+RfOfn1Kli4Z5Ko4reS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJyzj9AAoJEKVg1VMiehFYXHsP/34LsCczNYhhLc/ZBaE8LyCv
+ZGR09B92kOyUVCM6dOgB0MQ4iVaw9fd+Nc9H5LYiOVRBIl7mnaod+HGcwoOI16va
+mbsxezkoW8GEQ1x50gqW7vYNw+Ku1X94S1542eOefivOSaO9ZTqVsIUTHnC4Vl8z
+eq61c6zwv6HjG8jdwTEsJnwyn0nHcknmV/n86NWdkbgzAwSq4dFXsaRb+BhKjdrR
+uUuQUG9TyzaEkeDFUnAPU2FFaRq702GOCcQu3U7XIGUlVGoZQ8XD8iZahCIjL6ch
+7udX87mbp1pGrnJAaYJgF2ZLFs3stobRVDz40G9cpuBExrDSpNORHt8p6NkSAdRw
+arHdE5H0ffAmo+VnDBjO3Zf3+gHDBnoA+o57jvj3NPLMgfyGf1/h8epufh29uPrq
+GuWrD4kkBjOGsPtTf+QlC6iO+2R2SzYbEP274Y7unnCa73bLE+GU/yBjULFrI0BR
+rZ0sj2vRO5mbPD2xOwvixERCfoAcEr0oQwh4AY/5V26NZ1A0jasJ14M6JgbRQRT2
+Zdjxu4RLd8e/qUylWaPWMtUb6Tf5UkChgiIVziFfZHtkbpP7uikiRHZcKjyhyqxi
+iUXsVN/1kQBhUk2GE0MELjNFXnzajxS0Srcuddbw7FLSUYU7JEcCbWx+0Z5nbTQi
+NXuLv/3q5VTnCi4vAIFD
+=SDZm
+-----END PGP SIGNATURE-----
+
+--=-s+RfOfn1Kli4Z5Ko4reS--
+
