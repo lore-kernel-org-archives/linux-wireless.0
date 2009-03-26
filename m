@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:52199 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024AbZCBXr5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 18:47:57 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1LeHrV-0008Qg-9y
-	for linux-wireless@vger.kernel.org; Mon, 02 Mar 2009 23:47:53 +0000
-Received: from dslb-092-076-255-158.pools.arcor-ip.net ([92.76.255.158])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 23:47:53 +0000
-Received: from feldmann_markus by dslb-092-076-255-158.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 23:47:53 +0000
-To: linux-wireless@vger.kernel.org
-From: Markus Feldmann <feldmann_markus@gmx.de>
-Subject: BCM4303 on HP zv5265ea
-Date: Tue, 03 Mar 2009 00:47:44 +0100
-Message-ID: <gohr71$48f$1@ger.gmane.org> (sfid-20090303_004802_736630_682D7DFA)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from fmailhost05.isp.att.net ([204.127.217.105]:61064 "EHLO
+	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750796AbZCZT7V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 15:59:21 -0400
+Message-ID: <49CBDE6A.6040702@lwfinger.net> (sfid-20090326_205924_604709_EE446F77)
+Date: Thu, 26 Mar 2009 14:58:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: david@identd.dyndns.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT/RFC 1/2] b43legacy: Fixes for beacons
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+This patch ports the beaconing fixes from commit a82d992261f "b43: Beaconing
+fixes" to b43legacy. Basically it prevents the card from triggering the beacon
+IRQ over and over again.
 
-My actually System is:
-HP Pavilion Laptop zv5265ea
-Debian Lenny(Testing)
-Linux Kernel 2.6.28 from kernel.org
-Broadcom Wlan card BCM4303
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-My System doesnt work at all.
+Did these 2 patches work for you?
 
-I also asked for support on this newsgroup, but without
-any success. So i hope there will be sometime a Developer
-reading this. :-)
+Larry
 
-Is a know there is a Problem to activate this card.
 
-Regards Markus
 
