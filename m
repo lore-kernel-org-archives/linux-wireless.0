@@ -1,79 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:44734 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754718AbZCTNKq (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.226]:2738 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896AbZCZBVi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 09:10:46 -0400
-Date: Fri, 20 Mar 2009 09:10:15 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: VT6656 driver source now GPL
-Message-ID: <20090320131014.GG25237@storm.local.network> (sfid-20090320_141051_059427_E5E8C1EA)
-References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com>
+	Wed, 25 Mar 2009 21:21:38 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so329331rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 18:21:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="9Iq5ULCa7nGtWwZS"
-In-Reply-To: <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com>
+In-Reply-To: <20090323163051.784425387@sipsolutions.net>
+References: <20090323162834.154525349@sipsolutions.net> <20090323163051.784425387@sipsolutions.net>
+Date: Wed, 25 Mar 2009 18:21:21 -0700
+Message-ID: <43e72e890903251821i7b582601r877662790ceb747c@mail.gmail.com> (sfid-20090326_022143_915629_6C3D5EA3)
+Subject: Re: [PATCH 1/8] mac80211: rewrite fragmentation
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---9Iq5ULCa7nGtWwZS
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi Luis,
-
-On Thu, Mar 19, 2009 at 09:45:19AM -0700, Luis R. Rodriguez wrote:
-> On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittletooquiet.net>=
- wrote:
-> > Hi,
-> >
-> > VIA has released a new version of the VT6656 driver source, and it now =
-has a
-> > proper license!
-> >
-> > =A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
-> >
-> > As you may recall, the previous version lacked a license altogether, ma=
-king it
-> > unfit for distribution.
-> >
-> > I'd really like to see this driver integrated into the kernel. =A0Does =
-anyone care
-> > to comment regarding feasibility?
->=20
-> Indeed good news, what is the latest kernel it compiles for? If it
-> compiles on Linus' tree it can be stashed into staging while it gets
-> properly ported.
-
-Just so I know who to pester*, will you be driving this?  Do you have inter=
-est
-in also pulling in the VT6655 driver?
-
-* I won't pester that much. ;)
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---9Iq5ULCa7nGtWwZS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJw5W2RO4fQQdv5AwRAlmHAKCq9s1CpfZe/uBWVnuaOXuV+upAmQCggV7w
-q4gqdrJfu0irjNBnGv8Y/wM=
-=qQCe
------END PGP SIGNATURE-----
-
---9Iq5ULCa7nGtWwZS--
+T24gTW9uLCBNYXIgMjMsIDIwMDkgYXQgOToyOCBBTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gRnJhZ21lbnRhdGlvbiBjdXJyZW50bHkgdXNlcyBh
+biBhbGxvY2F0ZWQgYXJyYXkgdG8gc3RvcmUgdGhlCj4gZnJhZ21lbnQgc2ticywgYW5kIHRoZW4g
+a2VlcHMgdHJhY2sgb2Ygd2hpY2ggaGF2ZSBiZWVuIHNlbnQKPiBhbmQgd2hpY2ggYXJlIHN0aWxs
+IHBlbmRpbmcgZXRjLiBUaGlzIGlzIHJhdGhlciBjb21wbGljYXRlZDsKPiBtYWtlIGl0IHNpbXBs
+ZXIgYnkganVzdCBjaGFpbmluZyB0aGUgZnJhZ21lbnRzIGludG8gc2tiLT5uZXh0Cj4gYW5kIHJl
+bW92aW5nIGZyb20gdGhhdCBsaXN0IHdoZW4gc2VudC4gQWxzbyBzaW1wbGlmaWVzIGFsbAo+IGNv
+ZGUgdGhhdCBuZWVkcyB0byB0b3VjaCBmcmFnbWVudHMsIHNpbmNlIGl0IG5vdyBvbmx5IG5lZWRz
+Cj4gdG8gd2FsayB0aGUgc2tiLT5uZXh0IGxpc3QuCj4KPiBUaGlzIGlzIGEgcHJlcmVxdWlzaXRl
+IGZvciBmaXhpbmcgdGhlIHN0b3JlZCBwYWNrZXQgY29kZSwKPiB3aGljaCBJIG5lZWQgdG8gZG8g
+Zm9yIHByb3BlciBhZ2dyZWdhdGlvbiBwYWNrZXQgc3RvcmluZy4KPgo+IFNpZ25lZC1vZmYtYnk6
+IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+Cgo8LS0gc25pcCAtLT4K
+Cj4gQEAgLTEwOTksNDUgKzEwODgsMzYgQEAgc3RhdGljIGludCBpZWVlODAyMTFfdHhfcHJlcGFy
+ZShzdHJ1Y3QgaQo+IMKgIMKgIMKgIMKgcmV0dXJuIDA7Cj4gwqB9Cj4KPiAtc3RhdGljIGludCBf
+X2llZWU4MDIxMV90eChzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCwgc3RydWN0IHNrX2J1
+ZmYgKnNrYiwKPiArc3RhdGljIGludCBfX2llZWU4MDIxMV90eChzdHJ1Y3QgaWVlZTgwMjExX2xv
+Y2FsICpsb2NhbCwKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHN0cnVj
+dCBpZWVlODAyMTFfdHhfZGF0YSAqdHgpCj4gwqB7Cj4gKyDCoCDCoCDCoCBzdHJ1Y3Qgc2tfYnVm
+ZiAqc2tiID0gdHgtPnNrYiwgKm5leHQ7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3QgaWVlZTgwMjExX3R4
+X2luZm8gKmluZm87Cj4gLSDCoCDCoCDCoCBpbnQgcmV0LCBpOwo+ICsgwqAgwqAgwqAgaW50IHJl
+dDsKPiArIMKgIMKgIMKgIGJvb2wgZnJhZ20gPSBmYWxzZTsKPgo+IC0gwqAgwqAgwqAgaWYgKHNr
+Yikgewo+ICsgwqAgwqAgwqAgbG9jYWwtPm1kZXYtPnRyYW5zX3N0YXJ0ID0gamlmZmllczsKPiAr
+Cj4gKyDCoCDCoCDCoCB3aGlsZSAoc2tiKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAo
+aWVlZTgwMjExX3F1ZXVlX3N0b3BwZWQoJmxvY2FsLT5odywKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNrYl9nZXRfcXVl
+dWVfbWFwcGluZyhza2IpKSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHJl
+dHVybiBJRUVFODAyMTFfVFhfUEVORElORzsKPgo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0
+ID0gbG9jYWwtPm9wcy0+dHgobG9jYWxfdG9faHcobG9jYWwpLCBza2IpOwo+IC0gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgaWYgKHJldCkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IHJldHVybiBJRUVFODAyMTFfVFhfQUdBSU47Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBsb2Nh
+bC0+bWRldi0+dHJhbnNfc3RhcnQgPSBqaWZmaWVzOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+aWVlZTgwMjExX2xlZF90eChsb2NhbCwgMSk7Cj4gLSDCoCDCoCDCoCB9Cj4gLSDCoCDCoCDCoCBp
+ZiAodHgtPmV4dHJhX2ZyYWcpIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZvciAoaSA9IDA7
+IGkgPCB0eC0+bnVtX2V4dHJhX2ZyYWc7IGkrKykgewo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgaWYgKCF0eC0+ZXh0cmFfZnJhZ1tpXSkKPiAtIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNvbnRpbnVlOwo+IC0gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgaW5mbyA9IElFRUU4MDIxMV9TS0JfQ0IodHgtPmV4dHJhX2ZyYWdb
+aV0pOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGZyYWdtKSB7Cj4gKyDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpbmZvID0gSUVFRTgwMjExX1NLQl9DQihza2IpOwo+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaW5mby0+ZmxhZ3MgJj0gfihJRUVFODAy
+MTFfVFhfQ1RMX0NMRUFSX1BTX0ZJTFQgfAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIElFRUU4MDIxMV9UWF9DVExfRklSU1RfRlJB
+R01FTlQpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGllZWU4MDIx
+MV9xdWV1ZV9zdG9wcGVkKCZsb2NhbC0+aHcsCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBza2JfZ2V0X3F1ZXVlX21hcHBpbmcodHgt
+PmV4dHJhX2ZyYWdbaV0pKSkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIHJldHVybiBJRUVFODAyMTFfVFhfRlJBR19BR0FJTjsKPiAtCj4gLSDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXQgPSBsb2NhbC0+b3BzLT50eChsb2NhbF90b19o
+dyhsb2NhbCksCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCB0eC0+ZXh0cmFfZnJhZ1tpXSk7Cj4gLSDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAocmV0KQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0dXJuIElFRUU4MDIxMV9UWF9GUkFHX0FHQUlOOwo+IC0g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbG9jYWwtPm1kZXYtPnRyYW5zX3N0YXJ0
+ID0gamlmZmllczsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGllZWU4MDIx
+MV9sZWRfdHgobG9jYWwsIDEpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+dHgtPmV4dHJhX2ZyYWdbaV0gPSBOVUxMOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfQo+IC0g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAga2ZyZWUodHgtPmV4dHJhX2ZyYWcpOwo+IC0gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgdHgtPmV4dHJhX2ZyYWcgPSBOVUxMOwo+ICsKPiArIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIG5leHQgPSBza2ItPm5leHQ7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXQgPSBs
+b2NhbC0+b3BzLT50eChsb2NhbF90b19odyhsb2NhbCksIHNrYik7Cj4gKyDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCBpZiAocmV0ICE9IE5FVERFVl9UWF9PSykKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIHJldHVybiBJRUVFODAyMTFfVFhfQUdBSU47Cj4gKyDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCB0eC0+c2tiID0gc2tiID0gbmV4dDsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGll
+ZWU4MDIxMV9sZWRfdHgobG9jYWwsIDEpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZnJhZ20g
+PSB0cnVlOwo+IMKgIMKgIMKgIMKgfQo+ICsKPiDCoCDCoCDCoCDCoHJldHVybiBJRUVFODAyMTFf
+VFhfT0s7Cj4gwqB9Cj4KCkkgc2VlIG9ubHkgb25lIHBvc3NpYmxlIHJlZ3Jlc3Npb24gd2l0aCB0
+aGlzIHBhdGNoIGFuZCB0aGF0IGlzIHRoYXQgaXQKc2VlbXMgeW91IGZvcmdvdCB0byB1cGRhdGUg
+dGhlIG1kZXYtPnRyYW5zX3N0YXJ0IGluIHRoZSBuZXcgbG9vcCBvbgplYWNoIGZyYWdtZW50LgoK
+QXMgZmFyIGFzIEkgY2FuIHRlbGwgdGhpcyB3b3VsZCBvbmx5IGludHJvZHVjZSBhIHJlZ3Jlc3Np
+b24gd2l0aCBpZgpzb21lb25lIGlzIHVzaW5nIGEgbmV0ZGV2IHdhdGNoZG9nIG9uIHRoZSBtZGV2
+LCBpZiB3ZSBkb24ndCBjYXJlIGFib3V0CnRoYXQgYW5kIEknbSBub3QgbWlzc2luZyBhbnkgb3Ro
+ZXIgY2FzZSB3aGVyZSB0aGlzIGNvdWxkIGJlIGFmZmVjdGVkCndlIG1pZ2h0IGFzIHdlbGwgcmVt
+b3ZlIHRoYXQgZmlyc3QgdXBkYXRlIGFzIGF0IGxlYXN0IGZvciBtYWM4MDIxMSBpdHMKY29tcGxl
+dGVseSB1bnRvdWNoZWQuCgpPdGhlciB0aGFuIHRoYXQ6CgpSZXZpZXdlZC1ieTogTHVpcyBSLiBS
+b2RyaWd1ZXogPGxyb2RyaWd1ZXpAYXRoZXJvcy5jb20+CgogIEx1aXMK
