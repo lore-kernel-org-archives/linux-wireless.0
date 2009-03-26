@@ -1,82 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35020 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251AbZCYUSI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 16:18:08 -0400
-Subject: Re: [PATCH v4 0/5] mac80211: beacon filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <871vsl1i2q.fsf@litku.valot.fi> (sfid-20090325_210903_864239_7426B7FC)
-References: <20090322195619.26460.48292.stgit@tikku>
-	 <1237900276.4320.86.camel@johannes.local> <87iqly0ydm.fsf@litku.valot.fi>
-	 <1237973445.4320.135.camel@johannes.local> <87eiwl1jo2.fsf@litku.valot.fi>
-	 <1238010031.4320.164.camel@johannes.local>  <871vsl1i2q.fsf@litku.valot.fi>
-	 (sfid-20090325_210903_864239_7426B7FC)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CeIYObuReMDebsobAFfm"
-Date: Wed, 25 Mar 2009 21:17:28 +0100
-Message-Id: <1238012248.4320.172.camel@johannes.local> (sfid-20090325_211814_896078_74AAB21D)
+Received: from mga03.intel.com ([143.182.124.21]:62384 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755094AbZCZUcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 16:32:12 -0400
+Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
+From: reinette chatre <reinette.chatre@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <200903262049.18049.helmut.schaa@gmail.com>
+References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
+	 <200903262011.50118.helmut.schaa@gmail.com>
+	 <1238095859.25000.54.camel@rc-desk>
+	 <200903262049.18049.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 26 Mar 2009 13:37:27 -0700
+Message-Id: <1238099847.25000.63.camel@rc-desk> (sfid-20090326_213215_574214_46732F54)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-CeIYObuReMDebsobAFfm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-03-25 at 22:08 +0200, Kalle Valo wrote:
-
-> >> Do we have any knowledge how different hardware support beacon
-> >> checksumming? I only know how stlc45xx does it.
-> >
-> > Not really... how about wl12xx?
-
-> Name:       ACX_BEACON_FILTER_TABLE
+On Thu, 2009-03-26 at 12:49 -0700, Helmut Schaa wrote:
+> Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> > On Thu, 2009-03-26 at 12:11 -0700, Helmut Schaa wrote:
+> > > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb reinette chatre:
+> > > > On Thu, 2009-03-26 at 10:50 -0700, Helmut Schaa wrote:
+> > > > > Hi,
+> > > > >=20
+> > > > > Am Donnerstag, 26. M=C3=A4rz 2009 schrieb Reinette Chatre:
+> > > > > > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > > > >=20
+> > > > > > Remove STATUS_ALIVE checking when HW RF KILL disabled, the =
+bit get
+> > > > > > clear in __iwl_down() function; the additional checking wil=
+l fail and
+> > > > > > cause RF can not be turn back on.
+> > > > >=20
+> > > > > Are you sure this is needed? I'd argue we should only restart=
+ the adapter
+> > > > > if it was alive when it got rf_killed. In case the adapter wa=
+s rf_killed
+> > > > > while the interface was down I don't think we want to restart=
+ the adapter
+> > > > > immediately but first when the interface is taken up again.
+> > > >=20
+> > > > We also need to consider if a suspend/resume happens in the mid=
+dle.
+> > > > Without the patch, if you enable rfkill, suspend, resume, disab=
+le
+> > > > rfkill, then your interface cannot be brought up.
+> > >=20
+> > > I guess you refer to the situation where the interface is up, rig=
+ht?
+> > > Something like:
+> > >=20
+> > > - ifconfig wlan0 up
+> > > - press killswitch (kill wireless)
+> > > - suspend
+> > > - resume
+> > > - press killswitch (enable wireless)
+> > > - here the interface should still be up
+> > >=20
+> > > As the interface is/was up, mac80211's resume handler should rest=
+art the
+> > > adapter and thus we wouldn't need to restart the adapter in the
+> > > rfkill-handler, or did I miss anything?
+> >=20
+> > Yes, the resume handler will start the adapter (call "start"), but =
+the
+> > actions done by it will exit early because of rfkill being enabled.=
+ The
+> > STATUS_ALIVE bit will thus not be set after this is completed. Late=
+r,
+> > when user disables rfkill, we want to restart the adapter to get al=
+l
+> > this corrected, but this call currently fails because of this check=
+=2E
 >=20
-> Desc: This information element configures beacon filtering handling
->       for the set of information elements. An information element in a
->       beacon can be set to be: ignored (never compared, and changes
->       will not cause beacon transfer), checked (compared, and
->       transferred in case of a change), or transferred (transferred to
->       the host for each appearance or disappearance).
+> Got it, thanks for the explanation.
 >=20
->       The table contains all information elements that are subject to
->       monitoring for host transfer.
->=20
->       All information elements that are not in the table should be
->       ignored for monitoring.
+> Nevertheless, removing the check will result in restarting the adapte=
+r even
+> if the interface is down. So, I agree that we have a problem here but=
+ I do
+> not agree with the solution ;)
 
-Seems easy enough... Only concern is vendor IEs since we cannot ignore
-them (WMM) but others might change frequently... oh well.
+I agree that it is not efficient ... but it seems harmless.
 
-johannes
+> Maybe taking the interface up (not only pseudo-up, as done currently)=
+ should
+> be allowed even if wireless is killed? We already allow the interface=
+ to
+> stay up when the adapter gets rfkilled.
 
---=-CeIYObuReMDebsobAFfm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Knowing that rfkill is enabled enables us to save power by not bringing
+everything up.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Reinette
 
-iQIcBAABAgAGBQJJypFSAAoJEKVg1VMiehFYoT4QAIq8jreGy7AzW9hR0FPCUVeQ
-ulNB276lP5wXI/1FRXASDzG96fJ+mJOFVaINYWvrhrQhkYzvAlOl9nDyJemjneqx
-QQWjUnfzL9KGY2td0K+hVwyrQ55kmFDWl3p0qIKFqQsIDfc2yZBSMDJOmj5+oF2Z
-8LBoBDBf3dOBgubjyZJsAVbxkjfu5gq77AnJn0DX1Z7qkl1wqwF9IEB7beNNuMuM
-ujlMfADICBIbghSxsSx8T+EcZENq0EYcXVD6syA6OGm2QQBijBOytGsqRaL4H4hV
-uMIrHj4GuSCNl0MdQmGDU0GvFEdbOGUIr0Cx9OgwAAbSolEgPUQ/yVRLf7AyaP+o
-0LMM12L2V0hzgcrN/WDTEs4v76NS/Jb9ykAT4K6/iDbArbqxlp4g5xAzWAPFrxET
-8t2Kaz8DRdMGg8PDo6wVxHyRTvSAv0OIecCYsrUFvBfNRphuprrX2z9UcYYjYBTd
-D0Cg7aHDQRPizBbxdh8TyLPoEEdRAzhpNz/QFTjim8JG5wbLo33RTHT0Ts3LVzct
-Oab65LXBrJ3kYsmRYvRgU/9iyp1O1cXsruHUSYEpB/Gl4461sxbN4Ymjgn8HQ02j
-A8cIphcNTdMyPx4ZTpDFP0lyc0D8afgVdu4P0L+tsG0V9Zxg5ZQwfN7oSYxHu+0/
-ljjXFVfJrnTnCsz8dq6c
-=sFs9
------END PGP SIGNATURE-----
-
---=-CeIYObuReMDebsobAFfm--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
