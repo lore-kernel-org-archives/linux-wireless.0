@@ -1,116 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f167.google.com ([209.85.217.167]:41790 "EHLO
-	mail-gx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754116AbZCMDbH convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:40649 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756289AbZCZSVJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 23:31:07 -0400
-Received: by gxk11 with SMTP id 11so2582996gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 20:31:04 -0700 (PDT)
+	Thu, 26 Mar 2009 14:21:09 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so202516eyf.37
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 11:21:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1236742805.6267.9.camel@rainbow>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com>
-	 <1236211493.6612.90.camel@rc-desk> <1236297052.6153.4.camel@rainbow>
-	 <1236299085.6612.229.camel@rc-desk>
-	 <1236312734.19328.37.camel@rainbow> <1236317982.12430.9.camel@rc-desk>
-	 <1236649234.6685.9.camel@rainbow> <1236661466.15923.53.camel@rc-desk>
-	 <1236742805.6267.9.camel@rainbow>
-Date: Thu, 12 Mar 2009 23:31:04 -0400
-Message-ID: <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com> (sfid-20090313_043119_027055_6C06990B)
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: Jason Andryuk <jandryuk@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1237995293.18896.12.camel@localhost.localdomain>
+References: <c1e027750903250041qfb28bb5g69bc219da57736c0@mail.gmail.com>
+	 <c1e027750903250043n1e6bfffdnd6a6a3889a1f68d6@mail.gmail.com>
+	 <1237995293.18896.12.camel@localhost.localdomain>
+Date: Thu, 26 Mar 2009 23:51:05 +0530
+Message-ID: <c1e027750903261121i2958b705ldeb33eb036a4ebeb@mail.gmail.com> (sfid-20090326_192114_120034_A58E79D6)
+Subject: Re: Scan in compat-wireless
+From: Venkat Ch <venkatch@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2009 at 11:40 PM, Jason Andryuk <jandryuk@gmail.com> wr=
-ote:
->> You log below has a new error (similar to what you note in your next
->> email). "Unsupported interface type 515". This is very strange and
->> really looks like some corruption as this value is initialized with =
-a
->> macro during probe. Could you enable mac and info debugging also (ad=
-d
->> 0x3 to your current debug flags)? This code has also changed a bit s=
-ince
->> commit bb64785ad94d575fe4f5f9e69f4f6c0b24e9905d.
->>
->> You can also put a dump_stack() in iwl3945_connection_init_rx_config=
- to
->> see where the call comes from and then trace the value of mode to se=
+Hi Dan,
+=A0=A0 You have a valid point. Please see my reply inline.
+
+On Wed, Mar 25, 2009 at 9:04 PM, Dan Williams <dcbw@redhat.com> wrote:
+>
+> On Wed, 2009-03-25 at 13:13 +0530, Venkat Ch wrote:
+> > Hi All,
+> >
+> > =A0Last week I have downloaded compat-wireless driver. I have insta=
+lled
+> > the same into my laptop which has AR242x based WiFi card. Though th=
 e
->> where it is set to 515 ... it is supposed to be 2
->> (NL80211_IFTYPE_STATION).
+> > drivers are loaded correctly, the STA (my laptop) did not associate
+> > with the nearby AP. This used to happen well with madwifi driver.
+> >
+> > With my past experience with the details of madwifi driver, I have
+> > browsed through the code base of compat-wireless driver. I observed
+> > that with madwifi driver when the device is made up, the scan proce=
+ss
+> > is kicked off. Where as the same is not happening in compat-wireles=
+s.
+> > Does not the scan process need to be kicked off at the end of
+> > ieee80211_open (net/mac80211/iface.c)?
 >
-> See logs below. =A0I ran with debug=3D0x40003. =A0This is on commit
-> "ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f iwl3945: sync tx queue data
-> structure with iwlagn" with my patches to make it somewhat usable.
+> A scan gets kicked off when you set either SSID or BSSID using iw or
+> iwconfig, so that the card has some idea of what you'd like to associ=
+ate
+> with. =A0Kind of pointless to scan on dev open when the card doesn't =
+have
+> any idea of what you want to associate to. =A0Might as well defer tha=
+t
+> until you _have_ told the card what to do.
+
+I see two issues with this policy.=A0 Sorry if they are already
+discussed in the mailing list. I have searched in Google and have not
+seen any discussion on these.
+
+1.=A0 It effects mobility. Every time the user moves to a new network
+the SSID or BSS needs to be set manually.
+2.=A0 On a similar note the upcoming standards 802.11u and 802.21 need
+proactive scanning, which is not supported with the current
+implementation.
+
+I have verified this=A0 with a small test in our WLAN. It is not exactl=
+y
+a mobility scenario. But can be considered as a sub case of mobility
+requirement.
+
+1. Set the essid to that of the AP is using. (iwconfig wlan0 ssid
+"blllllll"). The STA is associated with the AP now.
+2. Switch-off AP for few minutes until the=A0 link between STA and AP i=
+s
+broken. (Verify this using iwconfig command)
+3. Switch on the AP. The STA wont associate with the AP until you
+specify, again the SSID or BSSID of the AP at the STA using iwconfig
+command.
+
+Thanks & Regards
+Venkat
+
+
 >
->> I am finding it hard to keep track of things as what works and what =
-does
->> not work appears to shift. I did install a 64bit system in the hopes=
- of
->> reproducing your issue but could not with a basic open connect. How =
-do
->> you connect to the AP? Please provide details that you think will en=
-able
->> me to reproduce.
+> > Also for ath5k driver, both the hw_scan and sw_scan_start are not
+> > defined. These two functions are used in ieee80211_start_scan to st=
+art
+> > the scan process (net/mac80211/scan.c). I observed that the scan
+> > process is not started because the above two functions are not
+> > defined.
 >
-> The problem is that as I try older commits to find which one introduc=
-ed
-> the original error, I find other problems that need to be solved.
-> Hopefully I have finally tracked down the commit,
-> "ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f iwl3945: sync tx queue data
-> structure with iwlagn", that introduced the Microcode SW errors.
+> I believe only Intel Wifi Link cards implement hardware scanning. =A0=
+The
+> rest of the cards use the mac80211 software scan functionality, which
+> works just fine.
+>
+> Dan
+>
+>
 
-Looking at ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f, I found the call
-to iwl_reset_qos corrupts priv->iw_mode.  It is 2 before the call and
-515 after.
 
-I dumped priv for 32 bytes starting at &priv->last_beacon_time and saw =
-this.
-iwl data: 00000000: 00 0f 00 ff 03 02 00 00 00 0f 00 ff 03 02 00 00
-=2E...............
-iwl data: 00000010: 00 0f 00 ff 03 02 00 00 00 0f 00 ff 03 02 00 00
-=2E...............
 
-515 =3D 0x0203 =3D 03 02 little endian
-
-We have
-
-struct iwl_ac_qos {
-        __le16 cw_min;
-        __le16 cw_max;
-        u8 aifsn;
-        u8 reserved1;
-        __le16 edca_txop;
-} __attribute__ ((packed));
-
-and
-
-	priv->qos_data.def_qos_parm.ac[0].cw_min =3D cpu_to_le16(cw_min);
-	priv->qos_data.def_qos_parm.ac[0].cw_max =3D cpu_to_le16(cw_max);
-        priv->qos_data.def_qos_parm.ac[0].aifsn =3D aifs;
-        priv->qos_data.def_qos_parm.ac[0].edca_txop =3D 0;
-        priv->qos_data.def_qos_parm.ac[0].reserved1 =3D 0;
-
-and
-	u16 cw_min =3D 15;      // 0x000f
-        u16 cw_max =3D 1023; // 0x03ff
-        u8 aifs =3D 2;                //0x02
-
-Which corresponds to the dump and what is showing up in iw_mode.
-
-I don't know why things are going wrong though.
-
-One problem I see is the check of staging_rxon instead of
-staging39_rxon in iwl_reset_qos.
-(priv->staging_rxon.flags & RXON_FLG_SHORT_SLOT_MSK) =3D=3D 0)
-
-Jason
+--
+Peace is its own reward
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
