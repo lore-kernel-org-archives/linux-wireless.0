@@ -1,122 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58623 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbZCXMdA (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:59972 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838AbZCZBrJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 08:33:00 -0400
-Subject: wireless powersaving (in NM?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BGWLjdMKNdckc0BO2mO7"
-Date: Tue, 24 Mar 2009 11:39:09 +0100
-Message-Id: <1237891149.4320.73.camel@johannes.local> (sfid-20090324_133306_274219_3B7517AB)
-Mime-Version: 1.0
+	Wed, 25 Mar 2009 21:47:09 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so96331eyf.37
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 18:47:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1238020625.15025.15.camel@mj>
+References: <1238020625.15025.15.camel@mj>
+Date: Thu, 26 Mar 2009 03:47:04 +0200
+Message-ID: <40f31dec0903251847p260446bfi22a1b4c587dc41cc@mail.gmail.com> (sfid-20090326_024714_031772_664CC13B)
+Subject: Re: [ath5k-devel] [BISECTED] AR5414 fails to scan after "ath5k:
+	Update reset code"
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: "ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/3/26 Pavel Roskin <proski@gnu.org>:
+> Hello!
+>
+> AR5414 fails to scan most of the time starting with the revision
+> 94f2e0d6234991d0c10d458f6f378934efbdf6d6 "ath5k: Update reset code"
+>
+> I have about 18 APs in the range. =C2=A0With the latest kernel, the s=
+can
+> results are usually empty. =C2=A0I tried reverting parts of the patch=
+, as it
+> cannot be cleanly reverted on top of wireless-testing, and I've seen
+> scan results with all APs occasionally, but most of the time the scan
+> results would be empty.
+>
+> With the last working revision, bbcce7389a7288c48d96d13bbf521e901236d=
+287
+> "ath5k: Update initvals", scanning gives all APs in range every time.
+>
+> The chip is reported by the driver as:
+> ath5k phy0: Atheros AR5414 chip found (MAC: 0xa3, PHY: 0x61)
+>
+> $ lspci -vnn -s 0000:0b:00.0
+> 0b:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR242=
+x 802.11abg Wireless PCI Express Adapter [168c:001c] (rev 01)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Subsystem: Apple Computer Inc. Device [106=
+b:0086]
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Flags: bus master, fast devsel, latency 0,=
+ IRQ 16
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Memory at fe8f0000 (64-bit, non-prefetchab=
+le) [size=3D64K]
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Capabilities: [40] Power Management versio=
+n 2
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Capabilities: [50] Message Signalled Inter=
+rupts: Mask- 64bit- Count=3D1/1 Enable-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Capabilities: [60] Express Legacy Endpoint=
+, MSI 00
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Capabilities: [90] MSI-X: Enable- Mask- Ta=
+bSize=3D1
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Capabilities: [100] Advanced Error Reporti=
+ng
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UESta: =C2=A0D=
+LP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- =
+UnsupReq- ACSVoil-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UEMsk: =C2=A0D=
+LP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- =
+UnsupReq- ACSVoil-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UESvrt: DLP+ S=
+DES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- Unsup=
+Req- ACSVoil-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0CESta: =C2=A0R=
+xErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0CESta: =C2=A0R=
+xErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0AERCap: First =
+Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Capabilities: [140] Virtual Channel <?>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Kernel driver in use: ath5k
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Kernel modules: ath_pci, ath5k
+>
+> It's a PCI Express minicard. =C2=A0The kernel architecture is x86_64.
+>
+> --
+> Regards,
+> Pavel Roskin
 
---=-BGWLjdMKNdckc0BO2mO7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's weird, I've tested this with my 5413 and it works just fine. It
+seems that 5424 (pci-e version of 5413) still has some issues. Have
+you tried monitor mode ?
 
-Hi,
-
-We're looking into turning on powersaving by default at least when on
-battery power, and I think that it needs to be done in userspace, simply
-by calling the equivalent of "iwconfig wlan0 power on".
-
-iwlwifi currently supports 5 or 6 power saving levels, and some people
-think we should allow those to be exposed to "iwconfig wlan0 power
-saving <N>", but as I've said before I don't see how the user can
-possibly make an informed choice. Essentially it seems to me that the
-best way for the user to determine the level would be to roll a dice and
-see if applications still work as expected. It is also specific to a
-single driver, and other drivers would expose similar values with
-completely different semantics -- in one word: useless. Yes, Windows
-exposes this, but that doesn't mean it's meaningful. Quite the contrary,
-in fact, many (most? all?) of the things Windows exposes related to
-power management are absolutely _not_ meaningful and hurt overall
-usability [1].
-
-Therefore, I think the "power saving level" needs to be determined by
-pm_qos. The design of how to do that, however, is still up in the air.
-One question, for example, is whether the driver should be adjusting the
-power savings parameters, with mac80211 only asking for it to be enabled
-or disabled. I'm thinking that the driver is in the best position to do
-so since various drivers have various parameters that can be tweaked.
-This would depend on pm_qos notifications being used in the driver, when
-power saving is enabled by mac80211.
-
-The alternative would be to expose all the possible parameters and/or
-levels to mac80211 and have it make choices based on pm_qos, but it
-seems that this interface would rapidly become extremely complex,
-fragile and buggy.
-
-Kalle, there's a related question here -- what's the value of exposing
-the sleep timeout to users? It seems to be quite unnecessary, since you
-seem to be using a fixed value of 500ms anyway. Can we remove that,
-leaving wext only with turning on/off power saving? [2][3]
-
-Ultimately, power saving mode should always be enabled unless the user
-specifically requires it being turned off (why?), regardless of AC power
-status; there's no reason not to do that if we integrate it into the
-entire system well enough so that things "just work". But that requires
-applications to change to register their network latency/throughput
-requirements.
-
-However, by putting the burden onto drivers, drivers can choose a
-conservative power saving level when no application has registered its
-pm_qos requirements, and once applications start using the it deeper
-power levels can be chosen as appropriate. This still requires some
-userspace to turn on power saving to start with, which I think would be
-appropriately placed in NM (or connman, of course).
-
-Comments?
-
-johannes
-
-
-[1] I was recently bitten by that when giving a presentation, and then
-forgetting to go out of presentation mode -- this left my laptop without
-a screensaver lock for far too long
-
-[2] which is a reasonable setting, imho, since you may well want to
-disable it under some circumstances, but I cannot see users making an
-informed choice about any of the many parameters -- of course we also
-need to start keeping track of this per virtual interface rather than
-globally so that adding a WDS interface for instance turns off power
-saving
-
-[3] since only one out-of-tree driver is allowing it to be used, it
-wouldn't even be a "regression" right now
-
-
---=-BGWLjdMKNdckc0BO2mO7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJyLhHAAoJEKVg1VMiehFY654P/iBzjbOswcwXtLtmelLOkmYx
-AdebAWUf9hXn+c7ZmwNQfPJf8mHyl+NMJMjgBiE6Rr0GvrK823W4f2Qy0umZM9uC
-t3VZsNiwZbAltn8serjujfQR4oEmQUKPzpLaDY5f2C6mqNZv+zGRlbk2H+frhulU
-z2BMAoxU16mtGH/Yo+cfxd7mYnidW1eCsXtcfhXhrQchqkt8gjThPe/72R3bHtdG
-FfPSAJgKz4IOHm3GGiPdIyoG81o71i8bMXntsya6j/w2vJelMvKtx6n41eS/c5hq
-4ZAJ8CWzBI+ro1TetFoO0LlKa0W2xQ4lMGUAaGShNzYrh3sWxpiWLPFB014CK43+
-TJv5KIccWZxxqB1Q3sgWHgDycMr/BubsB8OeD6LGJ6zVg8l5XjzEV0DRaAnEonr+
-Oue+52AlvBM1Xzq10IBW1DdK6h135tXEhoBYN0Nid4zR2qaPgZZioQsKPonHXcQK
-1arx9jRyggUjeDGLfkdekqekyfZOK33N59nqjzaDdinFwruUPT25wr5SDi5+sqPX
-pMktNz2esPkGf3ZbvE2NjjfcWmYpN2MMeTM/z7vV2NyReLWjWijNS/xqg9fVBBrZ
-8C6ZI/gPZh8b8zhfk7fig/6pRdirWh/gFAuCGA2YuPyj8ARfFV0Kp14AdviFzR7P
-l1YuyfgChJD3rDSz1Bsc
-=q90G
------END PGP SIGNATURE-----
-
---=-BGWLjdMKNdckc0BO2mO7--
-
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
