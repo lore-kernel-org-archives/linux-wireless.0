@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44925 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:50683 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668AbZCVKjh (ORCPT
+	with ESMTP id S1755165AbZCZIy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 06:39:37 -0400
-Subject: Re: [RFC] staging wireless crap: tell people not to work on it
+	Thu, 26 Mar 2009 04:54:57 -0400
+Subject: Re: wireless powersaving (in NM?)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <87ocvtg83i.fsf@litku.valot.fi> (sfid-20090322_113411_129130_27C4CA24)
-References: <1237714803.5100.770.camel@johannes.local>
-	 <87ocvtg83i.fsf@litku.valot.fi> (sfid-20090322_113411_129130_27C4CA24)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JaOPlzxVZsggb/G1oZZ5"
-Date: Sun, 22 Mar 2009 11:39:33 +0100
-Message-Id: <1237718373.19647.0.camel@johannes.local> (sfid-20090322_113945_535092_AC43C72C)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Matthew Garrett <mjg@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <43e72e890903260139k29d9e9a0ub418cdfbaef03418@mail.gmail.com> (sfid-20090326_093918_011896_56866168)
+References: <1237891149.4320.73.camel@johannes.local>
+	 <1237910398.9082.7.camel@localhost.localdomain>
+	 <1237979070.4320.156.camel@johannes.local>
+	 <1237995072.18896.9.camel@localhost.localdomain>
+	 <1237996137.4320.161.camel@johannes.local>
+	 <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com>
+	 <1238055060.4331.1.camel@johannes.local>
+	 <43e72e890903260139k29d9e9a0ub418cdfbaef03418@mail.gmail.com>
+	 (sfid-20090326_093918_011896_56866168)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-qbbx1pLMY3Oegggk0vBp"
+Date: Thu, 26 Mar 2009 09:54:21 +0100
+Message-Id: <1238057661.4331.16.camel@johannes.local> (sfid-20090326_095517_535881_28019CD0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-JaOPlzxVZsggb/G1oZZ5
+--=-qbbx1pLMY3Oegggk0vBp
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-03-22 at 12:33 +0200, Kalle Valo wrote:
+On Thu, 2009-03-26 at 01:39 -0700, Luis R. Rodriguez wrote:
 
-> > --- wireless-testing.orig/drivers/staging/at76_usb/TODO	2009-03-22 10:3=
-1:37.000000000 +0100
-> > +++ wireless-testing/drivers/staging/at76_usb/TODO	2009-03-22 10:31:37.=
-000000000 +0100
-> > @@ -1,2 +1,2 @@
-> > -rewrite the driver to use the proper in-kernel wireless stack
-> > -instead of using its own.
-> > +Work on at76c50x-usb instead, possibly using
-> > +this driver as a reference.
+> > We talked about that briefly yesterday -- it's not very easy to
+> > determine this because of the various ways things break:
+> >
+> >  * one AP sets the broadcast/multicast bit one beacon too late (after
+> >   having already sent the frames)
+> >  * one AP doesn't buffer frames at all
+> >  * one AP doesn't respond to PS-poll frames
 >=20
-> I already sent a similar patch to Greg:
->=20
-> http://kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-05-sta=
-ging/staging-at76_usb-mention-mac80211-port-in-todo-file.patch
->=20
-> But there's no mention of at76c50x-usb. I'll send an updated version
-> to him.
+> It sounds like all 3 things can be tested for.
 
-Ok, I'll drop that bit.
-
-> (I hope this mail manages to go to the linux-wireless list. All my
-> emails from yesterday got lost for some strange reason.)
-
-It did! :)
+Yes, but how complicated does it get, and is it worth it to invest that
+much work for these (hopefully few) ancient APs?
 
 johannes
 
---=-JaOPlzxVZsggb/G1oZZ5
+--=-qbbx1pLMY3Oegggk0vBp
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJxhViAAoJEKVg1VMiehFYZIAP/219B4iRzMCQ0Rjj8vf86Kwh
-ui522ROpjGQ3vXFq7LMq98MnXYyEn60PkOAOIyDEtiETgWUuhUqYAR6eJTZMIPA6
-xFNrbFIP1v5M5TFjaV7NYC6e7nxGoGFW/ziZryt+pEajdj7KTrA6yFYsbmzZkI2l
-WqSDKK/x5dAgC0qrnvHGI1GtcKnKeauNWRo2dh/vf4fCfuCcxbG4ItucrAy1Hjv2
-btCJFLWl5aEc/ZzGgHgieK2zwLnI+MlmnGLzr3JbohriNkH/h+jXYgRslRgjRoLl
-RRh8FDHvglxUrcwoGfBsJ8m5q9jW2o5gtd75K++c0tLOCS7Je+FIxdHes0oMrd8/
-39wpVbDPoMxJDbSkv02ge5w36w039IDHQKodHwR4endkveCX+GVpsx/rD1RotwG9
-PyngJDMb/h2suZlriDzqca7sk3MVZ9R4OZ9Bi/aLqSbhjNnKLkrHyrxTCRg10LtS
-cI92au/gA5xFSsNqQ1y/RMQ9bmwsEIVff2w2CNN0MTugrtb69HNFFR/sggZMBSr+
-P9UjJRNni0yUDgGmECtEaUg9rN7kX44HwzCxuyfyYkLMXfCWjMvaT8hFwKyRGhdV
-HD0C3ZD1akb4LqOcSDamsbDVq+vVyDQg078fMfcPglaNu6oZXDzQ9Pl6raKEVn6R
-uy/yoson7ypCncOyYv0v
-=hWew
+iQIcBAABAgAGBQJJy0K6AAoJEKVg1VMiehFYcvoQAJ7hc4N92JRIUjOVZILq6zXr
+kLa0iHl0UiDBqdj+1wB0UBC+GsRItZhHEGg0y6p1gbPg+U7WTQq1Hf3q9z2YtdgP
+q672ZDbUIl+Qg3cdODzNhRxEHGQMNxRGpg1rs+BnGrj/4uD/AhdDzMbOj4Xy1Xmk
+PkrnHDAXuiWe8/6i5c6MyWB1J+mKuMdxHEnQxltMWDy/bWCKhUx/pI65tZHheuFN
+W7VzfBd/Wc/5sAitkTiX/rUFyBb/k8ydbgefY+Pnpsx9tnYFNhG90Z8LP9SkTHqp
+SCtRZd4QgfomJpb/AqoGaZggeuVHbf0P3UbjKPdvgrOqNmS9QeCIxz1U5XFQzHSe
+IrU9pxxjnwwKCFACRJRwwrexlTx6lFl78e9TdvM+V4iuNpuLsbIuPOykuIIuJh5n
+3ifENYwG4e0uGCbSZvtef2ahUvHUjjINdfLzPUr5dmAnTSzk1/6fmdazmV0KemlP
+YFKuh2I8gMGOFiTx/t0He2XbeB/woy1Htrc7Ynb/iqMgxukW6ABNPKZwpzAjPCfm
+Ns4Au5v9VMkyunseILKvrD7sxZttg+oZhWH35r63Ky2SOdYwR7AHo3zWrkb8dqjB
+ND9M7G4ycZQedrJcO6P3ToHux8yBEh1jRJ8ZYlG0YYOU2fApYIepm8jxbPaDZf1t
+8Bi3m5M9ub4uWx+tiKQG
+=s5Vo
 -----END PGP SIGNATURE-----
 
---=-JaOPlzxVZsggb/G1oZZ5--
+--=-qbbx1pLMY3Oegggk0vBp--
 
