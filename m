@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4704 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756169AbZC2POO (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:26278 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbZCZET3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 11:14:14 -0400
-Date: Sun, 29 Mar 2009 11:14:01 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090329151401.GA26510@hash.localnet> (sfid-20090329_171418_243064_F8BC4824)
-References: <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com> <20090310004344.GA23466@hash.localnet> <20090312061047.GA13401@silver.sucs.org> <20090313095213.GA14250@silver.sucs.org> <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org>
+	Thu, 26 Mar 2009 00:19:29 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so443383wff.4
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 21:19:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090329142432.GA15578@sucs.org>
+In-Reply-To: <e13a36b30903252008i72caad77y32e31f625b7cb842@mail.gmail.com>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
+	<200903260337.37783.kel@otaku42.de> <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
+	<200903260442.36251.kel@otaku42.de> <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
+	<e13a36b30903252008i72caad77y32e31f625b7cb842@mail.gmail.com>
+Date: Wed, 25 Mar 2009 21:19:12 -0700
+Message-ID: <43e72e890903252119r56043c93h954ad1cdcc69ad33@mail.gmail.com> (sfid-20090326_051932_841615_F97C3F3E)
+Subject: Re: [renamed] Debian crda?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: debian-devel@lists.debian.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 29, 2009 at 03:24:32PM +0100, Sitsofe Wheeler wrote:
-> I've been away travelling for the past week and I move house on the 1st
-> April (which will make testing this much harder from then on) but I'll
-> try to get one final test in before the move.
-> 
-> Do you need an ftrace in addition to dmesg for this? If so is it better
-> to leave ieee calls out of the ftrace?
+On Wed, Mar 25, 2009 at 8:08 PM, Paul Wise <pabs@debian.org> wrote:
+> On Thu, Mar 26, 2009 at 4:03 AM, Paul Wise <pabs@debian.org> wrote:
+>
+>> When we do, just adding a second public key to the CRDA =C2=A0pubkey=
+s dir
+>> and using the corresponding private key (from outside the package)
+>> during the build process of wireless-regdb would be just fine. This
+>> would mean the maintainer of crda would also have to be the
+>> wireless-regdb maintainer. I assume the wireless-regdb is
+>> architecture-independent so this would work because the buildds do n=
+ot
+>> build such packages.
+>
+> Brainwave: no need to add a second public key to CRDA itself, the
+> wireless-regdb could install the public key corresponding to the
+> private key it was built with.
 
-No, thanks - the debug output will be plenty verbose already and should
-tell everything we need to know.
+Can you elaborate on what you mean? Do you mean for wireless-regdb to
+put the actual pubkey into the users' system somewhere? Otherwise not
+sure what you mean.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+>> It is possible for users to add more public keys to the CRDA =C2=A0p=
+ubkeys
+>> dir and build their own wireless-regdb using their own private key.
+>
+> The above simplification makes this much easier.
 
+Not sure what you mean, but the idea with the pubkeys directory when
+building CRDA is it lets you add more keys to CRDA so it can use
+regulatory.bin from multiple trusted parties. A small example is a
+distribution can decide to use their own pubkey and also leave John's
+in the pubkeys/ directory. This allow the user to then install and
+actually use the distribution's release of wireless-regdb while also
+enabling the users to upgrade to John's latest regulatory.bin
+themselves whenever they feel like it either manually or using the
+upstream package. Of course if the distribution keeps up with these
+then there is no need for the user to be doing any of this.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
