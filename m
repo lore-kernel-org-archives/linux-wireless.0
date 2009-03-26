@@ -1,39 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:45076 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753585AbZCQNcZ (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:27168 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033AbZCZE7l convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 09:32:25 -0400
-Received: by ti-out-0910.google.com with SMTP id i7so1630tid.23
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 06:32:22 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 26 Mar 2009 00:59:41 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so425846rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 21:59:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18879.42683.919616.530584@gargle.gargle.HOWL> (sfid-20090317_143228_562038_E4513CEE)
-Date: Tue, 17 Mar 2009 19:03:47 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@Atheros.com
-Subject: Re: Missing commits in wireless-testing
-In-Reply-To: <20090317130228.GA3549@tuxdriver.com>
-References: <18879.15297.344575.231076@gargle.gargle.HOWL>
-	<20090317130228.GA3549@tuxdriver.com>
+In-Reply-To: <43e72e890903252119r56043c93h954ad1cdcc69ad33@mail.gmail.com>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
+	 <200903260337.37783.kel@otaku42.de>
+	 <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
+	 <200903260442.36251.kel@otaku42.de>
+	 <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
+	 <e13a36b30903252008i72caad77y32e31f625b7cb842@mail.gmail.com>
+	 <43e72e890903252119r56043c93h954ad1cdcc69ad33@mail.gmail.com>
+Date: Thu, 26 Mar 2009 13:59:39 +0900
+Message-ID: <e13a36b30903252159r1dc5cdc7p244f39e75816f04@mail.gmail.com> (sfid-20090326_055944_646933_9EACBCE8)
+Subject: Re: [renamed] Debian crda?
+From: Paul Wise <pabs@debian.org>
+To: debian-devel@lists.debian.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> I just went through a (very painful) pseudo-rebase to 2.6.29-rc8
-> last night.  I'm fairly confident that what is there now matches what
-> was there before.
-> 
-> What commit do you think is missing?  What is it's subject line?
+On Thu, Mar 26, 2009 at 1:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> w=
+rote:
 
-The serialization patches from Luis:
+>> Brainwave: no need to add a second public key to CRDA itself, the
+>> wireless-regdb could install the public key corresponding to the
+>> private key it was built with.
+>
+> Can you elaborate on what you mean? Do you mean for wireless-regdb to
+> put the actual pubkey into the users' system somewhere? Otherwise not
+> sure what you mean.
 
-ath9k: implement IO serialization
-ath9k: AR9280 PCI devices must serialize IO as well
-ath9k: remove dummy PCI "retry timeout" fix
+The crda package would contain the default upstream public key.
 
-The code changes are present in wireless-testing, but the git SHA1 IDs
-seem to be absent.
+The wireless-regdb would ship the Debian maintainer's pubkey as
+debian/pubkeys/debian.pem in the source package and
+/lib/crda/pubkeys/debian.pub.pem (or similar) in the binary package.
 
-Sujith
+Ubuntu would add their pubkey in a similar way.
+
+When wireless-regdb is built, it would:
+
+check the sha1sum/sha256sum of db.txt (alternatively upstream could
+add a detached signature if possible to the tarball/git repo)
+
+if the db.txt is identical to the upstream one (or signed by
+upstream), ship the upstream regulatory.bin file
+
+if the db.txt has been modified:
+
+if no private key is available, generate one automatically
+
+rebuild the regulatory.bin file using the private key
+
+create the corresponding public key and install it in the package as
+/lib/crda/pubkeys/custom.pub.pem when it is not the same public key as
+one of the ones in debian/pubkeys/*.pem (avoids shipping two copies of
+the Debian pubkey)
+
+this scheme requires standard locations for the private key. I would
+suggest either ~/.debian-wireless-regdb.priv.pem or
+debian-wireless-regdb.priv.pem in the package build directory.
+
+>>> It is possible for users to add more public keys to the CRDA =C2=A0=
+pubkeys
+>>> dir and build their own wireless-regdb using their own private key.
+>>
+>> The above simplification makes this much easier.
+>
+> Not sure what you mean, but the idea with the pubkeys directory
+
+The above scheme would allow users who apt-get source wireless-regdb,
+edit db.txt, debuild, debi to automatically trust their own key, as
+well as trusting Debian's key and the upstream key.
+
+I wonder if any of this would be even remotely acceptable to
+regulatory authorities.
+
+--=20
+bye,
+pabs
+
+http://wiki.debian.org/PaulWise
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
