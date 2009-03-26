@@ -1,92 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45980 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753519AbZCLWuG (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:17966 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758669AbZCZPP1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 18:50:06 -0400
-Subject: [PATCH v2] mac80211: remove ieee80211_num_regular_queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200903122344.04238.mb@bu3sch.de>
-References: <1236852956.4175.19.camel@johannes.local>
-	 <200903122344.04238.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Thu, 12 Mar 2009 23:49:28 +0100
-Message-Id: <1236898168.25931.31.camel@johannes.local> (sfid-20090312_235009_108533_5E01DF4A)
-Mime-Version: 1.0
+	Thu, 26 Mar 2009 11:15:27 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so941165fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 08:15:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1537876674@web.de>
+References: <1537876674@web.de>
+Date: Thu, 26 Mar 2009 18:15:24 +0300
+Message-ID: <73aaf0dd0903260815i65df5bbav5c8633cab7afe691@mail.gmail.com> (sfid-20090326_161531_858500_4F3B24A8)
+Subject: Re: p54spi - mesh mode summary
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Chunkeey@web.de
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This inline is useless and actually makes the code _longer_
-rather than shorter.
+>> 3) Beaconing works, but not the way it should: like MPs don't hear e=
+ach other. Timestamps never get in sync
+>> and both MPs issue beacon during 0.1s beacon interval.
+>> I've seen it before, with stlc45xx. It shows when LMAC is set up wit=
+h LMAC_SETUP_IBSS | LMAC_SETUP_TRANSPARENT flags.
+>> If there's no LMAC_SETUP_TRANSPARENT flag in LMAC setup then timesta=
+mps get in sync.
+>
+> FYI: The TSF will always reset when a new beacon is submitted to the =
+firmware.
+> The specs talks about that.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: add parentheses mb requested, though I tend to not put them in this
-    case normally (I guess that means I have memorized this particular C
-    rule)
+I'd like to make it clear: there are timestamp field in the beacon and
+timestamp associated with the received packet. These two do not
+correlate. First gets reset at beacon submission (and why firmware
+wouldn't pick up timestamp from the submitted beacon?). The second
+only gets reset on firmware reset. And it seems to me that there's no
+way to find out, what the current value of beacon timestamp is. TSF
+reported in p54_rx_data is the second.
 
- include/net/mac80211.h |    5 -----
- net/mac80211/mlme.c    |    2 +-
- net/mac80211/tx.c      |    7 +++----
- 3 files changed, 4 insertions(+), 10 deletions(-)
+And if so, how timestamp syncing is expected to work in the following c=
+ase:
 
---- wireless-testing.orig/include/net/mac80211.h	2009-03-12 22:46:49.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2009-03-12 23:47:58.000000000 +0100
-@@ -1017,11 +1017,6 @@ static inline void SET_IEEE80211_PERM_AD
- 	memcpy(hw->wiphy->perm_addr, addr, ETH_ALEN);
- }
- 
--static inline int ieee80211_num_regular_queues(struct ieee80211_hw *hw)
--{
--	return hw->queues;
--}
--
- static inline struct ieee80211_rate *
- ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
- 		      const struct ieee80211_tx_info *c)
---- wireless-testing.orig/net/mac80211/mlme.c	2009-03-12 22:45:32.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2009-03-12 22:46:49.000000000 +0100
-@@ -1834,7 +1834,7 @@ void ieee80211_sta_setup_sdata(struct ie
- 	ifmgd->flags |= IEEE80211_STA_CREATE_IBSS |
- 		IEEE80211_STA_AUTO_BSSID_SEL |
- 		IEEE80211_STA_AUTO_CHANNEL_SEL;
--	if (ieee80211_num_regular_queues(&sdata->local->hw) >= 4)
-+	if (sdata->local->hw.queues >= 4)
- 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
- }
- 
---- wireless-testing.orig/net/mac80211/tx.c	2009-03-12 22:45:32.000000000 +0100
-+++ wireless-testing/net/mac80211/tx.c	2009-03-12 23:48:20.000000000 +0100
-@@ -1664,8 +1664,7 @@ int ieee80211_subif_start_xmit(struct sk
- 	}
- 
- 	/* receiver and we are QoS enabled, use a QoS type frame */
--	if (sta_flags & WLAN_STA_WME &&
--	    ieee80211_num_regular_queues(&local->hw) >= 4) {
-+	if ((sta_flags & WLAN_STA_WME) && local->hw.queues >= 4) {
- 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 		hdrlen += 2;
- 	}
-@@ -1800,7 +1799,7 @@ void ieee80211_clear_tx_pending(struct i
- 	int i, j;
- 	struct ieee80211_tx_stored_packet *store;
- 
--	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
-+	for (i = 0; i < local->hw.queues; i++) {
- 		if (!test_bit(i, local->queues_pending))
- 			continue;
- 		store = &local->pending_packet[i];
-@@ -1825,7 +1824,7 @@ void ieee80211_tx_pending(unsigned long 
- 	int i, ret;
- 
- 	netif_tx_lock_bh(dev);
--	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
-+	for (i = 0; i < local->hw.queues; i++) {
- 		/* Check that this queue is ok */
- 		if (__netif_subqueue_stopped(local->mdev, i) &&
- 		    !test_bit(i, local->queues_pending_run))
+<7>[  353.579189] RX beacon SA=3D00:1d:6e:9b:ee:6d
+BSSID=3D7e:2e:03:09:31:25 TSF=3D0x4aaa81 BCN=3D0x618f1f6 diff=3D-974047=
+89
+@1513
+<7>[  353.579250] wlan0: beacon TSF higher than local TSF - IBSS merge
+with BSSID 7e:2e:03:09:31:25
+
+After which stack submit new beacon which we send to LMAC, effectively
+resetting timestamp in our beacon and not affecting TSF that we would
+report on the next received frame.
+
+I see constant beacon resubmission cycle. How does it work on pci/usb p=
+54?
 
 
+>> - when LMAC was set up with LMAC_SETUP_TRANSPARENT flag firmware see=
+m to truncate last 2 bytes of the packet
+>> =A0 that it reports.
+> Heh, that's also a ISL3887 (USB 2nd gen) bug... But PCI devices are n=
+ot affected.
+> The reason "why" has probably to do with the firmware's frame alignme=
+nt code.
+> Unfortunately the firmware for (ISL3887 and SPI) is rounding "down" t=
+o 4 bytes instead of up...
+> So the FCS will be clipped... But fortunately the firmware set a bit =
+in the header that tells
+> us whenever the frames was corrupted or not (P54_HDR_FLAG_DATA_IN_FCS=
+_GOOD).
+Thank you for the explanation, it made me feel much better (:
+
+> what happens if you change p54spi_rx the following way:?
+Actually, I did this kind of thing. And it works this way.
+But I considered it a major hack, as noone acknowledged that there's a
+firmware problem:
+
+https://garage.maemo.org/pipermail/stlc45xx-devel/2009-January/000126.h=
+tml
+
+But if there's real problem in firmware, I'd consider it mere
+workaround and put it back.
+
+--=20
+Max
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
