@@ -1,135 +1,377 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55474 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751706AbZCPSaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 14:30:12 -0400
-Date: Mon, 16 Mar 2009 20:29:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alina Friedrichsen <x-alina@gmx.net>, feldmann_markus@gmx.de,
-	linux-wireless@vger.kernel.org, xose.vazquez@gmail.com
-Subject: Re: zd1211rw panuc (was: well working usb wlan stick)
-Message-ID: <20090316182953.GA19470@jm.kir.nu> (sfid-20090316_193016_816823_5F2D12E7)
-References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com> <20090316155152.276920@gmx.net> <ee588a540903160948u6b5c758ay5addec857b3cf913@mail.gmail.com> <20090316173301.92330@gmx.net> <1237225374.18086.1.camel@johannes.local> <20090316180310.206110@gmx.net> <1237227126.18086.3.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1237227126.18086.3.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:46636 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750796AbZCZUIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 16:08:21 -0400
+Subject: Re: [PATCH 2.6.29-rc8-wl] libertas: support mesh for various
+	firmware versions
+From: Dan Williams <dcbw@redhat.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <alpine.LFD.0.9999.0903250936340.24397@localhost.localdomain>
+References: <alpine.LFD.0.9999.0903250936340.24397@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 26 Mar 2009 16:06:01 -0400
+Message-Id: <1238097961.3254.0.camel@localhost.localdomain> (sfid-20090326_210825_831636_A1DB7D14)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 07:12:06PM +0100, Johannes Berg wrote:
-> On Mon, 2009-03-16 at 19:03 +0100, Alina Friedrichsen wrote:
-
-> > > Me too, were you ever able to capture it? It scrolls off my screen :(
-> > 
-> > Try "vga=9" as kernel command line option. On i386 and amd64 you
-> > should get a bigger text resolution with it.
+On Wed, 2009-03-25 at 09:51 -0700, Bing Zhao wrote:
+> rebased to fix the conflict with 6ec54de.
 > 
-> I already use vga=0x361 :)
+> 
+> From 915a19e7208524bda46872d70d6b346e06843c9f Mon Sep 17 00:00:00 2001
+> From: Bing Zhao <bzhao@marvell.com>
+> Date: Mon, 16 Mar 2009 14:52:36 -0700
+> Subject: [PATCH] libertas: support mesh for various firmware versions
+> 
+> CMD_MESH_CONFIG command ID and a couple of structure members in TxPD,
+> RxPD have been changed in firmware version 10.x.y.z and newer.
+> 
+> Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
 
-Which is nothing compared to the buffer provided with netconsole.. ;-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-I would assume this skb_under_panic is the crash you are seeing. Though,
-for some reason, I managed to get two interfaces (wlan2 and
-wlan1_rename) when I first tried to reproduce the problem be ejecting
-the device and then re-inserting it, so this could be something else,
-too, or USB on that laptop does not always behave nicely.. ;-)
+> ---
+>  drivers/net/wireless/libertas/cmd.c     |   26 +++++++++++++++++-
+>  drivers/net/wireless/libertas/defs.h    |   21 ++++++++++++++
+>  drivers/net/wireless/libertas/dev.h     |    1 +
+>  drivers/net/wireless/libertas/host.h    |    3 +-
+>  drivers/net/wireless/libertas/hostcmd.h |   28 +++++++++++++++++---
+>  drivers/net/wireless/libertas/main.c    |   44 +++++++++++++++++++------------
+>  drivers/net/wireless/libertas/rx.c      |   32 ++++++----------------
+>  drivers/net/wireless/libertas/tx.c      |    8 ++++-
+>  drivers/net/wireless/libertas/types.h   |    2 +
+>  9 files changed, 116 insertions(+), 49 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 639dd02..17d6f9c 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -119,6 +119,19 @@ int lbs_update_hw_spec(struct lbs_private *priv)
+>  	lbs_deb_cmd("GET_HW_SPEC: hardware interface 0x%x, hardware spec 0x%04x\n",
+>  		    cmd.hwifversion, cmd.version);
+>  
+> +	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
+> +	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
+> +	/* 5.110.22 have mesh command with 0xa3 command id */
+> +	/* 10.0.0.p0 FW brings in mesh config command with different id */
+> +	/* Check FW version MSB and initialize mesh_fw_ver */
+> +	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
+> +		priv->mesh_fw_ver = MESH_FW_OLD;
+> +	else if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
+> +		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK))
+> +		priv->mesh_fw_ver = MESH_FW_NEW;
+> +	else
+> +		priv->mesh_fw_ver = MESH_NONE;
+> +
+>  	/* Clamp region code to 8-bit since FW spec indicates that it should
+>  	 * only ever be 8-bit, even though the field size is 16-bit.  Some firmware
+>  	 * returns non-zero high 8 bits here.
+> @@ -1036,17 +1049,26 @@ static int __lbs_mesh_config_send(struct lbs_private *priv,
+>  				  uint16_t action, uint16_t type)
+>  {
+>  	int ret;
+> +	u16 command = CMD_MESH_CONFIG_OLD;
+>  
+>  	lbs_deb_enter(LBS_DEB_CMD);
+>  
+> -	cmd->hdr.command = cpu_to_le16(CMD_MESH_CONFIG);
+> +	/*
+> +	 * Command id is 0xac for v10 FW along with mesh interface
+> +	 * id in bits 14-13-12.
+> +	 */
+> +	if (priv->mesh_fw_ver == MESH_FW_NEW)
+> +		command = CMD_MESH_CONFIG |
+> +			  (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
+> +
+> +	cmd->hdr.command = cpu_to_le16(command);
+>  	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_mesh_config));
+>  	cmd->hdr.result = 0;
+>  
+>  	cmd->type = cpu_to_le16(type);
+>  	cmd->action = cpu_to_le16(action);
+>  
+> -	ret = lbs_cmd_with_response(priv, CMD_MESH_CONFIG, cmd);
+> +	ret = lbs_cmd_with_response(priv, command, cmd);
+>  
+>  	lbs_deb_leave(LBS_DEB_CMD);
+>  	return ret;
+> diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
+> index e8dfde3..48da157 100644
+> --- a/drivers/net/wireless/libertas/defs.h
+> +++ b/drivers/net/wireless/libertas/defs.h
+> @@ -227,6 +227,20 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
+>  #define TxPD_CONTROL_WDS_FRAME (1<<17)
+>  #define TxPD_MESH_FRAME TxPD_CONTROL_WDS_FRAME
+>  
+> +/** Mesh interface ID */
+> +#define MESH_IFACE_ID					0x0001
+> +/** Mesh id should be in bits 14-13-12 */
+> +#define MESH_IFACE_BIT_OFFSET				0x000c
+> +/** Mesh enable bit in FW capability */
+> +#define MESH_CAPINFO_ENABLE_MASK			(1<<16)
+> +
+> +/** FW definition from Marvell v5 */
+> +#define MRVL_FW_V5					(0x05)
+> +/** FW definition from Marvell v10 */
+> +#define MRVL_FW_V10					(0x0a)
+> +/** FW major revision definition */
+> +#define MRVL_FW_MAJOR_REV(x)				((x)>>24)
+> +
+>  /** RxPD status */
+>  
+>  #define MRVDRV_RXPD_STATUS_OK                0x0001
+> @@ -380,6 +394,13 @@ enum KEY_INFO_WPA {
+>  	KEY_INFO_WPA_ENABLED = 0x04
+>  };
+>  
+> +/** mesh_fw_ver */
+> +enum _mesh_fw_ver {
+> +	MESH_NONE = 0, /* MESH is not supported */
+> +	MESH_FW_OLD,   /* MESH is supported in FW V5 */
+> +	MESH_FW_NEW,   /* MESH is supported in FW V10 and newer */
+> +};
+> +
+>  /* Default values for fwt commands. */
+>  #define FWT_DEFAULT_METRIC 0
+>  #define FWT_DEFAULT_DIR 1
+> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+> index dd682c4..5f3f6b2 100644
+> --- a/drivers/net/wireless/libertas/dev.h
+> +++ b/drivers/net/wireless/libertas/dev.h
+> @@ -101,6 +101,7 @@ struct lbs_mesh_stats {
+>  /** Private structure for the MV device */
+>  struct lbs_private {
+>  	int mesh_open;
+> +	int mesh_fw_ver;
+>  	int infra_open;
+>  	int mesh_autostart_enabled;
+>  
+> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+> index d4457ef..8ff8ac9 100644
+> --- a/drivers/net/wireless/libertas/host.h
+> +++ b/drivers/net/wireless/libertas/host.h
+> @@ -83,7 +83,8 @@
+>  #define CMD_FWT_ACCESS				0x0095
+>  #define CMD_802_11_MONITOR_MODE			0x0098
+>  #define CMD_MESH_ACCESS				0x009b
+> -#define CMD_MESH_CONFIG				0x00a3
+> +#define CMD_MESH_CONFIG_OLD			0x00a3
+> +#define CMD_MESH_CONFIG				0x00ac
+>  #define	CMD_SET_BOOT2_VER			0x00a5
+>  #define CMD_802_11_BEACON_CTRL			0x00b0
+>  
+> diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+> index a899aeb..391c54a 100644
+> --- a/drivers/net/wireless/libertas/hostcmd.h
+> +++ b/drivers/net/wireless/libertas/hostcmd.h
+> @@ -13,8 +13,19 @@
+>  
+>  /* TxPD descriptor */
+>  struct txpd {
+> -	/* Current Tx packet status */
+> -	__le32 tx_status;
+> +	/* union to cope up with later FW revisions */
+> +	union {
+> +		/* Current Tx packet status */
+> +		__le32 tx_status;
+> +		struct {
+> +			/* BSS type: client, AP, etc. */
+> +			u8 bss_type;
+> +			/* BSS number */
+> +			u8 bss_num;
+> +			/* Reserved */
+> +			__le16 reserved;
+> +		} bss;
+> +	} u;
+>  	/* Tx control */
+>  	__le32 tx_control;
+>  	__le32 tx_packet_location;
+> @@ -36,8 +47,17 @@ struct txpd {
+>  
+>  /* RxPD Descriptor */
+>  struct rxpd {
+> -	/* Current Rx packet status */
+> -	__le16 status;
+> +	/* union to cope up with later FW revisions */
+> +	union {
+> +		/* Current Rx packet status */
+> +		__le16 status;
+> +		struct {
+> +			/* BSS type: client, AP, etc. */
+> +			u8 bss_type;
+> +			/* BSS number */
+> +			u8 bss_num;
+> +		} bss;
+> +	} u;
+>  
+>  	/* SNR */
+>  	u8 snr;
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index d93553f..f14d341 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -1316,8 +1316,10 @@ int lbs_start_card(struct lbs_private *priv)
+>  
+>  	lbs_update_channel(priv);
+>  
+> -	/* 5.0.16p0 is known to NOT support any mesh */
+> -	if (priv->fwrelease > 0x05001000) {
+> +	/* Check mesh FW version and appropriately send the mesh start
+> +	 * command
+> +	 */
+> +	if (priv->mesh_fw_ver == MESH_FW_OLD) {
+>  		/* Enable mesh, if supported, and work out which TLV it uses.
+>  		   0x100 + 291 is an unofficial value used in 5.110.20.pXX
+>  		   0x100 + 37 is the official value used in 5.110.21.pXX
+> @@ -1331,27 +1333,35 @@ int lbs_start_card(struct lbs_private *priv)
+>  		   It's just that 5.110.20.pXX will not have done anything
+>  		   useful */
+>  
+> -		priv->mesh_tlv = 0x100 + 291;
+> +		priv->mesh_tlv = TLV_TYPE_OLD_MESH_ID;
+>  		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+>  				    priv->curbssparams.channel)) {
+> -			priv->mesh_tlv = 0x100 + 37;
+> +			priv->mesh_tlv = TLV_TYPE_MESH_ID;
+>  			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+>  					    priv->curbssparams.channel))
+>  				priv->mesh_tlv = 0;
+>  		}
+> -		if (priv->mesh_tlv) {
+> -			lbs_add_mesh(priv);
+> -
+> -			if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
+> -				lbs_pr_err("cannot register lbs_mesh attribute\n");
+> -
+> -			/* While rtap isn't related to mesh, only mesh-enabled
+> -			 * firmware implements the rtap functionality via
+> -			 * CMD_802_11_MONITOR_MODE.
+> -			 */
+> -			if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
+> -				lbs_pr_err("cannot register lbs_rtap attribute\n");
+> -		}
+> +	} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
+> +		/* 10.0.0.pXX new firmwares should succeed with TLV
+> +		 * 0x100+37; Do not invoke command with old TLV.
+> +		 */
+> +		priv->mesh_tlv = TLV_TYPE_MESH_ID;
+> +		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+> +				    priv->curbssparams.channel))
+> +			priv->mesh_tlv = 0;
+> +	}
+> +	if (priv->mesh_tlv) {
+> +		lbs_add_mesh(priv);
+> +
+> +		if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
+> +			lbs_pr_err("cannot register lbs_mesh attribute\n");
+> +
+> +		/* While rtap isn't related to mesh, only mesh-enabled
+> +		 * firmware implements the rtap functionality via
+> +		 * CMD_802_11_MONITOR_MODE.
+> +		 */
+> +		if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
+> +			lbs_pr_err("cannot register lbs_rtap attribute\n");
+>  	}
+>  
+>  	lbs_debugfs_init_one(priv, dev);
+> diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+> index e661e10..2ca2f7b 100644
+> --- a/drivers/net/wireless/libertas/rx.c
+> +++ b/drivers/net/wireless/libertas/rx.c
+> @@ -160,8 +160,15 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+>  
+>  	p_rx_pkt = (struct rxpackethdr *) skb->data;
+>  	p_rx_pd = &p_rx_pkt->rx_pd;
+> -	if (priv->mesh_dev && (p_rx_pd->rx_control & RxPD_MESH_FRAME))
+> -		dev = priv->mesh_dev;
+> +	if (priv->mesh_dev) {
+> +		if (priv->mesh_fw_ver == MESH_FW_OLD) {
+> +			if (p_rx_pd->rx_control & RxPD_MESH_FRAME)
+> +				dev = priv->mesh_dev;
+> +		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
+> +			if (p_rx_pd->u.bss.bss_num == MESH_IFACE_ID)
+> +				dev = priv->mesh_dev;
+> +		}
+> +	}
+>  
+>  	lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data,
+>  		 min_t(unsigned int, skb->len, 100));
+> @@ -173,17 +180,6 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+>  		goto done;
+>  	}
+>  
+> -	/*
+> -	 * Check rxpd status and update 802.3 stat,
+> -	 */
+> -	if (!(p_rx_pd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
+> -		lbs_deb_rx("rx err: frame received with bad status\n");
+> -		lbs_pr_alert("rxpd not ok\n");
+> -		priv->stats.rx_errors++;
+> -		ret = 0;
+> -		goto done;
+> -	}
+> -
+>  	lbs_deb_rx("rx data: skb->len-sizeof(RxPd) = %d-%zd = %zd\n",
+>  	       skb->len, sizeof(struct rxpd), skb->len - sizeof(struct rxpd));
+>  
+> @@ -332,14 +328,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+>  		goto done;
+>  	}
+>  
+> -	/*
+> -	 * Check rxpd status and update 802.3 stat,
+> -	 */
+> -	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
+> -		//lbs_deb_rx("rx err: frame received with bad status\n");
+> -		priv->stats.rx_errors++;
+> -	}
+> -
+>  	lbs_deb_rx("rx data: skb->len-sizeof(RxPd) = %d-%zd = %zd\n",
+>  	       skb->len, sizeof(struct rxpd), skb->len - sizeof(struct rxpd));
+>  
+> @@ -351,8 +339,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+>  	radiotap_hdr.hdr.it_pad = 0;
+>  	radiotap_hdr.hdr.it_len = cpu_to_le16 (sizeof(struct rx_radiotap_hdr));
+>  	radiotap_hdr.hdr.it_present = cpu_to_le32 (RX_RADIOTAP_PRESENT);
+> -	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
+> -		radiotap_hdr.flags |= IEEE80211_RADIOTAP_F_BADFCS;
+>  	radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
+>  	/* XXX must check no carryout */
+>  	radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
+> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+> index 68bec31..6be3b27 100644
+> --- a/drivers/net/wireless/libertas/tx.c
+> +++ b/drivers/net/wireless/libertas/tx.c
+> @@ -132,8 +132,12 @@ int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  	txpd->tx_packet_length = cpu_to_le16(pkt_len);
+>  	txpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
+>  
+> -	if (dev == priv->mesh_dev)
+> -		txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
+> +	if (dev == priv->mesh_dev) {
+> +		if (priv->mesh_fw_ver == MESH_FW_OLD)
+> +			txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
+> +		else if (priv->mesh_fw_ver == MESH_FW_NEW)
+> +			txpd->u.bss.bss_num = MESH_IFACE_ID;
+> +	}
+>  
+>  	lbs_deb_hex(LBS_DEB_TX, "txpd", (u8 *) &txpd, sizeof(struct txpd));
+>  
+> diff --git a/drivers/net/wireless/libertas/types.h b/drivers/net/wireless/libertas/types.h
+> index fb7a2d1..de03b9c 100644
+> --- a/drivers/net/wireless/libertas/types.h
+> +++ b/drivers/net/wireless/libertas/types.h
+> @@ -94,6 +94,8 @@ struct ieeetypes_assocrsp {
+>  #define TLV_TYPE_TSFTIMESTAMP	    (PROPRIETARY_TLV_BASE_ID + 19)
+>  #define TLV_TYPE_RSSI_HIGH          (PROPRIETARY_TLV_BASE_ID + 22)
+>  #define TLV_TYPE_SNR_HIGH           (PROPRIETARY_TLV_BASE_ID + 23)
+> +#define TLV_TYPE_MESH_ID            (PROPRIETARY_TLV_BASE_ID + 37)
+> +#define TLV_TYPE_OLD_MESH_ID        (PROPRIETARY_TLV_BASE_ID + 291)
+>  
+>  /** TLV related data structures*/
+>  struct mrvlietypesheader {
 
-[  253.620359] usb 4-3: new high speed USB device using ehci_hcd and address 4
-[  253.757698] usb 4-3: configuration #1 chosen from 1 choice
-[  253.873681] usb 4-3: reset high speed USB device using ehci_hcd and address 4
-[  254.036528] phy3: Selected rate control algorithm 'pid'
-[  254.037063] zd1211rw 4-3:1.0: phy3
-[  260.302033] usb 4-3: firmware: requesting zd1211/zd1211b_ub
-[  260.317397] usb 4-3: firmware: requesting zd1211/zd1211b_uphr
-[  260.371225] zd1211rw 4-3:1.0: firmware version 4725
-[  260.411261] zd1211rw 4-3:1.0: zd1211b chip 0586:340f v4810 high 00-13-49 AL2230_RF pa0 g---S
-[  260.438306] ADDRCONF(NETDEV_UP): wlan1_rename: link is not ready
-[  278.345028] wlan1_rename: authenticate with AP 00:1a:9f:c9:60:96
-[  278.349033] wlan1_rename: authenticated
-[  278.349056] wlan1_rename: associate with AP 00:1a:9f:c9:60:96
-[  278.357029] wlan1_rename: RX AssocResp from 00:1a:9f:c9:60:96 (capab=0x471 status=0 aid=1)
-[  278.357029] wlan1_rename: associated
-[  278.357029] phy3: Allocated STA 00:1a:9f:c9:60:96
-[  278.357029] phy3: Inserted STA 00:1a:9f:c9:60:96
-[  278.357029] wlan1_rename: switched to short barker preamble (BSSID=00:1a:9f:c9:60:96)
-[  278.357029] wlan1_rename: switched to short slot time (BSSID=00:1a:9f:c9:60:96)
-[  278.392780] ADDRCONF(NETDEV_CHANGE): wlan1_rename: link becomes ready
-[  286.660675] usb 4-3: USB disconnect, address 4
-[  286.682479] wlan1_rename: deauthenticating by local choice (reason=3)
-[  286.683540] skb_under_panic: text:ffffffffa03936da len:59 put:11 head:ffff88012cf59400 data:ffff88012cf593fa tail:0x35 end:0x80 dev:wmaster2
-[  286.683672] ------------[ cut here ]------------
-[  286.683709] kernel BUG at net/core/skbuff.c:143!
-[  286.683744] invalid opcode: 0000 [#1] SMP 
-[  286.683829] last sysfs file: /sys/class/power_supply/BAT0/charge_full
-[  286.683867] CPU 1 
-[  286.683915] Modules linked in: aes_x86_64 aes_generic zd1211rw netconsole configfs af_packet ipv6 powernow_k8 cpufreq_powersave cpufreq_conservative cpufreq_ondemand freq_table cpufreq_userspace sbs sbshc fan container iptable_filter ip_tables x_tables sbp2 fuse dvb_usb_af9015 tda18271 af9013 dvb_pll snd_hda_codec_atihdmi mt2060 mxl5005s dvb_usb dvb_core qt1010 snd_hda_codec_idt arc4 snd_hda_intel ecb snd_hda_codec snd_pcm_oss snd_mixer_oss snd_seq_midi ath9k snd_pcm snd_rawmidi snd_seq_midi_event mac80211 snd_seq snd_timer snd_seq_device rfkill ohci1394 snd cfg80211 i2c_piix4 ehci_hcd sr_mod ohci_hcd ieee1394 r8169 mii soundcore led_class thermal pcspkr psmouse atiixp i2c_core cdrom sg usbcore snd_page_alloc video output rtc_cmos battery button ac processor thermal_sys shpchp pci_hotplug evdev
-[  286.685066] Pid: 2133, comm: khubd Not tainted 2.6.29-rc7-wl #1 HP Pavilion dv5 Notebook PC
-[  286.685066] RIP: 0010:[<ffffffff8043a3fa>]  [<ffffffff8043a3fa>] skb_push+0x7a/0x80
-[  286.685066] RSP: 0018:ffff88013b1f9800  EFLAGS: 00010286
-[  286.685066] RAX: 0000000000000093 RBX: ffff880123407600 RCX: 0000000000000001
-[  286.685066] RDX: ffff8800a79a7000 RSI: 0000000000000001 RDI: ffffffff804cf808
-[  286.685066] RBP: ffff88013b1f9820 R08: 0000000000000002 R09: 0000000000000001
-[  286.685066] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000034
-[  286.685066] R13: ffff880123407600 R14: ffff880123407638 R15: ffff880135ed1760
-[  286.685066] FS:  00007fc515e73770(0000) GS:ffff88013f802a00(0000) knlGS:0000000000000000
-[  286.685066] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-[  286.685066] CR2: 00007fc514ea8098 CR3: 000000013e834000 CR4: 00000000000006e0
-[  286.685066] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  286.685066] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  286.685066] Process khubd (pid: 2133, threadinfo ffff88013b1f8000, task ffff88013b1ebb00)
-[  286.685066] Stack:
-[  286.685066]  0000000000000035 0000000000000080 ffff880123520000 ffff880135ed1760
-[  286.685066]  ffff88013b1f9870 ffffffffa03936da ffff88013b1f9860 ffff880135ed0460
-[  286.685066]  ffff88012cf59405 ffff880123407600 ffff880135ed0460 ffff88013b1f98d0
-[  286.685066] Call Trace:
-[  286.685066]  [<ffffffffa03936da>] zd_op_tx+0x4a/0x1f0 [zd1211rw]
-[  286.685066]  [<ffffffffa01c4abd>] __ieee80211_tx+0x4d/0x140 [mac80211]
-[  286.685066]  [<ffffffffa01c5c0f>] ieee80211_master_start_xmit+0x2ff/0x6d0 [mac80211]
-[  286.685066]  [<ffffffffa01c5b97>] ?  ieee80211_master_start_xmit+0x287/0x6d0 [mac80211]
-[  286.685392]  [<ffffffff80443a65>] dev_hard_start_xmit+0x285/0x300
-[  286.685392]  [<ffffffff804577f6>] __qdisc_run+0x236/0x280
-[  286.685392]  [<ffffffff80443f18>] dev_queue_xmit+0x308/0x620
-[  286.685392]  [<ffffffff80443c62>] ? dev_queue_xmit+0x52/0x620
-[  286.685392]  [<ffffffffa01c7a11>] ieee80211_tx_skb+0x61/0x70 [mac80211]
-[  286.685392]  [<ffffffffa01b662f>] ieee80211_send_deauth_disassoc+0x12f/0x170 [mac80211]
-[  286.685392]  [<ffffffffa01b6b7f>] ieee80211_set_disassoc+0x21f/0x2f0 [mac80211]
-[  286.685392]  [<ffffffffa01b6960>] ? ieee80211_set_disassoc+0x0/0x2f0 [mac80211]
-[  286.685392]  [<ffffffffa01b351d>] ?  __ieee80211_stop_tx_ba_session+0x4d/0xa0 [mac80211]
-[  286.685392]  [<ffffffffa01b6d1d>] ieee80211_sta_deauthenticate+0x5d/0x70 [mac80211]
-[  286.685392]  [<ffffffffa01ba57c>] ieee80211_stop+0x37c/0x630 [mac80211]
-[  286.685392]  [<ffffffffa01ba279>] ? ieee80211_stop+0x79/0x630 [mac80211]
-[  286.685392]  [<ffffffff804cf75f>] ? _spin_unlock_bh+0x2f/0x40
-[  286.685392]  [<ffffffff8045711f>] ? dev_deactivate+0x18f/0x1d0
-[  286.685392]  [<ffffffff8045713a>] ? dev_deactivate+0x1aa/0x1d0
-[  286.685392]  [<ffffffff80444ae4>] dev_close+0x74/0xc0
-[  286.685392]  [<ffffffff80444b75>] rollback_registered+0x45/0x250
-[  286.685392]  [<ffffffff80444d9d>] unregister_netdevice+0x1d/0x70
-[  286.685392]  [<ffffffffa01b9c9e>] ieee80211_remove_interfaces+0x7e/0xc0 [mac80211]
-[  286.685392]  [<ffffffffa01ac0c1>] ieee80211_unregister_hw+0x31/0xf0 [mac80211]
-[  286.685392]  [<ffffffffa0396e50>] disconnect+0x30/0x80 [zd1211rw]
-[  286.685392]  [<ffffffffa0084155>] usb_unbind_interface+0x65/0x170 [usbcore]
-[  286.685392]  [<ffffffff803d96c8>] __device_release_driver+0x78/0xc0
-[  286.685392]  [<ffffffff803d980b>] device_release_driver+0x2b/0x40
-[  286.685392]  [<ffffffff803d8b3d>] bus_remove_device+0xbd/0x100
-[  286.685392]  [<ffffffff803d6ec0>] device_del+0x130/0x190
-[  286.685392]  [<ffffffffa0080e18>] usb_disable_device+0xa8/0x130 [usbcore]
-[  286.685392]  [<ffffffffa007b9b3>] usb_disconnect+0xb3/0x130 [usbcore]
-[  286.685392]  [<ffffffffa007c92f>] hub_thread+0x4cf/0x13d0 [usbcore]
-[  286.685392]  [<ffffffff80264bed>] ? trace_hardirqs_on+0xd/0x10
-[  286.685392]  [<ffffffff80254dd0>] ? autoremove_wake_function+0x0/0x40
-[  286.685392]  [<ffffffffa007c460>] ? hub_thread+0x0/0x13d0 [usbcore]
-[  286.685392]  [<ffffffff80254a29>] kthread+0x49/0x80
-[  286.685392]  [<ffffffff8020cafa>] child_rip+0xa/0x20
-[  286.685392]  [<ffffffff8020c4fc>] ? restore_args+0x0/0x30
-[  286.685392]  [<ffffffff802549e0>] ? kthread+0x0/0x80
-[  286.685392]  [<ffffffff8020caf0>] ? child_rip+0x0/0x20
-[  286.685392] Code: 8b 57 68 48 89 44 24 10 8b 87 c8 00 00 00 48 89 44 24 08 8b bf c4 00 00 00 31 c0 48 89 3c 24 48 c7 c7 c8 e4 5d 80 e8 7a 1c 09 00 <0f> 0b eb fe 66 90 55 89 f1 48 89 e5 48 83 ec 20 44 8b 4f 6c 4c 
-[  286.685392] RIP  [<ffffffff8043a3fa>] skb_push+0x7a/0x80
-[  286.685392]  RSP <ffff88013b1f9800>
-[  286.688534] ---[ end trace c004fb5735d74053 ]---
-[  286.688569] Kernel panic - not syncing: Fatal exception in interrupt
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
