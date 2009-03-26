@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:64715 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbZCLX5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 19:57:31 -0400
-Received: by fxm24 with SMTP id 24so2423747fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 16:57:27 -0700 (PDT)
-Subject: Re: [ipw3945-devel] [PATCH 3/8] iwl3945 : fix rate scaling
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1236897665.3911.8.camel@abhi-desktop>
-References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-2-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-3-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-4-git-send-email-reinette.chatre@intel.com>
-	 <1236821360.9581.78.camel@maxim-laptop>
-	 <1236824994.7177.3.camel@maxim-laptop>  <1236880246.13699.17.camel@rc-desk>
-	 <1236892879.30325.7.camel@maxim-laptop>
-	 <1236897665.3911.8.camel@abhi-desktop>
-Content-Type: text/plain
-Date: Fri, 13 Mar 2009 01:56:58 +0200
-Message-Id: <1236902218.13039.8.camel@maxim-laptop> (sfid-20090313_005734_926052_5FEE3C86)
-Mime-Version: 1.0
+Received: from mail.sdinet.de ([78.47.32.153]:39002 "EHLO mail.sdinet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759828AbZCZRFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 13:05:21 -0400
+Date: Thu, 26 Mar 2009 17:55:43 +0100 (CET)
+From: Sven-Haegar Koch <haegar@sdinet.de>
+To: Paco <eyes2k5@gmail.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Driver Support Linux 2.4.26 zd1211
+In-Reply-To: <b49006ab0903260822r35417242qbdc6889543de7072@mail.gmail.com>
+Message-ID: <alpine.DEB.2.00.0903261752470.11410@aurora.sdinet.de> (sfid-20090326_180526_354568_C1D96594)
+References: <b49006ab0903260414xad13bd5y370a47020348c66f@mail.gmail.com> <b49006ab0903260822r35417242qbdc6889543de7072@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-03-12 at 15:41 -0700, Abhijeet Kolekar wrote:
-> Can you try the attached patch for rate scaling?
+On Thu, 26 Mar 2009, Paco wrote:
 
-Just tried it.
-It doesn't make things worse, but nether better.
+> Hello everybody, and sorry if I disturb you with something that was
+> fixed before.
+> 
+> I'm trying to setup the zd1211 in Linux 2.4.26-ts11 in the board
+> TS-7200. I have some drivers that are working only with networks
+> without encryption. If I try to connect to a network with WEP or WPA
+> encryption, i can not get the access point. I am looking for a new
+> version of drivers to solve this problem.
 
-It seems that I can fully control speeds using iwconfig, and when speed
-drop, I see that there.
+I think for 2.4.x: forget it.
 
-Now speed dropped to 48 Mbits/s raw or 2.9 Mbytes/s real upload.
-But I can reset it to 54Mbits/s, then set speed to auto, then it will be
-3.1 for a while, then drops again.
+For 2.6.26 it may be possible using compat-wireless-old, or just using a 
+more current kernel 2.6.27+, perhaps with compat-wireless to get the 
+latest version.
 
-On the other hand speed is quite stable, it drops once in a while due to
-scanning for few seconds to about 2.2 Mbytes/s, then restores itself
-again.
+c'ya
+sven
 
-This was more or less the same as without this patch (I also use hw
-scanning now).
-
-
-Anyway, it is almost perfect. All I need to do it to set speed to
-54Mbits/s manually.
-
-Best regards and thanks,
-	Maxim Levitsky
-
+-- 
+The lights are fading out, once more...
