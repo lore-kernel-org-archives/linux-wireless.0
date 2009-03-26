@@ -1,50 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41351 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757706AbZCMRU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 13:20:59 -0400
-Subject: Re: [PATCH] cfg80211: drop wext channel list if too long
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090313145445.GC5551@tuxdriver.com>
-References: <1236882244.25931.5.camel@johannes.local>
-	 <20090313145445.GC5551@tuxdriver.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752583AbZCZQTu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 12:19:50 -0400
+Subject: [PATCH] cfg80211: introduce scan IE limit attribute
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
 Content-Type: text/plain
-Date: Fri, 13 Mar 2009 13:18:50 -0400
-Message-Id: <1236964730.9657.10.camel@localhost.localdomain> (sfid-20090313_182102_446793_E6DB3149)
+Date: Thu, 26 Mar 2009 17:19:17 +0100
+Message-Id: <1238084357.4331.66.camel@johannes.local> (sfid-20090326_171954_971957_38572F5D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-03-13 at 10:54 -0400, John W. Linville wrote:
-> On Thu, Mar 12, 2009 at 07:24:04PM +0100, Johannes Berg wrote:
-> > wext limits the number of channels it can list to 32, we obey
-> > that limitation but show a partial list which is confusing.
-> > Thus, when going over the limit, drop the list completely to
-> > make the users aware that something is wrong and hopefully
-> > prompt them to use iw instead. We still let iwlist print out
-> > the total number of available channels.
-> > 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> Will this make wpa_supplicant or Networkmanager barf?
+This patch introduces a new attribute for a wiphy that tells
+userspace how long the information elements added to a probe
+request frame can be at most. It also updates the at76 to
+advertise that it cannot support that, and, for now until I
+can fix that, iwlwifi too.
 
-It doesn't look like wpa_supplicant cares about the returned channel
-list from SIOCGIWRANGE.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/at76c50x-usb.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c |    1 +
+ include/linux/nl80211.h                 |    4 ++++
+ include/net/wireless.h                  |    1 +
+ net/mac80211/main.c                     |   13 ++++++++++++-
+ net/mac80211/util.c                     |    2 ++
+ net/wireless/nl80211.c                  |    7 +++++++
+ 7 files changed, 28 insertions(+), 1 deletion(-)
 
-NM, however, uses the returned channel list to figure out a free
-supported adhoc frequency to use when creating an adhoc network (like
-for connection sharing).  If it can't find an intersection between an
-internal "safe" frequency list and what the card supports (which it
-wouldn't be able to with this patch), it will simply use 2462 or 5180
-MHz.
-
-Thus, I don't think you'll *break* anything specifically, but this patch
-would cause the default frequency for an IBSS created by NM  to move
-from channel 1 to channel 11.
-
-Dan
+--- wireless-testing.orig/include/net/wireless.h	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/include/net/wireless.h	2009-03-26 17:12:29.000000000 +0100
+@@ -222,6 +222,7 @@ struct wiphy {
+ 
+ 	int bss_priv_size;
+ 	u8 max_scan_ssids;
++	u16 max_scan_ie_len;
+ 
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2009-03-26 17:12:29.000000000 +0100
+@@ -151,6 +151,8 @@ static int nl80211_send_wiphy(struct sk_
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
+ 		   dev->wiphy.max_scan_ssids);
++	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
++		    dev->wiphy.max_scan_ie_len);
+ 
+ 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
+ 	if (!nl_modes)
+@@ -2492,6 +2494,11 @@ static int nl80211_trigger_scan(struct s
+ 	else
+ 		ie_len = 0;
+ 
++	if (ie_len > wiphy->max_scan_ie_len) {
++		err = -EINVAL;
++		goto out;
++	}
++
+ 	request = kzalloc(sizeof(*request)
+ 			+ sizeof(*ssid) * n_ssids
+ 			+ sizeof(channel) * n_channels
+--- wireless-testing.orig/include/linux/nl80211.h	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/include/linux/nl80211.h	2009-03-26 17:12:29.000000000 +0100
+@@ -380,6 +380,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_MAX_NUM_SCAN_SSIDS: number of SSIDs you can scan with
+  *	a single scan request, a wiphy attribute.
++ * @NL80211_ATTR_MAX_SCAN_IE_LEN: maximum length of information elements
++ *	that can be added to a scan request
+  *
+  * @NL80211_ATTR_SCAN_FREQUENCIES: nested attribute with frequencies (in MHz)
+  * @NL80211_ATTR_SCAN_SSIDS: nested attribute with SSIDs, leave out for passive
+@@ -492,6 +494,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_AUTH_TYPE,
+ 	NL80211_ATTR_REASON_CODE,
+ 
++	NL80211_ATTR_MAX_SCAN_IE_LEN,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- wireless-testing.orig/net/mac80211/main.c	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-03-26 17:14:35.000000000 +0100
+@@ -724,7 +724,18 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 		return NULL;
+ 
+ 	wiphy->privid = mac80211_wiphy_privid;
+-	wiphy->max_scan_ssids = 4;
++
++	if (!ops->hw_scan) {
++		/* For hw_scan, driver needs to set these up. */
++		wiphy->max_scan_ssids = 4;
++
++		/* we support a maximum of 32 rates in cfg80211 */
++		wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN
++					 - 2 - 32 /* SSID */
++					 - 4 - 32 /* (ext) supp rates */;
++
++	}
++
+ 	/* Yes, putting cfg80211_bss into ieee80211_bss is a hack */
+ 	wiphy->bss_priv_size = sizeof(struct ieee80211_bss) -
+ 			       sizeof(struct cfg80211_bss);
+--- wireless-testing.orig/net/mac80211/util.c	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/net/mac80211/util.c	2009-03-26 17:12:29.000000000 +0100
+@@ -891,6 +891,8 @@ void ieee80211_send_probe_req(struct iee
+ 		*pos = rate->bitrate / 5;
+ 	}
+ 
++	/* if adding more here, adjust max_scan_ie_len */
++
+ 	if (ie)
+ 		memcpy(skb_put(skb, ie_len), ie, ie_len);
+ 
+--- wireless-testing.orig/drivers/net/wireless/at76c50x-usb.c	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/drivers/net/wireless/at76c50x-usb.c	2009-03-26 17:12:29.000000000 +0100
+@@ -2248,6 +2248,7 @@ static int at76_init_new_device(struct a
+ 
+ 	/* mac80211 initialisation */
+ 	priv->hw->wiphy->max_scan_ssids = 1;
++	priv->hw->wiphy->max_scan_ie_len = 0;
+ 	priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 	priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &at76_supported_band;
+ 	priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-03-26 17:12:27.000000000 +0100
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-03-26 17:12:29.000000000 +0100
+@@ -1306,6 +1306,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 
+ 	hw->wiphy->custom_regulatory = true;
+ 	hw->wiphy->max_scan_ssids = 1;
++	hw->wiphy->max_scan_ie_len = 0; /* XXX for now */
+ 
+ 	/* Default value; 4 EDCA QOS priorities */
+ 	hw->queues = 4;
 
 
