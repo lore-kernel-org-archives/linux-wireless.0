@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63968 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753904AbZCAT3t (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51481 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750796AbZCZUPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2009 14:29:49 -0500
-Message-ID: <49AAE22A.3080808@lwfinger.net> (sfid-20090301_202952_882942_715A272C)
-Date: Sun, 01 Mar 2009 13:29:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8187 performance diagnostics
-References: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk>    <499B27A4.30708@lwfinger.net>    <42781.82.152.175.172.1234911183.squirrel@www.phantomjinx.co.uk>    <499B4526.1030705@lwfinger.net>    <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>    <499E1826.8040903@lwfinger.net>    <56183.82.152.175.172.1235173364.squirrel@www.phantomjinx.co.uk>    <499F4763.70106@lwfinger.net> <60836.82.152.175.172.1235929727.squirrel@www.phantomjinx.co.uk>
-In-Reply-To: <60836.82.152.175.172.1235929727.squirrel@www.phantomjinx.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 Mar 2009 16:15:20 -0400
+Subject: Re: Scan in compat-wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Venkat Ch <venkatch@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1238098198.3254.4.camel@localhost.localdomain> (sfid-20090326_211229_483330_67147170)
+References: <c1e027750903250041qfb28bb5g69bc219da57736c0@mail.gmail.com>
+	 <c1e027750903250043n1e6bfffdnd6a6a3889a1f68d6@mail.gmail.com>
+	 <1237995293.18896.12.camel@localhost.localdomain>
+	 <c1e027750903261121i2958b705ldeb33eb036a4ebeb@mail.gmail.com>
+	 <1238098198.3254.4.camel@localhost.localdomain>
+	 (sfid-20090326_211229_483330_67147170)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bVMY7WVBGCfGIqiI4UA6"
+Date: Thu, 26 Mar 2009 21:14:46 +0100
+Message-Id: <1238098486.4331.83.camel@johannes.local> (sfid-20090326_211522_003847_E2EEB8DD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P.G. Richardson wrote:
-> Is there anything I can do to help improve this situation? These results
-> seems to rule out hardware in favour of being driver related. Are there
-> other tests I could perform to determine where the fragility lies?
-> 
-> Any thoughts, let me know.
 
-OK, the Windows driver is better than the Linux one. Unfortunately, source is
-not available.
+--=-bVMY7WVBGCfGIqiI4UA6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You can check what we did when the RTL8187B was implemented. To do that, you
-need to download the Realtek vendor-written Linux driver and check what they do
-against what is in the current in-kernel driver. The critical areas will likely
-be associated with power settings for the radio. Be aware that their code is
-quite difficult to read as it has multiple conditional compilations that are
-hard to keep straight.
+On Thu, 2009-03-26 at 16:09 -0400, Dan Williams wrote:
 
-I will be happy to test any improvements that you suggest.
+> Correct: if you're in an area with many access points, how is the driver
+> supposed to know which APs are allowed and which are not?  Certainly
+> connecting to any random SSID that the driver sees is a security risk,
+> and should not be done.
 
-Larry
+Hah. http://xkcd.com/440/
+
+johannes
+
+--=-bVMY7WVBGCfGIqiI4UA6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJy+I0AAoJEKVg1VMiehFYN74QAIe5Z+K+yrIJWssQpfAzR6oI
+w7Np3V78frUzJA8iGsNHNb5suvM+qK2vSfe+RG9PxHXqMnhlSv6iVxFhqgfs0lsy
+7ZJlcF6fR1vAiW/9ZOOJ5FJfbqSAb2g1xN5dWCmiEf5Gcxkv5izyMh5pNe6Gz/Ji
+OiaX6HYgp17Pyg++S5dAsi1iCdPwb6iBivH9p68NnAK/eSPQ3fEKSFIpoIkGpdDj
+kNpAr8p8eScH9eK1hbxUxRqKCbjRunsRGyG4HcnBzlMb0zlyPHPWzpp/n3BJ8SCc
+k+dPy/WJSaadzaJKSsb8QItTa1oMuE1rdD+Rw8oOSNAWCpKUwcUArfkd8LBh+7tT
+11trlSOjYupB/rHuwtFbmukWcezUXZE17pXLnORCZioha0AodWF7ywk+oGVGVv2x
+g3Kq5GM5+LA0gO7WkzOt14YU/hF06EA6U99fN5SDwMH18ELdGiEc7gDaaCj0tGxJ
+0XB2jNtwzAOOpB4r9xHX/tPa4Z+q/kOhYvfUJmiTx+GLAOd43F5MeiFeFLwGKcpb
+MvPqQp717cY2jct0IWIWJzqGUOnS9CYfzZuZ80uiXAdlv2XQjed40SToBkjwUuzp
+FYZEz/gx+d58hNPHNtXg4Au2h450S8ZQV7PO86+OML6KKJUY2tmndLIgiFsUYyq7
+fzK+Yq34JyOtaxxFc/x2
+=cTez
+-----END PGP SIGNATURE-----
+
+--=-bVMY7WVBGCfGIqiI4UA6--
+
