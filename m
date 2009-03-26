@@ -1,368 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54814 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbZCMDlf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 23:41:35 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 20:41:34 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fmmailgate04.web.de ([217.72.192.242]:55391 "EHLO
+	fmmailgate04.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbZCZMtM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 08:49:12 -0400
+Date: Thu, 26 Mar 2009 13:49:09 +0100
+Message-Id: <1537876674@web.de> (sfid-20090326_134916_649336_2D8C15AF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18873.54515.843518.478641@gargle.gargle.HOWL> (sfid-20090313_044138_854375_D46C468E)
-Date: Fri, 13 Mar 2009 09:07:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Update copyright in all the files
+From: Chunkeey@web.de
+To: Christian Lamparter <chunkeey@web.de>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: p54spi - mesh mode summary
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How time flies.
+> 2) Today it doesn't reproduce. Plink establishment passes, altough, w=
+arning remains:
+>=20
+> 3) Beaconing works, but not the way it should: like MPs don't hear ea=
+ch other. Timestamps never get in sync
+> and both MPs issue beacon during 0.1s beacon interval.
+> I've seen it before, with stlc45xx. It shows when LMAC is set up with=
+ LMAC_SETUP_IBSS | LMAC_SETUP_TRANSPARENT flags.
+> If there's no LMAC_SETUP_TRANSPARENT flag in LMAC setup then timestam=
+ps get in sync.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/ahb.c         |    2 +-
- drivers/net/wireless/ath9k/ani.c         |    2 +-
- drivers/net/wireless/ath9k/ani.h         |    2 +-
- drivers/net/wireless/ath9k/ath9k.h       |    2 +-
- drivers/net/wireless/ath9k/beacon.c      |    2 +-
- drivers/net/wireless/ath9k/calib.c       |    2 +-
- drivers/net/wireless/ath9k/calib.h       |    2 +-
- drivers/net/wireless/ath9k/debug.c       |    2 +-
- drivers/net/wireless/ath9k/debug.h       |    2 +-
- drivers/net/wireless/ath9k/eeprom.c      |    2 +-
- drivers/net/wireless/ath9k/eeprom.h      |    2 +-
- drivers/net/wireless/ath9k/hw.c          |    2 +-
- drivers/net/wireless/ath9k/hw.h          |    2 +-
- drivers/net/wireless/ath9k/initvals.h    |    2 +-
- drivers/net/wireless/ath9k/mac.c         |    2 +-
- drivers/net/wireless/ath9k/mac.h         |    2 +-
- drivers/net/wireless/ath9k/main.c        |    2 +-
- drivers/net/wireless/ath9k/pci.c         |    2 +-
- drivers/net/wireless/ath9k/phy.c         |    2 +-
- drivers/net/wireless/ath9k/phy.h         |    2 +-
- drivers/net/wireless/ath9k/rc.c          |    2 +-
- drivers/net/wireless/ath9k/rc.h          |    2 +-
- drivers/net/wireless/ath9k/recv.c        |    2 +-
- drivers/net/wireless/ath9k/reg.h         |    2 +-
- drivers/net/wireless/ath9k/regd.c        |    2 +-
- drivers/net/wireless/ath9k/regd.h        |    2 +-
- drivers/net/wireless/ath9k/regd_common.h |    2 +-
- drivers/net/wireless/ath9k/xmit.c        |    2 +-
- 28 files changed, 28 insertions(+), 28 deletions(-)
+=46YI: The TSF will always reset when a new beacon is submitted to the =
+firmware.
+The specs talks about that.
 
-diff --git a/drivers/net/wireless/ath9k/ahb.c b/drivers/net/wireless/ath9k/ahb.c
-index 00cc7bb..0e65c51 100644
---- a/drivers/net/wireless/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath9k/ahb.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
-  * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
-  *
-diff --git a/drivers/net/wireless/ath9k/ani.c b/drivers/net/wireless/ath9k/ani.c
-index a39eb76..6c5e887 100644
---- a/drivers/net/wireless/ath9k/ani.c
-+++ b/drivers/net/wireless/ath9k/ani.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/ani.h b/drivers/net/wireless/ath9k/ani.h
-index 7315761..08b4e7e 100644
---- a/drivers/net/wireless/ath9k/ani.h
-+++ b/drivers/net/wireless/ath9k/ani.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index f6e70b1..2750fc7 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index 3fd1b86..e5b0071 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
-index c9446fb..e2d62e9 100644
---- a/drivers/net/wireless/ath9k/calib.c
-+++ b/drivers/net/wireless/ath9k/calib.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/calib.h b/drivers/net/wireless/ath9k/calib.h
-index 32589e0..1c74bd5 100644
---- a/drivers/net/wireless/ath9k/calib.h
-+++ b/drivers/net/wireless/ath9k/calib.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index 82573ca..fdf9528 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/debug.h b/drivers/net/wireless/ath9k/debug.h
-index 065268b..7b0e541 100644
---- a/drivers/net/wireless/ath9k/debug.h
-+++ b/drivers/net/wireless/ath9k/debug.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index d7b9cf4..ffc36b0 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/eeprom.h b/drivers/net/wireless/ath9k/eeprom.h
-index 8e5b880..25b68c8 100644
---- a/drivers/net/wireless/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath9k/eeprom.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 7555894..e6ac8e5 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath9k/hw.h
-index dc681f0..0b594e0 100644
---- a/drivers/net/wireless/ath9k/hw.h
-+++ b/drivers/net/wireless/ath9k/hw.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
-index 1d60c37..e2f0a34 100644
---- a/drivers/net/wireless/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath9k/initvals.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/mac.c b/drivers/net/wireless/ath9k/mac.c
-index f757bc7..e0a6dee 100644
---- a/drivers/net/wireless/ath9k/mac.c
-+++ b/drivers/net/wireless/ath9k/mac.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/mac.h b/drivers/net/wireless/ath9k/mac.h
-index a75f65d..1176bce 100644
---- a/drivers/net/wireless/ath9k/mac.h
-+++ b/drivers/net/wireless/ath9k/mac.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 8db75f6..7d27eed 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/pci.c b/drivers/net/wireless/ath9k/pci.c
-index 53572d9..6dbc585 100644
---- a/drivers/net/wireless/ath9k/pci.c
-+++ b/drivers/net/wireless/ath9k/pci.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/phy.c b/drivers/net/wireless/ath9k/phy.c
-index e1494ba..8bcba90 100644
---- a/drivers/net/wireless/ath9k/phy.c
-+++ b/drivers/net/wireless/ath9k/phy.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/phy.h b/drivers/net/wireless/ath9k/phy.h
-index 1eac8c7..0f7f8e0 100644
---- a/drivers/net/wireless/ath9k/phy.h
-+++ b/drivers/net/wireless/ath9k/phy.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index b32820e..1a3b63d 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2004 Video54 Technologies, Inc.
-- * Copyright (c) 2004-2008 Atheros Communications, Inc.
-+ * Copyright (c) 2004-2009 Atheros Communications, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
-index db9b0b9..199a3ce 100644
---- a/drivers/net/wireless/ath9k/rc.h
-+++ b/drivers/net/wireless/ath9k/rc.h
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (c) 2004 Sam Leffler, Errno Consulting
-  * Copyright (c) 2004 Video54 Technologies, Inc.
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 0bba176..917bac7 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
-index d86e90e..5260524 100644
---- a/drivers/net/wireless/ath9k/reg.h
-+++ b/drivers/net/wireless/ath9k/reg.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index b8f9b6d..4ca6251 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/regd.h b/drivers/net/wireless/ath9k/regd.h
-index 8f885f3..9f5fbd4 100644
---- a/drivers/net/wireless/ath9k/regd.h
-+++ b/drivers/net/wireless/ath9k/regd.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/regd_common.h b/drivers/net/wireless/ath9k/regd_common.h
-index b41d000..4d0e298 100644
---- a/drivers/net/wireless/ath9k/regd_common.h
-+++ b/drivers/net/wireless/ath9k/regd_common.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 0aae8f3..8968abe 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
--- 
-1.6.2
+> 4) Pings don't go, because MPs don't answer ARP requests sent to it. =
+Haven't tested for the root cause yet.
+> But again, I have seen this with stlc45xx with two different causes:
+> - when LMAC was set up without LMAC_SETUP_TRANSPARENT flag, ARP reque=
+sts didn't pass LMAC packet filter
+>   and weren't reported to the driver;
+Yup, that's because the firmware will filter out any frames which are n=
+ot from/for the BSSID.
+(the bssid the field right next to the device own MAC in p54_setup_mac)
 
+> - when LMAC was set up with LMAC_SETUP_TRANSPARENT flag firmware seem=
+ to truncate last 2 bytes of the packet
+>   that it reports.
+Heh, that's also a ISL3887 (USB 2nd gen) bug... But PCI devices are not=
+ affected.
+The reason "why" has probably to do with the firmware's frame alignment=
+ code.
+Unfortunately the firmware for (ISL3887 and SPI) is rounding "down" to =
+4 bytes instead of up...
+So the FCS will be clipped... But fortunately the firmware set a bit in=
+ the header that tells
+us whenever the frames was corrupted or not (P54_HDR_FLAG_DATA_IN_FCS_G=
+OOD).
+
+what happens if you change p54spi_rx the following way:?=20
+
+-        skb =3D dev_alloc_skb(len);
++        skb =3D dev_alloc_skb(len + 4);
+        if (!skb) {
+                dev_err(&priv->spi->dev, "could not alloc skb");
+                return 0;
+        }
+
+        p54spi_spi_read(priv, SPI_ADRS_DMA_DATA, skb_put(skb, len), len=
+);
+        p54spi_sleep(priv);
+
++      skb_put(skb, 4);=20
+        if (p54_rx(priv->hw, skb) =3D=3D 0)
+                dev_kfree_skb(skb);
+
+=20
+> > Is there anything else I can do, or something you want to know?
+> Are there other p54 species that use 3826.arm firmware?
+I guess no... there are pci/usb/spi and shmem devices but all have thei=
+r own firmware.
+
+> Are there other sources of information regarding LMAC interaction exc=
+ept
+> http://wireless.kernel.org/en/developers/Documentation/specs?action=3D=
+AttachFile&do=3Dget&target=3DSTSW45x0C_LMAC_API_ED1P4.pdf ?
+
+hmm, maybe the old islsm... But then, this driver is very old now...
+=20
+> Who should be contacted with questions about firmware behavior?
+>=20
+No idea, maybe nokia knows... because the "frame alignment" can also cl=
+ip QoS-(Data) or WDS Frames.
+
+Regards,
+   Chr
+____________________________________________________________________
+Psssst! Schon vom neuen WEB.DE MultiMessenger geh=F6rt?=20
+Der kann`s mit allen: http://www.produkte.web.de/messenger/?did=3D3124
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
