@@ -1,131 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60462 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751255AbZC0V4Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:56:24 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] b43: Poison RX buffers
-Date: Fri, 27 Mar 2009 22:51:58 +0100
-Cc: Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from smtp3.dnainternet.fi ([87.94.96.71]:21657 "EHLO
+	smtp3.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757574AbZCZVto (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 17:49:44 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 2/6] rndis_wlan: convert get/set mode to cfg80211
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Thu, 26 Mar 2009 23:40:01 +0200
+Message-ID: <20090326214001.19238.77471.stgit@fate.lan> (sfid-20090326_224947_461435_9A0219D1)
+In-Reply-To: <20090326213953.19238.59497.stgit@fate.lan>
+References: <20090326213953.19238.59497.stgit@fate.lan>
 MIME-Version: 1.0
-Message-Id: <200903272251.58384.mb@bu3sch.de> (sfid-20090327_225627_197485_1BCD20F3)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds poisoning and sanity checking to the RX DMA buffers.
-This is used for protection against buggy hardware/firmware that raises
-RX interrupts without doing an actual DMA transfer.
+From: John W. Linville <linville@tuxdriver.com>
 
-This mechanism protects against rare "bad packets" (due to uninitialized skb data)
-and rare kernel crashes due to uninitialized RX headers.
-
-The poison is selected to not match on valid frames and to be cheap for checking.
-
-The poison check mechanism _might_ trigger incorrectly, if we are voluntarily
-receiving frames with bad PLCP headers. However, this is nonfatal, because the
-chance of such a match is basically zero and in case it happens it just results
-in dropping the packet.
-Bad-PLCP RX defaults to off, and you should leave it off unless you want to listen
-to the latest news broadcasted by your microwave oven.
-
-This patch also moves the initialization of the RX-header "length" field in front of
-the mapping of the DMA buffer. The CPU should not touch the buffer after we mapped it.
-
-Cc: stable@kernel.org
-Reported-by: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+[edit: made rndis_change_virtual_intf static]
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
 
-Francesco, please stresstest this.
-John, please queue as bugfix.
+ drivers/net/wireless/rndis_wlan.c |   95 +++++++++++++++++--------------------
+ 1 files changed, 43 insertions(+), 52 deletions(-)
 
-
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2009-03-27 12:29:57.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2009-03-27 22:22:21.000000000 +0100
-@@ -555,11 +555,32 @@ address_error:
- 	return 1;
- }
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index ebed802..464f73e 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -406,8 +406,17 @@ struct rndis_wext_private {
+ 	u8 command_buffer[COMMAND_BUFFER_SIZE];
+ };
  
-+static bool b43_rx_buffer_is_poisoned(struct b43_dmaring *ring, struct sk_buff *skb)
++/*
++ * cfg80211 ops
++ */
++static int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
++					enum nl80211_iftype type, u32 *flags,
++					struct vif_params *params);
++
++struct cfg80211_ops rndis_config_ops = {
++	.change_virtual_intf = rndis_change_virtual_intf,
++};
+ 
+-struct cfg80211_ops rndis_config_ops = { };
+ void *rndis_wiphy_privid = &rndis_wiphy_privid;
+ 
+ static const int bcm4320_power_output[4] = { 25, 50, 75, 100 };
+@@ -1125,6 +1134,37 @@ static void set_multicast_list(struct usbnet *usbdev)
+ 
+ 
+ /*
++ * cfg80211 ops
++ */
++static int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
++					enum nl80211_iftype type, u32 *flags,
++					struct vif_params *params)
 +{
-+	unsigned char *f = skb->data + ring->frameoffset;
++	struct net_device *dev;
++	struct usbnet *usbdev;
++	int mode;
 +
-+	return ((f[0] & f[1] & f[2] & f[3] & f[4] & f[5] & f[6] & f[7]) == 0xFF);
-+}
++	/* we're under RTNL */
++	dev = __dev_get_by_index(&init_net, ifindex);
++	if (!dev)
++		return -ENODEV;
++	usbdev = netdev_priv(dev);
 +
-+static void b43_poison_rx_buffer(struct b43_dmaring *ring, struct sk_buff *skb)
-+{
-+	struct b43_rxhdr_fw4 *rxhdr;
-+	unsigned char *frame;
-+
-+	/* This poisons the RX buffer to detect DMA failures. */
-+
-+	rxhdr = (struct b43_rxhdr_fw4 *)(skb->data);
-+	rxhdr->frame_len = 0;
-+
-+	B43_WARN_ON(ring->rx_buffersize < ring->frameoffset + sizeof(struct b43_plcp_hdr6) + 2);
-+	frame = skb->data + ring->frameoffset;
-+	memset(frame, 0xFF, sizeof(struct b43_plcp_hdr6) + 2 /* padding */);
-+}
-+
- static int setup_rx_descbuffer(struct b43_dmaring *ring,
- 			       struct b43_dmadesc_generic *desc,
- 			       struct b43_dmadesc_meta *meta, gfp_t gfp_flags)
- {
--	struct b43_rxhdr_fw4 *rxhdr;
- 	dma_addr_t dmaaddr;
- 	struct sk_buff *skb;
- 
-@@ -568,6 +589,7 @@ static int setup_rx_descbuffer(struct b4
- 	skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
- 	if (unlikely(!skb))
- 		return -ENOMEM;
-+	b43_poison_rx_buffer(ring, skb);
- 	dmaaddr = map_descbuffer(ring, skb->data, ring->rx_buffersize, 0);
- 	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 		/* ugh. try to realloc in zone_dma */
-@@ -578,6 +600,7 @@ static int setup_rx_descbuffer(struct b4
- 		skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
- 		if (unlikely(!skb))
- 			return -ENOMEM;
-+		b43_poison_rx_buffer(ring, skb);
- 		dmaaddr = map_descbuffer(ring, skb->data,
- 					 ring->rx_buffersize, 0);
- 		if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
-@@ -592,9 +615,6 @@ static int setup_rx_descbuffer(struct b4
- 	ring->ops->fill_descriptor(ring, desc, dmaaddr,
- 				   ring->rx_buffersize, 0, 0, 0);
- 
--	rxhdr = (struct b43_rxhdr_fw4 *)(skb->data);
--	rxhdr->frame_len = 0;
--
- 	return 0;
- }
- 
-@@ -1489,6 +1509,15 @@ static void dma_rx(struct b43_dmaring *r
- 			goto drop;
- 		}
- 	}
-+	if (unlikely(b43_rx_buffer_is_poisoned(ring, skb))) {
-+		/* Something went wrong with the DMA.
-+		 * The device did not touch the buffer and did not overwrite the poison. */
-+		b43dbg(ring->dev->wl, "DMA RX: Dropping poisoned buffer.\n");
-+		/* recycle the descriptor buffer. */
-+		sync_descbuffer_for_device(ring, meta->dmaaddr,
-+					   ring->rx_buffersize);
-+		goto drop;
++	switch (type) {
++	case NL80211_IFTYPE_ADHOC:
++		mode = ndis_80211_infra_adhoc;
++		break;
++	case NL80211_IFTYPE_STATION:
++		mode = ndis_80211_infra_infra;
++		break;
++	default:
++		return -EINVAL;
 +	}
- 	if (unlikely(len > ring->rx_buffersize)) {
- 		/* The data did not fit into one descriptor buffer
- 		 * and is split over multiple buffers.
++
++	return set_infra_mode(usbdev, mode);
++}
++
++/*
+  * wireless extension handlers
+  */
+ 
+@@ -1450,55 +1490,6 @@ static int rndis_iw_get_auth(struct net_device *dev,
+ }
+ 
+ 
+-static int rndis_iw_get_mode(struct net_device *dev,
+-				struct iw_request_info *info,
+-				union iwreq_data *wrqu, char *extra)
+-{
+-	struct usbnet *usbdev = netdev_priv(dev);
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-
+-	switch (priv->infra_mode) {
+-	case ndis_80211_infra_adhoc:
+-		wrqu->mode = IW_MODE_ADHOC;
+-		break;
+-	case ndis_80211_infra_infra:
+-		wrqu->mode = IW_MODE_INFRA;
+-		break;
+-	/*case ndis_80211_infra_auto_unknown:*/
+-	default:
+-		wrqu->mode = IW_MODE_AUTO;
+-		break;
+-	}
+-	devdbg(usbdev, "SIOCGIWMODE: %08x", wrqu->mode);
+-	return 0;
+-}
+-
+-
+-static int rndis_iw_set_mode(struct net_device *dev,
+-    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+-{
+-	struct usbnet *usbdev = netdev_priv(dev);
+-	int mode;
+-
+-	devdbg(usbdev, "SIOCSIWMODE: %08x", wrqu->mode);
+-
+-	switch (wrqu->mode) {
+-	case IW_MODE_ADHOC:
+-		mode = ndis_80211_infra_adhoc;
+-		break;
+-	case IW_MODE_INFRA:
+-		mode = ndis_80211_infra_infra;
+-		break;
+-	/*case IW_MODE_AUTO:*/
+-	default:
+-		mode = ndis_80211_infra_auto_unknown;
+-		break;
+-	}
+-
+-	return set_infra_mode(usbdev, mode);
+-}
+-
+-
+ static int rndis_iw_set_encode(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+ {
+@@ -2196,8 +2187,8 @@ static const iw_handler rndis_iw_handler[] =
+ 	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
+ 	IW_IOCTL(SIOCSIWFREQ)      = rndis_iw_set_freq,
+ 	IW_IOCTL(SIOCGIWFREQ)      = rndis_iw_get_freq,
+-	IW_IOCTL(SIOCSIWMODE)      = rndis_iw_set_mode,
+-	IW_IOCTL(SIOCGIWMODE)      = rndis_iw_get_mode,
++	IW_IOCTL(SIOCSIWMODE)      = (iw_handler) cfg80211_wext_siwmode,
++	IW_IOCTL(SIOCGIWMODE)      = (iw_handler) cfg80211_wext_giwmode,
+ 	IW_IOCTL(SIOCGIWRANGE)     = rndis_iw_get_range,
+ 	IW_IOCTL(SIOCSIWAP)        = rndis_iw_set_bssid,
+ 	IW_IOCTL(SIOCGIWAP)        = rndis_iw_get_bssid,
 
-
--- 
-Greetings, Michael.
