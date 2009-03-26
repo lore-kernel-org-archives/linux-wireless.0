@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50835 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487AbZCZBmC (ORCPT
+Received: from fmailhost01.isp.att.net ([204.127.217.101]:64913 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbZCZWta (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 21:42:02 -0400
-Date: Wed, 25 Mar 2009 21:41:48 -0400
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/8] mac80211: fix A-MPDU queue assignment
-Message-ID: <20090326014148.GA5543@bombadil.infradead.org> (sfid-20090326_024207_768447_CA149E90)
-References: <20090323162834.154525349@sipsolutions.net> <20090323163052.038036544@sipsolutions.net>
+	Thu, 26 Mar 2009 18:49:30 -0400
+Message-ID: <49CC064A.10304@lwfinger.net> (sfid-20090326_234933_710199_4AB96D51)
+Date: Thu, 26 Mar 2009 17:48:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090323163052.038036544@sipsolutions.net>
+To: David Ellingsworth <david@identd.dyndns.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT/RFC 1/2] b43legacy: Fixes for beacons
+References: <49CBDE6A.6040702@lwfinger.net> <30353c3d0903261426u56c47af9oe15d9775db171714@mail.gmail.com>
+In-Reply-To: <30353c3d0903261426u56c47af9oe15d9775db171714@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 05:28:36PM +0100, Johannes Berg wrote:
-> Internally, mac80211 requires the skb's queue mapping to be set
-> to the AC queue, not the virtual A-MPDU queue. This is not done
-> correctly currently, this patch moves the code down to directly
-> before the driver is invoked and adds a comment that it will be
-> moved into the driver later.
+David Ellingsworth wrote:
 > 
-> Since this requires __ieee80211_tx() to have the sta pointer,
-> make sure to provide it in ieee80211_tx_pending().
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> I haven't had a chance to test these as of yet. I had to wait a few
+> extra days in order for my new wireless card to come in (couldn't
+> really test in AP mode with only one card). I built a new kernel last
+> night with these patches, but I still need to setup and configure
+> hostapd. Hopefully, I'll know more later tonight. I'll run tests with
+> and without these patches.
 
-Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+OK. Please take whatever time you need. We already missed to 2.6.30 merge
+window, thus we have a couple of months.
 
-  Luis
+Larry
