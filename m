@@ -1,88 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35559 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751180AbZC0OaR (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:44393 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755749AbZCZBX0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 10:30:17 -0400
-Date: Fri, 27 Mar 2009 11:30:08 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rfkill-input madness
-Message-ID: <20090327143007.GA24288@khazad-dum.debian.net> (sfid-20090327_153021_388438_9585E99E)
-References: <1238159196.4452.1.camel@johannes.local>
+	Wed, 25 Mar 2009 21:23:26 -0400
+Received: by fxm2 with SMTP id 2so329758fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 18:23:24 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Subject: Re: [PATCH 2/2 v2] p54spi: fix p54spi_upload_firmware
+Date: Thu, 26 Mar 2009 04:15:26 +0300
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <73aaf0dd0903250500g51494e04iab9382e23d44f695@mail.gmail.com> <200903251345.01608.chunkeey@web.de>
+In-Reply-To: <200903251345.01608.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1238159196.4452.1.camel@johannes.local>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903260415.26646.jcmvbkbc@gmail.com> (sfid-20090326_022329_540191_827F0A4F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Mar 2009, Johannes Berg wrote:
->         ******IMPORTANT******
->         When rfkill-input is ACTIVE, userspace is NOT TO CHANGE THE STATE OF AN RFKILL
->         SWITCH IN RESPONSE TO AN INPUT EVENT also handled by rfkill-input, unless it
->         has set to true the user_claim attribute for that particular switch.  This rule
->         is *absolute*; do NOT violate it.
->         ******IMPORTANT******
->         
->         ...
->         
->         When rfkill-input is not active, userspace must initiate a rfkill status
->         change by writing to the "state" attribute in order for anything to happen.
-> 
-> 
-> How the hell is userspace supposed to know whether rfkill-input is
-> active or not? Does anybody fucking care to implement any of this mess
-> in userspace?
-
-I think rephrasing that warning to: "set user_claim to 1 on any switches
-that you're going to mess with in response to rfkill input events" would be
-a LOT better.  I should have written it that way.
-
-The truth is that userspace doestn't have to care about rfkill-input, unless
-it is trying to do what rfkill-input is supposed to (i.e. listening to input
-events and then trying to update switches), and if it is going to do that,
-it needs stuff that I never sent in for review.
-
-Anyway, I got sidetracked because I was Not Happy with the userspace ABI but
-couldn't come up with anything better.  Better at least get those patches
-into the open.  I just pushed a rebased version of the patches to somewhere
-public.
-
-It is at:
-git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git rfkill
-
-Please take a look and tell me what you think, and whether there is anything
-worth bothering with in there (FWIW, the patchset worked just fine last time
-I checked).
-
-
-As for your second question, I have been looking at the issues re. input
-devices and X.org evdev in the last two days, and the fact is that: it will
-have to be handled in userspace on most non-embedded scenarios, if things
-don't change in userspace soon.
-
-The problem is that X.org will exclusive-grab any input devices you let it
-touch, and rfkill_input will never see any events, anyway.   So, right now,
-for the vast majority of the users, either an input device is not in use, or
-it is in exclusive-grab mode feeding X.org evdev.
-
-At this point, I don't have a clue on what would be the best way to go about
-addressing this issue, that is causing problems not only to rfkill_input,
-but also to anyone who would like to have hotkey handling outside of X.org
-in a system daemon, but still have x.org see the keys (without ugly 'event
-repeater' hacks).
-
-I have no idea if we should talk to the X.org people to see if we can drop
-that exclusive grab?  Allow kernel-side input handlers to ignore exclusive
-grabs?  Have rfkill-input be a you-want-it-in-the-kernel solution and simply
-don't care at all about userspace interfering with it?
-
-I was about to try to locate someone that deals with evdev to ask his ideas
-on the subject.
+> > > what do you think about the attached proposal?
+> >
+> > It looks generally better. But (fw + offset) wouldn't compile, because
+> > fw is void*.
+>
+> ??? but it does compile?!
+>   CHECK   drivers/net/wireless/p54/p54spi.c
+>   CC [M]  drivers/net/wireless/p54/p54spi.o
+>  Building modules, stage 2.
+>   MODPOST 4 modules
+>   CC      drivers/net/wireless/p54/p54spi.mod.o
+>   LD [M]  drivers/net/wireless/p54/p54spi.ko
+>
+> But yes, I agree we better change void *fw to u8 *fw.
+>
+> BTW: does p54spi really work now?
+Now firmware uploading code works fine. It even successfully uploads firmware 
+in small chunks.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Thanks.
+-- Max
