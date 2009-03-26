@@ -1,32 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:19132 "EHLO
+Received: from wf-out-1314.google.com ([209.85.200.174]:1765 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776AbZCCFn2 (ORCPT
+	with ESMTP id S1755960AbZCZIAs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 00:43:28 -0500
+	Thu, 26 Mar 2009 04:00:48 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so538608wff.4
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 01:00:46 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 2 Mar 2009 21:43:26 -0800
-Message-ID: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com> (sfid-20090303_064332_051073_45C71AAE)
-Subject: Elaboration on "Equivalent fix must already exist in Linus' tree"
+In-Reply-To: <1237996137.4320.161.camel@johannes.local>
+References: <1237891149.4320.73.camel@johannes.local> <1237910398.9082.7.camel@localhost.localdomain>
+	<1237979070.4320.156.camel@johannes.local> <1237995072.18896.9.camel@localhost.localdomain>
+	<1237996137.4320.161.camel@johannes.local>
+Date: Thu, 26 Mar 2009 01:00:31 -0700
+Message-ID: <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com> (sfid-20090326_090246_472176_9DDA23B4)
+Subject: Re: wireless powersaving (in NM?)
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Matthew Garrett <mjg@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>, Jouni Malinen <j@w1.fi>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While extending the documentation for submitting Linux wireless bug
-reports [1] we note the stable series policy on patches -- that of
-having an equivalent fix already in Linus' tree. I find this
-documented in Documentation/stable_kernel_rules.txt but I'm curious if
-there is any other resource which documents this or elaborates on this
-a bit more. I often tell people about this rule or push _really_ hard
-on testing "upstream" but some people tend to not understand. I think
-that elaborating a little on this can help and will hopefully create
-more awareness around the importance of trees like Stephen's
-linux-next tree.
+On Wed, Mar 25, 2009 at 8:48 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-03-25 at 11:31 -0400, Dan Williams wrote:
+>
+>> Yeah, sounds OK. =C2=A0Just to be clear, problems with this code wil=
+l appear
+>> on a *per-AP* basis, not a per-card basis, right? =C2=A0ie there are=
+ some
+>> stupid APs that won't work with it, but it won't be the case that a
+>> chipset will be broken for all APs, right?
+>
+> Right. If a particular chipset doesn't properly supported PS then we
+> shouldn't actually support it at all -- but we cannot know if the AP =
+is
+> broken.
 
-[1] http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
-[2] git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
+How about leaving it to the supplicant to guess if the AP is borked or =
+not.
+
+Kalle, what would happen with these broken APs?
+
+If we can determine this through some heuristics then we can label
+such BSSes as borked in the supplicant and then the user won't have to
+worry about this. This would only be dealt with each BSS once at most
+as we would have saved the AP's power save borkedness after our first
+determination of this.
+
+If one wants to do manual debugging you can simple add the flag
+through the supplicant for the bss. Just don't see the need to confuse
+a user with an option if we can get away with figuring it out if
+possible.
 
   Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
