@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59093 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750852AbZCML75 (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:52032 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750830AbZC0PI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 07:59:57 -0400
-Date: Fri, 13 Mar 2009 13:59:39 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix panic on fragmentation with power saving
-Message-ID: <20090313115939.GA24310@jm.kir.nu> (sfid-20090313_130000_554737_16FE064E)
+	Fri, 27 Mar 2009 11:08:28 -0400
+Date: Fri, 27 Mar 2009 12:08:24 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: rfkill get_state
+Message-ID: <20090327150824.GC24288@khazad-dum.debian.net> (sfid-20090327_160831_167617_FE0152CF)
+References: <1238161210.4452.8.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1238161210.4452.8.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was possible to hit a kernel panic on NULL pointer dereference in
-dev_queue_xmit() when sending power save buffered frames to a STA that
-woke up from sleep. This happened when the buffered frame was requeued
-for transmission in ap_sta_ps_end(). In order to avoid the panic, copy
-the skb->dev and skb->iif values from the first fragment to all other
-fragments.
+On Fri, 27 Mar 2009, Johannes Berg wrote:
+> When you implement get_state but don't do force_state, how does
+> get_state ever get called?
+> 
+> It seems to me it'll only get called 
+>  * when you read sysfs
+>  * on resume
+>  * on epo
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Yes.  It is mostly something that the rfkill core uses to get an up-to-date
+state when it knows it needs one, and it is not good for anything else.
 
----
- net/mac80211/tx.c |    2 ++
- 1 file changed, 2 insertions(+)
+> How do we ever react to a button press then to make a uevent?
 
---- kernel-debug.orig/net/mac80211/tx.c	2009-03-13 13:16:00.000000000 +0200
-+++ kernel-debug/net/mac80211/tx.c	2009-03-13 13:39:01.000000000 +0200
-@@ -784,6 +784,8 @@ ieee80211_tx_h_fragment(struct ieee80211
- 		skb_copy_queue_mapping(frag, first);
- 
- 		frag->do_not_encrypt = first->do_not_encrypt;
-+		frag->dev = first->dev;
-+		frag->iif = first->iif;
- 
- 		pos += copylen;
- 		left -= copylen;
+rfkill-related uevents exist to signal change in state of the rfkill
+switches, REGARDLESS of the reason.  So they are NOT related to button
+presses, except in-so-far that a button press might have changed a rfkill
+switch state.
+
+So, the short answer is: rfkill_force_state().  Call it when the radio
+rfkill state changed, and the core will generate uevents.
+
+The core doesn't have any helpers for this, so if you need polling, for
+example, you do it in your driver and call rfkill_force_state() as needed.
+
+
+Where does the button press enters the picture in your driver?  Knowing
+that, I can illustrate how it would plug to rfkill core, or to the input
+device core (I am yet to see a case where it should be plugged to both).
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
