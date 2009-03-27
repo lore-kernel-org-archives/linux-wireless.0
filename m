@@ -1,101 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42156 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753746AbZCKPPc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42122 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbZC0ITS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 11:15:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] lib80211: silence excessive crypto debugging messages
-Date: Wed, 11 Mar 2009 11:12:04 -0400
-Message-Id: <1236784324-10015-1-git-send-email-linville@tuxdriver.com> (sfid-20090311_161716_147971_D5705BA7)
-In-Reply-To: <20090311151102.GC8761@tuxdriver.com>
-References: <20090311151102.GC8761@tuxdriver.com>
+	Fri, 27 Mar 2009 04:19:18 -0400
+Subject: Re: [RFC] regulatory information interpretation rules
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1237712542.5100.766.camel@johannes.local> (sfid-20090322_100234_495492_0385D4F0)
+References: <1237712542.5100.766.camel@johannes.local>
+	 (sfid-20090322_100234_495492_0385D4F0)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ueurdSIRgx3mVjepq+cu"
+Date: Fri, 27 Mar 2009 09:18:42 +0100
+Message-Id: <1238141922.4331.100.camel@johannes.local> (sfid-20090327_091923_361026_29E179F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When they were part of the now defunct ieee80211 component, these
-messages were only visible when special debugging settings were enabled.
-Let's mirror that with a new lib80211 debugging Kconfig option.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/Kconfig               |   10 ++++++++++
- net/wireless/lib80211_crypt_ccmp.c |    2 ++
- net/wireless/lib80211_crypt_tkip.c |    4 ++++
- 3 files changed, 16 insertions(+), 0 deletions(-)
+--=-ueurdSIRgx3mVjepq+cu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index e28e2b8..092ae6f 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -102,3 +102,13 @@ config LIB80211_CRYPT_CCMP
- 
- config LIB80211_CRYPT_TKIP
- 	tristate
-+
-+config LIB80211_DEBUG
-+	bool "lib80211 debugging messages"
-+	depends on LIB80211
-+	default n
-+	---help---
-+	  You can enable this if you want verbose debugging messages
-+	  from lib80211.
-+
-+	  If unsure, say N.
-diff --git a/net/wireless/lib80211_crypt_ccmp.c b/net/wireless/lib80211_crypt_ccmp.c
-index db42819..2301dc1 100644
---- a/net/wireless/lib80211_crypt_ccmp.c
-+++ b/net/wireless/lib80211_crypt_ccmp.c
-@@ -337,6 +337,7 @@ static int lib80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (ccmp_replay_check(pn, key->rx_pn)) {
-+#ifdef CONFIG_LIB80211_DEBUG
- 		if (net_ratelimit()) {
- 			printk(KERN_DEBUG "CCMP: replay detected: STA=%pM "
- 				 "previous PN %02x%02x%02x%02x%02x%02x "
-@@ -346,6 +347,7 @@ static int lib80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 				 key->rx_pn[3], key->rx_pn[4], key->rx_pn[5],
- 				 pn[0], pn[1], pn[2], pn[3], pn[4], pn[5]);
- 		}
-+#endif
- 		key->dot11RSNAStatsCCMPReplays++;
- 		return -4;
- 	}
-diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
-index 7e8e22b..c362873 100644
---- a/net/wireless/lib80211_crypt_tkip.c
-+++ b/net/wireless/lib80211_crypt_tkip.c
-@@ -465,12 +465,14 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (tkip_replay_check(iv32, iv16, tkey->rx_iv32, tkey->rx_iv16)) {
-+#ifdef CONFIG_LIB80211_DEBUG
- 		if (net_ratelimit()) {
- 			printk(KERN_DEBUG "TKIP: replay detected: STA=%pM"
- 			       " previous TSC %08x%04x received TSC "
- 			       "%08x%04x\n", hdr->addr2,
- 			       tkey->rx_iv32, tkey->rx_iv16, iv32, iv16);
- 		}
-+#endif
- 		tkey->dot11RSNAStatsTKIPReplays++;
- 		return -4;
- 	}
-@@ -505,10 +507,12 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 			 * it needs to be recalculated for the next packet. */
- 			tkey->rx_phase1_done = 0;
- 		}
-+#ifdef CONFIG_LIB80211_DEBUG
- 		if (net_ratelimit()) {
- 			printk(KERN_DEBUG "TKIP: ICV error detected: STA="
- 			       "%pM\n", hdr->addr2);
- 		}
-+#endif
- 		tkey->dot11RSNAStatsTKIPICVErrors++;
- 		return -5;
- 	}
--- 
-1.6.0.6
+On Sun, 2009-03-22 at 10:02 +0100, Johannes Berg wrote:
+> Ok, so I'm thinking about the interpretation rules for the regulatory
+> information. I even dreamt about this tonight, unfortunately...
+
+The posting about the German rules made me look at them again and I
+realised that there's no way (with either interpretation of the rules)
+we can currently handle the German requirement of using only
+0.25mW/25kHz, 10mW/MHz or 50mW/MHz.
+
+Previously we had only thought about 20 MHz (or above) channels so that
+wasn't a restriction (since you then reach the max EIRP permitted), but
+with smaller bandwidths that does become a limit, a 5 MHz channel can
+only have a max EIRP of 50mW, 50mW or 250mW respectively.
+
+Should we incorporate that into regdb while we're changing things there
+anyway? I'd add an optional field into the database like this:
+	(5150 - 5250 @ 40), (N/A, 200mW, 0.25 mW / 25 kHz), ...
+                                       ^^^^^^^^^^^^^^^^^^ optional
+
+and extend netlink with it as well -- this requires a regdb version
+change but not a netlink protocol change (except for the addition of the
+new limit).
+
+Does that make sense?
+
+johannes
+
+--=-ueurdSIRgx3mVjepq+cu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJzIvfAAoJEKVg1VMiehFYsCkP/0gvJymORZC/0yrNfI3s+57N
+RqkSkG2gAzjGF7WjvWerYm9+GHWatu+SxH7HWsOHmmwgU8n5m5NbrTF68cZF8923
+fRVmvp58x3uaatdvNfbC00fjEIEuKOoPVf6ZobJkcVefm/GJrmzOQUaKBjLJA114
+gEHlo9BJP1e9t0xYqHqBfemHvJrjRG66X30PX8goZJT1QmocBPSRfFP0jjP8ACoi
+wMfYmLwgHQfKKE6Exx3Gp0tWLBCUcRmV1l1YTeBlHG+1zqerPCRxt9UREaWZgnOL
+PIMVrj8xtXgb+yPFuIE28ISOjEC81GmiS5IQ5LGt5cYisEAb1pmOvKyXp+vi42Y5
+76Qdl+iW4zapUPhtdCU0tn/b/fCJ4H5QIUqiJjnNbIEwD4wr2FNR1Qy3mxkKANyw
+JAwgFDBOQTrQdE8qQNyDWVd+vP52CSHL2GlwkbHvEFfqhXdnD9m9Um0kIKMpLV6z
+KR/AgBH1qpeHkKSIF9FSfXGE8rOGVvIvJrAmZZBPLff7DcN2MfUwmtt88jlNB2q6
+L5PNGucD/yy9lfQDlEyAzGobgMXRsKFDJpOgspSad7FlWJUzw2kV35usKy48qJRF
+ePDhlXvTNdWHIYU+A7qf9xbCwTJddKsX8TUA6CyGswHVsj7p6MjkPghhm3Ahn3yy
+T8w8EN+UwPnipH258cjn
+=cJsc
+-----END PGP SIGNATURE-----
+
+--=-ueurdSIRgx3mVjepq+cu--
 
