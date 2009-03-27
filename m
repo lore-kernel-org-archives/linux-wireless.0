@@ -1,79 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44820 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48906 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbZCVIEP (ORCPT
+	with ESMTP id S1757566AbZC0VLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 04:04:15 -0400
-Subject: Re: [PATCH] Marvell CF8381
+	Fri, 27 Mar 2009 17:11:41 -0400
+Subject: Re: rfkill-input madness
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	hs4233@mail.mn-solutions.de
-In-Reply-To: <200903220511.50229.marek.vasut@gmail.com> (sfid-20090322_051148_655459_21864B2F)
-References: <200903220127.21836.marek.vasut@gmail.com>
-	 <200903220511.50229.marek.vasut@gmail.com>
-	 (sfid-20090322_051148_655459_21864B2F)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kKH/KxigDEv5JJhDVs1X"
-Date: Sun, 22 Mar 2009 09:04:08 +0100
-Message-Id: <1237709048.5100.682.camel@johannes.local> (sfid-20090322_090422_204815_6DB953F6)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090327143007.GA24288@khazad-dum.debian.net>
+References: <1238159196.4452.1.camel@johannes.local>
+	 <20090327143007.GA24288@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TCGWYFITccBkN2maI7Yb"
+Date: Fri, 27 Mar 2009 22:10:37 +0100
+Message-Id: <1238188237.4452.17.camel@johannes.local> (sfid-20090327_221144_293089_5261B8F9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-kKH/KxigDEv5JJhDVs1X
+--=-TCGWYFITccBkN2maI7Yb
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-03-22 at 05:11 +0100, Marek Vasut wrote:
+On Fri, 2009-03-27 at 11:30 -0300, Henrique de Moraes Holschuh wrote:
 
-> One more thing - I also had to apply the following patch in order to get=20
-> region code detected properly.
->=20
-> le16_to_cpu(cmd.regioncode) =3D 0x3031 for me and Im definitelly not in s=
-pain,=20
-> but 0x30 (eu) looks reasonable.
->=20
-> diff --git a/drivers/net/wireless/libertas/cmd.c=20
-> b/drivers/net/wireless/libertas/cmd.c
-> index 639dd02..ce32bc9 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -123,7 +123,7 @@ int lbs_update_hw_spec(struct lbs_private *priv)
->          * only ever be 8-bit, even though the field size is 16-bit.  Som=
-e=20
-> firmware
->          * returns non-zero high 8 bits here.
->          */
-> -       priv->regioncode =3D le16_to_cpu(cmd.regioncode) & 0xFF;
-> +       priv->regioncode =3D (le16_to_cpu(cmd.regioncode) & 0xFF00) >> 8;
+> I think rephrasing that warning to: "set user_claim to 1 on any switches
+> that you're going to mess with in response to rfkill input events" would =
+be
+> a LOT better.  I should have written it that way.
 
-I'd be more inclined to think that this was an endian bug? Does your
-machine happen to be big endian?
+Indeed, but that's useless since almost all drivers disable userspace
+claiming... I'll re-implement it later for only the software state.
+
+> The truth is that userspace doestn't have to care about rfkill-input, unl=
+ess
+> it is trying to do what rfkill-input is supposed to (i.e. listening to in=
+put
+> events and then trying to update switches), and if it is going to do that=
+,
+> it needs stuff that I never sent in for review.
+
+Care to explain?
+
+> Anyway, I got sidetracked because I was Not Happy with the userspace ABI =
+but
+> couldn't come up with anything better. =20
+
+It's not like we can change it now...
+
+> Better at least get those patches
+> into the open.  I just pushed a rebased version of the patches to somewhe=
+re
+> public.
+>=20
+> It is at:
+> git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git rfkill
+>=20
+> Please take a look and tell me what you think, and whether there is anyth=
+ing
+> worth bothering with in there (FWIW, the patchset worked just fine last t=
+ime
+> I checked).
+
+Ok, when I get online again :)
+
+> As for your second question, I have been looking at the issues re. input
+> devices and X.org evdev in the last two days, and the fact is that: it wi=
+ll
+> have to be handled in userspace on most non-embedded scenarios, if things
+> don't change in userspace soon.
+>=20
+> The problem is that X.org will exclusive-grab any input devices you let i=
+t
+> touch, and rfkill_input will never see any events, anyway.   So, right no=
+w,
+> for the vast majority of the users, either an input device is not in use,=
+ or
+> it is in exclusive-grab mode feeding X.org evdev.
+>=20
+> At this point, I don't have a clue on what would be the best way to go ab=
+out
+> addressing this issue, that is causing problems not only to rfkill_input,
+> but also to anyone who would like to have hotkey handling outside of X.or=
+g
+> in a system daemon, but still have x.org see the keys (without ugly 'even=
+t
+> repeater' hacks).
+>=20
+> I have no idea if we should talk to the X.org people to see if we can dro=
+p
+> that exclusive grab?  Allow kernel-side input handlers to ignore exclusiv=
+e
+> grabs?  Have rfkill-input be a you-want-it-in-the-kernel solution and sim=
+ply
+> don't care at all about userspace interfering with it?
+>=20
+> I was about to try to locate someone that deals with evdev to ask his ide=
+as
+> on the subject.
+
+Indeed, but that means *X* needs to implement all this, or something
+running in X, which is undesirable... Other things are sure to run afoul
+of this too, for example some hal button handlers.
 
 johannes
 
---=-kKH/KxigDEv5JJhDVs1X
+--=-TCGWYFITccBkN2maI7Yb
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJxfD1AAoJEKVg1VMiehFYYroP/Azfch7XPOTYSx2ONoryY1hu
-/WXfh9unY2UreaNta/k0reapOFDJNOadgK4R3qPqymaZDBQ5vDa6T4aqUER3Jgxx
-OdBSs3EI6OlyDzMJ5GTDSSQqu+894Ik6/nGNY1vd+C3froY8JQh7DmcmCTYYNjOe
-HOGoOOpNijhRR+d6PrmLz01cF6af0p/r45h/ey+WqCBJ1SNrbTJHRBmMYb0wRXpH
-i8OwAu7kfzToA2jvxaiKk0Iec0GJ3FAK36eRKgJNDd2plisya4yKggGTyDIFiHor
-qkBXZnRjugbUj731YgLKS3DKOzWVErj2kILwuvhLUIhEhVcvt2Cqg4V4xJzTgUza
-A+CJsMaT1JuoXYs58nbxSmOYE95yaw/edlaZpntOBjrExLViNrvoOEatb2Bd5ewE
-tCbV3B+rKeWXmybOlC+oZj0DsiE5J5BRncGAiB59Oq2Lj1Tf/GKUB3EGIs1d9BnX
-4wwO5wmDqWWJoUU7LsLU60VXpRg4RbpGEJ4MeiRYFPsCqaASGHtLue8GXci8vjg7
-bf1eaUc6b5iNBGETyhY/LV6G3l8LlvDTv+GxlxMFWeNTlf7hYdvx7txSP34Sfvmy
-NJ+/Q6eQvxR69XuTSy8+QAFeiSQQzL1BqVaAZMTzJm5+QaGPZRKnAPTFoJwBc4FG
-8dudGy3M0Nfm/uUr09kF
-=ICCk
+iQIcBAABAgAGBQJJzUDLAAoJEKVg1VMiehFYIsoP/1BhEih6xDqH+dOatzW+kCNC
+lQsSGoT+zlRLDIlmCxTRPzrj51xndlxgPOSSUwtq7d2fm8BFy7XjaT1H3I7NrXJj
+kviM/u2QrYt89FU+R+5Odf0LTSqkqhb5wjBROc08aCRBFe6XZQxhgXBMZ1SRXlRM
+h4dOmLITupiYIck68XqYaPkT31NKq7Ta14UQnfm8UiU+Tg4mklX1H7sI7N/4XXKk
+QK6yXL1vj/alpAj81ftHos5cVoCy+Pkgd56sZ/ohafL7zQqgLAfCLeZBvTAI69sT
+3ZgGHC+d7aqkPqfaAJNmR0AijfOe6Jmmi2dThh1ziuULZVlWI8kY0sRA6YyCDmUT
+etag6LJJwPPiY1CT6fUGnVZamvURqi98oEwO+dZd7qnbvZdcyGOjEg1meR8KMSCV
+kzneeSfFCrBPnHEZ6W8K5ZDBs70c5M4h+UNjrnZiNfXnXrX4Vk2CyC8KWz6pg69v
+qL69OtCbCNAZJiLTfiTgxy3CRuPSMeBuxWaZNgVvluoDSYN8SD742/VwOAc4TMS6
+d2IU+UEIg6ikY0S0vBuX2ep0HytQ9t2e8PN9dXfiNsVivjo7x3GSSd9ux40CNjy0
+fcoMEJXlVbugyH4GQP/fxD8c/vXqzxWieg6TEh0Fnz2Q8metnFmPyR1SHH0fReQH
+bM9JKkE7CY8Oh/IYMbjJ
+=7b58
 -----END PGP SIGNATURE-----
 
---=-kKH/KxigDEv5JJhDVs1X--
+--=-TCGWYFITccBkN2maI7Yb--
 
