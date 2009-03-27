@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:51339 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755373AbZCFAOp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 19:14:45 -0500
-Message-ID: <49B06AF0.9080605@lwfinger.net> (sfid-20090306_011457_112672_89510769)
-Date: Thu, 05 Mar 2009 18:14:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 7/7 v2] p54: initial SoftLED support
-References: <200903060102.04668.chunkeey@web.de>
-In-Reply-To: <200903060102.04668.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.uni-ulm.de ([134.60.1.11]:59112 "EHLO mail.uni-ulm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753831AbZC0K4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 06:56:36 -0400
+Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on
+	5GHz
+From: Bernhard Seibold <bernhard.seibold@uni-ulm.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <148ad3659dd1afe81ce6408e2a48715a.squirrel@secure.sipsolutions.net>
+References: <1238113267.29544.14.camel@blob>
+	 <148ad3659dd1afe81ce6408e2a48715a.squirrel@secure.sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S57NDWKad7jlj2LmcP9e"
+Date: Fri, 27 Mar 2009 11:55:12 +0100
+Message-Id: <1238151312.10401.1.camel@blob> (sfid-20090327_115639_188886_432F81B1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch adds SoftLED support for all p54 devices.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> changes:
-> 	- removed stray mutex_destroy
-> 	- ratelimit "failed to LED" messages
-> ---
 
-This one and the previous patch "p54: fix race condition in memory management"
-fixes my crash.
+--=-S57NDWKad7jlj2LmcP9e
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Fri, 2009-03-27 at 08:15 +0100, Johannes Berg wrote:
+
+> Can we find a URL for this one?
+
+http://www.bundesnetzagentur.de/media/archive/5009.pdf
+
+
+--=-S57NDWKad7jlj2LmcP9e
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAknMsIkACgkQYHTgXE+fjpkbmACfdVf4/6MCXlSPmPDgQAUmP2Yh
+OyIAoIuLgAE64kX12apq78esReuXo/sF
+=er58
+-----END PGP SIGNATURE-----
+
+--=-S57NDWKad7jlj2LmcP9e--
+
