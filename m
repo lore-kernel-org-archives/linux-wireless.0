@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f160.google.com ([209.85.217.160]:35220 "EHLO
-	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762163AbZCYRls (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:29083 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824AbZC0Szf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 13:41:48 -0400
-Received: by gxk4 with SMTP id 4so352537gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 10:41:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200903260337.37783.kel@otaku42.de>
-References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
-	<43e72e890903250047o6a4ed5cfm4ebb849013e9d571@mail.gmail.com>
-	<43e72e890903250051j44955276j42fce045c5079b87@mail.gmail.com>
-	<200903260337.37783.kel@otaku42.de>
-Date: Wed, 25 Mar 2009 10:41:30 -0700
-Message-ID: <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com> (sfid-20090325_184153_425610_40C0BB72)
-Subject: Re: [renamed] Debian crda?
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Kel Modderman <kel@otaku42.de>
-Cc: debian-devel@lists.debian.org,
+	Fri, 27 Mar 2009 14:55:35 -0400
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+CC: "ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Date: Fri, 27 Mar 2009 11:55:33 -0700
+Subject: RE: [ipw3945-devel] New firmware available for Intel PRO/Wireless
+	2200BG and 2915ABG
+Message-ID: <02B3067C068D0549A8CCFCB17D4D318B2E76C1D5@orsmsx502.amr.corp.intel.com> (sfid-20090327_195537_329806_DBA5A014)
+References: <1237916524.455.18.camel@rc-desk>
+	<200903241855.06916.helmut.schaa@gmail.com>
+	<1237918158.455.26.camel@rc-desk> <200903271637.42048.helmut.schaa@gmail.com>
+In-Reply-To: <200903271637.42048.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 25, 2009 at 10:37 AM, Kel Modderman <kel@otaku42.de> wrote:
-> On Wednesday 25 March 2009 17:51:41 Luis R. Rodriguez wrote:
->> On Wed, Mar 25, 2009 at 12:47 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> > On Wed, Mar 25, 2009 at 12:39 AM, Paul Wise <pabs@debian.org> wrote:
->> >> On Wed, Mar 25, 2009 at 4:09 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> >>
->> >>> Last time I poked them it seemed it was not easy to figure out how to
->> >>> deal with, if at all, the optional but recommended RSA signature stuff
->> >>> [1] with the DFSG.
->> >>>
->> >>> [1] http://wireless.kernel.org/en/developers/Regulatory#RSADigitalSignature
->> >>
->> >> What is the percieved DFSG/RSA conflict? I can't detect any based on
->> >> that section of the page.
->> >
->> > Thanks Paul, then its just a matter of packaging. There is an
->> > debian-example/ directory with a cdbs example of how to package for
->> > wireless-regdb and crda if anyone is up for it.
+=20
+
+>-----Original Message-----
+>From: Helmut Schaa [mailto:helmut.schaa@googlemail.com]=20
+>Sent: Friday, March 27, 2009 11:38 AM
+>To: Chatre, Reinette
+>Cc: ipw2100-devel@lists.sourceforge.net;=20
+>linux-wireless@vger.kernel.org; ipw3945-devel@lists.sourceforge.net
+>Subject: Re: [ipw3945-devel] New firmware available for Intel=20
+>PRO/Wireless 2200BG and 2915ABG
 >
-> The example packaging needs some love, I think. I don't see it as a great
-> reference to the eventual packaging material that would enter Debian.
+>Am Dienstag, 24. M=E4rz 2009 schrieb reinette chatre:
+>> Hi Helmut,
+>>=20
+>> On Tue, 2009-03-24 at 10:55 -0700, Helmut Schaa wrote:
+>> > Am Dienstag, 24. M=E4rz 2009 schrieb reinette chatre:
+>> > > A new version (3.1) of firmware for Intel=AE PRO/Wireless=20
+>2200BG and
+>> > > 2915ABG Drivers is now available for download from
+>> > > http://ipw2200.sourceforge.net/firmware.php.
+>> >=20
+>> > I couldn't find a changelog for the new firmware. Could=20
+>you point me to
+>> > a changelog or provide a short summary of what changed since 3.0?
+>>=20
+>> I am sorry, we were unable to obtain this information.
 >
->>
->> And as its probably best to coordinate with Ubuntu, they have a
->> wireless-crda package which combines both into one package. Its
->> shipping for Jaunty.
+>Would be interesting if any firmware crashes got fixed with=20
+>that release (and
+>in which situations these happened). Nevertheless, good to see=20
+>that Intel
+>still pushes updates for older hardware :)
+
+Reports from the field are welcome.
+
+-- Ben --
+
 >
-> And that's the only way to sanely package it (by combining the two pieces
-> upstream splits) as show by Fedora also choosing that route.
-
-Well I actually disagree.
-
-> Luis why can't CRDA and regd simply be released in same tarball considering
-> they have such a strong relationship with eachother due to the openssl stuff?
-
-Openssl stuff is optional and in fact not the lib chosen by default,
-libgcrypt is the default though.
-
-The point is that crda won't be updated regularly but the
-wireless-regdb will be. No point in updating a binary when only the
-file it reads is the one that changes.
-
-  Luis
+>Thanks,
+>Helmut
+>
+>---------------------------------------------------------------
+>---------------
+>_______________________________________________
+>Ipw3945-devel mailing list
+>Ipw3945-devel@lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
