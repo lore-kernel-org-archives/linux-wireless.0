@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:55697 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756453AbZCSSsM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 14:48:12 -0400
-Message-ID: <49C293CC.6020009@oracle.com> (sfid-20090319_194814_660804_C43BA1DA)
-Date: Thu, 19 Mar 2009 11:49:48 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for March 19 (wireless/p54)
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C280BE.8090106@oracle.com> <200903191850.17825.mb@bu3sch.de>
-In-Reply-To: <200903191850.17825.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:16674 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753573AbZC0TkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 15:40:00 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] iwlwifi: change check triggering device restart after rfkill change
+Date: Fri, 27 Mar 2009 12:45:30 -0700
+Message-Id: <1238183130-31461-1-git-send-email-reinette.chatre@intel.com> (sfid-20090327_204005_642167_EB1A658A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Thursday 19 March 2009 18:28:30 Randy Dunlap wrote:
->> Stephen Rothwell wrote:
->>> Hi all,
->>>
->>> Changes since 20090318:
->>
->> ERROR: "led_classdev_register" [drivers/net/wireless/p54/p54common.ko] undefined!
->> ERROR: "led_classdev_unregister" [drivers/net/wireless/p54/p54common.ko] undefined!
->>
->> One possible option (fix) is to have CONFIG_MAC80211_LEDS also select
->> LEDS_CLASS (that would build the missing functions).
-> 
-> Does p54 select CONFIG_MAC80211_LEDS? If that's the case, I think it should
+The STATUS_ALIVE value cannot be used because it is cleared when
+interface is brought down and will not be set if rfkill is enabled when
+interface is started again. The interface can thus not be brought up if
+rfkill was enabled before stopping the interface and disabled after
+starting the interface.
 
-  No, it doesn't.  p54common.c just has a large block of code that is
-surrounded by
-#ifdef CONFIG_MAC80211_LEDS
-...
-#endif
+Change the test to use priv->is_open instead, this will be set when
+interface is started whether rfkill is enabled or not.
 
-so we could argue that it's just purely a p54 bug.
+Thanks to Helmut Schaa for the suggested fix.
 
-> probably do it the other way around. p54 should build its LED code if CONFIG_MAC80211_LEDS
-> is available. Otherwise it should not.
-> 
-> This way you don't enter the SELECT dependency hell and still have automagic configuration.
-> 
-> Take a look at b43 for an example.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 18ef713..970c4fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2058,7 +2058,7 @@ void iwl_bg_rf_kill(struct work_struct *work)
+ 			  "HW and/or SW RF Kill no longer active, restarting "
+ 			  "device\n");
+ 		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+-		    test_bit(STATUS_ALIVE, &priv->status))
++		    priv->is_open)
+ 			queue_work(priv->workqueue, &priv->restart);
+ 	} else {
+ 		/* make sure mac80211 stop sending Tx frame */
 -- 
-~Randy
+1.5.6.3
+
