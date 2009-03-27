@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:9557 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487AbZCXAkZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 20:40:25 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so2013074rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 17:40:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49C82719.3080108@hauke-m.de>
-References: <49C82719.3080108@hauke-m.de>
-Date: Mon, 23 Mar 2009 17:40:08 -0700
-Message-ID: <43e72e890903231740m6b804fa5mfdcfe57ae07702a7@mail.gmail.com> (sfid-20090324_014028_061566_9F9DF407)
-Subject: Re: [PATCH] compat-2.6: Add AR9170 driver
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:61346 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750913AbZC0EHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 00:07:33 -0400
+Subject: Re: [ath5k-devel] [BISECTED] AR5414 fails to scan after "ath5k:
+ Update reset code"
+From: Pavel Roskin <proski@gnu.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0903251847p260446bfi22a1b4c587dc41cc@mail.gmail.com>
+References: <1238020625.15025.15.camel@mj>
+	 <40f31dec0903251847p260446bfi22a1b4c587dc41cc@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 27 Mar 2009 00:07:29 -0400
+Message-Id: <1238126849.20768.12.camel@mj> (sfid-20090327_050735_550143_5E423D6C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 5:19 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This adds the AR9170 driver to compat-wireless.
+On Thu, 2009-03-26 at 03:47 +0200, Nick Kossifidis wrote:
 
-Thanks applied and new tarball regenerated.
+> That's weird, I've tested this with my 5413 and it works just fine. It
+> seems that 5424 (pci-e version of 5413) still has some issues. Have
+> you tried monitor mode ?
 
-The patch commit log (which cannot be seen as the patch was attached)
-only enables ar9170 for >= 2.6.28. If someone wants to get this on
-2.6.27 you'll just have to backport the routines which fail to
-compile. Patches welcomed of course.
+I have reduced the patch to the clock setting in ath5k_hw_nic_wakeup().
 
-v2.6.29-rc8-18695-g8fe80c6
-wireless-testing latest tag:
-master-2009-03-23
-This is compat-release:
-master-2009-03-23
+Testing with madwifi-free shows that the clock register for 802.11a
+channels for RF5413 should be 0x04.  ath5k uses 0x44
+(AR5K_PHY_PLL_40MHZ_5413 | AR5K_PHY_PLL_RF5112).  The value before the
+patch that broke scanning was 0xea (AR5K_PHY_PLL_40MHZ |
+AR5K_PHY_PLL_RF5112).
 
-One small note, Hauke, can you send these patches inline moving
-forward? In this case it proved useful as the commit log had
-information useful.
+With the following patch, scanning works for both 2.4 GHz and 5 GHz
+bands.  Please test with your hardware.  If it works, I'll submit it.
 
-This may help, it has some example git send-email stuff:
 
-http://wireless.kernel.org/en/developers/Documentation/git-guide
+ath5k: fix scanning in AR2424
 
-  Luis
+AR5K_PHY_PLL_40MHZ_5413 shouldn't be ORed with AR5K_PHY_MODE_RAD_RF5112.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+
+ drivers/net/wireless/ath5k/reset.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+
+diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireless/ath5k/reset.c
+index 7a17d31..faede82 100644
+--- a/drivers/net/wireless/ath5k/reset.c
++++ b/drivers/net/wireless/ath5k/reset.c
+@@ -359,7 +359,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 			mode |= AR5K_PHY_MODE_FREQ_5GHZ;
+ 
+ 			if (ah->ah_radio == AR5K_RF5413)
+-				clock |= AR5K_PHY_PLL_40MHZ_5413;
++				clock = AR5K_PHY_PLL_40MHZ_5413;
+ 			else
+ 				clock |= AR5K_PHY_PLL_40MHZ;
+ 
+
+
+-- 
+Regards,
+Pavel Roskin
