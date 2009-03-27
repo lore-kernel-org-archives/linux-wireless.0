@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35810 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751689AbZCMIFR (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:62637 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760139AbZC0VMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 04:05:17 -0400
-Date: Fri, 13 Mar 2009 10:03:59 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Which APs to disregards from in inputting into the bss list
-Message-ID: <20090313080359.GA13826@jm.kir.nu> (sfid-20090313_090524_021011_0E3904F4)
-References: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com>
+	Fri, 27 Mar 2009 17:12:49 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so1527426wff.4
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 14:12:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com>
+In-Reply-To: <43e72e890903271410u4471f0b3je3308e6b65f03235@mail.gmail.com>
+References: <1238113267.29544.14.camel@blob> <43e72e890903271410u4471f0b3je3308e6b65f03235@mail.gmail.com>
+Date: Fri, 27 Mar 2009 14:12:32 -0700
+Message-ID: <43e72e890903271412k7e5a9feexae38059cb68e792c@mail.gmail.com> (sfid-20090327_221252_686777_1AF9FB16)
+Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Bernhard Seibold <bernhard.seibold@uni-ulm.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	David Quan <David.Quan@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2009 at 08:09:53PM -0700, Luis R. Rodriguez wrote:
-> Do we want to ignore certain APs if we determine they are bogus?
+On Fri, Mar 27, 2009 at 2:10 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Mar 26, 2009 at 5:21 PM, Bernhard Seibold
+> <bernhard.seibold@uni-ulm.de> wrote:
+>> Hi!
+>>
+>> The current regdb is missing a frequency range for Germany. That
+>> freq-range is military-controlled, so to be on the safe side, I asked
+>> the responsible agency, and they confirmed to me that it's legal to use.
+>> They also sent me the attached pdf (German only) which contains some
+>> details.
+>>
+>> Please CC me on replies.
+>
+> FWIW we reviewed this internally and this matches our understanding as well. So:
+>
+> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Only if we can be sure that there is no chance of that AP working (e.g.,
-someone running a program that sends random Beacon frames just to annoy
-people). Even in the case of apparently bogus AP, I'm not sure I would
-like to remove it from the scan results in any other case than the
-attack with huge number of random beacons/probe response frames.
+Oh John and if this patch is applied and mine are accepted as well
+please note that we now need to update the sha1sum.txt file with the
+sha1sum of db.txt upon each change. A change will trigger a recompile
+upon running make, and generate your key if you don't have one.
 
-> An
-> example is 11n APs with WEP/TKIP. Would we rather not even store then
-> in our bss list so that way we wont' get reports from users not being
-> able to connect to such APs.
-
-That is not an example of an AP we would not be able to talk to (with
-legacy rates; and as far as HT-only configuration is concerned, we would
-likely only learn about that after having tried to associate).
-
-> Other examples might be if 11n APs have
-> HT IEs but their lengths are not right, or if the AP is HT40 and our
-> regulatory domain does now allow HT40.
-
-I would be careful about IE lengths since many IEs can be extended in
-the future. As far as HT40 is concerned, we could try to associate with
-HT20 and anyway, I would like to see that AP in the scan results.
-
-> The benefit I see with these early checks we won't get complaints
-> about not being able to connect to bogus APs or APs you shouldn't be
-> connected to anyway.
-
-Those would be replaced with complaints about not seeing APs, scan
-being broken, and not being able to connect to APs that we should be
-able to connect to..
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
