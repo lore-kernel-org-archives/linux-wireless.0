@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44671 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080AbZCFTp3 (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35559 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751180AbZC0OaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 14:45:29 -0500
-Date: Fri, 6 Mar 2009 14:40:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for March 6 (ath9k)
-Message-ID: <20090306194045.GE3712@tuxdriver.com> (sfid-20090306_204534_146541_CAFDF746)
-References: <20090306191311.697e7b97.sfr@canb.auug.org.au> <49B17320.8010000@oracle.com> <49B17B12.3050200@openwrt.org> <49B17C4E.3000004@oracle.com>
+	Fri, 27 Mar 2009 10:30:17 -0400
+Date: Fri, 27 Mar 2009 11:30:08 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rfkill-input madness
+Message-ID: <20090327143007.GA24288@khazad-dum.debian.net> (sfid-20090327_153021_388438_9585E99E)
+References: <1238159196.4452.1.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <49B17C4E.3000004@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1238159196.4452.1.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 06, 2009 at 11:41:02AM -0800, Randy Dunlap wrote:
-> Gabor Juhos wrote:
-> > Randy Dunlap =EDrta:
-> >> Stephen Rothwell wrote:
-> >>> Hi all,
-> >>>
-> >>> Linus' release of -rc7 seems to have stirred people up a bit ...
-> >>>
-> >>> Changes since 20090305:
-> >>
-> >> when CONFIG_RFKILL=3Dn, ath9k/virtual.c causes:
-> >>
-> >> (.text+0x224e83): undefined reference to `ath_radio_disable'
-> >> (.text+0x224e8b): undefined reference to `ath_radio_enable'
-> >>
-> >>
-> >=20
-> > Hi,
-> >=20
-> > I have submitted a patch for this already:
-> > http://marc.info/?l=3Dlinux-wireless&m=3D123633468314970&w=3D2
-> >=20
-> > Should I send it to somewhere else as well?
->=20
-> It hasn't propagated into the linux-next merging yet...
+On Fri, 27 Mar 2009, Johannes Berg wrote:
+>         ******IMPORTANT******
+>         When rfkill-input is ACTIVE, userspace is NOT TO CHANGE THE STATE OF AN RFKILL
+>         SWITCH IN RESPONSE TO AN INPUT EVENT also handled by rfkill-input, unless it
+>         has set to true the user_claim attribute for that particular switch.  This rule
+>         is *absolute*; do NOT violate it.
+>         ******IMPORTANT******
+>         
+>         ...
+>         
+>         When rfkill-input is not active, userspace must initiate a rfkill status
+>         change by writing to the "state" attribute in order for anything to happen.
+> 
+> 
+> How the hell is userspace supposed to know whether rfkill-input is
+> active or not? Does anybody fucking care to implement any of this mess
+> in userspace?
 
-He just sent it today (or overnight).  I'll get it into wireless-next.
+I think rephrasing that warning to: "set user_claim to 1 on any switches
+that you're going to mess with in response to rfkill input events" would be
+a LOT better.  I should have written it that way.
 
-John
+The truth is that userspace doestn't have to care about rfkill-input, unless
+it is trying to do what rfkill-input is supposed to (i.e. listening to input
+events and then trying to update switches), and if it is going to do that,
+it needs stuff that I never sent in for review.
 
-P.S.  I'm starting to think that RFKILL should just be mandatory...
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Anyway, I got sidetracked because I was Not Happy with the userspace ABI but
+couldn't come up with anything better.  Better at least get those patches
+into the open.  I just pushed a rebased version of the patches to somewhere
+public.
+
+It is at:
+git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git rfkill
+
+Please take a look and tell me what you think, and whether there is anything
+worth bothering with in there (FWIW, the patchset worked just fine last time
+I checked).
+
+
+As for your second question, I have been looking at the issues re. input
+devices and X.org evdev in the last two days, and the fact is that: it will
+have to be handled in userspace on most non-embedded scenarios, if things
+don't change in userspace soon.
+
+The problem is that X.org will exclusive-grab any input devices you let it
+touch, and rfkill_input will never see any events, anyway.   So, right now,
+for the vast majority of the users, either an input device is not in use, or
+it is in exclusive-grab mode feeding X.org evdev.
+
+At this point, I don't have a clue on what would be the best way to go about
+addressing this issue, that is causing problems not only to rfkill_input,
+but also to anyone who would like to have hotkey handling outside of X.org
+in a system daemon, but still have x.org see the keys (without ugly 'event
+repeater' hacks).
+
+I have no idea if we should talk to the X.org people to see if we can drop
+that exclusive grab?  Allow kernel-side input handlers to ignore exclusive
+grabs?  Have rfkill-input be a you-want-it-in-the-kernel solution and simply
+don't care at all about userspace interfering with it?
+
+I was about to try to locate someone that deals with evdev to ask his ideas
+on the subject.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
