@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:35234 "EHLO
-	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750979AbZCTGbS (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:37543 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbZC0Phz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 02:31:18 -0400
-To: Adam Baker <linux@baker-net.org.uk>
-cc: Anders Eriksson <aeriksson@fastmail.fm>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
-In-reply-to: <200903192156.55843.linux@baker-net.org.uk>
-References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org> <200902212123.21950.linux@baker-net.org.uk> <20090308162023.BBD122C40D0@tippex.mynet.homeunix.org> <200903192156.55843.linux@baker-net.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Date: Fri, 20 Mar 2009 07:31:04 +0100
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Message-Id: <20090320063104.92D572C4101@tippex.mynet.homeunix.org> (sfid-20090320_073133_258242_71F16416)
+	Fri, 27 Mar 2009 11:37:55 -0400
+Received: by fxm2 with SMTP id 2so1079064fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 08:37:52 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Subject: Re: New firmware available for Intel PRO/Wireless 2200BG and 2915ABG
+Date: Fri, 27 Mar 2009 16:37:41 +0100
+Cc: "ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1237916524.455.18.camel@rc-desk> <200903241855.06916.helmut.schaa@gmail.com> <1237918158.455.26.camel@rc-desk>
+In-Reply-To: <1237918158.455.26.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200903271637.42048.helmut.schaa@gmail.com> (sfid-20090327_163758_952662_C7E44CA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
+> Hi Helmut,
+>=20
+> On Tue, 2009-03-24 at 10:55 -0700, Helmut Schaa wrote:
+> > Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
+> > > A new version (3.1) of firmware for Intel=C2=AE PRO/Wireless 2200=
+BG and
+> > > 2915ABG Drivers is now available for download from
+> > > http://ipw2200.sourceforge.net/firmware.php.
+> >=20
+> > I couldn't find a changelog for the new firmware. Could you point m=
+e to
+> > a changelog or provide a short summary of what changed since 3.0?
+>=20
+> I am sorry, we were unable to obtain this information.
 
-linux@baker-net.org.uk said:
-> Well I can see from those logs that it is only the transmit side that is
-> failing, some traffic is being seen on the receive side.
+Would be interesting if any firmware crashes got fixed with that releas=
+e (and
+in which situations these happened). Nevertheless, good to see that Int=
+el
+still pushes updates for older hardware :)
 
-> Does your hardware have an rfkill button and do you have rfkill support
-> enabled? I'm wondering if rfkill could be activated by a glitch on the
-> signal. 
-
-Rfkill is indeed enabled (for no good reason, really). I'll cook a new one 
-without rfkill and see what happens.
-
-
-linux@baker-net.org.uk said:
->  If trying that approach don't forget to instrument rt2500pci_interrupt as
-> well as rt2x00mac_tx
-
-Not knowing anything of the wireless code, I have no idea where to start to 
-look. Are these the best functions to start to look in (i.e. sprinkling printf 
-in)?
-
-/Anders
-
+Thanks,
+Helmut
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
