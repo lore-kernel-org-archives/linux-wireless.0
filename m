@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48966 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750AbZCREq7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 00:46:59 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:33305 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbZC0EU7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 00:20:59 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/13] iwlwifi: return 0 for AMPDU_TX/RX_STOP request if NIC is going down
-Date: Tue, 17 Mar 2009 21:51:43 -0700
-Message-Id: <1237351913-19202-4-git-send-email-reinette.chatre@intel.com> (sfid-20090318_060339_401419_BEE92C3F)
-In-Reply-To: <1237351913-19202-3-git-send-email-reinette.chatre@intel.com>
-References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-3-git-send-email-reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, pabs@debian.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/4] wireless-regdb: KR few reg updates
+Date: Fri, 27 Mar 2009 00:20:54 -0400
+Message-Id: <1238127656-1226-3-git-send-email-lrodriguez@atheros.com> (sfid-20090327_052114_653536_C3DBD87E)
+In-Reply-To: <1238127656-1226-1-git-send-email-lrodriguez@atheros.com>
+References: <1238127656-1226-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Korea (KR) allows the usage a channel with center of
+freq on 5260 MHz. It also specifically disables these
+channels though:
 
-When receive IEEE80211_AMPDU_RX_STOP or IEEE80211_AMPDU_TX_STOP request
-in iwl_mac_ampdu_action() from mac80211; check STATUS_EXIT_PENDING bit,
-if NIC is on the way out, then return 0 back to mac80211, this can
-prevent mac80211 report HW error incorrectly.
+128 - 5640 MHz
+132 - 5660 MHz
+136 - 5680 MHz
+140 - 5700 MHz
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+We refered to the Korean rules regulations, the doc is in
+Korean and I am not sure if I can post it but just in case
+Atheros refers to this doc internally as "MIC 2007-80 20071017".
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+ db.txt |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4d2ed52..c148285 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2683,6 +2683,7 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 			     struct ieee80211_sta *sta, u16 tid, u16 *ssn)
- {
- 	struct iwl_priv *priv = hw->priv;
-+	int ret;
+diff --git a/db.txt b/db.txt
+index 77f1754..6f29be9 100644
+--- a/db.txt
++++ b/db.txt
+@@ -334,8 +334,8 @@ country KP:
+ country KR:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+ 	(5170 - 5250 @ 20), (3, 20)
+-	(5260 - 5330 @ 20), (3, 20), DFS
+-	(5490 - 5710 @ 20), (3, 30), DFS
++	(5250 - 5330 @ 20), (3, 20), DFS
++	(5490 - 5630 @ 20), (3, 30), DFS
+ 	(5735 - 5815 @ 20), (3, 30)
  
- 	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
- 		     sta->addr, tid);
-@@ -2696,13 +2697,21 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 		return iwl_sta_rx_agg_start(priv, sta->addr, tid, *ssn);
- 	case IEEE80211_AMPDU_RX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Rx\n");
--		return iwl_sta_rx_agg_stop(priv, sta->addr, tid);
-+		ret = iwl_sta_rx_agg_stop(priv, sta->addr, tid);
-+		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+			return 0;
-+		else
-+			return ret;
- 	case IEEE80211_AMPDU_TX_START:
- 		IWL_DEBUG_HT(priv, "start Tx\n");
- 		return iwl_tx_agg_start(priv, sta->addr, tid, ssn);
- 	case IEEE80211_AMPDU_TX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Tx\n");
--		return iwl_tx_agg_stop(priv, sta->addr, tid);
-+		ret = iwl_tx_agg_stop(priv, sta->addr, tid);
-+		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+			return 0;
-+		else
-+			return ret;
- 	default:
- 		IWL_DEBUG_HT(priv, "unknown\n");
- 		return -EINVAL;
+ country KW:
 -- 
-1.5.6.3
+1.6.0.6
 
