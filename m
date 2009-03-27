@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63655 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750914AbZCIEGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 00:06:00 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 08 Mar 2009 21:05:59 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:58223 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbZC0GS3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 02:18:29 -0400
+Received: by bwz17 with SMTP id 17so848339bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 23:18:26 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
+Date: Fri, 27 Mar 2009 07:18:17 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>
+References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> <1238087650-26993-2-git-send-email-reinette.chatre@intel.com> <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18868.38061.239758.963002@gargle.gargle.HOWL> (sfid-20090309_050611_320124_924B24A2)
-Date: Mon, 9 Mar 2009 09:31:49 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 1/3] ath9k: Initialize ANI properly
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200903270718.18593.helmut.schaa@gmail.com> (sfid-20090327_071833_495524_1C9E02C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ANI was not being initialized correctly for all HW variants.
-This patch fixes it.
+Hi again,
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/hw.c |   13 +++----------
- 1 files changed, 3 insertions(+), 10 deletions(-)
+Am Donnerstag, 26. M=E4rz 2009 schrieb Reinette Chatre:
+> Remove STATUS_ALIVE checking when HW RF KILL disabled, the bit get
+> clear in __iwl_down() function; the additional checking will fail and
+> cause RF can not be turn back on.
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index c10b33b..ea550cc 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -662,16 +662,9 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
- 	}
- 
--	if (AR_SREV_9160(ah)) {
--		ah->config.enable_ani = 1;
--		ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
--					ATH9K_ANI_FIRSTEP_LEVEL);
--	} else {
--		ah->ani_function = ATH9K_ANI_ALL;
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			ah->ani_function &=	~ATH9K_ANI_NOISE_IMMUNITY_LEVEL;
--		}
--	}
-+	ah->ani_function = ATH9K_ANI_ALL;
-+	if (AR_SREV_9280_10_OR_LATER(ah))
-+		ah->ani_function &= ~ATH9K_ANI_NOISE_IMMUNITY_LEVEL;
- 
- 	DPRINTF(sc, ATH_DBG_RESET,
- 		"This Mac Chip Rev 0x%02x.%x is \n",
--- 
-1.6.1
+Maybe just checking for is_open instead of STATUS_ALIVE will fix the is=
+sue
+too? I only had a quick look but it looks possible. AFAICS is_open indi=
+cates
+if the interface was taken up by mac80211. So if the interface is up bu=
+t
+STATUS_ALIVE is not set we want to restart the adapter after unkilling =
+but
+if the interface is still down (is_open=3D=3D0) we do not want to resta=
+rt the
+adapter. Furthermore, is_open is also set in case the interface was tak=
+en
+up but wireless was rfkilled.
 
+Helmut
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
