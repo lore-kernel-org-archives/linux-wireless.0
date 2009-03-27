@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:30625 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbZCJIvn convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:36003 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761008AbZC0VVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 04:51:43 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2479992wfa.4
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 01:51:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1236674791.9658.36.camel@johannes.local>
-References: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
-	 <1236650699-30538-4-git-send-email-lrodriguez@atheros.com>
-	 <1236669329.9658.30.camel@johannes.local>
-	 <43e72e890903100143i76015377x31529b26b638275c@mail.gmail.com>
-	 <1236674791.9658.36.camel@johannes.local>
-Date: Tue, 10 Mar 2009 01:51:41 -0700
-Message-ID: <43e72e890903100151y1427c505jc8cace0e378d732e@mail.gmail.com> (sfid-20090310_095146_439158_9783670E)
-Subject: Re: [PATCH 3/4] mac80211: disallow HT40 if max channel bandwidth is
-	less than 40 MHz
+	Fri, 27 Mar 2009 17:21:07 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: Update maintainers for ath9k
+Date: Fri, 27 Mar 2009 17:21:05 -0400
+Message-Id: <1238188865-10420-1-git-send-email-lrodriguez@atheros.com> (sfid-20090327_222122_946851_519535AA)
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2009 at 1:46 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-03-10 at 01:43 -0700, Luis R. Rodriguez wrote:
->
->> >> + =C2=A0 =C2=A0 if (conf_is_ht40(&local->hw.conf) && chan->max_ba=
-ndwidth < 40)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return ret;
->> >> +
->> >
->> > You just made nl80211 check this, why bother adding it here too?
->>
->> Wext crap.
->
-> Wext can't set ht40, it'll always reset back to 20mhz when you set
-> channel with wext.
+This has been the case really, we just forgot to update it.
 
-Ah, but we can eventually get there with setting the ssid, guess I'll
-have to review that path.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John, please Cc Sujith, Vasanth, and Senthil on kernel.org bug
+reports as well. I won't have a chance to monitor those as
+closely as I have now, will be switching gears to focus on
+our next Atheros 11N USB chipset (which BTW will use a different
+MAC than ar9170).
+
+ MAINTAINERS |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1a6e9e9..2d8bdde 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -761,6 +761,12 @@ P:	Luis R. Rodriguez
+ M:	lrodriguez@atheros.com
+ P:	Jouni Malinen
+ M:	jmalinen@atheros.com
++P:	Sujith Manoharan
++M:	Sujith.Manoharan@atheros.com
++P:	Vasanthakumar Thiagarajan
++M:	vasanth@atheros.com
++P:	Senthil Balasubramanian
++M:	senthilkumar@atheros.com
+ L:	linux-wireless@vger.kernel.org
+ L:	ath9k-devel@lists.ath9k.org
+ S:	Supported
+-- 
+1.6.2.1.316.gedbc2
+
