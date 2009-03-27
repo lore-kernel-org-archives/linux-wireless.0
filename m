@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288AbZCKMkB (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:45305 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754597AbZC0P6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 08:40:01 -0400
-Subject: Re: [PATCH] mac80211: ieee80211_ibss_commit() cleanup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20090310224427.223760@gmx.net> (sfid-20090310_234458_784141_4631D28F)
-References: <20090309234946.99940@gmx.net>
-	 (sfid-20090310_005017_999744_57F45C40) <1236669682.9658.34.camel@johannes.local>
-	 <20090310224427.223760@gmx.net> (sfid-20090310_234458_784141_4631D28F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wtbtEgn8OYZ10UkPS3N4"
-Date: Wed, 11 Mar 2009 12:53:30 +0100
-Message-Id: <1236772410.20266.7.camel@johannes.local> (sfid-20090311_134028_274588_13D3553D)
-Mime-Version: 1.0
+	Fri, 27 Mar 2009 11:58:12 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 4/4] rfkill: export events for global state changes
+Date: Fri, 27 Mar 2009 12:58:05 -0300
+Message-Id: <1238169485-29298-5-git-send-email-hmh@hmh.eng.br> (sfid-20090327_165816_505645_15FBACBE)
+In-Reply-To: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br>
+References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Issue uevents for global rfkill state changes.
 
---=-wtbtEgn8OYZ10UkPS3N4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
 
-On Tue, 2009-03-10 at 23:44 +0100, Alina Friedrichsen wrote:
-> Hello!
->=20
-> > And now to explain why this is desired?
->=20
-> For unification with the STA implementation=20
-
-FWIW, I don't see that as something that is necessarily desirable, I've
-split them up to allow them to diverge further and in a manageable way.
-
-> and besides it fixes a bug, that ieee80211_sta_find_ibss() is
-> triggered while the interface is down and do some strange things that
-> it shouldn't do in this interface state.
-
-Indeed, good point, that can happen without this patch.
-
-johannes
-
---=-wtbtEgn8OYZ10UkPS3N4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJt6Y3AAoJEKVg1VMiehFYS3gP/RK6is6LtgrnvIm0Hd7v3xdO
-rW9+0pD0NtNGo/1cI0uXMKkfzIU/EFLCaw6Skr4oJ+i2FaOs0D11YJfOJSljjCX4
-6buSKs0ToaAZGmsadjlkwoOEpHnlRlLqhmFUlCX8zU/Z2aX5GaUWhOy2lvsWipjD
-k8/G2By/jVySNX9Sbt6f3D7e+PiQgC54Ya16LncR4uYmKHOlrDXe+F1P040zPoWs
-75W3CaG9lqQjgcpILGmQsHAaW23wv7KET6VkhL8XmN5YVMsr7+rzZDEgZxiyTkfN
-cFpZknuQOZ58lFE+SSvcf52/LoWl4fW6ujW3oiIuXl4BJrkUS/AE+q6z8KHrZ95B
-HI42pmWLCnnKdHVCTZyXqXeXrxpOZBXyF3mF1N5SdtndXw0amQWutVLF/yAtmieD
-PZSsTv9nrOJjTiVyiE+B0mHjDZ3k33dbfn9NbCtuGL+QFZWlxCkbMX6HF1S1Gcj3
-9+HjOwJ9tO5SX+IQrSv72ln9XYH8ZbKHMUFpPPXtd9XDnH2mL7ahziRFBagmCmIG
-Wh0IvgWjLpX7cN9rGdOWyXbLGs/QXiLkLHv232NGurids16x2wpWLBwBvsgLeTrW
-fBIodzJi7Z21h+8lh8TSaK64X26Sua+rZL2+P8SVevwHWYE1c33nxjC7UoTH1Gul
-AR9N4qW2nMy9VnUqATFM
-=r4ny
------END PGP SIGNATURE-----
-
---=-wtbtEgn8OYZ10UkPS3N4--
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 901e6c2..2f23cf7 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -56,6 +56,8 @@ static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
+ static bool rfkill_epo_lock_active;
+ 
+ static void rfkill_uevent(struct rfkill *rfkill);
++static void rfkill_global_uevent(enum rfkill_type type,
++				 enum rfkill_state state);
+ 
+ #ifdef CONFIG_RFKILL_LEDS
+ static void rfkill_led_trigger(struct rfkill *rfkill,
+@@ -188,6 +190,7 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+ 			mutex_unlock(&rfkill->mutex);
+ 		}
+ 	}
++	rfkill_global_uevent(type, state);
+ }
+ 
+ /**
+@@ -1238,6 +1241,42 @@ static struct platform_driver rfkill_pdrv = {
+ 		.owner = THIS_MODULE,
+ 	},
+ };
++
++/*
++ * Global rfkill uevents
++ */
++
++static void rfkill_global_uevent(enum rfkill_type type,
++				 enum rfkill_state state)
++{
++	struct kobj_uevent_env *env;
++
++	env = kzalloc(sizeof(*env), GFP_KERNEL);
++	if (WARN(!env, "rfkill: out of memory while trying to issue "
++			"RFKILL_GLOBAL_STATE_CHANGED uevent for type "
++			"%u\n", type))
++		return;
++
++	if (add_uevent_var(env, "RFKILL_GLOBAL_TYPE=%s",
++				rfkill_get_type_str(type)) ||
++	    add_uevent_var(env, "RFKILL_GLOBAL_STATE=%d",
++				state))
++		goto err_exit;
++
++	kobject_uevent_env(&rfkill_pdev->dev.kobj, KOBJ_CHANGE,
++			   (char **)&env->envp);
++	kfree(env);
++	return;
++
++err_exit:
++	WARN(1, "rfkill: failed to build uevent RFKILL_GLOBAL_STATE_CHANGED "
++		"data structures for type %u\n", type);
++	kfree(env);
++	return;
++}
++#else
++static void rfkill_global_uevent(enum rfkill_type type,
++				 enum rfkill_state state) {};
+ #endif /* CONFIG_RFKILL_GLOBAL_UAPI && !CONFIG_RFKILL_NO_CORE_UAPI */
+ 
+ /*
+-- 
+1.6.2.1
 
