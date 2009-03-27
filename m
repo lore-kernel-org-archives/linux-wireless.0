@@ -1,100 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33694 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751276AbZCBNHe (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:54192 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864AbZC0OGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 08:07:34 -0500
-Date: Mon, 2 Mar 2009 15:07:28 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Remove unused key xoring
-Message-ID: <20090302130728.GB30293@jm.kir.nu> (sfid-20090302_140737_319733_1CF2C027)
+	Fri, 27 Mar 2009 10:06:15 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Subject: Re: p54spi - mesh mode summary
+Date: Fri, 27 Mar 2009 15:06:10 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <1238055167.4331.3.camel@johannes.local> <200903270803.54820.jcmvbkbc@gmail.com>
+In-Reply-To: <200903270803.54820.jcmvbkbc@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903271506.10614.chunkeey@web.de> (sfid-20090327_150617_748617_A03AE9DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used anywhere in ath9k and is just making the code more
-confusing.
+On Friday 27 March 2009 06:03:54 Max Filippov wrote:
+> > > 4) Pings don't go, because MPs don't answer ARP requests sent to it.
+> > > Haven't tested for the root cause yet.
+> >
+> > Maybe some multicast issue?
+> 
+> ARP requests get filtered out by LMAC.
+> Can anyone explain why? My 802.11s comprehension is quite weak.
+> Here's the packet:
+> 
+> IEEE 802.11 Data, Flags: ......FT
+>     Type/Subtype: Data (0x20)
+>     Frame Control: 0x0308 (Normal)
+>         Version: 0
+>         Type: Data frame (2)
+>         Subtype: 0
+>         Flags: 0x3
+>             DS status: WDS (AP to AP) or Mesh (MP to MP) Frame (To DS: 1 From DS: 1) (0x03)
+>             .... .0.. = More Fragments: This is the last fragment
+>             .... 0... = Retry: Frame is not being retransmitted
+>             ...0 .... = PWR MGT: STA will stay up
+>             ..0. .... = More Data: No data buffered
+>             .0.. .... = Protected flag: Data is not protected
+>             0... .... = Order flag: Not strictly ordered
+>     Duration: 0
+>     Receiver address: Broadcast (ff:ff:ff:ff:ff:ff)
+>     Transmitter address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
+>     Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
+>     Fragment number: 0
+>     Sequence number: 2
+>     Source address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
+>     Mesh Header
+>         Address Extension 0
+>         Mesh TTL: 5
+>         Mesh Seq: 0
+> Logical-Link Control
+>     DSAP: SNAP (0xaa)
+>     IG Bit: Individual
+>     SSAP: SNAP (0xaa)
+>     CR Bit: Command
+>     Control field: U, func=UI (0x03)
+>         000. 00.. = Command: Unnumbered Information (0x00)
+>         .... ..11 = Frame type: Unnumbered frame (0x03)
+>     Organization Code: Encapsulated Ethernet (0x000000)
+>     Type: ARP (0x0806)
+> Address Resolution Protocol (request)
+>     Hardware type: Ethernet (0x0001)
+>     Protocol type: IP (0x0800)
+>     Hardware size: 6
+>     Protocol size: 4
+>     Opcode: request (0x0001)
+>     Sender MAC address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
+>     Sender IP address: 192.168.4.13 (192.168.4.13)
+>     Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+>     Target IP address: 192.168.4.14 (192.168.4.14)
+> 
+> 
+> I'm tempted to do something like this in p54_setup_mac:
+> 
+> -               case NL80211_IFTYPE_MESH_POINT:
+>                         mode = P54_FILTER_TYPE_IBSS;
+>                         break;
+> +               case NL80211_IFTYPE_MESH_POINT:
+> +                       mode = P54_FILTER_TYPE_IBSS | P54_FILTER_TYPE_TRANSPARENT;
+> +                       break;
+> 
+> But I guess that's bad solution, at least for pci/usb drivers.
+> Christian, Johannes, what would you suggest?
+That's odd.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+P54_FILTER_TYPE_TRANSPARENT should be already set for mesh mode.
 
----
- drivers/net/wireless/ath9k/hw.c   |   15 ++++++---------
- drivers/net/wireless/ath9k/hw.h   |    2 +-
- drivers/net/wireless/ath9k/main.c |    2 +-
- drivers/net/wireless/ath9k/phy.h  |    2 --
- 4 files changed, 8 insertions(+), 13 deletions(-)
+The reason is that mesh mode will automatically set the FIF_OTHER_BSS flag,
+(file:net/mac80211/iface.c func:ieee80211_open lines:251 f) 
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/hw.c	2009-03-02 14:23:07.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/hw.c	2009-03-02 14:23:09.000000000 +0200
-@@ -2415,14 +2415,11 @@ bool ath9k_hw_keysetmac(struct ath_hw *a
- 
- bool ath9k_hw_set_keycache_entry(struct ath_hw *ah, u16 entry,
- 				 const struct ath9k_keyval *k,
--				 const u8 *mac, int xorKey)
-+				 const u8 *mac)
- {
- 	const struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	u32 key0, key1, key2, key3, key4;
- 	u32 keyType;
--	u32 xorMask = xorKey ?
--		(ATH9K_KEY_XOR << 24 | ATH9K_KEY_XOR << 16 | ATH9K_KEY_XOR << 8
--		 | ATH9K_KEY_XOR) : 0;
- 
- 	if (entry >= pCap->keycache_size) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_KEYCACHE,
-@@ -2474,11 +2471,11 @@ bool ath9k_hw_set_keycache_entry(struct 
- 		return false;
- 	}
- 
--	key0 = get_unaligned_le32(k->kv_val + 0) ^ xorMask;
--	key1 = (get_unaligned_le16(k->kv_val + 4) ^ xorMask) & 0xffff;
--	key2 = get_unaligned_le32(k->kv_val + 6) ^ xorMask;
--	key3 = (get_unaligned_le16(k->kv_val + 10) ^ xorMask) & 0xffff;
--	key4 = get_unaligned_le32(k->kv_val + 12) ^ xorMask;
-+	key0 = get_unaligned_le32(k->kv_val + 0);
-+	key1 = get_unaligned_le16(k->kv_val + 4);
-+	key2 = get_unaligned_le32(k->kv_val + 6);
-+	key3 = get_unaligned_le16(k->kv_val + 10) & 0xffff;
-+	key4 = get_unaligned_le32(k->kv_val + 12);
- 	if (k->kv_len <= LEN_WEP104)
- 		key4 &= 0xff;
- 
---- wireless-testing.orig/drivers/net/wireless/ath9k/hw.h	2009-03-02 14:23:03.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/hw.h	2009-03-02 14:23:09.000000000 +0200
-@@ -584,7 +584,7 @@ bool ath9k_hw_keyreset(struct ath_hw *ah
- bool ath9k_hw_keysetmac(struct ath_hw *ah, u16 entry, const u8 *mac);
- bool ath9k_hw_set_keycache_entry(struct ath_hw *ah, u16 entry,
- 				 const struct ath9k_keyval *k,
--				 const u8 *mac, int xorKey);
-+				 const u8 *mac);
- bool ath9k_hw_keyisvalid(struct ath_hw *ah, u16 entry);
- 
- /* GPIO / RFKILL / Antennae */
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-02 14:23:03.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-02 14:23:09.000000000 +0200
-@@ -642,7 +642,7 @@ static int ath_keyset(struct ath_softc *
- 	bool status;
- 
- 	status = ath9k_hw_set_keycache_entry(sc->sc_ah,
--		keyix, hk, mac, false);
-+		keyix, hk, mac);
- 
- 	return status != false;
- }
---- wireless-testing.orig/drivers/net/wireless/ath9k/phy.h	2009-03-02 14:23:03.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/phy.h	2009-03-02 14:23:09.000000000 +0200
-@@ -559,8 +559,6 @@ bool ath9k_hw_init_rf(struct ath_hw *ah,
- 		}							\
- 	} while (0)
- 
--#define ATH9K_KEY_XOR                 0xaa
--
- #define ATH9K_IS_MIC_ENABLED(ah)					\
- 	((ah)->sta_id1_defaults & AR_STA_ID1_CRPT_MIC_ENABLE)
- 
+which in turn ORs the P54_FILTER_TYPE_TRANSPARENT flag to the mode...
+(file:drivers/net/wireless/p54/p54common.c func: p54_setup_mac lines: 1691 f)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+So, there's no need to OR a flag that gets ORed anyway?
+
+Regards,
+	Chr
