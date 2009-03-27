@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34429 "EHLO mga11.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:50551 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755627AbZCJVaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 17:30:13 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/6] iwlwifi: check IEEE80211_TX_STAT_AMPDU for agg pkt
-Date: Tue, 10 Mar 2009 14:35:11 -0700
-Message-Id: <1236720912-6502-6-git-send-email-reinette.chatre@intel.com> (sfid-20090310_223023_185318_C0415A7A)
-In-Reply-To: <1236720912-6502-5-git-send-email-reinette.chatre@intel.com>
-References: <1236720912-6502-1-git-send-email-reinette.chatre@intel.com>
- <1236720912-6502-2-git-send-email-reinette.chatre@intel.com>
- <1236720912-6502-3-git-send-email-reinette.chatre@intel.com>
- <1236720912-6502-4-git-send-email-reinette.chatre@intel.com>
- <1236720912-6502-5-git-send-email-reinette.chatre@intel.com>
+	id S1750862AbZC0PA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 11:00:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill-input: remove unused code
+Date: Fri, 27 Mar 2009 15:59:02 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1238159804.4452.4.camel@johannes.local> <20090327143608.GB24288@khazad-dum.debian.net>
+In-Reply-To: <20090327143608.GB24288@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903271559.02276.mb@bu3sch.de> (sfid-20090327_160029_818108_A8662EB6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Friday 27 March 2009 15:36:08 Henrique de Moraes Holschuh wrote:
+> On Fri, 27 Mar 2009, Johannes Berg wrote:
+> > There's a lot of rfkill-input code that cannot ever be
+> > compiled and is useless until somebody needs and tests
+> > it -- therefore remove it.
+> 
+> Just so that you guys know, that code *is* tested :-)
+> 
+> I'd suggest that the code removal be done leaving a comment in place, like this:
+> 
+> /* Currently, code to implement EV_SW SW_WLAN/WWAN/BLUETOOTH/etc is not
+>  * in place since it was unused and was therefore removed.  Please look
+>  * at past history to check how it was supposed to be done, if you need
+>  * to implement handling for EV_SW.
+>  */
+> 
+> Because that codepath is _not_ the most obvious thing in the world to
+> reimplement without hitting a pitfall, so people better look how it was done
+> once in time...
+> 
 
-when perform rate scaling, in tx status function, checking for
-IEEE80211_TX_STAT_AMPDU flag instead of IEEE_TX_CTL_AMPDU flag to perform
-AMPDU rate scaling operation.
+In practice this stuff does bitrot.
+So in my opinion it's _not_ a good idea to lookup some old code for implementing
+a feature. Instead one should think about it and understand the stuff and then implement it.
+And if there are pitfalls that are not obvious after one completely read the code, one
+should consider a redesign.
 
-IEEE80211_TX_CTL_AMPDU was set by mac80211 for aggregation pkt. But when
-iwlwifi receive the tx status reply, it reset the flag to following
-	info->flags = IEEE80211_TX_STAT_ACK;
-	info->flags |= IEEE80211_TX_STAT_AMPDU;
-it causes the rate-scaling to not work for aggregation pkt if we checking
-for IEEE80211_TX_CTL_AMPDU flag.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 0929f31..43c796b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -916,7 +916,7 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 			tpt = search_tbl->expected_tpt[rs_index];
- 		else
- 			tpt = 0;
--		if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+		if (info->flags & IEEE80211_TX_STAT_AMPDU)
- 			rs_collect_tx_data(search_win, rs_index, tpt,
- 					   info->status.ampdu_ack_len,
- 					   info->status.ampdu_ack_map);
-@@ -932,7 +932,7 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 			tpt = curr_tbl->expected_tpt[rs_index];
- 		else
- 			tpt = 0;
--		if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+		if (info->flags & IEEE80211_TX_STAT_AMPDU)
- 			rs_collect_tx_data(window, rs_index, tpt,
- 					   info->status.ampdu_ack_len,
- 					   info->status.ampdu_ack_map);
-@@ -944,7 +944,7 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 	/* If not searching for new mode, increment success/failed counter
- 	 * ... these help determine when to start searching again */
- 	if (lq_sta->stay_in_tbl) {
--		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		if (info->flags & IEEE80211_TX_STAT_AMPDU) {
- 			lq_sta->total_success += info->status.ampdu_ack_map;
- 			lq_sta->total_failed +=
- 			     (info->status.ampdu_ack_len - info->status.ampdu_ack_map);
 -- 
-1.5.6.3
-
+Greetings, Michael.
