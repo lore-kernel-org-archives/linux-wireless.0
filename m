@@ -1,67 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25181 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758138AbZC3KCv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:02:51 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:50 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18896.38864.93613.536410@gargle.gargle.HOWL> (sfid-20090330_120254_138707_44EE19B0)
-Date: Mon, 30 Mar 2009 15:28:40 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 08/17] ath9k: Remove a couple of unused variables in descriptor handling
+Received: from xc.sipsolutions.net ([83.246.72.84]:48919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758238AbZC0VMA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 17:12:00 -0400
+Subject: Re: [PATCH] rfkill-input: remove unused code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090327143608.GB24288@khazad-dum.debian.net> (sfid-20090327_153635_512916_55398CA9)
+References: <1238159804.4452.4.camel@johannes.local>
+	 <20090327143608.GB24288@khazad-dum.debian.net>
+	 (sfid-20090327_153635_512916_55398CA9)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1arQH5hdNPucUXI2IKU0"
+Date: Fri, 27 Mar 2009 22:10:53 +0100
+Message-Id: <1238188253.4452.18.camel@johannes.local> (sfid-20090327_221216_295915_46C89C0E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |    2 --
- drivers/net/wireless/ath9k/main.c  |    3 +--
- 2 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index b3ed89a..dae0f95 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -149,12 +149,10 @@ struct ath_buf {
- };
- 
- struct ath_descdma {
--	const char *dd_name;
- 	struct ath_desc *dd_desc;
- 	dma_addr_t dd_desc_paddr;
- 	u32 dd_desc_len;
- 	struct ath_buf *dd_bufptr;
--	dma_addr_t dd_dmacontext;
- };
- 
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index cc62520..b252a1f 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1790,7 +1790,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		goto fail;
- 	}
- 
--	dd->dd_name = name;
- 	dd->dd_desc_len = sizeof(struct ath_desc) * nbuf * ndesc;
- 
- 	/*
-@@ -1820,7 +1819,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 	ds = dd->dd_desc;
- 	DPRINTF(sc, ATH_DBG_CONFIG, "%s DMA map: %p (%u) -> %llx (%u)\n",
--		dd->dd_name, ds, (u32) dd->dd_desc_len,
-+		name, ds, (u32) dd->dd_desc_len,
- 		ito64(dd->dd_desc_paddr), /*XXX*/(u32) dd->dd_desc_len);
- 
- 	/* allocate buffers */
--- 
-1.6.2.1
+--=-1arQH5hdNPucUXI2IKU0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2009-03-27 at 11:36 -0300, Henrique de Moraes Holschuh wrote:
+> On Fri, 27 Mar 2009, Johannes Berg wrote:
+> > There's a lot of rfkill-input code that cannot ever be
+> > compiled and is useless until somebody needs and tests
+> > it -- therefore remove it.
+>=20
+> Just so that you guys know, that code *is* tested :-)
+
+At some point :)
+
+> I'd suggest that the code removal be done leaving a comment in place, lik=
+e this:
+>=20
+> /* Currently, code to implement EV_SW SW_WLAN/WWAN/BLUETOOTH/etc is not
+>  * in place since it was unused and was therefore removed.  Please look
+>  * at past history to check how it was supposed to be done, if you need
+>  * to implement handling for EV_SW.
+>  */
+>=20
+> Because that codepath is _not_ the most obvious thing in the world to
+> reimplement without hitting a pitfall, so people better look how it was d=
+one
+> once in time...
+
+Done, will repost. Do we expect it to be needed though?
+
+johannes
+
+--=-1arQH5hdNPucUXI2IKU0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJzUDbAAoJEKVg1VMiehFY7QAP/1s4Orw71XuI6HLq+XltL9Gh
+/IQXz/QsxJKZ36RikpHgv+JG6CihGcVPLLsfRrID8QSaRaWdnK2yJKdstEmkX5tU
+DphkPMPDhvixtT9Ab6ORmDGs2w8eglvuA/6msR6fD0CfmDQQef5C88YjkYe4SkaU
+kt4rpnfPqh8xn37nA7fR4wDq8NkGX0/IkcaQ7NPcsuiMthrj2G6lG5l0UmmZkqTv
+WRbpKoL+q4wLVNdtgJRqwVEKT+bnuE6hdtlrGeBKdcGzXo6Rfmft6rNEGclE1yR+
+TPIZcdCh8JGPBxd0MHP5dVEO4tpOhas2+wrrxPJcVzmzhTIdqt1GuOkR2EyPCNI3
+zq0BVbUvav/Vbstfq+eUDnKOLmza62t4iRi3eD5BX2Q/B/0HbthN32uFXMY45NbK
+QeqYMo5NF3ovT3qYySHoZbY9iVY0AM7hUh0/yEq3+gDsQngdz4GUNugBKUMJ4UjK
+eC5JzkrNEl5Eftc4kRxauMXnuVMFe0mCQxGX2vrsSb5iCcKhYW620HNdXEExqfss
+vvfkeE+w9hjfXgGipD1FJbH7FCSOGSEnMUNAg0/pEyAwAW0d/ebtfgTeumlXVaqp
+CHVbgL6NSb5iWLlIuLAAIqb+EESQWd27m22h7QmaFcayIFvHwZZcxGvjDvkQcSxN
+XB9UDAIwwvQk4jVAShIz
+=8Lqz
+-----END PGP SIGNATURE-----
+
+--=-1arQH5hdNPucUXI2IKU0--
 
