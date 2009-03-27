@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58675 "EHLO vs166246.vserver.de"
+Received: from suva.vyatta.com ([76.74.103.44]:43185 "EHLO suva.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755934AbZCLWpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 18:45:09 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: remove ieee80211_num_regular_queues
-Date: Thu, 12 Mar 2009 23:44:03 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1236852956.4175.19.camel@johannes.local>
-In-Reply-To: <1236852956.4175.19.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903122344.04238.mb@bu3sch.de> (sfid-20090312_234533_983816_00A6E6E6)
+	id S1755576AbZC0B14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2009 21:27:56 -0400
+Message-Id: <20090327011255.831891273@linux-foundation.org> (sfid-20090327_022802_644103_65C26BCF)
+Date: Thu, 26 Mar 2009 18:11:26 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: David Miller <davem@davemloft.net>, linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [patch 12/30] wireless: convert arlan to net_device_ops
+References: <20090327011114.169107105@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 12 March 2009 11:15:56 Johannes Berg wrote:
->  	/* receiver and we are QoS enabled, use a QoS type frame */
-> -	if (sta_flags & WLAN_STA_WME &&
-> -	    ieee80211_num_regular_queues(&local->hw) >= 4) {
-> +	if (sta_flags & WLAN_STA_WME && local->hw.queues >= 4) {
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Could we add a few parenthesis while we're at it?
-The code is correct, but it took me some time to realize that. ;)
 
--- 
-Greetings, Michael.
+--- a/drivers/net/wireless/arlan-main.c	2009-03-21 12:37:00.000000000 -0700
++++ b/drivers/net/wireless/arlan-main.c	2009-03-26 15:46:23.278349900 -0700
+@@ -1030,7 +1030,17 @@ static int arlan_mac_addr(struct net_dev
+ 	return 0;
+ }
+ 
+-
++static const struct net_device_ops arlan_netdev_ops = {
++	.ndo_open		= arlan_open,
++	.ndo_stop		= arlan_close,
++	.ndo_start_xmit		= arlan_tx,
++	.ndo_get_stats		= arlan_statistics,
++	.ndo_set_multicast_list = arlan_set_multicast,
++	.ndo_change_mtu		= arlan_change_mtu,
++	.ndo_set_mac_address	= arlan_mac_addr,
++	.ndo_tx_timeout		= arlan_tx_timeout,
++	.ndo_validate_addr	= eth_validate_addr,
++};
+ 
+ static int __init arlan_setup_device(struct net_device *dev, int num)
+ {
+@@ -1042,14 +1052,7 @@ static int __init arlan_setup_device(str
+ 	ap->conf = (struct arlan_shmem *)(ap+1);
+ 
+ 	dev->tx_queue_len = tx_queue_len;
+-	dev->open = arlan_open;
+-	dev->stop = arlan_close;
+-	dev->hard_start_xmit = arlan_tx;
+-	dev->get_stats = arlan_statistics;
+-	dev->set_multicast_list = arlan_set_multicast;
+-	dev->change_mtu = arlan_change_mtu;
+-	dev->set_mac_address = arlan_mac_addr;
+-	dev->tx_timeout = arlan_tx_timeout;
++	dev->netdev_ops = &arlan_netdev_ops;
+ 	dev->watchdog_timeo = 3*HZ;
+ 	
+ 	ap->irq_test_done = 0;
+
+
