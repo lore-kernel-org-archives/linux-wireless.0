@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58436 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753134AbZCPQCz (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.191]:34464 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752425AbZC0OVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 12:02:55 -0400
-Date: Mon, 16 Mar 2009 18:02:47 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Is the linuxwireless.org web site OK?
-Message-ID: <20090316160247.GA13489@jm.kir.nu> (sfid-20090316_170259_181344_C4FC97A7)
-References: <49BE7253.8020001@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49BE7253.8020001@lwfinger.net>
+	Fri, 27 Mar 2009 10:21:37 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so824702tid.23
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 07:21:34 -0700 (PDT)
+From: Huang Weiyi <weiyi.huang@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH 2/3] cfg80211: remove duplicated #include
+Date: Fri, 27 Mar 2009 22:20:27 +0800
+Message-Id: <1238163627-1148-1-git-send-email-weiyi.huang@gmail.com> (sfid-20090327_152141_536909_064D0A36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 10:37:55AM -0500, Larry Finger wrote:
-> If you browse to linuxwireless.org, do you get the correct page? I don't, but
-> did yesterday.
-> 
-> My ISP has been having some problems with hackers getting at their name servers
-> and that may be the source of my trouble. On the other hand, the web site may
-> have been hacked.
+Remove duplicated #include in include/net/cfg80211.h.
 
-I would assume the web site itself was not hacked, but someone just
-forgot to renew the domain.. Based on the whois data, I would assume the
-expiration date was yesterday and after that, someone/something just
-changed the domain to point somewhere else..
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+---
+ include/net/cfg80211.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 50f3fd9..e7e1f1b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -10,7 +10,6 @@
+ #include <net/iw_handler.h>
+ #include <net/genetlink.h>
+ /* remove once we remove the wext stuff */
+-#include <net/iw_handler.h>
+ 
+ /*
+  * 802.11 configuration in-kernel interface
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.1.3
+
