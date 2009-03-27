@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:56537 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585AbZCSQpV convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:45278 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759731AbZC0PNN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 12:45:21 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so731858wff.4
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 09:45:19 -0700 (PDT)
+	Fri, 27 Mar 2009 11:13:13 -0400
+Received: by fxm2 with SMTP id 2so1069004fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 08:13:10 -0700 (PDT)
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k and power management
+References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+	<87ljqr58oa.fsf@litku.valot.fi>
+	<2da21fe50903270754i26c8be08i206b12a268214f56@mail.gmail.com>
+	<2da21fe50903270807t25962a00w1a5da870641421ea@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 27 Mar 2009 17:13:07 +0200
+In-Reply-To: <2da21fe50903270807t25962a00w1a5da870641421ea@mail.gmail.com> (Davide Pesavento's message of "Fri\, 27 Mar 2009 16\:07\:28 +0100")
+Message-ID: <87hc1f5798.fsf@litku.valot.fi> (sfid-20090327_161333_442167_B7FC8109)
 MIME-Version: 1.0
-In-Reply-To: <20090319164256.GA25237@storm.local.network>
-References: <20090319164256.GA25237@storm.local.network>
-Date: Thu, 19 Mar 2009 09:45:19 -0700
-Message-ID: <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> (sfid-20090319_174525_758049_9605CBCD)
-Subject: Re: VT6656 driver source now GPL
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittletooquiet.ne=
-t> wrote:
-> Hi,
->
-> VIA has released a new version of the VT6656 driver source, and it no=
-w has a
-> proper license!
->
-> =C2=A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zi=
-p
->
-> As you may recall, the previous version lacked a license altogether, =
-making it
-> unfit for distribution.
->
-> I'd really like to see this driver integrated into the kernel. =C2=A0=
-Does anyone care
-> to comment regarding feasibility?
+Davide Pesavento <davidepesa@gmail.com> writes:
 
-Indeed good news, what is the latest kernel it compiles for? If it
-compiles on Linus' tree it can be stashed into staging while it gets
-properly ported.
+>>> It might be that ath9k doesn't work when timeout is zero (which 'power
+>>> on' effectively does). You need a fairly new wireless-tools to set the
+>>> timeout, older versions had a bug with that.
+>>>
+>>
+>> What do you mean by "fairly new"? I have wireless-tools version 29
+>> installed, which is the latest stable. Do I need to use version 30
+>> beta?
+>>
+>
+> Nevermind, I guess I need the beta version... :-)
+>
+> # iwconfig wlan0 power timeout 3
+> Error for wireless request "Set Power Management" (8B2C) :
+>     invalid argument "3".
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yeah, you need the beta version. I used version 30-pre7 myself.
+
+-- 
+Kalle Valo
