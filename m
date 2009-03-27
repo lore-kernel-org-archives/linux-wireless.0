@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42790 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751922AbZCCG2E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 01:28:04 -0500
-Date: Mon, 2 Mar 2009 22:27:21 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus'
-	tree"
-Message-ID: <20090303062721.GA4091@kroah.com> (sfid-20090303_072821_007913_7E1B80CF)
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:54587 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758138AbZC0Q3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 12:29:43 -0400
+Subject: Re: New firmware available for Intel PRO/Wireless 2200BG and
+	2915ABG
+From: reinette chatre <reinette.chatre@intel.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090327155009.GA28758@khazad-dum.debian.net>
+References: <1237916524.455.18.camel@rc-desk>
+	 <200903241855.06916.helmut.schaa@gmail.com>
+	 <1237918158.455.26.camel@rc-desk>
+	 <200903271637.42048.helmut.schaa@gmail.com>
+	 <20090327155009.GA28758@khazad-dum.debian.net>
+Content-Type: text/plain
+Date: Fri, 27 Mar 2009 09:35:12 -0700
+Message-Id: <1238171712.25568.27.camel@rc-desk> (sfid-20090327_172947_099930_51CAA5F9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 02, 2009 at 09:43:26PM -0800, Luis R. Rodriguez wrote:
-> While extending the documentation for submitting Linux wireless bug
-> reports [1] we note the stable series policy on patches -- that of
-> having an equivalent fix already in Linus' tree. I find this
-> documented in Documentation/stable_kernel_rules.txt but I'm curious if
-> there is any other resource which documents this or elaborates on this
-> a bit more.
+On Fri, 2009-03-27 at 08:50 -0700, Henrique de Moraes Holschuh wrote:
+> On Fri, 27 Mar 2009, Helmut Schaa wrote:
+> > > > I couldn't find a changelog for the new firmware. Could you point me to
+> > > > a changelog or provide a short summary of what changed since 3.0?
+> > > 
+> > > I am sorry, we were unable to obtain this information.
+> > 
+> > Would be interesting if any firmware crashes got fixed with that release (and
+> > in which situations these happened). Nevertheless, good to see that Intel
+> > still pushes updates for older hardware :)
+> 
+> Indeed.  But there is one boolean information we would _really_ appreciate,
+> for distro use:  does the update fix any potential security issues?
 
-Simple is better, do you really want a longer version of that same file?
+I wish I knew. I doubt it though because I am not aware of any security
+issues with the firmware.
 
-Is there something confusing in it?
+Reinette
 
-And as always, a simple:
-	Cc: stable <stable@kernel.org>
-in the patch itself is the easiest way to get it automatically included
-in the next -stable releases after it hits Linus's tree.
 
-What more do people want?  Personal invitations?
-
-Is it time to break out the caligraphy pens and wax seals?
-
-thanks,
-
-greg k-h
