@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:33022 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbZB1XIO (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33303 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbZC0EU7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2009 18:08:14 -0500
-Message-ID: <49A9C3D7.8060706@gmail.com> (sfid-20090301_000827_996496_E4F0297D)
-Date: Sun, 01 Mar 2009 00:08:07 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Dhaval Giani <dhaval.lists@thegianis.in>,
-	Dhaval Giani <dhaval@linux.vnet.ibm.com>,
-	linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
-References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com> <20090215134702.GA10180@hash.localnet>
-In-Reply-To: <20090215134702.GA10180@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 27 Mar 2009 00:20:59 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, pabs@debian.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/4] wireless-regdb: BN was missing two 5 GHz bands
+Date: Fri, 27 Mar 2009 00:20:53 -0400
+Message-Id: <1238127656-1226-2-git-send-email-lrodriguez@atheros.com> (sfid-20090327_052116_373625_DD26B6D5)
+In-Reply-To: <1238127656-1226-1-git-send-email-lrodriguez@atheros.com>
+References: <1238127656-1226-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15.2.2009 14:47, Bob Copeland wrote:
-> On Mon, Feb 02, 2009 at 01:27:39PM +0530, Dhaval Giani wrote:
->> So I finally managed to hit this on 2.6.29-rc3. It is hard to
->> reproduce, so I hope so much information is enough to give you a good
->> guess. This time it hit while trying to connect to an open network at
->> the airport.
->
->> WARNING: at net/mac80211/rx.c:2236 __ieee80211_rx+0x96/0x571 [mac80211]()
->> Hardware name: 2007CS3
->> RATE=255, BAND=8
->
-> band is supposed to be sc->curband?  8 is way wrong.
+Two 5 GHz bands regulatory rules were missing for
+Brunei Darussalam (BN). The document we referred to
+is the:
 
-If you look into the patch which outputs this (backtrace in this 
-thread), sband->n_bitrates is 8. I have no idea what I have been smoking 
-the day I wrote it, but BAND= for sure isn't the right name for that 
-thing. Sorry for the confusion.
+"Spectrum Policy and Planning - Joint Policy
+Issued by the TRA and the MOT   27 June 2006"
 
-> rate could be 255
-> if, for some reason, the hardware rate wasn't in the rate table.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ db.txt |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-So, we have a fix for this, right? I mean the u8->s8 sc->rate_idx 
-conversion or alike...
+diff --git a/db.txt b/db.txt
+index d3a05ea..77f1754 100644
+--- a/db.txt
++++ b/db.txt
+@@ -82,6 +82,8 @@ country BL:
+ 
+ country BN:
+ 	(2402 - 2482 @ 40), (N/A, 20)
++	(5170 - 5250 @ 40), (N/A, 20)
++	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5735 - 5835 @ 40), (N/A, 30)
+ 
+ country BO:
+-- 
+1.6.0.6
+
