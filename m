@@ -1,75 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:38868 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761845AbZCaRTA (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:17929 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbZC0EAh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 13:19:00 -0400
-Received: by ewy9 with SMTP id 9so2676541ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 10:18:57 -0700 (PDT)
+	Fri, 27 Mar 2009 00:00:37 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so1022656rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 21:00:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <200903311159.57449.rossi.f@inwind.it>
-References: <200903311159.57449.rossi.f@inwind.it>
-Date: Tue, 31 Mar 2009 20:18:55 +0300
-Message-ID: <40f31dec0903311018u104ea3c4x165829ade89b2e76@mail.gmail.com> (sfid-20090331_191906_451636_9FC6DCF5)
-Subject: Re: [PATCH] ath5k: fix interpolation with equal power levels
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Fabio Rossi <rossi.f@inwind.it>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org
+In-Reply-To: <e13a36b30903252159r1dc5cdc7p244f39e75816f04@mail.gmail.com>
+References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
+	<200903260337.37783.kel@otaku42.de> <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
+	<200903260442.36251.kel@otaku42.de> <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
+	<e13a36b30903252008i72caad77y32e31f625b7cb842@mail.gmail.com>
+	<43e72e890903252119r56043c93h954ad1cdcc69ad33@mail.gmail.com>
+	<e13a36b30903252159r1dc5cdc7p244f39e75816f04@mail.gmail.com>
+Date: Thu, 26 Mar 2009 21:00:20 -0700
+Message-ID: <43e72e890903262100p57802b9fuc5bb75a23599fbbd@mail.gmail.com> (sfid-20090327_050042_174669_1AE9E1BB)
+Subject: Re: [renamed] Debian crda?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: debian-devel@lists.debian.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAwOS8zLzMxIEZhYmlvIFJvc3NpIDxyb3NzaS5mQGlud2luZC5pdD46Cj4gV2hlbiB0aGUgRUVQ
-Uk9NIGNvbnRhaW5zIHdlaXJkIHZhbHVlcyBmb3IgdGhlIHBvd2VyIGxldmVscyB3ZSBoYXZlIHRv
-Cj4gZml4IHRoZSBpbnRlcnBvbGF0aW9uIHByb2Nlc3MuCj4KPiBTaWduZWQtb2ZmLWJ5OiBGYWJp
-byBSb3NzaSA8cm9zc2kuZkBpbndpbmQuaXQ+Cj4gLS0tCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aDVrL3BoeS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvcGh5
-LmMKPiBpbmRleCA5ZTJmYWFlLi4wZTNlMGUwIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL2F0aDVrL3BoeS5jCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsvcGh5
-LmMKPiBAQCAtMTQ4NywyOCArMTQ4NywzNSBAQCBhdGg1a19nZXRfbGluZWFyX3BjZGFjX21pbihj
-b25zdCB1OCAqc3RlcEwsIGNvbnN0IHU4ICpzdGVwUiwKPiDCoHsKPiDCoCDCoCDCoCDCoHM4IHRt
-cDsKPiDCoCDCoCDCoCDCoHMxNiBtaW5fcHdyTCwgbWluX3B3clI7Cj4gLSDCoCDCoCDCoCBzMTYg
-cHdyX2kgPSBwd3JMWzBdOwo+IC0KPiAtIMKgIMKgIMKgIGRvIHsKPiAtIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIHB3cl9pLS07Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0bXAgPSAoczgpIGF0aDVr
-X2dldF9pbnRlcnBvbGF0ZWRfdmFsdWUocHdyX2ksCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwd3JMWzBdLCBw
-d3JMWzFdLAo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgc3RlcExbMF0sIHN0ZXBMWzFdKTsKPiAtCj4gLSDCoCDC
-oCDCoCB9IHdoaWxlICh0bXAgPiAxKTsKPiAtCj4gLSDCoCDCoCDCoCBtaW5fcHdyTCA9IHB3cl9p
-Owo+IC0KPiAtIMKgIMKgIMKgIHB3cl9pID0gcHdyUlswXTsKPiAtIMKgIMKgIMKgIGRvIHsKPiAt
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIHB3cl9pLS07Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0
-bXAgPSAoczgpIGF0aDVrX2dldF9pbnRlcnBvbGF0ZWRfdmFsdWUocHdyX2ksCj4gLSDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCBwd3JSWzBdLCBwd3JSWzFdLAo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgc3RlcFJbMF0sIHN0ZXBSWzFd
-KTsKPiAtCj4gLSDCoCDCoCDCoCB9IHdoaWxlICh0bXAgPiAxKTsKPiArIMKgIMKgIMKgIHMxNiBw
-d3JfaTsKPiArCj4gKyDCoCDCoCDCoCBpZiAocHdyTFswXSA9PSBwd3JMWzFdKQo+ICsgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgbWluX3B3ckwgPSBwd3JMWzBdOwo+ICsgwqAgwqAgwqAgZWxzZSB7Cj4g
-KyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwd3JfaSA9IHB3ckxbMF07Cj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCBkbyB7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwd3JfaS0t
-Owo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdG1wID0gKHM4KSBhdGg1a19n
-ZXRfaW50ZXJwb2xhdGVkX3ZhbHVlKHB3cl9pLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-cHdyTFswXSwgcHdyTFsxXSwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHN0ZXBMWzBdLCBz
-dGVwTFsxXSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9IHdoaWxlICh0bXAgPiAxKTsKPiAr
-Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBtaW5fcHdyTCA9IHB3cl9pOwo+ICsgwqAgwqAgwqAg
-fQo+Cj4gLSDCoCDCoCDCoCBtaW5fcHdyUiA9IHB3cl9pOwo+ICsgwqAgwqAgwqAgaWYgKHB3clJb
-MF0gPT0gcHdyUlsxXSkKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIG1pbl9wd3JSID0gcHdyUlsw
-XTsKPiArIMKgIMKgIMKgIGVsc2Ugewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcHdyX2kgPSBw
-d3JSWzBdOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZG8gewo+ICsgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgcHdyX2ktLTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIHRtcCA9IChzOCkgYXRoNWtfZ2V0X2ludGVycG9sYXRlZF92YWx1ZShwd3JfaSwKPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHB3clJbMF0sIHB3clJbMV0sCj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBzdGVwUlswXSwgc3RlcFJbMV0pOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgfSB3aGlsZSAodG1wID4gMSk7Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbWluX3B3
-clIgPSBwd3JfaTsKPiArIMKgIMKgIMKgIH0KPgo+IMKgIMKgIMKgIMKgLyogS2VlcCB0aGUgcmln
-aHQgYm91bmRhcnkgc28gdGhhdCBpdCB3b3JrcyBmb3IgYm90aCBjdXJ2ZXMgKi8KPiDCoCDCoCDC
-oCDCoHJldHVybiBtYXgobWluX3B3ckwsIG1pbl9wd3JSKTsKPgoKCkFja2VkLWJ5OiBOaWNrIEtv
-c3NpZmlkaXMgPG1pY2tmbGVtbUBnbWFpbC5jb20+CgotLSAKR1BHIElEOiAweEQyMURCMkRCCkFz
-IHlvdSByZWFkIHRoaXMgcG9zdCBnbG9iYWwgZW50cm9weSByaXNlcy4gSGF2ZSBGdW4gOy0pCk5p
-Y2sK
+On Wed, Mar 25, 2009 at 9:59 PM, Paul Wise <pabs@debian.org> wrote:
+> On Thu, Mar 26, 2009 at 1:19 PM, Luis R. Rodriguez <mcgrof@gmail.com>=
+ wrote:
+>
+>>> Brainwave: no need to add a second public key to CRDA itself, the
+>>> wireless-regdb could install the public key corresponding to the
+>>> private key it was built with.
+>>
+>> Can you elaborate on what you mean? Do you mean for wireless-regdb t=
+o
+>> put the actual pubkey into the users' system somewhere? Otherwise no=
+t
+>> sure what you mean.
+>
+> The crda package would contain the default upstream public key.
+>
+> The wireless-regdb would ship the Debian maintainer's pubkey as
+> debian/pubkeys/debian.pem in the source package and
+> /lib/crda/pubkeys/debian.pub.pem (or similar) in the binary package.
+>
+> Ubuntu would add their pubkey in a similar way.
+>
+> When wireless-regdb is built, it would:
+>
+> check the sha1sum/sha256sum of db.txt (alternatively upstream could
+> add a detached signature if possible to the tarball/git repo)
+>
+> if the db.txt is identical to the upstream one (or signed by
+> upstream), ship the upstream regulatory.bin file
+>
+> if the db.txt has been modified:
+>
+> if no private key is available, generate one automatically
+>
+> rebuild the regulatory.bin file using the private key
+>
+> create the corresponding public key and install it in the package as
+> /lib/crda/pubkeys/custom.pub.pem when it is not the same public key a=
+s
+> one of the ones in debian/pubkeys/*.pem (avoids shipping two copies o=
+f
+> the Debian pubkey)
+>
+> this scheme requires standard locations for the private key. I would
+> suggest either ~/.debian-wireless-regdb.priv.pem or
+> debian-wireless-regdb.priv.pem in the package build directory.
+>
+>>>> It is possible for users to add more public keys to the CRDA =C2=A0=
+pubkeys
+>>>> dir and build their own wireless-regdb using their own private key=
+=2E
+>>>
+>>> The above simplification makes this much easier.
+>>
+>> Not sure what you mean, but the idea with the pubkeys directory
+>
+> The above scheme would allow users who apt-get source wireless-regdb,
+> edit db.txt, debuild, debi to automatically trust their own key, as
+> well as trusting Debian's key and the upstream key.
+>
+> I wonder if any of this would be even remotely acceptable to
+> regulatory authorities.
+
+Thanks for the ideas, will post patches for this.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
