@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48390 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752679AbZCKNbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 09:31:51 -0400
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=iso-8859-1
-Date: Wed, 11 Mar 2009 14:31:47 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1236772410.20266.7.camel@johannes.local>
-Message-ID: <20090311133147.228080@gmx.net> (sfid-20090311_143230_846193_496CD899)
-MIME-Version: 1.0
-References: <20090309234946.99940@gmx.net>	
- (sfid-20090310_005017_999744_57F45C40)
- <1236669682.9658.34.camel@johannes.local>	 <20090310224427.223760@gmx.net>
- (sfid-20090310_234458_784141_4631D28F) <1236772410.20266.7.camel@johannes.local>
-Subject: Re: [PATCH] mac80211: ieee80211_ibss_commit() cleanup
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369AbZC0Nkp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 09:40:45 -0400
+Subject: rfkill get_state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Matthew Garrett <mjg@redhat.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GPCCFoLx0Ddx1aYuzeB6"
+Date: Fri, 27 Mar 2009 14:40:10 +0100
+Message-Id: <1238161210.4452.8.camel@johannes.local> (sfid-20090327_144049_089494_74C98225)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
 
-> > For unification with the STA implementation=20
->=20
-> FWIW, I don't see that as something that is necessarily desirable, I'=
-ve
-> split them up to allow them to diverge further and in a manageable wa=
-y.
+--=-GPCCFoLx0Ddx1aYuzeB6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I mean not the code itself but the coding style. So that you can better=
- understand the code of the one mode, if you read the code of the other=
- mode before. Sorry, for my bad English.
+When you implement get_state but don't do force_state, how does
+get_state ever get called?
 
-Regards
-Alina
+It seems to me it'll only get called=20
+ * when you read sysfs
+ * on resume
+ * on epo
 
---=20
-Nur bis 16.03.! DSL-Komplettanschluss inkl. WLAN-Modem f=FCr nur=20
-17,95 =BF/mtl. + 1 Monat gratis!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1=
-1308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+How do we ever react to a button press then to make a uevent?
+
+johannes
+
+--=-GPCCFoLx0Ddx1aYuzeB6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJzNc4AAoJEKVg1VMiehFYu4MQAKXTMSpl5hEpT1MLn2nifY5k
+qCylOtQ9LKYBYa/GiVI3CMhVgFLfbwvMKTejsRNKACkQlX3PPgAScd42LYpbhCqQ
+BRSlB8VoO9I3teFwKSN2MnLAw76Kn+OI6NzjtS30OjpErSwp+CX1cy4+aSv4tIwp
+GzIvLul5I6Zrd3gv03gkpluovzhqvJiS0ohc0hVDqTomFi2EiP3rUOi7pfjzj00h
+RPNCBMERl0NAulZOyS1UdcNwU9OrY4bljcEUWIM3tT45ritaRDFkYMCuRue0vmn8
+6vSpMgAKpEocJMo28deFlBspUfFVuE62mo7YioFD7e+P6aCVRqXN8arZAbhCU4hQ
+AHsTigcHLmh79bMgk/dPDfazHbHadMktNnEGZwwt7CaabdZDjuCjluKZp2l1ZsPv
+MTBMnO4oJLH7WuHw9wkRC3clEusBIR9FnJQ71YVylCBz26rSdM4L3T/3Riu+5rDB
+hG0NZLn5oaiPzC++NXvfmp0EhATCMxFCFmDM0WlmsYNgJCytadxEBzoV9WSMDavS
+HFf7iHTHlXNBVjmiQor2CoG4p3H5YNvlbpEa0j/eZh0kFRpqGD1a/NJD4BD6vlVV
+kJRb57pR4vyxG5zA7YuvP8lBpJ04jYooBsNRDa8s0bbnchRrszcsVQvRL0Xw/nLT
+1HWF47r76aTV3brlIR28
+=Nzlz
+-----END PGP SIGNATURE-----
+
+--=-GPCCFoLx0Ddx1aYuzeB6--
+
