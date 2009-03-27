@@ -1,184 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:36667 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761036AbZCUFsT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 01:48:19 -0400
-Message-Id: <20090321053716.656878050@vyatta.com> (sfid-20090321_065217_659023_AD8A0321)
-References: <20090321053527.316395697@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:21 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 54/77] netwave: convert to internal net_device_stats
+Received: from xc.sipsolutions.net ([83.246.72.84]:49082 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567AbZC0VQI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 17:16:08 -0400
+Subject: Re: rfkill get_state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <20090327150824.GC24288@khazad-dum.debian.net>
+References: <1238161210.4452.8.camel@johannes.local>
+	 <20090327150824.GC24288@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2tZPAZEqEx9OTCyOa52I"
+Date: Fri, 27 Mar 2009 22:16:03 +0100
+Message-Id: <1238188563.4452.21.camel@johannes.local> (sfid-20090327_221612_076111_5D7A4C63)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
+--=-2tZPAZEqEx9OTCyOa52I
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- a/drivers/net/wireless/netwave_cs.c	2009-03-20 21:45:41.100964205 -0700
-+++ b/drivers/net/wireless/netwave_cs.c	2009-03-20 22:14:37.954403178 -0700
-@@ -210,10 +210,6 @@ static int netwave_rx( struct net_device
- static irqreturn_t netwave_interrupt(int irq, void *dev_id);
- static void netwave_watchdog(struct net_device *);
- 
--/* Statistics */
--static void update_stats(struct net_device *dev);
--static struct net_device_stats *netwave_get_stats(struct net_device *dev);
--
- /* Wireless extensions */
- static struct iw_statistics* netwave_get_wireless_stats(struct net_device *dev);
- 
-@@ -275,14 +271,9 @@ typedef struct netwave_private {
-     int        lastExec;
-     struct timer_list      watchdog;	/* To avoid blocking state */
-     struct site_survey     nss;
--    struct net_device_stats stats;
-     struct iw_statistics   iw_stats;    /* Wireless stats */
- } netwave_private;
- 
--#ifdef NETWAVE_STATS
--static struct net_device_stats *netwave_get_stats(struct net_device *dev);
--#endif
--
- /*
-  * The Netwave card is little-endian, so won't work for big endian
-  * systems.
-@@ -413,7 +404,6 @@ static int netwave_probe(struct pcmcia_d
- 
-     /* Netwave specific entries in the device structure */
-     dev->hard_start_xmit = &netwave_start_xmit;
--    dev->get_stats  = &netwave_get_stats;
-     dev->set_multicast_list = &set_multicast_list;
-     /* wireless extensions */
-     dev->wireless_handlers = (struct iw_handler_def *)&netwave_handler_def;
-@@ -988,7 +978,7 @@ static int netwave_hw_xmit(unsigned char
- 	return 1;
-     }
- 
--    priv->stats.tx_bytes += len;
-+    dev->stats.tx_bytes += len;
- 
-     DEBUG(3, "Transmitting with SPCQ %x SPU %x LIF %x ISPLQ %x\n",
- 	  readb(ramBase + NETWAVE_EREG_SPCQ),
-@@ -1107,11 +1097,11 @@ static irqreturn_t netwave_interrupt(int
- 	    rser = readb(ramBase + NETWAVE_EREG_RSER);			
- 	    
- 	    if (rser & 0x04) {
--		++priv->stats.rx_dropped; 
--		++priv->stats.rx_crc_errors;
-+		++dev->stats.rx_dropped;
-+		++dev->stats.rx_crc_errors;
- 	    }
- 	    if (rser & 0x02)
--		++priv->stats.rx_frame_errors;
-+		++dev->stats.rx_frame_errors;
- 			
- 	    /* Clear the RxErr bit in RSER. RSER+4 is the
- 	     * write part. Also clear the RxCRC (0x04) and 
-@@ -1125,8 +1115,8 @@ static irqreturn_t netwave_interrupt(int
- 	    wait_WOC(iobase);
- 	    writeb(0x40, ramBase + NETWAVE_EREG_ASCC);
- 
--	    /* Remember to count up priv->stats on error packets */
--	    ++priv->stats.rx_errors;
-+	    /* Remember to count up dev->stats on error packets */
-+	    ++dev->stats.rx_errors;
- 	}
- 	/* TxDN */
- 	if (status & 0x20) {
-@@ -1140,17 +1130,17 @@ static irqreturn_t netwave_interrupt(int
- 		/* Transmitting was okay, clear bits */
- 		wait_WOC(iobase);
- 		writeb(0x2f, ramBase + NETWAVE_EREG_TSER + 4);
--		++priv->stats.tx_packets;
-+		++dev->stats.tx_packets;
- 	    }
- 			
- 	    if (txStatus & 0xd0) {
- 		if (txStatus & 0x80) {
--		    ++priv->stats.collisions; /* Because of /proc/net/dev*/
--		    /* ++priv->stats.tx_aborted_errors; */
-+		    ++dev->stats.collisions; /* Because of /proc/net/dev*/
-+		    /* ++dev->stats.tx_aborted_errors; */
- 		    /* printk("Collision. %ld\n", jiffies - dev->trans_start); */
- 		}
- 		if (txStatus & 0x40) 
--		    ++priv->stats.tx_carrier_errors;
-+		    ++dev->stats.tx_carrier_errors;
- 		/* 0x80 TxGU Transmit giveup - nine times and no luck
- 		 * 0x40 TxNOAP No access point. Discarded packet.
- 		 * 0x10 TxErr Transmit error. Always set when 
-@@ -1163,7 +1153,7 @@ static irqreturn_t netwave_interrupt(int
- 		/* Clear out TxGU, TxNOAP, TxErr and TxTrys */
- 		wait_WOC(iobase);
- 		writeb(0xdf & txStatus, ramBase+NETWAVE_EREG_TSER+4);
--		++priv->stats.tx_errors;
-+		++dev->stats.tx_errors;
- 	    }
- 	    DEBUG(3, "New status is TSER %x ASR %x\n",
- 		  readb(ramBase + NETWAVE_EREG_TSER),
-@@ -1197,40 +1187,6 @@ static void netwave_watchdog(struct net_
-     netif_wake_queue(dev);
- } /* netwave_watchdog */
- 
--static struct net_device_stats *netwave_get_stats(struct net_device *dev) {
--    netwave_private *priv = netdev_priv(dev);
--
--    update_stats(dev);
--
--    DEBUG(2, "netwave: SPCQ %x SPU %x LIF %x ISPLQ %x MHS %x rxtx %x"
--	  " %x tx %x %x %x %x\n", 
--	  readb(priv->ramBase + NETWAVE_EREG_SPCQ),
--	  readb(priv->ramBase + NETWAVE_EREG_SPU),
--	  readb(priv->ramBase + NETWAVE_EREG_LIF),
--	  readb(priv->ramBase + NETWAVE_EREG_ISPLQ),
--	  readb(priv->ramBase + NETWAVE_EREG_MHS),
--	  readb(priv->ramBase + NETWAVE_EREG_EC + 0xe),
--	  readb(priv->ramBase + NETWAVE_EREG_EC + 0xf),
--	  readb(priv->ramBase + NETWAVE_EREG_EC + 0x18),
--	  readb(priv->ramBase + NETWAVE_EREG_EC + 0x19),
--	  readb(priv->ramBase + NETWAVE_EREG_EC + 0x1a),
--	  readb(priv->ramBase + NETWAVE_EREG_EC + 0x1b));
--
--    return &priv->stats;
--}
--
--static void update_stats(struct net_device *dev) {
--    //unsigned long flags;
--/*     netwave_private *priv = netdev_priv(dev); */
--
--    //spin_lock_irqsave(&priv->spinlock, flags);
--
--/*    priv->stats.rx_packets = readb(priv->ramBase + 0x18e); 
--    priv->stats.tx_packets = readb(priv->ramBase + 0x18f); */
--
--    //spin_unlock_irqrestore(&priv->spinlock, flags);
--}
--
- static int netwave_rx(struct net_device *dev)
- {
-     netwave_private *priv = netdev_priv(dev);
-@@ -1274,7 +1230,7 @@ static int netwave_rx(struct net_device 
- 	if (skb == NULL) {
- 	    DEBUG(1, "netwave_rx: Could not allocate an sk_buff of "
- 		  "length %d\n", rcvLen);
--	    ++priv->stats.rx_dropped; 
-+	    ++dev->stats.rx_dropped;
- 	    /* Tell the adapter to skip the packet */
- 	    wait_WOC(iobase);
- 	    writeb(NETWAVE_CMD_SRP, ramBase + NETWAVE_EREG_CB + 0);
-@@ -1307,8 +1263,8 @@ static int netwave_rx(struct net_device 
- 	/* Queue packet for network layer */
- 	netif_rx(skb);
- 
--	priv->stats.rx_packets++;
--	priv->stats.rx_bytes += rcvLen;
-+	dev->stats.rx_packets++;
-+	dev->stats.rx_bytes += rcvLen;
- 
- 	/* Got the packet, tell the adapter to skip it */
- 	wait_WOC(iobase);
+On Fri, 2009-03-27 at 12:08 -0300, Henrique de Moraes Holschuh wrote:
 
--- 
+> > It seems to me it'll only get called=20
+> >  * when you read sysfs
+> >  * on resume
+> >  * on epo
+>=20
+> Yes.  It is mostly something that the rfkill core uses to get an up-to-da=
+te
+> state when it knows it needs one, and it is not good for anything else.
+
+Ouch, ok.
+
+> > How do we ever react to a button press then to make a uevent?
+>=20
+> rfkill-related uevents exist to signal change in state of the rfkill
+> switches, REGARDLESS of the reason.  So they are NOT related to button
+> presses, except in-so-far that a button press might have changed a rfkill
+> switch state.
+
+STOP WRITING ALL CAPS PLEASE. Look, I know that rfkill is related to the
+button press, if that button affects the hw kill state.
+
+> So, the short answer is: rfkill_force_state().  Call it when the radio
+> rfkill state changed, and the core will generate uevents.
+
+You do realise though that none of the platform drivers actually call
+that, right?
+
+> The core doesn't have any helpers for this, so if you need polling, for
+> example, you do it in your driver and call rfkill_force_state() as needed=
+.
+
+OK -- IMHO the only reasonable thing is to actually add polling if
+get_state is assigned -- anything else is pointless. I also don't see
+how get_state is actually needed, drivers can just use force_state after
+suspend/resume etc.
+
+> Where does the button press enters the picture in your driver?  Knowing
+> that, I can illustrate how it would plug to rfkill core, or to the input
+> device core (I am yet to see a case where it should be plugged to both).
+
+I'm not actually interested in a driver. I need to integrate rfkill into
+mac80211, and for that I need to rewrite it to have a usable API.
+
+johannes
+
+--=-2tZPAZEqEx9OTCyOa52I
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJzUIRAAoJEKVg1VMiehFYEiIP+wUC3bGZ/Gpjkt3nSmka9tin
+ailJpErwWHMZCWQ+sHrJY4ucy6J9VI6ijI+dpPK2tbfVv99zrRRMCdOkGrL69IVQ
+ZmDwKBjt+gQ/MOBK8gY1bqrkxKD+X0ibbay5nWXHSC8f/5LdWnEeOiZk79au1XK2
+3AjwaXhkmJUQz5P5CwRfFjwLC+TLmUiLDxZch1ImCfgpSxHQ6rntt1FhoPkkJOHv
+b0kpNoFYysywCqN92MNGIVyTmgQ0pjWurMI2Gnl4JPPJeP4SVOTyKQ9pVPhEbwRC
+9Rq2zZms4W7cYEOruNWPiRi78FhE1HdQsiaLWhf46cp2cZqsx83yaPnH+U6Dmj7D
+uIQCcpenaV/Kc62RzhT16WdOUlBNEkpSjmZ+DqbyxSarXE+PWbVW/VuAOFSSrk9n
+Exe0hTy8Y5k1IwxU5uyOCQFTLw61bixjjvFbohBwOS9o44gKLu3iS3HBc33KV+K1
+pw6BvtgWb0H8CyvG9eGXdo41l8OIDT4B2+e7XB/FGY2M274ZxdFsQYputwWJ62Cl
+kNhoQzqkthYwRgoksmzBGieePP/Xv3JRdmk8nO2USIsFNrjNj7aOagmb+W26vEja
+IP2BfXOr8/lmsulSDi16rRXL+TV9PelOEjGTHJtw2bNGEbaruUE5LxKK5HFJg5hT
+NbcO0s2NeNmpto96bMFJ
+=rNDS
+-----END PGP SIGNATURE-----
+
+--=-2tZPAZEqEx9OTCyOa52I--
 
