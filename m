@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:48886 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751430AbZCDVlm (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:39582 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbZC0Omf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 16:41:42 -0500
-Message-ID: <49AEF58E.30302@lwfinger.net> (sfid-20090304_224144_527336_AD13DBC5)
-Date: Wed, 04 Mar 2009 15:41:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 27 Mar 2009 10:42:35 -0400
+Received: by bwz17 with SMTP id 17so1030088bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 07:42:31 -0700 (PDT)
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k and power management
+References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 27 Mar 2009 16:42:29 +0200
+In-Reply-To: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com> (Davide Pesavento's message of "Fri\, 27 Mar 2009 15\:27\:22 +0100")
+Message-ID: <87ljqr58oa.fsf@litku.valot.fi> (sfid-20090327_154237_636270_85D8F223)
 MIME-Version: 1.0
-To: Markus Feldmann <feldmann_markus@gmx.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: BCM4303 on HP zv5265ea
-References: <gohr71$48f$1@ger.gmane.org> <49AC742D.9030309@lwfinger.net> <gom4ke$vle$1@ger.gmane.org> <49AE9BDD.7070603@lwfinger.net> <gomq5f$n64$1@ger.gmane.org>
-In-Reply-To: <gomq5f$n64$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Markus Feldmann wrote:
-> Larry Finger schrieb:
->> I looked at that mail again. Have you figured out how to get your
->> radio switch on?
-> I have takled to Matthew Garret. And he told me to check whether i have
-> an empty directory </sys/bus/pci/slots/> or not.
-> Generally it should be not empty if the <acpiphp> modul works fine.
-> 
-> But thats all i know.
+Davide Pesavento <davidepesa@gmail.com> writes:
 
-My system has an empty /sys/bus/pci/slots.
+> I'm running a 2.6.29-wl kernel, using ath9k and wpa_supplicant 0.6.9
+> (with -Dnl80211).
+> Enabling power management when connected (i.e. 'iwconfig wlan0 power
+> on'), causes the currently established connection to break and the
+> machine is no longer able to reconnect to the AP.
 
-> Further on here is what Matthgew Garret said:
-> "Some of these systems seem to use PCI express hotplug to handle the
-> rfkill. Can you try with the latest git tree, and make sure that you
-> have the acpiphp driver built in?"
-> AND
-> "Go to bus options/Support for PCI Hotplug/ACPI PCI Hotplug driver and
-> enable it. You'll probably want it built-in to the kernel."
+Try with a timeout, for example three seconds:
 
-Did you do that?
+iwconfig wlan0 power timeout 3
 
-> I have some printk statements activated.
-> But i don't get more Debug messages than these in my
-> old threads, or do you know some special debug kernel
-> Options for wireless or general debug options ?
-> 
-> CONFIG_MAC80211_DEBUGFS
-> CONFIG_MAC80211_VERBOSE_DEBUG
-> CONFIG_MAC80211_VERBOSE_PS_DEBUG
+It might be that ath9k doesn't work when timeout is zero (which 'power
+on' effectively does). You need a fairly new wireless-tools to set the
+timeout, older versions had a bug with that.
 
-I meant new printk statements that are used to see if hitting your switch causes
-any action with RFKILL. I don't know where to put them, nor do I want to take
-much time. I have an old BCM4306 and a BCM4301 - both work with b43legacy.
-
-Larry
-
+-- 
+Kalle Valo
