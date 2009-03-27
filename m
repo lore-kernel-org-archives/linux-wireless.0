@@ -1,83 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:49194 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbZCAQmF (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:37410 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbZC0FL5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2009 11:42:05 -0500
-Received: by ewy25 with SMTP id 25so1829731ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Mar 2009 08:42:02 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: rt2x00: Fix SW antenna diversity
-Date: Sun, 1 Mar 2009 17:42:00 +0100
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+	Fri, 27 Mar 2009 01:11:57 -0400
+Received: by fxm2 with SMTP id 2so860532fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 22:11:54 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: p54spi - mesh mode summary
+Date: Fri, 27 Mar 2009 08:03:54 +0300
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903260922.48489.jcmvbkbc@gmail.com> <1238055167.4331.3.camel@johannes.local>
+In-Reply-To: <1238055167.4331.3.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200903011742.00468.IvDoorn@gmail.com> (sfid-20090301_174219_091790_C09682E5)
+Message-Id: <200903270803.54820.jcmvbkbc@gmail.com> (sfid-20090327_061204_890075_725A5E8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Software antenna tuning is broken because of an function
-ordering problem during rt2x00link_tuner().
+> > 4) Pings don't go, because MPs don't answer ARP requests sent to it.
+> > Haven't tested for the root cause yet.
+>
+> Maybe some multicast issue?
 
-rt2x00link_precalculate_signal()
-rt2x00leds_led_quality()
-rt2x00lib_antenna_diversity()
+ARP requests get filtered out by LMAC.
+Can anyone explain why? My 802.11s comprehension is quite weak.
+Here's the packet:
 
-rt2x00link_precalculate_signal() will reset the quality TX/RX counters,
-however rt2x00lib_antenna_diversity() requires the RX counter to
-see what RSSI value must be used for a particular antenna.
-We can't change the ordering since rt2x00lib_antenna_diversity() might
-reset other statistics which are needed by the function called earlier.
+IEEE 802.11 Data, Flags: ......FT
+    Type/Subtype: Data (0x20)
+    Frame Control: 0x0308 (Normal)
+        Version: 0
+        Type: Data frame (2)
+        Subtype: 0
+        Flags: 0x3
+            DS status: WDS (AP to AP) or Mesh (MP to MP) Frame (To DS: 1 From DS: 1) (0x03)
+            .... .0.. = More Fragments: This is the last fragment
+            .... 0... = Retry: Frame is not being retransmitted
+            ...0 .... = PWR MGT: STA will stay up
+            ..0. .... = More Data: No data buffered
+            .0.. .... = Protected flag: Data is not protected
+            0... .... = Order flag: Not strictly ordered
+    Duration: 0
+    Receiver address: Broadcast (ff:ff:ff:ff:ff:ff)
+    Transmitter address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
+    Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
+    Fragment number: 0
+    Sequence number: 2
+    Source address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
+    Mesh Header
+        Address Extension 0
+        Mesh TTL: 5
+        Mesh Seq: 0
+Logical-Link Control
+    DSAP: SNAP (0xaa)
+    IG Bit: Individual
+    SSAP: SNAP (0xaa)
+    CR Bit: Command
+    Control field: U, func=UI (0x03)
+        000. 00.. = Command: Unnumbered Information (0x00)
+        .... ..11 = Frame type: Unnumbered frame (0x03)
+    Organization Code: Encapsulated Ethernet (0x000000)
+    Type: ARP (0x0806)
+Address Resolution Protocol (request)
+    Hardware type: Ethernet (0x0001)
+    Protocol type: IP (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (0x0001)
+    Sender MAC address: NokiaDan_9b:ee:6c (00:1d:6e:9b:ee:6c)
+    Sender IP address: 192.168.4.13 (192.168.4.13)
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 192.168.4.14 (192.168.4.14)
 
-Move the reset of the quality TX/RX counters into a seperate function
-and move the call to after rt2x00lib_antenna_diversity().
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index 9223a6d..7eb5cd7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -302,11 +302,6 @@ static void rt2x00link_precalculate_signal(struct rt2x00_dev *rt2x00dev)
- 	    PERCENTAGE(qual->rx_success, qual->rx_failed + qual->rx_success);
- 	link->tx_percentage =
- 	    PERCENTAGE(qual->tx_success, qual->tx_failed + qual->tx_success);
--
--	qual->rx_success = 0;
--	qual->rx_failed = 0;
--	qual->tx_success = 0;
--	qual->tx_failed = 0;
- }
- 
- int rt2x00link_calculate_signal(struct rt2x00_dev *rt2x00dev, int rssi)
-@@ -392,6 +387,16 @@ void rt2x00link_reset_tuner(struct rt2x00_dev *rt2x00dev, bool antenna)
- 		rt2x00link_antenna_reset(rt2x00dev);
- }
- 
-+void rt2x00link_reset_qual(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct link_qual *qual = &rt2x00dev->link.qual;
-+
-+	qual->rx_success = 0;
-+	qual->rx_failed = 0;
-+	qual->tx_success = 0;
-+	qual->tx_failed = 0;
-+}
-+
- static void rt2x00link_tuner(struct work_struct *work)
- {
- 	struct rt2x00_dev *rt2x00dev =
-@@ -448,6 +453,11 @@ static void rt2x00link_tuner(struct work_struct *work)
- 	rt2x00lib_antenna_diversity(rt2x00dev);
- 
- 	/*
-+	 * Reset the quality counters which recounted during each period.
-+	 */
-+	rt2x00link_reset_qual(rt2x00dev);
-+
-+	/*
- 	 * Increase tuner counter, and reschedule the next link tuner run.
- 	 */
- 	link->count++;
+I'm tempted to do something like this in p54_setup_mac:
+
+-               case NL80211_IFTYPE_MESH_POINT:
+                        mode = P54_FILTER_TYPE_IBSS;
+                        break;
++               case NL80211_IFTYPE_MESH_POINT:
++                       mode = P54_FILTER_TYPE_IBSS | P54_FILTER_TYPE_TRANSPARENT;
++                       break;
+
+But I guess that's bad solution, at least for pci/usb drivers.
+Christian, Johannes, what would you suggest?
+
+-- 
+Thanks.
+-- Max
