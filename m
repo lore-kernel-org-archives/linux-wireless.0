@@ -1,78 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:36737 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761157AbZCUFsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 01:48:30 -0400
-Message-Id: <20090321053718.065171867@vyatta.com> (sfid-20090321_064955_557680_C142AFC5)
-References: <20090321053527.316395697@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:39 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>, jkosina@suse.cz,
-	dstreba@suse.cz
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 72/77] ipw2x00: convert infrastructure for use by net_device_ops
+Received: from xc.sipsolutions.net ([83.246.72.84]:35762 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbZC0Jr7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2009 05:47:59 -0400
+Subject: Re: [PATCH] mac80211: add driver ops debugging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1238066858.4331.30.camel@johannes.local> (sfid-20090326_122819_843243_E02404BE)
+References: <1238066858.4331.30.camel@johannes.local>
+	 (sfid-20090326_122819_843243_E02404BE)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-q5CBFTeCMv3PrlALE5ty"
+Date: Fri, 27 Mar 2009 10:47:23 +0100
+Message-Id: <1238147243.4331.101.camel@johannes.local> (sfid-20090327_104802_276637_15B04076)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Expose routines so drivers can hook. Only set ptrs in netdev
-if using old compat code.
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+--=-q5CBFTeCMv3PrlALE5ty
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- drivers/net/wireless/ipw2x00/ieee80211.h     |    1 +
- drivers/net/wireless/ipw2x00/libipw_module.c |    5 ++++-
- drivers/net/wireless/ipw2x00/libipw_tx.c     |    1 +
- 3 files changed, 6 insertions(+), 1 deletion(-)
+On Thu, 2009-03-26 at 12:27 +0100, Johannes Berg wrote:
+> This patch adds (optional) debugging for each driver call
+> (except tx) that can print out the call, its parameters and
+> the return value from the driver. I did this by adding static
+> inlines for each driver operation and integrating debugging
+> into them, thus all driver calls are now written as
+>=20
+> 	drv_<op>(local, ...);
+>=20
+> instead of
+>=20
+> 	local->ops-><op>(&local->hw, ...);
+>=20
+> Some of the inlines have also gotten the existence check and
+> default return values for the call integrated into them.
 
---- a/drivers/net/wireless/ipw2x00/libipw_module.c	2009-03-20 21:39:32.901088992 -0700
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c	2009-03-20 21:39:34.508964994 -0700
-@@ -131,13 +131,14 @@ static void ieee80211_networks_initializ
- 			      &ieee->network_free_list);
- }
- 
--static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
-+int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
- {
- 	if ((new_mtu < 68) || (new_mtu > IEEE80211_DATA_LEN))
- 		return -EINVAL;
- 	dev->mtu = new_mtu;
- 	return 0;
- }
-+EXPORT_SYMBOL(ieee80211_change_mtu);
- 
- struct net_device *alloc_ieee80211(int sizeof_priv)
- {
-@@ -153,8 +154,10 @@ struct net_device *alloc_ieee80211(int s
- 		goto failed;
- 	}
- 	ieee = netdev_priv(dev);
-+#ifdef CONFIG_COMPAT_NET_DEV_OPS
- 	dev->hard_start_xmit = ieee80211_xmit;
- 	dev->change_mtu = ieee80211_change_mtu;
-+#endif
- 
- 	ieee->dev = dev;
- 
---- a/drivers/net/wireless/ipw2x00/ieee80211.h	2009-03-20 21:39:32.900089558 -0700
-+++ b/drivers/net/wireless/ipw2x00/ieee80211.h	2009-03-20 21:39:34.509964918 -0700
-@@ -1016,6 +1016,7 @@ static inline int ieee80211_is_cck_rate(
- /* ieee80211.c */
- extern void free_ieee80211(struct net_device *dev);
- extern struct net_device *alloc_ieee80211(int sizeof_priv);
-+extern int ieee80211_change_mtu(struct net_device *dev, int new_mtu);
- 
- extern void ieee80211_networks_age(struct ieee80211_device *ieee,
- 				   unsigned long age_secs);
---- a/drivers/net/wireless/ipw2x00/libipw_tx.c	2009-03-20 21:39:59.063966304 -0700
-+++ b/drivers/net/wireless/ipw2x00/libipw_tx.c	2009-03-20 21:40:37.667839502 -0700
-@@ -541,5 +541,6 @@ int ieee80211_xmit(struct sk_buff *skb, 
- 	dev->stats.tx_errors++;
- 	return 1;
- }
-+EXPORT_SYMBOL(ieee80211_xmit);
- 
- EXPORT_SYMBOL(ieee80211_txb_free);
+This patch dropped some output for the no-conf_tx case that Jouni
+explicitly added for that case, I have a new version on my homepage but
+am looking into ftrace right now.
 
--- 
+johannes
+
+--=-q5CBFTeCMv3PrlALE5ty
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJzKCpAAoJEKVg1VMiehFYHj8P/3ua7Z88VxEWMqretO2oqbiS
+0N3pvGjlVRX3kTDX+pkXrLuaxOb9AtruJKFCnQd0YYp6bYo95Py4ATuYT55brAs6
+KimHHQ9FaAJqsRounauXvpg1mgDIROBocXb4rde3U32CKa3I8Gubho72QbOE9F6K
+3a7bpWjO8UouynO6dSN5xbv0i17hQAF7faco2VcohOg+vRGedtXaGsNQgc1nB6Du
+vogwFF2n+5TrfmOFVPdYmH1/C29WRAiZ94ub4PKbKHE8p5RLRlulFXvGWDxM7UaJ
++HJYKGlklX3aBexlSVhAbepBRvNEP6bGn6R8TGboC4bk4WrvcJ+htLyUsobj8/XQ
+HVAcut+7DPHcDRBhSMUTOLtwGRkOlmeZMkga0bHzZGCyG0/yP0b1ibzr2tUsgFlo
+Hu53m3DPkQaNoZUz0eFN/azSg11iz8P5zMLbtUdN++EjnuY3f+BvKnARVieuhNE9
+EXhsd2XOWQEOCCKrwX/pG05BELWxaSPJ9ttLDVlkZ4hakd4zzc9YMJvIlJ4wMi6C
+gXMK3YMxORknH32xsW5fIKp3/R9KjAMwIqZdIegQAwz2T95K5H0r7E48zFyTbdLm
+dfrvOVRiXiRzxKIAyzAMqj7hnb6e2U2g03hjNim5qeUE6GuVUbuwhU+2hiuDp2iF
+75bgB/K9ZY3azH81Nj0h
+=fjhT
+-----END PGP SIGNATURE-----
+
+--=-q5CBFTeCMv3PrlALE5ty--
 
