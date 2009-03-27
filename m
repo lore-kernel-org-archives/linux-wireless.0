@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:43038 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbZCPN3Y (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.191]:34464 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbZC0OVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 09:29:24 -0400
-Received: by nf-out-0910.google.com with SMTP id d21so962388nfb.21
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 06:29:21 -0700 (PDT)
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <AF751E60-0D2E-400D-8650-032CCC1F90D9@icix.org> (sfid-20090316_142927_848559_7014CE18)
-From: Antonio Marques <froz@icix.org>
-To: Pat Erley <pat-lkml@erley.org>
-In-Reply-To: <49BDB24D.3030508@erley.org>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: rt2x00 mesh support
-Date: Mon, 16 Mar 2009 13:29:16 +0000
-References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <467E98EC-F5B1-4D79-914E-35E021125E37@icix.org> <594B4EB2-FE87-4756-B016-C83083EF415B@icix.org> <200903151445.01344.IvDoorn@gmail.com> <49BDB24D.3030508@erley.org>
+	Fri, 27 Mar 2009 10:21:45 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so824702tid.23
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 07:21:43 -0700 (PDT)
+From: Huang Weiyi <weiyi.huang@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH 3/3] nl80211: remove duplicated #include
+Date: Fri, 27 Mar 2009 22:21:36 +0800
+Message-Id: <1238163696-308-1-git-send-email-weiyi.huang@gmail.com> (sfid-20090327_152146_565617_3232870F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mar 16, 2009, at 01:58 , Pat Erley wrote:
-> I get identical behavior with the patch I'm about to RFC for ath9k  
-> to enable
-> mesh mode.  I just want to test that it works with my b43, rt61pci,  
-> and
-> rt2x00usb devices.  Of the 4, ONLY b43 enables beaconing for mesh  
-> mode on
-> interface up.  I suspect my ath5k one will exhibit similar  
-> behavior.  I've
-> reviewed the b43 code about 100 times during the writing of my patch  
-> for ath9k
-> and I can't spot what it's doing that's so different.
->
-> Pat
+Remove duplicated #include in net/wireless/core.h.
 
-I have also tested with ath5k which behaves correctly on interface up by
-enabling beaconing. You might want to look at it too.
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+---
+ net/wireless/core.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Antonio Marques
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 6acd483..ed3a5b9 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -10,7 +10,6 @@
+ #include <linux/netdevice.h>
+ #include <linux/kref.h>
+ #include <linux/rbtree.h>
+-#include <linux/mutex.h>
+ #include <net/genetlink.h>
+ #include <net/wireless.h>
+ #include <net/cfg80211.h>
+-- 
+1.6.1.3
+
