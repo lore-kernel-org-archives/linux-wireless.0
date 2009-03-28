@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:4813 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752998AbZCQVSs (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:50682 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbZC1Mor (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 17:18:48 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so256269qwh.37
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 14:18:45 -0700 (PDT)
+	Sat, 28 Mar 2009 08:44:47 -0400
+Date: Sat, 28 Mar 2009 12:44:43 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC] rfkill/rfkill-input userspace API
+Message-ID: <20090328124443.GA25759@srcf.ucam.org> (sfid-20090328_134449_554273_C9592E19)
+References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> <20090327221147.GA499@srcf.ucam.org> <20090328123645.GD7439@khazad-dum.debian.net>
 MIME-Version: 1.0
-In-Reply-To: <49BC7117.1010107@gmail.com>
-References: <49BC0DBE.90209@gmail.com> <49BC6C21.6020807@gmail.com>
-	 <49BC7117.1010107@gmail.com>
-Date: Tue, 17 Mar 2009 17:18:45 -0400
-Message-ID: <b6c5339f0903171418h6534a5a8w1ef8354f9571657a@mail.gmail.com> (sfid-20090317_221852_101503_13754961)
-Subject: Re: ids missing in ath5k ?
-From: Bob Copeland <me@bobcopeland.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090328123645.GD7439@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 14, 2009 at 11:08 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
+On Sat, Mar 28, 2009 at 09:36:45AM -0300, Henrique de Moraes Holschuh wrote:
+> On Fri, 27 Mar 2009, Matthew Garrett wrote:
+> > On Fri, Mar 27, 2009 at 12:58:01PM -0300, Henrique de Moraes Holschuh wrote:
+> > > Note: unless something is done to change the way X.org deals with
+> > > input devices, rfkill-input is _useless_ in a large number of setups
+> > > as far as input event handling goes, because it will never get any
+> > > events after X.org evdev grabs the input device.
+> > 
+> > X.org evdev doesn't grab the input device. We fixed that precisely 
+> > because it broke rfkill-input.
+> 
+> Eh? What is that ioctl in the git version doing there, then?  Did I
+> get the code from the wrong branch or something?
 
-> [missing ids: 0x168c: { 0xff1a, 0x0020, 0x101a, 0x9013 } ]
+It'll only call the ioctl if the user explicitly passes the GrabDevice
+option, and if they do that they can deal with the breakage. Default 
+behaviour is not to grab. From the source:
 
-Luis, do you know anything about these devices?  Are all of these
-802.11abg or are any .11h (I didn't see ath9k claiming any of
-them either).
-
-Should be easy to add support, but would be nice to know if the
-hardware exists and will work.
+   /* Grabbing the event device stops in-kernel event forwarding. In other     
+       words, it disables rfkill and the "Macintosh mouse button emulation".
+       Note that this needs a server that sets the console to RAW mode. */
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Matthew Garrett | mjg59@srcf.ucam.org
