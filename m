@@ -1,373 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51901 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754919AbZCZRIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:08:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/3] iwlwifi: merge and better support of suspend/resume for iwlagn and iwl3945
-Date: Thu, 26 Mar 2009 10:14:08 -0700
-Message-Id: <1238087650-26993-2-git-send-email-reinette.chatre@intel.com> (sfid-20090326_180847_812946_1753BDD4)
-In-Reply-To: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
-References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.174]:60325 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753024AbZC1TSV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2009 15:18:21 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so1907945wff.4
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2009 12:18:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1238262118.4217.13.camel@johannes.local>
+References: <20090323162834.154525349@sipsolutions.net> <20090323163053.344441542@sipsolutions.net>
+	<20090328045529.GF5543@bombadil.infradead.org> <1238262118.4217.13.camel@johannes.local>
+Date: Sat, 28 Mar 2009 12:18:03 -0700
+Message-ID: <43e72e890903281218s6b4eeb9eu4a97aa3e87c5a3a6@mail.gmail.com> (sfid-20090328_201825_549378_A8582F74)
+Subject: Re: [PATCH 7/8] mac80211: fix aggregation to not require queue stop
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Sat, Mar 28, 2009 at 10:41 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2009-03-28 at 00:55 -0400, Luis R. Rodriguez wrote:
+>
+>
+>> > This changes how mac80211 behaves towards drivers that support
+>> > aggregation but have no hardware queues -- those drivers will now
+>> > not be handed packets while the aggregation session is being
+>> > established, but only after it has been fully established.
+>>
+>> That's fine from a logical point of view as compromise here as our
+>> ampdu start should be relatively quick. Now while I can say this
+>> from a logical point of view this patch obviously needed more
+>> testing but lets see how it holds up and I'm glad you're the one
+>> who wrote it. I'm confident there won't be any issues but that
+>> is something I cannot gaurantee just based on the review. We now
+>> need to go out and tests this. All other patches previous to this
+>> make 100% perfect sense.
+>
+> :)
+> I think it also makes more _sense_ to not ask the driver to handle th=
+ese
+> frames, because we won't set the AMPDU flag correctly if the session
+> start is declined.
 
-With mac80211's help to call stop() and start() in mac80211
-suspend/resume function, both iwlagn and iwl3945 no longer calling
-stop() and start(); remove un-necessary STATUS_IN_SUSPEND bit from both
-header files and functions,
+Hm, wouldn't we send them as normal frames if its declined here eventua=
+lly?
 
-Move apm_ops.stop() function into pci_suspend() to ensure
-DMA is stopped before go into suspend mode.
+>> > @@ -602,22 +637,19 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
+>> >
+>> > =C2=A0 =C2=A0 spin_lock_bh(&sta->lock);
+>> > + =C2=A0 spin_lock(&local->ampdu_lock);
+>> >
+>> > - =C2=A0 if (*state & HT_AGG_STATE_INITIATOR_MSK &&
+>> > - =C2=A0 =C2=A0 =C2=A0 hw->ampdu_queues) {
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /*
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* Wake up this queue, w=
+e stopped it earlier,
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* this will in turn wak=
+e the entire AC.
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ieee80211_wake_queue_by_reaso=
+n(hw,
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 h=
+w->queues + sta->tid_to_tx_q[tid],
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 I=
+EEE80211_QUEUE_STOP_REASON_AGGREGATION);
+>> > - =C2=A0 }
+>> > + =C2=A0 ieee80211_agg_splice_packets(local, sta, tid);
+>>
+>> Is it possible for ieee80211_stop_tx_ba_cb() to be called while
+>> state of the tid is not yet operational? from what I can tell
+>> that's the only case when we would have added skbs to the STA's tid
+>> pending queue.
+>
+> This happens when the session is denied by the peer.
 
-iwl3945 has the similar suspend/resume function as iwlagn, so move both
-functions to iwlcore to be shared by both drivers.
+Ah, got it, thanks.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   54 ++---------------------
- drivers/net/wireless/iwlwifi/iwl-core.c     |   40 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    5 ++-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   63 +++-----------------------
- 6 files changed, 56 insertions(+), 109 deletions(-)
+>> > =C2=A0 =C2=A0 *state =3D HT_AGG_STATE_IDLE;
+>> > + =C2=A0 /* from now on packets are no longer put onto sta->pendin=
+g */
+>>
+>> I think it would help to refer to the pendign queue consitantly inst=
+ead
+>> as something like "STA's TID pending queue" as that is what it is. W=
+e also
+>> now have the local->pending queue. STA's pending queue seems to impl=
+y
+>> its also used for non-aggregation sessions.
+>>
+>> See -- if the state is not operation nothing would have gone
+>> been put into the STA's tid pending queue. Might also be worth
+>> mentioning that in the comment.
+>
+> Hmm, yeah, might rewrite the comments a bit. Mind if I do a separate
+> patch later?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index ab7aaf6..29bc0d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -162,7 +162,6 @@ struct iwl3945_frame {
- #define STATUS_TEMPERATURE	8
- #define STATUS_GEO_CONFIGURED	9
- #define STATUS_EXIT_PENDING	10
--#define STATUS_IN_SUSPEND	11
- #define STATUS_STATISTICS	12
- #define STATUS_SCANNING		13
- #define STATUS_SCAN_ABORTING	14
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 663dc83..669b435 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1654,7 +1654,7 @@ static void __iwl_down(struct iwl_priv *priv)
- 		ieee80211_stop_queues(priv->hw);
- 
- 	/* If we have not previously called iwl_init() then
--	 * clear all bits but the RF Kill and SUSPEND bits and return */
-+	 * clear all bits but the RF Kill bits and return */
- 	if (!iwl_is_init(priv)) {
- 		priv->status = test_bit(STATUS_RF_KILL_HW, &priv->status) <<
- 					STATUS_RF_KILL_HW |
-@@ -1662,23 +1662,19 @@ static void __iwl_down(struct iwl_priv *priv)
- 					STATUS_RF_KILL_SW |
- 			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
- 					STATUS_GEO_CONFIGURED |
--			       test_bit(STATUS_IN_SUSPEND, &priv->status) <<
--					STATUS_IN_SUSPEND |
- 			       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
- 					STATUS_EXIT_PENDING;
- 		goto exit;
- 	}
- 
--	/* ...otherwise clear out all the status bits but the RF Kill and
--	 * SUSPEND bits and continue taking the NIC down. */
-+	/* ...otherwise clear out all the status bits but the RF Kill
-+	 * bits and continue taking the NIC down. */
- 	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
- 				STATUS_RF_KILL_HW |
- 			test_bit(STATUS_RF_KILL_SW, &priv->status) <<
- 				STATUS_RF_KILL_SW |
- 			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
- 				STATUS_GEO_CONFIGURED |
--			test_bit(STATUS_IN_SUSPEND, &priv->status) <<
--				STATUS_IN_SUSPEND |
- 			test_bit(STATUS_FW_ERROR, &priv->status) <<
- 				STATUS_FW_ERROR |
- 		       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
-@@ -1703,7 +1699,7 @@ static void __iwl_down(struct iwl_priv *priv)
- 	udelay(5);
- 
- 	/* FIXME: apm_ops.suspend(priv) */
--	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
-+	if (exit_pending)
- 		priv->cfg->ops->lib->apm_ops.stop(priv);
- 	else
- 		priv->cfg->ops->lib->apm_ops.reset(priv);
-@@ -2064,9 +2060,6 @@ static int iwl_mac_start(struct ieee80211_hw *hw)
- 
- 	IWL_DEBUG_INFO(priv, "Start UP work done.\n");
- 
--	if (test_bit(STATUS_IN_SUSPEND, &priv->status))
--		return 0;
--
- 	/* Wait for START_ALIVE from Run Time ucode. Otherwise callbacks from
- 	 * mac80211 will not be run successfully. */
- 	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-@@ -3566,45 +3559,6 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
- 	ieee80211_free_hw(priv->hw);
- }
- 
--#ifdef CONFIG_PM
--
--static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
--{
--	struct iwl_priv *priv = pci_get_drvdata(pdev);
--
--	if (priv->is_open) {
--		set_bit(STATUS_IN_SUSPEND, &priv->status);
--		iwl_mac_stop(priv->hw);
--		priv->is_open = 1;
--	}
--
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, PCI_D3hot);
--
--	return 0;
--}
--
--static int iwl_pci_resume(struct pci_dev *pdev)
--{
--	struct iwl_priv *priv = pci_get_drvdata(pdev);
--	int ret;
--
--	pci_set_power_state(pdev, PCI_D0);
--	ret = pci_enable_device(pdev);
--	if (ret)
--		return ret;
--	pci_restore_state(pdev);
--	iwl_enable_interrupts(priv);
--
--	if (priv->is_open)
--		iwl_mac_start(priv->hw);
--
--	clear_bit(STATUS_IN_SUSPEND, &priv->status);
--	return 0;
--}
--
--#endif /* CONFIG_PM */
- 
- /*****************************************************************************
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 4b1298c..e1b5472 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2115,3 +2115,43 @@ void iwl_rx_reply_error(struct iwl_priv *priv,
- }
- EXPORT_SYMBOL(iwl_rx_reply_error);
- 
-+#ifdef CONFIG_PM
-+
-+int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	struct iwl_priv *priv = pci_get_drvdata(pdev);
-+
-+	/*
-+	 * This function is called when system goes into suspend state
-+	 * mac80211 will call iwl_mac_stop() from the mac80211 suspend function
-+	 * first but since iwl_mac_stop() has no knowledge of who the caller is,
-+	 * it will not call apm_ops.stop() to stop the DMA operation.
-+	 * Calling apm_ops.stop here to make sure we stop the DMA.
-+	 */
-+	priv->cfg->ops->lib->apm_ops.stop(priv);
-+
-+	pci_save_state(pdev);
-+	pci_disable_device(pdev);
-+	pci_set_power_state(pdev, PCI_D3hot);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(iwl_pci_suspend);
-+
-+int iwl_pci_resume(struct pci_dev *pdev)
-+{
-+	struct iwl_priv *priv = pci_get_drvdata(pdev);
-+	int ret;
-+
-+	pci_set_power_state(pdev, PCI_D0);
-+	ret = pci_enable_device(pdev);
-+	if (ret)
-+		return ret;
-+	pci_restore_state(pdev);
-+	iwl_enable_interrupts(priv);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(iwl_pci_resume);
-+
-+#endif /* CONFIG_PM */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index a8eac8c..5d49045 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -432,6 +432,10 @@ static inline u16 iwl_pcie_link_ctl(struct iwl_priv *priv)
- 	pci_read_config_word(priv->pci_dev, pos + PCI_EXP_LNKCTL, &pci_lnk_ctl);
- 	return pci_lnk_ctl;
- }
-+#ifdef CONFIG_PM
-+int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state);
-+int iwl_pci_resume(struct pci_dev *pdev);
-+#endif /* CONFIG_PM */
- 
- /*****************************************************
- *  Error Handling Debugging
-@@ -458,7 +462,6 @@ void iwlcore_free_geos(struct iwl_priv *priv);
- #define STATUS_TEMPERATURE	8
- #define STATUS_GEO_CONFIGURED	9
- #define STATUS_EXIT_PENDING	10
--#define STATUS_IN_SUSPEND	11
- #define STATUS_STATISTICS	12
- #define STATUS_SCANNING		13
- #define STATUS_SCAN_ABORTING	14
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 64eb585..af1d121 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -456,8 +456,6 @@ static ssize_t iwl_dbgfs_status_read(struct file *file,
- 		test_bit(STATUS_GEO_CONFIGURED, &priv->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_EXIT_PENDING:\t %d\n",
- 		test_bit(STATUS_EXIT_PENDING, &priv->status));
--	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_IN_SUSPEND:\t %d\n",
--		test_bit(STATUS_IN_SUSPEND, &priv->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_STATISTICS:\t %d\n",
- 		test_bit(STATUS_STATISTICS, &priv->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_SCANNING:\t %d\n",
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 279d10c..33f5b00 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2996,7 +2996,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 		ieee80211_stop_queues(priv->hw);
- 
- 	/* If we have not previously called iwl3945_init() then
--	 * clear all bits but the RF Kill and SUSPEND bits and return */
-+	 * clear all bits but the RF Kill bits and return */
- 	if (!iwl_is_init(priv)) {
- 		priv->status = test_bit(STATUS_RF_KILL_HW, &priv->status) <<
- 					STATUS_RF_KILL_HW |
-@@ -3004,23 +3004,19 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 					STATUS_RF_KILL_SW |
- 			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
- 					STATUS_GEO_CONFIGURED |
--			       test_bit(STATUS_IN_SUSPEND, &priv->status) <<
--					STATUS_IN_SUSPEND |
- 				test_bit(STATUS_EXIT_PENDING, &priv->status) <<
- 					STATUS_EXIT_PENDING;
- 		goto exit;
- 	}
- 
--	/* ...otherwise clear out all the status bits but the RF Kill and
--	 * SUSPEND bits and continue taking the NIC down. */
-+	/* ...otherwise clear out all the status bits but the RF Kill
-+	 * bits and continue taking the NIC down. */
- 	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
- 				STATUS_RF_KILL_HW |
- 			test_bit(STATUS_RF_KILL_SW, &priv->status) <<
- 				STATUS_RF_KILL_SW |
- 			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
- 				STATUS_GEO_CONFIGURED |
--			test_bit(STATUS_IN_SUSPEND, &priv->status) <<
--				STATUS_IN_SUSPEND |
- 			test_bit(STATUS_FW_ERROR, &priv->status) <<
- 				STATUS_FW_ERROR |
- 			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
-@@ -3044,7 +3040,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 
- 	udelay(5);
- 
--	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
-+	if (exit_pending)
- 		priv->cfg->ops->lib->apm_ops.stop(priv);
- 	else
- 		priv->cfg->ops->lib->apm_ops.reset(priv);
-@@ -3097,10 +3093,8 @@ static int __iwl3945_up(struct iwl_priv *priv)
- 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
- 	else {
- 		set_bit(STATUS_RF_KILL_HW, &priv->status);
--		if (!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
--			IWL_WARN(priv, "Radio disabled by HW RF Kill switch\n");
--			return -ENODEV;
--		}
-+		IWL_WARN(priv, "Radio disabled by HW RF Kill switch\n");
-+		return -ENODEV;
- 	}
- 
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
-@@ -3592,9 +3586,6 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
- 
- 	IWL_DEBUG_INFO(priv, "Start UP work.\n");
- 
--	if (test_bit(STATUS_IN_SUSPEND, &priv->status))
--		return 0;
--
- 	/* Wait for START_ALIVE from ucode. Otherwise callbacks from
- 	 * mac80211 will not be run successfully. */
- 	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-@@ -5231,44 +5222,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	ieee80211_free_hw(priv->hw);
- }
- 
--#ifdef CONFIG_PM
--
--static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
--{
--	struct iwl_priv *priv = pci_get_drvdata(pdev);
--
--	if (priv->is_open) {
--		set_bit(STATUS_IN_SUSPEND, &priv->status);
--		iwl3945_mac_stop(priv->hw);
--		priv->is_open = 1;
--	}
--
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, PCI_D3hot);
--
--	return 0;
--}
--
--static int iwl3945_pci_resume(struct pci_dev *pdev)
--{
--	struct iwl_priv *priv = pci_get_drvdata(pdev);
--	int ret;
--
--	pci_set_power_state(pdev, PCI_D0);
--	ret = pci_enable_device(pdev);
--	if (ret)
--		return ret;
--	pci_restore_state(pdev);
--
--	if (priv->is_open)
--		iwl3945_mac_start(priv->hw);
--
--	clear_bit(STATUS_IN_SUSPEND, &priv->status);
--	return 0;
--}
--
--#endif /* CONFIG_PM */
- 
- /*****************************************************************************
-  *
-@@ -5282,8 +5235,8 @@ static struct pci_driver iwl3945_driver = {
- 	.probe = iwl3945_pci_probe,
- 	.remove = __devexit_p(iwl3945_pci_remove),
- #ifdef CONFIG_PM
--	.suspend = iwl3945_pci_suspend,
--	.resume = iwl3945_pci_resume,
-+	.suspend = iwl_pci_suspend,
-+	.resume = iwl_pci_resume,
- #endif
- };
- 
--- 
-1.5.6.3
+Nope.
 
+>> > @@ -1013,20 +1013,53 @@ __ieee80211_tx_prepare(struct ieee80211_
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+>> > =C2=A0 =C2=A0 }
+>> >
+>> > + =C2=A0 /*
+>> > + =C2=A0 =C2=A0* If this flag is set to true anywhere, and we get =
+here,
+>> > + =C2=A0 =C2=A0* we are doing the needed processing, so remove the=
+ flag
+>> > + =C2=A0 =C2=A0* now.
+>> > + =C2=A0 =C2=A0*/
+>> > + =C2=A0 info->flags &=3D ~IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+>> > +
+>> > =C2=A0 =C2=A0 hdr =3D (struct ieee80211_hdr *) skb->data;
+>> >
+>> > =C2=A0 =C2=A0 tx->sta =3D sta_info_get(local, hdr->addr1);
+>> >
+>> > - =C2=A0 if (tx->sta && ieee80211_is_data_qos(hdr->frame_control))=
+ {
+>> > + =C2=A0 if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) =
+&&
+>> > + =C2=A0 =C2=A0 =C2=A0 (local->hw.flags & IEEE80211_HW_AMPDU_AGGRE=
+GATION)) {
+>>
+>> Hm, why were we not crashing here before? I figure we would have
+>> with something like this:
+>>
+>> state =3D &tx->sta->ampdu_mlme.tid_state_tx[tid];
+>>
+>> That it itself should be separate patch, but too late now. Anyway
+>> the new added check for IEEE80211_HW_AMPDU_AGGREGATION should go
+>> to stable.
+>
+> Nah, state_tx always exists (and will be IDLE) but this was just an
+> added check to make us not need the spinlock for non-ampdu hw.
+
+Ah yes, its the ampdu_mlme.tid_tx that gets kmalloc'd only on aggr
+session start.
+
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 unsigned long flags;
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct tid_ampdu_tx *tid_tx;
+>> > +
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 qc =3D ieee80211_get_qos=
+_ctl(hdr);
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 tid =3D *qc & IEEE80211_=
+QOS_CTL_TID_MASK;
+>> >
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 spin_lock_irqsave(&tx->s=
+ta->lock, flags);
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /*
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* XXX: This spinlock co=
+uld be fairly expensive, but see the
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0c=
+omment in agg-tx.c:ieee80211_agg_tx_operational().
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0O=
+ne way to solve this would be to do something RCU-like
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0f=
+or managing the tid_tx struct and using atomic bitops
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0f=
+or the actual state -- by introducing an actual
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0'=
+operational' bit that would be possible. It would
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0r=
+equire changing ieee80211_agg_tx_operational() to
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0s=
+et that bit, and changing the way tid_tx is managed
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0e=
+verywhere, including races between that bit and
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0t=
+id_tx going away (tid_tx being added can be easily
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* =C2=A0 =C2=A0 =C2=A0c=
+ommitted to memory before the 'operational' bit).
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 tid_tx =3D tx->sta->ampdu_mlm=
+e.tid_tx[tid];
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 state =3D &tx->sta->ampd=
+u_mlme.tid_state_tx[tid];
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (*state =3D=3D HT_AGG_STAT=
+E_OPERATIONAL)
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (*state =3D=3D HT_AGG_STAT=
+E_OPERATIONAL) {
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 info->flags |=3D IEEE80211_TX_CTL_AMPDU;
+>>
+>> See, when its operational we don't add stuff to the STA's TID pendin=
+g
+>> queue.
+>>
+>> This piece:
+>>
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 } else if (*state !=3D HT_AGG=
+_STATE_IDLE) {
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /=
+* in progress */
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 q=
+ueued =3D true;
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 i=
+nfo->flags |=3D IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 _=
+_skb_queue_tail(&tid_tx->pending, skb);
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+>>
+>> Can probably be ported to stable too, to just TX_DROP.
+>
+> No, why? We're handing the frames to the driver. It wants to handle
+> those frames before agg session is started correctly. That's what I w=
+as
+> referring to before with this making more sense now.
+
+OK I see that but I am not sure of what's done to the skb in the old
+case if the session is note complete yet, nor now if the session gets
+declined. I can check later, right now I'm feeling lazy.
+
+>> > @@ -1251,7 +1295,12 @@ static int ieee80211_tx(struct net_devic
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 do {
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 next =3D skb->next;
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 skb->next =3D NULL;
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 skb_queue_tail(&local->pending[queue], skb);
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 if (unlikely(txpending))
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 skb_queue_head(&lo=
+cal->pending[queue],
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0skb);
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 else
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 skb_queue_tail(&lo=
+cal->pending[queue],
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0skb);
+>>
+>> For someone who hasn't read all the pending queue code stuff the abo=
+ve would be
+>> a little brain twister. It might be good to leave a comment explaini=
+ng why
+>> txpendign would be set and why we add it to the head (i.e. because t=
+he "skb" sent
+>> at a previous time was put into a pending queue). Maybe even rename =
+txpending to
+>> something like skb_was_pending.
+>
+> Ok that might make some sense, though as a parameter you can easily s=
+ee
+> where it's coming from, I think :) I agree that the entire code is a
+> little brain twister...
+
+Yeah.. I had to re-read aggregation code again to get the hang of it.
+Anything we can do to make
+it easier for people to pick would be nice. I think I'll go patch up
+the aggr-tx kdoc too now, unless we
+plan on nuking some stuff soon again. I suspect the next big change
+will be to move software based
+aggregation queue handling and mapping to ACs within mac80211 for that
+type of hardware which
+we'll need for ar9170, ralink stuff, broadcom (if that ever happens)
+and our next generation 11n USB
+driver.
+
+>> > @@ -1360,7 +1407,7 @@ int ieee80211_master_start_xmit(struct s
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0"originating device\n", dev->name);
+>> > =C2=A0#endif
+>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 dev_kfree_skb(skb);
+>> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 0;
+>> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return NETDEV_TX_OK;
+>>
+>> All these NETDEV_TX_OK could've gone into a separate patch.
+>
+> I guess, they're also not strictly necessary since 0 =3D=3D TX_OK :)
+
+Sure, what I'm trying to say is these patches are pretty hard to
+review because of the topic,
+it just helps to trim them down as much as possible -- but I realize
+even that is painful.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
