@@ -1,50 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f178.google.com ([209.85.218.178]:45490 "EHLO
-	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396AbZCIT4l convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:56393 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755165AbZC1D3G convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 15:56:41 -0400
-Received: by bwz26 with SMTP id 26so1342709bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2009 12:56:38 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Another "scan handling in mac80211" bug
-Date: Mon, 9 Mar 2009 20:56:27 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200903091838.16365.helmut.schaa@gmail.com> <1236624512.9658.5.camel@johannes.local>
-In-Reply-To: <1236624512.9658.5.camel@johannes.local>
+	Fri, 27 Mar 2009 23:29:06 -0400
+Received: by bwz17 with SMTP id 17so1227343bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 20:29:02 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Subject: Re: p54spi - mesh mode summary
+Date: Sat, 28 Mar 2009 06:21:02 +0300
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903270803.54820.jcmvbkbc@gmail.com> <200903271506.10614.chunkeey@web.de>
+In-Reply-To: <200903271506.10614.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200903092056.28091.helmut.schaa@gmail.com> (sfid-20090309_205644_543182_66380CDE)
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200903280621.02362.jcmvbkbc@gmail.com> (sfid-20090328_042917_234280_94B5168B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 9. M=E4rz 2009 schrieb Johannes Berg:
-[...]
+> That's odd.
+>
+> P54_FILTER_TYPE_TRANSPARENT should be already set for mesh mode.
+>
+> The reason is that mesh mode will automatically set the FIF_OTHER_BSS=
+ flag,
+> (file:net/mac80211/iface.c func:ieee80211_open lines:251 f)
+>
+> which in turn ORs the P54_FILTER_TYPE_TRANSPARENT flag to the mode...
+> (file:drivers/net/wireless/p54/p54common.c func: p54_setup_mac lines:=
+ 1691
+> f)
+>
+> So, there's no need to OR a flag that gets ORed anyway?
 
-> > All subsequent scan requests will fail in cfg80211_wext_siwscan as =
-mac80211
-> > did not notify cfg80211 about the scan result.
-> >=20
-> > I guess it should be sufficient to queue one more sta_work after th=
-e MLME
-> > moves to IEEE80211_STA_MLME_DISABLED state. In case IEEE80211_STA_R=
-EQ_SCAN
-> > is still set the scan will get started and cfg80211 gets notified a=
-bout the
-> > result.
-> >=20
-> > Does that seem correct?
->=20
-> Yes, that seems correct to me. IEEE80211_STA_REQ_RUN not being set wi=
-ll
-> catch the "do nothing with assoc state" part.
+=46ound the problem, that's my fault at merge of omap and wireless-test=
+ing=20
+trees:
+p54_configure_filter that I tested with has the following code:
 
-Ok, I'll do some more tests tomorrow and send a patch if it works for m=
-e.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 *total_flags &=3D FIF_PROMISC_IN_BSS |
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 FIF_OTHER_BSS |
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 (*total_flags & FIF_PROMISC_IN_BSS) ?
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 FIF_FCSFAIL : 0;
 
-Helmut
+which does not what it is intended to. '|' operator has higher preceden=
+ce=20
+than '? :'
+thus it is equivalent to *total_flags &=3D FIF_FCSFAIL; which never yie=
+lds=20
+neither
+=46IF_PROMISC_IN_BSS nor FIF_OTHER_BSS.
 
+Current wireless-testing head has=20
+
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 *total_flags &=3D FIF_PROMISC_IN_BSS |
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 FIF_OTHER_BSS;
+
+at this place, which work fine.
+
+--=20
+Thanks.
+-- Max
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
