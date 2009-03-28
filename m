@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sdinet.de ([78.47.32.153]:39002 "EHLO mail.sdinet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759828AbZCZRFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:05:21 -0400
-Date: Thu, 26 Mar 2009 17:55:43 +0100 (CET)
-From: Sven-Haegar Koch <haegar@sdinet.de>
-To: Paco <eyes2k5@gmail.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Driver Support Linux 2.4.26 zd1211
-In-Reply-To: <b49006ab0903260822r35417242qbdc6889543de7072@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.0903261752470.11410@aurora.sdinet.de> (sfid-20090326_180526_354568_C1D96594)
-References: <b49006ab0903260414xad13bd5y370a47020348c66f@mail.gmail.com> <b49006ab0903260822r35417242qbdc6889543de7072@mail.gmail.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:37500 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755183AbZC1PCF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2009 11:02:05 -0400
+Date: Sat, 28 Mar 2009 15:02:02 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC] rfkill/rfkill-input userspace API
+Message-ID: <20090328150202.GD27812@srcf.ucam.org> (sfid-20090328_160209_345999_60A20053)
+References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> <20090327221147.GA499@srcf.ucam.org> <20090328123645.GD7439@khazad-dum.debian.net> <20090328124719.GF7439@khazad-dum.debian.net> <20090328125301.GA26537@srcf.ucam.org> <20090328144823.GA6420@khazad-dum.debian.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090328144823.GA6420@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 26 Mar 2009, Paco wrote:
+On Sat, Mar 28, 2009 at 11:48:23AM -0300, Henrique de Moraes Holschuh wrote:
 
-> Hello everybody, and sorry if I disturb you with something that was
-> fixed before.
-> 
-> I'm trying to setup the zd1211 in Linux 2.4.26-ts11 in the board
-> TS-7200. I have some drivers that are working only with networks
-> without encryption. If I try to connect to a network with WEP or WPA
-> encryption, i can not get the access point. I am looking for a new
-> version of drivers to solve this problem.
+> I can live with that.  Very well, I will hunt down what version of
+> evdev we have in Debian stable and unstable, what version of evdev
+> stopped doing grab-by-default, and document this in a few places.
 
-I think for 2.4.x: forget it.
-
-For 2.6.26 it may be possible using compat-wireless-old, or just using a 
-more current kernel 2.6.27+, perhaps with compat-wireless to get the 
-latest version.
-
-c'ya
-sven
+The change was in commit 4912e2aa7f867a86d383010023b8426c881fb3b0 which 
+was on October 16th of last year. It does depend on having an X server 
+that sets the console into raw mode - the only reason evdev was ever 
+doing the grabs was because that particular bit of magic had ended up in 
+the legacy keyboard driver rather than being in the server core, and 
+everybody had forgotten how this stuff worked.
 
 -- 
-The lights are fading out, once more...
+Matthew Garrett | mjg59@srcf.ucam.org
