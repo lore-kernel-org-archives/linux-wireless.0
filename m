@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:64996 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbZCIIe6 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:62207 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759455AbZC1Tww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 04:34:58 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so942303yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2009 01:34:55 -0700 (PDT)
+	Sat, 28 Mar 2009 15:52:52 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so441054eyf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2009 12:52:49 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/4] rt2x00: Fix Sparse warning
+Date: Sat, 28 Mar 2009 20:51:41 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <200903282051.25112.IvDoorn@gmail.com>
+In-Reply-To: <200903282051.25112.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Date: Mon, 9 Mar 2009 10:34:55 +0200
-Message-ID: <55c333c0903090134o4c6c65b7v4bf0674971f9156c@mail.gmail.com> (sfid-20090309_093503_700141_30432BA0)
-Subject: Packet aggregation in iwlwifi drivers
-From: Kevin Wilson <wkevils@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903282051.41343.IvDoorn@gmail.com> (sfid-20090328_205305_871512_EA7597AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-- I have a short question about packet aggregation in iwlwifi drivers which
-support 802.11n:
-Is packet aggregation in these drivers performed by the firmware ?
+rt2x00link_reset_qual() is not declared in a header,
+and is only internally used within rt2x00link.c.
+It should be declared as static.
 
-I noticed that the ampdu_action() function is implemented by
-iwl_mac_ampdu_action()
-in these drivers; but as far as I can find, only the operations of
-start/stop tx and rx aggregation
-are implemented in the driver, so I guess that the aggregation of MPDU packets
-(concatenating them into a single block, sending BAR - block
-acknowledge request,
-sending the block containing aggregated MPDUs, and so on) are
-implemented in firmware. Is it so ?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00link.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index 7eb5cd7..eb9b981 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -387,7 +387,7 @@ void rt2x00link_reset_tuner(struct rt2x00_dev *rt2x00dev, bool antenna)
+ 		rt2x00link_antenna_reset(rt2x00dev);
+ }
+ 
+-void rt2x00link_reset_qual(struct rt2x00_dev *rt2x00dev)
++static void rt2x00link_reset_qual(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct link_qual *qual = &rt2x00dev->link.qual;
+ 
+-- 
+1.5.6.1
 
-Regards,
-Kevin
