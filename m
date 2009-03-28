@@ -1,89 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:59632 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbZCGMGJ convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53934
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751310AbZC1Ag6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 07:06:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <1236418002-2189-2-git-send-email-jirislaby@gmail.com>
-References: <1236418002-2189-1-git-send-email-jirislaby@gmail.com>
-	 <1236418002-2189-2-git-send-email-jirislaby@gmail.com>
-Date: Sat, 7 Mar 2009 14:06:06 +0200
-Message-ID: <40f31dec0903070406j65b869fau3359ae8148824d83@mail.gmail.com> (sfid-20090307_130614_294507_1E454229)
-Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: don't change mac in
-	eeprom_read_mac on error
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
+	Fri, 27 Mar 2009 20:36:58 -0400
+Date: Fri, 27 Mar 2009 17:36:46 -0700 (PDT)
+Message-Id: <20090327.173646.218142873.davem@davemloft.net> (sfid-20090328_013704_764878_56477776)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-03-27
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090328002946.GD3823@tuxdriver.com>
+References: <20090328002946.GD3823@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/3/7 Jiri Slaby <jirislaby@gmail.com>:
-> Do not touch mac parameter passed to ath5k_eeprom_read_mac unless
-> we are sure we have correct address. I.e. when returning error, do
-> not change it.
->
-> While at it, use '=3D {}' compiler trick for memsetting mac_d.
->
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Nick Kossifidis <jirislaby@gmail.com>
-> Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Cc: Bob Copeland <me@bobcopeland.com>
-> ---
-> =C2=A0drivers/net/wireless/ath5k/eeprom.c | =C2=A0 =C2=A09 +++------
-> =C2=A01 files changed, 3 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/eeprom.c b/drivers/net/wirele=
-ss/ath5k/eeprom.c
-> index a54ee7e..ac45ca4 100644
-> --- a/drivers/net/wireless/ath5k/eeprom.c
-> +++ b/drivers/net/wireless/ath5k/eeprom.c
-> @@ -1418,14 +1418,11 @@ ath5k_eeprom_init(struct ath5k_hw *ah)
-> =C2=A0*/
-> =C2=A0int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
-> =C2=A0{
-> - =C2=A0 =C2=A0 =C2=A0 u8 mac_d[ETH_ALEN];
-> + =C2=A0 =C2=A0 =C2=A0 u8 mac_d[ETH_ALEN] =3D {};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 total, offset;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0u16 data;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0int octet, ret;
->
-> - =C2=A0 =C2=A0 =C2=A0 memset(mac, 0, ETH_ALEN);
-> - =C2=A0 =C2=A0 =C2=A0 memset(mac_d, 0, ETH_ALEN);
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ath5k_hw_eeprom_read(ah, 0x20, &da=
-ta);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
-> @@ -1441,11 +1438,11 @@ int ath5k_eeprom_read_mac(struct ath5k_hw *ah=
-, u8 *mac)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0octet +=3D 2;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
->
-> - =C2=A0 =C2=A0 =C2=A0 memcpy(mac, mac_d, ETH_ALEN);
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!total || total =3D=3D 3 * 0xffff)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return -EINVAL=
-;
->
-> + =C2=A0 =C2=A0 =C2=A0 memcpy(mac, mac_d, ETH_ALEN);
-> +
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;
-> =C2=A0}
->
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 27 Mar 2009 20:29:46 -0400
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
 
-
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Pulled, thanks a lot John.
