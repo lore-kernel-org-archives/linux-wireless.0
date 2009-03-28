@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:1822 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754591AbZCBWcy (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:43482 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686AbZC1MxG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 17:32:54 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so2934485wfa.4
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 14:32:52 -0800 (PST)
+	Sat, 28 Mar 2009 08:53:06 -0400
+Date: Sat, 28 Mar 2009 12:53:01 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC] rfkill/rfkill-input userspace API
+Message-ID: <20090328125301.GA26537@srcf.ucam.org> (sfid-20090328_135313_459747_B4686F68)
+References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> <20090327221147.GA499@srcf.ucam.org> <20090328123645.GD7439@khazad-dum.debian.net> <20090328124719.GF7439@khazad-dum.debian.net>
 MIME-Version: 1.0
-In-Reply-To: <49AC5E4C.2020201@hauke-m.de>
-References: <49A88FF8.1040607@erley.org>
-	 <43e72e890903021322n2005bf79jda8df4497498d5a6@mail.gmail.com>
-	 <49AC5E4C.2020201@hauke-m.de>
-Date: Mon, 2 Mar 2009 14:32:52 -0800
-Message-ID: <43e72e890903021432m5c335ba3l324c0b1b0925e313@mail.gmail.com> (sfid-20090302_233257_925360_AB282DD0)
-Subject: Re: [patch] Update compat.diff
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: pat-lkml <pat-lkml@erley.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090328124719.GF7439@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 2, 2009 at 2:31 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Hi,
->
-> this patch does not look very nice.
-> The part of compat.diff for net/wireless/nl80211.c was for Johannes
-> commit b8120417fc6ee609430c5436fe9ed07ffc2e63ba in wireless-testing.
-> This patch was reverted in commit
-> 4d8bfeff50982158c4ec4ed6c38388ba3bfc9c9c. The whole patch for nl80211.c
-> is useless for kernel older than 2.6.30 and will case problems on this
-> kernel. (I know it does not exist for now ;-) ).
-> In my opinion it will be the best to delete the part for nl80211.c from
-> compat.diff for now.
+On Sat, Mar 28, 2009 at 09:47:19AM -0300, Henrique de Moraes Holschuh wrote:
+> Hi Matthew!
+> > Eh? What is that ioctl in the git version doing there, then?  Did I
+> > get the code from the wrong branch or something?
+> 
+> Ok, more on this: the ioctl _is_ needed for privacy reasons, it wasn't
+> added there just for the kick of it AFAIK.  Instead of just breaking
+> things the other way, can we configure evdev to sometimes do the grab,
+> and sometimes not, depending on a config option for that particular
+> device? 
 
-I should have reviewed this more carefully, thought it did that :)
+No it's not. The event devices are only readable by root, and root can 
+get your keypresses anyway.
 
-  Luis
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
