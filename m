@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:55082 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752729AbZCNRiB (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:62210 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759490AbZC1Twx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:38:01 -0400
-Message-ID: <49BBEB69.6090301@nokia.com> (sfid-20090314_183805_089935_CAFE7739)
-Date: Sat, 14 Mar 2009 19:37:45 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Sat, 28 Mar 2009 15:52:53 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so441059eyf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2009 12:52:50 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/4] rt2x00: Add rt73usb USB IDs
+Date: Sat, 28 Mar 2009 20:52:14 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <200903282051.25112.IvDoorn@gmail.com> <200903282051.41343.IvDoorn@gmail.com> <200903282051.58660.IvDoorn@gmail.com>
+In-Reply-To: <200903282051.58660.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC PATCH v2 3/4] mac80211: disable power save when scanning
-References: <20090314171234.11126.21125.stgit@tikku>	 <20090314171445.11126.97668.stgit@tikku> <1237051502.5235.102.camel@johannes.local>
-In-Reply-To: <1237051502.5235.102.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903282052.15095.IvDoorn@gmail.com> (sfid-20090328_205312_446141_03C78489)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Johannes Berg wrote:
-> On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
-> 
->> +	if (!ps || (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
->> +		/*
->> +		 * with IEEE80211_HW_PS_NULLFUNC_STACK and power save
->> +		 * enabled the firmware sent a null frame when power save
->> +		 * was disabled, so we need to send a new null frame
->> +		 */
->> +		ieee80211_send_nullfunc(local, sdata, 1);
->> +}
-> 
-> Now I'm confused a little. I thought with PS_NULLFUNC_STACK the firmware
-> _didn't_ send such frames.
 
-That's a bug, good catch! It should be:
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 420fff4..853b2b2 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2369,6 +2369,8 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* Buffalo */
+ 	{ USB_DEVICE(0x0411, 0x00d8), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x00f4), USB_DEVICE_DATA(&rt73usb_ops) },
++	{ USB_DEVICE(0x0411, 0x0116), USB_DEVICE_DATA(&rt73usb_ops) },
++	{ USB_DEVICE(0x0411, 0x0119), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* CNet */
+ 	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
+-- 
+1.5.6.1
 
-I'll fix that in v3.
-
-Kalle
