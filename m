@@ -1,46 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:32970 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752768AbZCPQhe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 12:37:34 -0400
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Mon, 16 Mar 2009 17:37:31 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <43e72e890903160918p75c8ee5cja0ff4a308d24c407@mail.gmail.com>
-Message-ID: <20090316163731.206110@gmx.net> (sfid-20090316_173740_510636_065CE67D)
-MIME-Version: 1.0
-References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>	
- <20090316155152.276920@gmx.net>
- <43e72e890903160918p75c8ee5cja0ff4a308d24c407@mail.gmail.com>
-Subject: Re: well working usb wlan stick
+Received: from xc.sipsolutions.net ([83.246.72.84]:59423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753291AbZC1R3l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2009 13:29:41 -0400
+Subject: Re: [PATCH 6/8] mac80211: add skb length sanity checking
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890903272000p2c00f80au92441f8df31bcb24@mail.gmail.com> (sfid-20090328_040036_592794_382DBCE3)
+References: <20090323162834.154525349@sipsolutions.net>
+	 <20090323163053.073748867@sipsolutions.net>
+	 <20090328024023.GE5543@bombadil.infradead.org>
+	 <43e72e890903272000p2c00f80au92441f8df31bcb24@mail.gmail.com>
+	 (sfid-20090328_040036_592794_382DBCE3)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-z3iMSLyzXdATmpqz8tiG"
+Date: Sat, 28 Mar 2009 18:29:34 +0100
+Message-Id: <1238261374.4217.1.camel@johannes.local> (sfid-20090328_182944_601383_3930ECC1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis!
 
-> 11n does work but currently only in the the otus driver, which is als=
-o
-> open but it just doesn't use mac80211. ar9170 is the driver which wil=
-l
-> eventually get merged.
+--=-z3iMSLyzXdATmpqz8tiG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yes, but the otus driver is currently less stable then the ar9170 drive=
-r. After my patches I haven't discovered a kernel panic anymore with it=
-=2E
+On Fri, 2009-03-27 at 20:00 -0700, Luis R. Rodriguez wrote:
 
-[STA, IBSS, not AP - max. ca. 2,4 MByte/s]
+> >> This patch adds a sanity check to mac80211 to catch
+> >> such driver mistakes; in this case we warn and drop
+> >> the skb.
+> >>
+> >> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> >
+> > Heh well this is obviously even a stable candidate and it got
+> > merged already :D.
+>=20
+> Nevermind, I was looking at .30, heh. So if zd1211rw also manged the
+> skb len in older kernels it seems this is stable candidate. Too lazy
+> to check right now though.
 
-Regards
-Alina
+The fixes should go to stable, but this won't apply without serious
+backporting.
 
---=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1=
-1308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-z3iMSLyzXdATmpqz8tiG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJzl57AAoJEKVg1VMiehFY3dcP/0tupqDCzua6J6rltH8rKmrt
+AoWbKMx52D85tUQ0zYyAHBFl4M7UYQVM0WZCRyfKtVpmhXCrXGu6DVXJAA0RojgW
+G64yMwJaPixC/Hm6ZKSwnp6bMmvfNA3HDUH1qrntR+hg3KLrwHsYILS/AT6jet/S
+tgMNc/dFvKfVblMspUttQink9v0wkj1cvS3RcOJaPRa07ilVmW1UMUBrpK4mR3NA
+LiUNbXuTQ+StdSeVEnrg5UfCtJqlIoULJQUQvIJFcrEN5ABd2E3YkdFX1vLz2m+J
+m3bsSgTwJo0mws++xEQjO/nIJ9O87sZQR4GYd0hJYIq8OoS7CC8SFQsz76P5JjVq
++U4FZ1vPZLP+bdg7ZdR9my1molTwnoJGcU5iyRl8YaN36jWIR5PoJzd+M0sDNpz0
+Qj2BWe06w4na+fZ4MwmgoGt3pPBW9Hdi46vyTQ4Yr1inIA+rQ4gGZr5HnMYiMBEe
+B4AO+oKehOCSoC/OmlAgAxS9144doDMd9E8oInpccP3HcGg3ixfR4/zSVmjpS0o1
+ML7l9mLeq2qpLaNY2rjvZfsI6GL7qb3caCYmXFURhGuVpXL0rdBnttZSTfaqms2A
+6tw1IhYXCbGglWZB7j4laBdZXooyWitaw+QLM4xu4AtBbdCzdBwPvtZae4xSM56g
+A1XW70x0Wxe2nDalDPSH
+=QtKC
+-----END PGP SIGNATURE-----
+
+--=-z3iMSLyzXdATmpqz8tiG--
+
