@@ -1,321 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49532 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:60263 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbZCaECg (ORCPT
+	with ESMTP id S1751535AbZC1Ezi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 00:02:36 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] iw: add beacon hint event parsing
-Date: Tue, 31 Mar 2009 00:02:34 -0400
-Message-Id: <1238472154-23370-1-git-send-email-lrodriguez@atheros.com> (sfid-20090331_060239_247557_E1F58FF8)
+	Sat, 28 Mar 2009 00:55:38 -0400
+Date: Sat, 28 Mar 2009 00:55:29 -0400
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 7/8] mac80211: fix aggregation to not require queue stop
+Message-ID: <20090328045529.GF5543@bombadil.infradead.org> (sfid-20090328_055541_275246_A61BE1FE)
+References: <20090323162834.154525349@sipsolutions.net> <20090323163053.344441542@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090323163053.344441542@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a screenshot:
+On Mon, Mar 23, 2009 at 05:28:41PM +0100, Johannes Berg wrote:
+> Instead of stopping the entire AC queue when enabling aggregation
+> (which was only done for hardware with aggregation queues) buffer
+> the packets for each station, and release them to the pending skb
+> queue once aggregation is turned on successfully.
 
-mcgrof@pogo ~ $ iw event
+Thank you for the nice compromised solution.
 
-mcgrof@pogo ~ $ sudo iw dev wlan0 scan trigger
+> We get a little more code, but it becomes conceptually simpler and
+> we can remove the entire virtual queue mechanism from mac80211 in
+> a follow-up patch.
+> 
+> This changes how mac80211 behaves towards drivers that support
+> aggregation but have no hardware queues -- those drivers will now
+> not be handed packets while the aggregation session is being
+> established, but only after it has been fully established.
 
-beacon hint:
-phy1 5200 MHz [40]:
-        o active scanning enabled
-        o beaconing enabled
-scan finished on wlan1 (phy #1)
+That's fine from a logical point of view as compromise here as our
+ampdu start should be relatively quick. Now while I can say this
+from a logical point of view this patch obviously needed more
+testing but lets see how it holds up and I'm glad you're the one
+who wrote it. I'm confident there won't be any issues but that
+is something I cannot gaurantee just based on the review. We now
+need to go out and tests this. All other patches previous to this
+make 100% perfect sense.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- iw.c      |   75 +++++++++++++++++++++++++++++++++++++++++
- nl80211.h |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 183 insertions(+), 3 deletions(-)
+I'm particularly interested in seeing results with AP support.
+Did you get to test that with ath9k by any chance?
 
-diff --git a/iw.c b/iw.c
-index c074554..427ce38 100644
---- a/iw.c
-+++ b/iw.c
-@@ -12,6 +12,7 @@
- #include <sys/stat.h>
- #include <fcntl.h>
- #include <unistd.h>
-+#include <stdbool.h>
-                      
- #include <netlink/genl/genl.h>
- #include <netlink/genl/family.h>
-@@ -330,6 +331,22 @@ static int print_event(struct nl_msg *msg, void *arg)
- 	struct nlattr *tb[NL80211_ATTR_MAX + 1];
- 	char ifname[100];
- 	__u8 reg_type;
-+	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
-+	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
-+	static struct nla_policy freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
-+		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
-+		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
-+		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
-+	};
-+	static struct ieee80211_channel {
-+		__u16 center_freq;
-+		bool passive_scan;
-+		bool no_ibss;
-+	} chan_before_beacon,  chan_after_beacon;
-+	int rem_band, rem_freq, num_bands = 0;
-+	unsigned int num_freqs = 0;
-+	struct nlattr *nl_freq, *nl_band;
-+	__u32 wiphy_idx = 0;
- 
- 	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
- 		  genlmsg_attrlen(gnlh, 0), NULL);
-@@ -386,6 +403,64 @@ static int print_event(struct nl_msg *msg, void *arg)
- 
- 		printf("\n");
- 		break;
-+	case NL80211_CMD_REG_BEACON_HINT:
-+
-+		if (!tb[NL80211_ATTR_WIPHY_BANDS])
-+			break;
-+
-+		wiphy_idx = nla_get_u32(tb[NL80211_ATTR_WIPHY]);
-+
-+		memset(&chan_before_beacon, 0, sizeof(chan_before_beacon));
-+		memset(&chan_after_beacon, 0, sizeof(chan_after_beacon));
-+
-+		nla_for_each_nested(nl_band, tb[NL80211_ATTR_WIPHY_BANDS], rem_band) {
-+
-+			num_bands++;
-+			if (num_bands > 2)
-+				continue;
-+
-+			nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band),
-+				nla_len(nl_band), NULL);
-+			nla_for_each_nested(nl_freq, tb_band[NL80211_BAND_ATTR_FREQS], rem_freq) {
-+				struct ieee80211_channel *chan;
-+
-+				chan = (num_freqs == 0) ? &chan_before_beacon : &chan_after_beacon;
-+
-+				num_freqs++;
-+
-+				if (num_freqs > 2)
-+					return NL_SKIP;
-+
-+				nla_parse(tb_freq, NL80211_FREQUENCY_ATTR_MAX, nla_data(nl_freq),
-+					  nla_len(nl_freq), freq_policy);
-+				if (!tb_freq[NL80211_FREQUENCY_ATTR_FREQ])
-+					continue;
-+				chan->center_freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
-+
-+				if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
-+					chan->passive_scan = true;
-+				if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
-+					chan->no_ibss = true;
-+			}
-+		}
-+
-+		if (chan_before_beacon.center_freq != chan_after_beacon.center_freq)
-+			break;
-+
-+		/* A beacon hint is sent _only_ if something _did_ change */
-+		printf("beacon hint:\n");
-+
-+		printf("phy%d %d MHz [%d]:\n",
-+		       wiphy_idx,
-+		       chan_before_beacon.center_freq,
-+		       ieee80211_frequency_to_channel(chan_before_beacon.center_freq));
-+
-+		if (chan_before_beacon.passive_scan && !chan_after_beacon.passive_scan)
-+			printf("\to active scanning enabled\n");
-+		if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
-+			printf("\to beaconing enabled\n");
-+
-+		break;
- 	default:
- 		printf("unknown event: %d\n", gnlh->cmd);
- 		break;
-diff --git a/nl80211.h b/nl80211.h
-index f33aa08..946be56 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -7,7 +7,7 @@
-  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-- * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
-+ * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
-  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-  * Copyright 2008 Colin McCabe <colin@cozybit.com>
-  *
-@@ -142,6 +142,12 @@
-  *	%NL80211_ATTR_IE. If the command succeeds, the requested data will be
-  *	added to all specified management frames generated by
-  *	kernel/firmware/driver.
-+ *	Note: This command has been removed and it is only reserved at this
-+ *	point to avoid re-using existing command number. The functionality this
-+ *	command was planned for has been provided with cleaner design with the
-+ *	option to specify additional IEs in NL80211_CMD_TRIGGER_SCAN,
-+ *	NL80211_CMD_AUTHENTICATE, NL80211_CMD_ASSOCIATE,
-+ *	NL80211_CMD_DEAUTHENTICATE, and NL80211_CMD_DISASSOCIATE.
-  *
-  * @NL80211_CMD_GET_SCAN: get scan results
-  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
-@@ -160,6 +166,57 @@
-  * 	set (%NL80211_ATTR_REG_TYPE), if the type of regulatory domain is
-  * 	%NL80211_REG_TYPE_COUNTRY the alpha2 to which we have moved on
-  * 	to (%NL80211_ATTR_REG_ALPHA2).
-+ * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP beacon
-+ * 	has been found while world roaming thus enabling active scan or
-+ * 	any mode of operation that initiates TX (beacons) on a channel
-+ * 	where we would not have been able to do either before. As an example
-+ * 	if you are world roaming (regulatory domain set to world or if your
-+ * 	driver is using a custom world roaming regulatory domain) and while
-+ * 	doing a passive scan on the 5 GHz band you find an AP there (if not
-+ * 	on a DFS channel) you will now be able to actively scan for that AP
-+ * 	or use AP mode on your card on that same channel. Note that this will
-+ * 	never be used for channels 1-11 on the 2 GHz band as they are always
-+ * 	enabled world wide. This beacon hint is only sent if your device had
-+ * 	either disabled active scanning or beaconing on a channel. We send to
-+ * 	userspace the wiphy on which we removed a restriction from
-+ * 	(%NL80211_ATTR_WIPHY) and the channel on which this occured
-+ * 	(%NL80211_ATTR_WIPHY_FREQ) before and after the beacon hint was applied.
-+ * 	We send the two channels on a frequency nestered attribute
-+ * 	(%NL80211_BAND_ATTR_FREQS) the first being the channel prior to the
-+ * 	beacon hint processing. We only send these events if something _did_
-+ * 	change to the channel.
-+ *
-+ * @NL80211_CMD_AUTHENTICATE: authentication request and notification.
-+ *	This command is used both as a command (request to authenticate) and
-+ *	as an event on the "mlme" multicast group indicating completion of the
-+ *	authentication process.
-+ *	When used as a command, %NL80211_ATTR_IFINDEX is used to identify the
-+ *	interface. %NL80211_ATTR_MAC is used to specify PeerSTAAddress (and
-+ *	BSSID in case of station mode). %NL80211_ATTR_SSID is used to specify
-+ *	the SSID (mainly for association, but is included in authentication
-+ *	request, too, to help BSS selection. %NL80211_ATTR_WIPHY_FREQ is used
-+ *	to specify the frequence of the channel in MHz. %NL80211_ATTR_AUTH_TYPE
-+ *	is used to specify the authentication type. %NL80211_ATTR_IE is used to
-+ *	define IEs (VendorSpecificInfo, but also including RSN IE and FT IEs)
-+ *	to be added to the frame.
-+ *	When used as an event, this reports reception of an Authentication
-+ *	frame in station and IBSS modes when the local MLME processed the
-+ *	frame, i.e., it was for the local STA and was received in correct
-+ *	state. This is similar to MLME-AUTHENTICATE.confirm primitive in the
-+ *	MLME SAP interface (kernel providing MLME, userspace SME). The
-+ *	included NL80211_ATTR_FRAME attribute contains the management frame
-+ *	(including both the header and frame body, but not FCS).
-+ * @NL80211_CMD_ASSOCIATE: association request and notification; like
-+ *	NL80211_CMD_AUTHENTICATE but for Association and Reassociation
-+ *	(similar to MLME-ASSOCIATE.request, MLME-REASSOCIATE.request,
-+ *	MLME-ASSOCIATE.confirm or MLME-REASSOCIATE.confirm primitives).
-+ * @NL80211_CMD_DEAUTHENTICATE: deauthentication request and notification; like
-+ *	NL80211_CMD_AUTHENTICATE but for Deauthentication frames (similar to
-+ *	MLME-DEAUTHENTICATION.request and MLME-DEAUTHENTICATE.indication
-+ *	primitives).
-+ * @NL80211_CMD_DISASSOCIATE: disassociation request and notification; like
-+ *	NL80211_CMD_AUTHENTICATE but for Disassociation frames (similar to
-+ *	MLME-DISASSOCIATE.request and MLME-DISASSOCIATE.indication primitives).
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -206,7 +263,7 @@ enum nl80211_commands {
- 	NL80211_CMD_GET_MESH_PARAMS,
- 	NL80211_CMD_SET_MESH_PARAMS,
- 
--	NL80211_CMD_SET_MGMT_EXTRA_IE,
-+	NL80211_CMD_SET_MGMT_EXTRA_IE /* reserved; not used */,
- 
- 	NL80211_CMD_GET_REG,
- 
-@@ -216,6 +273,12 @@ enum nl80211_commands {
- 	NL80211_CMD_SCAN_ABORTED,
- 
- 	NL80211_CMD_REG_CHANGE,
-+	NL80211_CMD_REG_BEACON_HINT,
-+
-+	NL80211_CMD_AUTHENTICATE,
-+	NL80211_CMD_ASSOCIATE,
-+	NL80211_CMD_DEAUTHENTICATE,
-+	NL80211_CMD_DISASSOCIATE,
- 
- 	/* add new commands above here */
- 
-@@ -230,8 +293,12 @@ enum nl80211_commands {
-  */
- #define NL80211_CMD_SET_BSS NL80211_CMD_SET_BSS
- #define NL80211_CMD_SET_MGMT_EXTRA_IE NL80211_CMD_SET_MGMT_EXTRA_IE
--
- #define NL80211_CMD_REG_CHANGE NL80211_CMD_REG_CHANGE
-+#define NL80211_CMD_AUTHENTICATE NL80211_CMD_AUTHENTICATE
-+#define NL80211_CMD_ASSOCIATE NL80211_CMD_ASSOCIATE
-+#define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
-+#define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
-+#define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
- 
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -349,6 +416,19 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REG_TYPE: indicates the type of the regulatory domain currently
-  * 	set. This can be one of the nl80211_reg_type (%NL80211_REGDOM_TYPE_*)
-  *
-+ * @NL80211_ATTR_SUPPORTED_COMMANDS: wiphy attribute that specifies
-+ *	an array of command numbers (i.e. a mapping index to command number)
-+ *	that the driver for the given wiphy supports.
-+ *
-+ * @NL80211_ATTR_FRAME: frame data (binary attribute), including frame header
-+ *	and body, but not FCS; used, e.g., with NL80211_CMD_AUTHENTICATE and
-+ *	NL80211_CMD_ASSOCIATE events
-+ * @NL80211_ATTR_SSID: SSID (binary attribute, 0..32 octets)
-+ * @NL80211_ATTR_AUTH_TYPE: AuthenticationType, see &enum nl80211_auth_type,
-+ *	represented as a u32
-+ * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
-+ *	%NL80211_CMD_DISASSOCIATE, u16
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -426,6 +506,13 @@ enum nl80211_attrs {
- 	NL80211_ATTR_REG_INITIATOR,
- 	NL80211_ATTR_REG_TYPE,
- 
-+	NL80211_ATTR_SUPPORTED_COMMANDS,
-+
-+	NL80211_ATTR_FRAME,
-+	NL80211_ATTR_SSID,
-+	NL80211_ATTR_AUTH_TYPE,
-+	NL80211_ATTR_REASON_CODE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -445,6 +532,10 @@ enum nl80211_attrs {
- #define NL80211_ATTR_IE NL80211_ATTR_IE
- #define NL80211_ATTR_REG_INITIATOR NL80211_ATTR_REG_INITIATOR
- #define NL80211_ATTR_REG_TYPE NL80211_ATTR_REG_TYPE
-+#define NL80211_ATTR_FRAME NL80211_ATTR_FRAME
-+#define NL80211_ATTR_SSID NL80211_ATTR_SSID
-+#define NL80211_ATTR_AUTH_TYPE NL80211_ATTR_AUTH_TYPE
-+#define NL80211_ATTR_REASON_CODE NL80211_ATTR_REASON_CODE
- 
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_REG_RULES		32
-@@ -978,4 +1069,18 @@ enum nl80211_bss {
- 	NL80211_BSS_MAX = __NL80211_BSS_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_auth_type - AuthenticationType
-+ *
-+ * @NL80211_AUTHTYPE_OPEN_SYSTEM: Open System authentication
-+ * @NL80211_AUTHTYPE_SHARED_KEY: Shared Key authentication (WEP only)
-+ * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
-+ * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
-+ */
-+enum nl80211_auth_type {
-+	NL80211_AUTHTYPE_OPEN_SYSTEM,
-+	NL80211_AUTHTYPE_SHARED_KEY,
-+	NL80211_AUTHTYPE_FT,
-+	NL80211_AUTHTYPE_NETWORK_EAP,
-+};
- #endif /* __LINUX_NL80211_H */
--- 
-1.6.0.6
+Hauke -- just a heads up since you're quick with this now :)  :
+skb_queue_splice_tail_init() needs some backporting to 2.6.27. I'd do
+it but I'm beat and calling it a day now.
 
+More comments below. I've tried to remove all the hunks I didn't have
+comments on.
+
+> @@ -308,21 +296,19 @@ int ieee80211_start_tx_ba_session(struct
+>  			ret = -ENOSPC;
+>  			goto err_unlock_sta;
+>  		}
+> -
+> -		/*
+> -		 * If we successfully allocate the session, we can't have
+> -		 * anything going on on the queue this TID maps into, so
+> -		 * stop it for now. This is a "virtual" stop using the same
+> -		 * mechanism that drivers will use.
+> -		 *
+> -		 * XXX: queue up frames for this session in the sta_info
+> -		 *	struct instead to avoid hitting all other STAs.
+> -		 */
+> -		ieee80211_stop_queue_by_reason(
+> -			&local->hw, hw->queues + qn,
+> -			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+>  	}
+>  
+> +	/*
+> +	 * While we're asking the driver about the aggregation,
+> +	 * stop the AC queue so that we don't have to worry
+> +	 * about frames that came in while we were doing that,
+> +	 * which would require us to put them to the AC pending
+> +	 * afterwards which just makes the code more complex.
+> +	 */
+> +	ieee80211_stop_queue_by_reason(
+> +		&local->hw, ieee80211_ac_from_tid(tid),
+> +		IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+> +
+
+ath9k's ampdu start is pretty quick anyway, so this
+won't be for long.
+
+> @@ -404,6 +399,45 @@ int ieee80211_start_tx_ba_session(struct
+>  }
+>  EXPORT_SYMBOL(ieee80211_start_tx_ba_session);
+>  
+> +/*
+> + * splice packets from the STA's pending to the local pending,
+> + * requires a call to ieee80211_agg_splice_finish and holding
+> + * local->ampdu_lock across both calls.
+> + */
+> +static void ieee80211_agg_splice_packets(struct ieee80211_local *local,
+> +					 struct sta_info *sta, u16 tid)
+> +{
+> +	unsigned long flags;
+> +	u16 queue = ieee80211_ac_from_tid(tid);
+> +
+> +	ieee80211_stop_queue_by_reason(
+> +		&local->hw, queue,
+> +		IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+
+No point in stopping the queue if the STA's tid queue is empty.
+
+> @@ -602,22 +637,19 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+>  			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
+>  
+>  	spin_lock_bh(&sta->lock);
+> +	spin_lock(&local->ampdu_lock);
+>  
+> -	if (*state & HT_AGG_STATE_INITIATOR_MSK &&
+> -	    hw->ampdu_queues) {
+> -		/*
+> -		 * Wake up this queue, we stopped it earlier,
+> -		 * this will in turn wake the entire AC.
+> -		 */
+> -		ieee80211_wake_queue_by_reason(hw,
+> -			hw->queues + sta->tid_to_tx_q[tid],
+> -			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+> -	}
+> +	ieee80211_agg_splice_packets(local, sta, tid);
+
+Is it possible for ieee80211_stop_tx_ba_cb() to be called while
+state of the tid is not yet operational? from what I can tell
+that's the only case when we would have added skbs to the STA's tid
+pending queue.
+
+>  
+>  	*state = HT_AGG_STATE_IDLE;
+> +	/* from now on packets are no longer put onto sta->pending */
+
+I think it would help to refer to the pendign queue consitantly instead
+as something like "STA's TID pending queue" as that is what it is. We also
+now have the local->pending queue. STA's pending queue seems to imply
+its also used for non-aggregation sessions.
+
+See -- if the state is not operation nothing would have gone
+been put into the STA's tid pending queue. Might also be worth
+mentioning that in the comment.
+
+> @@ -1013,20 +1013,53 @@ __ieee80211_tx_prepare(struct ieee80211_
+>  		 */
+>  	}
+>  
+> +	/*
+> +	 * If this flag is set to true anywhere, and we get here,
+> +	 * we are doing the needed processing, so remove the flag
+> +	 * now.
+> +	 */
+> +	info->flags &= ~IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+> +
+>  	hdr = (struct ieee80211_hdr *) skb->data;
+>  
+>  	tx->sta = sta_info_get(local, hdr->addr1);
+>  
+> -	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control)) {
+> +	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+> +	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
+
+Hm, why were we not crashing here before? I figure we would have
+with something like this:
+
+state = &tx->sta->ampdu_mlme.tid_state_tx[tid];
+
+That it itself should be separate patch, but too late now. Anyway
+the new added check for IEEE80211_HW_AMPDU_AGGREGATION should go
+to stable.
+
+>  		unsigned long flags;
+> +		struct tid_ampdu_tx *tid_tx;
+> +
+>  		qc = ieee80211_get_qos_ctl(hdr);
+>  		tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+>  
+>  		spin_lock_irqsave(&tx->sta->lock, flags);
+> +		/*
+> +		 * XXX: This spinlock could be fairly expensive, but see the
+> +		 *	comment in agg-tx.c:ieee80211_agg_tx_operational().
+> +		 *	One way to solve this would be to do something RCU-like
+> +		 *	for managing the tid_tx struct and using atomic bitops
+> +		 *	for the actual state -- by introducing an actual
+> +		 *	'operational' bit that would be possible. It would
+> +		 *	require changing ieee80211_agg_tx_operational() to
+> +		 *	set that bit, and changing the way tid_tx is managed
+> +		 *	everywhere, including races between that bit and
+> +		 *	tid_tx going away (tid_tx being added can be easily
+> +		 *	committed to memory before the 'operational' bit).
+> +		 */
+> +		tid_tx = tx->sta->ampdu_mlme.tid_tx[tid];
+>  		state = &tx->sta->ampdu_mlme.tid_state_tx[tid];
+> -		if (*state == HT_AGG_STATE_OPERATIONAL)
+> +		if (*state == HT_AGG_STATE_OPERATIONAL) {
+>  			info->flags |= IEEE80211_TX_CTL_AMPDU;
+
+See, when its operational we don't add stuff to the STA's TID pending 
+queue.
+
+This piece:
+
+> +		} else if (*state != HT_AGG_STATE_IDLE) {
+> +			/* in progress */
+> +			queued = true;
+> +			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+> +			__skb_queue_tail(&tid_tx->pending, skb);
+> +		}
+
+Can probably be ported to stable too, to just TX_DROP.
+
+> @@ -1251,7 +1295,12 @@ static int ieee80211_tx(struct net_devic
+>  			do {
+>  				next = skb->next;
+>  				skb->next = NULL;
+> -				skb_queue_tail(&local->pending[queue], skb);
+> +				if (unlikely(txpending))
+> +					skb_queue_head(&local->pending[queue],
+> +						       skb);
+> +				else
+> +					skb_queue_tail(&local->pending[queue],
+> +						       skb);
+
+For someone who hasn't read all the pending queue code stuff the above would be
+a little brain twister. It might be good to leave a comment explaining why
+txpendign would be set and why we add it to the head (i.e. because the "skb" sent
+at a previous time was put into a pending queue). Maybe even rename txpending to
+something like skb_was_pending.
+
+> @@ -1360,7 +1407,7 @@ int ieee80211_master_start_xmit(struct s
+>  		       "originating device\n", dev->name);
+>  #endif
+>  		dev_kfree_skb(skb);
+> -		return 0;
+> +		return NETDEV_TX_OK;
+
+All these NETDEV_TX_OK could've gone into a separate patch.
+
+  Luis
