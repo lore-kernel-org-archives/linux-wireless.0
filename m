@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46709 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754235AbZCWWY1 (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:55243 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756158AbZC1POU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 18:24:27 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] ath9k: fix dma mapping leak of rx buffer upon rmmod
-Date: Mon, 23 Mar 2009 18:24:23 -0400
-Message-Id: <1237847063-30083-1-git-send-email-lrodriguez@atheros.com> (sfid-20090323_232430_743987_5B16A9FF)
+	Sat, 28 Mar 2009 11:14:20 -0400
+Date: Sat, 28 Mar 2009 12:14:16 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC] rfkill/rfkill-input userspace API
+Message-ID: <20090328151416.GA8437@khazad-dum.debian.net> (sfid-20090328_161426_518254_D66448CE)
+References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> <20090327221147.GA499@srcf.ucam.org> <20090328123645.GD7439@khazad-dum.debian.net> <20090328124719.GF7439@khazad-dum.debian.net> <20090328125301.GA26537@srcf.ucam.org> <20090328144823.GA6420@khazad-dum.debian.net> <20090328150202.GD27812@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090328150202.GD27812@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were claiming DMA buffers on the RX tasklet but never
-upon a simple module removal.
+On Sat, 28 Mar 2009, Matthew Garrett wrote:
+> On Sat, Mar 28, 2009 at 11:48:23AM -0300, Henrique de Moraes Holschuh wrote:
+> > I can live with that.  Very well, I will hunt down what version of
+> > evdev we have in Debian stable and unstable, what version of evdev
+> > stopped doing grab-by-default, and document this in a few places.
+> 
+> The change was in commit 4912e2aa7f867a86d383010023b8426c881fb3b0 which 
+> was on October 16th of last year. It does depend on having an X server 
+> that sets the console into raw mode - the only reason evdev was ever 
+> doing the grabs was because that particular bit of magic had ended up in 
+> the legacy keyboard driver rather than being in the server core, and 
+> everybody had forgotten how this stuff worked.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/recv.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+What version of the X server does this?  This kind of thing will
+probably need to end up in the rfkill-input docs :-(
 
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 917bac7..71cb18d 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -344,8 +344,13 @@ void ath_rx_cleanup(struct ath_softc *sc)
- 
- 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
- 		skb = bf->bf_mpdu;
--		if (skb)
-+		if (skb) {
-+			dma_unmap_single(sc->dev,
-+					 bf->bf_buf_addr,
-+					 sc->rx.bufsize,
-+					 DMA_FROM_DEVICE);
- 			dev_kfree_skb(skb);
-+		}
- 	}
- 
- 	if (sc->rx.rxdma.dd_desc_len != 0)
 -- 
-1.5.6.4
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
