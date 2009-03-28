@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f167.google.com ([209.85.217.167]:47649 "EHLO
-	mail-gx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226AbZCLElO (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46316 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbZC1FEQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 00:41:14 -0400
-Received: by gxk11 with SMTP id 11so791879gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 21:41:11 -0700 (PDT)
+	Sat, 28 Mar 2009 01:04:16 -0400
+Date: Sat, 28 Mar 2009 01:04:13 -0400
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Reinette Chattre <reinette.chatre@intel.com>
+Subject: Re: [PATCH 8/8] mac80211/iwlwifi: move virtual A-MDPU queue
+	bookkeeping to iwlwifi
+Message-ID: <20090328050413.GG5543@bombadil.infradead.org> (sfid-20090328_060419_242630_B0271EFE)
+References: <20090323162834.154525349@sipsolutions.net> <20090323163053.563402186@sipsolutions.net>
 MIME-Version: 1.0
-Date: Thu, 12 Mar 2009 00:41:11 -0400
-Message-ID: <14df1c3e0903112141w645c716bu47e2309353527535@mail.gmail.com> (sfid-20090312_054120_864962_18FEF95D)
-Subject: ath9k panic when connecting to 802.11n-enabled AP
-From: Vladimir Senkov <hangup@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090323163053.563402186@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Mar 23, 2009 at 05:28:42PM +0100, Johannes Berg wrote:
+> This patch removes all the virtual A-MPDU-queue bookkeeping from
+> mac80211. Curiously, iwlwifi already does its own bookkeeping, so
+> it doesn't require much changes except where it needs to handle
+> starting and stopping the queues in mac80211.
+> 
+> To handle the queue stop/wake properly, we rewrite the software
+> queue number for aggregation frames and internally to iwlwifi keep
+> track of the queues that map into the same AC queue, and only talk
+> to mac80211 about the AC queue. The implementation requires calling
+> two new functions, iwl_stop_queue and iwl_wake_queue instead of the
+> mac80211 counterparts.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Reinette Chattre <reinette.chatre@intel.com>
 
-I'm new here so I apologize ahead of time if this is a known issue. In
-my defense, I did a quick search on the archives.
+This one I enjoyed the most. Fucking awesome.
 
-My client machine (running wireless-testing kernel updated with git
-today) panics when connecting to a hostapd access point (also running
-ath9k) only when 802.11n is enabled on the access point.
-More specifically, here is the hostapd configuration that causes the
-client to crash:
-ieee80211n=0
-ht_capab=[HT40+][SHORT-GI-40][DSSS_CCK-40]
+Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-If I disable 802.11n on the access point everything works ok.
-Interesting enough, access point machine never crashes. At one point
-both access point and client machine ran identical code and client
-would always crash while the access point box would stay up. So
-upgraded client to the latest and greatest and tried a few versions in
-between, this panic has been very consistent. It always panics right
-after 1st attempt to associate.
-
-I was able to narrow down the panic to this assert ath_rc_ratefind_ht() in rc.c:
-        ASSERT((rate_table->info[rate].valid && !ath_rc_priv->single_stream) ||
-               (rate_table->info[rate].valid_single_stream &&
-                ath_rc_priv->single_stream));
-When I ifdef'ed this assert panic went away and everything sort of
-worked (haven't tested it heavily), but the performance dropped to
-about 700Kbps. I usually get 10x when 802.11n is off and there is no
-panic.
-
-Has anyone else seen this?
-I'm not including panic printk's because several routines get inlined
-so panic printout points to the ath_get_rate(), but if you disass that
-at the right offset you'll see the trap instruction and I'm pretty
-sure I am barking up the right assert here :)
-
-Here is the lspci output:
-0c:00.0 Network controller [0280]: Atheros Communications, Inc.
-Unknown device [168c:002a] (rev 01)
-
-This client is a dell E1705 laptop with mini-pcie.
-
--- 
-Regards,
-Vladimir
+  Luis
