@@ -1,143 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55493 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611AbZCaKQh (ORCPT
+Received: from qmta11.emeryville.ca.mail.comcast.net ([76.96.27.211]:44389
+	"EHLO QMTA11.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751204AbZC2HsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 06:16:37 -0400
-Message-Id: <20090331101316.247550869@sipsolutions.net> (sfid-20090331_121639_260028_F323AA34)
-References: <20090331101204.540183860@sipsolutions.net>
-Date: Tue, 31 Mar 2009 12:12:05 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Subject: [PATCH v3 1/3] cfg80211: introduce scan IE limit attribute
+	Sun, 29 Mar 2009 03:48:22 -0400
+Date: Sun, 29 Mar 2009 00:42:37 -0700
+From: "Mark A. Haun" <haunma@keteu.org>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: p54 "device does not respond" with fullmac SMC 2802W PCI
+Message-ID: <20090329004237.710775ea@angwin.keteu.org> (sfid-20090329_094826_986111_AFB73A84)
+In-Reply-To: <200901101321.50077.chunkeey@web.de>
+References: <20090109182322.263db101@angwin.keteu.org>
+	<200901101321.50077.chunkeey@web.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces a new attribute for a wiphy that tells
-userspace how long the information elements added to a probe
-request frame can be at most. It also updates the at76 to
-advertise that it cannot support that, and, for now until I
-can fix that, iwlwifi too.
+Hi Christian,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/at76c50x-usb.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c |    1 +
- include/linux/nl80211.h                 |    4 ++++
- include/net/wireless.h                  |    1 +
- net/mac80211/main.c                     |   13 ++++++++++++-
- net/mac80211/util.c                     |    2 ++
- net/wireless/nl80211.c                  |    7 +++++++
- 7 files changed, 28 insertions(+), 1 deletion(-)
+I just upgraded to kernel 2.6.29 so I could give this another try.
+Unfortunately the error is still unchanged.  Here's the basic info
+again:
 
---- wireless-testing.orig/include/net/wireless.h	2009-03-31 11:42:22.000000000 +0200
-+++ wireless-testing/include/net/wireless.h	2009-03-31 11:48:50.000000000 +0200
-@@ -222,6 +222,7 @@ struct wiphy {
- 
- 	int bss_priv_size;
- 	u8 max_scan_ssids;
-+	u16 max_scan_ie_len;
- 
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
---- wireless-testing.orig/net/wireless/nl80211.c	2009-03-31 11:42:22.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-03-31 11:48:50.000000000 +0200
-@@ -151,6 +151,8 @@ static int nl80211_send_wiphy(struct sk_
- 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
-+	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
-+		    dev->wiphy.max_scan_ie_len);
- 
- 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
- 	if (!nl_modes)
-@@ -2492,6 +2494,11 @@ static int nl80211_trigger_scan(struct s
- 	else
- 		ie_len = 0;
- 
-+	if (ie_len > wiphy->max_scan_ie_len) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	request = kzalloc(sizeof(*request)
- 			+ sizeof(*ssid) * n_ssids
- 			+ sizeof(channel) * n_channels
---- wireless-testing.orig/include/linux/nl80211.h	2009-03-31 11:42:22.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2009-03-31 11:48:50.000000000 +0200
-@@ -380,6 +380,8 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_MAX_NUM_SCAN_SSIDS: number of SSIDs you can scan with
-  *	a single scan request, a wiphy attribute.
-+ * @NL80211_ATTR_MAX_SCAN_IE_LEN: maximum length of information elements
-+ *	that can be added to a scan request
-  *
-  * @NL80211_ATTR_SCAN_FREQUENCIES: nested attribute with frequencies (in MHz)
-  * @NL80211_ATTR_SCAN_SSIDS: nested attribute with SSIDs, leave out for passive
-@@ -492,6 +494,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_AUTH_TYPE,
- 	NL80211_ATTR_REASON_CODE,
- 
-+	NL80211_ATTR_MAX_SCAN_IE_LEN,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- wireless-testing.orig/net/mac80211/main.c	2009-03-31 11:48:49.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-03-31 11:48:50.000000000 +0200
-@@ -724,7 +724,18 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 		return NULL;
- 
- 	wiphy->privid = mac80211_wiphy_privid;
--	wiphy->max_scan_ssids = 4;
-+
-+	if (!ops->hw_scan) {
-+		/* For hw_scan, driver needs to set these up. */
-+		wiphy->max_scan_ssids = 4;
-+
-+		/* we support a maximum of 32 rates in cfg80211 */
-+		wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN
-+					 - 2 - 32 /* SSID */
-+					 - 4 - 32 /* (ext) supp rates */;
-+
-+	}
-+
- 	/* Yes, putting cfg80211_bss into ieee80211_bss is a hack */
- 	wiphy->bss_priv_size = sizeof(struct ieee80211_bss) -
- 			       sizeof(struct cfg80211_bss);
---- wireless-testing.orig/net/mac80211/util.c	2009-03-31 11:48:49.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-03-31 11:48:50.000000000 +0200
-@@ -891,6 +891,8 @@ void ieee80211_send_probe_req(struct iee
- 		*pos = rate->bitrate / 5;
- 	}
- 
-+	/* if adding more here, adjust max_scan_ie_len */
-+
- 	if (ie)
- 		memcpy(skb_put(skb, ie_len), ie, ie_len);
- 
---- wireless-testing.orig/drivers/net/wireless/at76c50x-usb.c	2009-03-31 11:42:22.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/at76c50x-usb.c	2009-03-31 11:48:50.000000000 +0200
-@@ -2248,6 +2248,7 @@ static int at76_init_new_device(struct a
- 
- 	/* mac80211 initialisation */
- 	priv->hw->wiphy->max_scan_ssids = 1;
-+	priv->hw->wiphy->max_scan_ie_len = 0;
- 	priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &at76_supported_band;
- 	priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-03-31 11:42:22.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-03-31 11:48:50.000000000 +0200
-@@ -1306,6 +1306,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 
- 	hw->wiphy->custom_regulatory = true;
- 	hw->wiphy->max_scan_ssids = 1;
-+	hw->wiphy->max_scan_ie_len = 0; /* XXX for now */
- 
- 	/* Default value; 4 EDCA QOS priorities */
- 	hw->queues = 4;
+On Sat, 10 Jan 2009 13:21:49 +0100
+Christian Lamparter <chunkeey@web.de> wrote:
+> what's lspci -nnv -s 0a:00.0 ? (I'm looking for the subsystem vendor
+> & product id)
 
--- 
+0a:00.0 Network controller [0280]: Intersil Corporation ISL3890 [Prism
+GT/Prism Duette]/ISL3886 [Prism Javelin/Prism Xbow] [1260:3890] (rev 01)
+Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI
+    Adapter [10b8:2802]
+Flags: bus master, medium devsel, latency 80, IRQ 16 
+Memory at fd0fe000 (32-bit, non-prefetchable) [size=8K]
+Capabilities: [dc] Power Management version 1
 
+With the 2.13.12.0 firmware, here is the kernel output:
+
+p54pci 0000:0a:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+p54pci 0000:0a:00.0: firmware: requesting isl3886pci
+phy0: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2376
+phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
+phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy0: device does not respond!
+p54pci 0000:0a:00.0: PCI INT A disabled 
+p54pci: probe of 0000:0a:00.0 failed with error -16
+
+This is essentially the same as before (kernel 2.6.28).
+
+> did you compile the old prism54 code as well? If yes, can you please
+> try if it works?
+
+I tried this, but the driver is not loading correctly.  The last time
+I used it was two or three years ago.  There could be a genuine problem
+with my card, but I saw similar reports on the net which suggest to me
+there might be a problem with the old prism54 in recent kernels.
+
+What I need to do is see if this card is working in Windows, but, I
+don't own a copy and in any case I'm not willing to go through the pain
+of putting it on this machine.  It would be a big help to know if there
+are any confirmed reports of p54 working with this particular PCI
+card.  If someone else is having success I would suspect the problem is
+my hardware.
+
+Regards,
+
+Mark
