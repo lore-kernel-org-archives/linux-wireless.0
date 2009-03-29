@@ -1,61 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:57812 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755985AbZCYO06 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:7321 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755123AbZC2XgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 10:26:58 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH 2/2 v2] p54spi: fix p54spi_upload_firmware
-Date: Wed, 25 Mar 2009 15:34:29 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <73aaf0dd0903250550x37e6847x38be1f0dcc4b1bb3@mail.gmail.com> <200903251442.58712.chunkeey@web.de>
-In-Reply-To: <200903251442.58712.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903251534.29549.chunkeey@web.de> (sfid-20090325_152702_267263_45781CE0)
+	Sun, 29 Mar 2009 19:36:24 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so233211fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 16:36:21 -0700 (PDT)
+Subject: AR2425 - test report
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	Nick Kossifidis <mick@madwifi-project.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain
+Date: Mon, 30 Mar 2009 02:36:17 +0300
+Message-Id: <1238369777.5165.32.camel@maxim-laptop> (sfid-20090330_013642_803228_1EB64999)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 25 March 2009 14:42:58 Christian Lamparter wrote:
-> On Wednesday 25 March 2009 13:50:44 Max Filippov wrote:
-> > >> Sorry, I haven't been used to checkpatch.
-> > > But your PATCH 1/2 sailed through without any complains. ;-)
-> > Mere coincidence (:
-> > 
-> > > BTW: does p54spi really work now?
-> > I haven't tested your patch yet, but with the one that I sent it does
-> > work in IBSS mode.
-> > My aim is to wind it up in mesh mode. This doesn't work, it cannot
-> > establish peer link.
-> > I'm going to investigate it. Does mesh mode work on conventional pci/usb p54?
-> 
-> hmm, yes... at least with wireless-testing from yesterday. (beaconing works too)
-> 
-> [ 9862.704138] mesh: running mesh housekeeping
-> [ 9906.580204] phy3: Allocated STA 00:14:a5:45:33:ff
-> [ 9906.581566] phy3: Inserted STA 00:14:a5:45:33:ff
-> [ 9906.581581] Mesh plink: starting establishment with 00:14:a5:45:33:ff
-> [ 9906.634055] Mesh plink (peer, state, llid, plid, event): 00:14:a5:45:33:ff 1 28312 0 1
-> [ 9906.636888] Mesh plink (peer, state, llid, plid, event): 00:14:a5:45:33:ff 2 28312 55519 4
-> [ 9906.636895] Mesh plink with 00:14:a5:45:33:ff ESTABLISHED
-> 
-> 64 bytes from 10.0.0.2: icmp_seq=449 ttl=64 time=1.81 ms
-> 64 bytes from 10.0.0.2: icmp_seq=450 ttl=64 time=1.41 ms
-> 64 bytes from 10.0.0.2: icmp_seq=451 ttl=64 time=3.52 ms
-> ...
-> 
-> both peers have a p54 (one is pci, the other one usb)... I'll see if I can
-> get my old ath5k back to verify that it works with other devices as well.
+I today did some testing with my aspire one and its wireless, and this
+is what I found:
 
-FYI, I just finished testing with a 5 node mesh network with various drivers
-(ath5k, ar9170usb and p54 mesh network) and it looks like everything works
-the way it should... ( testing was done with the current wireless-testing.git )
 
-Is there anything else I can do, or something you want to know?
+Environment: B/G AP configured for WPA2, about -50 to -60 dBm signal
+about (-101 noise - according to ath5k - in short the access point in
+next room)
 
-Regards,
-	Chr
+A wired desktop connected to the access point.
+I also have a laptop, but I didn't use in in tests.
+
+Win XP (on aspire of course):
+Upload/download speeds 2.4 Mbytes/s - solid speeds, just one horizontal
+line, tested against samba on wired desktop, thus have just copied large
+files, thus might be better.
+
+
+Madwifi-free - I tried it to compare it, as it seems to have ANI
+support, and many more features. 
+Download 2.3/2.4 Mbytes/s - solid, and this thing lies so it shows you
+that you have 4.7 Mbytes/s, but looking at desktop reveals the truth.
+or using iperf.
+
+Uploads - very very badly, almost always, stall, sometimes peak at 2.1
+Mbytes/s, in other words almost don't work at all - I wonder how
+downloads still work, as there is still some upload stream for tcp acks
+(about 30 Kbytes/s I think or even more).
+
+Everything else broken, for example adhoc doesn't work, with or without
+wlanconfig. I am not complaining about it, it is dead anyway, just what
+worries me is that since madwifi and its free hal don't work, then you
+could make the device work without the docs?
+
+
+
+and now ath5k:
+
+Uploads/downloads also peak at 2.4 Mbytes/s, but often data transfer
+stalls.
+
+This is what I found:
+
+
+Uploads alone (udp) seems to work always, although, somehow udp gives me
+maximum 1.5 Mbytes/s, but TCP gives 2.4 Mbytes/s
+
+Downloads stall often, and this happen randomally, and seems phy
+related. If I restart the device by triggering scanning (sudo iwlst
+scan...) it starts to work again for a while.
+
+It doesn't seem to be related to reset, actually, the resets that often
+happen, just cause an inverted spike on throughput graph. This seems to
+happen without a reset, and like I said reset helps.
+
+
+TCP uploads stall too, but I feel that it is related to download too.
+
+
+It could be that I mixed up directions above, I retest this again.
+
+
+Then I turned off WPA2, switched to open mode.
+Suddenly download speeds increased to 2.9/3.0 Mbytes/s, and uploads
+speed increased too, don't remember how much. I use hardware crypto, but
+does it support AES? (Maybe this is due to the fact that atom is slow?)
+
+Speaking of which, by doing some simple benchmarks (loops in bash) this
+atom seems to be 3 times slower that core 2 duo 1.5 Ghz T5450 - on my
+notebook - of course - atom is single core, and this is dual core - thus
+for compilations atom is effectively 6 times slower....)
+
+My laptop's iwl3945 does 3.0 Mbytes/s in one direction (don't remeber
+which, with or without WPA2 and 2.4 in other direction - didn't try
+without WPA2 - will do someday)
+
+
+
+Best regards,
+	Maxim Levitsky
+
+
