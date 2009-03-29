@@ -1,253 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48458 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474AbZCUIFg (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:38685 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757889AbZC2NtZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 04:05:36 -0400
-Subject: Re: [PATCH 3/4] nl80211: Check that netif_runnin is true in
- cfg80211 code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090320192357.566055522@atheros.com>
-References: <20090320192115.448175935@atheros.com>
-	 <20090320192357.566055522@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yRea/8vUETy9E0AbryYH"
-Date: Sat, 21 Mar 2009 09:05:30 +0100
-Message-Id: <1237622730.5100.166.camel@johannes.local> (sfid-20090321_090539_567450_F0FF79E7)
-Mime-Version: 1.0
+	Sun, 29 Mar 2009 09:49:25 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Subject: Re: p54spi - mesh mode summary
+Date: Sun, 29 Mar 2009 15:49:17 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <200903282251.42585.chunkeey@web.de> <200903290841.59902.jcmvbkbc@gmail.com>
+In-Reply-To: <200903290841.59902.jcmvbkbc@gmail.com>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_dx3zJo5/DDtXBlI"
+Message-Id: <200903291549.17216.chunkeey@web.de> (sfid-20090329_154945_317371_19583639)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--Boundary-00=_dx3zJo5/DDtXBlI
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
---=-yRea/8vUETy9E0AbryYH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Sunday 29 March 2009 06:41:59 Max Filippov wrote:
+> > your last patches had some offset, do you have more code fixes or
+> > does everything work (properly)?
+> The offset is caused by the fact that I haven't merged in changes that has been done since 2009.01.09.
+> Now I've cherry-picked all recent patches related to p54, and IBSS and mesh are working good.
+> 
+> There are 3 issues that I'm focused on now:
+> 
+> - 'cx3110x spi2.0: WR_READY timeout' which sometimes occurs on ifdown-ifup cycle. Communication
+>   with firmware breaks and sometimes the box hangs altogether. It looks like some locking-concurrency
+>   issue, but I still haven't found it for sure;
+> 
+> - this, which happens every time when IBSS or mesh starts:
+> <7>[  211.754448] wlan0: Creating new IBSS network, BSSID 56:75:0c:c5:65:0d
+> <7>[  213.681352] phy0: Adding new IBSS station 00:1d:6e:9b:ee:6d (dev=wlan0)
+> <7>[  213.681443] phy0: Allocated STA 00:1d:6e:9b:ee:6d
+> <4>[  213.684251] ------------[ cut here ]------------
+> <4>[  213.691850] WARNING: at kernel/softirq.c:138 local_bh_enable+0x54/0xbc()
+> <4>[  213.699571] Modules linked in: p54spi
+> <4>[  213.707231] [<c0034ff8>] (dump_stack+0x0/0x14) from [<c005b1f0>] (warn_on_slowpath+0x4c/0x68)
+> <4>[  213.715623] [<c005b1a4>] (warn_on_slowpath+0x0/0x68)
+> <4>[  213.740464] [<c00604c8>] (local_bh_enable+0x0/0xbc)
+> <4>[  213.766221] [<bf000000>] (p54spi_op_tx+0x0/0x4c [p54spi])
+> <4>[  213.793016] [<c01a4d34>] (p54_sta_unlock+0x0/0x78) 
+hmm, sta_unlock is called from a tasklet, so we must use the irqsave functions
+does this warning go away with the attached patch?
 
-On Fri, 2009-03-20 at 21:21 +0200, Jouni Malinen wrote:
-> plain text document attachment (nl80211-check-netif-running.patch)
-> We do not want to require all the drivers using cfg80211 to need to do
-> this or to be prepared to handle these commands when the interface is
-> down.
->=20
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Regards,
+	Chr
 
-Thanks a lot, Jouni.
+--Boundary-00=_dx3zJo5/DDtXBlI
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="p54spi-irqsave-locks.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54spi-irqsave-locks.diff"
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 155f453..5202312 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -469,9 +469,10 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
+ 	struct ieee80211_tx_info *info;
+ 	struct p54_tx_info *minfo;
+ 	struct p54s_tx_info *dinfo;
++	unsigned long flags;
+ 	int ret = 0;
+ 
+-	spin_lock_bh(&priv->tx_lock);
++	spin_lock_irqsave(&priv->tx_lock, flags);
+ 
+ 	while (!list_empty(&priv->tx_pending)) {
+ 		entry = list_entry(priv->tx_pending.next,
+@@ -479,7 +480,7 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
+ 
+ 		list_del_init(&entry->tx_list);
+ 
+-		spin_unlock_bh(&priv->tx_lock);
++		spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 
+ 		dinfo = container_of((void *) entry, struct p54s_tx_info,
+ 				     tx_list);
+@@ -491,16 +492,14 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
+ 
+ 		ret = p54spi_tx_frame(priv, skb);
+ 
+-		spin_lock_bh(&priv->tx_lock);
+-
+ 		if (ret < 0) {
+ 			p54_free_skb(priv->hw, skb);
+-			goto out;
++			return ret;
+ 		}
+-	}
+ 
+-out:
+-	spin_unlock_bh(&priv->tx_lock);
++		spin_lock_irqsave(&priv->tx_lock, flags);
++	}
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 	return ret;
+ }
+ 
+@@ -510,12 +509,13 @@ static void p54spi_op_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct p54_tx_info *mi = (struct p54_tx_info *) info->rate_driver_data;
+ 	struct p54s_tx_info *di = (struct p54s_tx_info *) mi->data;
++	unsigned long flags;
+ 
+ 	BUILD_BUG_ON(sizeof(*di) > sizeof((mi->data)));
+ 
+-	spin_lock_bh(&priv->tx_lock);
++	spin_lock_irqsave(&priv->tx_lock, flags);
+ 	list_add_tail(&di->tx_list, &priv->tx_pending);
+-	spin_unlock_bh(&priv->tx_lock);
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 
+ 	queue_work(priv->hw->workqueue, &priv->work);
+ }
+@@ -616,6 +616,7 @@ out:
+ static void p54spi_op_stop(struct ieee80211_hw *dev)
+ {
+ 	struct p54s_priv *priv = dev->priv;
++	unsigned long flags;
+ 
+ 	if (mutex_lock_interruptible(&priv->mutex)) {
+ 		/* FIXME: how to handle this error? */
+@@ -627,9 +628,9 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
+ 	cancel_work_sync(&priv->work);
+ 
+ 	p54spi_power_off(priv);
+-	spin_lock_bh(&priv->tx_lock);
++	spin_lock_irqsave(&priv->tx_lock, flags);
+ 	INIT_LIST_HEAD(&priv->tx_pending);
+-	spin_unlock_bh(&priv->tx_lock);
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 
+ 	priv->fw_state = FW_STATE_OFF;
+ 	mutex_unlock(&priv->mutex);
 
-> ---
->  net/mac80211/cfg.c     |   25 -------------------------
->  net/wireless/nl80211.c |   40 ++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 40 insertions(+), 25 deletions(-)
->=20
-> --- uml.orig/net/mac80211/cfg.c	2009-03-20 18:03:53.000000000 +0200
-> +++ uml/net/mac80211/cfg.c	2009-03-20 18:03:59.000000000 +0200
-> @@ -728,10 +728,6 @@ static int ieee80211_add_station(struct=20
->  	int err;
->  	int layer2_update;
-> =20
-> -	/* Prevent a race with changing the rate control algorithm */
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	if (params->vlan) {
->  		sdata =3D IEEE80211_DEV_TO_SUB_IF(params->vlan);
-> =20
-> @@ -860,9 +856,6 @@ static int ieee80211_add_mpath(struct wi
->  	struct sta_info *sta;
->  	int err;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT)
-> @@ -913,9 +906,6 @@ static int ieee80211_change_mpath(struct
->  	struct mesh_path *mpath;
->  	struct sta_info *sta;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT)
-> @@ -1202,9 +1192,6 @@ static int ieee80211_scan(struct wiphy *
->  {
->  	struct ieee80211_sub_if_data *sdata;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION &&
-> @@ -1220,9 +1207,6 @@ static int ieee80211_auth(struct wiphy *
->  {
->  	struct ieee80211_sub_if_data *sdata;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> @@ -1282,9 +1266,6 @@ static int ieee80211_assoc(struct wiphy=20
->  	struct ieee80211_sub_if_data *sdata;
->  	int ret;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> @@ -1323,9 +1304,6 @@ static int ieee80211_deauth(struct wiphy
->  {
->  	struct ieee80211_sub_if_data *sdata;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
->  		return -EOPNOTSUPP;
-> @@ -1339,9 +1317,6 @@ static int ieee80211_disassoc(struct wip
->  {
->  	struct ieee80211_sub_if_data *sdata;
-> =20
-> -	if (!netif_running(dev))
-> -		return -ENETDOWN;
-> -
->  	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> --- uml.orig/net/wireless/nl80211.c	2009-03-20 18:03:57.000000000 +0200
-> +++ uml/net/wireless/nl80211.c	2009-03-20 18:03:59.000000000 +0200
-> @@ -1556,6 +1556,11 @@ static int nl80211_new_station(struct sk
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	err =3D drv->ops->add_station(&drv->wiphy, dev, mac_addr, &params);
-> =20
->   out:
-> @@ -1808,6 +1813,11 @@ static int nl80211_set_mpath(struct sk_b
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	err =3D drv->ops->change_mpath(&drv->wiphy, dev, dst, next_hop);
-> =20
->   out:
-> @@ -1846,6 +1856,11 @@ static int nl80211_new_mpath(struct sk_b
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	err =3D drv->ops->add_mpath(&drv->wiphy, dev, dst, next_hop);
-> =20
->   out:
-> @@ -2380,6 +2395,11 @@ static int nl80211_trigger_scan(struct s
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	if (drv->scan_req) {
->  		err =3D -EBUSY;
->  		goto out;
-> @@ -2641,6 +2661,11 @@ static int nl80211_authenticate(struct s
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	if (!info->attrs[NL80211_ATTR_MAC]) {
->  		err =3D -EINVAL;
->  		goto out;
-> @@ -2709,6 +2734,11 @@ static int nl80211_associate(struct sk_b
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	if (!info->attrs[NL80211_ATTR_MAC] ||
->  	    !info->attrs[NL80211_ATTR_SSID]) {
->  		err =3D -EINVAL;
-> @@ -2767,6 +2797,11 @@ static int nl80211_deauthenticate(struct
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	if (!info->attrs[NL80211_ATTR_MAC]) {
->  		err =3D -EINVAL;
->  		goto out;
-> @@ -2821,6 +2856,11 @@ static int nl80211_disassociate(struct s
->  		goto out;
->  	}
-> =20
-> +	if (!netif_running(dev)) {
-> +		err =3D -ENETDOWN;
-> +		goto out;
-> +	}
-> +
->  	if (!info->attrs[NL80211_ATTR_MAC]) {
->  		err =3D -EINVAL;
->  		goto out;
->=20
-> --=20
->=20
-
---=-yRea/8vUETy9E0AbryYH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxJ/HAAoJEKVg1VMiehFY2D8P/izex/ZguLMqig5SFI9cU8JB
-5AhUiwttENI1RYq6HO+9R03S6I8AMAAX0q5PRaGgJcJREUZ8DNr2OrY3OafXQypG
-0Wy5UZorRHM1OTszpgxhzcRMTIXZ7+cQFZ15igARQbiiioywrlhxGu+6juk8cAlL
-oiwwqcIzC7XmoFztoyG9XuWLRflRhTiQnXgYVtHcy6RQw2nVqqjsk2WfwJNZc0fN
-jYxOpp5m40qZY2A+DFQo4LyJsvWZPPup4+lZ7ThIE0JIakDEk/+MGoYUi1OMBtn/
-N43PGlrcJy1YuSj6YNbQFnTzwzZ56p6InKigdVgo2ZOEkcJx2PSJ0nxQgIJLeIX/
-yhNe5UfbyadWAxW9NChm5Qpa8lBE8ApGNmXtEyB66J2zjGPUwJG3dNNyCOaTKQxv
-fTbQb1IEenG3LoIxb9nhY6T4l4hW60WvcxapOUXrJY8pLnO2t3L7TQ8CWtUSU2nC
-wA6ohwp1rz+iBYa1SnwfHb507D8nxKRRFC9XrtdI1aVnJ3rXlLDXKUzVeEJniswd
-uxq9fXvOuMfBohlayPzgimTnpsJ+I4FiHWnXfqaRTDzWh/3m90JNb7b/2qvafp2a
-ejNm7lGEOeNKnXNCd4TbxeobGlFP2eFmiLsE8CasW2wFDaMd1HeaH7hEv++nfPjV
-mB/fVGvE355FSMIA5Wgc
-=CZGD
------END PGP SIGNATURE-----
-
---=-yRea/8vUETy9E0AbryYH--
-
+--Boundary-00=_dx3zJo5/DDtXBlI--
