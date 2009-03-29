@@ -1,45 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:19297 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755421AbZCRBec (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:42796 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754576AbZC2Ufl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 21:34:32 -0400
-Received: by yw-out-2324.google.com with SMTP id 3so287661ywj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 18:34:30 -0700 (PDT)
+	Sun, 29 Mar 2009 16:35:41 -0400
+Received: by ewy9 with SMTP id 9so1804269ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 13:35:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <646765f40903171832i2ad3debbre4cd1630ed681d23@mail.gmail.com>
-References: <af5afd160903171817v6a6ec50al6e933985628e7674@mail.gmail.com>
-	 <646765f40903171824t7854e0d4wc2c3de9752ad6370@mail.gmail.com>
-	 <af5afd160903171829j45e194bbu22082ee83ffab3c9@mail.gmail.com>
-	 <646765f40903171832i2ad3debbre4cd1630ed681d23@mail.gmail.com>
-Date: Wed, 18 Mar 2009 12:34:29 +1100
-Message-ID: <af5afd160903171834r7863198dg64a21869fb2a8089@mail.gmail.com> (sfid-20090318_023434_223475_F351C63D)
-Subject: Re: compile error.
-From: Dennis Kavadas <dennis@kavadas.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200903292109.55033.rossi.f@inwind.it>
+References: <20090315202035.GC5246@makis>
+	 <200903292109.55033.rossi.f@inwind.it>
+Date: Sun, 29 Mar 2009 23:35:37 +0300
+Message-ID: <40f31dec0903291335j2befd3b4r1b4f4619ae634113@mail.gmail.com> (sfid-20090329_223542_816994_9F799430)
+Subject: Re: [PATCH 3/3] ath5k: Add tx power calibration support
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-got it !
+2009/3/29 Fabio Rossi <rossi.f@inwind.it>:
+> On Sunday 15 March 2009, Nick Kossifidis wrote:
+>
+>> =C2=A0* Add tx power calibration support
+>> =C2=A0* Add a few tx power limits
+>> =C2=A0* Hardcode default power to 12.5dB
+>> =C2=A0* Disable TPC for now
+>>
+>> =C2=A0v2: Address Jiri's comments
+>>
+>> =C2=A0Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> After bisecting I have found that this patch causes a regression with=
+ my
+> wireless PCI board:
 
-On Wed, Mar 18, 2009 at 12:32 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> On Wed, Mar 18, 2009 at 12:29, Dennis Kavadas <ipguy@kavadas.org> wrote:
->> ...but I downloaded compat-wireless-old, quoting from the website "You
->> can download compat-wireless-old for kernels <= 2.6.26 here"
+[...]
+
 >
-> Read this: http://wireless.kernel.org/en/users/Download#Requirements
+> With the problematic patch there is no frequency sweep after the "iwc=
+onfig
+> essid" command and I can't associate anymore (the frequency remains s=
+tuck to
+> 5.18GHz but I work with 802.11G)
 >
-> It clearly states that you need "A kernel >= 2.6.21 (limited support
-> for 2.6.21)"
+> Mar 29 11:08:45 kernel: cfg80211: Calling CRDA to update world regula=
+tory
+> domain
+> Mar 29 11:08:45 kernel: ath5k 0000:00:0b.0: PCI INT A -> Link[LNKB] -=
+> GSI 10
+> (level, low) -> IRQ 10
+> Mar 29 11:08:45 kernel: ath5k 0000:00:0b.0: registered as 'phy0'
+> Mar 29 11:08:45 kernel: phy0: Selected rate control algorithm 'minstr=
+el'
+> Mar 29 11:08:45 kernel: ath5k phy0: Atheros AR5212 chip found (MAC: 0=
+x56, PHY:
+> 0x41)
+> Mar 29 11:08:45 kernel: ath5k phy0: RF5112B multiband radio found (0x=
+36)
+> Mar 29 11:08:45 kernel: udev: renamed network interface wlan0 to ath0
+> Mar 29 11:09:03 kernel: ath5k phy0: noise floor calibration timeout (=
+5180MHz)
+> Mar 29 11:09:36 last message repeated 3 times
+> Mar 29 11:10:43 last message repeated 6 times
+> Mar 29 11:11:48 last message repeated 6 times
+> Mar 29 11:12:54 last message repeated 6 times
+> Mar 29 11:14:00 last message repeated 6 times
+> Mar 29 11:15:06 last message repeated 6 times
+> Mar 29 11:16:12 last message repeated 6 times
 >
-> Thanks,
+
+I can understand how this patch may have resulted a noise floor
+calibration timeout but i can't understand how it broke everything
+else. I've tested it with a very similar card (same MAC and PHY chips
+but from a different vendor) and it worked just fine. Also i know
+there is still something more to fix for RF5112 while setting rf
+buffer settings and we have 2 curves but i don't think that's related.
+
+> and with "modprobe -r ath5k"
 >
-> --
+> Mar 29 11:23:59 kernel: ath0: deauthenticating by local choice (reaso=
+n=3D3)
+> Mar 29 11:24:05 kernel: ath5k phy0: noise floor calibration timeout (=
+5180MHz)
+> Mar 29 11:24:38 last message repeated 3 times
+> Mar 29 11:24:49 kernel: ath5k phy0: noise floor calibration timeout (=
+5180MHz)
 >
-> Julian Calaby
+> (I can't understand the deauthenticating line when before I don't see=
+ an
+> authenticate line). At this point it's impossible to remove the modul=
+e and
+> the execution of a top session identifies a "phy0" program which runs=
+ forever
+> with high CPU usage (I need to reboot the system)
 >
-> Email: julian.calaby@gmail.com
-> .Plan: http://sites.google.com/site/juliancalaby/
+> =C2=A0PID USER =C2=A0 =C2=A0 =C2=A0PR =C2=A0NI =C2=A0VIRT =C2=A0RES =C2=
+=A0SHR S %CPU %MEM =C2=A0 =C2=A0TIME+ =C2=A0COMMAND
+> 21548 root =C2=A0 =C2=A0 =C2=A015 =C2=A0-5 =C2=A0 =C2=A0 0 =C2=A0 =C2=
+=A00 =C2=A0 =C2=A00 R 68.5 =C2=A00.0 =C2=A0 2:25.68 phy0
 >
+
+This is even more weird, do you have an SMP system ? That warning you
+get is from the periodic calibration function, it seems you run this
+function too often...
+
+
+
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
