@@ -1,66 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37621 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbZCKQGm (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:4717 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbZC2SQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 12:06:42 -0400
-Subject: Re: configuring while interface is down
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: j@w1.fi, samuel@sortiz.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20090311155812.269850@gmx.net> (sfid-20090311_165952_043610_1F5C5846)
-References: <1236774973.20266.13.camel@johannes.local>
-	 <20090311134329.269810@gmx.net>
-	 (sfid-20090311_144435_584837_2198C4E4) <1236779314.20266.22.camel@johannes.local>
-	 <20090311155812.269850@gmx.net> (sfid-20090311_165952_043610_1F5C5846)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QoZwbvVsLD1LydlbDV+w"
-Date: Wed, 11 Mar 2009 17:05:06 +0100
-Message-Id: <1236787506.20266.28.camel@johannes.local> (sfid-20090311_170750_121417_0796C36E)
-Mime-Version: 1.0
+	Sun, 29 Mar 2009 14:16:11 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so518244eyf.37
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 11:16:08 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] rfkill: rewrite
+Date: Sun, 29 Mar 2009 20:16:02 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+References: <1238349195.24972.5.camel@johannes.local>
+In-Reply-To: <1238349195.24972.5.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200903292016.05470.IvDoorn@gmail.com> (sfid-20090329_201616_721337_9779E4AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 29 March 2009, Johannes Berg wrote:
+> This patch completely rewrites the rfkill core to address
+> the following deficiencies:
+> 
+>  * all rfkill drivers need to implement polling where necessary
+>    rather than having one central implementation
+> 
+>  * updating the rfkill state cannot be done from any context,
+>    forcing drivers to use schedule_work and requiring lots of
+>    code
+> 
+>  * rfkill drivers need to keep track of soft/hard blocked
+>    internally -- the core should do this
+> 
+>  * the rfkill API has many unexpected quirks, for example being
+>    asymmetric wrt. alloc/free and register/unregister
+> 
+>  * rfkill can call back into a driver from within a function the
+>    driver called -- this is prone to deadlocks and generally
+>    should be avoided
+> 
+>  * rfkill-input pointlessly is a separate module
+> 
+>  * drivers need to #ifdef rfkill functions (unless they want to
+>    depend on or select RFKILL) -- rfkill should provide inlines
+>    that do nothing if it isn't compiled in
+> 
+>  * the rfkill structure, despite containing almost only internal
+>    variables, is not opaque -- and drivers need to initialise it
+>    correctly (lots of sanity checking code required) -- instead
+>    force drivers to pass the right variables to rfkill_alloc()
+> 
+>  * the documentation is hard to read because it always assumes
+>    the reader is completely clueless and contains way to many CAPS
+> 
+>  * the rfkill code needlessly uses a lot of locks and atomic
+>    operations in locked sections
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> RFC only because I haven't fixed all drivers yet, still missing are
+> toshiba, thinkpad, wimax and tosa.
+> 
+> Let the flames begin! (or if you like it feel free to chime in too)
 
---=-QoZwbvVsLD1LydlbDV+w
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just for the record, as long as you (or somebody else) takes over maintainership
+over rfkill after these changes, I have no objections against the changes. Luckily
+you already updated the Maintainers entry, so I'm happy. :)
 
-On Wed, 2009-03-11 at 16:58 +0100, Alina Friedrichsen wrote:
-> Hello Johannes!
->=20
-> > which is what we'll continue doing in cfg80211, but I think we shouldn'=
-t
-> > bother the driver/mac80211 with it until the netdev is up, and thus
-> > reject things from nl80211.
->=20
-> Do you think WEXT should only be a wrapper around cfg80211? If yes, I wou=
-ld agree.
+I know rfkill was poorly designed and I simply lacked the time (and perhaps
+some interest as well) to continue with it. The changes you propose sound
+reasonable so I hope it will turn rfkill really into something which it was supposed
+to be from the start.
 
-Yes, of course.
-
-johannes
-
---=-QoZwbvVsLD1LydlbDV+w
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJt+EtAAoJEKVg1VMiehFYSrgQAMaKD90MPeG34gg+60N+sF9s
-3RXAjav/jH9zbsCmaxXTAdOGo5Yt0D9T23w5w6kdW96cLB9s7yh2ZrL287RUPhou
-hwwwFXUUTDq7JOtMZPzUSECjjVy2GFmu2uAxmRqunN+IYafVAsehdPNjVYBFzyZi
-A/90erQtLNDHUYROepmb/gfqlK3MwJkvHZxYi2izqeuYdg4CvjiZMc6pkYgPZWW8
-axIFceg4oHWBviKILl9JaKw4qknQuccToQBJLMznmpmZIJZqAXHHk3GxoGg7QPMo
-Rrp5dvxzRIlcYoaKFDR8A1OeUMQJ/9busi5w4XsAgLY20+HCHJd3tR5vQNp0dfpl
-NjKqCJMKmlgUEE3jOTwQW+ZISvSyyf3guVw0sTCpx3XVIOolqWkl4gC8XKEoMEhN
-OYZrk0hPcYExvMN6Xc7IH2ipcG4xyx26OJvw+/XiNmKLo/EvEhqDFHOYCjKZrmGM
-itWLP/S5fLpDfZLhqmgPt7J1lEtUl81mEN3SJv124XgQ0Gq2oEJBF/8VMrn7PZOd
-ZUPS5wQnIh4w+OC4ruI/d3pG6sUVAR7wdthLMjJU2Y5bzxlLq7JZiTuR6+kyDVC5
-098TV+CqFlnHBC9ANMXLb18yg2SPkaaOWe1LlgdfVRV3whSKuqEHxEBkoQL4i0Ee
-FMJQw63NxcobXMpqybr1
-=+yRl
------END PGP SIGNATURE-----
-
---=-QoZwbvVsLD1LydlbDV+w--
-
+Ivo
