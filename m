@@ -1,78 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f118.google.com ([209.85.221.118]:42756 "EHLO
-	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752662AbZCXSIi (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:36028 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbZC2XLI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 14:08:38 -0400
-Received: by qyk16 with SMTP id 16so3517077qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 11:08:35 -0700 (PDT)
+	Sun, 29 Mar 2009 19:11:08 -0400
+Received: by ewy9 with SMTP id 9so1839116ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 16:11:05 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 24 Mar 2009 23:38:19 +0530
-Message-ID: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com> (sfid-20090324_190840_939498_34F9DD29)
-Subject: GSoC '09 applicant : Introduction
-From: k roy <kroykroy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20090327214727.28989.90735.stgit@mj.roinet.com>
+References: <20090327214727.28989.90735.stgit@mj.roinet.com>
+Date: Mon, 30 Mar 2009 02:11:04 +0300
+Message-ID: <40f31dec0903291611g3c783032qd84881148de6b4bb@mail.gmail.com> (sfid-20090330_011119_634049_0F62A85E)
+Subject: Re: [PATCH] ath5k: fix scanning in AR2424
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+2009/3/27 Pavel Roskin <proski@gnu.org>:
+> AR5K_PHY_PLL_40MHZ_5413 should not be ORed with AR5K_PHY_MODE_RAD_RF5=
+112
+> for 5 GHz channels.
+>
+> The incorrect PLL value breaks scanning in the countries where 5 GHz
+> channels are allowed.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>
+> =C2=A0drivers/net/wireless/ath5k/reset.c | =C2=A0 =C2=A02 +-
+> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireles=
+s/ath5k/reset.c
+> index 7a17d31..faede82 100644
+> --- a/drivers/net/wireless/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath5k/reset.c
+> @@ -359,7 +359,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int =
+flags, bool initial)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0mode |=3D AR5K_PHY_MODE_FREQ_5GHZ;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0if (ah->ah_radio =3D=3D AR5K_RF5413)
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 clock |=3D AR5K_PHY_PLL_40MHZ_5413;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 clock =3D AR5K_PHY_PLL_40MHZ_5413;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0else
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0clock |=3D AR5K_PHY_PLL_40MHZ=
+;
+>
 
-I guess that I am pretty late at introducing myself in this mailing
-list but I will do it nevertheless. My name is Kalpana Roy, a final
-year student from India, pursuing her B.Tech(I.T.) degree. Inspite of
-being in my final year this will be my first (probably the last too)
-attempt at GSoC. I was introduced to the wonderful world of FOSS by
-another FOSS enthusist who also successfully completed his GSoC
-project last year. Uptil then, my only interaction with FOSS was using
-the softwares but now I am looking into development aspects and want
-to contribute as well.
-I worked on an open-source project last year and created a
-GUI-cum-editor for VPython. As I did not interact with the core
-developers, my work could never be included in the VPython module. I
-learned this through GSoC, that communication is as important as
-contribution, and that the work you do is of no use if you just keep
-it to yourself.
-My skill-set includes working in languages C++,PHP and familiarity
-with PyGtk, Java, MySQL. I mostly work on Linux systems (Ubuntu and
-Fedora being my distros of choice) though I have a dual boot machine
-with Windows installed as well.
-The project which I would like to work on, under Linux Foundations is
-Integration of Geoclue with linux kernel and gnome-desktop. As
-suggested by Luis R. Rodriguez, who has agreed to comentor this
-project, it will be a combined project under both Linux Foundations
-and Gnome developers. Under the Gnome-desktop cover, I would work to
-include location-sensitivity functionality to various gnome
-applications like Tracker, Empathy, Gwibber, Evolution, Clock and use
-of OpenStreetMap and libchamplain library to display a map of the
-locality. The comments which I receive for the above proposal was that
-it was too short compared to GSoC and it only included submitting
-patches to a few gnome applications. Now since, the project will
-include providing Geoclue information to the Network Manager and
-currectly deducing the country based on the timezone provided by the
-user using Geoclue, I guess the project is big enough. Infact Geoclue
-does the automatic finding of the location (Geotargetting) based on IP
-address. It uses the database of hostip.info site for the same.
-I conversed about the merging of the two project ideas with Jussi
-Kukkonen, who is the major developer of Geoclue, and he expressed his
-views about it being a great idea but he said that geoclue cannot (in
-many cases) make guarantees on the correctness of results so using
-them for "regulatory compliance" should be done with understanding
-that. Example: wlan positioning is based on access point MAC address
-and the manufacturers are known to make mistakes with those, so there
-may be two devices out there with the same MAC address but totally
-different locations. If the afore-mentioned is acceptable then it is a
-great idea.I am planning to submit the project proposal under both
-Gnome as well as Linux Foundations, however if accepted under any, it
-will needed to be comentored by both the organisation's developers. I
-am working on the application and it should be ready within 1-2 days
-span. I am also looking forward to any comments/suggestions regarding
-the project.
-My contact details are as follows:
-email : kroykroy@gmail.com
-IM (XMPP) : kroykroy@gmail.com
-IRC nick : kr0y
-weblog : http://wannabe-a-geek.blogspot.com/
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Looking forward to hearing from you,
-~kr0y.
+
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
