@@ -1,92 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tjworld.net ([67.18.187.6]:52104 "EHLO tjworld.net"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755263AbZCXPyU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 11:54:20 -0400
-Subject: iwl3945: Don't queue rfkill_poll work when module is exiting
-From: TJ <ubuntu@tjworld.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 24 Mar 2009 15:44:19 +0000
-Message-Id: <1237909459.5365.16.camel@hephaestion> (sfid-20090324_165424_122966_556E28B8)
-Mime-Version: 1.0
+Received: from kso.tls-tautenburg.de ([194.94.209.8]:39302 "EHLO
+	kso.tls-tautenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752256AbZC2ULq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Mar 2009 16:11:46 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by kso.tls-tautenburg.de (Postfix) with ESMTP id 1A7D730D
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 21:45:41 +0200 (CEST)
+Received: from kso.tls-tautenburg.de ([127.0.0.1])
+ by localhost (kso [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 30876-04 for <linux-wireless@vger.kernel.org>;
+ Sun, 29 Mar 2009 21:45:37 +0200 (CEST)
+Received: from [192.168.178.31] (unknown [89.246.169.68])
+	by kso.tls-tautenburg.de (Postfix) with ESMTP id 2E52F9A
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 21:45:37 +0200 (CEST)
+Message-ID: <49CFD043.6020708@tls-tautenburg.de> (sfid-20090329_221151_387129_C229915F)
+Date: Sun, 29 Mar 2009 21:47:15 +0200
+From: Bringfried Stecklum <stecklum@tls-tautenburg.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: compile error compat-wireless-2009-03-29
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Gardner suggested I forward this as a possible stable-release
-update. I found the problem in our current Ubuntu Jaunty tree - iwlwifi
-version 1.2.26k. What follows is a copy of the patch for Jaunty
-(2.6.28).
+When trying to compile the latest compat-wireless packagev=20
+(2.6.29-20327-g8f2487d) on an Ubuntu 8.10 system running linux kernel 2=
+=2E6.27-12=20
+I get the following error
 
-----------
-Bug: #345710
-
-When the wireless interface is active and the iwl3945 module is unloaded the
-call to ieee80211_unregister_hw() would call iwl3945_mac_stop() which would
-restart the delayed workqueue for rfkill_poll. That workqueue had already been
-cancelled so when the next work item was run (2 seconds later) the system would
-suffer a hard lock-up because the module had been unloaded by then.
-
-This patch implements STATUS_EXIT_PENDING checks in places where the rfkill_poll
-work is scheduled, and moves the final workqueue cancellation to occur after the
-call to ieee80211_unregister_hw().
-
-Bug discovered, experienced and fix tested on my PC.
-
-Signed-off-by: TJ <ubuntu@tjworld.net>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index bb92db2..acaf038 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6062,7 +6062,9 @@ static void iwl3945_rfkill_poll(struct work_struct *data)
- 	if (test_bit(STATUS_RF_KILL_HW, &status) != test_bit(STATUS_RF_KILL_HW, &priv->status))
- 	   queue_work(priv->workqueue, &priv->rf_kill);
- 
--	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-+	/* only queue if module isn't exiting */
-+	if (! test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
- 						   round_jiffies_relative(2 * HZ));
- 
- }
-@@ -6588,7 +6590,10 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
- 	flush_workqueue(priv->workqueue);
- 
- 	/* start polling the killswitch state again */
--	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-+
-+	/* only queue if module isn't exiting */
-+	if (! test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
- 						   round_jiffies_relative(2 * HZ));
- 
- 	IWL_DEBUG_MAC80211("leave\n");
-@@ -8166,7 +8171,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
- 
- 	iwl3945_rfkill_unregister(priv);
--	cancel_delayed_work(&priv->rfkill_poll);
- 	iwl3945_dealloc_ucode_pci(priv);
- 
- 	if (priv->rxq.bd)
-@@ -8182,6 +8186,12 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	/*netif_stop_queue(dev); */
- 	flush_workqueue(priv->workqueue);
- 
-+	/* ieee80211_unregister_hw calls iwl3945_mac_stop which used to restart the rfkill
-+	   polling. Although that now checks STATUS_EXIT_PENDING do cancel and wait for any
-+	   pending work to complete */
-+	cancel_delayed_work(&priv->rfkill_poll);
-+	cancel_work_sync(&priv->rfkill_poll);
-+
- 	/* ieee80211_unregister_hw calls iwl3945_mac_stop, which flushes
- 	 * priv->workqueue... so we can't take down the workqueue
- 	 * until now... */
--- 
-1.6.0.4
-
+/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/agg-t=
+x.c: In=20
+function =E2=80=98ieee80211_agg_splice_packets=E2=80=99:
+/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/agg-t=
+x.c:385:=20
+error: implicit declaration of function =E2=80=98skb_queue_splice_tail_=
+init=E2=80=99
+make[3]: ***=20
+[/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/agg-=
+tx.o] Error 1
+make[2]: *** [/home/stecklum/System/src/compat-wireless-2009-03-29/net/=
+mac80211]=20
+Error 2
+make[1]: *** [_module_/home/stecklum/System/src/compat-wireless-2009-03=
+-29] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
+make: *** [modules] Error 2
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
