@@ -1,75 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48349 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498AbZCUIC3 (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:55671 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752985AbZC2XNc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 04:02:29 -0400
-Subject: Re: [PATCH v4 3/6] mac80211: check if HT40+/- is allowed before
- sending assoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Sun, 29 Mar 2009 19:13:32 -0400
+Received: by ewy9 with SMTP id 9so1839569ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 16:13:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090328163929.GA24075@hash.localnet>
+References: <200903241938.47155.chunkeey@web.de>
+	 <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com>
+	 <20090324184100.GA29268@tesla>
+	 <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
+	 <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com>
+	 <1237926664.4320.131.camel@johannes.local>
+	 <43e72e890903241504u4dfb5c76kbcb11a096bba72fc@mail.gmail.com>
+	 <20090328163929.GA24075@hash.localnet>
+Date: Mon, 30 Mar 2009 02:13:28 +0300
+Message-ID: <40f31dec0903291613w6b6520a5ucf8daeede7a6ae0@mail.gmail.com> (sfid-20090330_011340_093577_9C9D6D47)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090320142957.GA8120@tesla>
-References: <1237444886-24530-1-git-send-email-lrodriguez@atheros.com>
-	 <1237546136.5100.147.camel@johannes.local>  <20090320142957.GA8120@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7803FRsval1j/4bznJom"
-Date: Sat, 21 Mar 2009 09:02:22 +0100
-Message-Id: <1237622542.5100.163.camel@johannes.local> (sfid-20090321_090234_587557_50F1F921)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/3/28 Bob Copeland <me@bobcopeland.com>:
+> On Tue, Mar 24, 2009 at 03:04:59PM -0700, Luis R. Rodriguez wrote:
+>> >> > Channel list is a good hint, maybe
+>> >> > it's time to fix iw/nl80211 to send back all the channels :)
+>> >
+>> > I looked into yesterday actually, and it's completely non-trivial =
+and
+>> > requires userspace interface changes.
+>>
+>> Heh, there goes that idea then. Then in that case I'd advocate even
+>> more trimming the channels down.
+>
+> Nick, what do you think of this? =C2=A0I think it's the best compromi=
+se
+> for now - people can still get all the channels, normal users get a
+> nice speedup in the default case.
+>
+> --------------------
+> From 7289f60a3acf3bb1cfcc2a7ef7c4d88ffd0e13f1 Mon Sep 17 00:00:00 200=
+1
+> From: Bob Copeland <me@bobcopeland.com>
+> Date: Sat, 28 Mar 2009 12:27:31 -0400
+> Subject: [PATCH] ath5k: reduce exported channel list
+>
+> Claiming every available 5 ghz channel has a couple of negative
+> side-effects: scanning takes a long time, and the channel list
+> overflows the available buffer space for netlink commands,
+> resulting in:
+>
+> =C2=A0 =C2=A0$ iw phy phy0 info
+> =C2=A0 =C2=A0command failed: No buffer space available (-105)
+>
+> This patch adds a modparam so people who want to see all the channels
+> can do so by passing all_channels=3D1. =C2=A0By default users will se=
+e a
+> smaller list of channels that works with iw. =C2=A0This also halves s=
+can
+> time, from 10 seconds down to less than 5.
+>
+> Changes-licensed-under: 3-Clause-BSD
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+> =C2=A0drivers/net/wireless/ath5k/base.c | =C2=A0 21 +++++++++++++++++=
+++++
+> =C2=A01 files changed, 21 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless=
+/ath5k/base.c
+> index 5d57d77..a018106 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -64,6 +64,10 @@ static int modparam_nohwcrypt;
+> =C2=A0module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
+> =C2=A0MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+>
+> +static int modparam_all_channels;
+> +module_param_named(all_channels, modparam_all_channels, int, 0444);
+> +MODULE_PARM_DESC(all_channels, "Expose all channels the device can u=
+se.");
+> +
+>
+> =C2=A0/******************\
+> =C2=A0* Internal defines *
+> @@ -862,6 +866,20 @@ ath5k_ieee2mhz(short chan)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 2212 + =
+chan * 20;
+> =C2=A0}
+>
+> +/*
+> + * Returns true for the channel numbers user without all_channels mo=
+dparam.
+> + */
+> +static bool ath5k_is_standard_channel(short chan)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 return ((chan <=3D 14) ||
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* UNII 1,2 */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ((chan & 3) =3D=3D=
+ 0 && chan >=3D 36 && chan <=3D 64) ||
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* midband */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ((chan & 3) =3D=3D=
+ 0 && chan >=3D 100 && chan <=3D 140) ||
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* UNII-3 */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ((chan & 3) =3D=3D=
+ 1 && chan >=3D 149 && chan <=3D 165));
+> +}
+> +
+> =C2=A0static unsigned int
+> =C2=A0ath5k_copy_channels(struct ath5k_hw *ah,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ieee802=
+11_channel *channels,
+> @@ -899,6 +917,9 @@ ath5k_copy_channels(struct ath5k_hw *ah,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!ath5k_cha=
+nnel_ok(ah, freq, chfreq))
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0continue;
+>
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (!modparam_all_=
+channels && !ath5k_is_standard_channel(ch))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 continue;
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Write chann=
+el info and increment counter */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0channels[count=
+].center_freq =3D freq;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0channels[count=
+].band =3D (chfreq =3D=3D CHANNEL_2GHZ) ?
 
---=-7803FRsval1j/4bznJom
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Seems fine ;-)
 
-On Fri, 2009-03-20 at 07:29 -0700, Luis R. Rodriguez wrote:
-> On Fri, Mar 20, 2009 at 03:48:56AM -0700, Johannes Berg wrote:
-> > On Thu, 2009-03-19 at 02:41 -0400, Luis R. Rodriguez wrote:
-> > > We weren't checking this at all.
-> >=20
-> > The question is whether we really want that. In other places, we trust
-> > the AP, why not here as well?
->=20
-> Its not about trust its also about if it will logistically make sense, fo=
-r
-> example you simply cannot use HT40- on channel 11 if yuo don't have
-> a channel 7. The NO_HT40- would indicate this to us so we don't bother.
-> The example I give is lousy as its not something that would occur usually
-> but with 5 GHz and regulatory rules changing things could be a bit
-> different.
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Yeah, good point. That's why we need to disassoc from the AP if we
-definitely cannot support it -- we cannot change the APs opinion of our
-HT40 capabilities. Of course, when we start out not supporting it we can
-tell it we don't do HT40.
-
-johannes
-
---=-7803FRsval1j/4bznJom
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxJ8LAAoJEKVg1VMiehFY9YcP/R3f0UIjlC37stU8XwY5EXN/
-hyINyz2gSy65SbNlM6TqEO4y9wAPQD+vdyRsYnP2yiRPCB3LVeQug8HEgDoVjVwi
-e+Ql7IgjasWeTDckrdLEcNo94W/906MyQIDrtXf9czEBJYRi5gcggHxVfS4MCHTO
-VlQ9sSrnw8fJPLg3OAg5zocrgOpRA21yuEEGuoKQ3ITjBIQU6EWwc2vhcfeV7qdg
-276JkD8aQunt2ff/Br5KCFY0StMRSNW5JtPqbyNcQSPs+Ll8rxONGkyjrSMb3P4M
-Z62fa9zN1it0q0VGVonjNEc5afG8i2kzmJ+ll+zZQHVvAMXlxDEgwTn7Cq99kLa8
-H6cRG5LYmQi5CigO1pfE/6NpuSu2d0GGfqXPGFM2K92urNbjnezWTvlH5UB55MB9
-KckB8o2U+Sv6xVWkWJ4win1Y9KSA1Shbree7X6jeTGOZbPz5WwQSpxJXIosDxbZ3
-/zi25fURx8eW+18CoHXFOyOLuDg4LAvb619YAz5uX4tPjt0tmZ60VS/2Lx9rz4yZ
-SVSlFMdI49CL/Ocn/cDvYpL5GoOX+yxfiGV4g2NzEqUIqHXYw9Y6bNPA1nF9QgI5
-qpDDsAq8u1IloR5kEItzKdzyR282NI/shc3d/XqUq2ufJpEKoA4rVLRtM0R0lV6g
-5qqFFUdCqB3gP3T0v4oh
-=WOqt
------END PGP SIGNATURE-----
-
---=-7803FRsval1j/4bznJom--
-
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
