@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:9366 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602AbZCDTTm (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4633 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413AbZC2TlT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 14:19:42 -0500
-Received: by el-out-1112.google.com with SMTP id b25so2572042elf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 11:19:40 -0800 (PST)
+	Sun, 29 Mar 2009 15:41:19 -0400
+Date: Sun, 29 Mar 2009 15:39:00 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+Message-ID: <20090329193900.GA27166@hash.localnet> (sfid-20090329_214129_376797_021FC71D)
+References: <200903242324.33485.chunkeey@web.de> <20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com> <43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com> <43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com> <20090325010626.GA8528@hash.localnet> <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com> <43e72e890903241959x51dc9278oc424bfa85cff9e0f@mail.gmail.com> <43e72e890903242015l449f0835v5602694c735f9b96@mail.gmail.com> <43e72e890903242045n520842c3q9392f75651a6b905@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <3e45db430903040642u421e4ed9tc0718e59cfcb4d7c@mail.gmail.com>
-References: <3e45db430903040642u421e4ed9tc0718e59cfcb4d7c@mail.gmail.com>
-Date: Wed, 4 Mar 2009 14:19:33 -0500
-Message-ID: <3e45db430903041119j49c98896s9762fa07498d416d@mail.gmail.com> (sfid-20090304_201945_231205_3AFC992C)
-Subject: Fwd: Simple question regarding ath5k and 802.11abg card
-From: Sylvain Lamontagne <sylvain.lamontagne@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890903242045n520842c3q9392f75651a6b905@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----------- Forwarded message ----------
-From: Sylvain Lamontagne <sylvain.lamontagne@gmail.com>
-Date: Wed, Mar 4, 2009 at 9:42 AM
-Subject: Simple question regarding ath5k and 802.11abg card
-To: ath5k-devel@lists.ath5k.org
+On Tue, Mar 24, 2009 at 08:45:53PM -0700, Luis R. Rodriguez wrote:
+> > Fixed..
+> >
+> > http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v5.patch.txt
+> 
+> Nope.. no luck, something got messed up along the way... needs a closer look.
 
+So I tested this series and it works fine, with a caveat:
 
-Hi
+Currently, ath5k exposes tons of 5 GHz channels.  In addition to the other
+problems I mentioned in http://marc.info/?l=linux-wireless&m=123825852320853,
+it also essentially breaks with regulatory hints from the driver.  This is
+because because the Atheros world regdomain allows most channels in the
+5 GHz range for passive scanning, whereas the default world regdomain 
+disables many of these.  Consequently, scanning takes long enough that 
+NM/wpa_supplicant bails.
 
-I am currently working with a wifi card cabable of doing 802.11 in a,b
-and g mode using the ath5k driver. But for some acceptance test for a
-product we are developing, we need the card to do only 802.11b and
-802.11g not 802.11a. What is the procedure to tell the card to not
-operate in 802.11a ?
+So, I think the way forward is to include the patch linked above with the
+rest of the series.  Although perhaps the last patch moving ath5k/ath9k etc 
+under the ath/ directory can be put off a while in case people have patches 
+sitting around against the old dir structure.
 
-Thank you
+Anyone who still wants to use all the channels with ath5k can use a custom 
+regd or configure the supplicant to scan the specific channels they are 
+interested in.
 
-Sylvain
+-- 
+Bob Copeland %% www.bobcopeland.com
+
