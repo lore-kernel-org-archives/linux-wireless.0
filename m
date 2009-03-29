@@ -1,76 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56211 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655AbZCYTlL (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4704 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756169AbZC2POO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 15:41:11 -0400
-Subject: Re: [PATCH v4 0/5] mac80211: beacon filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87eiwl1jo2.fsf@litku.valot.fi> (sfid-20090325_203441_242100_4CF900B0)
-References: <20090322195619.26460.48292.stgit@tikku>
-	 <1237900276.4320.86.camel@johannes.local> <87iqly0ydm.fsf@litku.valot.fi>
-	 <1237973445.4320.135.camel@johannes.local>  <87eiwl1jo2.fsf@litku.valot.fi>
-	 (sfid-20090325_203441_242100_4CF900B0)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-d9QzdrPzQDtQTP0XcJ4t"
-Date: Wed, 25 Mar 2009 20:40:31 +0100
-Message-Id: <1238010031.4320.164.camel@johannes.local> (sfid-20090325_204117_704846_3DBB751B)
-Mime-Version: 1.0
+	Sun, 29 Mar 2009 11:14:14 -0400
+Date: Sun, 29 Mar 2009 11:14:01 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090329151401.GA26510@hash.localnet> (sfid-20090329_171418_243064_F8BC4824)
+References: <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com> <20090310004344.GA23466@hash.localnet> <20090312061047.GA13401@silver.sucs.org> <20090313095213.GA14250@silver.sucs.org> <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090329142432.GA15578@sucs.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Mar 29, 2009 at 03:24:32PM +0100, Sitsofe Wheeler wrote:
+> I've been away travelling for the past week and I move house on the 1st
+> April (which will make testing this much harder from then on) but I'll
+> try to get one final test in before the move.
+> 
+> Do you need an ftrace in addition to dmesg for this? If so is it better
+> to leave ieee calls out of the ftrace?
 
---=-d9QzdrPzQDtQTP0XcJ4t
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, thanks - the debug output will be plenty verbose already and should
+tell everything we need to know.
 
-On Wed, 2009-03-25 at 21:34 +0200, Kalle Valo wrote:
-
-> > It has to be dynamic, no? Much of the information in there would be
-> > things wpa_supplicant is only interested in. If it was just the kernel
-> > code -- yes, we could just have a static list somewhere -- but much of
-> > the 11k things for instance are only useful for wpa_supplicant.
->=20
-> But if we already know what wpa_supplicant needs, can't we do the
-> first implementation with a static list? Sure, the dynamic list is
-> something we should aim for.
-
-True. The userspace part is easy to add though, just make it part of the
-assoc() nl80211 command. So we just need the static list for the
-mac80211 part.
-
-> Do we have any knowledge how different hardware support beacon
-> checksumming? I only know how stlc45xx does it.
-
-Not really... how about wl12xx?
-
-johannes
-
---=-d9QzdrPzQDtQTP0XcJ4t
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJyoitAAoJEKVg1VMiehFYdr8P/3moGhghnqmGY5VnqlhM+UQP
-LHSf8VEPN6+Stum83lJItAljyWOFDLnatpaAiqbAa+gj92l0ZS+U/5hXBRkHsVVk
-+PmLPy+niUs+bkH0zetLR1ECrSrjT67+CRD2Fj2lMvxSRBohS7VCmiV/Tavc4f2x
-QG9HO5lttQz3CM7CSN/JUzS0HtFyPUr2tVO0Pr7d3E9Uhchj5MRToh+336qGp0TD
-cZwtfZjHWFl7KDPgdeTMtD4K4unFCWnpjY4Ak9UlIJbyOcvB0R2VgCaybmbqQrP4
-S0F5ZVpdz2v8H0CRd+H2sgsU+LomoDaj49F4wVOdMwWn7rt4b4y8/lNbla8pb24z
-E8UbNll2RYBbRueR3W7w1e9czUCn9BJCQuesI2WUxGa/pl/6nOEnzMZ9+Hoeno9D
-WyRNCmXBLdOY+lBFJuebbpMWK8TBpE3FmMA1mnG3jy+sTa/KIwxqUKZnhwIFTy3G
-JyBmpIXwgz915y/YwVln4pucsQezlTYysEBvAel8ahW/Te+t0WM0PDpeR7l3Wfcw
-JiVRomU0Egf1CnlF8slvlY1P0FhCmBocnM2lh7Q8YnT9A0Ai9jizRQ8IPkGRXmzV
-iTZ/SQPKr4Uu3E5PT7WqiCP2nNMr2YfvAAz7uwzh+0YwKMBpQ1+4ajJRM6JK9Zk1
-t02x2NpEyEZtYkgKemB6
-=qU05
------END PGP SIGNATURE-----
-
---=-d9QzdrPzQDtQTP0XcJ4t--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
