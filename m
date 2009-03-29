@@ -1,122 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:49360 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753973AbZCWAhJ (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:37981 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756519AbZC2VXL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 20:37:09 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1562973qwh.37
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 17:37:06 -0700 (PDT)
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <c4d76b3b0903221029r21282bbbs13a8af06f9d8ce2@mail.gmail.com>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <1236649234.6685.9.camel@rainbow> <1236661466.15923.53.camel@rc-desk>
-	 <1236742805.6267.9.camel@rainbow>
-	 <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com>
-	 <c4d76b3b0903160510i5afc6cd6t856b63383a275fca@mail.gmail.com>
-	 <1237254243.13077.33.camel@rainbow> <1237427568.6943.13.camel@rainbow>
-	 <c4d76b3b0903191822l5494f268h395acc4a14608239@mail.gmail.com>
-	 <1237581564.21165.5.camel@abhi-desktop>
-	 <c4d76b3b0903221029r21282bbbs13a8af06f9d8ce2@mail.gmail.com>
-Content-Type: text/plain
-Date: Sun, 22 Mar 2009 20:37:01 -0400
-Message-Id: <1237768621.8764.13.camel@rainbow> (sfid-20090323_013715_377932_93011D77)
-Mime-Version: 1.0
+	Sun, 29 Mar 2009 17:23:11 -0400
+Received: by ewy9 with SMTP id 9so1816368ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 14:23:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200903292204.44260.rossi.f@inwind.it>
+References: <20090315202035.GC5246@makis>
+	 <200903292109.55033.rossi.f@inwind.it>
+	 <40f31dec0903291335j2befd3b4r1b4f4619ae634113@mail.gmail.com>
+	 <200903292204.44260.rossi.f@inwind.it>
+Date: Mon, 30 Mar 2009 00:23:07 +0300
+Message-ID: <40f31dec0903291423s384a98b5l8f86b317aeb5c9a4@mail.gmail.com> (sfid-20090329_232330_178819_C7F88B85)
+Subject: Re: [PATCH 3/3] ath5k: Add tx power calibration support
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-03-22 at 13:29 -0400, Jason Andryuk wrote:
-> The patch did not work.
-> 
-> However, I do not think it's an alignment issue.
-> 
-> pci_map_single on x86_64 with >3G memory and no IOMMU uses the swiotlb
-> by default.  swiotlb provides "bounce buffers" for physical addresses
-> over 4GB.  So for memory where the kmalloc value is at a physical
-> address over 2**32, pci_map_single will copy to a swiotlb slot.  That
-> means the dma_handle return value of pci_map_single is not necessarily
-> the physical address of the virtual address.
-> 
-> In iwl3945_tx_skb (iwl3945-base.c line 1099) use the pci_map_single
-> which copies the memory of out_cmd at that time.  However,
-> iwl3945_build_tx_cmd_basic, iwl3945_hw_build_tx_cmd_rate, and
-> iwl3945_build_tx_cmd_hwcrypto are all passed out_cmd and modify memory
-> located there.  These modifications are not reflected in the memory
-> located at txcmd_phys.
-> 
-> pci_map_single should only be called once the tx command structures
-> are completely written.
-> 
-> Additionally, pci_unmap_single should be called once the memory is no
-> longer needed to free the swiotlb entry for that command.  I am not
-> sure if this is currently handled for all cases.
-> 
-> Previous use of pci_alloc_coherent meant that memory would allocated
-> at an physical address below 4GB and kept in-sync both the device and
-> cpu.
-> 
-> Refer to Documentation/x86/x86_64/boot-options.txt and lib/swiotlb.c
-> for information on IOMMU and swiotlb
-> 
-> Jason
+2009/3/29 Fabio Rossi <rossi.f@inwind.it>:
+> On Sunday 29 March 2009, Nick Kossifidis wrote:
+>
+>> I can understand how this patch may have resulted a noise floor
+>> calibration timeout but i can't understand how it broke everything
+>> else. I've tested it with a very similar card (same MAC and PHY chips
+>> but from a different vendor) and it worked just fine. Also i know
+>> there is still something more to fix for RF5112 while setting rf
+>> buffer settings and we have 2 curves but i don't think that's related.
+>
+> I was using wireless-testing when I have experienced the problem. Then after
+> the bisectioning procedure I removed the entire patch solving the problem with
+> the authentication-association process.
+>
+> Does also your board support 802.11abg? I don't understand why the noise
+> calibration process remains stuck @ 5.18GHz.
+>
 
-I hacked up an inelegant patch that does get the driver working.
+Yup i have exactly the same phy chip as you.
 
-We call pci_dma_sync_single_for_device to ensure the correct contents
-are visible to the device.  That is, we copy out_cmd to phys_addr, so
-the desired contents are viewable for the device.
+> Is it possible to split your patch in shorter pieces to isolate the problem?
+>
 
-I tried moving the pci_map_single call to right before the call to
-iwl_txq_update_write_ptr, but I never got that working successfully.
-Presumably that is how the problem should be fixed.  Another failed
-attempt was to map from "out_cmd + offsetof(struck iwl_cmd, hdr)"
-instead of out_cmd.  The phys_addr + offsetof(struck iwl_cmd, hdr) is
-what is passed to txq_attach_buf_to_tfd, so I thought that should work.
-Unfortunately it did not.  The added benefit would have been that it
-moved "len" and "mapping" of struct iwl_cmd_meta out of the mapped area.
-Then losing them since they were written after the mapping would not
-have been a problem. 
+This patch introduces a function (and some helpers) to set 2 tables on
+hardware, it doesn't mess with the rest of the driver. I've tested it
+both on sta and ap scenarios with all the cards i have available and
+it worked fine. If you want to make more tests just disable parts of
+hw_txpower on phy.c, you can start by commenting out everything  below
 
-If struct iwl_cmd_meta's len and mapping members are read by one of the
-"reclaim" functions, then they should probably be sync'ed with
-pci_dma_sync_single_for_cpu beforehand.
+ath5k_setup_rate_powertable(ah, txpower, &rate_info, ee_mode);
 
-Jason
+to skip the setting of tx power, if you comment out the whole function
+you'll disable the functionality that this patch adds.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index b13862a..8ec26c7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -975,6 +975,9 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	pci_unmap_len_set(&out_cmd->meta, len, len);
- 	phys_addr += offsetof(struct iwl_cmd, hdr);
- 
-+	pci_dma_sync_single_for_device(priv->pci_dev, phys_addr,
-+				   len, PCI_DMA_BIDIRECTIONAL);
-+
- 	priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
- 						   phys_addr, fix_size, 1,
- 						   U32_PAD(cmd->len));
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 279d10c..a32ee4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1151,6 +1151,12 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	iwl_print_hex_dump(priv, IWL_DL_TX, (u8 *)tx->hdr,
- 			   ieee80211_hdrlen(fc));
- 
-+	pci_dma_sync_single_for_device(priv->pci_dev,
-+				    txcmd_phys, sizeof(struct iwl_cmd),
-+				    PCI_DMA_TODEVICE);
-+	pci_dma_sync_single_for_device(priv->pci_dev, phys_addr,
-+					   skb->len - hdr_len,
-+				PCI_DMA_TODEVICE);
- 	/* Tell device the write index *just past* this latest filled TFD */
- 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
- 	rc = iwl_txq_update_write_ptr(priv, txq);
+>> This is even more weird, do you have an SMP system ? That warning you
+>> get is from the periodic calibration function, it seems you run this
+>> function too often...
+>
+> Unfortunately I don't have a SMP system but a very old processor, an Athlon
+> Thunderbird 900MHz :-( I have to manually reboot the system (hardware button,
+> the software procedure doesn't work).
+>
 
+My initial thought was that one of the cpus was stuck, running the
+calibration function again and again which would result what you
+describe.
+
+Check this out...
+
+Mar 29 11:08:45 kernel: udev: renamed network interface wlan0 to ath0
+Mar 29 11:09:03 kernel: ath5k phy0: noise floor calibration timeout (5180MHz)
+Mar 29 11:09:36 last message repeated 3 times
+Mar 29 11:10:43 last message repeated 6 times
+Mar 29 11:11:48 last message repeated 6 times
+Mar 29 11:12:54 last message repeated 6 times
+Mar 29 11:14:00 last message repeated 6 times
+Mar 29 11:15:06 last message repeated 6 times
+Mar 29 11:16:12 last message repeated 6 times
+
+Calibration functions runs almost 6 times /min which makes sense (we
+run it each 10 secs) but...
+
+a) It always fails
+b) It's always called with the same channel
+
+> Tell me if you need other information, I'll test possible patches to solve the
+> problem.
+
+How about scanning or monitor mode, does it work ?
+
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
