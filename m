@@ -1,59 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41013 "EHLO mga01.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:58717 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751575AbZCIULq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 16:11:46 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Kevin Wilson <wkevils@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 9 Mar 2009 13:11:43 -0700
-Subject: RE: Packet aggregation in iwlwifi drivers
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A353F74F532@orsmsx506.amr.corp.intel.com> (sfid-20090309_211149_962841_B474D774)
-References: <55c333c0903090134o4c6c65b7v4bf0674971f9156c@mail.gmail.com>
-In-Reply-To: <55c333c0903090134o4c6c65b7v4bf0674971f9156c@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1753288AbZC2LYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Mar 2009 07:24:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: Do not "select" HW_RANDOM
+Date: Sun, 29 Mar 2009 13:19:31 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903291319.31484.mb@bu3sch.de> (sfid-20090329_132425_022514_C11156C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You are correct, iwlwifi driver will handle enable the h/w aggregation queue and based on the ampdu_action() and other condition such as sequence# to decide which queue the pkt shall belong to. All the real aggregation works are performed in the firmware.
+Auto-depend on HW_RANDOM, rather than "select"ing it.
+This way the user has the choice to enable or disable HWRNG support.
 
-Wey-Yi Guy
-Intel Corporation
-2111 N.E. 25th Avenue  M/S JF3-308                 
-Hillsboro OR 97124-5961
-USA
-Work Phone: 503-264-6023 (OR)
-Cell Phone: 503-329-8410
-Email: wey-yi.w.guy@intel.com
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, please queue for the next feature release.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/Kconfig	2009-03-29 13:08:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/Kconfig	2009-03-29 13:08:21.000000000 +0200
+@@ -3,7 +3,6 @@ config B43
+ 	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && HAS_DMA
+ 	select SSB
+ 	select FW_LOADER
+-	select HW_RANDOM
+ 	---help---
+ 	  b43 is a driver for the Broadcom 43xx series wireless devices.
  
+@@ -106,6 +105,13 @@ config B43_RFKILL
+ 	depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT && (INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
+ 	default y
+ 
++# This config option automatically enables b43 HW-RNG support,
++# if the HW-RNG core is enabled.
++config B43_HWRNG
++	bool
++	depends on B43 && (HW_RANDOM = y || HW_RANDOM = B43)
++	default y
++
+ config B43_DEBUG
+ 	bool "Broadcom 43xx debugging"
+ 	depends on B43
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2009-03-29 13:08:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2009-03-29 13:08:21.000000000 +0200
+@@ -625,9 +625,11 @@ struct b43_wl {
+ 	/* Stats about the wireless interface */
+ 	struct ieee80211_low_level_stats ieee_stats;
+ 
++#ifdef CONFIG_B43_HWRNG
+ 	struct hwrng rng;
+-	u8 rng_initialized;
++	bool rng_initialized;
+ 	char rng_name[30 + 1];
++#endif /* CONFIG_B43_HWRNG */
+ 
+ 	/* The RF-kill button */
+ 	struct b43_rfkill rfkill;
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-03-29 13:08:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-03-29 13:09:40.000000000 +0200
+@@ -2980,6 +2980,7 @@ static void b43_security_init(struct b43
+ 	b43_clear_keys(dev);
+ }
+ 
++#ifdef CONFIG_B43_HWRNG
+ static int b43_rng_read(struct hwrng *rng, u32 *data)
+ {
+ 	struct b43_wl *wl = (struct b43_wl *)rng->priv;
+@@ -2995,17 +2996,21 @@ static int b43_rng_read(struct hwrng *rn
+ 
+ 	return (sizeof(u16));
+ }
++#endif /* CONFIG_B43_HWRNG */
+ 
+ static void b43_rng_exit(struct b43_wl *wl)
+ {
++#ifdef CONFIG_B43_HWRNG
+ 	if (wl->rng_initialized)
+ 		hwrng_unregister(&wl->rng);
++#endif /* CONFIG_B43_HWRNG */
+ }
+ 
+ static int b43_rng_init(struct b43_wl *wl)
+ {
+-	int err;
++	int err = 0;
+ 
++#ifdef CONFIG_B43_HWRNG
+ 	snprintf(wl->rng_name, ARRAY_SIZE(wl->rng_name),
+ 		 "%s_%s", KBUILD_MODNAME, wiphy_name(wl->hw->wiphy));
+ 	wl->rng.name = wl->rng_name;
+@@ -3018,6 +3023,7 @@ static int b43_rng_init(struct b43_wl *w
+ 		b43err(wl, "Failed to register the random "
+ 		       "number generator (%d)\n", err);
+ 	}
++#endif /* CONFIG_B43_HWRNG */
+ 
+ 	return err;
+ }
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Kevin Wilson
-Sent: Monday, March 09, 2009 1:35 AM
-To: linux-wireless@vger.kernel.org
-Subject: Packet aggregation in iwlwifi drivers
-
-Hello,
-- I have a short question about packet aggregation in iwlwifi drivers which
-support 802.11n:
-Is packet aggregation in these drivers performed by the firmware ?
-
-I noticed that the ampdu_action() function is implemented by
-iwl_mac_ampdu_action()
-in these drivers; but as far as I can find, only the operations of
-start/stop tx and rx aggregation
-are implemented in the driver, so I guess that the aggregation of MPDU packets
-(concatenating them into a single block, sending BAR - block
-acknowledge request,
-sending the block containing aggregated MPDUs, and so on) are
-implemented in firmware. Is it so ?
-
-
-Regards,
-Kevin
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Greetings, Michael.
