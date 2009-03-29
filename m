@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from col0-omc4-s4.col0.hotmail.com ([65.55.34.206]:34698 "EHLO
-	col0-omc4-s4.col0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752391AbZCPPEH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 11:04:07 -0400
-Message-ID: <COL113-W3112753E5580938034189ECB9B0@phx.gbl> (sfid-20090316_160410_610221_2DFA95B0)
-From: Adrian Bassett <adrian.bassett@hotmail.co.uk>
-To: <larry.finger@lwfinger.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: rtl8180 Bit Rate regression in 2.6.29
-Date: Mon, 16 Mar 2009 15:04:06 +0000
-In-Reply-To: <49BE64CF.8020407@lwfinger.net>
-References: <COL113-W348B209977311F6BB460ADCB9B0@phx.gbl>
- <49BE64CF.8020407@lwfinger.net>
-Content-Type: text/plain; charset=Windows-1252
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:44187 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753244AbZC2XPh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Mar 2009 19:15:37 -0400
+Received: by ewy9 with SMTP id 9so1839996ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 16:15:35 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <40f31dec0903291613w6b6520a5ucf8daeede7a6ae0@mail.gmail.com>
+References: <200903241938.47155.chunkeey@web.de>
+	 <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com>
+	 <20090324184100.GA29268@tesla>
+	 <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com>
+	 <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com>
+	 <1237926664.4320.131.camel@johannes.local>
+	 <43e72e890903241504u4dfb5c76kbcb11a096bba72fc@mail.gmail.com>
+	 <20090328163929.GA24075@hash.localnet>
+	 <40f31dec0903291613w6b6520a5ucf8daeede7a6ae0@mail.gmail.com>
+Date: Mon, 30 Mar 2009 02:15:34 +0300
+Message-ID: <40f31dec0903291615g73443eccpf2e41efc7460104@mail.gmail.com> (sfid-20090330_011541_850284_AE31998C)
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/3/30 Nick Kossifidis <mickflemm@gmail.com>:
+> 2009/3/28 Bob Copeland <me@bobcopeland.com>:
+>> On Tue, Mar 24, 2009 at 03:04:59PM -0700, Luis R. Rodriguez wrote:
+>>> >> > Channel list is a good hint, maybe
+>>> >> > it's time to fix iw/nl80211 to send back all the channels :)
+>>> >
+>>> > I looked into yesterday actually, and it's completely non-trivial=
+ and
+>>> > requires userspace interface changes.
+>>>
+>>> Heh, there goes that idea then. Then in that case I'd advocate even
+>>> more trimming the channels down.
+>>
+>> Nick, what do you think of this? =C2=A0I think it's the best comprom=
+ise
+>> for now - people can still get all the channels, normal users get a
+>> nice speedup in the default case.
+>>
 
+By the way it would be nice if you could also clean up CHANNEL_DEBUG
+stuff from ath5k.h etc ;-)
 
-Thanks for the quick response.
-
-I already use git and kernel source from kernel.org so I'll branch out,=
- follow the bisect instructions in git man/docs, and see what I can com=
-e up with ...
-
-Adrian Bassett
-
-> Date: Mon, 16 Mar 2009 09:40:15 -0500
-> From: Larry.Finger@lwfinger.net
-> To: adrian.bassett@hotmail.co.uk
-> CC: linux-wireless@vger.kernel.org
-> Subject: Re: rtl8180 Bit Rate regression in 2.6.29
->=20
-> Adrian Bassett wrote:
->>=20
->> (I'm not currently subscribed so please Cc: in any response ...)
->>=20
->> Using PCI device 1799:700f and the rtl8180 kernel wireless driver.
->>=20
->> With the vanilla 2.6.29-rc releases (rc8 most recently but also with=
- predecessors) I've noticed that the Bit Rate of my wireless device app=
-ears to be more or less fixed at 1 Mb/s.  Occasionally, iwconfig report=
-s higher values but, as the stats below show, no attempts are successfu=
-l at higher Bit Rates with this kernel version.
->>=20
->> With the 2.6.28 series, however, the Bit Rate will vary in the norma=
-l way, with the majority of the network activity happening at the highe=
-r end, if not the highest(54 Mb /s) point, of the range supported by th=
-is device.
->=20
-> It would be immensely helpful if you, or someone else with this hardw=
-are and the
-> problem, could use git to download the mainline tree and find the bad=
- commit
-> using bisection. In a review of the commit log, I found only one chan=
-ge in the
-> rtl8180 code in the 2.6.28 to 2.6.29-rcX range, and without it the rt=
-l8180 would
-> not work at all. As a result, I cannot suggest a trial patch.
->=20
-> My system says that there are 6172 commits between 2.6.29-rc8 and 2.6=
-=2E28, thus
-> it will take roughly 13 kernel builds to bisect the problem.
->=20
-> Larry
-
-_________________________________________________________________
-View your Twitter and Flickr updates from one place =96 Learn more!
-http://clk.atdmt.com/UKM/go/137984870/direct/01/--
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
 the body of a message to majordomo@vger.kernel.org
