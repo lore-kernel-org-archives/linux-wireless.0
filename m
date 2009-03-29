@@ -1,164 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:50293 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756945AbZCCEbJ convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:54838 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400AbZC2I3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 23:31:09 -0500
+	Sun, 29 Mar 2009 04:29:42 -0400
+Message-ID: <49CF316D.6040903@gmail.com> (sfid-20090329_102948_646672_C1A47529)
+Date: Sun, 29 Mar 2009 10:29:33 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20090303034600.GA3757@hash.localnet>
-References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com>
-	 <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com>
-	 <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com>
-	 <49A726A7.6090809@gmail.com> <20090227022704.GA29850@hash.localnet>
-	 <20090227023912.GF13456@tesla> <20090227030608.GA29974@hash.localnet>
-	 <1235884912.9224.26.camel@mj> <20090303034600.GA3757@hash.localnet>
-Date: Tue, 3 Mar 2009 06:31:05 +0200
-Message-ID: <40f31dec0903022031l20ecc3dcx9ba7859cb24fa5ae@mail.gmail.com> (sfid-20090303_053118_311360_5FD0F6A7)
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: Paul Collins <paul@burly.ondioline.org>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: soft lockup apparently in ath5k_hw_update_mib_counters (or ioread32?)
+ with 2.6.29
+References: <87tz5ckfye.fsf@burly.wgtn.ondioline.org>
+In-Reply-To: <87tz5ckfye.fsf@burly.wgtn.ondioline.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/3/3 Bob Copeland <me@bobcopeland.com>:
-> On Sun, Mar 01, 2009 at 12:21:52AM -0500, Pavel Roskin wrote:
->> I would prefer that we don't hide problems.
->>
->> If we don't know why we cannot get a valid rate, we should use WARN_=
-ON
->> and find out why and when it happens. =C2=A0I'm fine with using a bo=
-gus rate
->> with WARN_ON.
->
-> So here is at least stage one of this, not yet the global "unknown ra=
-te"
-> infrastructure, but hopefully it will allow us to track down the issu=
-e.
->
-> It makes hw_to_driver_rix a little uglier, but oh well. =C2=A0Thought=
-s?
->
-> From: Bob Copeland <me@bobcopeland.com>
-> Date: Mon, 2 Mar 2009 21:55:18 -0500
-> Subject: [PATCH] ath5k: warn and correct rate for unknown hw rate ind=
-exes
->
-> ath5k sets up a mapping table from the hardware rate index to
-> the rate index used by mac80211; however, we have seen some
-> received frames with incorrect rate indexes. =C2=A0Such frames
-> normally get dropped with a warning in __ieee80211_rx(), but the
-> warning doesn't include enough context to track down the error.
->
-> This patch adds a warning to hw_to_driver_rix for any lookups
-> that result in a rate index of -1, then returns a valid rate so
-> the frame can be processed.
->
-> This also includes the bug fix suggested by Pavel Roskin, in which
-> the mapping table is made signed, so rates initialized to -1 stay
-> that way.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
-> =C2=A0drivers/net/wireless/ath5k/base.c | =C2=A0 15 ++++++++++++---
-> =C2=A0drivers/net/wireless/ath5k/base.h | =C2=A0 =C2=A02 +-
-> =C2=A02 files changed, 13 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless=
-/ath5k/base.c
-> index f7c424d..8d4b11c 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1100,9 +1100,18 @@ ath5k_mode_setup(struct ath5k_softc *sc)
-> =C2=A0static inline int
-> =C2=A0ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
-> =C2=A0{
-> - =C2=A0 =C2=A0 =C2=A0 WARN(hw_rix < 0 || hw_rix >=3D AR5K_MAX_RATES,
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 "hw_rix out of bounds: %x\n", hw_rix);
-> - =C2=A0 =C2=A0 =C2=A0 return sc->rate_idx[sc->curband->band][hw_rix]=
-;
-> + =C2=A0 =C2=A0 =C2=A0 int rix;
-> +
-> + =C2=A0 =C2=A0 =C2=A0 /* return base rate on errors */
-> + =C2=A0 =C2=A0 =C2=A0 if (WARN(hw_rix < 0 || hw_rix >=3D AR5K_MAX_RA=
-TES,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 "hw_rix out of bounds: %x\n", hw_rix))
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 0;
-> +
-> + =C2=A0 =C2=A0 =C2=A0 rix =3D sc->rate_idx[sc->curband->band][hw_rix=
-];
-> + =C2=A0 =C2=A0 =C2=A0 if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_r=
-ix))
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 rix =3D 0;
-> +
-> + =C2=A0 =C2=A0 =C2=A0 return rix;
-> =C2=A0}
->
-> =C2=A0/***************\
-> diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless=
-/ath5k/base.h
-> index 20e0d14..8229561 100644
-> --- a/drivers/net/wireless/ath5k/base.h
-> +++ b/drivers/net/wireless/ath5k/base.h
-> @@ -112,7 +112,7 @@ struct ath5k_softc {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ieee80211_supported_band sbands[IEE=
-E80211_NUM_BANDS];
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ieee80211_channel channels[ATH_CHAN=
-_MAX];
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ieee80211_rate =C2=A0 rates[IEEE802=
-11_NUM_BANDS][AR5K_MAX_RATES];
-> - =C2=A0 =C2=A0 =C2=A0 u8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_R=
-ATES];
-> + =C2=A0 =C2=A0 =C2=A0 s8 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_R=
-ATES];
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0enum nl80211_iftype =C2=A0 =C2=A0 opmode;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ath5k_hw =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- *ah; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Atheros HW */
->
-> --
-> 1.6.0.6
->
+On 03/29/2009 08:20 AM, Paul Collins wrote:
+> After about two days of uptime with 2.6.29 I got this:
+> 
+> BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
+> Modules linked in: ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables vfat fat usb_storage sch_sfq i915 drm i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect btusb rfcomm hidp l2cap bluetooth tun cpufreq_stats rpcsec_gss_krb5 nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc fuse cbc aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod fbcon font bitblit softcursor fb kvm_intel kvm acpi_cpufreq firewire_sbp2 loop snd_hda_intel snd_pcm arc4 snd_seq_midi snd_rawmidi ecb snd_seq_midi_event snd_seq snd_timer ath5k snd_seq_device snd mac80211 soundcore firewire_ohci firewire_core thermal snd_page_alloc cfg80211 i2c_i801 crc_itu_t button processor evdev
+> CPU 0:
+> Modules linked in: ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables vfat fat usb_storage sch_sfq i915 drm i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect btusb rfcomm hidp l2cap bluetooth tun cpufreq_stats rpcsec_gss_krb5 nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc fuse cbc aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod fbcon font bitblit softcursor fb kvm_intel kvm acpi_cpufreq firewire_sbp2 loop snd_hda_intel snd_pcm arc4 snd_seq_midi snd_rawmidi ecb snd_seq_midi_event snd_seq snd_timer ath5k snd_seq_device snd mac80211 soundcore firewire_ohci firewire_core thermal snd_page_alloc cfg80211 i2c_i801 crc_itu_t button processor evdev
+> Pid: 0, comm: swapper Not tainted 2.6.29-00003-g0be8685 #163 Macmini2,1
+> RIP: 0010:[<ffffffff803950f0>]  [<ffffffff803950f0>] ioread32+0xf/0x32
 
-Another thought...
+Huh. I see no reason for this to happen. I suppose this is a regression,
+which kernel worked?
 
-According to docs the rate field is only valid if more flag is clear
-(we have the last descriptor) and only if the receive ok flag is set
-or both receive ok and phy error flags are cleared. We never do such
-checks so we might actually try to process this field when we already
-know we shouldn't...
+There is nothing like "too many interrupts, giving up for now" in dmesg,
+right?
 
-Also the following rate codes are reserved (except XR codes that we
-already know):
+> RSP: 0018:ffffffff807dfc30  EFLAGS: 00000296
+> RAX: 0000000000000000 RBX: ffffffff807dfc30 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: ffff88007cb51a68 RDI: ffffc200109e8094
+> RBP: ffffffff8020d033 R08: ffffffff8070a600 R09: 0000000000000064
+> R10: ffffffff807dfd60 R11: ffff88007cb51980 R12: ffffffff807dfbb0
+> R13: ffff88007c916000 R14: 000000000076b647 R15: ffffffff8051966c
+> FS:  0000000000000000(0000) GS:ffffffff807e8000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 00007feefddbb0d0 CR3: 000000007a74e000 CR4: 00000000000026e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Call Trace:
+>  <IRQ>  [<ffffffffa009a884>] ? ath5k_hw_update_mib_counters+0xd9/0x15a [ath5k]
+>  [<ffffffffa00a0707>] ? ath5k_intr+0x24c/0x2bd [ath5k]
+>  [<ffffffff8021dcfb>] ? lapic_timer_broadcast+0x18/0x1a
+>  [<ffffffff8025f22c>] ? tick_handle_oneshot_broadcast+0xf3/0x101
+>  [<ffffffff80278e07>] ? handle_IRQ_event+0x33/0x6a
+>  [<ffffffff8027a248>] ? handle_fasteoi_irq+0x9b/0xe0
+>  [<ffffffff8027a1a3>] ? handle_edge_irq+0x126/0x130
+>  [<ffffffff80519565>] ? __irqentry_text_start+0x75/0xe9
+>  [<ffffffff8020cdd3>] ? ret_from_intr+0x0/0x29
+>  [<ffffffff804a6b19>] ? neigh_timer_handler+0x0/0x31b
+>  [<ffffffff8024a038>] ? round_jiffies_common+0x28/0x5a
+>  [<ffffffff804a593e>] ? neigh_periodic_timer+0x146/0x191
+>  [<ffffffff8024a0b5>] ? round_jiffies+0x18/0x1a
+>  [<ffffffff804a5955>] ? neigh_periodic_timer+0x15d/0x191
+>  [<ffffffff804a57f8>] ? neigh_periodic_timer+0x0/0x191
+>  [<ffffffff8024a4e7>] ? run_timer_softirq+0x19c/0x21d
+>  [<ffffffff8024679a>] ? __do_softirq+0x8f/0x159
+>  [<ffffffff8020d65c>] ? call_softirq+0x1c/0x28
+>  [<ffffffff8020e6f1>] ? do_softirq+0x49/0x94
+>  [<ffffffff8024647c>] ? irq_exit+0x44/0x7e
+>  [<ffffffff805195b8>] ? __irqentry_text_start+0xc8/0xe9
+>  [<ffffffff8020cdd3>] ? ret_from_intr+0x0/0x29
+>  <EOI>  [<ffffffff80260174>] ? tick_nohz_restart_sched_tick+0x140/0x149
+>  [<ffffffff80260146>] ? tick_nohz_restart_sched_tick+0x112/0x149
+>  [<ffffffff8020b2d0>] ? cpu_idle+0x98/0x9f
+>  [<ffffffff80501157>] ? rest_init+0x6b/0x6d
+> 
+> Hardware:
+> 
+>         ath5k phy0: Atheros AR5414 chip found (MAC: 0xa3, PHY: 0x61)
+> 
+> 02:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter [168c:001c] (rev 01)
+> 	Subsystem: Apple Computer Inc. Device [106b:0086]
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Latency: 0, Cache Line Size: 256 bytes
+> 	Interrupt: pin A routed to IRQ 17
+> 	Region 0: Memory at 90100000 (64-bit, non-prefetchable) [size=64K]
+> 	Capabilities: <access denied>
+> 	Kernel driver in use: ath5k
+> 
 
-0x00
-0x04 -> the short preamble flag
-0x05
-0x10 - 0x17
-0x1f
-
-and i don't believe i've ever seen them, so we can warn on them too
-and print something like "Reserved rate code: %x", also it would be
-nice to warn on XR rates (1,2,3,6,7) in case we want to debug this in
-the future.
-
-
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
