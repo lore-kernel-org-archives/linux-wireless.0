@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28010 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761054AbZCSV4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 17:56:42 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 14:56:40 -0700
-Date: Thu, 19 Mar 2009 13:56:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/6] Use the regulatory bandwidth and export HT40
-	stuff
-Message-ID: <20090319205602.GC14753@tesla> (sfid-20090319_225704_776518_0BCCD2F8)
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com> <1237491647.5100.114.camel@johannes.local> <43e72e890903191328j15a53a5au1f0162e53daa2a14@mail.gmail.com> <1237498852.5100.121.camel@johannes.local> <20090319204406.GA14753@tesla> <1237499211.5100.123.camel@johannes.local>
+Received: from mail-gx0-f160.google.com ([209.85.217.160]:63008 "EHLO
+	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036AbZC3Q6b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 12:58:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1237499211.5100.123.camel@johannes.local>
+In-Reply-To: <20090330085952.GB3837@linux.vnet.ibm.com>
+References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com>
+	 <1231338965-796-1-git-send-email-jirislaby@gmail.com>
+	 <20090107152208.GB4207@linux.vnet.ibm.com>
+	 <4964CAAA.3040801@gmail.com>
+	 <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com>
+	 <20090215134702.GA10180@hash.localnet> <49A9C3D7.8060706@gmail.com>
+	 <20090330085952.GB3837@linux.vnet.ibm.com>
+Date: Mon, 30 Mar 2009 12:58:28 -0400
+Message-ID: <b6c5339f0903300958m587cde69o44ae24d0609228ba@mail.gmail.com> (sfid-20090330_185835_437055_6E78A7CA)
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+From: Bob Copeland <me@bobcopeland.com>
+To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Dhaval Giani <dhaval.lists@thegianis.in>,
+	linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 02:46:51PM -0700, Johannes Berg wrote:
-> On Thu, 2009-03-19 at 13:44 -0700, Luis R. Rodriguez wrote:
-> > On Thu, Mar 19, 2009 at 02:40:52PM -0700, Johannes Berg wrote:
-> > > On Thu, 2009-03-19 at 13:28 -0700, Luis R. Rodriguez wrote:
-> > > > On Thu, Mar 19, 2009 at 12:40 PM, Johannes Berg
-> > > > <johannes@sipsolutions.net> wrote:
-> > > > > John,
-> > > > >
-> > > > > please back out this series, I'm not sure I agree with the concept and
-> > > > > I'm sure there are potential bugs that can make it segfault.
-> > > > 
-> > > > Can you be more elaborate?
-> > > 
-> > > reg_process_ht_flags_channel doesn't initialise channel_before and
-> > > channel_after.
-> > 
-> > I can fix that, two lines.
-> 
-> I know, but I wouldn't want having bug reports from this code until John
-> gets to merging again :)
+On Mon, Mar 30, 2009 at 4:59 AM, Dhaval Giani <dhaval@linux.vnet.ibm.com> wrote:
+> Where is the fix? Is it merged in? I still see this happen on 2.6.29
+>
+> thanks,
 
-Absolutely.
+It's in b726604706ad88d8b28bc487e45e710f58cc19ee in Linus' tree, after
+2.6.29.  You still might get a warning, but this time from the driver
+side instead of higher up the stack -- if you do please post it.
 
-  Luis
+-- 
+Bob Copeland %% www.bobcopeland.com
