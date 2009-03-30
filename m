@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51807 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56333 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753089AbZCUMqj (ORCPT
+	with ESMTP id S1750873AbZC3V1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 08:46:39 -0400
-Subject: Re: [RFC PATCH v3 5/5] mac80211: add beacon filtering support
+	Mon, 30 Mar 2009 17:27:25 -0400
+Subject: Re: [RFC] rfkill: rewrite
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R.Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <20090321120930.11613.15570.stgit@tikku>
-References: <20090321120558.11613.56299.stgit@tikku>
-	 <20090321120930.11613.15570.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m/QlDTbtoFutU+9eJVNc"
-Date: Sat, 21 Mar 2009 13:46:32 +0100
-Message-Id: <1237639592.5100.182.camel@johannes.local> (sfid-20090321_134710_825766_1897078D)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <20090330211513.GF23749@khazad-dum.debian.net>
+References: <1238349195.24972.5.camel@johannes.local>
+	 <20090330211513.GF23749@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QFT2ls9tC2WXKx+VTfup"
+Date: Mon, 30 Mar 2009 23:26:43 +0200
+Message-Id: <1238448403.5970.50.camel@johannes.local> (sfid-20090330_232727_336642_82F7A7E5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-m/QlDTbtoFutU+9eJVNc
+--=-QFT2ls9tC2WXKx+VTfup
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-03-21 at 14:09 +0200, Kalle Valo wrote:
+On Mon, 2009-03-30 at 18:15 -0300, Henrique de Moraes Holschuh wrote:
+> So, far, it looks quite good.  A few initial comments that I want to get =
+out
+> ASAP (I am bound to have many more after I take a first try at convert
+> thinkpad-acpi to the new API).
 
-> +/**
-> + * ieee80211_beacon_loss - inform hardware does not receive beacons
-> + *
-> + * @hw: pointer as obtained from ieee80211_alloc_hw()
-> + * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_co=
-nf.
-> + *
-> + * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING a=
-nd
-> + * IEEE80211_CONF_PS is set, the driver needs to inform whenever the
-> + * hardware is not receiving beacons with this function.
-> + */
-> +void ieee80211_beacon_loss(struct ieee80211_hw *hw,
-> +			   struct ieee80211_vif *vif);
-
-Strictly speaking there's no need to pass both since the mac80211 sdata
-can be obtained from vif and that has a pointer to local, but it doesn't
-really matter.
+Eh, btw, I've been working on it -- look at
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-rfkill-rewri=
+te.patch (updated frequently)
 
 johannes
 
---=-m/QlDTbtoFutU+9eJVNc
+--=-QFT2ls9tC2WXKx+VTfup
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJxOGlAAoJEKVg1VMiehFYjbAP/1nYEUNnw9xnlaEt8YSbSnRD
-MgpnbNpTfKJJJ3VGb6D8katosH7yxSp6NsBeJ+XVxBVZkLTRlbTFNqTeoX1Rdf6L
-gPzNJVA07FrlSNd3EGJiK361zrhlV/FuhOFTru9U0WkN8ZcGl1nMawuA20uiiNMS
-v3VOyutf4E0WnSGinw8Q3uy3Ur924Fo5+mcZls5Lp5u7OanHTBG624XDnm8ou+Hw
-wRkNjlykL5Pxizj1N4cZA1bc3OdVgvvuPX/vmYLaCfuQfSGFKxRM3ObiDPqTlrJr
-EHfQn0OTPZth417NtT1FQO/GcrhZVh1o9K258U1MBnXx/bfrMACP6kmPwKFSlqdB
-xMqwH/5OkbKL7DpfL0rFZfG44qk6MIC0yfNmWagcow7Xel8yhsXX5H9BqrtGTcZ5
-3F/lf7o8Y5XllpF814kPJINL3WSX2m1mEfbFv093zy+bi04uXmn/Ln7lUeCzg3BG
-NyECU0qz97ECBn5ulFuH1UZWarLUXHwRZYDqReSGbKpdFZe68pE48j6LEGLxyzLr
-d0vDke/ZHkFC1o+oo2Lx218tvAyS3iO7J119upfKO/iu3wD2wsNwm2V/LKC3rQBM
-k4vX3ER5t7fw8wY7BSFMVxD4HS+j88F1/WV9/cFmdwcxaua4Nie2WSRCMSvtuyy+
-bVYKNOyxBiI+QyJe8nk0
-=qIex
+iQIcBAABAgAGBQJJ0TkQAAoJEKVg1VMiehFYGFIP/1Jy4DxCVnS9S/ynbmU2VmJS
+JitJwJ4PMRNo9KIKJTzYmIpJs+ORoJskGWbvfNkhNGI5iuUnfQN5IpfoMpvMcK46
+p4W0vc7H+xnwlflAyMXj7rO1+qJZ1qOZLKMdcderFBjyUp5g8spBfi4bCOga5/K0
+eg9xJLgqB1iBb3tv2iKbl4SCEqhZxh1cOv7YQReKSzLPrcMOIL/yvfeh9wIK8AXs
+P2WUbiXsP/D2YaAKc4AAQQAYCrvx/6Q/+JRDdTxYTxeMoiX9upNrF+LA2Obeb1SR
+H2ZrTTptRyzyMXoMLb9pR+Blliln1e2RZFjMGGoWiHstu2hllLs4otGc7rqmq342
+OSf1Bf3l/gQbAPWnszrjNsPO6DEx6nTK0USViEiIjQag4pcafptNf1/9YOKYRzxb
+bjckO1GLs0ot9lsPlnohs2R3fvZwFQBmTwVopzb12ro8pvtC5Y0ERN7ZUowWLDSL
+kELcuqS37C6P78jelTf9Ar3dTHdDWmhch3XgKhmjDnXSbXP2Wk2aIbn7bcd3xgVO
+txZOP1F2gyT87AgEEPuwOMEB5PrLeuLJ8YAMvtKAlgPCmW9VjH9VCwOwtUpaDg0c
+LVJbQpYFbm76nnXOzdUFt9WFNB7Xbnps+fPW7iDAfnDCCAWFoEyoXKh4XT8P1Tpk
+fmp7+KUjfrB+M3rleS6j
+=OwQ8
 -----END PGP SIGNATURE-----
 
---=-m/QlDTbtoFutU+9eJVNc--
+--=-QFT2ls9tC2WXKx+VTfup--
 
