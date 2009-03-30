@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:52548 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964AbZCNRdv (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4183 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315AbZC3MCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:33:51 -0400
-Message-ID: <49BBEA60.6070702@nokia.com> (sfid-20090314_183352_573096_BC691F09)
-Date: Sat, 14 Mar 2009 19:33:20 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>,
+	Mon, 30 Mar 2009 08:02:22 -0400
+Date: Mon, 30 Mar 2009 08:00:28 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL	in	iwl_adjust_beacon_interval
-References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com>	 <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk>	 <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com>	 <20090221003133.GB3890@tuxdriver.com>	 <1235443093.4455.77.camel@johannes.local>	 <20090225014454.GA3577@tuxdriver.com>	 <1237046388.5235.82.camel@johannes.local>  <49BBE4A0.3060901@nokia.com> <1237050872.5235.95.camel@johannes.local>
-In-Reply-To: <1237050872.5235.95.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
+Message-ID: <20090330120028.GA29297@hash.localnet> (sfid-20090330_140227_577571_DE62C694)
+References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com> <20090324184100.GA29268@tesla> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com> <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com> <1237926664.4320.131.camel@johannes.local> <43e72e890903241504u4dfb5c76kbcb11a096bba72fc@mail.gmail.com> <20090328163929.GA24075@hash.localnet> <40f31dec0903291613w6b6520a5ucf8daeede7a6ae0@mail.gmail.com> <40f31dec0903291615g73443eccpf2e41efc7460104@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0903291615g73443eccpf2e41efc7460104@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-03-14 at 19:08 +0200, Kalle Valo wrote:
->> Johannes Berg wrote:
->>> Kalle, I suspect that your beacon offload will require something like
->>> holding on to BSS structs too, is that correct?
->> My current solution is just to disable beacon filtering (and power save) 
->> whenever we are scanning. That way beacon filtering doesn't interfere 
->> scanning in anyway.
+On Mon, Mar 30, 2009 at 02:15:34AM +0300, Nick Kossifidis wrote:
+> >> Nick, what do you think of this? ??I think it's the best compromise
+> >> for now - people can still get all the channels, normal users get a
+> >> nice speedup in the default case.
+> >>
 > 
-> That makes sense, but disabling beacons means that
-> 
-> 	iwlist wlan0 scan last
-> 
-> will not show _any_ BSS while associated, but it should really show the
-> BSS we're associated to. This is the problem I was referring to.
+> By the way it would be nice if you could also clean up CHANNEL_DEBUG
+> stuff from ath5k.h etc ;-)
 
-Oh man, I wasn't even aware of this feature. So yes, my patches 
-definitely need a way to hold bss structs. I need to study the 
-implementation more before I can comment.
+Ah, sure, will do that in a followup (also ATH_CHAN_MAX & friends).
 
-(Dropping the ipw3945 list from CC, it bugs me about not being subscribed.)
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-Kalle
