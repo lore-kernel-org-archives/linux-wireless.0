@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:45389 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbZCVKdn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 06:33:43 -0400
-Received: by bwz17 with SMTP id 17so1377348bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 03:33:40 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] staging wireless crap: tell people not to work on it
-References: <1237714803.5100.770.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 22 Mar 2009 12:33:37 +0200
-In-Reply-To: <1237714803.5100.770.camel@johannes.local> (Johannes Berg's message of "Sun\, 22 Mar 2009 10\:40\:03 +0100")
-Message-ID: <87ocvtg83i.fsf@litku.valot.fi> (sfid-20090322_113349_726764_37F31345)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from main.gmane.org ([80.91.229.2]:50286 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755682AbZC3ULw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 16:11:52 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LoNpk-0004gV-I3
+	for linux-wireless@vger.kernel.org; Mon, 30 Mar 2009 20:11:48 +0000
+Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 20:11:48 +0000
+Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 20:11:48 +0000
+To: linux-wireless@vger.kernel.org
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+Date: Mon, 30 Mar 2009 22:11:38 +0200
+Message-ID: <gqr91q$lbo$1@ger.gmane.org> (sfid-20090330_221157_131472_6A9F708A)
+References: <1238113267.29544.14.camel@blob>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <1238113267.29544.14.camel@blob>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Bernhard Seibold schrieb:
+> --- a/db.txt	2009-03-25 19:38:22.838975857 +0100
+> +++ b/db.txt	2009-03-25 19:39:37.722248019 +0100
+> @@ -165,8 +165,8 @@
+>  country DE:
+>  	# entries 279004 and 280006
+>  	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+> -	# entries 303005 and 304002
+> -	(5150 - 5255 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+> +	# entries 303005, 304002 and 305002
+> +	(5150 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+>  	# entries 308002 and 309001
+>  	(5470 - 5650 @ 40), (N/A, 1000 mW), DFS
+>  
+> 
 
-> Any objections from anyone on this? We've had somebody clean out otus
-> because he thought it was a good idea...
->
-> johannes
-> ---
->  drivers/staging/at76_usb/TODO  |    4 ++--
->  drivers/staging/otus/TODO      |    7 +++----
->  drivers/staging/rt2860/TODO    |    4 ++--
->  drivers/staging/rt2870/TODO    |    9 ++++++++-
->  drivers/staging/wlan-ng/README |    4 +++-
->  5 files changed, 18 insertions(+), 10 deletions(-)
->
-> --- wireless-testing.orig/drivers/staging/at76_usb/TODO	2009-03-22 10:31:37.000000000 +0100
-> +++ wireless-testing/drivers/staging/at76_usb/TODO	2009-03-22 10:31:37.000000000 +0100
-> @@ -1,2 +1,2 @@
-> -rewrite the driver to use the proper in-kernel wireless stack
-> -instead of using its own.
-> +Work on at76c50x-usb instead, possibly using
-> +this driver as a reference.
+What about 5650-5725? Shouldn't that be added as well? At least my 
+university runs an AP at 5.7GHz.
 
-I already sent a similar patch to Greg:
-
-http://kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-05-staging/staging-at76_usb-mention-mac80211-port-in-todo-file.patch
-
-But there's no mention of at76c50x-usb. I'll send an updated version
-to him.
-
-(I hope this mail manages to go to the linux-wireless list. All my
-emails from yesterday got lost for some strange reason.)
-
--- 
-Kalle Valo
