@@ -1,89 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:63614 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758055AbZCYFVo convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbZC3Rlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 01:21:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <20090325025944.GA12447@kamineko.org>
-References: <20090321065006.GF3834@kamineko.org>
-	 <178fec830903211130x7aa2d266u5f249625c4436fd0@mail.gmail.com>
-	 <20090322011517.GA17905@kamineko.org>
-	 <20090325025944.GA12447@kamineko.org>
-Date: Tue, 24 Mar 2009 22:21:41 -0700
-Message-ID: <178fec830903242221l6c07f8a1k8c91be94bc70fc37@mail.gmail.com> (sfid-20090325_062150_063788_F8AD7658)
-Subject: Re: iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after
-	500ms
-From: Abhi Kolekar <kolekar.a@gmail.com>
-To: Mattia Dongili <malattia@linux.it>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	reinette.chatre@intel.com, yi.zhu@intel.com, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Mar 2009 13:41:52 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <20090330173421.GB23749@khazad-dum.debian.net>
+References: <1238349195.24972.5.camel@johannes.local>
+	 <1238406057.24972.23.camel@johannes.local>
+	 <20090330132911.GC11934@khazad-dum.debian.net>
+	 <1238422114.5970.6.camel@johannes.local>
+	 <20090330173421.GB23749@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/up0U+AvIQC0C/iIlVYG"
+Date: Mon, 30 Mar 2009 19:41:18 +0200
+Message-Id: <1238434878.5970.17.camel@johannes.local> (sfid-20090330_194155_228323_9FCB0AB3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can you create a bug at http://www.intellinuxwireless.org/bugzilla/ ?
 
-Thanks
-Abhijeet
+--=-/up0U+AvIQC0C/iIlVYG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Mar 24, 2009 at 7:59 PM, Mattia Dongili <malattia@linux.it> wro=
-te:
-> On Sun, Mar 22, 2009 at 10:15:17AM +0900, Mattia Dongili wrote:
->> On Sat, Mar 21, 2009 at 11:30:29AM -0700, Abhi Kolekar wrote:
->> > On Fri, Mar 20, 2009 at 11:50 PM, Mattia Dongili <malattia@linux.i=
-t> wrote:
->> > > Hello,
->> > >
->> > > I get this error consistently with all the recent kernels:
->> > > [ =A0338.476057] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: =
-time out after 500ms.
->> > > [ =A0458.976089] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: =
-time out after 500ms.
->> > > [ =A0598.885036] iwl3945: Microcode SW error detected. =A0Restar=
-ting 0x82000008.
->> > > [ =A0598.885050] iwl3945: Error Reply type 0x00000005 cmd REPLY_=
-TX (0x1C) seq 0x02AC ser 0x0000004E
->> > > [ =A0601.869319] iwl3945: Can't stop Rx DMA.
->> > > then the wifi connection becomes useless and I have to re-associ=
-ate to
->> > > the AP or sometimes to unload and reload the module to get my co=
-nnection
->> > > back.
->> > >
->> > > The above is on 2.6.29-rc8 but I get it since 2.6.28 (apologies =
-for not
->
-> Actually since 2.6.27.
->
->> > > reporting it earlier). =A0Both my thinkpad x60s and my vaio sz72=
-b are
->> > > affected.
->> > > Reproducing it is very easy, I just need to download even a smal=
-l file.
->> > >
->> > > After reading some older bug submissions I rebuilt the driver wi=
-th debug
->> > > support and loaded it with debug=3D0x43fff, the log is here:
->> > > http://kamineko.org/kernel/kern.log
->> > > The beginning of the log is 2.6.28 with no debug, then you can s=
-ee a
->> > > reboot and the module loaded with the debug option on 2.6.29-rc8=
-=2E
->> > >
->> > > Is this a known problem? Is there any other information I can pr=
-ovide to
->> > > help fixing it?
->
-> Anyone?
->
-> --
-> mattia
-> :wq!
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[remove memebeam.org from CC, it doesn't have an MX]
+
+Hi Henrique,
+
+> There are three independent rfkill controllers in a thinkpad: UWB, WWAN,
+> bluetooth.  They're hierarchically slaved to the master radio-kill switch=
+ in
+> the standard EPO way:  if the master switch is active, all rfkill
+> controllers are forced active (all radios are killed).  If the master swi=
+tch
+> is not active, each rfkill controller can be independently set to kill or
+> not their respective radio.
+
+[snip]
+
+Thanks for the explanation. I guess that kinda makes sense. One thing
+I'm entirely sure about -- I had removed the sw default state setter --
+I guess this code still requires then? I was thinking the sw default
+state should be set for the devices it applies to, but it seems that if
+the master rfkill switch is set to "transmitter off" then one needs to
+set the default state (for all USB transmitters etc) to off, correct?
+
+johannes
+
+--=-/up0U+AvIQC0C/iIlVYG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0QQ8AAoJEKVg1VMiehFYW7EQAKQ0Tks5WWW4+Gjk413BvNA2
+5kn1Eq70A1gUid6noE5jPEey/BVrOb8i03Reaz4eZF3947p6l0a2wMw6+ITvJgl7
+UBJi+UXk5WUQRFJ0ozV6hcShPjRtCyB4nnpxEx9fcdHh/H/YuNJqhRrJG/AjATUx
+gbohfyxCI+ao+H4XAs6MAd2Kl/5GCw1hYUf0AyKH/eQqwcwSZfDCt500LhuoWlou
+cWtRr2VRDWkLzc4YHZiHsSE4VzTJDc4fAnNGAeODMm9ma+S/ZdjLW/Zl/NV3oRBc
+QoB3Zb8kwM/8j0d8r+784aNEzYBl/H9ieZlOx2ruDRaqXHxizj2or3GMGtNHqhn2
+6gGSbr4K/5dqelrXkf5eIzxnpHULEZaU82DtgGhhNKHCedn5aN5u8goQ45qhlkId
+H291+QvQi1/X3ALeq2gJ+JCTq2BpaxzKjIqkXa61mqcKuqleE81GLtdVO6kHPqm7
+yL62A16PBjPJeWBejs7w7INNR86vOVAt19c3Mt8Hharyi9h32rFUxVD1Bz2IGNkJ
+8K2jnwRMxz9zICmB3TjFhj51WYM4GblT1txIwMmFdqgLQNMbyc1W43iRIu4iDCvw
+38d1vsHNaVSx7cdmNxQ9ffzBlAf9Ka/S7Rl9HHNimD7NS9cq+JGp4C99ZWwt6IRS
+sleeDFYrRCIsldxEkTUA
+=6qrd
+-----END PGP SIGNATURE-----
+
+--=-/up0U+AvIQC0C/iIlVYG--
+
