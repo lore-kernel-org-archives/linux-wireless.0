@@ -1,142 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f168.google.com ([209.85.219.168]:51877 "EHLO
-	mail-ew0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754179AbZCQTrm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 15:47:42 -0400
-Received: by ewy12 with SMTP id 12so179539ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 12:47:38 -0700 (PDT)
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <58D3A916-8548-4DEC-BEC6-09AFE4CEBCBD@icix.org> (sfid-20090317_204748_799657_5A8B649C)
-From: Antonio Marques <froz@icix.org>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <200903171031.41302.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed	delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: rt2x00 mesh support
-Date: Tue, 17 Mar 2009 19:38:32 +0000
-References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <200903161558.01070.IvDoorn@gmail.com> <A1AF7AF9-047F-41A1-829F-94F58821DB09@icix.org> <200903171031.41302.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:41869 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756318AbZC3KGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 06:06:35 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:06:34 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18896.39086.910489.260877@gargle.gargle.HOWL> (sfid-20090330_120636_792856_3716958D)
+Date: Mon, 30 Mar 2009 15:32:22 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 16/17] ath9k: Determine number of streams from HT capabilities
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mar 17, 2009, at 9:31 , Ivo van Doorn wrote:
-> On Monday 16 March 2009, Antonio Marques wrote:
->> On Mar 16, 2009, at 14:58 , Ivo van Doorn wrote:
->>> On Monday 16 March 2009, Ant=F3nio Marques wrote:
->>>>
->>>> As requested, I have attached the output of the script run before =
-=20
->>>> and
->>>> after
->>>> running 'iwlist mesh scan'. Unfortunately there seems to be no
->>>> change in
->>>> the output. I have also included the queue statistics as these do
->>>> change from
->>>> one state to the next. Any further pointers to help debug this? =20
->>>> I'll
->>>> gladly test
->>>> any patches that try to address this issue.
->>>
->>> The dumps aren't correct, I had forgotten to update the script on
->>> the website
->>> after some API for the rt2x00 debugfs interface changes recently.
->>> Attached is the correct patch.
->>>
->>> Ivo
->>> <rt2x00_regdump.sh>
->>
->> Fixed, new dumps are attached.
->
-> Thanks for the dumps, the reason why the beaconing isn't working
-> is (fortunately) very obvious from the registers point of view.
-> The "generate beacons" bit is simply not enabled. However the reason
-> why this bit has not been set escapes me. Could you apply the attache=
-d
-> patch? This will add extra debug messages to the driver to see when =20
-> the
-> beacon generation bit is set.
->
-> Thanks,
->
-> Ivo
-> <rt73usb.beacon.diff>
+The number of streams supported by a STA can be determined
+directly from the HT capabilities. Remove the redundant
+variable storing the stream cap.
 
-Here are the relevant portions of the dmesg with the aforementioned
-patch applied.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |   18 ++++++++----------
+ drivers/net/wireless/ath9k/rc.h |    2 --
+ 2 files changed, 8 insertions(+), 12 deletions(-)
 
-After interface creation and before 'iwlist mesh scan':
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 824ccbb..a6933cc 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -524,7 +524,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
+ 	u32 valid;
+ 
+ 	for (i = 0; i < rate_table->rate_cnt; i++) {
+-		valid = (ath_rc_priv->single_stream ?
++		valid = (!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ?
+ 			 rate_table->info[i].valid_single_stream :
+ 			 rate_table->info[i].valid);
+ 		if (valid == 1) {
+@@ -557,9 +557,9 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
+ 	for (i = 0; i < rateset->rs_nrates; i++) {
+ 		for (j = 0; j < rate_table->rate_cnt; j++) {
+ 			u32 phy = rate_table->info[j].phy;
+-			u32 valid = (ath_rc_priv->single_stream ?
+-				rate_table->info[j].valid_single_stream :
+-				rate_table->info[j].valid);
++			u32 valid = (!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ?
++				     rate_table->info[j].valid_single_stream :
++				     rate_table->info[j].valid);
+ 			u8 rate = rateset->rs_rates[i];
+ 			u8 dot11rate = rate_table->info[j].dot11rate;
+ 
+@@ -603,7 +603,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
+ 	for (i = 0; i < rateset->rs_nrates; i++) {
+ 		for (j = 0; j < rate_table->rate_cnt; j++) {
+ 			u32 phy = rate_table->info[j].phy;
+-			u32 valid = (ath_rc_priv->single_stream ?
++			u32 valid = (!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ?
+ 				     rate_table->info[j].valid_single_stream :
+ 				     rate_table->info[j].valid);
+ 			u8 rate = rateset->rs_rates[i];
+@@ -740,9 +740,10 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
+ 	if (rate > (ath_rc_priv->rate_table_size - 1))
+ 		rate = ath_rc_priv->rate_table_size - 1;
+ 
+-	ASSERT((rate_table->info[rate].valid && !ath_rc_priv->single_stream) ||
++	ASSERT((rate_table->info[rate].valid &&
++		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
+ 	       (rate_table->info[rate].valid_single_stream &&
+-		ath_rc_priv->single_stream));
++		!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
+ 
+ 	return rate;
+ }
+@@ -1422,9 +1423,6 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	}
+ 	ath_rc_priv->rc_phy_mode = ath_rc_priv->ht_cap & WLAN_RC_40_FLAG;
+ 
+-	/* Set stream capability */
+-	ath_rc_priv->single_stream = (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ? 0 : 1;
+-
+ 	if (!rateset->rs_nrates) {
+ 		/* No working rate, just initialize valid rates */
+ 		hi = ath_rc_init_validrates(ath_rc_priv, rate_table,
+diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
+index ec72dd2..bdfd205 100644
+--- a/drivers/net/wireless/ath9k/rc.h
++++ b/drivers/net/wireless/ath9k/rc.h
+@@ -157,7 +157,6 @@ struct ath_rateset {
+  * @probe_interval: interval for ratectrl to probe for other rates
+  * @prev_data_rix: rate idx of last data frame
+  * @ht_cap: HT capabilities
+- * @single_stream: When TRUE, only single TX stream possible
+  * @neg_rates: Negotatied rates
+  * @neg_ht_rates: Negotiated HT rates
+  */
+@@ -175,7 +174,6 @@ struct ath_rate_priv {
+ 	u8 max_valid_rate;
+ 	u8 valid_rate_index[RATE_TABLE_SIZE];
+ 	u8 ht_cap;
+-	u8 single_stream;
+ 	u8 valid_phy_ratecnt[WLAN_RC_PHY_MAX];
+ 	u8 valid_phy_rateidx[WLAN_RC_PHY_MAX][RATE_TABLE_SIZE];
+ 	u8 rc_phy_mode;
+-- 
+1.6.2.1
 
-[108544.382327] phy3 -> rt73usb_validate_eeprom: EEPROM recovery - =20
-NIC: 0xffef
-[108544.382332] phy3 -> rt73usb_validate_eeprom: EEPROM recovery - =20
-Led: 0xe000
-[108544.382334] phy3 -> rt73usb_validate_eeprom: EEPROM recovery - =20
-RSSI OFFSET A: 0x0000
-[108544.382561] phy3 -> rt2x00_set_chip: Info - Chipset detected - rt: =
-=20
-1300, rf: 0002, rev: 0002573a.
-[108544.384587] phy3: Selected rate control algorithm 'minstrel'
-[108544.385282] Registered led device: rt73usb-phy3::radio
-[108544.385296] Registered led device: rt73usb-phy3::assoc
-[108544.385309] Registered led device: rt73usb-phy3::quality
-[108544.385995] usbcore: registered new interface driver rt73usb
-[108565.147588] phy3 -> rt2x00lib_request_firmware: Info - Loading =20
-firmware file 'rt73.bin'.
-[108565.147595] rt73usb 2-5:1.0: firmware: requesting rt73.bin
-[108565.152149] phy3 -> rt2x00lib_request_firmware: Info - Firmware =20
-detected - version: 1.7.
-[108565.174384] phy3 -> rt73usb_config_intf: Error - TXRX_CSR9 WRITE: =20
-0x000d0000, READ: 0x000d0000
-[108565.280398] phy3 -> rt73usb_config_intf: Error - TXRX_CSR9 WRITE: =20
-0x000d0000, READ: 0x000d0000
-[108565.385291] phy3 -> rt73usb_write_beacon: Error - TXRX_CSR9 WRITE: =
-=20
-0x00040000, READ: 0x00040000
-[108565.492687] phy3 -> rt73usb_kick_tx_queue: Error - TXRX_CSR9 =20
-WRITE: 0x001d0000, READ: 0x001d0000
-[108565.603206] phy3 -> rt73usb_init_registers: Error - TXRX_CSR9 =20
-WRITE: 0x00000000, READ: 0x00000000
-[108565.742604] phy3 -> rt73usb_config_duration: Error - TXRX_CSR9 =20
-WRITE: 0x00000640, READ: 0x00000640
-[108565.863000] phy3 -> rt2x00mac_conf_tx: Info - Configured TX queue =20
-0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-[108565.864999] phy3 -> rt2x00mac_conf_tx: Info - Configured TX queue =20
-1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-[108565.866996] phy3 -> rt2x00mac_conf_tx: Info - Configured TX queue =20
-2 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-[108565.869001] phy3 -> rt2x00mac_conf_tx: Info - Configured TX queue =20
-3 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-
-After 'iwlist mesh scan':
-
-[108700.626333] phy3 -> rt73usb_config_intf: Error - TXRX_CSR9 WRITE: =20
-0x000d0640, READ: 0x000d0640
-[108701.756022] cfg80211: Found new beacon on frequency: 2472 MHz (Ch =20
-13) on phy3
-[108701.756031] cfg80211: Enabling active scanning on frequency: 2472 =20
-MHz (Ch 13) on phy3
-[108701.756034] cfg80211: Enabling beaconing on frequency: 2472 MHz =20
-(Ch 13) on phy3
-[108701.756037] cfg80211: Enabling active scanning on frequency: 2472 =20
-MHz (Ch 13) on phy0
-[108701.756039] cfg80211: Enabling beaconing on frequency: 2472 MHz =20
-(Ch 13) on phy0
-[108702.178713] phy3 -> rt73usb_config_intf: Error - TXRX_CSR9 WRITE: =20
-0x000d0640, READ: 0x000d0640
-[108702.287605] phy3 -> rt73usb_write_beacon: Error - TXRX_CSR9 WRITE: =
-=20
-0x00040640, READ: 0x00040640
-[108702.395122] phy3 -> rt73usb_kick_tx_queue: Error - TXRX_CSR9 =20
-WRITE: 0x001d0640, READ: 0x001d0640
-
-Hope this is useful.
-
-Antonio Marques
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
