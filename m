@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51819 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753807AbZCUMqz (ORCPT
+Received: from mail-gx0-f160.google.com ([209.85.217.160]:56502 "EHLO
+	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782AbZC3SNi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 08:46:55 -0400
-Subject: Re: [RFC PATCH v3 0/5] mac80211: beacon filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R.Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <20090321120558.11613.56299.stgit@tikku>
-References: <20090321120558.11613.56299.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dHjbzrl+2zEQavKgMswz"
-Date: Sat, 21 Mar 2009 13:46:52 +0100
-Message-Id: <1237639612.5100.183.camel@johannes.local> (sfid-20090321_134718_478981_02473A7E)
-Mime-Version: 1.0
+	Mon, 30 Mar 2009 14:13:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <20090330175951.GB4199@linux.vnet.ibm.com>
+References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com>
+	 <1231338965-796-1-git-send-email-jirislaby@gmail.com>
+	 <20090107152208.GB4207@linux.vnet.ibm.com>
+	 <4964CAAA.3040801@gmail.com>
+	 <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com>
+	 <20090215134702.GA10180@hash.localnet> <49A9C3D7.8060706@gmail.com>
+	 <20090330085952.GB3837@linux.vnet.ibm.com>
+	 <b6c5339f0903300958m587cde69o44ae24d0609228ba@mail.gmail.com>
+	 <20090330175951.GB4199@linux.vnet.ibm.com>
+Date: Mon, 30 Mar 2009 14:13:35 -0400
+Message-ID: <b6c5339f0903301113y6cb0b8bu1eaa55439eb18d97@mail.gmail.com> (sfid-20090330_201341_851561_7308A5A2)
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+From: Bob Copeland <me@bobcopeland.com>
+To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Dhaval Giani <dhaval.lists@thegianis.in>,
+	linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 30, 2009 at 1:59 PM, Dhaval Giani <dhaval@linux.vnet.ibm.co=
+m> wrote:
+> ok, so my kernel does hve this patch applied, and this is what I get,
+>
+> =A0------------[ cut here ]------------
+> =A0WARNING: at include/net/mac80211.h:1956 minstrel_get_rate+0xa1/0x4=
+b9 [mac80211]()
 
---=-dHjbzrl+2zEQavKgMswz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I believe this is something different (tx path not rx).  I think it's
+that minstrel rate table bug again, which we never solved for ath5k.
 
-On Sat, 2009-03-21 at 14:08 +0200, Kalle Valo wrote:
-> Here's my proposal how to implement beacon filtering in mac80211. The
-> basic idea is simple, the driver enables filtering whenever mac80211
-> enables power save and the driver calls ieee80211_beacon_loss()
-> whenever hardware informs about beacon loss.
->=20
-> I have tested this with stlc45xx (with beacon filtering) and iwl3945
-> (without beacon filtering) and based on simple tests this seems to
-> work. For reference I'll send the stlc45xx patch as a followup.
+Are you using adhoc or managed mode?  Do you have the slab/slub debuggi=
+ng
+options turned on?  Any steps that consistently reproduce it?  Do you
+get any warnings with PID controller?
 
-Looks good to me.
-
-johannes
-
---=-dHjbzrl+2zEQavKgMswz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxOG4AAoJEKVg1VMiehFYtFQP/RJjiSvGKx7xJhEap0tCigiH
-9ATH7iuXekAVpYpnwFLxB0N5/xU0SruRVpG+kFfE4RGh+ZmUod3goVlSigfKuV6W
-gPKSmtfwdhtjgITL+248ReQF8gfEmfA0QzXGuCx/LKNIEnPdzR0j314LE/bGQgh/
-YacwXzUX4Ob9ChiIBeDi2mnPkIYSItAf5ee6DMn6814Fuh5kstl3Ekr1DCzDRcgS
-LygbghenIPVXatdnblZpO+kAL71QsASQTMGFlYgGBHNzqLtzPpICTta+rTkgqtiy
-ef8Rt28kcDhQTqVHwnssOY7wVGPbhFOFtgP5I01qItTh8bwjgMZgAVBWwEAkgUa/
-eGo8UEEf0CSF1J8omkM2dBPL+oC84pNlNKXeySvvkK33BvZZdd7hQdjcTH5Ksm6Z
-CnUsoIikfW5aX4FwgyLkcV9BwLInk5xsIcljhSIYfrs/UfwS4zLMP3Z2g8MspCif
-jhrEnkVpQ83EV5TFdZc486eSTQRCd2AEMSeURw/h1pv7iP+ywb3E+zWbyq0Ewvzq
-n6YDuVBUX2narZTVvAhaZICiLqNql5/CaPUCqwae2lshf3cJELdcK60vpDUu+TVF
-xM097xTG/pX/I0a7yr1Rx5T1jMCFXNIejt4JbALerkQMvJFYhU33iPY80+Z1Nmob
-IgeB0uyTTzOhCcnoY4e0
-=znWh
------END PGP SIGNATURE-----
-
---=-dHjbzrl+2zEQavKgMswz--
-
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
