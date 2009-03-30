@@ -1,94 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:17966 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758669AbZCZPP1 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54386 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754899AbZC3JlB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 11:15:27 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so941165fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 08:15:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1537876674@web.de>
-References: <1537876674@web.de>
-Date: Thu, 26 Mar 2009 18:15:24 +0300
-Message-ID: <73aaf0dd0903260815i65df5bbav5c8633cab7afe691@mail.gmail.com> (sfid-20090326_161531_858500_4F3B24A8)
-Subject: Re: p54spi - mesh mode summary
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Chunkeey@web.de
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Mar 2009 05:41:01 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <1238349195.24972.5.camel@johannes.local> (sfid-20090329_195345_745378_2F2074B3)
+References: <1238349195.24972.5.camel@johannes.local>
+	 (sfid-20090329_195345_745378_2F2074B3)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BSyDxkG2EU8AScMNqK/V"
+Date: Mon, 30 Mar 2009 11:40:57 +0200
+Message-Id: <1238406057.24972.23.camel@johannes.local> (sfid-20090330_114105_983781_83388221)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> 3) Beaconing works, but not the way it should: like MPs don't hear e=
-ach other. Timestamps never get in sync
->> and both MPs issue beacon during 0.1s beacon interval.
->> I've seen it before, with stlc45xx. It shows when LMAC is set up wit=
-h LMAC_SETUP_IBSS | LMAC_SETUP_TRANSPARENT flags.
->> If there's no LMAC_SETUP_TRANSPARENT flag in LMAC setup then timesta=
-mps get in sync.
->
-> FYI: The TSF will always reset when a new beacon is submitted to the =
-firmware.
-> The specs talks about that.
 
-I'd like to make it clear: there are timestamp field in the beacon and
-timestamp associated with the received packet. These two do not
-correlate. First gets reset at beacon submission (and why firmware
-wouldn't pick up timestamp from the submitted beacon?). The second
-only gets reset on firmware reset. And it seems to me that there's no
-way to find out, what the current value of beacon timestamp is. TSF
-reported in p54_rx_data is the second.
+--=-BSyDxkG2EU8AScMNqK/V
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-And if so, how timestamp syncing is expected to work in the following c=
-ase:
+TODO:
 
-<7>[  353.579189] RX beacon SA=3D00:1d:6e:9b:ee:6d
-BSSID=3D7e:2e:03:09:31:25 TSF=3D0x4aaa81 BCN=3D0x618f1f6 diff=3D-974047=
-89
-@1513
-<7>[  353.579250] wlan0: beacon TSF higher than local TSF - IBSS merge
-with BSSID 7e:2e:03:09:31:25
+ * toshiba_acpi.c
+   -> need help, seems to abuse input polldev and report it as both
+      input and rfkill block state? at very least need info about what
+      hw actually does
 
-After which stack submit new beacon which we send to LMAC, effectively
-resetting timestamp in our beacon and not affecting TSF that we would
-report on the next received frame.
+ * thinkpad_acpi.c
+   -> need help, convoluted code I don't understand at all, looks like
+      another candidate for rewriting
 
-I see constant beacon resubmission cycle. How does it work on pci/usb p=
-54?
+ * wimax
+   -> need help, seems to report rfkill states to input device?
+      don't understand
+
+ * b43/b43legacy
+   -> compiles now, but should remove input polldev and use hw block
+      polling -- later
+
+ * tosa - done now in new patch, but not even compile-tested
+   (http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-rfkill-r=
+ewrite.patch)
+
+ * test
+   -> need help, I don't have any hardware with rfkill buttons, will see
+      if I can come up with a uinput rfkill "button"
+
+johannes
 
 
->> - when LMAC was set up with LMAC_SETUP_TRANSPARENT flag firmware see=
-m to truncate last 2 bytes of the packet
->> =A0 that it reports.
-> Heh, that's also a ISL3887 (USB 2nd gen) bug... But PCI devices are n=
-ot affected.
-> The reason "why" has probably to do with the firmware's frame alignme=
-nt code.
-> Unfortunately the firmware for (ISL3887 and SPI) is rounding "down" t=
-o 4 bytes instead of up...
-> So the FCS will be clipped... But fortunately the firmware set a bit =
-in the header that tells
-> us whenever the frames was corrupted or not (P54_HDR_FLAG_DATA_IN_FCS=
-_GOOD).
-Thank you for the explanation, it made me feel much better (:
+--=-BSyDxkG2EU8AScMNqK/V
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> what happens if you change p54spi_rx the following way:?
-Actually, I did this kind of thing. And it works this way.
-But I considered it a major hack, as noone acknowledged that there's a
-firmware problem:
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-https://garage.maemo.org/pipermail/stlc45xx-devel/2009-January/000126.h=
-tml
+iQIcBAABAgAGBQJJ0JOmAAoJEKVg1VMiehFYK3QP/AhjmB7+DecaZgkNazG1AGHV
+03B+/q/MhRkQFDfhAYj3h/5M3J3st9VrGV6zUSpIXz2fUVWOPqaOLL5yUdWsZJYB
+rXe2jycYTJcO98mK16X7QPFDVlMtXiyLXYnd7XYZ2/S+If19gmnoDi1i5S/1SI3a
+ok9n2taCEHsRxoE/gtivO6KT/sHKlqxi1G2s+C3N5/VEF08n+9wW4pEzNsCjMpGy
+yITcCWKbiLsevjGm8YcQR7oNqHojeeD0AjYlb/ZD/j/DMjIn+DUNq/r6R1qLP0JG
+JK119g/GiTV9yYyR7MKidAm3l3DcH9f7IX7nnr1+h09o3Swe1BoFOV2TgnqDq4NB
+XbY5YV8zeHEPBQv6xZ5VU/cwvUBUT6FkV6AzkYA70/61tkKjKGzTWXByRmpT6H+5
+Q8rsYiTmLmr6Uz3c1zFcL29X1oz7lZlPpkPEskUe9McQTd7psAdVCpwLCAiR1Ry1
+K57g+y0WN1HMd/LTf3eDqCh3kQ601OdFIJOy0jDzEynxZnxMADUodiKi31K76R2v
+JzkP1S8OBoTrW6RO2SORdcLHuuK8e4N3vHav4JBpslbzywGz6RmCdD2zmzFfsUc2
+5Uv/4chBB0OsMOY/c0y94uYktL5rbWZ03V/cEu9B2OGV9F295JnaCUosvwFRg4Sv
+8EviqxGyWYGW58wfwR+1
+=RaFu
+-----END PGP SIGNATURE-----
 
-But if there's real problem in firmware, I'd consider it mere
-workaround and put it back.
+--=-BSyDxkG2EU8AScMNqK/V--
 
---=20
-Max
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
