@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1147 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbZCWCcX (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:43729 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbZC3Nb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 22:32:23 -0400
-Date: Sun, 22 Mar 2009 22:31:52 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Dhaval Giani <dhaval@linux.vnet.ibm.com>,
-	linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090323023152.GB5287@hash.localnet> (sfid-20090323_033238_967376_2C20363D)
-References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <200903152227.16676.s.L-H@gmx.de> <200903230146.02071.s.L-H@gmx.de>
+	Mon, 30 Mar 2009 09:31:57 -0400
+Received: by bwz17 with SMTP id 17so1919140bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 06:31:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903230146.02071.s.L-H@gmx.de>
+In-Reply-To: <8e92b4100903300238p4b0cbd3fh754a3dddbf904fa7@mail.gmail.com>
+References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+	<87ljqr58oa.fsf@litku.valot.fi> <2da21fe50903271208m1c369c88lba8399416dace43a@mail.gmail.com>
+	<8e92b4100903300238p4b0cbd3fh754a3dddbf904fa7@mail.gmail.com>
+Date: Mon, 30 Mar 2009 15:31:39 +0200
+Message-ID: <2da21fe50903300631o39779ac9ge42252fd4697dce@mail.gmail.com> (sfid-20090330_153201_166963_2D3FDBAE)
+Subject: Re: ath9k and power management
+From: Davide Pesavento <davidepesa@gmail.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>, mcgrof@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 01:45:58AM +0100, Stefan Lippers-Hollmann wrote:
+On Mon, Mar 30, 2009 at 11:38, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
+> On Sat, Mar 28, 2009 at 12:38 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
 >
-> Post scriptum: I'm not able to trigger this trace with ath5k/ AR2425.
+>>>> I'm running a 2.6.29-wl kernel, using ath9k and wpa_supplicant 0.6.9
+>>>> (with -Dnl80211).
+>>>> Enabling power management when connected (i.e. 'iwconfig wlan0 power
+>>>> on'), causes the currently established connection to break and the
+>>>> machine is no longer able to reconnect to the AP.
+>
+> Patch has been sent to wireless-testing. Please report if the issue
+> still exists after
+> applying the patch.
+> The commit log of the patch is
+>
+> ath9k: No need to abort Rx path when autosleep is enabled.
+>
+> For chipsets supporting autosleep feature, there is no need to abort
+> Rx engine since they are capable of automatically going back to sleep
+> after receiving a packet.
+>
+>
+> Thanks a lot for reporting the issue
+> Vivek.
+>
 
-Okay, well just to be clear ath5k had the same issue (I posted a patch
-a couple of weeks ago - I think it got lost and I need to repost it).  
+I've applied your patch but unfortunately the behaviour is still the
+same as before.
 
-But this is separate from the problem where the rate controller is 
-choosing a bad rate index for TX in adhoc mode, that's still an unknown, 
-unsolved problem.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Thanks,
+Davide
