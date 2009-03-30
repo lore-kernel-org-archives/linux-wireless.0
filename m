@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charybdis-ext.suse.de ([195.135.221.2]:58849 "EHLO
-	emea5-mh.id5.novell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752463AbZCPQnw convert rfc822-to-8bit (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:59024 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755844AbZC3JiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 12:43:52 -0400
-Message-Id: <49BE8FD2020000A20006952F@emea5-mh.id5.novell.com> (sfid-20090316_174354_834826_08B0D382)
-Date: Mon, 16 Mar 2009 17:43:46 +0100
-From: "Alejandro Bonilla" <abonilla@novell.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>, "Jouni Malinen" <j@w1.fi>
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: Is the linuxwireless.org web site OK?
-References: <49BE7253.8020001@lwfinger.net>
- <20090316160247.GA13489@jm.kir.nu>
- <43e72e890903160915tbefcf16w2892606e857ded72@mail.gmail.com>
-In-Reply-To: <43e72e890903160915tbefcf16w2892606e857ded72@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 30 Mar 2009 05:38:16 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so2494237wff.4
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 02:38:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <2da21fe50903271208m1c369c88lba8399416dace43a@mail.gmail.com>
+References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+	 <87ljqr58oa.fsf@litku.valot.fi>
+	 <2da21fe50903271208m1c369c88lba8399416dace43a@mail.gmail.com>
+Date: Mon, 30 Mar 2009 15:08:15 +0530
+Message-ID: <8e92b4100903300238p4b0cbd3fh754a3dddbf904fa7@mail.gmail.com> (sfid-20090330_113819_546844_7051C606)
+Subject: Re: ath9k and power management
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>, mcgrof@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> On 3/16/2009 at 05:15 PM, in message
-<43e72e890903160915tbefcf16w2892606e857ded72@mail.gmail.com>, "Luis R.
-Rodriguez" <mcgrof@gmail.com> wrote: 
-> On Mon, Mar 16, 2009 at 9:02 AM, Jouni Malinen <j@w1.fi> wrote: 
-> > On Mon, Mar 16, 2009 at 10:37:55AM -0500, Larry Finger wrote: 
-> >> If you browse to linuxwireless.org, do you get the correct page? I don't,  
-> but 
-> >> did yesterday. 
-> >> 
-> >> My ISP has been having some problems with hackers getting at their name  
-> servers 
-> >> and that may be the source of my trouble. On the other hand, the web site  
-> may 
-> >> have been hacked. 
-> > 
-> > I would assume the web site itself was not hacked, but someone just 
-> > forgot to renew the domain.. Based on the whois data, I would assume the 
-> > expiration date was yesterday and after that, someone/something just 
-> > changed the domain to point somewhere else.. 
->  
-> Please update your bookmarks to use wireless.kernel.org. Alejandro 
-> Bonilla is the owner of linuxwireless.org and was reluctant to give it 
-> to us so just in case we started prefering to use wireless.kernel.org 
-> which we do have more control over. 
->  
-> Hopefully once he gets this he'll update it though. 
+On Sat, Mar 28, 2009 at 12:38 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
 
-I'm reluctant to help anyone that expects people owe them anything. The fact that I gave linuxwireless.org for use is a Gift as I normally pay the Domain Price. This only makes you a really bad admin for not knowing when it expires.
+>>> I'm running a 2.6.29-wl kernel, using ath9k and wpa_supplicant 0.6.9
+>>> (with -Dnl80211).
+>>> Enabling power management when connected (i.e. 'iwconfig wlan0 power
+>>> on'), causes the currently established connection to break and the
+>>> machine is no longer able to reconnect to the AP.
 
-I will surely Update the subscription, let me know if you want to keep using the Site.
+Patch has been sent to wireless-testing. Please report if the issue
+still exists after
+applying the patch.
+The commit log of the patch is
 
-bye
+ath9k: No need to abort Rx path when autosleep is enabled.
+				
+For chipsets supporting autosleep feature, there is no need to abort
+Rx engine since they are capable of automatically going back to sleep
+after receiving a packet.
 
 
-
-Alejandro Bonilla
-EMEA Technical Services
-abonilla@novell.com
-
-Novell
-Making IT Work As One
-http://www.novell.com/success/
-
-
-
+Thanks a lot for reporting the issue
+Vivek.
