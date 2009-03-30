@@ -1,87 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:16690 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753563AbZCGN4K convert rfc822-to-8bit (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:37545 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759735AbZC3Vfl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 08:56:10 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so137927eya.37
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Mar 2009 05:56:06 -0800 (PST)
-From: Florian Fainelli <florian@openwrt.org>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Subject: Re: [PATCH 00/15] ath9k: Virtual interfaces and radios
-Date: Sat, 7 Mar 2009 14:56:03 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mon, 30 Mar 2009 17:35:41 -0400
+Cc: linville@tuxdriver.com, bcm43xx-dev@lists.berlios.de,
 	linux-wireless@vger.kernel.org
-References: <20090303172325.437810138@atheros.com>
-In-Reply-To: <20090303172325.437810138@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200903071456.03827.florian@openwrt.org> (sfid-20090307_145621_148826_97936F4F)
+Message-Id: <C0D59D9C-FC8A-4C79-B777-AF2F166D9711@ing.unibs.it> (sfid-20090330_233549_900057_D72C8B8D)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200903280041.25265.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: [PATCH] b43: Refresh RX poison on buffer recycling
+Date: Mon, 30 Mar 2009 23:35:34 +0200
+References: <200903280041.25265.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jouni,
 
-Le Tuesday 03 March 2009 18:23:25 Jouni Malinen, vous avez =C3=A9crit=C2=
-=A0:
-> When using virtual wiphys, the APs that the virtual interfaces are
-> associated with do not need to be on the same channel. One of the
-> wiphys could also be used with hostapd to bring up an AP. However, it
-> should be noted that most client implementation do not exactly like
-> the AP disappearing all the time, so using a virtual station interfac=
-e
-> on another channel at the same time may not be that good of an idea
-> for most use cases now. This will hopefully improve somewhat with
-> future optimizations.
+On Mar 28, 2009, at 12:41 AM, Michael Buesch wrote:
+
+> The RX buffer poison needs to be refreshed, if we recycle an RX  
+> buffer,
+> because it might be (partially) overwritten by some DMA operations.
+>
+> Cc: stable@kernel.org
+> Cc: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+>
+> ---
+>
+> Francesco, please stresstest this on top of the other patch that  
+> adds poisoning.
+Hi Michael,
+
+great work! No more crashes with the two patches. I will continue  
+stress testing anyway but it seems stable.
+
+I have one more question: the hardware seems to allow frames that are  
+longer than 2352 bytes. If we monitor the firmware during receiving we  
+get up to 0x1005 bytes long frames. When such frames arrives, the  
+kernel drops them as the "The data did not fit into one descriptor  
+buffer and is split over multiple buffers." I tried to increase  
+B43_DMA0_RX_BUFFERSIZE up to 0x1006 but I get problems with dma and  
+the driver keeps restarting the hardware forever. What is wrong with  
+increasing this value above IEEE80211_MAX_FRAME_LEN?
+
+Many thanks,
+Cheers
+-FG
+
+
+>
+> John, please queue as bugfix.
 >
 >
-> It would be useful to hear what others think about this sort of
-> functionality and how this should be integrated with Linux, including
-> the user space interface, applications managing the virtual interface
-> functionality, and user interface that the end users would see. This
-> is still quite an early step in the progress, but the goal here is to
-> get this functionality into mature state and provide something that
-> makes it easier to use wireless LAN in general for connecting devices
-> in various scenarios. All feedback would be welcome!
+> Index: wireless-testing/drivers/net/wireless/b43/dma.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2009-03-27  
+> 23:15:36.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/dma.c	2009-03-27  
+> 23:30:17.000000000 +0100
+> @@ -1503,20 +1503,16 @@ static void dma_rx(struct b43_dmaring *r
+> 			len = le16_to_cpu(rxhdr->frame_len);
+> 		} while (len == 0 && i++ < 5);
+> 		if (unlikely(len == 0)) {
+> -			/* recycle the descriptor buffer. */
+> -			sync_descbuffer_for_device(ring, meta->dmaaddr,
+> -						   ring->rx_buffersize);
+> -			goto drop;
+> +			dmaaddr = meta->dmaaddr;
+> +			goto drop_recycle_buffer;
+> 		}
+> 	}
+> 	if (unlikely(b43_rx_buffer_is_poisoned(ring, skb))) {
+> 		/* Something went wrong with the DMA.
+> 		 * The device did not touch the buffer and did not overwrite the  
+> poison. */
+> 		b43dbg(ring->dev->wl, "DMA RX: Dropping poisoned buffer.\n");
+> -		/* recycle the descriptor buffer. */
+> -		sync_descbuffer_for_device(ring, meta->dmaaddr,
+> -					   ring->rx_buffersize);
+> -		goto drop;
+> +		dmaaddr = meta->dmaaddr;
+> +		goto drop_recycle_buffer;
+> 	}
+> 	if (unlikely(len > ring->rx_buffersize)) {
+> 		/* The data did not fit into one descriptor buffer
+> @@ -1530,6 +1526,7 @@ static void dma_rx(struct b43_dmaring *r
+> 		while (1) {
+> 			desc = ops->idx2desc(ring, *slot, &meta);
+> 			/* recycle the descriptor buffer. */
+> +			b43_poison_rx_buffer(ring, meta->skb);
+> 			sync_descbuffer_for_device(ring, meta->dmaaddr,
+> 						   ring->rx_buffersize);
+> 			*slot = next_slot(ring, *slot);
+> @@ -1548,8 +1545,7 @@ static void dma_rx(struct b43_dmaring *r
+> 	err = setup_rx_descbuffer(ring, desc, meta, GFP_ATOMIC);
+> 	if (unlikely(err)) {
+> 		b43dbg(ring->dev->wl, "DMA RX: setup_rx_descbuffer() failed\n");
+> -		sync_descbuffer_for_device(ring, dmaaddr, ring->rx_buffersize);
+> -		goto drop;
+> +		goto drop_recycle_buffer;
+> 	}
+>
+> 	unmap_descbuffer(ring, dmaaddr, ring->rx_buffersize, 0);
+> @@ -1559,6 +1555,11 @@ static void dma_rx(struct b43_dmaring *r
+> 	b43_rx(ring->dev, skb, rxhdr);
+> drop:
+> 	return;
+> +
+> +drop_recycle_buffer:
+> +	/* Poison and recycle the RX buffer. */
+> +	b43_poison_rx_buffer(ring, skb);
+> +	sync_descbuffer_for_device(ring, dmaaddr, ring->rx_buffersize);
+> }
+>
+> void b43_dma_rx(struct b43_dmaring *ring)
+>
+> -- 
+> Greetings, Michael.
 
-I am only commenting from a user point of view this feature. This defin=
-itively=20
-is very useful since quite a lot of people stick to madwifi instead of =
-using=20
-ath5k or ath9k since there was not real support before this patch for v=
-irtual=20
-interfaces.
+-------
 
-One thing that I did not like with wlanconfig and I would like not to f=
-ind=20
-with mac80211/cfg80211 is the incompatibility of some setups (i.e: AP s=
-hould=20
-be created first, STA interface later with nosbeacon), not sure this is=
-=20
-possible, but if it is, one should be able to add a virtual interface w=
-ithout=20
-knowing the state of the other interfaces before.
+Francesco Gringoli, PhD - Assistant Professor
+Dept. of Electrical Engineering for Automation
+University of Brescia
+via Branze, 38
+25123 Brescia
+ITALY
 
-I really like the way we can create mesh point interfaces with iw, so t=
-his=20
-could be the user interface to configure virtual interfaces, say like t=
-his :
+Ph:  ++39.030.3715843
+FAX: ++39.030.380014
+WWW: http://www.ing.unibs.it/~gringoli
 
-iw dev wlan0 interface add sta0 type sta
-iw dev wlan0 interface add ap0 type master
 
-On a broader perspective, I really hope other drivers will become capab=
-le of=20
-supporting virtual interfaces as well.
 
-Thank you for your work.
---=20
-Best regards, Florian Fainelli
-Email : florian@openwrt.org
-http://openwrt.org
--------------------------------
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
