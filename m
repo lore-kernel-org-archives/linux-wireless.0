@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:46806 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753409AbZC0PoR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 11:44:17 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 1/4] rfkill: minor locking fix
-Date: Fri, 27 Mar 2009 12:44:08 -0300
-Message-Id: <1238168651-28891-2-git-send-email-hmh@hmh.eng.br> (sfid-20090327_164422_843547_82544339)
-In-Reply-To: <1238168651-28891-1-git-send-email-hmh@hmh.eng.br>
-References: <1238168651-28891-1-git-send-email-hmh@hmh.eng.br>
+Received: from mail.atheros.com ([12.36.123.2]:25179 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758092AbZC3KCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 06:02:45 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:44 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18896.38852.877562.282540@gargle.gargle.HOWL> (sfid-20090330_120247_910201_31BFF9FF)
+Date: Mon, 30 Mar 2009 15:28:28 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 04/17] ath9k: Change return value of ath9k_hw_fill_cap_info
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The API requires that we lock rfkill->mutex before we call
-rfkill_toggle_radio().  We weren't doing it in rfkill_add_switch(),
-which is part of the rfkill_register() code flow.
+This routine always return true, checking for false
+in the return value is invalid. Fix this.
 
-It is higly unlikely that something would access the rfkill struct
-while it is not even registered yet, so this is not a bug I would ever
-expect to see triggered.
-
-Still, there is no reason to not fix anyway and thus always enforce
-the API.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- net/rfkill/rfkill.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath9k/hw.c |   10 ++--------
+ drivers/net/wireless/ath9k/hw.h |    2 +-
+ 2 files changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 3eaa394..f00df8c 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -629,9 +629,11 @@ static int rfkill_add_switch(struct rfkill *rfkill)
- 			rfkill_global_states[rfkill->type].default_state;
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 169d8ef..4ad1508 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -837,11 +837,7 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
+ 	if (AR_SREV_9280_20(ah))
+ 		ath9k_hw_init_txgain_ini(ah);
+ 
+-	if (!ath9k_hw_fill_cap_info(ah)) {
+-		DPRINTF(sc, ATH_DBG_RESET, "failed ath9k_hw_fill_cap_info\n");
+-		ecode = -EINVAL;
+-		goto bad;
+-	}
++	ath9k_hw_fill_cap_info(ah);
+ 
+ 	if ((ah->hw_version.devid == AR9280_DEVID_PCI) &&
+ 	    test_bit(ATH9K_MODE_11A, ah->caps.wireless_modes)) {
+@@ -3228,7 +3224,7 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ /* HW Capabilities */
+ /*******************/
+ 
+-bool ath9k_hw_fill_cap_info(struct ath_hw *ah)
++void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	u16 capField = 0, eeval;
+@@ -3403,8 +3399,6 @@ bool ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		ah->btactive_gpio = 6;
+ 		ah->wlanactive_gpio = 5;
  	}
+-
+-	return true;
+ }
  
-+	mutex_lock(&rfkill->mutex);
- 	rfkill_toggle_radio(rfkill,
- 			    rfkill_global_states[rfkill->type].current_state,
- 			    0);
-+	mutex_unlock(&rfkill->mutex);
- 
- 	list_add_tail(&rfkill->node, &rfkill_list);
- 
+ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath9k/hw.h
+index 5ba6a4b..c50faae 100644
+--- a/drivers/net/wireless/ath9k/hw.h
++++ b/drivers/net/wireless/ath9k/hw.h
+@@ -557,7 +557,7 @@ struct ath_hw *ath9k_hw_attach(u16 devid, struct ath_softc *sc, int *error);
+ void ath9k_hw_rfdetach(struct ath_hw *ah);
+ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   bool bChannelChange);
+-bool ath9k_hw_fill_cap_info(struct ath_hw *ah);
++void ath9k_hw_fill_cap_info(struct ath_hw *ah);
+ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+ 			    u32 capability, u32 *result);
+ bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
 -- 
 1.6.2.1
 
