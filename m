@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:36003 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761008AbZC0VVH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51083 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbZC3PT1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:21:07 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: Update maintainers for ath9k
-Date: Fri, 27 Mar 2009 17:21:05 -0400
-Message-Id: <1238188865-10420-1-git-send-email-lrodriguez@atheros.com> (sfid-20090327_222122_946851_519535AA)
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Mon, 30 Mar 2009 11:19:27 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <20090330132911.GC11934@khazad-dum.debian.net>
+References: <1238349195.24972.5.camel@johannes.local>
+	 <1238406057.24972.23.camel@johannes.local>
+	 <20090330132911.GC11934@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9xWr+rv3U9V7XTET/xvM"
+Date: Mon, 30 Mar 2009 16:08:34 +0200
+Message-Id: <1238422114.5970.6.camel@johannes.local> (sfid-20090330_171931_245402_9C22B9CF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has been the case really, we just forgot to update it.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+--=-9xWr+rv3U9V7XTET/xvM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John, please Cc Sujith, Vasanth, and Senthil on kernel.org bug
-reports as well. I won't have a chance to monitor those as
-closely as I have now, will be switching gears to focus on
-our next Atheros 11N USB chipset (which BTW will use a different
-MAC than ar9170).
+On Mon, 2009-03-30 at 10:29 -0300, Henrique de Moraes Holschuh wrote:
+> On Mon, 30 Mar 2009, Johannes Berg wrote:
+> >  * thinkpad_acpi.c
+> >    -> need help, convoluted code I don't understand at all, looks like
+> >       another candidate for rewriting
+>=20
+> Heh.  I will take care of it, obviously.   As for rewriting, well, a clea=
+nup
+> is in the queue.
 
- MAINTAINERS |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Heh, thanks. I appreciate any help even if the golden rule still is that
+those who change the API get to fix users :)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1a6e9e9..2d8bdde 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -761,6 +761,12 @@ P:	Luis R. Rodriguez
- M:	lrodriguez@atheros.com
- P:	Jouni Malinen
- M:	jmalinen@atheros.com
-+P:	Sujith Manoharan
-+M:	Sujith.Manoharan@atheros.com
-+P:	Vasanthakumar Thiagarajan
-+M:	vasanth@atheros.com
-+P:	Senthil Balasubramanian
-+M:	senthilkumar@atheros.com
- L:	linux-wireless@vger.kernel.org
- L:	ath9k-devel@lists.ath9k.org
- S:	Supported
--- 
-1.6.2.1.316.gedbc2
+Thinkpad in particular confuses me due to the way it uses force_state
+and input. Is it like Dell in that the button press causes a soft block?
+
+johannes
+
+--=-9xWr+rv3U9V7XTET/xvM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0NJeAAoJEKVg1VMiehFY7HIP/R0aeqPjclHVMIHya7TZAJgB
+eJ+LNAHpTYud4qQugWif3hHAaSj2uQii1e+1AgUOxXdL0jXygN2pokAWUU+yEwCa
+WYP2RMebjkLV22Nf4y/YODA6Dwa/vlzV+s0ZjR/ju2fH2DjP10UfilRZ+WxXifbU
+L6gPSrSzDM9HLPF7kHB00LZCSEEU3GbAVqOxyyeGThuNZKYuIqrNpy06e27kSh+b
+LDuTwLXLV8X8+xzoWkF0+OMXMXvxMyOuDg325kPnj0IGhLr4OnbF8jRSt1T0zTEq
+hncXEg0LElwufOYJGZtKa4sgoXEToxxi4wHEQS5+VVEqAdLgHkKNVPV1eWjreNYv
+Ka3j+x4KOWHtllKPraLb2ZXo5AtqXeH94NIjrGVaHYT7jys6XXeYTXqmWCvL2VLb
+XNAOPs2Gn+QoGnStCiWIhYnA3LbMY6h19046Z/B0ESJyEaTUMzwfGLgX4nd2MMeq
+n7vKETUY0DH7UNu+89xUZXt9vGKrir+V6fUVh6d3io0DeLPwB9mCL9X9PDkR/UlJ
+sDae5c01Cf3myZIdzDSW0MgAT8RLa5VScvcqwrYYAlXrVuWzgNxDWfpbXrnqiL4/
+U5gFN3XoYtOLUqmwXHnfGs0xxK8tinHaqEPohhnnxREWee5nPrQsLNcKDEQrqvGY
+9nTfYUj4RhCwHhcoXN67
+=3+Ii
+-----END PGP SIGNATURE-----
+
+--=-9xWr+rv3U9V7XTET/xvM--
 
