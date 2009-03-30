@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48874 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758464AbZCMPAm (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:50589 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427AbZC3RfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 11:00:42 -0400
-Date: Fri, 13 Mar 2009 10:57:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Which APs to disregards from in inputting into the bss list
-Message-ID: <20090313145726.GD5551@tuxdriver.com> (sfid-20090313_160050_727451_AAF7CA61)
-References: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com> <20090313080359.GA13826@jm.kir.nu>
+	Mon, 30 Mar 2009 13:35:06 -0400
+Received: by bwz17 with SMTP id 17so2016713bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 10:35:02 -0700 (PDT)
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 11/17] ath9k: Remove TIM from the interrupt mask
+References: <18896.38867.997551.983464@gargle.gargle.HOWL>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 30 Mar 2009 20:35:00 +0300
+In-Reply-To: <18896.38867.997551.983464@gargle.gargle.HOWL> (Sujith's message of "Mon\, 30 Mar 2009 15\:28\:43 +0530")
+Message-ID: <8763hqnccb.fsf@litku.valot.fi> (sfid-20090330_193510_863915_3304964A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090313080359.GA13826@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2009 at 10:03:59AM +0200, Jouni Malinen wrote:
-> On Thu, Mar 12, 2009 at 08:09:53PM -0700, Luis R. Rodriguez wrote:
+Sujith <Sujith.Manoharan@atheros.com> writes:
 
-> > The benefit I see with these early checks we won't get complaints
-> > about not being able to connect to bogus APs or APs you shouldn't be
-> > connected to anyway.
-> 
-> Those would be replaced with complaints about not seeing APs, scan
-> being broken, and not being able to connect to APs that we should be
-> able to connect to..
+> -	/*
+> -	 * Some hardware processes the TIM IE and fires an
+> -	 * interrupt when the TIM bit is set.  For hardware
+> -	 * that does, if not overridden by configuration,
+> -	 * enable the TIM interrupt when operating as station.
+> -	 */
 
-My thoughts exactly...
+This might be useful for beacon filtering. Does the hardware know to
+parse the beacons in more detail, for example ERP protection or WMM
+settings?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
