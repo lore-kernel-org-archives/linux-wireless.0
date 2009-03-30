@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60856 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbZCSTAl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 15:00:41 -0400
-Date: Thu, 19 Mar 2009 14:46:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-Subject: Re: [PATCH 06/13] iwlcore: Fix scan problem, resource busy
-Message-ID: <20090319184616.GC3587@tuxdriver.com> (sfid-20090319_200042_952884_B1C5C139)
-References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com> <1237351913-19202-6-git-send-email-reinette.chatre@intel.com> <1237351913-19202-7-git-send-email-reinette.chatre@intel.com> <200903191712.01325.helmut.schaa@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:25191 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758625AbZC3KDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 06:03:09 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:03:08 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200903191712.01325.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18896.38881.717688.543632@gargle.gargle.HOWL> (sfid-20090330_120320_314497_8631A6AE)
+Date: Mon, 30 Mar 2009 15:28:57 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 17/17] ath9k: Fix bug in determining HT40 mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 05:12:00PM +0100, Helmut Schaa wrote:
-> Hi,
->=20
-> Am Mittwoch, 18. M=E4rz 2009 schrieb Reinette Chatre:
-> > From: Mohamed Abbas <mohamed.abbas@intel.com>
-> >=20
-> > when mac80211 issues scan request to lower driver, it always expect
-> > a scan_complete notification from the driver, this driver make sure
-> > we call scan_completed on all exit path in iwl_mac_hw_scan.
->=20
-> It should suffice to return an error in iwl_mac_hw_scan (as done with=
-out
-> this patch). The problem was mac80211 not calling cfg80211 in case of=
- a
-> failure. [1] should fix that. Hence, this workaround in iwlwifi shoul=
-d
-> not be needed.
->=20
-> Helmut
->=20
-> [1] http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-tes=
-ting.git;a=3Dcommit;h=3Da3fa954ddc4509721a691dd685c3d102cba0b58e
+This patch fixes a bug in checking for HT40 mode.
+The STA's mode can be determined from the cached HT capabilities,
+use that and remove the redundant variable 'rc_phy_mode'.
 
-I think Helmut is right.  I'm dropping patch 6/13.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |    6 ++----
+ drivers/net/wireless/ath9k/rc.h |    1 -
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index a6933cc..a13668b 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1321,7 +1321,7 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 				 * 40 to 20 => don't update */
+ 
+ 				if ((flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
+-				    (ath_rc_priv->rc_phy_mode != WLAN_RC_40_FLAG))
++				    !(ath_rc_priv->ht_cap & WLAN_RC_40_FLAG))
+ 					return;
+ 
+ 				rix = ath_rc_get_rateindex(rate_table, &rates[i]);
+@@ -1346,9 +1346,8 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 
+ 	/* If HT40 and we have switched mode from 40 to 20 => don't update */
+ 	if ((flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
+-	    (ath_rc_priv->rc_phy_mode != WLAN_RC_40_FLAG)) {
++	    !(ath_rc_priv->ht_cap & WLAN_RC_40_FLAG))
+ 		return;
+-	}
+ 
+ 	rix = ath_rc_get_rateindex(rate_table, &rates[i]);
+ 	ath_rc_update_ht(sc, ath_rc_priv, tx_info_priv, rix,
+@@ -1421,7 +1420,6 @@ static void ath_rc_init(struct ath_softc *sc,
+ 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
+ 		ath_rc_priv->valid_phy_ratecnt[i] = 0;
+ 	}
+-	ath_rc_priv->rc_phy_mode = ath_rc_priv->ht_cap & WLAN_RC_40_FLAG;
+ 
+ 	if (!rateset->rs_nrates) {
+ 		/* No working rate, just initialize valid rates */
+diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
+index bdfd205..e3abd76 100644
+--- a/drivers/net/wireless/ath9k/rc.h
++++ b/drivers/net/wireless/ath9k/rc.h
+@@ -176,7 +176,6 @@ struct ath_rate_priv {
+ 	u8 ht_cap;
+ 	u8 valid_phy_ratecnt[WLAN_RC_PHY_MAX];
+ 	u8 valid_phy_rateidx[WLAN_RC_PHY_MAX][RATE_TABLE_SIZE];
+-	u8 rc_phy_mode;
+ 	u8 rate_max_phy;
+ 	u32 rssi_time;
+ 	u32 rssi_down_time;
+-- 
+1.6.2.1
+
