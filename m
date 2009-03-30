@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34367 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569AbZCJC2v (ORCPT
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:57140 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002AbZC3JA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:28:51 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/3] iw: parse max allowed bandwidth
-Date: Mon,  9 Mar 2009 22:28:48 -0400
-Message-Id: <1236652130-29971-2-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032858_292032_0D8DC1E3)
-In-Reply-To: <1236652130-29971-1-git-send-email-lrodriguez@atheros.com>
-References: <1236652130-29971-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 30 Mar 2009 05:00:56 -0400
+Date: Mon, 30 Mar 2009 14:29:52 +0530
+From: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Dhaval Giani <dhaval.lists@thegianis.in>,
+	linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+Message-ID: <20090330085952.GB3837@linux.vnet.ibm.com> (sfid-20090330_110100_417709_76305544)
+Reply-To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com> <20090215134702.GA10180@hash.localnet> <49A9C3D7.8060706@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49A9C3D7.8060706@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- info.c    |   17 ++++++++++++++---
- nl80211.h |    3 +++
- 2 files changed, 17 insertions(+), 3 deletions(-)
+On Sun, Mar 01, 2009 at 12:08:07AM +0100, Jiri Slaby wrote:
+> On 15.2.2009 14:47, Bob Copeland wrote:
+>> On Mon, Feb 02, 2009 at 01:27:39PM +0530, Dhaval Giani wrote:
+>>> So I finally managed to hit this on 2.6.29-rc3. It is hard to
+>>> reproduce, so I hope so much information is enough to give you a good
+>>> guess. This time it hit while trying to connect to an open network at
+>>> the airport.
+>>
+>>> WARNING: at net/mac80211/rx.c:2236 __ieee80211_rx+0x96/0x571 [mac80211]()
+>>> Hardware name: 2007CS3
+>>> RATE=255, BAND=8
+>>
+>> band is supposed to be sc->curband?  8 is way wrong.
+>
+> If you look into the patch which outputs this (backtrace in this  
+> thread), sband->n_bitrates is 8. I have no idea what I have been smoking  
+> the day I wrote it, but BAND= for sure isn't the right name for that  
+> thing. Sorry for the confusion.
+>
+>> rate could be 255
+>> if, for some reason, the hardware rate wasn't in the rate table.
+>
+> So, we have a fix for this, right? I mean the u8->s8 sc->rate_idx  
+> conversion or alike...
 
-diff --git a/info.c b/info.c
-index ed135a9..f704131 100644
---- a/info.c
-+++ b/info.c
-@@ -54,6 +54,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
- 		[NL80211_FREQUENCY_ATTR_RADAR] = { .type = NLA_FLAG },
- 		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U32 },
-+		[NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH] = { .type = NLA_U32 },
- 	};
- 
- 	struct nlattr *tb_rate[NL80211_BITRATE_ATTR_MAX + 1];
-@@ -205,9 +206,19 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 			freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
- 			printf("\t\t\t* %d MHz [%d]", freq, ieee80211_frequency_to_channel(freq));
- 
--			if (tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] &&
--			    !tb_freq[NL80211_FREQUENCY_ATTR_DISABLED])
--				printf(" (%.1f dBm)", 0.01 * nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER]));
-+			if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED]) {
-+				bool set_freq_pow_bw = false;
-+				if (tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER]) {
-+					printf(" (%.1f dBm", 0.01 * nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER]));
-+					set_freq_pow_bw = true;
-+				}
-+				if (tb_freq[NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH]) {
-+					printf(" / %d MHz", nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH]));
-+					set_freq_pow_bw = true;
-+				}
-+				if (set_freq_pow_bw)
-+					printf(")");
-+			}
- 
- 			open = 0;
- 			if (tb_freq[NL80211_FREQUENCY_ATTR_DISABLED]) {
-diff --git a/nl80211.h b/nl80211.h
-index f6e5637..55565a4 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -639,6 +639,7 @@ enum nl80211_band_attr {
-  *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
-  *	(100 * dBm).
-+ * @NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH: max bandwidth allowed, given in MHz
-  */
- enum nl80211_frequency_attr {
- 	__NL80211_FREQUENCY_ATTR_INVALID,
-@@ -648,6 +649,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_IBSS,
- 	NL80211_FREQUENCY_ATTR_RADAR,
- 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-+	NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -655,6 +657,7 @@ enum nl80211_frequency_attr {
- };
- 
- #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
-+#define NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH
- 
- /**
-  * enum nl80211_bitrate_attr - bitrate attributes
+Where is the fix? Is it merged in? I still see this happen on 2.6.29
+
+thanks,
 -- 
-1.6.0.6
-
+regards,
+Dhaval
