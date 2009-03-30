@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:44357 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758010AbZCCH1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 02:27:19 -0500
-Date: Mon, 2 Mar 2009 23:26:37 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus'
-	tree"
-Message-ID: <20090303072637.GB4440@kroah.com> (sfid-20090303_082739_181498_94F1B114)
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com> <49ACC6B0.409@garzik.org> <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35540 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758626AbZC3UlB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 16:41:01 -0400
+Subject: [PATCH] update/fix DE 5GHz rules
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bernhard Seibold <bernhard.seibold@uni-ulm.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Thomas =?ISO-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
+In-Reply-To: <1238113267.29544.14.camel@blob> (sfid-20090327_015046_030762_288A170F)
+References: <1238113267.29544.14.camel@blob>
+	 (sfid-20090327_015046_030762_288A170F)
+Content-Type: text/plain
+Date: Mon, 30 Mar 2009 22:39:49 +0200
+Message-Id: <1238445589.5970.35.camel@johannes.local> (sfid-20090330_224113_517077_A1F82057)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 02, 2009 at 10:44:40PM -0800, Luis R. Rodriguez wrote:
-> On Mon, Mar 2, 2009 at 9:57 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> > Luis R. Rodriguez wrote:
-> >>
-> >> While extending the documentation for submitting Linux wireless bug
-> >> reports [1] we note the stable series policy on patches -- that of
-> >> having an equivalent fix already in Linus' tree. I find this
-> >> documented in Documentation/stable_kernel_rules.txt but I'm curious if
-> >> there is any other resource which documents this or elaborates on this
-> >> a bit more. I often tell people about this rule or push _really_ hard
-> >> on testing "upstream" but some people tend to not understand. I think
-> >> that elaborating a little on this can help and will hopefully create
-> >> more awareness around the importance of trees like Stephen's
-> >> linux-next tree.
-> >
-> > Just have people google for GregKH's copious messages, telling people a fix
-> > needs to be upstream before it goes into -stable.
-> >
-> > Typically you make things easy by emailing stable@kernel.org with a commit
-> > id.
-> >
-> > There are only two exceptions:
-> > * fix is upstream, but needs to be modified for -stable
-> > * fix is not needed at all in upstream, but -stable still needs it
-> 
-> This certainly helps, I'm also looking for good arguments to support
-> the reasoning behind the policy so that not only will people follow
-> this to help development but _understand_ it and so that they can
-> themselves promote things like linux-next and realize why its so
-> important. Mind you -- upstream for us in wireless for example is not
-> Linus its John's tree so what we promote is not to get the fix first
-> into Linus' tree but first into John's tree. Which is obvious to
-> developers but perhaps not to others.
+This updates the 5 GHz rules -- TPC is not supported in any way yet so
+the transmit power limit needs to be halved; some additional ranges are
+available.
 
-Who are these "people" that you are trying to convince?  If they aren't
-developers, why would any "others" care about our development
-proceedures?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ db.txt |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Heck, very few developers even read the Documentation files, I'd never
-expect an "other" to do that :)
+diff --git a/db.txt b/db.txt
+index d3a05ea..b9cb935 100644
+--- a/db.txt
++++ b/db.txt
+@@ -162,13 +162,15 @@ country CZ:
+ 
+ # Data from "Frequenznutzungsplan" (as published in April 2008),
+ # downloaded from http://www.bundesnetzagentur.de/media/archive/13358.pdf
++# Also applicable is http://www.bundesnetzagentur.de/media/archive/5009.pdf
++# On the 5 GHz ranges TX power can be doubled if TPC is implemented.
+ country DE:
+ 	# entries 279004 and 280006
+ 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+-	# entries 303005 and 304002
+-	(5150 - 5255 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+-	# entries 308002 and 309001
+-	(5470 - 5650 @ 40), (N/A, 1000 mW), DFS
++	# entries 303005, 304002 and 305002
++	(5150 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
++	# entries 308002, 309001 and 310003
++	(5470 - 5725 @ 40), (N/A, 500 mW), NO-OUTDOOR, DFS
+ 
+ country DK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 
-thanks,
 
-greg k-h
