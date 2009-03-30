@@ -1,124 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11406 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753487AbZCTWkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 18:40:00 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 15:39:59 -0700
-Date: Fri, 20 Mar 2009 14:39:20 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Max Ott <Max.Ott@nicta.com.au>,
-	Subrata Modak <subrata@linux.vnet.ibm.com>,
-	Qasim Javed <qasimj@gmail.com>,
-	Till Kamppeter <till.kamppeter@gmail.com>
-Subject: Google Summer of Code 2009 -- Linux wireless testing project
-Message-ID: <20090320213920.GC8120@tesla> (sfid-20090320_234016_471479_E5EA1A32)
+Received: from fmmailgate03.web.de ([217.72.192.234]:49547 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbZC3Nz2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 09:55:28 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Subject: [PATCH] p54spi: fix locking warning in p54spi_op_tx
+Date: Mon, 30 Mar 2009 15:55:24 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903301555.24267.chunkeey@web.de> (sfid-20090330_155531_235392_49DD89C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a list of information to help those students looking into the
-Linux wireless GSoC 2009 "Automation of testing using mac80211_hwsim and Orbit"
-project [0], part of the Linux Foundation set of GSoC projects:
+This patch fixes the following waring:
+> ------------[ cut here ]------------
+>WARNING: at kernel/softirq.c:138 local_bh_enable+0x54/0xbc()
+>Modules linked in: p54spi
+>[<c0034ff8>] (dump_stack+0x0/0x14)
+>[<c005b1a4>] (warn_on_slowpath+0x0/0x68)
+>[<c00604c8>] (local_bh_enable+0x0/0xbc)
+>[<bf000000>] (p54spi_op_tx+0x0/0x4c [p54spi])
+>[<c01a4d34>] (p54_sta_unlock+0x0/0x78)
 
-https://www.linuxfoundation.org/en/Google_Summer_of_Code_2009
+p54spi_op_tx needs to be called from different locking contexts.
+Therefore we have to protect the linked list with irqsave spinlocks.
 
-In anyone has ideas to further help this project please just feel free to
-chime in. I'm adding other potential mentors to the project, Maxx Ott
-which might be signing up as a mentor for Orbit-related stuff and
-Subrata Modak which seems to be familiar with the Linux testing project
-(LTP).
-
-I'll also recommend to subscribe to the wiki page for the test project
-so you can get e-mails on changes to the wiki page.
-
-Students can start by becoming familiar with iw [1] and using wpa_supplicant with
-the nl80211 driver. We eventually want to not depend on wireless extensions so
-the new cutting edge tests will all be based on the new nl80211 stuff which
-both iw and wpa_supplicant can use. iw is strictly nl80211 based. Of course
-we should still have things to test wireless-extensions but soon it may be
-possible to live completely without them for new cfg80211 based drivers.
-
-Then you can look at starting to quickly create an AP with the different
-encryption options, and use a STA to associate to that AP quickly and easily
-as well.
-
-I have some old scripts which did this which you may feel free to
-use/modify/disregard. There's one for AP [2] and one for STA [3].
-Jouni also has some stuff for this and you can check it out via his
-git gree:
-
-git://w1.fi/srv/git/hostap.git
-
-In there check out the hostap/mac80211_hwsim/tests/ directory.
-
-A starting point would be to extend this with simple scripts which let
-you test mac80211_hwsim to do certain individual taks one at a time. For
-example gettings association completed and transfering some amount of data
-using the different encryptions algorithms available would test the software
-encryption with mac80211. That would be a good first easy step to become
-familiar with what we want to accomplish with the project.
-
-The idea is to build a list of tests which we can automate and run to
-test against the wireless-testing tree completely in software. Once
-these tests are in place we then use them to also test against individual
-drivers using real hardware. Since its not expected that students will have
-all the wireless hardware available we can leverage the kindness of folks
-at Orbit [4] and use sandboxes [5] there during a reservation to test
-the different hardware present there. Fortunately the list of cards available
-in the Sandboxes [6] is pretty decent and can grow. Go read the Orbit
-developer's section [7]. This is the hardware present so far:
-
-  * Atheros AR5002X Mini PCI 802.11a/b/g
-    (AR5212 MAC Baseband Processor + AR5112 Dual-band Radio-on-a-Chip)
-  * Intel PRO/Wireless 2915ABG Network Connection Mini PCI 802.11a/b/g
-  * GNURadio - USB (we won't be testing this)
-  * zd1211 - USB 802.11g
-  * RTL8185 - PCI 802.11bg
-  * ISL3890 - Mini PCI 802.11bg (prism54)
-  * Marvell Libertas 8388 802.11 USB 
-
-We may also have Intel 5000 11n, and I think we have some 11n Atheros stuff too
-and if not I'll be sure to mail them out ASAP. Surely this will depend on
-coordination with the Orbit folks and we cannot simply expect everything to
-be there but its a starting point.
-
-Once we have a set of scripts we are happy with for mac80211_hwsim we
-can save an image for re-use at Orbit with these scripts and that image
-can be installed during a reserved time-slot for testing. Its advised
-the automation of testing to make use of Orbit's own automation
-infrastructure called OMF. These are used at Orbit for research purposes
-but just as they are used for research purposes it can also be used to
-automate tests. Some scripts may need to be ported to use OMF.
-
-To start becoming familiar with the Orbit testbed and using OMF you can
-read their tutorials [8]. I think OMF is completely open source, Maxx
-correct me if I'm wrong. If so then we can always end up contributing to
-it to enhance it should that be possible and needed.
-
-So the end goal is to have a nice list of tests which we can run on
-for mac80211, the driver infrastructure (through mac80211_hwsim) and
-also for each driver either through Orbit or manually so users can run
-them at home or so that the Linux Testing Project [9] can use. In the
-end it would be nice to have a page online which we can go to and see
-some results of tests for each driver and also for mac80211 internals.
-
-If anyone has other idease or documentation that may be usable for the
-students please chime in.
-
-  Luis
-
-[0] http://wireless.kernel.org/en/developers/GSoC/2009/Automation_of_testing
-[1] http://wireless.kernel.org/en/users/Documentation/iw
-[2] http://www.winlab.rutgers.edu/~mcgrof/qa/create-ap.sh.txt
-[3] http://www.winlab.rutgers.edu/~mcgrof/qa/create-client.sh.txt
-[4] http://www.orbit-lab.org/
-[5] http://www.orbit-lab.org/wiki/SandBoxes
-[6] http://www.orbit-lab.org/wiki/SandboxMap
-[7] http://www.orbit-lab.org/wiki/Documentation/Developers
-[8] http://www.orbit-lab.org/wiki/Tutorial
-[9] http://ltp.sourceforge.net/
+Reported-by: Max Filippov <jcmvbkbc@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 155f453..5202312 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -469,9 +469,10 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
+ 	struct ieee80211_tx_info *info;
+ 	struct p54_tx_info *minfo;
+ 	struct p54s_tx_info *dinfo;
++	unsigned long flags;
+ 	int ret = 0;
+ 
+-	spin_lock_bh(&priv->tx_lock);
++	spin_lock_irqsave(&priv->tx_lock, flags);
+ 
+ 	while (!list_empty(&priv->tx_pending)) {
+ 		entry = list_entry(priv->tx_pending.next,
+@@ -479,7 +480,7 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
+ 
+ 		list_del_init(&entry->tx_list);
+ 
+-		spin_unlock_bh(&priv->tx_lock);
++		spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 
+ 		dinfo = container_of((void *) entry, struct p54s_tx_info,
+ 				     tx_list);
+@@ -491,16 +492,14 @@ static int p54spi_wq_tx(struct p54s_priv *priv)
+ 
+ 		ret = p54spi_tx_frame(priv, skb);
+ 
+-		spin_lock_bh(&priv->tx_lock);
+-
+ 		if (ret < 0) {
+ 			p54_free_skb(priv->hw, skb);
+-			goto out;
++			return ret;
+ 		}
+-	}
+ 
+-out:
+-	spin_unlock_bh(&priv->tx_lock);
++		spin_lock_irqsave(&priv->tx_lock, flags);
++	}
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 	return ret;
+ }
+ 
+@@ -510,12 +509,13 @@ static void p54spi_op_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct p54_tx_info *mi = (struct p54_tx_info *) info->rate_driver_data;
+ 	struct p54s_tx_info *di = (struct p54s_tx_info *) mi->data;
++	unsigned long flags;
+ 
+ 	BUILD_BUG_ON(sizeof(*di) > sizeof((mi->data)));
+ 
+-	spin_lock_bh(&priv->tx_lock);
++	spin_lock_irqsave(&priv->tx_lock, flags);
+ 	list_add_tail(&di->tx_list, &priv->tx_pending);
+-	spin_unlock_bh(&priv->tx_lock);
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 
+ 	queue_work(priv->hw->workqueue, &priv->work);
+ }
+@@ -616,6 +616,7 @@ out:
+ static void p54spi_op_stop(struct ieee80211_hw *dev)
+ {
+ 	struct p54s_priv *priv = dev->priv;
++	unsigned long flags;
+ 
+ 	if (mutex_lock_interruptible(&priv->mutex)) {
+ 		/* FIXME: how to handle this error? */
+@@ -627,9 +628,9 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
+ 	cancel_work_sync(&priv->work);
+ 
+ 	p54spi_power_off(priv);
+-	spin_lock_bh(&priv->tx_lock);
++	spin_lock_irqsave(&priv->tx_lock, flags);
+ 	INIT_LIST_HEAD(&priv->tx_pending);
+-	spin_unlock_bh(&priv->tx_lock);
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
+ 
+ 	priv->fw_state = FW_STATE_OFF;
+ 	mutex_unlock(&priv->mutex);
