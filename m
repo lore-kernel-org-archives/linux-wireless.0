@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f118.google.com ([209.85.221.118]:50642 "EHLO
-	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758370AbZCXUDR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44918 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755396AbZC3UoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 16:03:17 -0400
-Received: by qyk16 with SMTP id 16so3631001qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 13:03:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090324184100.GA29268@tesla>
-References: <200903241938.47155.chunkeey@web.de>
-	 <b6c5339f0903241159x505fc88ap4d9850fa74733156@mail.gmail.com>
-	 <20090324184100.GA29268@tesla>
-Date: Tue, 24 Mar 2009 16:03:14 -0400
-Message-ID: <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com> (sfid-20090324_210320_758134_AACBDA0E)
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Mar 2009 16:44:19 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Dirk Opfer <Dirk@opfer-online.de>,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <200903301336.52883.inaky@linux.intel.com>
+References: <1238349195.24972.5.camel@johannes.local>
+	 <200903301954.07008.IvDoorn@gmail.com>
+	 <1238436058.5970.24.camel@johannes.local>
+	 <200903301336.52883.inaky@linux.intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-qXwt3X32EBle0Ut6j8EO"
+Date: Mon, 30 Mar 2009 22:43:45 +0200
+Message-Id: <1238445825.5970.37.camel@johannes.local> (sfid-20090330_224422_298261_B7D11220)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 24, 2009 at 2:41 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Do any of you guys have time to pick it up?
 
-Well my patch #2 is pretty similar to what Christian has, and I'd like to
-upstream the first few patches soon (especially the ath.ko creation, it is a
-beast to rebase as you saw).  That would bring up the first contentious
-point of the merge: is "ath/ath.ko" ok with everyone?  ath5k/9k specific
-bits can eventually go in ath/{5k,9k} subdirs... not sure where 9170
-lives then :)
+--=-qXwt3X32EBle0Ut6j8EO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I probably can't get to it until the weekend, but if you have more time,
-Christian, feel free to adopt whatever you want from mine.  Otherwise I'll
-pick up where Luis left off on the weekend.
+On Mon, 2009-03-30 at 13:36 -0700, Inaky Perez-Gonzalez wrote:
 
-I didn't push it yet because ath5k was having problems once I turned it
-on for ath5k, and I have no other hardware to test with so wanted to
-figure out what was broken first.  Channel list is a good hint, maybe
-it's time to fix iw/nl80211 to send back all the channels :)
+> I guess there is both history to both; Johannes, you are right, in this
+> case the hw rfkill kills the radio in HW and *we* send the input event.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Ok.
+
+> Reason it sends the input event is because I used the rt2x00 code as
+> reference...
+
+Right, but rt2x00 doesn't kill the radio in HW.
+
+> So, if you guys all agree that passing this to the input layer is not
+> needed,feel free to yank it.
+
+Ok. Except I don't know how to handle wimax_report_rfkill_sw() yet.
+
+johannes
+
+--=-qXwt3X32EBle0Ut6j8EO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0S7/AAoJEKVg1VMiehFY5uEQAMD0qTFuwFNSVvsIRo6+lBWG
+EZK9UA/czrdsbrELBmSLd2giIUEbsBXwn6324jpwX/1CfN6w7tTnS9FL7pTU9EBa
+Ofv09q0MLssWl6SxLtYE3kJTzoDzrbJvFBqgFfZKyNa2D9RSpqOPz4pNTwkfgThW
+D6xvs2lyCSvpGKB9F/bVSl5Jjw2AbKYCsoCKEVQDsPmx8zjB15hQF3y2yxWiHnwO
++O/nB/CW7+WD+1a00TpRbDTTIbsvEWTNqnUCt0dmbSvDy9x1xzfc02JpC3lPvXDD
+DAb1SoCb+PXwTikexy2bv0ayMy8xwJNhucPYBdjGun+CPV4f36E0MOFEiU4AGKzW
+bMG2vuShjBWHfZf6+1nsAdZdwcpoKWAHkPL1zM0ZWYlFHROb8mFhNC5Q17TjioI5
+mHJQIKOi7oadlm+p1XIB3k+XJBRHEFnLkWuqMLC2IFzx17DQCfDYBpOc3zrS7SNG
+olxI9G0LtDrGV6JQA3wpzsHKDfdALdITw1fz1VpuAcgk8D9PfJU4FhsJgUaR7Mpi
+ZXMtJtGHOEeK+3MPQKAzy1zJhH0Wd+W8f09d9pXst5fl/xaYq5k0kMAdrjCpKmY7
+rP45rkNH3Tj8jxmbNS0rk9cNGfV2cthyl45B3iuaEBCMJ/ZmLcWbPph6MqMhWLXE
+cTvw//FRAidHHFAWR00a
+=405X
+-----END PGP SIGNATURE-----
+
+--=-qXwt3X32EBle0Ut6j8EO--
+
