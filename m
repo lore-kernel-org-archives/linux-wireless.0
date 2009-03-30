@@ -1,206 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:53558 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232AbZCNRPA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:15:00 -0400
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v2 2/4] mac80211: track beacons separately from the rx
-	path activity
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 14 Mar 2009 19:14:38 +0200
-Message-ID: <20090314171438.11126.30330.stgit@tikku> (sfid-20090314_181501_622295_8F8FABBD)
-In-Reply-To: <20090314171234.11126.21125.stgit@tikku>
-References: <20090314171234.11126.21125.stgit@tikku>
+Received: from mail.atheros.com ([12.36.123.2]:25185 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755039AbZC3KC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 06:02:56 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:55 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18896.38869.229698.501792@gargle.gargle.HOWL> (sfid-20090330_120317_386372_D8688665)
+Date: Mon, 30 Mar 2009 15:28:45 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 12/17] ath9k: Remove the useless do..while loops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Separate beacon and rx path tracking in preparation for the beacon filtering
-support. At the same time change ieee80211_associated() to look a bit simpler.
+These are unnecessary constructs in a function.
+This patch removes these from both RX and TX init
+routines.
 
-Probe requests are now sent only after IEEE80211_PROBE_IDLE_TIME, which
-is now set to 60 seconds.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
+ drivers/net/wireless/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath9k/recv.c  |   83 +++++++++++++++++-------------------
+ drivers/net/wireless/ath9k/xmit.c  |   40 +++++++----------
+ 3 files changed, 57 insertions(+), 68 deletions(-)
 
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   79 ++++++++++++++++++++++++++------------------
- net/mac80211/rx.c          |    6 +++
- 3 files changed, 53 insertions(+), 33 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 74c4e13..5d3d0bf 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -305,6 +305,7 @@ struct ieee80211_if_managed {
- 	unsigned long request;
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index 6aba991..f374fa4 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -344,7 +344,7 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an);
+ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an);
+ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq);
+ int ath_tx_init(struct ath_softc *sc, int nbufs);
+-int ath_tx_cleanup(struct ath_softc *sc);
++void ath_tx_cleanup(struct ath_softc *sc);
+ struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb);
+ int ath_txq_update(struct ath_softc *sc, int qnum,
+ 		   struct ath9k_tx_queue_info *q);
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index ea02332..94a3328 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -283,54 +283,51 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 	struct ath_buf *bf;
+ 	int error = 0;
  
- 	unsigned long last_probe;
-+	unsigned long last_beacon;
+-	do {
+-		spin_lock_init(&sc->rx.rxflushlock);
+-		sc->sc_flags &= ~SC_OP_RXFLUSH;
+-		spin_lock_init(&sc->rx.rxbuflock);
+-
+-		sc->rx.bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
+-					   min(sc->cachelsz,
+-					       (u16)64));
++	spin_lock_init(&sc->rx.rxflushlock);
++	sc->sc_flags &= ~SC_OP_RXFLUSH;
++	spin_lock_init(&sc->rx.rxbuflock);
  
- 	unsigned int flags;
+-		DPRINTF(sc, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
+-			sc->cachelsz, sc->rx.bufsize);
++	sc->rx.bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
++				 min(sc->cachelsz, (u16)64));
  
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 397a2e7..c235d39 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -30,7 +30,7 @@
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
- #define IEEE80211_MONITORING_INTERVAL (2 * HZ)
--#define IEEE80211_PROBE_INTERVAL (60 * HZ)
-+#define IEEE80211_PROBE_IDLE_TIME (60 * HZ)
- #define IEEE80211_RETRY_AUTH_INTERVAL (1 * HZ)
+-		/* Initialize rx descriptors */
++	DPRINTF(sc, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
++		sc->cachelsz, sc->rx.bufsize);
  
- /* utils */
-@@ -925,7 +925,7 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	int disassoc;
-+	bool disassoc = false;
- 
- 	/* TODO: start monitoring current AP signal quality and number of
- 	 * missed beacons. Scan other channels every now and then and search
-@@ -940,36 +940,39 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
- 	if (!sta) {
- 		printk(KERN_DEBUG "%s: No STA entry for own AP %pM\n",
- 		       sdata->dev->name, ifmgd->bssid);
--		disassoc = 1;
--	} else {
--		disassoc = 0;
--		if (time_after(jiffies,
--			       sta->last_rx + IEEE80211_MONITORING_INTERVAL)) {
--			if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL) {
--				printk(KERN_DEBUG "%s: No ProbeResp from "
--				       "current AP %pM - assume out of "
--				       "range\n",
--				       sdata->dev->name, ifmgd->bssid);
--				disassoc = 1;
--			} else
--				ieee80211_send_probe_req(sdata, ifmgd->bssid,
--							 ifmgd->ssid,
--							 ifmgd->ssid_len,
--							 NULL, 0);
--			ifmgd->flags ^= IEEE80211_STA_PROBEREQ_POLL;
--		} else {
--			ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
--			if (time_after(jiffies, ifmgd->last_probe +
--				       IEEE80211_PROBE_INTERVAL)) {
--				ifmgd->last_probe = jiffies;
--				ieee80211_send_probe_req(sdata, ifmgd->bssid,
--							 ifmgd->ssid,
--							 ifmgd->ssid_len,
--							 NULL, 0);
--			}
+-		error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
+-					  "rx", nbufs, 1);
+-		if (error != 0) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"failed to allocate rx descriptors: %d\n", error);
+-			break;
 -		}
-+		disassoc = true;
-+		goto unlock;
++	/* Initialize rx descriptors */
+ 
+-		list_for_each_entry(bf, &sc->rx.rxbuf, list) {
+-			skb = ath_rxbuf_alloc(sc, sc->rx.bufsize, GFP_KERNEL);
+-			if (skb == NULL) {
+-				error = -ENOMEM;
+-				break;
+-			}
++	error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
++				  "rx", nbufs, 1);
++	if (error != 0) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"failed to allocate rx descriptors: %d\n", error);
++		goto err;
 +	}
-+
-+	if ((ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL) &&
-+	    time_after(jiffies, sta->last_rx + IEEE80211_MONITORING_INTERVAL)) {
-+		printk(KERN_DEBUG "%s: no probe response from AP %pM "
-+		       "- disassociating\n",
-+		       sdata->dev->name, ifmgd->bssid);
-+		disassoc = true;
-+		ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
-+		goto unlock;
+ 
+-			bf->bf_mpdu = skb;
+-			bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+-							 sc->rx.bufsize,
+-							 DMA_FROM_DEVICE);
+-			if (unlikely(dma_mapping_error(sc->dev,
+-				  bf->bf_buf_addr))) {
+-				dev_kfree_skb_any(skb);
+-				bf->bf_mpdu = NULL;
+-				DPRINTF(sc, ATH_DBG_FATAL,
+-					"dma_mapping_error() on RX init\n");
+-				error = -ENOMEM;
+-				break;
+-			}
+-			bf->bf_dmacontext = bf->bf_buf_addr;
++	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
++		skb = ath_rxbuf_alloc(sc, sc->rx.bufsize, GFP_KERNEL);
++		if (skb == NULL) {
++			error = -ENOMEM;
++			goto err;
+ 		}
+-		sc->rx.rxlink = NULL;
+ 
+-	} while (0);
++		bf->bf_mpdu = skb;
++		bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
++						 sc->rx.bufsize,
++						 DMA_FROM_DEVICE);
++		if (unlikely(dma_mapping_error(sc->dev,
++					       bf->bf_buf_addr))) {
++			dev_kfree_skb_any(skb);
++			bf->bf_mpdu = NULL;
++			DPRINTF(sc, ATH_DBG_FATAL,
++				"dma_mapping_error() on RX init\n");
++			error = -ENOMEM;
++			goto err;
++		}
++		bf->bf_dmacontext = bf->bf_buf_addr;
 +	}
-+
-+	if (time_after(jiffies,
-+		       ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
-+		printk(KERN_DEBUG "%s: beacon loss from AP %pM "
-+		       "- sending probe request\n",
-+		       sdata->dev->name, ifmgd->bssid);
-+		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
-+		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
-+					 ifmgd->ssid_len, NULL, 0);
-+		goto unlock;
-+
-+	}
-+
-+	if (time_after(jiffies, sta->last_rx + IEEE80211_PROBE_IDLE_TIME)) {
-+		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
-+		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
-+					 ifmgd->ssid_len, NULL, 0);
++	sc->rx.rxlink = NULL;
+ 
++err:
+ 	if (error)
+ 		ath_rx_cleanup(sc);
+ 
+@@ -345,10 +342,8 @@ void ath_rx_cleanup(struct ath_softc *sc)
+ 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
+ 		skb = bf->bf_mpdu;
+ 		if (skb) {
+-			dma_unmap_single(sc->dev,
+-					 bf->bf_buf_addr,
+-					 sc->rx.bufsize,
+-					 DMA_FROM_DEVICE);
++			dma_unmap_single(sc->dev, bf->bf_buf_addr,
++					 sc->rx.bufsize, DMA_FROM_DEVICE);
+ 			dev_kfree_skb(skb);
+ 		}
  	}
- 
-+ unlock:
- 	rcu_read_unlock();
- 
- 	if (disassoc)
-@@ -977,7 +980,7 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
- 					WLAN_REASON_PREV_AUTH_NOT_VALID);
- 	else
- 		mod_timer(&ifmgd->timer, jiffies +
--				      IEEE80211_MONITORING_INTERVAL);
-+			  IEEE80211_MONITORING_INTERVAL);
- }
- 
- 
-@@ -1358,6 +1361,12 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 	bss_conf->assoc_capability = capab_info;
- 	ieee80211_set_associated(sdata, changed);
- 
-+	/*
-+	 * initialise the time of last beacon to be the association time,
-+	 * otherwise beacon loss check will trigger immediately
-+	 */
-+	ifmgd->last_beacon = jiffies;
-+
- 	ieee80211_associated(sdata);
- }
- 
-@@ -1405,9 +1414,12 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 					 size_t len,
- 					 struct ieee80211_rx_status *rx_status)
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 735256f..628b780 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -2047,44 +2047,38 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
  {
-+	struct ieee80211_if_managed *ifmgd;
- 	size_t baselen;
- 	struct ieee802_11_elems elems;
+ 	int error = 0;
  
-+	ifmgd = &sdata->u.mgd;
-+
- 	if (memcmp(mgmt->da, sdata->dev->dev_addr, ETH_ALEN))
- 		return; /* ignore ProbeResp to foreign address */
+-	do {
+-		spin_lock_init(&sc->tx.txbuflock);
++	spin_lock_init(&sc->tx.txbuflock);
  
-@@ -1422,11 +1434,14 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+-		error = ath_descdma_setup(sc, &sc->tx.txdma, &sc->tx.txbuf,
+-			"tx", nbufs, 1);
+-		if (error != 0) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Failed to allocate tx descriptors: %d\n",
+-				error);
+-			break;
+-		}
+-
+-		error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
+-					  "beacon", ATH_BCBUF, 1);
+-		if (error != 0) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Failed to allocate beacon descriptors: %d\n",
+-				error);
+-			break;
+-		}
++	error = ath_descdma_setup(sc, &sc->tx.txdma, &sc->tx.txbuf,
++				  "tx", nbufs, 1);
++	if (error != 0) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"Failed to allocate tx descriptors: %d\n", error);
++		goto err;
++	}
  
- 	/* direct probe may be part of the association flow */
- 	if (test_and_clear_bit(IEEE80211_STA_REQ_DIRECT_PROBE,
--	    &sdata->u.mgd.request)) {
-+			       &ifmgd->request)) {
- 		printk(KERN_DEBUG "%s direct probe responded\n",
- 		       sdata->dev->name);
- 		ieee80211_authenticate(sdata);
- 	}
-+
-+	if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL)
-+		ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
+-	} while (0);
++	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
++				  "beacon", ATH_BCBUF, 1);
++	if (error != 0) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"Failed to allocate beacon descriptors: %d\n", error);
++		goto err;
++	}
+ 
++err:
+ 	if (error != 0)
+ 		ath_tx_cleanup(sc);
+ 
+ 	return error;
  }
  
- static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 25982c0..4990e76 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -849,7 +849,11 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		 * Mesh beacons will update last_rx when if they are found to
- 		 * match the current local configuration when processed.
- 		 */
--		sta->last_rx = jiffies;
-+		if (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
-+		    ieee80211_is_beacon(hdr->frame_control)) {
-+			rx->sdata->u.mgd.last_beacon = jiffies;
-+		} else
-+			sta->last_rx = jiffies;
- 	}
+-int ath_tx_cleanup(struct ath_softc *sc)
++void ath_tx_cleanup(struct ath_softc *sc)
+ {
+ 	if (sc->beacon.bdma.dd_desc_len != 0)
+ 		ath_descdma_cleanup(sc, &sc->beacon.bdma, &sc->beacon.bbuf);
  
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 	if (sc->tx.txdma.dd_desc_len != 0)
+ 		ath_descdma_cleanup(sc, &sc->tx.txdma, &sc->tx.txbuf);
+-
+-	return 0;
+ }
+ 
+ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
+-- 
+1.6.2.1
 
