@@ -1,51 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47783 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751434AbZCSULR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 16:11:17 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: Re: [PATCH] b43: Mask PHY TX error interrupt, if not debugging
-Date: Thu, 19 Mar 2009 21:10:08 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200903191927.21868.mb@bu3sch.de> <200903192013.44903.mb@bu3sch.de> <35D36C55-6CB3-443C-A916-D5771B68DD9A@ing.unibs.it>
-In-Reply-To: <35D36C55-6CB3-443C-A916-D5771B68DD9A@ing.unibs.it>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:42023 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755955AbZC3UsJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 16:48:09 -0400
+Date: Mon, 30 Mar 2009 17:48:00 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: [RFC] rfkill: rewrite
+Message-ID: <20090330204800.GC23749@khazad-dum.debian.net> (sfid-20090330_224812_393211_E3AC7116)
+References: <1238349195.24972.5.camel@johannes.local> <1238406057.24972.23.camel@johannes.local> <20090330132911.GC11934@khazad-dum.debian.net> <1238422114.5970.6.camel@johannes.local> <20090330173421.GB23749@khazad-dum.debian.net> <1238434878.5970.17.camel@johannes.local>
 MIME-Version: 1.0
-Message-Id: <200903192110.08437.mb@bu3sch.de> (sfid-20090319_211126_162775_045D22B6)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1238434878.5970.17.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 19 March 2009 20:56:52 Francesco Gringoli wrote:
-> I would agree with you, but there is this bizarre issue with PHY  
-> errors in monitoring mode that makes me thinking about what we call  
-> PHY errors. I would say they are not only due to transmission, they  
-> are general PHY errors, could they be? One last test I could try, is  
+On Mon, 30 Mar 2009, Johannes Berg wrote:
+> Thanks for the explanation. I guess that kinda makes sense. One thing
+> I'm entirely sure about -- I had removed the sw default state setter --
+> I guess this code still requires then? I was thinking the sw default
 
-No the interrupt indicates a PHY TX error.
-This name is from the broadcom headers, so we can trust that it's correct.
+Yes, thinkpad-acpi wants it.  It uses that to make sure the bluethooth
+and wwan rfkill _global_ state is kept across machine shutdown and
+reboots (I can't do that for UWB because Lenovo didn't add persistence
+for UWB for some reason).
 
-As I said, I never saw the error with the proprietary firmware in monitor mode.
-If you know a way how to trigger them, please tell me.
+Here's how it works:
 
-> to put again the broken minipci to pci adapter in one pci slot and put  
-> on the next slot the adapter that does not trigger these errors. If  
-> the interference caused by the broken adapter induces the wifi boards  
-> on top of it in errors, it should induce the same error on the board  
-> mounted on the right adapter.
+0.  Platform boots with the radio states that were in NVRAM
 
-Well, the question is what can we learn from this test? ;)
-What we really need is a way to find out which part of the PHY triggers
-this error. We have a dozen of methods to trigger the error. But we _still_
-do not know the lowlevel PHY conditions that result in an error.
+1.  thinkpad-acpi loads
+    1a. reads radio states from firmware, and stores to rfkill core
+        default state for the specific radio type
+    1b. registers the rfkill switch.  The core will cause the just
+        registered rfkill switch state to be changed to match the
+        current global state for that switch type... which probably
+        is what thinkpad-acpi tried to set in 1a.
 
-Probably somebody with lots of time should randomly go through the code
-and set various PHY thresholds to big/small values. Maybe that'll point us into
-some direction. The problem is that the code basically is undocumented and we
-only write blob values to the registers. So from reading the code you won't even
-know where these values are written. But the specs give some useful hints. ;)
+(normal system lifecycle)
+
+2.  thinkpad-acpi unload (or machine shutdown via platform bus
+    shutdown)
+    2a. commands firmware to store current radio state to NVRAM
+
+
+So, if thinkpad-acpi is the first rfkill driver of a certain radio
+type to load, it will cause the state for that radio type to be
+persistent.   If it is not the first driver to load, well, there is
+nothing we can do, and the radio state will be whatever is the current
+global state for that radio.
+
+The rfkill core tries to keep global states, that are per type. That's
+why the default is per type (and not per rfkill controller).
+
+Without it, all rfkill types will initally be either blocked or
+unblocked, depending on a module parameter for the rfkill core.
+
+> state should be set for the devices it applies to, but it seems that if
+> the master rfkill switch is set to "transmitter off" then one needs to
+> set the default state (for all USB transmitters etc) to off, correct?
+
+Well, the default is applied to a _type_, so it is valid for all
+switches of that type.
+
+It is probably a good idea to have the rfkill core sanitize the
+attempt to set the default state, and force it to "block" if EPO is
+active (I don't recall if I checked for this failure mode in the old
+code).
+
+On a _thinkpad_, the state stored in NVRAM will be overriden by the
+master switch, because the driver gets that information very
+indirectly (the firmware sets the initial rfkill controller state from
+NVRAM, and the driver just reads the rfkill controlled state at
+startup -- and if the master switch is active, the driver will read
+all rfkill controllers as blocked).   A driver that could get the
+persistent state directly from NVRAM might not be so limited.
 
 -- 
-Greetings, Michael.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
