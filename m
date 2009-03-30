@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753130AbZCaMQt (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:2721 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753269AbZC3RkH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 08:16:49 -0400
-Subject: Re: [RFC/RFT v2] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Mon, 30 Mar 2009 13:40:07 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] rfkill: rewrite
+Date: Mon, 30 Mar 2009 10:39:51 -0700
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
 	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <1238451390.5970.59.camel@johannes.local> (sfid-20090331_001720_897384_DD6E5216)
-References: <1238349195.24972.5.camel@johannes.local>
-	 (sfid-20090329_195345_745378_2F2074B3)  <1238451390.5970.59.camel@johannes.local>
-	 (sfid-20090331_001720_897384_DD6E5216)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9xip8XruVCAEKJhTQCuM"
-Date: Tue, 31 Mar 2009 14:16:13 +0200
-Message-Id: <1238501773.5970.90.camel@johannes.local> (sfid-20090331_141652_651028_28CD2677)
-Mime-Version: 1.0
+References: <1238349195.24972.5.camel@johannes.local> <1238406057.24972.23.camel@johannes.local>
+In-Reply-To: <1238406057.24972.23.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903301039.52153.inaky@linux.intel.com> (sfid-20090330_194011_616611_A0EEDB75)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 30 March 2009, Johannes Berg wrote:
+>
+>  * wimax
+>    -> need help, seems to report rfkill states to input device?
+>       don't understand
 
---=-9xip8XruVCAEKJhTQCuM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not really. 
 
-On Tue, 2009-03-31 at 00:16 +0200, Johannes Berg wrote:
-> This patch completely rewrites the rfkill core to address
-> the following deficiencies:
+What it does is if the device exposes a hw rfkill key, export that 
+key as an input device, as well as using it to report the state
+change. 
 
-[snip]
+So there are three main entry points:
 
-This one has a few stupid locking bugs, will send an updated version
-later today, for now at the well-known URL.
+wimax_report_rfkill_hw() -- device driver report to stack
+  
+   device reports a change in the hw rfkill key; switch the radio to
+   whichever state AND report a key event through the input layer
 
-johannes
+wimax_report_rfkill_sw() -- device driver report to stack
 
---=-9xip8XruVCAEKJhTQCuM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+   device reports a change in the sw rfkill state; this is needed for
+   cases where the radio is shared amongst different technologies (wifi
+   and wimax, for example, in the case of the 5150). When you turn on
+   Wifi, WiMAX switches off (and vice versa).
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+   As well, if from SW you flip it off, this gets called back but does
+   nothing as the state is updated already.
 
-iQIcBAABAgAGBQJJ0gmKAAoJEKVg1VMiehFYzcYQAIZhTw0wvdi5Z9jveADRU1B+
-YSqezUfrVgFlh6NDTMal8XZ6FiygdhEFU0j2PSMkvy996ZifKagRRe+Z5PgV4QY1
-L6dKGXK07cQRGPYeqHff6xPOJOOFegmh1aQey7XkWPn62g1qNrRyEVQoUVbj1y1Q
-AiMtNFm1fzaFj/9rDaayayYpKcuwZEJPLwyGArGuoRvZWoOQ74h1GHX2zOpHRSSe
-bJfKeLgQRiS4ZVnPa0M8UpJ2QJYHO8Ltdhn4I/h5JTWUxXE94p+qWzahcPEypx/D
-08ZQQLbTVcSQNqY527INbcC67mbMjJhTc7Y7pHiK5OQ/fge7gE6g1hkfOrnmaIO3
-wXTayViYFZIMSX/M7zzhO7TKSrxQbiwzF7irmxsxpq/ugt+lNAwDIcsNLeCcz/AQ
-ipU5JEXE6M8ruSQvQ14DpXdCvVhQMNDVAzBIBep719/jjrfmrl8GKE9z/1lC3Q21
-4H2UscdKy5IeA+eP3IISmXdHKNSxZWeffrbUZaLXNIoTAx9VnbZCoqsgUfg4cl3v
-kfw9xZAfiuug4D52LG/96bLzFPvfxUWzf2zk/4B+AUHn6RhqOzXoQjNM6JwV6hRW
-yfYEut8N+uEytR0WNdLMKvLY+/7PQDMfNJMmNgea8DPizjcbVlnjyFaDXiHPGNNB
-zEwNlq+pZfmf6qyeU0g6
-=Gq/H
------END PGP SIGNATURE-----
+wimax_rfkill / wimax_rfkill_toggle_radio -- user interface
 
---=-9xip8XruVCAEKJhTQCuM--
+   The user wants to flip the SW switch on/off
 
+-- 
+Inaky
