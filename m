@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:33845 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759111AbZCTU7o (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:46621 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751600AbZC3N1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 16:59:44 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "Alina Friedrichsen" <x-alina@gmx.net>
-Subject: Re: [RFC][RFT][PATCH 0/5 v5] ar9170: ar9170 driver (aka mac80211's otus)
-Date: Fri, 20 Mar 2009 21:59:41 +0100
-Cc: linux-wireless@vger.kernel.org,
-	otus-devel@lists.madwifi-project.org, greg@kroah.com,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-References: <200903170408.12626.chunkeey@web.de> <200903202036.09255.chunkeey@web.de> <20090320200736.261050@gmx.net>
-In-Reply-To: <20090320200736.261050@gmx.net>
+	Mon, 30 Mar 2009 09:27:13 -0400
+Date: Mon, 30 Mar 2009 10:27:09 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: [RFC] rfkill: rewrite
+Message-ID: <20090330132709.GB11934@khazad-dum.debian.net> (sfid-20090330_152715_798337_51CC91B2)
+References: <1238349195.24972.5.camel@johannes.local> <200903292016.05470.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903202159.41613.chunkeey@web.de> (sfid-20090320_220013_584427_8158CBD9)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200903292016.05470.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 20 March 2009 21:07:36 Alina Friedrichsen wrote:
-> Hello Christian!
-Hello!
-
-> > Based on the number of mails I got, this driver should be ready for
-> > inclusion.
+On Sun, 29 Mar 2009, Ivo van Doorn wrote:
+> Just for the record, as long as you (or somebody else) takes over maintainership
+> over rfkill after these changes, I have no objections against the changes. Luckily
+> you already updated the Maintainers entry, so I'm happy. :)
 > 
-> ACK
-Good ;-)
- 
-> > So, this is probably the last RFC and the official patches will follow on
-> > sunday (only if no one finds a bug that needs to be fixed ASAP.)
-> 
-> This is not same driver. Its much different, and I couldn't follow the changes in Johannes' git repository.
-Well, the USB code was rewritten & "outsourced" into a separate module...
-I did that because:
-1. we might want to replace most of the "common" code with portions of ath9k.
-    (no one, except Atheros' developers can really us with ANI/BC/HT/
-    ABOLT/VAP etc. ;-) )
+> I know rfkill was poorly designed and I simply lacked the time (and perhaps
+> some interest as well) to continue with it. The changes you propose sound
+> reasonable so I hope it will turn rfkill really into something which it was supposed
+> to be from the start.
 
-2. The otus driver talks about SPI devices. So maybe one day, we will need to
-    add another frontend for the people with a handhelds or tablet with such a
-    chip.
+Agreed.  I never wanted to do so much work on rfkill, either... I just
+wanted something I could use in thinkpad-acpi, but that proved to be a lot
+of work, as once you start, you want to finish it.
 
-Now, what "changes" are you referring to?
-Most of the qos, hw & rate control changes were already present in Johannes' tree.
-And all I did was moving lines from other mac80211 driver around. :)
- 
-> Today, if have implement rate control (the needed ieee80211_tx_status_irqsafe() calls) for the original code. Now after one hour this code already outdated. :/
-well, this "rate control" code was already part of the first RFC...
-which was posted earlier this week?!
+I will go over the new proposed rfkill to check if it is in a state that is
+comfortable for drivers like thinkpad-acpi to use, and offer comments about
+it.
 
-> In your code the implementation of it is not yet complete?
-What's missing? Well, there is no BA (fail) & MCS rate report, true...
-But under normal operation the rate should go up or down depending on the
-current link quality.
-
-However, please tell me about your idea. As my way of solving this issue
-properly has some drawbacks (of course, I'm _fully_ aware of them)!
-
-Regards,
-	Chr
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
