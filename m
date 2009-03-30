@@ -1,223 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:44056 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbZCFII6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 03:08:58 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Imre Kaloz <kaloz@openwrt.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 3/3] ath9k: fix AR_SREV_9100_OR_LATER macro
-Date: Fri,  6 Mar 2009 09:08:53 +0100
-Message-Id: <1236326933-27412-4-git-send-email-juhosg@openwrt.org> (sfid-20090306_090903_728592_461EEAC4)
-In-Reply-To: <1236326933-27412-1-git-send-email-juhosg@openwrt.org>
-References: <1236326933-27412-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.atheros.com ([12.36.123.2]:25186 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758110AbZC3KC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 06:02:57 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:56 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18896.38870.613700.109192@gargle.gargle.HOWL> (sfid-20090330_120318_866124_F01C1A0C)
+Date: Mon, 30 Mar 2009 15:28:46 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 13/17] ath9k: Initialize values when setting up the queue parameters
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current macro is wrong, because detects some AR5416 devices as an
-AR9100 device. The AR5416 devices would have performance issues after
-this change, because the contents of the ar5416 specific and of the
-ar9100 specificinitval arrays are swapped. Fortunately we can correct
-this with the rename of the arrays simply.
+Also fix a small typo.
 
-Changes-licesed-under: ISC
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath9k/initvals.h |   44 ++++++++++++++++----------------
- drivers/net/wireless/ath9k/reg.h      |    2 +-
- 2 files changed, 23 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath9k/main.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
-index d492363..4eb8b59 100644
---- a/drivers/net/wireless/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath9k/initvals.h
-@@ -14,7 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index d510c4e..6db2131 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -922,7 +922,7 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
+ 		mod_timer(&sc->ani.timer,
+ 			  jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
+ 	} else {
+-		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info DISSOC\n");
++		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info DISASSOC\n");
+ 		sc->curaid = 0;
+ 	}
+ }
+@@ -2037,8 +2037,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * here except setup the interrupt mask.
+ 	 */
+ 	if (ath_startrecv(sc) != 0) {
+-		DPRINTF(sc, ATH_DBG_FATAL,
+-			"Unable to start recv logic\n");
++		DPRINTF(sc, ATH_DBG_FATAL, "Unable to start recv logic\n");
+ 		r = -EIO;
+ 		goto mutex_unlock;
+ 	}
+@@ -2552,6 +2551,8 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
  
--static const u32 ar5416Modes_9100[][6] = {
-+static const u32 ar5416Modes[][6] = {
-     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
-     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
-     { 0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38, 0x00001180 },
-@@ -78,7 +78,7 @@ static const u32 ar5416Modes_9100[][6] = {
-     { 0x0000a334, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
- };
+ 	mutex_lock(&sc->mutex);
  
--static const u32 ar5416Common_9100[][2] = {
-+static const u32 ar5416Common[][2] = {
-     { 0x0000000c, 0x00000000 },
-     { 0x00000030, 0x00020015 },
-     { 0x00000034, 0x00000005 },
-@@ -456,12 +456,12 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000a3e0, 0x000001ce },
- };
- 
--static const u32 ar5416Bank0_9100[][2] = {
-+static const u32 ar5416Bank0[][2] = {
-     { 0x000098b0, 0x1e5795e5 },
-     { 0x000098e0, 0x02008020 },
- };
- 
--static const u32 ar5416BB_RfGain_9100[][3] = {
-+static const u32 ar5416BB_RfGain[][3] = {
-     { 0x00009a00, 0x00000000, 0x00000000 },
-     { 0x00009a04, 0x00000040, 0x00000040 },
-     { 0x00009a08, 0x00000080, 0x00000080 },
-@@ -528,21 +528,21 @@ static const u32 ar5416BB_RfGain_9100[][3] = {
-     { 0x00009afc, 0x000000f9, 0x000000f9 },
- };
- 
--static const u32 ar5416Bank1_9100[][2] = {
-+static const u32 ar5416Bank1[][2] = {
-     { 0x000098b0, 0x02108421 },
-     { 0x000098ec, 0x00000008 },
- };
- 
--static const u32 ar5416Bank2_9100[][2] = {
-+static const u32 ar5416Bank2[][2] = {
-     { 0x000098b0, 0x0e73ff17 },
-     { 0x000098e0, 0x00000420 },
- };
- 
--static const u32 ar5416Bank3_9100[][3] = {
-+static const u32 ar5416Bank3[][3] = {
-     { 0x000098f0, 0x01400018, 0x01c00018 },
- };
- 
--static const u32 ar5416Bank6_9100[][3] = {
-+static const u32 ar5416Bank6[][3] = {
- 
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -579,7 +579,7 @@ static const u32 ar5416Bank6_9100[][3] = {
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
- 
--static const u32 ar5416Bank6TPC_9100[][3] = {
-+static const u32 ar5416Bank6TPC[][3] = {
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -615,13 +615,13 @@ static const u32 ar5416Bank6TPC_9100[][3] = {
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
- 
--static const u32 ar5416Bank7_9100[][2] = {
-+static const u32 ar5416Bank7[][2] = {
-     { 0x0000989c, 0x00000500 },
-     { 0x0000989c, 0x00000800 },
-     { 0x000098cc, 0x0000000e },
- };
- 
--static const u32 ar5416Addac_9100[][2] = {
-+static const u32 ar5416Addac[][2] = {
-     {0x0000989c,  0x00000000 },
-     {0x0000989c,  0x00000003 },
-     {0x0000989c,  0x00000000 },
-@@ -661,7 +661,7 @@ static const u32 ar5416Addac_9100[][2] = {
-     {0x000098cc,  0x00000000 },
- };
- 
--static const u32 ar5416Modes[][6] = {
-+static const u32 ar5416Modes_9100[][6] = {
-     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
-     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
-     { 0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38, 0x00001180 },
-@@ -735,7 +735,7 @@ static const u32 ar5416Modes[][6] = {
-     { 0x0000a334, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
- };
- 
--static const u32 ar5416Common[][2] = {
-+static const u32 ar5416Common_9100[][2] = {
-     { 0x0000000c, 0x00000000 },
-     { 0x00000030, 0x00020015 },
-     { 0x00000034, 0x00000005 },
-@@ -1109,12 +1109,12 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000a3e0, 0x000001ce },
- };
- 
--static const u32 ar5416Bank0[][2] = {
-+static const u32 ar5416Bank0_9100[][2] = {
-     { 0x000098b0, 0x1e5795e5 },
-     { 0x000098e0, 0x02008020 },
- };
- 
--static const u32 ar5416BB_RfGain[][3] = {
-+static const u32 ar5416BB_RfGain_9100[][3] = {
-     { 0x00009a00, 0x00000000, 0x00000000 },
-     { 0x00009a04, 0x00000040, 0x00000040 },
-     { 0x00009a08, 0x00000080, 0x00000080 },
-@@ -1181,21 +1181,21 @@ static const u32 ar5416BB_RfGain[][3] = {
-     { 0x00009afc, 0x000000f9, 0x000000f9 },
- };
- 
--static const u32 ar5416Bank1[][2] = {
-+static const u32 ar5416Bank1_9100[][2] = {
-     { 0x000098b0, 0x02108421},
-     { 0x000098ec, 0x00000008},
- };
- 
--static const u32 ar5416Bank2[][2] = {
-+static const u32 ar5416Bank2_9100[][2] = {
-     { 0x000098b0, 0x0e73ff17},
-     { 0x000098e0, 0x00000420},
- };
- 
--static const u32 ar5416Bank3[][3] = {
-+static const u32 ar5416Bank3_9100[][3] = {
-     { 0x000098f0, 0x01400018, 0x01c00018 },
- };
- 
--static const u32 ar5416Bank6[][3] = {
-+static const u32 ar5416Bank6_9100[][3] = {
- 
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -1233,7 +1233,7 @@ static const u32 ar5416Bank6[][3] = {
- };
- 
- 
--static const u32 ar5416Bank6TPC[][3] = {
-+static const u32 ar5416Bank6TPC_9100[][3] = {
- 
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -1270,13 +1270,13 @@ static const u32 ar5416Bank6TPC[][3] = {
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
- 
--static const u32 ar5416Bank7[][2] = {
-+static const u32 ar5416Bank7_9100[][2] = {
-     { 0x0000989c, 0x00000500 },
-     { 0x0000989c, 0x00000800 },
-     { 0x000098cc, 0x0000000e },
- };
- 
--static const u32 ar5416Addac[][2] = {
-+static const u32 ar5416Addac_9100[][2] = {
-     {0x0000989c, 0x00000000 },
-     {0x0000989c, 0x00000000 },
-     {0x0000989c, 0x00000000 },
-diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
-index 357b90b..afca69f 100644
---- a/drivers/net/wireless/ath9k/reg.h
-+++ b/drivers/net/wireless/ath9k/reg.h
-@@ -754,7 +754,7 @@
- #define AR_SREV_9100(ah) \
- 	((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
- #define AR_SREV_9100_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
-+	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
- 
- #define AR_SREV_9160(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
++	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
++
+ 	qi.tqi_aifs = params->aifs;
+ 	qi.tqi_cwmin = params->cw_min;
+ 	qi.tqi_cwmax = params->cw_max;
 -- 
-1.5.3.2
+1.6.2.1
 
