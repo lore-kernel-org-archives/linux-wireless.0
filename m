@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35457 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754943AbZCCRZW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056AbZC3Kjf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 12:25:22 -0500
-Message-Id: <20090303172515.987598674@atheros.com> (sfid-20090303_182527_491250_B3C2233C)
-References: <20090303172325.437810138@atheros.com>
-Date: Tue, 03 Mar 2009 19:23:34 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 09/15] ath9k: Register larger listen interval
+	Mon, 30 Mar 2009 06:39:35 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <1238407043.24972.25.camel@johannes.local> (sfid-20090330_115732_529983_0928B643)
+References: <1238349195.24972.5.camel@johannes.local>
+	 <1238403987.24972.14.camel@johannes.local>
+	 <200903301154.10067.mb@bu3sch.de>
+	 (sfid-20090330_115542_001932_2A670424)  <1238407043.24972.25.camel@johannes.local>
+	 (sfid-20090330_115732_529983_0928B643)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Us1WuZ18OdCaOsAgx2OA"
+Date: Mon, 30 Mar 2009 12:39:30 +0200
+Message-Id: <1238409570.24972.33.camel@johannes.local> (sfid-20090330_123938_825000_88EFD3FC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Notify the AP that we may be sleeping longer to allow the AP power
-save code to buffer larger number of frames for us when using virtual
-wiphys.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-Us1WuZ18OdCaOsAgx2OA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- drivers/net/wireless/ath9k/main.c |    1 +
- 1 file changed, 1 insertion(+)
+On Mon, 2009-03-30 at 11:57 +0200, Johannes Berg wrote:
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:30.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:43.000000000 +0200
-@@ -1595,6 +1595,7 @@ void ath_set_hw_capab(struct ath_softc *
- 	hw->queues = 4;
- 	hw->max_rates = 4;
- 	hw->channel_change_time = 5000;
-+	hw->max_listen_interval = 10;
- 	hw->max_rate_tries = ATH_11N_TXMAXTRY;
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
+> > > One thing I was wondering about -- should we just implement polling v=
+ia
+> > > a single work struct that iterates all those rfkill drivers that need
+> > > polling? I've given them each an own right now, but that seems
+> > > unnecessary.
+> >=20
+> > If it doesn't add new locking problems (global locks, etc...) that'd be=
+ OK.
+>=20
+> Hm, indeed, it probably would -- rfkill_register needs a global lock
+> while being called from the driver, and the polling would need the same
+> lock while calling into the driver.
 
--- 
+We can work around that by cancelling the work whenever we want to
+modify the list -- that way the work doesn't need to take any locks. Not
+sure it's worth it though, that makes the code harder to follow.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+johannes
+
+--=-Us1WuZ18OdCaOsAgx2OA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0KFgAAoJEKVg1VMiehFYx7gQAMAglhb8nxbLa4+fcvFHeGQu
+D5RjXrDxpmOB5DzDVMgOVgeZ4OmMiYVon0I+lZseYcFEIMx0UNSkhBine4BnJx+Y
+cCdlM7THNcjT6qoXRw+4Dj5Ey7EL5T3LTgrg9MPI5A0D3Wse4b9esTMnpH4ckJ2y
+lVJYrbaQuZt+Ee/DJ/0z5cvt/X5p0A0uSIrprs4eKbA/bXojt+iGK+4t/7F2wgCr
+Ot2Mfa9a7CzWU2BERjyjf5iqgWHyUrnjP2T/i+MVXti3T8R/3xV9+lr9bpAC1rsP
+1RduZU9U3Aj08DhkplM+IJU9gWRJziZ669+xnsko1BaNMFju/jRFw58pjMXcdb+M
+JRhAYBLVi9S/N4qrswLaM8T6gtup+mE5T2ispGVmNdq5oGxTnHrovim3Ywgonpqu
+vwrScWCwirh0ajPhfp2D0Naszle7FB5H5QtCdqBgTCZHtLilYoAXNbnK2MJ02svX
+56x9GwagDq05XDPTd54hr5A+drjW2trJTLH+pm1oiF32Y9QBKhwferrLT7Gx0ISa
+KpcHkuae8E6p0aOok0K1NY2sTqYVTtPCQzIZ+QYeW0SeKdn5zg7mqeCEdyFcFOWa
+IHfete+Y1QTM4mCCawd4EXWI68G/0DExl37khdMjtK8/Ctd8zOUT0onyz+SvGBoZ
+QJXcmzHmeChMzPfY+kyt
+=khU5
+-----END PGP SIGNATURE-----
+
+--=-Us1WuZ18OdCaOsAgx2OA--
+
