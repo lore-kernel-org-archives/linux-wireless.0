@@ -1,80 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:56408 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069AbZCBDiA convert rfc822-to-8bit (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:43060 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752540AbZC3UwT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2009 22:38:00 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so1412763ywh.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Mar 2009 19:37:58 -0800 (PST)
+	Mon, 30 Mar 2009 16:52:19 -0400
+Date: Mon, 30 Mar 2009 17:52:15 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dirk Opfer <Dirk@opfer-online.de>,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: [RFC] rfkill: rewrite
+Message-ID: <20090330205215.GD23749@khazad-dum.debian.net> (sfid-20090330_225222_863819_248BA58B)
+References: <1238349195.24972.5.camel@johannes.local> <1238406057.24972.23.camel@johannes.local> <200903301039.52153.inaky@linux.intel.com> <1238435143.5970.21.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <20090128113751.GA3197@sortiz.org>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <20090126114453.GB3197@sortiz.org>
-	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
-	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
-	 <20090127162437.GA3596@sortiz.org>
-	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
-	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
-	 <20090128113751.GA3197@sortiz.org>
-Date: Sun, 1 Mar 2009 22:37:57 -0500
-Message-ID: <c4d76b3b0903011937p6538adbfpc0dab859a6742394@mail.gmail.com> (sfid-20090302_043806_408022_4F66CFEB)
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Samuel Ortiz <samuel@sortiz.org>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1238435143.5970.21.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 6:37 AM, Samuel Ortiz <samuel@sortiz.org> wrote=
-:
-> On Wed, Jan 28, 2009 at 09:12:48AM +0200, Tomas Winkler wrote:
->> On Wed, Jan 28, 2009 at 1:31 AM, Jason Andryuk <jandryuk@gmail.com> =
-wrote:
->> >> No, that's just a consequence of the bug, not the bug itself.
->> >> Would you mind applying this patch on top of your latest wireless=
--testing tree
->> >> and testing 3945 with it ? Thanks for your patience.
->> >
->> > The patch did not cleanly apply, but I just removed the lines
->> > indicated in the patch. =A0It crashed with a NULL pointer derefere=
-nce.
->>
->> Samuel
->> It was really wrong try, you cannot just leave place where firmware
->> updated read pointer unallocated. I would rather focus on difference=
-s
->> introduced by this patch.
-> Well, that's what I did. I neglected to check if rb_stts were actuall=
-y used.
->
->
->> commit 738910c064ff461051cd37e17199f270ff88a9a3 iwl3945: use rx queu=
-e
->> management infrastructure from iwlcore is the first to trigger the
->> BUG_ON. However, prior versions would dereference a NULL pointer
->> before the driver could get far enough to trigger the BUG_ON.
-> I know, that's what Jason described.
-> I think I now understand why. Prior to
-> 738910c064ff461051cd37e17199f270ff88a9a3, you introduced
-> c2a0aa3cb733452e749727680e380dca6cc10a68 without actually allocating =
-the
-> rb_stts pointer, which was really wrong too.
+On Mon, 30 Mar 2009, Johannes Berg wrote:
+> On Mon, 2009-03-30 at 10:39 -0700, Inaky Perez-Gonzalez wrote:
+> > On Monday 30 March 2009, Johannes Berg wrote:
+> > >
+> > >  * wimax
+> > >    -> need help, seems to report rfkill states to input device?
+> > >       don't understand
+> > 
+> > Not really. 
+> > 
+> > What it does is if the device exposes a hw rfkill key, export that 
+> > key as an input device, as well as using it to report the state
+> > change. 
+> > 
+> > So there are three main entry points:
+> > 
+> > wimax_report_rfkill_hw() -- device driver report to stack
+> >   
+> >    device reports a change in the hw rfkill key; switch the radio to
+> >    whichever state AND report a key event through the input layer
+> 
+> But reporting the key through the input layer is wrong, afaict.
 
-I tested c2a0aa3cb733452e749727680e380dca6cc10a68 "iwl3945: use
-iwl_rb_status" with the additional patches to initialize rb_stts
-(copied from iwl_rx_queue_alloc) and to convert the BUG_ON to a
-WARN_ON.
+Reporting the key through the input layer is correct if, and _only_ if, it
+is REALLY a button/key, AND nothing else is doing it.
 
-The driver runs without segfaulting.  So far the WARN_ON has not been
-triggered, but the driver fails to finish authentication with the AP.
-I receive "wlan0: authentication with AP 00:30:bd:c0:90:24 timed out"
+It is NOT to be done in anything that could be, for example, an input pin
+that is tied to a GPIO output in the embedded controller of a laptop that
+will be driven by a platform driver.
 
-Jason
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And if it could be both and you can't be certain, you need dmi whitelisting
+or a module parameter to know which one.  And default to NOT issuing input
+events.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
