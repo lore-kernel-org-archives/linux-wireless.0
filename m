@@ -1,156 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:50532 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432AbZCUAJo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38624 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429AbZC3J53 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 20:09:44 -0400
-From: Christian Lamparter <chunkeey@web.de>
+	Mon, 30 Mar 2009 05:57:29 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH] p54: fix SoftLED compile dependencies
-Date: Sat, 21 Mar 2009 00:57:46 +0100
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C293CC.6020009@oracle.com> <200903191955.00718.mb@bu3sch.de>
-In-Reply-To: <200903191955.00718.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903210057.47067.chunkeey@web.de> (sfid-20090321_010958_004369_3120D1FA)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <200903301154.10067.mb@bu3sch.de> (sfid-20090330_115542_001932_2A670424)
+References: <1238349195.24972.5.camel@johannes.local>
+	 <1238403987.24972.14.camel@johannes.local>
+	 <200903301154.10067.mb@bu3sch.de> (sfid-20090330_115542_001932_2A670424)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Wtf3eIkpkF49CjDXfdQ1"
+Date: Mon, 30 Mar 2009 11:57:23 +0200
+Message-Id: <1238407043.24972.25.camel@johannes.local> (sfid-20090330_115732_529983_0928B643)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a compile problem when the MAC80211_LEDS
-triggers are enabled but not LED class itself. 
-(which is sort of pointless, but anyway...)
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-mb, thank you for the tips!
+--=-Wtf3eIkpkF49CjDXfdQ1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Randy Dunlap can you please give this patch a try?
+On Mon, 2009-03-30 at 11:54 +0200, Michael Buesch wrote:
+> On Monday 30 March 2009 11:06:27 Johannes Berg wrote:
+> > On Sun, 2009-03-29 at 19:53 +0200, Johannes Berg wrote:
+> > > This patch completely rewrites the rfkill core to address
+> > > the following deficiencies:
+> > >=20
+> > >  * all rfkill drivers need to implement polling where necessary
+> > >    rather than having one central implementation
+> >=20
+> > One thing I was wondering about -- should we just implement polling via
+> > a single work struct that iterates all those rfkill drivers that need
+> > polling? I've given them each an own right now, but that seems
+> > unnecessary.
+>=20
+> If it doesn't add new locking problems (global locks, etc...) that'd be O=
+K.
 
-John, do you know where the patch form 
-Geert Uytterhoeven <geert@linux-m68k.org> went?
----
-diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
-index 0e344ac..ee1aaca 100644
---- a/drivers/net/wireless/p54/Kconfig
-+++ b/drivers/net/wireless/p54/Kconfig
-@@ -1,9 +1,10 @@
- config P54_COMMON
- 	tristate "Softmac Prism54 support"
--	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
-+	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	select FW_LOADER
- 	---help---
--	  This is common code for isl38xx based cards.
--	  This module does nothing by itself - the USB/PCI frontends
-+	  This is common code for isl38xx/stlc45xx based modules.
-+	  This module does nothing by itself - the USB/PCI/SPI frontends
- 	  also need to be enabled in order to support any devices.
- 
- 	  These devices require softmac firmware which can be found at
-@@ -17,31 +18,6 @@ config P54_USB
- 	select CRC32
- 	---help---
- 	  This driver is for USB isl38xx based wireless cards.
--	  These are USB based adapters found in devices such as:
--
--	  3COM 3CRWE254G72
--	  SMC 2862W-G
--	  Accton 802.11g WN4501 USB
--	  Siemens Gigaset USB
--	  Netgear WG121
--	  Netgear WG111
--	  Medion 40900, Roper Europe
--	  Shuttle PN15, Airvast WM168g, IOGear GWU513
--	  Linksys WUSB54G
--	  Linksys WUSB54G Portable
--	  DLink DWL-G120 Spinnaker
--	  DLink DWL-G122
--	  Belkin F5D7050 ver 1000
--	  Cohiba Proto board
--	  SMC 2862W-G version 2
--	  U.S. Robotics U5 802.11g Adapter
--	  FUJITSU E-5400 USB D1700
--	  Sagem XG703A
--	  DLink DWL-G120 Cohiba
--	  Spinnaker Proto board
--	  Linksys WUSB54AG
--	  Inventel UR054G
--	  Spinnaker DUT
- 
- 	  These devices require softmac firmware which can be found at
- 	  http://prism54.org/
-@@ -71,3 +47,8 @@ config P54_SPI
- 	  Nokia's N800/N810 Portable Internet Tablet.
- 
- 	  If you choose to build a module, it'll be called p54spi.
-+
-+config P54_LEDS
-+	bool
-+	depends on P54_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = P54_COMMON)
-+	default y
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 0a98983..0c1b057 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -21,9 +21,9 @@
- #include <linux/etherdevice.h>
- 
- #include <net/mac80211.h>
--#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- #include <linux/leds.h>
--#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
- 
- #include "p54.h"
- #include "p54common.h"
-@@ -2420,7 +2420,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
- 	return 0;
- }
- 
--#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- static void p54_led_brightness_set(struct led_classdev *led_dev,
- 				   enum led_brightness brightness)
- {
-@@ -2508,7 +2508,7 @@ static void p54_unregister_leds(struct ieee80211_hw *dev)
- 	if (priv->assoc_led.registered)
- 		led_classdev_unregister(&priv->assoc_led.led_dev);
- }
--#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
- 
- static const struct ieee80211_ops p54_ops = {
- 	.tx			= p54_tx,
-@@ -2592,11 +2592,11 @@ int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
- 		return err;
- 	}
- 
--	#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- 	err = p54_init_leds(dev);
- 	if (err)
- 		return err;
--	#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
- 
- 	dev_info(pdev, "is registered as '%s'\n", wiphy_name(dev->wiphy));
- 	return 0;
-@@ -2610,9 +2610,9 @@ void p54_free_common(struct ieee80211_hw *dev)
- 	kfree(priv->output_limit);
- 	kfree(priv->curve_data);
- 
--	#ifdef CONFIG_MAC80211_LEDS
-+#ifdef CONFIG_P54_LEDS
- 	p54_unregister_leds(dev);
--	#endif /* CONFIG_MAC80211_LEDS */
-+#endif /* CONFIG_P54_LEDS */
- }
- EXPORT_SYMBOL_GPL(p54_free_common);
- 
+Hm, indeed, it probably would -- rfkill_register needs a global lock
+while being called from the driver, and the polling would need the same
+lock while calling into the driver.
+
+johannes
+
+--=-Wtf3eIkpkF49CjDXfdQ1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0JeAAAoJEKVg1VMiehFYjOcQAIqNJhXnKd6wo679m377R9lm
+JVT5i3Ma5KNUrDUx4Oeiqswb8FweIgV55fdhmyzboavvm0oXY5Hu1Bf4mfs8cSPh
+FXZQhOSaym473yNyQmu3+1i5+y1Z6fkApilQiZmL/MiDnpWMmx+wLWMUjQeEu/yx
+SX8vP0iDeSw2eEgiv9WsIrmxQZmiiNgKa5Go/QPFN9lEaYC3R5HMqsZ+a2kJVIQB
+cNaYP1azUyaRrM6briCPxAzkGcBknkCZaaitTIJIxxkyrZflrW2O/4kexjlcKM+M
+xAjQ+MnzdXZPRIwu660B0VeT/CqscnU294b2BBsldRWrPR+QH5FUEDFVQNbk9Mmq
+XYse+w3TDPhA9eTvfzjnshW62zRfCwNbeP959lY1mVXIiOncSg1Lq0epYduFwmn6
+wE1DFM1xXSV8Ymg9UDhaz4LC98/4YxF0e6jHo0A6frRjor/RPuYjT0q6m5qDh8Ue
+e7RUG9pSID97fZRQ0fJcjnTzqzwpVYdADg7QP256cIETThtS386p5gIzG4hHEzRR
+ToGRDGtM11g9Lzxvw87JxFcw5HOuXK1ePD1Jd8rczhFrXlhHx2mCjBTsMu9SYn7x
+PajV/Vu8NC9CLaeFHTSJDpRQrVVTmFQQe8Ahj1dVfK4F8iSYH8MH5Cp0fRTPC0ef
+JzfsUy8RhsP51XVpkTEJ
+=VpGQ
+-----END PGP SIGNATURE-----
+
+--=-Wtf3eIkpkF49CjDXfdQ1--
+
