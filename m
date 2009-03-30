@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56178 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbZCDOP0 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:24164 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752231AbZC3SsC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 09:15:26 -0500
-Date: Wed, 4 Mar 2009 09:14:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Mike Cui <cuicui@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Bug in iw prevents setting the "cook" monitor flag
-Message-ID: <20090304141402.GB7965@tuxdriver.com> (sfid-20090304_151529_108318_FCDFB214)
-References: <7c8826910903021516t640aa84dxfbb61a278b69c740@mail.gmail.com> <20090303145233.GB17678@tuxdriver.com> <87tz69six4.fsf@litku.valot.fi>
+	Mon, 30 Mar 2009 14:48:02 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so2721663wff.4
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 11:48:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87tz69six4.fsf@litku.valot.fi>
+In-Reply-To: <49CFDB1F.7040902@hauke-m.de>
+References: <49CFD043.6020708@tls-tautenburg.de> <49CFDB1F.7040902@hauke-m.de>
+Date: Mon, 30 Mar 2009 11:47:45 -0700
+Message-ID: <43e72e890903301147hc09cec7rc8f214450a53efa7@mail.gmail.com> (sfid-20090330_204807_953325_EA020424)
+Subject: Re: compile error compat-wireless-2009-03-29
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Bringfried Stecklum <stecklum@tls-tautenburg.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 04, 2009 at 12:04:39PM +0200, Kalle Valo wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
-> 
-> > On Mon, Mar 02, 2009 at 03:16:14PM -0800, Mike Cui wrote:
-> >> There is an off by one error in interface.c of iw that prevents
-> >> passing of the cook flag when creating a monitor interface. The fix is
-> >> simple:
-> >> 
-> >> 
-> >> --- a/interface.c       2009-03-02 15:11:58.748078548 -0800
-> >> +++ b/interface.c       2009-03-02 15:12:14.695203787 -0800
-> 
-> [...]
-> 
-> > FWIW, I think I like "x <= Y" instead of "x < Y + 1".
-> 
-> I agree.
-> 
-> > Also, please make sure you are following the guidelines explained here:
-> >
-> > 	http://linux.yyz.us/patch-format.html
-> >
-> > In particular, I need a Signed-off-by line from you.
-> 
-> But this is for iw, not for wireless-testing. Or did I miss something?
+On Sun, Mar 29, 2009 at 1:33 PM, Hauke Mehrtens <hauke@hauke-m.de> wrot=
+e:
+> Bringfried Stecklum wrote:
+>> When trying to compile the latest compat-wireless packagev
+>> (2.6.29-20327-g8f2487d) on an Ubuntu 8.10 system running linux kerne=
+l
+>> 2.6.27-12 I get the following error
+>>
+>> /home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/ag=
+g-tx.c:
+>> In function =E2=80=98ieee80211_agg_splice_packets=E2=80=99:
+>> /home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/ag=
+g-tx.c:385:
+>> error: implicit declaration of function =E2=80=98skb_queue_splice_ta=
+il_init=E2=80=99
+>> make[3]: ***
+>> [/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/a=
+gg-tx.o]
+>> Error 1
+>> make[2]: ***
+>> [/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211] =
+Error 2
+>> make[1]: ***
+>> [_module_/home/stecklum/System/src/compat-wireless-2009-03-29] Error=
+ 2
+>> make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygener=
+ic'
+>> make: *** [modules] Error 2
+>
+> Hi,
+>
+> This is already know. The patch can be found here:
+> http://marc.info/?l=3Dlinux-wireless&m=3D123825765019764
 
-Ah, you're right... :-)  Then I'll let Johannes worry about that.
+This is now merged, please try now Bringfried.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
