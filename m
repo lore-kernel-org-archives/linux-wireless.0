@@ -1,89 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:52078 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401AbZCFOci (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:43770 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbZC3P0f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 09:32:38 -0500
-Received: by fxm24 with SMTP id 24so402680fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 06:32:35 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 1/3] ipw2x00: remove duplicated defines
-Date: Fri, 6 Mar 2009 15:32:20 +0100
-Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+	Mon, 30 Mar 2009 11:26:35 -0400
+Date: Mon, 30 Mar 2009 10:26:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] b43legacy: Do not select HW_RANDOM
+Message-ID: <49d0e498.VVNw6/FIi1OemoLq%Larry.Finger@lwfinger.net> (sfid-20090330_172646_328099_5E8D1E0B)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903061532.22200.helmut.schaa@gmail.com> (sfid-20090306_153241_650180_FF919A37)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove several duplicated defines from ipw2x00/ieee80211.h which are
-also available in linux/ieee80211.h.
+Auto-depend on HW_RANDOM, rather than "select"ing it.
+This way the user has the choice to enable or disable HWRNG support.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 
-diff --git a/drivers/net/wireless/ipw2x00/ieee80211.h b/drivers/net/wireless/ipw2x00/ieee80211.h
-index 97c7cfc..e292114 100644
---- a/drivers/net/wireless/ipw2x00/ieee80211.h
-+++ b/drivers/net/wireless/ipw2x00/ieee80211.h
-@@ -54,59 +54,6 @@
- #define MIN_FRAG_THRESHOLD     256U
- #define	MAX_FRAG_THRESHOLD     2346U
+John, please queue for 2.6.31.
+
+
+
+Index: wireless-testing/drivers/net/wireless/b43legacy/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/Kconfig
++++ wireless-testing/drivers/net/wireless/b43legacy/Kconfig
+@@ -3,7 +3,6 @@ config B43LEGACY
+ 	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && HAS_DMA
+ 	select SSB
+ 	select FW_LOADER
+-	select HW_RANDOM
+ 	---help---
+ 	  b43legacy is a driver for 802.11b devices from Broadcom (BCM4301 and
+ 	  BCM4303) and early model 802.11g chips (BCM4306 Ver. 2) used in the
+@@ -51,6 +50,13 @@ config B43LEGACY_RFKILL
+ 	depends on B43LEGACY && (RFKILL = y || RFKILL = B43LEGACY) && RFKILL_INPUT && (INPUT_POLLDEV = y || INPUT_POLLDEV = B43LEGACY)
+ 	default y
  
--/* Frame control field constants */
--#define IEEE80211_FCTL_VERS		0x0003
--#define IEEE80211_FCTL_FTYPE		0x000c
--#define IEEE80211_FCTL_STYPE		0x00f0
--#define IEEE80211_FCTL_TODS		0x0100
--#define IEEE80211_FCTL_FROMDS		0x0200
--#define IEEE80211_FCTL_MOREFRAGS	0x0400
--#define IEEE80211_FCTL_RETRY		0x0800
--#define IEEE80211_FCTL_PM		0x1000
--#define IEEE80211_FCTL_MOREDATA		0x2000
--#define IEEE80211_FCTL_PROTECTED	0x4000
--#define IEEE80211_FCTL_ORDER		0x8000
--
--#define IEEE80211_FTYPE_MGMT		0x0000
--#define IEEE80211_FTYPE_CTL		0x0004
--#define IEEE80211_FTYPE_DATA		0x0008
--
--/* management */
--#define IEEE80211_STYPE_ASSOC_REQ	0x0000
--#define IEEE80211_STYPE_ASSOC_RESP 	0x0010
--#define IEEE80211_STYPE_REASSOC_REQ	0x0020
--#define IEEE80211_STYPE_REASSOC_RESP	0x0030
--#define IEEE80211_STYPE_PROBE_REQ	0x0040
--#define IEEE80211_STYPE_PROBE_RESP	0x0050
--#define IEEE80211_STYPE_BEACON		0x0080
--#define IEEE80211_STYPE_ATIM		0x0090
--#define IEEE80211_STYPE_DISASSOC	0x00A0
--#define IEEE80211_STYPE_AUTH		0x00B0
--#define IEEE80211_STYPE_DEAUTH		0x00C0
--#define IEEE80211_STYPE_ACTION		0x00D0
--
--/* control */
--#define IEEE80211_STYPE_PSPOLL		0x00A0
--#define IEEE80211_STYPE_RTS		0x00B0
--#define IEEE80211_STYPE_CTS		0x00C0
--#define IEEE80211_STYPE_ACK		0x00D0
--#define IEEE80211_STYPE_CFEND		0x00E0
--#define IEEE80211_STYPE_CFENDACK	0x00F0
--
--/* data */
--#define IEEE80211_STYPE_DATA		0x0000
--#define IEEE80211_STYPE_DATA_CFACK	0x0010
--#define IEEE80211_STYPE_DATA_CFPOLL	0x0020
--#define IEEE80211_STYPE_DATA_CFACKPOLL	0x0030
--#define IEEE80211_STYPE_NULLFUNC	0x0040
--#define IEEE80211_STYPE_CFACK		0x0050
--#define IEEE80211_STYPE_CFPOLL		0x0060
--#define IEEE80211_STYPE_CFACKPOLL	0x0070
--#define IEEE80211_STYPE_QOS_DATA        0x0080
--
--#define IEEE80211_SCTL_FRAG		0x000F
--#define IEEE80211_SCTL_SEQ		0xFFF0
--
- /* QOS control */
- #define IEEE80211_QCTL_TID		0x000F
++# This config option automatically enables b43 HW-RNG support,
++# if the HW-RNG core is enabled.
++config B43legacy_HWRNG
++	bool
++	depends on B43legacy && (HW_RANDOM = y || HW_RANDOM = B43legacy)
++	default y
++
+ config B43LEGACY_DEBUG
+ 	bool "Broadcom 43xx-legacy debugging"
+ 	depends on B43LEGACY
+Index: wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/b43legacy.h
++++ wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -596,9 +596,11 @@ struct b43legacy_wl {
+ 	/* Stats about the wireless interface */
+ 	struct ieee80211_low_level_stats ieee_stats;
+ 
++#ifdef CONFIG_B43legacy_RNG
+ 	struct hwrng rng;
+ 	u8 rng_initialized;
+ 	char rng_name[30 + 1];
++#endif
+ 
+ 	/* The RF-kill button */
+ 	struct b43legacy_rfkill rfkill;
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c
+@@ -2394,6 +2394,7 @@ static void b43legacy_security_init(stru
+ 				  dev->max_nr_keys - 8);
+ }
+ 
++#ifdef CONFIG_B43legacy_HWRNG
+ static int b43legacy_rng_read(struct hwrng *rng, u32 *data)
+ {
+ 	struct b43legacy_wl *wl = (struct b43legacy_wl *)rng->priv;
+@@ -2409,17 +2410,21 @@ static int b43legacy_rng_read(struct hwr
+ 
+ 	return (sizeof(u16));
+ }
++#endif
+ 
+ static void b43legacy_rng_exit(struct b43legacy_wl *wl)
+ {
++#ifdef CONFIG_B43legacy_HWRNG
+ 	if (wl->rng_initialized)
+ 		hwrng_unregister(&wl->rng);
++#endif
+ }
+ 
+ static int b43legacy_rng_init(struct b43legacy_wl *wl)
+ {
+-	int err;
++	int err = 0;
+ 
++#ifdef CONFIG_B43legacy_HWRNG
+ 	snprintf(wl->rng_name, ARRAY_SIZE(wl->rng_name),
+ 		 "%s_%s", KBUILD_MODNAME, wiphy_name(wl->hw->wiphy));
+ 	wl->rng.name = wl->rng_name;
+@@ -2433,6 +2438,7 @@ static int b43legacy_rng_init(struct b43
+ 		       "number generator (%d)\n", err);
+ 	}
+ 
++#endif
+ 	return err;
+ }
+ 
