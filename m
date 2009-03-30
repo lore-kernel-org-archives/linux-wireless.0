@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:49559 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbZCQOVx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 10:21:53 -0400
-Received: by ti-out-0910.google.com with SMTP id i7so14366tid.23
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 07:21:50 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:47664 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751895AbZC3RnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2009 13:43:05 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] rfkill: remove deprecated state constants
+Date: Mon, 30 Mar 2009 10:42:54 -0700
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1238159566.4452.2.camel@johannes.local> <1238405566.24972.16.camel@johannes.local>
+In-Reply-To: <1238405566.24972.16.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18879.45652.949317.628987@gargle.gargle.HOWL> (sfid-20090317_152156_440611_7CB6B7BB)
-Date: Tue, 17 Mar 2009 19:53:16 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@Atheros.com
-Subject: Re: Missing commits in wireless-testing
-In-Reply-To: <20090317141308.GD3549@tuxdriver.com>
-References: <18879.15297.344575.231076@gargle.gargle.HOWL>
-	<20090317130228.GA3549@tuxdriver.com>
-	<18879.42683.919616.530584@gargle.gargle.HOWL>
-	<20090317141308.GD3549@tuxdriver.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903301042.55352.inaky@linux.intel.com> (sfid-20090330_194307_404422_CD418F8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> > The serialization patches from Luis:
-> > 
-> > ath9k: implement IO serialization
-> > ath9k: AR9280 PCI devices must serialize IO as well
-> > ath9k: remove dummy PCI "retry timeout" fix
-> > 
-> > The code changes are present in wireless-testing, but the git SHA1 IDs
-> > seem to be absent.
-> 
-> Not sure which IDs you are seeking, but they should all still be there.
+On Monday 30 March 2009, Johannes Berg wrote:
+> I only did superficial review, but these constants are stupid
+> to have and without proper warnings nobody will review the
+> code anyway, no amount of shouting will help.
+>
+> Also fix wimax to use correct states.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Ah, sorry, they are present indeed.
-The chronology confused me, sorry for the noise. :)
+Acked-by: Inaky Perez-Gonzalez <inaky@linux.intel.com>
 
-Sujith
+Let's push these changes through your tree; it's going to be
+hell to coordinate otherwise, anyway.
+
+
+-- 
+Inaky
