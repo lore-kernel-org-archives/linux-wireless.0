@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:59153 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795AbZC0GTY convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60289 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459AbZCaUS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 02:19:24 -0400
-Received: by bwz17 with SMTP id 17so848507bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 23:19:21 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
-Date: Fri, 27 Mar 2009 07:19:13 +0100
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com> <200903262158.52601.helmut.schaa@gmail.com> <1238110011.10348.19.camel@rc-desk>
-In-Reply-To: <1238110011.10348.19.camel@rc-desk>
+	Tue, 31 Mar 2009 16:18:56 -0400
+Date: Tue, 31 Mar 2009 16:18:50 -0400
+From: Kyle McMartin <kyle@mcmartin.ca>
+To: gregkh@suse.de
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] staging: at76_usb convert to netdev_ops
+Message-ID: <20090331201850.GC25513@bombadil.infradead.org> (sfid-20090331_221906_912138_5F8F7442)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200903270719.14589.helmut.schaa@gmail.com> (sfid-20090327_071926_676600_A85B8369)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 27. M=C3=A4rz 2009 schrieb reinette chatre:
-> On Thu, 2009-03-26 at 13:58 -0700, Helmut Schaa wrote:
-> > 2) take the interface down when it gets rfkilled
-> >=20
-> > However, I'm not sure if 2 is possible without help of mac80211 and=
- if it
-> > makes sense to change an interface state from within the driver.
->=20
-> Like you say ... probably not the driver's place to do this.
+From: Kyle McMartin <kyle@redhat.com>
 
-Yeah, just ignore that idea ;)
+Didn't see this in your patch queue, fixes build on Fedora, though we'll
+probably end up turning on CONFIG_COMPAT_NET_DEV_OPS for now anyway.
 
-Helmut
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Kyle McMartin <kyle@redhat.com>
+
+---
+diff --git a/drivers/staging/at76_usb/at76_usb.c b/drivers/staging/at76_usb/at76_usb.c
+index c8e4d31..59071e6 100644
+--- a/drivers/staging/at76_usb/at76_usb.c
++++ b/drivers/staging/at76_usb/at76_usb.c
+@@ -5259,6 +5259,18 @@ static int at76_alloc_urbs(struct at76_priv *priv,
+ 	return 0;
+ }
+ 
++static const struct net_device_ops at76_netdev_ops = {
++	.ndo_open 		= at76_open,
++	.ndo_stop		= at76_stop,
++	.ndo_get_stats		= at76_get_stats,
++	.ndo_start_xmit		= at76_tx,
++	.ndo_tx_timeout		= at76_tx_timeout,
++	.ndo_set_multicast_list	= at76_set_multicast,
++	.ndo_set_mac_address	= at76_set_mac_address,
++	.ndo_change_mtu		= eth_change_mtu,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ /* Register network device and initialize the hardware */
+ static int at76_init_new_device(struct at76_priv *priv,
+ 				struct usb_interface *interface)
+@@ -5303,22 +5315,18 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	priv->scan_mode = SCAN_TYPE_ACTIVE;
+ 
+ 	netdev->flags &= ~IFF_MULTICAST;	/* not yet or never */
+-	netdev->open = at76_open;
+-	netdev->stop = at76_stop;
+-	netdev->get_stats = at76_get_stats;
++
++	netdev->netdev_ops = &at76_netdev_ops;
+ 	netdev->ethtool_ops = &at76_ethtool_ops;
+ 
++	dev_alloc_name(netdev, "wlan%d");
++
+ 	/* Add pointers to enable iwspy support. */
+ 	priv->wireless_data.spy_data = &priv->spy_data;
+ 	netdev->wireless_data = &priv->wireless_data;
+ 
+-	netdev->hard_start_xmit = at76_tx;
+-	netdev->tx_timeout = at76_tx_timeout;
+ 	netdev->watchdog_timeo = 2 * HZ;
+ 	netdev->wireless_handlers = &at76_handler_def;
+-	netdev->set_multicast_list = at76_set_multicast;
+-	netdev->set_mac_address = at76_set_mac_address;
+-	dev_alloc_name(netdev, "wlan%d");
+ 
+ 	ret = register_netdev(priv->netdev);
+ 	if (ret) {
