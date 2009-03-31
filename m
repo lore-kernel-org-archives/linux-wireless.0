@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f175.google.com ([209.85.218.175]:53519 "EHLO
-	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753607AbZCMMQW convert rfc822-to-8bit (ORCPT
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:41170 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202AbZCaDwp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 08:16:22 -0400
-Received: by bwz23 with SMTP id 23so96268bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 05:16:19 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
-Date: Fri, 13 Mar 2009 13:10:44 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-References: <1236939917.5235.7.camel@johannes.local> <1236941339.5235.14.camel@johannes.local> <1236941444.5235.16.camel@johannes.local>
-In-Reply-To: <1236941444.5235.16.camel@johannes.local>
+	Mon, 30 Mar 2009 23:52:45 -0400
+Date: Tue, 31 Mar 2009 09:21:40 +0530
+From: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Dhaval Giani <dhaval.lists@thegianis.in>,
+	linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+Message-ID: <20090331035140.GC4199@linux.vnet.ibm.com> (sfid-20090331_055250_289362_CA8A0659)
+Reply-To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+References: <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com> <20090215134702.GA10180@hash.localnet> <49A9C3D7.8060706@gmail.com> <20090330085952.GB3837@linux.vnet.ibm.com> <b6c5339f0903300958m587cde69o44ae24d0609228ba@mail.gmail.com> <20090330175951.GB4199@linux.vnet.ibm.com> <b6c5339f0903301113y6cb0b8bu1eaa55439eb18d97@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200903131310.44757.helmut.schaa@gmail.com> (sfid-20090313_131624_136834_19860C82)
+In-Reply-To: <b6c5339f0903301113y6cb0b8bu1eaa55439eb18d97@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 13. M=E4rz 2009 schrieb Johannes Berg:
-> On Fri, 2009-03-13 at 11:48 +0100, Johannes Berg wrote:
-> > On Fri, 2009-03-13 at 11:44 +0100, Johannes Berg wrote:
-> > > When mac80211 resumes, it currently doesn't reconfigure the inter=
-faces
-> > > entirely and also doesn't reconfigure BSS information -- fix this=
-=2E
-> > >=20
-> > > Also, to be able to test this, add a debugfs file that just calls
-> > > the suspend/resume code to see what happens when we go through th=
-at,
-> > > without needing the time-consuming suspend/resume cycle.
-> > >=20
-> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > > ---
-> > > v2: rebased on top of "stop queues across suspend/resume"
-> > >=20
-> > > zd1211rw currently doesn't survive this properly, I'm not sure wh=
-y,
-> > > but it keeps saying
-> > > 	zd1211rw 1-1:1.0: error ioread32(CR_REG1): -11
-> > >=20
-> > > Please test with other hardware, we need to figure out whether or
-> > > not something is missing in mac80211.
-> >=20
-> > ath9k survives ping -f without even blinking.
+On Mon, Mar 30, 2009 at 02:13:35PM -0400, Bob Copeland wrote:
+> On Mon, Mar 30, 2009 at 1:59 PM, Dhaval Giani <dhaval@linux.vnet.ibm.=
+com> wrote:
+> > ok, so my kernel does hve this patch applied, and this is what I ge=
+t,
+> >
+> > =A0------------[ cut here ]------------
+> > =A0WARNING: at include/net/mac80211.h:1956 minstrel_get_rate+0xa1/0=
+x4b9 [mac80211]()
 >=20
-> So does iwlwifi.
+> I believe this is something different (tx path not rx).  I think it's
+> that minstrel rate table bug again, which we never solved for ath5k.
+>=20
+> Are you using adhoc or managed mode?  Do you have the slab/slub debug=
+ging
+> options turned on?  Any steps that consistently reproduce it?  Do you
+> get any warnings with PID controller?
+>=20
 
-Mine does not. I got:
+[dhaval@gondor ~]$ iwconfig wlan0
+wlan0     IEEE 802.11abg  ESSID:"linksys_SES_62338"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1A:70:D6:=
+2D:06
+          Bit Rate=3D36 Mb/s   Tx-Power=3D23 dBm
+          Retry min limit:7   RTS thr:off   Fragment thr=3D2352 B
+          Power Management:off
+          Link Quality=3D100/100  Signal level:-49 dBm  Noise level=3D-=
+96 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-mac80211-phy2: failed to set key (0, XX:XX:XX:XX:XX:XX) to hardware (-2=
-2)
+[dhaval@gondor ~]$
 
-iwconfig still shows signal strength etc. but no packets are transmitte=
-d
-anymore.
+[dhaval@gondor linux-2.6]$ grep -i slub .config
+CONFIG_SLUB_DEBUG=3Dy
+CONFIG_SLUB=3Dy
+# CONFIG_SLUB_DEBUG_ON is not set
+# CONFIG_SLUB_STATS is not set
+[dhaval@gondor linux-2.6]$
 
-Helmut
+Am not sure what the PID controller is, and google gave me a number of
+results, which did not make too much sense in the context.
+
+Yes, I think I know how to reproduce it, but I am not sure what is the
+real cause.
+
+One way I have found of reproducing it is to connect to open networks,
+but it does not happen always. At home, when my network is set to open,
+I do not see this issue, whereas at the airport, kaboom.
+
+I've also seen it on LEAP networks, but there were also a few open
+networks around. This warning is generally accompanied by a disconnect
+from the LEAP connected network, and then the system reconnects. Let me
+know if you have patches, I can give them a run and report back.
+
+Thanks,
+--=20
+regards,
+Dhaval
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
