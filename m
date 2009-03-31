@@ -1,100 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eta-ori.net ([91.121.142.51]:36482 "EHLO orion.eta-ori.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753210AbZCDCnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 21:43:13 -0500
-Message-ID: <49ADEB0D.6070100@impulze.org> (sfid-20090304_034316_608480_B08D4EEB)
-Date: Wed, 04 Mar 2009 03:44:29 +0100
-From: Daniel Mierswa <impulze@impulze.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: CRDA_PATH fixes for wireless-regdb.git
-Content-Type: multipart/mixed;
- boundary="------------020808000209050509080708"
+Received: from xc.sipsolutions.net ([83.246.72.84]:54985 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758700AbZCaSC1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2009 14:02:27 -0400
+Subject: Re: [ipw3945-devel] 2.6.29-wl-36116-g6a982a0: connection loss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Nico -telmich- Schottelius
+	<nico-linux-ipw3945-devel@schottelius.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200903311957.39264.chunkeey@web.de>
+References: <20090331044946.GA10616@denkbrett.schottelius.org>
+	 <1238520041.5970.112.camel@johannes.local> <8763hpsi0a.fsf@litku.valot.fi>
+	 <200903311957.39264.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KuxfCdFxJwjXAM1Pr+QU"
+Date: Tue, 31 Mar 2009 20:01:51 +0200
+Message-Id: <1238522511.5970.114.camel@johannes.local> (sfid-20090331_200230_540548_8D6F3700)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020808000209050509080708
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Heya, i just found that there was a typo in your Makefile and
-debian-examples dir.
-I fixed those plus also give the user the chance to override CRDA_PATH
-(I use /lib64 since I like the idea of having all necessary stuff to get
-wireless connected in superuser reach). :)
-Feedback welcomed.
+--=-KuxfCdFxJwjXAM1Pr+QU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Mierswa, Daniel
+On Tue, 2009-03-31 at 19:57 +0200, Christian Lamparter wrote:
+> On Tuesday 31 March 2009 19:45:57 Kalle Valo wrote:
+> > Johannes Berg <johannes@sipsolutions.net> writes:
+> >=20
+> > >> Perhaps the new beacon filtering work [1] is changing more than it
+> > >> intended?
+> > >
+> > > I think it only changed the messages here. Previously, that message
+> > > simply wouldn't have been there, instead you'd only have seen the "No
+> > > ProbeResp from current AP - assume out of range" thing.
+> >=20
+> > At least I have been using latest wireless-testing with iwl3945 all the=
+ time
+> > (for example right now) and I haven't noticed any problems.
+> >=20
+> > But your comment makes me think is the "beacon loss" message too
+> > verbose. Maybe we should remove it?
+> >=20
+> > BTW, what are the AP settings (beacon interval, DTIM)? Was power save
+> > enabled in the driver? If the beacon interval is really long, like 1
+> > second, our timer is far from optimal and missing beacon only once
+> > might trigger the warning. We should fix that properly at some point.
+> >=20
+> and what is its tsf/last beacon in iwlist wlan0 scan?
+>=20
+> e.g:
+> Extra:tsf=3D0000005a35738ad1
+> Extra: Last beacon: 2180ms ago
 
-If you still don't like it, that's ok: that's why I'm boss. I simply
-know better than you do.
-               --- Linus Torvalds, comp.os.linux.advocacy, 1996/07/22
+that would have to be 'iwlist wlan0 scan last' to actually give
+something marginally useful.
 
+johannes
 
+--=-KuxfCdFxJwjXAM1Pr+QU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
---------------020808000209050509080708
-Content-Type: text/plain;
- name="wireless-regdb-CRDA_PATH.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="wireless-regdb-CRDA_PATH.patch"
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
->From 14a0da690de4e8803809f5da970b42c953990f03 Mon Sep 17 00:00:00 2001
-From: Daniel Mierswa <impulze@impulze.org>
-Date: Thu, 5 Feb 2009 02:11:41 +0100
-Subject: [PATCH] CDRA_PATH typo, also let user override CRDA_PATH
+iQIcBAABAgAGBQJJ0lqNAAoJEKVg1VMiehFYA90P/RiVPpEtmrlaBF3WgX3GvN5j
+JRuDaziBU7Tsyk8NrEMx4yFMe2fIGjgL1dfhtDk8plaCACuLr2g4Ek6Fuzkw1iep
+WyYGrzbvJjxgqShgmeK3AkGy/6GZ5V8amN1bMXEfHtwchZpQUzmt1oe2fAlPb8EF
+1GmY/O5aqgvfeVdKLDofFcr+BI2rQVI8fRjnRvYXxVaSj7nBzPPBwqBFPsLe0ls6
+ytXwHkti5+9xinTqGIbahjh8l57k3W4CB45l2Xw56rXl17MCvbvypCV1vnCrQOfl
+gkkaIpgMw+tBU2XSCcA5pannvm6P10pKZkGjrS3akYg+D87vV9cXtA8jcpswxixV
+FXlE/uUZbdbKkX2C+dKiIEH3pSpq+gjxuPPBzT1XhYePRa7WrRsum2l1UFNb6SFI
+1fgxdgiBGhMJMFTMTu7zO+PKWp/inopjfHmDUBkJBNeDozdSDBH8RcdPWpRerGVx
+B+ejnND1O1Opf+UWwZ52Ty/tIN3LxVSS+C06oaG3Bp/C3HUgVB4CZO6iIngjEuoL
+4T0KejTySwQaxz2FkdJUCAbcWbf42GiKzuzKXMYNVpp22Wu5P9pw9V4kfxYeqQGm
+1BXvouqnUrVM1l2JHG0TgnzHbehUXSdEPhyT6zFH6UBLro+mYuTGGK87Ik+JaYMW
+XmikkOjmee2tJVax6jFE
+=vD0B
+-----END PGP SIGNATURE-----
 
----
- Makefile             |    6 +++---
- debian-example/rules |    6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+--=-KuxfCdFxJwjXAM1Pr+QU--
 
-diff --git a/Makefile b/Makefile
-index a719f59..32626a1 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1,6 +1,6 @@
- # Install prefix
- PREFIX = /usr
--CDRA_PATH = $(PREFIX)/lib/crda
-+CRDA_PATH ?= $(PREFIX)/lib/crda
- 
- MANDIR ?= $(PREFIX)/share/man/
- 
-@@ -32,7 +32,7 @@ key.priv.pem:
- # Distributions wishing to just use John's database
- # can just call make install.
- install: regulatory.bin.5.gz
--	install -o 0 -g 0 -m 755 -d $(DESTDIR)/$(CDRA_PATH)
--	install -o 0 -g 0 -m 644 regulatory.bin $(DESTDIR)/$(CDRA_PATH)/regulatory.bin
-+	install -o 0 -g 0 -m 755 -d $(DESTDIR)/$(CRDA_PATH)
-+	install -o 0 -g 0 -m 644 regulatory.bin $(DESTDIR)/$(CRDA_PATH)/regulatory.bin
- 	mkdir -p $(DESTDIR)/$(MANDIR)/man5/
- 	install -m 644 -t $(DESTDIR)/$(MANDIR)/man5/ regulatory.bin.5.gz
-diff --git a/debian-example/rules b/debian-example/rules
-index dab9255..34a08a5 100755
---- a/debian-example/rules
-+++ b/debian-example/rules
-@@ -3,8 +3,8 @@
- include /usr/share/cdbs/1/rules/debhelper.mk
- 
- PREFIX = /usr
--CDRA_LIB = $(PREFIX)/lib/crda
-+CRDA_LIB ?= $(PREFIX)/lib/crda
- 
- install/wireless-regdb::
--	install -o 0 -g 0 -m 755 -d debian/$(cdbs_curpkg)/$(CDRA_LIB)
--	install -o 0 -g 0 -m 644 regulatory.bin debian/$(cdbs_curpkg)/$(CDRA_LIB)/regulatory.bin
-+	install -o 0 -g 0 -m 755 -d debian/$(cdbs_curpkg)/$(CRDA_LIB)
-+	install -o 0 -g 0 -m 644 regulatory.bin debian/$(cdbs_curpkg)/$(CRDA_LIB)/regulatory.bin
--- 
-1.6.1.2
-
-
-
-
---------------020808000209050509080708--
