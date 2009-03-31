@@ -1,106 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:52844 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbZCGRmH (ORCPT
+Received: from cp-out12.libero.it ([212.52.84.112]:42932 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755581AbZCaQzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 12:42:07 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so585490yxm.1
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Mar 2009 09:42:04 -0800 (PST)
+	Tue, 31 Mar 2009 12:55:20 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [PATCH 3/3] ath5k: Add tx power calibration support
+Date: Tue, 31 Mar 2009 18:54:00 +0200
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+References: <20090315202035.GC5246@makis> <200903311158.57947.rossi.f@inwind.it> <40f31dec0903310906h49cbbcc7pa12bf3a9f2799a9a@mail.gmail.com>
+In-Reply-To: <40f31dec0903310906h49cbbcc7pa12bf3a9f2799a9a@mail.gmail.com>
 MIME-Version: 1.0
-Date: Sat, 7 Mar 2009 12:42:04 -0500
-Message-ID: <960a51b60903070942q31d4d5e2n835f2c642cd19d70@mail.gmail.com> (sfid-20090307_184212_490737_AFAB68F6)
-Subject: Intermittent wlan operation ( b43-phy0 ERROR: PHY transmission
-	error).
-From: Tom Cada <thomas.cada@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200903311854.01494.rossi.f@inwind.it> (sfid-20090331_185546_050628_CCD946B8)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all.
+On Tuesday 31 March 2009, Nick Kossifidis wrote:
+> 2009/3/31 Fabio Rossi <rossi.f@inwind.it>:
+> > On Tuesday 31 March 2009, Nick Kossifidis wrote:
+> >> > 2009/3/30 Fabio Rossi <rossi.f@inwind.it>:
+> >> > I have discovered the problem. Inside ath5k_hx_txpower() it's called
+> >> > ath5k_setup_channel_powertable() where the gain curves of frequency
+> >> > piers are scanned (if I have understood correctly) to extract the data
+> >> > for the calibration of the current channel.
+> >> >
+> >> > In particular, for the 5180MHz channel (the first of the A band), the
+> >> > function ath5k_get_linear_pcdac_min() is called with some critical
+> >> > data which generate an endless while loop.
+> >> >
+> >> > Here are the bad numbers passed to ath5k_get_linear_pcdac_min():
+> >> > * pwrL[0] = 4
+> >> > * pwrL[1] = 4
+> >> > * stepL[0] = 20
+> >> > * stepL[1] = 35
+> >> > and with this configuration the variable 'tmp' is never decremented
+> >> > inside the first while loop.
+> >> >
+> >> > I suppose the data comes from the EEPROM. Is there an easy way to read
+> >> > the contents of the EEPROM regarding the calibration data for all the
+> >> > channels?
+> >> >
+> >> > Fabio
+> >>
+> >> Nice catch ;-)
+> >>
+> >> It's weird that your EEPROM contains a value twice, both pwrL[0] and
+> >> pwrL[1] are 4 so interpolation always returns 4 and tmp is always > 1
+> >> so you have an endless loop. This is not what we expect to have on
+> >> EEPROM (we are supposed to have a monotonicaly increasing curve and in
+> >> your case it should be almost linear). Anyway since we have such cards
+> >> we just need to put a check there and where pwrL[0] == pwrL[1], we set
+> >> tmp = stepL[0] or if pwrR[0] == pwrR[1], we set tmp = stepR[0]. Try
+> >> this out and see how it goes...
+> >
+> > Here is the full dump of the power levels inside my board EEPROM:
+> >
+> > channel freq 2412,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-119, pwrR[1]=-96,
+> > stepR[0]=20, stepR[1]=35 channel freq 2417,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2422,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2427,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2432,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2437,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2442,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2447,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2452,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2457,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2462,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2467,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2472,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-119, pwrL[1]=-96, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 2484,
+> > ath5k_get_linear_pcdac_min pwrL[0]=-106, pwrL[1]=-58, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=-106, pwrR[1]=-58,
+> > stepR[0]=20, stepR[1]=35 channel freq 5180,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5185,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5190,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5195,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5200,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5205,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5210,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5215,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5220,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5225,
+> > ath5k_get_linear_pcdac_min pwrL[0]=4, pwrL[1]=4, stepL[0]=20, stepL[1]=35
+> > ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13, stepR[0]=20,
+> > stepR[1]=35 channel freq 5230,
+> > ath5k_get_linear_pcdac_min pwrL[0]=13, pwrL[1]=13, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=13, pwrR[1]=13,
+> > stepR[0]=20, stepR[1]=35 channel freq 5235,
+> > ath5k_get_linear_pcdac_min pwrL[0]=13, pwrL[1]=13, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=8, pwrR[1]=9, stepR[0]=20,
+> > stepR[1]=35 channel freq 5240,
+> > ath5k_get_linear_pcdac_min pwrL[0]=13, pwrL[1]=13, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=8, pwrR[1]=9, stepR[0]=20,
+> > stepR[1]=35 channel freq 5745,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5750,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5755,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5760,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5765,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5770,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5775,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5780,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5785,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5790,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5795,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5800,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5805,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5810,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5815,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5820,
+> > ath5k_get_linear_pcdac_min pwrL[0]=8, pwrL[1]=26, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35 channel freq 5825,
+> > ath5k_get_linear_pcdac_min pwrL[0]=11, pwrL[1]=28, stepL[0]=20,
+> > stepL[1]=35 ath5k_get_linear_pcdac_min pwrR[0]=11, pwrR[1]=28,
+> > stepR[0]=20, stepR[1]=35
+> >
+> > As you can see the problem is related only to the frequency range
+> > 5180-5240MHz. I'll post a separate patch to solve the issue, please add
+> > your favourite tag.
+> >
+> > Fabio
+>
+> Any other issues after the patch ?
 
-I have a HP notebook with a Broadcom wireless adapter. The output of
-lspci -vv is:
+I have other issues regarding the "stability" of the connection getting this 
+log
 
-03:00.0 Network controller: Broadcom Corporation BCM4312 802.11a/b/g (rev 02)
-	Subsystem: Hewlett-Packard Company Device 1370
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 19
-	Region 0: Memory at b6000000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: <access denied>
-	Kernel driver in use: b43-pci-bridge
-	Kernel modules: ssb, wl
+cfg80211: Calling CRDA to update world regulatory domain
+ath5k 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) -> IRQ 10
+ath5k 0000:00:0b.0: registered as 'phy0'
+phy0: Selected rate control algorithm 'minstrel'
+ath5k phy0: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
+ath5k phy0: RF5112B multiband radio found (0x36)
+udev: renamed network interface wlan0 to ath0
+ath0: authenticate with AP 00:0c:f6:xx:xx:xx
+ath0: authenticated
+ath0: associate with AP 00:0c:f6:xx:xx:xx
+ath0: RX AssocResp from 00:0c:f6:xx:xx:xx (capab=0x411 status=0 aid=2)
+ath0: associated
+phy0: Allocated STA 00:0c:f6:xx:xx:xx
+phy0: Inserted STA 00:0c:f6:xx:xx:xx
+ath0: switched to short slot time (BSSID=00:0c:f6:xx:xx:xx)
+ath0: no probe response from AP 00:0c:f6:xx:xx:xx - disassociating
+phy0: Removed STA 00:0c:f6:xx:xx:xx
+phy0: Destroyed STA 00:0c:f6:xx:xx:xx
 
- I am using Ubuntu 8.10 64 bit SMP  with the kernel 2.6.27-11-generic.
+i.e. soon after the association with the AP I'm also disassociated. The 
+problem is that I cannot associate anymore with the "iwconfig ath0 essid" 
+command, I have to remove and load again the ath5k module. I haven't 
+investigated about this problem yet but it doesn't seem strictly related to 
+your tx power calibration patch.
 
-I am running into the problem where the wireless stops transferring
-data while still maintaining the connection. I get the following from
-dmesg.
-
-[ 7462.509663] PM: Finishing wakeup.
-[ 7462.509664] Restarting tasks ... done.
-[ 7463.541721] eth0: no link during initialization.
-[ 7463.542855] ADDRCONF(NETDEV_UP): eth0: link is not ready
-[ 7463.562080] input: b43-phy0 as /devices/virtual/input/input16
-[ 7465.244085] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-[ 7465.379272] Registered led device: b43-phy0::tx
-[ 7465.379320] Registered led device: b43-phy0::rx
-[ 7465.379348] Registered led device: b43-phy0::radio
-[ 7465.379437] b43-phy0 ERROR: PHY transmission error
-[ 7465.400668] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[ 7465.413169] wlan0: authenticate with AP 00:17:9a:23:21:1a
-[ 7465.413231] wlan0: authenticate with AP 00:17:9a:23:21:1a
-[ 7465.613088] wlan0: authenticate with AP 00:17:9a:23:21:1a
-[ 7465.813025] wlan0: authenticate with AP 00:17:9a:23:21:1a
-[ 7466.013134] wlan0: authentication with AP 00:17:9a:23:21:1a timed out
-[ 7492.844302] wlan0: authenticate with AP 00:19:e0:7a:10:a0
-[ 7492.845896] wlan0: authenticated
-[ 7492.845912] wlan0: associate with AP 00:19:e0:7a:10:a0
-[ 7492.848140] wlan0: RX AssocResp from 00:19:e0:7a:10:a0 (capab=0x431
-status=0 aid=7)
-[ 7492.848154] wlan0: associated
-[ 7492.849829] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[ 7492.851048] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[ 7705.804798] b43-phy0 ERROR: PHY transmission error
-[ 7705.804835] b43-phy0 ERROR: PHY transmission error
-[ 7705.804857] b43-phy0 ERROR: PHY transmission error
-[ 7705.804878] b43-phy0 ERROR: PHY transmission error
-[ 7705.804899] b43-phy0 ERROR: PHY transmission error
-[ 7705.804920] b43-phy0 ERROR: PHY transmission error
-[ 7705.804941] b43-phy0 ERROR: PHY transmission error
-[ 7705.804961] b43-phy0 ERROR: PHY transmission error
-[ 7705.804982] b43-phy0 ERROR: PHY transmission error
-[ 7705.805003] b43-phy0 ERROR: PHY transmission error
-[ 7706.055190] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-[ 7706.190480] Registered led device: b43-phy0::tx
-[ 7706.190541] Registered led device: b43-phy0::rx
-[ 7706.190599] Registered led device: b43-phy0::radio
-tom@speedy:~$
-
-When I get this series of b43-phy0 errors, data transfer stops and I
-have to re-start the network.
-
-I googled the error and found your web site which recommends upgrading
-the drivers.
-
-I did as suggested, and found eventually that I was already running
-the suggested drivers as it appears that the Ubuntu upgrade to the
-kernel also upgraded the b43 drivers.
-
-I went so far as to download the broadcom-wl-4.150.10.5.3 drivers
-thinking that a more recent version would have addressed the problem.
-However, I found out I couldn't install them with the error:
-
- $ ../../b43-fwcutter-011/b43-fwcutter -w /lib/firmware wl_apsta_mimo.o
-Sorry, the input file is either wrong or not supported by b43-fwcutter.
-This file has an unknown MD5sum b84bc801b9b8f39069c252f533655af8.
-
-At this point, I am stymied.
-
-Any help or suggestions would be most welcome.
-
-Thanks... Tom.
+Fabio
