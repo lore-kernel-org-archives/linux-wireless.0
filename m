@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15865 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750724AbZCFFSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 00:18:31 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 21:18:30 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: sanity checks on freq range
-Date: Thu, 5 Mar 2009 21:17:49 -0800
-Message-ID: <1236316669-10093-1-git-send-email-lrodriguez@atheros.com> (sfid-20090306_061835_333429_518B9169)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:43814 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754766AbZCaSSK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2009 14:18:10 -0400
+To: Anders Eriksson <aeriksson@fastmail.fm>
+cc: Adam Baker <linux@baker-net.org.uk>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
+In-reply-to: <20090320063104.92D572C4101@tippex.mynet.homeunix.org>
+References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org> <200902212123.21950.linux@baker-net.org.uk> <20090308162023.BBD122C40D0@tippex.mynet.homeunix.org> <200903192156.55843.linux@baker-net.org.uk> <20090320063104.92D572C4101@tippex.mynet.homeunix.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Date: Tue, 31 Mar 2009 20:17:50 +0200
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Message-Id: <20090331181750.926DE93C47B@tippex.mynet.homeunix.org> (sfid-20090331_201814_609253_8D40B6FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do sanity checks on the frequency range before building upon it.
-The kernel will reject these so we want to know if we goofed up
-first.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Looking deeper into this I must confess I was wrong here:
 
-My python-fu sucks. But at least it bails out on errors.
+aeriksson2@fastmail.fm said:
+> Here's another trace of what happens due to lost ProbeResp. The "count" for
+> queue 0 stops to increase after that, fwiw. rmmod/modprobe doesn't help. A
+> reboot is necessary.
 
- dbparse.py     |   13 +++++++++++++
- 1 file changed, 13 insertions(+), 0 deletions(-)
+rmmod/modprobe + manually configuring the itnerface DOES seem to fix the 
+problem (somehow gentoo's "restart" of the inteface does not. That needs 
+further investigation)
 
-diff --git a/dbparse.py b/dbparse.py
-index 55615bd..dd64927 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -136,6 +136,19 @@ class DBParser(object):
-             start, end = freqs.split('-')
-             start = float(start)
-             end = float(end)
-+            # The kernel will reject these, so might as well reject this
-+            # upon building it.
-+            if start <= 0:
-+            	self._syntax_error("Invalid start freq (%d)" % start)
-+            if end <= 0:
-+            	self._syntax_error("Invalid end freq (%d)" % end)
-+            if start > end:
-+            	self._syntax_error("Inverted freq range it seems (%d - %d)" % (start, end))
-+            if end - start <= 0:
-+            	self._syntax_error("Invalid bandwidth (%d)" % bw)
-+            if end - start < bw:
-+            	self._syntax_error("Invalid bandwidth: %d width channel "
-+			"cannot possibly fit between %d - %d" % (bw, start, end))
-         except ValueError:
-             self._syntax_error("band must have frequency range")
+I looked at the code, and "No ProbeResp" sits too far from the rt2500pci module 
+for me to find out what to do. How is reassociation normally triggered?
+
+/Anders
  
+
+
