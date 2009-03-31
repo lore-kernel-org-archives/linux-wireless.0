@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35166 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbZCFKR7 (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:38903 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186AbZCaR5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 05:17:59 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: always compile ath_radio_{en,dis}able
-Date: Fri,  6 Mar 2009 11:17:55 +0100
-Message-Id: <1236334675-21918-1-git-send-email-juhosg@openwrt.org> (sfid-20090306_111802_515551_27F64154)
+	Tue, 31 Mar 2009 13:57:43 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [ipw3945-devel] 2.6.29-wl-36116-g6a982a0: connection loss
+Date: Tue, 31 Mar 2009 19:57:39 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Nico -telmich- Schottelius
+	<nico-linux-ipw3945-devel@schottelius.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <20090331044946.GA10616@denkbrett.schottelius.org> <1238520041.5970.112.camel@johannes.local> <8763hpsi0a.fsf@litku.valot.fi>
+In-Reply-To: <8763hpsi0a.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903311957.39264.chunkeey@web.de> (sfid-20090331_195747_525536_8B15309C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_radio_{en,dis}able is only compiled if RFKILL is enabled, but it is
-required by the 'ath9k_wiphy_select' function.
+On Tuesday 31 March 2009 19:45:57 Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> >> Perhaps the new beacon filtering work [1] is changing more than it
+> >> intended?
+> >
+> > I think it only changed the messages here. Previously, that message
+> > simply wouldn't have been there, instead you'd only have seen the "No
+> > ProbeResp from current AP - assume out of range" thing.
+> 
+> At least I have been using latest wireless-testing with iwl3945 all the time
+> (for example right now) and I haven't noticed any problems.
+> 
+> But your comment makes me think is the "beacon loss" message too
+> verbose. Maybe we should remove it?
+> 
+> BTW, what are the AP settings (beacon interval, DTIM)? Was power save
+> enabled in the driver? If the beacon interval is really long, like 1
+> second, our timer is far from optimal and missing beacon only once
+> might trigger the warning. We should fix that properly at some point.
+> 
+and what is its tsf/last beacon in iwlist wlan0 scan?
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath9k/main.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+e.g:
+Extra:tsf=0000005a35738ad1
+Extra: Last beacon: 2180ms ago
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index f473fee..9f65a94 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1084,12 +1084,6 @@ fail:
- 	ath_deinit_leds(sc);
- }
- 
--#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
--
--/*******************/
--/*	Rfkill	   */
--/*******************/
--
- void ath_radio_enable(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -1166,6 +1160,12 @@ void ath_radio_disable(struct ath_softc *sc)
- 	ath9k_ps_restore(sc);
- }
- 
-+#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
-+
-+/*******************/
-+/*	Rfkill	   */
-+/*******************/
-+
- static bool ath_is_rfkill_set(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--- 
-1.5.3.2
+Regards,
+	Chr
 
