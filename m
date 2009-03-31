@@ -1,355 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34188 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752395AbZCFVa3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55531 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbZCaKRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 16:30:29 -0500
-Date: Fri, 6 Mar 2009 16:24:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2009-03-06
-Message-ID: <20090306212414.GG3712@tuxdriver.com> (sfid-20090306_223036_520481_F76D608F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 31 Mar 2009 06:17:41 -0400
+Message-Id: <20090331101316.650149666@sipsolutions.net> (sfid-20090331_121744_132751_D0057CAC)
+References: <20090331101204.540183860@sipsolutions.net>
+Date: Tue, 31 Mar 2009 12:12:07 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Subject: [PATCH v3 3/3] mac80211: include HT capabilities in probe request
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Include the HT capabilities in the probe request frame.
 
-Here are a few small patches intended for 2.6.29.
-
-Two of them add USB IDs to the Ralink drivers.  Some of those IDs are
-already in -next, so there will be some minor conflicts.
-
-The one from Roel Kluin avoids checking for <0 on an unsigned variable.
-It seems like a very low-risk fix to a potentially hard to find
-problem, so it seems worthwhile to me.
-
-The iwlwifi fix corrects some problems with cleaning-up after
-initialization errors, avoiding some potential resources leaks.
-
-The p54 patch corrects a crash that was unveiled by applying a patch
-headed to -next.  The problem was their all along, so it seems work
-taking now.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+v2: fix the HT IE
 
-Individual patches are available here:
+ net/mac80211/main.c |    5 +++++
+ net/mac80211/util.c |   16 ++++++++++++++++
+ 2 files changed, 21 insertions(+)
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
----
-
-The following changes since commit 72e2240f181871675d3a979766330c91d48a1673:
-  Patrick McHardy (1):
-        bonding: Fix device passed into ->ndo_neigh_setup().
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Christian Lamparter (1):
-      p54: fix race condition in memory management
-
-Reinette Chatre (1):
-      iwlwifi: fix error flow in iwl*_pci_probe
-
-Roel Kluin (1):
-      cfg80211: test before subtraction on unsigned
-
-Xose Vazquez Perez (2):
-      rt2x00 : more devices to rt2500usb.c
-      rt2x00 : more devices to rt73usb.c
-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   17 ++++++--------
- drivers/net/wireless/p54/p54common.c        |    9 +++++--
- drivers/net/wireless/rt2x00/rt2500usb.c     |    8 ++++++
- drivers/net/wireless/rt2x00/rt73usb.c       |   32 ++++++++++++++++++++++++++-
- net/wireless/reg.c                          |    3 +-
- 6 files changed, 58 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 36bafeb..129e2d3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3868,7 +3868,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 	err = iwl_eeprom_check_version(priv);
- 	if (err)
--		goto out_iounmap;
-+		goto out_free_eeprom;
- 
- 	/* extract MAC Address */
- 	iwl_eeprom_get_mac(priv, priv->mac_addr);
-@@ -3945,6 +3945,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	return 0;
- 
-  out_remove_sysfs:
-+	destroy_workqueue(priv->workqueue);
-+	priv->workqueue = NULL;
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl_attribute_group);
-  out_uninit_drv:
- 	iwl_uninit_drv(priv);
-@@ -3953,8 +3955,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-  out_iounmap:
- 	pci_iounmap(pdev, priv->hw_base);
-  out_pci_release_regions:
--	pci_release_regions(pdev);
- 	pci_set_drvdata(pdev, NULL);
-+	pci_release_regions(pdev);
-  out_pci_disable_device:
- 	pci_disable_device(pdev);
-  out_ieee80211_free_hw:
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 93be74a..57dd34e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -7911,7 +7911,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 				CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (err < 0) {
- 		IWL_DEBUG_INFO("Failed to init the card\n");
--		goto out_remove_sysfs;
-+		goto out_iounmap;
+--- wireless-testing.orig/net/mac80211/util.c	2009-03-31 11:48:51.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2009-03-31 11:48:51.000000000 +0200
+@@ -862,6 +862,22 @@ int ieee80211_build_preq_ies(struct ieee
+ 		*pos++ = rate->bitrate / 5;
  	}
  
- 	/***********************
-@@ -7921,7 +7921,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	err = iwl3945_eeprom_init(priv);
- 	if (err) {
- 		IWL_ERROR("Unable to init EEPROM\n");
--		goto out_remove_sysfs;
-+		goto out_iounmap;
- 	}
- 	/* MAC Address location in EEPROM same for 3945/4965 */
- 	get_eeprom_mac(priv, priv->mac_addr);
-@@ -7975,7 +7975,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	err = iwl3945_init_channel_map(priv);
- 	if (err) {
- 		IWL_ERROR("initializing regulatory failed: %d\n", err);
--		goto out_release_irq;
-+		goto out_unset_hw_setting;
- 	}
++	if (sband->ht_cap.ht_supported) {
++		__le16 tmp = cpu_to_le16(sband->ht_cap.cap);
++
++		*pos++ = WLAN_EID_HT_CAPABILITY;
++		*pos++ = sizeof(struct ieee80211_ht_cap);
++		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
++		memcpy(pos, &tmp, sizeof(u16));
++		pos += sizeof(u16);
++		/* TODO: needs a define here for << 2 */
++		*pos++ = sband->ht_cap.ampdu_factor |
++			 (sband->ht_cap.ampdu_density << 2);
++		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
++		pos += sizeof(sband->ht_cap.mcs);
++		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
++	}
++
+ 	/*
+ 	 * If adding more here, adjust code in main.c
+ 	 * that calculates local->scan_ies_len.
+--- wireless-testing.orig/net/mac80211/main.c	2009-03-31 11:48:51.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-03-31 11:48:51.000000000 +0200
+@@ -818,6 +818,7 @@ int ieee80211_register_hw(struct ieee802
+ 	struct net_device *mdev;
+ 	struct ieee80211_master_priv *mpriv;
+ 	int channels, i, j, max_bitrates;
++	bool supp_ht;
  
- 	err = iwl3945_init_geos(priv);
-@@ -8045,25 +8045,22 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	return 0;
+ 	/*
+ 	 * generic code guarantees at least one band,
+@@ -826,6 +827,7 @@ int ieee80211_register_hw(struct ieee802
+ 	 */
+ 	channels = 0;
+ 	max_bitrates = 0;
++	supp_ht = false;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		struct ieee80211_supported_band *sband;
  
-  out_remove_sysfs:
-+	destroy_workqueue(priv->workqueue);
-+	priv->workqueue = NULL;
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
-  out_free_geos:
- 	iwl3945_free_geos(priv);
-  out_free_channel_map:
- 	iwl3945_free_channel_map(priv);
--
--
-- out_release_irq:
--	destroy_workqueue(priv->workqueue);
--	priv->workqueue = NULL;
-+ out_unset_hw_setting:
- 	iwl3945_unset_hw_setting(priv);
--
-  out_iounmap:
- 	pci_iounmap(pdev, priv->hw_base);
-  out_pci_release_regions:
- 	pci_release_regions(pdev);
-  out_pci_disable_device:
--	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
-+	pci_disable_device(pdev);
-  out_ieee80211_free_hw:
- 	ieee80211_free_hw(priv->hw);
-  out:
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 34561e6..f170106 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -710,10 +710,11 @@ static struct sk_buff *p54_find_tx_entry(struct ieee80211_hw *dev,
- 					   __le32 req_id)
- {
- 	struct p54_common *priv = dev->priv;
--	struct sk_buff *entry = priv->tx_queue.next;
-+	struct sk_buff *entry;
- 	unsigned long flags;
+@@ -842,6 +844,7 @@ int ieee80211_register_hw(struct ieee802
  
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-+	entry = priv->tx_queue.next;
- 	while (entry != (struct sk_buff *)&priv->tx_queue) {
- 		struct p54_hdr *hdr = (struct p54_hdr *) entry->data;
- 
-@@ -732,7 +733,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	struct p54_common *priv = dev->priv;
- 	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
- 	struct p54_frame_sent *payload = (struct p54_frame_sent *) hdr->data;
--	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
-+	struct sk_buff *entry;
- 	u32 addr = le32_to_cpu(hdr->req_id) - priv->headroom;
- 	struct memrecord *range = NULL;
- 	u32 freed = 0;
-@@ -741,6 +742,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	int count, idx;
- 
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-+	entry = (struct sk_buff *) priv->tx_queue.next;
- 	while (entry != (struct sk_buff *)&priv->tx_queue) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
- 		struct p54_hdr *entry_hdr;
-@@ -976,7 +978,7 @@ static int p54_assign_address(struct ieee80211_hw *dev, struct sk_buff *skb,
- 			       struct p54_hdr *data, u32 len)
- {
- 	struct p54_common *priv = dev->priv;
--	struct sk_buff *entry = priv->tx_queue.next;
-+	struct sk_buff *entry;
- 	struct sk_buff *target_skb = NULL;
- 	struct ieee80211_tx_info *info;
- 	struct memrecord *range;
-@@ -1014,6 +1016,7 @@ static int p54_assign_address(struct ieee80211_hw *dev, struct sk_buff *skb,
- 		}
+ 		if (max_bitrates < sband->n_bitrates)
+ 			max_bitrates = sband->n_bitrates;
++		supp_ht = supp_ht || sband->ht_cap.ht_supported;
  	}
  
-+	entry = priv->tx_queue.next;
- 	while (left--) {
- 		u32 hole_size;
- 		info = IEEE80211_SKB_CB(entry);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index af6b584..3e2ac2b 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1952,6 +1952,8 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	{ USB_DEVICE(0x13b1, 0x000d), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x13b1, 0x0011), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x13b1, 0x001a), USB_DEVICE_DATA(&rt2500usb_ops) },
-+	/* CNet */
-+	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Conceptronic */
- 	{ USB_DEVICE(0x14b2, 0x3c02), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* D-LINK */
-@@ -1976,14 +1978,20 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	{ USB_DEVICE(0x148f, 0x2570), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
-+	/* Sagem */
-+	{ USB_DEVICE(0x079b, 0x004b), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Siemens */
- 	{ USB_DEVICE(0x0681, 0x3c06), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* SMC */
- 	{ USB_DEVICE(0x0707, 0xee13), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Spairon */
- 	{ USB_DEVICE(0x114b, 0x0110), USB_DEVICE_DATA(&rt2500usb_ops) },
-+	/* SURECOM */
-+	{ USB_DEVICE(0x0769, 0x11f3), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Trust */
- 	{ USB_DEVICE(0x0eb0, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
-+	/* VTech */
-+	{ USB_DEVICE(0x0f88, 0x3012), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Zinwell */
- 	{ USB_DEVICE(0x5a57, 0x0260), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ 0, }
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 96a8d69..cefee1b 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2281,7 +2281,18 @@ static const struct rt2x00_ops rt73usb_ops = {
-  */
- static struct usb_device_id rt73usb_device_table[] = {
- 	/* AboCom */
-+	{ USB_DEVICE(0x07b8, 0xb21b), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x07b8, 0xb21c), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x07b8, 0xb21d), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x07b8, 0xb21e), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x07b8, 0xb21f), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* AL */
-+	{ USB_DEVICE(0x14b2, 0x3c10), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* Amigo */
-+	{ USB_DEVICE(0x148f, 0x9021), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0eb0, 0x9021), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* AMIT  */
-+	{ USB_DEVICE(0x18c5, 0x0002), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Askey */
- 	{ USB_DEVICE(0x1690, 0x0722), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* ASUS */
-@@ -2294,7 +2305,9 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x050d, 0x905c), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Billionton */
- 	{ USB_DEVICE(0x1631, 0xc019), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x08dd, 0x0120), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Buffalo */
-+	{ USB_DEVICE(0x0411, 0x00d8), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x00f4), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* CNet */
- 	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
-@@ -2308,6 +2321,11 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x07d1, 0x3c04), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c06), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c07), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* Edimax */
-+	{ USB_DEVICE(0x7392, 0x7318), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x7392, 0x7618), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* EnGenius */
-+	{ USB_DEVICE(0x1740, 0x3701), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Gemtek */
- 	{ USB_DEVICE(0x15a9, 0x0004), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Gigabyte */
-@@ -2328,22 +2346,34 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x0db0, 0xa861), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0db0, 0xa874), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Ralink */
-+	{ USB_DEVICE(0x04bb, 0x093d), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2671), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Qcom */
- 	{ USB_DEVICE(0x18e8, 0x6196), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x18e8, 0x6229), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x18e8, 0x6238), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* Samsung */
-+	{ USB_DEVICE(0x04e8, 0x4471), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Senao */
- 	{ USB_DEVICE(0x1740, 0x7100), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Sitecom */
--	{ USB_DEVICE(0x0df6, 0x9712), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x0024), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x0027), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x002f), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0df6, 0x90ac), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0df6, 0x9712), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Surecom */
- 	{ USB_DEVICE(0x0769, 0x31f3), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* Philips */
-+	{ USB_DEVICE(0x0471, 0x200a), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Planex */
- 	{ USB_DEVICE(0x2019, 0xab01), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x2019, 0xab50), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* Zcom */
-+	{ USB_DEVICE(0x0cde, 0x001c), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* ZyXEL */
-+	{ USB_DEVICE(0x0586, 0x3415), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ 0, }
- };
+ 	local->int_scan_req.n_channels = channels;
+@@ -868,6 +871,8 @@ int ieee80211_register_hw(struct ieee802
+ 	 * information -- SSID is the driver's responsibility.
+ 	 */
+ 	local->scan_ies_len = 4 + max_bitrates; /* (ext) supp rates */
++	if (supp_ht)
++		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
  
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 85c9034..bd0a16c 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -380,7 +380,8 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
- 
- 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
- 
--	if (freq_diff <= 0 || freq_range->max_bandwidth_khz > freq_diff)
-+	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
-+			freq_range->max_bandwidth_khz > freq_diff)
- 		return false;
- 
- 	return true;
+ 	if (!local->ops->hw_scan) {
+ 		/* For hw_scan, driver needs to set these up. */
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
