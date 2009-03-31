@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53483 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754506AbZCXAgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 20:36:00 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 17:35:59 -0700
-Date: Mon, 23 Mar 2009 16:35:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Christian Lamparter <chunkeey@web.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
-Message-ID: <20090323233522.GM5740@tesla> (sfid-20090324_013605_075105_8E8751D6)
-References: <200903212311.49348.chunkeey@web.de> <1237818551.6147.15.camel@johannes.local> <200903240126.12692.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200903240126.12692.chunkeey@web.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:53717 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753130AbZCaMQt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2009 08:16:49 -0400
+Subject: Re: [RFC/RFT v2] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <1238451390.5970.59.camel@johannes.local> (sfid-20090331_001720_897384_DD6E5216)
+References: <1238349195.24972.5.camel@johannes.local>
+	 (sfid-20090329_195345_745378_2F2074B3)  <1238451390.5970.59.camel@johannes.local>
+	 (sfid-20090331_001720_897384_DD6E5216)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9xip8XruVCAEKJhTQCuM"
+Date: Tue, 31 Mar 2009 14:16:13 +0200
+Message-Id: <1238501773.5970.90.camel@johannes.local> (sfid-20090331_141652_651028_28CD2677)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 05:26:12PM -0700, Christian Lamparter wrote:
-> On Monday 23 March 2009 15:29:11 Johannes Berg wrote:
-> >
-> > I think it would make sense to link them into the same module as long as
-> > we don't have a second user of the common code. I actually doubt we will
-> > see a second user of the common code at all, even if it is in theory
-> > possible with the hardware design.
-> Shh, there's a secret plan, see ar9170/main.c
-> 
-> /*
->  * BIG FAT TODO:
->  *
->  * By the looks of things: these devices share a lot of things like
->  * EEPROM layout/design and PHY code with other Atheros WIFI products.
->  * So this driver/library will eventually become ath9k code... or vice versa ;-)
->  */
 
-The MACs are completely different so if there is some code sharing possible
-it may be difficult to find but it would certainly be welcomed!
+--=-9xip8XruVCAEKJhTQCuM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> And the ath5k<->ath9k merge could provide some "helper" function for this
-> driver as well... (wishful thinking, but anyway...)
+On Tue, 2009-03-31 at 00:16 +0200, Johannes Berg wrote:
+> This patch completely rewrites the rfkill core to address
+> the following deficiencies:
 
-Yeah we'll see.
+[snip]
 
-> Meanwhile, what about a config option that can be enabled to
-> integrate everything into the front-end module (ar9170usb)?
-> ( However, I don't think this config solution will stand a chance ;-)
->   and we all come to the same "all-in-one works best" conclusion.  )
+This one has a few stupid locking bugs, will send an updated version
+later today, for now at the well-known URL.
 
-Future Atheros 11n USB devices will use a different MAC and therefore expect
-them to be different. I am not sure if in the future we can share but
-I won't know for sure for a little while.
+johannes
 
-Its your driver though so your call. I also just don't see where things
-can be immediately shared right now but do welcome the work to do so.
+--=-9xip8XruVCAEKJhTQCuM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-  Luis
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0gmKAAoJEKVg1VMiehFYzcYQAIZhTw0wvdi5Z9jveADRU1B+
+YSqezUfrVgFlh6NDTMal8XZ6FiygdhEFU0j2PSMkvy996ZifKagRRe+Z5PgV4QY1
+L6dKGXK07cQRGPYeqHff6xPOJOOFegmh1aQey7XkWPn62g1qNrRyEVQoUVbj1y1Q
+AiMtNFm1fzaFj/9rDaayayYpKcuwZEJPLwyGArGuoRvZWoOQ74h1GHX2zOpHRSSe
+bJfKeLgQRiS4ZVnPa0M8UpJ2QJYHO8Ltdhn4I/h5JTWUxXE94p+qWzahcPEypx/D
+08ZQQLbTVcSQNqY527INbcC67mbMjJhTc7Y7pHiK5OQ/fge7gE6g1hkfOrnmaIO3
+wXTayViYFZIMSX/M7zzhO7TKSrxQbiwzF7irmxsxpq/ugt+lNAwDIcsNLeCcz/AQ
+ipU5JEXE6M8ruSQvQ14DpXdCvVhQMNDVAzBIBep719/jjrfmrl8GKE9z/1lC3Q21
+4H2UscdKy5IeA+eP3IISmXdHKNSxZWeffrbUZaLXNIoTAx9VnbZCoqsgUfg4cl3v
+kfw9xZAfiuug4D52LG/96bLzFPvfxUWzf2zk/4B+AUHn6RhqOzXoQjNM6JwV6hRW
+yfYEut8N+uEytR0WNdLMKvLY+/7PQDMfNJMmNgea8DPizjcbVlnjyFaDXiHPGNNB
+zEwNlq+pZfmf6qyeU0g6
+=Gq/H
+-----END PGP SIGNATURE-----
+
+--=-9xip8XruVCAEKJhTQCuM--
+
