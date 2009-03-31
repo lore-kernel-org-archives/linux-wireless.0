@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:41581 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047AbZCLCaB (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:48386 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757180AbZCaRqD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 22:30:01 -0400
-Received: by fxm24 with SMTP id 24so224816fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 19:29:57 -0700 (PDT)
-Subject: Re: [ipw3945-devel] [PATCH 3/8] iwl3945 : fix rate scaling
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1236821360.9581.78.camel@maxim-laptop>
-References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-2-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-3-git-send-email-reinette.chatre@intel.com>
-	 <1236795481-12757-4-git-send-email-reinette.chatre@intel.com>
-	 <1236821360.9581.78.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Thu, 12 Mar 2009 04:29:54 +0200
-Message-Id: <1236824994.7177.3.camel@maxim-laptop> (sfid-20090312_033007_566101_2C109BD6)
-Mime-Version: 1.0
+	Tue, 31 Mar 2009 13:46:03 -0400
+Received: by bwz17 with SMTP id 17so2482677bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 10:45:59 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	Nico -telmich- Schottelius
+	<nico-linux-ipw3945-devel@schottelius.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ipw3945-devel] 2.6.29-wl-36116-g6a982a0: connection loss
+References: <20090331044946.GA10616@denkbrett.schottelius.org>
+	<1238519733.10366.32.camel@rc-desk>
+	<1238520041.5970.112.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 31 Mar 2009 20:45:57 +0300
+In-Reply-To: <1238520041.5970.112.camel@johannes.local> (Johannes Berg's message of "Tue\, 31 Mar 2009 19\:20\:41 +0200")
+Message-ID: <8763hpsi0a.fsf@litku.valot.fi> (sfid-20090331_194607_701221_3D32CC07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-03-12 at 03:29 +0200, Maxim Levitsky wrote:
-> On Wed, 2009-03-11 at 11:17 -0700, Reinette Chatre wrote:
-> > From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > 
-> > Patch fixes the bug 1900 at
-> > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1900
-> > 
-> > Issues:
-> > Throughput and success ratio calculations were not done properly.
-> > Number of retries were exceeding 16.
-> 
-> ether.
-> 
-> On the other omitting  the 'disable_hw_scan=1' option (which appears to
-> work once again, since  few days ago it broke s2disk with hung scan) -
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Ah , I remember now. The disable_hw_scan=0 breaks (!) 
-the rfkill support.
+>> Perhaps the new beacon filtering work [1] is changing more than it
+>> intended?
+>
+> I think it only changed the messages here. Previously, that message
+> simply wouldn't have been there, instead you'd only have seen the "No
+> ProbeResp from current AP - assume out of range" thing.
 
-I don't know if this affects it, but I patched NM to poll the rfkill
-each second.
+At least I have been using latest wireless-testing with iwl3945 all the time
+(for example right now) and I haven't noticed any problems.
 
-When I enable radio - NM hangs forever in scanning mode. 
-Only module reload helps.
+But your comment makes me think is the "beacon loss" message too
+verbose. Maybe we should remove it?
 
-Best regards,
-	Maxim Levitsky
+BTW, what are the AP settings (beacon interval, DTIM)? Was power save
+enabled in the driver? If the beacon interval is really long, like 1
+second, our timer is far from optimal and missing beacon only once
+might trigger the warning. We should fix that properly at some point.
 
+-- 
+Kalle Valo
