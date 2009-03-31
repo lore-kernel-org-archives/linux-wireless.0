@@ -1,108 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30821 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751553AbZCMWZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 18:25:28 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 15:25:27 -0700
-Date: Fri, 13 Mar 2009 14:24:46 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Greg KH <greg@kroah.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [stable] [ath9k-devel] [PATCH v6 0/3] ath9k: SMP fixes
-Message-ID: <20090313212445.GD1620@tesla> (sfid-20090313_232532_070181_3D1AF05B)
-References: <1236896331-5026-1-git-send-email-lrodriguez@atheros.com> <43e72e890903131429h560dd786j74dd93a9e80fac12@mail.gmail.com> <20090313220259.GA29459@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090313220259.GA29459@kroah.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44083 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbZCaIDf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2009 04:03:35 -0400
+Subject: Re: [RFC/RFT v2] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <49D153C2.7010706@lwfinger.net>
+References: <1238349195.24972.5.camel@johannes.local>
+	 (sfid-20090329_195345_745378_2F2074B3) <1238451390.5970.59.camel@johannes.local>
+	 <49D153C2.7010706@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0p8JF1Ai5opo44lZr0n0"
+Date: Tue, 31 Mar 2009 10:02:57 +0200
+Message-Id: <1238486577.5970.70.camel@johannes.local> (sfid-20090331_100348_648902_122ACD64)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2009 at 03:02:59PM -0700, Greg KH wrote:
-> On Fri, Mar 13, 2009 at 02:29:08PM -0700, Luis R. Rodriguez wrote:
-> > On Thu, Mar 12, 2009 at 3:18 PM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> > > This v6 removes the hotplug CPU stuff which although it technically
-> > > would be correct is more cruft and highly unlikely. The down side
-> > > is you will get serialization applied even if you only have one
-> > > CPU but who cares, I doubt those nutty SGI guys are toying with
-> > > ath9k in the lab.
-> > >
-> > > Yesterday I started mucking with an alternative approach to
-> > > serialization which worked. I added just 5 udelay()s in key places
-> > > where we had a lot of consecutive IO read/writes issued and that
-> > > resolved the issue at least for STA mode but it didn't do the trick
-> > > for AP mode. Technically it should be possible to groom all hardware
-> > > access routines to do the same but I'm tired of this issue and want
-> > > to a fix merged today not a few weeks from now. Anyway if you are
-> > > curious you can check out that patch replacement approach for
-> > > serialization here:
-> > >
-> > > http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/smp-udelay-fix.patch
-> > >
-> > > Note that AP won't work though so if you have a lot of time in your
-> > > hands and have an SMP box with PCI Atheros 11n and are seeing the hangs
-> > > and want a neat alternative to the current serialization implementation
-> > > try adding udelays like the ones in the patch in places where we do a lot
-> > > of io read/writes. Send me the results :)
-> > >
-> > > The compromise is to keep serialization conditional -- we do not want to
-> > > do it for every read/write regardless of the type of card you have, the
-> > > code overhead is not great and we maintain this anyway. Adding it for all
-> > > cases would just not be optimal.
-> > >
-> > > Luis R. Rodriguez (3):
-> > >  ath9k: implement IO serialization
-> > >  ath9k: AR9280 PCI devices must serialize IO as well
-> > >  ath9k: remove dummy PCI "retry timeout" fix
-> > >
-> > >  drivers/net/wireless/ath9k/ath9k.h |   34 ++++++++++++++++++++++++++++++++++
-> > >  drivers/net/wireless/ath9k/hw.c    |   28 +++++++++++++++++++++++++++-
-> > >  drivers/net/wireless/ath9k/hw.h    |    4 ++--
-> > >  drivers/net/wireless/ath9k/main.c  |    1 +
-> > >  drivers/net/wireless/ath9k/pci.c   |   18 ------------------
-> > >  5 files changed, 64 insertions(+), 21 deletions(-)
-> >
-> > John, Greg,
-> >
-> > these patches require a port down to the other stable kernels, I've
-> > taken the time to port only the necessary patches (the first two) to
-> > fix the SMP hang on each stable kernel and test them accordingly:
-> >
-> > * 2.6.27
-> > * 2.6.28
-> > * 2.6.29
-> >
-> > Once merged into wireless-testing the following patches can be used to
-> > push into Linus' tree:
-> >
-> > http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/serialization-v6/for-2.6.29/
-> >
-> > Once merged into stable these can be used to merge into 2.6.27 and 2.6.28:
-> >
-> > http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/serialization-v6/for-2.6.27/
-> > http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/serialization-v6/for-2.6.28/
-> >
-> > Just replace:
-> >
-> > This is a port of commit SHA1 <BLEH>
-> >
-> > With the respective SHA1.
-> >
-> > I can also simply resend the ports for 27 and 28 once merged into
-> > Linus' tree. Whatever makes it easier for you.
-> 
-> Please, when the patches go into Linus's tree, send stable@kernel.org
-> the backported patches, with the proper git commit id in them.
-> 
-> Otherwise it's just too much confusing work for me and I'll easily mess
-> it up.  The number of -stable patches is increasing and I need all the
-> help I can get in handling this in a sane manner :)
 
-Sure will do thanks,
+--=-0p8JF1Ai5opo44lZr0n0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Mon, 2009-03-30 at 18:20 -0500, Larry Finger wrote:
+
+> Initial testing shows at least two problems with b43legacy (and probably =
+b43 as
+> well):
+
+Thanks for testing!
+
+> (1) On bootup with my radio switch OFF, the driver ignored that switch an=
+d
+> associated with my AP. Only when the switch was turned on and off again d=
+id the
+> driver log the expected "switch off" message".
+
+I think that's expected because I'm missing some code to set the default
+state when a driver registers.
+
+> (2) The radio LED is on no matter the state of the switch.
+
+That's strange. I'll take a look.
+
+johannes
+
+--=-0p8JF1Ai5opo44lZr0n0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ0c4uAAoJEKVg1VMiehFYIjgP+gL5tMrg1pn0H3/AtwKo0Mzg
+MQH/5dYfYUA6gIZDDIkrPU1bHvtdYcnQ3QtM2tU+uWtDCG1dHsz1nSYML0s8RbXA
+nEdyI9q5EBxKG1BjBcpykZac5wom80V3FqixVDIjj5BDRJVEdJB1RyCtG8sEyDOs
+ODL8BYTyAlIN7zfJbpO3YiribvbuFtQYPnFg+D6GbYWZosY18ryvcsQGo/u2UbXa
+I2SwlXgHDfRnDKqbaGnyIgVeIxxdpqBWCaBIYzeP94PzPijou7TesO0qUhbV5viH
+LsiDA6cSbKHvgwH68uqgaBP2qSn53wIcBKVHyWwE4D6dHvKmhqRxTs3npsdjK5Ln
+CpE+mX8zvIr+YeVSyFrUtv1+RIoovbhP7vzChxuej62wWLok+3Hbqw3d8RaY6XDg
+SFD4/uqUc7pz4XG44epUp6id4/+rahVKdNymCTbbnDcsXVsRMRsCmaDhT4+dccpU
+Izdnq0HtkUAdNmHOFAvCKEihmkpSjPs747vA2O0HYbOWBPmtChV5VivmRyOE6nm7
+poYT6X4BAhlnM1rq+OxwNhk9t1SQ107oG+uweEZKVB5IoAnWtqVxeNqstyPp0E8g
+wJIqBXJSMLbaS4+JQ40jyLG7ApFyY1dNzePVLsNC3zLYlK7lY8RikJ8OGPxPzxzg
+cabpYw12LK+wNed9rTD/
+=0Td7
+-----END PGP SIGNATURE-----
+
+--=-0p8JF1Ai5opo44lZr0n0--
+
