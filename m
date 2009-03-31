@@ -1,77 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56069 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756056AbZC3Kjf (ORCPT
+Received: from cp-out11.libero.it ([212.52.84.111]:43653 "EHLO
+	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbZCaKHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:39:35 -0400
-Subject: Re: [RFC] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <1238407043.24972.25.camel@johannes.local> (sfid-20090330_115732_529983_0928B643)
-References: <1238349195.24972.5.camel@johannes.local>
-	 <1238403987.24972.14.camel@johannes.local>
-	 <200903301154.10067.mb@bu3sch.de>
-	 (sfid-20090330_115542_001932_2A670424)  <1238407043.24972.25.camel@johannes.local>
-	 (sfid-20090330_115732_529983_0928B643)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Us1WuZ18OdCaOsAgx2OA"
-Date: Mon, 30 Mar 2009 12:39:30 +0200
-Message-Id: <1238409570.24972.33.camel@johannes.local> (sfid-20090330_123938_825000_88EFD3FC)
-Mime-Version: 1.0
+	Tue, 31 Mar 2009 06:07:10 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linville@tuxdriver.com
+Subject: [PATCH] ath5k: fix interpolation with equal power levels
+Date: Tue, 31 Mar 2009 11:59:56 +0200
+Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
+	jirislaby@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org
+MIME-Version: 1.0
+Message-Id: <200903311159.57449.rossi.f@inwind.it> (sfid-20090331_120713_876366_2C1F26C1)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the EEPROM contains weird values for the power levels we have to
+fix the interpolation process.
 
---=-Us1WuZ18OdCaOsAgx2OA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-03-30 at 11:57 +0200, Johannes Berg wrote:
-
-> > > One thing I was wondering about -- should we just implement polling v=
-ia
-> > > a single work struct that iterates all those rfkill drivers that need
-> > > polling? I've given them each an own right now, but that seems
-> > > unnecessary.
-> >=20
-> > If it doesn't add new locking problems (global locks, etc...) that'd be=
- OK.
->=20
-> Hm, indeed, it probably would -- rfkill_register needs a global lock
-> while being called from the driver, and the polling would need the same
-> lock while calling into the driver.
-
-We can work around that by cancelling the work whenever we want to
-modify the list -- that way the work doesn't need to take any locks. Not
-sure it's worth it though, that makes the code harder to follow.
-
-johannes
-
---=-Us1WuZ18OdCaOsAgx2OA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ0KFgAAoJEKVg1VMiehFYx7gQAMAglhb8nxbLa4+fcvFHeGQu
-D5RjXrDxpmOB5DzDVMgOVgeZ4OmMiYVon0I+lZseYcFEIMx0UNSkhBine4BnJx+Y
-cCdlM7THNcjT6qoXRw+4Dj5Ey7EL5T3LTgrg9MPI5A0D3Wse4b9esTMnpH4ckJ2y
-lVJYrbaQuZt+Ee/DJ/0z5cvt/X5p0A0uSIrprs4eKbA/bXojt+iGK+4t/7F2wgCr
-Ot2Mfa9a7CzWU2BERjyjf5iqgWHyUrnjP2T/i+MVXti3T8R/3xV9+lr9bpAC1rsP
-1RduZU9U3Aj08DhkplM+IJU9gWRJziZ669+xnsko1BaNMFju/jRFw58pjMXcdb+M
-JRhAYBLVi9S/N4qrswLaM8T6gtup+mE5T2ispGVmNdq5oGxTnHrovim3Ywgonpqu
-vwrScWCwirh0ajPhfp2D0Naszle7FB5H5QtCdqBgTCZHtLilYoAXNbnK2MJ02svX
-56x9GwagDq05XDPTd54hr5A+drjW2trJTLH+pm1oiF32Y9QBKhwferrLT7Gx0ISa
-KpcHkuae8E6p0aOok0K1NY2sTqYVTtPCQzIZ+QYeW0SeKdn5zg7mqeCEdyFcFOWa
-IHfete+Y1QTM4mCCawd4EXWI68G/0DExl37khdMjtK8/Ctd8zOUT0onyz+SvGBoZ
-QJXcmzHmeChMzPfY+kyt
-=khU5
------END PGP SIGNATURE-----
-
---=-Us1WuZ18OdCaOsAgx2OA--
-
+Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
+---
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 9e2faae..0e3e0e0 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1487,28 +1487,35 @@ ath5k_get_linear_pcdac_min(const u8 *stepL, const u8 *stepR,
+ {
+ 	s8 tmp;
+ 	s16 min_pwrL, min_pwrR;
+-	s16 pwr_i = pwrL[0];
+-
+-	do {
+-		pwr_i--;
+-		tmp = (s8) ath5k_get_interpolated_value(pwr_i,
+-						pwrL[0], pwrL[1],
+-						stepL[0], stepL[1]);
+-
+-	} while (tmp > 1);
+-
+-	min_pwrL = pwr_i;
+-
+-	pwr_i = pwrR[0];
+-	do {
+-		pwr_i--;
+-		tmp = (s8) ath5k_get_interpolated_value(pwr_i,
+-						pwrR[0], pwrR[1],
+-						stepR[0], stepR[1]);
+-
+-	} while (tmp > 1);
++	s16 pwr_i;
++
++	if (pwrL[0] == pwrL[1])
++		min_pwrL = pwrL[0];
++	else {
++		pwr_i = pwrL[0];
++		do {
++			pwr_i--;
++			tmp = (s8) ath5k_get_interpolated_value(pwr_i,
++							pwrL[0], pwrL[1],
++							stepL[0], stepL[1]);
++		} while (tmp > 1);
++
++		min_pwrL = pwr_i;
++	}
+ 
+-	min_pwrR = pwr_i;
++	if (pwrR[0] == pwrR[1])
++		min_pwrR = pwrR[0];
++	else {
++		pwr_i = pwrR[0];
++		do {
++			pwr_i--;
++			tmp = (s8) ath5k_get_interpolated_value(pwr_i,
++							pwrR[0], pwrR[1],
++							stepR[0], stepR[1]);
++		} while (tmp > 1);
++ 
++		min_pwrR = pwr_i;
++	}
+ 
+ 	/* Keep the right boundary so that it works for both curves */
+ 	return max(min_pwrL, min_pwrR);
