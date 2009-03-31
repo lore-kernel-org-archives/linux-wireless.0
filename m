@@ -1,29 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53572
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1763208AbZCaVLv (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43416 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758880AbZCaCai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 17:11:51 -0400
-Date: Tue, 31 Mar 2009 14:11:39 -0700 (PDT)
-Message-Id: <20090331.141139.188200200.davem@davemloft.net> (sfid-20090331_231220_106305_A0D90E92)
-To: kyle@mcmartin.ca
-Cc: gregkh@suse.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: at76_usb convert to netdev_ops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090331201850.GC25513@bombadil.infradead.org>
-References: <20090331201850.GC25513@bombadil.infradead.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 30 Mar 2009 22:30:38 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 8/9] ath: space cleanup
+Date: Mon, 30 Mar 2009 22:30:34 -0400
+Message-Id: <1238466635-23280-9-git-send-email-lrodriguez@atheros.com> (sfid-20090331_043045_449055_5DA2F6A3)
+In-Reply-To: <1238466635-23280-1-git-send-email-lrodriguez@atheros.com>
+References: <1238466635-23280-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kyle McMartin <kyle@mcmartin.ca>
-Date: Tue, 31 Mar 2009 16:18:50 -0400
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/regd.c |   33 +++++++++++++++++++--------------
+ 1 files changed, 19 insertions(+), 14 deletions(-)
 
-> Didn't see this in your patch queue, fixes build on Fedora, though we'll
-> probably end up turning on CONFIG_COMPAT_NET_DEV_OPS for now anyway.
-> 
-> Signed-off-by: Kyle McMartin <kyle@redhat.com>
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 3ccf21c..4b5c851 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -173,9 +173,9 @@ static bool ath_is_radar_freq(u16 center_freq)
+  *   received a beacon on a channel we can enable active scan and
+  *   adhoc (or beaconing).
+  */
+-static void ath_reg_apply_beaconing_flags(
+-	struct wiphy *wiphy,
+-	enum nl80211_reg_initiator initiator)
++static void
++ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
++			      enum nl80211_reg_initiator initiator)
+ {
+ 	enum ieee80211_band band;
+ 	struct ieee80211_supported_band *sband;
+@@ -232,9 +232,9 @@ static void ath_reg_apply_beaconing_flags(
+ }
+ 
+ /* Allows active scan scan on Ch 12 and 13 */
+-static void ath_reg_apply_active_scan_flags(
+-	struct wiphy *wiphy,
+-	enum nl80211_reg_initiator initiator)
++static void
++ath_reg_apply_active_scan_flags(struct wiphy *wiphy,
++				enum nl80211_reg_initiator initiator)
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *ch;
+@@ -316,8 +316,8 @@ static void ath_reg_apply_radar_flags(struct wiphy *wiphy)
+ }
+ 
+ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
+-				 enum nl80211_reg_initiator initiator,
+-				 struct ath_regulatory *reg)
++				      enum nl80211_reg_initiator initiator,
++				      struct ath_regulatory *reg)
+ {
+ 	switch (reg->regpair->regDmnEnum) {
+ 	case 0x60:
+@@ -335,7 +335,8 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
+ }
+ 
+ int ath_reg_notifier_apply(struct wiphy *wiphy,
+-	struct regulatory_request *request, struct ath_regulatory *reg)
++			   struct regulatory_request *request,
++			   struct ath_regulatory *reg)
+ {
+ 	/* We always apply this */
+ 	ath_reg_apply_radar_flags(wiphy);
+@@ -433,8 +434,10 @@ ath_get_regpair(int regdmn)
+ 	return NULL;
+ }
+ 
+-static int ath_regd_init_wiphy(struct ath_regulatory *reg, struct wiphy *wiphy,
+-			       int (*reg_notifier)(struct wiphy *wiphy,
++static int
++ath_regd_init_wiphy(struct ath_regulatory *reg,
++		    struct wiphy *wiphy,
++		    int (*reg_notifier)(struct wiphy *wiphy,
+ 					struct regulatory_request *request))
+ {
+ 	const struct ieee80211_regdomain *regd;
+@@ -464,9 +467,11 @@ static int ath_regd_init_wiphy(struct ath_regulatory *reg, struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
+-int ath_regd_init(struct ath_regulatory *reg, struct wiphy *wiphy,
+-		  int (*reg_notifier)(struct wiphy *wiphy,
+-			    struct regulatory_request *request))
++int
++ath_regd_init(struct ath_regulatory *reg,
++	      struct wiphy *wiphy,
++	      int (*reg_notifier)(struct wiphy *wiphy,
++				  struct regulatory_request *request))
+ {
+ 	struct country_code_to_enum_rd *country = NULL;
+ 	u16 regdmn;
+-- 
+1.6.0.6
 
-Acked-by: David S. Miller <davem@davemloft.net>
