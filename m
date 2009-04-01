@@ -1,44 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:33306 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753984AbZDBSgU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 14:36:20 -0400
-Date: Thu, 02 Apr 2009 13:36:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: rpurdie@rpsys.net
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] leds: Increase trigger name maximum size
-Message-ID: <49d5059a.f3z10uf0HvyIItSz%Larry.Finger@lwfinger.net> (sfid-20090402_203623_678261_D2FDE19D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:23370 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758369AbZDAV1r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2009 17:27:47 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/3] iwlwifi driver updates 04/01/2009
+Date: Wed,  1 Apr 2009 14:33:22 -0700
+Message-Id: <1238621605-14846-1-git-send-email-reinette.chatre@intel.com> (sfid-20090401_232753_040799_70239910)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On my HP dv2815 laptop, the total length of the triggers for my b43legacy
-wireless device exceeds the maximum value of 50 defined in
-include/linux/leds.h. As a result, the list is garbled.
+[PATCH 1/3] iwlwifi: adding triple stream rate support for MIMO3
+[PATCH 2/3] iwlwifi: adding MIMO3 support in rate scaling
+[PATCH 3/3] iwlwifi: add debug messages when start aggregation queue
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Thank you
 
-Richard,
+Reinette
 
-This is 2.6.31 material.
-
-Larry
----
-
-Index: wireless-testing/include/linux/leds.h
-===================================================================
---- wireless-testing.orig/include/linux/leds.h
-+++ wireless-testing/include/linux/leds.h
-@@ -74,7 +74,7 @@ extern void led_classdev_resume(struct l
-  */
- #ifdef CONFIG_LEDS_TRIGGERS
- 
--#define TRIG_NAME_MAX 50
-+#define TRIG_NAME_MAX 70
- 
- struct led_trigger {
- 	/* Trigger Properties */
