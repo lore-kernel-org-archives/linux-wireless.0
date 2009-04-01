@@ -1,47 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59746 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059AbZDTSbI (ORCPT
+Received: from mga14.intel.com ([143.182.124.37]:40831 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765065AbZDAO3F convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 14:31:08 -0400
-Date: Mon, 20 Apr 2009 14:25:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mcgrof@gmail.com, me@bobcopeland.com, nbd@openwrt.org
-Subject: Re: [PATCH 2/7] ath5k: Read Spur channels from EEPROM
-Message-ID: <20090420182524.GE3369@tuxdriver.com> (sfid-20090420_203113_129770_F19C83A7)
-References: <20090416002449.GB4138@makis> <1239841547.25334.19.camel@johannes.local> <40f31dec0904151751u3fd15d93i194d0abbb4657439@mail.gmail.com> <1239843860.4669.1.camel@johannes.local> <49E6CCBA.2010105@gmail.com> <87k55lf7hs.fsf@litku.valot.fi>
+	Wed, 1 Apr 2009 10:29:05 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Kalle Valo <kalle.valo@iki.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Date: Wed, 1 Apr 2009 07:29:01 -0700
+Subject: RE: more thoughts on power saving (was: wireless powersaving (in
+ NM?))
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3546FDD123@orsmsx506.amr.corp.intel.com> (sfid-20090401_162909_624541_23BD8722)
+References: <1237891149.4320.73.camel@johannes.local>
+	<1238583879.5970.195.camel@johannes.local> <87zlf0hbk4.fsf@litku.valot.fi>
+In-Reply-To: <87zlf0hbk4.fsf@litku.valot.fi>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87k55lf7hs.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2009 at 09:16:47AM +0300, Kalle Valo wrote:
-> Jiri Slaby <jirislaby@gmail.com> writes:
-> 
-> > On 04/16/2009 03:04 AM, Johannes Berg wrote:
-> >> On Thu, 2009-04-16 at 03:51 +0300, Nick Kossifidis wrote:
-> >>> ACK, are 80 cols ok ?
-> >> 
-> >> I don't know if there's a standard on that, I tend to use around 60-70,
-> >> but 80 seems good too. It's not just the "doesn't fit terminal" argument
-> >> anyway, it's much easier to read if it's less.
-> >
-> > When one uses git log, it gets moved few (4) columns to the right. So
-> > something little less than 76 is usually preferred :).
-> 
-> I think in usenet 72 characters was the recommended width, right? That
-> way quoting was also easier.
+If I understand correctly, based on implementation, if VoIP support silence detection (which most of the codec support it), it will not constantly sending packets; that might be the reason for bad quality.
 
-72 is my vote...thanks!
+Wey-Yi Guy
+Intel Corporation
+2111 N.E. 25th Avenue  M/S JF3-308                 
+Hillsboro OR 97124-5961
+USA
+Work Phone: 503-264-6023 (OR)
+Cell Phone: 503-329-8410
+Email: wey-yi.w.guy@intel.com
+ 
 
-John
+-----Original Message-----
+From: Kalle Valo [mailto:kalle.valo@gmail.com] On Behalf Of Kalle Valo
+Sent: Wednesday, April 01, 2009 4:13 AM
+To: Johannes Berg
+Cc: Dan Williams; Guy, Wey-Yi W; linux-wireless; Matthew Garrett; Marcel Holtmann
+Subject: Re: more thoughts on power saving (was: wireless powersaving (in NM?))
+
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+> Hi,
+>
+> So I had a few more thoughts.
+>
+> Let me start with a story :)
+>
+>         I use my N810 device for landline calls via SIP these days.
+>         Every time I'm in a call, audio is very choppy and I can barely
+>         understand the person I'm talking to -- my fix is to "ping -i
+>         0.05" the device to disable its powersaving...
+>
+>
+> Now, why is audio choppy? I was blaming it on the wireless powersaving,
+> and disabling that clearly fixes it. But is the problem really just
+> there? I think it might also be the application -- its playback buffer
+> is smaller than the networking latency I am experiencing due to
+> wireless. I think I could probably tolerate an additional audio latency
+> of 150ms (my beacon interval being 102.4ms) or so, if audio wasn't
+> choppy.
+
+What's the DTIM count in your AP? N810 wakes up only for DTIM beacons,
+that might increase the latency.
+
+> That means the application (telepathy sofiasip I guess) would have
+> to have 150ms or so playback buffer to make the playback smooth with
+> delay. [1]
+
+[...]
+
+> [1] I don't quite see why this doesn't happen automatically, it seems it
+> must discard packets that don't fit into its idea of the stream timing
+
+N810 only disables the power save when there's a frame to transmit. I
+guess the SIP connection isn't constantly sending anything and that's
+why you get bad quality.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
