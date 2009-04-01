@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23103.mail.ird.yahoo.com ([217.146.189.43]:34554 "HELO
-	web23103.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751689AbZDMTRB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 15:17:01 -0400
-Message-ID: <164369.31510.qm@web23103.mail.ird.yahoo.com> (sfid-20090413_211707_248188_667101E7)
-Date: Mon, 13 Apr 2009 19:16:58 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFT/RFC V2] rtl8187: Implement TX/RX blink for LED
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
+Received: from yw-out-2324.google.com ([74.125.46.28]:18682 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717AbZDAB2O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2009 21:28:14 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so2721120ywb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 18:28:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1238538161.10366.144.camel@rc-desk>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com>
+	 <c4d76b3b0903160510i5afc6cd6t856b63383a275fca@mail.gmail.com>
+	 <1237254243.13077.33.camel@rainbow> <1237427568.6943.13.camel@rainbow>
+	 <c4d76b3b0903191822l5494f268h395acc4a14608239@mail.gmail.com>
+	 <1237581564.21165.5.camel@abhi-desktop>
+	 <c4d76b3b0903221029r21282bbbs13a8af06f9d8ce2@mail.gmail.com>
+	 <1237768621.8764.13.camel@rainbow>
+	 <1238538161.10366.144.camel@rc-desk>
+Date: Tue, 31 Mar 2009 21:28:12 -0400
+Message-ID: <c4d76b3b0903311828x48a3f162yc8394f053d7749c9@mail.gmail.com> (sfid-20090401_032818_726715_EAD4CBB6)
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: Jason Andryuk <jandryuk@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 31, 2009 at 6:22 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> Could you please try this patch?
 
+It is working for me on iwl3945.  I am associated to my AP and
+streaming a video off the internet (10 minutes so far).
 
+Thanks,
 
---- On Mon, 13/4/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> The following patch implements some
-> control over the LED on RTL8187B and
-> RTL8187L devices. Triggers are registered for TX and RX.
-> Whenever the
-> trigger event occurs, the LED is turned off for 1/20
-> second, then turned
-> back on.
-> 
-> Note: For those RTL8187X devices that are built into the
-> computer and have
-> a LED that is expected to be controlled with a radio
-> switch, this patch will
-> not operate that LED. That will take a separate patch to be
-> prepared later.
-> 
-> Please test and comment.
-> 
-> The behavior described above is found for my Level One
-> RTL8187B. Prior to this
-> patch, the LED was on continuously. On a Netgear WG111V2
-> RTL8187L, the LED
-> blinks erratically. Before the patch, the LED was off.
-> 
-> If you test, please report the status of the LED before and
-> after applying the
-> patch. In addition, find the line that looks like "rtl8187:
-> Customer ID 0x00" in
-> the dmesg output and report it. I also need to know if you
-> have a B or L model.
-> 
-> A number of problems with version 1 of this patch have been
-> fixed. The most
-> important of these was a locking problem that caused the
-> RTL8187L to fail.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-
-I see you have changed to cancel_delayed_work_sync() - that's might be where how it was(?) crashing?
-
-Hin-Tak
-
-
-
-
-      
+Jason
