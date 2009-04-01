@@ -1,62 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:59673 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbZDXGZA (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:50018 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316AbZDAPmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 02:25:00 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so121470fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 23:24:58 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: on radio_enabled
-References: <1240439975.30082.66.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 24 Apr 2009 09:24:56 +0300
-In-Reply-To: <1240439975.30082.66.camel@johannes.local> (Johannes Berg's message of "Thu\, 23 Apr 2009 00\:39\:35 +0200")
-Message-ID: <87tz4ed0w7.fsf@litku.valot.fi> (sfid-20090424_082507_068366_AD5B0CE0)
+	Wed, 1 Apr 2009 11:42:49 -0400
+Date: Wed, 01 Apr 2009 10:42:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V3] b43legacy: Do not select HW_RANDOM
+Message-ID: <49d38b6c.fMv3owVntV9WBh+h%Larry.Finger@lwfinger.net> (sfid-20090401_174253_748603_88FAC11D)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Auto-depend on HW_RANDOM, rather than "select"ing it.
+This way the user has the choice to enable or disable HWRNG support.
 
-> Now, if we're going to use radio_enabled more, I wonder whether we
-> should completely deconfigure the hardware when we want to turn off
-> radio_enabled, and then completely reconfigure it once we enable the
-> radio again.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I assume that you mean op_stop() and op_start() here.
+John, please queue for 2.6.31.
 
-> Pros:
->  * configures all hardware correctly without the driver needing to do
->    everything by itself
->  * works with all hardware for sure
->
-> Cons:
->  * higher latency
 
->From stlc45xx and wl12xx perspective I would like to have low latency as
-possible for the radio on/off case. This is what I had in mind:
 
-interface down:
-
-o chip is powered off while down
-o ifup uploads firmware and initialises it
-o ifup might take hundreds of milliseconds, at least with 1271
-
-radio off:
-
-o chip is powered on
-o firmware possibly sleeping/hibernating
-o radios turned off
-o very low latency (<5 ms) to wakeup
-o small power consuption during radio off
-
-This way it would be possible to have a bit faster scans when not
-associated (with radio off), but still have a possibility to completely
-turn of chip from user space for a longer periods of time (with
-interface down).
-
--- 
-Kalle Valo
+Index: wireless-testing/drivers/net/wireless/b43legacy/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/Kconfig
++++ wireless-testing/drivers/net/wireless/b43legacy/Kconfig
+@@ -3,7 +3,6 @@ config B43LEGACY
+ 	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && HAS_DMA
+ 	select SSB
+ 	select FW_LOADER
+-	select HW_RANDOM
+ 	---help---
+ 	  b43legacy is a driver for 802.11b devices from Broadcom (BCM4301 and
+ 	  BCM4303) and early model 802.11g chips (BCM4306 Ver. 2) used in the
+@@ -51,6 +50,13 @@ config B43LEGACY_RFKILL
+ 	depends on B43LEGACY && (RFKILL = y || RFKILL = B43LEGACY) && RFKILL_INPUT && (INPUT_POLLDEV = y || INPUT_POLLDEV = B43LEGACY)
+ 	default y
+ 
++# This config option automatically enables b43 HW-RNG support,
++# if the HW-RNG core is enabled.
++config B43LEGACY_HWRNG
++	bool
++	depends on B43LEGACY && (HW_RANDOM = y || HW_RANDOM = B43LEGACY)
++	default y
++
+ config B43LEGACY_DEBUG
+ 	bool "Broadcom 43xx-legacy debugging"
+ 	depends on B43LEGACY
+Index: wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/b43legacy.h
++++ wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -596,9 +596,11 @@ struct b43legacy_wl {
+ 	/* Stats about the wireless interface */
+ 	struct ieee80211_low_level_stats ieee_stats;
+ 
++#ifdef CONFIG_B43LEGACY_HWRNG
+ 	struct hwrng rng;
+ 	u8 rng_initialized;
+ 	char rng_name[30 + 1];
++#endif
+ 
+ 	/* The RF-kill button */
+ 	struct b43legacy_rfkill rfkill;
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c
+@@ -2393,6 +2393,7 @@ static void b43legacy_security_init(stru
+ 				  dev->max_nr_keys - 8);
+ }
+ 
++#ifdef CONFIG_B43LEGACY_HWRNG
+ static int b43legacy_rng_read(struct hwrng *rng, u32 *data)
+ {
+ 	struct b43legacy_wl *wl = (struct b43legacy_wl *)rng->priv;
+@@ -2408,17 +2409,21 @@ static int b43legacy_rng_read(struct hwr
+ 
+ 	return (sizeof(u16));
+ }
++#endif
+ 
+ static void b43legacy_rng_exit(struct b43legacy_wl *wl)
+ {
++#ifdef CONFIG_B43LEGACY_HWRNG
+ 	if (wl->rng_initialized)
+ 		hwrng_unregister(&wl->rng);
++#endif
+ }
+ 
+ static int b43legacy_rng_init(struct b43legacy_wl *wl)
+ {
+-	int err;
++	int err = 0;
+ 
++#ifdef CONFIG_B43LEGACY_HWRNG
+ 	snprintf(wl->rng_name, ARRAY_SIZE(wl->rng_name),
+ 		 "%s_%s", KBUILD_MODNAME, wiphy_name(wl->hw->wiphy));
+ 	wl->rng.name = wl->rng_name;
+@@ -2432,6 +2437,7 @@ static int b43legacy_rng_init(struct b43
+ 		       "number generator (%d)\n", err);
+ 	}
+ 
++#endif
+ 	return err;
+ }
+ 
