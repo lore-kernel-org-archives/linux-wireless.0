@@ -1,36 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out7.libero.it ([212.52.84.107]:37730 "EHLO
-	cp-out7.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753053AbZDNPOs (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:35353 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbZDAUzb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 11:14:48 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: Christian Lamparter <chunkeey@web.de>
-Subject: Re: [PATCH 2/3] p54: more SoftLED updates
-Date: Tue, 14 Apr 2009 17:12:33 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200903250312.18264.chunkeey@web.de>
-In-Reply-To: <200903250312.18264.chunkeey@web.de>
+	Wed, 1 Apr 2009 16:55:31 -0400
+Received: by an-out-0708.google.com with SMTP id d14so190072and.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Apr 2009 13:55:29 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200904141712.34220.rossi.f@inwind.it> (sfid-20090414_171452_036771_88319E01)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Date: Wed, 1 Apr 2009 16:55:29 -0400
+Message-ID: <86201b3f0904011355p788ee867p300b5be24569e46b@mail.gmail.com> (sfid-20090401_225534_289155_7CA4C47F)
+Subject: Fragmentation
+From: Charles Gordon <digigordo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 25 March 2009, Christian Lamparter wrote:
+Hi,
 
-> This patch hopefully finishes the SoftLED code:
-> - It adds two more LEDs (rx and radio).
->   (the FW claims it can support up to 16 LEDs,
->    but I doubt that any vendor put more than 4 on a board)
-> - update the LEDs in a _delayed_ workqueue.
->   No one reported any more crashes.
->   (see: "PATCH] p54: fix race condition in memory management")
->   So we can stop burning the mm code.
+I'm working on a driver which will use mac80211.  My hardware cannot
+transmit a frame larger than 1792 bytes, or receive frames larger than
+2048 bytes.  Right now I am relying on the fragmentation routines
+built into mac80211.  Is there a way for my driver to tell mac80211
+what the maximum transmit and receive frame sizes are?  Do I need to
+implement my own fragmentation code to handle this?
 
-My device has 2 LEDs and I can see 4 registrations (assoc, tx, rx and radio). 
-Does it make sense to register LEDs which are not available?
-
-Fabio
+Thanks for you help.
