@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24912 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932379AbZDHSdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 14:33:46 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel C Halperin <daniel.c.halperin@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 4/6] iwlwifi: check triple_stream_basic_rates in iwl_full_rxon_required
-Date: Wed,  8 Apr 2009 11:39:30 -0700
-Message-Id: <1239215972-1795-5-git-send-email-reinette.chatre@intel.com> (sfid-20090408_203406_509217_177106FA)
-In-Reply-To: <1239215972-1795-4-git-send-email-reinette.chatre@intel.com>
-References: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com>
- <1239215972-1795-2-git-send-email-reinette.chatre@intel.com>
- <1239215972-1795-3-git-send-email-reinette.chatre@intel.com>
- <1239215972-1795-4-git-send-email-reinette.chatre@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54199 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1764234AbZDAOYN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2009 10:24:13 -0400
+Date: Wed, 1 Apr 2009 17:23:54 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Report rejected association to user space SME
+Message-ID: <20090401142354.GA8695@jm.kir.nu> (sfid-20090401_162417_433906_F94231EE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel C Halperin <daniel.c.halperin@intel.com>
+When using nl80211 association, we need to send association response
+with a failure code to user space SME instead of just internally
+trying to send out the same (re)association request again couple of
+times. This fixes problems in association process getting stuck on a
+failure when user space is not notified in any way that something
+actually failed.
 
-For completeness, we should also make sure that the 3x3 MIMO rates are also checked when seeing if one rxon struct matches another.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ net/mac80211/mlme.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 3b34b18..9fac8f7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -735,6 +735,8 @@ int iwl_full_rxon_required(struct iwl_priv *priv)
- 	     priv->active_rxon.ofdm_ht_single_stream_basic_rates) ||
- 	    (priv->staging_rxon.ofdm_ht_dual_stream_basic_rates !=
- 	     priv->active_rxon.ofdm_ht_dual_stream_basic_rates) ||
-+	    (priv->staging_rxon.ofdm_ht_triple_stream_basic_rates !=
-+	     priv->active_rxon.ofdm_ht_triple_stream_basic_rates) ||
- 	    (priv->staging_rxon.assoc_id != priv->active_rxon.assoc_id))
- 		return 1;
+--- uml.orig/net/mac80211/mlme.c	2009-04-01 17:20:11.000000000 +0300
++++ uml/net/mac80211/mlme.c	2009-04-01 17:21:15.000000000 +0300
+@@ -1363,6 +1363,11 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 		 * association next time. This works around some broken APs
+ 		 * which do not correctly reject reassociation requests. */
+ 		ifmgd->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
++		cfg80211_send_rx_assoc(sdata->dev, (u8 *) mgmt, len);
++		if (ifmgd->flags & IEEE80211_STA_EXT_SME) {
++			/* Wait for SME to decide what to do next */
++			ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		}
+ 		return;
+ 	}
  
--- 
-1.5.6.3
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
