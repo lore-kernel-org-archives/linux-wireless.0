@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:47589 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751770AbZDNUUh (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:10729 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbZDAXws (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 16:20:37 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: remove module_ stubs
-Date: Tue, 14 Apr 2009 22:19:29 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 1 Apr 2009 19:52:48 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so295031rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Apr 2009 16:52:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200904142219.29935.chunkeey@web.de> (sfid-20090414_234555_570539_0591CF58)
+In-Reply-To: <20090318033600.4d17be51@beast3>
+References: <20090318033600.4d17be51@beast3>
+Date: Wed, 1 Apr 2009 16:52:31 -0700
+Message-ID: <43e72e890904011652k407abb36ye0c9244557c09c18@mail.gmail.com> (sfid-20090402_015253_093211_AC89996D)
+Subject: Re: GSoC project proposals
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Mircea Gherzan <mgherzan@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christoph Hellwig pointed out that these stubs are unnecessary.
+On Tue, Mar 17, 2009 at 6:36 PM, Mircea Gherzan <mgherzan@gmail.com> wrote:
+> Hello,
+>
+> I'm a CS student (undergrad) wanting to do a wireless-related project
+> for the Google Summer of Code.
+>
+> As advised by Johannes Berg, I am posting on here in order to know the
+> mentors and to get a better understanding of the requierements.
+>
+> From the publised list, I am most interested in the roaming project.
+> Please, can anyone tell me who will be mentoring it, so I cand get in
+> touch with him/her?
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-The only reason why I post it, is because it makes the "split up" patch a bit smaller ;)
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index b6ebd48..ad2503a 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -2670,15 +2670,3 @@ void p54_free_common(struct ieee80211_hw *dev)
- #endif /* CONFIG_P54_LEDS */
- }
- EXPORT_SYMBOL_GPL(p54_free_common);
--
--static int __init p54_init(void)
--{
--	return 0;
--}
--
--static void __exit p54_exit(void)
--{
--}
--
--module_init(p54_init);
--module_exit(p54_exit);
+Just a heads up deadline is in two days.
+
+ Luis
