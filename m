@@ -1,135 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:52809 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755232AbZD1KuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 06:50:04 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Lykt0-0003rf-Lz
-	for linux-wireless@vger.kernel.org; Tue, 28 Apr 2009 10:50:02 +0000
-Received: from 193.160.199.2 ([193.160.199.2])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 10:50:02 +0000
-Received: from bjorn by 193.160.199.2 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 10:50:02 +0000
-To: linux-wireless@vger.kernel.org
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: "No ProbeResp from current AP" and then nothing more happens
-Date: Tue, 28 Apr 2009 12:32:33 +0200
-Message-ID: <87ocuhysou.fsf@nemi.mork.no> (sfid-20090428_125016_987218_1BFCC891)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from wf-out-1314.google.com ([209.85.200.170]:46895 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753659AbZDARAd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2009 13:00:33 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so135461wff.4
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Apr 2009 10:00:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1238574545.5970.137.camel@johannes.local>
+References: <1238549294-29168-1-git-send-email-lrodriguez@atheros.com>
+	<1238574545.5970.137.camel@johannes.local>
+Date: Wed, 1 Apr 2009 10:00:16 -0700
+Message-ID: <43e72e890904011000j3d7fb694j28921a3245dd7ed7@mail.gmail.com> (sfid-20090401_190037_370090_B00297A1)
+Subject: Re: [PATCH v2] cfg80211: send regulatory beacon hint events to
+	userspace
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, Apr 1, 2009 at 1:29 AM, Johannes Berg <johannes@sipsolutions.ne=
+t> wrote:
+> On Tue, 2009-03-31 at 21:28 -0400, Luis R. Rodriguez wrote:
+>
+>> + * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP =
+beacon
+>> + * =C2=A0 has been found while world roaming thus enabling active s=
+can or
+>> + * =C2=A0 any mode of operation that initiates TX (beacons) on a ch=
+annel
+>> + * =C2=A0 where we would not have been able to do either before. As=
+ an example
+>> + * =C2=A0 if you are world roaming (regulatory domain set to world =
+or if your
+>> + * =C2=A0 driver is using a custom world roaming regulatory domain)=
+ and while
+>> + * =C2=A0 doing a passive scan on the 5 GHz band you find an AP the=
+re (if not
+>> + * =C2=A0 on a DFS channel) you will now be able to actively scan f=
+or that AP
+>> + * =C2=A0 or use AP mode on your card on that same channel. Note th=
+at this will
+>> + * =C2=A0 never be used for channels 1-11 on the 2 GHz band as they=
+ are always
+>> + * =C2=A0 enabled world wide. This beacon hint is only sent if your=
+ device had
+>> + * =C2=A0 either disabled active scanning or beaconing on a channel=
+=2E We send to
+>> + * =C2=A0 userspace the wiphy on which we removed a restriction fro=
+m
+>> + * =C2=A0 (%NL80211_ATTR_WIPHY) and the channel on which this occur=
+red
+>> + * =C2=A0 before (%NL80211_ATTR_FREQ_BEFORE) and after (%NL80211_AT=
+TR_FREQ_AFTER)
+>> + * =C2=A0 the beacon hint was processed.
+>
+>
+> I wonder -- are there other reasons we may ever update the regdomain?=
+ I
+> could imagine the CMD being REG_UPDATE with an ATTR_REASON or so? Or
+> just using REG_CHANGE with NL80211_REGDOM_TYPE_WORLD _and_ the new
+> channel change attributes?
 
-I'm still configuring my wireless interface manually using iwconfig, an=
-d
-do not run any management daemons like wpasupplicant etc.  This provide=
-s
-the basic functionality I'm interested in.
+I don't follow what you were saying.
 
-But from time to time, I get the message=20
-"No ProbeResp from current AP <ap address> - assume out of range"
-and then my connection is dead.  I've found no other way out of this
-(using only iwconfig/ifconfig) than trigger a reassociation by
-temporariliy configuring different (non-existing) essid.
+=46YI -- we only call this when world roaming.
 
-The wireless network consists of a large number of APs, and there are
-always more than one accessible AP when this error occurs.  I suppose
-the reason for the probe failure may be a temporary AP failure
-(crash/whatever).  However, as you can see from the log below, the erro=
-r
-condition is permanent after such a timeout - even if the associated AP
-become available again.  It does associate with the same AP after
-manually triggering reassociation.
-
-I'm currently using the iwlagn driver as you can see, but I've
-previously had the same (or similar?) issues with both the ath5k and th=
+>> +static int nl80211_put_beacon_hint_channel(void *hdr,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+struct sk_buff *msg,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+enum nl80211_attrs attribute,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+struct ieee80211_channel *chan)
+>> +{
+>> + =C2=A0 =C2=A0 struct nlattr *nl_freq;
+>> +
+>> + =C2=A0 =C2=A0 nl_freq =3D nla_nest_start(msg, attribute);
+>> + =C2=A0 =C2=A0 if (!nl_freq)
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto nla_put_failure;
+>> +
+>> + =C2=A0 =C2=A0 NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FREQ,
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan->cent=
+er_freq);
+>> +
+>> + =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 NLA_PUT_FLAG(msg, NL8021=
+1_FREQUENCY_ATTR_PASSIVE_SCAN);
+>> + =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_NO_IBSS)
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 NLA_PUT_FLAG(msg, NL8021=
+1_FREQUENCY_ATTR_NO_IBSS);
+>> +
+>> + =C2=A0 =C2=A0 nla_nest_end(msg, nl_freq);
+>> +
+>> + =C2=A0 =C2=A0 return 0;
+>
+> I think you should send all possible channel attributes here -- pleas=
 e
-b43 driver.
+> refactor the code and extract the bit that sends a channel from
+> nl80211_send_wiphy(), this bit:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FR=
+EQ,...)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0..
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MA=
+X_TX_POWER,...)
+>
+> put it into a new function that takes a msg and channel pointer and c=
+all
+> it twice.
 
+Heh.. sure.
 
- -> iwconfig wlan0 essid "bar"; ifup wlan0=20
-Apr 28 08:13:10 nemi kernel: [272487.353682] iwlagn 0000:03:00.0: PCI I=
-NT A -> GSI 17 (level, low) -> IRQ 17
-Apr 28 08:13:10 nemi kernel: [272487.353857] iwlagn 0000:03:00.0: irq 2=
-6 for MSI/MSI-X
-Apr 28 08:13:10 nemi kernel: [272487.379825] Registered led device: iwl=
--phy1:radio
-Apr 28 08:13:10 nemi kernel: [272487.379853] Registered led device: iwl=
--phy1:assoc
-Apr 28 08:13:10 nemi kernel: [272487.379877] Registered led device: iwl=
--phy1:RX
-Apr 28 08:13:10 nemi kernel: [272487.379906] Registered led device: iwl=
--phy1:TX
-Apr 28 08:13:11 nemi kernel: [272487.395683] ADDRCONF(NETDEV_UP): wlan0=
-: link is not ready
-Apr 28 08:13:11 nemi kernel: [272487.404641] wlan0: direct probe to AP =
-00:22:90:f9:63:b2 try 1
-Apr 28 08:13:11 nemi kernel: [272487.407965] wlan0 direct probe respond=
-ed
-Apr 28 08:13:11 nemi kernel: [272487.407970] wlan0: authenticate with A=
-P 00:22:90:f9:63:b2
-Apr 28 08:13:11 nemi kernel: [272487.410950] wlan0: authenticated
-Apr 28 08:13:11 nemi kernel: [272487.410954] wlan0: associate with AP 0=
-0:22:90:f9:63:b2
-Apr 28 08:13:11 nemi kernel: [272487.414565] wlan0: RX AssocResp from 0=
-0:22:90:f9:63:b2 (capab=3D0x421 status=3D0 aid=3D1)
-Apr 28 08:13:11 nemi kernel: [272487.414569] wlan0: associated
-Apr 28 08:13:11 nemi kernel: [272487.419542] ADDRCONF(NETDEV_CHANGE): w=
-lan0: link becomes ready
-Apr 28 08:13:21 nemi kernel: [272497.760019] wlan0: no IPv6 routers pre=
-sent
+> Does the relaxing we do on receiving beacons only apply to a single
+> wiphy though?
 
-  -> then it works until:
-Apr 28 09:51:31 nemi kernel: [278388.088590] wlan0: No ProbeResp from c=
-urrent AP 00:22:90:f9:63:b2 - assume out of range
+We do it per wiphy if the wiphy is world roaming.
 
- -> which leaves the interface in a non-functional state until I do:
- -> iwconfig wlan0 essid "foo"; iwconfig wlan0 essid "bar"
-Apr 28 10:13:05 nemi kernel: [279681.489584] wlan0: direct probe to AP =
-00:22:90:f9:63:b2 try 1
-Apr 28 10:13:05 nemi kernel: [279681.492237] wlan0 direct probe respond=
-ed
-Apr 28 10:13:05 nemi kernel: [279681.492242] wlan0: authenticate with A=
-P 00:22:90:f9:63:b2
-Apr 28 10:13:05 nemi kernel: [279681.494645] wlan0: authenticated
-Apr 28 10:13:05 nemi kernel: [279681.494651] wlan0: associate with AP 0=
-0:22:90:f9:63:b2
-Apr 28 10:13:05 nemi kernel: [279681.497428] wlan0: RX AssocResp from 0=
-0:22:90:f9:63:b2 (capab=3D0x421 status=3D0 aid=3D3)
-Apr 28 10:13:05 nemi kernel: [279681.497434] wlan0: associated
+>> + =C2=A0 =C2=A0 /*
+>> + =C2=A0 =C2=A0 =C2=A0* Since we are applying the beacon hint to a w=
+iphy we know its
+>> + =C2=A0 =C2=A0 =C2=A0* wiphy_idx is valid
+>> + =C2=A0 =C2=A0 =C2=A0*/
+>> + =C2=A0 =C2=A0 NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(w=
+iphy));
+>
+> You're sending out the wiphy here.
 
-I've been trying to get a grasp of what happens here, and am wondering
-whether it would make sense to force a scan after a direct probe
-timeout?  Could this be done with something like:
+Hm? We're sending its wiphy_idx here.
 
+> And I just realised there's a bug in the existing code:
+>
+>> @@ -1070,18 +1062,26 @@ static void handle_reg_beacon(struct wiphy *=
+wiphy,
+>> =C2=A0 =C2=A0 =C2=A0 if (likely(chan->center_freq !=3D reg_beacon->c=
+han.center_freq))
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
+>>
+>> + =C2=A0 =C2=A0 if (chan->beacon_found)
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
+>> +
+>> + =C2=A0 =C2=A0 chan->beacon_found =3D true;
+>> +
+>> + =C2=A0 =C2=A0 chan_before.center_freq =3D chan->center_freq;
+>> + =C2=A0 =C2=A0 chan_before.flags =3D chan->flags;
+>> +
+>> =C2=A0 =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) =
+{
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan->flags &=3D ~I=
+EEE80211_CHAN_PASSIVE_SCAN;
+>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 REG_DEBUG_BEACON_FLAG("a=
+ctive scanning");
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 channel_changed =3D true=
+;
+>> =C2=A0 =C2=A0 =C2=A0 }
+>>
+>> =C2=A0 =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan->flags &=3D ~I=
+EEE80211_CHAN_NO_IBSS;
+>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 REG_DEBUG_BEACON_FLAG("b=
+eaconing");
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 channel_changed =3D true=
+;
+>> =C2=A0 =C2=A0 =C2=A0 }
+>
+> This is incorrect, it has to be like this:
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if ((chan->flags & FLAG) && !(chan->orig_f=
+lags & FLAG)) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0chan->flags &=3D=
+ ~FLAG;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0channel_change=
+d =3D true;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+> to take into account the flags the _driver_ had already set on the
+> channel. This is important for Intel hardware -- if you lift the IBSS
+> restriction on a channel that iwlwifi thinks should not use IBSS then
+> the firmware will hate you if you try to use it anyway. Now, I think
+> iwlwifi isn't world-roaming in that sense, but it should still be fix=
+ed!
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 132938b..a12c408 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -679,6 +679,7 @@ static void ieee80211_direct_probe(struct ieee80211=
-_sub_if_data *sdata)
-                 * due to state =3D=3D IEEE80211_STA_MLME_DIRECT_PROBE.
-                 * Hence, queue the STAs work again
-                 */
-+               set_bit(IEEE80211_STA_REQ_SCAN, &ifmgd->request);
-                queue_work(local->hw.workqueue, &ifmgd->work);
-                return;
-        }
+Ew, sure it can go in as a separate patch.
 
-I'm of course going to test this, but it would help alot if someone
-knowing the code could say "that's ridiculous" or "please test".  The
-error condition is quite rare, and I guess I'll have to test for weeks
-to be somewhat certain whether a workaround really helps or not.
+> Does this mean though you're sending one event per wiphy? Just
+> wondering, it's probably acceptable.
 
+Indeed as this flags won't change for for all wiphys, only for wiphys
+for which the regulatory beacon hint had an effect on a change of a
+channel. This will also be sent for each channel changed on the wiphy.
 
-Bj=C3=B8rn
-
+  Luis
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
