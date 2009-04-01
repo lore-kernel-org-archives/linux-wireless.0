@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754928AbZDPWWK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 18:22:10 -0400
-Subject: Re: [PATCH 2.6.30!] mac80211: validate TIM IE length
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Christian Lamparter <chunkeey@web.de>,
-	Vivek Natarajan <vivek.natraj@gmail.com>
-In-Reply-To: <1239920291.26575.37.camel@johannes.local> (sfid-20090417_001849_051533_DC947D05)
-References: <1239920291.26575.37.camel@johannes.local>
-	 (sfid-20090417_001849_051533_DC947D05)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-qef3EK7nnNb2rwHn1Apl"
-Date: Fri, 17 Apr 2009 00:21:38 +0200
-Message-Id: <1239920498.26575.38.camel@johannes.local> (sfid-20090417_002215_771553_87A08C19)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:23370 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765463AbZDAV1t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2009 17:27:49 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/3] iwlwifi: add debug messages when start aggregation queue
+Date: Wed,  1 Apr 2009 14:33:25 -0700
+Message-Id: <1238621605-14846-4-git-send-email-reinette.chatre@intel.com> (sfid-20090401_232756_658468_07D74590)
+In-Reply-To: <1238621605-14846-3-git-send-email-reinette.chatre@intel.com>
+References: <1238621605-14846-1-git-send-email-reinette.chatre@intel.com>
+ <1238621605-14846-2-git-send-email-reinette.chatre@intel.com>
+ <1238621605-14846-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
---=-qef3EK7nnNb2rwHn1Apl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch adding few more debug messages if encounter error when driver
+try to start tx aggregation queue. Also change from IWL_ERR to
+IWL_DEBUG_HT is the HW legacy queue is empty when driver request to move
+to aggregation queue.
 
-On Fri, 2009-04-17 at 00:18 +0200, Johannes Berg wrote:
-> The TIM IE must not be shorter than 4 bytes, so verify that
-> when parsing it and use the proper type. To ease that adjust
-> struct ieee80211_tim_ie to have a virtual bitmap of size
-> at least 1.
->=20
-> Also check that the TIM IE is actually present before trying
-> to parse it!
->=20
-> Because other people may need the function, make it a static
-> inline in ieee80211.h.
->=20
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> I can provide a shorter fix for 2.6.30 if required.
->=20
-> Kalle!!
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Oops, sorry, that was Vivek :)
-
-johannes
-
---=-qef3EK7nnNb2rwHn1Apl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ569vAAoJEKVg1VMiehFYrRwQAKFRGlnOThfONGvOZgk8myZh
-jn9flWy53x8snAj+rssX2rX8h1QWvKJwkMGAxrEZM27rtKwVJIGN2UFeKUOHHzQ1
-GMW+JptmiK7ur71MBmUifsxQmT6lHAn0F6dIY7ZbhdoPP+CmdTfKRXp9Eu7XPXbk
-woX+A7HhEap+B5VRK4dkzjwVS66ANgX3l6fa59xT76+K7ZbZ4e4O73z19xMJYY6t
-weF43W7zb50Hu6VrjA5tKOKt8otJp7zDWOBfGMaEj/cRTl2/BpSSjcZ9Ku66KuW0
-9eS9+g3/gSUByMXrYFxEfAS+7gLQo+jiGeZQv3vJRHPvZYIBJMmfX5WaGF9kfFKg
-yT8C29Ud7/ptZYsnCmixk+JR0lS6xNi9yHsZkEoCLJM1SJtxAGNmmVIrl8VVAME/
-H8j6eLkIAwPKgWFcrxGLSUMTezQ5AlTXaA+G4SV9kUXWxfggQoo03IGCWy6tLuXR
-0kL/8RpdJEzSToBIq4aK2ZZ+QxdHuwBOptllNa9L5volsMR5nR4GqpOVcQPFzHn4
-Ju4TC86r1alODFuBcEXvk7xveY4tFsYzwr1SzV4xWfjWGx1VsNdhH4D/5qplxNO7
-euTXwlPPao1wWLVWr4M0T5B8ZQrHfdZ1y8QMztBGwvbGr3TXzOgJn/JKubnGk9mp
-tkbn52Ku154XobWsY9iE
-=KbeR
------END PGP SIGNATURE-----
-
---=-qef3EK7nnNb2rwHn1Apl--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index b13862a..57ea320 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -1168,8 +1168,10 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
+ 			__func__, ra, tid);
+ 
+ 	sta_id = iwl_find_station(priv, ra);
+-	if (sta_id == IWL_INVALID_STATION)
++	if (sta_id == IWL_INVALID_STATION) {
++		IWL_ERR(priv, "Start AGG on invalid station\n");
+ 		return -ENXIO;
++	}
+ 
+ 	if (priv->stations[sta_id].tid[tid].agg.state != IWL_AGG_OFF) {
+ 		IWL_ERR(priv, "Start AGG when state is not IWL_AGG_OFF !\n");
+@@ -1177,8 +1179,10 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
+ 	}
+ 
+ 	txq_id = iwl_txq_ctx_activate_free(priv);
+-	if (txq_id == -1)
++	if (txq_id == -1) {
++		IWL_ERR(priv, "No free aggregation queue available\n");
+ 		return -ENXIO;
++	}
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 	tid_data = &priv->stations[sta_id].tid[tid];
+@@ -1192,7 +1196,7 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
+ 		return ret;
+ 
+ 	if (tid_data->tfds_in_queue == 0) {
+-		IWL_ERR(priv, "HW queue is empty\n");
++		IWL_DEBUG_HT(priv, "HW queue is empty\n");
+ 		tid_data->agg.state = IWL_AGG_ON;
+ 		ieee80211_start_tx_ba_cb_irqsafe(priv->hw, ra, tid);
+ 	} else {
+-- 
+1.5.6.3
 
