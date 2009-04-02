@@ -1,69 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50910 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46311 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbZDQMIx (ORCPT
+	with ESMTP id S1755764AbZDBB4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 08:08:53 -0400
-Subject: Re: p54 problem with PS
+	Wed, 1 Apr 2009 21:56:03 -0400
+Subject: Re: Fragmentation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-In-Reply-To: <200904171356.58336.chunkeey@web.de>
-References: <1239823495.20927.1.camel@johannes.local>
-	 <200904162157.20576.chunkeey@web.de>
-	 <1239913104.26575.25.camel@johannes.local>
-	 <200904171356.58336.chunkeey@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9LVbczwHrnZrebq6P6dX"
-Date: Fri, 17 Apr 2009 14:08:18 +0200
-Message-Id: <1239970098.26575.88.camel@johannes.local> (sfid-20090417_140856_859299_B420414B)
+To: Charles Gordon <digigordo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <86201b3f0904011355p788ee867p300b5be24569e46b@mail.gmail.com> (sfid-20090401_225534_289155_7CA4C47F)
+References: <86201b3f0904011355p788ee867p300b5be24569e46b@mail.gmail.com>
+	 (sfid-20090401_225534_289155_7CA4C47F)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Yv+pX/crq/+yHrlAzlza"
+Date: Thu, 02 Apr 2009 03:55:29 +0200
+Message-Id: <1238637329.4141.7.camel@johannes.local> (sfid-20090402_035608_720401_A79ABAC0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9LVbczwHrnZrebq6P6dX
+--=-Yv+pX/crq/+yHrlAzlza
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-04-17 at 13:56 +0200, Christian Lamparter wrote:
-> On Thursday 16 April 2009 22:18:24 Johannes Berg wrote:
-> >=20
-> > > Well, I guess I figured out what's wrong: the hw spec.
-> > > So this patch might work on PCI & USB, but could break SPI devices.
-> >=20
-> > Heh.
-> >=20
-> > > Johannes, can you please test the attached patch?
-> > >=20
->=20
-> updated version.
+Charles,
 
-Loads of "Fake beacon loss" but works. :)
+> I'm working on a driver which will use mac80211.  My hardware cannot
+> transmit a frame larger than 1792 bytes, or receive frames larger than
+> 2048 bytes.  Right now I am relying on the fragmentation routines
+> built into mac80211.  Is there a way for my driver to tell mac80211
+> what the maximum transmit and receive frame sizes are?  Do I need to
+> implement my own fragmentation code to handle this?
+
+Using fragmentation for this is not a good plan -- better adjust the
+maximum MTU. We currently cannot do that because mac80211 assumes that
+all devices actually conform to the 802.11 standard wrt. this... Clearly
+your device does not -- 2048 bytes is much too small, and you cannot
+force the remote peer to send smaller frames than that (though in
+practise it they will be smaller most of the time).
+
+I would suggest that for now you don't worry about it at all -- the
+default MTU is 1500 matching ethernet, so the largest frame that
+mac80211 will give you by default is much smaller than 1792 bytes. Then,
+once you release your driver under GPL and post it for inclusion into
+our tree we can think about adding a new hardware capability to mac80211
+that restricts users from increasing the MTU above 1792-30-2-8-4 (or
+something like that).
 
 johannes
 
---=-9LVbczwHrnZrebq6P6dX
+--=-Yv+pX/crq/+yHrlAzlza
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ6HEwAAoJEKVg1VMiehFYUhoP/RGa1zGHnfnMCJGg+LxmJ0Q8
-FJHzqzZZRt+Buv3aLCv4L3m6jsb81FeUni6aH+8Jnv/7z/nI1OG3ACrrOMMbVUjg
-RqRnGK50ZX1eAQzmWugU/NF8X7d7hap9kz1KMDJ/YuuPFa951avN8rkGbyiraVL+
-2lq8JaLjkfEPIj/HYCROaor1IaY/p/7vpO4+ER37QfeOA7eNrrRjHd2j49PJP0eY
-cFcywDzkUA1X6W951bBajgHdF/fDBHwT70PQFRuKYLTn/VXSck8dobK+/siBhIPj
-oGVvC+RCkWcpjQFcDvqfkqpNQmSnksUHB0nWVHmovRqG9FvZKU+xtF/YUYrmVhVn
-6K7uXT6F9QgLsbWrN9hixzZVhtwyObuChqMozfeuc3OJDIQkWu34qEDt7HiU3cm0
-CUuUZxatjn3iI5ROUR8SCd9pM8KXzOrYr1AVZmDPzLgyBYWtf34QYrlv35S9aCYD
-uq5rs6k9Xw+WsntxrAAEkaS9anrilPLaZdMTox4xfZ5/tBcABK9iYZU7MYbMlCw0
-hf7lCZlLFk063HV9a/LrF/M15ATM6feQH9KD9Z2x9jeTSMEX7OPotS2916lD4P0u
-ZAwm3g9EDVtpr5Y8zwp/lWpr9cSjLNHJZ7dnQ8OOcUaEEOeEwpkKxegxn9w/VMVO
-Hp3GLr4aBZC1RN4J2jzO
-=WM3h
+iQIcBAABAgAGBQJJ1BsPAAoJEKVg1VMiehFYP0IP/RGnUldYRsYNeciV5M1hOk5l
+W0JPPkJcPhQRdihGUkDrYXp6ymr7rbNtIwWN4vTImNbUmTDnOkzBR+yfZFw2oNR8
+DOt9jKDNY0e1nyEakT050IgoPes7QPl2sBdGkytJKQ3bFQ/AJm46OLsU2W5syYCr
+f0B5HkSubE6AaWOcPC7xSy1ln4wwk6n/KtE6DhvbudxAxhwmsqn/Qd537pwXNwfv
+8XlmkH6vL6IMRRaTiBqeYHr5q0o3LG5PRzeh83yCkJmM59ck9BzGMBwAm/44VMMA
+AWzBs44qYy2yhbW5w4elU53tOx2c1FcrqiYIjcz7KDqMrCi2k+Al4bbYDutDpnCd
+MugUmeGFK7EQRax9z1JbFW/Tgi/erTXEpLWf1o9b504nqEoZDIOeASwXrg0YkqGx
+VQVKzj5bSKZDXMhkXjZ0y6tpV1nZLmnlyohxWZl2Z0vnhLy9XU7gVCXA+6p5eEIz
+kiqZWP9HyaYPtV/Dx+qslwkNOXSsNIRJ/gWMC2lG5eXlUp9MVKUGjCOooUhg6b07
+cEjy0To/P5RTtWCRcSy33ZYa9oMltbGEsiEGpAnXGj/u5oNpc20PV/+PjmpB+/YH
+bVU8y1gQuI+aXVUO3wBqS5vuh+5Va6au7JDRLItYL0oTsd4CGTx6BfgRCKv6XK87
+4Rm35uYRlnpYRJB42w7n
+=u6Pw
 -----END PGP SIGNATURE-----
 
---=-9LVbczwHrnZrebq6P6dX--
+--=-Yv+pX/crq/+yHrlAzlza--
 
