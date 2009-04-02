@@ -1,64 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3839 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272AbZDEPBo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58755 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548AbZDBSsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Apr 2009 11:01:44 -0400
-Date: Sun, 5 Apr 2009 11:01:20 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath5k: add support for Fukato Datacask Jupiter LEDs
-Message-ID: <20090405150120.GB21913@hash.localnet> (sfid-20090405_170147_057734_3DD8FC37)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 2 Apr 2009 14:48:39 -0400
+Subject: Re: How does rfkill work?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49D506FE.5070405@lwfinger.net>
+References: <49D44635.80306@lwfinger.net>
+	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>
+	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>
+	 <1238689637.24708.41.camel@johannes.local> <49D5018E.6050001@lwfinger.net>
+	 <1238696967.6137.5.camel@johannes.local> <49D506FE.5070405@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-I7YsTi9loaIAdHO+RhCx"
+Date: Thu, 02 Apr 2009 20:48:04 +0200
+Message-Id: <1238698084.7630.3.camel@johannes.local> (sfid-20090402_204842_882765_82560824)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for the LEDs on the Jupiter netbook.
 
-Reported-by: Martin Bammer <mrb74@gmx.at>
+--=-I7YsTi9loaIAdHO+RhCx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
+On Thu, 2009-04-02 at 13:42 -0500, Larry Finger wrote:
+> Johannes Berg wrote:
+> >=20
+> > Also, if increasing that helps, does it also work then? I mean, does th=
+e
+> > LED get turned on/off?
+>=20
+> No. I'm still not getting the appropriate call to the set brightness call=
+back.
+> Actually, I didn't expect any change as the truncation from the too-short=
+ array
+> length only occurs when the pseudo file is dumped.
 
-This is pre-ath merge, following makes it post-merge:
+Hmm. In my tree TRIG_NAME_MAX is only used when you try to /write/
+something to the trigger sysfs file, so that garbling and the patch
+don't make much sense to me. There must be some other weirdness going
+on.
 
-%!s,wireless/ath5k,wireless/ath/ath5k,g
+johannes
 
- drivers/net/wireless/ath5k/led.c |    2 ++
- include/linux/pci_ids.h          |    2 ++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+--=-I7YsTi9loaIAdHO+RhCx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-diff --git a/drivers/net/wireless/ath5k/led.c b/drivers/net/wireless/ath5k/led.c
-index 19555fb..13864fa 100644
---- a/drivers/net/wireless/ath5k/led.c
-+++ b/drivers/net/wireless/ath5k/led.c
-@@ -67,6 +67,8 @@ static const struct pci_device_id ath5k_led_devices[] = {
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428), ATH_LED(3, 0) },
- 	/* Acer Extensa 5620z (nekoreeve@gmail.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
-+	/* Fukato Datacask Jupiter 1014a (mrb74@gmx.at) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_AZWAVE, 0x1026), ATH_LED(3, 0) },
- 	{ }
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1702acb..e592883 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2269,6 +2269,8 @@
- 
- #define PCI_VENDOR_ID_QMI		0x1a32
- 
-+#define PCI_VENDOR_ID_AZWAVE		0x1a3b
-+
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
--- 
-1.6.0.6
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
-Bob Copeland %% www.bobcopeland.com
+iQIcBAABAgAGBQJJ1QhiAAoJEKVg1VMiehFYENYP+weX/CnhQVpqXwQEZWvhdNFe
+vfFFDCe5jlnkE4LBMMmCpKen656i9i5mivTOgdGR4UsTM8IsmRlPAJ38Sezf2UcV
+BprNTUhclSkVZ/WoKKdX1B5EruZVN8IVQ5dxfxQgyN+5idBDYYghD8mrluHEKcPc
+t3dWO77HCjPa4QoooKGSg15iZJE6dSMUplkZ1qVTerJOKbvCJOUznzhadaPrbFUv
+UBJHJv0/iO0kchBaKUZTyCQ37GEwr8ZWPuYYLqZS9dbZmEtKgWT+CupS7jZud4km
+5bKhIuWZXu4Zq56hCZXUqCTRPCucynSu1LFJ/ez/BtJtauRJhmH6KuSPrNa4o/+9
+TetKuUNQp+WbjhZ57WsXtNHaQuHVJNDxHujrumb+QqEeJSN4tHvAJEEHjq7sx5QV
+BnigHJQYVRAxDzn4RdH7GoE/03alFIfef4G9JWj3Jw6v8aUcyKq/V8DeL6pElx29
+qDMzKKc7aH0zVgvNujc5p0XGJUU/b2pcYGYRD0mTZhRamontfXjgo8T8kZpOswU9
+lc7XYEJYD5A/zgtCM6wSblDpErnQZVhUzogGbZLGbZV25ZG/vFhGAFB7XDxCsk8H
+TKsKzcWPd/XVSxk7tYbPV2EDXSdr/g6BNMUUpIIu+H3fwkSFgWZR8LWuV2zs4AgK
+dPKWuaIDtdvvN6bZs9Xm
+=TiSD
+-----END PGP SIGNATURE-----
+
+--=-I7YsTi9loaIAdHO+RhCx--
 
