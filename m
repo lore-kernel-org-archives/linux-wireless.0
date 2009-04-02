@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50336 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751171AbZDQU2E (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:59319 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbZDBUhE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 16:28:04 -0400
-Date: Fri, 17 Apr 2009 23:27:52 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Do not call cfg80211_send_disassoc with rcu
-	held
-Message-ID: <20090417202752.GA27686@jm.kir.nu> (sfid-20090417_222809_919929_F3F76EF6)
-References: <20090417200448.GA24430@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090417200448.GA24430@jm.kir.nu>
+	Thu, 2 Apr 2009 16:37:04 -0400
+Subject: Re: Atheros Linux wireless support - ramifications of reverse
+ engineering alien technology
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <49D519CF.5000507@lwfinger.net>
+References: <43e72e890904011147p5e22eaeejac3fddd2b9cddcfc@mail.gmail.com>
+	 <1238701879.9847.2.camel@maxim-laptop>  <49D519CF.5000507@lwfinger.net>
+Content-Type: text/plain
+Date: Thu, 02 Apr 2009 23:36:55 +0300
+Message-Id: <1238704615.9847.6.camel@maxim-laptop> (sfid-20090402_223710_557925_E255336F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 17, 2009 at 11:04:48PM +0300, Jouni Malinen wrote:
-> cfg80211_send_mlme_event() uses GFP_KERNEL and could sleep. Better not
-> call it with rcu_read_lock held.
+On Thu, 2009-04-02 at 15:02 -0500, Larry Finger wrote:
+> Maxim Levitsky wrote:
+> > On Wed, 2009-04-01 at 11:47 -0700, Luis R. Rodriguez wrote:
+> >> Fellow Linux wireless hackers,
+> > 
+> > I have just three words:
+> > 
+> > This is not funny.
+> 
+> No sense of humor, and cannot count.
 
-Please drop this; moving the deauth/disassoc frame TX here is not the
-best idea. I'll figure out something safer to fix this.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+I don't want to start arguing with you, but I still think that 
+April posts about something evil that is about to done for linux aren't
+funny, just think for example about tomtom case , I also thought that
+this was a April fool joke, but it appears that it isn't.
+
+And speaking of counting I just meant "This isn't funny" and is three
+words.
+
+Maxim
+
