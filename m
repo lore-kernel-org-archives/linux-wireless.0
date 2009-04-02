@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59266 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137AbZDSRuD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49183 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755682AbZDBS3I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 13:50:03 -0400
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090419173354.158790@gmx.net>
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
-	 <20090419125212.158800@gmx.net>
-	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
-	 <20090419133544.158820@gmx.net>
-	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
-	 <20090419140523.158830@gmx.net>
-	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
-	 <20090419151629.158790@gmx.net>
-	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
-	 <20090419155319.158810@gmx.net>
-	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
-	 <20090419161316.158790@gmx.net>
-	 (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
-	 <20090419165443.158820@gmx.net>
-	 (sfid-20090419_185516_519795_36D34B9B) <1240160241.28138.4.camel@johannes.local>
-	 <20090419173354.158790@gmx.net>
-Content-Type: text/plain
-Date: Sun, 19 Apr 2009 19:49:51 +0200
-Message-Id: <1240163391.11795.59.camel@violet> (sfid-20090419_195008_020670_B93A1099)
+	Thu, 2 Apr 2009 14:29:08 -0400
+Subject: Re: How does rfkill work?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Richard Purdie <rpurdie@rpsys.net>
+In-Reply-To: <49D5018E.6050001@lwfinger.net>
+References: <49D44635.80306@lwfinger.net>
+	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>
+	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>
+	 <1238689637.24708.41.camel@johannes.local>  <49D5018E.6050001@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UUL3zvNm/jNzlZeNLx8Z"
+Date: Thu, 02 Apr 2009 20:28:33 +0200
+Message-Id: <1238696913.6137.4.camel@johannes.local> (sfid-20090402_202913_590283_728D295D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alina,
 
-> > I still haven't understood why those extra commands are bothering you so
-> > much.
-> 
-> I want a simple generic API. I don't want to need the old wext for it.
-> 
-> This would be stupid for me:
-> iwconfig wlan0 essid test_essid
-> vs.
-> iw dev wlan0 assoc test_essid
-> iw dev wlan0 join_ibss test_essid
-> iw dev wlan0 set meshid test_essid
-> 
-> On the last I get MS-DOS feeling.
+--=-UUL3zvNm/jNzlZeNLx8Z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-you argue command line tools against kernel exposed API. Both have
-nothing to do with each other on that level. If you don't like the iw
-syntax then fix it and provide a command that does all three task for
-you. No need to mess with the kernel interface for that.
+On Thu, 2009-04-02 at 13:18 -0500, Larry Finger wrote:
 
-Also the argument that WEXT does it doesn't fly with anybody here since
-WEXT are clearly broken and not something we wanna ever copy again. If
-cfg80211/nl80211 has to use a different API, then it will do that.
+> The problem is the statement #define TRIG_NAME_MAX 50 in include/linux/le=
+ds.h.
+> When I make it 60, then the trigger file contains "none ide-disk ADP1-onl=
+ine
+> BAT0-charging-or-full BAT0-charging BAT0-full phy0rx phy0tx phy0assoc phy=
+0radio
+> [rfkill0]" as expected.
 
-Regards
+Woah, that's strange. Richard? Larry is seeing problems where, oddly
+depending on a patch I have, he's getting garbage for the selected
+trigger when reading the trigger sysfs file.
 
-Marcel
+The trigger's name, should be
+	led_trigger.name =3D <something that is NULL> ? : dev_name(&some_dev)
 
+Does this make any sense to you?
+
+> I still have not found where radio gets truncated to rad, but I'm looking=
+.
+
+Probably in sysfs or something, don't think it is important.
+
+johannes
+
+--=-UUL3zvNm/jNzlZeNLx8Z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ1QPOAAoJEKVg1VMiehFYiTMP/RVGtI0kr7r+ipASm+TOhLJf
+3upz30YYkZhuk4kYW/AZTv2R9Cc2ZfRDXxCtvtjgGT4hclb8g2fRteUvPk/UTYEM
+etbUAP4jcC7Ng2C29tBHif5I0m5P4Q9YU0RUN6+1yJO5XlO0EJeYt8yuNzvlJM1r
+sSRrCiEwN5BCuy+s0mCayT7Z1CTSu9MxSlriusauIOo+7KPCuAUYUUAG3RXm2MvR
+FmeLwcYnjrV2xbZWW/K+z+3k4PaEt0ubFZ5OgQfHM4J/IZzxFsgoCjbFL8qwtr6L
+4GYBHT0FSIDQtk/JnmnO5L7siGNaD/kzusUTz2ShwPcf4l5wak1p3iWBDTQefAkU
+gK/1orjzvoCjk2nBXq1i88vLf61D/DsqQT3TxgKgFfoa/0bBQlYWUFubseAljhHt
+dIXZXwtU3XUHW2FR8XeAS7h88c2YHRj5o9GEBzksxJsSsXleKfuyCTSfKzobb+LI
+Xk0iQ5BiDqXHIElmsUlu9HUQZL0qT8nfu8tzLodZXoXuO819C5zlYGUtw3WLrce0
+/uo+9QnjfCcWDThI4jKFbTV0o9w0Jeo+g6/658e7xxbvrqFAEvePczZfyUfIKf4F
+qXeiFnFehK8uMFAAIM7SDSdAKKTQp1+JW7vJjvR/sOBsMuwW+6f7UNtWXeSU8qBO
+/5zVFoHVDNDcQcxS3ViJ
+=deDB
+-----END PGP SIGNATURE-----
+
+--=-UUL3zvNm/jNzlZeNLx8Z--
 
