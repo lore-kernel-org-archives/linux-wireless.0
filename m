@@ -1,36 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57645 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760964AbZD1QqF (ORCPT
+Received: from fmailhost04.isp.att.net ([204.127.217.104]:47231 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765704AbZDBSmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 12:46:05 -0400
-Date: Tue, 28 Apr 2009 11:52:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mcgrof@gmail.com, nbd@openwrt.org
-Subject: Re: [PATCH 1/7] ath5k: Allow user/driver to set txpower
-Message-ID: <20090428155244.GD4113@tuxdriver.com> (sfid-20090428_184616_581281_42E80DCA)
-References: <20090416002220.GA4138@makis> <20090424040143.GB3277@hash.localnet>
+	Thu, 2 Apr 2009 14:42:54 -0400
+Message-ID: <49D506FE.5070405@lwfinger.net> (sfid-20090402_204312_130369_AE50829A)
+Date: Thu, 02 Apr 2009 13:42:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090424040143.GB3277@hash.localnet>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: How does rfkill work?
+References: <49D44635.80306@lwfinger.net>	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>	 <1238689637.24708.41.camel@johannes.local>  <49D5018E.6050001@lwfinger.net> <1238696967.6137.5.camel@johannes.local>
+In-Reply-To: <1238696967.6137.5.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 24, 2009 at 12:01:43AM -0400, Bob Copeland wrote:
-> On Thu, Apr 16, 2009 at 03:22:20AM +0300, Nick Kossifidis wrote:
-> >  * Now that we have regulatory control enable the driver to set txpower on hw
-> >  * Also use txpower table offset so that we can match power range set by user/driver with indices on power table.
+Johannes Berg wrote:
 > 
-> BTW I gave this patchset a spin on my rf 5413 and it works fine here, 
-> so feel free to add my Acked-By on the series.  Does it need anything
-> besides a reposting with 72-col changelogs?
+> Also, if increasing that helps, does it also work then? I mean, does the
+> LED get turned on/off?
 
-The series seems fine, but I was waiting for a repost with the
-narrower changelogs...?
+No. I'm still not getting the appropriate call to the set brightness callback.
+Actually, I didn't expect any change as the truncation from the too-short array
+length only occurs when the pseudo file is dumped.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
