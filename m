@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:56029 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569AbZDMVIn convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f160.google.com ([209.85.217.160]:46030 "EHLO
+	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764387AbZDBPFg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 17:08:43 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so2360929yxl.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 14:08:41 -0700 (PDT)
+	Thu, 2 Apr 2009 11:05:36 -0400
+Received: by gxk4 with SMTP id 4so1303546gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Apr 2009 08:05:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890904131400v5c484f05s13d50ada2538e555@mail.gmail.com>
-References: <200904132244.24122.chunkeey@web.de> <20090413204430.GH31922@baikonur.stro.at>
-	<43e72e890904131400v5c484f05s13d50ada2538e555@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 13 Apr 2009 14:08:26 -0700
-Message-ID: <43e72e890904131408x30617bf6w66c2db892d654392@mail.gmail.com> (sfid-20090413_230846_641348_CAD3CF14)
-Subject: Re: [PATCH] ath: add module information
-To: maximilian attems <max@stro.at>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <49D4C7B3.7010803@gmail.com>
+References: <49D4C7B3.7010803@gmail.com>
+Date: Thu, 2 Apr 2009 11:05:33 -0400
+Message-ID: <b6c5339f0904020805w5e210c2bl542eadb20ac5d6c7@mail.gmail.com> (sfid-20090402_170542_949524_0601287B)
+Subject: Re: Trouble Associating with ath5k on AR5212
+From: Bob Copeland <me@bobcopeland.com>
+To: Will Keaney <keaneyw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 13, 2009 at 2:00 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, Apr 13, 2009 at 1:44 PM, maximilian attems <max@stro.at> wrot=
-e:
->> On Mon, Apr 13, 2009 at 10:44:23PM +0200, Christian Lamparter wrote:
->>> diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wirele=
-ss/ath/Makefile
->>> index a005b91..4bb0132 100644
->>> --- a/drivers/net/wireless/ath/Makefile
->>> +++ b/drivers/net/wireless/ath/Makefile
->>> @@ -3,5 +3,4 @@ obj-$(CONFIG_ATH9K) =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 +=3D ath9k/
->>> =C2=A0obj-$(CONFIG_AR9170_USB) =C2=A0 =C2=A0 =C2=A0 =C2=A0+=3D ar91=
-70/
->>>
->>> =C2=A0obj-$(CONFIG_ATH_COMMON) =C2=A0 =C2=A0 +=3D ath.o
->>> -ath-objs =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 :=3D regd.o
->>> -
->>> +ath-objs =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 :=3D main.o reg=
-d.o
->>
->> why do you put that in a different file and not in ath.c?
->
-> Apart from this objection, looks good -- and thanks.
+On Thu, Apr 2, 2009 at 10:12 AM, Will Keaney <keaneyw@gmail.com> wrote:
+> Hello,
+> I have been following the wireless-testing branch for a few months,
+> hoping with each revision that my Atheros card would finally work
+> properly with ath5k. =A0So far, I've been able to scan for and see ne=
+arby
+> networks, but I haven't been able to associate to them.
 
-Actually a new file makes sense -- we might later add more stuff other
-than regulatory. That is the idea.
+Does limiting wpa_supplicant to only scan the 2 GHz channels help?
 
-  Luis
+e.g. setting "scan_freq=3D2412 2437 2462" in your wpa_supplicant.conf
+scans 1 6 and 11.
+
+--=20
+Bob Copeland %% www.bobcopeland.com
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
