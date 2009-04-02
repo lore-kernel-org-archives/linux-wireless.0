@@ -1,90 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57372 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754195AbZDONPu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbZDBSOn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 09:15:50 -0400
-Date: Wed, 15 Apr 2009 09:02:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: alan-jenkins@tuffmail.co.uk
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: net/wireless/reg.c:1196: =?utf-8?Q?war?=
-	=?utf-8?Q?ning=3A_=E2=80=98channel=5Fafter?=
-	=?utf-8?B?4oCZ?= may be used uninitialised in this function
-Message-ID: <20090415130232.GA21411@tuxdriver.com> (sfid-20090415_151830_398681_8C9F157C)
-References: <9b2b86520904150345r31851012jb6a231e02583038a@mail.gmail.com> <9b2b86520904150358u81dd977g3378ef81d7748355@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <9b2b86520904150358u81dd977g3378ef81d7748355@mail.gmail.com>
+	Thu, 2 Apr 2009 14:14:43 -0400
+Subject: [PATCH] cfg80211: add cipher capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 02 Apr 2009 20:14:06 +0200
+Message-Id: <1238696046.5445.2.camel@johannes.local> (sfid-20090402_201446_592814_464353F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 15, 2009 at 11:58:39AM +0100, Alan Jenkins wrote:
-> [Corrected Luis address]
->=20
-> On 4/15/09, Alan Jenkins <sourcejedi.lkml@googlemail.com> wrote:
-> > On 4/10/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> >> Thanks pavel, please try this patch:
-> >>
-> >> From 94505af850bd0961a86e2786238ac0bbe0c44615 Mon Sep 17 00:00:00 =
-2001
-> >> From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >> Date: Fri, 10 Apr 2009 11:07:43 -0700
-> >> Subject: [PATCH] cfg80211: fix bug while trying to process obeacon=
- hints
-> >> on
-> >> init
-> >>
-> >> During initialization we would not have received any beacons
-> >> so skip processing reg beacon hints, also adds a check to
-> >> reg_is_world_roaming() for last_request before accessing its
-> >> fields.
-> >
-> > Hi again
-> >
-> > I'm building wireless-testing to test the rfkill-rewrite patches on
-> > top of.  I need to apply the patch referenced above as well.
-> >
-> > When I applied the above patch, I noticed this unrelated warning
-> >
-> > net/wireless/reg.c: In function =E2=80=98wiphy_update_regulatory=E2=
-=80=99:
-> > net/wireless/reg.c:1196: warning: =E2=80=98channel_after=E2=80=99 m=
-ay be used
-> > uninitialised in this function
-> > net/wireless/reg.c:1196: note: =E2=80=98channel_after=E2=80=99 was =
-declared here
-> > net/wireless/reg.c:1196: warning: =E2=80=98channel_before=E2=80=99 =
-may be used
-> > uninitialised in this function
-> > net/wireless/reg.c:1196: note: =E2=80=98channel_before=E2=80=99 was=
- declared here
-> >
-> > Looking at the code, I think it does need fixing.  There's even a
-> > comment which says "this finds them (or not)" - and if they're not
-> > found, channel_before / channel_after will be unset.
+This adds the necessary code and fields to let drivers specify
+their cipher capabilities and exports them to userspace. Also
+update mac80211 to export the ciphers it has.
 
-I reverted the (HT40-related) patch series that last touched that line.
-Hopefully that resolves that warning.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/nl80211.h |    4 ++++
+ include/net/wireless.h  |    5 +++++
+ net/mac80211/main.c     |   14 ++++++++++++++
+ net/wireless/nl80211.c  |   14 +++++++++++++-
+ 4 files changed, 36 insertions(+), 1 deletion(-)
 
-> Um, also the new "ath" module taints the kernel
->=20
-> ath: module 'unspecified' taints kernel.
->=20
-> and I get a new BUG in freq_reg_info_regd.  I'll send the full trace
-> as soon as someone reassures it is welcome and wireless-testing is
-> really intended for testing at the current time :-).
+--- wireless-testing.orig/include/net/wireless.h	2009-04-02 19:55:48.000000000 +0200
++++ wireless-testing/include/net/wireless.h	2009-04-02 19:56:15.000000000 +0200
+@@ -205,6 +205,8 @@ struct ieee80211_supported_band {
+  *	on the reg_notifier() if it chooses to ignore future
+  *	regulatory domain changes caused by other drivers.
+  * @signal_type: signal type reported in &struct cfg80211_bss.
++ * @cipher_suites: supported cipher suites
++ * @n_cipher_suites: number of supported cipher suites
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -224,6 +226,9 @@ struct wiphy {
+ 	u8 max_scan_ssids;
+ 	u16 max_scan_ie_len;
+ 
++	int n_cipher_suites;
++	const u32 *cipher_suites;
++
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+ 	 * know whether it points to a wiphy your driver has registered
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-04-02 19:56:12.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-04-02 19:56:15.000000000 +0200
+@@ -184,6 +184,10 @@ static int nl80211_send_wiphy(struct sk_
+ 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
+ 		    dev->wiphy.max_scan_ie_len);
+ 
++	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
++		sizeof(u32) * dev->wiphy.n_cipher_suites,
++		dev->wiphy.cipher_suites);
++
+ 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
+ 	if (!nl_modes)
+ 		goto nla_put_failure;
+@@ -966,7 +970,7 @@ static int nl80211_set_key(struct sk_buf
+ static int nl80211_new_key(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *drv;
+-	int err;
++	int err, i;
+ 	struct net_device *dev;
+ 	struct key_params params;
+ 	u8 key_idx = 0;
+@@ -1035,6 +1039,14 @@ static int nl80211_new_key(struct sk_buf
+ 	if (err)
+ 		goto unlock_rtnl;
+ 
++	for (i = 0; i < drv->wiphy.n_cipher_suites; i++)
++		if (params.cipher == drv->wiphy.cipher_suites[i])
++			break;
++	if (i == drv->wiphy.n_cipher_suites) {
++		err = -EINVAL;
++		goto out;
++	}
++
+ 	if (!drv->ops->add_key) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+--- wireless-testing.orig/net/mac80211/main.c	2009-04-02 19:55:48.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-04-02 19:56:15.000000000 +0200
+@@ -823,6 +823,15 @@ int ieee80211_register_hw(struct ieee802
+ 	struct ieee80211_master_priv *mpriv;
+ 	int channels, i, j, max_bitrates;
+ 	bool supp_ht;
++	static const u32 cipher_suites[] = {
++		WLAN_CIPHER_SUITE_WEP40,
++		WLAN_CIPHER_SUITE_WEP104,
++		WLAN_CIPHER_SUITE_TKIP,
++		WLAN_CIPHER_SUITE_CCMP,
++
++		/* keep last -- depends on hw flags! */
++		WLAN_CIPHER_SUITE_AES_CMAC
++	};
+ 
+ 	/*
+ 	 * generic code guarantees at least one band,
+@@ -894,6 +903,11 @@ int ieee80211_register_hw(struct ieee802
+ 	if (local->hw.wiphy->max_scan_ie_len)
+ 		local->hw.wiphy->max_scan_ie_len -= local->scan_ies_len;
+ 
++	local->hw.wiphy->cipher_suites = cipher_suites;
++	local->hw.wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
++	if (!(local->hw.flags & IEEE80211_HW_MFP_CAPABLE))
++		local->hw.wiphy->n_cipher_suites--;
++
+ 	result = wiphy_register(local->hw.wiphy);
+ 	if (result < 0)
+ 		goto fail_wiphy_register;
+--- wireless-testing.orig/include/linux/nl80211.h	2009-04-02 19:55:48.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2009-04-02 19:56:15.000000000 +0200
+@@ -410,6 +410,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
+  *	%NL80211_CMD_DISASSOCIATE, u16
+  *
++ * @NL80211_ATTR_CIPHER_SUITES: a set of u32 values indicating the supported
++ *	cipher suites
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -495,6 +498,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_REASON_CODE,
+ 
+ 	NL80211_ATTR_MAX_SCAN_IE_LEN,
++	NL80211_ATTR_CIPHER_SUITES,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
 
-Someone probably wants to see it. :-)
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
