@@ -1,79 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757944AbZDSOxO (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55258 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754319AbZDBBfs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 10:53:14 -0400
-Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090419144108.158790@gmx.net> (sfid-20090419_164139_347477_E9AF49DE)
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
-	 <20090419142631.158790@gmx.net>
-	 (sfid-20090419_162703_506410_10175D69) <1240151561.898.12.camel@johannes.local>
-	 <20090419144108.158790@gmx.net> (sfid-20090419_164139_347477_E9AF49DE)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-C1icJB9HiChx0QR4sH6o"
-Date: Sun, 19 Apr 2009 16:53:10 +0200
-Message-Id: <1240152790.898.15.camel@johannes.local> (sfid-20090419_165318_220324_4EA31200)
-Mime-Version: 1.0
+	Wed, 1 Apr 2009 21:35:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 3/3] cfg80211: send regulatory beacon hint events to userspace
+Date: Wed,  1 Apr 2009 21:35:30 -0400
+Message-Id: <1238636130-27747-3-git-send-email-lrodriguez@atheros.com> (sfid-20090402_033552_208421_460723C7)
+In-Reply-To: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com>
+References: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This informs userspace when a change has occured on a world
+roaming wiphy's channel which has lifted some restrictions
+due to a regulatory beacon hint.
 
---=-C1icJB9HiChx0QR4sH6o
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Because this is now sent to userspace through the regulatory
+multicast group we remove the debug prints we used to use as
+they are no longer necessary.
 
-On Sun, 2009-04-19 at 16:41 +0200, Alina Friedrichsen wrote:
-> Hello Johannes!
->=20
-> > That's not what I was referring to -- and wext doesn't actually allow
-> > what I'm referring to afaik.
->=20
-> You must budget it, when you want implement the old wext code clean with =
-cfg80211.
->=20
-> > When you want to create an IBSS on channel 5, what do you do?
-> >=20
-> > I think you have to
-> > 	iwconfig wlan0 essid test
-> > 	iwconfig wlan0 channel 5
-> > 	iwconfig wlan0 ap off # clear fixed channel bit
-> >=20
-> > which is ... weird.
->=20
-> Why not make simply the following?
->=20
-> iwconfig wlan0 channel 5
-> iwconfig wlan0 essid test
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/nl80211.h |   34 +++++++++++++++++++++++++++++++-
+ net/wireless/nl80211.c  |   50 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    4 +++
+ net/wireless/reg.c      |   28 +++++++++++++-------------
+ 4 files changed, 101 insertions(+), 15 deletions(-)
 
-That fixes the channel to 5.
-
-johannes
-
---=-C1icJB9HiChx0QR4sH6o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ6zrTAAoJEKVg1VMiehFYuNgP/i3UBEpXs7sDgcLClvhTxMpH
-lrXqpNCV9+0rCxrx1LNOZKh9UW21aIni8bdcQNoUPvQdxDI7tKeqF9ZMMv+MKoC6
-RAmJeVV1Otz16BAy4i72n+mTyVQglfW8T2LnAG5SapNben+YXOMmFER+KQTPPZvE
-Z4WoEjnokqNSIT9+XFDnmcY+3BdFL1MUMOv1kuBNIuazjxBVc56xJ8+WJhnQLxgm
-tFCOj58AFTFP42m3pg3MebkUCeVp0WPvIje8/vmlHiRugVDJweMgejxPnyI/MgXR
-KFDxApwBWJTSA5+kMMr+sRC0kpWOi1ApFwo6DqUbRUrc8wf4P8F888yfr+Hbmr/M
-+Q/4dwWlCEAkqeK3UQKHtz+OZuzyV8vVJRhpFfUDoKuZkE7ixQoowWfJRVXjsrhZ
-MmATzxlt738PjybkaEguzBkyQBy5NUEmN4Asdka+N+CRz8tAB/CESWVYVu5RTP0O
-c03Z7CzIxdqDbaRNufoikKc6KFavYVxlQa0KKJlHifQpMWOu6G8LA7a2qgcfDa+J
-7hYDTyxvgaqxokXk+P/1nrNppF7/lGNc1iSOc8zLAQvlRwPgPEByYOHKMt2BkxH9
-L6VkK15RiCOsKRKCvQnoH84w0n/2FJM5Cpp4rHtqvZj0CxJinBPgPd0y5+SFusF7
-W+eukN5YNzo8c68a9XM9
-=9/T7
------END PGP SIGNATURE-----
-
---=-C1icJB9HiChx0QR4sH6o--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index cbe8ce3..9838f99 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -7,7 +7,7 @@
+  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
+  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
+- * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
++ * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
+  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
+  * Copyright 2008 Colin McCabe <colin@cozybit.com>
+  *
+@@ -166,6 +166,22 @@
+  * 	set (%NL80211_ATTR_REG_TYPE), if the type of regulatory domain is
+  * 	%NL80211_REG_TYPE_COUNTRY the alpha2 to which we have moved on
+  * 	to (%NL80211_ATTR_REG_ALPHA2).
++ * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP beacon
++ * 	has been found while world roaming thus enabling active scan or
++ * 	any mode of operation that initiates TX (beacons) on a channel
++ * 	where we would not have been able to do either before. As an example
++ * 	if you are world roaming (regulatory domain set to world or if your
++ * 	driver is using a custom world roaming regulatory domain) and while
++ * 	doing a passive scan on the 5 GHz band you find an AP there (if not
++ * 	on a DFS channel) you will now be able to actively scan for that AP
++ * 	or use AP mode on your card on that same channel. Note that this will
++ * 	never be used for channels 1-11 on the 2 GHz band as they are always
++ * 	enabled world wide. This beacon hint is only sent if your device had
++ * 	either disabled active scanning or beaconing on a channel. We send to
++ * 	userspace the wiphy on which we removed a restriction from
++ * 	(%NL80211_ATTR_WIPHY) and the channel on which this occurred
++ * 	before (%NL80211_ATTR_FREQ_BEFORE) and after (%NL80211_ATTR_FREQ_AFTER)
++ * 	the beacon hint was processed.
+  *
+  * @NL80211_CMD_AUTHENTICATE: authentication request and notification.
+  *	This command is used both as a command (request to authenticate) and
+@@ -260,6 +276,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_DEAUTHENTICATE,
+ 	NL80211_CMD_DISASSOCIATE,
+ 
++	NL80211_CMD_REG_BEACON_HINT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -278,6 +296,7 @@ enum nl80211_commands {
+ #define NL80211_CMD_ASSOCIATE NL80211_CMD_ASSOCIATE
+ #define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
+ #define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
++#define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -408,6 +427,17 @@ enum nl80211_commands {
+  * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
+  *	%NL80211_CMD_DISASSOCIATE, u16
+  *
++ * @NL80211_ATTR_FREQ_BEFORE: A channel which has suffered a regulatory change
++ * 	due to considerations from a beacon hint. This attribute reflects
++ * 	the state of the channel _before_ the beacon hint processing. This
++ * 	attributes consists of a nested attribute containing
++ * 	NL80211_FREQUENCY_ATTR_*
++ * @NL80211_ATTR_FREQ_AFTER: A channel which has suffered a regulatory change
++ * 	due to considerations from a beacon hint. This attribute reflects
++ * 	the state of the channel _after_ the beacon hint processing. This
++ * 	attributes consists of a nested attribute containing
++ * 	NL80211_FREQUENCY_ATTR_*
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -492,6 +522,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_AUTH_TYPE,
+ 	NL80211_ATTR_REASON_CODE,
+ 
++	NL80211_ATTR_FREQ_BEFORE,
++	NL80211_ATTR_FREQ_AFTER,
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d154f95..ad5b685 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3404,6 +3404,56 @@ void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
+ 				NL80211_CMD_DISASSOCIATE);
+ }
+ 
++void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
++				    struct ieee80211_channel *channel_before,
++				    struct ieee80211_channel *channel_after)
++{
++#define NL80211_PUT_BC_CHAN(_attr, _chan) do { \
++	nl_freq = nla_nest_start(msg, _attr); \
++	if (!nl_freq) \
++		goto nla_put_failure; \
++	if (nl80211_msg_put_channel(msg, _chan)); \
++		goto nla_put_failure; \
++	nla_nest_end(msg, nl_freq); \
++} while (0)
++	struct sk_buff *msg;
++	void *hdr;
++	struct nlattr *nl_freq;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_BEACON_HINT);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	/*
++	 * Since we are applying the beacon hint to a wiphy we know its
++	 * wiphy_idx is valid
++	 */
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy));
++
++	NL80211_PUT_BC_CHAN(NL80211_ATTR_FREQ_BEFORE, channel_before);
++	NL80211_PUT_BC_CHAN(NL80211_ATTR_FREQ_AFTER, channel_after);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast(msg, 0, nl80211_regulatory_mcgrp.id, GFP_ATOMIC);
++
++	return;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++#undef NL80211_PUT_BC_CHAN
++}
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index b77af4a..9496eff 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -23,5 +23,9 @@ extern void nl80211_send_rx_deauth(struct cfg80211_registered_device *rdev,
+ extern void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
+ 				     struct net_device *netdev,
+ 				     const u8 *buf, size_t len);
++extern void
++nl80211_send_beacon_hint_event(struct wiphy *wiphy,
++			       struct ieee80211_channel *channel_before,
++			       struct ieee80211_channel *channel_after);
+ 
+ #endif /* __NET_WIRELESS_NL80211_H */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c3e39e1..a3ed913 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1049,18 +1049,10 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 			      unsigned int chan_idx,
+ 			      struct reg_beacon *reg_beacon)
+ {
+-#ifdef CONFIG_CFG80211_REG_DEBUG
+-#define REG_DEBUG_BEACON_FLAG(desc) \
+-	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
+-		"frequency: %d MHz (Ch %d) on %s\n", \
+-		reg_beacon->chan.center_freq, \
+-		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
+-		wiphy_name(wiphy));
+-#else
+-#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
+-#endif
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
++	bool channel_changed = false;
++	struct ieee80211_channel chan_before;
+ 
+ 	assert_cfg80211_lock();
+ 
+@@ -1070,20 +1062,28 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
+ 		return;
+ 
++	if (chan->beacon_found)
++		return;
++
++	chan->beacon_found = true;
++
++	chan_before.center_freq = chan->center_freq;
++	chan_before.flags = chan->flags;
++
+ 	if ((chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
+ 	    !(chan->orig_flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
+ 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
+-		REG_DEBUG_BEACON_FLAG("active scanning");
++		channel_changed = true;
+ 	}
+ 
+ 	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
+ 	    !(chan->orig_flags & IEEE80211_CHAN_NO_IBSS)) {
+ 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
+-		REG_DEBUG_BEACON_FLAG("beaconing");
++		channel_changed = true;
+ 	}
+ 
+-	chan->beacon_found = true;
+-#undef REG_DEBUG_BEACON_FLAG
++	if (channel_changed)
++		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
+ }
+ 
+ /*
+-- 
+1.6.0.6
 
