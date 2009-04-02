@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:50205 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbZDOMLZ convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54825 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760935AbZDBW0N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 08:11:25 -0400
-Received: by bwz17 with SMTP id 17so2868154bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 05:11:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1239796656-20646-3-git-send-email-me@bobcopeland.com>
-References: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
-	 <1239796656-20646-3-git-send-email-me@bobcopeland.com>
-Date: Wed, 15 Apr 2009 15:11:22 +0300
-Message-ID: <40f31dec0904150511y498a23e8t24476844bcb715b0@mail.gmail.com> (sfid-20090415_141128_763680_4DF96D17)
-Subject: Re: [PATCH 2/5] ath5k: use tasklet_hi_schedule for beacon queue
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, jirislaby@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 2 Apr 2009 18:26:13 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/5] wireless: listen to bandwidths preferences
+Date: Thu,  2 Apr 2009 18:26:01 -0400
+Message-Id: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com> (sfid-20090403_002619_809680_EDA3AD8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/15 Bob Copeland <me@bobcopeland.com>:
-> For embedded platforms, beacon transmission can be starved when
-> flooded with data packets. =C2=A0Prioritize beacons by giving the bea=
-con
-> queue the first shot when the isr completes.
->
-> Changes-licensed-under: 3-Clause-BSD
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+This is an interim fix for dealing with bandwidth checks as
+this will all be reworked later. We avoid problems in the future
+by not exposing anything new over through an API. Debugfs can be used
+to debug these new flags.
 
+Luis R. Rodriguez (5):
+  cfg80211: Process regulatory max bandwidth checks for HT40
+  wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
+  mac80211: check if HT40+/- is allowed before sending assoc
+  cfg80211: check allowed channel type upon userspace requests
+  mac80211: expose HT channel flags through debugfs
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+ drivers/net/wireless/ath/regd.c           |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 +-
+ include/net/wireless.h                    |   23 +++--
+ net/mac80211/debugfs.c                    |   15 +++
+ net/mac80211/ht.c                         |   11 ++-
+ net/mac80211/ieee80211_i.h                |    3 +
+ net/mac80211/mlme.c                       |    4 +-
+ net/wireless/nl80211.c                    |   18 +++
+ net/wireless/reg.c                        |  194 ++++++++++++++++++++++------
+ 10 files changed, 226 insertions(+), 64 deletions(-)
 
-
-
-
-
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
