@@ -1,66 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50962 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbZDVRZn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54829 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760957AbZDBW0O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 13:25:43 -0400
-Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090422170852.GA7298@jm.kir.nu> (sfid-20090422_190902_787643_D1BB9D20)
-References: <1240419177.12282.3.camel@localhost.localdomain>
-	 <20090422170852.GA7298@jm.kir.nu> (sfid-20090422_190902_787643_D1BB9D20)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tFwgXuxbsXG429aYLg/M"
-Date: Wed, 22 Apr 2009 19:25:08 +0200
-Message-Id: <1240421108.30082.8.camel@johannes.local> (sfid-20090422_192546_778496_CDA2628E)
-Mime-Version: 1.0
+	Thu, 2 Apr 2009 18:26:14 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/5] wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
+Date: Thu,  2 Apr 2009 18:26:03 -0400
+Message-Id: <1238711166-2208-3-git-send-email-lrodriguez@atheros.com> (sfid-20090403_002623_752549_13CBC4E1)
+In-Reply-To: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
+References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is more consistent with our nl80211 naming convention
+for HT40-/+.
 
---=-tFwgXuxbsXG429aYLg/M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 ++++----
+ include/net/wireless.h                    |   12 ++++++------
+ net/mac80211/mlme.c                       |    4 ++--
+ net/wireless/reg.c                        |   16 ++++++++--------
+ 5 files changed, 22 insertions(+), 22 deletions(-)
 
-On Wed, 2009-04-22 at 20:08 +0300, Jouni Malinen wrote:
-
-> > Can we fix this somehow? I really wanna get rid of using WEXT.
->=20
-> There still one remaining WEXT operation even with driver_nl80211.c in
-> wpa_supplicant, so we are not yet there, but there is work going on in
-> getting that added to nl80211 after which point -Dnl80211 (or
-> -Dnl80211,wext for more likely distro use) should allow this goal to be
-> met.
-
-We also need that message when we abort authentication after three tries
-because otherwise wpa-supplicant just hangs there doing nothing and
-mac80211 does so too :)
-
-johannes
-
---=-tFwgXuxbsXG429aYLg/M
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ71LyAAoJEKVg1VMiehFYex4P/0vB3z72IBBvNcTkrDX5lfRu
-4kwT2bSzQySm0tWjWfwn9zPNA0GBIoWtYxkAANTRQ6RDbf3pGxfYVohKAcDWUQ3I
-UM3VIw5mMF9aTR8CWuT0BI0GXTTJXOhZWF4p0sXEinQPV6wrDmT73bAdeLmFofJW
-7dK3hy/LHo5uYDqu+o3gvwUf8JouHhEzZ0Z69nrlA10dc6SPUmNji3qT4/hBCInl
-wmVlDqtUQyEbFp1dQ6N24hI0DZJolwNezCHkppiQbA4pLVXMOj+8lERku9y1Fl0P
-pN3ZyS+1y5YPxGurOb/NyGTeK3GmWgbGnfirW3bvZAjVPq9syijYeI6rVk5ceZT+
-UM86SZvKDhPYQH75nNU921WF3ZbpvYra7IJ3ax1OOwtsFXVb907+Y3BT8F7OHl3L
-sqU2VB1SXLwmjEkEN4hTXUpnVGMi5a58md6PR9zC4UQlmkcYhz5LXE+tK0MLaOzo
-NkF5fYBoCV3of9bevu2xOBHpS2XLfBrbeuF/MrASNwYGBIqR56NGiytWPVPEX+uA
-NQ3kzetvuZiV5kNoKL52AXr4S3g0xwV+DlS7b5tBMmI0e6Fj2odlXgYts5yqXl1g
-Hy0XQPs1XTk2nGETWxza/ZiH47Tg1PiipGtasOKp7YGr8f/67ex5uYML/K21YFRd
-VReZIxQiDuYpT0Nceuys
-=fv8p
------END PGP SIGNATURE-----
-
---=-tFwgXuxbsXG429aYLg/M--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index c54fb93..d558797 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -591,10 +591,10 @@ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+ 
+ 	if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
+ 		return !(ch_info->fat_extension_channel &
+-					IEEE80211_CHAN_NO_FAT_ABOVE);
++					IEEE80211_CHAN_NO_HT40PLUS);
+ 	else if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW)
+ 		return !(ch_info->fat_extension_channel &
+-					IEEE80211_CHAN_NO_FAT_BELOW);
++					IEEE80211_CHAN_NO_HT40MINUS);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 75517d0..9d73f19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -481,8 +481,8 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 			/* First write that fat is not enabled, and then enable
+ 			 * one by one */
+ 			ch_info->fat_extension_channel =
+-				(IEEE80211_CHAN_NO_FAT_ABOVE |
+-				 IEEE80211_CHAN_NO_FAT_BELOW);
++				(IEEE80211_CHAN_NO_HT40PLUS |
++				 IEEE80211_CHAN_NO_HT40MINUS);
+ 
+ 			if (!(is_channel_valid(ch_info))) {
+ 				IWL_DEBUG_INFO(priv, "Ch. %d Flags %x [%sGHz] - "
+@@ -561,7 +561,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 				fat_extension_chan = 0;
+ 			else
+ 				fat_extension_chan =
+-					IEEE80211_CHAN_NO_FAT_BELOW;
++					IEEE80211_CHAN_NO_HT40MINUS;
+ 
+ 			/* Set up driver's info for lower half */
+ 			iwl_set_fat_chan_info(priv, ieeeband,
+@@ -573,7 +573,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 			iwl_set_fat_chan_info(priv, ieeeband,
+ 						(eeprom_ch_index[ch] + 4),
+ 						&(eeprom_ch_info[ch]),
+-						IEEE80211_CHAN_NO_FAT_ABOVE);
++						IEEE80211_CHAN_NO_HT40PLUS);
+ 		}
+ 	}
+ 
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index e3077e1..0331d26 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -40,21 +40,21 @@ enum ieee80211_band {
+  *	on this channel.
+  * @IEEE80211_CHAN_NO_IBSS: IBSS is not allowed on this channel.
+  * @IEEE80211_CHAN_RADAR: Radar detection is required on this channel.
+- * @IEEE80211_CHAN_NO_FAT_ABOVE: extension channel above this channel
++ * @IEEE80211_CHAN_NO_HT40PLUS: extension channel above this channel
+  * 	is not permitted.
+- * @IEEE80211_CHAN_NO_FAT_BELOW: extension channel below this channel
++ * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
+  * 	is not permitted.
+  * @IEEE80211_CHAN_NO_HT40: indicates no HT40 is allowed at all,
+- * 	when this is set %IEEE80211_CHAN_NO_FAT_ABOVE and
+- * 	%IEEE80211_CHAN_NO_FAT_BELOW will also be set.
++ * 	when this is set %IEEE80211_CHAN_NO_HT40PLUS and
++ * 	%IEEE80211_CHAN_NO_HT40MINUS will also be set.
+  */
+ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_DISABLED		= 1<<0,
+ 	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
+ 	IEEE80211_CHAN_NO_IBSS		= 1<<2,
+ 	IEEE80211_CHAN_RADAR		= 1<<3,
+-	IEEE80211_CHAN_NO_FAT_ABOVE	= 1<<4,
+-	IEEE80211_CHAN_NO_FAT_BELOW	= 1<<5,
++	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
++	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
+ 	IEEE80211_CHAN_NO_HT40		= 1<<6,
+ };
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7ecda9d..3670014 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -263,13 +263,13 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 
+ 		switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+ 		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-			if (flags & IEEE80211_CHAN_NO_FAT_ABOVE) {
++			if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
+ 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 				cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 			}
+ 			break;
+ 		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-			if (flags & IEEE80211_CHAN_NO_FAT_BELOW) {
++			if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
+ 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 				cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 			}
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 91f7b34..6f25ef4 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1185,8 +1185,8 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ 
+ 	if (channel->flags &
+ 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)) {
+-		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE |
+-				  IEEE80211_CHAN_NO_FAT_BELOW;
++		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS |
++				  IEEE80211_CHAN_NO_HT40MINUS;
+ 		return;
+ 	}
+ 
+@@ -1209,15 +1209,15 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ 	 */
+ 	if (!channel_before || (channel_before->flags &
+ 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)))
+-		channel->flags |= IEEE80211_CHAN_NO_FAT_BELOW;
++		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
+ 	else
+-		channel->flags &= ~IEEE80211_CHAN_NO_FAT_BELOW;
++		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
+ 
+ 	if (!channel_after || (channel_after->flags &
+ 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)))
+-		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE;
++		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
+ 	else
+-		channel->flags &= ~IEEE80211_CHAN_NO_FAT_ABOVE;
++		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
+ }
+ 
+ static void reg_process_ht_flags_band(struct wiphy *wiphy,
+@@ -1299,8 +1299,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
+ 		bw_flags = IEEE80211_CHAN_NO_HT40 |
+-			   IEEE80211_CHAN_NO_FAT_BELOW |
+-			   IEEE80211_CHAN_NO_FAT_ABOVE;
++			   IEEE80211_CHAN_NO_HT40MINUS |
++			   IEEE80211_CHAN_NO_HT40PLUS;
+ 
+ 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+-- 
+1.6.0.6
 
