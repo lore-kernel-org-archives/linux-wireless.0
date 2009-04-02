@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:37643 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253AbZDUT4T (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46196 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753324AbZDBBwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 15:56:19 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1240248773.4632.13.camel@johannes.local>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
-	 <1240247636.5260.11.camel@localhost.localdomain>
-	 <1240248008.4632.10.camel@johannes.local>
-	 <1240248385.5260.15.camel@localhost.localdomain>
-	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 21 Apr 2009 20:56:15 +0100
-Message-Id: <1240343775.3327.3.camel@localhost.localdomain> (sfid-20090421_215623_171016_458DA260)
+	Wed, 1 Apr 2009 21:52:31 -0400
+Subject: Re: How to implement power save mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Charles Gordon <digigordo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <86201b3f0904011350o5b3fb48g811b57b3c4a1e602@mail.gmail.com> (sfid-20090401_225051_265370_58404EAB)
+References: <86201b3f0904011350o5b3fb48g811b57b3c4a1e602@mail.gmail.com>
+	 (sfid-20090401_225051_265370_58404EAB)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xfwt+VM5e7iEOTLg+6wT"
+Date: Thu, 02 Apr 2009 03:51:57 +0200
+Message-Id: <1238637117.4141.3.camel@johannes.local> (sfid-20090402_035235_334633_5852DBA9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-> > I can try but I am not home anymore. So no promises. However it keeps
-> > happening in a pretty constant rate. Like every 2-5 seconds interval.
-> 
-> Ok. The thing I don't understand is why the AP would deauth you. And
-> with that reason code to boot.
-> 
-> > Could be the iwlagn driver for 5350 hardware doing something wrong here.
-> > And I also forced it to use sw_crypto.
-> 
-> I suppose I could try 5350. But I see no reason it would influence the
-> auth/assoc handshake.
+--=-xfwt+VM5e7iEOTLg+6wT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-so I have built the latest wireless-testing tree with a new patches sent
-by Reinette fixing the DMA issue. So far I have no problems and I am
-unable to re-produce it. However this is a different AP and I disabled
-the power control feature for now.
+Charles,
 
-I also updated wpa_supplicant and iw to the latest code and assume that
-no fix in there silently fixed it for me.
+> How is the IEEE80211_CONF_PS flag in the ieee80211_conf structure
+> used?  Does it indicate when the low level driver should be turning
+> the transceiver on and off, or is it just an indication of whether or
+> not the driver should be running in power save mode?
+>=20
+> If the low level driver is suppose to implement the bulk of power save
+> mode, then how is it suppose to get information like how long the
+> sleep periods are suppose to be?  Does mac80211 provide utility
+> functions for parsing beacons to check for TIM and DTIM elements?
+>=20
+> Any help you can provide would be appreciated.
 
-So we are suspecting that this issue was because of me having 3GB of RAM
-and running on a 64-bit kernel. Does this makes sense and could be the
-problem why it kept failing until I unload the iwlagn driver?
+You really need to read 802.11-2007, and understand how powersave mode
+works. If you need software to check the beacons for (D)TIM, then you
+can't really do powersave mode. You could hack around that if your
+hardware provides an interrupt before the TBTT -- but that is very
+fragile and I wouldn't recommend it. If your hardware design cannot
+support powersave mode you'll just have to live without it.
 
-Regards
+johannes
 
-Marcel
+--=-xfwt+VM5e7iEOTLg+6wT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ1Bo7AAoJEKVg1VMiehFYMWEP/jEgzzQVPEqxHS8IzdWciiuT
+US6OK8q5iEjOG+6TPoYrH9ConA3RxVt775Hz0T9VBWTo5362nVsmdd32inF6X7Ze
+3xd4BRayr9ZJgoRSrnl2vIu422g2rU5hwC/ILrVNyV2UFkxV5rHjfAtSd/CbSe1F
+UFWtGjRX6DJRrs4+p5nY2rXeT1xfu4jQ5j3Cgk1micEebFO9S8e0aTgNSr2k0xwA
+G8jUJ/y6uCnc6v6G3GZCOmo/PE+esSA8lwtFal7XGPGoOoUgH8NzxkfsHUqM74tS
+/O9cqBVX2Ah92OEQVLigM6kwxcmclTPDh0yslSzE0wRWUDL08Pf5Srr7vwex8Num
+EJ129HGAHVpBIZooljwERRLUggN7ysXxvQH7xP33V8JKBQ7yOxXdTflicE4OM5Ep
+zuV7AtdtYzsuWszEwAnI1dGxaXfBdFNqIe2lY4mrqZ5PrfDdKgh6wTdYTF2Wf+YH
+zaYBv/tPg0xpaNax23mQwo+Tc3h3zKY+I9vSJtpTKmnfZc+sg4QOFxyvvJEt0qpU
+vDOlvtFNyf/7uMIx0DFPIWh6pOXFUpLIsfbECDrlafNxQdfg5bM6vcu1QkdJZuX1
+2AUa4QIXuARApyHu9R0vkA617JPlw9mdxLam1JnsMjTiJnziqInu/Bz0olrH02lU
+U1T1IvlXTag98BTC4JRT
+=WJr2
+-----END PGP SIGNATURE-----
+
+--=-xfwt+VM5e7iEOTLg+6wT--
 
