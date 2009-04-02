@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:53449 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394AbZDVTpx (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55259 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754615AbZDBBfs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 15:45:53 -0400
-Received: by mail-fx0-f158.google.com with SMTP id 2so162414fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:45:52 -0700 (PDT)
-To: Bob Copeland <me@bobcopeland.com>
-Cc: kalle.valo@nokia.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/6] wl12xx: update to 2.6.29 mac80211 hw scan API
-References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
-	<1238897428-19639-2-git-send-email-me@bobcopeland.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 22 Apr 2009 22:45:50 +0300
-In-Reply-To: <1238897428-19639-2-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Sat\,  4 Apr 2009 22\:10\:23 -0400")
-Message-ID: <87ocuoeakx.fsf@litku.valot.fi> (sfid-20090422_214555_420712_5A37BA1F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 1 Apr 2009 21:35:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 1/3] cfg80211: respect API on orig_flags on channel for beacon hint
+Date: Wed,  1 Apr 2009 21:35:28 -0400
+Message-Id: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com> (sfid-20090402_033551_280164_DA676C55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+As part of our documented API we always respect the orig_flag
+settings on a channel. We forgot to follow this for the beacon
+hints.
 
-> The ops->hw_scan callback now takes a struct *cfg80211_scan_request,
-> and the scan_completed notifier takes a parameter to indicate whether
-> the scan was aborted.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Applied.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6327e16..c3e39e1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1070,12 +1070,14 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
+ 		return;
+ 
+-	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
++	if ((chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
++	    !(chan->orig_flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
+ 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
+ 		REG_DEBUG_BEACON_FLAG("active scanning");
+ 	}
+ 
+-	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
++	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
++	    !(chan->orig_flags & IEEE80211_CHAN_NO_IBSS)) {
+ 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
+ 		REG_DEBUG_BEACON_FLAG("beaconing");
+ 	}
 -- 
-Kalle Valo
+1.6.0.6
+
