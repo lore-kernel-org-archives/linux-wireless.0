@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755620AbZDTPlw (ORCPT
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:64983 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753585AbZDBUhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 11:41:52 -0400
-Subject: Re: [PATCH] ar9170: rework rxstream code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200904190128.13206.chunkeey@web.de> (sfid-20090419_012821_861639_E6D0EBF4)
-References: <200904190128.13206.chunkeey@web.de>
-	 (sfid-20090419_012821_861639_E6D0EBF4)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gi16JWY9xwvCvBFrccCV"
-Date: Mon, 20 Apr 2009 17:41:19 +0200
-Message-Id: <1240242079.4632.0.camel@johannes.local> (sfid-20090420_174155_839361_899D7C4A)
-Mime-Version: 1.0
+	Thu, 2 Apr 2009 16:37:03 -0400
+Message-ID: <49D521BF.2080301@lwfinger.net> (sfid-20090402_223707_783947_4791B6A3)
+Date: Thu, 02 Apr 2009 15:36:15 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: How does rfkill work?
+References: <49D44635.80306@lwfinger.net>	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>	 <1238689637.24708.41.camel@johannes.local> <49D5018E.6050001@lwfinger.net>	 <1238696967.6137.5.camel@johannes.local> <49D506FE.5070405@lwfinger.net>	 <1238698084.7630.3.camel@johannes.local>	 (sfid-20090402_204842_882765_82560824) <1238698667.7630.7.camel@johannes.local>
+In-Reply-To: <1238698667.7630.7.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Thu, 2009-04-02 at 20:48 +0200, Johannes Berg wrote:
+> 
+> Could you try something for me?
+> 
+> In drivers/leds/led-triggers.c in led_trigger_show you have
+> 
+>         list_for_each_entry(trig, &trigger_list, next_trig) {
+> +		printk(KERN_DEBUG "available trigger: %s\n", trig->name);
+>                 if (led_cdev->trigger && !strcmp(led_cdev->trigger->name,
+>                                                         trig->name))
+>                         len += sprintf(buf+len, "[%s] ", trig->name);
+>                 else
+>                         len += sprintf(buf+len, "%s ", trig->name);
+>         }
+> 
+> could you do the modification, with a kernel that has the TRIG_NAME_MAX
+> set to 50, and see what it prints? I'm completely confused by this
+> failure mode since the garbage you get is actually put into brackets, so
+> it seems the strcmp() is returning 0 which seems odd.
 
---=-gi16JWY9xwvCvBFrccCV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Have I told you that I hate things that appear to be intermittent?
 
-On Sun, 2009-04-19 at 01:28 +0200, Christian Lamparter wrote:
+I added the printk, returned TRIG_NAME_MAX to 50, rebuilt and rebooted. This
+time I got
 
-> +static void ar9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
-> +{
-> +	struct ar9170_rx_head *head;
-> +	struct ar9170_rx_macstatus *mac;
-> +	struct ar9170_rx_phystatus *phy;
+~/wireless-testing> cat /sys/class/leds/b43legacy-phy0\:\:rad/trigger
+none ide-disk ADP1-online BAT0-charging-or-full BAT0-charging BAT0-full phy0rx
+phy0tx phy0assoc phy0radio [rfkill0]
+~/wireless-testing> dmesg | grep available
+available trigger: ide-disk
+available trigger: ADP1-online
+available trigger: BAT0-charging-or-full
+available trigger: BAT0-charging
+available trigger: BAT0-full
+available trigger: phy0rx
+available trigger: phy0tx
+available trigger: phy0assoc
+available trigger: phy0radio
+available trigger: rfkill0
 
-Missing =3D NULL here for phy.
+I'll leave the printk in place for the moment.
 
-johannes
+The name is being truncated by "#define BUS_ID_SIZE 20" in
+include/linux/device.h. As changing that define would be pretty invasive, I plan
+to use a shorter name when the LED is registered.
 
---=-gi16JWY9xwvCvBFrccCV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+The bad news is that the set brightness callback routine is still not being
+called even though I tried BUS_ID_SIZE of 30..
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Till later,
 
-iQIcBAABAgAGBQJJ7JecAAoJEKVg1VMiehFYS+wP/jejnDJMHLlc8ozvShinp4ac
-pS2/h2rKEu4OnjDZZr+luXUD3aghVs4rCPrE7r0VRwuQSVk7sUE4b3oZd8BKs4qr
-VclO/LuauH2tGD11Xt1vWLRLva0bXG7Furz1XKRDx+tfYXRDLWOTjUGHMP2jJ9px
-9yykyNNIF1vIWJfe/yRafljSyNZ2i5fN5exuRnuymJCnQFmUKRtcDMoOefsUFbFm
-Ab4rnRI6YDYmciiCCHjON3LdgwmjN9n+UTOx6UtXqp9Turc9LQAMYgtkN9fbO8+z
-bMjxMZpXxvlcjG7WYol4o1H7O+XcgSy+mFfbCL+llLpaLI4+9fwMXIJU81qh/SB6
-QjoOeNwxY/VfZl6IcIbLRBv4TwEKEcTzPvI/mc3a9cxM3KE2rY3unSag8VtoEK6I
-WTADkHIx041CcuII57rHyJFaMONSgLhZesvED+0ayAJIykek5H62nU4OAQ9C4VAU
-c9gbbYmlh+hS/ccj2fxNLI4Gvw9TX1eDgIqP8YJUNGqFVUFG0gmhVJSdjOngC8cO
-MMDWZMHNkz+chU5ECfnxrrkAPpdpg3WC8M90zcqKI/vRxs5Y9yxTdHW4PAbhfwKj
-tWtARFhVmKOa1+3joqUElF4R/s1IBjGnrobcgia92RqVNn1xLDR52NeZLG0CuBox
-AJlZtxU3o/RmQSNfOaFa
-=GJCq
------END PGP SIGNATURE-----
-
---=-gi16JWY9xwvCvBFrccCV--
+Larry
 
