@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:35682 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbZDNKvL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54823 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760758AbZDBW0N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 06:51:11 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so2549195rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2009 03:51:10 -0700 (PDT)
-Date: Tue, 14 Apr 2009 16:21:01 +0530
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ath9k: Disable autosleep feature for AR9285 based
-	chipsets.
-Message-ID: <20090414105101.GB3850@myhost.users.atheros.com> (sfid-20090414_125115_370635_26ED895C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 2 Apr 2009 18:26:13 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/5] cfg80211: check allowed channel type upon userspace requests
+Date: Thu,  2 Apr 2009 18:26:05 -0400
+Message-Id: <1238711166-2208-5-git-send-email-lrodriguez@atheros.com> (sfid-20090403_002621_023844_AA7146A8)
+In-Reply-To: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
+References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Thanks to nl80211 userspace can be very specific upon device
+configuration. Before processing the request for the new HT40
+channel types (HT40- or HT40+) we need to ensure we can use them
+regulatory-wise. This wasn't required with wireless extensions as
+specifying the channel type wasn't not available and configuration
+was done towards the end implicitly upon association or reception
+of beacons from the AP. For the new nl80211 we have to check this
+when configuring the interfaces explicitly.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 24299e6..524f19c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3376,7 +3376,8 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	    (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) ||
- 	    (ah->hw_version.macVersion == AR_SREV_VERSION_9160) ||
- 	    (ah->hw_version.macVersion == AR_SREV_VERSION_9100) ||
--	    (ah->hw_version.macVersion == AR_SREV_VERSION_9280))
-+	    (ah->hw_version.macVersion == AR_SREV_VERSION_9280) ||
-+	    (ah->hw_version.macVersion == AR_SREV_VERSION_9285))
- 		pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
- 	else
- 		pCap->hw_caps |= ATH9K_HW_CAP_AUTOSLEEP;
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 411c233..1d05b17 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -457,6 +457,24 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
+ 			goto bad_res;
+ 
++		if (channel_type == NL80211_CHAN_HT40MINUS ||
++		    channel_type == NL80211_CHAN_HT40PLUS)
++			if (chan->flags & IEEE80211_CHAN_NO_HT40)
++				goto bad_res;
++
++		if (channel_type == NL80211_CHAN_HT40MINUS &&
++		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
++			goto bad_res;
++		else if (channel_type == NL80211_CHAN_HT40PLUS &&
++			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
++			goto bad_res;
++
++		/*
++		 * At this point we know if that if HT40 was requested
++		 * we are allowed to use it and the extension channel
++		 * exists.
++		 */
++
+ 		if (channel_type == NL80211_CHAN_HT40MINUS)
+ 			sec_freq = freq - 20;
+ 		else if (channel_type == NL80211_CHAN_HT40PLUS)
 -- 
-1.6.2.3
+1.6.0.6
 
