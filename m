@@ -1,90 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f160.google.com ([209.85.217.160]:33184 "EHLO
-	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754837AbZDGFev convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38005 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbZDBBq6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 01:34:51 -0400
-Received: by gxk4 with SMTP id 4so5515348gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 22:34:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com>
-References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com>
-	<3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
-	<3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 6 Apr 2009 22:34:34 -0700
-Message-ID: <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com> (sfid-20090407_073651_763338_7E51C453)
-Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 1 Apr 2009 21:46:58 -0400
+Subject: Re: [PATCH v3 3/3] cfg80211: send regulatory beacon hint events to
+ userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1238636130-27747-3-git-send-email-lrodriguez@atheros.com>
+References: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com>
+	 <1238636130-27747-3-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-668TeznjudvGJFJfl9qU"
+Date: Thu, 02 Apr 2009 03:46:21 +0200
+Message-Id: <1238636782.4141.0.camel@johannes.local> (sfid-20090402_034701_942974_675CE102)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 6, 2009 at 9:20 PM, Hin-Tak Leung <hintak.leung@gmail.com> =
-wrote:
-> On Sun, Apr 5, 2009 at 3:44 AM, Hin-Tak Leung <hintak.leung@gmail.com=
-> wrote:
->> On Sat, Apr 4, 2009 at 5:15 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> Here is our latest "vendor driver" for the old zd1211. We much pref=
-er
->>> the in-kernel zd1211rw driver but I've heard a few users with issue=
-s
->>> with some devices. Perhaps this might help a few developers help po=
-rt
->>> over any changes. I myself have not looked at this yet.
->>>
->>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/zd1211/LinuxUS=
-B_AR2524-3.0.0.56.tgz
->>
->> Somebody reported some problems with the 3.0.0.56 driver in the zd12=
-11
->> list a few days ago, and I was wondering where he got it from :-) ..=
-=2E
->> anyway, if you see an obvious answer with the regression noted in th=
-is
->> mail, it might worth either correcting it or something.
->>
->> http://sourceforge.net/mailarchive/message.php?msg_name=3D8c675e9b09=
-04010320j18f49dccub37b65b81d254cb4%40mail.gmail.com
->>
->> I'll certainly have a look at the vendor driver sometime soon - I us=
-e
->> the AP mode.
->>
->
-> I have given it a try and even just adding the minimal bits
-> (enough to cope with David S. Miller's "wext: Emit event stream
-> entries correctly when compat."
-> change some 9 months ago) to port beyond 2.6.27(?), the result is a h=
-ard lock up
-> in AP mode of the machine if either 'iwpriv <dev> card_reset' is
-> issued, or even having a client trying to associate.
->
-> Also the message above is a hard crash problem, and seem to relate to
-> this paragraph
-> in LinuxUSB_AR2524-3.0.0.56/docs/PortingNotes.txt
->
-> -------------------
-> 1. RX_OFFSET =3D 3 result in a unaligned rx buffer for usb dma.
-> =C2=A0 This is used to ensure the WLAN/ETH/IP Header is 2 bytes align=
-ed.
-> =C2=A0 But it RX_OFFSET=3D0, These headers are not aligned , we neeed=
- to
-> =C2=A0 do a copy
-> ------------------
->
-> May I ask what's the context and origin of the file
-> "PortingNotes.txt"?
 
-Not sure, I wanted to get this out to help those who are interested in
-porting changes over (if any) to zd1211rw. If you find nothing useful
-from it please simply disregard it.
+--=-668TeznjudvGJFJfl9qU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Wed, 2009-04-01 at 21:35 -0400, Luis R. Rodriguez wrote:
+
+> +void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+> +				    struct ieee80211_channel *channel_before,
+> +				    struct ieee80211_channel *channel_after)
+> +{
+> +#define NL80211_PUT_BC_CHAN(_attr, _chan) do { \
+> +	nl_freq =3D nla_nest_start(msg, _attr); \
+> +	if (!nl_freq) \
+> +		goto nla_put_failure; \
+> +	if (nl80211_msg_put_channel(msg, _chan)); \
+> +		goto nla_put_failure; \
+> +	nla_nest_end(msg, nl_freq); \
+> +} while (0)
+
+Please just open-code that, and there's a ; too much after the if.
+
+Otherwise good series, thanks.
+
+johannes
+
+--=-668TeznjudvGJFJfl9qU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ1BjnAAoJEKVg1VMiehFYPXwQALrPiVli1fVZftY1xU8W1RAj
+Z+aSFLQrZrf6OeLS6g5sIqKOqUx37DY867pPCZfSH4taU5jaEDTfY3EBUfVAJP33
+VAUkn22rhlDM/jqz+fbSYBCGQrN2Sbes+Zb3lgpK6/jNXXkZ4QPJDQSHJELQ2A+G
+HHSiSqRPVfek4XTl0Bf04KF+r4Gjmu+sDgVuOL2ECtBWYE4NEQ3K485U4WHFDDsu
+xrLMmJN/hjQCUQ2U/MeBCM0AreChfy2NAYrIvoVSzEzQGDIS6L5CHD03IJnVhORs
+UziKRAb4zFY4qft1Tbs0bYB/M840FIobkvbdpzP7YQNnAqcdLIAtH1XNTEI7YATh
+fiPrE9T0iNr4OUU8wDSx74Hy7u4q0b8AXX9fbIKX+CWJSd/BmkV0i3T9bMaVPmFT
+CTzn22dOV+gJCf5S4ezAlHWHgItWrctFd3T2LYBbi+RP9fBh8yktPv1gHosUZ1fU
+JWs/vNEYOdu7K8oanzhqQPWp6gbd2P6QqlFxdsYjCnBEZCtWlebJy1pm5+ZbD0Nd
+38zRkWgsBIt46NP8zThmSf+immBRhTWdLEzDrXhGpK7VbzgHW+uQEuFvKOvoz+v4
+NP1fSg4ByLphfxS7A1249FG/7fK1yfxQh1k0i444Bt+k8dDHB+iWaj1Vhavx6Uu5
+YmetBsUgqxzoWAky//Uf
+=ZHCe
+-----END PGP SIGNATURE-----
+
+--=-668TeznjudvGJFJfl9qU--
+
