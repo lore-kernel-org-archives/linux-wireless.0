@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33999 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbZD2JwU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58014 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936101AbZDCSao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 05:52:20 -0400
-Subject: Re: [PATCH] mac80211: tell driver when idle
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1240997537.593.35.camel@johannes.local> (sfid-20090429_113258_830522_7A916290)
-References: <1240997537.593.35.camel@johannes.local>
-	 (sfid-20090429_113258_830522_7A916290)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NIz+1uhNBBDQHeuUF7KL"
-Date: Wed, 29 Apr 2009 11:51:47 +0200
-Message-Id: <1240998707.593.36.camel@johannes.local> (sfid-20090429_115224_281059_8EC4231C)
-Mime-Version: 1.0
+	Fri, 3 Apr 2009 14:30:44 -0400
+Date: Fri, 3 Apr 2009 14:27:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Linux wireless mini-summit -- Berlin, June 2009
+Message-ID: <20090403182724.GA7364@tuxdriver.com> (sfid-20090403_203108_005030_BC3865B6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Greetings,
 
---=-NIz+1uhNBBDQHeuUF7KL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+As you may know, we are planning on having a wireless summit meeting
+in Berlin, Germany this June.  This meeting is in cooperation with
+the Fedora FUDCon event, which will be accomodating us under the
+guise of a "hackfest".  This event also overlaps (and co-locates)
+with LinuxTag 2009.  Details are available here:
 
-On Wed, 2009-04-29 at 11:32 +0200, Johannes Berg wrote:
-> When we aren't doing anything in mac80211, we can turn off
-> much of the hardware, depending on the driver/hw. Not doing
-> anything, aka being idle, means:
->=20
->  * no monitor interfaces
->  * no AP/mesh/wds interfaces
->  * any station interfaces are in DISABLED state
->  * any IBSS interfaces aren't trying to be in a network
->  * we aren't trying to scan
+	https://fedoraproject.org/wiki/FUDCon:Berlin_2009
 
-Please ignore this patch -- it has a small locking bug.
+FUDCon's are typically self-organizing under the BarCamp model.
+However, I have secured a promise that we will be allocated space
+for 1-2 dozen people on at least Friday 26 June and Saturday 27 June
+for our wireless event.  I personally encourage everyone not only to
+attend LinuxTag but also to participate in the rest of FUDCon!
 
-johannes
+So, here I open the floor for discussion of agenda items for our
+wireless meeting/hackfest.  What do we think is important to discuss
+face-to-face this year?  What isn't getting done?  What is getting
+done wrong?  What do we need that we didn't realize last year?
 
---=-NIz+1uhNBBDQHeuUF7KL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Also, please consider making some sort of prepared presentation.
+Especially welcome would be topics that are accessible to those
+outside of the core wireless developer group, such as current
+projects on enhancing IBSS support, extended power savings, or any
+other user-visible topic.  I'll be happy to take such proposals in
+private email or you can post them as part of this thread.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Hopefully this gets the discussion started...please comment!
 
-iQIcBAABAgAGBQJJ+CMvAAoJEKVg1VMiehFYfMAQALvQiW1KvLqKlnqbm05awuzK
-gAbOuu3V0XR9b230rfW2VZJV4iqnysD3G5yFGXKY76RJuREsPhvj3sGAtgNKNQOZ
-jZeLRPjYoI0G9xC3AsT4hIB1ETlHQ1g7g0SB0SoAhlWbXL2L/XP5wKjxya+OSQF8
-2LRQV+tUWsS0czEunTGAmEp7nZgUQOY+QpmHYw8PYPpJoQwvK+lZM7P5+nSAXflr
-u4jhX9AKXM6CsBmxc3iUzQ44Ubw0eD5iI6VgGurLBtnMA1vUaCJZftZsLM4Exxdc
-jHXASWrkHy8QsowtRKrwqvr/SV2HmmQmdyEEvtP6EUvQx83Z5M1NEISQ7AfygqgH
-eyjnmUiafhuSM9lzIGF+krJ6PjIGYIkFkDIGO/GUNyQIa0vR2jE0UBmZJDSDPHYQ
-oLcdZbLGioyv3kWiBZkC84eoiHd1YY/riszK4t2szekdjPtVW8HaRXYVSxzAszrN
-qoxc8V3LtwS7TZE+KYPgx+bzE6dT+syzTC6mX0mybfx6Kj8RCpxEr/rtKpIrskPG
-tMXTJcFkxZO0GyIe0jX3hIHjFL+e8OhbAdvT0jr/v5n/9Nlc3t8Vj2ZZ/o/HznUk
-PC3hoiAAT0qk1RoewoVQLeoyowot9Q+uhkPejqlj75YTdjHjdLM+bokMdOnUJyCq
-I499f+dXXvPMHGVnZQ3W
-=AHfw
------END PGP SIGNATURE-----
+John
 
---=-NIz+1uhNBBDQHeuUF7KL--
-
+P.S.  We are also planning a meeting in Portland this September for
+those unable or unwilling to travel outside of North America for
+whatever reason -- stay tuned.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
