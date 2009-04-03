@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:62230 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754802AbZDKQE7 (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:63948 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756811AbZDCOo2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 12:04:59 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1558597ywb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Apr 2009 09:04:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49E0B8DA.8030708@lwfinger.net>
-References: <30353c3d0904100736g69782d46g18d99edd0dd0660d@mail.gmail.com>
-	 <49DF9E38.5030801@lwfinger.net>
-	 <30353c3d0904101349o915439arffb652b98e245e10@mail.gmail.com>
-	 <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
-	 <49E0B8DA.8030708@lwfinger.net>
-Date: Sat, 11 Apr 2009 12:04:57 -0400
-Message-ID: <30353c3d0904110904g1e04afd2w77aad06f40affa9b@mail.gmail.com> (sfid-20090411_180503_673905_EDE73479)
-Subject: Re: b43legacy AP
-From: David Ellingsworth <david@identd.dyndns.org>
+	Fri, 3 Apr 2009 10:44:28 -0400
+Subject: Re: [PATCH] leds: Increase trigger name maximum size
+From: Richard Purdie <rpurdie@linux.intel.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <49D536FA.2050307@lwfinger.net>
+References: <49d5059a.f3z10uf0HvyIItSz%Larry.Finger@lwfinger.net>
+	 <49D536FA.2050307@lwfinger.net>
+Content-Type: text/plain
+Date: Fri, 03 Apr 2009 15:45:04 +0100
+Message-Id: <1238769904.5347.11.camel@dax.rpnet.com> (sfid-20090403_164439_367898_9902B61C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 11, 2009 at 11:35 AM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> David Ellingsworth wrote:
->> I wanted to report that I've finally been successful at getting
->> b43legacy to beacon properly. Originally, I had configured hostapd to
->> use channel 1. After reading the list of bugs for the bwi driver,
->> shown here: http://leaf.dragonflybsd.org/cgi/web-man?command=bwi , I
->> had the inclination to try channel 6. It appears b43legacy might have
->> the same bugs as the bwi driver as I immediately began seeing beacons
->> once I started using channel 6.
->
-> I just tested and my 4311/1 running b43legacy sends beacons on channel 1. The
-> problem is likely in the initialization of the 4306 units. That is something I
-> will be investigating.
->
-> As far as I can tell, it should be OK to submit the b43legacy beacon patches.
->
 
-Agreed, they have my ACK.
+On Thu, 2009-04-02 at 17:06 -0500, Larry Finger wrote:
+> Larry Finger wrote:
+> > On my HP dv2815 laptop, the total length of the triggers for my b43legacy
+> > wireless device exceeds the maximum value of 50 defined in
+> > include/linux/leds.h. As a result, the list is garbled.
+> > 
+> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > ---
+> 
+> Richard,
+> 
+> Please drop this. That length change is a red herring. Something is corrupting
+> the list of triggers, but this length is not it.
+> 
+> Sorry for the noise.
 
-Regards,
+I was about to raise some concerns about this patch as its just hiding
+some underlying memory corruption. I don't think this is related to the
+LED code but let me know if it turns out to be.
 
-David Ellingsworth
+Cheers,
+
+Richard
+-- 
+Richard Purdie
+Intel Open Source Technology Centre
+
