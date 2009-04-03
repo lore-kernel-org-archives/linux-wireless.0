@@ -1,139 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43228 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbZDBSOn (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:37252 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825AbZDCEh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 14:14:43 -0400
-Subject: [PATCH] cfg80211: add cipher capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	Fri, 3 Apr 2009 00:37:58 -0400
+Subject: Re: How does rfkill work?
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Kay Sievers <kay.sievers@vrfy.org>
+In-Reply-To: <49D521BF.2080301@lwfinger.net>
+References: <49D44635.80306@lwfinger.net>
+	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>
+	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>
+	 <1238689637.24708.41.camel@johannes.local> <49D5018E.6050001@lwfinger.net>
+	 <1238696967.6137.5.camel@johannes.local> <49D506FE.5070405@lwfinger.net>
+	 <1238698084.7630.3.camel@johannes.local>
+	 (sfid-20090402_204842_882765_82560824) <1238698667.7630.7.camel@johannes.local>
+	 <49D521BF.2080301@lwfinger.net>
 Content-Type: text/plain
-Date: Thu, 02 Apr 2009 20:14:06 +0200
-Message-Id: <1238696046.5445.2.camel@johannes.local> (sfid-20090402_201446_592814_464353F5)
+Date: Fri, 03 Apr 2009 06:37:54 +0200
+Message-Id: <1238733474.19390.2.camel@violet> (sfid-20090403_063802_954300_2479ECBC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the necessary code and fields to let drivers specify
-their cipher capabilities and exports them to userspace. Also
-update mac80211 to export the ciphers it has.
+Hi Larry,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/nl80211.h |    4 ++++
- include/net/wireless.h  |    5 +++++
- net/mac80211/main.c     |   14 ++++++++++++++
- net/wireless/nl80211.c  |   14 +++++++++++++-
- 4 files changed, 36 insertions(+), 1 deletion(-)
+> > On Thu, 2009-04-02 at 20:48 +0200, Johannes Berg wrote:
+> > 
+> > Could you try something for me?
+> > 
+> > In drivers/leds/led-triggers.c in led_trigger_show you have
+> > 
+> >         list_for_each_entry(trig, &trigger_list, next_trig) {
+> > +		printk(KERN_DEBUG "available trigger: %s\n", trig->name);
+> >                 if (led_cdev->trigger && !strcmp(led_cdev->trigger->name,
+> >                                                         trig->name))
+> >                         len += sprintf(buf+len, "[%s] ", trig->name);
+> >                 else
+> >                         len += sprintf(buf+len, "%s ", trig->name);
+> >         }
+> > 
+> > could you do the modification, with a kernel that has the TRIG_NAME_MAX
+> > set to 50, and see what it prints? I'm completely confused by this
+> > failure mode since the garbage you get is actually put into brackets, so
+> > it seems the strcmp() is returning 0 which seems odd.
+> 
+> Have I told you that I hate things that appear to be intermittent?
+> 
+> I added the printk, returned TRIG_NAME_MAX to 50, rebuilt and rebooted. This
+> time I got
+> 
+> ~/wireless-testing> cat /sys/class/leds/b43legacy-phy0\:\:rad/trigger
+> none ide-disk ADP1-online BAT0-charging-or-full BAT0-charging BAT0-full phy0rx
+> phy0tx phy0assoc phy0radio [rfkill0]
+> ~/wireless-testing> dmesg | grep available
+> available trigger: ide-disk
+> available trigger: ADP1-online
+> available trigger: BAT0-charging-or-full
+> available trigger: BAT0-charging
+> available trigger: BAT0-full
+> available trigger: phy0rx
+> available trigger: phy0tx
+> available trigger: phy0assoc
+> available trigger: phy0radio
+> available trigger: rfkill0
+> 
+> I'll leave the printk in place for the moment.
+> 
+> The name is being truncated by "#define BUS_ID_SIZE 20" in
+> include/linux/device.h. As changing that define would be pretty invasive, I plan
+> to use a shorter name when the LED is registered.
 
---- wireless-testing.orig/include/net/wireless.h	2009-04-02 19:55:48.000000000 +0200
-+++ wireless-testing/include/net/wireless.h	2009-04-02 19:56:15.000000000 +0200
-@@ -205,6 +205,8 @@ struct ieee80211_supported_band {
-  *	on the reg_notifier() if it chooses to ignore future
-  *	regulatory domain changes caused by other drivers.
-  * @signal_type: signal type reported in &struct cfg80211_bss.
-+ * @cipher_suites: supported cipher suites
-+ * @n_cipher_suites: number of supported cipher suites
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -224,6 +226,9 @@ struct wiphy {
- 	u8 max_scan_ssids;
- 	u16 max_scan_ie_len;
- 
-+	int n_cipher_suites;
-+	const u32 *cipher_suites;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
---- wireless-testing.orig/net/wireless/nl80211.c	2009-04-02 19:56:12.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-04-02 19:56:15.000000000 +0200
-@@ -184,6 +184,10 @@ static int nl80211_send_wiphy(struct sk_
- 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
- 		    dev->wiphy.max_scan_ie_len);
- 
-+	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
-+		sizeof(u32) * dev->wiphy.n_cipher_suites,
-+		dev->wiphy.cipher_suites);
-+
- 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
- 	if (!nl_modes)
- 		goto nla_put_failure;
-@@ -966,7 +970,7 @@ static int nl80211_set_key(struct sk_buf
- static int nl80211_new_key(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
--	int err;
-+	int err, i;
- 	struct net_device *dev;
- 	struct key_params params;
- 	u8 key_idx = 0;
-@@ -1035,6 +1039,14 @@ static int nl80211_new_key(struct sk_buf
- 	if (err)
- 		goto unlock_rtnl;
- 
-+	for (i = 0; i < drv->wiphy.n_cipher_suites; i++)
-+		if (params.cipher == drv->wiphy.cipher_suites[i])
-+			break;
-+	if (i == drv->wiphy.n_cipher_suites) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	if (!drv->ops->add_key) {
- 		err = -EOPNOTSUPP;
- 		goto out;
---- wireless-testing.orig/net/mac80211/main.c	2009-04-02 19:55:48.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-04-02 19:56:15.000000000 +0200
-@@ -823,6 +823,15 @@ int ieee80211_register_hw(struct ieee802
- 	struct ieee80211_master_priv *mpriv;
- 	int channels, i, j, max_bitrates;
- 	bool supp_ht;
-+	static const u32 cipher_suites[] = {
-+		WLAN_CIPHER_SUITE_WEP40,
-+		WLAN_CIPHER_SUITE_WEP104,
-+		WLAN_CIPHER_SUITE_TKIP,
-+		WLAN_CIPHER_SUITE_CCMP,
-+
-+		/* keep last -- depends on hw flags! */
-+		WLAN_CIPHER_SUITE_AES_CMAC
-+	};
- 
- 	/*
- 	 * generic code guarantees at least one band,
-@@ -894,6 +903,11 @@ int ieee80211_register_hw(struct ieee802
- 	if (local->hw.wiphy->max_scan_ie_len)
- 		local->hw.wiphy->max_scan_ie_len -= local->scan_ies_len;
- 
-+	local->hw.wiphy->cipher_suites = cipher_suites;
-+	local->hw.wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-+	if (!(local->hw.flags & IEEE80211_HW_MFP_CAPABLE))
-+		local->hw.wiphy->n_cipher_suites--;
-+
- 	result = wiphy_register(local->hw.wiphy);
- 	if (result < 0)
- 		goto fail_wiphy_register;
---- wireless-testing.orig/include/linux/nl80211.h	2009-04-02 19:55:48.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2009-04-02 19:56:15.000000000 +0200
-@@ -410,6 +410,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
-  *	%NL80211_CMD_DISASSOCIATE, u16
-  *
-+ * @NL80211_ATTR_CIPHER_SUITES: a set of u32 values indicating the supported
-+ *	cipher suites
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -495,6 +498,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_REASON_CODE,
- 
- 	NL80211_ATTR_MAX_SCAN_IE_LEN,
-+	NL80211_ATTR_CIPHER_SUITES,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
+I am under the impression that all these limitations are going away. Did
+you talk to Kay or Greg about this?
+
+Regards
+
+Marcel
 
 
