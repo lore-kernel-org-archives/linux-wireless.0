@@ -1,389 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33948 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757551AbZDXNiH (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:53524 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753735AbZDCTM1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 09:38:07 -0400
-Subject: [RFC] mac80211: tell driver when idle
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Content-Type: text/plain
-Date: Fri, 24 Apr 2009 15:37:25 +0200
-Message-Id: <1240580246.18031.47.camel@johannes.local> (sfid-20090424_153814_318771_F94780D6)
-Mime-Version: 1.0
+	Fri, 3 Apr 2009 15:12:27 -0400
+Received: by fxm2 with SMTP id 2so1109155fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 12:12:23 -0700 (PDT)
+Message-ID: <49D65F93.40105@gmail.com> (sfid-20090403_211229_272804_A19FA521)
+Date: Fri, 03 Apr 2009 21:12:19 +0200
+From: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	Jussi Kukkonen <jku@linux.intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Google Summer of Code 2009: Another wireless application
+References: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com> 	<43e72e890903241256l39f5b1f9i49ce2b7a6e8099c3@mail.gmail.com> 	<49CD0FCF.3060706@gmail.com> <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com>
+In-Reply-To: <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we aren't doing anything in mac80211, we can turn off
-much of the hardware, depending on the driver/hw. Not doing
-anything, aka being idle, means:
+Hi,
 
- * no monitor interfaces
- * no AP/mesh/wds interfaces
- * any station interfaces are in DISABLED state
- * any IBSS interfaces aren't trying to be in a network
- * we aren't trying to scan
+we got another application on wireless. See below. Who has not done so
+yet, do not forget to apply as mentor for the LF at
+http://socghop.appspot.com/.
 
-By creating a new function that verifies these conditions and calling
-it at strategic points where the states of those conditions change,
-we can easily make mac80211 tell the driver when we are idle to save
-power.
+    Till
 
-Additionally, this fixes a small quirk where a recalculated powersave
-state is passed to the driver even if the hardware is about to stopped
-completely.
+--------------------
 
-This patch intentionally doesn't touch radio_enabled because that is
-currently implemented to be a soft rfkill which is inappropriate here
-when we need to be able to wake up with low latency.
+Title:  	Automated test bed for WiFi
+Student: 	vipin m
+Mentor: 	No mentor assigned
+Possible Mentors: 	None
+Abstract:
+Presently none of the open source drivers are WiFi (Wireless Fidelity)=20
+certified. Getting that certification is costly too.UNH-IOL brings out=20
+comprehensive test plans for protocol conformance testing. But=20
+unfortunately the tools used by UNH-IOL are not available publically.An=
+d=20
+the final goal of this project is to test the IEEE 802.11n based open=20
+source device drivers and devices (AP and clients) in terms of protocol=
+=20
+conformance and interoperability with various vendors.
+Content:
 
-One thing I'm not entirely sure about is this:
+About Me -
 
-  phy0: device no longer idle - in use
-  phy0:mac80211_hwsim_config (freq=2462 radio_enabled=1 idle=0 ps=0)
-  wlan0: direct probe to AP 00:11:24:91:07:4d try 1
-  wlan0 direct probe responded
-  wlan0: authenticate with AP 00:11:24:91:07:4d
-  wlan0: authenticated
-> phy0: device now idle
-  phy0:mac80211_hwsim_config (freq=2462 radio_enabled=1 idle=1 ps=0)
-> phy0: device no longer idle - in use
-  phy0:mac80211_hwsim_config (freq=2462 radio_enabled=1 idle=0 ps=0)
-  wlan0: associate with AP 00:11:24:91:07:4d
-  wlan0: RX AssocResp from 00:11:24:91:07:4d (capab=0x401 status=0 aid=1)
-  wlan0: associated
+I am Vipin M, doing My MS by Research in Wireless Communication  at=20
+AU-KBC Research Center of Anna University Chennai india.
 
-Is it appropriate to go into idle state for a short time when we have
-just authenticated, but not associated yet? This happens only with the
-userspace SME, because we cannot really know how long it will wait
-before teling us to associate. Would going idle only after a timeout
-be more appropriate here? Normally this would be only a very short
-period of time so the delay added by asking the driver to go idle,
-however long it may be, might well be undesirable?
+I finished my B.E - Electronics and Communication Engineering (2000 -=20
+2003) Tamilnadu, India
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/mac80211_hwsim.c |    6 +-
- include/net/mac80211.h                |    8 +++
- net/mac80211/ibss.c                   |    5 ++
- net/mac80211/ieee80211_i.h            |    2 
- net/mac80211/iface.c                  |   78 +++++++++++++++++++++++++++++++++-
- net/mac80211/mlme.c                   |   10 ++++
- net/mac80211/scan.c                   |   17 +++----
- 7 files changed, 112 insertions(+), 14 deletions(-)
+ From April 2004 to January 2006 as Project Engineer in Network Securit=
+y=20
+Research Group and System Administrator at AU=E2=80=93KBC Research Cent=
+re. At=20
+present i parally doing network administartion work for center with my=20
+MS studies.
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-24 14:57:10.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-24 14:57:12.000000000 +0200
-@@ -985,6 +985,8 @@ int ieee80211_if_change_type(struct ieee
- 			     enum nl80211_iftype type);
- void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
- void ieee80211_remove_interfaces(struct ieee80211_local *local);
-+u32 __ieee80211_recalc_idle(struct ieee80211_local *local);
-+void ieee80211_recalc_idle(struct ieee80211_local *local);
- 
- /* tx handling */
- void ieee80211_clear_tx_pending(struct ieee80211_local *local);
---- wireless-testing.orig/net/mac80211/iface.c	2009-04-24 14:56:54.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-04-24 14:57:12.000000000 +0200
-@@ -301,6 +301,8 @@ static int ieee80211_open(struct net_dev
- 	if (sdata->flags & IEEE80211_SDATA_PROMISC)
- 		atomic_inc(&local->iff_promiscs);
- 
-+	hw_reconf_flags |= __ieee80211_recalc_idle(local);
-+
- 	local->open_count++;
- 	if (hw_reconf_flags) {
- 		ieee80211_hw_config(local, hw_reconf_flags);
-@@ -548,6 +550,10 @@ static int ieee80211_stop(struct net_dev
- 
- 	sdata->bss = NULL;
- 
-+	hw_reconf_flags |= __ieee80211_recalc_idle(local);
-+
-+	ieee80211_recalc_ps(local, -1);
-+
- 	if (local->open_count == 0) {
- 		if (netif_running(local->mdev))
- 			dev_close(local->mdev);
-@@ -565,8 +571,6 @@ static int ieee80211_stop(struct net_dev
- 		hw_reconf_flags = 0;
- 	}
- 
--	ieee80211_recalc_ps(local, -1);
--
- 	/* do after stop to avoid reconfiguring when we stop anyway */
- 	if (hw_reconf_flags)
- 		ieee80211_hw_config(local, hw_reconf_flags);
-@@ -892,3 +896,73 @@ void ieee80211_remove_interfaces(struct 
- 		unregister_netdevice(sdata->dev);
- 	}
- }
-+
-+static u32 ieee80211_idle_off(struct ieee80211_local *local,
-+			      const char *reason)
-+{
-+	if (!(local->hw.conf.flags & IEEE80211_CONF_IDLE))
-+		return 0;
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+	printk(KERN_DEBUG "%s: device no longer idle - %s\n",
-+	       wiphy_name(local->hw.wiphy), reason);
-+#endif
-+
-+	local->hw.conf.flags &= ~IEEE80211_CONF_IDLE;
-+	return IEEE80211_CONF_CHANGE_IDLE;
-+}
-+
-+static u32 ieee80211_idle_on(struct ieee80211_local *local)
-+{
-+	if (local->hw.conf.flags & IEEE80211_CONF_IDLE)
-+		return 0;
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+	printk(KERN_DEBUG "%s: device now idle\n",
-+	       wiphy_name(local->hw.wiphy));
-+#endif
-+
-+	local->hw.conf.flags |= IEEE80211_CONF_IDLE;
-+	return IEEE80211_CONF_CHANGE_IDLE;
-+}
-+
-+u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	int count = 0;
-+
-+	if (local->hw_scanning || local->sw_scanning)
-+		return ieee80211_idle_off(local, "scanning");
-+
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (!netif_running(sdata->dev))
-+			continue;
-+		/* do not count disabled managed interfaces */
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+		    sdata->u.mgd.state == IEEE80211_STA_MLME_DISABLED)
-+			continue;
-+		/* do not count unused IBSS interfaces */
-+		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
-+		    !sdata->u.ibss.ssid_len)
-+			continue;
-+		/* count everything else */
-+		count++;
-+	}
-+
-+	if (!count)
-+		return ieee80211_idle_on(local);
-+	else
-+		return ieee80211_idle_off(local, "in use");
-+
-+	return 0;
-+}
-+
-+void ieee80211_recalc_idle(struct ieee80211_local *local)
-+{
-+	u32 chg;
-+
-+	mutex_lock(&local->iflist_mtx);
-+	chg = __ieee80211_recalc_idle(local);
-+	mutex_unlock(&local->iflist_mtx);
-+	ieee80211_hw_config(local, chg);
-+}
---- wireless-testing.orig/net/mac80211/ibss.c	2009-04-24 14:56:54.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-04-24 14:57:12.000000000 +0200
-@@ -862,6 +862,8 @@ int ieee80211_ibss_join(struct ieee80211
- 
- 	sdata->u.ibss.ssid_len = params->ssid_len;
- 
-+	ieee80211_recalc_idle(sdata->local);
-+
- 	set_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
- 	queue_work(sdata->local->hw.workqueue, &sdata->u.ibss.work);
- 
-@@ -889,6 +891,9 @@ int ieee80211_ibss_leave(struct ieee8021
- 
- 	skb_queue_purge(&sdata->u.ibss.skb_queue);
- 	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
-+	sdata->u.ibss.ssid_len = 0;
-+
-+	ieee80211_recalc_idle(sdata->local);
- 
- 	return 0;
- }
---- wireless-testing.orig/net/mac80211/scan.c	2009-04-24 14:56:54.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2009-04-24 14:57:12.000000000 +0200
-@@ -302,17 +302,9 @@ void ieee80211_scan_completed(struct iee
- 	/* we only have to protect scan_req and hw/sw scan */
- 	mutex_unlock(&local->scan_mtx);
- 
--	if (was_hw_scan) {
--		/*
--		 * Somebody might have requested channel change during scan
--		 * that we won't have acted upon, try now. ieee80211_hw_config
--		 * will set the flag based on actual changes.
--		 */
--		ieee80211_hw_config(local, 0);
--		goto done;
--	}
--
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+	if (was_hw_scan)
-+		goto done;
- 
- 	netif_tx_lock_bh(local->mdev);
- 	netif_addr_lock(local->mdev);
-@@ -351,6 +343,7 @@ void ieee80211_scan_completed(struct iee
- 	mutex_unlock(&local->iflist_mtx);
- 
-  done:
-+	ieee80211_recalc_idle(local);
- 	ieee80211_mlme_notify_scan_completed(local);
- 	ieee80211_ibss_notify_scan_completed(local);
- 	ieee80211_mesh_notify_scan_completed(local);
-@@ -471,6 +464,8 @@ static int __ieee80211_start_scan(struct
- 	 * dependency, so that the scan completed calls
- 	 * have more locking freedom.
- 	 */
-+
-+	ieee80211_recalc_idle(local);
- 	mutex_unlock(&local->scan_mtx);
- 
- 	if (local->ops->hw_scan)
-@@ -487,6 +482,8 @@ static int __ieee80211_start_scan(struct
- 		} else
- 			local->sw_scanning = false;
- 
-+		ieee80211_recalc_idle(local);
-+
- 		local->scan_req = NULL;
- 		local->scan_sdata = NULL;
- 	}
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-24 14:57:10.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-24 14:57:12.000000000 +0200
-@@ -890,6 +890,7 @@ static void ieee80211_direct_probe(struc
- 		printk(KERN_DEBUG "%s: direct probe to AP %pM timed out\n",
- 		       sdata->dev->name, ifmgd->bssid);
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_recalc_idle(local);
- 		ieee80211_sta_send_apinfo(sdata);
- 
- 		/*
-@@ -938,6 +939,7 @@ static void ieee80211_authenticate(struc
- 		       " timed out\n",
- 		       sdata->dev->name, ifmgd->bssid);
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_recalc_idle(local);
- 		cfg80211_send_auth_timeout(sdata->dev, ifmgd->bssid);
- 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
- 				sdata->local->hw.conf.channel->center_freq,
-@@ -1034,6 +1036,7 @@ static void ieee80211_set_disassoc(struc
- 
- 	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT) {
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_recalc_idle(local);
- 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
- 				sdata->local->hw.conf.channel->center_freq,
- 				ifmgd->ssid, ifmgd->ssid_len);
-@@ -1121,6 +1124,7 @@ static void ieee80211_associate(struct i
- 		       " timed out\n",
- 		       sdata->dev->name, ifmgd->bssid);
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_recalc_idle(local);
- 		cfg80211_send_assoc_timeout(sdata->dev, ifmgd->bssid);
- 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
- 				sdata->local->hw.conf.channel->center_freq,
-@@ -1141,6 +1145,7 @@ static void ieee80211_associate(struct i
- 		printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
- 		       "mixed-cell disabled - abort association\n", sdata->dev->name);
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_recalc_idle(local);
- 		return;
- 	}
- 
-@@ -1279,6 +1284,7 @@ static void ieee80211_auth_completed(str
- 	if (ifmgd->flags & IEEE80211_STA_EXT_SME) {
- 		/* Wait for SME to request association */
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		ieee80211_recalc_idle(sdata->local);
- 	} else
- 		ieee80211_associate(sdata);
- }
-@@ -1515,6 +1521,7 @@ static void ieee80211_rx_mgmt_assoc_resp
- 		if (ifmgd->flags & IEEE80211_STA_EXT_SME) {
- 			/* Wait for SME to decide what to do next */
- 			ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+			ieee80211_recalc_idle(local);
- 		}
- 		return;
- 	}
-@@ -2083,6 +2090,7 @@ static int ieee80211_sta_config_auth(str
- 		} else {
- 			ifmgd->assoc_scan_tries = 0;
- 			ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+			ieee80211_recalc_idle(local);
- 		}
- 	}
- 	return -1;
-@@ -2126,6 +2134,8 @@ static void ieee80211_sta_work(struct wo
- 	} else if (!test_and_clear_bit(IEEE80211_STA_REQ_RUN, &ifmgd->request))
- 		return;
- 
-+	ieee80211_recalc_idle(local);
-+
- 	switch (ifmgd->state) {
- 	case IEEE80211_STA_MLME_DISABLED:
- 		break;
---- wireless-testing.orig/include/net/mac80211.h	2009-04-24 14:56:54.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-04-24 14:57:12.000000000 +0200
-@@ -533,10 +533,16 @@ struct ieee80211_rx_status {
-  *
-  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
-  * @IEEE80211_CONF_PS: Enable 802.11 power save mode (managed mode only)
-+ * @IEEE80211_CONF_IDLE: The device is running, but idle; if the flag is set
-+ *	the driver should be prepared to handle configuration requests but
-+ *	may turn the device off as much as possible. Typically, this flag will
-+ *	be set when an interface is set UP but not associated or scanning, but
-+ *	it can also be unset in that case when monitor interfaces are active.
-  */
- enum ieee80211_conf_flags {
- 	IEEE80211_CONF_RADIOTAP		= (1<<0),
- 	IEEE80211_CONF_PS		= (1<<1),
-+	IEEE80211_CONF_IDLE		= (1<<2),
- };
- 
- 
-@@ -551,6 +557,7 @@ enum ieee80211_conf_flags {
-  * @IEEE80211_CONF_CHANGE_POWER: the TX power changed
-  * @IEEE80211_CONF_CHANGE_CHANNEL: the channel/channel_type changed
-  * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
-+ * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
-  */
- enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_RADIO_ENABLED	= BIT(0),
-@@ -561,6 +568,7 @@ enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_POWER		= BIT(5),
- 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
- 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
-+	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
- };
- 
- static inline __deprecated enum ieee80211_conf_changed
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-04-24 14:56:54.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-04-24 14:57:12.000000000 +0200
-@@ -554,9 +554,11 @@ static int mac80211_hwsim_config(struct 
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
- 
--	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d)\n",
-+	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d idle=%d ps=%d)\n",
- 	       wiphy_name(hw->wiphy), __func__,
--	       conf->channel->center_freq, conf->radio_enabled);
-+	       conf->channel->center_freq, conf->radio_enabled,
-+	       !!(conf->flags & IEEE80211_CONF_IDLE),
-+	       !!(conf->flags & IEEE80211_CONF_PS));
- 
- 	data->channel = conf->channel;
- 	data->radio_enabled = conf->radio_enabled;
+Exprence -
+
+IEEE 802.11n Power Save Simulation - Simulation study of HT-MAC Power=20
+Save in Matlab.
+Building Custom Linux distribution - Building a custom Linux for=20
+=46irewall, Development, Mail and Web Servers.
+Remote File Integrity Check  (RFiC) -  Software tools to check the file=
+=20
+integrity of local files in Linux systems developed using c.
+Dynamic Password Authentication System ( DPAT) - Used for Two Factor=20
+authentication. Hardware Token in client side and web server on server =
+side.
+Detection and Analysis of Burst Signal from LDV  - Bust signal analyzer=
+=20
+using LabView / Matlab for Laser Doppler Velocimeter.
+
+My irc.freenode.net id is vipintm.
+
+Code skill and other details -
+
+I use C for most of the simulation as part of my research work, work=20
+around C++ and Qt for simple GUI. Do scripting using bash/perl also for=
+=20
+  the network administartion task and automation of our internal testin=
+g=20
+and expiriments.
+
+I use AMD Athlon X2 based Acer lapto with Merlin based Atheros ( Athero=
+s=20
+AR9280 ) card in express pci and Brodcome (BCM4311 ) inbuild card with=20
+fedora 10 os. I use latest compiled kernel from wireless-testing.
+
+I have a good understanding of IEEE 802.11 protocoles. And currentely i=
+=20
+am in a lerning process of mac80211 based linux-wireless stack.
+
+We use SVN for most of the internal project and now git through linux
+
+Till date none of my work is not there in public domain. But used lot o=
+f=20
+open source tools in the development.
+
+Project Proposal - Automated test bed for WiFi
 
 
+
+The reson to chose this project
+
+Presently none of the open source drivers are WiFi (Wireless Fidelity)=20
+certified. Getting that certification is costly too. WiFi Alliance (WFA=
+)=20
+also majorly focuses on the interoperability among the multiple vendors=
+=2E=20
+UNH-IOL brings out comprehensive test plans for protocol conformance=20
+testing. But unfortunately the tools used by UNH-IOL are not available=20
+publically.
+
+What do you want to achieve?
+
+=46inal goal of this project is to test the IEEE 802.11n based open sou=
+rce=20
+device drivers (such as ath9k, iwlagn etc) and devices (AP and clients)=
+=20
+in terms of protocol conformance and interoperability with various vend=
+ors.
+
+If you are proposing a project of your own, what is unique about it?
+
+We created a draft version of test plans using UNH-IOL and other genera=
+l=20
+test senirious. We added plans for Stress and Regression testing.
+
+This enhanced test plans are developed to help free-lancers to evaluate=
+=20
+the functionality of the MAC (Medium Access Control) layer. And also=20
+ensures that the device/driver obeys the specification defined in the=20
+IEEE standard. Access point (AP) as well as client cards can be tested=20
+using our test bed.
+
+Each and every bit of a frame can be manipulated in our injection tool.
+
+What makes you suited to carry the project?
+
+We had experience in testing performance of outdoor and indoor based=20
+WiFi products. Presently we are doing minimal testing on mac80211 based=
+=20
+driver as we have enough hardware resources. Meantime we found=20
+interesting to develop a complete test bed which can do most of the tes=
+t=20
+automatically.
+
+
+
+What do you expect from your implementation?
+
+We are expecting the following two tools will be the outcome of this=20
+project.
+
+    1.
+
+       Injector
+
+This tool is used to transmit MAC frames according to the test plans in=
+=20
+controlled and interactive manner. Data rate, channel and other=20
+necessary parameters also can be configured. Development of this tool i=
+s=20
+already in progress.
+
+    1.
+
+       Test Console:
+
+Test parameters such as device type (AP, Client), hardware address of=20
+the device will be configured in the console. Once these configurations=
+=20
+are done the tests runs automatically based on the test plan. It can=20
+directly interact with Wireshark and Injector to get the results and=20
+then analyses the results. Finally generate the complete report based o=
+n=20
+the collected results. Development of this tool is not yet started.
+
+Why have you chosen your development idea?
+
+To implement all the test plans we need the above mentioned tools. With=
+=20
+the help of console we can automate the testing process.
+
+
+
+Tentative schedule -
+
+
+
+As we have a simple syetm for injecting packet, we like to continu to=20
+extent it to ieee 802.11n packets and make
+the frame work so we like to discuss and generate a schedule.
+
+
+REF : http://www.iol.unh.edu/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
