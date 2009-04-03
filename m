@@ -1,239 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302AbZDOTjx (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:5359 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbZDCNjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 15:39:53 -0400
-Subject: [RFC 2/3 v2] mac80211: disable powersave if pm_qos asks for low
- latency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <Kalle.Valo@nokia.com>
-In-Reply-To: <20090415171633.489000512@sipsolutions.net> (sfid-20090415_191905_551998_2087931B)
-References: <20090415171046.336006351@sipsolutions.net>
-	 <20090415171633.489000512@sipsolutions.net>
-	 (sfid-20090415_191905_551998_2087931B)
-Content-Type: text/plain
-Date: Wed, 15 Apr 2009 21:38:50 +0200
-Message-Id: <1239824330.29769.5.camel@johannes.local> (sfid-20090415_213956_659540_B4D888A8)
-Mime-Version: 1.0
+	Fri, 3 Apr 2009 09:39:22 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so976658ywb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 06:39:20 -0700 (PDT)
+Message-ID: <49D6117D.9020408@gmail.com> (sfid-20090403_153925_892314_99E9782A)
+Date: Fri, 03 Apr 2009 09:39:09 -0400
+From: Will Keaney <keaneyw@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Trouble Associating with ath5k on AR5212
+References: <49D4C7B3.7010803@gmail.com> <b6c5339f0904020805w5e210c2bl542eadb20ac5d6c7@mail.gmail.com> <49D56445.20502@gmail.com> <20090403020358.GA12406@hash.localnet> <49D571BB.7060406@gmail.com> <20090403122332.GA14853@hash.localnet>
+In-Reply-To: <20090403122332.GA14853@hash.localnet>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig6CA44B66C51D358E6CB0F83E"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an application asks for a latency lower than the beacon interval
-there's nothing we can do -- we need to stay awake and not have the
-AP buffer frames for us. Add code to automatically calculate this
-constraint in mac80211 so drivers need not concern themselves with it.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig6CA44B66C51D358E6CB0F83E
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: rebased
+Bob Copeland wrote:
+> On Thu, Apr 02, 2009 at 10:17:31PM -0400, Will Keaney wrote:
+>  =20
+>> dmesg shows this:
+>> [38645.639170] ath5k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->=
 
- include/linux/ieee80211.h  |    9 +++++++++
- net/mac80211/ieee80211_i.h |    5 ++++-
- net/mac80211/iface.c       |    4 ++--
- net/mac80211/main.c        |   31 ++++++++++++++++++++++++-------
- net/mac80211/mlme.c        |   36 ++++++++++++++++++++++++++++++++----
- net/mac80211/wext.c        |    2 +-
- 6 files changed, 72 insertions(+), 15 deletions(-)
+>> IRQ 17
+>> [38645.639199] ath5k 0000:03:00.0: setting latency timer to 64
+>> [38645.639342] ath5k 0000:03:00.0: registered as 'phy5'
+>> [38645.872038] phy5: Selected rate control algorithm 'minstrel'
+>> [38645.882037] Registered led device: ath5k-phy5::rx
+>> [38645.882090] Registered led device: ath5k-phy5::tx
+>> [38645.882097] ath5k phy5: Atheros AR5414 chip found (MAC: 0xa3, PHY: =
+0x61)
+>> [38646.133614] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> [38667.211026] ath5k phy5: noise floor calibration timeout (5785MHz)
+>>
+>> I think the key there is the last line.  There is no further output in=
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-15 20:32:42.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-15 20:40:22.000000000 +0200
-@@ -17,6 +17,7 @@
- #include <linux/if_arp.h>
- #include <linux/etherdevice.h>
- #include <linux/rtnetlink.h>
-+#include <linux/pm_qos_params.h>
- #include <net/mac80211.h>
- #include <asm/unaligned.h>
- 
-@@ -515,7 +516,7 @@ static void ieee80211_change_ps(struct i
- }
- 
- /* need to hold RTNL or interface lock */
--void ieee80211_recalc_ps(struct ieee80211_local *local)
-+void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- {
- 	struct ieee80211_sub_if_data *sdata, *found = NULL;
- 	int count = 0;
-@@ -534,10 +535,22 @@ void ieee80211_recalc_ps(struct ieee8021
- 		count++;
- 	}
- 
--	if (count == 1 && found->u.mgd.powersave)
--		local->ps_sdata = found;
--	else
-+	if (count == 1 && found->u.mgd.powersave) {
-+		s32 beaconint_us;
-+
-+		if (latency < 0)
-+			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
-+
-+		beaconint_us = ieee80211_tu_to_usec(
-+					found->vif.bss_conf.beacon_int);
-+
-+		if (beaconint_us > latency)
-+			local->ps_sdata = NULL;
-+		else
-+			local->ps_sdata = found;
-+	} else {
- 		local->ps_sdata = NULL;
-+	}
- 
- 	ieee80211_change_ps(local);
- }
-@@ -2305,3 +2318,18 @@ void ieee80211_mlme_notify_scan_complete
- 		ieee80211_restart_sta_timer(sdata);
- 	rcu_read_unlock();
- }
-+
-+int ieee80211_max_network_latency(struct notifier_block *nb,
-+				  unsigned long data, void *dummy)
-+{
-+	s32 latency_usec = (s32) data;
-+	struct ieee80211_local *local =
-+		container_of(nb, struct ieee80211_local,
-+			     network_latency_notifier);
-+
-+	mutex_lock(&local->iflist_mtx);
-+	ieee80211_recalc_ps(local, latency_usec);
-+	mutex_unlock(&local->iflist_mtx);
-+
-+	return 0;
-+}
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-15 20:32:42.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-15 20:40:22.000000000 +0200
-@@ -750,6 +750,7 @@ struct ieee80211_local {
- 	struct work_struct dynamic_ps_enable_work;
- 	struct work_struct dynamic_ps_disable_work;
- 	struct timer_list dynamic_ps_timer;
-+	struct notifier_block network_latency_notifier;
- 
- 	int user_power_level; /* in dBm */
- 	int power_constr_level; /* in dBm */
-@@ -938,7 +939,9 @@ int ieee80211_sta_deauthenticate(struct 
- int ieee80211_sta_disassociate(struct ieee80211_sub_if_data *sdata, u16 reason);
- void ieee80211_send_pspoll(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *sdata);
--void ieee80211_recalc_ps(struct ieee80211_local *local);
-+void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
-+int ieee80211_max_network_latency(struct notifier_block *nb,
-+				  unsigned long data, void *dummy);
- 
- /* IBSS code */
- int ieee80211_ibss_commit(struct ieee80211_sub_if_data *sdata);
---- wireless-testing.orig/net/mac80211/main.c	2009-04-15 20:32:42.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-04-15 20:40:22.000000000 +0200
-@@ -21,6 +21,7 @@
- #include <linux/wireless.h>
- #include <linux/rtnetlink.h>
- #include <linux/bitmap.h>
-+#include <linux/pm_qos_params.h>
- #include <net/net_namespace.h>
- #include <net/cfg80211.h>
- 
-@@ -1038,25 +1039,38 @@ int ieee80211_register_hw(struct ieee802
- 		}
- 	}
- 
-+	local->network_latency_notifier.notifier_call =
-+		ieee80211_max_network_latency;
-+	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
-+				     &local->network_latency_notifier);
-+
-+	if (result) {
-+		rtnl_lock();
-+		goto fail_pm_qos;
-+	}
-+
- 	return 0;
- 
--fail_wep:
-+ fail_pm_qos:
-+	ieee80211_led_exit(local);
-+	ieee80211_remove_interfaces(local);
-+ fail_wep:
- 	rate_control_deinitialize(local);
--fail_rate:
-+ fail_rate:
- 	unregister_netdevice(local->mdev);
- 	local->mdev = NULL;
--fail_dev:
-+ fail_dev:
- 	rtnl_unlock();
- 	sta_info_stop(local);
--fail_sta_info:
-+ fail_sta_info:
- 	debugfs_hw_del(local);
- 	destroy_workqueue(local->hw.workqueue);
--fail_workqueue:
-+ fail_workqueue:
- 	if (local->mdev)
- 		free_netdev(local->mdev);
--fail_mdev_alloc:
-+ fail_mdev_alloc:
- 	wiphy_unregister(local->hw.wiphy);
--fail_wiphy_register:
-+ fail_wiphy_register:
- 	kfree(local->int_scan_req.channels);
- 	return result;
- }
-@@ -1069,6 +1083,9 @@ void ieee80211_unregister_hw(struct ieee
- 	tasklet_kill(&local->tx_pending_tasklet);
- 	tasklet_kill(&local->tasklet);
- 
-+	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
-+			       &local->network_latency_notifier);
-+
- 	rtnl_lock();
- 
- 	/*
---- wireless-testing.orig/net/mac80211/iface.c	2009-04-15 20:32:42.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-04-15 20:40:22.000000000 +0200
-@@ -317,7 +317,7 @@ static int ieee80211_open(struct net_dev
- 		ieee80211_set_wmm_default(sdata);
- 	}
- 
--	ieee80211_recalc_ps(local);
-+	ieee80211_recalc_ps(local, -1);
- 
- 	/*
- 	 * ieee80211_sta_work is disabled while network interface
-@@ -574,7 +574,7 @@ static int ieee80211_stop(struct net_dev
- 		hw_reconf_flags = 0;
- 	}
- 
--	ieee80211_recalc_ps(local);
-+	ieee80211_recalc_ps(local, -1);
- 
- 	/* do after stop to avoid reconfiguring when we stop anyway */
- 	if (hw_reconf_flags)
---- wireless-testing.orig/net/mac80211/wext.c	2009-04-15 20:32:42.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-04-15 20:40:22.000000000 +0200
-@@ -789,7 +789,7 @@ static int ieee80211_ioctl_siwpower(stru
- 		ieee80211_hw_config(local,
- 				    IEEE80211_CONF_CHANGE_DYNPS_TIMEOUT);
- 
--	ieee80211_recalc_ps(local);
-+	ieee80211_recalc_ps(local, -1);
- 
- 	return 0;
- }
---- wireless-testing.orig/include/linux/ieee80211.h	2009-04-15 20:32:42.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-04-15 20:40:22.000000000 +0200
-@@ -1383,4 +1383,13 @@ static inline int ieee80211_freq_to_ofdm
- 		return -1;
- }
- 
-+/**
-+ * ieee80211_tu_to_usec - convert time units (TU) to microseconds
-+ * @tu: the TUs
-+ */
-+static inline unsigned long ieee80211_tu_to_usec(unsigned long tu)
-+{
-+	return 1024 * tu;
-+}
-+
- #endif /* LINUX_IEEE80211_H */
+>> dmesg, regardless of what I do in wpa_supplicant.
+>>    =20
+>
+> Probably a red herring, actually -- but yeah, you should be seeing more=
+
+> output as the association process continues.  That is a pretty frequent=
+
+> and harmless error message, here you are scanning and just changed to
+> a 5.7 ghz channel for a passive scan.
+>
+> Are you getting any results at all from scans?  Is ath5k using 100% of
+> any cpu?
+>  =20
+I do get some results on scans, but not as many as with madwifi.  Also,
+it reports dramatically different signal strengths than madwifi (though
+this may be because madwifi sets my maximun Tx power to 17dBm, and ath5k
+sets it to 20).
+I don't see any untoward CPU usage when ath5k is loaded.  wpa_supplicant
+uses about 40% on one core, give or take.
 
 
+--------------enig6CA44B66C51D358E6CB0F83E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAknWEYIACgkQjfayWCA8dDFpTQCeKYto2fXfrzi7SEISJJQhwA3k
+3ZAAmQHm18s9WGqbnNi1zDwEpNbQupo6
+=duYm
+-----END PGP SIGNATURE-----
+
+--------------enig6CA44B66C51D358E6CB0F83E--
