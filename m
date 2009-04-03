@@ -1,124 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:48962 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754973AbZDGUYo (ORCPT
+Received: from fmailhost02.isp.att.net ([207.115.11.52]:57980 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135AbZDCE6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:24:44 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
- recently
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1239112310.15015.25.camel@maxim-laptop>
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
-	 <1239108689.15015.3.camel@maxim-laptop>
-	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
-	 <1239109497.15015.12.camel@maxim-laptop>
-	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
-	 <1239110412.15015.23.camel@maxim-laptop>
-	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
-	 <1239112310.15015.25.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Tue, 07 Apr 2009 23:24:38 +0300
-Message-Id: <1239135878.17958.11.camel@maxim-laptop> (sfid-20090407_222449_694721_08B98E55)
-Mime-Version: 1.0
+	Fri, 3 Apr 2009 00:58:07 -0400
+Message-ID: <49D5972D.4010309@lwfinger.net> (sfid-20090403_065813_662086_0F0EE399)
+Date: Thu, 02 Apr 2009 23:57:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: How does rfkill work?
+References: <49D44635.80306@lwfinger.net>	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>	 <1238689637.24708.41.camel@johannes.local> <49D5018E.6050001@lwfinger.net>	 <1238696967.6137.5.camel@johannes.local> <49D506FE.5070405@lwfinger.net>	 <1238698084.7630.3.camel@johannes.local>	 (sfid-20090402_204842_882765_82560824) <1238698667.7630.7.camel@johannes.local>	 <49D521BF.2080301@lwfinger.net> <1238733474.19390.2.camel@violet>
+In-Reply-To: <1238733474.19390.2.camel@violet>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 16:51 +0300, Maxim Levitsky wrote:
-> On Tue, 2009-04-07 at 15:27 +0200, Johannes Berg wrote:
-> > On Tue, 2009-04-07 at 16:20 +0300, Maxim Levitsky wrote:
-> > 
-> > > > Of course, we can go back to dropping the scan request, but that
-> > > > wouldn't be very nice.
-> > > > 
-> > > > Is this creating any problems?
-> > 
-> > > Yep, but dropping the request won't help ether.
-> > 
-> > Indeed.
-> > 
-> > > Problem is that wpa_supplicant will attempt to scan before association,
-> > > scan fails (it doesn't know it is already running) thus it waits 10
-> > > seconds. (I patched it to wait 2 seconds).
-> > > 
-> > > It happens if user first disconnects, and then reconnects to a network
-> > > (typical test I do for time it takes to connect)
-> > > 
-> > > Now I patched it not to clear essid on disconnect, and this helped
-> > > reduce connect times by about 2 seconds.
-> > > 
-> > > now it takes just 3~4 seconds to connect to open network, and ~6 seconds
-> > > to WPA2 network.
-> > > 
-> > > (This is with patched dhclient, I reduced its timeouts, but this is
-> > > another story.... it seems that first DHCPREQUEST never succeeds, and I
-> > > tested this with 2 cards, and few wireless networks)
-> > 
-> > Have you tried with a new tree and wpa_supplicant's (from git) nl80211
-> > driver? Might be a lot better.
-> I use NM and wpa_supplicant from -git
-> Last time, I tried nl80211 wpa_supplicant driver it didn't work well,
-> but I try again soon I  hope.
-
-I have just tried the nl80211 driver.
-
-
-First I get this in kernel logs:
-
-
-> [   29.971903] WARNING: at /home/maxim/software/kernel/linux-2.6/net/wireless/core.h:79 nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
-> [   29.971905] Hardware name: Aspire 5720     
-> [   29.971906] Modules linked in: nfsd exportfs ipv6 nfs lockd nfs_acl auth_rpcgss sunrpc cpufreq_powersave cpufreq_conservative cpufreq_userspace acpi_cpufreq coretemp sbp2 uvcvideo videodev v4l1_compat v4l2_compat_ioctl32 joydev iwl3945 iwlcore rfkill uhci_hcd mac80211 snd_hda_codec_realtek psmouse lib80211 video snd_hda_intel snd_hda_codec iTCO_wdt tg3 serio_raw ehci_hcd snd_hwdep snd_pcm_oss snd_mixer_oss sdhci_pci iTCO_vendor_support libphy output cfg80211 ata_piix sdhci nvidia(P) evdev ohci1394 snd_pcm snd_timer snd_page_alloc usbcore ext3 jbd mbcache fuse ahci libata
-> [   29.971936] Pid: 3688, comm: wpa_supplicant Tainted: P           2.6.29-wl #18
-> [   29.971938] Call Trace:
-> [   29.971948]  [<ffffffff80241320>] warn_slowpath+0xd0/0x130
-> [   29.971956]  [<ffffffffa08e4ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg80211]
-> [   29.971960]  [<ffffffff802a8263>] ? __alloc_pages_internal+0xe3/0x4f0
-> [   29.971965]  [<ffffffff804ade47>] ? netdev_run_todo+0x57/0x260
-> [   29.971972]  [<ffffffffa08e465d>] nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]
-> [   29.971979]  [<ffffffffa08e4ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg80211]
-> [   29.971981]  [<ffffffff802a86ee>] ? __get_free_pages+0x1e/0x60
-> [   29.971986]  [<ffffffff804a59ae>] ? __alloc_skb+0x6e/0x140
-> [   29.971993]  [<ffffffffa08e4ae4>] nl80211_get_wiphy+0x74/0xd0 [cfg80211]
-> [   29.972020]  [<ffffffff804c5986>] genl_rcv_msg+0x1b6/0x1f0
-> [   29.972023]  [<ffffffff804c57d0>] ? genl_rcv_msg+0x0/0x1f0
-> [   29.972027]  [<ffffffff804c4839>] netlink_rcv_skb+0x89/0xb0
-> [   29.972030]  [<ffffffff804c57b7>] genl_rcv+0x27/0x40
-> [   29.972032]  [<ffffffff804c4234>] netlink_unicast+0x2c4/0x2e0
-> [   29.972035]  [<ffffffff804a59ae>] ? __alloc_skb+0x6e/0x140
-> [   29.972038]  [<ffffffff804c4464>] netlink_sendmsg+0x214/0x310
-> [   29.972041]  [<ffffffff8049ceb7>] sock_sendmsg+0x127/0x140
-> [   29.972045]  [<ffffffff80258c20>] ? autoremove_wake_function+0x0/0x40
-> [   29.972049]  [<ffffffff802da0c7>] ? do_lookup+0x147/0x260
-> [   29.972052]  [<ffffffff802e375c>] ? dput+0xac/0x160
-> [   29.972054]  [<ffffffff8049dd17>] ? move_addr_to_kernel+0x57/0x60
-> [   29.972057]  [<ffffffff804a6e7c>] ? verify_iovec+0x3c/0xd0
-> [   29.972060]  [<ffffffff8049d059>] sys_sendmsg+0x189/0x320
-> [   29.972063]  [<ffffffff8049bf71>] ? sock_ioctl+0x81/0x270
-> [   29.972065]  [<ffffffff802dfd21>] ? vfs_ioctl+0x31/0xa0
-> [   29.972068]  [<ffffffff802dfe18>] ? do_vfs_ioctl+0x88/0x580
-> [   29.972071]  [<ffffffff802d20c9>] ? __fput+0x169/0x1e0
-> [   29.972074]  [<ffffffff802e03a9>] ? sys_ioctl+0x99/0xa0
-> [   29.972077]  [<ffffffff8020c5db>] system_call_fastpath+0x16/0x1b
-> [   29.972079] ---[ end trace b4d9e95705d7d0d8 ]---
+Marcel Holtmann wrote:
+> Hi Larry,
 > 
+>>> On Thu, 2009-04-02 at 20:48 +0200, Johannes Berg wrote:
+>>>
+>>> Could you try something for me?
+>>>
+>>> In drivers/leds/led-triggers.c in led_trigger_show you have
+>>>
+>>>         list_for_each_entry(trig, &trigger_list, next_trig) {
+>>> +		printk(KERN_DEBUG "available trigger: %s\n", trig->name);
+>>>                 if (led_cdev->trigger && !strcmp(led_cdev->trigger->name,
+>>>                                                         trig->name))
+>>>                         len += sprintf(buf+len, "[%s] ", trig->name);
+>>>                 else
+>>>                         len += sprintf(buf+len, "%s ", trig->name);
+>>>         }
+>>>
+>>> could you do the modification, with a kernel that has the TRIG_NAME_MAX
+>>> set to 50, and see what it prints? I'm completely confused by this
+>>> failure mode since the garbage you get is actually put into brackets, so
+>>> it seems the strcmp() is returning 0 which seems odd.
+>> Have I told you that I hate things that appear to be intermittent?
+>>
+>> I added the printk, returned TRIG_NAME_MAX to 50, rebuilt and rebooted. This
+>> time I got
+>>
+>> ~/wireless-testing> cat /sys/class/leds/b43legacy-phy0\:\:rad/trigger
+>> none ide-disk ADP1-online BAT0-charging-or-full BAT0-charging BAT0-full phy0rx
+>> phy0tx phy0assoc phy0radio [rfkill0]
+>> ~/wireless-testing> dmesg | grep available
+>> available trigger: ide-disk
+>> available trigger: ADP1-online
+>> available trigger: BAT0-charging-or-full
+>> available trigger: BAT0-charging
+>> available trigger: BAT0-full
+>> available trigger: phy0rx
+>> available trigger: phy0tx
+>> available trigger: phy0assoc
+>> available trigger: phy0radio
+>> available trigger: rfkill0
+>>
+>> I'll leave the printk in place for the moment.
+>>
+>> The name is being truncated by "#define BUS_ID_SIZE 20" in
+>> include/linux/device.h. As changing that define would be pretty invasive, I plan
+>> to use a shorter name when the LED is registered.
 > 
-> 
-Then same -EBUSY errors are present, and this driver even says explictly this.
-(This is despite the fact I removed the essid clearing from the wpa_supplicant)
-In fact (now I speak about the wext driver) I put printfs in many its functions, and it seems that it only resets encryption keys
-before scanning now, and still device seems to be busy.
-This ensures that scan occurs twice, and adds up 2~3 seconds to association time, which consists about 40% of all time (~7 seconds)
+> I am under the impression that all these limitations are going away. Did
+> you talk to Kay or Greg about this?
 
+No, I have not approached them about this matter. Based on this exchange, I will
+find out from them.
 
->  
-> 
-> Best regards,
-> 	Maxim Levitsky
-> > 
-> > johannes
-> 
+To answer your previous question, this is a 2.6.29 kernel from wireless-testing.
 
+Thanks,
+
+Larry
