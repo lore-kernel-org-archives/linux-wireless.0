@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([204.127.217.103]:54978 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934547AbZDIOqz (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:45129 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbZDCQgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 10:46:55 -0400
-Message-ID: <49DE0A4D.7010408@lwfinger.net> (sfid-20090409_164706_775311_A1831C21)
-Date: Thu, 09 Apr 2009 09:46:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 3 Apr 2009 12:36:18 -0400
+Received: by bwz17 with SMTP id 17so1044401bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 09:36:14 -0700 (PDT)
+Message-ID: <49D63AF5.4080302@gmail.com> (sfid-20090403_183622_788837_CE736EE9)
+Date: Fri, 03 Apr 2009 18:36:05 +0200
+From: Witold Sowa <witold.sowa@gmail.com>
 MIME-Version: 1.0
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix iwl3945 registration regression
-References: <87ljqamktq.fsf@litku.valot.fi>	 <1239263762.32594.19.camel@johannes.local> <da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com>
-In-Reply-To: <da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: GSoC proposal - AP mode for NetworkManager
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> On Thu, Apr 9, 2009 at 10:56 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> I forgot that iwl3945 registration is separate from iwlagn.
->>
->> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> Thanks, this fixed the problem for me.
-> 
-> Tested-by: Kalle Valo <kalle.valo@iki.fi>
-> 
-> Although I wasn't able to get iwl3945 working yet:
-> 
-> Apr  9 17:06:57 tikku kernel: [   16.586612] iwl3945: Intel(R)
-> PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26kd
-> Apr  9 17:06:57 tikku kernel: [   16.591406] iwl3945: Copyright(c)
-> 2003-2009 Intel Corporation
-> Apr  9 17:06:57 tikku kernel: [   16.596203] iwl3945 0000:03:00.0: PCI
-> INT A -> GSI 17 (level, low) -> IRQ 17
-> Apr  9 17:06:57 tikku kernel: [   16.600996] iwl3945 0000:03:00.0:
-> setting latency timer to 64
-> Apr  9 17:06:57 tikku kernel: [   16.660038] iwl3945 0000:03:00.0:
-> Tunable channels: 13 802.11bg, 23 802.11a channels
-> Apr  9 17:06:57 tikku kernel: [   16.664799] iwl3945 0000:03:00.0:
-> Detected Intel Wireless WiFi Link 3945ABG
-> Apr  9 17:06:57 tikku kernel: [   16.669786] iwl3945 0000:03:00.0: irq
-> 29 for MSI/MSI-X
-> Apr  9 17:06:57 tikku kernel: [   16.675157] phy0: Selected rate
-> control algorithm 'iwl-3945-rs'
-> Apr  9 17:06:57 tikku kernel: [   16.681674] phy0: Failed to initialize wep: -2
-> Apr  9 17:06:57 tikku kernel: [   16.695543] iwl3945 0000:03:00.0:
-> Failed to register hw (error -2)
-> Apr  9 17:06:57 tikku kernel: [   16.700576] iwl3945 0000:03:00.0: PCI
-> INT A disabled
-> Apr  9 17:06:57 tikku kernel: [   16.705359] iwl3945: probe of
-> 0000:03:00.0 failed with error -2
-> 
-> Maybe this is the infamous module loading bug I see people talking
-> about? I'll investigate it later.
+Hi,
 
-Yes it is. The key is the "Failed to initialize wep", which is caused by a
-failure to load modules ecb and arc4. Apply that patch and all will be well.
+I have just sent my proposal to Google Summer of Code project: AP mode
+support for NetworkManager.
+You can read it here:
+http://student.agh.edu.pl/~wsowa/gsoc.txt
 
-Larry
+Since, I haven't received reply form Dan Williams, I will allow myself
+to take the liberty of quoting below the mail I sent him. It contains
+general description of my idea and some questions. Request for comments :-)
+
+Thanks,
+Witold Sowa
+
+"Hi,
+
+I am interested in realization of 'Add AP support to Network Manager'
+Google Summer of Code project witch you are mentoring and I'd like to
+discuss my ideas and ask some questions.
+
+First of all, you wrote on
+http://wireless.kernel.org/en/developers/GSoC/2009/Add_AP_Support_to_Network_Manager
+that hostapd functionality will be incorporated into wpa_supplicant
+soon. Actually, I couldn't find any information about it, so here is the
+basic question: Does wpa_supplicant incorporate AP functionality or when
+will it do?
+
+I went through a few docs, mailing lists and cursorily through source
+codes of hostapd and NetworkManager before I found your note about
+incorporating AP into wpa_supplicant. That's why I developed a general
+idea of realization the project using hostapd:
+
+1. hostapd should be modified in such a way that it could be configured
+via dbus just like wpa_supplicant can be. This would require creating a
+dbus interface and moving most of configuration options from config file
+to the dbus interface. This will probably turn most of hostapd's code
+upside down, and this would be probably the most difficult and time
+consuming part.
+
+2. hostapd should be started and kept alive by NetworkManager just like
+wpa_supplicant is now (using some dbus service - I'm not sure how it
+works for wpa_supplicant and NM now). NM should then use hostapd's dbus
+interface to communicate with it.
+
+3. Some additional dbus interfaces should be added to NM, which will
+allow client applications like nm-applet, knetworkmanager, etc. set
+wireless interface in AP (master) mode and configure it.
+
+4. Fancy GUI controls would be added to nm-applet which will let user to
+set his own AP "with 2 simple mouse clicks ;-)".
+
+As you can see first two points seem to boil down to making hostapd
+usage simmilar to wpa_supplicant so it could be a good idea to move
+hostapd functionality to wpa_supplicant instead - if it hasn't already
+been done. In case it has been done, I could focus only on points 3 and 4.
+
+I will be grateful if you tell me what is your opinion about my
+approach, what should I take notice of and what is state of
+incorporating hostapd into wpa_supplicant. I will appreciate any
+suggestions or advice too.
+
+Regards,
+Witold Sowa"
+
