@@ -1,173 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29364 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754059AbZDUBOw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 21:14:52 -0400
-Subject: Re: [PATCH] cfg80211: mark all WEXT handlers _GPL
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1240246179.4632.6.camel@johannes.local>
-References: <1240246179.4632.6.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 21 Apr 2009 09:08:56 +0800
-Message-Id: <1240276136.354.107.camel@debian> (sfid-20090421_031456_289133_AE3CCDAF)
+Received: from xc.sipsolutions.net ([83.246.72.84]:35299 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101AbZDCJYD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Apr 2009 05:24:03 -0400
+Subject: Re: [PATCH 4/5] cfg80211: check allowed channel type upon
+ userspace requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1238711166-2208-5-git-send-email-lrodriguez@atheros.com>
+References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
+	 <1238711166-2208-5-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QFGJdNLX+zcJ3PaoLnwY"
+Date: Fri, 03 Apr 2009 11:23:27 +0200
+Message-Id: <1238750607.27712.14.camel@johannes.local> (sfid-20090403_112406_038181_B96DE74B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-21 at 00:49 +0800, Johannes Berg wrote:
-> The fact that these are exported is a technical detail
-> of the conversion period -- we don't want anybody to
-> start relying on these. Ultimately we want things to
-> use cfg80211 only, and once everything that is in wext
-> is converted to cfg80211 drivers will not need to touch
-> wext _at all_.
 
-Johannes, why don't you want them to be used by others, say some fullmac
-drivers? These functions can be used as glue from wext to cfg80211 in
-the conversion period. After cfg80211 is ultimately used, they can be
-removed all together of course.
+--=-QFGJdNLX+zcJ3PaoLnwY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
--yi
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/wireless/scan.c        |    4 ++--
->  net/wireless/wext-compat.c |   24 ++++++++++++------------
->  2 files changed, 14 insertions(+), 14 deletions(-)
-> 
-> --- wireless-testing.orig/net/wireless/scan.c	2009-04-20 18:47:21.000000000 +0200
-> +++ wireless-testing/net/wireless/scan.c	2009-04-20 18:47:45.000000000 +0200
-> @@ -653,7 +653,7 @@ int cfg80211_wext_siwscan(struct net_dev
->  	cfg80211_put_dev(rdev);
->  	return err;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_siwscan);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwscan);
->  
->  static void ieee80211_scan_add_ies(struct iw_request_info *info,
->  				   struct cfg80211_bss *bss,
-> @@ -962,5 +962,5 @@ int cfg80211_wext_giwscan(struct net_dev
->  	cfg80211_put_dev(rdev);
->  	return res;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwscan);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwscan);
->  #endif
-> --- wireless-testing.orig/net/wireless/wext-compat.c	2009-04-20 18:47:21.000000000 +0200
-> +++ wireless-testing/net/wireless/wext-compat.c	2009-04-20 18:47:33.000000000 +0200
-> @@ -57,7 +57,7 @@ int cfg80211_wext_giwname(struct net_dev
->  
->  	return 0;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwname);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwname);
->  
->  int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
->  			  u32 *mode, char *extra)
-> @@ -108,7 +108,7 @@ int cfg80211_wext_siwmode(struct net_dev
->  
->  	return ret;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_siwmode);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwmode);
->  
->  int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
->  			  u32 *mode, char *extra)
-> @@ -143,7 +143,7 @@ int cfg80211_wext_giwmode(struct net_dev
->  	}
->  	return 0;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwmode);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwmode);
->  
-> 
->  int cfg80211_wext_giwrange(struct net_device *dev,
-> @@ -239,7 +239,7 @@ int cfg80211_wext_giwrange(struct net_de
->  
->  	return 0;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwrange);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwrange);
->  
->  int cfg80211_wext_siwmlme(struct net_device *dev,
->  			  struct iw_request_info *info,
-> @@ -283,7 +283,7 @@ int cfg80211_wext_siwmlme(struct net_dev
->  		return -EOPNOTSUPP;
->  	}
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_siwmlme);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwmlme);
->  
-> 
->  /**
-> @@ -313,7 +313,7 @@ struct ieee80211_channel *cfg80211_wext_
->  	}
->  
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_freq);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_freq);
->  
->  int cfg80211_wext_siwrts(struct net_device *dev,
->  			 struct iw_request_info *info,
-> @@ -338,7 +338,7 @@ int cfg80211_wext_siwrts(struct net_devi
->  
->  	return err;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_siwrts);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwrts);
->  
->  int cfg80211_wext_giwrts(struct net_device *dev,
->  			 struct iw_request_info *info,
-> @@ -352,7 +352,7 @@ int cfg80211_wext_giwrts(struct net_devi
->  
->  	return 0;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwrts);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwrts);
->  
->  int cfg80211_wext_siwfrag(struct net_device *dev,
->  			  struct iw_request_info *info,
-> @@ -379,7 +379,7 @@ int cfg80211_wext_siwfrag(struct net_dev
->  
->  	return err;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_siwfrag);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwfrag);
->  
->  int cfg80211_wext_giwfrag(struct net_device *dev,
->  			  struct iw_request_info *info,
-> @@ -393,7 +393,7 @@ int cfg80211_wext_giwfrag(struct net_dev
->  
->  	return 0;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwfrag);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwfrag);
->  
->  int cfg80211_wext_siwretry(struct net_device *dev,
->  			   struct iw_request_info *info,
-> @@ -434,7 +434,7 @@ int cfg80211_wext_siwretry(struct net_de
->  
->  	return err;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_siwretry);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwretry);
->  
->  int cfg80211_wext_giwretry(struct net_device *dev,
->  			   struct iw_request_info *info,
-> @@ -464,4 +464,4 @@ int cfg80211_wext_giwretry(struct net_de
->  
->  	return 0;
->  }
-> -EXPORT_SYMBOL(cfg80211_wext_giwretry);
-> +EXPORT_SYMBOL_GPL(cfg80211_wext_giwretry);
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, 2009-04-02 at 18:26 -0400, Luis R. Rodriguez wrote:
+
+> @@ -457,6 +457,24 @@ static int nl80211_set_wiphy(struct sk_buff *skb, st=
+ruct genl_info *info)
+>  		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
+>  			goto bad_res;
+> =20
+> +		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS ||
+> +		    channel_type =3D=3D NL80211_CHAN_HT40PLUS)
+> +			if (chan->flags & IEEE80211_CHAN_NO_HT40)
+> +				goto bad_res;
+> +
+> +		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS &&
+> +		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
+> +			goto bad_res;
+> +		else if (channel_type =3D=3D NL80211_CHAN_HT40PLUS &&
+> +			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
+> +			goto bad_res;
+> +
+> +		/*
+> +		 * At this point we know if that if HT40 was requested
+> +		 * we are allowed to use it and the extension channel
+> +		 * exists.
+> +		 */
+> +
+>  		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS)
+>  			sec_freq =3D freq - 20;
+>  		else if (channel_type =3D=3D NL80211_CHAN_HT40PLUS)
+
+And here you should remove the code below this where we still see the
+first three lines.
+
+johannes
+
+--=-QFGJdNLX+zcJ3PaoLnwY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ1dWNAAoJEKVg1VMiehFYMscP+wXwUatyDRo6bd8vd8yXGOCw
+gOwYGcOE8MCCsaeUnt19xxrtCCEbK24uHzusFC0BKL7QVsVsXCFaV4uclmMUvruA
+lze08zDQxTd8NVT+JYr6nAn4SthATZce9MZ8liAAtUkimSfXMSjBTLt0hmjNj7wg
+2bLl+DpH1Xwmil2UQj5spfglo8HH08/jUk1Xyf4XTqr1fyPb2NJzqncI1p5x3LDG
+fY8wPGElYHt5jEwXuJA6V34iT9fHXRyyb93mxYG59WcEdvKQOw587vOrNW+htHNA
+Ej3jIfbnwLZ7RF5/q1J+tWsMs6zuB4EDGVcATPnM8ynTmjxzMG1YcYZlW7JsDuyZ
+s6hJPAvITWJgdPVxxN4vWrgVdVxYh13NLkCfK0/zk/cPRkKg+Dol8u4Wj0/4oSVX
+6uZqC81ubMGnid4IqJIVOt1WC6plVZWDClJjpdFU/HyfJcge2SKuWjGzlZXk6o2w
+mKBOaR7EVyqmSysnwzxNpgj+2RRREMLUPXHwbKRBejVfe6YksSLds9LY7VSlldYF
+gZQuQqqy3kTDtqOKI2gu9GFup46NKGpa8rwab2c3Y0VFi5devDitGbtQU8J5DaY7
+tg8snL4RJl2mUH0NFpIwV9BEm6c+KHtv1o0F50SK8WWe1FGzbG1YfOnbUq1s9OFN
+O0yo0rwS1/M4ijLktj3X
+=RZQr
+-----END PGP SIGNATURE-----
+
+--=-QFGJdNLX+zcJ3PaoLnwY--
 
