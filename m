@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45360 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbZDGISV (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:56017 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbZDEJLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 04:18:21 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
- recently
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1239062401.4705.23.camel@maxim-laptop> (sfid-20090407_020013_939126_90578556)
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1e+v3vSe+ZP0YSmO6I41"
-Date: Tue, 07 Apr 2009 10:18:16 +0200
-Message-Id: <1239092296.22453.1.camel@johannes.local> (sfid-20090407_101824_756855_6E6DC191)
-Mime-Version: 1.0
+	Sun, 5 Apr 2009 05:11:37 -0400
+MIME-Version: 1.0
+Date: Sun, 5 Apr 2009 11:11:32 +0200
+Message-ID: <8db1092f0904050211m3385bf45wbf1a0452cb44cc06@mail.gmail.com> (sfid-20090405_111151_122653_FA6850FF)
+Subject: [2.6.29-git12 iwl3945] wlan0: beacon loss from AP 00:19:5b:e7:a2:f8 -
+	sending probe request
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Wireless card:
+08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+[Golan] Network Connection (rev 02)
 
---=-1e+v3vSe+ZP0YSmO6I41
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have compiled 2.6.29-git12. Comparing to 2.6.29 (stable) I have
+message in dmesg:
 
-On Tue, 2009-04-07 at 03:00 +0300, Maxim Levitsky wrote:
+wlan0: beacon loss from AP 00:19:5b:e7:a2:f8 - sending probe request
 
-> I noticed that always first attempt at scan fails when NM asks for scan.
-> I also noticed that this happens with quite recent kernels (I think
-> 2,6.28) didn't have this behavior.
+Also iwconfig shows slow Bit Rate (1 Mb/s). Connection seems be
+stable, but it never happen in 2.6.29.
 
-I'm pretty sure it did.
+Dmesg:
+http://unixy.pl/maciek/download/kernel/2.6.29-git12/dmesg-2.6.29-git12.txt
 
-> Looking a bit deeper I discovered that each time NM disconnects from a
-> networks it sets random ssid/essid to the card (using wireless
-> extensions)
+Dmesg (after "echo 0x43fff > /sys/class/net/wlan0/device/debug_level"):
+http://unixy.pl/maciek/download/kernel/2.6.29-git12/dmesg-2.6.29-git12-debug.txt
 
-This forces a scan
 
-> After that scan fails for some time.
->=20
-> as a NM free example you can run=20
->=20
-> iwconfig wlan0 essid dummy
-> iwlist scan
+iwconfig wlan0 from 2.6.29 (I remove "Encryption key"):
+http://unixy.pl/maciek/download/kernel/2.6.29-git12/iwconfig_wlan0_2.6.29.txt
 
-and then this fails with EBUSY.
+iwconfig wlan0 from 2.6.29-git12:
+http://unixy.pl/maciek/download/kernel/2.6.29-git12/iwconfig_wlan0_2.6.29-git12.txt
 
-johannes
-
---=-1e+v3vSe+ZP0YSmO6I41
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ2wxGAAoJEKVg1VMiehFYXBoQAJdRubE/lbOMjON/iTZ//GKa
-u3hAxAdea7mVEB2VfnxyyweARiUr84WWo1drt8PSawqw45EUarc4q2ZXF0PqFwcm
-piFZ0bx4tpXCD0FBiEdtNrNHyJFs7kG7bDF/Qoj1bB/Kx68Id34TKTo02bVz8x+2
-18VEapSPVLdOrV4bljOg0unArzk8g+GzKVjHwcdbPnqHdWM6/OOKUoldmiF/4Xo5
-PF0sdztA5E9QpUk6n5HRih5Gb6CU+/E5zP0WkVM/eJwr1PX9weaMCX4BPZljvm7f
-L/SZq44ZSR7tbHZMyu4uBVllOWAFTIzSz2yB5uL+Q4ZN8ChgKNItxTtrkb5OIIxY
-7mnSMJxVL1uYxbWqSt13G3udW6vEfAIQGK0XHC/kWS84W3iHrBLd/LFS22vb/lGj
-Q29SeDIxIZO4hUUeaogjGPznuQqzGZ22yhPbjzEW7ZZyXe5TmmXvlMyESH51qytB
-Tapkf+8yw9tpAXKPggzp0whwj6X43ig9XFBmbdkFe+X4+/STCjyE/iQV7k1Ec7dG
-fA8RjFLibJ7oAKUNjrtFm08isoa/zcx0uzGSS1fAFfxysKvo1puIaBhihzYg9WCK
-BafjENH6XZhSIkcA6lJ1EhFo54v2uRQxVYiAk6fEfW5gMsSjTih8PXnocjnZjcG3
-s44gaLhciLcu0/MJX0qf
-=07mc
------END PGP SIGNATURE-----
-
---=-1e+v3vSe+ZP0YSmO6I41--
-
+Config (2.6.29-git12):
+http://unixy.pl/maciek/download/kernel/2.6.29-git12/config-2.6.29-git12.txt
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
