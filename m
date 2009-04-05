@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38034 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbZDVJip (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1609 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756305AbZDECLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 05:38:45 -0400
-Subject: [PATCH] mac80211: fix variable truncation on 32-bit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-next@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090422144537.06937b16.sfr@canb.auug.org.au>
-References: <20090422144537.06937b16.sfr@canb.auug.org.au>
-Content-Type: text/plain
-Date: Wed, 22 Apr 2009 11:25:43 +0200
-Message-Id: <1240392343.20308.6.camel@johannes.local> (sfid-20090422_113848_881539_58D9C896)
-Mime-Version: 1.0
+	Sat, 4 Apr 2009 22:11:08 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: kalle.valo@nokia.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 0/6] wl12xx updates
+Date: Sat,  4 Apr 2009 22:10:22 -0400
+Message-Id: <1238897428-19639-1-git-send-email-me@bobcopeland.com> (sfid-20090405_041125_414047_4322E3C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Rothwell reported these warnings from a 32-bit build:
+Hi Kalle,
 
-  net/mac80211/mlme.c:1771: warning: left shift count >= width of type
-  net/mac80211/mlme.c:1772: warning: left shift count >= width of type
-  net/mac80211/mlme.c:1773: warning: left shift count >= width of type
-  net/mac80211/mlme.c:1774: warning: left shift count >= width of type
-  net/mac80211/mlme.c:1775: warning: left shift count >= width of type
+Here are some patches that bring wl12xx back to compiling state for
+current wireless-testing.  This is on top of your original patch
+from your web page.  Review at your leisure, and feel free to roll
+them all up into your eventual post for inclusion.
 
-This shows a bug in my code -- BIT(X) uses just "1 << X" which means
-a 32-bit integer on 32-bit platforms, but the code here needs a u64
-on all platforms. Fix this by using "1ULL << X" instead of BIT(X).
+Of note, possible incompatible changes are patch 2 which removes ssid
+from the join command, and patch 3 which changes the platform setup
+so it can compile on any platform.  Only compile-tested for now.
 
-Thanks Stephen!
+Bob Copeland (6):
+  wl12xx: update to 2.6.29 mac80211 hw scan API
+  wl12xx: remove ssid parameters from driver private struct
+  wl12xx: separate platform data into arch-independent code
+  wl12xx: update tx API usage
+  wl12xx: update config callback parameters
+  wl12xx: update set_key callback to match current API
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-22 11:19:20.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-22 11:19:54.000000000 +0200
-@@ -1743,12 +1743,12 @@ static void ieee80211_rx_mgmt_probe_resp
-  *	look out for other vendor IEs.
-  */
- static const u64 care_about_ies =
--	BIT(WLAN_EID_COUNTRY) |
--	BIT(WLAN_EID_ERP_INFO) |
--	BIT(WLAN_EID_CHANNEL_SWITCH) |
--	BIT(WLAN_EID_PWR_CONSTRAINT) |
--	BIT(WLAN_EID_HT_CAPABILITY) |
--	BIT(WLAN_EID_HT_INFORMATION);
-+	(1ULL << WLAN_EID_COUNTRY) |
-+	(1ULL << WLAN_EID_ERP_INFO) |
-+	(1ULL << WLAN_EID_CHANNEL_SWITCH) |
-+	(1ULL << WLAN_EID_PWR_CONSTRAINT) |
-+	(1ULL << WLAN_EID_HT_CAPABILITY) |
-+	(1ULL << WLAN_EID_HT_INFORMATION);
- 
- static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_mgmt *mgmt,
+ drivers/net/wireless/wl12xx/cmd.c    |    4 +--
+ drivers/net/wireless/wl12xx/event.c  |    2 +-
+ drivers/net/wireless/wl12xx/main.c   |   47 ++++++++++++++++++----------------
+ drivers/net/wireless/wl12xx/tx.c     |   11 +++-----
+ drivers/net/wireless/wl12xx/wl12xx.h |    7 +---
+ include/linux/spi/wl12xx_spi.h       |   18 +++++++++++++
+ 6 files changed, 51 insertions(+), 38 deletions(-)
+ create mode 100644 include/linux/spi/wl12xx_spi.h
 
 
