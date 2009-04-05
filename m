@@ -1,158 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57145 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbZDTQ1j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 12:27:39 -0400
-Subject: [PATCH] ar9170: support HT receive and channel config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:35360 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754401AbZDELBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Apr 2009 07:01:31 -0400
+Subject: Re: ath9k becon loss messages
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Sujith <Sujith.Manoharan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	LKML <linux-kernel@vger.kernel.org>, linville@tuxdriver.com,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Andi Kleen <andi@firstfloor.org>
+In-Reply-To: <200904051136.15285.mb@bu3sch.de>
+References: <1238923439.4120.9.camel@localhost.localdomain>
+	 <200904051129.38904.mb@bu3sch.de>  <200904051136.15285.mb@bu3sch.de>
 Content-Type: text/plain
-Date: Mon, 20 Apr 2009 18:27:04 +0200
-Message-Id: <1240244824.4632.1.camel@johannes.local> (sfid-20090420_182742_813852_53D62E77)
+Date: Sun, 05 Apr 2009 16:30:33 +0530
+Message-Id: <1238929233.5186.4.camel@localhost.localdomain> (sfid-20090405_130141_223822_16446A93)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for configuring HT40 channels
-and receiving HT40 to ar9170. Receiving aggregation
-doesn't seem to work right now, so it's not enabled.
-Same goes for TX aggregation, but that probably needs
-even more work.
+On Sun, 2009-04-05 at 11:36 +0200, Michael Buesch wrote:
+> On Sunday 05 April 2009 11:29:38 Michael Buesch wrote:
+> > On Sunday 05 April 2009 11:23:59 Jaswinder Singh Rajput wrote:
+> > > With latest linus tree I am getting, .config file attached:
+> > > 
+> > > [   22.895051] r8169: eth0: link down
+> > > [   22.897564] ADDRCONF(NETDEV_UP): eth0: link is not ready
+> > > [   22.928047] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > > [   22.982292] libvirtd used greatest stack depth: 4200 bytes left
+> > > [   63.709879] wlan0: authenticate with AP 00:11:95:9e:df:f6
+> > > [   63.712096] wlan0: authenticated
+> > > [   63.712127] wlan0: associate with AP 00:11:95:9e:df:f6
+> > > [   63.726831] wlan0: RX AssocResp from 00:11:95:9e:df:f6 (capab=0x471 status=0 aid=1)
+> > > [   63.726855] wlan0: associated
+> > > [   63.730093] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> > > [   74.296087] wlan0: no IPv6 routers present
+> > > [   79.349044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  119.358200] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  179.354292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  259.366044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  359.348292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  361.953459] packagekitd used greatest stack depth: 4160 bytes left
+> > > [  478.824258] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  598.813343] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  718.817292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  838.824567] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [  958.815402] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1078.848434] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1198.822913] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1318.824931] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1438.814157] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1558.827336] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1678.823011] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1798.830589] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 1918.828044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 2038.827224] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 2116.517152] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 2158.840243] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > > [ 2278.827427] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > 
+> > 
+> > I think this message should only show if CONFIG_MAC80211_VERBOSE_DEBUG is set.
+> > It's kind of expected that we lose a beacon once in a while, so we shouldn't print
+> > verbose messages to the kernel log (even if they are KERN_DEBUG).
+> > 
+> > And besides that, I think one can easily remotely trigger this message and flood the logs.
+> > So it should probably _also_ be ratelimited.
+> > 
+> 
 
-With this, I can receive roughly 33 Mbits/sec.
+I tested you patch:
+when CONFIG_MAC80211_VERBOSE_DEBUG was not defined:
+[   21.928047] r8169: eth0: link down
+[   21.930774] ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   21.957007] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   59.872337] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[   59.874350] wlan0: authenticated
+[   59.874350] wlan0: associate with AP 00:11:95:9e:df:f6
+[   59.893103] wlan0: RX AssocResp from 00:11:95:9e:df:f6 (capab=0x471 status=0 aid=1)
+[   59.893135] wlan0: associated
+[   59.896260] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   70.409313] wlan0: no IPv6 routers present
 
-The HT capabilities are a little odd, I tried following
-otus here -- in particular having SGI_40 but not SGI_20
-is a little weird but afaict that's what otus does.
+when CONFIG_MAC80211_VERBOSE_DEBUG defined:
+[   22.851052] r8169: eth0: link down
+[   22.854049] ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   22.885982] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   61.043261] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[   61.044997] wlan0: authenticated
+[   61.045016] wlan0: associate with AP 00:11:95:9e:df:f6
+[   61.059901] wlan0: RX AssocResp from 00:11:95:9e:df:f6 (capab=0x471 status=0 aid=1)
+[   61.059922] wlan0: associated
+[   61.060124] wlan0: switched to short barker preamble (BSSID=00:11:95:9e:df:f6)
+[   61.060141] wlan0: switched to short slot time (BSSID=00:11:95:9e:df:f6)
+[   61.064651] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   71.211042] wlan0: no IPv6 routers present
+[   79.323009] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  119.333646] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  179.332725] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  259.330506] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  359.311615] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  479.334949] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  599.330222] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  719.001652] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  838.994788] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[  958.993262] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[ 1079.024024] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[ 1199.023672] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+[ 1319.021355] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+..
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/ath/ar9170/ar9170.h |   15 ++++++++
- drivers/net/wireless/ath/ar9170/main.c   |   54 ++++++++++++++++++++++++++-----
- 2 files changed, 61 insertions(+), 8 deletions(-)
+So net_ratelimit() does not make any difference in my case where rate is 120 seconds.
 
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/ar9170.h	2009-04-20 18:18:08.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/ar9170.h	2009-04-20 18:18:22.000000000 +0200
-@@ -60,6 +60,21 @@ enum ar9170_bw {
- 	__AR9170_NUM_BW,
- };
- 
-+static inline enum ar9170_bw nl80211_to_ar9170(enum nl80211_channel_type type)
-+{
-+	switch (type) {
-+	case NL80211_CHAN_NO_HT:
-+	case NL80211_CHAN_HT20:
-+		return AR9170_BW_20;
-+	case NL80211_CHAN_HT40MINUS:
-+		return AR9170_BW_40_BELOW;
-+	case NL80211_CHAN_HT40PLUS:
-+		return AR9170_BW_40_ABOVE;
-+	default:
-+		BUG();
-+	}
-+}
-+
- enum ar9170_rf_init_mode {
- 	AR9170_RFI_NONE,
- 	AR9170_RFI_WARM,
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2009-04-20 18:18:08.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2009-04-20 18:18:22.000000000 +0200
-@@ -142,11 +142,36 @@ static struct ieee80211_channel ar9170_5
- };
- #undef CHAN
- 
-+#define AR9170_HT_CAP							\
-+{									\
-+	.ht_supported	= true,						\
-+	.cap		= IEEE80211_HT_CAP_MAX_AMSDU |			\
-+			  IEEE80211_HT_CAP_SM_PS |			\
-+			  IEEE80211_HT_CAP_SUP_WIDTH_20_40 |		\
-+			  IEEE80211_HT_CAP_SGI_40 |			\
-+			  IEEE80211_HT_CAP_DSSSCCK40 |			\
-+			  IEEE80211_HT_CAP_SM_PS,			\
-+	.ampdu_factor	= 3, /* ?? */					\
-+	.ampdu_density	= 7, /* ?? */					\
-+	.mcs		= {						\
-+		.rx_mask = { 0xFF, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, },	\
-+	},								\
-+}
-+
- static struct ieee80211_supported_band ar9170_band_2GHz = {
- 	.channels	= ar9170_2ghz_chantable,
- 	.n_channels	= ARRAY_SIZE(ar9170_2ghz_chantable),
- 	.bitrates	= ar9170_g_ratetable,
- 	.n_bitrates	= ar9170_g_ratetable_size,
-+	.ht_cap		= AR9170_HT_CAP,
-+};
-+
-+static struct ieee80211_supported_band ar9170_band_5GHz = {
-+	.channels	= ar9170_5ghz_chantable,
-+	.n_channels	= ARRAY_SIZE(ar9170_5ghz_chantable),
-+	.bitrates	= ar9170_a_ratetable,
-+	.n_bitrates	= ar9170_a_ratetable_size,
-+	.ht_cap		= AR9170_HT_CAP,
- };
- 
- #ifdef AR9170_QUEUE_DEBUG
-@@ -190,13 +215,6 @@ static void ar9170_dump_station_tx_statu
- }
- #endif /* AR9170_QUEUE_DEBUG */
- 
--static struct ieee80211_supported_band ar9170_band_5GHz = {
--	.channels	= ar9170_5ghz_chantable,
--	.n_channels	= ARRAY_SIZE(ar9170_5ghz_chantable),
--	.bitrates	= ar9170_a_ratetable,
--	.n_bitrates	= ar9170_a_ratetable_size,
--};
--
- void ar9170_handle_tx_status(struct ar9170 *ar, struct sk_buff *skb,
- 			     bool valid_status, u16 tx_status)
- {
-@@ -1327,7 +1345,8 @@ static int ar9170_op_config(struct ieee8
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
- 		err = ar9170_set_channel(ar, hw->conf.channel,
--					 AR9170_RFI_NONE, AR9170_BW_20);
-+				AR9170_RFI_NONE,
-+				nl80211_to_ar9170(hw->conf.channel_type));
- 		if (err)
- 			goto out;
- 		/* adjust slot time for 5 GHz */
-@@ -1749,6 +1768,24 @@ static int ar9170_conf_tx(struct ieee802
- 	return ret;
- }
- 
-+static int ar9170_ampdu_action(struct ieee80211_hw *hw,
-+			       enum ieee80211_ampdu_mlme_action action,
-+			       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+{
-+	switch (action) {
-+	case IEEE80211_AMPDU_RX_START:
-+	case IEEE80211_AMPDU_RX_STOP:
-+		/*
-+		 * Something goes wrong -- RX locks up
-+		 * after a while of receiving aggregated
-+		 * frames -- not enabling for now.
-+		 */
-+		return -EOPNOTSUPP;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
- static const struct ieee80211_ops ar9170_ops = {
- 	.start			= ar9170_op_start,
- 	.stop			= ar9170_op_stop,
-@@ -1765,6 +1802,7 @@ static const struct ieee80211_ops ar9170
- 	.sta_notify		= ar9170_sta_notify,
- 	.get_stats		= ar9170_get_stats,
- 	.get_tx_stats		= ar9170_get_tx_stats,
-+	.ampdu_action		= ar9170_ampdu_action,
- };
- 
- void *ar9170_alloc(size_t priv_size)
+--
+JSR
 
+> Something like this:
+> 
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> Index: wireless-testing/net/mac80211/mlme.c
+> ===================================================================
+> --- wireless-testing.orig/net/mac80211/mlme.c	2009-04-05 11:32:16.000000000 +0200
+> +++ wireless-testing/net/mac80211/mlme.c	2009-04-05 11:35:57.000000000 +0200
+> @@ -945,9 +945,13 @@ void ieee80211_beacon_loss_work(struct w
+>  			     u.mgd.beacon_loss_work);
+>  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+>  
+> -	printk(KERN_DEBUG "%s: driver reports beacon loss from AP %pM "
+> -	       "- sending probe request\n", sdata->dev->name,
+> -	       sdata->u.mgd.bssid);
+> +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+> +	if (net_ratelimit()) {
+> +		printk(KERN_DEBUG "%s: driver reports beacon loss from AP %pM "
+> +		       "- sending probe request\n", sdata->dev->name,
+> +		       sdata->u.mgd.bssid);
+> +	}
+> +#endif
+>  
+>  	ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
+>  	ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
+> @@ -1007,9 +1011,13 @@ static void ieee80211_associated(struct 
+>  	      (local->hw.conf.flags & IEEE80211_CONF_PS)) &&
+>  	    time_after(jiffies,
+>  		       ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
+> -		printk(KERN_DEBUG "%s: beacon loss from AP %pM "
+> -		       "- sending probe request\n",
+> -		       sdata->dev->name, ifmgd->bssid);
+> +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+> +		if (net_ratelimit()) {
+> +			printk(KERN_DEBUG "%s: beacon loss from AP %pM "
+> +			       "- sending probe request\n",
+> +			       sdata->dev->name, ifmgd->bssid);
+> +		}
+> +#endif
+>  		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
+>  		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
+>  					 ifmgd->ssid_len, NULL, 0);
+> 
 
