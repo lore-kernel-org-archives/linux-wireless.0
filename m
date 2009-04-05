@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:62844 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073AbZDRJnj (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:24230 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983AbZDEWmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 05:43:39 -0400
-Received: by ewy24 with SMTP id 24so517247ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Apr 2009 02:43:37 -0700 (PDT)
-Message-ID: <49E9A0C7.8040602@tuffmail.co.uk> (sfid-20090418_114343_230804_412454C4)
-Date: Sat, 18 Apr 2009 10:43:35 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Sun, 5 Apr 2009 18:42:38 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so165665fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Apr 2009 15:42:34 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rfkill rewrite bug
-References: <49DCA88E.6060400@tuffmail.co.uk>	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>	 <49E98C86.2040308@tuffmail.co.uk> (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>
-In-Reply-To: <1240043283.5792.0.camel@johannes.local>
+In-Reply-To: <49D92A82.8010108@gmail.com>
+References: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com>
+	 <43e72e890903241256l39f5b1f9i49ce2b7a6e8099c3@mail.gmail.com>
+	 <49CD0FCF.3060706@gmail.com>
+	 <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com>
+	 <49D65F93.40105@gmail.com>
+	 <3ace41890904031820p7b5fc61meaf21a4bd4330f69@mail.gmail.com>
+	 <49D7316A.4040502@gmail.com>
+	 <3ace41890904042017y34a50374k193b5ea5761f3840@mail.gmail.com>
+	 <49D92A82.8010108@gmail.com>
+Date: Sun, 5 Apr 2009 23:42:34 +0100
+Message-ID: <3ace41890904051542x458626a4naf3b7a8ff5685353@mail.gmail.com> (sfid-20090406_004252_032469_6BDD2D42)
+Subject: Re: Google Summer of Code 2009: Another wireless application
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Witold Sowa <witold.sowa@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-04-18 at 09:17 +0100, Alan Jenkins wrote:
->
->   
->> When I looked at the code earlier, I saw no obvious replacement for 
->> rfkill_set_default().  So I tried disabling the wireless and rebooting 
->> to see what happened.  It didn't like that :-).
->>     
->
-> Ok that wasn't too hard -- try this on top if you get a chance:
->   
+On Sun, Apr 5, 2009 at 11:02 PM, Witold Sowa <witold.sowa@gmail.com> wrote:
 
-Great, that fixes the crash.
+> There is nothing to apologize for. I think that proposals should be
+> discussed publicly. It would point mistakes which applicants do and help
+> them to avoid doing them later (eg. next year). Constructive criticism
+> is always welcomed.
 
+It is still up to somebody else to make up their mind to accept a
+student/application or not, in the wireless area, which isn't where my
+expertise lies, and/or decide between several applications to the same
+project.
 
-1) I think we need to add a resume method to eeepc-laptop.
+> I thought it works in a bit different way. I thought that mentor is
+> determined to lead some project before the applications are submitted.
+> Then, proposals are sorted in order of quality and importance and the
+> best Y applications is being accepted. Thanks for making it clear.
 
-Without this, funny things happen when I hibernate, disable wireless in
-the BIOS, and resume:
+Yes and no. Project ideas and areas needed working on are advertised,
+but mentors are not committed to take up students. (and students can
+suggest their own topics, and when that happens, some people will hunt
+for suitable mentors). And all the projects under the Linux
+Foundations are scored and qualified together before Google takes the
+decision of how many to fund. i.e. wireless projects are considered
+against open-printing projects against LSB-standard-compliant
+projects. So there are 4(?) wireless ideas, and a few possible mentors
+under those 4, but it doesn't necessarily mean that there will be 4
+students working on each of those this summer. Most likely it will be
+less than 4. If there are fewer than 4, it just means that the work
+won't get done this year (i.e pushed to next year) or being done
+differently (one of Redhat/Suse/Ubuntu people might just do it as a
+smaller part of the daily job).
 
-    ath5k phy0: failed to wake up the MAC chip
+(it is possible to have more than 4 - e.g. I can see two people
+working on AP mode NetworkManager support, one for gnome and one for
+KDE, if Google or some organization have unlimited resources).
 
-It's an really stupid thing to do, but it can happen.  It's bad from a
-UI point of view.  E.g. in network-manager, you can see a "wlan0"
-device, but it doesn't work.
-
-The EEE rfkill is unusual in that it hotplugs the PCI device, making
-eeepc-laptop something like a custom pci hotplug driver.  With your
-rewrite, eeepc-laptop doesn't notice the state change on resume. 
-Previously, the rfkill-core would restore the pre-hibernation state,
-which would sort everything out.  I don't think anything else does this,
-so we can just add a resume method to eeepc-laptop.  The resume method
-would re-check the state and do the PCI hotplug dance if necessary.
-
-If you agree, I can do the patch for this and send it to you.
-
-
-2) Do you have any thoughts about an rfkill_set_default() equivalent? 
-AFAICS your current patch simply removes it.
-
-This means that when I boot linux, it doesn't respect the previous
-rfkill state.  I can no longer disable the wireless in the BIOS setup
-screen, and the rfkill state won't be preserved over reboots.
-
-I don't have a strong feeling about reboots _on their own_.  But I would
-be annoyed if the option in the BIOS setup screen stopped working in a
-future version of linux.  Admittedly it's only a matter of principle /
-nostalgia - since the eeepc-laptop was fixed to implement rfkill
-properly, I've never used the BIOS option in anger.
-
-Thanks
-Alan
+AFAIK, google wants to fund 1000 projects this year (a slightly
+smaller number than last year, due to economic down-turn), and this is
+split between organizations, and out of the allocation to Linux
+Foundations, some will be wireless, some will be open-printing, and
+some will be LSB-standard-compliances. (those are the areas I know off
+the top of my head of main areas under LF, there might be some other
+topics which I forget to mention).
