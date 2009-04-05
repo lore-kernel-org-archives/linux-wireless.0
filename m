@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:35281 "EHLO ciao.gmane.org"
+Received: from bu3sch.de ([62.75.166.246]:46839 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753177AbZDYOuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 10:50:08 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1LxjCd-0004ez-4n
-	for linux-wireless@vger.kernel.org; Sat, 25 Apr 2009 14:50:03 +0000
-Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Apr 2009 14:50:03 +0000
-Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Apr 2009 14:50:03 +0000
-To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Edimax EW-7318USG as Access Point?
-Date: Sat, 25 Apr 2009 15:44:39 +0100
-Message-ID: <wfbpqkvlm0.fsf@calligramme.charmers> (sfid-20090425_165012_274521_294A8398)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1755122AbZDEJbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Apr 2009 05:31:48 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Subject: Re: ath9k becon loss messages
+Date: Sun, 5 Apr 2009 11:29:38 +0200
+Cc: Sujith <Sujith.Manoharan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <1238923439.4120.9.camel@localhost.localdomain>
+In-Reply-To: <1238923439.4120.9.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904051129.38904.mb@bu3sch.de> (sfid-20090405_113158_987381_7200A27A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 05 April 2009 11:23:59 Jaswinder Singh Rajput wrote:
+> With latest linus tree I am getting, .config file attached:
+> 
+> [   22.895051] r8169: eth0: link down
+> [   22.897564] ADDRCONF(NETDEV_UP): eth0: link is not ready
+> [   22.928047] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [   22.982292] libvirtd used greatest stack depth: 4200 bytes left
+> [   63.709879] wlan0: authenticate with AP 00:11:95:9e:df:f6
+> [   63.712096] wlan0: authenticated
+> [   63.712127] wlan0: associate with AP 00:11:95:9e:df:f6
+> [   63.726831] wlan0: RX AssocResp from 00:11:95:9e:df:f6 (capab=0x471 status=0 aid=1)
+> [   63.726855] wlan0: associated
+> [   63.730093] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> [   74.296087] wlan0: no IPv6 routers present
+> [   79.349044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  119.358200] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  179.354292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  259.366044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  359.348292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  361.953459] packagekitd used greatest stack depth: 4160 bytes left
+> [  478.824258] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  598.813343] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  718.817292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  838.824567] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [  958.815402] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1078.848434] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1198.822913] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1318.824931] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1438.814157] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1558.827336] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1678.823011] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1798.830589] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 1918.828044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 2038.827224] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 2116.517152] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 2158.840243] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> [ 2278.827427] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
 
-I'm looking for a USB dongle with an external antenna that
-will serve both as an access point on my home router (an old
-IBM PC running linux off a CF card), and as a WPA capable
-station for my IBM X30 laptop when not at home. The Edimax
-EW-7318USG looks promising, but the wiki at
-<http://wireless.kernel.org/en/users/Drivers> has but a
-qualified yes under AP for the rt73usb driver.
 
-Before I buy one, please can someone give me an idea of what
-yes[footnote: under development] means? Is it an optimistic
-version of "no[footnote: under development]", or a
-pessimistic version of "yes, it works barring a minor hitch
-or two"? I'm not averse to building kernel modules, possibly
-applying experimental patches, but I don't want to keep
-having to do that for years, and if it doesn't work at all
-now, I'd rather wait for further developments before
-choosing (maybe a different dongle is more likely to work?).
+I think this message should only show if CONFIG_MAC80211_VERBOSE_DEBUG is set.
+It's kind of expected that we lose a beacon once in a while, so we shouldn't print
+verbose messages to the kernel log (even if they are KERN_DEBUG).
 
-The other side of the issue is WPA: the airo card on the
-laptop works OK with WEP, but there doesn't seem to be any
-prospect of WPA on that, unless I mis-googled.
+And besides that, I think one can easily remotely trigger this message and flood the logs.
+So it should probably _also_ be ratelimited.
 
---=20
-J=C3=B3n Fairbairn                                 Jon.Fairbairn@cl.cam=
-=2Eac.uk
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Greetings, Michael.
