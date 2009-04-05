@@ -1,68 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:34904 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755869AbZDWLP6 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1733 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381AbZDECVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 07:15:58 -0400
-Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1240484281.18245.16.camel@localhost.localdomain>
-References: <1240419177.12282.3.camel@localhost.localdomain>
-	 <20090422170852.GA7298@jm.kir.nu>
-	 <1240426517.12282.11.camel@localhost.localdomain>
-	 <1240441752.14995.8.camel@localhost.localdomain>
-	 <1240475973.30504.1.camel@localhost.localdomain>
-	 <1240484281.18245.16.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 23 Apr 2009 12:15:52 +0100
-Message-Id: <1240485352.15894.3.camel@localhost.localdomain> (sfid-20090423_131611_377917_54FDE223)
-Mime-Version: 1.0
+	Sat, 4 Apr 2009 22:21:07 -0400
+Date: Sat, 4 Apr 2009 22:20:09 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	simon@farnz.org.uk
+Subject: Re: [PATCH] ath5k: reduce exported channel list
+Message-ID: <20090405022009.GA19600@hash.localnet> (sfid-20090405_042116_201261_CF3F1FC6)
+References: <1238414729-29358-1-git-send-email-me@bobcopeland.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1238414729-29358-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
-
-> > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
-> > > > > > instead of WEXT. I don't seem to be able to control the from the command
-> > > > > > line and the -D option doesn't take.
-> > > > > 
-> > > > > I would assume you are doing this with NM. You could either change it to
-> > > > > register the interface (this is not from -D option, but from the D-Bus
-> > > > > message) with the nl80211 driver or try to build wpa_supplicant without
-> > > > > WEXT support (which would make the nl80211 wrapper the default one). I
-> > > > > don't think either of these are yet acceptable as a generic solution,
-> > > > > but making NM request driver "nl80211,wext" could be a suitable first
-> > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
-> > > > > first try with nl80211 and if needed, fall back to WEXT).
-> > > > 
-> > > > I am doing manual testing and with ConnMan. However I would prefer to
-> > > > have a global driver setting "nl80211,wext" that I can give on the
-> > > > command line and that will then chosen as default if the addInterface
-> > > > method doesn't give a driver. I really don't need a per interface
-> > > > setting here.
-> > > 
-> > > Um, you can specify a driver for the interface you add in the dbus call
-> > > for addInterface.  Add a "driver" key to your dict with the driver you
-> > > want in the value.  Is there a bug with that?
-> > 
-> > I know that I can do that. I was just looking for a global configuration
-> > switch to default to nl80211,wext via D-Bus system activation and not
-> > via changing the code.
+On Mon, Mar 30, 2009 at 08:05:29AM -0400, Bob Copeland wrote:
+> Claiming every available 5 ghz channel has a couple of negative
+> side-effects: scanning takes a long time, and the channel list
+> overflows the available buffer space for netlink commands,
+> resulting in:
+[...]
 > 
-> Even with system activation you still need to call addInterface, which
-> can take the driver.  I still don't quite understand what you're getting
-> at here, I guess...  When you say "not change code" you mean in the
-> process that's calling wpa_supplicant?
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-that is exactly what I mean. So to switch NM to use nl80211 you would
-have to change the NM code. I prefer to have this a command line option
-so people can turn it back to wext in case something breaks. Or a vendor
-driver for that matter (not that I care about these).
+I forgot to include appropriate credit -- John, if you don't mind 
+adding, that would be great, or I can resend.
 
-Regards
+Reported-by: Simon Farnsworth <simon@farnz.org.uk> 
+Tested-By: Simon Farnsworth <simon@farnz.org.uk> 
 
-Marcel
-
+-- 
+Bob Copeland %% www.bobcopeland.com
 
