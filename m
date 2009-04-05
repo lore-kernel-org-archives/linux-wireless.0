@@ -1,62 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48469 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbZDJICw (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1615 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756263AbZDECLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 04:02:52 -0400
-Subject: [PATCH] ar9170: fix struct layout on arm
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	chunkeey <chunkeey@web.de>
-Content-Type: text/plain
-Date: Fri, 10 Apr 2009 10:02:45 +0200
-Message-Id: <1239350565.17031.21.camel@johannes.local> (sfid-20090410_100257_183385_61D44863)
-Mime-Version: 1.0
+	Sat, 4 Apr 2009 22:11:08 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: kalle.valo@nokia.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/6] wl12xx: update to 2.6.29 mac80211 hw scan API
+Date: Sat,  4 Apr 2009 22:10:23 -0400
+Message-Id: <1238897428-19639-2-git-send-email-me@bobcopeland.com> (sfid-20090405_041128_490081_5FFF7983)
+In-Reply-To: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
+References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-arm will pad even between u8's, so mark the structs/unions
-packed. Fixes a build bug on arm due to BUILD_BUG_ON tests
-in the code.
+The ops->hw_scan callback now takes a struct *cfg80211_scan_request,
+and the scan_completed notifier takes a parameter to indicate whether
+the scan was aborted.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/ar9170/hw.h |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/wl12xx/event.c |    2 +-
+ drivers/net/wireless/wl12xx/main.c  |   14 +++++++++++---
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ar9170/hw.h	2009-04-10 09:58:05.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ar9170/hw.h	2009-04-10 09:58:33.000000000 +0200
-@@ -310,7 +310,7 @@ struct ar9170_tx_control {
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 5c3b22b..7095772 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -37,7 +37,7 @@ static int wl12xx_event_scan_complete(struct wl12xx *wl,
  
- struct ar9170_rx_head {
- 	u8 plcp[12];
--};
-+} __packed;
+ 	if (wl->scanning) {
+ 		mutex_unlock(&wl->mutex);
+-		ieee80211_scan_completed(wl->hw);
++		ieee80211_scan_completed(wl->hw, false);
+ 		mutex_lock(&wl->mutex);
+ 		wl->scanning = false;
+ 	}
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7c4e538..27f4f15 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -511,7 +511,7 @@ static void wl12xx_op_stop(struct ieee80211_hw *hw)
  
- struct ar9170_rx_tail {
- 	union {
-@@ -318,16 +318,16 @@ struct ar9170_rx_tail {
- 			u8 rssi_ant0, rssi_ant1, rssi_ant2,
- 			   rssi_ant0x, rssi_ant1x, rssi_ant2x,
- 			   rssi_combined;
--		};
-+		} __packed;
- 		u8 rssi[7];
--	};
-+	} __packed;
+ 	if (wl->scanning) {
+ 		mutex_unlock(&wl->mutex);
+-		ieee80211_scan_completed(wl->hw);
++		ieee80211_scan_completed(wl->hw, true);
+ 		mutex_lock(&wl->mutex);
+ 		wl->scanning = false;
+ 	}
+@@ -1092,15 +1092,23 @@ out:
  
- 	u8 evm_stream0[6], evm_stream1[6];
- 	u8 phy_err;
- 	u8 SAidx, DAidx;
- 	u8 error;
- 	u8 status;
--};
-+} __packed;
+ }
  
- #define AR9170_ENC_ALG_NONE			0x0
- #define AR9170_ENC_ALG_WEP64			0x1
+-static int wl12xx_op_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
++static int wl12xx_op_hw_scan(struct ieee80211_hw *hw,
++			     struct cfg80211_scan_request *req)
+ {
+ 	struct wl12xx *wl = hw->priv;
+ 	int ret;
++	u8 *ssid = NULL;
++	size_t ssid_len = 0;
+ 
+ 	wl12xx_debug(DEBUG_MAC80211, "mac80211 hw scan");
+ 
++	if (req->n_ssids) {
++		ssid = req->ssids[0].ssid;
++		ssid_len = req->ssids[0].ssid_len;
++	}
++
+ 	mutex_lock(&wl->mutex);
+-	ret = wl12xx_hw_scan(hw->priv, ssid, len, 1, 0, 13, 3);
++	ret = wl12xx_hw_scan(hw->priv, ssid, ssid_len, 1, 0, 13, 3);
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return ret;
+-- 
+1.6.0.6
 
 
