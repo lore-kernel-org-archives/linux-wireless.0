@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58110 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629AbZDZImS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 04:42:18 -0400
-From: Michael Buesch <mb@bu3sch.de>
+Received: from mail.deathmatch.net ([72.66.92.28]:3448 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbZDEOgm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Apr 2009 10:36:42 -0400
+Date: Sun, 5 Apr 2009 10:33:57 -0400
+From: Bob Copeland <me@bobcopeland.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH RFC] cfg80211: Add ies_allocated check before copying ies
-Date: Sun, 26 Apr 2009 10:40:10 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-References: <200904252236.34802.mb@bu3sch.de> <1240734752.17781.3.camel@johannes.local>
-In-Reply-To: <1240734752.17781.3.camel@johannes.local>
+Cc: kalle.valo@nokia.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/6] wl12xx: update to 2.6.29 mac80211 hw scan API
+Message-ID: <20090405143357.GA21913@hash.localnet> (sfid-20090405_163645_961847_2A633FDF)
+References: <1238897428-19639-1-git-send-email-me@bobcopeland.com> <1238897428-19639-2-git-send-email-me@bobcopeland.com> <1238921906.3782.5.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904261040.10838.mb@bu3sch.de> (sfid-20090426_104223_646600_498FC60A)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1238921906.3782.5.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 26 April 2009 10:32:32 Johannes Berg wrote:
-> On Sat, 2009-04-25 at 22:36 +0200, Michael Buesch wrote:
-> > I don't fully understand the code, but let's imagine the following situation:
-> > 
-> > - cfg80211_bss_update was called and the ie was stored to allocated space.
-> > - The information_elements pointer is changed to the allocated space.
-> > - cfg80211_bss_update is called again, but now the ie fits into the
-> >   space after the "found" structure.
-> > - But the information_elements pointer still points to the allocated space.
-> >   So it may overrun the buffer and crash.
-> > 
-> > Is this scenario possible?
-> > If yes, please consider the following patch.
-> 
-> Yeah, looks like a bug, good catch. I don't think the fix is correct
-> though -- you lose the data in this case.
-> 
-> I think it should simply be:
-> 
-> >  			size_t ielen = res->pub.len_information_elements;
-> >  
-> > -			if (ksize(found) >= used + ielen) {
-> > +			if (!found->ies_allocated && ksize(found) >= used + ielen) {
-> >  				memcpy(found->pub.information_elements,
-> >  				       res->pub.information_elements, ielen);
-> >  				found->pub.len_information_elements = ielen;
-> > 
-> 
-> so that the else branch gets a chance to reallocate if necessary, would
-> you agree?
+On Sun, Apr 05, 2009 at 10:58:26AM +0200, Johannes Berg wrote:
+> This will work for mac80211, but only by accident, and will not allow
+> userspace to request directed scans -- you need to add
+> 	hw->wiphy->max_scan_ssids = 1;
 
-Yeah I first also considered this option, but I thought that the code likes to
-prefer putting the stuff into the "found" tail, if it fits.
-But yes, your fix is perfectly fine. If it was allocated once, it will always be
-allocated (and grown) from then on.
-It won't shrink the buffer anymore for future ies that are smaller, but I guess that's OK.
+Thanks for the catch, I added this to my local copy.  Also, there needs
+to be a patch that sets wiphy->interface_modes.
+
+> somewhere. Supporting scan IEs would also be good, if possible.
+
+Looks doable with some minor surgery.
 
 -- 
-Greetings, Michael.
+Bob Copeland %% www.bobcopeland.com
+
