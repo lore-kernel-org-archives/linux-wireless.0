@@ -1,48 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:40195 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672AbZDPKXU (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39517 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758403AbZDFUWm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 06:23:20 -0400
-Received: by fxm2 with SMTP id 2so320114fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 03:23:18 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-References: <1239837672.11795.46.camel@violet>
-	<1239841291.25334.18.camel@johannes.local>
-	<87ocuxf7kv.fsf@litku.valot.fi>
-	<1239873166.9737.4.camel@johannes.local>
-	<87fxg8apgo.fsf@litku.valot.fi>
-	<1239876253.9737.12.camel@johannes.local>
-	<878wm0ap2u.fsf@litku.valot.fi>
-	<1239877115.9737.16.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 16 Apr 2009 13:23:16 +0300
-In-Reply-To: <1239877115.9737.16.camel@johannes.local> (Johannes Berg's message of "Thu\, 16 Apr 2009 12\:18\:35 +0200")
-Message-ID: <874owoaodn.fsf@litku.valot.fi> (sfid-20090416_122323_947531_634E11EC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 6 Apr 2009 16:22:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 4/5] cfg80211: check allowed channel type upon userspace requests
+Date: Mon,  6 Apr 2009 16:22:39 -0400
+Message-Id: <1239049359-13194-1-git-send-email-lrodriguez@atheros.com> (sfid-20090406_222246_663876_946D0A0F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Thanks to nl80211 userspace can be very specific upon device
+configuration. Before processing the request for the new HT40
+channel types (HT40- or HT40+) we need to ensure we can use them
+regulatory-wise. This wasn't required with wireless extensions as
+specifying the channel type wasn't not available and configuration
+was done towards the end implicitly upon association or reception
+of beacons from the AP. For the new nl80211 we have to check this
+when configuring the interfaces explicitly.
 
-> On Thu, 2009-04-16 at 13:08 +0300, Kalle Valo wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->> 
->> > But ieee80211_sta_work() checks if we're scanning and aborts if we are.
->> 
->> Oh, I missed that one. Yes, you are right.
->
-> Maybe we should just set last_beacon = jiffies on scan finished as an
-> easy workaround :)
+Also since we already check if the secondary channel exists
+during regulatory processing we no longer need to check for it here
+anymore.
 
-That sounds quite good actually.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |   42 +++++++++++++++++++++---------------------
+ 1 files changed, 21 insertions(+), 21 deletions(-)
 
-I wish I had noticed the check in ieee80211_sta_work() already when I
-tried to fix this :)
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 411c233..6d54d07 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -431,7 +431,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+ 		struct ieee80211_channel *chan;
+ 		struct ieee80211_sta_ht_cap *ht_cap;
+-		u32 freq, sec_freq;
++		u32 freq;
+ 
+ 		if (!rdev->ops->set_channel) {
+ 			result = -EOPNOTSUPP;
+@@ -457,33 +457,33 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
+ 			goto bad_res;
+ 
+-		if (channel_type == NL80211_CHAN_HT40MINUS)
+-			sec_freq = freq - 20;
+-		else if (channel_type == NL80211_CHAN_HT40PLUS)
+-			sec_freq = freq + 20;
+-		else
+-			sec_freq = 0;
+-
+-		ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
++		if (channel_type == NL80211_CHAN_HT40MINUS ||
++		    channel_type == NL80211_CHAN_HT40PLUS)
++			if (chan->flags & IEEE80211_CHAN_NO_HT40)
++				goto bad_res;
+ 
+-		/* no HT capabilities */
+-		if (channel_type != NL80211_CHAN_NO_HT &&
+-		    !ht_cap->ht_supported)
++		if (channel_type == NL80211_CHAN_HT40MINUS &&
++		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
++			goto bad_res;
++		else if (channel_type == NL80211_CHAN_HT40PLUS &&
++			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
+ 			goto bad_res;
+ 
+-		if (sec_freq) {
+-			struct ieee80211_channel *schan;
++		/*
++		 * At this point we know if that if HT40 was requested
++		 * we are allowed to use it and the extension channel
++		 * exists.
++		 */
+ 
+-			/* no 40 MHz capabilities */
++		ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
++
++		/* no HT capabilities or intolerant */
++		if (channel_type != NL80211_CHAN_NO_HT) {
++			if (!ht_cap->ht_supported)
++				goto bad_res;
+ 			if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
+ 			    (ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
+ 				goto bad_res;
+-
+-			schan = ieee80211_get_channel(&rdev->wiphy, sec_freq);
+-
+-			/* Secondary channel not allowed */
+-			if (!schan || schan->flags & IEEE80211_CHAN_DISABLED)
+-				goto bad_res;
+ 		}
+ 
+ 		result = rdev->ops->set_channel(&rdev->wiphy, chan,
 -- 
-Kalle Valo
+1.5.6.4
+
