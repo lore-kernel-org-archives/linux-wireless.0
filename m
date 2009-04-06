@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48016 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbZD3IKA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 04:10:00 -0400
-Subject: Re: iwlwifi: remove EXPORT_SYMBOL for static symbol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andreas Schwab <schwab@linux-m68k.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vget.kernel.org
-In-Reply-To: <m24ow6vah1.fsf@igel.home> (sfid-20090430_095859_848503_CEFFB30C)
-References: <m24ow6vah1.fsf@igel.home>
-	 (sfid-20090430_095859_848503_CEFFB30C)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-g1aNS0cpVjs7sRVHcHlm"
-Date: Thu, 30 Apr 2009 10:09:26 +0200
-Message-Id: <1241078967.25477.8.camel@johannes.local> (sfid-20090430_101013_474024_E3B7BCA2)
+Received: from mx2.redhat.com ([66.187.237.31]:32819 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753813AbZDFUVN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Apr 2009 16:21:13 -0400
+Subject: Re: [PATCH] libertas: increase spi driver thread priority
+From: Dan Williams <dcbw@redhat.com>
+To: Anna Neal <anna@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	javier@cozybit.com
+In-Reply-To: <49d54fd9.1aba720a.5b57.ffffe3f6@mx.google.com>
+References: <49d54fd9.1aba720a.5b57.ffffe3f6@mx.google.com>
+Content-Type: text/plain
+Date: Mon, 06 Apr 2009 16:22:14 -0400
+Message-Id: <1239049334.28824.10.camel@localhost.localdomain> (sfid-20090406_222115_484815_D63FE696)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-04-02 at 14:44 -0700, Anna Neal wrote:
+> Currently, the libertas main thread contends with the spi driver thread
+> in the TX path.  To improve throughput, ensure that the driver thread
+> has higher scheduling priority than the libertas main thread.  Do this
+> by making the libertas spi driver thread a low priority real time
+> thread.
+> 
+> We measured an average throughput improvement of 13%.
+> 
+> Signed-off-by: Anna Neal <anna@cozybit.com>
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 
---=-g1aNS0cpVjs7sRVHcHlm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sure; looks fine to me.  
 
-On Thu, 2009-04-30 at 09:58 +0200, Andreas Schwab wrote:
-> It does not make sense to apply EXPORT_SYMBOL to a static symbol.  Fixes
-> this build error:
->=20
-> drivers/net/wireless/iwlwifi/iwl3945-base.c:1697: error:
-> __ksymtab_iwl3945_rx_queue_reset causes a section type conflict
->=20
-> Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+Acked-by: Dan Williams <dcbw@redhat.com>
+
 > ---
-> This obsoletes 6269b731560d69c5eaa929909891edec39496d71, which was
-> misattributed as a compiler bug.
-
-At least in my tree the function isn't static...(yet I still got the
-compiler error)?
-
-johannes
-
---=-g1aNS0cpVjs7sRVHcHlm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ+Vy0AAoJEKVg1VMiehFY2OAP/AomeAp34Xh0iYWBzC0noZ5M
-3K6miUr1ppUCKNuzCFeHKOw/NiX6IuAo4zDp93I/lyHQ+Yy6W43UAvOVSnMy5NfY
-RCSzqsZVgpCVVy+GJr+Te1DqDVpPFeTlXXNuqapX0ocKOHJkAf535KKx8qbBLNMe
-vRdXsSIEmgjobspmXxM8E/+tsWO1gR8XOQtZN+ppQITgcs4XxxEFU1/6mzLXmbvv
-en4hrLMyloSC58X/q8/g7M4U2qhqJHvxnCdwoliNuar0w3qi16CvZ9eLbSSzdMlg
-xWcTiW6CgYnuVyaxRojXMrZGfv0OeJCFwed8kZHxaZfF+3JZLhg5/k72po/67vMG
-RYD3eGgnVzeGw+w+G+vz8Zn2/oTMbgYW6wBhH6I+ZPEO4alHIVFujZR/rKEQM6s9
-m2scz4wWLZJ1fJAiJ2S9NAxQZUhfas4A7nj4slsVVI9QYLVod7tKIm0OGdfN2Uu4
-Gi0LyJbxj2dESI9WR8kwDgO6lK2Ho3TAbvHPbzrgGjtqzIvFSNi2UnPp0ClZgETI
-TZC2RAQc9oO1qtmfa5tK72JVVmdYYBbKa6oY08xp4rGi4hPGdet61iaWmBW3Mwt9
-NwAHVFWL0KU3+B7hpKTzDYDtZmegD4kBVw0idSSNYZFTpf6/BBbZWjOCgw08WaaQ
-Qtxer0ulkPABvwBiYtp8
-=pQh5
------END PGP SIGNATURE-----
-
---=-g1aNS0cpVjs7sRVHcHlm--
+>  drivers/net/wireless/libertas/if_spi.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 07311e7..97493e2 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -1020,6 +1020,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+>  	struct libertas_spi_platform_data *pdata = spi->dev.platform_data;
+>  	int err = 0;
+>  	u32 scratch;
+> +	struct sched_param param = { .sched_priority = 1 };
+>  
+>  	lbs_deb_enter(LBS_DEB_SPI);
+>  
+> @@ -1123,6 +1124,9 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+>  		lbs_pr_err("error creating SPI thread: err=%d\n", err);
+>  		goto remove_card;
+>  	}
+> +	if (sched_setscheduler(card->spi_thread, SCHED_FIFO, &param))
+> +		lbs_pr_err("Error setting scheduler, using default.\n");
+> +
+>  	err = request_irq(spi->irq, if_spi_host_interrupt,
+>  			IRQF_TRIGGER_FALLING, "libertas_spi", card);
+>  	if (err) {
 
