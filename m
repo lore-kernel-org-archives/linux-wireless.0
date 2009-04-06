@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50290 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757019AbZDPTL7 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:33611 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957AbZDFKvU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 15:11:59 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Proposal]TX flags
-Date: Thu, 16 Apr 2009 21:10:04 +0200
-Cc: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	radiotap@radiotap.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com> <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com> <1239908374.26575.20.camel@johannes.local>
-In-Reply-To: <1239908374.26575.20.camel@johannes.local>
+	Mon, 6 Apr 2009 06:51:20 -0400
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: ath9k becon loss messages
+Date: Mon, 6 Apr 2009 12:51:10 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <1238923439.4120.9.camel@localhost.localdomain> <200904061217.31134.mb@bu3sch.de> <87tz52xepy.fsf@litku.valot.fi>
+In-Reply-To: <87tz52xepy.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Message-Id: <200904162110.05150.mb@bu3sch.de> (sfid-20090416_211203_069755_2A46AE06)
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200904061251.10965.helmut.schaa@gmail.com> (sfid-20090406_125129_012606_C8AF760C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 16 April 2009 20:59:34 Johannes Berg wrote:
-> On Thu, 2009-04-16 at 20:47 +0200, G=C3=A1bor Stefanik wrote:
->=20
-> > Alternatively, the meanings of the {0,0} and {1,1} cases could be
-> > switched around (making the {0,0} case more logical, at the expense=
- of
-> > the {1,1} one):
-> >=20
-> > TX Flags absent: Use RTS & CTS as needed.
-> > TX Flags present: {
-> > RTS=3D0, CTS=3D0: Use RTS & CTS as needed.
-> > RTS=3D0, CTS=3D1: Use CTS-to-self.
-> > RTS=3D1, CTS=3D0: Use RTS/CTS-handshake.
-> > RTS=3D1, CTS=3D1: Use neither RTS nor CTS.
+Am Montag, 6. April 2009 schrieb Kalle Valo:
+> Michael Buesch <mb@bu3sch.de> writes:
+> 
+> >> NetworkManager typically scans every 120 seconds and I can also trigger
+> >> the messages by a manual scan with iwlist. I did not dig any further but
+> >> the messages seem to appear right at the end of the scan. Tried with iwlagn
+> >> and both sw_scan and hw_scan.
+> >
+> > Yeah OK. While scanning it's expected to lose some frames.
+> >
+> > However, the driver should probably protect against this by using the
+> > scan notification callbacks. It could disable beacon-loss reporting
+> > while scanning.
+> 
+> That case is already covered. In sw_scan mac80211 will disable power
+> save and hence beacon filter is also disabled.
 
-The first and the last thing let my head explode, because it's not what=
- somebody
-would expect from such bits. This kind of logic is also used in wext. A=
-nd it's why I hate wext.
-"bit0 means x, bit1 means y, buuuuuuuuuuuuuuuut iff both bits are set t=
-he whole logic
-is inverted and whatever..."
-That complicates _every_ single test of the bit (always need if (bit0 i=
-s set but not bit1))
-It produces spaghetti code interpreting these bits with lots of branche=
-s and special
-conditions that nobody does understand by reading the code alone.
-If you can't encode your functionality into a boolean, do _NOT_ use bit=
-s to encode it.
-Use integers to encode tristate or quadstate or whatever.
-You essentially _did_ that already, if you look at your bits. You use t=
-he two individual bits
-as 2bit integer value. So why not spell it out and use an integer field=
- for that information?
+Ok, that explains why the beacon loss is first detected after the scan
+finished.
 
---=20
-Greetings, Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> But ath9k nor iwlwifi don't support beacon filtering and this is a
+> problem in mac80211. We need to disable the beacon loss check in
+> mac80211, most probably by stopping the associated timer whenever
+> scanning.
+
+Yeah, but the first execution of the timer will then also detect
+beacon loss:
+
+1006   if (!((local->hw.flags & IEEE80211_HW_BEACON_FILTER) &&
+1007         (local->hw.conf.flags & IEEE80211_CONF_PS)) &&
+1008       time_after(jiffies,
+1009            ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
+
+If the scan took longer then IEEE80211_MONITORING_INTERVAL (=2 sec) this
+condition will apply just after the scan finished. Maybe this issue could be
+avoided by making the beacon loss detection smarter then just checking if no
+beacon was received within the last two seconds.
+
+Helmut
