@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:50970 "EHLO
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:60583 "EHLO
 	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbZDPGOY (ORCPT
+	with ESMTP id S1755448AbZDFLFu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 02:14:24 -0400
-Received: by bwz17 with SMTP id 17so219771bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 23:14:21 -0700 (PDT)
-Message-ID: <49E6CCBA.2010105@gmail.com> (sfid-20090416_081430_583762_9EC4A138)
-Date: Thu, 16 Apr 2009 08:14:18 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Mon, 6 Apr 2009 07:05:50 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 2/7] ath5k: Read Spur channels from EEPROM
-References: <20090416002449.GB4138@makis>	 <1239841547.25334.19.camel@johannes.local>	 <40f31dec0904151751u3fd15d93i194d0abbb4657439@mail.gmail.com>	 (sfid-20090416_025226_608021_1AD90341) <1239843860.4669.1.camel@johannes.local>
-In-Reply-To: <1239843860.4669.1.camel@johannes.local>
+In-Reply-To: <200904061251.10965.helmut.schaa@gmail.com>
+References: <1238923439.4120.9.camel@localhost.localdomain>
+	 <200904061217.31134.mb@bu3sch.de> <87tz52xepy.fsf@litku.valot.fi>
+	 <200904061251.10965.helmut.schaa@gmail.com>
+Date: Mon, 6 Apr 2009 14:05:46 +0300
+Message-ID: <da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com> (sfid-20090406_130554_559920_D169E5AC)
+Subject: Re: ath9k becon loss messages
+From: Kalle Valo <kalle.valo@iki.fi>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2009 03:04 AM, Johannes Berg wrote:
-> On Thu, 2009-04-16 at 03:51 +0300, Nick Kossifidis wrote:
->> ACK, are 80 cols ok ?
-> 
-> I don't know if there's a standard on that, I tend to use around 60-70,
-> but 80 seems good too. It's not just the "doesn't fit terminal" argument
-> anyway, it's much easier to read if it's less.
+On Mon, Apr 6, 2009 at 1:51 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Am Montag, 6. April 2009 schrieb Kalle Valo:
+>
+>> But ath9k nor iwlwifi don't support beacon filtering and this is a
+>> problem in mac80211. We need to disable the beacon loss check in
+>> mac80211, most probably by stopping the associated timer whenever
+>> scanning.
+>
+> Yeah, but the first execution of the timer will then also detect
+> beacon loss:
+>
+> 1006 =A0 if (!((local->hw.flags & IEEE80211_HW_BEACON_FILTER) &&
+> 1007 =A0 =A0 =A0 =A0 (local->hw.conf.flags & IEEE80211_CONF_PS)) &&
+> 1008 =A0 =A0 =A0 time_after(jiffies,
+> 1009 =A0 =A0 =A0 =A0 =A0 =A0ifmgd->last_beacon + IEEE80211_MONITORING=
+_INTERVAL)) {
+>
+> If the scan took longer then IEEE80211_MONITORING_INTERVAL (=3D2 sec)=
+ this
+> condition will apply just after the scan finished.
 
-When one uses git log, it gets moved few (4) columns to the right. So
-something little less than 76 is usually preferred :).
+Not if we do "mod_timer(&ifmgd->timer, jiffies +
+IEEE80211_MONITORING_INTERVAL)" after the scan has finished. That way
+there's enought time to receive beacons before the timer triggers.
+
+> Maybe this issue could be
+> avoided by making the beacon loss detection smarter then just checkin=
+g if no
+> beacon was received within the last two seconds.
+
+Definitely the beacon loss logic should be smarter, but I think that
+should be improved separately. I just have tried to do small changes
+at a time to avoid regressions and I didn't even consider improving
+the beacon loss logic.
+
+Kalle
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
