@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:54487 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbZDGU7X (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59593 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753686AbZDFUQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:59:23 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2962669wff.4
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 13:59:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1239137614.8456.10.camel@johannes.local>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-	<1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
-	<1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
-	<1239131370.6199.0.camel@johannes.local> <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com>
-	<1239136863.7475.66.camel@johannes.local> <43e72e890904071344v30c663c5sb50937ce54e1b92b@mail.gmail.com>
-	<1239137614.8456.10.camel@johannes.local>
+	Mon, 6 Apr 2009 16:16:07 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 7 Apr 2009 13:59:07 -0700
-Message-ID: <43e72e890904071359g1108dc42tca7e7fa06fb3a830@mail.gmail.com> (sfid-20090407_225927_766917_B5406A40)
-Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
-	sending assoc
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 5/5] mac80211: expose HT channel flags through debugfs
+Date: Mon,  6 Apr 2009 16:15:58 -0400
+Message-Id: <1239048958-11775-6-git-send-email-lrodriguez@atheros.com> (sfid-20090406_221611_351265_E6939604)
+In-Reply-To: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 7, 2009 at 1:53 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-04-07 at 13:44 -0700, Luis R. Rodriguez wrote:
->
->> >> That's what was there or what I added in my patches.
->> >
->> > Indeed, it's already there. I guess I got confused, sorry for the noise.
->>
->> hehe, np, are these ACKed now then?
->
-> Yeah seems fine to me -- I'm happy as long as the userspace interface
-> doesn't include all this :)
+Since we are not going to be exporting HT40-/+
+flags for now through nl80211 we supply the channel
+flags as a whole through debugfs so users/testers can
+see whether or not HT40-/+ is allowed.
 
-Thanks :)
+Screenshot on channel 1 (2.412 GHz):
 
- Luis
+[root@pogo ~]# mount -t debugfs debugfs /debug/
+[root@pogo ~]# cat /debug/ieee80211/phy0/ht40minusallowed
+0
+[root@pogo ~]# cat /debug/ieee80211/phy0/ht40plusallowed
+1
+[root@pogo ~]# umount /debug
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/debugfs.c     |   10 ++++++++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 210b9b6..fa15a88 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -51,6 +51,12 @@ static const struct file_operations name## _ops = {			\
+ 
+ DEBUGFS_READONLY_FILE(frequency, 20, "%d",
+ 		      local->hw.conf.channel->center_freq);
++DEBUGFS_READONLY_FILE(ht40plusallowed, 20, "%d",
++		      !(local->hw.conf.channel->flags &
++		      IEEE80211_CHAN_NO_HT40PLUS));
++DEBUGFS_READONLY_FILE(ht40minusallowed, 20, "%d",
++		      !(local->hw.conf.channel->flags &
++		      IEEE80211_CHAN_NO_HT40MINUS));
+ DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
+ 		      local->rts_threshold);
+ DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
+@@ -269,6 +275,8 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
+ 
+ 	DEBUGFS_ADD(frequency);
++	DEBUGFS_ADD(ht40plusallowed);
++	DEBUGFS_ADD(ht40minusallowed);
+ 	DEBUGFS_ADD(rts_threshold);
+ 	DEBUGFS_ADD(fragmentation_threshold);
+ 	DEBUGFS_ADD(short_retry_limit);
+@@ -324,6 +332,8 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ void debugfs_hw_del(struct ieee80211_local *local)
+ {
+ 	DEBUGFS_DEL(frequency);
++	DEBUGFS_DEL(ht40plusallowed);
++	DEBUGFS_DEL(ht40minusallowed);
+ 	DEBUGFS_DEL(rts_threshold);
+ 	DEBUGFS_DEL(fragmentation_threshold);
+ 	DEBUGFS_DEL(short_retry_limit);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6ed78c..f7b192a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -750,6 +750,8 @@ struct ieee80211_local {
+ 		struct dentry *rcdir;
+ 		struct dentry *rcname;
+ 		struct dentry *frequency;
++		struct dentry *ht40plusallowed;
++		struct dentry *ht40minusallowed;
+ 		struct dentry *rts_threshold;
+ 		struct dentry *fragmentation_threshold;
+ 		struct dentry *short_retry_limit;
+-- 
+1.6.0.6
+
