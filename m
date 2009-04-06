@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:40890 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbZDJE3r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 00:29:47 -0400
-Received: by fxm2 with SMTP id 2so878175fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 21:29:45 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix iwl3945 registration regression
-References: <87ljqamktq.fsf@litku.valot.fi>
-	<1239263762.32594.19.camel@johannes.local>
-	<da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com>
-	<49DE0A4D.7010408@lwfinger.net> <20090409145714.GD3349@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 10 Apr 2009 07:29:42 +0300
-In-Reply-To: <20090409145714.GD3349@tuxdriver.com> (John W. Linville's message of "Thu\, 9 Apr 2009 10\:57\:15 -0400")
-Message-ID: <877i1tuo5l.fsf@litku.valot.fi> (sfid-20090410_062949_842879_6A221991)
+Received: from bu3sch.de ([62.75.166.246]:43848 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752436AbZDFKMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Apr 2009 06:12:52 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: b43 WARN_ON
+Date: Mon, 6 Apr 2009 12:12:10 +0200
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <49D97CF5.4040808@lwfinger.net>
+In-Reply-To: <49D97CF5.4040808@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200904061212.10398.mb@bu3sch.de> (sfid-20090406_121256_408308_6EE884A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+On Monday 06 April 2009 05:54:29 Larry Finger wrote:
+> Using the latest rfkill patches posted by Johannes, I am hitting the following
+> 
+>         if (WARN_ON(!wl->rfkill.registered))
+>                 return -EINVAL;
 
-> On Thu, Apr 09, 2009 at 09:46:37AM -0500, Larry Finger wrote:
->> Kalle Valo wrote:
->
->> > Maybe this is the infamous module loading bug I see people talking
->> > about? I'll investigate it later.
->> 
->> Yes it is. The key is the "Failed to initialize wep", which is caused by a
->> failure to load modules ecb and arc4. Apply that patch and all will be well.
->
-> FWIW, I reverted the problem causing commit in the master branch
-> of wireless-testing.  
+I think we should simply remove the warning.
+In the previous rfkill implementation I had a reason to _not_ warn here.
+(It had one valid codepath where it was called. I don't remember the details...)
 
-Nice, thanks. I have Johannes patch applied on top of latest
-wireless-testing and iwl3945 works again.
+Anyway, please feel free to do a patch that removes the warning (but not the check).
+
+> 
+> in b43_rfkill_soft_set() as follows:
+> 
+> ------------[ cut here ]------------
+> WARNING: at drivers/net/wireless/b43/rfkill.c:77 b43_rfkill_soft_set+0x38/0xb3
+> [b43]()
+> Hardware name: HP Pavilion dv2700 Notebook PC
+> --snip--
+> ---[ end trace a1ef19d1571fdb71 ]---
+> b43 ssb0:0: firmware: requesting b43/ucode5.fw
+> b43 ssb0:0: firmware: requesting b43/pcm5.fw
+> b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
+> b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+> b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+> b43-phy0 debug: Chip initialized
+> b43-phy0 debug: 32-bit DMA initialized
+> Registered led device: b43-phy0::tx
+> Registered led device: b43-phy0::rx
+> Registered led device: b43-phy0::radio
+> b43-phy0 debug: Wireless interface started
+> b43-phy0 debug: Adding Interface type 2
+> b43-phy0: Radio turned on by software
+> 
+> Larry
+> 
+> 
+
+
 
 -- 
-Kalle Valo
+Greetings, Michael.
