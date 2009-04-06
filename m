@@ -1,50 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:37472 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759041AbZDGUiT (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.185]:39319 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067AbZDFFQt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:38:19 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2952747wff.4
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 13:38:18 -0700 (PDT)
+	Mon, 6 Apr 2009 01:16:49 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so693965muf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Apr 2009 22:16:46 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Subject: Re: [PATCH] p54spi: get rid of busy-wait loops
+Date: Mon, 6 Apr 2009 08:16:02 +0300
+Cc: linux-wireless@vger.kernel.org
+References: <> <1238965389-5706-1-git-send-email-jcmvbkbc@gmail.com> <200904060030.25425.chunkeey@web.de>
+In-Reply-To: <200904060030.25425.chunkeey@web.de>
 MIME-Version: 1.0
-In-Reply-To: <1239131370.6199.0.camel@johannes.local>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-	<1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
-	<1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
-	<1239131370.6199.0.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 7 Apr 2009 13:38:03 -0700
-Message-ID: <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com> (sfid-20090407_223824_870361_EC71A186)
-Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
-	sending assoc
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904060916.03555.jcmvbkbc@gmail.com> (sfid-20090406_071654_716937_D232BF18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCBBcHIgNywgMjAwOSBhdCAxMjowOSBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gT24gVHVlLCAyMDA5LTA0LTA3IGF0IDA5OjIzIC0w
-NzAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90ZToKPgo+PiA+IFRoaXMgcGF0Y2ggaXMgbm90IHN1
-ZmZpY2llbnQgLS0geW91IGFsc28gbmVlZCB0byBtb2RpZnkKPj4gPiBpZWVlODAyMTFfc2VuZF9h
-c3NvYy4gT3RoZXJ3aXNlIHdlIGVuZCB1cCB0ZWxsaW5nIHRoZSBBUCB0aGF0IHdlIHN1cHBvcnQK
-Pj4gPiBIVDQwLCBidXQgdHVuaW5nIHRoZSBoYXJkd2FyZSB0byBIVDIwLgo+Pgo+PiBMaWtlIHRo
-aXM/Cj4+Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHN3aXRjaCAoaHRfaW5mby0+aHRfcGFy
-YW0gJiBJRUVFODAyMTFfSFRfUEFSQU1fQ0hBX1NFQ19PRkZTRVQpIHsKPj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgY2FzZSBJRUVFODAyMTFfSFRfUEFSQU1fQ0hBX1NFQ19BQk9WRToKPj4gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGZsYWdzICYgSUVFRTgwMjExX0NI
-QU5fTk9fSFQ0MFBMVVMpIHsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsKPj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2FwICY9IH5J
-RUVFODAyMTFfSFRfQ0FQX1NHSV80MDsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgfQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmVhazsKPj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2FzZSBJRUVFODAyMTFfSFRfUEFSQU1fQ0hBX1NFQ19C
-RUxPVzoKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGZsYWdzICYg
-SUVFRTgwMjExX0NIQU5fTk9fSFQ0ME1JTlVTKSB7Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9TVVBfV0lE
-VEhfMjBfNDA7Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9TR0lfNDA7Cj4+IMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIH0KPgo+IFllYWgsIHRoYXQgbG9va3Mgb2suCgpUaGF0J3Mgd2hh
-dCB3YXMgdGhlcmUgb3Igd2hhdCBJIGFkZGVkIGluIG15IHBhdGNoZXMuCgogIEx1aXMK
+> On Sunday 05 April 2009 23:03:09 Max Filippov wrote:
+> > p54spi_wakeup and p54spi_tx_frame used busy-waiting loop
+> > to poll for 'ready' bits in SPI_ADRS_HOST_INTERRUPTS register.
+> > With this change in place 'WR_READY timeout' messages do not
+> > show anymore.
+> >
+> > Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+> > ---
+>
+> looks good to me.
+> Acked-by: Christian Lamparter <chunkeey@web.de>
+>
+> > I wish I knew for sure why. My guess is that busy-waiting
+> > somehow interferes with SPI transfer scheduling.
+> >
+> >  drivers/net/wireless/p54/p54spi.c |   41
+> > ++++++++++++------------------------ 1 files changed, 14 insertions(+),
+> > 27 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/p54/p54spi.c
+> > b/drivers/net/wireless/p54/p54spi.c index 2903672..e4e708e 100644
+> > --- a/drivers/net/wireless/p54/p54spi.c
+> > +++ b/drivers/net/wireless/p54/p54spi.c
+> > @@ -153,14 +153,13 @@ static const struct p54spi_spi_reg
+> > p54spi_registers_array[] = static int p54spi_wait_bit(struct p54s_priv
+> > *priv, u16 reg, __le32 bits) {
+> >  	int i;
+> > -	__le32 buffer;
+> >
+> >  	for (i = 0; i < 2000; i++) {
+> > -		p54spi_spi_read(priv, reg, &buffer, sizeof(buffer));
+> > +		__le32 buffer = p54spi_read32(priv, reg);
+> >  		if ((buffer & bits) == bits)
+> >  			return 1;
+> >
+> > -		msleep(1);
+> > +		msleep(0);
+>
+> I never liked msleep in workqueues. So instead of msleep(0),
+> what about replacing it with udelay or remove it entirely?
+The whole point was to delay these repeated SPI reads (:
+I'm not sure if kernel scheduling is important here. Will test and repost the patch.
+
+> OR: maybe you can get the chip to generate IRQs when its ready,
+> so we don't have to poll it at all?
+Will try it.
+
+> >  	}
+> >  	return 0;
+> >  }
+> > @@ -171,10 +170,10 @@ static int p54spi_spi_write_dma(struct p54s_priv
+> > *priv, __le32 base, p54spi_write16(priv, SPI_ADRS_DMA_WRITE_CTRL,
+> >  		       cpu_to_le16(SPI_DMA_WRITE_CTRL_ENABLE));
+> >
+> > -	if (p54spi_wait_bit(priv, SPI_ADRS_DMA_WRITE_CTRL,
+> > -			    cpu_to_le32(HOST_ALLOWED)) == 0) {
+> > +	if (!p54spi_wait_bit(priv, SPI_ADRS_DMA_WRITE_CTRL,
+> > +			     cpu_to_le32(HOST_ALLOWED))) {
+> >  		dev_err(&priv->spi->dev, "spi_write_dma not allowed "
+> > -			"to DMA write.");
+> > +			"to DMA write.\n");
+> >  		return -EAGAIN;
+> >  	}
+> >
+> > @@ -316,21 +315,15 @@ static inline void p54spi_int_ack(struct p54s_priv
+> > *priv, u32 val)
+> >
+> >  static void p54spi_wakeup(struct p54s_priv *priv)
+> >  {
+> > -	unsigned long timeout;
+> > -	u32 ints;
+> > -
+> >  	/* wake the chip */
+> >  	p54spi_write32(priv, SPI_ADRS_ARM_INTERRUPTS,
+> >  		       cpu_to_le32(SPI_TARGET_INT_WAKEUP));
+> >
+> >  	/* And wait for the READY interrupt */
+> > -	timeout = jiffies + HZ;
+> > -
+> > -	ints =  p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
+> > -	while (!(ints & SPI_HOST_INT_READY)) {
+> > -		if (time_after(jiffies, timeout))
+> > -				goto out;
+> > -		ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
+> > +	if (!p54spi_wait_bit(priv, SPI_ADRS_HOST_INTERRUPTS,
+> > +			     cpu_to_le32(SPI_HOST_INT_READY))) {
+> > +		dev_err(&priv->spi->dev, "INT_READY timeout\n");
+> > +		goto out;
+> >  	}
+> >
+> >  	p54spi_int_ack(priv, SPI_HOST_INT_READY);
+> > @@ -418,9 +411,7 @@ static irqreturn_t p54spi_interrupt(int irq, void
+> > *config) static int p54spi_tx_frame(struct p54s_priv *priv, struct
+> > sk_buff *skb) {
+> >  	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
+> > -	unsigned long timeout;
+> >  	int ret = 0;
+> > -	u32 ints;
+> >
+> >  	p54spi_wakeup(priv);
+> >
+> > @@ -428,15 +419,11 @@ static int p54spi_tx_frame(struct p54s_priv *priv,
+> > struct sk_buff *skb) if (ret < 0)
+> >  		goto out;
+> >
+> > -	timeout = jiffies + 2 * HZ;
+> > -	ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
+> > -	while (!(ints & SPI_HOST_INT_WR_READY)) {
+> > -		if (time_after(jiffies, timeout)) {
+> > -			dev_err(&priv->spi->dev, "WR_READY timeout\n");
+> > -			ret = -1;
+>
+> what about replacing the generic code "-1" with EBUSY/EIO or ETIMEDOUT?
+>
+> > -			goto out;
+> > -		}
+> > -		ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
+> > +	if (!p54spi_wait_bit(priv, SPI_ADRS_HOST_INTERRUPTS,
+> > +			     cpu_to_le32(SPI_HOST_INT_WR_READY))) {
+> > +		dev_err(&priv->spi->dev, "WR_READY timeout\n");
+> > +		ret = -1;
+>
+> here too?!
+Will do so.
+
+> > +		goto out;
+> >  	}
+> >
+> >  	p54spi_int_ack(priv, SPI_HOST_INT_WR_READY);
+>
+> ---
+>
+> By the way a few days ago the libertas driver authors posted a patch
+> which "improve the average throughput 13%."
+>
+> http://marc.info/?l=linux-wireless&m=123871643203161
+>
+> I wonder if this would also work with p54spi.
+> But to test this theory, one has to rewrite the driver to use kthread
+> instead of hogging workqueues.... just in case you're looking for more
+> TODOs ;-)
+I'm just getting it to work. And there are still problems in tx path, e.g.
+it cannot withstand dd if=/dev/zero | ssh ... "cat >/dev/null".
+Sure I will revisit performance issues once they remain the most important ones.
+>
+> Regards,
+> 	Chr
+
+-- 
+Thanks.
+-- Max
