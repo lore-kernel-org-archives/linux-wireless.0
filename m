@@ -1,111 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:3458 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbZDQUCX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35478 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754999AbZDFKZf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 16:02:23 -0400
-Received: by yx-out-2324.google.com with SMTP id 3so198641yxj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2009 13:02:22 -0700 (PDT)
-Message-ID: <49E8E046.2070004@gmail.com> (sfid-20090417_220227_086205_39540F7F)
-Date: Fri, 17 Apr 2009 16:02:14 -0400
-From: Will Keaney <keaneyw@gmail.com>
-MIME-Version: 1.0
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Fwd: Re: Trouble Associating with ath5k on AR5212]
-References: <49DCA8E3.3060603@gmail.com>	 <b6c5339f0904080758k2be9ae3dm1a98b564f3b10867@mail.gmail.com>	 <49DCC641.4010405@gmail.com> <b6c5339f0904080920q47a33315j127a0aa2eca84444@mail.gmail.com> <49DCD05B.9050802@gmail.com> <49DCE23B.7010400@gmail.com>
-In-Reply-To: <49DCE23B.7010400@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig2C5A01FC20E87A06B5F2B4C7"
+	Mon, 6 Apr 2009 06:25:35 -0400
+Subject: Re: b43 WARN_ON
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200904061212.10398.mb@bu3sch.de>
+References: <49D97CF5.4040808@lwfinger.net>
+	 <200904061212.10398.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AG6c6oFSEO/2Yk2GUmGW"
+Date: Mon, 06 Apr 2009 12:25:29 +0200
+Message-Id: <1239013529.13407.6.camel@johannes.local> (sfid-20090406_122538_596553_AC1A0350)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig2C5A01FC20E87A06B5F2B4C7
-Content-Type: text/plain; charset=UTF-8
+
+--=-AG6c6oFSEO/2Yk2GUmGW
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Will Keaney wrote:
-> Will Keaney wrote:
->  =20
->> Bob Copeland wrote:
->>  =20
->>    =20
->>>> I also have to manually set the reg domain to US every time I load t=
-he
->>>> ath5k module. =EF=BF=BDI tried configuring wpa_supplicant.conf to do=
- this
->>>> itself, but that doesn't seem to work. =EF=BF=BDIt would be nice to =
-have a
->>>> module parameter for setting this at load time.
->>>>    =20
->>>>      =20
->>>>        =20
->>> I may be wrong but I think that only works in wpa_supplicant if you
->>> use -Dnl80211 (instead of -Dwext).
->>>
->>> FWIW in the default world roaming domain you can still connect to mos=
-t
->>> APs.  Besides iw/wpa_supplicant, pending patches to ath5k will set th=
-e
->>> default regdomain automatically based on the value stored in the eepr=
-om.
->>>  =20
->>>    =20
->>>      =20
->> Ahh, interesting.  I didn't see nl80211 documented in the wpa_supplica=
-nt
->> example configs or man page. I'll give that a shot.
->> I seem to get much better scanning results with the region set properl=
-y,
->> than on the world roaming domain.
->>  =20
->>    =20
-> I don't know if it's relevant or not, but when using -Dnl80211 I see a
-> bit of odd behavior:
-> - wpa_supplicant is able to set the region automatically. Yay!
-> - scanning produces quite an extensive list of APs, but most of them
-> don't have SSIDs listed.  This isn't in itself too strange, since I kno=
-w
-> that there are 2 networks nearby each with several repeaters that do no=
-t
-> broadcast SSID.  However, one of them (chmc_guest) is identified in the=
+On Mon, 2009-04-06 at 12:12 +0200, Michael Buesch wrote:
+> On Monday 06 April 2009 05:54:29 Larry Finger wrote:
+> > Using the latest rfkill patches posted by Johannes, I am hitting the fo=
+llowing
+> >=20
+> >         if (WARN_ON(!wl->rfkill.registered))
+> >                 return -EINVAL;
+>=20
+> I think we should simply remove the warning.
+> In the previous rfkill implementation I had a reason to _not_ warn here.
+> (It had one valid codepath where it was called. I don't remember the deta=
+ils...)
+>=20
+> Anyway, please feel free to do a patch that removes the warning (but not =
+the check).
 
-> scanning output when using -Dwext.
-> - All of the networks show a signal strength of 0.  -Dwext shows varyin=
-g
-> signal strengths for each network.  Considering that I am unable to
-> associate with any of them, I have to wonder which driver is producing
-> spurious output.
->
-> I would also like to note that the maximum Tx Power of the card is
-> significantly different between madwifi and ath5k.  In madwifi, it maxe=
-s
-> at 17dBm; in ath5k, it maxes at 27dBm.  I don't know if it actually is
-> using these values, or if one or both drivers are reporting Tx power
-> incorrectly.
->
-> Will
->  =20
-Is there any other information or testing I can provide to assist with
-diagnosing/resolving this?
+Actually, I think the check is invalid, or rather, rfkill.registered
+needs to be set before registering the rfkill struct.
 
-Will
+See, right now, and I'm not entirely happy with this, during
+rfkill_register I call the set_block callback. The reason I'm not really
+happy with that is that I said calling driver -> rfkill -> driver is
+bad, but on the other hand due to locking constraints across the
+subsystems the driver cannot take the same locks around rfkill_register
+as in the callbacks.
 
+Additionally, the driver must be ready to service rfkill calls _before_
+rfkill_register() is called, everything else results in a race
+condition. Compare with the shared interrupt handlers, for instance.
 
+The reason I call it during rfkill_register is that I need to sync the
+software state to the driver's block state, and that needs to be done
+somewhere. Doing that from a work struct would be possible, but wouldn't
+solve the locking constraints nor would it actually help since
+rfkill_register can potentially sleep, so the work could still be
+executed before rfkill_register returns -- the driver still needs to be
+able to handle rfkill callbacks before rfkill_register returns.
 
---------------enig2C5A01FC20E87A06B5F2B4C7
+Therefore, the warning is spurious, but because of a driver bug
+elsewhere -- I think the rfkill.registered =3D 1 assignment should be
+moved up to before rfkill_register() (and be =3D 0 again if that fails
+unexpectedly); I'll do that in my patch.
+
+johannes
+
+--=-AG6c6oFSEO/2Yk2GUmGW
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Comment: Johannes Berg (powerbook)
 
-iEYEARECAAYFAkno4EsACgkQjfayWCA8dDGrFQCbBczhGQTWnwjApjvJIJOVs9Hh
-e48AmwWx9ZHEB/NzUhLVwiXpVyybw89S
-=g01u
+iQIcBAABAgAGBQJJ2diWAAoJEKVg1VMiehFYKycP/2qnl+mRlgxilTJaLrcGP07M
+tc6nQiWq+KM2ISF4HicMQpVifOpGV9SFTxMorPVYbd8iWAW5bk66P5oWRxZ1Z56U
+j5ExH1r336y0laMCXWWOkEoU6TsCerBNucIbVx8OGpJmZwKfvfPgcGO3zsvWt/4A
+iOX/E1kNlkqyzxTkjrt4hU3x9H82/Btmnmr8t/gZVHy/Gb/RkSbKfmkDTnRoapl3
+hn7zcXBt2TO3Qi1VfAQbSVgahOMSlGFCRDczPYN0+YUQGA1HVmtJsrptCiBQQU70
+6zKurfaTTRiRChAAyt1/E3H6MmpmnzqYPiDs44kKYxM9UXyRSCMVY3PSx7btVRcB
+pHXJh03AeVCqV1YnaQeV42XIpJiRTxlXUbOp87ccyhjtCmNeWyCH60dJZE6jXrYc
+p6wlGAihk8c+8Qav9Gh2nRqxWPOjrhfIun1yjnqPpsLbBlgJhXle/obPg8ukQST0
+atDX+xui7GPrS2jg6iNMAZr4fZBdkIVeWNoVqV9E6GzXQdJsKYnG6+/iztf6tXKg
+tke6oFovjJ13rN9F7xsBKDlovQIEJ9dLm/1loFkEWADYrP6tBDQSGfkPEGvmjTe7
++VvJQWZZYiSOzcGnavFWktfo2+82rCeodZeoeBG7jgEO+0qPdYc4q213mlnJYrp8
+nNoMT6z7bIZUJH2Z03Ji
+=UBDR
 -----END PGP SIGNATURE-----
 
---------------enig2C5A01FC20E87A06B5F2B4C7--
+--=-AG6c6oFSEO/2Yk2GUmGW--
+
