@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44354 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752189AbZDSTw2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 15:52:28 -0400
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 21:52:25 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240169513.11795.80.camel@violet>
-Message-ID: <20090419195225.158830@gmx.net> (sfid-20090419_215234_122873_38B47C97)
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:45917 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbZDFPTC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Apr 2009 11:19:02 -0400
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: ath9k becon loss messages
+References: <1238923439.4120.9.camel@localhost.localdomain>
+	<200904061217.31134.mb@bu3sch.de> <87tz52xepy.fsf@litku.valot.fi>
+	<200904061251.10965.helmut.schaa@gmail.com>
+	<da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 06 Apr 2009 18:18:56 +0300
+In-Reply-To: <da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com> (Kalle Valo's message of "Mon\, 6 Apr 2009 14\:05\:46 +0300")
+Message-ID: <87iqlhdd3z.fsf@litku.valot.fi> (sfid-20090406_171908_978335_B06F8522)
 MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
- (sfid-20090419_145246_566920_BF082D12)
- <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
- (sfid-20090419_153615_967882_D1A9F951)
- <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
- (sfid-20090419_160555_446977_A429511B)
- <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
- (sfid-20090419_171702_263242_9A8C16F9)
- <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
- (sfid-20090419_175352_161479_A88396A3)
- <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>	
- (sfid-20090419_181324_681308_BAEAE072)
- <1240158381.917.21.camel@johannes.local>	 <20090419165443.158820@gmx.net>	
- (sfid-20090419_185516_519795_36D34B9B)
- <1240160241.28138.4.camel@johannes.local>	 <20090419173354.158790@gmx.net>
- <1240163391.11795.59.camel@violet>	 <20090419180314.23710@gmx.net>
- <1240164895.11795.70.camel@violet>	 <20090419184320.158810@gmx.net>	
- (sfid-20090419_204331_522505_5A7A007C)
- <1240167343.28138.12.camel@johannes.local>	 <20090419190103.158790@gmx.net>	
- (sfid-20090419_210135_646451_315341AB)
- <1240168864.28138.13.camel@johannes.local>	 <20090419192543.158810@gmx.net>
- <1240169513.11795.80.camel@violet>
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> you know what, the next time I run into him, I ask his opinion about
-> this ;)
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-Implement as few (sys)calls as possible, only as much as needed. Genera=
-lize as much as you can.
+> On Mon, Apr 6, 2009 at 1:51 PM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+>
+>> Maybe this issue could be
+>> avoided by making the beacon loss detection smarter then just checking if no
+>> beacon was received within the last two seconds.
+>
+> Definitely the beacon loss logic should be smarter, but I think that
+> should be improved separately. I just have tried to do small changes
+> at a time to avoid regressions and I didn't even consider improving
+> the beacon loss logic.
 
-He has compared operating systems as less syscalls they have:
-MS-DOS > UNIX > Mach > Amoeba
+I reverted my beacon filter patches but added a similar "beacon loss"
+message. With iwl3945 I was able to reproduce the problem even by just
+associating to an AP and issuing 'iwlist wlan0 scan':
 
-Alina
+Apr  6 15:09:31 tikku kernel: [ 3692.544221] beacon loss (reverted version)
+Apr  6 15:09:46 tikku kernel: [ 3707.654520] beacon loss (reverted version)
+Apr  6 15:09:53 tikku kernel: [ 3714.314057] beacon loss (reverted version)
 
---=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So the good news is that this is not a new regression, the problem just
+appeared because of the new printk I added to my beacon filtering
+patches.
+
+I'm suffering from flu right now (damn the finnish weather), but I tried
+to investigate this a bit. The problem happens when mac80211 does not
+receive anything for two seconds while scanning. For example, at my home
+there are only few APs and scanning takes a long time due to 11a support
+in iwl3945, so I can reproduce the problem easily.
+
+I'm working on implementing a proper fix, but due to my condition it
+might take few days before I'm able to finish it. But in the mean time,
+Michael's patch, changing the "beacon loss" messages visible only when
+CONFIG_MAC80211_VERBOSE_DEBUG is enabled, is the way to go forward. The
+message is useful for developers (eg. we found this bug because of the
+message), but it's better that users don't see it. I would like to have
+the patch for 2.6.30.
+
+When I'm able to implement the proper fix, I think it should first have
+proper testing in wireles-testing before pushing it to mainline. So
+maybe the proper fix is 2.6.31 material, just to be on the safe side
+here.
+
+John, what do you think?
+
+-- 
+Kalle Valo
