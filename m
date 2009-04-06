@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:42566 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbZDGFNw (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:37752 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539AbZDFHOl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 01:13:52 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so326332fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 22:13:49 -0700 (PDT)
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: What is needed to inplement a AP support in a driver?
-References: <1239062777.4705.30.camel@maxim-laptop>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 07 Apr 2009 08:13:47 +0300
-In-Reply-To: <1239062777.4705.30.camel@maxim-laptop> (Maxim Levitsky's message of "Tue\, 07 Apr 2009 03\:06\:17 +0300")
-Message-ID: <87k55xhwqc.fsf@litku.valot.fi> (sfid-20090407_071356_252980_35F96522)
+	Mon, 6 Apr 2009 03:14:41 -0400
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: ath9k becon loss messages
+Date: Mon, 6 Apr 2009 09:14:31 +0200
+Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <1238923439.4120.9.camel@localhost.localdomain> <1238925174.4120.12.camel@localhost.localdomain> <87bprbif2f.fsf@litku.valot.fi>
+In-Reply-To: <87bprbif2f.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200904060914.32245.helmut.schaa@gmail.com> (sfid-20090406_091445_006004_7AFB768E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky <maximlevitsky@gmail.com> writes:
+Am Sonntag, 5. April 2009 schrieb Kalle Valo:
+> Jaswinder Singh Rajput <jaswinder@kernel.org> writes:
+> 
+> >> And besides that, I think one can easily remotely trigger this
+> >> message and flood the logs. So it should probably _also_ be
+> >> ratelimited.
+> >
+> > normally it prints after 120 seconds:
+> >
+> > [ 1078.848434] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > [ 1198.822913] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+> > [ 1318.824931] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
 
-> I recently found that now ath5k supports AP mode.
-> I also found that most of the work is now done in userspace.
->
-> Since many drivers including my IWL3945 support sending beacons for IBSS
-> (strictly speaking userspace can send them too, but this is  sub
-> optimal), what else driver must support for AP?
->
-> Sending to several stations ? (IBSS already has this), have several
-> virtual devices (this is optional feature), what else?
+> Then there is something happening in ath9k or your AP which prevents
+> ath9k from receiving beacons. Try pinging your AP with 100 ms
+> interval. Do you see anything happening in 120 s intervals?
 
-At least sending multicast/broadcast frames immediately after DTIM
-beacons. This is needed for clients in power save mode.
+NetworkManager typically scans every 120 seconds and I can also trigger
+the messages by a manual scan with iwlist. I did not dig any further but
+the messages seem to appear right at the end of the scan. Tried with iwlagn
+and both sw_scan and hw_scan.
 
-> Why iwl3945 still doesn't support AP mode?
-
-No idea. I recall Intel talking about having patches to support AP mode
-for iwl3945, but quick googling didn't reveal anything. All I found was
-this from Tomas:
-
-"We've enabled only iwl4965, not so ever effort was done for iwl3945
-
-[...]
-
-In general there should not problem to extend AP mode also for 3945 on
-PC platform"
-
-http://osdir.com/ml/linux.drivers.ipw3945.devel/2007-11/msg00184.html
-
-It would be really nice to get AP mode support for iwl3945.
-Unfortunately I don't have any spare time to work on that, but if you
-are planning to work on it I (and others) can give you email support via
-this mailing list.
-
--- 
-Kalle Valo
+Helmut
