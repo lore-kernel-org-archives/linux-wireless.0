@@ -1,24 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:59603 "EHLO mout.perfora.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752261AbZDKL7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 07:59:40 -0400
-Message-Id: <30E26FB8-9ED3-40DC-8DED-A1D7A8F86E4C@handheldmedia.us> (sfid-20090411_135944_811109_AD08BBEF)
-From: Charles Woloszynski <charles.woloszynski@handheldmedia.us>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Subject: Mesh point and AP mode at same time
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Date: Sat, 11 Apr 2009 07:59:34 -0400
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:60232 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbZDGAAH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Apr 2009 20:00:07 -0400
+Subject: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 07 Apr 2009 03:00:01 +0300
+Message-Id: <1239062401.4705.23.camel@maxim-laptop> (sfid-20090407_020013_939126_90578556)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am looking into using 802.11s to allow a set of devices exchange  
-information. I also need to have those same nodes operate as AP nodes.  
-Does anyone have any pointers on how to do this?  Does it already work  
-or will I need to the current baseline?  If the latter, can anyone  
-provide any pointers on related work I should try to leverage?
+Recently I was trying to reduce time it takes for wireless card to
+connect.
 
-Thanks,
+I noticed that always first attempt at scan fails when NM asks for scan.
+I also noticed that this happens with quite recent kernels (I think
+2,6.28) didn't have this behavior.
 
-Charlie
+Looking a bit deeper I discovered that each time NM disconnects from a
+networks it sets random ssid/essid to the card (using wireless
+extensions)
+
+After that scan fails for some time.
+
+as a NM free example you can run 
+
+iwconfig wlan0 essid dummy
+iwlist scan
+
+
+and this will fail
+
+
+
+NM in this case waits for whole 10 seconds.
+
+
+What do you think about this?
+
+I confirm that on iwl3945 and ath5k, so this isn't driver specific.
+
+Best regards,
+	Maxim Levitsky
+
