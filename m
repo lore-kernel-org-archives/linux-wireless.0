@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39916 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbZDQTbY (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:55656 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbZDGEU1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 15:31:24 -0400
-Subject: Re: [PATCH] iw: Add set/get for frag/rts threshold and retry limits
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <18920.55219.833341.713847@gargle.gargle.HOWL> (sfid-20090417_212340_384716_7A88CE07)
-References: <20090417185041.GA17526@jm.kir.nu>
-	 <18920.55219.833341.713847@gargle.gargle.HOWL>
-	 (sfid-20090417_212340_384716_7A88CE07)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s9t759B8YSsJ1bj+vXso"
-Date: Fri, 17 Apr 2009 21:31:19 +0200
-Message-Id: <1239996679.5110.13.camel@johannes.local> (sfid-20090417_213127_255724_7E89C3B5)
-Mime-Version: 1.0
+	Tue, 7 Apr 2009 00:20:27 -0400
+Received: by bwz17 with SMTP id 17so2130877bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 21:20:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
+References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com>
+	 <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
+Date: Tue, 7 Apr 2009 05:20:24 +0100
+Message-ID: <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com> (sfid-20090407_062031_960440_FFD72D6D)
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Apr 5, 2009 at 3:44 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Sat, Apr 4, 2009 at 5:15 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> Here is our latest "vendor driver" for the old zd1211. We much prefer
+>> the in-kernel zd1211rw driver but I've heard a few users with issues
+>> with some devices. Perhaps this might help a few developers help port
+>> over any changes. I myself have not looked at this yet.
+>>
+>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/zd1211/LinuxUSB_AR2524-3.0.0.56.tgz
+>
+> Somebody reported some problems with the 3.0.0.56 driver in the zd1211
+> list a few days ago, and I was wondering where he got it from :-) ...
+> anyway, if you see an obvious answer with the regression noted in this
+> mail, it might worth either correcting it or something.
+>
+> http://sourceforge.net/mailarchive/message.php?msg_name=8c675e9b0904010320j18f49dccub37b65b81d254cb4%40mail.gmail.com
+>
+> I'll certainly have a look at the vendor driver sometime soon - I use
+> the AP mode.
+>
 
---=-s9t759B8YSsJ1bj+vXso
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have given it a try and even just adding the minimal bits
+(enough to cope with David S. Miller's "wext: Emit event stream
+entries correctly when compat."
+change some 9 months ago) to port beyond 2.6.27(?), the result is a hard lock up
+in AP mode of the machine if either 'iwpriv <dev> card_reset' is
+issued, or even having a client trying to associate.
 
-On Sat, 2009-04-18 at 00:55 +0530, Sujith wrote:
-> Jouni Malinen wrote:
-> > --- iw.orig/nl80211.h	2009-04-17 21:48:13.000000000 +0300
-> > +++ iw/nl80211.h	2009-04-17 21:48:17.000000000 +0300
-> > @@ -7,7 +7,7 @@
-> >   * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-> >   * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-> >   * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-> > - * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
-> > + * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
-> >   * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-> >   * Copyright 2008 Colin McCabe <colin@cozybit.com>
->=20
-> I don't think Luis would complain, but still... :-)
+Also the message above is a hard crash problem, and seem to relate to
+this paragraph
+in LinuxUSB_AR2524-3.0.0.56/docs/PortingNotes.txt
 
-He just copied the kernel file in ...
+-------------------
+1. RX_OFFSET = 3 result in a unaligned rx buffer for usb dma.
+   This is used to ensure the WLAN/ETH/IP Header is 2 bytes aligned.
+   But it RX_OFFSET=0, These headers are not aligned , we neeed to
+   do a copy
+------------------
 
-johannes
-
---=-s9t759B8YSsJ1bj+vXso
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ6NkFAAoJEKVg1VMiehFY2DIQAJKR5pJFjbGWSsyXlTXvFYU1
-7AMKqVtG+2S/29Og/Pp0yzbSyN1VQWE1Kj3RmvNmjKDgZIHJLCDEIQgKmpJrXyl9
-X5/NY5bnE3LNc6GgQB84tbK6go2usONW/dPDRaHPR0w1zl+bOsYpa8iCQG9o0szU
-bz4D8Mzx2FZHzAs99SSBPNoeCLfsx8NyMuhwDEKnxIZMxwbRRs/MgfsCJpmhP3GF
-NbriSln4vU3kIVsQtEF2UrUjzeBeJIYCU7F92hN7px4Eg6qqNhzkuN5F9pW0X/hI
-YU9+Hy6Aizyfcg6E0+mKND+0rCGlVcgTU2+UiIQEPSs6kqKp4tuNtvlbOESJ+/qk
-ZO+sKIXKH4247CssFAilrmFDmR6vmhtMNtqTNkM+Nw88c1oZum2T0HpkO8XPX/++
-tCPqqaWUTs3MZC8qP+RV1uNs79eSwReT1FRF7+LG3MPN1OWlUst2xEBkbX/LEorC
-nfuM76WJrLbZsWfcvibjZVp6Qm0JV6W5kuAkhmIZUdt7SYw6vV+ilyZXkoDlULnv
-liVm1ArLNUiG2mwES7vgi5JA9coG0W5Y/kKLDORWNF/DsU+JGND38BEHtNS+wr5v
-zjV0cwmxjXzv/59AG8Wj1mYddt4tiJQNvAFvisJl8euek2cAJXi9XrF2ysyfr43e
-EbU2rjD/fIzgJoLbGQln
-=2VoH
------END PGP SIGNATURE-----
-
---=-s9t759B8YSsJ1bj+vXso--
-
+May I ask what's the context and origin of the file
+"PortingNotes.txt"? it seems to be collection of
+some doubts and/or in-coherent thoughts about some changes made, etc.
