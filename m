@@ -1,160 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756490AbZDRPda (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:46649 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286AbZDGHtc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 11:33:30 -0400
-Subject: [PATCH 2.6.31 v2] mac80211: validate TIM IE length
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Christian Lamparter <chunkeey@web.de>
-In-Reply-To: <1239920291.26575.37.camel@johannes.local> (sfid-20090417_001849_051533_DC947D05)
-References: <1239920291.26575.37.camel@johannes.local>
-	 (sfid-20090417_001849_051533_DC947D05)
-Content-Type: text/plain
-Date: Sat, 18 Apr 2009 17:33:24 +0200
-Message-Id: <1240068804.20540.4.camel@johannes.local> (sfid-20090418_173337_483480_966B8760)
-Mime-Version: 1.0
+	Tue, 7 Apr 2009 03:49:32 -0400
+Received: by mail-fx0-f158.google.com with SMTP id 2so2199256fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 00:49:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com>
+References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com>
+	 <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
+	 <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com>
+	 <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com>
+Date: Tue, 7 Apr 2009 08:49:30 +0100
+Message-ID: <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com> (sfid-20090407_094936_338475_4708ED41)
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TIM IE must not be shorter than 4 bytes, so verify that
-when parsing it and use the proper type. To ease that adjust
-struct ieee80211_tim_ie to have a virtual bitmap of size
-at least 1.
+On Tue, Apr 7, 2009 at 6:34 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
 
-Also check that the TIM IE is actually present before trying
-to parse it!
+> Not sure, I wanted to get this out to help those who are interested in
+> porting changes over (if any) to zd1211rw. If you find nothing useful
+> from it please simply disregard it.
 
-Because other people may need the function, make it a static
-inline in ieee80211.h.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Just rebased onto the other fix.
-
- include/linux/ieee80211.h  |   32 +++++++++++++++++++++++++++++++-
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/mlme.c        |   27 ++-------------------------
- net/mac80211/util.c        |    6 ++++--
- 4 files changed, 38 insertions(+), 29 deletions(-)
-
---- wireless-testing.orig/include/linux/ieee80211.h	2009-04-18 17:31:06.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-04-18 17:31:59.000000000 +0200
-@@ -540,7 +540,7 @@ struct ieee80211_tim_ie {
- 	u8 dtim_period;
- 	u8 bitmap_ctrl;
- 	/* variable size: 1 - 251 bytes */
--	u8 virtual_map[0];
-+	u8 virtual_map[1];
- } __attribute__ ((packed));
- 
- #define WLAN_SA_QUERY_TR_ID_LEN 16
-@@ -1392,4 +1392,34 @@ static inline unsigned long ieee80211_tu
- 	return 1024 * tu;
- }
- 
-+/**
-+ * ieee80211_check_tim - check if AID bit is set in TIM
-+ * @tim: the TIM IE
-+ * @tim_len: length of the TIM IE
-+ * @aid: the AID to look for
-+ */
-+static inline bool ieee80211_check_tim(struct ieee80211_tim_ie *tim,
-+				       u8 tim_len, u16 aid)
-+{
-+	u8 mask;
-+	u8 index, indexn1, indexn2;
-+
-+	if (unlikely(!tim || tim_len < sizeof(*tim)))
-+		return false;
-+
-+	aid &= 0x3fff;
-+	index = aid / 8;
-+	mask  = 1 << (aid & 7);
-+
-+	indexn1 = tim->bitmap_ctrl & 0xfe;
-+	indexn2 = tim_len + indexn1 - 4;
-+
-+	if (index < indexn1 || index > indexn2)
-+		return false;
-+
-+	index -= indexn1;
-+
-+	return !!(tim->virtual_map[index] & mask);
-+}
-+
- #endif /* LINUX_IEEE80211_H */
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-18 17:31:10.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-18 17:31:59.000000000 +0200
-@@ -844,7 +844,7 @@ struct ieee802_11_elems {
- 	u8 *fh_params;
- 	u8 *ds_params;
- 	u8 *cf_params;
--	u8 *tim;
-+	struct ieee80211_tim_ie *tim;
- 	u8 *ibss_params;
- 	u8 *challenge;
- 	u8 *wpa;
---- wireless-testing.orig/net/mac80211/util.c	2009-04-18 17:31:10.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-04-18 17:31:59.000000000 +0200
-@@ -588,8 +588,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start
- 			elems->cf_params_len = elen;
- 			break;
- 		case WLAN_EID_TIM:
--			elems->tim = pos;
--			elems->tim_len = elen;
-+			if (elen >= sizeof(struct ieee80211_tim_ie)) {
-+				elems->tim = (void *)pos;
-+				elems->tim_len = elen;
-+			}
- 			break;
- 		case WLAN_EID_IBSS_PARAMS:
- 			elems->ibss_params = pos;
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-18 17:31:10.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-18 17:31:59.000000000 +0200
-@@ -675,30 +675,6 @@ static void ieee80211_sta_wmm_params(str
- 	}
- }
- 
--static bool ieee80211_check_tim(struct ieee802_11_elems *elems, u16 aid)
--{
--	u8 mask;
--	u8 index, indexn1, indexn2;
--	struct ieee80211_tim_ie *tim = (struct ieee80211_tim_ie *) elems->tim;
--
--	if (unlikely(!tim || elems->tim_len < 4))
--		return false;
--
--	aid &= 0x3fff;
--	index = aid / 8;
--	mask  = 1 << (aid & 7);
--
--	indexn1 = tim->bitmap_ctrl & 0xfe;
--	indexn2 = elems->tim_len + indexn1 - 4;
--
--	if (index < indexn1 || index > indexn2)
--		return false;
--
--	index -= indexn1;
--
--	return !!(tim->virtual_map[index] & mask);
--}
--
- static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
- 					   u16 capab, bool erp_valid, u8 erp)
- {
-@@ -1806,7 +1782,8 @@ static void ieee80211_rx_mgmt_beacon(str
- 					  care_about_ies, ncrc);
- 
- 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
--		directed_tim = ieee80211_check_tim(&elems, ifmgd->aid);
-+		directed_tim = ieee80211_check_tim(elems.tim, elems.tim_len,
-+						   ifmgd->aid);
- 
- 	ncrc = crc32_be(ncrc, (void *)&directed_tim, sizeof(directed_tim));
- 
-
-
+It is vaguely relevant in that (1) there are new and old features
+which are not in the rw driver yet - e.g. the AP mode,  and
+3.0 introduces newly antenna diversity, (2) to port changes - either
+new-hardware related, or bug-fixes/improvements, they need to be
+proven to work-better ... e.g. blindly copying could just copy
+mistakes/regressions...
