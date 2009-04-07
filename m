@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56599 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51050 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758323AbZDIH4J (ORCPT
+	with ESMTP id S1761311AbZDGUyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 03:56:09 -0400
-Subject: [PATCH] fix iwl3945 registration regression
+	Tue, 7 Apr 2009 16:54:09 -0400
+Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
+ sending assoc
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <87ljqamktq.fsf@litku.valot.fi> (sfid-20090409_075706_696359_FC064489)
-References: <87ljqamktq.fsf@litku.valot.fi>
-	 (sfid-20090409_075706_696359_FC064489)
-Content-Type: text/plain
-Date: Thu, 09 Apr 2009 09:56:02 +0200
-Message-Id: <1239263762.32594.19.camel@johannes.local> (sfid-20090409_095621_484226_6C688CE8)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890904071344v30c663c5sb50937ce54e1b92b@mail.gmail.com> (sfid-20090407_224440_415119_E05566A5)
+References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	 <1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
+	 <1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
+	 <1239131370.6199.0.camel@johannes.local>
+	 <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com>
+	 <1239136863.7475.66.camel@johannes.local>
+	 <43e72e890904071344v30c663c5sb50937ce54e1b92b@mail.gmail.com>
+	 (sfid-20090407_224440_415119_E05566A5)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-E7JWZTxe2aWuyojKuNrg"
+Date: Tue, 07 Apr 2009 22:53:34 +0200
+Message-Id: <1239137614.8456.10.camel@johannes.local> (sfid-20090407_225413_985708_4405C3D8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I forgot that iwl3945 registration is separate from iwlagn.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Hi Kalle, Reinette,
+--=-E7JWZTxe2aWuyojKuNrg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This looks like my mistake, sorry!
+On Tue, 2009-04-07 at 13:44 -0700, Luis R. Rodriguez wrote:
 
-> [   17.489314] WARNING: at net/wireless/core.c:291 wiphy_register+0xa7/0x1bf [cfg80211]()
+> >> That's what was there or what I added in my patches.
+> >
+> > Indeed, it's already there. I guess I got confused, sorry for the noise=
+.
+>=20
+> hehe, np, are these ACKed now then?
 
-> And the warning from code:
-> 
-> 	if (WARN_ON(wiphy->max_scan_ssids < 1))
-> 		return -EINVAL;
-
-I thought 3945 were already unified so that the setup code was common,
-but it turns out not to be. This patch will fix it.
-
-Alternatively the scanning rework patches you (Reinette) have will also
-fix it -- do you just want to send those to John instead?
+Yeah seems fine to me -- I'm happy as long as the userspace interface
+doesn't include all this :)
 
 johannes
 
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
- 1 file changed, 2 insertions(+)
+--=-E7JWZTxe2aWuyojKuNrg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-04-09 09:53:35.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-04-09 09:53:57.000000000 +0200
-@@ -4913,6 +4913,8 @@ static int iwl3945_setup_mac(struct iwl_
- 
- 	hw->wiphy->custom_regulatory = true;
- 
-+	hw->wiphy->max_scan_ssids = 1; /* WILL FIX */
-+
- 	/* Default value; 4 EDCA QOS priorities */
- 	hw->queues = 4;
- 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJ271LAAoJEKVg1VMiehFYQasP/Aip/cil0vOK7C1L2oe+z7C7
+KjEmn7cNMT/fBXwpmFM5hHJ3pDeDe1wbPmyIGg8whAFo9mkO0n72FwbBxr9uiDIv
+I4GY6Q0PTu4t/PfMjvCxECbLt6CtfMN3T1bv9syrJnIInolZ+XshaB+DFKh/HqEM
+qZX73lyvJkshMpOli82nOJ9cCLRhYDzgRAF8ED2ab2LZk75gTf13VRRNBK948TR3
+73sQ007A0XhDNxaiVNXrJrKdH6X9h61I5MH5RPgbyYiJBPS/4iY2M9KHi86cVyvn
+trjhAux9oqXqsVw8A06ptxujm2DTwQRJUtfwBq4wB0soRQlFi8onagXbHkmyx7zj
++B4MwQ5LLuGI7JDAbB9D+RgHr/9P+HXbZyoJ5tbT2CiZvf0XE2zdiOy49FIjqQlR
+1BI3ixejYCg3Pg8/SWs2LhV77Ky7cPXngl+l4qBJpIsgV/osjR4QbNevnCrMF8D0
+xQHME3Pb0UvHJ4aGp6NVkcfnt+kWGq6pfcxCz9mXSypQPQZcORA1zvYdnb40Dhhn
+HPIFLL5mH8pxbDBgtdimjtBpELziZsm8vA1bAQT7VjZKNdFvdES9EdDhd4/igIaA
+DMNQOsXviEzGO7T6d36rZxGC7/YuySAQvXbPWeZUCaIU1zUwN7wju2PxbyrJnCEK
+KjanUmemeqb0l1qXwxIY
+=dQHQ
+-----END PGP SIGNATURE-----
+
+--=-E7JWZTxe2aWuyojKuNrg--
 
