@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:47522 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754734AbZDKO4F (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:54487 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbZDGU7X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 10:56:05 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1538431ywb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Apr 2009 07:56:04 -0700 (PDT)
+	Tue, 7 Apr 2009 16:59:23 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so2962669wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 13:59:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <30353c3d0904101349o915439arffb652b98e245e10@mail.gmail.com>
-References: <30353c3d0904100736g69782d46g18d99edd0dd0660d@mail.gmail.com>
-	 <49DF9E38.5030801@lwfinger.net>
-	 <30353c3d0904101349o915439arffb652b98e245e10@mail.gmail.com>
-Date: Sat, 11 Apr 2009 10:56:03 -0400
-Message-ID: <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com> (sfid-20090411_165621_813968_5E6DD118)
-Subject: Re: b43legacy AP
-From: David Ellingsworth <david@identd.dyndns.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1239137614.8456.10.camel@johannes.local>
+References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	<1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
+	<1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
+	<1239131370.6199.0.camel@johannes.local> <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com>
+	<1239136863.7475.66.camel@johannes.local> <43e72e890904071344v30c663c5sb50937ce54e1b92b@mail.gmail.com>
+	<1239137614.8456.10.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 7 Apr 2009 13:59:07 -0700
+Message-ID: <43e72e890904071359g1108dc42tca7e7fa06fb3a830@mail.gmail.com> (sfid-20090407_225927_766917_B5406A40)
+Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
+	sending assoc
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I wanted to report that I've finally been successful at getting
-b43legacy to beacon properly. Originally, I had configured hostapd to
-use channel 1. After reading the list of bugs for the bwi driver,
-shown here: http://leaf.dragonflybsd.org/cgi/web-man?command=bwi , I
-had the inclination to try channel 6. It appears b43legacy might have
-the same bugs as the bwi driver as I immediately began seeing beacons
-once I started using channel 6.
+On Tue, Apr 7, 2009 at 1:53 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2009-04-07 at 13:44 -0700, Luis R. Rodriguez wrote:
+>
+>> >> That's what was there or what I added in my patches.
+>> >
+>> > Indeed, it's already there. I guess I got confused, sorry for the noise.
+>>
+>> hehe, np, are these ACKed now then?
+>
+> Yeah seems fine to me -- I'm happy as long as the userspace interface
+> doesn't include all this :)
 
-Regards,
+Thanks :)
 
-David Ellingsworth
+ Luis
