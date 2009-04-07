@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([207.115.11.53]:48115 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbZDKQgv (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:59541 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752096AbZDGMvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 12:36:51 -0400
-Message-ID: <49E0C713.4040507@lwfinger.net> (sfid-20090411_183655_375711_C78006FE)
-Date: Sat, 11 Apr 2009 11:36:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
-References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>	 <49DE7E42.5020700@lwfinger.net>	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com> <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com>
-In-Reply-To: <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Apr 2009 08:51:37 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239092296.22453.1.camel@johannes.local>
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 07 Apr 2009 15:51:29 +0300
+Message-Id: <1239108689.15015.3.camel@maxim-laptop> (sfid-20090407_145150_427368_18297660)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> On Sat, Apr 11, 2009 at 5:23 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+On Tue, 2009-04-07 at 10:18 +0200, Johannes Berg wrote:
+> On Tue, 2009-04-07 at 03:00 +0300, Maxim Levitsky wrote:
 > 
-> Oh, I forgot to mention that to test this code against
-> compat-wireless, appending "CONFIG_RTL8187_LEDS=y" to config.mk does
-> the job.
+> > I noticed that always first attempt at scan fails when NM asks for scan.
+> > I also noticed that this happens with quite recent kernels (I think
+> > 2,6.28) didn't have this behavior.
 > 
-> I am wonder if we actually needs an extra Kconfig for this - at least
-> in my case, the code has no ill effect with device which hasn't got an
-> RX/TX LED. (other than possibly a small theoretical performance loss
-> from do extra non-useful work).
+> I'm pretty sure it did.
+I am sure that on older kernel there was no -EBUSY error returned to
+userspace. It probably just stalled the client.
 
-I do have to compile the LED code only if the kernel has support for them,
-otherwise the registration entry points would be missing. The necessary
-conditions would be more complicated, thus I put them in one place in the
-Kconfig and let the source only be dependent on CONFIG_RTL8187_LEDS.
 
-Larry
+> 
+> > Looking a bit deeper I discovered that each time NM disconnects from a
+> > networks it sets random ssid/essid to the card (using wireless
+> > extensions)
+> 
+> This forces a scan
+> 
+> > After that scan fails for some time.
+> > 
+> > as a NM free example you can run 
+> > 
+> > iwconfig wlan0 essid dummy
+> > iwlist scan
+> 
+> and then this fails with EBUSY.
+Thanks for explanation.
+Since NM has its reasons to clear essid (to prevent unwanted
+association), then what can be  done to prevent this (and still use
+wireless extensions, since nl80211 support isn't yet mature)?
 
+
+Best regards,
+	Maxim Levitsky
 
