@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:53449 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220AbZDVTpd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 15:45:33 -0400
-Received: by fxm2 with SMTP id 2so162414fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:45:31 -0700 (PDT)
-To: Bob Copeland <me@bobcopeland.com>
-Cc: kalle.valo@nokia.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/6] wl12xx updates
-References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 22 Apr 2009 22:45:30 +0300
-In-Reply-To: <1238897428-19639-1-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Sat\,  4 Apr 2009 22\:10\:22 -0400")
-Message-ID: <87skk0ealh.fsf@litku.valot.fi> (sfid-20090422_214537_160520_6D724D18)
+Received: from bu3sch.de ([62.75.166.246]:51390 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757841AbZDGTwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 15:52:53 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: changing number of queues in ops->start
+Date: Tue, 7 Apr 2009 21:51:15 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200904072024.41910.mb@bu3sch.de> <200904072140.23318.mb@bu3sch.de> <1239133589.7475.3.camel@johannes.local>
+In-Reply-To: <1239133589.7475.3.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904072151.15583.mb@bu3sch.de> (sfid-20090407_215256_922906_5E918C30)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+On Tuesday 07 April 2009 21:46:29 Johannes Berg wrote:
+> On Tue, 2009-04-07 at 21:40 +0200, Michael Buesch wrote:
+> 
+> > Ok I see. So you say it's OK to lower hw->queues after ieee80211_register.
+> 
+> Let's say it's acceptable ;)
+> 
+> > Should I reset hw->queues back to the value ieee80211_register was called with, before
+> > I call unregister/free? Are there resources allocated by the number of queues?
+> 
+> There are resources allocated, notably the qdiscs etc. in
+> alloc_ether_mq() or whatever it's called in register_hw(). But the
+> networking core should keep track of those so it shouldn't matter what
+> the value is. OTOH if it can switch back and forth the pending packets
+> are done per queue... for example ieee80211_clear_tx_pending will be
+> called at unregister times, so if it's possible to be up with 4 queues,
+> and later be up with 1, you will want to unregister with 4.
 
-> Hi Kalle,
-
-Hi Bob,
-
-> Here are some patches that bring wl12xx back to compiling state for
-> current wireless-testing.  This is on top of your original patch
-> from your web page.  Review at your leisure, and feel free to roll
-> them all up into your eventual post for inclusion.
->
-> Of note, possible incompatible changes are patch 2 which removes ssid
-> from the join command, and patch 3 which changes the platform setup
-> so it can compile on any platform.  Only compile-tested for now.
-
-Very cool! I took latest wl12xx code and applied your patches on top of
-that. I managed to get working connection with 2.6.30-rc2-omap1 (from
-linux-omap). So your patches work in a real device.
-
-I'll send all the patches later tonight and try to convince John to take
-wl12xx to wireless-testing.
+Ok, sounds like a huge hack to me. :) I'll think about it.
 
 -- 
-Kalle Valo
+Greetings, Michael.
