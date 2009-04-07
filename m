@@ -1,115 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:50932 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbZDVX3B convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48841 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753709AbZDGM7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 19:29:01 -0400
-Received: by fxm2 with SMTP id 2so258003fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 16:28:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200904221953.23265.eugene.sobol@promwad.com>
-References: <200904221953.23265.eugene.sobol@promwad.com>
-Date: Thu, 23 Apr 2009 00:28:59 +0100
-Message-ID: <3ace41890904221628y17d558f7y17bf091afc346d7@mail.gmail.com> (sfid-20090423_012906_748693_76F46DCB)
-Subject: Re: rtl8187 diversity
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Eugene Sobol <eugene.sobol@promwad.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Apr 2009 08:59:34 -0400
+Subject: Re: [RFC] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
+	Matthew Garrett <mjg@redhat.com>
+In-Reply-To: <20090405145941.GA24963@khazad-dum.debian.net>
+References: <1238349195.24972.5.camel@johannes.local>
+	 <20090330211513.GF23749@khazad-dum.debian.net>
+	 <20090405145941.GA24963@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NTjWSA73u8EWCgg0UQ7A"
+Date: Tue, 07 Apr 2009 12:36:19 +0200
+Message-Id: <1239100579.22453.38.camel@johannes.local> (sfid-20090407_145938_173268_1B1E244D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks a lot for working on the patch; I see Larry has already given
-some feedback - more below.
 
-On Wed, Apr 22, 2009 at 5:53 PM, Eugene Sobol <eugene.sobol@promwad.com=
-> wrote:
+--=-NTjWSA73u8EWCgg0UQ7A
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> diff -urN compat-wireless-2.6-old.orig/drivers/net/wireless/rtl8187_d=
-ev.c compat-wireless-2.6-old/drivers/net/wireless/rtl8187_dev.c
-> --- compat-wireless-2.6-old.orig/drivers/net/wireless/rtl8187_dev.c =A0=
- =A0 2008-09-15 19:57:24.000000000 +0300
-> +++ compat-wireless-2.6-old/drivers/net/wireless/rtl8187_dev.c =A0200=
-9-04-22 18:04:01.000000000 +0300
-> @@ -45,6 +45,9 @@
-> =A0 =A0 =A0 =A0{USB_DEVICE(0x03f0, 0xca02), .driver_info =3D DEVICE_R=
-TL8187},
-> =A0 =A0 =A0 =A0/* Sitecom */
-> =A0 =A0 =A0 =A0{USB_DEVICE(0x0df6, 0x000d), .driver_info =3D DEVICE_R=
-TL8187},
-> +
-> + =A0 =A0 =A0 {USB_DEVICE(0x13d1, 0xabe6), .driver_info =3D DEVICE_RT=
-L8187},
-> +
-> =A0 =A0 =A0 =A0{}
-> =A0};
->
+Hi!
 
-Support for new hardware should/could be a separate patch; also some
-notes about make/vendor would be nice, about the device.
+> > > +struct rfkill_ops {
+> > > +#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+> > > +	bool (*poll_hw_block)(void *data);
+> > > +	bool (*query_state)(void *data);
+> > > +	void (*set_block)(void *data, bool blocked);
+> > >  #endif
+> >=20
+> > Missing error handling on set_block...  could you change that to:
+>=20
+> And also on the rest of the hooks.  I should have noticed it sooner!
+>=20
+> As I said, ACPI platform drivers _do_ get errors when calling the ACPI
+> functions, or trying to do an EC transaction.  That applies to reads
+> just as well as it applies to writes.
+
+And it also doesn't really matter. Yes, the current poll API isn't
+prepared to treat errors, but see below for a suggestion.
+
+> I.e. I can get AE_BUSY or something else while querying the thinkpad
+> firmware, and then, what should I do to return the data on the
+> query_state (and, for that matter, poll_hw_block) hooks?
+>=20
+> Since there can be a clear error path from userspace to the rfkill
+> driver for reads and writes in many situations (e.g. on all sysfs
+> accesses to that driver's rfkill struct), this would be a good reason to
+> change the hooks to allow for that error path.
+
+Totally bogus argument -- 99.9% of users will be using rfkill's input
+handler which has no way of reacting to errors, and neither does
+userspace. And it's wrong too -- the sysfs files don't actually call
+into rfkill, they just report the current status.
+
+> Without that, I'd have, for example, to return false (unblocked) on any
+> errors from thinkpad-acpi, for safety reasons (a blocked radio is never
+> a hazard, but an unblocked one can be).  This is the kind of stuff that
+> a driver shouldn't need to decide by itself...
+
+Eh? Your first half sentence is correct (up to "on any errors"), the
+rest is garbage. Yes, you'd have to return false so that the core
+assumes it can do something, but no, it has nothing to do with hazards.
+
+> On a related note, it was not clear to me from looking only at
+> rfkill.txt and the linux/rfkill.h headers, how am I supposed to deal
+> with the software controlled component of the rfkill controller (the
+> hardware rfkill line is quite obvious, though).  I know there is a way,
+> but I haven't finished reading the core code to know which one, and the
+> docs didn't help, so they need an extra paragraph somewhere...
+
+There's a function for that -- but no poll yet.
+
+> Anyway, I suggest changing the hook protypes to this (which does _NOT_
+> change the fact that you now track hw and sw separately in the core, but
+> lets the rfkill driver deliver both in a single call if it needs to):
+>=20
+> int (*poll_block_state)(void *data,
+> 			 bool *is_sw_block_active,
+> 			 bool *is_hw_block_active);
+> int (*query_block_state)(void *data,=20
+> 			 bool *is_sw_block_active,
+> 			 bool *is_hw_block_active);
+> int (*set_block_state)(void *data, bool do_sw_block);
+
+No way.
+
+I can be convinced to change the prototype of poll_hw_block to
+
+	void (*poll_hw_block)(void *data, bool *blocked);
+
+so that drivers can say
+	"*shrug*, I dunno right now, keep whatever I told you last".
+Returning an error, however, is completely pointless.
+
+> The core should ignore the is_* stuff if an error status is returned,
+> as a defensive approach against driver bugs: doing it that way is less
+> programmer-error-prone than telling people to not touch is_* in case of
+> an error.
+
+Bugs happen, and can be fixed; your defensive programming mantra just
+makes for messy code that has multiple ways of working "correctly". I
+quite obviously disagree -- if you can't read the status don't touch the
+variables.
+
+> BTW: it is probably a good idea to document what the driver should do if
+> the core tries this on a radio that is hardware blocked, or if the
+> driver discovers the radio is hardware blocked the instant it tries to
+> software unblock it...
+
+The first case doesn't happen... And it says so in the header file:
+
+ * @set_block: turn the transmitter on (blocked =3D=3D false) or off
+ *      (blocked =3D=3D true) -- this is called only while the transmitter
+ *      is not hard-blocked. This must be assigned.
+
+The second case _shouldn't_ happen (but can, due to race conditions);
+Then you just call set_hw_state before returning.
+
+The third case, which you forgot, works the same as the second and needs
+no extra code either.
+
+> It would be nice to have the core export a way to "force" both sw and hw
+> states at once, as well.  This lets the core optimize the issuing of
+> events and other internal changes and avoids bad mojo if the driver does
+> sw/hw force calls in the wrong order (which might cause a unblock-block
+> fast sequence, etc).
+>=20
+> This would let drivers that have the worst case software blocking (it
+> exists, hw blocking also exists and is separate, and both sw and hw
+> blocking state could change behind the driver's back) work well, without
+> causing any extra complexity to the other drivers.
+
+There may be some value in that, do you need polling for both though?
+Otherwise you'd need
+	if (hw_blocked)
+		set_hw_state(hw_blocked)
+		set_sw_state(sw_blocked)
+	else
+		set_sw_state(sw_blocked)
+		set_hw_state(hw_blocked)
+
+in the driver which I agree isn't nice and would be better with a
+combined function.
+
+> IF you don't want the hooks to return both sw and hw states, you can
+> just change the return type from bool to int, and explicitly document
+> tha the return status is:
+>=20
+> status < 0: error
+> status =3D 0: false, implies no error
+> status > 0: true, implies no error
+
+Ick.
 
 
-> @@ -1123,6 +1229,7 @@
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0default:
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0chip_name =3D "RTL8187=
-vB (default)";
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 priv->ant_diversity_ena=
-bled =3D 1;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0} else {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/*
+If you really do need polling for the sw state as well as the hw state,
+I can be convinced to change poll_hw_block to
 
-Switching on antenna diversity for all 8187L? I don't know what
-side-effect there might be - (particularly for device which hasn't got
-double-antenna). It is probably better to move this out of the loop
-and conditioning on the vid/pid - i.e. specific to your device, for
-the time being.
+	void (*poll_block)(void *data, bool *hw_blocked, bool *sw_blocked);
+=09
+You need much better reasons, however, to convince me to add any error
+return, I see absolutely no value in that. Neither rfkill's input
+handler nor the polling nor userspace has any means to react to errors.
 
-I am just a little concerned that the code should not have side effect
-on devices not having double-antenna - for general testing/reviewing
-is fine, but I think we need some way of auto-detection or runtime
-switching (via iwpriv, etc), rather than compile-time change.
+johannes
 
-> diff -urN compat-wireless-2.6-old.orig/drivers/net/wireless/rtl8187.h=
- compat-wireless-2.6-old/drivers/net/wireless/rtl8187.h
-> --- compat-wireless-2.6-old.orig/drivers/net/wireless/rtl8187.h 2008-=
-09-04 00:04:20.000000000 +0300
-> +++ compat-wireless-2.6-old/drivers/net/wireless/rtl8187.h =A0 =A0 =A0=
-2009-04-22 16:51:13.000000000 +0300
-> @@ -82,11 +82,24 @@
-> =A0 =A0 =A0 =A0DEVICE_RTL8187B
-> =A0};
->
-> +#define VAL_ARRAY_SIZE 10
-> +#define ANTSEL 0xFF9F
-> +
-> +struct rtl8187_ant_diversity {
-> +
-> + =A0 =A0int count;
-> + =A0 =A0 =A0 u8 agc_array[VAL_ARRAY_SIZE];
-> +
-> + =A0 =A0u8 switch_to;
-> + =A0 =A0u8 curr_ant_index;
-> +} __attribute__ ((packed));
-> +
-> =A0struct rtl8187_priv {
-> =A0 =A0 =A0 =A0/* common between rtl818x drivers */
-> =A0 =A0 =A0 =A0struct rtl818x_csr *map;
-> =A0 =A0 =A0 =A0const struct rtl818x_rf_ops *rf;
-> =A0 =A0 =A0 =A0struct ieee80211_vif *vif;
-> + =A0 =A0 =A0 struct ieee80211_hw *hw;
-> =A0 =A0 =A0 =A0int mode;
-> =A0 =A0 =A0 =A0/* The mutex protects the TX loopback state.
-> =A0 =A0 =A0 =A0 * Any attempt to set channels concurrently locks the =
-device.
+--=-NTjWSA73u8EWCgg0UQ7A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-This looks wrong - there are existing means for accessing the
-hardware, should not need to add another struct there.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Thanks for the work.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIcBAABAgAGBQJJ2yygAAoJEKVg1VMiehFYKRsP/1YeCa+wiYyiFecppoMGu5W9
+8Yba2BiHf1dUrvt4WNcyGvjpzkbqYvwPfKMzRjUAua5RMPMuZ/sdNHldmkiR86Cb
+YMlbe7OZ7I3wFpVTjulBn/WNr3NnJK97iTNmh//md3G+/M/OO/oerldoF2p6ybjP
+aAFCzJcTZ5TBLJjdnH7c/5QhfNcZ8zfNyIA0FKvdVsjGzHPS9miouNAXdYWZx0y9
+86Qi4t2XZIMx0iOWfTwbS+SQKiN0oqUPyMfPrtWp9rZlI2s8/kfA2BimOQL6KjGX
+jkWEjMxwyacQcNpzfcuVdHgwL5BOozm3wKTpjSNoZ4tXqUbvSc5DczcWhU8mUEb1
+FeMy5Yv/JlWaw0TGR/E9075d3waAx9CIy85b6oQUllS8HP3BpHYTnftB2tGYoWFZ
+jqPQpgoYjzdmaUrSl6z7gh/iAYlVz6tRbrTkjHeYhVw9OVmsg6xI9HJrNW049RYH
+wDrfIXBALdAUBeS5mt2G2d78B8Yb/MKtvuoSTQeBNJEVqnx8BmlpA2EvxfNt5ALe
+8pIxQRinxRMv6gbu2qkKXILXVLlV2sHK07LVBq9xGJglbiy8KNF+jue4vCIuU6d4
+8MdJODvBIoy4ObWldUnLFGkdIvoZ3D7LSDzG+bM2h1wh/gwLMgZtCZ5TlSvQzP3S
+D8Xi4e15Xp1jkoxqM9BD
+=izGj
+-----END PGP SIGNATURE-----
+
+--=-NTjWSA73u8EWCgg0UQ7A--
+
