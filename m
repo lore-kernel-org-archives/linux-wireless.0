@@ -1,71 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49235 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51941 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761251AbZDSNmC (ORCPT
+	with ESMTP id S1756964AbZDGNOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 09:42:02 -0400
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+	Tue, 7 Apr 2009 09:14:04 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090419133544.158820@gmx.net> (sfid-20090419_153615_967882_D1A9F951)
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
-	 <20090419125212.158800@gmx.net>
-	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
-	 <20090419133544.158820@gmx.net> (sfid-20090419_153615_967882_D1A9F951)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-WV2l9VpWVQOd1VIYA397"
-Date: Sun, 19 Apr 2009 15:41:58 +0200
-Message-Id: <1240148519.898.3.camel@johannes.local> (sfid-20090419_154219_699601_D441AE0E)
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239109497.15015.12.camel@maxim-laptop> (sfid-20090407_150534_375314_4DA28551)
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
+	 <1239109497.15015.12.camel@maxim-laptop>
+	 (sfid-20090407_150534_375314_4DA28551)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-M74qu0Gb2BZ7cPztZp/z"
+Date: Tue, 07 Apr 2009 15:13:30 +0200
+Message-Id: <1239110010.22453.41.camel@johannes.local> (sfid-20090407_151426_264016_DE682477)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-WV2l9VpWVQOd1VIYA397
+--=-M74qu0Gb2BZ7cPztZp/z
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-04-19 at 15:35 +0200, Alina Friedrichsen wrote:
-> Hello Johannes!
->=20
-> > Because you don't associate with an IBSS?
->=20
-> This is only a name, but the call does mostly the same. I think having
-> one generic API goes more along with the UNIX philosophy, than having
-> for each mode a defend API, on which almost only the names of the
-> calls are deferent.
+On Tue, 2009-04-07 at 16:04 +0300, Maxim Levitsky wrote:
 
-Huh? No, it does not mostly do the same. Quite not so. Managed and IBSS
-modes are _really_ different. Almost the only thing they have in common
-is that they use an SSID and a BSSID.
+> > > > > Looking a bit deeper I discovered that each time NM disconnects f=
+rom a
+> > > > > networks it sets random ssid/essid to the card (using wireless
+> > > > > extensions)
+> > > >=20
+> > > > This forces a scan
+> > > >=20
+> > > > > After that scan fails for some time.
+> > > > >=20
+> > > > > as a NM free example you can run=20
+> > > > >=20
+> > > > > iwconfig wlan0 essid dummy
+> > > > > iwlist scan
+> > > >=20
+> > > > and then this fails with EBUSY.
+> > > Thanks for explanation.
+> > > Since NM has its reasons to clear essid (to prevent unwanted
+> > > association), then what can be  done to prevent this (and still use
+> > > wireless extensions, since nl80211 support isn't yet mature)?
+> >=20
+> > Nothing. Wext sucks, news at 11, yadda.
+> Thanks.
+> Everything understood.
 
-And an airy concept of "UNIX philosophy" really has nothing whatsoever
-to do with it.
+Of course, we can go back to dropping the scan request, but that
+wouldn't be very nice.
+
+Is this creating any problems?
 
 johannes
 
---=-WV2l9VpWVQOd1VIYA397
+--=-M74qu0Gb2BZ7cPztZp/z
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ6yokAAoJEKVg1VMiehFYYhsQAMBorDP6m51Vdh3IgKS+LWl/
-V3noBh4h0Sjgf3RdQRDyJ/uUCUHmSIv/RKUgpppI6TCJYaBvEUAv8t9sDaFRLTuw
-mcgjJMaRYSO5wguRiK8DjnOtqRtma/6ZEwVnQqh1Mdrs2Sipp0+5y+/pznQ86mqN
-dGwMav81R2fxSnr1HEdP3U7O3/KLr53yUaxwDwLMkVkCa149p9ZeuIgxsb90p/KU
-gHna/aKfEwFjmjvId6SbFBn9ylP2X7XGu/B5R/b56xgRU8htmdenwYcHIWGGAsWf
-aas0EXQyumsS9dkjQvTPnzKQn5Sv4w3IfjI6TXg4vUPRhmRZgh4QpLKc5G3jaUw0
-Y5v8AwSKk9SC3WGqLhonDC02ZNBrGLjLYB+wyd0WMcLhXRAtNHFPyRcWiMUi2YI8
-6UeVdDUqO/OzH2gGtNWLAduTQgcR9tt7JgNiV3//fPIoC9UVZ2z41wsKVbzecG/Y
-ejpZHE0qp/zeN+YbwYKnHJ44J+EsWMbikAz3pyjeHVPqSQmywp1HbQTQCAipzq35
-C2OLs+1XRBauUSAB6Ga62u7o6Ea9CxT41xn7Tuqwvc+mYSvkfYScH3IzQ05dHzYx
-RwpNdXkjVMjWJRD2jsWo+U9p1Qif8IxdifokLXKyKfGGug7JHRdqX6d9IDTskI/2
-etXs3kIDWoI7scVENHs8
-=P0Ue
+iQIcBAABAgAGBQJJ21F4AAoJEKVg1VMiehFYBPQQAIwMkG6bhZm4TxYnAC7UBT2+
+gmGmcjU7ewhnlAuJjeKAjsznvD/KovTV8fY3J+EzKAE0TJ4ix8CaUFpZvSF74ZRc
+MBw/XoothpoxoqmI4q+H/huNVoVHRY/c7xMzgP7EXUElB0qOJGrMelO2eJS0l0uz
+HE5uHkqhsbDAE44QVfRZTADGj3B8eXseuSWKnqLE7nQsiMJMh7O4L+nFBaVIJ7dL
+CdTmFoDvAMjPKNeK+tMeSDDiaF+8oRjhvwhcVaj5VDyNQKJa8ekzXubA7lAespF+
+/SdsxqUdrIPBGZk6694ls6/HJ/bzJGuVwtlmyJz+EShAH9yLIDEAxjnz0bUumIPJ
+3odR4kIMvSLQh2r0VCX/8jlhcIDGeYEni1oBWUatO85I9h708G3zhsHP3V/bfGoU
+3GbUy++jpvNvNjgUvW2kVM+5j4jVhTqRFfnELJBxRqvEIDvU7hIHElrpIr98DaI4
+yvkgqSeUkRdyU95rmWWC04dk5e3UnsHsUFmeSCUubaGJ+lqcKIxgnT7tDHYtquhn
+ns2mlVa7jJunLWReZall8kF53ilh0wAlDNt32pUY3lNMkume4X5V6wFslVv/3dPI
+9ysir9brQ4LAPwtaz8a+mAFTZPdxoDK2X3j3z7lVqb78R3G+Q7HaiXB/4Fs2rbwp
+gn+ohGiveTg42UzDUZ+Y
+=dXuV
 -----END PGP SIGNATURE-----
 
---=-WV2l9VpWVQOd1VIYA397--
+--=-M74qu0Gb2BZ7cPztZp/z--
 
