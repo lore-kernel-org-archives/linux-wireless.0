@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039AbZDPKjk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 06:39:40 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1LuP0M-0006EX-8l
-	for linux-wireless@vger.kernel.org; Thu, 16 Apr 2009 12:39:38 +0200
-Subject: [RFC 3/3 v2] mac80211: enable PS by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <20090415171633.723852466@sipsolutions.net> (sfid-20090415_191937_921308_A4403082)
-References: <20090415171046.336006351@sipsolutions.net>
-	 <20090415171633.723852466@sipsolutions.net>
-	 (sfid-20090415_191937_921308_A4403082)
-Content-Type: text/plain
-Date: Thu, 16 Apr 2009 12:39:06 +0200
-Message-Id: <1239878346.9737.17.camel@johannes.local> (sfid-20090416_123943_605782_E8EA05EA)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:48415 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752950AbZDGTfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 15:35:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: changing number of queues in ops->start
+Date: Tue, 7 Apr 2009 21:33:21 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200904072024.41910.mb@bu3sch.de> <1239132567.7187.1.camel@johannes.local>
+In-Reply-To: <1239132567.7187.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904072133.21296.mb@bu3sch.de> (sfid-20090407_213525_462007_BF1F26DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable PS by default (depending on Kconfig) -- rely on drivers
-to control the level using pm_qos. Due to the previous patch
-we turn off PS when necessary due to latency requirements.
+On Tuesday 07 April 2009 21:29:27 Johannes Berg wrote:
+> On Tue, 2009-04-07 at 20:24 +0200, Michael Buesch wrote:
+> > I'm wondering how to implement QoS capability runtime detection
+> > in a mac80211 driver.
+> > 
+> > In b43 we don't know at ieee80211_register time whether the firmware does
+> > support QoS or not, because it's not loaded yet. (Reasons for not loading
+> > it that early are issues with builtin-b43, etc...).
+> > So we don't know whether we are going to load opensource fw (no QoS) or
+> > proprietary fw (QoS capable).
+> > But it seems that mac80211 requires to set hw->queues before ieee80211_register.
+> > 
+> > So what I'd need is a way to change the number of possible queues from within
+> > the ops->start handler.
+> 
+> Well, I suppose you could register with the max and later reduce and
+> stop the remaining queues you're not using... Or not stop them and drop
+> packets on them. That's somewhat fragile, gives people who look at tc a
+> wrong idea, and I can't imagine supporting it, but it should work.
 
-This has a Kconfig symbol so people can, if they really want,
-configure the default in their kernels. We may want to keep it
-at "default y" only in wireless-testing for a while.
+mkay, I'll try this. thanks :)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/Kconfig |   16 ++++++++++++++++
- net/mac80211/mlme.c  |    3 +++
- 2 files changed, 19 insertions(+)
+I wonder, however, will mac80211 try to queue packets on queues that are stopped?
+And I think just dropping them is not an option, because this will cause breakage.
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-16 12:22:35.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-16 12:34:21.000000000 +0200
-@@ -2200,6 +2200,9 @@ void ieee80211_sta_setup_sdata(struct ie
- 		IEEE80211_STA_AUTO_CHANNEL_SEL;
- 	if (sdata->local->hw.queues >= 4)
- 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
-+
-+	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
-+		ifmgd->powersave = CONFIG_MAC80211_DEFAULT_PS_VALUE;
- }
- 
- /* configuration hooks */
---- wireless-testing.orig/net/mac80211/Kconfig	2009-04-16 12:34:28.000000000 +0200
-+++ wireless-testing/net/mac80211/Kconfig	2009-04-16 12:36:52.000000000 +0200
-@@ -11,6 +11,22 @@ config MAC80211
- 	  This option enables the hardware independent IEEE 802.11
- 	  networking stack.
- 
-+config MAC80211_DEFAULT_PS
-+	bool "enable powersave by default"
-+	depends on MAC80211
-+	default y
-+	help
-+	  This option enables powersave mode by default.
-+
-+	  If this causes your applications to misbehave you should fix your
-+	  applications instead -- they need to register their network
-+	  latency requirement, see Documentation/power/pm_qos_interface.txt.
-+
-+config MAC80211_DEFAULT_PS_VALUE
-+	int
-+	default 1 if MAC80211_DEFAULT_PS
-+	default 0
-+
- menu "Rate control algorithm selection"
- 	depends on MAC80211 != n
- 
+What about just queueing everything on a single queue, no matter what queue mac80211
+puts the frame into? Would this cause ordering issues?
+Or the other way around, is there anything that _depends_ on the higher priority queues
+to get sent before the higher priority queues?
 
-
+-- 
+Greetings, Michael.
