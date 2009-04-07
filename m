@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:45743 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753948AbZDSTxU (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:37472 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759041AbZDGUiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 15:53:20 -0400
-Message-ID: <49EB8119.1020402@lwfinger.net> (sfid-20090419_215324_704513_34056C71)
-Date: Sun, 19 Apr 2009 14:52:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 7 Apr 2009 16:38:19 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so2952747wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 13:38:18 -0700 (PDT)
 MIME-Version: 1.0
-To: Forest Bond <forest@alittletooquiet.net>
-CC: Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network>
-In-Reply-To: <20090419170950.GA28885@storm.local.network>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1239131370.6199.0.camel@johannes.local>
+References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	<1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
+	<1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
+	<1239131370.6199.0.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 7 Apr 2009 13:38:03 -0700
+Message-ID: <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com> (sfid-20090407_223824_870361_EC71A186)
+Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
+	sending assoc
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forest Bond wrote:
-> 
-> However, I did have a question:
-> 
-> The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwusb.ko.
-> Should the directories be named "viawget" and "vntwusb," respectively, or is it
-> appropriate for them to be named "vt6655" and "vt6656"?
-
-Of course Greg has the final say, but I vote to keep the directories with the
-vt6656 name and change the name of the driver, which is defined in  the line
-#define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor driver.
-
-Larry
+T24gVHVlLCBBcHIgNywgMjAwOSBhdCAxMjowOSBQTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gT24gVHVlLCAyMDA5LTA0LTA3IGF0IDA5OjIzIC0w
+NzAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90ZToKPgo+PiA+IFRoaXMgcGF0Y2ggaXMgbm90IHN1
+ZmZpY2llbnQgLS0geW91IGFsc28gbmVlZCB0byBtb2RpZnkKPj4gPiBpZWVlODAyMTFfc2VuZF9h
+c3NvYy4gT3RoZXJ3aXNlIHdlIGVuZCB1cCB0ZWxsaW5nIHRoZSBBUCB0aGF0IHdlIHN1cHBvcnQK
+Pj4gPiBIVDQwLCBidXQgdHVuaW5nIHRoZSBoYXJkd2FyZSB0byBIVDIwLgo+Pgo+PiBMaWtlIHRo
+aXM/Cj4+Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHN3aXRjaCAoaHRfaW5mby0+aHRfcGFy
+YW0gJiBJRUVFODAyMTFfSFRfUEFSQU1fQ0hBX1NFQ19PRkZTRVQpIHsKPj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgY2FzZSBJRUVFODAyMTFfSFRfUEFSQU1fQ0hBX1NFQ19BQk9WRToKPj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGZsYWdzICYgSUVFRTgwMjExX0NI
+QU5fTk9fSFQ0MFBMVVMpIHsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsKPj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2FwICY9IH5J
+RUVFODAyMTFfSFRfQ0FQX1NHSV80MDsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgfQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmVhazsKPj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2FzZSBJRUVFODAyMTFfSFRfUEFSQU1fQ0hBX1NFQ19C
+RUxPVzoKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGZsYWdzICYg
+SUVFRTgwMjExX0NIQU5fTk9fSFQ0ME1JTlVTKSB7Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9TVVBfV0lE
+VEhfMjBfNDA7Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIGNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9TR0lfNDA7Cj4+IMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIH0KPgo+IFllYWgsIHRoYXQgbG9va3Mgb2suCgpUaGF0J3Mgd2hh
+dCB3YXMgdGhlcmUgb3Igd2hhdCBJIGFkZGVkIGluIG15IHBhdGNoZXMuCgogIEx1aXMK
