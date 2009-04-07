@@ -1,115 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-1.ms.rz.RWTH-Aachen.DE ([134.130.7.72]:57220 "EHLO
-	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751710AbZDPPXP (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:9313 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbZDGCDA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 11:23:15 -0400
-MIME-version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
- by mta-1.ms.rz.RWTH-Aachen.de
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
- with ESMTP id <0KI700L6R9EPOXB0@mta-1.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Thu, 16 Apr 2009 17:23:13 +0200 (CEST)
-Message-id: <49E74D46.6030707@nets.rwth-aachen.de> (sfid-20090416_172318_087691_A82DCC28)
-Date: Thu, 16 Apr 2009 17:22:46 +0200
-From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>, Hans Maes <Hans@bitnet.be>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: how to set antenna iw + ath5k
-References: <49E71982.5050204@bitnet.be>
- <40f31dec0904160611l58500309wa1ba92fe3aeff843@mail.gmail.com>
- <69e28c910904160637j5769be3au94821d48bfecf6f2@mail.gmail.com>
-In-reply-to: <69e28c910904160637j5769be3au94821d48bfecf6f2@mail.gmail.com>
+	Mon, 6 Apr 2009 22:03:00 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so583048eyf.37
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 19:02:57 -0700 (PDT)
+Message-ID: <49DAB445.7040206@gmail.com> (sfid-20090407_040310_628429_F7D9312F)
+Date: Mon, 06 Apr 2009 22:02:45 -0400
+From: Will Keaney <keaneyw@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Trouble Associating with ath5k on AR5212
+References: <49D4C7B3.7010803@gmail.com> <b6c5339f0904020805w5e210c2bl542eadb20ac5d6c7@mail.gmail.com> <49D56445.20502@gmail.com> <20090403020358.GA12406@hash.localnet> <49D571BB.7060406@gmail.com> <20090403122332.GA14853@hash.localnet> <49D6117D.9020408@gmail.com>
+In-Reply-To: <49D6117D.9020408@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigF80D7420688FBA40B41BD0C4"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-G=E1bor Stefanik wrote:
-> On Thu, Apr 16, 2009 at 3:11 PM, Nick Kossifidis <mickflemm@gmail.com=
-> wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigF80D7420688FBA40B41BD0C4
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Will Keaney wrote:
+> Bob Copeland wrote:
 >  =20
->> 2009/4/16 Hans Maes <Hans@bitnet.be>:
+>> On Thu, Apr 02, 2009 at 10:17:31PM -0400, Will Keaney wrote:
+>>  =20
 >>    =20
->>> Hello,
+>>> dmesg shows this:
+>>> [38645.639170] ath5k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -=
+>
+>>> IRQ 17
+>>> [38645.639199] ath5k 0000:03:00.0: setting latency timer to 64
+>>> [38645.639342] ath5k 0000:03:00.0: registered as 'phy5'
+>>> [38645.872038] phy5: Selected rate control algorithm 'minstrel'
+>>> [38645.882037] Registered led device: ath5k-phy5::rx
+>>> [38645.882090] Registered led device: ath5k-phy5::tx
+>>> [38645.882097] ath5k phy5: Atheros AR5414 chip found (MAC: 0xa3, PHY:=
+ 0x61)
+>>> [38646.133614] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>> [38667.211026] ath5k phy5: noise floor calibration timeout (5785MHz)
 >>>
->>> I'm not sure this is the correct place to ask my question, but I've=
- been
->>> searching on google for ages now and can't seem to find an answer s=
-o I'm
->>> asking it here.
->>> If not, please yell at me and tell me where to go whine instead ;-)
->>>
->>> I'm using CM11 a/b/g cards with the Atheros AR5414A Chip, which hav=
-e 2
->>> antenna connectors.
->>> I only have 1 antenna connected to the MAIN connector.
->>> Running a self compiled 2.6.29 kernel on a few debian lenny boxes w=
-ith ath5k
->>> module for the wireless cards, set up in mesh mode.
->>> Seems to work fine on the test bench, but behaves rather poorly in
->>> production environment.
->>> Everything related to the mesh network setup seems to work, but I h=
-ave about
->>> 40% - 60% packet loss on the entire netwerk (about 15 nodes)
->>>
->>> I'm guessing this has something to do with the antenna diversity se=
-tting.
->>>
->>> Can anybody tell me how to tell the ath5k module to disable antenna
->>> diversity and only use the MAIN antenna ?
->>>
->>> If this is a RTFM thingie, then I apologize, I just can't seem to f=
-ind it
->>> anywhere.
->>>
->>> Please reply to my personal e-mail address as well, I'm not subscri=
-bed to
->>> the list.
->>>
->>> Thanks for your help.
->>>
->>> Regards,
->>>
->>> Hans
+>>> I think the key there is the last line.  There is no further output i=
+n
+>>> dmesg, regardless of what I do in wpa_supplicant.
+>>>    =20
 >>>      =20
->> After this patch...
->> https://lists.ath5k.org/pipermail/ath5k-devel/2009-April/002264.html
+>> Probably a red herring, actually -- but yeah, you should be seeing mor=
+e
+>> output as the association process continues.  That is a pretty frequen=
+t
+>> and harmless error message, here you are scanning and just changed to
+>> a 5.7 ghz channel for a passive scan.
 >>
->> It's possible to tell the driver to use one fixed antenna (in your
->> case its fixed antenna A). Just change...
->> ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
->>
->> with
->> ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_FIXED_A);
->>
->> we will have a better way to change this in the future ;-)
+>> Are you getting any results at all from scans?  Is ath5k using 100% of=
+
+>> any cpu?
+>>  =20
 >>    =20
->
-> I wonder if just exporting that as a modparam is a good-enough
-> choice... though perhaps the best solution would be something like "i=
-w
-> phy phy0 antenna 1 up/down". Or perhaps we should make antenna
-> diversity depend on the PCI ID, defaulting to 1 antenna when diversit=
-y
-> support cannot be determined.
->
+> I do get some results on scans, but not as many as with madwifi.  Also,=
+
+> it reports dramatically different signal strengths than madwifi (though=
+
+> this may be because madwifi sets my maximun Tx power to 17dBm, and ath5=
+k
+> sets it to 20).
+> I don't see any untoward CPU usage when ath5k is loaded.  wpa_supplican=
+t
+> uses about 40% on one core, give or take.
 >  =20
-modparam seems somewhat broken, thinking of multiple wireless cards...
-My feature request would be to allow setup fixed txantenna only for
-broadcast/multicast frames.
-I think it would work for almost all setups, even if only
-one antenna connector is used, as diversity logic
-will naturally handle unicast frames right. Or did I miss something?
+Following up on our conversation in IRC, I found a few other nearby
+networks where I could get stronger signal.
+ath5k showed much higher signal strengths for all of the networks it
+could see than madwifi did.  Although ath5k showed a particular network
+with strength between 16-29 dBm, it was unable to connect.
+madwifi showed the same network with a strength of 4 dBm, and was able
+to connect almost instantly.
+As before, I didn't see any additional dmesg output from athk, even with
+'dmesg -n7'.
 
-BTW: is it theoretically possible to turn off RX antenna diversity, and
-what would be the potential gain?
+Will
 
-Best regards,
-Arnd
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--------------enigF80D7420688FBA40B41BD0C4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAknatEoACgkQjfayWCA8dDGAuQCeNcXPiU9XkYxFVrCLGV85V+pj
+EWAAoIQGQ3Vn9zK+G/Uc06cDydwVsEXg
+=Zu5c
+-----END PGP SIGNATURE-----
+
+--------------enigF80D7420688FBA40B41BD0C4--
