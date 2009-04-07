@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37778 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128AbZDUJF4 (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:49233 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902AbZDGAP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 05:05:56 -0400
-Subject: [PATCH] atmel: fix netdev ops conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+	Mon, 6 Apr 2009 20:15:58 -0400
+Received: by bwz17 with SMTP id 17so2095470bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 17:15:55 -0700 (PDT)
+Subject: Making promisc mode work with WPA encryption?
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Tue, 21 Apr 2009 11:05:20 +0200
-Message-Id: <1240304720.17388.13.camel@johannes.local> (sfid-20090421_110601_997149_6B60284C)
+Date: Tue, 07 Apr 2009 03:15:52 +0300
+Message-Id: <1239063352.4705.40.camel@maxim-laptop> (sfid-20090407_021606_189492_3B4B42DB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sparse says:
+This is my last question I want  to ask.
+I finally got time to learn how WPA2 encryption works.
+so there is per station key (temporal key), and one multicast key (group
+key). TK is derived from PSK by throwing together macs or both ends, two
+random numbers, and PMK (whick in case of wpa personal == PSK
 
-drivers/net/wireless/atmel.c:1501:3: warning: Initializer entry defined twice
-drivers/net/wireless/atmel.c:1505:3:   also defined here
+This means kernel can't automatically decrypt other stations traffic.
+But I could arrange small program that listens to device in monitor or
+maybe even just promisc mode, and records WPA handshakes. For every
+handshake it could install the key in kernel driver, so it would use it
+for decryption, and show the traffic on device in promisc mode. Is it
+possible to do today? I guess not.
+All this program has to know is the PSK.
+(I could even arrange WPA supplicant to do this job - it knows all keys
+already)
 
-and it's correct; atmel has its own ndo_change_mtu and
-shouldn't use eth_change_mtu.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Hemminger <shemminger@vyatta.com>
----
-It looks like you (davem) took the initial conversion, do you want this
-one as well?
-
- drivers/net/wireless/atmel.c |    1 -
- 1 file changed, 1 deletion(-)
-
---- wireless-testing.orig/drivers/net/wireless/atmel.c	2009-04-21 11:01:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/atmel.c	2009-04-21 11:01:22.000000000 +0200
-@@ -1500,11 +1500,10 @@ static const struct net_device_ops atmel
- 	.ndo_stop		= atmel_close,
- 	.ndo_change_mtu 	= atmel_change_mtu,
- 	.ndo_set_mac_address 	= atmel_set_mac_address,
- 	.ndo_start_xmit 	= start_tx,
- 	.ndo_do_ioctl 		= atmel_ioctl,
--	.ndo_change_mtu		= eth_change_mtu,
- 	.ndo_validate_addr	= eth_validate_addr,
- };
- 
- struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
- 				   const AtmelFWType fw_type,
-
+Best regards,
+	Maxim Levitsky
 
