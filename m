@@ -1,98 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:48813 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937AbZDWSG1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56112 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761127AbZDGUkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 14:06:27 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so41947fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 11:06:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910904231036r131612e3vabdab0302659fb63@mail.gmail.com>
-References: <69e28c910904231036r131612e3vabdab0302659fb63@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 23 Apr 2009 20:06:06 +0200
-Message-ID: <69e28c910904231106j7f74fe2fo471479c582985413@mail.gmail.com> (sfid-20090423_200630_591949_172AA745)
-Subject: [PATCH 2/5 v2] mac80211: Fix handling of retry count of NO_ACK frames
-	in PID
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: multipart/mixed; boundary=000e0cd24492c62ad604683cbc85
+	Tue, 7 Apr 2009 16:40:11 -0400
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20090403182724.GA7364@tuxdriver.com> (sfid-20090403_203108_005030_BC3865B6)
+References: <20090403182724.GA7364@tuxdriver.com>
+	 (sfid-20090403_203108_005030_BC3865B6)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LlcIQx/+4MzLDGz/bhTW"
+Date: Tue, 07 Apr 2009 22:39:28 +0200
+Message-Id: <1239136768.7475.62.camel@johannes.local> (sfid-20090407_224016_300710_DB355506)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---000e0cd24492c62ad604683cbc85
-Content-Type: text/plain; charset=ISO-8859-1
+
+--=-LlcIQx/+4MzLDGz/bhTW
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Make PID check for IEEE80211_TX_CTL_NO_ACK instead of
-is_multicast_ether_addr when determining whether to use the lowest
-rate, and set the retry count to 0 (total try count =3D 1) if
-IEEE80211_TX_CTL_NO_ACK is set.
+Hi,
 
-Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+> Also, please consider making some sort of prepared presentation.
+> Especially welcome would be topics that are accessible to those
+> outside of the core wireless developer group, such as current
+> projects on enhancing IBSS support, extended power savings, or any
+> other user-visible topic.  I'll be happy to take such proposals in
+> private email or you can post them as part of this thread.
 
----
-v2: I accidentally inlined the minstrel patch. The attachment is
-identical to v1.
-Patch also available as an attachment if Gmail linewraps it.
+Since I've just booked my train (will arrive 1:30pm or so on the 25th,
+leave Sunday [28th] late afternoon), here are some things I could
+possibly talk about:
 
- rc80211_pid_algo.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ * status of moving to nl80211/cfg80211 -- overview over new cfg80211
+   operations, maybe with Jouni?
+ * power saving if Kalle can't make it
+ * aggregation/11n support -- fairly technical but I've just rewritten
+   things :)
+ * maybe some regulatory stuff but Luis really is the expert, unless by
+   then I've rewritten it according to my plan ;)
 
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_alg=
-o.c
-index b16801c..2b33e3a 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -289,13 +289,15 @@ rate_control_pid_get_rate(void *priv, struct
-ieee80211_sta *sta,
- 		info->control.rates[0].count =3D
- 			txrc->hw->conf.short_frame_max_tx_count;
+johannes
 
--	/* Send management frames and broadcast/multicast data using lowest
--	 * rate. */
-+	/* Send management frames and NO_ACK data using lowest rate. */
- 	fc =3D le16_to_cpu(hdr->frame_control);
- 	if (!sta || !spinfo ||
- 	    (fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_DATA ||
--	    is_multicast_ether_addr(hdr->addr1)) {
-+	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
- 		info->control.rates[0].idx =3D rate_lowest_index(sband, sta);
-+		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-+			info->control.rates[0].count =3D 1;
-+
- 		return;
- 	}
+--=-LlcIQx/+4MzLDGz/bhTW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
---000e0cd24492c62ad604683cbc85
-Content-Type: text/x-patch; charset=US-ASCII; name="pid-fix-no-ack-retry-count.patch"
-Content-Disposition: attachment; filename="pid-fix-no-ack-retry-count.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ftvqffl60
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-IHJjODAyMTFfcGlkX2FsZ28uYyB8ICAgIDggKysrKystLS0KIDEgZmlsZSBjaGFuZ2VkLCA1IGlu
-c2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3Jj
-ODAyMTFfcGlkX2FsZ28uYyBiL25ldC9tYWM4MDIxMS9yYzgwMjExX3BpZF9hbGdvLmMKaW5kZXgg
-YjE2ODAxYy4uMmIzM2UzYSAxMDA2NDQKLS0tIGEvbmV0L21hYzgwMjExL3JjODAyMTFfcGlkX2Fs
-Z28uYworKysgYi9uZXQvbWFjODAyMTEvcmM4MDIxMV9waWRfYWxnby5jCkBAIC0yODksMTMgKzI4
-OSwxNSBAQCByYXRlX2NvbnRyb2xfcGlkX2dldF9yYXRlKHZvaWQgKnByaXYsIHN0cnVjdCBpZWVl
-ODAyMTFfc3RhICpzdGEsCiAJCWluZm8tPmNvbnRyb2wucmF0ZXNbMF0uY291bnQgPQogCQkJdHhy
-Yy0+aHctPmNvbmYuc2hvcnRfZnJhbWVfbWF4X3R4X2NvdW50OwogCi0JLyogU2VuZCBtYW5hZ2Vt
-ZW50IGZyYW1lcyBhbmQgYnJvYWRjYXN0L211bHRpY2FzdCBkYXRhIHVzaW5nIGxvd2VzdAotCSAq
-IHJhdGUuICovCisJLyogU2VuZCBtYW5hZ2VtZW50IGZyYW1lcyBhbmQgTk9fQUNLIGRhdGEgdXNp
-bmcgbG93ZXN0IHJhdGUuICovCiAJZmMgPSBsZTE2X3RvX2NwdShoZHItPmZyYW1lX2NvbnRyb2wp
-OwogCWlmICghc3RhIHx8ICFzcGluZm8gfHwKIAkgICAgKGZjICYgSUVFRTgwMjExX0ZDVExfRlRZ
-UEUpICE9IElFRUU4MDIxMV9GVFlQRV9EQVRBIHx8Ci0JICAgIGlzX211bHRpY2FzdF9ldGhlcl9h
-ZGRyKGhkci0+YWRkcjEpKSB7CisJICAgIGluZm8tPmZsYWdzICYgSUVFRTgwMjExX1RYX0NUTF9O
-T19BQ0spIHsKIAkJaW5mby0+Y29udHJvbC5yYXRlc1swXS5pZHggPSByYXRlX2xvd2VzdF9pbmRl
-eChzYmFuZCwgc3RhKTsKKwkJaWYgKGluZm8tPmZsYWdzICYgSUVFRTgwMjExX1RYX0NUTF9OT19B
-Q0spCisJCQlpbmZvLT5jb250cm9sLnJhdGVzWzBdLmNvdW50ID0gMTsKKwogCQlyZXR1cm47CiAJ
-fQogCg==
---000e0cd24492c62ad604683cbc85--
+iQIcBAABAgAGBQJJ27n9AAoJEKVg1VMiehFYoqcQAL9x9g88HlXWBkc0VRURfHJa
+rdfgrLC+svok6EGd9USAokrrRuA+QB4FvCXOB/b46esG3axBUxT7TIIwMuIVbSOX
+5/sG+NJ+93Pc6rgrWgkM9igAV3RklTS07g7lGYo0XmDEM9FoxCcO0X2ecS8svdbT
+MkcbghphnTu+kLH0yr++w+s3nEAw/RLc2+dtR3mD5h+9NPoLfYtguuNdHHOXTSuU
+qA/6zbiFCrg6VUxGVQsiaFsa5+3ho3VEqaQVicls5OBKd1RD/5OR1rU4nnqIyF6D
+AQCIOp3a3zjB5wSi/AQpKK8zuE6Fd3KyW/NyGEHCCCNYjkZIoUXk3fcUgXLbWXZZ
+vBVsjLNKyBB3L1GavR99a3Zrj9LBUtzqEAKTVIn4MC8KD6kiJZdnsJlchtsaX5bb
+UY410eVFzxhOuhjjIhOUJB2yTURDrpntkKwBYJDL+dlG19W6j0bQaIF5qfDKXRQ9
+6dS0whR+iimOS9+VUbYV/s6jYHAoGiSasUu0wfAFdgyk1RLD955T+0/OQ+uwUbdD
+DqJVGEKwK17XhO50ytm23P6GAq8eDPyQ784ywYkdZ5P8ZJHjxMh8HDxwKvr2OwZv
+2CwFYPW5HH6WTdEePspMUbmmmhI+lTF5k+Q7IPrJXmAaKPNAht7mCM/aXBuO5TJF
+CITizcL1bdZa77wMQ3Pm
+=xDrM
+-----END PGP SIGNATURE-----
+
+--=-LlcIQx/+4MzLDGz/bhTW--
+
