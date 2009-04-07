@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54194 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752360AbZDMQa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 12:30:56 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:30:56 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18915.26545.651518.817037@gargle.gargle.HOWL> (sfid-20090413_183059_188965_3A1FADAC)
-Date: Mon, 13 Apr 2009 21:56:25 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/11] ath9k: Handle ASPM properly for RFKILL
+Received: from mail-qy0-f118.google.com ([209.85.221.118]:46081 "EHLO
+	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663AbZDGNUT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 09:20:19 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239110010.22453.41.camel@johannes.local>
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
+	 <1239109497.15015.12.camel@maxim-laptop>
+	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 07 Apr 2009 16:20:12 +0300
+Message-Id: <1239110412.15015.23.camel@maxim-laptop> (sfid-20090407_152026_597162_E2ABA456)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Radio enable/disable have to handle ASPM state properly.
-This patch fixes it.
+On Tue, 2009-04-07 at 15:13 +0200, Johannes Berg wrote:
+> On Tue, 2009-04-07 at 16:04 +0300, Maxim Levitsky wrote:
+> 
+> > > > > > Looking a bit deeper I discovered that each time NM disconnects from a
+> > > > > > networks it sets random ssid/essid to the card (using wireless
+> > > > > > extensions)
+> > > > > 
+> > > > > This forces a scan
+> > > > > 
+> > > > > > After that scan fails for some time.
+> > > > > > 
+> > > > > > as a NM free example you can run 
+> > > > > > 
+> > > > > > iwconfig wlan0 essid dummy
+> > > > > > iwlist scan
+> > > > > 
+> > > > > and then this fails with EBUSY.
+> > > > Thanks for explanation.
+> > > > Since NM has its reasons to clear essid (to prevent unwanted
+> > > > association), then what can be  done to prevent this (and still use
+> > > > wireless extensions, since nl80211 support isn't yet mature)?
+> > > 
+> > > Nothing. Wext sucks, news at 11, yadda.
+> > Thanks.
+> > Everything understood.
+> 
+> Of course, we can go back to dropping the scan request, but that
+> wouldn't be very nice.
+> 
+> Is this creating any problems?
+Yep, but dropping the request won't help ether.
+Problem is that wpa_supplicant will attempt to scan before association,
+scan fails (it doesn't know it is already running) thus it waits 10
+seconds. (I patched it to wait 2 seconds).
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+It happens if user first disconnects, and then reconnects to a network
+(typical test I do for time it takes to connect)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 8b6a7ea..1a9bf7e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1089,10 +1089,10 @@ void ath_radio_enable(struct ath_softc *sc)
- 	int r;
- 
- 	ath9k_ps_wakeup(sc);
--	spin_lock_bh(&sc->sc_resetlock);
-+	ath9k_hw_configpcipowersave(ah, 0);
- 
-+	spin_lock_bh(&sc->sc_resetlock);
- 	r = ath9k_hw_reset(ah, ah->curchan, false);
--
- 	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to reset channel %u (%uMhz) ",
-@@ -1154,6 +1154,7 @@ void ath_radio_disable(struct ath_softc *sc)
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
- 	ath9k_hw_phy_disable(ah);
-+	ath9k_hw_configpcipowersave(ah, 1);
- 	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
- 	ath9k_ps_restore(sc);
- }
--- 
-1.6.2.2
+Now I patched it not to clear essid on disconnect, and this helped
+reduce connect times by about 2 seconds.
+
+now it takes just 3~4 seconds to connect to open network, and ~6 seconds
+to WPA2 network.
+
+(This is with patched dhclient, I reduced its timeouts, but this is
+another story.... it seems that first DHCPREQUEST never succeeds, and I
+tested this with 2 cards, and few wireless networks)
+
+
+Best regards,
+	Maxim Levitsky
+
+> 
+> johannes
 
