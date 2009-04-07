@@ -1,84 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41892 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:60662 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751644AbZDWL4p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 07:56:45 -0400
-Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1240485352.15894.3.camel@localhost.localdomain>
-References: <1240419177.12282.3.camel@localhost.localdomain>
-	 <20090422170852.GA7298@jm.kir.nu>
-	 <1240426517.12282.11.camel@localhost.localdomain>
-	 <1240441752.14995.8.camel@localhost.localdomain>
-	 <1240475973.30504.1.camel@localhost.localdomain>
-	 <1240484281.18245.16.camel@localhost.localdomain>
-	 <1240485352.15894.3.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 23 Apr 2009 07:57:55 -0400
-Message-Id: <1240487875.18245.37.camel@localhost.localdomain> (sfid-20090423_135649_839561_06BA351A)
-Mime-Version: 1.0
+	id S1760445AbZDGQKh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 12:10:37 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 09:10:37 -0700
+Date: Tue, 7 Apr 2009 09:10:33 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/5] cfg80211: Process regulatory max bandwidth
+	checks for HT40
+Message-ID: <20090407161033.GB5758@tesla> (sfid-20090407_181050_747866_1358A557)
+References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com> <1239048958-11775-2-git-send-email-lrodriguez@atheros.com> <1239098925.22453.10.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1239098925.22453.10.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-04-23 at 12:15 +0100, Marcel Holtmann wrote:
-> Hi Dan,
+On Tue, Apr 07, 2009 at 03:08:45AM -0700, Johannes Berg wrote:
+> On Mon, 2009-04-06 at 16:15 -0400, Luis R. Rodriguez wrote:
 > 
-> > > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
-> > > > > > > instead of WEXT. I don't seem to be able to control the from the command
-> > > > > > > line and the -D option doesn't take.
-> > > > > > 
-> > > > > > I would assume you are doing this with NM. You could either change it to
-> > > > > > register the interface (this is not from -D option, but from the D-Bus
-> > > > > > message) with the nl80211 driver or try to build wpa_supplicant without
-> > > > > > WEXT support (which would make the nl80211 wrapper the default one). I
-> > > > > > don't think either of these are yet acceptable as a generic solution,
-> > > > > > but making NM request driver "nl80211,wext" could be a suitable first
-> > > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
-> > > > > > first try with nl80211 and if needed, fall back to WEXT).
-> > > > > 
-> > > > > I am doing manual testing and with ConnMan. However I would prefer to
-> > > > > have a global driver setting "nl80211,wext" that I can give on the
-> > > > > command line and that will then chosen as default if the addInterface
-> > > > > method doesn't give a driver. I really don't need a per interface
-> > > > > setting here.
-> > > > 
-> > > > Um, you can specify a driver for the interface you add in the dbus call
-> > > > for addInterface.  Add a "driver" key to your dict with the driver you
-> > > > want in the value.  Is there a bug with that?
-> > > 
-> > > I know that I can do that. I was just looking for a global configuration
-> > > switch to default to nl80211,wext via D-Bus system activation and not
-> > > via changing the code.
-> > 
-> > Even with system activation you still need to call addInterface, which
-> > can take the driver.  I still don't quite understand what you're getting
-> > at here, I guess...  When you say "not change code" you mean in the
-> > process that's calling wpa_supplicant?
+> > +static bool is_ht40_not_allowed(struct ieee80211_channel *chan)
 > 
-> that is exactly what I mean. So to switch NM to use nl80211 you would
-> have to change the NM code. I prefer to have this a command line option
-> so people can turn it back to wext in case something breaks. Or a vendor
-> driver for that matter (not that I care about these).
+> I think it would be nicer on the reader to remove the not?
+> 
+> > +{
+> > +	if (!chan)
+> > +		return true;
+> > +	if (chan->flags & IEEE80211_CHAN_DISABLED)
+> > +		return true;
+> > +	/* This would happen when regulatory rules disallow HT40 completely */
+> > +	if (IEEE80211_CHAN_NO_HT40 == (chan->flags & (IEEE80211_CHAN_NO_HT40)))
+> > +		return true;
+> 
+> How would that happen at this point?
 
-That's exactly why it's hardcoded, so people can't change it just on a
-whim, and break their stuff.  It's great and desired to try nl80211 to,
-as a developer, test it out and make sure it works with nl80211 (and fix
-supplicant bugs that come up) but, of course, that shouldn't be done for
-end-users.
+Due to the regulatory freq rule.
 
-The real fix here is to do what Johannes and I were talking about two
-nights ago; provide udev-based driver hints for those drivers supporting
-nl80211, or else have NM inspect the driver directly with netlink and
-determine whether it supports nl80211, and then direct wpa_supplicant to
-use nl80211 instead of wext.  I'll take a patch to do that, because I
-want to kill wext as much as you do.
+> /me stops reading.
+> 
+> Ok, whatever, I know I want to rewrite most of this anyway.
 
-But hacking that stuff in without doing it the right way is only
-suitable for development, and given that, I'd be against any sort of
-change to wpa_supplicant as you've proposed.
-
-Dan
-
-
+:)
