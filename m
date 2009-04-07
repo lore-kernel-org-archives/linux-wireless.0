@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16425 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751141AbZDTBRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 21:17:06 -0400
-Subject: Re: [PATCH] MAC80211: Remove unused
- MAC80211_VERBOSE_SPECT_MGMT_DEBUG.
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Robert P. J. Day" <rpjday@crashcourse.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1240061918.4755.42.camel@johannes.local>
-References: <alpine.LFD.2.00.0904180930530.3509@localhost.localdomain>
-	 <1240061918.4755.42.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 20 Apr 2009 09:11:13 +0800
-Message-Id: <1240189873.354.38.camel@debian> (sfid-20090420_031713_861870_7C66A1D8)
-Mime-Version: 1.0
+Received: from web58908.mail.re1.yahoo.com ([66.196.100.237]:43070 "HELO
+	web58908.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754685AbZDGTlT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 15:41:19 -0400
+Message-ID: <422915.71719.qm@web58908.mail.re1.yahoo.com> (sfid-20090407_214122_452635_9559A27B)
+Date: Tue, 7 Apr 2009 12:41:17 -0700 (PDT)
+From: Philip Rakity <prakity@yahoo.com>
+Subject: [PATCH] libertas: don't leak skb on receive error
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+	prakity@yahoo.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-04-18 at 21:38 +0800, Johannes Berg wrote:
-> On Sat, 2009-04-18 at 09:33 -0400, Robert P. J. Day wrote:
-> > Remove this unused Kconfig variable, which Intel apparently once
-> > promised to make use of but never did.
-> > 
-> > Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
-> 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Ack. Sorry about it!
 
-Thanks,
--yi
+Don't lead memory when receive errors 
+Signed-off-by: Philip Rakity <prakity@yahoo.com>
 
-> FWIW, this is the exact revert of the commit introducing the option:
-> 
-> commit 7b1e78d5052a92e95d851fbb0236a712264fe7e8
-> Author: Yi Zhu <yi.zhu@intel.com>
-> Date:   Wed Jun 18 17:53:43 2008 +0300
-> 
->     mac80211: add MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option
->     
->     The patch introduces MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option to
->     suppress Spectrum Management 802.11h related debug logs.
->     
->     Signed-off-by: Zhu Yi <yi.zhu@intel.com>
->     Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> 
-> So it's been there for over half a year. I guess we learn from that to
-> not take Kconfig symbols that are unused in the first place ;)
-> 
-> johannes
+--- linux-2.6.29/drivers/net/wireless/libertas/rx.c.old    2009-04-01 13:19:26.000000000 -0700
++++ linux-2.6.29/drivers/net/wireless/libertas/rx.c    2009-04-01 13:19:57.000000000 -0700
+@@ -170,6 +170,7 @@
+         lbs_deb_rx("rx err: frame received with bad length\n");
+         priv->stats.rx_length_errors++;
+         ret = 0;
++        dev_kfree_skb(skb);
+         goto done;
+     }
+ 
+@@ -181,6 +182,7 @@
+         lbs_pr_alert("rxpd not ok\n");
+         priv->stats.rx_errors++;
+         ret = 0;
++        dev_kfree_skb(skb);
+         goto done;
 
+
+
+      
