@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52152 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbZDZIcf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 04:32:35 -0400
-Subject: Re: [PATCH RFC] cfg80211: Add ies_allocated check before copying
- ies
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <200904252236.34802.mb@bu3sch.de>
-References: <200904252236.34802.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y16R8kEcIQtUA99klMfz"
-Date: Sun, 26 Apr 2009 10:32:32 +0200
-Message-Id: <1240734752.17781.3.camel@johannes.local> (sfid-20090426_103238_101566_2C594CEE)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:49588 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754640AbZDGTl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 15:41:57 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: changing number of queues in ops->start
+Date: Tue, 7 Apr 2009 21:40:23 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200904072024.41910.mb@bu3sch.de> <200904072133.21296.mb@bu3sch.de> <1239133078.7187.3.camel@johannes.local>
+In-Reply-To: <1239133078.7187.3.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904072140.23318.mb@bu3sch.de> (sfid-20090407_214201_463238_3FCB9439)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 07 April 2009 21:37:58 Johannes Berg wrote:
+> On Tue, 2009-04-07 at 21:33 +0200, Michael Buesch wrote:
+> 
+> > > Well, I suppose you could register with the max and later reduce and
+> > > stop the remaining queues you're not using... Or not stop them and drop
+> > > packets on them. That's somewhat fragile, gives people who look at tc a
+> > > wrong idea, and I can't imagine supporting it, but it should work.
+> > 
+> > mkay, I'll try this. thanks :)
+> > 
+> > I wonder, however, will mac80211 try to queue packets on queues that are stopped?
+> > And I think just dropping them is not an option, because this will cause breakage.
+> > 
+> > What about just queueing everything on a single queue, no matter what queue mac80211
+> > puts the frame into? Would this cause ordering issues?
+> > Or the other way around, is there anything that _depends_ on the higher priority queues
+> > to get sent before the higher priority queues?
+> 
+> mac80211 won't try to select a queue higher than hw->queues at
+> select_queue time, so it shouldn't try to put packets onto that queue,
+> look in wme.c.
 
---=-Y16R8kEcIQtUA99klMfz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok I see. So you say it's OK to lower hw->queues after ieee80211_register.
+Should I reset hw->queues back to the value ieee80211_register was called with, before
+I call unregister/free? Are there resources allocated by the number of queues?
 
-On Sat, 2009-04-25 at 22:36 +0200, Michael Buesch wrote:
-> I don't fully understand the code, but let's imagine the following situat=
-ion:
->=20
-> - cfg80211_bss_update was called and the ie was stored to allocated space=
-.
-> - The information_elements pointer is changed to the allocated space.
-> - cfg80211_bss_update is called again, but now the ie fits into the
->   space after the "found" structure.
-> - But the information_elements pointer still points to the allocated spac=
-e.
->   So it may overrun the buffer and crash.
->=20
-> Is this scenario possible?
-> If yes, please consider the following patch.
-
-Yeah, looks like a bug, good catch. I don't think the fix is correct
-though -- you lose the data in this case.
-
-I think it should simply be:
-
->  			size_t ielen =3D res->pub.len_information_elements;
-> =20
-> -			if (ksize(found) >=3D used + ielen) {
-> +			if (!found->ies_allocated && ksize(found) >=3D used + ielen) {
->  				memcpy(found->pub.information_elements,
->  				       res->pub.information_elements, ielen);
->  				found->pub.len_information_elements =3D ielen;
->=20
-
-so that the else branch gets a chance to reallocate if necessary, would
-you agree?
-
-johannes
-
---=-Y16R8kEcIQtUA99klMfz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ9BwbAAoJEKVg1VMiehFYqHIP/1p/uHf8Q/qHZtDojaNZ2+LU
-jcgbKRIxbkhqBY/5dJ0zoabMNnwScBbOW4eVFWvb45crCzUxxHgc51Zofl1PQkUj
-EmxFhGzWNMbOF8LcrcpfObcNCq8LyaX7lbWP+BNeJY4K+c2Qe2b0ww6R4iVhsmpn
-SF/mtCS/vPM3y97SXi0+6++Rj/3WlnMAUdNKDnuJckCITxsecMHh3jTd6yGll61x
-OYBdM5U7KmhiTSwCWq68l8ls8Qh3/J5IbtO+RScAsPNk8c+uoDQShOoTdff/w9w2
-kZUZCos5AfUVDGatpyjqLNw22jKl+8ipQZ5c2YblX/YhfH9Wi2zFKAXqe6xzttZf
-Dw+19xnzOTaR+vzVtNTjvzHR6Man1c0ag94VwwRJhqEaqdjrVC/Xri5onuPUz46n
-1djX16T2pTV6JntM+ck81vnS6/4G/2uXyz/HQu9NGI0dQg4fWGm9+mmncN4YQJw4
-eXOHJ9PEM/F+1dTWvgwFms+PXql7sbnMQttR+QQBh780pw2qU/LVRHoMIFaI98c2
-UNqXHZdPuoa8mFXyIrmyV2ctD87aYMcoVcvInsdjpHECyu7rL2lZ1r621jUYOWwi
-QSQVPRM3KUpUPBjn6AMSYk/DcIMlIFXI9wYYgHqCHohLvNyaQhbOCcFRsuhNvcSd
-BzhgqjlRYVQsIMG/n/3R
-=m4k+
------END PGP SIGNATURE-----
-
---=-Y16R8kEcIQtUA99klMfz--
-
+-- 
+Greetings, Michael.
