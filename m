@@ -1,102 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54003 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178AbZDTRde (ORCPT
+Received: from mail-qy0-f118.google.com ([209.85.221.118]:43365 "EHLO
+	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755263AbZDGNLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 13:33:34 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1240248385.5260.15.camel@localhost.localdomain> (sfid-20090420_192718_984250_38AB6869)
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
-	 <1240247636.5260.11.camel@localhost.localdomain>
-	 <1240248008.4632.10.camel@johannes.local>
-	 <1240248385.5260.15.camel@localhost.localdomain>
-	 (sfid-20090420_192718_984250_38AB6869)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Hq8cgFaJd9heiAPo/LYW"
-Date: Mon, 20 Apr 2009 19:32:53 +0200
-Message-Id: <1240248773.4632.13.camel@johannes.local> (sfid-20090420_193340_676286_D83A3D7C)
+	Tue, 7 Apr 2009 09:11:08 -0400
+Received: by qyk16 with SMTP id 16so4714087qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 06:11:07 -0700 (PDT)
+Subject: Re: What is needed to inplement a AP support in a driver?
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Rami Rosen <roszenrami@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <b25312890904070225t44f72ecdsd87a29f7fed341b8@mail.gmail.com>
+References: <1239062777.4705.30.camel@maxim-laptop>
+	 <b25312890904070225t44f72ecdsd87a29f7fed341b8@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 07 Apr 2009 16:11:02 +0300
+Message-Id: <1239109862.15015.17.camel@maxim-laptop> (sfid-20090407_151114_804825_AB71B9B4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-04-07 at 12:25 +0300, Rami Rosen wrote:
+> Hi,
+> > Why iwl3945 still doesn't support AP mode?
+> see also this patch, titled: "wlwifi: disable AP mode"
+> 
+> http://www.spinics.net/lists/linux-wireless/msg24688.html
+> 
+> Regards,
+> Rami Rosen
 
---=-Hq8cgFaJd9heiAPo/LYW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Quoiting this patch:
 
-> > > wlan0: associated
-> >=20
-> > > wlan0: deauthenticated (Reason: 2)
-> >=20
-> > > wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=3D0x431 status=3D=
-0 aid=3D2)
-> > > wlan0: associated
-> >=20
-> > > wlan0: deauthenticated (Reason: 2)
-> >=20
-> > > wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=3D0x431 status=3D=
-0 aid=3D2)
-> > > wlan0: associated
-> >=20
-> > > wlan0: deauthenticated (Reason: 2)
-> >=20
-> > > Do you need anything else? I have really no idea what happens here an=
-d I
-> > > like to get it fixed.
-> >=20
-> > Can you do the kernel log with timing please? It seems strange to get
-> > "previous authentication is no longer valid" from the AP as a reason
-> > code while associated.
->=20
-> I can try but I am not home anymore. So no promises. However it keeps
-> happening in a pretty constant rate. Like every 2-5 seconds interval.
 
-Ok. The thing I don't understand is why the AP would deauth you. And
-with that reason code to boot.
+> iwlwifi does not support AP mode in any way. For one, it doesn't even
+> buffer multicast/broadcast frames properly. We didn't allow zd1211rw AP
+> mode to be enabled without this, so iwlwifi shouldn't be allowed to
+> advertise AP mode either.
+This is interesting, this means it doesn't save frames when client is in power save mode?
+IBSS doesn't have this?
 
-> Could be the iwlagn driver for 5350 hardware doing something wrong here.
-> And I also forced it to use sw_crypto.
 
-I suppose I could try 5350. But I see no reason it would influence the
-auth/assoc handshake.
 
-> Do you have any ideas so far or want me to put some extra debug code in
-> there. Not sure if I get that kernel up before tomorrow morning.
+> 
+> 
+> 
+> It also doesn't work at all, it doesn't even answer to probe requests,
+> I'm guessing the packet injection code was disabled again.
+Packet injection (even fragmentation) works fine here.
+Also, now hostapd responds to probes isn't it?
+(I was said that now hostapd sends/recieves all managment frames)
 
-Sorry, not really. A parallel monitor capture might help:
-	iw dev wlan0 interface add moni0 type monitor flags none
-	ip link set moni0 up
-	tcpdump -s 10000 -w /tmp/dump.pkt -i moni0 -p
-	# now leave that running and do whatever as usual
 
-johannes
+> 
+> 
+> [  471.524478] iwlagn: ERROR: APs don't scan
+> 
+> this is a long-standing bug, of course APs scan to know their
+> surroundings, not sure why this is there, it's also very pointless since
+> I can remove it by enabling software scan...
+Here, software scan fixes it, besides many device don't have hardware scan
+> 
+> 
+> 
+> [  487.507346] iwlagn: Microcode SW error detected.  Restarting 0x2000000.
+This probably was fixed now, there were many reports about microcode errors.
+> 
 
---=-Hq8cgFaJd9heiAPo/LYW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I just feel, that AP mode can be done, and it isn't that hard to enable it.
 
-iQIcBAABAgAGBQJJ7LHDAAoJEKVg1VMiehFYOsEP/3wkTav68EM8pcYQelp7Qfqx
-NwyDJJ7PsFkL64f2fsW6rHFf6B+6kwuWBQPYJZf4jXTIJcEBdFzPc4Kst7kyOyG3
-rGrUq/ev8G7qm6eRg7uaFiMt46y19G9TXZjnARbbHGcF8b156Rfb4CfFPFiuaOLL
-QNepYw/jC0ooxKO491hI8ig3fZBt7fc1VIilutsHYwtBv5ZNqhasXsv+KkzyBnz7
-6kGxpG7vVTtyErrymGz6dniB0QV7qWUlc5ZG3+IrrAVLMggVMyaJQjGHmYTYn/5d
-7mLitwNChMS65LkJj8f60CWKibROzdELa7z/gNxipewpxO+8kHgNfLQBKV6i1Vil
-ST1Xh342IoxUjqGXPj1W6DyWuGoa5XEuWstVJeAqO/ivNMW8nNgDnV8/tCMXr85w
-NRt7Z5BU6ZsT0WCSBTgUZYGMOqA2+l/CQmZOuIVeMrIQJHD/+T3WhsRWcb0dDIQo
-ZE5Co4I6HVWfawV6YbumJVuC53LN4AuH+syb+xvma20yXXvDhd2fH67EYMtvMpiz
-iag4EJBqYFbpHKjjTNQwhEfX0bH8yyMuHCkgUjT2StW7e73JW4buy9RXtEYSYwC3
-7H1Jy5kH2ibeGJOSLp6pmuoPLwMmn4msX4gz5GSdWtZT19imhsd/B2JHJjLUoHsC
-vTF7dADXmusAbGtg8mrC
-=A5Pq
------END PGP SIGNATURE-----
 
---=-Hq8cgFaJd9heiAPo/LYW--
+Best regards,
+	Maxim Levitsky
+
 
