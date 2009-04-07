@@ -1,159 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:40697 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754271AbZD2WVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 18:21:47 -0400
-Message-Id: <20090429220929.995031553@mini.kroah.org> (sfid-20090430_002159_684585_8645450C)
-Date: Wed, 29 Apr 2009 15:07:46 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: [patch 47/58] ath9k: implement IO serialization
-References: <20090429220659.339950874@mini.kroah.org>
-In-Reply-To: <20090429221657.GA11765@kroah.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:45366 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140AbZDGUlh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 16:41:37 -0400
+Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
+ sending assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com> (sfid-20090407_223826_570259_084A19A1)
+References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	 <1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
+	 <1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
+	 <1239131370.6199.0.camel@johannes.local>
+	 <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com>
+	 (sfid-20090407_223826_570259_084A19A1)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zG7GZ2Qbtb5ePyGsAIFc"
+Date: Tue, 07 Apr 2009 22:41:03 +0200
+Message-Id: <1239136863.7475.66.camel@johannes.local> (sfid-20090407_224140_652703_55CB63AE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.27-stable review patch.  If anyone has any objections, please let us know.
 
-------------------
+--=-zG7GZ2Qbtb5ePyGsAIFc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
+On Tue, 2009-04-07 at 13:38 -0700, Luis R. Rodriguez wrote:
 
-This is a port of:
-commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
-for 2.6.27
+> >>                 switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC=
+_OFFSET) {
+> >>                 case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+> >>                         if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
+> >>                                 cap &=3D ~IEEE80211_HT_CAP_SUP_WIDTH_2=
+0_40;
+> >>                                 cap &=3D ~IEEE80211_HT_CAP_SGI_40;
+> >>                         }
+> >>                         break;
+> >>                 case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+> >>                         if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
+> >>                                 cap &=3D ~IEEE80211_HT_CAP_SUP_WIDTH_2=
+0_40;
+> >>                                 cap &=3D ~IEEE80211_HT_CAP_SGI_40;
+> >>                         }
+> >
+> > Yeah, that looks ok.
+>=20
+> That's what was there or what I added in my patches.
 
-All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
-serialization of IO when on non-uniprocessor systems. PCI
-express devices not not require this.
+Indeed, it's already there. I guess I got confused, sorry for the noise.
 
-This should fix our only last standing open ath9k kernel.org
-bugzilla bug report:
+johannes
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12110
+--=-zG7GZ2Qbtb5ePyGsAIFc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
- drivers/net/wireless/ath9k/ath9k.h |    4 ++--
- drivers/net/wireless/ath9k/core.c  |    1 +
- drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
- 4 files changed, 55 insertions(+), 2 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -591,8 +591,8 @@ struct ath9k_country_entry {
- 	u8 iso[3];
- };
- 
--#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
--#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
-+#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
-+#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
- 
- #define SM(_v, _f)  (((_v) << _f##_S) & _f)
- #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
---- a/drivers/net/wireless/ath9k/core.c
-+++ b/drivers/net/wireless/ath9k/core.c
-@@ -1120,6 +1120,7 @@ int ath_init(u16 devid, struct ath_softc
- 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
- 
- 	spin_lock_init(&sc->sc_resetlock);
-+	spin_lock_init(&sc->sc_serial_rw);
- 
- 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
- 	if (ah == NULL) {
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -1022,6 +1022,7 @@ struct ath_softc {
- 	spinlock_t sc_rxbuflock;
- 	spinlock_t sc_txbuflock;
- 	spinlock_t sc_resetlock;
-+	spinlock_t sc_serial_rw;
- 	spinlock_t node_lock;
- };
- 
-@@ -1069,4 +1070,36 @@ void ath_skb_unmap_single(struct ath_sof
- void ath_mcast_merge(struct ath_softc *sc, u32 mfilt[2]);
- enum ath9k_ht_macmode ath_cwm_macmode(struct ath_softc *sc);
- 
-+/*
-+ * Read and write, they both share the same lock. We do this to serialize
-+ * reads and writes on Atheros 802.11n PCI devices only. This is required
-+ * as the FIFO on these devices can only accept sanely 2 requests. After
-+ * that the device goes bananas. Serializing the reads/writes prevents this
-+ * from happening.
-+ */
-+
-+static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
-+{
-+	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+}
-+
-+static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
-+{
-+	u32 val;
-+	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+	return val;
-+}
-+
- #endif /* CORE_H */
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -369,6 +369,25 @@ static void ath9k_hw_set_defaults(struct
- 	}
- 
- 	ah->ah_config.intr_mitigation = 0;
-+
-+	/*
-+	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
-+	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
-+	 * This means we use it for all AR5416 devices, and the few
-+	 * minor PCI AR9280 devices out there.
-+	 *
-+	 * Serialization is required because these devices do not handle
-+	 * well the case of two concurrent reads/writes due to the latency
-+	 * involved. During one read/write another read/write can be issued
-+	 * on another CPU while the previous read/write may still be working
-+	 * on our hardware, if we hit this case the hardware poops in a loop.
-+	 * We prevent this by serializing reads and writes.
-+	 *
-+	 * This issue is not present on PCI-Express devices or pre-AR5416
-+	 * devices (legacy, 802.11abg).
-+	 */
-+       if (num_possible_cpus() > 1)
-+               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
- }
- 
- static inline void ath9k_hw_override_ini(struct ath_hal *ah,
+iQIcBAABAgAGBQJJ27pcAAoJEKVg1VMiehFYN8UQAMIdtAXrMYEYCiG3nFTJvwP3
+lRUbEE7gTnKnskjJRsXDl/ptucSb8QF7L+fq1P2qAx73PSrEGqgMGpJMaYXIPIB4
+WyS6eQXVb1He0ovMshh+vDaAdU/Pi/6kJVr/1JOgo4DEVvSWgkHMTv6UndanijJG
+c/iN3gzY9hFVBOpPiy7clhm8ecfX0pIqPI6WBE3zXMPcAS1Zzz+76yDWbIsNMYF7
+/Wevl78S9M4p62eg/QtbB9womxVXcN7ZA1JPINvTmwk3xYd8M626B0PxCJi7ZY0u
+L4mT2/ZFTtxnxuVcTVDVKeKSODk6W7m5LEVBW9IWY0PwkWytl/cx6WOrPzJvJHU8
+8S+lt+WDj/N5rgrg3NCAc/2v3HaxL1K25n4eOhl2K68Z5IjQyCDeNjnDsppRZ9K8
+ISJSY5VGLjy8j0DVcI70pXlpqK5l4ZXfsmg5lfS9OFvmIZ4tP3vTaG2660Bra6jt
+PPFIg7e9UBm3zX7K890GqxKZR607d3oakWdQkF6tc8d+mxOIK3bECbJomIETyhb7
+2mTI9zACNp2RjTWuCr2TrSmwxNQiFTpT/o1z09lnjWtIDPnoSjerU7hA6kikR3TI
+IgtIcyu61rIkan7mt7Ngecw/MdLfMSwy1MstTEOYHNWNxOY80+Q2Cl2H9Gbf3Yvh
+/4UceGQ0rgUxrJyuBXwL
+=uayT
+-----END PGP SIGNATURE-----
 
+--=-zG7GZ2Qbtb5ePyGsAIFc--
 
