@@ -1,84 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40831 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765065AbZDAO3F convert rfc822-to-8bit (ORCPT
+Received: from woodchuck.wormnet.eu ([77.75.105.223]:55303 "EHLO
+	woodchuck.wormnet.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbZDGWHg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 10:29:05 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Kalle Valo <kalle.valo@iki.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Date: Wed, 1 Apr 2009 07:29:01 -0700
-Subject: RE: more thoughts on power saving (was: wireless powersaving (in
- NM?))
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3546FDD123@orsmsx506.amr.corp.intel.com> (sfid-20090401_162909_624541_23BD8722)
-References: <1237891149.4320.73.camel@johannes.local>
-	<1238583879.5970.195.camel@johannes.local> <87zlf0hbk4.fsf@litku.valot.fi>
-In-Reply-To: <87zlf0hbk4.fsf@litku.valot.fi>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 7 Apr 2009 18:07:36 -0400
+Date: Tue, 7 Apr 2009 22:59:56 +0100 (BST)
+From: Jamie Lentin <jm@lentin.co.uk>
+To: kalle.valo@iki.fi
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] Add device ID for OQO model 01+
+Message-ID: <alpine.DEB.1.10.0904072237270.24512@woodchuck.wormnet.eu> (sfid-20090408_000740_759462_DFC9097F)
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If I understand correctly, based on implementation, if VoIP support silence detection (which most of the codec support it), it will not constantly sending packets; that might be the reason for bad quality.
+Add USB device ID for OQO 01+'s internal wireless LAN
 
-Wey-Yi Guy
-Intel Corporation
-2111 N.E. 25th Avenue  M/S JF3-308                 
-Hillsboro OR 97124-5961
-USA
-Work Phone: 503-264-6023 (OR)
-Cell Phone: 503-329-8410
-Email: wey-yi.w.guy@intel.com
- 
+An OQO employee mentions the chip's true identity here:-
+    ftp://ftp.oqo.com/unsupported/linux/OQOLinux.html
 
------Original Message-----
-From: Kalle Valo [mailto:kalle.valo@gmail.com] On Behalf Of Kalle Valo
-Sent: Wednesday, April 01, 2009 4:13 AM
-To: Johannes Berg
-Cc: Dan Williams; Guy, Wey-Yi W; linux-wireless; Matthew Garrett; Marcel Holtmann
-Subject: Re: more thoughts on power saving (was: wireless powersaving (in NM?))
+Signed-off-by: Jamie Lentin <jm@lentin.co.uk>
+---
+  drivers/net/wireless/at76c50x-usb.c |    2 ++
+  1 files changed, 2 insertions(+), 0 deletions(-)
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> Hi,
->
-> So I had a few more thoughts.
->
-> Let me start with a story :)
->
->         I use my N810 device for landline calls via SIP these days.
->         Every time I'm in a call, audio is very choppy and I can barely
->         understand the person I'm talking to -- my fix is to "ping -i
->         0.05" the device to disable its powersaving...
->
->
-> Now, why is audio choppy? I was blaming it on the wireless powersaving,
-> and disabling that clearly fixes it. But is the problem really just
-> there? I think it might also be the application -- its playback buffer
-> is smaller than the networking latency I am experiencing due to
-> wireless. I think I could probably tolerate an additional audio latency
-> of 150ms (my beacon interval being 102.4ms) or so, if audio wasn't
-> choppy.
-
-What's the DTIM count in your AP? N810 wakes up only for DTIM beacons,
-that might increase the latency.
-
-> That means the application (telepathy sofiasip I guess) would have
-> to have 150ms or so playback buffer to make the playback smooth with
-> delay. [1]
-
-[...]
-
-> [1] I don't quite see why this doesn't happen automatically, it seems it
-> must discard packets that don't fit into its idea of the stream timing
-
-N810 only disables the power save when there's a frame to transmit. I
-guess the SIP connection isn't constantly sending anything and that's
-why you get bad quality.
-
+diff --git a/drivers/net/wireless/at76c50x-usb.c 
+b/drivers/net/wireless/at76c50x-usb.c
+index 0c02f1c..744f4f4 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -250,6 +250,8 @@ static struct usb_device_id dev_table[] = {
+  	{ USB_DEVICE(0x03eb, 0x7617), USB_DEVICE_DATA(BOARD_505A) },
+  	/* Siemens Gigaset USB WLAN Adapter 11 */
+  	{ USB_DEVICE(0x1690, 0x0701), USB_DEVICE_DATA(BOARD_505A) },
++	/* OQO Model 01+ Internal Wi-Fi */
++	{ USB_DEVICE(0x1557, 0x0002), USB_DEVICE_DATA(BOARD_505A) },
+  	/*
+  	 * at76c505amx-rfmd
+  	 */
 -- 
-Kalle Valo
+1.6.2.1
+
