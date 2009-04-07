@@ -1,76 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32868 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379AbZDUVU0 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:48962 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754973AbZDGUYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 17:20:26 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1240343775.3327.3.camel@localhost.localdomain>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
-	 <1240247636.5260.11.camel@localhost.localdomain>
-	 <1240248008.4632.10.camel@johannes.local>
-	 <1240248385.5260.15.camel@localhost.localdomain>
-	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
-	 <1240343775.3327.3.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ULw+AuwIx3vY7z8v2MsS"
-Date: Tue, 21 Apr 2009 23:19:52 +0200
-Message-Id: <1240348792.17388.46.camel@johannes.local> (sfid-20090421_232030_897368_8033CB57)
+	Tue, 7 Apr 2009 16:24:44 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239112310.15015.25.camel@maxim-laptop>
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
+	 <1239109497.15015.12.camel@maxim-laptop>
+	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
+	 <1239110412.15015.23.camel@maxim-laptop>
+	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
+	 <1239112310.15015.25.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Tue, 07 Apr 2009 23:24:38 +0300
+Message-Id: <1239135878.17958.11.camel@maxim-laptop> (sfid-20090407_222449_694721_08B98E55)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-04-07 at 16:51 +0300, Maxim Levitsky wrote:
+> On Tue, 2009-04-07 at 15:27 +0200, Johannes Berg wrote:
+> > On Tue, 2009-04-07 at 16:20 +0300, Maxim Levitsky wrote:
+> > 
+> > > > Of course, we can go back to dropping the scan request, but that
+> > > > wouldn't be very nice.
+> > > > 
+> > > > Is this creating any problems?
+> > 
+> > > Yep, but dropping the request won't help ether.
+> > 
+> > Indeed.
+> > 
+> > > Problem is that wpa_supplicant will attempt to scan before association,
+> > > scan fails (it doesn't know it is already running) thus it waits 10
+> > > seconds. (I patched it to wait 2 seconds).
+> > > 
+> > > It happens if user first disconnects, and then reconnects to a network
+> > > (typical test I do for time it takes to connect)
+> > > 
+> > > Now I patched it not to clear essid on disconnect, and this helped
+> > > reduce connect times by about 2 seconds.
+> > > 
+> > > now it takes just 3~4 seconds to connect to open network, and ~6 seconds
+> > > to WPA2 network.
+> > > 
+> > > (This is with patched dhclient, I reduced its timeouts, but this is
+> > > another story.... it seems that first DHCPREQUEST never succeeds, and I
+> > > tested this with 2 cards, and few wireless networks)
+> > 
+> > Have you tried with a new tree and wpa_supplicant's (from git) nl80211
+> > driver? Might be a lot better.
+> I use NM and wpa_supplicant from -git
+> Last time, I tried nl80211 wpa_supplicant driver it didn't work well,
+> but I try again soon I  hope.
 
---=-ULw+AuwIx3vY7z8v2MsS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have just tried the nl80211 driver.
 
-Hi Marcel,
 
-> so I have built the latest wireless-testing tree with a new patches sent
-> by Reinette fixing the DMA issue. So far I have no problems and I am
-> unable to re-produce it. However this is a different AP and I disabled
-> the power control feature for now.
+First I get this in kernel logs:
 
-Ok.
 
-> I also updated wpa_supplicant and iw to the latest code and assume that
-> no fix in there silently fixed it for me.
+> [   29.971903] WARNING: at /home/maxim/software/kernel/linux-2.6/net/wireless/core.h:79 nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
+> [   29.971905] Hardware name: Aspire 5720     
+> [   29.971906] Modules linked in: nfsd exportfs ipv6 nfs lockd nfs_acl auth_rpcgss sunrpc cpufreq_powersave cpufreq_conservative cpufreq_userspace acpi_cpufreq coretemp sbp2 uvcvideo videodev v4l1_compat v4l2_compat_ioctl32 joydev iwl3945 iwlcore rfkill uhci_hcd mac80211 snd_hda_codec_realtek psmouse lib80211 video snd_hda_intel snd_hda_codec iTCO_wdt tg3 serio_raw ehci_hcd snd_hwdep snd_pcm_oss snd_mixer_oss sdhci_pci iTCO_vendor_support libphy output cfg80211 ata_piix sdhci nvidia(P) evdev ohci1394 snd_pcm snd_timer snd_page_alloc usbcore ext3 jbd mbcache fuse ahci libata
+> [   29.971936] Pid: 3688, comm: wpa_supplicant Tainted: P           2.6.29-wl #18
+> [   29.971938] Call Trace:
+> [   29.971948]  [<ffffffff80241320>] warn_slowpath+0xd0/0x130
+> [   29.971956]  [<ffffffffa08e4ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg80211]
+> [   29.971960]  [<ffffffff802a8263>] ? __alloc_pages_internal+0xe3/0x4f0
+> [   29.971965]  [<ffffffff804ade47>] ? netdev_run_todo+0x57/0x260
+> [   29.971972]  [<ffffffffa08e465d>] nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]
+> [   29.971979]  [<ffffffffa08e4ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg80211]
+> [   29.971981]  [<ffffffff802a86ee>] ? __get_free_pages+0x1e/0x60
+> [   29.971986]  [<ffffffff804a59ae>] ? __alloc_skb+0x6e/0x140
+> [   29.971993]  [<ffffffffa08e4ae4>] nl80211_get_wiphy+0x74/0xd0 [cfg80211]
+> [   29.972020]  [<ffffffff804c5986>] genl_rcv_msg+0x1b6/0x1f0
+> [   29.972023]  [<ffffffff804c57d0>] ? genl_rcv_msg+0x0/0x1f0
+> [   29.972027]  [<ffffffff804c4839>] netlink_rcv_skb+0x89/0xb0
+> [   29.972030]  [<ffffffff804c57b7>] genl_rcv+0x27/0x40
+> [   29.972032]  [<ffffffff804c4234>] netlink_unicast+0x2c4/0x2e0
+> [   29.972035]  [<ffffffff804a59ae>] ? __alloc_skb+0x6e/0x140
+> [   29.972038]  [<ffffffff804c4464>] netlink_sendmsg+0x214/0x310
+> [   29.972041]  [<ffffffff8049ceb7>] sock_sendmsg+0x127/0x140
+> [   29.972045]  [<ffffffff80258c20>] ? autoremove_wake_function+0x0/0x40
+> [   29.972049]  [<ffffffff802da0c7>] ? do_lookup+0x147/0x260
+> [   29.972052]  [<ffffffff802e375c>] ? dput+0xac/0x160
+> [   29.972054]  [<ffffffff8049dd17>] ? move_addr_to_kernel+0x57/0x60
+> [   29.972057]  [<ffffffff804a6e7c>] ? verify_iovec+0x3c/0xd0
+> [   29.972060]  [<ffffffff8049d059>] sys_sendmsg+0x189/0x320
+> [   29.972063]  [<ffffffff8049bf71>] ? sock_ioctl+0x81/0x270
+> [   29.972065]  [<ffffffff802dfd21>] ? vfs_ioctl+0x31/0xa0
+> [   29.972068]  [<ffffffff802dfe18>] ? do_vfs_ioctl+0x88/0x580
+> [   29.972071]  [<ffffffff802d20c9>] ? __fput+0x169/0x1e0
+> [   29.972074]  [<ffffffff802e03a9>] ? sys_ioctl+0x99/0xa0
+> [   29.972077]  [<ffffffff8020c5db>] system_call_fastpath+0x16/0x1b
+> [   29.972079] ---[ end trace b4d9e95705d7d0d8 ]---
+> 
+> 
+> 
+Then same -EBUSY errors are present, and this driver even says explictly this.
+(This is despite the fact I removed the essid clearing from the wpa_supplicant)
+In fact (now I speak about the wext driver) I put printfs in many its functions, and it seems that it only resets encryption keys
+before scanning now, and still device seems to be busy.
+This ensures that scan occurs twice, and adds up 2~3 seconds to association time, which consists about 40% of all time (~7 seconds)
 
-I wouldn't suspect any significant changes there -- for sure not iw :)
 
-> So we are suspecting that this issue was because of me having 3GB of RAM
-> and running on a 64-bit kernel. Does this makes sense and could be the
-> problem why it kept failing until I unload the iwlagn driver?
-
-I couldn't say. Nothing here makes much sense to me, unfortunately.
-
-johannes
-
---=-ULw+AuwIx3vY7z8v2MsS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ7jh2AAoJEKVg1VMiehFY04kP/2z67ulGYkQ45dtuGbTTv4IY
-oBp8/8Yfs+XLlIbNMceDAH1Ts3/WIc9mvD0IjrnIiyQQFV9XbQee4ebAytHILexS
-IaD1pXxysk73JoMPMb4HxFmwNTYlMyJfGhygQvBXgHGfif5U+C0ODe+wfG7lb1JY
-OxnpiVgUWeoTgCz0JEM5Al+D+aGAMaXKuLW9ACK6lgZibxO8BSLjQ2COsYf+4GUw
-w5g2ntJoO4hKHHVn/1vz5/1j81fVHEepTWn5s7DzFpq/svOwnC562PciWGxUum6Z
-J8sBmncdqHDAJqi8XFzXKDV91qfpnckrd4mkbKPYP6rnYrbddJ0O39A0kKLPi6Im
-O5Fv7ccAzusqaNNmnssYrdjDTMIL7tJs82/slL4BRRTcgdi70hfe26vyNj3/2p+U
-PbDB7/Xy+OXow/vquV1aNvbTEFVk00rJRHxsgk3o5pMagdC1Hon5g6SQQldwZH9I
-Wh6XHx/ezsfF/KEKp5aXGOlifVIxp1SlkbgKGiRGH3PGX9EhEb1CF5HC+mPqYQuB
-CzByBpVysrMgxuWpLMak/rWQnKKkCiCxA900UH8Nk4rCZuI0Ca4HXTSgtefp+UKC
-vyONLmfGKOxqoR81wAvt11pMHV4n05mtDJiV19+0GMeK+nATkpdXpgT4SxzUIdtC
-7X1pHfvPRXfxKDe5D0la
-=t5MR
------END PGP SIGNATURE-----
-
---=-ULw+AuwIx3vY7z8v2MsS--
+>  
+> 
+> Best regards,
+> 	Maxim Levitsky
+> > 
+> > johannes
+> 
 
