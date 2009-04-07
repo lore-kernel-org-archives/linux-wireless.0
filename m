@@ -1,121 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:14825 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756018AbZD0UDc convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46151 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758330AbZDGTib (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2009 16:03:32 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so92464rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Apr 2009 13:03:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200904251431.02196.alf@mypals.org>
-References: <200904251431.02196.alf@mypals.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 27 Apr 2009 13:03:17 -0700
-Message-ID: <43e72e890904271303q7f4c956fv176deb6e33fe3a56@mail.gmail.com> (sfid-20090427_220337_310284_0204BBD8)
-Subject: Re: Problems with ADM8211 driver
-To: Alf <alf@mypals.org>, Michael Wu <aluminum.tape@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 7 Apr 2009 15:38:31 -0400
+Subject: Re: mac80211: changing number of queues in ops->start
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200904072133.21296.mb@bu3sch.de>
+References: <200904072024.41910.mb@bu3sch.de>
+	 <1239132567.7187.1.camel@johannes.local>  <200904072133.21296.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JWQyr7REuQd/6TQg3mfo"
+Date: Tue, 07 Apr 2009 21:37:58 +0200
+Message-Id: <1239133078.7187.3.camel@johannes.local> (sfid-20090407_213850_057838_35001BE1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 25, 2009 at 1:31 PM, Alf <alf@mypals.org> wrote:
-> I have a D-Link PCI card with a ADM8211 driver:
->
-> =C2=A000:07.0 Network controller: ADMtek ADM8211 802.11b Wireless Int=
-erface
-> =C2=A0 =C2=A0(rev 11)
->
-> A few years ago I used it in Linux with the out-of-tree driver withou=
-t any
-> problems. =C2=A0I now have need of the card again in Linux, but the c=
-ard doesn't
-> want to associate with the AP. =C2=A0I tried the card under Windows a=
-nd it worked
-> well, so I know it's not hardware or configuration issues.
->
-> I am using kernel 2.6.29.1 with version 29 of the wireless_tools pack=
-age and
-> wpa_supplicant 0.6.9. =C2=A0I have disabled wpa_supplicant and have t=
-ried
-> configuring the card directly with iwconfig:
->
-> =C2=A0iwconfig wlan0 essid (ssid) channel 1 mode managed \
-> =C2=A0 =C2=A0key (some hex junk)
->
-> In the end, iwconfig reports:
->
-> =C2=A0wlan0 =C2=A0 =C2=A0 IEEE 802.11b =C2=A0ESSID:"(ssid)"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Mode:Managed =C2=A0Frequency:2.412=
- GHz =C2=A0Access Point: Not-Associated
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Tx-Power=3D27 dBm
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Retry min limit:7 =C2=A0 RTS thr:o=
-ff =C2=A0 Fragment thr=3D2352 B
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Encryption key:(some hex junk) =C2=
-=A0 Security mode:open
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Power Management:off
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Link Quality:0 =C2=A0Signal level:=
-0 =C2=A0Noise level:0
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Rx invalid nwid:0 =C2=A0Rx invalid=
- crypt:0 =C2=A0Rx invalid frag:0
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Tx excessive retries:0 =C2=A0Inval=
-id misc:0 =C2=A0 Missed beacon:0
->
-> There are a few weird things I'm observing:
->
-> - The signal level and noise level are both at 0.
->
-> - Even when scanning, the signal strength is very low even though the=
- AP is
-> 4 feet away (Quality=3D0/100 =C2=A0Signal level:19/100). =C2=A0Window=
-s reports a strong
-> signal.
->
-> - The kernel log only reports the following problems:
->
-> =C2=A0Apr 25 11:22:17 xyz wlan0: direct probe to AP 00:30:bd:60:d3:44=
- try 1
-> =C2=A0Apr 25 11:22:17 xyz wlan0: direct probe to AP 00:30:bd:60:d3:44=
- try 2
-> =C2=A0Apr 25 11:22:18 xyz wlan0: direct probe to AP 00:30:bd:60:d3:44=
- try 3
-> =C2=A0Apr 25 11:22:18 xyz wlan0: direct probe to AP 00:30:bd:60:d3:44=
- timed out
->
-> =C2=A0(the AP mac address is correct)
->
-> - When the card is loaded, there is a significant pause (about 15 sec=
-onds)
-> when I first try to do something with the card. =C2=A0For example, if=
- I load the
-> module and use iwconfig as outlined above and then run iwconfig again=
- to see
-> the configuration, it takes about 15 or 16 seconds for it to display.=
- =C2=A0Also,
-> if any services (like ssh) want to bind the address when it first com=
-es up,
-> sshd takes about 15 seconds to start. =C2=A0But, once this delay has =
-happened,
-> everything else works fine. =C2=A0For example, if I run iwconfig agai=
-n, it
-> displays the information immediately.
->
-> Would any of you have any pointers on how to debug the problem with t=
-his
-> card and fix it? =C2=A0I'm running a custom kernel, so I can reconfig=
-ure or patch
-> as necessary. =C2=A0(Distribution is Linux From Scratch; =C2=A0all ot=
-her similar
-> systems with wireless networking work just fine.)
 
-May want to try wireless-testing or compat-wireless to see if the
-issue is still present. This driver is old and the maintainer is no
-longer active so your best bet is to try the latest and see if someone
-is willing to help you with random bits of troubleshooting.
+--=-JWQyr7REuQd/6TQg3mfo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, 2009-04-07 at 21:33 +0200, Michael Buesch wrote:
+
+> > Well, I suppose you could register with the max and later reduce and
+> > stop the remaining queues you're not using... Or not stop them and drop
+> > packets on them. That's somewhat fragile, gives people who look at tc a
+> > wrong idea, and I can't imagine supporting it, but it should work.
+>=20
+> mkay, I'll try this. thanks :)
+>=20
+> I wonder, however, will mac80211 try to queue packets on queues that are =
+stopped?
+> And I think just dropping them is not an option, because this will cause =
+breakage.
+>=20
+> What about just queueing everything on a single queue, no matter what que=
+ue mac80211
+> puts the frame into? Would this cause ordering issues?
+> Or the other way around, is there anything that _depends_ on the higher p=
+riority queues
+> to get sent before the higher priority queues?
+
+mac80211 won't try to select a queue higher than hw->queues at
+select_queue time, so it shouldn't try to put packets onto that queue,
+look in wme.c.
+
+johannes
+
+--=-JWQyr7REuQd/6TQg3mfo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ26uUAAoJEKVg1VMiehFY6TEP/3m5mLIzuDJYEAVA/w+ypPgw
++5naB7HN6dTv2NWvjTfb9O28FcobUkKdDYxHfN2nXMcHsfPO6haWiSUb33mDakia
+z4jH72Ir8il0fqs0B8vFwkyWrF/jzfCUmvks9sfufB7B9iQYA6P3XllqyXv3CtaN
+y88h/3M+2kk6ujsoicHS8EDmkghV2sFqs+81um2R5/vJZfmFTw5T9NEvOXR0Rert
+D6qce+KD3QZgYAChNUfv2IT0Xk3vTv9BdT/dTUIDygGi91xArEdEjz1SmD0hRK7j
+uo3rFyHJwuEQeZVTvj01gU7qrv7yUgUAfv++tFXj5CtOcMM1C4mK9nc8J9wK1EcJ
+ipk2qxaJEn2LAZrHUyJE6MCJyT3qPP+oP1RZ6UQJAF+a528SlT1huk3sdOZNJKrD
+WAUCFfS889KPxMbsCHNtcJqye+7tMv3MXihlImTVkwwMJXpjNO4/6WyXjROI9tsE
+WZTdeyTDS3tRc0Mc/H1lwZh/DQKusTi/3opAhSHtmbjWT0aUUXdJCcIoA8aAKUk2
+2p1TvzJWh/0JlY4omOjnRd1QJ348B42RzoUqfq4p1XOCmeaxxgAETtUnar3ZtqRi
+9E3w5mPbORWAK4xRvLufaayT2ywYf1ueIwPTZLCptZ5aSdFt+bvld8QM513zepbp
+8TrXrvviP5DGhEgPOy/z
+=+eFe
+-----END PGP SIGNATURE-----
+
+--=-JWQyr7REuQd/6TQg3mfo--
+
