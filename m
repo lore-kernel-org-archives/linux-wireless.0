@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost06.isp.att.net ([207.115.11.56]:61061 "EHLO
-	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753650AbZD2XXK (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:62964 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbZDGMyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 19:23:10 -0400
-Message-ID: <49F8E145.1050708@lwfinger.net> (sfid-20090430_012316_460274_D053342A)
-Date: Wed, 29 Apr 2009 18:22:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
-References: <49F8C03D.6040909@lwfinger.net>	 (sfid-20090429_230225_847074_E5413886)  <1241039372.4547.3.camel@johannes.local>	 (sfid-20090429_231009_993152_4FF82E4D) <1241040451.5067.0.camel@johannes.local>
-In-Reply-To: <1241040451.5067.0.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Apr 2009 08:54:15 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so2919932qwh.37
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 05:54:13 -0700 (PDT)
+Subject: Re: Making promisc mode work with WPA encryption?
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <87ocv9hxeo.fsf@litku.valot.fi>
+References: <1239063352.4705.40.camel@maxim-laptop>
+	 <87ocv9hxeo.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Tue, 07 Apr 2009 15:54:07 +0300
+Message-Id: <1239108847.15015.6.camel@maxim-laptop> (sfid-20090407_145418_915246_41A73E48)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2009-04-29 at 23:09 +0200, Johannes Berg wrote:
+On Tue, 2009-04-07 at 07:59 +0300, Kalle Valo wrote:
+> Maxim Levitsky <maximlevitsky@gmail.com> writes:
 > 
->> 	"%d, %d, need %d, %d", skb->data_len, skb->len, head_need, tail_need
+> > This means kernel can't automatically decrypt other stations traffic.
+> > But I could arrange small program that listens to device in monitor or
+> > maybe even just promisc mode, and records WPA handshakes. For every
+> > handshake it could install the key in kernel driver, so it would use
+> > it for decryption, and show the traffic on device in promisc mode. Is
+> > it possible to do today? I guess not. All this program has to know is
+> > the PSK. (I could even arrange WPA supplicant to do this job - it
+> > knows all keys already)
 > 
-> actually, I think I want
+> I think wireshark does something like this. You can enter the PSK in the
+> settings and it will decrypt the traffic. I only tried it once and it
+> was a long time ago, though.
 > 
-> 	skb_tail_pointer(skb) - skb->head
-> 
-> instead of skb->data_len.
 
-I get the "failed to reallocate TX buffer" message. Not all are related to the
-page allocation failure. I am also getting "b43-phy0 debug: DMA RX:
-setup_rx_descbuffer() failed" messages.
+Exactly.
+But for this I have to use monitor, which means that each time I want to
+see only network traffic I have to filter by essid, filter out beacons,
+etc.
+it would be nicer to use promisc mode, and receive decrypted the
+ethernet frames.
 
-So far, the numbers printed by the revised printk are:
+So can this be done?
 
-kernel: phy0: failed to reallocate TX buffer 0, 404, need 0, 0
-kernel: protocol 0008 is buggy, dev eth1
+Best regards,
+	Maxim Levitsky
 
-kernel: phy0: failed to reallocate TX buffer 0, 1728, need 0, 18
 
-Device eth1 is the b43 wireless device.
 
-Larry
