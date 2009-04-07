@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1092 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754767AbZD3T47 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57961 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335AbZDGOAr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:56:59 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Paride Legovini <legovini@spiro.fisica.unipd.it>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 9/9] Add LED support for AR5BXB6 IBM Thinkpad PCIe adapters
-Date: Thu, 30 Apr 2009 15:55:52 -0400
-Message-Id: <1241121352-6064-10-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
-References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+	Tue, 7 Apr 2009 10:00:47 -0400
+Date: Tue, 7 Apr 2009 09:55:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless mini summit
+Message-ID: <20090407135551.GB28289@tuxdriver.com> (sfid-20090407_160051_542770_CBF16F09)
+References: <efe7343f0904070235n4803280au76a75490f5f07900@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <efe7343f0904070235n4803280au76a75490f5f07900@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Paride Legovini <legovini@spiro.fisica.unipd.it>
+On Tue, Apr 07, 2009 at 10:35:10AM +0100, Luis Correia wrote:
+> Hi all,
+> 
+> I'm planning to attend the conference in Berlin, representing the
+> rt2x00 project.
+> 
+> In order to make the appropriate plans, I would like to know if this
+> information is still valid?
+> https://fedoraproject.org/wiki/FedoraEvents/LinuxTag/SurvivalKit
 
-Add LED support on the IBM ThinkPad 11a/b/g Wireless LAN Mini Express
-Adapter (AR5BXB6), found on the IBM/Lenovo Thinkpad X60/T60/Z60 series.
+I hope so!  If not, we'll be lost together... :-)
 
-Signed-off-by: Paride Legovini <legovini@spiro.fisica.unipd.it>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/led.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index cbdc0b3..876725f 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -53,8 +53,6 @@
- 
- /* Devices we match on for LED config info (typically laptops) */
- static const struct pci_device_id ath5k_led_devices[] = {
--	/* IBM-specific AR5212 */
--	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
- 	/* AR5211 */
- 	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211), ATH_LED(0, 0) },
- 	/* HP Compaq nc6xx, nc4000, nx6000 */
-@@ -69,6 +67,10 @@ static const struct pci_device_id ath5k_led_devices[] = {
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
- 	/* Fukato Datacask Jupiter 1014a (mrb74@gmx.at) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_AZWAVE, 0x1026), ATH_LED(3, 0) },
-+	/* IBM ThinkPad AR5BXB6 (legovini@spiro.fisica.unipd.it) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a), ATH_LED(1, 0) },
-+	/* IBM-specific AR5212 (all others) */
-+	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
- 	{ }
- };
- 
+John
 -- 
-1.6.0.6
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
