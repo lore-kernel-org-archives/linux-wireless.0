@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3889 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbZD1CNE (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54378 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757878AbZDGQRY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2009 22:13:04 -0400
-Date: Mon, 27 Apr 2009 22:12:43 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.30] ath5k: fix buffer overrun in rate debug code
-Message-ID: <20090428021243.GA16292@hash.localnet> (sfid-20090428_041311_963267_86F3DB2F)
+	Tue, 7 Apr 2009 12:17:24 -0400
+Date: Tue, 7 Apr 2009 19:17:18 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Making promisc mode work with WPA encryption?
+Message-ID: <20090407161718.GA19733@jm.kir.nu> (sfid-20090407_181742_985090_0D2A0C24)
+References: <1239063352.4705.40.camel@maxim-laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1239063352.4705.40.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 07, 2009 at 03:15:52AM +0300, Maxim Levitsky wrote:
 
-char bname[5] is too small for the string "X GHz" when the null
-terminator is taken into account.  Thus, turning on rate debugging
-can crash unless we have lucky stack alignment.
+> But I could arrange small program that listens to device in monitor or
+> maybe even just promisc mode, and records WPA handshakes. For every
+> handshake it could install the key in kernel driver, so it would use it
+> for decryption, and show the traffic on device in promisc mode. Is it
+> possible to do today? I guess not.
 
-Cc: stable@kernel.org
-Reported-by: Paride Legovini <legovini@spiro.fisica.unipd.it>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+No, and I don't see why this should ever end up in the kernel.. It is
+better done in userspace for such a special case. The key configuration
+interface does not support configuring different keys based on the
+receiver address and most hardware acceleration designs would not
+support matching the key in this way, so the standard mechanism used for
+decrypting packets to the STA in normal case does not really suit this
+type of need.
 
----
-John, this patch should probably go for 2.6.30, I'll send a version for
-wireless-testing next.
+> All this program has to know is the PSK.
+> (I could even arrange WPA supplicant to do this job - it knows all keys
+> already)
 
- drivers/net/wireless/ath5k/debug.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-index 9770bb3..4904a07 100644
---- a/drivers/net/wireless/ath5k/debug.c
-+++ b/drivers/net/wireless/ath5k/debug.c
-@@ -424,7 +424,7 @@ ath5k_debug_dump_bands(struct ath5k_softc *sc)
- 
- 	for (b = 0; b < IEEE80211_NUM_BANDS; b++) {
- 		struct ieee80211_supported_band *band = &sc->sbands[b];
--		char bname[5];
-+		char bname[6];
- 		switch (band->band) {
- 		case IEEE80211_BAND_2GHZ:
- 			strcpy(bname, "2 GHz");
--- 
-1.6.0.6
+Sure, you could figure out the PTK for each STA when using WPA-Personal
+(but not so for WPA-Enterprise/EAP), but that is only one part of the
+task. The problem comes from decrypting packets that were not designed
+to be decrypted (unicast frames to other STAs).
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Jouni Malinen                                            PGP id EFC895FA
