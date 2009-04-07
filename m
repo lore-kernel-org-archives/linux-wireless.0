@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n23.bullet.mail.mud.yahoo.com ([68.142.206.162]:23629 "HELO
-	n23.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754124AbZDLKFH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2009 06:05:07 -0400
-Date: Sun, 12 Apr 2009 02:57:54 -0700
-From: Steven Luo <steven@steven676.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH] ath9k: reset after PCI FATAL/PERR interrupts
-Message-ID: <20090412095754.GA2594@steven676.net> (sfid-20090412_120513_480515_AFE70DCE)
+Received: from mail.atheros.com ([12.36.123.2]:60602 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760205AbZDGQIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 12:08:19 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 09:08:19 -0700
+Date: Tue, 7 Apr 2009 09:08:13 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+Message-ID: <20090407160812.GA5758@tesla> (sfid-20090407_180823_733339_1442521F)
+References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com> <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com> <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com> <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com> <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Steven Luo <steven@steven676.net>
+On Tue, Apr 07, 2009 at 12:49:30AM -0700, Hin-Tak Leung wrote:
+> On Tue, Apr 7, 2009 at 6:34 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> 
+> > Not sure, I wanted to get this out to help those who are interested in
+> > porting changes over (if any) to zd1211rw. If you find nothing useful
+> > from it please simply disregard it.
+> 
+> It is vaguely relevant in that (1) there are new and old features
+> which are not in the rw driver yet - e.g. the AP mode,  and
+> 3.0 introduces newly antenna diversity, (2) to port changes - either
+> new-hardware related, or bug-fixes/improvements, they need to be
+> proven to work-better ... e.g. blindly copying could just copy
+> mistakes/regressions...
 
-ath9k_hw_getisr() doesn't appear to set anything in the status mask for
-PCI FATAL or PERR interrupts (AR_INTR_SYNC_HOST1_FATAL/PERR), which
-the open-source HAL seems to do.  This means that the card isn't reset
-after these interrupts.
+Right, that is the idea.
 
-This patch seems to fix a problem where the wireless drops out with an
-"ath9k: received PCI FATAL interrupt" in dmesg after some time; the
-hardware is an AR5416 in an ASUS WL-500W running 2.6.28.7 (OpenWRT) and
-compat-wireless 2009-03-31.
-
-Signed-off-by: Steven Luo <steven@steven676.net>
----
-
---- a/drivers/net/wireless/ath9k/hw.c	2009-04-09 23:23:35.000000000 -0700
-+++ b/drivers/net/wireless/ath9k/hw.c	2009-04-11 23:29:28.000000000 -0700
-@@ -3007,6 +3007,7 @@ bool ath9k_hw_getisr(struct ath_hw *ah, 
- 				DPRINTF(ah->ah_sc, ATH_DBG_ANY,
- 					"received PCI PERR interrupt\n");
- 			}
-+			*masked |= ATH9K_INT_FATAL;
- 		}
- 		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
- 			DPRINTF(ah->ah_sc, ATH_DBG_INTERRUPT,
-
+  Luis
