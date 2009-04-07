@@ -1,75 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46311 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755764AbZDBB4D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 21:56:03 -0400
-Subject: Re: Fragmentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Charles Gordon <digigordo@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <86201b3f0904011355p788ee867p300b5be24569e46b@mail.gmail.com> (sfid-20090401_225534_289155_7CA4C47F)
-References: <86201b3f0904011355p788ee867p300b5be24569e46b@mail.gmail.com>
-	 (sfid-20090401_225534_289155_7CA4C47F)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Yv+pX/crq/+yHrlAzlza"
-Date: Thu, 02 Apr 2009 03:55:29 +0200
-Message-Id: <1238637329.4141.7.camel@johannes.local> (sfid-20090402_035608_720401_A79ABAC0)
+Received: from mga01.intel.com ([192.55.52.88]:14338 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751228AbZDGRR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2009 13:17:56 -0400
+Subject: Re: iwlagn preventing hibernation with TuxOnIce
+From: reinette chatre <reinette.chatre@intel.com>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <8ccc1dbe0904061216m1e31aaf4j53b0c067b9e19999@mail.gmail.com>
+References: <8ccc1dbe0904061150w18d38193v772492e480f0aa15@mail.gmail.com>
+	 <8ccc1dbe0904061216m1e31aaf4j53b0c067b9e19999@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 07 Apr 2009 10:23:43 -0700
+Message-Id: <1239125023.16010.33.camel@rc-desk> (sfid-20090407_191800_500043_CAF05AF7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Mathias,
 
---=-Yv+pX/crq/+yHrlAzlza
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2009-04-06 at 12:16 -0700, Mathias Bur=C3=A9n wrote:
+> Hi,
+>=20
+> I think I've found a bug. Either it's iwlagn or it's TuxOnIce, I'll
+> try here first. Whenever my wlan0 interfaces is up, TuxOnIce causes a
+> kernel panic=20
 
-Charles,
+Does this mean you do not get a kernel panic if your wlan0 interface is
+down? Does it matter whether iwlagn module is loaded or not, or just
+interface being up or down? Does it happen during hibernate or when you
+resume?
 
-> I'm working on a driver which will use mac80211.  My hardware cannot
-> transmit a frame larger than 1792 bytes, or receive frames larger than
-> 2048 bytes.  Right now I am relying on the fragmentation routines
-> built into mac80211.  Is there a way for my driver to tell mac80211
-> what the maximum transmit and receive frame sizes are?  Do I need to
-> implement my own fragmentation code to handle this?
+> when it's 'writing kernel and process information', after
+> a while I get a backtrace (?) about something with sda (my SSD). I wa=
+s
+> first using iwlagn from 2.6.29 but I just installed
+> compat-wireless-2009-04-06 and it made no difference.
+>=20
+> Hardware being used:
+> Dell Inspiron 1520
+>=20
+> iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
+> iwlagn: Copyright(c) 2003-2009 Intel Corporation
+> iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> iwlagn 0000:0c:00.0: setting latency timer to 64
+> iwlagn 0000:0c:00.0: Detected Intel Wireless WiFi Link 4965AGN REV=3D=
+0x4
+> iwlagn 0000:0c:00.0: Tunable channels: 13 802.11bg, 19 802.11a channe=
+ls
+> iwlagn 0000:0c:00.0: irq 29 for MSI/MSI-X
+> phy0: Selected rate control algorithm 'iwl-agn-rs'
+> iwlagn 0000:0c:00.0: firmware: requesting iwlwifi-4965-2.ucode
+> iwlagn 0000:0c:00.0: loaded firmware version 228.57.2.23
+> Registered led device: iwl-phy0::radio
+> Registered led device: iwl-phy0::assoc
+> Registered led device: iwl-phy0::RX
+> Registered led device: iwl-phy0::TX
+>=20
+> Vanilla 2.6.29.1 kernel with TuxOnIce patch, fs for / is ext4, using
+> the deadline scheduler. Kernel configuration at [1]. dmesg at [2].
 
-Using fragmentation for this is not a good plan -- better adjust the
-maximum MTU. We currently cannot do that because mac80211 assumes that
-all devices actually conform to the 802.11 standard wrt. this... Clearly
-your device does not -- 2048 bytes is much too small, and you cannot
-force the remote peer to send smaller frames than that (though in
-practise it they will be smaller most of the time).
+The dmesg does not contain any panic or errors related to iwlagn that I
+can see.=20
 
-I would suggest that for now you don't worry about it at all -- the
-default MTU is 1500 matching ethernet, so the largest frame that
-mac80211 will give you by default is much smaller than 1792 bytes. Then,
-once you release your driver under GPL and post it for inclusion into
-our tree we can think about adding a new hardware capability to mac80211
-that restricts users from increasing the MTU above 1792-30-2-8-4 (or
-something like that).
+>=20
+> Is there any way you could help me debug this? Thanks,
 
-johannes
+We can start with iwlagn debugging. Please recompile your driver with
+debugging enabled and then load it with "modprobe iwlagn
+debug=3D0x43fff".=20
 
---=-Yv+pX/crq/+yHrlAzlza
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+>=20
+> Mathias
+>=20
+>=20
+> [1] http://rafb.net/p/qWvmzl19.html
+> [2] http://rafb.net/p/3c2Nuw14.html
+> --
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Reinette
 
-iQIcBAABAgAGBQJJ1BsPAAoJEKVg1VMiehFYP0IP/RGnUldYRsYNeciV5M1hOk5l
-W0JPPkJcPhQRdihGUkDrYXp6ymr7rbNtIwWN4vTImNbUmTDnOkzBR+yfZFw2oNR8
-DOt9jKDNY0e1nyEakT050IgoPes7QPl2sBdGkytJKQ3bFQ/AJm46OLsU2W5syYCr
-f0B5HkSubE6AaWOcPC7xSy1ln4wwk6n/KtE6DhvbudxAxhwmsqn/Qd537pwXNwfv
-8XlmkH6vL6IMRRaTiBqeYHr5q0o3LG5PRzeh83yCkJmM59ck9BzGMBwAm/44VMMA
-AWzBs44qYy2yhbW5w4elU53tOx2c1FcrqiYIjcz7KDqMrCi2k+Al4bbYDutDpnCd
-MugUmeGFK7EQRax9z1JbFW/Tgi/erTXEpLWf1o9b504nqEoZDIOeASwXrg0YkqGx
-VQVKzj5bSKZDXMhkXjZ0y6tpV1nZLmnlyohxWZl2Z0vnhLy9XU7gVCXA+6p5eEIz
-kiqZWP9HyaYPtV/Dx+qslwkNOXSsNIRJ/gWMC2lG5eXlUp9MVKUGjCOooUhg6b07
-cEjy0To/P5RTtWCRcSy33ZYa9oMltbGEsiEGpAnXGj/u5oNpc20PV/+PjmpB+/YH
-bVU8y1gQuI+aXVUO3wBqS5vuh+5Va6au7JDRLItYL0oTsd4CGTx6BfgRCKv6XK87
-4Rm35uYRlnpYRJB42w7n
-=u6Pw
------END PGP SIGNATURE-----
-
---=-Yv+pX/crq/+yHrlAzlza--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
