@@ -1,136 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58197 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48866 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S939034AbZDJHd2 (ORCPT
+	with ESMTP id S1752063AbZDGNAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 03:33:28 -0400
-Subject: Re: [PATCH] rfkill: Fix broken rfkill LED in 2.6.30-rc1
+	Tue, 7 Apr 2009 09:00:05 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <49deb98b.b3qoCjTA6clRL5zY%Larry.Finger@lwfinger.net>
-References: <49deb98b.b3qoCjTA6clRL5zY%Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Purj/+lg0RSzfSDyUXYC"
-Date: Fri, 10 Apr 2009 09:33:24 +0200
-Message-Id: <1239348804.17031.17.camel@johannes.local> (sfid-20090410_093342_374514_4B4CAFBA)
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239108689.15015.3.camel@maxim-laptop> (sfid-20090407_145137_740898_8D0C40FD)
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FXUH2CrM6OWQI2KTx2n2"
+Date: Tue, 07 Apr 2009 14:56:41 +0200
+Message-Id: <1239109001.22453.40.camel@johannes.local> (sfid-20090407_150009_750581_7626B1EC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Purj/+lg0RSzfSDyUXYC
+--=-FXUH2CrM6OWQI2KTx2n2
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-09 at 22:14 -0500, Larry Finger wrote:
-> The rfkill system fails to issue a LED trigger event when the rfkill stat=
-e
-> changes.
+On Tue, 2009-04-07 at 15:51 +0300, Maxim Levitsky wrote:
 
-I have no issues with this patch, and will just port my rewrite over it
--- I'll get back to the rewrite next week for good, hopefully.
+> > > I noticed that always first attempt at scan fails when NM asks for sc=
+an.
+> > > I also noticed that this happens with quite recent kernels (I think
+> > > 2,6.28) didn't have this behavior.
+> >=20
+> > I'm pretty sure it did.
+
+> I am sure that on older kernel there was no -EBUSY error returned to
+> userspace. It probably just stalled the client.
+
+Can't imagine it did, maybe it just dropped the request though without
+indicating an error.
+
+> > > Looking a bit deeper I discovered that each time NM disconnects from =
+a
+> > > networks it sets random ssid/essid to the card (using wireless
+> > > extensions)
+> >=20
+> > This forces a scan
+> >=20
+> > > After that scan fails for some time.
+> > >=20
+> > > as a NM free example you can run=20
+> > >=20
+> > > iwconfig wlan0 essid dummy
+> > > iwlist scan
+> >=20
+> > and then this fails with EBUSY.
+> Thanks for explanation.
+> Since NM has its reasons to clear essid (to prevent unwanted
+> association), then what can be  done to prevent this (and still use
+> wireless extensions, since nl80211 support isn't yet mature)?
+
+Nothing. Wext sucks, news at 11, yadda.
 
 johannes
 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->=20
-> John,
->=20
-> This is 2.6.31 material.
->=20
-> Larry
-> ---
->=20
-> Index: wireless-testing/net/rfkill/rfkill.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/net/rfkill/rfkill.c
-> +++ wireless-testing/net/rfkill/rfkill.c
-> @@ -96,6 +96,7 @@ static void update_rfkill_state(struct r
->  		}
->  		mutex_unlock(&rfkill->mutex);
->  	}
-> +	rfkill_led_trigger(rfkill, rfkill->state);
->  }
-> =20
->  /**
-> @@ -136,8 +137,9 @@ static int rfkill_toggle_radio(struct rf
->  	oldstate =3D rfkill->state;
-> =20
->  	if (rfkill->get_state && !force &&
-> -	    !rfkill->get_state(rfkill->data, &newstate))
-> +	    !rfkill->get_state(rfkill->data, &newstate)) {
->  		rfkill->state =3D newstate;
-> +	}
-> =20
->  	switch (state) {
->  	case RFKILL_STATE_HARD_BLOCKED:
-> @@ -172,6 +174,7 @@ static int rfkill_toggle_radio(struct rf
->  	if (force || rfkill->state !=3D oldstate)
->  		rfkill_uevent(rfkill);
-> =20
-> +	rfkill_led_trigger(rfkill, rfkill->state);
->  	return retval;
->  }
-> =20
-> @@ -204,6 +207,7 @@ static void __rfkill_switch_all(const en
->  			mutex_lock(&rfkill->mutex);
->  			rfkill_toggle_radio(rfkill, state, 0);
->  			mutex_unlock(&rfkill->mutex);
-> +			rfkill_led_trigger(rfkill, rfkill->state);
->  		}
->  	}
->  }
-> @@ -256,6 +260,7 @@ void rfkill_epo(void)
->  				RFKILL_STATE_SOFT_BLOCKED;
->  	}
->  	mutex_unlock(&rfkill_global_mutex);
-> +	rfkill_led_trigger(rfkill, rfkill->state);
->  }
->  EXPORT_SYMBOL_GPL(rfkill_epo);
-> =20
-> @@ -358,6 +363,7 @@ int rfkill_force_state(struct rfkill *rf
->  		rfkill_uevent(rfkill);
-> =20
->  	mutex_unlock(&rfkill->mutex);
-> +	rfkill_led_trigger(rfkill, rfkill->state);
-> =20
->  	return 0;
->  }
-> @@ -520,6 +526,7 @@ static int rfkill_resume(struct device *
->  				1);
-> =20
->  		mutex_unlock(&rfkill->mutex);
-> +		rfkill_led_trigger(rfkill, rfkill->state);
->  	}
-> =20
->  	return 0;
->=20
-
---=-Purj/+lg0RSzfSDyUXYC
+--=-FXUH2CrM6OWQI2KTx2n2
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ3vZBAAoJEKVg1VMiehFYOd0QALm/dA4jOBc4n7UxIgOhjhfh
-8xMYqSoTXJPj28C7ILmFX/yu/tY/nyTBorTd31OGgVHearN/OZXCJ/JEzB00BU0r
-s+rk0xSEYZDV6i3hCwrrRHsxeXFIEgHti04y5rPKI6Azc7vCysIBnZiDDsSffm+F
-KEwTdL67GJlqhpdWPPJrNOxvhfoMDr4Mt5kzRfzLG+EEWl6zjSLpPdp1+kNe+XDP
-rquemRwjOhSwR8McyeeKv2rnJhDajicmRui9JcZ9e9lyldO/4ONEpV8OhOtSAUHN
-yKw8pIIxvQO0kMjs1OynSr5TKqIkdolPYeGbqAE6JqhmQuOkUi0rQ5idW7l4gxbT
-YH5XhCxfEdAYNvYjBkLwJlWkOix2/e+6I4W5OeSpOnhve9Zi1UNN2sBG1Xvfl61S
-9TBH9bW206vERRzf8GuuxKbpG6MmyoLYj7fSh0+s/EpFVIFyQPEiSslgTcywpTRj
-0nW18G63gUlI6zukiGfm+5744CibKLyt4Z2OgR22RalMSAdezS7JSEg8NOjVchyg
-CipTd8u2GGk5lEW9UTmdqt/+gRi2QuopbJ0Ae/Zw3PZJd/mke6O1JOoDdlByN3qB
-5FDep5Y9Yp4uPy46UOypTacsqxYhckmLF7tOBu/9fJD0GxwGeN7gWsoddFXym4h8
-tWjHsh+BAlRdgJxwZcbx
-=yvFo
+iQIcBAABAgAGBQJJ202HAAoJEKVg1VMiehFYa1wP/2N4Qs2BTqNir8AoSn4OA01U
+HuoW4JzCTvOB5H3fawtYBoKaCQQCoo3fHvsakZh8qJsdYdopKb4uRyl89l264JFY
+1ckkUGNxrZevt+oKMYAVyy4xasQU+JxG2zx6T3RtBKCyNH3S3s3aouQUW2ghDvCL
+M7LqeJia+ZgSM26DcVMRzgKAi2W0I0LfuA+4DBt5ElN+0K8R1IFoAJ4y42u8qcr3
+Dpc2QU/ytH0G3uE/KM57BuBIIkuc66L0InAxfof5HwddhLOuapeXceP7MY3+xdFL
+x+9vAQjNB5fcch0qYGOAYVJcjXCkjKXr3jXEMlIKY97gDletmlWwT1hcerFNJTRK
+VfaNuMCqpPAYcSvQbIUqeZxy4z+127Fv0mZhCmSrsujs2XOby5U4CWzmPfQaNlV5
+tU/FZWOHk3dQANLPnrdkzLiS2a8ktmvJiLMeyhTSRqY9tXhkOEF9su2rTVkvxSOA
++Jg2tVAAJUSztIcWRDgXWJCDa1B+UG5uIe84AGPVTmxdCUvDoEe09E1n2r4mVr9p
+5zkneU5aXJwRDXHuMuqf4zkvRfMZj+QQVcu5qaD8QyanzZ/aTaLy0lTki2GYD6CG
+L0FgyOwmsQO5u1Wlu07vvmMtDOVMIUXDSyWg9/RTU6AQlFE6lPSYo9sidQ8h3sBK
+jQSv2CLTotcmWrxE2c9A
+=co6y
 -----END PGP SIGNATURE-----
 
---=-Purj/+lg0RSzfSDyUXYC--
+--=-FXUH2CrM6OWQI2KTx2n2--
 
