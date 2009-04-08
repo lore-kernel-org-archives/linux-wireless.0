@@ -1,46 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:34420 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752162AbZDBFw2 (ORCPT
+Received: from fmailhost01.isp.att.net ([207.115.11.51]:49897 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbZDHRcc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 01:52:28 -0400
-Received: by fxm2 with SMTP id 2so342568fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Apr 2009 22:52:25 -0700 (PDT)
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Always send a null data frame if TIM bit is  set.
-References: <20090302145030.GA4660@myhost.users.atheros.com>
-	<8e92b4100903312115l2f013083jf507b66f8449a63a@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 02 Apr 2009 08:52:22 +0300
-In-Reply-To: <8e92b4100903312115l2f013083jf507b66f8449a63a@mail.gmail.com> (Vivek Natarajan's message of "Wed\, 1 Apr 2009 09\:45\:10 +0530")
-Message-ID: <87ocvfiovd.fsf@litku.valot.fi> (sfid-20090402_075231_784877_7FBB0EC4)
+	Wed, 8 Apr 2009 13:32:32 -0400
+Message-ID: <49DCDF9E.8000605@lwfinger.net> (sfid-20090408_193237_238015_424A6E63)
+Date: Wed, 08 Apr 2009 12:32:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: alan-jenkins@tuffmail.co.uk
+CC: Rusty Russell <rusty@rustcorp.com.au>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression in 2.6.30-rc1 since commit acae0515 - wireless broken
+References: <49DC2DF5.3010603@lwfinger.net> <49DC31EA.8050208@linux.intel.com>	 <200904081631.09150.rusty@rustcorp.com.au>	 <49DCB976.4020200@lwfinger.net> <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com>
+In-Reply-To: <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+Alan Jenkins wrote:
+> On 4/8/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+> Something is very wrong with request_module(), this is just the most
+> obvious symptom.  It also seems to affect libusual (loading
+> usb-storage) and FAT (loading NLS modules).
+> 
+> If I hotplug my wireless device, it then loads correctly.  So I'm
+> guessing wireless modules e.g. encryption modules get loaded too
+> asynchronously.   I.e. on boot, the  sub-modules are loaded too late.
+> But when I hotplug the device, the modules are already loaded.
+> 
+> Same with FAT - it fails on first attempt to mount because of missing
+> NLS module, then works on second mount,
+> 
+> I agree that commit looks like it should be a no-op though :-).
+> I will try to confirm the OP's bisection by reverting the commit, acae0515.
 
-> Although the above patch is a right approach, it opens up an issue
-> with pspolling.
->
-> In the above chunk of code, if the timeout is zero, instead of
-> sending a null frame to correct the state in the AP, we may keep on
-> sending ps poll frames ( And the ps state in the AP will never be
-> corrected)
->
-> I have not tested pspolling with ath9k. But this seems to be an issue.
-> Thoughts?
+I added printk's to the entry and exit from __request_module and obtained the
+following:
 
-Maybe it's better to have a separate test for the case that TIM bit is
-set but we are not in power save and just send a nullfunc frame
-without psm bit. And leave the original power save code as it was.
+module: __request_module entered for module snd-hda-codec-id:14f15051
+module: loading module snd-hda-codec-id:14f15051 - call_usermodehelper returned 0
+module: __request_module entered for module ecb(arc4)
+module: loading module ecb(arc4) - call_usermodehelper returned 256
+module: __request_module entered for module ecb
+module: loading module ecb - call_usermodehelper returned 0
+module: __request_module entered for module char-major-4-68
+module: loading module char-major-4-68 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4
+module: loading module char-major-4 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4-69
+module: loading module char-major-4-69 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4
+module: loading module char-major-4 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4-70
+module: loading module char-major-4-70 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4
+module: loading module char-major-4 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4-71
+module: loading module char-major-4-71 - call_usermodehelper returned 256
+module: __request_module entered for module char-major-4
+module: loading module char-major-4 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
+module: __request_module entered for module net-pf-10
+module: loading module net-pf-10 - call_usermodehelper returned 256
 
-I really would like to have some frame ack callback to mac80211, even
-not all drivers support that. Otherwise we cannot reliably go to power
-save because the AP might not receive our nullfunc frame. I have to
-think about this and I'll try to propose something later on.
+According to the description of the routine, it should return 0 on success and a
+negative number for an error. Where do the values of "256" mean?
 
--- 
-Kalle Valo
+Larry
