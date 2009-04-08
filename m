@@ -1,87 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14338 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751228AbZDGRR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 13:17:56 -0400
-Subject: Re: iwlagn preventing hibernation with TuxOnIce
-From: reinette chatre <reinette.chatre@intel.com>
-To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <8ccc1dbe0904061216m1e31aaf4j53b0c067b9e19999@mail.gmail.com>
-References: <8ccc1dbe0904061150w18d38193v772492e480f0aa15@mail.gmail.com>
-	 <8ccc1dbe0904061216m1e31aaf4j53b0c067b9e19999@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 07 Apr 2009 10:23:43 -0700
-Message-Id: <1239125023.16010.33.camel@rc-desk> (sfid-20090407_191800_500043_CAF05AF7)
+Received: from xc.sipsolutions.net ([83.246.72.84]:43418 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbZDHKzV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 06:55:21 -0400
+Subject: [PATCH] mac80211: update injection documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Andy Green <andy@warmcat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 08 Apr 2009 12:54:41 +0200
+Message-Id: <1239188081.8456.43.camel@johannes.local> (sfid-20090408_125524_314796_12500AA5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mathias,
+We don't currently support antenna or rate setting, so remove
+that. Also update the link -- the current one is dead and the
+wiki can be kept updated easier.
 
-On Mon, 2009-04-06 at 12:16 -0700, Mathias Bur=C3=A9n wrote:
-> Hi,
->=20
-> I think I've found a bug. Either it's iwlagn or it's TuxOnIce, I'll
-> try here first. Whenever my wlan0 interfaces is up, TuxOnIce causes a
-> kernel panic=20
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ Documentation/networking/mac80211-injection.txt |   28 +++++-------------------
+ 1 file changed, 6 insertions(+), 22 deletions(-)
 
-Does this mean you do not get a kernel panic if your wlan0 interface is
-down? Does it matter whether iwlagn module is loaded or not, or just
-interface being up or down? Does it happen during hibernate or when you
-resume?
+--- wireless-testing.orig/Documentation/networking/mac80211-injection.txt	2009-04-08 12:48:30.000000000 +0200
++++ wireless-testing/Documentation/networking/mac80211-injection.txt	2009-04-08 12:52:31.000000000 +0200
+@@ -12,38 +12,22 @@ following format:
+ The radiotap format is discussed in
+ ./Documentation/networking/radiotap-headers.txt.
+ 
+-Despite 13 radiotap argument types are currently defined, most only make sense
++Despite many radiotap parameters being currently defined, most only make sense
+ to appear on received packets.  The following information is parsed from the
+ radiotap headers and used to control injection:
+ 
+- * IEEE80211_RADIOTAP_RATE
+-
+-   rate in 500kbps units, automatic if invalid or not present
+-
+-
+- * IEEE80211_RADIOTAP_ANTENNA
+-
+-   antenna to use, automatic if not present
+-
+-
+- * IEEE80211_RADIOTAP_DBM_TX_POWER
+-
+-   transmit power in dBm, automatic if not present
+-
+-
+  * IEEE80211_RADIOTAP_FLAGS
+ 
+    IEEE80211_RADIOTAP_F_FCS: FCS will be removed and recalculated
+    IEEE80211_RADIOTAP_F_WEP: frame will be encrypted if key available
+    IEEE80211_RADIOTAP_F_FRAG: frame will be fragmented if longer than the
+-			      current fragmentation threshold. Note that
+-			      this flag is only reliable when software
+-			      fragmentation is enabled)
++			      current fragmentation threshold.
++
+ 
+ The injection code can also skip all other currently defined radiotap fields
+ facilitating replay of captured radiotap headers directly.
+ 
+-Here is an example valid radiotap header defining these three parameters
++Here is an example valid radiotap header defining some parameters
+ 
+ 	0x00, 0x00, // <-- radiotap version
+ 	0x0b, 0x00, // <- radiotap header length
+@@ -72,8 +56,8 @@ interface), along the following lines:
+ ...
+ 	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
+ 
+-You can also find sources for a complete inject test applet here:
++You can also find a link to a complete inject application here:
+ 
+-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
++http://wireless.kernel.org/en/users/Documentation/packetspammer
+ 
+ Andy Green <andy@warmcat.com>
 
-> when it's 'writing kernel and process information', after
-> a while I get a backtrace (?) about something with sda (my SSD). I wa=
-s
-> first using iwlagn from 2.6.29 but I just installed
-> compat-wireless-2009-04-06 and it made no difference.
->=20
-> Hardware being used:
-> Dell Inspiron 1520
->=20
-> iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-> iwlagn: Copyright(c) 2003-2009 Intel Corporation
-> iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> iwlagn 0000:0c:00.0: setting latency timer to 64
-> iwlagn 0000:0c:00.0: Detected Intel Wireless WiFi Link 4965AGN REV=3D=
-0x4
-> iwlagn 0000:0c:00.0: Tunable channels: 13 802.11bg, 19 802.11a channe=
-ls
-> iwlagn 0000:0c:00.0: irq 29 for MSI/MSI-X
-> phy0: Selected rate control algorithm 'iwl-agn-rs'
-> iwlagn 0000:0c:00.0: firmware: requesting iwlwifi-4965-2.ucode
-> iwlagn 0000:0c:00.0: loaded firmware version 228.57.2.23
-> Registered led device: iwl-phy0::radio
-> Registered led device: iwl-phy0::assoc
-> Registered led device: iwl-phy0::RX
-> Registered led device: iwl-phy0::TX
->=20
-> Vanilla 2.6.29.1 kernel with TuxOnIce patch, fs for / is ext4, using
-> the deadline scheduler. Kernel configuration at [1]. dmesg at [2].
 
-The dmesg does not contain any panic or errors related to iwlagn that I
-can see.=20
-
->=20
-> Is there any way you could help me debug this? Thanks,
-
-We can start with iwlagn debugging. Please recompile your driver with
-debugging enabled and then load it with "modprobe iwlagn
-debug=3D0x43fff".=20
-
->=20
-> Mathias
->=20
->=20
-> [1] http://rafb.net/p/qWvmzl19.html
-> [2] http://rafb.net/p/3c2Nuw14.html
-> --
-
-Reinette
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
