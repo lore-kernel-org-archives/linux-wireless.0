@@ -1,68 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f118.google.com ([209.85.221.118]:36724 "EHLO
-	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbZDWKdO (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:24757 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547AbZDHQ1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 06:33:14 -0400
+	Wed, 8 Apr 2009 12:27:13 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so195985ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Apr 2009 09:27:12 -0700 (PDT)
+Message-ID: <49DCD05B.9050802@gmail.com> (sfid-20090408_182716_387741_820F7FED)
+Date: Wed, 08 Apr 2009 12:27:07 -0400
+From: Will Keaney <keaneyw@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <a4423d670904230254v672798ddtda443e549ef45490@mail.gmail.com>
-References: <20090422154247.dbffd285.sfr@canb.auug.org.au>
-	 <49EEF38D.8000801@in.ibm.com>
-	 <a4423d670904230254v672798ddtda443e549ef45490@mail.gmail.com>
-Date: Thu, 23 Apr 2009 11:33:13 +0100
-Message-ID: <5a44caba0904230333v88a2a81j3f86cfb46b3ec33c@mail.gmail.com> (sfid-20090423_123326_794188_58C30233)
-Subject: Re: April 22 Next : net/rfkill randconfig failure
-From: Ken Lewis <kennylewis@gmail.com>
-To: Alexander Beregalov <a.beregalov@gmail.com>,
-	Sachin Sant <sachinp@in.ibm.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=0016364ee12a3d7e8f046836680d
+To: Bob Copeland <me@bobcopeland.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Fwd: Re: Trouble Associating with ath5k on AR5212]
+References: <49DCA8E3.3060603@gmail.com>	 <b6c5339f0904080758k2be9ae3dm1a98b564f3b10867@mail.gmail.com>	 <49DCC641.4010405@gmail.com> <b6c5339f0904080920q47a33315j127a0aa2eca84444@mail.gmail.com>
+In-Reply-To: <b6c5339f0904080920q47a33315j127a0aa2eca84444@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig347D4202BE0035BD415DF285"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016364ee12a3d7e8f046836680d
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig347D4202BE0035BD415DF285
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-2009/4/23 Alexander Beregalov <a.beregalov@gmail.com>:
-> 2009/4/22 Sachin Sant <sachinp@in.ibm.com>:
->> Today's next tree build (x86 randconfig) failed with
->>
->> net/rfkill/rfkill.c: In function 'update_rfkill_state':
->> net/rfkill/rfkill.c:99: error: implicit declaration of function
->> 'rfkill_led_trigger'
->> make[2]: *** [net/rfkill/rfkill.o] Error 1
->>
->> .config attached
->>
+Bob Copeland wrote:
+>> I also have to manually set the reg domain to US every time I load the=
+
+>> ath5k module. =EF=BF=BDI tried configuring wpa_supplicant.conf to do t=
+his
+>> itself, but that doesn't seem to work. =EF=BF=BDIt would be nice to ha=
+ve a
+>> module parameter for setting this at load time.
+>>    =20
 >
-> Add CCs
+> I may be wrong but I think that only works in wpa_supplicant if you
+> use -Dnl80211 (instead of -Dwext).
+>
+> FWIW in the default world roaming domain you can still connect to most
+> APs.  Besides iw/wpa_supplicant, pending patches to ath5k will set the
+> default regdomain automatically based on the value stored in the eeprom=
+=2E
+>  =20
+Ahh, interesting.  I didn't see nl80211 documented in the wpa_supplicant
+example configs or man page. I'll give that a shot.
+I seem to get much better scanning results with the region set properly,
+than on the world roaming domain.
 
-I'm getting the same issue, but my .config does not include
-CONFIG_RFKILL_LEDS.  I use the attached patch to ensure the functions
-were defined.  Apols for the formatting: first patch atttempt.
 
-Take care.
-Ken.
+--------------enig347D4202BE0035BD415DF285
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
---0016364ee12a3d7e8f046836680d
-Content-Type: text/plain; charset=US-ASCII; name="next-20090423-rfkill-diff.txt"
-Content-Disposition: attachment; filename="next-20090423-rfkill-diff.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ftvbe0q70
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-ZGlmZiAtLWdpdCBhL25ldC9yZmtpbGwvcmZraWxsLmMgYi9uZXQvcmZraWxsL3Jma2lsbC5jCmlu
-ZGV4IDUzNDMwYTcuLmZjZGQ1ZTAgMTAwNjQ0Ci0tLSBhL25ldC9yZmtpbGwvcmZraWxsLmMKKysr
-IGIvbmV0L3Jma2lsbC9yZmtpbGwuYwpAQCAtNzUsNiArNzUsMTIgQEAgc3RhdGljIHZvaWQgcmZr
-aWxsX2xlZF90cmlnZ2VyX2FjdGl2YXRlKHN0cnVjdCBsZWRfY2xhc3NkZXYgKmxlZCkKIAogCXJm
-a2lsbF9sZWRfdHJpZ2dlcihyZmtpbGwsIHJma2lsbC0+c3RhdGUpOwogfQorI2Vsc2UKK3N0YXRp
-YyB2b2lkIHJma2lsbF9sZWRfdHJpZ2dlcihzdHJ1Y3QgcmZraWxsICpyZmtpbGwsCisJCQkgICAg
-ICAgZW51bSByZmtpbGxfc3RhdGUgc3RhdGUpCit7IH0KK3N0YXRpYyB2b2lkIHJma2lsbF9sZWRf
-dHJpZ2dlcl9hY3RpdmF0ZShzdHJ1Y3QgbGVkX2NsYXNzZGV2ICpsZWQpCit7IH0KICNlbmRpZiAv
-KiBDT05GSUdfUkZLSUxMX0xFRFMgKi8KIAogc3RhdGljIHZvaWQgcmZraWxsX3VldmVudChzdHJ1
-Y3QgcmZraWxsICpyZmtpbGwpCg==
---0016364ee12a3d7e8f046836680d--
+iEYEARECAAYFAknc0FsACgkQjfayWCA8dDGb+gCfVBnb7Qk89mI1srR4X8BGasYd
+Q1sAn1tGy8DqI/qrgNDbXaifNBbr5XeR
+=Bgjl
+-----END PGP SIGNATURE-----
+
+--------------enig347D4202BE0035BD415DF285--
