@@ -1,83 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:45800 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbZDAEPM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 00:15:12 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so3555950wff.4
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 21:15:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090302145030.GA4660@myhost.users.atheros.com>
-References: <20090302145030.GA4660@myhost.users.atheros.com>
-Date: Wed, 1 Apr 2009 09:45:10 +0530
-Message-ID: <8e92b4100903312115l2f013083jf507b66f8449a63a@mail.gmail.com> (sfid-20090401_061516_790436_BCCC94C1)
-Subject: Re: [PATCH] mac80211: Always send a null data frame if TIM bit is
-	set.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:61547 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755621AbZDHSVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:21:14 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/18] iwlwifi: add station management ops
+Date: Wed,  8 Apr 2009 11:26:39 -0700
+Message-Id: <1239215212-1657-6-git-send-email-reinette.chatre@intel.com> (sfid-20090408_202121_769575_5B0790DD)
+In-Reply-To: <1239215212-1657-5-git-send-email-reinette.chatre@intel.com>
+References: <1239215212-1657-1-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-3-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-4-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 2, 2009 at 8:20 PM, Vivek Natarajan <vivek.natraj@gmail.com=
-> wrote:
-> If the AP thinks we are in power save state eventhough we are not tru=
-ly
-> in that state, it sets the TIM bit and does not send a data frame unl=
-ess
-> we send a null data frame to correct the state in the AP.
-> This might happen if the null data frame for wake up is lost in the a=
-ir
-> after we disable power save.
->
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> ---
-> =A0net/mac80211/mlme.c | =A0 =A03 +--
-> =A01 files changed, 1 insertions(+), 2 deletions(-)
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 7f23858..ac10b21 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -1457,8 +1457,7 @@ static void ieee80211_rx_mgmt_beacon(struct iee=
-e80211_sub_if_data *sdata,
-> =A0 =A0 =A0 =A0ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param=
-,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 elems=
-=2Ewmm_param_len);
->
-> - =A0 =A0 =A0 if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK &&
-> - =A0 =A0 =A0 =A0 =A0 local->hw.conf.flags & IEEE80211_CONF_PS) {
-> + =A0 =A0 =A0 if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0directed_tim =3D ieee80211_check_tim(&=
-elems, ifmgd->aid);
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (directed_tim) {
-	                 if (local->hw.conf.dynamic_ps_timeout > 0) {
-				local->hw.conf.flags &=3D ~IEEE80211_CONF_PS;
-				ieee80211_hw_config(local,
-						    IEEE80211_CONF_CHANGE_PS);
-				ieee80211_send_nullfunc(local, sdata, 0);
-			} else {
-				local->pspolling =3D true;
-				ieee80211_send_pspoll(local, sdata);
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Although the above patch is a right approach, it opens up an issue
-with pspolling.
+This patch adds declarations for station management ops to iwlwifi drivers.
 
-In the above chunk of code, if the timeout is zero, instead of sending
-a null frame to
-correct the state in the AP, we may keep on sending ps poll frames (
-And the ps state
-in the AP will never be corrected)
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    7 +++++++
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.h |   13 +++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
+ 6 files changed, 40 insertions(+), 0 deletions(-)
 
-I have not tested pspolling with ath9k. But this seems to be an issue.
-Thoughts?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 9a0fb80..fb08295 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2954,6 +2954,15 @@ static struct iwl_lib_ops iwl3945_lib = {
+ 	.post_associate = iwl3945_post_associate,
+ };
+ 
++static struct iwl_station_mgmt_ops iwl3945_station_mgmt = {
++	.add_station = iwl3945_add_station,
++#if 0
++	.remove_station = iwl3945_remove_station,
++#endif
++	.find_station = iwl3945_hw_find_station,
++	.clear_station_table = iwl3945_clear_stations_table,
++};
++
+ static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+ 	.get_hcmd_size = iwl3945_get_hcmd_size,
+ 	.build_addsta_hcmd = iwl3945_build_addsta_hcmd,
+@@ -2963,6 +2972,7 @@ static struct iwl_ops iwl3945_ops = {
+ 	.lib = &iwl3945_lib,
+ 	.hcmd = &iwl3945_hcmd,
+ 	.utils = &iwl3945_hcmd_utils,
++	.smgmt = &iwl3945_station_mgmt,
+ };
+ 
+ static struct iwl_cfg iwl3945_bg_cfg = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 053e420..e3d1e30 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2268,6 +2268,12 @@ static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
+ 	cancel_work_sync(&priv->txpower_work);
+ }
+ 
++static struct iwl_station_mgmt_ops iwl4965_station_mgmt = {
++	.add_station_ht = iwl_add_station_flags,
++	.remove_station = iwl_remove_station,
++	.find_station = iwl_find_station,
++	.clear_station_table = iwl_clear_stations_table,
++};
+ 
+ static struct iwl_hcmd_ops iwl4965_hcmd = {
+ 	.rxon_assoc = iwl4965_send_rxon_assoc,
+@@ -2332,6 +2338,7 @@ static struct iwl_ops iwl4965_ops = {
+ 	.lib = &iwl4965_lib,
+ 	.hcmd = &iwl4965_hcmd,
+ 	.utils = &iwl4965_hcmd_utils,
++	.smgmt = &iwl4965_station_mgmt,
+ };
+ 
+ struct iwl_cfg iwl4965_agn_cfg = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 410cba2..1344943 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1472,6 +1472,13 @@ int iwl5000_calc_rssi(struct iwl_priv *priv,
+ 	return max_rssi - agc - IWL49_RSSI_OFFSET;
+ }
+ 
++struct iwl_station_mgmt_ops iwl5000_station_mgmt = {
++	.add_station_ht = iwl_add_station_flags,
++	.remove_station = iwl_remove_station,
++	.find_station = iwl_find_station,
++	.clear_station_table = iwl_clear_stations_table,
++};
++
+ struct iwl_hcmd_ops iwl5000_hcmd = {
+ 	.rxon_assoc = iwl5000_send_rxon_assoc,
+ 	.commit_rxon = iwl_commit_rxon,
+@@ -1535,6 +1542,7 @@ struct iwl_ops iwl5000_ops = {
+ 	.lib = &iwl5000_lib,
+ 	.hcmd = &iwl5000_hcmd,
+ 	.utils = &iwl5000_hcmd_utils,
++	.smgmt = &iwl5000_station_mgmt,
+ };
+ 
+ struct iwl_mod_params iwl50_mod_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index edfa5e1..ee271d7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -72,6 +72,7 @@ static struct iwl_ops iwl6000_ops = {
+ 	.lib = &iwl5000_lib,
+ 	.hcmd = &iwl5000_hcmd,
+ 	.utils = &iwl6000_hcmd_utils,
++	.smgmt = &iwl5000_station_mgmt,
+ };
+ 
+ struct iwl_cfg iwl6000_2ag_cfg = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index c7e0595..8b7f5bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -83,10 +83,22 @@ struct iwl_cmd;
+ #define IWL_SKU_A       0x2
+ #define IWL_SKU_N       0x8
+ 
++struct iwl_station_mgmt_ops {
++	u8 (*add_station_ht)(struct iwl_priv *priv, const u8 *addr,
++			int is_ap, u8 flags, struct ieee80211_sta_ht_cap *ht_info);
++	u8 (*add_station)(struct iwl_priv *priv, const u8 *addr,
++			int is_ap, u8 flags);
++	int (*remove_station)(struct iwl_priv *priv, const u8 *addr,
++			int is_ap);
++	u8 (*find_station)(struct iwl_priv *priv, const u8 *addr);
++	void (*clear_station_table)(struct iwl_priv *priv);
++};
++
+ struct iwl_hcmd_ops {
+ 	int (*rxon_assoc)(struct iwl_priv *priv);
+ 	int (*commit_rxon)(struct iwl_priv *priv);
+ };
++
+ struct iwl_hcmd_utils_ops {
+ 	u16 (*get_hcmd_size)(u8 cmd_id, u16 len);
+ 	u16 (*build_addsta_hcmd)(const struct iwl_addsta_cmd *cmd, u8 *data);
+@@ -160,6 +172,7 @@ struct iwl_ops {
+ 	const struct iwl_lib_ops *lib;
+ 	const struct iwl_hcmd_ops *hcmd;
+ 	const struct iwl_hcmd_utils_ops *utils;
++	const struct iwl_station_mgmt_ops *smgmt;
+ };
+ 
+ struct iwl_mod_params {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index ec9a138..59930f3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -70,6 +70,7 @@ extern struct iwl_ops iwl5000_ops;
+ extern struct iwl_lib_ops iwl5000_lib;
+ extern struct iwl_hcmd_ops iwl5000_hcmd;
+ extern struct iwl_hcmd_utils_ops iwl5000_hcmd_utils;
++extern struct iwl_station_mgmt_ops iwl5000_station_mgmt;
+ 
+ /* shared functions from iwl-5000.c */
+ extern u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len);
+-- 
+1.5.6.3
 
-VIvek.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
