@@ -1,93 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpfb2-g21.free.fr ([212.27.42.10]:48685 "EHLO
-	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbZD2WLF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 18:11:05 -0400
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5])
-	by smtpfb2-g21.free.fr (Postfix) with ESMTP id 75CCDD1A833
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2009 00:10:59 +0200 (CEST)
-Subject: Re: [PATCH 3/5] rt2x00: Fix the interval for rfkill and link_tuner.
-From: Alban browaeys <prahal@yahoo.com>
-Reply-To: prahal@yahoo.com
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-In-Reply-To: <a32f33a40904281318r7b26e5c2ja5ebefe19ecaa089@mail.gmail.com>
-References: <200904261608.30384.IvDoorn@gmail.com>
-	 <200904261608.50411.IvDoorn@gmail.com>
-	 <200904261609.11447.IvDoorn@gmail.com>
-	 <20090428185709.GA3321@tuxdriver.com>
-	 <a32f33a40904281318r7b26e5c2ja5ebefe19ecaa089@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
-Date: Thu, 30 Apr 2009 00:09:32 +0200
-Message-Id: <1241042973.14263.489.camel@argos.server.maison> (sfid-20090430_001112_989497_34DD6F8F)
-Mime-Version: 1.0
+Received: from promwad.com ([83.149.69.23]:52831 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764419AbZDHToF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 15:44:05 -0400
+MIME-Version: 1.0
+Date: Wed, 08 Apr 2009 22:43:48 +0300
+From: Ivan Kuten <ivan.kuten@promwad.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "eugene.sobol" <eugene.sobol@promwad.com>,
+	linux-wireless@vger.kernel.org, hintak.leung@gmail.com
+Subject: Re: rtl8187 diversity
+In-Reply-To: <49DCE741.7080406@lwfinger.net>
+References: <200904081530.51962.eugene.sobol@promwad.com> <49DCE741.7080406@lwfinger.net>
+Message-ID: <1e0576e9ab550ccec84402b8b0805633@promwad.com> (sfid-20090408_214411_062057_480F05EC)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mardi 28 avril 2009 =E0 22:18 +0200, Ivo Van Doorn a =E9crit :
-> On Tue, Apr 28, 2009 at 8:57 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Sun, Apr 26, 2009 at 04:09:11PM +0200, Ivo van Doorn wrote:
-> >> From: Alban Browaeys <prahal@yahoo.com>
-> >>
-> >> extra parenthesis made the value an argument and the value of the
-> >> define empty. This was triggering those very fast.
-> >>
-> >> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
-> >> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> >
-> > ???
-> >
-> > If that were so, wouldn't that have caused compile-time errors?
->=20
-> I've CCed Alban so he can explain the issue he experienced..
->=20
-> For me this patch is just a style-fix, because those
-> parenthesis were useless anyway.
+> 
+> My first comment is that the patch should be in-line rather than as an
+> attachment. Reviewing is easier.
+> 
+> You should be using the wireless-testing tree to derive your patches.
+> Otherwise,
+> they cannot be applied. For example, the following hunk is already in
+w-t:
+> 
+> @@ -257,6 +261,7 @@
+> 
+>         usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev,
+> ep),
+>                           buf, skb->len, rtl8187_tx_cb, skb);
+> +       urb->transfer_flags |= URB_ZERO_PACKET;
+>         rc = usb_submit_urb(urb, GFP_ATOMIC);
+>         if (rc < 0) {
+>                 usb_free_urb(urb);
+> 
+> 
+> I don't like the idea of having the antenna diversity as a compile-time
+> option.
+> That works OK for a single user, but it fails when distros are
+considered.
+> They
+> would have to have it on for all cases even though very few users would
+> need it.
+> Does the EEPROM for your device have special encoding that indicates the
+> presence of multiple antennas? You should be able to compile the antenna
+> diversity code unconditionally and use such a special EEPROM value.
+> Alternatively, the USB ID's (13d1:abe6) could be used to select its
+> execution.
+> 
+> You should run the patch through the scripts/checkpatch.pl routine. Yours
+> shows
+> 55 errors and 34 warnings.
+> 
+> Please split out the part that adds the new USB_DEVICE and submit it now.
+> That
+> will be needed no matter what happens to the antenna diversity code.
+> 
+> Larry
+> --
 
-Right this is only style change. Not that when I sent it I thought :
-#define A (x)
-was like:
-#define A(X)()
+Hello Larry, thanks for comments! Surely Eugene will fix patch issues and 
+resubmit patch inline. Actually in its current stage this patch just show
+an 
+diversity idea and will be cleaned-up for submission with Signed-off-by.
+Currently the question was about correctness of calculation of signal
+quality
+and making decision when switching between antennas should be done. Anyway
+it will be easier to say about this when patch will be inline.
 
-thus the patch and the comment.
+Btw, USB_DEVICE is already added: http://lkml.org/lkml/2008/11/17/39
 
-Thankfully it does not hurt though it does not help either . My getting
-the issue fixed was that I had EV_KEY  instead of EV_SW for the rfkill
-switch. I mixed the results of this test and the one about this patch.
+Best regards,
+Ivan
 
-By the way I found out that I had rfkill-input loaded for no good reaso=
-n
-(only because the debian eeepc acpi support package load it at boot).
-If one load it at the same time as rt2800pci crash follows next rfkill
-switch.=20
-That could be due to the init of the rfkill-input module that register =
-a
-handler to input subsystem. Its connect operation triggers a start whic=
-h
-itself triggers the EV_SW,and swbit code of its device. Thus it would
-explain that the device is shut down at registration of the
-input_register_polled_device. =20
-=20
 
-This is minor as on eeepc the status is always on (when off the device
-is out of power and thus no status is available) and the rfkill for wla=
-n
-is already managed by eeepc-laptop platform driver.
-One only need not have rfkill-input loaded which is the default on
-debian and may be required by other uses .
 
-Regards,
-Alban
 
-PS: sorry for the mistake and the time I took to tell about it. Finding
-out the real culprit of the crash/invalid behaviour (crash is new ...
-reproducible though) took time.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
