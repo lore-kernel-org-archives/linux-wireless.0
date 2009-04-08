@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:53461 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756973AbZDXTlb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 15:41:31 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ar9170: uncomment powermgt case handle
-Date: Fri, 24 Apr 2009 21:41:18 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+Received: from blaine.gmane.org ([80.91.229.8]:44556 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759353AbZDHUhC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 16:37:02 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1LreW5-00017n-2V
+	for linux-wireless@vger.kernel.org; Wed, 08 Apr 2009 22:37:01 +0200
+From: Andreas Schwab <schwab@linux-m68k.org>
+To: public-alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@hugh.gmane.org
+Cc: Larry Finger
+	<public-Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@hugh.gmane.org>,
+	Rusty Russell
+	<public-rusty-8n+1lVoiYb80n/F98K4Iww@hugh.gmane.org>,
+	Arjan van de Ven
+	<public-arjan-VuQAYsv1563Yd54FQh9/CA@hugh.gmane.org>,
+	LKML <public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	"Rafael J. Wysocki" <public-rjw-KKrjLPT3xs0@hugh.gmane.org>,
+	wireless
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
+Subject: Re: Regression in 2.6.30-rc1 since commit acae0515 - wireless broken
+References: <49DC2DF5.3010603@lwfinger.net> <49DC31EA.8050208@linux.intel.com>
+	<200904081631.09150.rusty@rustcorp.com.au>
+	<49DCB976.4020200@lwfinger.net>
+	<9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com>
+Date: Wed, 08 Apr 2009 22:05:21 +0200
+In-Reply-To: <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com>
+	(Alan Jenkins's message of "Wed, 8 Apr 2009 18:06:18 +0100")
+Message-ID: <m2fxgi6hdq.fsf@igel.home> (sfid-20090408_223726_504878_135BF815)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200904242141.19266.chunkeey@web.de> (sfid-20090424_214151_442826_5B6EE961)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uncomment a few lines that survived the RFCs.
-However, there is not much to worry about, since AP mode is
-not officially advertised and supported.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+
+
+Alan Jenkins <sourcejedi.lkml-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
+writes:
+
+> I agree that commit looks like it should be a no-op though :-).
+
+But it isn't.
+
+Andreas.
+
 ---
-diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
-index 4ee3223..f28a4c2 100644
---- a/drivers/net/wireless/ath/ar9170/mac.c
-+++ b/drivers/net/wireless/ath/ar9170/mac.c
-@@ -268,9 +268,9 @@ int ar9170_set_operating_mode(struct ar9170 *ar)
- 		case NL80211_IFTYPE_ADHOC:
- 			pm_mode |= AR9170_MAC_REG_POWERMGT_IBSS;
- 			break;
--/*		case NL80211_IFTYPE_AP:
-+		case NL80211_IFTYPE_AP:
- 			pm_mode |= AR9170_MAC_REG_POWERMGT_AP;
--			break;*/
-+			break;
- 		case NL80211_IFTYPE_WDS:
- 			pm_mode |= AR9170_MAC_REG_POWERMGT_AP_WDS;
- 			break;
+Fix try_then_request_module to use waiting __request_module again.
+
+Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+---
+ include/linux/kmod.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-2.6.30-rc1/include/linux/kmod.h
+===================================================================
+--- linux-2.6.30-rc1.orig/include/linux/kmod.h	2009-04-08 12:47:54.000000000 +0200
++++ linux-2.6.30-rc1/include/linux/kmod.h	2009-04-08 17:39:35.000000000 +0200
+@@ -34,7 +34,7 @@ extern int __request_module(bool wait, c
+ #define request_module(mod...) __request_module(true, mod)
+ #define request_module_nowait(mod...) __request_module(false, mod)
+ #define try_then_request_module(x, mod...) \
+-	((x) ?: (__request_module(false, mod), (x)))
++	((x) ?: (__request_module(true, mod), (x)))
+ #else
+ static inline int request_module(const char *name, ...) { return -ENOSYS; }
+ static inline int request_module_nowait(const char *name, ...) { return -ENOSYS; }
+
+-- 
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
+
+
