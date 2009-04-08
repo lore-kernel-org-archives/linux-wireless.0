@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:62161 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752120AbZDMAlL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51801 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756751AbZDHNpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2009 20:41:11 -0400
-Date: Sun, 12 Apr 2009 19:40:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [RFT/RFC] rtl8187: Remove some magic numbers
-Message-ID: <49e28a0e.w2E55OwYOA9yeg+w%Larry.Finger@lwfinger.net> (sfid-20090413_024115_059324_BFAA839F)
+	Wed, 8 Apr 2009 09:45:49 -0400
+Date: Wed, 8 Apr 2009 09:45:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: unreachable code in airo_set_auth()
+Message-ID: <20090408134504.GA24452@tuxdriver.com> (sfid-20090408_154552_443158_587543AA)
+References: <alpine.DEB.2.00.0904072049540.8684@bicker>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.0904072049540.8684@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are several magic numbers that refer to locations in the CSR page.
-They can be replaced.
+On Wed, Apr 08, 2009 at 02:02:41PM +0300, Dan Carpenter wrote:
+> Smatch (http://repo.or.cz/w/smatch.git) complains about unreachable code 
+> in airo_set_auth() from drivers/net/wireless/airo.c
+> 
+> We don't actually commit the changes, but instead break on line 6577.  I 
+> didn't know what was intended there.  Or who the maintainer was.
+> 
+> regards,
+> dan carpenter
+> 
+>   6567          case IW_AUTH_80211_AUTH_ALG: {
+>   6568                          /* FIXME: What about AUTH_OPEN?  This API seems to
+>   6569                           * disallow setting our auth to AUTH_OPEN.
+>   6570                           */
+>   6571                          if (param->value & IW_AUTH_ALG_SHARED_KEY) {
+>   6572                                  local->config.authType = AUTH_SHAREDKEY;
+>   6573                          } else if (param->value & IW_AUTH_ALG_OPEN_SYSTEM) {
+>   6574                                  local->config.authType = AUTH_ENCRYPT;
+>   6575                          } else
+>   6576                                  return -EINVAL;
+>   6577                          break;
+>   6578  
+>   6579                          /* Commit the changes to flags if needed */
+>   6580                          if (local->config.authType != currentAuthType)
+>   6581                                  set_bit (FLAG_COMMIT, &local->flags);
+>   6582                  }
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -650,7 +650,7 @@ static int rtl8187_init_hw(struct ieee80
- 
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
- 
--	rtl818x_iowrite16(priv, (__le16 *)0xFFF4, 0xFFFF);
-+	rtl818x_iowrite16(priv, &priv->map->FEMR, 0xFFFF);
- 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG1);
- 	reg &= 0x3F;
- 	reg |= 0x80;
-@@ -882,7 +882,7 @@ static void rtl8187_work(struct work_str
- 	u16 tmp;
- 
- 	mutex_lock(&priv->conf_mutex);
--	tmp = rtl818x_ioread16(priv, (__le16 *)0xFFFA);
-+	tmp = rtl818x_ioread16(priv, &priv->map->TALLY_CNT);
- 	while (skb_queue_len(&priv->b_tx_status.queue) > 0) {
- 		struct sk_buff *old_skb;
- 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-@@ -462,7 +462,7 @@ static void rtl8225_rf_init(struct ieee8
- 
- 	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
- 	msleep(1);
--	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
-+	rtl818x_iowrite32(priv, &priv->map->HSSI_PARA, 0x3dc00002);
- 
- 	/* set sensitivity */
- 	rtl8225_write(dev, 0x0c, 0x50);
-@@ -818,7 +818,7 @@ static void rtl8225z2_rf_init(struct iee
- 	rtl8225_write_phy_cck(dev, 0x4b, 0x04);
- 	rtl8225_write_phy_cck(dev, 0x4c, 0x05);
- 
--	rtl818x_iowrite8(priv, (u8 *)0xFF5B, 0x0D); msleep(1);
-+	rtl818x_iowrite8(priv, &priv->map->TESTR, 0x0D); msleep(1);
- 
- 	rtl8225z2_rf_set_tx_power(dev, 1);
- 
-@@ -828,7 +828,7 @@ static void rtl8225z2_rf_init(struct iee
- 
- 	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
- 	msleep(1);
--	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
-+	rtl818x_iowrite32(priv, &priv->map->HSSI_PARA, 0x3dc00002);
- }
- 
- static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
+Not sure what tree you're based upon, but the same code is farther
+down now.  Anyway:
+
+4be757dd	(Dan Williams	2006-01-30 11:58:00 -0500	6716)		break;
+4be757dd	(Dan Williams	2006-01-30 11:58:00 -0500	6717)
+4be757dd	(Dan Williams	2006-01-30 11:58:00 -0500	6718)		/* Commit the changes to flags if needed */
+
+Looks like we can blame Dan since he added those lines all in one
+patch.  Pay no attention to the person that committed... :-)
+
+Dan, what is the proper fix?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
