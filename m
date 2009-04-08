@@ -1,105 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752873AbZDPPE7 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:38687 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754936AbZDHXhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 11:04:59 -0400
-Subject: [PATCH] mac80211: document powersaving/beacon filter future
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain
-Date: Thu, 16 Apr 2009 17:04:25 +0200
-Message-Id: <1239894265.14169.2.camel@johannes.local> (sfid-20090416_170502_809421_20F13E45)
-Mime-Version: 1.0
+	Wed, 8 Apr 2009 19:37:00 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so619131fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Apr 2009 16:36:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <49DCE741.7080406@lwfinger.net>
+References: <200904081530.51962.eugene.sobol@promwad.com>
+	 <49DCE741.7080406@lwfinger.net>
+Date: Thu, 9 Apr 2009 00:36:58 +0100
+Message-ID: <3ace41890904081636g76f0057cv9a9b5a788489d9a3@mail.gmail.com> (sfid-20090409_013703_856510_358FFEF2)
+Subject: Re: rtl8187 diversity
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"eugene.sobol" <eugene.sobol@promwad.com>
+Cc: linux-wireless@vger.kernel.org, ivan.kuten@promwad.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Document what mac80211 will do in the future to help save power.
-We're not quite there yet, but a plan helps. Also, while at it,
-fix the docs wrt. multicast traffic.
+First of all, thanks a lot for posting the patch.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |   60 ++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 50 insertions(+), 10 deletions(-)
+The use of compat-wireless-old is presumably for older kernel
+side-by-side comparison on an older kernel?
+In any case, starting from somewhere is better than not-starting :-).
 
---- wireless-testing.orig/include/net/mac80211.h	2009-04-16 16:23:44.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-04-16 16:59:16.000000000 +0200
-@@ -1109,11 +1109,9 @@ ieee80211_get_alt_retry_rate(const struc
-  * need software support for parsing the TIM bitmap. This is also supported
-  * by mac80211 by combining the %IEEE80211_HW_SUPPORTS_PS and
-  * %IEEE80211_HW_PS_NULLFUNC_STACK flags. The hardware is of course still
-- * required to pass up beacons. Additionally, in this case, mac80211 will
-- * wake up the hardware when multicast traffic is announced in the beacon.
-- *
-- * FIXME: I don't think we can be fast enough in software when we want to
-- *	  receive multicast traffic?
-+ * required to pass up beacons. The hardware is still required to handle
-+ * waking up for multicast traffic; if it cannot the driver must handle that
-+ * as best as it can, mac80211 is too slow.
-  *
-  * Dynamic powersave mode is an extension to normal powersave mode in which
-  * the hardware stays awake for a user-specified period of time after sending
-@@ -1134,11 +1132,53 @@ ieee80211_get_alt_retry_rate(const struc
-  * way the host will only receive beacons where some relevant information
-  * (for example ERP protection or WMM settings) have changed.
-  *
-- * Beacon filter support is informed with %IEEE80211_HW_BEACON_FILTER flag.
-- * The driver needs to enable beacon filter support whenever power save is
-- * enabled, that is %IEEE80211_CONF_PS is set. When power save is enabled,
-- * the stack will not check for beacon miss at all and the driver needs to
-- * notify about complete loss of beacons with ieee80211_beacon_loss().
-+ * Beacon filter support is advertised with the %IEEE80211_HW_BEACON_FILTER
-+ * hardware capability. The driver needs to enable beacon filter support
-+ * whenever power save is enabled, that is %IEEE80211_CONF_PS is set. When
-+ * power save is enabled, the stack will not check for beacon loss and the
-+ * driver needs to notify about loss of beacons with ieee80211_beacon_loss().
-+ *
-+ * The time (or number of beacons missed) until the firmware notifies the
-+ * driver of a beacon loss event (which in turn causes the driver to call
-+ * ieee80211_beacon_loss()) should be configurable and will be controlled
-+ * by mac80211 and the roaming algorithm in the future.
-+ *
-+ * Since there may be constantly changing information elements that nothing
-+ * in the software stack cares about, we will, in the future, have mac80211
-+ * tell the driver which information elements are interesting in the sense
-+ * that we want to see changes in them. This will include
-+ *  - a list of information element IDs
-+ *  - a list of OUIs for the vendor information element
-+ *
-+ * Ideally, the hardware would filter out any beacons without changes in the
-+ * requested elements, but if it cannot support that it may, at the expense
-+ * of some efficiency, filter out only a subset. For example, if the device
-+ * doesn't support checking for OUIs it should pass up all changes in all
-+ * vendor information elements.
-+ *
-+ * Note that change, for the sake of simplification, also includes information
-+ * elements appearing or disappearing from the beacon.
-+ *
-+ * Some hardware supports an "ignore list" instead, just make sure nothing
-+ * that was requested is on the ignore list, and include commonly changing
-+ * information element IDs in the ignore list, for example 11 (BSS load) and
-+ * the various vendor-assigned IEs with unknown contents (128, 129, 133-136,
-+ * 149, 150, 155, 156, 173, 176, 178, 179, 219); for forward compatibility
-+ * it could also include some currently unused IDs.
-+ *
-+ *
-+ * In addition to these capabilities, hardware should support notifying the
-+ * host of changes in the beacon RSSI. This is relevant to implement roaming
-+ * when no traffic is flowing (when traffic is flowing we see the RSSI of
-+ * the received data packets). This can consist in notifying the host when
-+ * the RSSI changes significantly or when it drops below or rises above
-+ * configurable thresholds. In the future these thresholds will also be
-+ * configured by mac80211 (which gets them from userspace) to implement
-+ * them as the roaming algorithm requires.
-+ *
-+ * If the hardware cannot implement this, the driver should ask it to
-+ * periodically pass beacon frames to the host so that software can do the
-+ * signal strength threshold checking.
-  */
- 
- /**
+>> However while testing, the switching between antennas doesn't give any
+>> download speed improvements.
+>> May be we missed some point.
 
+You are confusing throughput with signal quality - unless the
+improvement with signal quality is dramatic enough to affect the
+rate-controlling mechanism (to bump the driver up to a higher rate),
+it probably will just result in more "steady" download (i.e. with less
+fluctuations), and you probably need to be moving around a bit to
+notice this.
 
+> I don't like the idea of having the antenna diversity as a compile-time option.
+> That works OK for a single user, but it fails when distros are considered. They
+> would have to have it on for all cases even though very few users would need it.
+> Does the EEPROM for your device have special encoding that indicates the
+> presence of multiple antennas? You should be able to compile the antenna
+> diversity code unconditionally and use such a special EEPROM value.
+> Alternatively, the USB ID's (13d1:abe6) could be used to select its execution.
+
+I agree this should not be a compile-time option; it should either
+auto-detect -
+
+- is based on USB vid/pid's reliable? enumeration of the number of antennas
+(presumably there is a way of asking the device itself how many
+antennas it is attached to)
+and the code simply cycles/alternates between all antennas; this might
+actually punnish the
+majority of the single-antenna users -
+
+or a run-time configurable option, i.e. via iwconfig/iwpriv/iw . It
+might be as simple as
+making the antenna switching no-op in the case of single antenna; but
+whatever needs to be done between single and multiple antennas should
+be require a module recompile.
+
+On the patch itself - I suggest to separate the procfs related stuff
+as a separate patch, or even removing it(?) it is probably only useful
+for devel? and hard coding "#define VAL_ARRAY_SIZE 10"?
