@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:46151 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415AbZDGFyj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 01:54:39 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: ath9k becon loss messages
-References: <1238923439.4120.9.camel@localhost.localdomain>
-	<200904061217.31134.mb@bu3sch.de> <87tz52xepy.fsf@litku.valot.fi>
-	<200904061251.10965.helmut.schaa@gmail.com>
-	<da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com>
-	<87iqlhdd3z.fsf@litku.valot.fi> <20090406180042.GD10842@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 07 Apr 2009 08:54:35 +0300
-In-Reply-To: <20090406180042.GD10842@tuxdriver.com> (John W. Linville's message of "Mon\, 6 Apr 2009 14\:00\:42 -0400")
-Message-ID: <87fxglhuuc.fsf@litku.valot.fi> (sfid-20090407_075443_152486_3A506AC6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:9750 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932251AbZDHSdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:33:44 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/6] iwlwifi driver updates 04/08/2009
+Date: Wed,  8 Apr 2009 11:39:26 -0700
+Message-Id: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com> (sfid-20090408_203402_177788_08900BB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+Some iwlwifi fixes as well as additional debugging for rate scaling
+and interrupt handling.
 
-> On Mon, Apr 06, 2009 at 06:18:56PM +0300, Kalle Valo wrote:
->
->> When I'm able to implement the proper fix, I think it should first have
->> proper testing in wireles-testing before pushing it to mainline. So
->> maybe the proper fix is 2.6.31 material, just to be on the safe side
->> here.
->> 
->> John, what do you think?
->
-> It depends on what the proper fix looks like, but basically anything
-> posted in the last week and thereafter is already 2.6.31 material
-> unless it is a specific bug fix for what is already in Linus' kernel.
+This series should be applied after the 3945 porting series as patch 3/6
+depends on 1/18 from that series.
 
-Ok, that settles it then. Because this bug has been in mac80211 for ages
-we can wait for 2.6.31.
+[PATCH 1/6] iwlwifi: Display decoded rate/mcs information
+[PATCH 2/6] iwlwifi: do not set dual_stream_ant_msk for 3 streams
+[PATCH 3/6] iwlagn: Sync rxon active with changes
+[PATCH 4/6] iwlwifi: check triple_stream_basic_rates in iwl_full_rxon_required
+[PATCH 5/6] iwlcore: fix channel display in debugfs
+[PATCH 6/6] iwlwifi: adding interrupt counter in debugfs for debugging
 
-But do you take Michael's patch[1] for disabling the "beacon loss"
-message for 2.6.30? I think we should have it in 2.6.30, otherwise we
-will get quite a lot of bug reports. Do you want me to resend it?
 
-[1] http://marc.info/?l=linux-kernel&m=123892431619630&w=2
+Thank you
 
--- 
-Kalle Valo
+Reinette
+
