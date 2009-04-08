@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto053.server4you.de ([62.75.220.53]:59109 "EHLO
-	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764988AbZDCNGc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 09:06:32 -0400
-Date: Fri, 3 Apr 2009 14:38:22 +0200
-From: Daniel Wagner <wagi@monom.org>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: No local loopback for mac80211_hwsim test setup
-Message-ID: <20090403123822.GA26100@toronto053.server4you.de> (sfid-20090403_150647_912363_CB6A5CE6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx2.redhat.com ([66.187.237.31]:45356 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933636AbZDHOOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 10:14:25 -0400
+Subject: [PATCH] airo: queue SIOCSIWAUTH-requested auth mode change for
+	next commit
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Carpenter <error27@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20090408134504.GA24452@tuxdriver.com>
+References: <alpine.DEB.2.00.0904072049540.8684@bicker>
+	 <20090408134504.GA24452@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 08 Apr 2009 10:15:17 -0400
+Message-Id: <1239200117.14879.2.camel@localhost.localdomain> (sfid-20090408_161436_350062_9E1164F9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Code was clearly wrong, plus callers expect the mode change to happen as
+soon as possible, not dropped on the floor until the next time some
+other config value changes and a commit happens.
 
-I'd like to setup a wireless test network using the mac80211_hwsim
-driver.  The main idea is to use one simulated device as access point
-(e.g wlan13) and the other as normal station (e.g. wlan20).
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-I was able to get hostapd and dhcpd listining on wlan13 and handling the
-request coming from wlan20. So after that the configuration looks like this:
-
-[wagi@stardust ~]$ ip addr show dev wlan13
-12: wlan13: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
-    link/ether 02:00:00:00:03:00 brd ff:ff:ff:ff:ff:ff
-    inet 10.0.13.1/32 scope global wlan13
-    inet6 fe80::ff:fe00:300/64 scope link
-       valid_lft forever preferred_lft forever
-
-[wagi@stardust ~]$ ip addr show dev wlan20
-26: wlan20: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
-    link/ether 02:00:00:00:0a:00 brd ff:ff:ff:ff:ff:ff
-    inet 10.0.13.10/24 brd 10.0.13.255 scope global wlan20
-    inet6 fe80::ff:fe00:a00/64 scope link
-       valid_lft forever preferred_lft forever
-
-[wagi@stardust ~]$ ip route show
-10.0.13.0/24 dev wlan20  proto kernel  scope link  src 10.0.13.10  metric 2
-192.168.122.0/24 dev virbr0  proto kernel  scope link  src 192.168.122.1
-192.168.0.0/16 dev eth0  proto kernel  scope link  src 192.168.101.53  metric 1
-default via 192.168.0.254 dev eth0  proto static
-
-[wagi@stardust ~]$ ip route show dev wlan13 table local
-local 10.0.13.1  proto kernel  scope host  src 10.0.13.1
-
-[wagi@stardust ~]$ ip route show dev wlan20 table local
-local 10.0.13.10  proto kernel  scope host  src 10.0.13.10
-broadcast 10.0.13.255  proto kernel  scope link  src 10.0.13.10
-broadcast 10.0.13.0  proto kernel  scope link  src 10.0.13.10
-
-If I 'ping 10.0.13.1' then the ip packets are not going through 
-mac80211_hwsim because of the local route entry. So I tried
-to remove this entry with the result that I know see:
-
-[wagi@stardust ~]$ sudo tcpdump -i wlan13
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on wlan13, link-type EN10MB (Ethernet), capture size 96 bytes
-14:31:05.431507 arp who-has 10.0.13.1 tell 10.0.13.10
-14:31:05.431448 arp who-has 10.0.13.1 tell 10.0.13.10
-14:31:06.431486 arp who-has 10.0.13.1 tell 10.0.13.10
-...
-
-Fidling with the arp entries was not helping either. I'm a bit at a
-loss. I've searched the web, nothing found what helped.
-
-So my question is this possible what I'd like to do? If so, what's the
-trick to get it working?
-
-thanks,
-daniel
-
-
-
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index fc4322c..0bf2779 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -6574,11 +6574,11 @@ static int airo_set_auth(struct net_device *dev,
+ 				local->config.authType = AUTH_ENCRYPT;
+ 			} else
+ 				return -EINVAL;
+-			break;
+ 
+ 			/* Commit the changes to flags if needed */
+ 			if (local->config.authType != currentAuthType)
+ 				set_bit (FLAG_COMMIT, &local->flags);
++			break;
+ 		}
+ 
+ 	case IW_AUTH_WPA_ENABLED:
 
 
