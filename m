@@ -1,74 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57449 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760825AbZDSQ0Y (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64866 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934404AbZDHRGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 12:26:24 -0400
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090419161316.158790@gmx.net> (sfid-20090419_181324_681308_BAEAE072)
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
-	 <20090419125212.158800@gmx.net>
-	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
-	 <20090419133544.158820@gmx.net>
-	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
-	 <20090419140523.158830@gmx.net>
-	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
-	 <20090419151629.158790@gmx.net>
-	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
-	 <20090419155319.158810@gmx.net>
-	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
-	 <20090419161316.158790@gmx.net> (sfid-20090419_181324_681308_BAEAE072)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6bTDc9/sFgG0PKh+CIjJ"
-Date: Sun, 19 Apr 2009 18:26:21 +0200
-Message-Id: <1240158381.917.21.camel@johannes.local> (sfid-20090419_182627_951206_729611A1)
-Mime-Version: 1.0
+	Wed, 8 Apr 2009 13:06:22 -0400
+MIME-Version: 1.0
+Reply-To: alan-jenkins@tuffmail.co.uk
+In-Reply-To: <49DCB976.4020200@lwfinger.net>
+References: <49DC2DF5.3010603@lwfinger.net> <49DC31EA.8050208@linux.intel.com>
+	 <200904081631.09150.rusty@rustcorp.com.au>
+	 <49DCB976.4020200@lwfinger.net>
+Date: Wed, 8 Apr 2009 18:06:18 +0100
+Message-ID: <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com> (sfid-20090408_190702_134337_AF984883)
+Subject: Re: Regression in 2.6.30-rc1 since commit acae0515 - wireless broken
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Rusty Russell <rusty@rustcorp.com.au>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 4/8/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Rusty Russell wrote:
+>> On Wednesday 08 April 2009 14:41:06 Arjan van de Ven wrote:
+>>> Larry Finger wrote:
+>>>> The most recent pulls of the Linux-2.6 git tree has broken wireless. The
+>>>> problem
+>>>> was bisected with commit acae05156551fd7528fbb616271e672789388e3c,
+>>>> entitled
+>>>> "module: create a request_module_nowait()", indicated as the faulty
+>>>> change. This
+>>>> is seen with driver b43 on my system, and 2 reports for driver iwlagn:
+>>>> http://marc.info/?l=linux-wireless&m=123916157630571&w=2 and
+>>>> http://marc.info/?l=linux-wireless&m=123913015021457&w=2.
+>>>>
+>>>> For b43, the logged error messages are:
+>>> rusty... I still suspect your "int to bool" conversion stuff ;-)
+>>
+>> One way to find out.  Here's the reversion:
+>>
+>> diff --git a/include/linux/kmod.h b/include/linux/kmod.h
+>> --- a/include/linux/kmod.h
+>> +++ b/include/linux/kmod.h
+>> @@ -29,12 +29,10 @@
+>>  #ifdef CONFIG_MODULES
+>>  /* modprobe exit status on success, -ve on error.  Return value
+>>   * usually useless though. */
+>> -extern int __request_module(bool wait, const char *name, ...) \
+>
+> The patch did not fix the problem. The symptoms are the same.
+>
+> Larry
 
---=-6bTDc9/sFgG0PKh+CIjJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi, I can confirm this bug on ath5k.
 
-On Sun, 2009-04-19 at 18:13 +0200, Alina Friedrichsen wrote:
-> > You don't need wpa_supplicant, you just need an SME for that. Eventuall=
-y
-> > we'll implement one in iw.
->=20
-> You need one simple SME for compatibility with wext in the
-> kernel-space. Why not allow to access it with nl80211?
+Something is very wrong with request_module(), this is just the most
+obvious symptom.  It also seems to affect libusual (loading
+usb-storage) and FAT (loading NLS modules).
 
-We might actually do that -- as part of the commands "connect" and
-"disconnect" that do not exist yet and subsume auth and assoc into one
-for hardware that doesn't support it.
+If I hotplug my wireless device, it then loads correctly.  So I'm
+guessing wireless modules e.g. encryption modules get loaded too
+asynchronously.   I.e. on boot, the  sub-modules are loaded too late.
+But when I hotplug the device, the modules are already loaded.
 
-johannes
+Same with FAT - it fails on first attempt to mount because of missing
+NLS module, then works on second mount,
 
---=-6bTDc9/sFgG0PKh+CIjJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I agree that commit looks like it should be a no-op though :-).
+I will try to confirm the OP's bisection by reverting the commit, acae0515.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ61CqAAoJEKVg1VMiehFYUnkP/RMY+oqPlaldb34wcESb97ke
-LnOR+etcBcKRyk09UPTV01PnywephuweS7lsaYUWJApvXy7QZaFSYlz6SWKPRIV3
-otsr7so323jegcYNVUzclLUKGxjknFX+6+RGpHcXvf3QCU4geQK+D6EEKVlqvPkZ
-9D7hzDWX8Yl6HzDTGiTskb4kCr0QI4YUIR+OQZleWFF0tuNbGDJvT+8V/9t+sJkD
-AVR0L+mbqlyB2mO2NLkUnNRul4mEru3kW0nkfXAORBOJ70wPyxRv//cQVIsLtvmE
-v/mQMgSz0UAqpL1AjU1AtNtN9ESHe3Ns4KK2hoCypsKPmuKNOTMoIiYywAz0N1+O
-J7jfiYkxAacvdsmaCZ3c8l13d2+1OS4+hoW7PEUjy6HcuKcFipKeZ/4p8Bv6vvj2
-/Ad1y1bUAMRVBeWJhllmaTg8tKJeoawTZlK+3kG8SZhIg4dobOebOhLi41ZGcbFs
-RxgiThiX3A8abcVkaLlexxX/CaNVUNs17WS34l1miYuaHKMWtJnoIp7SG1lBvVMQ
-Khy+Tk5wo0LzH008Az7gpM14aEOPVLqWwaBIlLux4cOfQjhiQBRPyuo2fIzwXa0M
-8D0FO4AbkFtMr7s9cIWxw88hdm088Gt1iklNkB09EsSIFu0NPob6W9SxaaU/dJJP
-Rg1lFxPpuHSLZ2wAjdQx
-=hUpn
------END PGP SIGNATURE-----
-
---=-6bTDc9/sFgG0PKh+CIjJ--
-
+Alan
