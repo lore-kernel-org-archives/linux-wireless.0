@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:51801 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbZDWQkK (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:29168 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751780AbZDHBId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 12:40:10 -0400
-Received: by fxm2 with SMTP id 2so649862fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 09:40:08 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: luciano.coelho@nokia.com, Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-Subject: wl12xx: third submission
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 23 Apr 2009 19:40:05 +0300
-Message-ID: <87ab67b9y2.fsf@litku.valot.fi> (sfid-20090423_184017_459971_979DD6FE)
+	Tue, 7 Apr 2009 21:08:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 7 Apr 2009 18:08:17 -0700
+Message-ID: <43e72e890904071808t20513fa1h524a15a2cd039856@mail.gmail.com> (sfid-20090408_030837_857070_CA6F2CDA)
+Subject: [ANN] Stable kernel series Linux wireless backports
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+We have been letting users get bleeding edge wireless through
+compat-wireless [1] since 2.6.22. This has worked great by giving
+wireless-testing more exposure and more testing. Sometimes users don't
+want to go all out on bleeding edge and sometimes you simply cannot
+upgrade your kernel. For those of you we're going to start releasing
+backports of Linux wireless for the stable kernel series. What this
+means is you will be able to get future stable kernel releases with
+the wireless subsystem backported for you and available when you are
+on kernels >= 2.6.27.
 
-here is the third (and hopefully last) submission of wl12xx, a driver
-for TI wl1251 chipset:
+As an example today 2.6.30-rc1 was released, so you can now download
+the 2.6.31-rc1 wireless subsystem alone and install it on a system on
+kernels >= 2.6.27.
 
-http://www.valot.fi/kalle/tmp/wl12xx/20090423/
+So here is the first release:
 
-Changes since second submission:
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30/compat-wireless-2.6.30-rc1.tar.bz2
 
-o remove mach includes to make it compile in wireless-testing
+Just as you would test 2.6.30-rc1 if you just want to test the
+wireless stuff from that kernel release you can use this. Please let
+me know if it compiles on 2.6.27..2.6.29 (I'm already on 2.6.30) but I
+think it should.
 
-Changes since first submission from February 10:
+Users looking for things a little more stable than wireless-testing
+can use this. The other added benefit is if you need to support
+customers using a newer wireless subsystem than what your customers
+have available you won't need to branch of off specific release from
+wireless-testing and waste energy and time on backporting fixes to
+random wireless-testing snapshots, instead you can rely on the
+compat-wireless stable series backports -- any bugs found should be
+fixed and merged back upstream.
 
-o update to 2.6.29 (bob)
-o sysfs interface removed (bob)
-o netlink interface removed
-o lots of bug fixes
-o platform data for proper board file support
+If I have time I'll see if I can prep one up based on 2.6.29, if not
+please feel free to send patches. I figure we shouldn't bother with
+2.6.28 and 2.6.27-- that is backporting this stuff as most users
+should already be there by now. You can find the specific
+compat-wireless changes for each stable kernel on the compat-wireless
+branches.
 
-Please consider for including the driver to wireless-testing. Bob is
-planning to add SDIO support to the driver and it's easier for us to
-have the driver in wireless-testing. And if all goes well, it would be
-nice to get the driver into 2.6.31. But that's up to you, of course.
+  Luis
 
-The diffstat:
-
- drivers/net/wireless/Kconfig               |    1 +
- drivers/net/wireless/Makefile              |    2 +
- drivers/net/wireless/wl12xx/Kconfig        |   11 +
- drivers/net/wireless/wl12xx/Makefile       |    4 +
- drivers/net/wireless/wl12xx/acx.c          |  689 ++++++++++++++
- drivers/net/wireless/wl12xx/acx.h          | 1245 +++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/boot.c         |  295 ++++++
- drivers/net/wireless/wl12xx/boot.h         |   40 +
- drivers/net/wireless/wl12xx/cmd.c          |  353 +++++++
- drivers/net/wireless/wl12xx/cmd.h          |  265 ++++++
- drivers/net/wireless/wl12xx/debugfs.c      |  508 ++++++++++
- drivers/net/wireless/wl12xx/debugfs.h      |   33 +
- drivers/net/wireless/wl12xx/event.c        |  127 +++
- drivers/net/wireless/wl12xx/event.h        |  121 +++
- drivers/net/wireless/wl12xx/init.c         |  200 ++++
- drivers/net/wireless/wl12xx/init.h         |   40 +
- drivers/net/wireless/wl12xx/main.c         | 1375 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/ps.c           |  151 +++
- drivers/net/wireless/wl12xx/ps.h           |   36 +
- drivers/net/wireless/wl12xx/reg.h          |  745 +++++++++++++++
- drivers/net/wireless/wl12xx/rx.c           |  208 +++++
- drivers/net/wireless/wl12xx/rx.h           |  122 +++
- drivers/net/wireless/wl12xx/spi.c          |  358 ++++++++
- drivers/net/wireless/wl12xx/spi.h          |  109 +++
- drivers/net/wireless/wl12xx/tx.c           |  557 +++++++++++
- drivers/net/wireless/wl12xx/tx.h           |  215 +++++
- drivers/net/wireless/wl12xx/wl1251.c       |  709 ++++++++++++++
- drivers/net/wireless/wl12xx/wl1251.h       |  165 ++++
- drivers/net/wireless/wl12xx/wl12xx.h       |  409 +++++++++
- drivers/net/wireless/wl12xx/wl12xx_80211.h |  156 ++++
- include/linux/spi/wl12xx.h                 |   31 +
- 31 files changed, 9280 insertions(+), 0 deletions(-)
-
--- 
-Kalle Valo
+[1] http://wireless.kernel.org/en/users/Download
