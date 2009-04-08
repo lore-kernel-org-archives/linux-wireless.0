@@ -1,77 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40218 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707AbZDYHNB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 03:13:01 -0400
-Subject: Re: [PATCH 0/5] mac80211, iwlwifi, ath9k: Fix rate scaling for
- IEEE80211_TX_CTL_NO_ACK packets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Jouni Malinen <j@w1.fi>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <49F1F789.6090307@openwrt.org>
-References: <69e28c910904231035u7ff2d9bbnbf1a74ece718659@mail.gmail.com>
-	 <20090423180928.GA22426@jm.kir.nu>  <49F1F789.6090307@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y1gkP5wwTg3XQSR1htkj"
-Date: Sat, 25 Apr 2009 09:12:52 +0200
-Message-Id: <1240643572.18031.49.camel@johannes.local> (sfid-20090425_091317_319661_2D11A17C)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:2471 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756188AbZDHSVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:21:05 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/18] iwl3945: use iwl_mac_beacon_update
+Date: Wed,  8 Apr 2009 11:26:36 -0700
+Message-Id: <1239215212-1657-3-git-send-email-reinette.chatre@intel.com> (sfid-20090408_202117_285069_9CB6CC94)
+In-Reply-To: <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
+References: <1239215212-1657-1-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
---=-Y1gkP5wwTg3XQSR1htkj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+3945 can use iwl_mac_beacon_update.
 
-On Fri, 2009-04-24 at 19:31 +0200, Felix Fietkau wrote:
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   43 -----------------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   41 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   49 +-------------------------
+ 4 files changed, 44 insertions(+), 90 deletions(-)
 
-> > While this may be the case with the current rate control
-> > implementations, this is not a good assumption to make.
-> > Multicast/broadcast frames could (and often really should) be
-> > transmitted at higher rate, i.e., the rate control algorithm could
-> > figure out that all associated STAs should be able to receive frames at
-> > a higher basic rate.
-> Good idea. I should implement this in minstrel and use the minimum value
-> of max_prob_rate for all stations as multicast rate ;)
->=20
-> Johannes: Can you think of a good way to fit this into the API?
-
-Not really... We haven't exported station iterators (for a vif) yet,
-which you would need (though I would recalculate only when a station is
-removed, when adding you can use min(current,new))
-
-johannes
-
---=-Y1gkP5wwTg3XQSR1htkj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ8rfwAAoJEKVg1VMiehFYamYP/j9aVNFQVOcTsb9quBLwOAJY
-kfyW0jJMoElMOI0drq3Unq0cqXhkWg2GTW7zciBxDEIWBnuKFgFiImvAZglrTQuS
-nXa2/YjWztvhN6wNDX2Vx0ePHseP+8pgxCKmJj6rsXDtP6NX0gZHeZboscSX6WxT
-ub88DogB7b4VTF2Q0WPtwGMfkuGBo897vBly5NdGn+E9lorh6tU+sfLiF573NGhU
-H17c8NZz8yRfysGYR3n9+Pzn4t2BHYV20VxNyDkMXO5KYZwx9qJfgoUiaHwBMZco
-IaTTk+CQs5QR8DB2ybYWN6PIjYuc3Bixt8vD0HQ08r9jVvMuz8JbZlBCHrsIJhPd
-3r3PUp6+hddnQ2nbvpDOvU+Oc3yprR4UcrYGrSw3A3PL9Q/dSqduGl/fZhlrShU6
-D0enbnTF/g6wytuZoQnStu4/Lmr9rGHOr5/z/TUX+Ik6mXShmFN7cgGZCzdfY05U
-sOQ/aNTS+txIWMPEKaOmXfqoVtaVDBS1eMqeRWMCfO83Dw2STa46wAi8gADbLT1+
-yGFaRIszzTALWkkxhec+BkrD2iPRc+hwyAVilOkq3he/OpzMVQG5ZjqDP1i9V3Rc
-+TZDvOJgSQgaMUd8UaF+xRMKhIxM3l/kVlgIjMCP1Uunr4VKBP+NvA9ou8OnbiJ7
-N/BMN4dkcm8KWCeVKqkx
-=FtYe
------END PGP SIGNATURE-----
-
---=-Y1gkP5wwTg3XQSR1htkj--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 2492ec0..ea4f65e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1443,10 +1443,6 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 	return ret;
+ }
+ 
+-/* temporary */
+-static int iwl_mac_beacon_update(struct ieee80211_hw *hw,
+-				 struct sk_buff *skb);
+-
+ /**
+  * iwl_alive_start - called after REPLY_ALIVE notification received
+  *                   from protocol/runtime uCode (initialization uCode's
+@@ -2657,45 +2653,6 @@ static void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+ 
+-static int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	unsigned long flags;
+-	__le64 timestamp;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	if (!iwl_is_ready_rf(priv)) {
+-		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
+-		return -EIO;
+-	}
+-
+-	if (priv->iw_mode != NL80211_IFTYPE_ADHOC) {
+-		IWL_DEBUG_MAC80211(priv, "leave - not IBSS\n");
+-		return -EIO;
+-	}
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	if (priv->ibss_beacon)
+-		dev_kfree_skb(priv->ibss_beacon);
+-
+-	priv->ibss_beacon = skb;
+-
+-	priv->assoc_id = 0;
+-	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	priv->timestamp = le64_to_cpu(timestamp);
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	iwl_reset_qos(priv);
+-
+-	priv->cfg->ops->lib->post_associate(priv);
+-
+-
+-	return 0;
+-}
+ 
+ /*****************************************************************************
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index a351a38..cb78186 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2292,6 +2292,47 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(iwl_bss_info_changed);
+ 
++int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct iwl_priv *priv = hw->priv;
++	unsigned long flags;
++	__le64 timestamp;
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	if (!iwl_is_ready_rf(priv)) {
++		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
++		return -EIO;
++	}
++
++	if (priv->iw_mode != NL80211_IFTYPE_ADHOC) {
++		IWL_DEBUG_MAC80211(priv, "leave - not IBSS\n");
++		return -EIO;
++	}
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	if (priv->ibss_beacon)
++		dev_kfree_skb(priv->ibss_beacon);
++
++	priv->ibss_beacon = skb;
++
++	priv->assoc_id = 0;
++	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
++	priv->timestamp = le64_to_cpu(timestamp);
++
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	iwl_reset_qos(priv);
++
++	priv->cfg->ops->lib->post_associate(priv);
++
++
++	return 0;
++}
++EXPORT_SYMBOL(iwl_mac_beacon_update);
++
+ #ifdef CONFIG_PM
+ 
+ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 4ad8465..0447385 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -258,6 +258,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *bss_conf,
+ 				     u32 changes);
++int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb);
+ 
+ /*****************************************************
+  * RX handlers.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 22cd171..4ac272b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2792,11 +2792,6 @@ static void iwl3945_init_alive_start(struct iwl_priv *priv)
+ 	queue_work(priv->workqueue, &priv->restart);
+ }
+ 
+-
+-/* temporary */
+-static int iwl3945_mac_beacon_update(struct ieee80211_hw *hw,
+-				     struct sk_buff *skb);
+-
+ /**
+  * iwl3945_alive_start - called after REPLY_ALIVE notification received
+  *                   from protocol/runtime uCode (initialization uCode's
+@@ -2904,7 +2899,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
+ 		struct sk_buff *beacon = ieee80211_beacon_get(priv->hw,
+ 								priv->vif);
+ 		if (beacon)
+-			iwl3945_mac_beacon_update(priv->hw, beacon);
++			iwl_mac_beacon_update(priv->hw, beacon);
+ 	}
+ 
+ 	return;
+@@ -3837,7 +3832,7 @@ static int iwl3945_mac_config_interface(struct ieee80211_hw *hw,
+ 		if (!beacon)
+ 			return -ENOMEM;
+ 		mutex_lock(&priv->mutex);
+-		rc = iwl3945_mac_beacon_update(hw, beacon);
++		rc = iwl_mac_beacon_update(hw, beacon);
+ 		mutex_unlock(&priv->mutex);
+ 		if (rc)
+ 			return rc;
+@@ -4089,46 +4084,6 @@ static void iwl3945_mac_reset_tsf(struct ieee80211_hw *hw)
+ 
+ }
+ 
+-static int iwl3945_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	unsigned long flags;
+-	__le64 timestamp;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	if (!iwl_is_ready_rf(priv)) {
+-		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
+-		return -EIO;
+-	}
+-
+-	if (priv->iw_mode != NL80211_IFTYPE_ADHOC) {
+-		IWL_DEBUG_MAC80211(priv, "leave - not IBSS\n");
+-		return -EIO;
+-	}
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	if (priv->ibss_beacon)
+-		dev_kfree_skb(priv->ibss_beacon);
+-
+-	priv->ibss_beacon = skb;
+-
+-	priv->assoc_id = 0;
+-	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	priv->timestamp = le64_to_cpu(timestamp);
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	iwl_reset_qos(priv);
+-
+-	priv->cfg->ops->lib->post_associate(priv);
+-
+-
+-	return 0;
+-}
+-
+ /*****************************************************************************
+  *
+  * sysfs attributes
+-- 
+1.5.6.3
 
