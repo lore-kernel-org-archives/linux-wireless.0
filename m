@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59600 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757417AbZDFUQH (ORCPT
+Received: from fmailhost03.isp.att.net ([207.115.11.53]:33454 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761895AbZDHVHZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 16:16:07 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 0/5] wireless: listen to reg bw preferences
-Date: Mon,  6 Apr 2009 16:15:53 -0400
-Message-Id: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com> (sfid-20090406_221613_778096_BCC239A0)
+	Wed, 8 Apr 2009 17:07:25 -0400
+Message-ID: <49DD11FC.6090506@lwfinger.net> (sfid-20090408_231852_359853_A4476559)
+Date: Wed, 08 Apr 2009 16:07:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ivan Kuten <ivan.kuten@promwad.com>
+CC: "eugene.sobol" <eugene.sobol@promwad.com>,
+	linux-wireless@vger.kernel.org, hintak.leung@gmail.com
+Subject: Re: rtl8187 diversity
+References: <200904081530.51962.eugene.sobol@promwad.com> <49DCE741.7080406@lwfinger.net> <1e0576e9ab550ccec84402b8b0805633@promwad.com>
+In-Reply-To: <1e0576e9ab550ccec84402b8b0805633@promwad.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This new series addresses Johannes comments. Gabor -- didn't have
-time to rename variables in iwl for fat-->ht40, feel free to take a stab.
+Ivan Kuten wrote:
+> 
+> Hello Larry, thanks for comments! Surely Eugene will fix patch issues and 
+> resubmit patch inline. Actually in its current stage this patch just show
+> an 
+> diversity idea and will be cleaned-up for submission with Signed-off-by.
+> Currently the question was about correctness of calculation of signal
+> quality
+> and making decision when switching between antennas should be done. Anyway
+> it will be easier to say about this when patch will be inline.
+> 
+> Btw, USB_DEVICE is already added: http://lkml.org/lkml/2008/11/17/39
 
-Luis R. Rodriguez (5):
-  cfg80211: Process regulatory max bandwidth checks for HT40
-  wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
-  mac80211: check if HT40+/- is allowed before sending assoc
-  cfg80211: check allowed channel type upon userspace requests
-  mac80211: expose HT channel flags through debugfs
+I think there is a logic error in the following:
 
- drivers/net/wireless/ath/regd.c           |   10 +-
- drivers/net/wireless/iwlwifi/iwl-core.c   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 +-
- include/net/wireless.h                    |   22 ++-
- net/mac80211/debugfs.c                    |   10 ++
- net/mac80211/ht.c                         |    8 +-
- net/mac80211/ieee80211_i.h                |    2 +
- net/mac80211/mlme.c                       |    4 +-
- net/wireless/nl80211.c                    |   47 ++++---
- net/wireless/reg.c                        |  200 +++++++++++++++++++++++------
- 10 files changed, 230 insertions(+), 85 deletions(-)
++void sw_antenna_diversity_timer_callback(struct rtl8187_priv *priv)
++{
++    static int tick_without_switch = 0;
++    static int old_value = 0;
++    int average = 0;
++    int i;
++    for ( i = 0; i < VAL_ARRAY_SIZE; ++i)
++    {
++        average += priv->ant_diversity.agc_array[i];
++    }
++    average /= VAL_ARRAY_SIZE;
++    average /= 10; // cut 1 chipher
++    printk("%d->%d\n", old_value, average);
++
++    int sub = average - old_value;
++    if (sub < 0)
++        sub *= -1;
++    if (average > old_value)
++    {
++        priv->ant_diversity.switch_to ^= 1;
++        queue_delayed_work(priv->hw->workqueue, &priv->antenna_work,
++                                    msecs_to_jiffies(ANTENNA_SWITCH_TIMER_PERIOD));
++    }
++    old_value = average;
+
+The AGC value is inversely proportional to the signal strength. I think you need
+to select the antenna with the smaller, not the larger, value for the average.
+
+Larry
 
