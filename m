@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53941 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbZDXJYR (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:34591 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569AbZDHFRF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 05:24:17 -0400
-Subject: Re: [PATCH] mac80211: add driver ops wrappers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <87y6tqd32q.fsf@litku.valot.fi> (sfid-20090424_073822_071232_0014077F)
-References: <1240505572.30082.233.camel@johannes.local>
-	 <87y6tqd32q.fsf@litku.valot.fi> (sfid-20090424_073822_071232_0014077F)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QqZFeHERUzBTVN/7C06a"
-Date: Fri, 24 Apr 2009 11:23:39 +0200
-Message-Id: <1240565019.5066.2.camel@johannes.local> (sfid-20090424_112420_537963_BD89FC62)
-Mime-Version: 1.0
+	Wed, 8 Apr 2009 01:17:05 -0400
+Received: by fxm2 with SMTP id 2so2616843fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 22:17:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.1.10.0904072237270.24512@woodchuck.wormnet.eu>
+References: <alpine.DEB.1.10.0904072237270.24512@woodchuck.wormnet.eu>
+Date: Wed, 8 Apr 2009 08:17:03 +0300
+Message-ID: <da94abde0904072217r48aca149h6871c964fcd7d4e2@mail.gmail.com> (sfid-20090408_071712_276423_A8E00EE0)
+Subject: Re: [PATCH] Add device ID for OQO model 01+
+From: Kalle Valo <kalle.valo@iki.fi>
+To: Jamie Lentin <jm@lentin.co.uk>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Apr 8, 2009 at 12:59 AM, Jamie Lentin <jm@lentin.co.uk> wrote:
+> Add USB device ID for OQO 01+'s internal wireless LAN
+>
+> An OQO employee mentions the chip's true identity here:-
+> =A0 ftp://ftp.oqo.com/unsupported/linux/OQOLinux.html
+>
+> Signed-off-by: Jamie Lentin <jm@lentin.co.uk>
 
---=-QqZFeHERUzBTVN/7C06a
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-04-24 at 08:37 +0300, Kalle Valo wrote:
-
-> But I'm just concerned about the drv prefix, with very bad luck it might
-> create conflicts with some other component. What about using
-> ieee80211_drv, for example?
-
-Hmm. I kinda share your concern, but since these are all static inlines
-they don't really pollute any namespace, at least not for linking, so
-conflicts could only arise when another subsystem suddenly exports the
-same name, in a header file that we include. In the end I decided not to
-worry about it just because it otherwise gets very long.
-
-johannes
-
---=-QqZFeHERUzBTVN/7C06a
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ8YUSAAoJEKVg1VMiehFYZ0IQAKhE0IY14bLZSu9nCsNIGqr+
-bB6+67mu0wD30VqBleGPmU3sYLl6Ta+N2enKY++E97n8DQ57AZmU3pSf/NBVmJks
-aPGl/1crjFYR78y+vthOVouJtbMnFwH7EWGU2OLYGVwHnZ9AU1fNmGVsJklm6DCs
-Nh6CmDR1CqtvN2Yatg7gNt/VBSpSAatgcwnRy5H+Rvzy8SOzZRlQAlkBVaHTvMMe
-YRungzLwUvQxEjOWuznHfP4fOPwmFDyPcuDlQVj8iMU6Gl4gNOy2Png6UiGgCcSP
-pj0MFRHeqXbVKBGRupgIlLBt2LnEAUdXcTnQPnYaaEC16GSLyIGj2m+d9d0+rPL6
-0HvLUNMz6BDE5Ec8nlsFiB2MKYKjwyCgsQ7rKzAxDszrj/eF8GprF+Wf3OLqENz6
-N1VEw8ulj9goH6bvLGipDl/N9toUJa3jNXlG33Mpg4nXnC0TkUC+tXK62SRbedXp
-Pn1WCqQdjNtHoSsKholRO1qCC1r6UGq4SHb0UgF44tDGSveVbq3seDuKEpTV67Ah
-Tzvf+719i3N4ivDqzl5FwaEQ5ICp2pJJ4qYiiGK9tNrOjjn2GOVhgzL6kfeRGLum
-5oZd1jaVFnLUTdA0H9+xpuatsI6q/5HZd5udD4WGHUG/5VcbTOS1vYaAi1IlruxC
-dydJ0UxFUrRKiS1Y2n2m
-=JoiY
------END PGP SIGNATURE-----
-
---=-QqZFeHERUzBTVN/7C06a--
-
+Acked-by: Kalle Valo <kalle.valo@iki.fi>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
