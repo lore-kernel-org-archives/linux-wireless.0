@@ -1,24 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54749
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752545AbZDUIns (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 04:43:48 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by sunset.davemloft.net (Postfix) with ESMTP id C5F21C8C0DE
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 01:43:40 -0700 (PDT)
-Date: Tue, 21 Apr 2009 01:43:40 -0700 (PDT)
-Message-Id: <20090421.014340.235726123.davem@davemloft.net> (sfid-20090421_104352_471569_13F52D83)
-To: linux-wireless@vger.kernel.org
-Subject: warning in current tree
-From: David Miller <davem@davemloft.net>
+Received: from mx2.redhat.com ([66.187.237.31]:41687 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754990AbZDHOXP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 10:23:15 -0400
+Subject: Re: [PATCH] libertas: don't leak skb on receive error
+From: Dan Williams <dcbw@redhat.com>
+To: Philip Rakity <prakity@yahoo.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+In-Reply-To: <422915.71719.qm@web58908.mail.re1.yahoo.com>
+References: <422915.71719.qm@web58908.mail.re1.yahoo.com>
+Content-Type: text/plain
+Date: Wed, 08 Apr 2009 10:23:02 -0400
+Message-Id: <1239200582.14879.5.camel@localhost.localdomain> (sfid-20090408_162318_171949_6627E1AE)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-04-07 at 12:41 -0700, Philip Rakity wrote:
+> 
+> Don't lead memory when receive errors 
+> Signed-off-by: Philip Rakity <prakity@yahoo.com>
 
-This appears in net-2.6 as well as net-next-2.6, could someone
-please fix it up?  Thanks!
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-drivers/net/wireless/mwl8k.c:897: warning: large integer implicitly truncated to unsigned type
+> --- linux-2.6.29/drivers/net/wireless/libertas/rx.c.old    2009-04-01 13:19:26.000000000 -0700
+> +++ linux-2.6.29/drivers/net/wireless/libertas/rx.c    2009-04-01 13:19:57.000000000 -0700
+> @@ -170,6 +170,7 @@
+>          lbs_deb_rx("rx err: frame received with bad length\n");
+>          priv->stats.rx_length_errors++;
+>          ret = 0;
+> +        dev_kfree_skb(skb);
+>          goto done;
+>      }
+>  
+> @@ -181,6 +182,7 @@
+>          lbs_pr_alert("rxpd not ok\n");
+>          priv->stats.rx_errors++;
+>          ret = 0;
+> +        dev_kfree_skb(skb);
+>          goto done;
+> 
+> 
+> 
+>       
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
