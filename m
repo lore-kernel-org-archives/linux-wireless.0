@@ -1,76 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:54352 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752989AbZDOBSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 21:18:07 -0400
-Date: Tue, 14 Apr 2009 18:10:20 -0700
-From: Greg KH <greg@kroah.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090415011020.GC10045@kroah.com> (sfid-20090415_031814_065002_C1473CDF)
-References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090414141852.GB20470@storm.local.network>
+Received: from mga11.intel.com ([192.55.52.93]:9750 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932301AbZDHSdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:33:45 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/6] iwlwifi: Display decoded rate/mcs information
+Date: Wed,  8 Apr 2009 11:39:27 -0700
+Message-Id: <1239215972-1795-2-git-send-email-reinette.chatre@intel.com> (sfid-20090408_203405_881838_978342C9)
+In-Reply-To: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com>
+References: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 14, 2009 at 10:19:06AM -0400, Forest Bond wrote:
-> Hi,
-> 
-> On Tue, Apr 14, 2009 at 09:02:48AM -0400, John W. Linville wrote:
-> > On Tue, Apr 14, 2009 at 02:43:54PM +0200, Johannes Berg wrote:
-> > > Hi Marcel,
-> > > 
-> > > > just to document the irony here. Two or three years ago at OLS, Kyle and
-> > > > Greg were making fun of Ubuntu merging its 5th wireless stack into their
-> > > > kernel. Now the staging crap is doing exactly the same.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Yes we are.  But we are doing it correctly :)
+This patch adding MCS information in rate_scale_table, it help for
+debugging rate scaling algorithm, easy to understand what is the current
+rate scale table and matching modulation, plus the last mcs used for tx.
 
-Turns out that people actually want to use their hardware, and no one
-else was working on merging these drivers, so that is what staging is
-for.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   40 ++++++++++++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    7 +++++
+ 2 files changed, 43 insertions(+), 4 deletions(-)
 
-> Well, gosh, I understand the criticism here and if I were a kernel developer I
-> imagine my perspective would be much the same.  But I can't help but feel that
-> there's some amount of hypocrisy when we hammer on a manufacturer to properly
-> license their driver and then let it drop dead when they do.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index b1818a3..786b11d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -167,6 +167,8 @@ struct iwl_lq_sta {
+ 
+ 	/* used to be in sta_info */
+ 	int last_txrate_idx;
++	/* last tx rate_n_flags */
++	u32 last_rate_n_flags;
+ };
+ 
+ static void rs_rate_scale_perform(struct iwl_priv *priv,
+@@ -249,6 +251,23 @@ static s32 expected_tpt_mimo3_40MHzSGI[IWL_RATE_COUNT] = {
+ 	0, 0, 0, 0, 160, 160, 219, 245, 261, 284, 294, 297, 300
+ };
+ 
++/* mbps, mcs */
++const static struct iwl_rate_mcs_info iwl_rate_mcs[IWL_RATE_COUNT] = {
++  {"1", ""},
++  {"2", ""},
++  {"5.5", ""},
++  {"11", ""},
++  {"6", "BPSK 1/2"},
++  {"9", "BPSK 1/2"},
++  {"12", "QPSK 1/2"},
++  {"18", "QPSK 3/4"},
++  {"24", "16QAM 1/2"},
++  {"36", "16QAM 3/4"},
++  {"48", "64QAM 2/3"},
++  {"54", "64QAM 3/4"},
++  {"60", "64QAM 5/6"}
++};
++
+ static inline u8 rs_extract_rate(u32 rate_n_flags)
+ {
+ 	return (u8)(rate_n_flags & 0xFF);
+@@ -919,6 +938,7 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
+ 	 * else look up the rate that was, finally, successful.
+ 	 */
+ 	tx_rate = le32_to_cpu(table->rs_table[index].rate_n_flags);
++	lq_sta->last_rate_n_flags = tx_rate;
+ 	rs_get_tbl_info_from_mcs(tx_rate, priv->band, &tbl_type, &rs_index);
+ 
+ 	/* Update frame history window with "success" if Tx got ACKed ... */
+@@ -2826,6 +2846,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	char *buff;
+ 	int desc = 0;
+ 	int i = 0;
++	int index = 0;
+ 	ssize_t ret;
+ 
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
+@@ -2857,6 +2878,8 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 		   (tbl->is_fat) ? "40MHz" : "20MHz");
+ 		desc += sprintf(buff+desc, " %s\n", (tbl->is_SGI) ? "SGI" : "");
+ 	}
++	desc += sprintf(buff+desc, "last tx rate=0x%X\n",
++		lq_sta->last_rate_n_flags);
+ 	desc += sprintf(buff+desc, "general:"
+ 		"flags=0x%X mimo-d=%d s-ant0x%x d-ant=0x%x\n",
+ 		lq_sta->lq.general_params.flags,
+@@ -2877,10 +2900,19 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			lq_sta->lq.general_params.start_rate_index[2],
+ 			lq_sta->lq.general_params.start_rate_index[3]);
+ 
+-
+-	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
+-		desc += sprintf(buff+desc, " rate[%d] 0x%X\n",
+-			i, le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags));
++	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
++		index = iwl_hwrate_to_plcp_idx(
++			le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags));
++		if (is_legacy(tbl->lq_type)) {
++			desc += sprintf(buff+desc, " rate[%d] 0x%X %smbps\n",
++				i, le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags),
++				iwl_rate_mcs[index].mbps);
++		} else {
++			desc += sprintf(buff+desc, " rate[%d] 0x%X %smbps (%s)\n",
++				i, le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags),
++				iwl_rate_mcs[index].mbps, iwl_rate_mcs[index].mcs);
++		}
++	}
+ 
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+ 	kfree(buff);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 9cd90ba..f875136 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -325,6 +325,13 @@ enum iwl_table_type {
+ #define ANT_BC		(ANT_B | ANT_C)
+ #define ANT_ABC		(ANT_AB | ANT_C)
+ 
++#define IWL_MAX_MCS_DISPLAY_SIZE	12
++
++struct iwl_rate_mcs_info {
++	char	mbps[IWL_MAX_MCS_DISPLAY_SIZE];
++	char	mcs[IWL_MAX_MCS_DISPLAY_SIZE];
++};
++
+ static inline u8 num_of_ant(u8 mask)
+ {
+ 	return  !!((mask) & ANT_A) +
+-- 
+1.5.6.3
 
-I agree.
-
-> I understand that the problem would be solved if they manufacturers would
-> suddenly "get it," but the scale of social problem preventing that is likely too
-> large to change anytime soon.
-
-Agreed.
-
-> If kernel developers are too busy to support the hardware, why do the
-> manufacturers take so much criticism for releasing binary-only drivers or badly
-> licensed drivers, or for neglecting to release technical specifications?  If
-> what I'm sensing is correct and there's no practical likelihood of these devices
-> getting in-kernel support even with those issues resolved, the criticism almost
-> seems unjustified.
-> 
-> I appreciate what the kernel developers do, of course, and my intention is not
-> to ruffle feathers.  But when a manufacturer that has taken a lot of criticism
-> for its approach to the Linux community shows some good will, it seems like we
-> ought to be able to turn that into something productive.  If we can't, what have
-> we been complaining about?
-> 
-> My apologies if I'm way off on this.  I haven't been around all that long so it
-> is certainly possible.
-
-You aren't way off at all.
-
-Thanks for the patches, I'll get to them in a few days when my "real
-job" calms down a bit.  They're now in my queue, and will not get lost.
-
-thanks,
-
-greg k-h
