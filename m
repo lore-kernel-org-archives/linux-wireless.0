@@ -1,49 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:55057 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755559AbZDJDH6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 23:07:58 -0400
-Received: by ewy9 with SMTP id 9so977728ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 20:07:56 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 10 Apr 2009 05:07:56 +0200
-Message-ID: <2d0a357f0904092007p4d84b35bma856d6c8d3546511@mail.gmail.com> (sfid-20090410_050804_100950_0AE6C86C)
-Subject: Patch "module: try_then_request_module must wait" in Linus tree
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:24824 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758277AbZDHSVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:21:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 17/18] iwl3945: use iwl_mac_get_tx_stats from iwlwifi
+Date: Wed,  8 Apr 2009 11:26:51 -0700
+Message-Id: <1239215212-1657-18-git-send-email-reinette.chatre@intel.com> (sfid-20090408_202128_700261_FF6ED7E2)
+In-Reply-To: <1239215212-1657-17-git-send-email-reinette.chatre@intel.com>
+References: <1239215212-1657-1-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-3-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-4-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-5-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-6-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-7-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-8-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-9-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-10-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-11-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-12-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-13-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-14-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-15-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-16-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-17-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-this is just to inform you:
-With 2.6.30-rc1-git3 there is now a patch in upstream solving the
-problem with wireless kernel modules not to work properly.
-It seems there was an overlapping with Andreas Schwab's "module: fix
-try_then_request_module" patch [2] in Rusty's
-"linux-2.6-module-and-param" GIT branch, both patches fix the same
-issue affecting different Linux kernel modules (beyond wireless
-hardware) not to work.
-That means your revert-patch in [3] is obsolete and as you expected a
-fix will be in "-rc2" :-).
+3945 can now use iwl_mac_get_tx_stats from iwlwifi.
 
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   35 -------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   36 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   37 +--------------------------
+ 4 files changed, 39 insertions(+), 71 deletions(-)
 
-Kind Regards,
-Sedat
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8d4e9a9..1d458ae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2223,41 +2223,6 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
+-static int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
+-				struct ieee80211_tx_queue_stats *stats)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	int i, avail;
+-	struct iwl_tx_queue *txq;
+-	struct iwl_queue *q;
+-	unsigned long flags;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	if (!iwl_is_ready_rf(priv)) {
+-		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
+-		return -EIO;
+-	}
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	for (i = 0; i < AC_NUM; i++) {
+-		txq = &priv->txq[i];
+-		q = &txq->q;
+-		avail = iwl_queue_space(q);
+-
+-		stats[i].len = q->n_window - avail;
+-		stats[i].limit = q->n_window - q->high_mark;
+-		stats[i].count = q->n_window;
+-
+-	}
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-
+-	return 0;
+-}
+-
+ static int iwl_mac_get_stats(struct ieee80211_hw *hw,
+ 			     struct ieee80211_low_level_stats *stats)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 3059231..3a7b69d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2678,6 +2678,42 @@ int iwl_mac_config_interface(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(iwl_mac_config_interface);
+ 
++int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
++			 struct ieee80211_tx_queue_stats *stats)
++{
++	struct iwl_priv *priv = hw->priv;
++	int i, avail;
++	struct iwl_tx_queue *txq;
++	struct iwl_queue *q;
++	unsigned long flags;
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	if (!iwl_is_ready_rf(priv)) {
++		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
++		return -EIO;
++	}
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	for (i = 0; i < AC_NUM; i++) {
++		txq = &priv->txq[i];
++		q = &txq->q;
++		avail = iwl_queue_space(q);
++
++		stats[i].len = q->n_window - avail;
++		stats[i].limit = q->n_window - q->high_mark;
++		stats[i].count = q->n_window;
++
++	}
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++
++	return 0;
++}
++EXPORT_SYMBOL(iwl_mac_get_tx_stats);
++
+ #ifdef CONFIG_PM
+ 
+ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 92a42c8..7e0d0ed 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -284,6 +284,8 @@ void iwl_config_ap(struct iwl_priv *priv);
+ int iwl_mac_config_interface(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_if_conf *conf);
++int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
++			 struct ieee80211_tx_queue_stats *stats);
+ 
+ /*****************************************************
+  * RX handlers.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index b2b2ebc..be762f5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3494,41 +3494,6 @@ static int iwl3945_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	return ret;
+ }
+ 
+-static int iwl3945_mac_get_tx_stats(struct ieee80211_hw *hw,
+-				struct ieee80211_tx_queue_stats *stats)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	int i, avail;
+-	struct iwl_tx_queue *txq;
+-	struct iwl_queue *q;
+-	unsigned long flags;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	if (!iwl_is_ready_rf(priv)) {
+-		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
+-		return -EIO;
+-	}
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	for (i = 0; i < AC_NUM; i++) {
+-		txq = &priv->txq[i];
+-		q = &txq->q;
+-		avail = iwl_queue_space(q);
+-
+-		stats[i].len = q->n_window - avail;
+-		stats[i].limit = q->n_window - q->high_mark;
+-		stats[i].count = q->n_window;
+-
+-	}
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-
+-	return 0;
+-}
+-
+ static void iwl3945_mac_reset_tsf(struct ieee80211_hw *hw)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+@@ -4116,7 +4081,7 @@ static struct ieee80211_ops iwl3945_hw_ops = {
+ 	.config_interface = iwl_mac_config_interface,
+ 	.configure_filter = iwl_configure_filter,
+ 	.set_key = iwl3945_mac_set_key,
+-	.get_tx_stats = iwl3945_mac_get_tx_stats,
++	.get_tx_stats = iwl_mac_get_tx_stats,
+ 	.conf_tx = iwl_mac_conf_tx,
+ 	.reset_tsf = iwl3945_mac_reset_tsf,
+ 	.bss_info_changed = iwl_bss_info_changed,
+-- 
+1.5.6.3
 
-P.S.:
-* [1] and [2] are identical.
-* [1], [2] and [3] fix the same issue.
-* Here on my laptop iwl3945-driver works fine with all three patches (tested).
-
-[1] Upstream: "module: try_then_request_module must wait" (Linus tree,
-Author: Herbert Xu)
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=97c18e2c7a8e36d2d83d50ee070314aadac73a11
-[2] Andreas Schwab's "module: fix try_then_request_module" patch
-(rusty linux-2.6-module-and-param tree)
-http://git.kernel.org/?p=linux/kernel/git/rusty/linux-2.6-module-and-param.git;a=commit;h=8188c26f4bdd6ea8ae9f018e24ee8609394020f4
-[3] Wireless-Testing: "Revert "module: create a request_module_nowait()"
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=99535e1f80edd3c06461b94d65be38930b9dc553
