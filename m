@@ -1,89 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44793 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171AbZDBSIT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 14:08:19 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
+Received: from mga03.intel.com ([143.182.124.21]:61547 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757888AbZDHSVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:21:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 2/3] cfg80211: add netlink channel put helper
-Date: Thu,  2 Apr 2009 14:08:08 -0400
-Message-Id: <1238695689-15323-3-git-send-email-lrodriguez@atheros.com> (sfid-20090402_200821_518686_DBDA5407)
-In-Reply-To: <1238695689-15323-1-git-send-email-lrodriguez@atheros.com>
-References: <1238695689-15323-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/18] iwl3945: use iwl_set_mode in 3945
+Date: Wed,  8 Apr 2009 11:26:45 -0700
+Message-Id: <1239215212-1657-12-git-send-email-reinette.chatre@intel.com> (sfid-20090408_202132_585005_80A7A715)
+In-Reply-To: <1239215212-1657-11-git-send-email-reinette.chatre@intel.com>
+References: <1239215212-1657-1-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-3-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-4-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-5-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-6-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-7-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-8-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-9-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-10-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-11-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a netlink channel put helper, nl80211_msg_put_channel(),
-which we will also make use of later for the beacon hints events.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+3945 can now use iwl_set_mode from iwlcore library.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/wireless/nl80211.c |   41 +++++++++++++++++++++++++++--------------
- 1 files changed, 27 insertions(+), 14 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   27 -----------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   42 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   40 +------------------------
+ 4 files changed, 45 insertions(+), 65 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 353e1a4..d154f95 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -126,6 +126,30 @@ static inline void *nl80211hdr_put(struct sk_buff *skb, u32 pid, u32 seq,
- 	return genlmsg_put(skb, pid, seq, &nl80211_fam, flags, cmd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 723f741..f262444 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -588,33 +588,6 @@ static void iwl_setup_rxon_timing(struct iwl_priv *priv)
+ 			le16_to_cpu(priv->rxon_timing.atim_window));
  }
  
-+static int nl80211_msg_put_channel(struct sk_buff *msg,
-+				   struct ieee80211_channel *chan)
+-static int iwl_set_mode(struct iwl_priv *priv, int mode)
+-{
+-	iwl_connection_init_rx_config(priv, mode);
+-
+-	if (priv->cfg->ops->hcmd->set_rxon_chain)
+-		priv->cfg->ops->hcmd->set_rxon_chain(priv);
+-
+-	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
+-
+-	priv->cfg->ops->smgmt->clear_station_table(priv);
+-
+-	/* dont commit rxon if rf-kill is on*/
+-	if (!iwl_is_ready_rf(priv))
+-		return -EAGAIN;
+-
+-	cancel_delayed_work(&priv->scan_check);
+-	if (iwl_scan_cancel_timeout(priv, 100)) {
+-		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+-		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+-		return -EAGAIN;
+-	}
+-
+-	iwlcore_commit_rxon(priv);
+-
+-	return 0;
+-}
+-
+ /******************************************************************************
+  *
+  * Generic RX handler implementations
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 270d866..237e794 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2338,6 +2338,48 @@ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(iwl_mac_beacon_update);
+ 
++int iwl_set_mode(struct iwl_priv *priv, int mode)
 +{
-+	NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FREQ,
-+		    chan->center_freq);
++	if (mode == NL80211_IFTYPE_ADHOC) {
++		const struct iwl_channel_info *ch_info;
 +
-+	if (chan->flags & IEEE80211_CHAN_DISABLED)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_DISABLED);
-+	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_PASSIVE_SCAN);
-+	if (chan->flags & IEEE80211_CHAN_NO_IBSS)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
-+	if (chan->flags & IEEE80211_CHAN_RADAR)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
++		ch_info = iwl_get_channel_info(priv,
++			priv->band,
++			le16_to_cpu(priv->staging_rxon.channel));
 +
-+	NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-+		    DBM_TO_MBM(chan->max_power));
++		if (!ch_info || !is_channel_ibss(ch_info)) {
++			IWL_ERR(priv, "channel %d not IBSS channel\n",
++				  le16_to_cpu(priv->staging_rxon.channel));
++			return -EINVAL;
++		}
++	}
++
++	iwl_connection_init_rx_config(priv, mode);
++
++	if (priv->cfg->ops->hcmd->set_rxon_chain)
++		priv->cfg->ops->hcmd->set_rxon_chain(priv);
++
++	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
++
++	priv->cfg->ops->smgmt->clear_station_table(priv);
++
++	/* dont commit rxon if rf-kill is on*/
++	if (!iwl_is_ready_rf(priv))
++		return -EAGAIN;
++
++	cancel_delayed_work(&priv->scan_check);
++	if (iwl_scan_cancel_timeout(priv, 100)) {
++		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
++		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
++		return -EAGAIN;
++	}
++
++	iwlcore_commit_rxon(priv);
 +
 +	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
 +}
++EXPORT_SYMBOL(iwl_set_mode);
 +
- /* netlink command implementations */
+ #ifdef CONFIG_PM
  
- static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
-@@ -202,20 +226,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 				goto nla_put_failure;
+ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index f5eff74..49df47a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -273,6 +273,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				     u32 changes);
+ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb);
+ int iwl_commit_rxon(struct iwl_priv *priv);
++int iwl_set_mode(struct iwl_priv *priv, int mode);
  
- 			chan = &dev->wiphy.bands[band]->channels[i];
--			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FREQ,
--				    chan->center_freq);
+ /*****************************************************
+  * RX handlers.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c3d6caf..82bb736 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -570,42 +570,6 @@ static void iwl3945_setup_rxon_timing(struct iwl_priv *priv)
+ 		le16_to_cpu(priv->rxon_timing.atim_window));
+ }
+ 
+-static int iwl3945_set_mode(struct iwl_priv *priv, int mode)
+-{
+-	if (mode == NL80211_IFTYPE_ADHOC) {
+-		const struct iwl_channel_info *ch_info;
 -
--			if (chan->flags & IEEE80211_CHAN_DISABLED)
--				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_DISABLED);
--			if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
--				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_PASSIVE_SCAN);
--			if (chan->flags & IEEE80211_CHAN_NO_IBSS)
--				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
--			if (chan->flags & IEEE80211_CHAN_RADAR)
--				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
+-		ch_info = iwl_get_channel_info(priv,
+-			priv->band,
+-			le16_to_cpu(priv->staging_rxon.channel));
 -
--			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
--				    DBM_TO_MBM(chan->max_power));
-+
-+			if (nl80211_msg_put_channel(msg, chan))
-+				goto nla_put_failure;
+-		if (!ch_info || !is_channel_ibss(ch_info)) {
+-			IWL_ERR(priv, "channel %d not IBSS channel\n",
+-				  le16_to_cpu(priv->staging_rxon.channel));
+-			return -EINVAL;
+-		}
+-	}
+-
+-	iwl_connection_init_rx_config(priv, mode);
+-
+-	priv->cfg->ops->smgmt->clear_station_table(priv);
+-
+-	/* don't commit rxon if rf-kill is on*/
+-	if (!iwl_is_ready_rf(priv))
+-		return -EAGAIN;
+-
+-	cancel_delayed_work(&priv->scan_check);
+-	if (iwl_scan_cancel_timeout(priv, 100)) {
+-		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+-		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+-		return -EAGAIN;
+-	}
+-
+-	iwlcore_commit_rxon(priv);
+-
+-	return 0;
+-}
+-
+ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+ 				      struct ieee80211_tx_info *info,
+ 				      struct iwl_cmd *cmd,
+@@ -2701,7 +2665,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
+ 	}
  
- 			nla_nest_end(msg, nl_freq);
- 		}
+ 	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
+-		iwl3945_set_mode(priv, priv->iw_mode);
++		iwl_set_mode(priv, priv->iw_mode);
+ 
+ 	return;
+ 
+@@ -3442,7 +3406,7 @@ static int iwl3945_mac_add_interface(struct ieee80211_hw *hw,
+ 		memcpy(priv->mac_addr, conf->mac_addr, ETH_ALEN);
+ 	}
+ 
+-	if (iwl3945_set_mode(priv, conf->type) == -EAGAIN)
++	if (iwl_set_mode(priv, conf->type) == -EAGAIN)
+ 		set_bit(STATUS_MODE_PENDING, &priv->status);
+ 
+ 	mutex_unlock(&priv->mutex);
 -- 
-1.6.0.6
+1.5.6.3
 
