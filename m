@@ -1,169 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54219 "EHLO mail.atheros.com"
+Received: from mga03.intel.com ([143.182.124.21]:38104 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753401AbZDMQbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 12:31:22 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:31:22 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18915.26568.380639.376006@gargle.gargle.HOWL> (sfid-20090413_183124_439285_90F46853)
-Date: Mon, 13 Apr 2009 21:56:48 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/11] ath9k: Cleanup calibration interface
+	id S1760840AbZDHSVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:21:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 09/18] iwl3945: use iwl_get_sta_id from iwlwifi
+Date: Wed,  8 Apr 2009 11:26:43 -0700
+Message-Id: <1239215212-1657-10-git-send-email-reinette.chatre@intel.com> (sfid-20090408_202130_049132_7E2ED13E)
+In-Reply-To: <1239215212-1657-9-git-send-email-reinette.chatre@intel.com>
+References: <1239215212-1657-1-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-3-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-4-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-5-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-6-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-7-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-8-git-send-email-reinette.chatre@intel.com>
+ <1239215212-1657-9-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch cleans up the functions dealing with calibration,
-using proper return values.
-ath9k_hw_per_calibration(), ath9k_hw_calibrate now return bool values
-instead of setting error values in the function arguments.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+iwl3945 can now use iwl_get_sta_id.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |   27 +++++++++++++--------------
- drivers/net/wireless/ath/ath9k/calib.h |    3 +--
- drivers/net/wireless/ath/ath9k/main.c  |   32 ++++++++++----------------------
- 3 files changed, 24 insertions(+), 38 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   61 +--------------------------
+ 1 files changed, 1 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 3195c0b..a0661bb 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -238,13 +238,12 @@ static void ath9k_hw_reset_calibration(struct ath_hw *ah,
- 	ah->cal_samples = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c1f3324..c3d6caf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -712,65 +712,6 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
+ 	tx->next_frame_len = 0;
  }
  
--static void ath9k_hw_per_calibration(struct ath_hw *ah,
-+static bool ath9k_hw_per_calibration(struct ath_hw *ah,
- 				     struct ath9k_channel *ichan,
- 				     u8 rxchainmask,
--				     struct hal_cal_list *currCal,
--				     bool *isCalDone)
-+				     struct hal_cal_list *currCal)
- {
--	*isCalDone = false;
-+	bool iscaldone = false;
- 
- 	if (currCal->calState == CAL_RUNNING) {
- 		if (!(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
-@@ -263,7 +262,7 @@ static void ath9k_hw_per_calibration(struct ath_hw *ah,
- 				currCal->calData->calPostProc(ah, numChains);
- 				ichan->CalValid |= currCal->calData->calType;
- 				currCal->calState = CAL_DONE;
--				*isCalDone = true;
-+				iscaldone = true;
- 			} else {
- 				ath9k_hw_setup_calibration(ah, currCal);
- 			}
-@@ -271,6 +270,8 @@ static void ath9k_hw_per_calibration(struct ath_hw *ah,
- 	} else if (!(ichan->CalValid & currCal->calData->calType)) {
- 		ath9k_hw_reset_calibration(ah, currCal);
- 	}
-+
-+	return iscaldone;
- }
- 
- /* Assumes you are talking about the currently configured channel */
-@@ -841,23 +842,21 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah)
- }
- 
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
--			u8 rxchainmask, bool longcal,
--			bool *isCalDone)
-+			u8 rxchainmask, bool longcal)
- {
-+	bool iscaldone = true;
- 	struct hal_cal_list *currCal = ah->cal_list_curr;
- 
--	*isCalDone = true;
+-/**
+- * iwl3945_get_sta_id - Find station's index within station table
+- */
+-static int iwl3945_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+-{
+-	int sta_id;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
 -
- 	if (currCal &&
- 	    (currCal->calState == CAL_RUNNING ||
- 	     currCal->calState == CAL_WAITING)) {
--		ath9k_hw_per_calibration(ah, chan, rxchainmask, currCal,
--					 isCalDone);
--		if (*isCalDone) {
-+		iscaldone = ath9k_hw_per_calibration(ah, chan,
-+						     rxchainmask, currCal);
-+		if (iscaldone) {
- 			ah->cal_list_curr = currCal = currCal->calNext;
- 
- 			if (currCal->calState == CAL_WAITING) {
--				*isCalDone = false;
-+				iscaldone = false;
- 				ath9k_hw_reset_calibration(ah, currCal);
- 			}
- 		}
-@@ -877,7 +876,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			chan->channelFlags &= ~CHANNEL_CW_INT;
- 	}
- 
--	return true;
-+	return iscaldone;
- }
- 
- static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 1c74bd5..ac71ed9 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -116,8 +116,7 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
- s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
--			u8 rxchainmask, bool longcal,
--			bool *isCalDone);
-+			u8 rxchainmask, bool longcal);
- bool ath9k_hw_init_cal(struct ath_hw *ah,
- 		       struct ath9k_channel *chan);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9564b73..8bf2bf3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -367,28 +367,16 @@ static void ath_ani_calibrate(unsigned long data)
- 
- 		/* Perform calibration if necessary */
- 		if (longcal || shortcal) {
--			bool iscaldone = false;
+-	/* If this frame is broadcast or management, use broadcast station id */
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+-	    is_multicast_ether_addr(hdr->addr1))
+-		return priv->hw_params.bcast_sta_id;
 -
--			if (ath9k_hw_calibrate(ah, ah->curchan,
--					       sc->rx_chainmask, longcal,
--					       &iscaldone)) {
--				if (longcal)
--					sc->ani.noise_floor =
--						ath9k_hw_getchan_noise(ah,
--							       ah->curchan);
+-	switch (priv->iw_mode) {
 -
--				DPRINTF(sc, ATH_DBG_ANI,
--					"calibrate chan %u/%x nf: %d\n",
--					ah->curchan->channel,
--					ah->curchan->channelFlags,
--					sc->ani.noise_floor);
--			} else {
--				DPRINTF(sc, ATH_DBG_ANY,
--					"calibrate chan %u/%x failed\n",
--					ah->curchan->channel,
--					ah->curchan->channelFlags);
--			}
--			sc->ani.caldone = iscaldone;
-+			sc->ani.caldone = ath9k_hw_calibrate(ah, ah->curchan,
-+						     sc->rx_chainmask, longcal);
-+
-+			if (longcal)
-+				sc->ani.noise_floor = ath9k_hw_getchan_noise(ah,
-+								     ah->curchan);
-+
-+			DPRINTF(sc, ATH_DBG_ANI," calibrate chan %u/%x nf: %d\n",
-+				ah->curchan->channel, ah->curchan->channelFlags,
-+				sc->ani.noise_floor);
- 		}
- 	}
+-	/* If we are a client station in a BSS network, use the special
+-	 * AP station entry (that's the only station we communicate with) */
+-	case NL80211_IFTYPE_STATION:
+-		return IWL_AP_ID;
+-
+-	/* If we are an AP, then find the station, or use BCAST */
+-	case NL80211_IFTYPE_AP:
+-		sta_id = priv->cfg->ops->smgmt->find_station(priv, hdr->addr1);
+-		if (sta_id != IWL_INVALID_STATION)
+-			return sta_id;
+-		return priv->hw_params.bcast_sta_id;
+-
+-	/* If this frame is going out to an IBSS network, find the station,
+-	 * or create a new station table entry */
+-	case NL80211_IFTYPE_ADHOC: {
+-		/* Create new station table entry */
+-		sta_id = priv->cfg->ops->smgmt->find_station(priv, hdr->addr1);
+-		if (sta_id != IWL_INVALID_STATION)
+-			return sta_id;
+-
+-		sta_id = priv->cfg->ops->smgmt->add_station(priv,
+-				hdr->addr1, 0, CMD_ASYNC, NULL);
+-
+-		if (sta_id != IWL_INVALID_STATION)
+-			return sta_id;
+-
+-		IWL_DEBUG_DROP(priv, "Station %pM not in station map. "
+-			       "Defaulting to broadcast...\n",
+-			       hdr->addr1);
+-		iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+-		return priv->hw_params.bcast_sta_id;
+-	}
+-	/* If we are in monitor mode, use BCAST. This is required for
+-	 * packet injection. */
+-	case NL80211_IFTYPE_MONITOR:
+-		return priv->hw_params.bcast_sta_id;
+-
+-	default:
+-		IWL_WARN(priv, "Unknown mode of operation: %d\n",
+-			priv->iw_mode);
+-		return priv->hw_params.bcast_sta_id;
+-	}
+-}
+-
+ /*
+  * start REPLY_TX command process
+  */
+@@ -836,7 +777,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	hdr_len = ieee80211_hdrlen(fc);
  
+ 	/* Find (or create) index into station table for destination station */
+-	sta_id = iwl3945_get_sta_id(priv, hdr);
++	sta_id = iwl_get_sta_id(priv, hdr);
+ 	if (sta_id == IWL_INVALID_STATION) {
+ 		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+ 			       hdr->addr1);
 -- 
-1.6.2.2
+1.5.6.3
 
