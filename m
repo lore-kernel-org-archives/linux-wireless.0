@@ -1,50 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([204.127.217.101]:60182 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751833AbZDGTUm (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3689 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933855AbZDHMKu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:20:42 -0400
-Message-ID: <49DBA77F.2090104@lwfinger.net> (sfid-20090407_212046_965312_6DD9832C)
-Date: Tue, 07 Apr 2009 14:20:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 8 Apr 2009 08:10:50 -0400
+Date: Wed, 8 Apr 2009 08:10:25 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Will Keaney <keaneyw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Trouble Associating with ath5k on AR5212
+Message-ID: <20090408121025.GC28096@hash.localnet> (sfid-20090408_141103_980159_E5DBD154)
+References: <49D4C7B3.7010803@gmail.com> <b6c5339f0904020805w5e210c2bl542eadb20ac5d6c7@mail.gmail.com> <49D56445.20502@gmail.com> <20090403020358.GA12406@hash.localnet> <49D571BB.7060406@gmail.com> <20090403122332.GA14853@hash.localnet> <49D6117D.9020408@gmail.com> <49DAB445.7040206@gmail.com>
 MIME-Version: 1.0
-To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-CC: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: 2.6.29 linus tree: iwlagn  Failed to register hw (error -2) on
- first try. Success on unload and retry
-References: <200904072248.56413.a.miskiewicz@gmail.com>
-In-Reply-To: <200904072248.56413.a.miskiewicz@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49DAB445.7040206@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arkadiusz Miskiewicz wrote:
-> Hi,
-> 
-> Some recent commits (in last 2 days I guess) broke iwlagn driver.
-> Using Linus tree as of aeeae86859f4319de0a4946b44771d9926eeed54
-> 
-> [    5.431753] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-> [    5.431755] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-> [    5.431836] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [    5.431863] iwlagn 0000:03:00.0: setting latency timer to 64
-> [    5.431965] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 5350AGN REV=0x24
-> [    5.451117] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-> [    5.451202] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
-> [    5.451591] phy0: Selected rate control algorithm 'iwl-agn-rs'
-> [    5.458313] phy0: Failed to initialize wep: -2
-> [    5.489134] iwlagn 0000:03:00.0: Failed to register hw (error -2)
-> [    5.489214] iwlagn 0000:03:00.0: PCI INT A disabled
-> [    5.489221] iwlagn: probe of 0000:03:00.0 failed with error -2
+On Mon, Apr 06, 2009 at 10:02:45PM -0400, Will Keaney wrote:
+> As before, I didn't see any additional dmesg output from athk, even with
+> 'dmesg -n7'.
 
-The problem is not with iwlagn as I see the same problem with b43.
+Hmm, you should be seeing association requests in any case.  How are
+you starting the wireless network?  Can you try setting the -dd option
+to wpa_supplicant?
 
-There are at least 3 regressions in the latest version of Linus's tree. The
-first is bad commit 9cb610d - it inhibits loading of modules from initrd and the
-system will not boot. I'm bisecting the second - a NULL pointer BUG. Once that
-one is located, I'll scope out the one you found. I know that commit 45e36c1 is
-after the problem.
-
-Larry
+-- 
+Bob Copeland %% www.bobcopeland.com
 
