@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50224 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758821AbZDGTKI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:10:08 -0400
-Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
- sending assoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090407162345.GC5758@tesla>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-	 <1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
-	 <1239099071.22453.12.camel@johannes.local>  <20090407162345.GC5758@tesla>
-Content-Type: text/plain
-Date: Tue, 07 Apr 2009 21:09:30 +0200
-Message-Id: <1239131370.6199.0.camel@johannes.local> (sfid-20090407_211015_173380_8B068808)
-Mime-Version: 1.0
+Received: from blaine.gmane.org ([80.91.229.8]:50192 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753226AbZDHVOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 17:14:09 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1Lrf5p-0005GB-LO
+	for linux-wireless@vger.kernel.org; Wed, 08 Apr 2009 23:13:57 +0200
+Message-ID: <49DD136B.50300@lwfinger.net> (sfid-20090408_231858_064681_E0AA7EBA)
+Date: Wed, 08 Apr 2009 16:13:15 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Andreas Schwab <schwab@linux-m68k.org>
+CC: public-alan-jenkins-cCz0Lq7MMjm9FHfhHBbuYA@hugh.gmane.org,
+	Larry Finger
+	<public-Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@hugh.gmane.org>,
+	Rusty Russell
+	<public-rusty-8n+1lVoiYb80n/F98K4Iww@hugh.gmane.org>,
+	Arjan van de Ven
+	<public-arjan-VuQAYsv1563Yd54FQh9/CA@hugh.gmane.org>,
+	LKML <public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	"Rafael J. Wysocki" <public-rjw-KKrjLPT3xs0@hugh.gmane.org>,
+	wireless
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
+Subject: Re: Regression in 2.6.30-rc1 since commit acae0515 - wireless broken
+References: <49DC2DF5.3010603@lwfinger.net> <49DC31EA.8050208@linux.intel.com>	<200904081631.09150.rusty@rustcorp.com.au>	<49DCB976.4020200@lwfinger.net>	<9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com> <m2fxgi6hdq.fsf@igel.home>
+In-Reply-To: <m2fxgi6hdq.fsf@igel.home>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 09:23 -0700, Luis R. Rodriguez wrote:
 
-> > This patch is not sufficient -- you also need to modify
-> > ieee80211_send_assoc. Otherwise we end up telling the AP that we support
-> > HT40, but tuning the hardware to HT20.
+
+Andreas Schwab wrote:
 > 
-> Like this?
 > 
->                 switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
->                 case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
->                         if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
->                                 cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
->                                 cap &= ~IEEE80211_HT_CAP_SGI_40;
->                         }
->                         break;
->                 case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
->                         if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
->                                 cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
->                                 cap &= ~IEEE80211_HT_CAP_SGI_40;
->                         }
+> Alan Jenkins <sourcejedi.lkml-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
+> writes:
+> 
+>> I agree that commit looks like it should be a no-op though :-).
+> 
+> But it isn't.
+> 
+> Andreas.
+> 
+> ---
+> Fix try_then_request_module to use waiting __request_module again.
+> 
+> Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+> ---
+>  include/linux/kmod.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux-2.6.30-rc1/include/linux/kmod.h
+> ===================================================================
+> --- linux-2.6.30-rc1.orig/include/linux/kmod.h	2009-04-08 12:47:54.000000000 +0200
+> +++ linux-2.6.30-rc1/include/linux/kmod.h	2009-04-08 17:39:35.000000000 +0200
+> @@ -34,7 +34,7 @@ extern int __request_module(bool wait, c
+>  #define request_module(mod...) __request_module(true, mod)
+>  #define request_module_nowait(mod...) __request_module(false, mod)
+>  #define try_then_request_module(x, mod...) \
+> -	((x) ?: (__request_module(false, mod), (x)))
+> +	((x) ?: (__request_module(true, mod), (x)))
+>  #else
+>  static inline int request_module(const char *name, ...) { return -ENOSYS; }
+>  static inline int request_module_nowait(const char *name, ...) { return -ENOSYS; }
+> 
 
-Yeah, that looks ok.
+Bingo. The above patch fixes my system. Andreas, you have a much sharper eye
+than I do.
 
-johannes
+Feel free to add a Tested-by: Larry Finger <Larry.Finger@lwfinger.net> if you wish.
+
+Larry
+
 
