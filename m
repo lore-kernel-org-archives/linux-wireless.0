@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:18553 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661AbZDPJOb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 05:14:31 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so94204fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 02:14:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87zleh9e89.fsf@litku.valot.fi>
-References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com>
-	 <87ws9lf8c4.fsf@litku.valot.fi>
-	 <73aaf0dd0904160139o159a604fv5b3ff0801124d1d3@mail.gmail.com>
-	 <87zleh9e89.fsf@litku.valot.fi>
-Date: Thu, 16 Apr 2009 13:14:30 +0400
-Message-ID: <73aaf0dd0904160214hff956aek77290380f81aa709@mail.gmail.com> (sfid-20090416_111433_874862_3A692721)
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Greg KH <greg@kroah.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:45789 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764239AbZDHSdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 14:33:45 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/6] iwlwifi: do not set dual_stream_ant_msk for 3 streams
+Date: Wed,  8 Apr 2009 11:39:28 -0700
+Message-Id: <1239215972-1795-3-git-send-email-reinette.chatre@intel.com> (sfid-20090408_203406_403527_2524CAE5)
+In-Reply-To: <1239215972-1795-2-git-send-email-reinette.chatre@intel.com>
+References: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com>
+ <1239215972-1795-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Kalle, what is the primary location for stlc45xx sources then?
->
-> I have been thinking about using staging the primary location. What do
-> you think?
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-Partly agree: drivers/staging is better than gitorious and there are
-more potential testers than at stlc45xx-devel@garage.maemo.org.
-But I don't realize what is the purpose to have two drivers for one
-hw? p54spi IMHO only lacks firmware restart feature now. And most of
-the p54 code is used collectively by the pci, usb and spi, so it is
-probably more tested than stlc45xx.
+This patch fixes a bug introduced by commit "iwlwifi: adding MIMO3 support
+in rate scaling". We should not set the dual_stream_ant_msk (for 2x2 MIMO)
+when using a 3x3 rate, this will cause a SYSASSERT in uCode.
 
+Note: there is no triple_stream_ant_msk, because all three antennas are used.
+
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 786b11d..98b6b37 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2666,9 +2666,6 @@ static void rs_fill_link_cmd(const struct iwl_priv *priv,
+ 	} else if (num_of_ant(tbl_type.ant_type) == 2) {
+ 		lq_cmd->general_params.dual_stream_ant_msk =
+ 						tbl_type.ant_type;
+-	} else if (num_of_ant(tbl_type.ant_type) == 3) {
+-		lq_cmd->general_params.dual_stream_ant_msk =
+-						tbl_type.ant_type;
+ 	} /* otherwise we don't modify the existing value */
+ 
+ 	index++;
 -- 
-Max
+1.5.6.3
+
