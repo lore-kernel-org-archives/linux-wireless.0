@@ -1,109 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3419 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbZDOL6i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 07:58:38 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 4/5] ath5k: use rx hw descriptor pointer for self-linked check
-Date: Wed, 15 Apr 2009 07:57:35 -0400
-Message-Id: <1239796656-20646-5-git-send-email-me@bobcopeland.com> (sfid-20090415_135842_781984_FF23300D)
-In-Reply-To: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
-References: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
+Received: from mail.gmx.net ([213.165.64.20]:39389 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754453AbZDHNkP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Apr 2009 09:40:15 -0400
+Message-ID: <49DCA93C.3000504@gmx.de> (sfid-20090408_154020_159478_FDCF9C2B)
+Date: Wed, 08 Apr 2009 15:40:12 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luis Correia <luis.f.correia@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wireless mini summit
+References: <efe7343f0904070235n4803280au76a75490f5f07900@mail.gmail.com> <20090407135551.GB28289@tuxdriver.com>
+In-Reply-To: <20090407135551.GB28289@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch simplifies the code used to detect when the
-self-linked DMA buffer is still in use by hardware, by
-checking the hardware's rxdp register instead of looking
-at the software buffer list.
+On 04/07/2009 03:55 PM, John W. Linville wrote:
+>> In order to make the appropriate plans, I would like to know if this
+>> information is still valid?
+>> https://fedoraproject.org/wiki/FedoraEvents/LinuxTag/SurvivalKit
+>=20
+> I hope so!  If not, we'll be lost together... :-)
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c |   24 ++++--------------------
- drivers/net/wireless/ath/ath5k/base.h |    1 -
- drivers/net/wireless/ath/ath5k/dma.c  |    2 --
- 3 files changed, 4 insertions(+), 23 deletions(-)
+I've just updated the section on public transport a bit (ticket=20
+prices, Tempelhof airport is closed, Sch=F6nefeld airport moved to=20
+zone C, ...)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3bde18f..1a6e72f 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1780,7 +1780,7 @@ ath5k_tasklet_rx(unsigned long data)
- 	struct sk_buff *skb, *next_skb;
- 	dma_addr_t next_skb_addr;
- 	struct ath5k_softc *sc = (void *)data;
--	struct ath5k_buf *bf, *bf_last;
-+	struct ath5k_buf *bf;
- 	struct ath5k_desc *ds;
- 	int ret;
- 	int hdrlen;
-@@ -1791,7 +1791,6 @@ ath5k_tasklet_rx(unsigned long data)
- 		ATH5K_WARN(sc, "empty rx buf pool\n");
- 		goto unlock;
- 	}
--	bf_last = list_entry(sc->rxbuf.prev, struct ath5k_buf, list);
- 	do {
- 		rxs.flag = 0;
- 
-@@ -1800,24 +1799,9 @@ ath5k_tasklet_rx(unsigned long data)
- 		skb = bf->skb;
- 		ds = bf->desc;
- 
--		/*
--		 * last buffer must not be freed to ensure proper hardware
--		 * function. When the hardware finishes also a packet next to
--		 * it, we are sure, it doesn't use it anymore and we can go on.
--		 */
--		if (bf_last == bf)
--			bf->flags |= 1;
--		if (bf->flags) {
--			struct ath5k_buf *bf_next = list_entry(bf->list.next,
--					struct ath5k_buf, list);
--			ret = sc->ah->ah_proc_rx_desc(sc->ah, bf_next->desc,
--					&rs);
--			if (ret)
--				break;
--			bf->flags &= ~1;
--			/* skip the overwritten one (even status is martian) */
--			goto next;
--		}
-+		/* bail if HW is still using self-linked descriptor */
-+		if (ath5k_hw_get_rxdp(sc->ah) == bf->daddr)
-+			break;
- 
- 		ret = sc->ah->ah_proc_rx_desc(sc->ah, ds, &rs);
- 		if (unlikely(ret == -EINPROGRESS))
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 8229561..852b2c1 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -56,7 +56,6 @@
- 
- struct ath5k_buf {
- 	struct list_head	list;
--	unsigned int		flags;	/* rx descriptor flags */
- 	struct ath5k_desc	*desc;	/* virtual addr of desc */
- 	dma_addr_t		daddr;	/* physical addr of desc */
- 	struct sk_buff		*skb;	/* skbuff for buf */
-diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
-index b65b4fe..941b511 100644
---- a/drivers/net/wireless/ath/ath5k/dma.c
-+++ b/drivers/net/wireless/ath/ath5k/dma.c
-@@ -80,8 +80,6 @@ int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
-  * ath5k_hw_get_rxdp - Get RX Descriptor's address
-  *
-  * @ah: The &struct ath5k_hw
-- *
-- * XXX: Is RXDP read and clear ?
-  */
- u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah)
- {
--- 
-1.6.0.6
+Please check the english pages of the LinuxTag, too:
 
+http://www.linuxtag.org/2009/en/about/ueber-den-linuxtag.html
 
+Seems like they open at 10 am and tickets are more expensive this year.
+
+/Joerg
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
