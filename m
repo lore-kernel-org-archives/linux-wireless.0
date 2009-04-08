@@ -1,82 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52860 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119AbZDPPwc (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:51708 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753178AbZDHRnc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 11:52:32 -0400
-Subject: Re: [PATCH] mac80211: Allow scan to be requested in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090416154453.GA7311@jm.kir.nu>
-References: <20090416154453.GA7311@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AWliAMEf/aLGnNxiOoSz"
-Date: Thu, 16 Apr 2009 17:51:57 +0200
-Message-Id: <1239897117.14169.8.camel@johannes.local> (sfid-20090416_175235_332231_9DE1F4A5)
-Mime-Version: 1.0
+	Wed, 8 Apr 2009 13:43:32 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so232231ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Apr 2009 10:43:31 -0700 (PDT)
+Message-ID: <49DCE23B.7010400@gmail.com> (sfid-20090408_194337_156312_7FC0DDE5)
+Date: Wed, 08 Apr 2009 13:43:23 -0400
+From: Will Keaney <keaneyw@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Fwd: Re: Trouble Associating with ath5k on AR5212]
+References: <49DCA8E3.3060603@gmail.com>	 <b6c5339f0904080758k2be9ae3dm1a98b564f3b10867@mail.gmail.com>	 <49DCC641.4010405@gmail.com> <b6c5339f0904080920q47a33315j127a0aa2eca84444@mail.gmail.com> <49DCD05B.9050802@gmail.com>
+In-Reply-To: <49DCD05B.9050802@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigB533083BD219DD48C955BED2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-AWliAMEf/aLGnNxiOoSz
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigB533083BD219DD48C955BED2
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-16 at 18:44 +0300, Jouni Malinen wrote:
-> We can allow scan requests in AP mode as long as the interface has not
-> yet been configured to send out Beacon frames (or if beaconing has
-> been disabled prior to the scan request). This makes it easier to scan
-> for neighboring BSSes during AP initialization and makes it possible
-> to run a scan without setting the interface down, if needed. Without
-> this change, the only available option would be to set the interface
-> down, move into station mode, and set the interface up, prior to
-> requesting the scan.
->=20
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
->=20
-> ---
->  net/mac80211/cfg.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> --- uml.orig/net/mac80211/cfg.c	2009-04-16 18:20:19.000000000 +0300
-> +++ uml/net/mac80211/cfg.c	2009-04-16 18:33:44.000000000 +0300
-> @@ -1167,7 +1167,8 @@ static int ieee80211_scan(struct wiphy *
-> =20
->  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION &&
->  	    sdata->vif.type !=3D NL80211_IFTYPE_ADHOC &&
-> -	    sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT)
-> +	    sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT &&
-> +	    (sdata->vif.type !=3D NL80211_IFTYPE_AP || sdata->u.ap.beacon))
->  		return -EOPNOTSUPP;
+Will Keaney wrote:
+> Bob Copeland wrote:
+>  =20
+>>> I also have to manually set the reg domain to US every time I load th=
+e
+>>> ath5k module. =EF=BF=BDI tried configuring wpa_supplicant.conf to do =
+this
+>>> itself, but that doesn't seem to work. =EF=BF=BDIt would be nice to h=
+ave a
+>>> module parameter for setting this at load time.
+>>>    =20
+>>>      =20
+>> I may be wrong but I think that only works in wpa_supplicant if you
+>> use -Dnl80211 (instead of -Dwext).
+>>
+>> FWIW in the default world roaming domain you can still connect to most=
 
-Should this return a different error code for AP then? Maybe -EBUSY for
-AP && beacon? Then again, EBUSY is already returned for "already
-scanning". hmm.
+>> APs.  Besides iw/wpa_supplicant, pending patches to ath5k will set the=
 
-johannes
+>> default regdomain automatically based on the value stored in the eepro=
+m.
+>>  =20
+>>    =20
+> Ahh, interesting.  I didn't see nl80211 documented in the wpa_supplican=
+t
+> example configs or man page. I'll give that a shot.
+> I seem to get much better scanning results with the region set properly=
+,
+> than on the world roaming domain.
+>  =20
+I don't know if it's relevant or not, but when using -Dnl80211 I see a
+bit of odd behavior:
+- wpa_supplicant is able to set the region automatically. Yay!
+- scanning produces quite an extensive list of APs, but most of them
+don't have SSIDs listed.  This isn't in itself too strange, since I know
+that there are 2 networks nearby each with several repeaters that do not
+broadcast SSID.  However, one of them (chmc_guest) is identified in the
+scanning output when using -Dwext.
+- All of the networks show a signal strength of 0.  -Dwext shows varying
+signal strengths for each network.  Considering that I am unable to
+associate with any of them, I have to wonder which driver is producing
+spurious output.
 
---=-AWliAMEf/aLGnNxiOoSz
+I would also like to note that the maximum Tx Power of the card is
+significantly different between madwifi and ath5k.  In madwifi, it maxes
+at 17dBm; in ath5k, it maxes at 27dBm.  I don't know if it actually is
+using these values, or if one or both drivers are reporting Tx power
+incorrectly.
+
+Will
+
+
+--------------enigB533083BD219DD48C955BED2
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIcBAABAgAGBQJJ51QbAAoJEKVg1VMiehFYRlgP/164Hc/VCU7sN5215UxgcLTf
-NYG1dGeTGrlCk2sEUsCMtjL9PYP2+4N9vd4h2cShI/SFvVN7V+90ZkA1BjAyD3om
-b/5Y8GfVsQV6Slu/T3tUx0BlB0aNbkYLbiWWFdMiITD1+h9Ac79HR64Yd0w3Cr6W
-j+3L5xsW4SCaAWQwJiRohorgeesjCW/rTEvej+Vnq5cpszfxxE6dJLSR7JB6mt8a
-kXS9Ud2hXcQfzO4XJW7BEAVeRjLTYJcXEaz5+wdgYTkSSk9KMo769YxD3jYQnsdn
-88joZov6Gzjs83updlcKmFhDUux0VS/TduDIwp8vtLlIDmC+0Y4k422iYzgzZr9b
-gwuUZIHeC47e9yyTBAx+5GxGs30I4Qfai6jqeQ0gce2nOUEE9TbQ8tTEffGLo5+6
-xJnhKpfm6iBqdnWwkiw4lZPtohQnxl5wyEmiDNyWuzkmwg+MqnZZNWL2clJHZTuo
-+5WC8r1Ac+IAyr4bQcNJXdFL2SUuFllg2JS5WNyFIe771sOSoyXqtaJIT9tIrhuD
-JtdRpO3TL0t55COZDZ9p9lj6iflLSypsxiI+lT5B8NOelaQyzC5yOJQ40YetURYd
-BlCDG1Xdttl7dgJKHsS+G0sg6+PCu/dVFD4/jj2LGDDAayK+XuJBDiE9QgwrLy7u
-BJ0bp7xeEiyQP3IrFuy1
-=c5PA
+iEYEARECAAYFAknc4j8ACgkQjfayWCA8dDG4jgCdFQjKv/20OAK/U4paSygdgU7U
+BAoAnRF6tAXEBGifUeyslXqkcOA+E+oY
+=irKZ
 -----END PGP SIGNATURE-----
 
---=-AWliAMEf/aLGnNxiOoSz--
-
+--------------enigB533083BD219DD48C955BED2--
