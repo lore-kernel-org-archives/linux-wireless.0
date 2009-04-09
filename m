@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54206 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753190AbZDMQbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 12:31:03 -0400
-Received: from mail.atheros.com ([10.10.20.86])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:31:03 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fmailhost03.isp.att.net ([204.127.217.103]:54978 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934547AbZDIOqz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2009 10:46:55 -0400
+Message-ID: <49DE0A4D.7010408@lwfinger.net> (sfid-20090409_164706_775311_A1831C21)
+Date: Thu, 09 Apr 2009 09:46:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18915.26558.933755.575033@gargle.gargle.HOWL> (sfid-20090413_183106_533461_C2A8EBD4)
-Date: Mon, 13 Apr 2009 21:56:38 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/11] ath9k: Remove unused channel flags
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] fix iwl3945 registration regression
+References: <87ljqamktq.fsf@litku.valot.fi>	 <1239263762.32594.19.camel@johannes.local> <da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com>
+In-Reply-To: <da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.h |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
+Kalle Valo wrote:
+> On Thu, Apr 9, 2009 at 10:56 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> I forgot that iwl3945 registration is separate from iwlagn.
+>>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> Thanks, this fixed the problem for me.
+> 
+> Tested-by: Kalle Valo <kalle.valo@iki.fi>
+> 
+> Although I wasn't able to get iwl3945 working yet:
+> 
+> Apr  9 17:06:57 tikku kernel: [   16.586612] iwl3945: Intel(R)
+> PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26kd
+> Apr  9 17:06:57 tikku kernel: [   16.591406] iwl3945: Copyright(c)
+> 2003-2009 Intel Corporation
+> Apr  9 17:06:57 tikku kernel: [   16.596203] iwl3945 0000:03:00.0: PCI
+> INT A -> GSI 17 (level, low) -> IRQ 17
+> Apr  9 17:06:57 tikku kernel: [   16.600996] iwl3945 0000:03:00.0:
+> setting latency timer to 64
+> Apr  9 17:06:57 tikku kernel: [   16.660038] iwl3945 0000:03:00.0:
+> Tunable channels: 13 802.11bg, 23 802.11a channels
+> Apr  9 17:06:57 tikku kernel: [   16.664799] iwl3945 0000:03:00.0:
+> Detected Intel Wireless WiFi Link 3945ABG
+> Apr  9 17:06:57 tikku kernel: [   16.669786] iwl3945 0000:03:00.0: irq
+> 29 for MSI/MSI-X
+> Apr  9 17:06:57 tikku kernel: [   16.675157] phy0: Selected rate
+> control algorithm 'iwl-3945-rs'
+> Apr  9 17:06:57 tikku kernel: [   16.681674] phy0: Failed to initialize wep: -2
+> Apr  9 17:06:57 tikku kernel: [   16.695543] iwl3945 0000:03:00.0:
+> Failed to register hw (error -2)
+> Apr  9 17:06:57 tikku kernel: [   16.700576] iwl3945 0000:03:00.0: PCI
+> INT A disabled
+> Apr  9 17:06:57 tikku kernel: [   16.705359] iwl3945: probe of
+> 0000:03:00.0 failed with error -2
+> 
+> Maybe this is the infamous module loading bug I see people talking
+> about? I'll investigate it later.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5c4127e..7e37570 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -266,13 +266,6 @@ enum ath9k_int {
- #define CHANNEL_HT40PLUS  0x20000
- #define CHANNEL_HT40MINUS 0x40000
- 
--#define CHANNEL_INTERFERENCE    0x01
--#define CHANNEL_DFS             0x02
--#define CHANNEL_4MS_LIMIT       0x04
--#define CHANNEL_DFS_CLEAR       0x08
--#define CHANNEL_DISALLOW_ADHOC  0x10
--#define CHANNEL_PER_11D_ADHOC   0x20
--
- #define CHANNEL_A           (CHANNEL_5GHZ|CHANNEL_OFDM)
- #define CHANNEL_B           (CHANNEL_2GHZ|CHANNEL_CCK)
- #define CHANNEL_G           (CHANNEL_2GHZ|CHANNEL_OFDM)
-@@ -303,10 +296,6 @@ struct ath9k_channel {
- 	int16_t rawNoiseFloor;
- };
- 
--#define IS_CHAN_A(_c) ((((_c)->channelFlags & CHANNEL_A) == CHANNEL_A) || \
--       (((_c)->channelFlags & CHANNEL_A_HT20) == CHANNEL_A_HT20) || \
--       (((_c)->channelFlags & CHANNEL_A_HT40PLUS) == CHANNEL_A_HT40PLUS) || \
--       (((_c)->channelFlags & CHANNEL_A_HT40MINUS) == CHANNEL_A_HT40MINUS))
- #define IS_CHAN_G(_c) ((((_c)->channelFlags & (CHANNEL_G)) == CHANNEL_G) || \
-        (((_c)->channelFlags & CHANNEL_G_HT20) == CHANNEL_G_HT20) || \
-        (((_c)->channelFlags & CHANNEL_G_HT40PLUS) == CHANNEL_G_HT40PLUS) || \
-@@ -314,7 +303,6 @@ struct ath9k_channel {
- #define IS_CHAN_OFDM(_c) (((_c)->channelFlags & CHANNEL_OFDM) != 0)
- #define IS_CHAN_5GHZ(_c) (((_c)->channelFlags & CHANNEL_5GHZ) != 0)
- #define IS_CHAN_2GHZ(_c) (((_c)->channelFlags & CHANNEL_2GHZ) != 0)
--#define IS_CHAN_PASSIVE(_c) (((_c)->channelFlags & CHANNEL_PASSIVE) != 0)
- #define IS_CHAN_HALF_RATE(_c) (((_c)->channelFlags & CHANNEL_HALF) != 0)
- #define IS_CHAN_QUARTER_RATE(_c) (((_c)->channelFlags & CHANNEL_QUARTER) != 0)
- #define IS_CHAN_A_5MHZ_SPACED(_c)			\
--- 
-1.6.2.2
+Yes it is. The key is the "Failed to initialize wep", which is caused by a
+failure to load modules ecb and arc4. Apply that patch and all will be well.
 
+Larry
