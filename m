@@ -1,67 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46379 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754999AbZDSRd5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 13:33:57 -0400
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 19:33:54 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240160241.28138.4.camel@johannes.local>
-Message-ID: <20090419173354.158790@gmx.net> (sfid-20090419_193413_781741_0B289F9F)
-MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
- (sfid-20090419_145246_566920_BF082D12)
- <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
- (sfid-20090419_153615_967882_D1A9F951)
- <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
- (sfid-20090419_160555_446977_A429511B)
- <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
- (sfid-20090419_171702_263242_9A8C16F9)
- <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
- (sfid-20090419_175352_161479_A88396A3)
- <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>	
- (sfid-20090419_181324_681308_BAEAE072)
- <1240158381.917.21.camel@johannes.local>	 <20090419165443.158820@gmx.net>
- (sfid-20090419_185516_519795_36D34B9B) <1240160241.28138.4.camel@johannes.local>
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from Viola.Opus1.COM ([192.245.12.8]:2493 "EHLO Viola.Opus1.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756541AbZDIExM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2009 00:53:12 -0400
+Received: from [10.1.1.4] ([204.17.34.178]) by Opus1.COM (PMDF V6.2-X27 #9830)
+ with ESMTPSA id <01N7K5BT706Q96CA3H@Opus1.COM> for
+ linux-wireless@vger.kernel.org; Wed, 08 Apr 2009 20:59:35 -0700 (MST)
+Date: Wed, 08 Apr 2009 20:59:34 -0700
+From: gavron@wetwork.net
+Subject: Re: Problems with 2.6.30-rc1
+In-reply-to: <49DD149B.2060300@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: bcm43xx-dev@lists.berlios.de,
+	wireless <linux-wireless@vger.kernel.org>
+Message-id: <49DD72A6.7060002@wetwork.net> (sfid-20090409_065315_490202_70FB6828)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20090408182021.GA4112@aragorn.home.lxtec.de>
+ <200904082050.00327.mb@bu3sch.de> <49DCF537.8000702@lwfinger.net>
+ <20090408192634.GB3717@samweis.home.lxtec.de> <49DD149B.2060300@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I still haven't understood why those extra commands are bothering you=
- so
-> much.
+I had the same problem on my iwlagn notebook.  This patch successfully 
+fixed that as well!
 
-I want a simple generic API. I don't want to need the old wext for it.
+Thanks, Larry :)
 
-This would be stupid for me:
-iwconfig wlan0 essid test_essid
-vs.
-iw dev wlan0 assoc test_essid
-iw dev wlan0 join_ibss test_essid
-iw dev wlan0 set meshid test_essid
+Ehud
 
-On the last I get MS-DOS feeling.
+Larry Finger wrote:
+> If you are having problems with wireless networking using 2.6.30-rc1 from
+> Linus's Linux-2.6 git tree, the fix is the following (Note: This is _NOT_ needed
+> for wireless-testing!!!):
+>
+> ---
+> Fix try_then_request_module to use waiting __request_module again.
+>
+> Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+> ---
+>  include/linux/kmod.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Index: linux-2.6.30-rc1/include/linux/kmod.h
+> ===================================================================
+> --- linux-2.6.30-rc1.orig/include/linux/kmod.h	2009-04-08 12:47:54.000000000 +0200
+> +++ linux-2.6.30-rc1/include/linux/kmod.h	2009-04-08 17:39:35.000000000 +0200
+> @@ -34,7 +34,7 @@ extern int __request_module(bool wait, c
+>  #define request_module(mod...) __request_module(true, mod)
+>  #define request_module_nowait(mod...) __request_module(false, mod)
+>  #define try_then_request_module(x, mod...) \
+> -	((x) ?: (__request_module(false, mod), (x)))
+> +	((x) ?: (__request_module(true, mod), (x)))
+>  #else
+>  static inline int request_module(const char *name, ...) { return -ENOSYS; }
+>  static inline int request_module_nowait(const char *name, ...) { return -ENOSYS; }
+>
+>   
 
-> Anyhow, you don't _connect_ to an IBSS so that would simply be
-> _wrong_.
+-- 
+Legal Disclaimer that you are now contractually bound to under all laws with no recourse:
+http://attrition.org/security/rants/z/disclaimers.html
 
-Then call it join or whatever you want.
-
-"to join: [Ad-Hoc oder Managed Netzwerk] beitreten, trat bei, beigetret=
-en" --- leo.org
-
-Alina
-
---=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
