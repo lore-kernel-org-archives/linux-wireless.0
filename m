@@ -1,72 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44093 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898AbZDPJqk (ORCPT
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:63718 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756077AbZDIXBi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 05:46:40 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1239837672.11795.46.camel@violet> (sfid-20090416_012123_293746_81110E23)
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tVqiulh6Qn+pYrrQrKXZ"
-Date: Thu, 16 Apr 2009 11:46:08 +0200
-Message-Id: <1239875168.9737.10.camel@johannes.local> (sfid-20090416_114643_572801_07873E40)
-Mime-Version: 1.0
+	Thu, 9 Apr 2009 19:01:38 -0400
+Message-ID: <49DE7E42.5020700@lwfinger.net> (sfid-20090410_010142_717851_CD365EC6)
+Date: Thu, 09 Apr 2009 18:01:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
+References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net> <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>
+In-Reply-To: <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hin-Tak Leung wrote:
+> On Thu, Apr 9, 2009 at 5:23 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+> On the LED functionality - the LED on my laptop actually works rather
+> differently under windows vs under linux.
+> On windows it is tied to the hardware switch, and the windows driver
+> depends on the state of the hardware switch.
+> The linux driver's behavior has no relationship with the LED what so
+> ever. (I suppose it might blink under windows but I don't know for
+> sure).
 
---=-tVqiulh6Qn+pYrrQrKXZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I take it that your device is built in. If it works with the hardware switch,
+then we need a "radio" LED and the rfkill subsystem. I won't be able to test
+that configuration, but I will try to spin that code, but I'll do it separately
+from the TX/RX LEDs.
 
-On Thu, 2009-04-16 at 01:21 +0200, Marcel Holtmann wrote:
+>> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.h
+>> ===================================================================
+> 
+>> + * Based on the r8187 driver, which is:
+>> + * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
+> 
+> I found these two comments a bit odd, so I went back to the vendor
+> driver code to have a look.
+> The LED code is AFAIK a rather new addition to the vendor driver,
+> within the 2008, I think. It is in
+> 0708.2008 but not in 0822.2007, and does not seem to be in 0125.2008
+> driver either.
+> 
+> The two new LED related files in 0708.2008 have these headers:
+> --------------------------------------------------------------------------------------------------
+> /*++
+> Copyright (c) Realtek Semiconductor Corp. All rights reserved.
+> 
+> Module Name:
+>  	r8187_led.c
+> 	
+> Abstract:
+>  	RTL8187 LED control functions
+>  	
+> Major Change History:
+> 	When        Who      What
+> 	----------    ---------------   -------------------------------
+> 	2006-09-07    Xiong		Created
+> 
+> Notes:	
+>  	
+> --*/
+> /*++
+> 
+> Copyright (c) Microsoft Corporation. All rights reserved.
+> 
+> Module Name:
+>     r8187_led.h
+> 
+> Abstract:
+>     definitions and stuctures for rtl8187 led control.
+> 
+> Major Change History:
+>       When        Who	What
+>     ----------	------	----------------------------------------------
+>     2006-09-07	Xiong	Created
+> 
+> Notes:
+> 
+> --*/
+> -------------------------------------------------------------------------------------------------
+> 
+> I am slightly worried about the microsoft copyright in the latter :-),
+> but presumably it is a visual studio or dev tool artefact :-).
 
-> After a long debugging session with Reinette we finally tracked down
-> what is going on here. A full scan with this card takes 7-9 seconds and
-> that seems to be too long and trigger IEEE80211_MONITORING_INTERVAL
-> which then deauthenticates us with the AP (reason=3D6).
+I used the rtl8187 code from rtl8187_linux_26.1025.0328.2007, and the rtl8187B
+code from rtl8187B_linux_24.6.1031.0125.2008. It turned out that the code was
+identical, thus no need to have two distinct paths. As you have likely seen, my
+implementation was a lot smaller than theirs.
 
-Note to everybody: _Please_ provide the exact output. This text above
-makes it sound like we deauth from the AP, when in reality the AP has
-deauth'ed us.
+I used the rtl8187_led.c file to generate my code. It only has a Realtek
+copyright. The only part of the .h file that was used was the interpretation of
+the EEPROM customer code. I don't think that Microsoft has a copyright on that.
 
-Maybe your AP is just buggy and can't handle you going away for more
-than a couple of seconds? It _looks_ like it sends you a deauth frame
-while you're scanning (please verify using wireshark or similar), we
-miss that deauth because we're off the channel, and then when we get
-back and start sending data again the AP complains that we're no longer
-authenticated.
+>>  #include <linux/init.h>
+>>  #include <linux/usb.h>
+>> +#include <linux/eeprom_93cx6.h>
+>>  #include <net/mac80211.h>
+>>
+>>  #include "rtl8187.h"
+> 
+> This trunk seems to be redundant - why would a new include be needed
+> for no code addition?
 
-Sorry, but there's not enough information here to tell what really is
-going wrong. The known bug shouldn't be able to cause this behaviour.
+In my implementation of the LEDs init function, I pass the EEPROM structure as
+one of the arguments so that I can read the customer code, which is the reason
+that that header ended up there. I'll modify my patch so that the customer code
+is read in rtl8187_dev.c and pass that to the init routine. Then the EEPROM
+struct will not be needed.
 
-johannes
+Thanks for your comments.
 
---=-tVqiulh6Qn+pYrrQrKXZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ5v5dAAoJEKVg1VMiehFYjGEP/2ECTpji3u3+9HbNhCljjdLz
-i+nvfwSIjo4SrmqtpLq8WlkhMQ4oRfgBEQPke1RN3kMeQU5nKqh8iEqLPEa8RsJt
-DDSZLE9rWtrHTCNWwMxsrga3Py2OrXoePj8FGCpI0QM61tUelb0izt4j9+i3M06D
-Y8H79JhKuIH4Xl3rQFmc0oTkX+x0PbXvq/ePt4cmjQCd8HX5mm8gEhmqY12Hs1si
-oB0vK2tRhzQXqLbqwoQPuUT94mPhCwRpc2N+y4s+vqkHBuy9ISdyn70hEwgSrSNX
-7Md8iSLo3iMy8bhC2bIwlAEYIqqWI4HaLOrxzU7sC/gZgh6KONP4fj6wruPiipzB
-B9kKki8NxdOZehGAxTXsP54zt4XAK27LwKAuh+kCiARr2qyN4woK2JVwKmHtclOo
-5BJMoUaBTdEpV70jAyH73CuIBSgALmRoV5q1Bi75sYnlQCNvcAqSC7SPTLJVLd3W
-JyLFtKNmZb7Uvw2HZDrMqRrJEw3q901zuayyBU60PvirN5cPGcjezQmmGRoeR9Zf
-vdWm2htf6Gt1sSmn0kc6kVJLYCOISV2HxIstKWg3IeLnRydfCs/LWVAbXeCQ/ckT
-o+K4ryFkBvS0qM3bd3W8O1SUIVhrtvmrcvasDzZKVnjVWnV498Rva+zAahCtYSTP
-Yx5NV013J1mt4D3MD1JG
-=JsyO
------END PGP SIGNATURE-----
-
---=-tVqiulh6Qn+pYrrQrKXZ--
-
+Larry
