@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:51430 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbZDNKwA (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:35853 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754913AbZDILvf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 06:52:00 -0400
-Date: Tue, 14 Apr 2009 06:51:28 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Greg KH <greg@kroah.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: [PATCH][RESEND] Add vt6655 driver to drivers/staging.
-Message-ID: <20090414105128.GD25746@storm.local.network> (sfid-20090414_125205_085117_A044C703)
+	Thu, 9 Apr 2009 07:51:35 -0400
+Received: by fxm2 with SMTP id 2so551158fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 04:51:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5p8PegU4iirBW1oA"
+In-Reply-To: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>
+References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 9 Apr 2009 13:51:17 +0200
+Message-ID: <69e28c910904090451k38ffa9bcvea771bd1b9fda086@mail.gmail.com> (sfid-20090409_135140_762935_AF351D2A)
+Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Apr 9, 2009 at 6:23 AM, Larry Finger <Larry.Finger@lwfinger.net=
+> wrote:
+> The following patch implements some control over the LED on RTL8187B =
+and
+> RTL8187L devices. Triggers are registered for TX and RX. Whenever the
+> trigger event occurs, the LED is turned off for 1/20 second, then tur=
+ned
+> back on.
+>
+> Please test and comment.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> Index: wireless-testing/drivers/net/wireless/Kconfig
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-testing.orig/drivers/net/wireless/Kconfig
+> +++ wireless-testing/drivers/net/wireless/Kconfig
+> @@ -433,6 +433,13 @@ config RTL8187
+>
+> =A0 =A0 =A0 =A0 =A0Thanks to Realtek for their support!
+>
+> +# If possible, automatically enable LED's for RTL8187.
 
---5p8PegU4iirBW1oA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Spelling error: "LED's" should be "LEDs".
 
-This patch adds the vt6655 driver to drivers/staging.  This code was literally
-copied from the upstream source archive, available here:
+> +
+> +config RTL8187_LEDS
+> + =A0 =A0 =A0 bool
+> + =A0 =A0 =A0 depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS =3D =
+y || LEDS_CLASS =3D RTL8187)
+> + =A0 =A0 =A0 default y
+> +
+> =A0config ADM8211
+> =A0 =A0 =A0 =A0tristate "ADMtek ADM8211 support"
+> =A0 =A0 =A0 =A0depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENT=
+AL
 
-  http://www.viaarena.com/Driver/vt6655_linux_src_v1.19.12_x86.zip
-
-Copyright: VIA Networking Technologies, Inc.
-License: GPL
-Authors: Jerry Chen, Kyle Hsu, Lucas Lin, Lyndon Chen, Tevin Chen, Warren Hsu,
-         Yiching Chen
-Signed-off-by: Forest Bond <forest@alittletooquiet.net>
-
-Patch: http://www.alittletooquiet.net/media/code/0001-Add-vt6655-driver-to-drivers-staging.patch.gz
-Signature: http://www.alittletooquiet.net/media/code/0001-Add-vt6655-driver-to-drivers-staging.patch.gz.sig
-
-Thanks,
-Forest
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
 --
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---5p8PegU4iirBW1oA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJ5GqwRO4fQQdv5AwRAvbZAJ9ummD0pYUU/1GRrsNc0cMJ69pF4gCgyK4L
-/q8juc/87+dE0fj5Fe38DaQ=
-=uk8o
------END PGP SIGNATURE-----
-
---5p8PegU4iirBW1oA--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
