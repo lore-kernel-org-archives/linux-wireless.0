@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web58908.mail.re1.yahoo.com ([66.196.100.237]:43070 "HELO
-	web58908.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754685AbZDGTlT (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:60362 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933967AbZDIWlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:41:19 -0400
-Message-ID: <422915.71719.qm@web58908.mail.re1.yahoo.com> (sfid-20090407_214122_452635_9559A27B)
-Date: Tue, 7 Apr 2009 12:41:17 -0700 (PDT)
-From: Philip Rakity <prakity@yahoo.com>
-Subject: [PATCH] libertas: don't leak skb on receive error
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-	prakity@yahoo.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 9 Apr 2009 18:41:20 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so813014rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 15:41:19 -0700 (PDT)
+Message-Id: <7CF72FB2-D8F0-4605-93B0-99522E17E455@gmail.com> (sfid-20090410_004139_292464_669939D8)
+From: Charlie Woloszynski <cwoloszynski@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain;
+	charset=us-ascii;
+	format=flowed;
+	delsp=yes
+Subject: Mesh point and AP mode at same time
+Mime-Version: 1.0 (iPhone Mail 5H11)
+Date: Thu, 9 Apr 2009 18:41:06 -0400
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I am looking into using 802.11s to allow a set of devices exchange  
+information. I also need to have those same nodes operate as AP nodes.  
+Does anyone have any pointers on how to do this?  Does it already work  
+or will I need to the current baseline?  If the latter, can anyone  
+provide any pointers on related work I should try to leverage?
 
+Thanks,
 
-Don't lead memory when receive errors 
-Signed-off-by: Philip Rakity <prakity@yahoo.com>
-
---- linux-2.6.29/drivers/net/wireless/libertas/rx.c.old    2009-04-01 13:19:26.000000000 -0700
-+++ linux-2.6.29/drivers/net/wireless/libertas/rx.c    2009-04-01 13:19:57.000000000 -0700
-@@ -170,6 +170,7 @@
-         lbs_deb_rx("rx err: frame received with bad length\n");
-         priv->stats.rx_length_errors++;
-         ret = 0;
-+        dev_kfree_skb(skb);
-         goto done;
-     }
- 
-@@ -181,6 +182,7 @@
-         lbs_pr_alert("rxpd not ok\n");
-         priv->stats.rx_errors++;
-         ret = 0;
-+        dev_kfree_skb(skb);
-         goto done;
-
-
-
-      
+Charlie 
