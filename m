@@ -1,29 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:47231 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765704AbZDBSmy (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:46906 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761898AbZDIUae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 14:42:54 -0400
-Message-ID: <49D506FE.5070405@lwfinger.net> (sfid-20090402_204312_130369_AE50829A)
-Date: Thu, 02 Apr 2009 13:42:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 9 Apr 2009 16:30:34 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so785406wff.4
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 13:30:33 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: How does rfkill work?
-References: <49D44635.80306@lwfinger.net>	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>	 <1238689637.24708.41.camel@johannes.local>  <49D5018E.6050001@lwfinger.net> <1238696967.6137.5.camel@johannes.local>
-In-Reply-To: <1238696967.6137.5.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1239306851-25030-2-git-send-email-hauke@hauke-m.de>
+References: <1239306851-25030-1-git-send-email-hauke@hauke-m.de>
+	<1239306851-25030-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 9 Apr 2009 13:30:18 -0700
+Message-ID: <43e72e890904091330v74dd44afv2ff99d1c618e38d3@mail.gmail.com> (sfid-20090409_223038_003670_8F2F4E92)
+Subject: Re: [PATCH 2/2] [compat-2.6] Sorted compat.diff with the help of git.
+	The content of compat.diff was only sorted with this patch there are no
+	really changes to it.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 
-> Also, if increasing that helps, does it also work then? I mean, does the
-> LED get turned on/off?
+On Thu, Apr 9, 2009 at 12:54 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-No. I'm still not getting the appropriate call to the set brightness callback.
-Actually, I didn't expect any change as the truncation from the too-short array
-length only occurs when the pseudo file is dumped.
+Thanks, applied and pushed new shiny tarball out.
 
-Larry
+  Luis
+
+Updated from /home/wireless/wireless-testing, git-describe says:
+v2.6.30-rc1-21195-g99535e1
+wireless-testing latest tag:
+master-2009-04-08
+This is compat-release:
+master-2009-04-08
