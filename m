@@ -1,46 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:44881 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751644AbZDSWfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 18:35:03 -0400
-Date: Sun, 19 Apr 2009 15:32:18 -0700
-From: Greg KH <greg@kroah.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090419223218.GA30599@kroah.com> (sfid-20090420_003509_111501_63FACF1A)
-References: <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network>
+Received: from sycorax.lbl.gov ([128.3.11.121]:36395 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbZDIEwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2009 00:52:08 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Justin Madru <jdm64@gawab.com>,
+	lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2.6.30-rc1: intel 3945 no wireless
+References: <49DC37F0.2040408@gawab.com>
+	<20090408201414.9161568f.akpm@linux-foundation.org>
+	<49DD6BF7.3040400@lwfinger.net>
+Date: Wed, 08 Apr 2009 21:39:47 -0700
+In-Reply-To: <49DD6BF7.3040400@lwfinger.net> (message from Larry Finger on
+	Wed, 08 Apr 2009 22:31:03 -0500)
+Message-ID: <87myaql9t8.fsf@sycorax.lbl.gov> (sfid-20090409_065213_167887_D384ABF9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090419200146.GB28885@storm.local.network>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
-> Hi Larry,
-> 
-> On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
-> > Forest Bond wrote:
-> > > 
-> > > However, I did have a question:
-> > > 
-> > > The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwusb.ko.
-> > > Should the directories be named "viawget" and "vntwusb," respectively, or is it
-> > > appropriate for them to be named "vt6655" and "vt6656"?
-> > 
-> > Of course Greg has the final say, but I vote to keep the directories with the
-> > vt6656 name and change the name of the driver, which is defined in  the line
-> > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor driver.
-> 
-> This makes sense to me.  I'll proceed this way for now.  Greg, let me know if
-> you'd prefer I didn't do this.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-No objection from me.
+> Andrew Morton wrote:
+>> (cc linux-wireless)
+>> 
+>> On Tue, 07 Apr 2009 22:36:48 -0700 Justin Madru <jdm64@gawab.com> wrote:
+>> 
+>>> Hi,
+>>>
+>>> Decided to test out .30-rc1, but I've run into some bugs.
+>>> My intel 3945 wireless card doesn't work. Bellow is the relevant 
+>>> portions of dmesg
+>>> The full dmesg and config can be found at: 
+>>> http://jdserver.homelinux.org/bugreports/003/
+>>>
+>>> iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for 
+>>> Linux, 1.2.26ks
+>>> iwl3945: Copyright(c) 2003-2009 Intel Corporation
+>>> iwl3945 0000:0b:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+>>> iwl3945 0000:0b:00.0: setting latency timer to 64
+>>> input: SynPS/2 Synaptics TouchPad as 
+>>> /devices/platform/i8042/serio1/input/input6
+>>> iwl3945 0000:0b:00.0: Tunable channels: 11 802.11bg, 13 802.11a channels
+>>> iwl3945 0000:0b:00.0: Detected Intel Wireless WiFi Link 3945ABG
+>>>   alloc irq_desc for 26 on cpu 0 node 0
+>>>   alloc kstat_irqs on cpu 0 node 0
+>>> iwl3945 0000:0b:00.0: irq 26 for MSI/MSI-X
+>>> phy0: Selected rate control algorithm 'iwl-3945-rs'
+>>> input: HDA Intel Mic at Ext Right Jack as 
+>>> /devices/pci0000:00/0000:00:1b.0/input/input7
+>>> input: HDA Intel HP Out at Ext Right Jack as 
+>>> /devices/pci0000:00/0000:00:1b.0/input/input8
+>>> phy0: Failed to initialize wep: -2
+>>> iwl3945 0000:0b:00.0: Failed to register hw (error -2)
+>>> iwl3945 0000:0b:00.0: PCI INT A disabled
+>>> iwl3945: probe of 0000:0b:00.0 failed with error -2
+>>>
+>> 
+>> I assume this is a regression?  2.6.29 was OK?
+>
+> See the discussion in the thread containing
+> http://marc.info/?l=linux-kernel&m=123922531327539&w=2. This one also contains
+> the fix that was accepted by Rusty Russell.
 
-thanks,
+i have the same problem. 2.6.29 was fine, 2.6.30-rc1 doesn't work. i
+tried applying the above mentioned patch but it didn't make any
+difference. at any rate, i have iwl3945 compiled in the kernel and not
+as a module and i don't use wep. this is the relevant part from syslog:
 
-greg k-h
+iwl3945 0000:03:00.0: firmware: requesting iwlwifi-3945-2.ucode
+iwl3945 0000:03:00.0: loaded firmware version 15.28.2.8
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+wlan0: authenticate with AP XX:XX:XX:XX:XX:XX
+wlan0: authenticate with AP XX:XX:XX:XX:XX:XX
+iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+iwl3945 0000:03:00.0: Error Reply type 0x00000005 cmd REPLY_PHY_CALIBRATION_CMD (0xB0) seq 0x013A ser 0x004E0000
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+wlan0: authenticate with AP XX:XX:XX:XX:XX:XX
+wlan0: authentication with AP XX:XX:XX:XX:XX:XX timed out
+
+looking through the logs i also noticed this:
+
+REISERFS warning (device sda4): jdm-20004 reiserfs_delete_xattrs: Couldn't delete all xattrs (-13)
+
+REISERFS warning (device sda4): jdm-20004 reiserfs_delete_xattrs: Couldn't delete all xattrs (-13)
+
+REISERFS warning (device sda2): jdm-20004 reiserfs_delete_xattrs: Couldn't delete all xattrs (-13)
+
+--alex--
+
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
