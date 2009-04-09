@@ -1,60 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:33670 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910AbZDNWFo convert rfc822-to-8bit (ORCPT
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:41375 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761769AbZDIPho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 18:05:44 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [RFC] ar9170: 802.11n RX Part
-Date: Wed, 15 Apr 2009 00:05:40 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200904142159.59511.chunkeey@web.de> <69e28c910904141329o731a7bcfjde0e5587c20e9058@mail.gmail.com>
-In-Reply-To: <69e28c910904141329o731a7bcfjde0e5587c20e9058@mail.gmail.com>
+	Thu, 9 Apr 2009 11:37:44 -0400
+Message-ID: <49DE1638.8060906@lwfinger.net> (sfid-20090409_173748_662227_9CC12D31)
+Date: Thu, 09 Apr 2009 10:37:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Message-Id: <200904150005.41377.chunkeey@web.de> (sfid-20090415_000547_908601_799F3ADA)
+To: John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Another regression in 2.6.30-rc1
+Content-Type: multipart/mixed;
+ boundary="------------020807010307060604090709"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 14 April 2009 22:29:34 G=E1bor Stefanik wrote:
-> On Tue, Apr 14, 2009 at 9:59 PM, Christian Lamparter <chunkeey@web.de=
-> wrote:
-> > With this patch you can finally tune your ar9170 radio to the next =
-network
-> > and listen to the sound of HT.
-> >
-> > Of course, you won't be able to sing along with all other 11n devic=
-es.
-> > We still need a rate algo, BA support (weird stuff!) for HT before
-> > we can think about coding it.
-> >
-> > Regards,
-> >        Chr
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wir=
-eless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->=20
-> A rate algo is needed because wext doesn't support HT rates, and
-> nl80211 doesn't yet have a rate selection feature, preventing manual
-> setting of HT rates, right?
+This is a multi-part message in MIME format.
+--------------020807010307060604090709
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Hmm, what are you trying to say/ask?
+If you are implementing kernel 2.6.30-rc1 from wireless-testing, there is a
+regression that will hit you if you have the ACPI battery routines enabled. The
+symptom is an oops on boot with the line "> BUG: unable to handle kernel NULL
+pointer dereference at (null)". The patch for this, which comes from
+2.6.30-rc1-git1 in Linus's tree, is as follows:
 
-The rate algo is not the "big problem" here... as nbd will do the most =
-work.
-(in fact its very easy to "emulate" it for now)
+==============================================
 
-BA on the other hand is next to impossible ;-)
-And even with code from ath9k, it's still ALOT TODO.
+commit 5d38258ec026921a7b266f4047ebeaa75db358e5
+Author: Vegard Nossum <vegard.nossum@gmail.com>
+Date:   Tue Apr 7 10:55:38 2009 +0200
 
-Regards,
-	Chr
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    ACPI battery: fix async boot oops
+
+    > BUG: unable to handle kernel NULL pointer dereference at (null)
+
+    What happens is that the battery module's init sections are being freed
+    before the async callback (which was marked __init) has run. This theory
+    is supported by the fact that the bad RIP value is a vmalloc address.
+
+    The immediate fix is to make this a non-init call.
+
+    (A better long-term fix is of course to wait with init-section unloading
+    until a module's async initcalls have been run, which would allow us to
+    discard this function which is still only run once, after all. Perhaps a
+    new async_initcall() function for the async/module API, if this is needed
+    for other modules in the future?)
+
+    Reported-by: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+    Signed-off-by: Vegard Nossum <vegard.nossum@gmail.com>
+    Tested-by: Alessandro Suardi <alessandro.suardi@gmail.com>
+    Tested-by: Rafael J. Wysocki <rjw@sisk.pl>
+    Signed-off-by: Len Brown <len.brown@intel.com>
+
+diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
+index b0de631..3c7d894 100644
+--- a/drivers/acpi/battery.c
++++ b/drivers/acpi/battery.c
+@@ -903,7 +903,7 @@ static struct acpi_driver acpi_battery_driver = {
+ 		},
+ };
+
+-static void __init acpi_battery_init_async(void *unused, async_cookie_t cookie)
++static void acpi_battery_init_async(void *unused, async_cookie_t cookie)
+ {
+ 	if (acpi_disabled)
+ 		return;
+
+
+----
+
+Larry
+
+--------------020807010307060604090709
+Content-Type: text/plain;
+ name="battery_init_async"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="battery_init_async"
+
+commit 5d38258ec026921a7b266f4047ebeaa75db358e5
+Author: Vegard Nossum <vegard.nossum@gmail.com>
+Date:   Tue Apr 7 10:55:38 2009 +0200
+
+    ACPI battery: fix async boot oops
+    
+    > BUG: unable to handle kernel NULL pointer dereference at (null)
+    
+    What happens is that the battery module's init sections are being freed
+    before the async callback (which was marked __init) has run. This theory
+    is supported by the fact that the bad RIP value is a vmalloc address.
+    
+    The immediate fix is to make this a non-init call.
+    
+    (A better long-term fix is of course to wait with init-section unloading
+    until a module's async initcalls have been run, which would allow us to
+    discard this function which is still only run once, after all. Perhaps a
+    new async_initcall() function for the async/module API, if this is needed
+    for other modules in the future?)
+    
+    Reported-by: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+    Signed-off-by: Vegard Nossum <vegard.nossum@gmail.com>
+    Tested-by: Alessandro Suardi <alessandro.suardi@gmail.com>
+    Tested-by: Rafael J. Wysocki <rjw@sisk.pl>
+    Signed-off-by: Len Brown <len.brown@intel.com>
+
+diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
+index b0de631..3c7d894 100644
+--- a/drivers/acpi/battery.c
++++ b/drivers/acpi/battery.c
+@@ -903,7 +903,7 @@ static struct acpi_driver acpi_battery_driver = {
+ 		},
+ };
+ 
+-static void __init acpi_battery_init_async(void *unused, async_cookie_t cookie)
++static void acpi_battery_init_async(void *unused, async_cookie_t cookie)
+ {
+ 	if (acpi_disabled)
+ 		return;
+
+
+--------------020807010307060604090709--
