@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:62964 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379AbZDGMyP (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:41359 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760516AbZDIMI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 08:54:15 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so2919932qwh.37
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 05:54:13 -0700 (PDT)
-Subject: Re: Making promisc mode work with WPA encryption?
+	Thu, 9 Apr 2009 08:08:29 -0400
+Received: by bwz17 with SMTP id 17so554808bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 05:08:26 -0700 (PDT)
+Subject: Re: What is needed to inplement a AP support in a driver?
 From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
+To: Rami Rosen <roszenrami@gmail.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <87ocv9hxeo.fsf@litku.valot.fi>
-References: <1239063352.4705.40.camel@maxim-laptop>
-	 <87ocv9hxeo.fsf@litku.valot.fi>
+In-Reply-To: <1239109862.15015.17.camel@maxim-laptop>
+References: <1239062777.4705.30.camel@maxim-laptop>
+	 <b25312890904070225t44f72ecdsd87a29f7fed341b8@mail.gmail.com>
+	 <1239109862.15015.17.camel@maxim-laptop>
 Content-Type: text/plain
-Date: Tue, 07 Apr 2009 15:54:07 +0300
-Message-Id: <1239108847.15015.6.camel@maxim-laptop> (sfid-20090407_145418_915246_41A73E48)
+Date: Thu, 09 Apr 2009 15:08:20 +0300
+Message-Id: <1239278900.7235.10.camel@maxim-laptop> (sfid-20090409_140834_546820_28738A43)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 07:59 +0300, Kalle Valo wrote:
-> Maxim Levitsky <maximlevitsky@gmail.com> writes:
+On Tue, 2009-04-07 at 16:11 +0300, Maxim Levitsky wrote:
+> On Tue, 2009-04-07 at 12:25 +0300, Rami Rosen wrote:
+> > Hi,
+> > > Why iwl3945 still doesn't support AP mode?
+> > see also this patch, titled: "wlwifi: disable AP mode"
+> > 
+> > http://www.spinics.net/lists/linux-wireless/msg24688.html
+> > 
+> > Regards,
+> > Rami Rosen
 > 
-> > This means kernel can't automatically decrypt other stations traffic.
-> > But I could arrange small program that listens to device in monitor or
-> > maybe even just promisc mode, and records WPA handshakes. For every
-> > handshake it could install the key in kernel driver, so it would use
-> > it for decryption, and show the traffic on device in promisc mode. Is
-> > it possible to do today? I guess not. All this program has to know is
-> > the PSK. (I could even arrange WPA supplicant to do this job - it
-> > knows all keys already)
 > 
-> I think wireshark does something like this. You can enter the PSK in the
-> settings and it will decrypt the traffic. I only tried it once and it
-> was a long time ago, though.
+> Quoiting this patch:
+> 
+> 
+> > iwlwifi does not support AP mode in any way. For one, it doesn't even
+> > buffer multicast/broadcast frames properly. We didn't allow zd1211rw AP
+> > mode to be enabled without this, so iwlwifi shouldn't be allowed to
+> > advertise AP mode either.
+> This is interesting, this means it doesn't save frames when client is in power save mode?
+> IBSS doesn't have this?
+> 
+> 
+> 
+> > 
+> > 
+> > 
+> > It also doesn't work at all, it doesn't even answer to probe requests,
+> > I'm guessing the packet injection code was disabled again.
+> Packet injection (even fragmentation) works fine here.
+> Also, now hostapd responds to probes isn't it?
+> (I was said that now hostapd sends/recieves all managment frames)
+> 
+> 
+> > 
+> > 
+> > [  471.524478] iwlagn: ERROR: APs don't scan
+> > 
+> > this is a long-standing bug, of course APs scan to know their
+> > surroundings, not sure why this is there, it's also very pointless since
+> > I can remove it by enabling software scan...
+> Here, software scan fixes it, besides many device don't have hardware scan
+> > 
+> > 
+> > 
+> > [  487.507346] iwlagn: Microcode SW error detected.  Restarting 0x2000000.
+> This probably was fixed now, there were many reports about microcode errors.
+> > 
+> 
+> 
+> I just feel, that AP mode can be done, and it isn't that hard to enable it.
 > 
 
-Exactly.
-But for this I have to use monitor, which means that each time I want to
-see only network traffic I have to filter by essid, filter out beacons,
-etc.
-it would be nicer to use promisc mode, and receive decrypted the
-ethernet frames.
+I am thinking, currently iwl3945 is ported to iwlagn.
+When porting is it could fix AP problems in it too?
 
-So can this be done?
 
-Best regards,
+Best regards
 	Maxim Levitsky
-
-
 
