@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:43848 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613AbZDLFoh (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:30839 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753517AbZDIPO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2009 01:44:37 -0400
-Message-ID: <49E17FB4.4050807@lwfinger.net> (sfid-20090412_074440_888953_47040243)
-Date: Sun, 12 Apr 2009 00:44:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
-References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>	 <49DE7E42.5020700@lwfinger.net>	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>	 <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com>	 <49E0C713.4040507@lwfinger.net> <3ace41890904112157r2037946xddd8fca9222fd97e@mail.gmail.com>
-In-Reply-To: <3ace41890904112157r2037946xddd8fca9222fd97e@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 9 Apr 2009 11:14:57 -0400
+Date: Thu, 9 Apr 2009 17:30:23 +0200
+From: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: Atheros Linux wireless support - ramifications of reverse
+ engineering  alien technology
+Message-Id: <20090409173023.1612fc38.kristoffer.ericson@gmail.com> (sfid-20090409_171502_260824_6E6BDFA0)
+In-Reply-To: <43e72e890904011147p5e22eaeejac3fddd2b9cddcfc@mail.gmail.com>
+References: <43e72e890904011147p5e22eaeejac3fddd2b9cddcfc@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
+On Wed, 1 Apr 2009 11:47:33 -0700
+"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+
+> Fellow Linux wireless hackers,
 > 
-> Thanks for the explanation. Depending (silently) on other kernel
-> requirements is certainly fine.
-> I am just thinking we can keep it simple, and wondering if we need
-> another user-configurable option.
+> We regret to inform you that Atheros is no longer going to be working
+> with the upstream Linux kernel community. We have received notice from
+> the Atheros Alien Reverse Engineering Division (AARED) that we have
+> given away too much information by opening up our drivers, furthermore
+> our batch of newly arrived organic-based wireless technology at AARED
+> is far too advanced and current wireless research cannot explain our
+> achieved max thoughput figures which violate The Shannon Theorem [1].
+> The AARED also fears that the FOSS community will start creating
+> communication portals to parallel universes with our hardware[2], a
+> feature which is theoretically possible with our latest organic-based
+> wireless technology, but unfortunately cannot be allowed due to
+> regulatory consideration near the Council Chambers of Zion [3].
+> 
+> We may be able to address the communication portal regulatory
+> considerations through CRDA [4] and for this we do ask for you advice,
+> but please be aware that we already are facing hard questions from the
+> NSA, specifically from Agent Smith [5]. The NSA ultimately fears that
+> the alien community we have reversed engineered their wireless
+> technology from may be watching us and may soon start sending hostile
+> ships to earth for retribution, these concerns are coming directly
+> from The Architect [6].
 
-It is not user configurable. The revised Kconfig selects it automatically if
-MAC80211_LEDS is set and LEDS_CLASS is y or m. The user never sees it in the
-configuration process.
+Dammit, dont joke about that, now I have to run outside and pick up my
+broken eeepc.
 
-> BTW, I had a hard lock-up on suspend - it hasn't happened for
-> months... while the module doesn't suspend properly, I have
-> unload-on-sleep configured and it has work mostly fine for some
-> months.  The vendor code is quite lacking in suspend/resume support,
-> and if you are going to prepare another iteration of the LED patch,
-> please give this a thought.
-> on possible problem with this.
 
-Thanks for the heads up. I have not been able to suspend my computer due to
-other problems, but I'll see what I can find.
+> 
+>   The Atheros Linux team
+> 
+> [1] http://en.wikipedia.org/wiki/Shannon_theorem
+> [2] http://www.sciam.com/article.cfm?id=the-great-cosmic-roller-coaster-ride
+> [3] http://en.wikipedia.org/wiki/Zion_(The_Matrix)
+> [4] http://wireless.kernel.org/en/developers/Regulatory/CRDA
+> [5] http://en.wikipedia.org/wiki/Agent_Smith
+> [6] http://en.wikipedia.org/wiki/Architect_(The_Matrix)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-On another subject, I have been working with the vendor driver from
-rtl8187B_linux_26.1036.0708.2008. I stripped out a lot of the dead code and made
-the modifications so that it compiles cleanly with kernel 2.6.30-rc1. I also
-modified it to handle my RTL8187B stick with the 8187 ID. The driver scans OK,
-but so far it has not associated with my WPA2 AP. My hope is to get it running
-so that I can compare throughput with the current Linux driver.
 
-Larry
-
+-- 
+Kristoffer Ericson <kristoffer.ericson@gmail.com>
