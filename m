@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:24535 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755673AbZDLJWU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2009 05:22:20 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so226472fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Apr 2009 02:22:19 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:20643 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758812AbZDJW0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2009 18:26:13 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2009 15:26:13 -0700
+Date: Fri, 10 Apr 2009 15:26:09 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+CC: Pavel Roskin <proski@gnu.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] BUG in wiphy_update_regulatory when loading
+	ath5k (on latest git)
+Message-ID: <20090410222609.GE5750@tesla> (sfid-20090411_002619_112592_9BC0A9F4)
+References: <49DF6216.8040303@tuffmail.co.uk> <49DF714F.9070600@tuffmail.co.uk> <1239385533.24621.11.camel@mj> <20090410181157.GC5750@tesla> <1239394864.3673.2.camel@mj> <49DFAC64.5050208@tuffmail.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <49E17FB4.4050807@lwfinger.net>
-References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>
-	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>
-	 <49DE7E42.5020700@lwfinger.net>
-	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>
-	 <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com>
-	 <49E0C713.4040507@lwfinger.net>
-	 <3ace41890904112157r2037946xddd8fca9222fd97e@mail.gmail.com>
-	 <49E17FB4.4050807@lwfinger.net>
-Date: Sun, 12 Apr 2009 10:22:18 +0100
-Message-ID: <3ace41890904120222u151becb7pe2cb07a816a51d73@mail.gmail.com> (sfid-20090412_112225_085306_4EB60169)
-Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <49DFAC64.5050208@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 12, 2009 at 6:44 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> It is not user configurable. The revised Kconfig selects it automatically if
-> MAC80211_LEDS is set and LEDS_CLASS is y or m. The user never sees it in the
-> configuration process.
+On Fri, Apr 10, 2009 at 01:30:28PM -0700, Alan Jenkins wrote:
+> Pavel Roskin wrote:
+> > On Fri, 2009-04-10 at 11:11 -0700, Luis R. Rodriguez wrote:
+> >
+> >
+> >> Thanks pavel, please try this patch:
+> >>
+> >
+> > I checked ath5k, ath9k and b43, and in all cases last_request is
+> > initialized before it's used by the code changed in your patch.  In
+> > fact, last_request is initialized before there is any message from ath5k
+> > or another driver.
+> >
+> > I wonder if "module: create a request_module_nowait()" reverted in
+> > wireless-testing was causing the initialization to go in a different
+> > order.  I tried reapplying it and still could not reproduce the problem
+> > (that is, last_request is not NULL in wiphy_update_regulatory).  But
+> > maybe I'm just lucky.
+> >
+> > Anyway, your patch makes the code safer and doesn't break anything for
+> > me.
+> >
+> 
+> I see.  That would explain why it's not deterministic.
+> 
+> I've done 5 or so test runs with the patch applied, and I haven't had
+> any more BUGs.  Thanks for the quick response!
 
-That's great and that's how I think it should work.
+Hm, yeah so when you load cfg80211 you always trigger a core regulatory hint
+and technically there is a race between the workqueue running and you
+loading your driver and mac80211 and your driver having been registered
+before the workqueue ran.. what might be easiest is for us to schedule
+somewhere or use the kernel completion thing but I haven't used that
+myself yet.
 
-> Thanks for the heads up. I have not been able to suspend my computer due to
-> other problems, but I'll see what I can find.
-
-My guess is that it is probably related to resource to do with the new
-work-queue.
-
-> On another subject, I have been working with the vendor driver from
-> rtl8187B_linux_26.1036.0708.2008. I stripped out a lot of the dead code and made
-> the modifications so that it compiles cleanly with kernel 2.6.30-rc1. I also
-> modified it to handle my RTL8187B stick with the 8187 ID. The driver scans OK,
-> but so far it has not associated with my WPA2 AP. My hope is to get it running
-> so that I can compare throughput with the current Linux driver.
-
-That's quite some work! I wouldn't mind seeing the diff, or even the
-incremental diffs, if you have done it in git.
-I had an old patch for beyond 2.6.28 but never got it to work, I
-think. Have some problem with porting forward another vendor driver
-(the zd1211) and can certainly benefit from some tips.
+  Luis
