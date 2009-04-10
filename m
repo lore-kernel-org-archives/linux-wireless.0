@@ -1,91 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55907 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41461 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbZDROKj (ORCPT
+	with ESMTP id S938740AbZDJH3Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 10:10:39 -0400
-Subject: Re: Rfkill rewrite: eeepc-laptop resume
+	Fri, 10 Apr 2009 03:29:24 -0400
+Subject: Re: [PATCH] mac80211: re-upload keys only after telling driver
+ about association
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <49E9DD64.7000902@tuffmail.co.uk> (sfid-20090418_160245_391864_C41C477B)
-References: <49DCA88E.6060400@tuffmail.co.uk>
-	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>
-	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>
-	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>
-	 <49E98C86.2040308@tuffmail.co.uk>
-	 (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>
-	 <49E9A0C7.8040602@tuffmail.co.uk>
-	 (sfid-20090418_114338_695917_3CBF9024) <1240057470.4755.7.camel@johannes.local>
-	 <49E9D5AE.50509@tuffmail.co.uk>
-	 (sfid-20090418_152951_979624_DE0ADF1D) <1240061621.4755.35.camel@johannes.local>
-	 <49E9DD64.7000902@tuffmail.co.uk> (sfid-20090418_160245_391864_C41C477B)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-aCZNYz0axhWWRDwZcEEI"
-Date: Sat, 18 Apr 2009 16:10:27 +0200
-Message-Id: <1240063827.20540.2.camel@johannes.local> (sfid-20090418_161043_382078_2D42C5D9)
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <bcopeland@gmail.com>
+In-Reply-To: <1239294389.4684.15.camel@rc-desk>
+References: <1239152134.8456.41.camel@johannes.local>
+	 <1239294389.4684.15.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DN87DD90y2pqDogq+hR4"
+Date: Fri, 10 Apr 2009 09:29:16 +0200
+Message-Id: <1239348556.17031.14.camel@johannes.local> (sfid-20090410_092934_987510_8C9AFBA0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-aCZNYz0axhWWRDwZcEEI
+--=-DN87DD90y2pqDogq+hR4
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-04-18 at 15:02 +0100, Alan Jenkins wrote:
+Hi,
 
-> >>  * This function tells the rfkill core that the device is capable of
-> >>  * remembering soft blocks (which it is notified of via the set_block
-> >>  * method) -- this means that the driver may ignore the return value
-> >>  * from rfkill_set_hw_state().
-> >>
-> >> Doesn't this conflict with the declaration of rfkill_set_sw_state() as
-> >> __must_check?
-> >>    =20
-> >
-> > Yeah, in a way it does, but I figure it's rare enough that those who
-> > really can ignore it can write
-> > 	(void) rfkill_set_sw_state(...)
-> >
-> > Don't really have a strong opinion, it just seemed the mistake in the
-> > other direction would be more common.
-> >  =20
-> Oops... I meant to write rfkill_set_hw_state(), I think you copied me.  O=
-k.
+> On Tue, 2009-04-07 at 17:55 -0700, Johannes Berg wrote:
+> > In the normal WPA or RSN case keys are only configured after
+> > associating, so we should do that in that order when resuming
+> > as well. It shouldn't really matter since we do not send any
+> > data at either point, but iwlwifi prefers it this way and it
+> > does seem more natural.
+>=20
+> Could you please share the symptom of the problem with iwlwifi without
+> this patch?
 
-I, uh, didn't even pay that much attention.
+[this is just a snippet from my other mail -- for the wider audience]
 
-> So then why is the _sw_ variant marked __must_check?  That looks like a
-> mistake.  I don't see what I can sensibly do with the return value.=20
-> Unless you want EPO to veto a firmware-initiated enable?
 
-Good question. It gives you the hardware enable state but I guess you
-know about that already. Hmm :) Yeah it seems that we should remove that
-__must_check.
+When you have a microcode error, we pretty much take the driver
+completely down, and the firmware is of course completely
+re-initialised. Now, when mac80211 goes to reconfigure the hardware, it
+would, before this patch, do this [simplified, but you can look at the
+code]:
+ 1) ->start()
+ 2) ->add_interface()
+ 3) ->sta_notify()    [which iwlwifi doesn't use]
+ 4) ->set_key()
+ 5) ->bss_info_changed()
+
+and some more. Now, because iwlwifi ignores step 3, in step 4 it will
+complain "station not found" when mac80211 wants to add the pairwise key
+for the AP. Reordering 4 and 5 fixes that because iwlwifi adds the
+station in bss_info_changed and then the key upload can be successful.
 
 johannes
 
---=-aCZNYz0axhWWRDwZcEEI
+--=-DN87DD90y2pqDogq+hR4
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ6d9RAAoJEKVg1VMiehFYVNcP/jOOOxXQMvhJ6sc7rfIXLGIY
-G3ogMmAxNwr7TjU5jKHr3/XPv8e0+CiPRyIACb3tqpdOus00RoneRJYREpo6t3VB
-bZzxpjMZrTTyXMXv3fcGl6yjZcSlzqxhG0Vxi+I3k+wvQzgIt4AiV0emHs2gAm/Z
-3PAZYNyqGuXZZ/5YaMG9D9u899/GP13K1bK/vfkkx9nkyqZPkkw8as6bYcSp0W6u
-l9qronzHy1lWkIUtvKKRCCWM9IHe7gmf/1Hi925q0szrQ4bL0dEaqGrcdxLti+gq
-C0u+z+LG8RjOBmj3gAm6KkYkTMyZXyBCCMmw0lIi8NpULzpdMCNAPvBxpzQ63gfa
-f6ocixJfsvnZ2lxTzG628XSGOQ+9b858BaWshmRk2URguAeGVNByEAjKK//6ISip
-Ny6LZjcGclvqXjNrlwUs2h9nPj0+8Q4Bkbcpulw5LIGedFz8dImuMbJXsxh3ZTXX
-nNtufOWZUR20z4n5qO0LhnB+kMxWsJt76GKIa0qKu/DmpDceIY6HiG2ykbr+osch
-R+ZGGkjJxrQV/1m5xSMFV5q5LOoLJj993rf+qmESjrqyGneVowq+iKpmZVIaRQ3l
-N4lxGkLVrcZL87NvZJs5dTYsPBIFlrAba5U7Ja7JeqHHv1me12Qr4gmajLLxmjgX
-Sdfkxe15A7yLr8Bl4ecc
-=7Urm
+iQIcBAABAgAGBQJJ3vVJAAoJEKVg1VMiehFYv8YQALdvwbVS4nCanNTRRkkELMuT
+BE/dbZ7CacmDGU3aFlQcWB01kOGUSEZjAjSgnFDPE3Tkj5EN2zYZpRP8QcAzEV6r
+u2obmH7nWC8MtdiBpiirjXyXBrzO9Es6gEXdEO/cqvcnjAkwCBf0z+10+W/JVuzF
+mVR+7rxbcYAONlbKdg1ZNFJi7PGfYe/bZrhlo3UIrbo5iRZ1dSoEf3R3UGYq61+6
+LANR3wipQ5/jTkv3bfVwEmb6EgXDtUcnmSfLh9xGL9hbwEmRMbeeFwFgKzUN179/
+O09bKrvyk47ZHnANm9EH6wIz6At//VNzkSXQRPHW5To5GiFKt8stKMlsXhdXY9jZ
+mdjSrkm4MZCd+eTuHpBQChWI/JqAvwF4YLC99AJI7Fb/yaHqraIj1ozbnczmQYRX
+S5tdrwMFjnIrjtnW0n0mtNAiVDvJSC5Cd4Nbxhon2KIGtmWlzBqhIc9U9vGX9B6J
+pGN8w/pxsjinmOGRYTb408FSYM7ewsB2ZAje4YjmPCFwUvoluMcEkf/L8yBcMhzr
+5ai0rLPWZaKgWEqW35McfAsfMFzki41+zbjOumb/eaEyH73JOd4/XYUWZSvC1y4K
+XRozVrZPuX9mbL8j5E44BTjC+aKK6jnN/LTlGZS9EOarIsdJenvlhYY+Rt115Pvs
+8zL8aJD3jdnYRpdE2vNi
+=IxXL
 -----END PGP SIGNATURE-----
 
---=-aCZNYz0axhWWRDwZcEEI--
+--=-DN87DD90y2pqDogq+hR4--
 
