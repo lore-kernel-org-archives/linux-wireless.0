@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2187 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761209AbZD2RD6 (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:53585 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881AbZDJFTR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 13:03:58 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 1/7] ath5k: Allow user/driver to set txpower
-Date: Wed, 29 Apr 2009 13:03:05 -0400
-Message-Id: <20090429170229.M13841@bobcopeland.com> (sfid-20090429_190408_823624_3104E467)
-In-Reply-To: <40f31dec0904290948x4becb1fu3187dd4c4e7e089@mail.gmail.com>
-References: <20090416002220.GA4138@makis> <20090424040143.GB3277@hash.localnet> <20090428155244.GD4113@tuxdriver.com> <40f31dec0904290948x4becb1fu3187dd4c4e7e089@mail.gmail.com>
+	Fri, 10 Apr 2009 01:19:17 -0400
+Received: by fxm2 with SMTP id 2so888785fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 22:19:15 -0700 (PDT)
+To: Sedat Dilek <sedat.dilek@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Another regression in 2.6.30-rc1
+References: <49DE1638.8060906@lwfinger.net> <873achunwz.fsf@litku.valot.fi>
+	<49DED22E.4000001@lwfinger.net>
+	<2d0a357f0904092213m124305adu5eddc25ccd2b6591@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 10 Apr 2009 08:19:13 +0300
+In-Reply-To: <2d0a357f0904092213m124305adu5eddc25ccd2b6591@mail.gmail.com> (Sedat Dilek's message of "Fri\, 10 Apr 2009 07\:13\:56 +0200")
+Message-ID: <87vdpdt7am.fsf@litku.valot.fi> (sfid-20090410_071920_293972_4C7CB4BC)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 29 Apr 2009 19:48:35 +0300, Nick Kossifidis wrote
-> > The series seems fine, but I was waiting for a repost with the
-> > narrower changelogs...?
-> >
-> > John
-> 
-> Is this really needed ? I'm full right now ;-(
-> Can anyone else resend this plz ?
+Sedat Dilek <sedat.dilek@googlemail.com> writes:
 
-No worries, I'll fix and resend them.
+> I think it is a good choice to put informations about regressions in
+> Linus-tree in a separate Email as you did for wireless-tesing ML.
+
+Yes, I agree. Also it's good idea to pay attention to the subject, for
+example having a word regression in the subject always draws my attention.
+
+> I reported about ACPI-battery issue [1] already, but I think it
+> "disappeared" in the flood of replies.
+
+Yeah, I missed that altogether. I'm trying to read all mails for
+linux-wireless list, but sometimes I just seem to skim some of them.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
-
+Kalle Valo
