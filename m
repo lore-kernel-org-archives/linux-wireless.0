@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:53338 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754827AbZDSTcD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48469 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbZDJICw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 15:32:03 -0400
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090419192543.158810@gmx.net>
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
-	 <20090419125212.158800@gmx.net>
-	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
-	 <20090419133544.158820@gmx.net>
-	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
-	 <20090419140523.158830@gmx.net>
-	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
-	 <20090419151629.158790@gmx.net>
-	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
-	 <20090419155319.158810@gmx.net>
-	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
-	 <20090419161316.158790@gmx.net>
-	 (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
-	 <20090419165443.158820@gmx.net>
-	 (sfid-20090419_185516_519795_36D34B9B) <1240160241.28138.4.camel@johannes.local>
-	 <20090419173354.158790@gmx.net> <1240163391.11795.59.camel@violet>
-	 <20090419180314.23710@gmx.net> <1240164895.11795.70.camel@violet>
-	 <20090419184320.158810@gmx.net>
-	 (sfid-20090419_204331_522505_5A7A007C) <1240167343.28138.12.camel@johannes.local>
-	 <20090419190103.158790@gmx.net>
-	 (sfid-20090419_210135_646451_315341AB) <1240168864.28138.13.camel@johannes.local>
-	 <20090419192543.158810@gmx.net>
+	Fri, 10 Apr 2009 04:02:52 -0400
+Subject: [PATCH] ar9170: fix struct layout on arm
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	chunkeey <chunkeey@web.de>
 Content-Type: text/plain
-Date: Sun, 19 Apr 2009 21:31:53 +0200
-Message-Id: <1240169513.11795.80.camel@violet> (sfid-20090419_213210_210120_A6FE0122)
+Date: Fri, 10 Apr 2009 10:02:45 +0200
+Message-Id: <1239350565.17031.21.camel@johannes.local> (sfid-20090410_100257_183385_61D44863)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alina,
+arm will pad even between u8's, so mark the structs/unions
+packed. Fixes a build bug on arm due to BUILD_BUG_ON tests
+in the code.
 
-> > Go ahead. But consider reading 802.11 first.
-> 
-> Read first Andrew Tanenbaum.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ drivers/net/wireless/ar9170/hw.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-you know what, the next time I run into him, I ask his opinion about
-this ;)
-
-Regards
-
-Marcel
+--- wireless-testing.orig/drivers/net/wireless/ar9170/hw.h	2009-04-10 09:58:05.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ar9170/hw.h	2009-04-10 09:58:33.000000000 +0200
+@@ -310,7 +310,7 @@ struct ar9170_tx_control {
+ 
+ struct ar9170_rx_head {
+ 	u8 plcp[12];
+-};
++} __packed;
+ 
+ struct ar9170_rx_tail {
+ 	union {
+@@ -318,16 +318,16 @@ struct ar9170_rx_tail {
+ 			u8 rssi_ant0, rssi_ant1, rssi_ant2,
+ 			   rssi_ant0x, rssi_ant1x, rssi_ant2x,
+ 			   rssi_combined;
+-		};
++		} __packed;
+ 		u8 rssi[7];
+-	};
++	} __packed;
+ 
+ 	u8 evm_stream0[6], evm_stream1[6];
+ 	u8 phy_err;
+ 	u8 SAidx, DAidx;
+ 	u8 error;
+ 	u8 status;
+-};
++} __packed;
+ 
+ #define AR9170_ENC_ALG_NONE			0x0
+ #define AR9170_ENC_ALG_WEP64			0x1
 
 
