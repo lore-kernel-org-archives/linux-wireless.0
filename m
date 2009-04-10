@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3426 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964AbZDOL6i (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:59255 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753610AbZDJUrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 07:58:38 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 5/5] ath5k: manipulate rxlink and descriptor address under rxbuf lock
-Date: Wed, 15 Apr 2009 07:57:36 -0400
-Message-Id: <1239796656-20646-6-git-send-email-me@bobcopeland.com> (sfid-20090415_135847_082656_78E4E78D)
-In-Reply-To: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
-References: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
+	Fri, 10 Apr 2009 16:47:08 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239395434.13792.3.camel@maxim-laptop>
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
+	 <1239109497.15015.12.camel@maxim-laptop>
+	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
+	 <1239110412.15015.23.camel@maxim-laptop>
+	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
+	 <1239112310.15015.25.camel@maxim-laptop>
+	 <1239135878.17958.11.camel@maxim-laptop>
+	 (sfid-20090407_222443_633750_085B264D)  <1239136637.7475.57.camel@johannes.local>
+	 <1239395434.13792.3.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 10 Apr 2009 23:47:01 +0300
+Message-Id: <1239396421.13792.6.camel@maxim-laptop> (sfid-20090410_224713_176738_4E4D565F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grabbing an ath5k_buf then dropping the lock is racy because the
-referenced descriptor can be obtained in another thread and released
-before the buffer is handed to the hardware.  Likewise, manipulating
-sc->rxlink without the lock can lead to having multiple self-linked
-hardware descriptors.
+On Fri, 2009-04-10 at 23:30 +0300, Maxim Levitsky wrote:
+> On Tue, 2009-04-07 at 22:37 +0200, Johannes Berg wrote:
+> > On Tue, 2009-04-07 at 23:24 +0300, Maxim Levitsky wrote:
+> > 
+> > > First I get this in kernel logs:
+> > > 
+> > > 
+> > > > [   29.971903] WARNING:
+> > > at /home/maxim/software/kernel/linux-2.6/net/wireless/core.h:79
+> > > nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
+> > 
+> > Eh, I don't think that is present in a recent wireless tree.
+> 
+> It is.
+> 
+> I have just compiled iwlwifi.git tree, and same message is there:
 
-Changes-licensed-under: 3-Clause-BSD
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+And I found out why device is always busy, when wpa supplicant tries to
+scan. It is the disassociation sequence.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 1a6e72f..c8c658b 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1618,9 +1618,8 @@ ath5k_rx_start(struct ath5k_softc *sc)
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "cachelsz %u rxbufsize %u\n",
- 		sc->cachelsz, sc->rxbufsize);
- 
--	sc->rxlink = NULL;
--
- 	spin_lock_bh(&sc->rxbuflock);
-+	sc->rxlink = NULL;
- 	list_for_each_entry(bf, &sc->rxbuf, list) {
- 		ret = ath5k_rxbuf_setup(sc, bf);
- 		if (ret != 0) {
-@@ -1629,9 +1628,9 @@ ath5k_rx_start(struct ath5k_softc *sc)
- 		}
- 	}
- 	bf = list_first_entry(&sc->rxbuf, struct ath5k_buf, list);
-+	ath5k_hw_set_rxdp(ah, bf->daddr);
- 	spin_unlock_bh(&sc->rxbuflock);
- 
--	ath5k_hw_set_rxdp(ah, bf->daddr);
- 	ath5k_hw_start_rx_dma(ah);	/* enable recv descriptors */
- 	ath5k_mode_setup(sc);		/* set filters, etc. */
- 	ath5k_hw_start_rx_pcu(ah);	/* re-enable PCU/DMA engine */
--- 
-1.6.0.6
+Does kernel notify, when disassociation have finished?
+Maybe it is still better not to fail scan request, but block?
 
+Best regards,
+	Maxim Levitsky
 
