@@ -1,81 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58706 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753229AbZD0RN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2009 13:13:26 -0400
-Subject: Re: 2.6.30-rc3: iwlagn probe timeouts (regression)
-From: reinette chatre <reinette.chatre@intel.com>
-To: Niel Lambrechts <niel.lambrechts@gmail.com>
-Cc: "linux.kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <49F4F5B1.4020201@gmail.com>
-References: <49F4F5B1.4020201@gmail.com>
-Content-Type: text/plain
-Date: Mon, 27 Apr 2009 10:19:37 -0700
-Message-Id: <1240852777.29221.6.camel@rc-desk> (sfid-20090427_191334_333628_6BBF657B)
-Mime-Version: 1.0
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:36871 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbZDJEez (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2009 00:34:55 -0400
+Received: by bwz17 with SMTP id 17so881415bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 21:34:53 -0700 (PDT)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Another regression in 2.6.30-rc1
+References: <49DE1638.8060906@lwfinger.net>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 10 Apr 2009 07:34:52 +0300
+In-Reply-To: <49DE1638.8060906@lwfinger.net> (Larry Finger's message of "Thu\, 09 Apr 2009 10\:37\:28 -0500")
+Message-ID: <873achunwz.fsf@litku.valot.fi> (sfid-20090410_063458_477179_F2708FD6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Niel,
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-On Sun, 2009-04-26 at 17:00 -0700, Niel Lambrechts wrote:
-> Hi,
-> 
-> In earlier 2.6.30 (rc1 and 2) kernel tests I suffered the "beacon loss,
-> sending probe request" problem, during which my connection would
-> intermittently fail and reconnect. With the latest git kernel which
-> seems to include a patch (ad935687dbe7307f5abd9e3f610a965a287324a9) for
-> at least some of this, my card (Intel 5300AGN REV=0x24) completely fails
-> to associate and I get:
-> 
-> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::radio
-> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::assoc
-> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::RX
-> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::TX
-> Apr 27 01:32:36 linux-7vph kernel: ADDRCONF(NETDEV_UP): wlan0: link is
-> not ready
-> Apr 27 01:32:40 linux-7vph sudo:   niella : TTY=pts/2 ; PWD=/home/niella
-> ; USER=root ; COMMAND=/usr/bin/tail -f /var/log/messages
-> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 1
-> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 2
-> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 3
-> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e timed out
-> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 1
-> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 1
-> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 2
-> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 3
-> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e timed out
-> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 1
-> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 1
-> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 2
-> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e try 3
-> Apr 27 01:33:43 linux-7vph kernel: wlan0: direct probe to AP
-> 00:1d:92:1d:1e:8e timed out
-> 
-> I do not have any similar problems with 2.6.29 or 2.6.28 at the exact
-> same physical location.
-> 
-> I can try to bisect in a day or two if need be.
+> If you are implementing kernel 2.6.30-rc1 from wireless-testing, there is a
+> regression that will hit you if you have the ACPI battery routines enabled. The
+> symptom is an oops on boot with the line "> BUG: unable to handle kernel NULL
+> pointer dereference at (null)". The patch for this, which comes from
+> 2.6.30-rc1-git1 in Linus's tree, is as follows:
 
->From what I can tell we did not send any iwlagn patches to 2.6.30 that
-are related to this behavior. Please do try a bisect. 
+Thanks Larry, this was very helpful. After cherry picking this commit
+wireless-testing is booting without errors for me.
 
-Thank you
+In general sharing regressions and workarounds in this list is a very
+good idea. I'm sure most of the people (including me) don't have time to
+follow lkml and find fixes for all regressions.
 
-Reinette
-
-
+-- 
+Kalle Valo
