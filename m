@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:35119 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874AbZDUNJy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 09:09:54 -0400
-Received: by bwz7 with SMTP id 7so1749338bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 06:09:53 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] mac80211 powersave work
-References: <20090416111723.904720021@sipsolutions.net>
-	<20090420194430.GG3369@tuxdriver.com>
-	<1240257188.4632.19.camel@johannes.local>
-	<87ocuqfuk3.fsf@litku.valot.fi> <20090421125132.GC17805@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 21 Apr 2009 16:09:48 +0300
-In-Reply-To: <20090421125132.GC17805@tuxdriver.com> (John W. Linville's message of "Tue\, 21 Apr 2009 08\:51\:32 -0400")
-Message-ID: <87d4b6f90j.fsf@litku.valot.fi> (sfid-20090421_150958_387609_CE1D03B2)
+Received: from hell.pl ([193.219.28.162]:58362 "EHLO hell.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751715AbZDJWxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2009 18:53:23 -0400
+Received: from krecik by hell.pl with local (Exim 4.63)
+	(envelope-from <krecik@hell.pl>)
+	id 1LsOS6-00042x-Vy
+	for linux-wireless@vger.kernel.org; Fri, 10 Apr 2009 23:39:59 +0200
+Date: Fri, 10 Apr 2009 23:39:58 +0200
+From: Grzegorz Nowakowski <krecik@hell.pl>
+To: linux-wireless@vger.kernel.org
+Subject: ath5k blind to nearby network
+Message-ID: <20090410213958.GA12571@hell.pl> (sfid-20090411_005328_213790_829C4DAC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+Hello everyone,
 
->> Yes, in my opinion the power save should not be enabled by default for
->> the big masses, at least not yet. My understanding is that only few
->> people have tested it and I would like to see more testing first. 
->> 
->> But if you (Johannes&John) think it's ready for the prime time, I'm not
->> going to complain :)
->
-> Well there is always a trade-off.  But by the time 2.6.31 come around
-> the code will have been in wireless-testing, net-next, and linux-next
-> for a reasonably long time.  Hopefully we will have good confidence
-> in it by then.  If not, then we can disable it by default later.
+I'm more or less ordinary Linux user: have used the system for a long
+time.  While I'm accustomed to manual tweaking of the system, I gave up
+regarding set up of secure wireless connection.  I rely on the tools,
+networkmanager at the beginning, wicd now, to do the job.  Which was
+performed rather well except lately, when I encounter strange problem.
 
-That sounds good. With those three trees there should be quite a lot of
-testers.
+The short version is: my laptop doesn't see my home network (and can't
+connect to, too).
 
+For longer one, there is needed some background.  The AP used is Motorola
+WR850G running DD-WRT v24-sp1 (and v24-beta few months earlier).  The
+laptop is Fujitsu-Siemens Lifebook E8310 with Atheros AR242x built in.
+For reference, there is also another laptop, HP, with Intel IPW2200 on
+board.  Both laptops run on Debian unstable with unpatched, custom configured
+2.6.29.1 kernel.  What works or worked:
+
+- HP
+- FSC with Madwifi long time ago
+- FSC running Windows XP
+- FSC with Linux&ath5k few months ago
+
+What doesn't:
+- FSC with Linux&ath5k now
+- FSC with Knoppix 6.1
+
+The symptom is that with both NetworkManager and WICD (and "iwlist <if>
+scanning") I don't see my home network on the list.  I see all other
+neighbouring networks around and I'm even able to connect if any is
+open.  Too much power on AP is not an issue as I lowered it to pathetic
+level (30mW), besides HP doesn't complain.  Problem is probably not with
+hardware nor with AP as WinXP on FSC connects flawlessly.
+
+The only uncertainity is with the DD-WRT version as I'm not 100% sure if
+the FSC worked after the firmware upgrade.  Most probably, yes.  Anyway,
+WinXP still works.
+
+I mentioned Madwifi only for completness.  I had bad experience with the
+driver and I'm not going to use it unless I get really good argument
+("it works for me" is not such one).
+
+In summary, the problem seems to lie somewhere around ath5k driver on
+this paritcular laptop connecting to this particular access point.  Now
+I have no reason to believe there is an error in ath5k but I'm at loss
+what to check more.  So maybe someone suggest what additional diagnosis
+can I perform to better isolate the glitch?  Any suggestion is welcome.
+
+As I don't subscribe to this list, please CC me when replying.
+
+Thanks in advance and best regards,
 -- 
-Kalle Valo
+Grzegorz Nowakowski
