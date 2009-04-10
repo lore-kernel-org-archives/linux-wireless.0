@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57649 "EHLO mga11.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:2280 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751538AbZD1UtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 16:49:05 -0400
-Subject: Re: mmotm 2009-04-27-15-45 uploaded - iwl3945 oops
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>,
+	id S1759886AbZDJUVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2009 16:21:09 -0400
+Subject: Re: [ath5k-devel] BUG in wiphy_update_regulatory when loading
+ ath5k (on latest git)
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090428203805.GB3321@tuxdriver.com>
-References: <200904272305.n3RN51mu031395@imap1.linux-foundation.org>
-	 <25818.1240938876@turing-police.cc.vt.edu>
-	 <1240951184.1207.11.camel@rc-desk>  <20090428203805.GB3321@tuxdriver.com>
+In-Reply-To: <20090410181157.GC5750@tesla>
+References: <49DF6216.8040303@tuffmail.co.uk>
+	 <49DF714F.9070600@tuffmail.co.uk> <1239385533.24621.11.camel@mj>
+	 <20090410181157.GC5750@tesla>
 Content-Type: text/plain
-Date: Tue, 28 Apr 2009 13:55:17 -0700
-Message-Id: <1240952117.1207.21.camel@rc-desk> (sfid-20090428_224913_299349_C6E132FE)
+Date: Fri, 10 Apr 2009 16:21:04 -0400
+Message-Id: <1239394864.3673.2.camel@mj> (sfid-20090410_222114_797661_B827FF1E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-28 at 13:38 -0700, John W. Linville wrote:
-> On Tue, Apr 28, 2009 at 01:39:44PM -0700, reinette chatre wrote:
-> > On Tue, 2009-04-28 at 10:14 -0700, Valdis.Kletnieks@vt.edu wrote:
-> > > On Mon, 27 Apr 2009 15:46:07 PDT, akpm@linux-foundation.org said:
-> > > > The mm-of-the-moment snapshot 2009-04-27-15-45 has been uploaded to
-> > > > 
-> > > >    http://userweb.kernel.org/~akpm/mmotm/
-> > > 
-> > > Saw this while booting at home, out of range of any access points I was
-> > > configured to associate with (there *are* 4 APs owned by neighbors that I can
-> > > see via kismet, but wpa_supplicant isn't configured to use them).  Didn't
-> > > happen this morning at my office, when there's APs in range.
-> > > 
-> > > This didn't happen in mmotm-0424, so it's something new in the last few days.
-> > 
-> > A recent patch that is related is ...
-> > 
-> > commit 4583f7455c6b668a4e9cab154b5a7b6c583b288a
-> > Author: Johannes Berg <johannes@sipsolutions.net>
-> > Date:   Thu Apr 23 10:45:04 2009 +0200
-> > 
-> >     iwlwifi: notify on scan completion even when shutting down
-> > 
-> >     Under certain circumstances iwlwifi can get stuck and will no
-> >     longer accept scan requests, because the core code (cfg80211)
-> >     thinks that it's still processing one. This fixes one of the
-> >     points where it can happen, but I've still seen it (although
-> >     only with my radio-off-when-idle patch).
-> >     
-> >     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> >     Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-> >     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > 
-> > 
-> > Could you please revert this and test again?
-> 
-> I doubt if that will help -- I just put it into wireless-2.6 and
-> wireless-testing today.
-> 
-> > If this does not help, could you please bisect?
-> 
-> Better bet...unless you meant "apply" instead of "revert"...
+On Fri, 2009-04-10 at 11:11 -0700, Luis R. Rodriguez wrote:
 
-I did mean revert ... without checking that this patch was in mm yet. Sorry.
+> Thanks pavel, please try this patch:
 
-Reinette
+I checked ath5k, ath9k and b43, and in all cases last_request is
+initialized before it's used by the code changed in your patch.  In
+fact, last_request is initialized before there is any message from ath5k
+or another driver.
 
+I wonder if "module: create a request_module_nowait()" reverted in
+wireless-testing was causing the initialization to go in a different
+order.  I tried reapplying it and still could not reproduce the problem
+(that is, last_request is not NULL in wiphy_update_regulatory).  But
+maybe I'm just lucky.
 
+Anyway, your patch makes the code safer and doesn't break anything for
+me.
 
-
-
+-- 
+Regards,
+Pavel Roskin
