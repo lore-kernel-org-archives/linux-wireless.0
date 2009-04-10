@@ -1,65 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38775 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760281AbZDBQ1u (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:55206 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936385AbZDJUak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 12:27:50 -0400
-Subject: Re: How does rfkill work?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <49D4D833.9070107@lwfinger.net>
-References: <49D44635.80306@lwfinger.net>
-	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>
-	 <1238684527.4141.63.camel@johannes.local>  <49D4D833.9070107@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-k9xeh85xOPalBo+ulHgr"
-Date: Thu, 02 Apr 2009 18:27:16 +0200
-Message-Id: <1238689637.24708.41.camel@johannes.local> (sfid-20090402_182807_297249_7CD911FC)
+	Fri, 10 Apr 2009 16:30:40 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1239136637.7475.57.camel@johannes.local>
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
+	 <1239109497.15015.12.camel@maxim-laptop>
+	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
+	 <1239110412.15015.23.camel@maxim-laptop>
+	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
+	 <1239112310.15015.25.camel@maxim-laptop>
+	 <1239135878.17958.11.camel@maxim-laptop>
+	 (sfid-20090407_222443_633750_085B264D)  <1239136637.7475.57.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 10 Apr 2009 23:30:34 +0300
+Message-Id: <1239395434.13792.3.camel@maxim-laptop> (sfid-20090410_223047_708717_58D9A2DC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-04-07 at 22:37 +0200, Johannes Berg wrote:
+> On Tue, 2009-04-07 at 23:24 +0300, Maxim Levitsky wrote:
+> 
+> > First I get this in kernel logs:
+> > 
+> > 
+> > > [   29.971903] WARNING:
+> > at /home/maxim/software/kernel/linux-2.6/net/wireless/core.h:79
+> > nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
+> 
+> Eh, I don't think that is present in a recent wireless tree.
 
---=-k9xeh85xOPalBo+ulHgr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It is.
 
-On Thu, 2009-04-02 at 10:22 -0500, Larry Finger wrote:
+I have just compiled iwlwifi.git tree, and same message is there:
 
-> Without your "rfkill rewrite" patch, but with "rfkill-remove-unused-code"=
-,
-> "rfkill-remove-deprecated", and "rfkill-remove-user-claim" patches, the f=
-ile
-> /sys/class/..../trigger contains "none ide-disk BAT0-charging-or-full
-> BAT0-charging BAT0-full ADP1-online phy0rx phy0tx phy0assoc phy0radio [rf=
-kill0]"
 
-On my system that's exactly what it looks like with my patch (well,
-rfkill4 right now). I'm stumped. What kernel are you running?
 
-johannes
+> [ 1666.298390] ------------[ cut here ]------------
+> [ 1666.298395] WARNING: at /home/maxim/software/kernel/linux-2.6/net/wireless/core.h:79 nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
+> [ 1666.298399] Hardware name: Aspire 5720     
+> [ 1666.298402] Modules linked in: af_packet nfsd exportfs ipv6 nfs lockd nfs_acl auth_rpcgss sunrpc cpufreq_powersave cpufreq_conservative cpufreq_userspace acpi_cpufreq coretemp sbp2 joydev uvcvideo iwl3945 videodev v4l1_compat v4l2_compat_ioctl32 iwlcore rfkill snd_hda_codec_realtek snd_hda_intel snd_hda_codec mac80211 snd_hwdep ehci_hcd psmouse video iTCO_wdt lib80211 tg3 snd_pcm_oss snd_mixer_oss usbcore output evdev iTCO_vendor_support nvidia(P) cfg80211 libphy serio_raw snd_pcm snd_timer ricoh_mmc sdhci_pci sdhci ohci1394 ata_piix snd_page_alloc ext3 jbd mbcache fuse ahci libata
+> [ 1666.298473] Pid: 13164, comm: wpa_supplicant Tainted: P           2.6.29-wl #19
+> [ 1666.298477] Call Trace:
+> [ 1666.298490]  [<ffffffff80241320>] warn_slowpath+0xd0/0x130
+> [ 1666.298504]  [<ffffffffa00f9ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg80211]
+> [ 1666.298512]  [<ffffffff802a8263>] ? __alloc_pages_internal+0xe3/0x4f0
+> [ 1666.298525]  [<ffffffffa00f965d>] nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]
+> [ 1666.298537]  [<ffffffffa00f9ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg80211]
+> [ 1666.298542]  [<ffffffff802a86ee>] ? __get_free_pages+0x1e/0x60
+> [ 1666.298550]  [<ffffffff804a59ae>] ? __alloc_skb+0x6e/0x140
+> [ 1666.298562]  [<ffffffffa00f9ae4>] nl80211_get_wiphy+0x74/0xd0 [cfg80211]
+> [ 1666.298569]  [<ffffffff804c5986>] genl_rcv_msg+0x1b6/0x1f0
+> [ 1666.298575]  [<ffffffff804c57d0>] ? genl_rcv_msg+0x0/0x1f0
+> [ 1666.298582]  [<ffffffff804c4839>] netlink_rcv_skb+0x89/0xb0
+> [ 1666.298586]  [<ffffffff804c57b7>] genl_rcv+0x27/0x40
+> [ 1666.298592]  [<ffffffff804c4234>] netlink_unicast+0x2c4/0x2e0
+> [ 1666.298597]  [<ffffffff804a59ae>] ? __alloc_skb+0x6e/0x140
+> [ 1666.298603]  [<ffffffff804c4464>] netlink_sendmsg+0x214/0x310
+> [ 1666.298609]  [<ffffffff8049ceb7>] sock_sendmsg+0x127/0x140
+> [ 1666.298616]  [<ffffffff80258c20>] ? autoremove_wake_function+0x0/0x40
+> [ 1666.298622]  [<ffffffff8023bc60>] ? wake_up_process+0x10/0x20
+> [ 1666.298629]  [<ffffffff80535c74>] ? __mutex_unlock_slowpath+0x44/0x50
+> [ 1666.298635]  [<ffffffff80535c0e>] ? mutex_unlock+0xe/0x10
+> [ 1666.298641]  [<ffffffff804b8900>] ? __rtnl_unlock+0x10/0x20
+> [ 1666.298647]  [<ffffffff8049dd17>] ? move_addr_to_kernel+0x57/0x60
+> [ 1666.298652]  [<ffffffff804a6e7c>] ? verify_iovec+0x3c/0xd0
+> [ 1666.298657]  [<ffffffff8049d059>] sys_sendmsg+0x189/0x320
+> [ 1666.298663]  [<ffffffff804ffd14>] ? inet_ioctl+0x94/0xc0
+> [ 1666.298668]  [<ffffffff8049bf56>] ? sock_ioctl+0x66/0x270
+> [ 1666.298675]  [<ffffffff802dfd21>] ? vfs_ioctl+0x31/0xa0
+> [ 1666.298680]  [<ffffffff802dfe18>] ? do_vfs_ioctl+0x88/0x580
+> [ 1666.298686]  [<ffffffff802d20c9>] ? __fput+0x169/0x1e0
+> [ 1666.298692]  [<ffffffff8020c5db>] system_call_fastpath+0x16/0x1b
+> [ 1666.298696] ---[ end trace 24eb07dee6e9ca52 ]---
+> 
+> 
 
---=-k9xeh85xOPalBo+ulHgr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+On top of that I need to note that NM doesn't show signal strenghts correctly.
+Instead it shows 100% for all AP except the current active one.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+This is iwl3945 driver from iwlwifi-git of today.
+Plus I use latest -git of wpa_supplicant, and NM
 
-iQIcBAABAgAGBQJJ1OdiAAoJEKVg1VMiehFYyGwQALga9vUvVE1+N1U4F/AjqjeJ
-PPzVC31trs9djmSt2+566xDgCRPxcykU0Z/NzsgVFExe01lNTY287HkaEYLQVCE4
-pubfsWnuE2L5vm91E06fOyyaw/Kdac9hTCeR9/pnuxTFjRTZgpvOrTzQunjC99RI
-mktlyyCW7FaejVHqU3BksNzig9VgZkdZ/cZDBz8Kz2WXQCjd1S3qfuBaxoJ6eP4e
-/qccskJbIDn6oF3DYhMVv860jklxBJNrVUVH8T4t5aY65PkAvR5ZqjBWEI/nyFMI
-qVfxQg9xyTHq9P0E4nqfqw1GAFwWc2I5l5iEro/GVuXy+2UhqS7OKQYkM1ZESWKk
-rS6ncDsxHszNRSzJuucH189aJqnjQdtStXPagUIfbbUifvEul3bcCCDdF6d3RuU0
-ClRE6NPjlDm+eEv9/av8fFAVlK0sa0zfve9a01QFN990lTlG4Kjm1VOWpSJgl/Qj
-1iK/FrjN4uei5+XkzGlEEMXcxS9ZCJ226+kMdhYTenFYsGbmlkvgPWsH05ouikca
-HeuLAhTSB1uSYDw0hmpCP9aCqUfWkBPfI2mB34/vxemghhJ+q6pShwjHCUZ91r4v
-VbSf4GwAcfieED/4knyjmuuwpXLyOAlQAXPiEKCNtRfbWgwOeatlhv8jSCKz9j9W
-+GhviJq+k0NuU6VMO9Ve
-=v9G7
------END PGP SIGNATURE-----
 
---=-k9xeh85xOPalBo+ulHgr--
+Best regards,
+	Maxim Levitsky
+
+
 
