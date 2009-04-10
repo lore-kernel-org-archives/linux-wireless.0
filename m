@@ -1,95 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:33916 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230AbZDXLEH (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:55057 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755559AbZDJDH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 07:04:07 -0400
-Date: Fri, 24 Apr 2009 07:03:29 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Greg KH <greg@kroah.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090424110329.GJ2830@storm.local.network> (sfid-20090424_130413_071122_2498A62E)
-References: <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com>
+	Thu, 9 Apr 2009 23:07:58 -0400
+Received: by ewy9 with SMTP id 9so977728ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 20:07:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dwWFXG4JqVa0wfCP"
-In-Reply-To: <20090419223218.GA30599@kroah.com>
+Date: Fri, 10 Apr 2009 05:07:56 +0200
+Message-ID: <2d0a357f0904092007p4d84b35bma856d6c8d3546511@mail.gmail.com> (sfid-20090410_050804_100950_0AE6C86C)
+Subject: Patch "module: try_then_request_module must wait" in Linus tree
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John,
 
---dwWFXG4JqVa0wfCP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+this is just to inform you:
+With 2.6.30-rc1-git3 there is now a patch in upstream solving the
+problem with wireless kernel modules not to work properly.
+It seems there was an overlapping with Andreas Schwab's "module: fix
+try_then_request_module" patch [2] in Rusty's
+"linux-2.6-module-and-param" GIT branch, both patches fix the same
+issue affecting different Linux kernel modules (beyond wireless
+hardware) not to work.
+That means your revert-patch in [3] is obsolete and as you expected a
+fix will be in "-rc2" :-).
 
-Hi Greg,
 
-On Sun, Apr 19, 2009 at 03:32:18PM -0700, Greg KH wrote:
-> On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
-> > On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
-> > > Forest Bond wrote:
-> > > >=20
-> > > > However, I did have a question:
-> > > >=20
-> > > > The vt6655 driver builds viawget.ko, and the vt6656 driver builds v=
-ntwusb.ko.
-> > > > Should the directories be named "viawget" and "vntwusb," respective=
-ly, or is it
-> > > > appropriate for them to be named "vt6655" and "vt6656"?
-> > >=20
-> > > Of course Greg has the final say, but I vote to keep the directories =
-with the
-> > > vt6656 name and change the name of the driver, which is defined in  t=
-he line
-> > > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the ven=
-dor driver.
-> >=20
-> > This makes sense to me.  I'll proceed this way for now.  Greg, let me k=
-now if
-> > you'd prefer I didn't do this.
->=20
-> No objection from me.
+Kind Regards,
+Sedat
 
-The following git repository has a vt6655 branch and a vt6656 branch:
+P.S.:
+* [1] and [2] are identical.
+* [1], [2] and [3] fix the same issue.
+* Here on my laptop iwl3945-driver works fine with all three patches (tested).
 
-  http://www.alittletooquiet.net/media/code/vt665x.git
-
-The vt6655 branch contains pretty much all of the work I'll likely be able =
-to do
-for that driver.  The vt6656 branch needs more work.  I've not gone farther=
- than
-build-testing either, at this point.
-
-As I've mentioned before, some of this kind of work is really a bit outside=
- my
-usual domain, so if you do look at it, I'd appreciate feedback.
-
-Feel free to make requests.
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---dwWFXG4JqVa0wfCP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJ8ZyBRO4fQQdv5AwRAn9cAKDRnowfb0WEGPFE4UmyLMg6CtQHhgCggM+N
-ZvfFP7WdO/9eJy6VzlWQk4c=
-=WTva
------END PGP SIGNATURE-----
-
---dwWFXG4JqVa0wfCP--
+[1] Upstream: "module: try_then_request_module must wait" (Linus tree,
+Author: Herbert Xu)
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=97c18e2c7a8e36d2d83d50ee070314aadac73a11
+[2] Andreas Schwab's "module: fix try_then_request_module" patch
+(rusty linux-2.6-module-and-param tree)
+http://git.kernel.org/?p=linux/kernel/git/rusty/linux-2.6-module-and-param.git;a=commit;h=8188c26f4bdd6ea8ae9f018e24ee8609394020f4
+[3] Wireless-Testing: "Revert "module: create a request_module_nowait()"
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=99535e1f80edd3c06461b94d65be38930b9dc553
