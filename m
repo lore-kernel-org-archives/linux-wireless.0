@@ -1,119 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:38104 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760840AbZDHSVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 14:21:17 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/18] iwl3945: use iwl_get_sta_id from iwlwifi
-Date: Wed,  8 Apr 2009 11:26:43 -0700
-Message-Id: <1239215212-1657-10-git-send-email-reinette.chatre@intel.com> (sfid-20090408_202130_049132_7E2ED13E)
-In-Reply-To: <1239215212-1657-9-git-send-email-reinette.chatre@intel.com>
-References: <1239215212-1657-1-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-2-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-3-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-4-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-5-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-6-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-7-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-8-git-send-email-reinette.chatre@intel.com>
- <1239215212-1657-9-git-send-email-reinette.chatre@intel.com>
+Received: from fmmailgate02.web.de ([217.72.192.227]:47274 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbZDKB6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2009 21:58:15 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] p54: remove obsolet signal quality calculation
+Date: Sat, 11 Apr 2009 03:58:14 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200904110358.15052.chunkeey@web.de> (sfid-20090411_035817_802078_7F67F777)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+The signal quality percentage is now calculated by mac80211 stack.
 
-iwl3945 can now use iwl_get_sta_id.
-
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   61 +--------------------------
- 1 files changed, 1 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index c1f3324..c3d6caf 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -712,65 +712,6 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
- 	tx->next_frame_len = 0;
- }
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index d57e0ca..c9d564c 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -958,8 +958,6 @@ static int p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
  
--/**
-- * iwl3945_get_sta_id - Find station's index within station table
-- */
--static int iwl3945_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
--{
--	int sta_id;
--	u16 fc = le16_to_cpu(hdr->frame_control);
--
--	/* If this frame is broadcast or management, use broadcast station id */
--	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
--	    is_multicast_ether_addr(hdr->addr1))
--		return priv->hw_params.bcast_sta_id;
--
--	switch (priv->iw_mode) {
--
--	/* If we are a client station in a BSS network, use the special
--	 * AP station entry (that's the only station we communicate with) */
--	case NL80211_IFTYPE_STATION:
--		return IWL_AP_ID;
--
--	/* If we are an AP, then find the station, or use BCAST */
--	case NL80211_IFTYPE_AP:
--		sta_id = priv->cfg->ops->smgmt->find_station(priv, hdr->addr1);
--		if (sta_id != IWL_INVALID_STATION)
--			return sta_id;
--		return priv->hw_params.bcast_sta_id;
--
--	/* If this frame is going out to an IBSS network, find the station,
--	 * or create a new station table entry */
--	case NL80211_IFTYPE_ADHOC: {
--		/* Create new station table entry */
--		sta_id = priv->cfg->ops->smgmt->find_station(priv, hdr->addr1);
--		if (sta_id != IWL_INVALID_STATION)
--			return sta_id;
--
--		sta_id = priv->cfg->ops->smgmt->add_station(priv,
--				hdr->addr1, 0, CMD_ASYNC, NULL);
--
--		if (sta_id != IWL_INVALID_STATION)
--			return sta_id;
--
--		IWL_DEBUG_DROP(priv, "Station %pM not in station map. "
--			       "Defaulting to broadcast...\n",
--			       hdr->addr1);
--		iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
--		return priv->hw_params.bcast_sta_id;
--	}
--	/* If we are in monitor mode, use BCAST. This is required for
--	 * packet injection. */
--	case NL80211_IFTYPE_MONITOR:
--		return priv->hw_params.bcast_sta_id;
--
--	default:
--		IWL_WARN(priv, "Unknown mode of operation: %d\n",
--			priv->iw_mode);
--		return priv->hw_params.bcast_sta_id;
--	}
--}
--
- /*
-  * start REPLY_TX command process
-  */
-@@ -836,7 +777,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	hdr_len = ieee80211_hdrlen(fc);
- 
- 	/* Find (or create) index into station table for destination station */
--	sta_id = iwl3945_get_sta_id(priv, hdr);
-+	sta_id = iwl_get_sta_id(priv, hdr);
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
- 			       hdr->addr1);
--- 
-1.5.6.3
-
+ 	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
+ 	rx_status.noise = priv->noise;
+-	/* XX correct? */
+-	rx_status.qual = (100 * hdr->rssi) / 127;
+ 	if (hdr->rate & 0x10)
+ 		rx_status.flag |= RX_FLAG_SHORTPRE;
+ 	if (dev->conf.channel->band == IEEE80211_BAND_5GHZ)
