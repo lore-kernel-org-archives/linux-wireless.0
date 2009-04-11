@@ -1,83 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36413 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:36133 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754814AbZD3QJk (ORCPT
+	with ESMTP id S1751562AbZDKLeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 12:09:40 -0400
-Subject: Re: [RFC v6] rfkill: rewrite
+	Sat, 11 Apr 2009 07:34:14 -0400
+Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
+ recently
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>,
-	Matthew Garrett <mjg@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <20090430155316.GF28027@khazad-dum.debian.net>
-References: <1238349195.24972.5.camel@johannes.local>
-	 <1239745712.4205.17.camel@johannes.local>
-	 <1239750483.4205.28.camel@johannes.local>
-	 <20090430031903.GD18827@khazad-dum.debian.net>
-	 <1241104014.29878.12.camel@johannes.local>
-	 <20090430155316.GF28027@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tRgbRxxx/UT7ZoTwabhO"
-Date: Thu, 30 Apr 2009 18:09:08 +0200
-Message-Id: <1241107748.29878.19.camel@johannes.local>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1239395434.13792.3.camel@maxim-laptop> (sfid-20090410_223110_294055_69850902)
+References: <1239062401.4705.23.camel@maxim-laptop>
+	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
+	 <1239108689.15015.3.camel@maxim-laptop>
+	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
+	 <1239109497.15015.12.camel@maxim-laptop>
+	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
+	 <1239110412.15015.23.camel@maxim-laptop>
+	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
+	 <1239112310.15015.25.camel@maxim-laptop>
+	 <1239135878.17958.11.camel@maxim-laptop>
+	 (sfid-20090407_222443_633750_085B264D)  <1239136637.7475.57.camel@johannes.local>
+	 <1239395434.13792.3.camel@maxim-laptop>
+	 (sfid-20090410_223110_294055_69850902)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cIiVCE7xJKDOing6CbRd"
+Date: Sat, 11 Apr 2009 13:34:11 +0200
+Message-Id: <1239449651.17031.42.camel@johannes.local> (sfid-20090411_133417_212159_B921F452)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-tRgbRxxx/UT7ZoTwabhO
+--=-cIiVCE7xJKDOing6CbRd
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-30 at 12:53 -0300, Henrique de Moraes Holschuh wrote:
+On Fri, 2009-04-10 at 23:30 +0300, Maxim Levitsky wrote:
 
-> > Actually, I was going to clean this up, and then I noticed you're
-> > wrong. :) Returning ERR_PTR(-ENODEV) is intentional, in the non-RFKILL
-> > case. Imagine a driver like this:
+> It is.
 >=20
-> Well, that's confusing as all heck... document it, please? =20
+> I have just compiled iwlwifi.git tree, and same message is there:
+>=20
+>=20
+>=20
+> > [ 1666.298390] ------------[ cut here ]------------
+> > [ 1666.298395] WARNING: at /home/maxim/software/kernel/linux-2.6/net/wi=
+reless/core.h:79 nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
+> > [ 1666.298399] Hardware name: Aspire 5720    =20
 
-Well, ok. I don't really think it's all that confusing since you don't
-need to think about the non-RFKILL code, you can just write the code as
-though rfkill was always enabled.
+> > [ 1666.298473] Pid: 13164, comm: wpa_supplicant Tainted: P           2.=
+6.29-wl #19
+> > [ 1666.298477] Call Trace:
+> > [ 1666.298490]  [<ffffffff80241320>] warn_slowpath+0xd0/0x130
+> > [ 1666.298504]  [<ffffffffa00f9ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg=
+80211]
+> > [ 1666.298512]  [<ffffffff802a8263>] ? __alloc_pages_internal+0xe3/0x4f=
+0
+> > [ 1666.298525]  [<ffffffffa00f965d>] nl80211_send_wiphy+0x8bd/0xa20 [cf=
+g80211]
 
-> I still think in
-> that case, we'd be better off if rfkill_alloc always uses the ERR_PTR
-> convention.
+Then your stacktrace is crap -- please apply the patch I just sent you.
 
-Umm, no, think again. If we do that, the driver won't do
-	if (!rf)
-but
-	if (IS_ERR(rf))
-and the advantage is lost.
+> On top of that I need to note that NM doesn't show signal strenghts
+> correctly.
+> Instead it shows 100% for all AP except the current active one.
 
-This is exactly what debugfs does too.
+Separate thing -- don't hide it in this thread. I'll not even think
+about looking at it here.
 
 johannes
 
---=-tRgbRxxx/UT7ZoTwabhO
+--=-cIiVCE7xJKDOing6CbRd
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ+c0iAAoJEKVg1VMiehFYUNMP/2ykYS05wuSgWwKD5kiA1i98
-1BHyjjkOLR43VJNPH3xAml5t9SsuFbYl/XsX5G6TGRUbikjJ9UKlJdUppV3DP78I
-E9y9/jBqMtxwG1wk8NlQhMRDMr4gT4Rq3N/jbP67S+0BhCrM+3brr/5G8oumOD7e
-oQG2bYrXG45XgLQwPyiRFgHF9J9R3fWTA1v/rzaWtcGxpTQGU/BS5XDRk63Htfvr
-20+SieToNZRpG4iqCgN0LYgDve1aci1UZX1LbzMIP0RPozDMW9lNsDZYPsP3kHUu
-c/TDVg2HDDFOawg0pHtDwpnj3VuEzGNxNWy5nPfBwxePzff23xNQcNTHDetjr3rm
-/IClnT4Qu05wpjhtI/H6L5Enej37ToSvlEYOQ24Y5LAqlwNGoi3MC2b+OOjPfO/I
-H82ebjrSiu+cpG4j0TQ8XaCtHYzpY9Eb8/N4FfgF4davmW6tjN1RQCm033OTWf6S
-5sRNQfDumkp4o58ht3WkSL6KWWbjwT5gNqfdrJTiSesfRf7TI5sMs9LVfKbulL8h
-qAgOWDAjZWQMtOxPStRskYGu9eFwp/tseWMWsyBRppWBsvXN0sleSUVc3KzLZJhg
-X5e51ojNqbSvdzgScIhpEWmDWhQYXrJaaPAcXCwVS1oun8jPqifaFNBHyxfE3DCI
-t8VnKLq0rKK/aXjrAKvW
-=m6Mi
+iQIcBAABAgAGBQJJ4IAxAAoJEKVg1VMiehFY334QALQJkG7apQeycmp9qmTBs7D1
+qW6anewEsc++yTamU1/8TS7PBMTx5+fI+7NXq8c5LKnkkIJsrWR/a18q0jyTUN9I
+SSH7m4Y6x20qLm4ZNbPS0+hYwaukAtlfK2ebqlJ5NjLXea6mNesn1nQ22s7/ivt4
+HipzY8cmxt4x+TDD4IvpQEhieCZagqM5VlUBvd6INrUpm616VeAGpPRXG5JNrnkf
+PvrWT2QFk7karxfF7OVANzyPLbqfVw1TsTiGeouVWJMw6/qUHRV93Uf9mFvfFBrq
+F0Kf1pw212EEFWD85k6mfz+Z+enTEjd6Ib2k9RzmuA+hcxaREQLQtIkC1i4syyBq
+S4TRcQwVZ2CSLUa7ZrCjAlGnXIcDvWXYrj7HzJ94qAW4KDH28w1oThMjzu1AoGeW
+GteRy52XhleZdlzDrWURYlq05oidnMyFS1QTgsV5FtkdZGhsbuX6cXVNqVpPiOjI
+HNIPxTS1k0RCSod0eX6rE0JOpuIdCG0GK8ep6PV2bb/Wg39jheh2fVrvJAIqy5MK
+ulGwKJHWqXA8HFJiQNKiTDg07f1kqCaPeATQ/a5oBaMPHv8HRVsaOPPUFoWpy7v1
+JF3my1iYJlPTitIloR9aKqU6szOf8kK9k8dJ4Chr5tuKrmS5B6uqNijoSlIAqqCk
+UVnH9z/PNKSWhjTz3EBm
+=wnPM
 -----END PGP SIGNATURE-----
 
---=-tRgbRxxx/UT7ZoTwabhO--
+--=-cIiVCE7xJKDOing6CbRd--
 
