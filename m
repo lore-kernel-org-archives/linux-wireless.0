@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:61249 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752933AbZDGQXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 12:23:47 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 09:23:47 -0700
-Date: Tue, 7 Apr 2009 09:23:45 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
-	sending assoc
-Message-ID: <20090407162345.GC5758@tesla> (sfid-20090407_182351_613656_70A1F156)
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com> <1239048958-11775-4-git-send-email-lrodriguez@atheros.com> <1239099071.22453.12.camel@johannes.local>
+Received: from fg-out-1718.google.com ([72.14.220.159]:14400 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbZDKE3x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Apr 2009 00:29:53 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so113789fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2009 21:29:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1239099071.22453.12.camel@johannes.local>
+In-Reply-To: <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>
+References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>
+	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>
+	 <49DE7E42.5020700@lwfinger.net>
+	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>
+Date: Sat, 11 Apr 2009 05:29:51 +0100
+Message-ID: <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com> (sfid-20090411_062957_623109_8B781B36)
+Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 07, 2009 at 03:11:11AM -0700, Johannes Berg wrote:
-> On Mon, 2009-04-06 at 16:15 -0400, Luis R. Rodriguez wrote:
-> > We weren't checking this at all.
-> > 
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >  net/mac80211/ht.c |    8 ++++++--
-> >  1 files changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-> > index 4e3c72f..967367c 100644
-> > --- a/net/mac80211/ht.c
-> > +++ b/net/mac80211/ht.c
-> > @@ -122,10 +122,14 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
-> >  		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
-> >  			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-> >  			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-> > -				channel_type = NL80211_CHAN_HT40PLUS;
-> > +				if (!(local->hw.conf.channel->flags &
-> > +				    IEEE80211_CHAN_NO_HT40PLUS))
-> > +					channel_type = NL80211_CHAN_HT40PLUS;
-> 
-> This patch is not sufficient -- you also need to modify
-> ieee80211_send_assoc. Otherwise we end up telling the AP that we support
-> HT40, but tuning the hardware to HT20.
+On Sat, Apr 11, 2009 at 5:23 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
 
-Like this?
+> I just gave your patch against compat-wireless, and there isn't any
+> noticeable effect other than
+> these three lines in dmesg - which at least shows that the new code is active:
 
-                switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-                case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-                        if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
-                                cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-                                cap &= ~IEEE80211_HT_CAP_SGI_40;
-                        }
-                        break;
-                case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-                        if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
-                                cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-                                cap &= ~IEEE80211_HT_CAP_SGI_40;
-                        }
-                    
-  Luis 
+Oh, I forgot to mention that to test this code against
+compat-wireless, appending "CONFIG_RTL8187_LEDS=y" to config.mk does
+the job.
+
+I am wonder if we actually needs an extra Kconfig for this - at least
+in my case, the code has no ill effect with device which hasn't got an
+RX/TX LED. (other than possibly a small theoretical performance loss
+from do extra non-useful work).
