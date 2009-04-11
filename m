@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:39191 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbZDFIRm (ORCPT
+Received: from ganymede.vroon.org ([195.66.242.11]:45735 "EHLO
+	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752123AbZDKQaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 04:17:42 -0400
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k becon loss messages
-References: <1238923439.4120.9.camel@localhost.localdomain>
-	<1238925174.4120.12.camel@localhost.localdomain>
-	<87bprbif2f.fsf@litku.valot.fi>
-	<200904060914.32245.helmut.schaa@gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 06 Apr 2009 11:17:34 +0300
-In-Reply-To: <200904060914.32245.helmut.schaa@gmail.com> (Helmut Schaa's message of "Mon\, 6 Apr 2009 09\:14\:31 +0200")
-Message-ID: <873acmyz4x.fsf@litku.valot.fi> (sfid-20090406_101746_845269_7E89AF59)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 11 Apr 2009 12:30:08 -0400
+Date: Sat, 11 Apr 2009 17:19:55 +0100
+From: Tony Vroon <tony@vroon.org>
+To: Grzegorz Nowakowski <krecik@hell.pl>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k blind to nearby network
+Message-ID: <20090411171955.76c48709@vroon.org> (sfid-20090411_183011_797851_7EBB522E)
+In-Reply-To: <20090410213958.GA12571@hell.pl>
+References: <20090410213958.GA12571@hell.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
-
->> Then there is something happening in ath9k or your AP which prevents
->> ath9k from receiving beacons. Try pinging your AP with 100 ms
->> interval. Do you see anything happening in 120 s intervals?
->
-> NetworkManager typically scans every 120 seconds and I can also trigger
-> the messages by a manual scan with iwlist. I did not dig any further but
-> the messages seem to appear right at the end of the scan. Tried with iwlagn
-> and both sw_scan and hw_scan.
-
-Thanks, this was valuable info. It might be that my beacon filtering
-patches broke something related to scanning and beacon loss check. I'll
-take a look at this.
-
--- 
-Kalle Valo
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBGcmks
+IDEwIEFwciAyMDA5IDIzOjM5OjU4ICswMjAwDQpHcnplZ29yeiBOb3dha293c2tpIDxrcmVjaWtA
+aGVsbC5wbD4gd3JvdGU6DQo+IFRoZSBzeW1wdG9tIGlzIHRoYXQgd2l0aCBib3RoIE5ldHdvcmtN
+YW5hZ2VyIGFuZCBXSUNEIChhbmQgIml3bGlzdA0KPiA8aWY+IHNjYW5uaW5nIikgSSBkb24ndCBz
+ZWUgbXkgaG9tZSBuZXR3b3JrIG9uIHRoZSBsaXN0LiAgSSBzZWUgYWxsDQo+IG90aGVyIG5laWdo
+Ym91cmluZyBuZXR3b3JrcyBhcm91bmQgYW5kIEknbSBldmVuIGFibGUgdG8gY29ubmVjdCBpZg0K
+PiBhbnkgaXMgb3Blbi4NCg0KUGxlYXNlIGRvdWJsZWNoZWNrIHlvdXIgd2lyZWxlc3MgcmVndWxh
+dG9yeSBzZXR0aW5nLiBPbiB0aGUgZGVmYXVsdA0KIndvcmxkIiBkb21haW4sIGl0IGlzIHVubGlr
+ZWx5IHlvdSB3aWxsIGJlIGFibGUgdG8gc2VlIG5ldHdvcmtzIG9uDQpjaGFubmVsIDEzLiBZb3Ug
+bWF5IHdlbGwgaGF2ZSBjaG9zZW4gdGhhdCBzcGVjaWZpYyBjaGFubmVsIGJlY2F1c2UgaXQNCndh
+cyBzbyBxdWlldC4NCklmIHNvLCB5b3UgbmVlZCB0bzoNCml3IHJlZyBzZXQgUEwNCg0KQ29uZmly
+bSB0aGF0IGl0IGdvdCBzZXQgYnkgaXNzdWluZzoNCml3IHJlZyBnZXQNCg0KVGhlIGV4cGVjdGVk
+IG91dHB1dCBpcyBhbG9uZyB0aGUgbGluZXMgb2Y6DQpjb3VudHJ5IFBMOg0KCSgyNDAyIC0gMjQ4
+MiBAIDQwKSwgKE4vQSwgMjApDQoJKDUxNzAgLSA1MjUwIEAgNDApLCAoTi9BLCAyMCkNCgkoNTI1
+MCAtIDUzMzAgQCA0MCksIChOL0EsIDIwKSwgREZTDQoJKDU0OTAgLSA1NzEwIEAgNDApLCAoTi9B
+LCAyNyksIERGUw0KDQpSZWdhcmRzLA0KVG9ueSBWLg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJF
+LS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMTEgKEdOVS9MaW51eCkNCg0KaUVZRUFSRUNBQVlG
+QWtuZ3d6QUFDZ2tRcDV2VzRyVUZqNW9KUlFDZlZhNVlnb095U21TNHlySnhSV0pkV1U4dA0KZi8w
+QW9KZ0xFNEtiT01iRGtIcHA5ZTVaRmZ0dXlEMjANCj14THhCDQotLS0tLUVORCBQR1AgU0lHTkFU
+VVJFLS0tLS0NCg==
