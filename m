@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60582 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754681AbZDPPpN (ORCPT
+Received: from fmailhost04.isp.att.net ([204.127.217.104]:43848 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbZDLFoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 11:45:13 -0400
-Date: Thu, 16 Apr 2009 18:44:53 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Allow scan to be requested in AP mode
-Message-ID: <20090416154453.GA7311@jm.kir.nu> (sfid-20090416_174516_953775_6A788077)
+	Sun, 12 Apr 2009 01:44:37 -0400
+Message-ID: <49E17FB4.4050807@lwfinger.net> (sfid-20090412_074440_888953_47040243)
+Date: Sun, 12 Apr 2009 00:44:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
+References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>	 <49DE7E42.5020700@lwfinger.net>	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>	 <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com>	 <49E0C713.4040507@lwfinger.net> <3ace41890904112157r2037946xddd8fca9222fd97e@mail.gmail.com>
+In-Reply-To: <3ace41890904112157r2037946xddd8fca9222fd97e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can allow scan requests in AP mode as long as the interface has not
-yet been configured to send out Beacon frames (or if beaconing has
-been disabled prior to the scan request). This makes it easier to scan
-for neighboring BSSes during AP initialization and makes it possible
-to run a scan without setting the interface down, if needed. Without
-this change, the only available option would be to set the interface
-down, move into station mode, and set the interface up, prior to
-requesting the scan.
+Hin-Tak Leung wrote:
+> 
+> Thanks for the explanation. Depending (silently) on other kernel
+> requirements is certainly fine.
+> I am just thinking we can keep it simple, and wondering if we need
+> another user-configurable option.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+It is not user configurable. The revised Kconfig selects it automatically if
+MAC80211_LEDS is set and LEDS_CLASS is y or m. The user never sees it in the
+configuration process.
 
----
- net/mac80211/cfg.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> BTW, I had a hard lock-up on suspend - it hasn't happened for
+> months... while the module doesn't suspend properly, I have
+> unload-on-sleep configured and it has work mostly fine for some
+> months.  The vendor code is quite lacking in suspend/resume support,
+> and if you are going to prepare another iteration of the LED patch,
+> please give this a thought.
+> on possible problem with this.
 
---- uml.orig/net/mac80211/cfg.c	2009-04-16 18:20:19.000000000 +0300
-+++ uml/net/mac80211/cfg.c	2009-04-16 18:33:44.000000000 +0300
-@@ -1167,7 +1167,8 @@ static int ieee80211_scan(struct wiphy *
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
- 	    sdata->vif.type != NL80211_IFTYPE_ADHOC &&
--	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
-+	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
-+	    (sdata->vif.type != NL80211_IFTYPE_AP || sdata->u.ap.beacon))
- 		return -EOPNOTSUPP;
- 
- 	return ieee80211_request_scan(sdata, req);
+Thanks for the heads up. I have not been able to suspend my computer due to
+other problems, but I'll see what I can find.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+On another subject, I have been working with the vendor driver from
+rtl8187B_linux_26.1036.0708.2008. I stripped out a lot of the dead code and made
+the modifications so that it compiles cleanly with kernel 2.6.30-rc1. I also
+modified it to handle my RTL8187B stick with the 8187 ID. The driver scans OK,
+but so far it has not associated with my WPA2 AP. My hope is to get it running
+so that I can compare throughput with the current Linux driver.
+
+Larry
+
