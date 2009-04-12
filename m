@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbZDGIQw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:24535 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755673AbZDLJWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 04:16:52 -0400
-Subject: Re: What is needed to inplement a AP support in a driver?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1239062777.4705.30.camel@maxim-laptop> (sfid-20090407_020641_627468_1583988E)
-References: <1239062777.4705.30.camel@maxim-laptop>
-	 (sfid-20090407_020641_627468_1583988E)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4ey0h42V0BavqnhUBLvr"
-Date: Tue, 07 Apr 2009 10:16:45 +0200
-Message-Id: <1239092205.22453.0.camel@johannes.local> (sfid-20090407_101656_791184_7BB5D4D1)
-Mime-Version: 1.0
+	Sun, 12 Apr 2009 05:22:20 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so226472fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Apr 2009 02:22:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <49E17FB4.4050807@lwfinger.net>
+References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>
+	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>
+	 <49DE7E42.5020700@lwfinger.net>
+	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>
+	 <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com>
+	 <49E0C713.4040507@lwfinger.net>
+	 <3ace41890904112157r2037946xddd8fca9222fd97e@mail.gmail.com>
+	 <49E17FB4.4050807@lwfinger.net>
+Date: Sun, 12 Apr 2009 10:22:18 +0100
+Message-ID: <3ace41890904120222u151becb7pe2cb07a816a51d73@mail.gmail.com> (sfid-20090412_112225_085306_4EB60169)
+Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Apr 12, 2009 at 6:44 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> It is not user configurable. The revised Kconfig selects it automatically if
+> MAC80211_LEDS is set and LEDS_CLASS is y or m. The user never sees it in the
+> configuration process.
 
---=-4ey0h42V0BavqnhUBLvr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's great and that's how I think it should work.
 
-On Tue, 2009-04-07 at 03:06 +0300, Maxim Levitsky wrote:
-> I recently found that now ath5k supports AP mode.
-> I also found that most of the work is now done in userspace.
->=20
-> Since many drivers including my IWL3945 support sending beacons for IBSS
-> (strictly speaking userspace can send them too, but this is  sub
-> optimal), what else driver must support for AP?
+> Thanks for the heads up. I have not been able to suspend my computer due to
+> other problems, but I'll see what I can find.
 
-http://wireless.kernel.org/en/developers/Documentation/mac80211/API
+My guess is that it is probably related to resource to do with the new
+work-queue.
 
-> If I patch it to support it (just add ap to list of allowed modes) will
-> it work? (I soon anyway try out....)
+> On another subject, I have been working with the vendor driver from
+> rtl8187B_linux_26.1036.0708.2008. I stripped out a lot of the dead code and made
+> the modifications so that it compiles cleanly with kernel 2.6.30-rc1. I also
+> modified it to handle my RTL8187B stick with the 8187 ID. The driver scans OK,
+> but so far it has not associated with my WPA2 AP. My hope is to get it running
+> so that I can compare throughput with the current Linux driver.
 
-no.
-
-johannes
-
---=-4ey0h42V0BavqnhUBLvr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ2wvrAAoJEKVg1VMiehFYFDAP/0r0nU/k0maS13Q0ZbrRG6FK
-JwtqUSKo67PXSOxHyfCKeLYMfYk/FfNqfEIbg/rNBkjK3J9Oj4iL6vztZzONhd/0
-8zXjq6ocTzj0zbS/ZNTTgb1VLE34Zt3nxj5MDQyq3B/Qojqk99wp6JK8NFOcqERC
-2AJNzl3HffU+T34YEZ0sTz2wzLwQGcsKcqvcD5smGbWReDdazU1i2KGotmxM2e+H
-BnO2PVO8Mu+1NvEiIMEY0FQXEqecqEDBPlKfi4xBXPQaO4wYBTheCZjb7zoPaxA5
-k7PDuNNnwLOmaeTC7Z81/jjXn1SKn9pNe/Dnyp8zcRsXcVeSYMnBDLRcyRjYD3HY
-zbxfYzpbsCjbkNqONtLk3zn11Gv8SRrnAaEZCieR4FZKgcwKzbaWebergcMncMa3
-ejvtUMY0Vj+hYDbdFj3hoNkFLuQskm28AhsS37mgUznaSiWVvI3xaFZmSZ+WymUD
-p5/4g3jtm83aN6dU6iLAJl47uYL+0R4vtzTmfMygiV6HGTorTpm3SFWA3uhWDd5e
-NeXjeo93W5Bpfg9A/69G8tkEaDrqk88SIEx2MZeT83kaXhIHT95SOp86bD8dDpp9
-gnEy3ntSbrdb6TSIV2UWp+GhkEGYPBRoPNP+WIxcHZ86iufOuRBB4RSq63O23lQS
-QpRe8vY4WBtCo83MXe/n
-=P/6U
------END PGP SIGNATURE-----
-
---=-4ey0h42V0BavqnhUBLvr--
-
+That's quite some work! I wouldn't mind seeing the diff, or even the
+incremental diffs, if you have done it in git.
+I had an old patch for beyond 2.6.28 but never got it to work, I
+think. Have some problem with porting forward another vendor driver
+(the zd1211) and can certainly benefit from some tips.
