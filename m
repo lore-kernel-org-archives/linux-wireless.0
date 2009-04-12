@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51801 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756751AbZDHNpt (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:65414 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751641AbZDLWoB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 09:45:49 -0400
-Date: Wed, 8 Apr 2009 09:45:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: unreachable code in airo_set_auth()
-Message-ID: <20090408134504.GA24452@tuxdriver.com> (sfid-20090408_154552_443158_587543AA)
-References: <alpine.DEB.2.00.0904072049540.8684@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.0904072049540.8684@bicker>
+	Sun, 12 Apr 2009 18:44:01 -0400
+Received: by bwz17 with SMTP id 17so1823447bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Apr 2009 15:43:59 -0700 (PDT)
+Subject: A warning in latest -git 2.6.30-rc1
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain
+Date: Mon, 13 Apr 2009 01:43:56 +0300
+Message-Id: <1239576236.3814.2.camel@maxim-laptop> (sfid-20090413_004409_281211_D9E014F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 08, 2009 at 02:02:41PM +0300, Dan Carpenter wrote:
-> Smatch (http://repo.or.cz/w/smatch.git) complains about unreachable code 
-> in airo_set_auth() from drivers/net/wireless/airo.c
+I have just noticed this, seems to be harmless, everything works fine:
+
+
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250121] ------------[ cut here ]------------
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250128] WARNING: at /home/maxim/software/kernel/linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c:496 iwl3945_mac_set_key+0x7e5/0x7f0 [iwl3945]()
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250134] Hardware name: Aspire 5720     
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250137] no space for a new keyModules linked in: uhci_hcd af_packet nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc cpufreq_powersave cpufreq_conservative cpufreq_userspace acpi_cpufreq coretemp uvcvideo videodev v4l1_compat v4l2_compat_ioctl32 sbp2 joydev iwl3945 iwlcore psmouse snd_hda_codec_realtek rfkill ehci_hcd tg3 snd_hda_intel snd_hda_codec iTCO_wdt mac80211 nvidia(P) ohci1394 ricoh_mmc sdhci_pci sdhci evdev serio_raw libphy snd_hwdep iTCO_vendor_support usbcore snd_pcm snd_timer snd_page_alloc ext3 jbd mbcache fuse
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250208] Pid: 8, comm: events/0 Tainted: P        W  2.6.30-rc1-vanilla #5
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250212] Call Trace:
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250224]  [<ffffffff802463f0>] warn_slowpath+0xd0/0x130
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250233]  [<ffffffff802c8bdf>] ? __slab_alloc+0xbf/0x760
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250241]  [<ffffffff802e60d1>] ? alloc_inode+0x51/0x60
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250247]  [<ffffffff802e3a1f>] ? __d_lookup+0xcf/0x150
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250255]  [<ffffffff8035988c>] ? security_inode_alloc+0x1c/0x20
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250262]  [<ffffffff802e5fbe>] ? inode_init_always+0x12e/0x1f0
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250277]  [<ffffffffa09dc100>] ? iwl3945_mac_set_key+0x0/0x7f0 [iwl3945]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250284]  [<ffffffff8035a416>] ? security_d_instantiate+0x16/0x30
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250291]  [<ffffffff802e2d45>] ? d_instantiate+0x45/0x50
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250313]  [<ffffffffa09b97bd>] ? iwl_scan_cancel_timeout+0x2d/0xb0 [iwlcore]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250328]  [<ffffffffa09dc8e5>] iwl3945_mac_set_key+0x7e5/0x7f0 [iwl3945]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250357]  [<ffffffffa08d72fc>] __ieee80211_key_todo+0x16c/0x330 [mac80211]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250383]  [<ffffffffa08d7630>] ? key_todo+0x0/0x10 [mac80211]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250408]  [<ffffffffa08d7615>] ieee80211_key_todo+0x15/0x30 [mac80211]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250433]  [<ffffffffa08d7639>] key_todo+0x9/0x10 [mac80211]
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250441]  [<ffffffff80259713>] worker_thread+0x1a3/0x2a0
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250448]  [<ffffffff8025e290>] ? autoremove_wake_function+0x0/0x40
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250455]  [<ffffffff80259570>] ? worker_thread+0x0/0x2a0
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250461]  [<ffffffff80259570>] ? worker_thread+0x0/0x2a0
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250467]  [<ffffffff8025dd96>] kthread+0x56/0x90
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250475]  [<ffffffff8020ceea>] child_rip+0xa/0x20
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250481]  [<ffffffff8025dd40>] ? kthread+0x0/0x90
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250487]  [<ffffffff8020cee0>] ? child_rip+0x0/0x20
+> Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250492] ---[ end trace a941121475b47e49 ]---
 > 
-> We don't actually commit the changes, but instead break on line 6577.  I 
-> didn't know what was intended there.  Or who the maintainer was.
-> 
-> regards,
-> dan carpenter
-> 
->   6567          case IW_AUTH_80211_AUTH_ALG: {
->   6568                          /* FIXME: What about AUTH_OPEN?  This API seems to
->   6569                           * disallow setting our auth to AUTH_OPEN.
->   6570                           */
->   6571                          if (param->value & IW_AUTH_ALG_SHARED_KEY) {
->   6572                                  local->config.authType = AUTH_SHAREDKEY;
->   6573                          } else if (param->value & IW_AUTH_ALG_OPEN_SYSTEM) {
->   6574                                  local->config.authType = AUTH_ENCRYPT;
->   6575                          } else
->   6576                                  return -EINVAL;
->   6577                          break;
->   6578  
->   6579                          /* Commit the changes to flags if needed */
->   6580                          if (local->config.authType != currentAuthType)
->   6581                                  set_bit (FLAG_COMMIT, &local->flags);
->   6582                  }
+Happens often, usually after resume from disk. I have WPA2 network.
 
-Not sure what tree you're based upon, but the same code is farther
-down now.  Anyway:
 
-4be757dd	(Dan Williams	2006-01-30 11:58:00 -0500	6716)		break;
-4be757dd	(Dan Williams	2006-01-30 11:58:00 -0500	6717)
-4be757dd	(Dan Williams	2006-01-30 11:58:00 -0500	6718)		/* Commit the changes to flags if needed */
+This is vanilla kernel commit b0cbc861a3c05e634520b049b5cc27ad6febb51f
 
-Looks like we can blame Dan since he added those lines all in one
-patch.  Pay no attention to the person that committed... :-)
+Best regards,
+	Maxim Levitsky
 
-Dan, what is the proper fix?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
