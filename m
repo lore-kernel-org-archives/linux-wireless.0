@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:64743 "EHLO
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:42185 "EHLO
 	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461AbZDYPf4 convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752858AbZDMQ6L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 11:35:56 -0400
-Received: by fxm2 with SMTP id 2so1563645fxm.37
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Apr 2009 08:35:54 -0700 (PDT)
+	Mon, 13 Apr 2009 12:58:11 -0400
+Received: by fxm2 with SMTP id 2so2067201fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:58:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <200904251650.17142.mb@bu3sch.de>
-References: <200904251650.17142.mb@bu3sch.de>
+In-Reply-To: <20090413162439.GA30220@hell.pl>
+References: <20090410213958.GA12571@hell.pl> <20090411171955.76c48709@vroon.org>
+	<20090413162439.GA30220@hell.pl>
 From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sat, 25 Apr 2009 17:35:39 +0200
-Message-ID: <69e28c910904250835q4eed1a3if06b0fe214e9801c@mail.gmail.com> (sfid-20090425_173600_184173_0C38D3BA)
-Subject: Re: Warning in tx.c:775 invoke_tx_handlers
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+Date: Mon, 13 Apr 2009 18:57:53 +0200
+Message-ID: <69e28c910904130957o68d24c90pf49f44f8db60ece4@mail.gmail.com> (sfid-20090413_185816_417821_40D6BA72)
+Subject: Re: ath5k blind to nearby network
+To: Grzegorz Nowakowski <krecik@hell.pl>
+Cc: Tony Vroon <tony@vroon.org>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 25, 2009 at 4:50 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> I just noticed the following warning on my test-AP:
+On Mon, Apr 13, 2009 at 6:24 PM, Grzegorz Nowakowski <krecik@hell.pl> w=
+rote:
+> On Sat, Apr 11, 2009 at 05:19:55PM +0100, Tony Vroon wrote:
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>
+>> On Fri, 10 Apr 2009 23:39:58 +0200
+>> Grzegorz Nowakowski <krecik@hell.pl> wrote:
+>> > The symptom is that with both NetworkManager and WICD (and "iwlist
+>> > <if> scanning") I don't see my home network on the list. =A0I see =
+all
+>> > other neighbouring networks around and I'm even able to connect if
+>> > any is open.
+>>
+>> Please doublecheck your wireless regulatory setting. On the default
+>> "world" domain, it is unlikely you will be able to see networks on
+>> channel 13. You may well have chosen that specific channel because i=
+t
+>> was so quiet.
 >
-> [973533.018255] ------------[ cut here ]------------
-> [973533.018287] WARNING: at /home/mb/kernel/compat-wireless-2009-04-2=
-0/net/mac80211/tx.c:775 invoke_tx_handlers+0xde4/0xe10 [mac80211]()
-> [973533.018333] Hardware name:
-> [973533.018354] Modules linked in: b43 ssb mac80211 cfg80211 [last un=
-loaded: cfg80211]
-> [973533.018408] Pid: 2825, comm: lighttpd Not tainted 2.6.29.1 #1
-> [973533.018432] Call Trace:
-> [973533.018452] =A0<IRQ> =A0[<ffffffff80244470>] warn_slowpath+0xd0/0=
-x130
-> [973533.018504] =A0[<ffffffffa00153a6>] ? op32_fill_descriptor+0x46/0=
-xd0 [b43]
-> [973533.018542] =A0[<ffffffffa0042913>] ? ssb_pci_write32+0x33/0x60 [=
-ssb]
-> [973533.018573] =A0[<ffffffff802130a0>] ? nommu_map_single+0x0/0xa0
-> [973533.018608] =A0[<ffffffffa00150ed>] ? b43_dma_tx+0x54d/0x7c0 [b43=
-]
-> [973533.018652] =A0[<ffffffffa0042974>] ? ssb_pci_write16+0x34/0x60 [=
-ssb]
-> [973533.018689] =A0[<ffffffffa0017a05>] ? b43_led_turn_off+0x75/0xa0 =
-[b43]
-> [973533.018725] =A0[<ffffffffa0017b9d>] ? b43_led_brightness_set+0x3d=
-/0x70 [b43]
-> [973533.018767] =A0[<ffffffffa00e0a94>] invoke_tx_handlers+0xde4/0xe1=
-0 [mac80211]
-> [973533.018808] =A0[<ffffffffa00e11f3>] ? __ieee80211_tx+0x73/0xf0 [m=
-ac80211]
+> Gee, that was so stoopid! =A0You have guessed correctly, the channel =
+in
+> use was indeed thirteenth and 13 was its number. =A0After reconfiguri=
+ng
+> the AP to use another one everything seems to be working fine.
 >
+> But that leaves me with the question: why Windows XP on Atheros and L=
+inux
+> on Intel didn't have such trouble?
+
+Windows XP auto-configures the regulatory domain based on your
+regional settings. Intel cards have semi-hardcoded regulatory
+information in their EEPROMs, which allows Linux to automatically
+select the right regulatory settings. Atheros cards have no such
+firmware-level regulatory enforcement.
+
+>
+> Anyway, thanks for suggestion and best regards.
 > --
-> Greetings, Michael.
+> Grzegorz Nowakowski
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-wirel=
 ess" in
@@ -60,7 +67,7 @@ ess" in
 > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-=46ragmented A-MPDU?
+
 
 --=20
 Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
