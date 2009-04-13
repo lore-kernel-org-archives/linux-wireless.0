@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:20169 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbZDDKHv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Apr 2009 06:07:51 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so40083fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Apr 2009 03:07:48 -0700 (PDT)
-Message-ID: <49D7316A.4040502@gmail.com> (sfid-20090404_120816_061607_0A4FCD69)
-Date: Sat, 04 Apr 2009 12:07:38 +0200
-From: Witold Sowa <witold.sowa@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:54225 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754032AbZDMQb0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:31:26 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:31:26 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Google Summer of Code 2009: Another wireless application
-References: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com>	 <43e72e890903241256l39f5b1f9i49ce2b7a6e8099c3@mail.gmail.com>	 <49CD0FCF.3060706@gmail.com>	 <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com>	 <49D65F93.40105@gmail.com> <3ace41890904031820p7b5fc61meaf21a4bd4330f69@mail.gmail.com>
-In-Reply-To: <3ace41890904031820p7b5fc61meaf21a4bd4330f69@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18915.26581.459295.287426@gargle.gargle.HOWL> (sfid-20090413_183129_541286_B23C1AFE)
+Date: Mon, 13 Apr 2009 21:57:01 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/11] ath9k: Remove CHANNEL_CW_INT handling in ath9k_hw_calibrate
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> (Hi Till!) - personally I like to see AP mode in network manager...
-> there are two students on this (neither look too promising on first
-> glance, but I could be wrong.)
->
-> I haven't been checking lately - seems to have fewer students this year?
->   
-Actually, I disagree. I am ready to discuss my ideas and prove that I
-have suitable skills to carry on the project.
+It is already handled properly in ath9k_hw_getnf.
 
-Witold
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 08f6902..a197041 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -871,9 +871,6 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		ath9k_hw_getnf(ah, chan);
+ 		ath9k_hw_loadnf(ah, ah->curchan);
+ 		ath9k_hw_start_nfcal(ah);
+-
+-		if (chan->channelFlags & CHANNEL_CW_INT)
+-			chan->channelFlags &= ~CHANNEL_CW_INT;
+ 	}
+ 
+ 	return iscaldone;
+-- 
+1.6.2.2
+
