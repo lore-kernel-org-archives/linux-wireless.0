@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52143 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbZDZIal (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:47910 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433AbZDMTyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 04:30:41 -0400
-Subject: Re: [PATCH] cfg80211: Remove unnecessary ksize() call
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <200904252228.55381.mb@bu3sch.de>
-References: <200904252228.55381.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ztTvN5SOEp5yyCT6KTn2"
-Date: Sun, 26 Apr 2009 10:30:31 +0200
-Message-Id: <1240734631.17781.1.camel@johannes.local> (sfid-20090426_103046_523931_94BD4C73)
-Mime-Version: 1.0
+	Mon, 13 Apr 2009 15:54:45 -0400
+Received: by fxm2 with SMTP id 2so2131175fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 12:54:43 -0700 (PDT)
+MIME-Version: 1.0
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 13 Apr 2009 21:54:27 +0200
+Message-ID: <69e28c910904131254q5f7a933aqc5614c4e0900ec17@mail.gmail.com> (sfid-20090413_215450_820711_9C96B8AB)
+Subject: [PATCH] rtl8187: Remove the "8187B chip detected" message when
+	probing RTL8187B cards
+To: John Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Content-Type: multipart/mixed; boundary=000e0cd28e9ce43d1404677515f9
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-ztTvN5SOEp5yyCT6KTn2
-Content-Type: text/plain
+--000e0cd28e9ce43d1404677515f9
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-04-25 at 22:28 +0200, Michael Buesch wrote:
-> This removes an unnecessary ksize() call. krealloc() will do this
-> test internally and won't perform any allocation if the space is
-> already sufficient to hold the data.
-> So remove the redundant check.
->=20
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+This message appears to be nothing more than a leftover of the
+experimental-8187B era. Also, we print the HW type in the hwaddr line,
+making this message reduntant. And it's definitely not important
+enough to be a KERN_WARNING.
 
-Good catch, thanks.
+Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Patch also available as attachment in case Gmail linewraps it.
 
-johannes
+rtl8187_dev.c |    3 ---
+1 file changed, 3 deletions(-)
+---
 
-> ---
->  net/wireless/scan.c |    8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
->=20
-> --- wireless-testing.orig/net/wireless/scan.c
-> +++ wireless-testing/net/wireless/scan.c
-> @@ -384,11 +384,9 @@ cfg80211_bss_update(struct cfg80211_regi
->  			} else {
->  				u8 *ies =3D found->pub.information_elements;
-> =20
-> -				if (found->ies_allocated) {
-> -					if (ksize(ies) < ielen)
-> -						ies =3D krealloc(ies, ielen,
-> -							       GFP_ATOMIC);
-> -				} else
-> +				if (found->ies_allocated)
-> +					ies =3D krealloc(ies, ielen, GFP_ATOMIC);
-> +				else
->  					ies =3D kmalloc(ielen, GFP_ATOMIC);
-> =20
->  				if (ies) {
->=20
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c~
+b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index fd81884..d6d4001 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c~
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1470,9 +1470,6 @@ static int __devinit rtl8187_probe(struct
+usb_interface *intf,
+ 		(*channel++).hw_value =3D txpwr >> 8;
+ 	}
 
---=-ztTvN5SOEp5yyCT6KTn2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+-	if (priv->is_rtl8187b)
+-		printk(KERN_WARNING "rtl8187: 8187B chip detected.\n");
+-
+ 	/*
+ 	 * XXX: Once this driver supports anything that requires
+ 	 *	beacons it must implement IEEE80211_TX_CTL_ASSIGN_SEQ.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--000e0cd28e9ce43d1404677515f9
+Content-Type: text/x-patch; charset=US-ASCII; name="rtl8187-remove-8187b-warning.patch"
+Content-Disposition: attachment;
+	filename="rtl8187-remove-8187b-warning.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fthl22z00
 
-iQIcBAABAgAGBQJJ9BukAAoJEKVg1VMiehFYrdUP/j9Ej4iFYOKcPjAKLCje8ipP
-d6GAF7hCKboUnLY4X3qGckVDb+6RIipIhwdoLPVcTCpY4KHTqJxlsNl9dJaO1Xhb
-m/STL1/60Pibg0or8w9o/83sN36p1QslZNa+u/i5HWiVZwTTFXxoP8KxBj4paKV3
-ilDPbOvUu2Yqnx5qlcVu9ya2PmQ56D0vYrc5KU4kHC8xAfdT29YBR7dCtwRIYa9j
-o5LlVByHy/89G5VeEHbvhjmVDlY7aM0EU077ZhwbM+leBHmWVShkcbRjQCNkeykw
-f5JvSpVmPJlaJn1gFnNWsG/zYGtoKrCWqZqjQy3RBlooXgRVDGMUBJ5DxKNNcg4B
-L3UwwyUsYz1IwHvleoVYqsTNXChdwm7+mNyhfy8lW7C4X3Q737VOagFSk9oeMY0x
-QWEbjjcz+B7rXoBTlLyQyQLbIjG+GTed8asR3MXbilmVA2l3VPkjaF92xN3F9dKD
-gTQ7EAY7UlavLzHZRQPCeZ5PKpTZW+9Sm4c3Kp63jwDlrYsjY/aQnwGxRYV5/cSd
-bTqaHFjWt9R88zd9YC1J9Ji275n1zkvRZOnyQb6S6Pmw6rOS7gKc4KhUcmwcWJYq
-egIkRJ88V7jJQmFs/p98RzJCFQj5PDtIsCEJSXBkmloi0xnOHz5pB/xb7D8HFsbV
-yqLxIdB2D4sD+W2zjeMx
-=Vpr4
------END PGP SIGNATURE-----
-
---=-ztTvN5SOEp5yyCT6KTn2--
-
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bDgxOHgvcnRsODE4N19kZXYuY34g
+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGw4MTh4L3J0bDgxODdfZGV2LmMKaW5kZXggZmQ4MTg4
+NC4uZDZkNDAwMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsODE4eC9ydGw4
+MTg3X2Rldi5jfgorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGw4MTh4L3J0bDgxODdfZGV2
+LmMKQEAgLTE0NzAsOSArMTQ3MCw2IEBAIHN0YXRpYyBpbnQgX19kZXZpbml0IHJ0bDgxODdfcHJv
+YmUoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJCSgqY2hhbm5lbCsrKS5od192YWx1ZSA9
+IHR4cHdyID4+IDg7CiAJfQogCi0JaWYgKHByaXYtPmlzX3J0bDgxODdiKQotCQlwcmludGsoS0VS
+Tl9XQVJOSU5HICJydGw4MTg3OiA4MTg3QiBjaGlwIGRldGVjdGVkLlxuIik7Ci0KIAkvKgogCSAq
+IFhYWDogT25jZSB0aGlzIGRyaXZlciBzdXBwb3J0cyBhbnl0aGluZyB0aGF0IHJlcXVpcmVzCiAJ
+ICoJYmVhY29ucyBpdCBtdXN0IGltcGxlbWVudCBJRUVFODAyMTFfVFhfQ1RMX0FTU0lHTl9TRVEu
+Cg==
+--000e0cd28e9ce43d1404677515f9--
