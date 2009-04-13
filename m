@@ -1,78 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:43656 "EHLO coco.kroah.org"
+Received: from mail.atheros.com ([12.36.123.2]:54222 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751437AbZDYASG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 20:18:06 -0400
-Date: Fri, 24 Apr 2009 17:14:05 -0700
-From: Greg KH <greg@kroah.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090425001405.GB23173@kroah.com> (sfid-20090425_021812_451172_8F63B29E)
-References: <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com> <20090424110329.GJ2830@storm.local.network> <20090424225820.GE3343@kroah.com> <20090425000830.GO2830@storm.local.network>
+	id S1753833AbZDMQbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:31:25 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:31:25 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090425000830.GO2830@storm.local.network>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18915.26579.173650.253119@gargle.gargle.HOWL> (sfid-20090413_183128_438691_0791BCE8)
+Date: Mon, 13 Apr 2009 21:56:59 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/11] ath9k: Fix bug in calibration initialization
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 24, 2009 at 08:08:30PM -0400, Forest Bond wrote:
-> Hi,
-> 
-> On Fri, Apr 24, 2009 at 03:58:20PM -0700, Greg KH wrote:
-> > On Fri, Apr 24, 2009 at 07:03:29AM -0400, Forest Bond wrote:
-> > > Hi Greg,
-> > > 
-> > > On Sun, Apr 19, 2009 at 03:32:18PM -0700, Greg KH wrote:
-> > > > On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
-> > > > > On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
-> > > > > > Forest Bond wrote:
-> > > > > > > 
-> > > > > > > However, I did have a question:
-> > > > > > > 
-> > > > > > > The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwusb.ko.
-> > > > > > > Should the directories be named "viawget" and "vntwusb," respectively, or is it
-> > > > > > > appropriate for them to be named "vt6655" and "vt6656"?
-> > > > > > 
-> > > > > > Of course Greg has the final say, but I vote to keep the directories with the
-> > > > > > vt6656 name and change the name of the driver, which is defined in  the line
-> > > > > > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor driver.
-> > > > > 
-> > > > > This makes sense to me.  I'll proceed this way for now.  Greg, let me know if
-> > > > > you'd prefer I didn't do this.
-> > > > 
-> > > > No objection from me.
-> > > 
-> > > The following git repository has a vt6655 branch and a vt6656 branch:
-> > > 
-> > >   http://www.alittletooquiet.net/media/code/vt665x.git
-> > > 
-> > > The vt6655 branch contains pretty much all of the work I'll likely be able to do
-> > > for that driver.  The vt6656 branch needs more work.  I've not gone farther than
-> > > build-testing either, at this point.
-> > > 
-> > > As I've mentioned before, some of this kind of work is really a bit outside my
-> > > usual domain, so if you do look at it, I'd appreciate feedback.
-> > > 
-> > > Feel free to make requests.
-> > 
-> > Could you send it out as patches so it's easier to review?
-> 
-> Yes, I would've preferred that but the first patch is >1MB, so I figured it
-> might be more useful to point you to a git repository, rather than send out a
-> compressed patch.  I can send it out uncompressed if you prefer, or I can just
-> send all but the first patch (which only copies files from the upstream archive,
-> anyway).
+This patch fixes a bug in ath9k_hw_init_cal() where the wrong
+calibration was being done for non-AR9285 chipsets.
+Also add a few helpful comments.
 
-Well, I'll need all of them, including the first patch, if I'm going to
-ever apply them to the tree, so I don't mind :)
+Cc: stable@kernel.org
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   61 +++++++++++--------------------
+ 1 files changed, 22 insertions(+), 39 deletions(-)
 
-Everyone else might not care, so you can just send that one to me...
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 67375ad..08f6902 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -918,83 +918,66 @@ static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	return true;
+ }
+ 
+-bool ath9k_hw_init_cal(struct ath_hw *ah,
+-		       struct ath9k_channel *chan)
++bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
+ 		if (!ar9285_clc(ah, chan))
+ 			return false;
+-	} else if (AR_SREV_9280_10_OR_LATER(ah)) {
+-		REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
+-		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
+-		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
++	} else {
++		if (AR_SREV_9280_10_OR_LATER(ah)) {
++			REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
++			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
++		}
+ 
+-		/* Kick off the cal */
++		/* Calibrate the AGC */
+ 		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-				REG_READ(ah, AR_PHY_AGC_CONTROL) |
+-				AR_PHY_AGC_CONTROL_CAL);
++			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
++			  AR_PHY_AGC_CONTROL_CAL);
+ 
+-		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+-					AR_PHY_AGC_CONTROL_CAL, 0,
+-					AH_WAIT_TIMEOUT)) {
++		/* Poll for offset calibration complete */
++		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
++				   0, AH_WAIT_TIMEOUT)) {
+ 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+ 				"offset calibration failed to complete in 1ms; "
+ 				"noisy environment?\n");
+ 			return false;
+ 		}
+ 
+-		REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
+-		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
+-		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
+-	}
+-
+-	/* Calibrate the AGC */
+-	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-			REG_READ(ah, AR_PHY_AGC_CONTROL) |
+-			AR_PHY_AGC_CONTROL_CAL);
+-
+-	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+-				0, AH_WAIT_TIMEOUT)) {
+-		DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-			"offset calibration failed to complete in 1ms; "
+-			"noisy environment?\n");
+-		return false;
+-	}
+-
+-	if (AR_SREV_9280_10_OR_LATER(ah)) {
+-		REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
+-		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
++		if (AR_SREV_9280_10_OR_LATER(ah)) {
++			REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
++			REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
++		}
+ 	}
+ 
+ 	/* Do PA Calibration */
+ 	if (AR_SREV_9285(ah) && AR_SREV_9285_11_OR_LATER(ah))
+ 		ath9k_hw_9285_pa_cal(ah);
+ 
+-	/* Do NF Calibration */
++	/* Do NF Calibration after DC offset and other calibrations */
+ 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-			REG_READ(ah, AR_PHY_AGC_CONTROL) |
+-			AR_PHY_AGC_CONTROL_NF);
++		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
+ 
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+ 
++	/* Enable IQ, ADC Gain and ADC DC offset CALs */
+ 	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
+ 		if (ath9k_hw_iscal_supported(ah, ADC_GAIN_CAL)) {
+ 			INIT_CAL(&ah->adcgain_caldata);
+ 			INSERT_CAL(ah, &ah->adcgain_caldata);
+ 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-					"enabling ADC Gain Calibration.\n");
++				"enabling ADC Gain Calibration.\n");
+ 		}
+ 		if (ath9k_hw_iscal_supported(ah, ADC_DC_CAL)) {
+ 			INIT_CAL(&ah->adcdc_caldata);
+ 			INSERT_CAL(ah, &ah->adcdc_caldata);
+ 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-					"enabling ADC DC Calibration.\n");
++				"enabling ADC DC Calibration.\n");
+ 		}
+ 		if (ath9k_hw_iscal_supported(ah, IQ_MISMATCH_CAL)) {
+ 			INIT_CAL(&ah->iq_caldata);
+ 			INSERT_CAL(ah, &ah->iq_caldata);
+ 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-					"enabling IQ Calibration.\n");
++				"enabling IQ Calibration.\n");
+ 		}
+ 
+ 		ah->cal_list_curr = ah->cal_list;
+-- 
+1.6.2.2
 
-thanks,
-
-greg k-h
