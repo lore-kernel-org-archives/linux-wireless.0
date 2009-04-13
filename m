@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45789 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:54129 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764239AbZDHSdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 14:33:45 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel C Halperin <daniel.c.halperin@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/6] iwlwifi: do not set dual_stream_ant_msk for 3 streams
-Date: Wed,  8 Apr 2009 11:39:28 -0700
-Message-Id: <1239215972-1795-3-git-send-email-reinette.chatre@intel.com> (sfid-20090408_203406_403527_2524CAE5)
-In-Reply-To: <1239215972-1795-2-git-send-email-reinette.chatre@intel.com>
-References: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com>
- <1239215972-1795-2-git-send-email-reinette.chatre@intel.com>
+	id S1752569AbZDMQ2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:28:44 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:28:44 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18915.26414.269933.599629@gargle.gargle.HOWL> (sfid-20090413_182906_088019_FE68A537)
+Date: Mon, 13 Apr 2009 21:54:14 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/11] ath9k fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel C Halperin <daniel.c.halperin@intel.com>
+John,
 
-This patch fixes a bug introduced by commit "iwlwifi: adding MIMO3 support
-in rate scaling". We should not set the dual_stream_ant_msk (for 2x2 MIMO)
-when using a 3x3 rate, this will cause a SYSASSERT in uCode.
+A bunch of driver fixes, a few are stable candidates (2.6.29) too.
+Applies over the pending ath5k/ath9k/ar9170 merge patches and two ath9k patches.
+Please apply.
 
-Note: there is no triple_stream_ant_msk, because all three antennas are used.
+Sujith
 
-Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+Sujith (11):
+  ath9k: Handle ASPM properly for RFKILL
+  ath9k: Fix memleak on TX DMA failure
+  ath9k: Fix bug in scan termination
+  ath9k: Remove unused channel flags
+  ath9k: Fix bug in checking HT flag
+  ath9k: Fix bug in determining calibration support
+  ath9k: Initialize ANI timers
+  ath9k: Cleanup calibration interface
+  ath9k: Use a consistent naming convention
+  ath9k: Fix bug in calibration initialization
+  ath9k: Remove CHANNEL_CW_INT handling in ath9k_hw_calibrate
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 786b11d..98b6b37 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2666,9 +2666,6 @@ static void rs_fill_link_cmd(const struct iwl_priv *priv,
- 	} else if (num_of_ant(tbl_type.ant_type) == 2) {
- 		lq_cmd->general_params.dual_stream_ant_msk =
- 						tbl_type.ant_type;
--	} else if (num_of_ant(tbl_type.ant_type) == 3) {
--		lq_cmd->general_params.dual_stream_ant_msk =
--						tbl_type.ant_type;
- 	} /* otherwise we don't modify the existing value */
- 
- 	index++;
--- 
-1.5.6.3
+ drivers/net/wireless/ath/ath9k/calib.c |  123 +++++++++++++-------------------
+ drivers/net/wireless/ath/ath9k/calib.h |   33 ++++-----
+ drivers/net/wireless/ath/ath9k/hw.h    |   28 ++-----
+ drivers/net/wireless/ath/ath9k/main.c  |   62 ++++++++---------
+ drivers/net/wireless/ath/ath9k/xmit.c  |    5 +-
+ 5 files changed, 107 insertions(+), 144 deletions(-)
 
