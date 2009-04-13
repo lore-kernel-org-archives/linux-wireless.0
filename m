@@ -1,68 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56439 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbZDWRnl (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:35304 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966AbZDMUOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 13:43:41 -0400
-Subject: Re: [PATCH 3/5] iwlwifi: Fix handling of retry count of NO_ACK
- frames in  iwl-{3945|agn}-rs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <69e28c910904231036l5fb331d5u81bcbe92b7f40179@mail.gmail.com> (sfid-20090423_193653_487405_479A8CA1)
-References: <69e28c910904231036l5fb331d5u81bcbe92b7f40179@mail.gmail.com>
-	 (sfid-20090423_193653_487405_479A8CA1)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BxV43H1Z6y4FGe4jSqDN"
-Date: Thu, 23 Apr 2009 19:42:41 +0200
-Message-Id: <1240508561.30082.260.camel@johannes.local> (sfid-20090423_194345_137249_95044315)
-Mime-Version: 1.0
+	Mon, 13 Apr 2009 16:14:17 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so391192fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 13:14:15 -0700 (PDT)
+MIME-Version: 1.0
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 13 Apr 2009 22:14:00 +0200
+Message-ID: <69e28c910904131314s49f0c2e2w55b7098f662aa3fe@mail.gmail.com> (sfid-20090413_221421_218737_B3D38F02)
+Subject: [PATCH RFC] rtl8187: Call 8187L variants "RTL8187LvX" rather than
+	"RTL8187vX"
+To: John Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Content-Type: multipart/mixed; boundary=000e0cd24762c53b390467755bfa
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-BxV43H1Z6y4FGe4jSqDN
-Content-Type: text/plain; charset="UTF-8"
+--000e0cd24762c53b390467755bfa
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-23 at 19:36 +0200, G=C3=A1bor Stefanik wrote:
-> Make PID
+We call RTL8187B chips "RTL8187BvX" (X is the revision), so we should
+call RTL8187L ones "RTL8187LvX", not "RTL8187vX".
 
->  iwl-3945-rs.c |    7 ++++---
->  iwl-agn-rs.c  |   14 +++++++-------
->  2 files changed, 11 insertions(+), 10 deletions(-)
+Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
 
-Ummm.
+---
+Patch also available as an attachment if Gmail linewraps the inline version=
+.
 
-johannes
+rtl8187_dev.c |    4 ++--
+1 file changed, 2 insertions(+), 2 deletions(-)
 
---=-BxV43H1Z6y4FGe4jSqDN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+---
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c~
+b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index fd81884..0eb5c4c 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c~
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1415,10 +1415,10 @@ static int __devinit rtl8187_probe(struct
+usb_interface *intf,
+ 			priv->hw_rev =3D RTL8187BvB;
+ 			break;
+ 		case RTL818X_TX_CONF_R8187vD:
+-			chip_name =3D "RTL8187vD";
++			chip_name =3D "RTL8187LvD";
+ 			break;
+ 		default:
+-			chip_name =3D "RTL8187vB (default)";
++			chip_name =3D "RTL8187LvB (default)";
+ 		}
+        } else {
+ 		/*
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--000e0cd24762c53b390467755bfa
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="rtl8187-call-8187l-chips-rtl8187lvx.patch"
+Content-Disposition: attachment;
+	filename="rtl8187-call-8187l-chips-rtl8187lvx.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fthlo4vd0
 
-iQIcBAABAgAGBQJJ8KiLAAoJEKVg1VMiehFYjfkP+wUq39+jvqaYOGcTSxG5tHYm
-P4YxvHm7mRwr7OtizVl/QW8NrVMdQbLPPjqQSt5uFXpxnMq3+LPK/9+7pJbX3uF9
-lhQx8CGPvnfoS0lJnN9e7sUQaTbI3dwV4Fg8C5wettMwvuxLcy/U6kOS3m/jUTr4
-fUWj15/hX0UBn7JnqpvVFSJonAvQBrEzvUNk7EddC+pK3ERizhv+blPD7qFm/GSo
-zDXlXiruAxcboPIyMpzIry45CXgaPOWW4BVXrBbfS5xPdiXxBaa0iZ2cFC/MzW9L
-/CdYkZuniuZGGcK/KdnJxTlW0hkGYIwsiepRFBIYndOwB/6FvLJ01tL/iUD7X8nI
-0iBFhfh2FyX847g9IQUb+SpkxwrRZNMhAIQYh/CokXbGvw3S5CfJYAqC/TT8dUjI
-VJqhx2Px/uGEj8T0aXEf6oeoT8rq6Qh0snUzOLHyJ4QFZbgIiI0DCLBdculOnLj5
-LMSBcYy3+zej4A0DUA5/4CfckuvO2DU74Z+yqdMLxPhBIws0bw76FiVps09yM4FF
-42gKUsTjkDKoJ0EMN0REGQqPL/cf1EUkUwJMzJS2NGQc1AShm1Hgk03IPXbRzDyQ
-raYvILOutCm8R719X2BnH/IzNBXEG0UzAWzw6WLJEmy2JxFUxOgn2f5oatpEL3/a
-ZYNO+93jZ973nZZuepb/
-=tA0t
------END PGP SIGNATURE-----
-
---=-BxV43H1Z6y4FGe4jSqDN--
-
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bDgxOHgvcnRsODE4N19kZXYuY34g
+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGw4MTh4L3J0bDgxODdfZGV2LmMKaW5kZXggZmQ4MTg4
+NC4uMGViNWM0YyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsODE4eC9ydGw4
+MTg3X2Rldi5jfgorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGw4MTh4L3J0bDgxODdfZGV2
+LmMKQEAgLTE0MTUsMTAgKzE0MTUsMTAgQEAgc3RhdGljIGludCBfX2RldmluaXQgcnRsODE4N19w
+cm9iZShzdHJ1Y3QgdXNiX2ludGVyZmFjZSAqaW50ZiwKIAkJCXByaXYtPmh3X3JldiA9IFJUTDgx
+ODdCdkI7CiAJCQlicmVhazsKIAkJY2FzZSBSVEw4MThYX1RYX0NPTkZfUjgxODd2RDoKLQkJCWNo
+aXBfbmFtZSA9ICJSVEw4MTg3dkQiOworCQkJY2hpcF9uYW1lID0gIlJUTDgxODdMdkQiOwogCQkJ
+YnJlYWs7CiAJCWRlZmF1bHQ6Ci0JCQljaGlwX25hbWUgPSAiUlRMODE4N3ZCIChkZWZhdWx0KSI7
+CisJCQljaGlwX25hbWUgPSAiUlRMODE4N0x2QiAoZGVmYXVsdCkiOwogCQl9CiAgICAgICAgfSBl
+bHNlIHsKIAkJLyoK
+--000e0cd24762c53b390467755bfa--
