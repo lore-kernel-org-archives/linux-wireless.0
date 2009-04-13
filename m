@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sous-sol.org ([216.99.217.87]:56892 "EHLO sequoia.sous-sol.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752339AbZDQVMJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 17:12:09 -0400
-Date: Fri, 17 Apr 2009 13:26:00 -0700
-From: Chris Wright <chrisw@sous-sol.org>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org,
-	Arnaud Patard <apatard@mandriva.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [stable] [PATCH] rt2x00: Fix SLAB corruption during rmmod
-Message-ID: <20090417202600.GA14852@sequoia.sous-sol.org> (sfid-20090417_231213_609742_5104F055)
-References: <200904012118.12391.IvDoorn@gmail.com> <20090417001807.GA5020@hera.kernel.org> <49E7F3E6.2010809@gmail.com> <a32f33a40904162356r5dddeed8u60f63e5c0acfc506@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:54206 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753190AbZDMQbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:31:03 -0400
+Received: from mail.atheros.com ([10.10.20.86])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:31:03 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <a32f33a40904162356r5dddeed8u60f63e5c0acfc506@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18915.26558.933755.575033@gargle.gargle.HOWL> (sfid-20090413_183106_533461_C2A8EBD4)
+Date: Mon, 13 Apr 2009 21:56:38 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/11] ath9k: Remove unused channel flags
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Ivo Van Doorn (ivdoorn@gmail.com) wrote:
-> >> Who is the Author of this patch? =A0The Signed-off-by order sugges=
-ts is
-> >> Gertjan.
-> >
-> > Indeed, I have been the author of the patch.
->=20
-> Yeah, Gertjan is indeed the author, I forgot to add
-> the Fom: line at the top of the patch to make that more clear.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |   12 ------------
+ 1 files changed, 0 insertions(+), 12 deletions(-)
 
-Great, thanks, I'll add that in.
--chris
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5c4127e..7e37570 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -266,13 +266,6 @@ enum ath9k_int {
+ #define CHANNEL_HT40PLUS  0x20000
+ #define CHANNEL_HT40MINUS 0x40000
+ 
+-#define CHANNEL_INTERFERENCE    0x01
+-#define CHANNEL_DFS             0x02
+-#define CHANNEL_4MS_LIMIT       0x04
+-#define CHANNEL_DFS_CLEAR       0x08
+-#define CHANNEL_DISALLOW_ADHOC  0x10
+-#define CHANNEL_PER_11D_ADHOC   0x20
+-
+ #define CHANNEL_A           (CHANNEL_5GHZ|CHANNEL_OFDM)
+ #define CHANNEL_B           (CHANNEL_2GHZ|CHANNEL_CCK)
+ #define CHANNEL_G           (CHANNEL_2GHZ|CHANNEL_OFDM)
+@@ -303,10 +296,6 @@ struct ath9k_channel {
+ 	int16_t rawNoiseFloor;
+ };
+ 
+-#define IS_CHAN_A(_c) ((((_c)->channelFlags & CHANNEL_A) == CHANNEL_A) || \
+-       (((_c)->channelFlags & CHANNEL_A_HT20) == CHANNEL_A_HT20) || \
+-       (((_c)->channelFlags & CHANNEL_A_HT40PLUS) == CHANNEL_A_HT40PLUS) || \
+-       (((_c)->channelFlags & CHANNEL_A_HT40MINUS) == CHANNEL_A_HT40MINUS))
+ #define IS_CHAN_G(_c) ((((_c)->channelFlags & (CHANNEL_G)) == CHANNEL_G) || \
+        (((_c)->channelFlags & CHANNEL_G_HT20) == CHANNEL_G_HT20) || \
+        (((_c)->channelFlags & CHANNEL_G_HT40PLUS) == CHANNEL_G_HT40PLUS) || \
+@@ -314,7 +303,6 @@ struct ath9k_channel {
+ #define IS_CHAN_OFDM(_c) (((_c)->channelFlags & CHANNEL_OFDM) != 0)
+ #define IS_CHAN_5GHZ(_c) (((_c)->channelFlags & CHANNEL_5GHZ) != 0)
+ #define IS_CHAN_2GHZ(_c) (((_c)->channelFlags & CHANNEL_2GHZ) != 0)
+-#define IS_CHAN_PASSIVE(_c) (((_c)->channelFlags & CHANNEL_PASSIVE) != 0)
+ #define IS_CHAN_HALF_RATE(_c) (((_c)->channelFlags & CHANNEL_HALF) != 0)
+ #define IS_CHAN_QUARTER_RATE(_c) (((_c)->channelFlags & CHANNEL_QUARTER) != 0)
+ #define IS_CHAN_A_5MHZ_SPACED(_c)			\
+-- 
+1.6.2.2
+
