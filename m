@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58204 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767AbZDNNPu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 09:15:50 -0400
-Date: Tue, 14 Apr 2009 09:02:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Forest Bond <forest@alittletooquiet.net>,
-	Greg KH <greg@kroah.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090414130248.GA3291@tuxdriver.com> (sfid-20090414_151553_418915_E8A1982D)
-References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local>
+Received: from web23108.mail.ird.yahoo.com ([217.146.189.48]:20137 "HELO
+	web23108.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750979AbZDMU30 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 16:29:26 -0400
+Message-ID: <42609.6548.qm@web23108.mail.ird.yahoo.com> (sfid-20090413_222930_120948_2E27A78F)
+Date: Mon, 13 Apr 2009 20:29:23 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH RFC] rtl8187: Call 8187L variants "RTL8187LvX" rather than  "RTL8187vX"
+To: John Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	=?iso-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1239713034.17109.10.camel@johannes.local>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 14, 2009 at 02:43:54PM +0200, Johannes Berg wrote:
-> Hi Marcel,
-> 
-> > just to document the irony here. Two or three years ago at OLS, Kyle and
-> > Greg were making fun of Ubuntu merging its 5th wireless stack into their
-> > kernel. Now the staging crap is doing exactly the same.
-> 
-> :)
-> 
-> Actually, last I counted it was already 7 or 8 stacks in staging _only_.
-> This (and the other patch) will add two more. Not to mention that of
-> course we already have something like two and a half stacks in the
-> kernel tree (mac80211, in hostapd, and libipw [former ieee80211]).
 
-FWIW I had started trying to consolidate some code between those three.
-I stalled-out a bit and got distracted with the rndis_wlan cfg80211
-bits, but I hope to get back to it.  Of course, hostap seems mighty
-complex internally -- it might just have to lay there.  And libipw
-and mac80211 target different types of designs, but I hope they can
-eventually share some infrastructure in lib80211.
+--- On Mon, 13/4/09, G=E1bor Stefanik <netrolller.3d@gmail.com> wrote:
 
-None of the above is meant to disagree about the staging crap.
-Having that stuff around is at best an optimistic attempt to help a
-few stray users... :-)
+> We call RTL8187B chips "RTL8187BvX"
+> (X is the revision), so we should
+> call RTL8187L ones "RTL8187LvX", not "RTL8187vX".
+>=20
+> Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+
+I don't have a preference either way - if any, I would probably prefer =
+without the change, or use a space for readability rather than 'L', bec=
+ause the 'L' just isn't there most of the time, and there is B (which i=
+s similiar but not the same) and SE (which is completely different). It=
+ might be worth also to put a space after the B's.
+
+The way that string is currently done is largely inherited from the ven=
+dor driver, I think.
+
+
+
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
