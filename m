@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59700 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307AbZDTUbZ (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:40573 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbZDMUo1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 16:31:25 -0400
-Subject: Re: [PATCH 0/4] mac80211 powersave work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Davide Pesavento <davidepesa@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com> (sfid-20090420_222651_059133_FB461D0F)
-References: <20090416111723.904720021@sipsolutions.net>
-	 <20090420194430.GG3369@tuxdriver.com>
-	 <1240257188.4632.19.camel@johannes.local>
-	 <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com>
-	 (sfid-20090420_222651_059133_FB461D0F)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8SnfMT5ARVPq3uD1kzHx"
-Date: Mon, 20 Apr 2009 22:30:50 +0200
-Message-Id: <1240259450.4632.20.camel@johannes.local> (sfid-20090420_223127_996713_4471A3B3)
-Mime-Version: 1.0
+	Mon, 13 Apr 2009 16:44:27 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath: add module information
+Date: Mon, 13 Apr 2009 22:44:23 +0200
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200904132244.24122.chunkeey@web.de> (sfid-20090413_224429_546820_FBC23D17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds licensing information, description and author to the module.
 
---=-8SnfMT5ARVPq3uD1kzHx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+Luis,
 
-On Mon, 2009-04-20 at 22:26 +0200, Davide Pesavento wrote:
+what does your secretary say?
+As we are "borrowing" dual licensed code and I guess Atheros wants
+to keep their code "this way", right?
 
-> As I've already reported [1][2], ath9k is currently broken when power
-> saving is enabled, at least on AR5418 hardware. So please don't turn
-> it on by default yet.
-
-But if that's just a hardware/driver bug shouldn't the driver disable PS
-for that combination? It seems wrong to disable PS in the stack by
-default just because one driver has a problem with it, when that driver
-could just unset the PS support bit.
-
-johannes
-
---=-8SnfMT5ARVPq3uD1kzHx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ7Nt4AAoJEKVg1VMiehFYuxMP/2OXY9Ga6KAknNA9u+8iS+U2
-H0tlj+wCBWAXRPl2c/1fBicHTAnni76T0bbIJffLHzC6NNmO8Bmg7iy+VKoKC58q
-wNPrWh3POjUO5TF5lR+/uLk9n/n057qo7C4P08wzXEQnb3ccW5cqvTSg+/fvPlID
-VuyJpUwr47IcIR6PBV3eDl9cRQguagC5nJm6e4poCgzpTrQow8ZZ09QGYreo+e/8
-zvtAOBbRa5W8ML8cRBerV61ew+W/n+09cptgcwOAdsjMZ2Q8miAsEM4O7z+i8ce6
-6jp9MJKjf2xu3P3dbZJJj3UkoNTnZ7e7G0lRlBVXS74wldlVw7IhML6NClLsxLaK
-zBgCnPfs4SFVPbscqFQersYhl66DKuam8j6tZg0wOc9nEAC3scGg4R+1Ox0/ofd2
-4eE9+6u2C9FyAwLlS7+IlQWI3+t/u/rpm7ZEZAmtLaellEue4Z2PMGAhvLa4jhq2
-RfDQEn5OVtG2BmOQrRJAoYEW4IKg6pUWc46OBn0/ThQGZxsBIyu4h6w4mCa7LW+2
-N/0+SrcqnXeLEEzo3oSbha9CspYkK680ejwalhcVJGTBZBxTVinqciCNp/Z8cHya
-zRIhs+IA4poHsHx5uPLMO2+fvG7JiRRjgYK7acjJTu7gwNFzRkF/BeSP3potibUO
-TA+YDu8tr+A6fJTYpf/C
-=FRAY
------END PGP SIGNATURE-----
-
---=-8SnfMT5ARVPq3uD1kzHx--
-
+Regards,
+	Chr
+---
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index a005b91..4bb0132 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -3,5 +3,4 @@ obj-$(CONFIG_ATH9K)		+= ath9k/
+ obj-$(CONFIG_AR9170_USB)        += ar9170/
+ 
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+-ath-objs 		:= regd.o
+-
++ath-objs 		:= main.o regd.o
+diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+new file mode 100644
+index 0000000..c5eb144
+--- /dev/null
++++ b/drivers/net/wireless/ath/main.c
+@@ -0,0 +1,33 @@
++/*
++ * Copyright (c) 2008-2009 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++
++MODULE_AUTHOR("Atheros Communications");
++MODULE_DESCRIPTION("Shared library for Atheros wireless LAN cards.");
++MODULE_LICENSE("Dual BSD/GPL");
++
++static int __init ath_init(void)
++{
++	return 0;
++}
++module_init(ath_init);
++
++static void __exit ath_exit(void)
++{
++}
++module_exit(ath_exit);
