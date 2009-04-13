@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:60583 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755448AbZDFLFu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 07:05:50 -0400
+Received: from mail.atheros.com ([12.36.123.2]:54197 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753105AbZDMQa7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:30:59 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:30:59 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <200904061251.10965.helmut.schaa@gmail.com>
-References: <1238923439.4120.9.camel@localhost.localdomain>
-	 <200904061217.31134.mb@bu3sch.de> <87tz52xepy.fsf@litku.valot.fi>
-	 <200904061251.10965.helmut.schaa@gmail.com>
-Date: Mon, 6 Apr 2009 14:05:46 +0300
-Message-ID: <da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com> (sfid-20090406_130554_559920_D169E5AC)
-Subject: Re: ath9k becon loss messages
-From: Kalle Valo <kalle.valo@iki.fi>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18915.26556.616453.868533@gargle.gargle.HOWL> (sfid-20090413_183101_495075_E9C73AB8)
+Date: Mon, 13 Apr 2009 21:56:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/11] ath9k: Fix bug in scan termination
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 6, 2009 at 1:51 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Montag, 6. April 2009 schrieb Kalle Valo:
->
->> But ath9k nor iwlwifi don't support beacon filtering and this is a
->> problem in mac80211. We need to disable the beacon loss check in
->> mac80211, most probably by stopping the associated timer whenever
->> scanning.
->
-> Yeah, but the first execution of the timer will then also detect
-> beacon loss:
->
-> 1006 =A0 if (!((local->hw.flags & IEEE80211_HW_BEACON_FILTER) &&
-> 1007 =A0 =A0 =A0 =A0 (local->hw.conf.flags & IEEE80211_CONF_PS)) &&
-> 1008 =A0 =A0 =A0 time_after(jiffies,
-> 1009 =A0 =A0 =A0 =A0 =A0 =A0ifmgd->last_beacon + IEEE80211_MONITORING=
-_INTERVAL)) {
->
-> If the scan took longer then IEEE80211_MONITORING_INTERVAL (=3D2 sec)=
- this
-> condition will apply just after the scan finished.
+A full HW reset needs to be done on termination of a scan run.
+Not setting SC_OP_FULL_RESET resulted in doing a
+fast channel change.
 
-Not if we do "mod_timer(&ifmgd->timer, jiffies +
-IEEE80211_MONITORING_INTERVAL)" after the scan has finished. That way
-there's enought time to receive beacons before the timer triggers.
+Cc: stable@kernel.org
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> Maybe this issue could be
-> avoided by making the beacon loss detection smarter then just checkin=
-g if no
-> beacon was received within the last two seconds.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1a9bf7e..b2d129f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2749,6 +2749,7 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
+ 	mutex_lock(&sc->mutex);
+ 	aphy->state = ATH_WIPHY_ACTIVE;
+ 	sc->sc_flags &= ~SC_OP_SCANNING;
++	sc->sc_flags |= SC_OP_FULL_RESET;
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+-- 
+1.6.2.2
 
-Definitely the beacon loss logic should be smarter, but I think that
-should be improved separately. I just have tried to do small changes
-at a time to avoid regressions and I didn't even consider improving
-the beacon loss logic.
-
-Kalle
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
