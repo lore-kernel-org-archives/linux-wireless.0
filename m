@@ -1,108 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753754AbZDVJEW (ORCPT
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:45664 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753076AbZDMJGr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 05:04:22 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1240385542.3404.5.camel@localhost.localdomain>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
-	 <1240247636.5260.11.camel@localhost.localdomain>
-	 <1240248008.4632.10.camel@johannes.local>
-	 <1240248385.5260.15.camel@localhost.localdomain>
-	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
-	 <1240343775.3327.3.camel@localhost.localdomain>
-	 <1240348792.17388.46.camel@johannes.local>
-	 <1240385542.3404.5.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0rj7da77B9o2LqsizkCB"
-Date: Wed, 22 Apr 2009 11:03:49 +0200
-Message-Id: <1240391029.20308.1.camel@johannes.local> (sfid-20090422_113345_450115_FD6F47A8)
+	Mon, 13 Apr 2009 05:06:47 -0400
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: BUG: unable to handle kernel paging request (mac80211 related??)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Date: Mon, 13 Apr 2009 11:04:52 +0200
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Message-Id: <20090413090452.D78D32C4133@tippex.mynet.homeunix.org> (sfid-20090413_110653_660248_59EC6CE3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-0rj7da77B9o2LqsizkCB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The following BUG is the result of
+rmmod rt2500pci && modprobe rt2500pci && iwconfig wlan0 txpower auto
 
-Hi,
+The only odd thing that preceeded it was that I (10 minutes earlier), tried to
+change the wlan rate algo to minstrel from pid using the 
+ /sys/module/mac80211/parameters/ieee80211_default_rc_algo file.
 
-> one other weird thing happens now (except wireless-testing tree and
-> suspend/resume is broken). The first connection attempt fails horribly:
->=20
-> CTRL-EVENT-SCAN-RESULTS=20
-> Trying to authenticate with 00:23:ab:xx:xx:xx (SSID=3D'Guest' freq=3D2412=
- MHz)
-> Trying to associate with 00:23:ab:xx:xx:xx (SSID=3D'Guest' freq=3D2412 MH=
-z)
-> Associated with 00:23:ab:xx:xx:xx
-> CTRL-EVENT-CONNECTED - Connection to 00:23:ab:xx:xx:xx completed (auth) [=
-id=3D2 id_str=3D]
-> CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-> l2_packet_receive - recvfrom: Network is down
-> Failed to initiate AP scan.
-> Failed to initiate AP scan.
-> ^CCTRL-EVENT-TERMINATING - signal 2 received
->=20
-> So starting wpa_supplicant does its job fine, then running dhclient I
-> end up in the disconnect and network down and after that scanning fails.
+Mac80211 was not a module at the time, and the file went from showing 'pid' to 
+nothing, so I'm a bit unsure as to what exacly happened. Is 
+/sys/module/*/parameters/* expected to work on non-modules?
 
-???
 
-And the below kernel message is all yo uget?
+rt2500pci 0000:00:0a.0: found PCI INT A -> IRQ 11
+phy21 -> rt2500pci_validate_eeprom: EEPROM recovery - NIC: 0xfff0
+phy21 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003, rev: 00000004.
+wmaster0 (rt2500pci): not using net_device_ops yet
+phy21: Selected rate control algorithm 'pid'
+wlan0 (rt2500pci): not using net_device_ops yet
+phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+wlan0: authenticate with AP 00:18:39:c0:5f:50
+phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+wlan0: authenticate with AP 00:18:39:c0:5f:50
+wlan0: authenticate with AP 00:18:39:c0:5f:50
+wlan0: authenticate with AP 00:18:39:c0:5f:50
+wlan0: authentication with AP 00:18:39:c0:5f:50 timed out
+rt2500pci 0000:00:0a.0: found PCI INT A -> IRQ 11
+phy22 -> rt2500pci_validate_eeprom: EEPROM recovery - NIC: 0xfff0
+phy22 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003, rev: 00000004.
+wmaster0 (rt2500pci): not using net_device_ops yet
+phy22: Selected rate control algorithm 'pid'
+wlan0 (rt2500pci): not using net_device_ops yet
+phy22 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+phy22 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+BUG: unable to handle kernel paging request at 8b291c6a
+IP: [<cc84d5ad>] 0xcc84d5ad
+*pde = 00000000 
+Oops: 0002 [#1] 
+last sysfs file: /sys/class/net/wlan0/flags
+Modules linked in: rt2500pci rtc cdc_wdm rt2x00pci i2c_piix4 intel_agp pcspkr rt2x00lib eeprom_93cx6 uhci_hcd i2c_core agpgar
+t evdev [last unloaded: rt2500pci]
 
-> Killing wpa_supplicant and dhclient and then trying again works fine. So
-> far I have seen that only after a fresh boot.
->=20
-> Found this one in dmesg:
->=20
-> ------------[ cut here ]------------
-> WARNING: at net/wireless/nl80211.c:205 nl80211_send_wiphy+0x4b/0x988
-> [cfg80211]()
-> Hardware name: 7454CTO
-> Modules linked in: fuse rfcomm sco bnep l2cap binfmt_misc
-> snd_hda_codec_conexant iwlagn iwlcore snd_hda_intel i2400m_usb
-> snd_hda_codec i2400m mac80211 uvcvideo snd_pcm btusb snd_timer snd wimax
-> cfg80211 soundcore bluetooth snd_page_alloc uhci_hcd ehci_hcd [last
-> unloaded: microcode]
-> Pid: 3274, comm: wpa_supplicant Tainted: G        W  2.6.30-rc2-wl #1
-> Call Trace:
->  [<ffffffff80236604>] warn_slowpath+0xb1/0xe5
->  [<ffffffff8039a44a>] ? extract_buf+0x84/0xe4
->  [<ffffffffa0055e04>] nl80211_send_wiphy+0x4b/0x988 [cfg80211]
+Pid: 27810, comm: iwconfig Not tainted (2.6.29.1 #11) HP Vectra
+EIP: 0060:[<cc84d5ad>] EFLAGS: 00010246 CPU: 0
+EIP is at 0xcc84d5ad
+EAX: c5948d20 EBX: c5948d20 ECX: dc84e2e0 EDX: c5948dac
+ESI: c5948dac EDI: c5948dfc EBP: 00000000 ESP: cd5cde00
+ DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+Process iwconfig (pid: 27810, ti=cd5cc000 task=c58c88a0 task.ti=cd5cc000)
+Stack:
+ dc86f77e c5948d20 c5948160 00000000 dc86eed9 d49e50b4 00000001 c03a07a8
+ 00008b26 c0353429 c5948160 cd5cdf08 c03544e1 cd5cdf08 ffffffa1 c034d5cc
+ 00000000 cd5cdef8 c59c2800 c13197a0 c013748e c0161e94 db4d08fc c015f2b7
+Call Trace:
+ [<dc86f77e>] rt2x00lib_config_antenna+0x74/0xaa [rt2x00lib]
+ [<dc86eed9>] rt2x00mac_config+0x4f/0x6d [rt2x00lib]
+ [<c0353429>] ieee80211_hw_config+0x7b/0x82
+ [<c03544e1>] ieee80211_ioctl_siwtxpower+0x77/0x83
+ [<c034d5cc>] ioctl_standard_call+0x49/0x286
+ [<c013748e>] file_read_actor+0x79/0xcf
+ [<c0161e94>] mnt_want_write+0x8/0x47
+ [<c015f2b7>] touch_atime+0xe/0xce
+ [<c034d2ad>] wext_handle_ioctl+0x97/0x17e
+ [<c035446a>] ieee80211_ioctl_siwtxpower+0x0/0x83
+ [<c02bc83f>] dev_ioctl+0x532/0x565
+ [<c0135d64>] find_lock_page+0x10/0x42
+ [<c0137727>] filemap_fault+0x70/0x2f5
+ [<c02b25b4>] sock_ioctl+0x0/0x1d1
+ [<c015a8b6>] vfs_ioctl+0x16/0x48
+ [<c015ade3>] do_vfs_ioctl+0x40e/0x47f
+ [<c0143fdf>] handle_mm_fault+0x1f6/0x462
+ [<c02b1372>] sock_map_fd+0x46/0x50
+ [<c02b1ce0>] sys_socket+0x3f/0x52
+ [<c015ae80>] sys_ioctl+0x2c/0x42
+ [<c0102945>] sysenter_do_call+0x12/0x25
+ [<c0360000>] __ieee80211_rx_handle_packet+0x24e/0x646
+Code: d7 5c 7d 72 35 51 00 00 28 68 5a 4e 68 3c 4e 68 13 4e 75 4d d8 5c 7d 72 36 51 00 00 28 68 86 4e 6a f8 07 00 00 4e 68 88
+ 4e 75 4d <d9> 5c 7d 72 37 51 00 00 28 68 3c 4e 68 11 4e 68 99 4e 75 4d da 
+EIP: [<cc84d5ad>] 0xcc84d5ad SS:ESP 0068:cd5cde00
+---[ end trace 469062b162cecfcc ]---
 
-What tree are you using? This warning totally confuses me -- there's no
-code to produce it! It was a spurious warning Luis added some time ago,
-we removed right away again and now it's haunting us.
 
-johannes
 
---=-0rj7da77B9o2LqsizkCB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ7t1yAAoJEKVg1VMiehFYIBAP/RoI4c2E+R8s+Qi1clyqKber
-hoRUMWAF/Lfw4uPx1mM83ehJ64uV6e3scqRq6tJklk1SthR/inUZCl2TfKLm9pho
-LOeUlY5G6J+tblDaQQ+19JDj8r7cmC6RSxeEhcNkc7MLMhr2Xm8xLxgH4oZhcG8X
-QkYlgKzJbto7G2a6nN6ytp4q6ufWt8+8u6R/zt0UHVZnqSUwZDe3BM6k8qgwLGZc
-iGAQyuQuDVydXXwFKhbyjutrU5XmenHFvr4+tp53val3MxWDz1bllL4iIENWC96n
-4g6I3s4aMgwc6iEfnUz/tbKkNERMCobl3HWs977i/8/YbIyWGpiAb0NRZmFyN257
-ZhBfJSLSjufAfo1NhXbe7oziYP2iSQR0uLuMMQBwHSFZ1IBx8QkSwJUsyquDtrny
-lhKZ0DGmX+OsUIAzKd8S0EyXSLhtynLpWktJhDFIOJ5J63blz2m3b4lU0c7g0Dtr
-d+b2d8ggfEq4QdAC1vP95DoBPI/S2qtRqgTRhYxrejDHeoxxfY/7efhRbd4vkzJf
-Qtuh5+Trgmo/N/+sOHmSTcs3d+9lDHFFgfM5M7JJ8G0Dy01Zz8cLVQml36//0u9q
-czALDEld/rdfuyxUF1Z1KeG7S5hgF6BnC6n4t7SPK5eVrOUYxrbi4xdAXIweVnel
-z+Yre74avKneDtlPwk02
-=o0Df
------END PGP SIGNATURE-----
-
---=-0rj7da77B9o2LqsizkCB--
 
