@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:34194 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752084AbZDYTcL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 15:32:11 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ar9170usb: reset device on resume
-Date: Sat, 25 Apr 2009 21:32:09 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
+Received: from hell.pl ([193.219.28.162]:46874 "EHLO hell.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751886AbZDMQYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 12:24:41 -0400
+Date: Mon, 13 Apr 2009 18:24:39 +0200
+From: Grzegorz Nowakowski <krecik@hell.pl>
+To: Tony Vroon <tony@vroon.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k blind to nearby network
+Message-ID: <20090413162439.GA30220@hell.pl> (sfid-20090413_182444_341289_82BAAF61)
+References: <20090410213958.GA12571@hell.pl> <20090411171955.76c48709@vroon.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200904252132.09966.chunkeey@web.de> (sfid-20090425_213220_315292_D6B160E6)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090411171955.76c48709@vroon.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch takes care of an outstanding comment in
-"[PATCH] ar9170usb: fix hang on resume" commit message.
+On Sat, Apr 11, 2009 at 05:19:55PM +0100, Tony Vroon wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> On Fri, 10 Apr 2009 23:39:58 +0200
+> Grzegorz Nowakowski <krecik@hell.pl> wrote:
+> > The symptom is that with both NetworkManager and WICD (and "iwlist
+> > <if> scanning") I don't see my home network on the list.  I see all
+> > other neighbouring networks around and I'm even able to connect if
+> > any is open.
+> 
+> Please doublecheck your wireless regulatory setting. On the default
+> "world" domain, it is unlikely you will be able to see networks on
+> channel 13. You may well have chosen that specific channel because it
+> was so quiet.
 
->However, the device does not accept the firmware on resume.
->and it will exit with:
->
->> firmware part 1 upload failed (-71).
->> device is in a bad state. please reconnect it!
+Gee, that was so stoopid!  You have guessed correctly, the channel in
+use was indeed thirteenth and 13 was its number.  After reconfiguring
+the AP to use another one everything seems to be working fine.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-Johannes,
+But that leaves me with the question: why Windows XP on Atheros and Linux
+on Intel didn't have such trouble?
 
-does this two-liner breathe life into the device after resume?
-
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index fddda47..368fc2d 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -689,6 +689,7 @@ static int ar9170_usb_probe(struct usb_interface *intf,
- 	aru->common.exec_cmd = ar9170_usb_exec_cmd;
- 	aru->common.callback_cmd = ar9170_usb_callback_cmd;
- 
-+	udev->reset_resume = 1;
- 	err = ar9170_usb_reset(aru);
- 	if (err)
- 		goto err_freehw;
-@@ -805,6 +806,7 @@ static struct usb_driver ar9170_driver = {
- #ifdef CONFIG_PM
- 	.suspend = ar9170_suspend,
- 	.resume = ar9170_resume,
-+	.reset_resume = ar9170_resume,
- #endif /* CONFIG_PM */
- };
- 
+Anyway, thanks for suggestion and best regards.
+-- 
+Grzegorz Nowakowski
