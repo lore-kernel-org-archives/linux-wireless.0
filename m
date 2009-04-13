@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:51759 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbZD2Ux2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58176 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754748AbZDMJv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 16:53:28 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: luciano.coelho@nokia.com, Bob Copeland <me@bobcopeland.com>,
+	Mon, 13 Apr 2009 05:51:58 -0400
+Subject: Re: [RFT/RFC] rtl8187: Remove some magic numbers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
 	linux-wireless@vger.kernel.org
-Subject: wl12xx: fourth submission
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 29 Apr 2009 23:47:49 +0300
-Message-ID: <87d4avdw5m.fsf@nokia.com> (sfid-20090429_225333_990847_1CB60F0E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49e28a0e.w2E55OwYOA9yeg+w%Larry.Finger@lwfinger.net> (sfid-20090413_024115_059324_BFAA839F)
+References: <49e28a0e.w2E55OwYOA9yeg+w%Larry.Finger@lwfinger.net>
+	 (sfid-20090413_024115_059324_BFAA839F)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ylUroZCRd2Mpn0VKI4ly"
+Date: Mon, 13 Apr 2009 11:51:44 +0200
+Message-Id: <1239616304.8243.0.camel@johannes.local> (sfid-20090413_115202_012162_3A79FED8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-here is the fourth submission of wl12xx, a driver for TI wl1251
-chipset:
+--=-ylUroZCRd2Mpn0VKI4ly
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://www.valot.fi/kalle/tmp/wl12xx/20090429/
+On Sun, 2009-04-12 at 19:40 -0500, Larry Finger wrote:
 
-Changes since the third submission:
+> -	rtl818x_iowrite16(priv, (__le16 *)0xFFF4, 0xFFFF);
+> +	rtl818x_iowrite16(priv, &priv->map->FEMR, 0xFFFF);
 
-o add patch "wl12xx: unify config_interface and bss_info_changed"
+That looks strange -- I can tell it works because priv->map is set to
+0xFF00, but wouldn't actual constants make more sense?
 
-Changes since the second submission:
+johannes
 
-o remove mach includes to make it compile in wireless-testing
+--=-ylUroZCRd2Mpn0VKI4ly
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Changes since the first submission from February 10:
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-o update to 2.6.29 (bob)
-o sysfs interface removed (bob)
-o netlink interface removed
-o lots of bug fixes
-o platform data for proper board file support
+iQIcBAABAgAGBQJJ4wstAAoJEKVg1VMiehFY8VIP/j/hrKJwFdsMQ0/ZaVJZufFR
+B7/gt7WWN/YBhITD8aR4udffk0rH9ANdN6sBQR6hOGU0B1EdaMZikN4KdnIQNr4K
+bAVrnNjQhTico4mjatnWOFEdpBxL1grMrfQJJxlM2jzZ33yzdH+3FXPISZ34gGmX
+2dDWI5+FCO4v/88VgODqjiNRiigK0/n52V22KwkQ3D28n/LWzAi9f1DYNzKkCM/c
+O/SMuvf7b+174yMDN9qML3WwgFaMYOS03cpuf4MiLnmNbEeG4idLgrJZ8tNJDCFJ
+czE3i/oe9D82ps1lmKnyy6T/0ZlmREv0h5PJvBdKp/hqntrxxMDcRLU7bcG2Vtxk
+759W1nMdU/h/J54PXS3hqh3HhunqoTCsWCgY2O+zQYHIO3Nn3vv0V4hO9C6aCQDo
+Nhim+E4rCKdYMHAQslMVsAgjtYjvMVP6ItXpKFCHaAa4jIQZ3aTX58in2wLYOPku
+6WH53B/UssltLLxgMIgCFkAp6t25XuQXUikvn6FyoZqtn/tPcrxYoxpzIyml1BQK
+UTUYVwnkk5jD9volthxzyNe0yhO4vuMuoSms3UnbzU9RdSFzbmMiuS0Bni30hGEh
+aaZVSlYhPQjGievCStQS/ji2Y96O11UoGmALQIVVtvxAFBpvIgYTunmxX1MKUBuz
+75bjOJKx59pU7ZPS+Ae3
+=u+gv
+-----END PGP SIGNATURE-----
 
-Please consider for including the driver to wireless-testing. Bob is
-planning to add SDIO support to the driver and it's easier for us to
-have the driver in wireless-testing. And if all goes well, it would be
-nice to get the driver into 2.6.31. But that's up to you, of course.
+--=-ylUroZCRd2Mpn0VKI4ly--
 
-The diffstat:
-
- drivers/net/wireless/Kconfig               |    1 
- drivers/net/wireless/Makefile              |    2 
- drivers/net/wireless/wl12xx/Kconfig        |   11 
- drivers/net/wireless/wl12xx/Makefile       |    4 
- drivers/net/wireless/wl12xx/acx.c          |  689 ++++++++++++++
- drivers/net/wireless/wl12xx/acx.h          | 1245 ++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/boot.c         |  295 ++++++
- drivers/net/wireless/wl12xx/boot.h         |   40 +
- drivers/net/wireless/wl12xx/cmd.c          |  353 +++++++
- drivers/net/wireless/wl12xx/cmd.h          |  265 +++++
- drivers/net/wireless/wl12xx/debugfs.c      |  508 ++++++++++
- drivers/net/wireless/wl12xx/debugfs.h      |   33 +
- drivers/net/wireless/wl12xx/event.c        |  127 +++
- drivers/net/wireless/wl12xx/event.h        |  121 ++
- drivers/net/wireless/wl12xx/init.c         |  200 ++++
- drivers/net/wireless/wl12xx/init.h         |   40 +
- drivers/net/wireless/wl12xx/main.c         | 1358 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/ps.c           |  151 +++
- drivers/net/wireless/wl12xx/ps.h           |   36 +
- drivers/net/wireless/wl12xx/reg.h          |  745 +++++++++++++++
- drivers/net/wireless/wl12xx/rx.c           |  208 ++++
- drivers/net/wireless/wl12xx/rx.h           |  122 +++
- drivers/net/wireless/wl12xx/spi.c          |  358 +++++++
- drivers/net/wireless/wl12xx/spi.h          |  109 ++
- drivers/net/wireless/wl12xx/tx.c           |  557 +++++++++++
- drivers/net/wireless/wl12xx/tx.h           |  215 ++++
- drivers/net/wireless/wl12xx/wl1251.c       |  709 +++++++++++++++
- drivers/net/wireless/wl12xx/wl1251.h       |  165 +++
- drivers/net/wireless/wl12xx/wl12xx.h       |  409 ++++++++
- drivers/net/wireless/wl12xx/wl12xx_80211.h |  156 +++
- include/linux/spi/wl12xx.h                 |   31 +
- 31 files changed, 9263 insertions(+), 0 deletions(-)
-
--- 
-Kalle Valo
