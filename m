@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38227 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750984AbZDUNAw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:11516 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbZDMXtV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 09:00:52 -0400
-Date: Tue, 21 Apr 2009 08:51:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] mac80211 powersave work
-Message-ID: <20090421125132.GC17805@tuxdriver.com> (sfid-20090421_150055_977092_2820163D)
-References: <20090416111723.904720021@sipsolutions.net> <20090420194430.GG3369@tuxdriver.com> <1240257188.4632.19.camel@johannes.local> <87ocuqfuk3.fsf@litku.valot.fi>
+	Mon, 13 Apr 2009 19:49:21 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so712449fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 16:49:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ocuqfuk3.fsf@litku.valot.fi>
+In-Reply-To: <42609.6548.qm@web23108.mail.ird.yahoo.com>
+References: <42609.6548.qm@web23108.mail.ird.yahoo.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 14 Apr 2009 01:49:05 +0200
+Message-ID: <69e28c910904131649s7e735380i10c739d27ad0766f@mail.gmail.com> (sfid-20090414_014925_892886_92FFB710)
+Subject: Re: [PATCH RFC] rtl8187: Call 8187L variants "RTL8187LvX" rather than
+	"RTL8187vX"
+To: htl10@users.sourceforge.net
+Cc: John Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 21, 2009 at 08:24:28AM +0300, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> >> I'm not sure I understand.  Your patch (which would go to 2.6.31)
-> >> has it turned-on by default.  Which way do you want it?
-> >
-> > I want it turned on by default, at least in wireless-testing; Kalle
-> > thinks that we should turn it off for a .31 release.
-> >
-> > I would think that since an easy workaround is available ("iwconfig
-> > wlan0 power off") and it doesn't affect most hardware yet anyway (only
-> > those supporting powersave) we should turn it on by default anyway,
-> > since otherwise we won't find any bugs -- but maybe that's just me.
-> 
-> Yes, in my opinion the power save should not be enabled by default for
-> the big masses, at least not yet. My understanding is that only few
-> people have tested it and I would like to see more testing first. 
-> 
-> But if you (Johannes&John) think it's ready for the prime time, I'm not
-> going to complain :)
+On Mon, Apr 13, 2009 at 10:29 PM, Hin-Tak Leung
+<htl10@users.sourceforge.net> wrote:
+>
+> --- On Mon, 13/4/09, G=E1bor Stefanik <netrolller.3d@gmail.com> wrote=
+:
+>
+>> We call RTL8187B chips "RTL8187BvX"
+>> (X is the revision), so we should
+>> call RTL8187L ones "RTL8187LvX", not "RTL8187vX".
+>>
+>> Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+>
+> Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+>
+> I don't have a preference either way - if any, I would probably prefe=
+r without the change, or use a space for readability rather than 'L', b=
+ecause the 'L' just isn't there most of the time, and there is B (which=
+ is similiar but not the same) and SE (which is completely different). =
+It might be worth also to put a space after the B's.
+>
+> The way that string is currently done is largely inherited from the v=
+endor driver, I think.
 
-Well there is always a trade-off.  But by the time 2.6.31 come around
-the code will have been in wireless-testing, net-next, and linux-next
-for a reasonably long time.  Hopefully we will have good confidence
-in it by then.  If not, then we can disable it by default later.
+What do you mean by "the 'L' just isn't there most of the time"? AFAIK
+there is no RTL8187 chip (without a letter suffix), only RTL8187L,
+RTL8187B and RTL8187SE, and 8187L is not much more common that 8187B,
+to warrant calling it "RTL8187" in any case.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
