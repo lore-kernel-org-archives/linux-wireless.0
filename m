@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54199 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1764234AbZDAOYN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57782 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbZDMXPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 10:24:13 -0400
-Date: Wed, 1 Apr 2009 17:23:54 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
+	Mon, 13 Apr 2009 19:15:47 -0400
+Date: Mon, 13 Apr 2009 19:11:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Report rejected association to user space SME
-Message-ID: <20090401142354.GA8695@jm.kir.nu> (sfid-20090401_162417_433906_F94231EE)
+Subject: Re: [PATCH] ath9k: Disable autosleep feature for AR9285 based
+	chipsets.
+Message-ID: <20090413231122.GB18841@tuxdriver.com> (sfid-20090414_011551_238157_F94B5710)
+References: <20090331063752.GA9846@myhost.users.atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090331063752.GA9846@myhost.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using nl80211 association, we need to send association response
-with a failure code to user space SME instead of just internally
-trying to send out the same (re)association request again couple of
-times. This fixes problems in association process getting stuck on a
-failure when user space is not notified in any way that something
-actually failed.
+On Tue, Mar 31, 2009 at 12:07:52PM +0530, Vivek Natarajan wrote:
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/hw.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+> index b15eaf8..7d07f09 100644
+> --- a/drivers/net/wireless/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath9k/hw.c
+> @@ -3411,7 +3411,8 @@ bool ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>  	    (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) ||
+>  	    (ah->hw_version.macVersion == AR_SREV_VERSION_9160) ||
+>  	    (ah->hw_version.macVersion == AR_SREV_VERSION_9100) ||
+> -	    (ah->hw_version.macVersion == AR_SREV_VERSION_9280))
+> +	    (ah->hw_version.macVersion == AR_SREV_VERSION_9280) ||
+> +	    (ah->hw_version.macVersion == AR_SREV_VERSION_9285))
+>  		pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
+>  	else
+>  		pCap->hw_caps |= ATH9K_HW_CAP_AUTOSLEEP;
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+error: drivers/net/wireless/ath9k/hw.c: No such file or directory
 
----
- net/mac80211/mlme.c |    5 +++++
- 1 file changed, 5 insertions(+)
+Granted, I'm a bit behind on my patch queue.  Perhaps I'm missing a patch?
 
---- uml.orig/net/mac80211/mlme.c	2009-04-01 17:20:11.000000000 +0300
-+++ uml/net/mac80211/mlme.c	2009-04-01 17:21:15.000000000 +0300
-@@ -1363,6 +1363,11 @@ static void ieee80211_rx_mgmt_assoc_resp
- 		 * association next time. This works around some broken APs
- 		 * which do not correctly reject reassociation requests. */
- 		ifmgd->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
-+		cfg80211_send_rx_assoc(sdata->dev, (u8 *) mgmt, len);
-+		if (ifmgd->flags & IEEE80211_STA_EXT_SME) {
-+			/* Wait for SME to decide what to do next */
-+			ifmgd->state = IEEE80211_STA_MLME_DISABLED;
-+		}
- 		return;
- 	}
- 
-
+John
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
