@@ -1,44 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3.dnainternet.fi ([87.94.96.71]:56820 "EHLO
-	smtp3.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753675AbZDVVIa (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:44386 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbZDMAkU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 17:08:30 -0400
-Message-ID: <20090423000820.82452fzhxxsz1c8w@hayate.sektori.org> (sfid-20090422_230833_882876_B4EF9651)
-Date: Thu, 23 Apr 2009 00:08:20 +0300
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Randy Dunlap" <randy.dunlap@oracle.com>,
-	"Stephen Rothwell" <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for April 22 (rndis_wlan)
-References: <20090422154247.dbffd285.sfr@canb.auug.org.au>
-	<49EF4B73.2050702@oracle.com> <20090422172804.GE3288@tuxdriver.com>
-In-Reply-To: <20090422172804.GE3288@tuxdriver.com>
+	Sun, 12 Apr 2009 20:40:20 -0400
+Date: Sun, 12 Apr 2009 19:39:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: [RFT/RFC] rtl8187: Remove redundant quality calculation
+Message-ID: <49e289df.b/+c2+59HqherrPx%Larry.Finger@lwfinger.net> (sfid-20090413_024034_481677_3F3254E5)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "John W. Linville" <linville@tuxdriver.com>:
+Now that mac80211 does the link quality calculation, that code can be
+removed from this driver. In addition, the signal noise calculation
+used by the vendor driver has been implemented for RYL8187B. The value
+for RTL8187L is fictional.
 
->> # CONFIG_CFG80211 is not set
->
-> No doubt this is the problem...
->
-> ---
->
-> From bce85c97aeeb9c34098951e9ef3de425c6830b63 Mon Sep 17 00:00:00 2001
-> From: John W. Linville <linville@tuxdriver.com>
-> Date: Wed, 22 Apr 2009 13:27:08 -0400
-> Subject: [PATCH] rndis_wlan: select CFG80211 in Kconfig
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
-
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -37,8 +37,8 @@ struct rtl8187_rx_info {
+ 
+ struct rtl8187_rx_hdr {
+ 	__le32 flags;
+-	u8 noise;
+-	u8 signal;
++	u8 sq;
++	u8 rssi;
+ 	u8 agc;
+ 	u8 reserved;
+ 	__le64 mac_time;
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -315,7 +315,6 @@ static void rtl8187_rx_cb(struct urb *ur
+ 	struct ieee80211_rx_status rx_status = { 0 };
+ 	int rate, signal;
+ 	u32 flags;
+-	u32 quality;
+ 	unsigned long f;
+ 
+ 	spin_lock_irqsave(&priv->rx_queue.lock, f);
+@@ -338,13 +337,13 @@ static void rtl8187_rx_cb(struct urb *ur
+ 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
+ 		flags = le32_to_cpu(hdr->flags);
+ 		/* As with the RTL8187B below, the AGC is used to calculate
+-		 * signal strength and quality. In this case, the scaling
+-		 * constants are derived from the output of p54usb.
++		 * signal strength. In this case, the scaling constants are
++		 * derived from the output of p54usb.
+ 		 */
+-		quality = 130 - ((41 * hdr->agc) >> 6);
+ 		signal = -4 - ((27 * hdr->agc) >> 6);
+-		rx_status.antenna = (hdr->signal >> 7) & 1;
++		rx_status.antenna = (hdr->rssi >> 7) & 1;
+ 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
++		rx_status.noise = hdr->sq - 100;
+ 	} else {
+ 		struct rtl8187b_rx_hdr *hdr =
+ 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
+@@ -354,23 +353,18 @@ static void rtl8187_rx_cb(struct urb *ur
+ 		 * In testing, none of these quantities show qualitative
+ 		 * agreement with AP signal strength, except for the AGC,
+ 		 * which is inversely proportional to the strength of the
+-		 * signal. In the following, the quality and signal strength
+-		 * are derived from the AGC. The arbitrary scaling constants
+-		 * are chosen to make the results close to the values obtained
+-		 * for a BCM4312 using b43 as the driver. The noise is ignored
+-		 * for now.
++		 * signal. In the following, the signal strength is derived
++		 * from the AGC. The arbitrary scaling constants are chosen
++		 * to make the results close to the values obtained for a
++		 * BCM4312 using b43 as the driver.
+ 		 */
+ 		flags = le32_to_cpu(hdr->flags);
+-		quality = 170 - hdr->agc;
+ 		signal = 14 - hdr->agc / 2;
+ 		rx_status.antenna = (hdr->rssi >> 7) & 1;
+ 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
++		rx_status.noise = hdr->snr_long2end;
+ 	}
+ 
+-	if (quality > 100)
+-		quality = 100;
+-	rx_status.qual = quality;
+-	priv->quality = quality;
+ 	rx_status.signal = signal;
+ 	priv->signal = signal;
+ 	rate = (flags >> 20) & 0xF;
+@@ -1357,6 +1351,7 @@ static int __devinit rtl8187_probe(struc
+ 	priv->mode = NL80211_IFTYPE_MONITOR;
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		     IEEE80211_HW_SIGNAL_DBM |
++		     IEEE80211_HW_NOISE_DBM |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS;
+ 
+ 	eeprom.data = dev;
