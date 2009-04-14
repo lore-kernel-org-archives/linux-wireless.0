@@ -1,188 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:57139 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754153AbZDPAWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 20:22:13 -0400
-Date: Thu, 16 Apr 2009 03:22:20 +0300
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Subject: [PATCH 1/7] ath5k: Allow user/driver to set txpower
-Message-ID: <20090416002220.GA4138@makis> (sfid-20090416_022216_018047_42681BFD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from xc.sipsolutions.net ([83.246.72.84]:54292 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbZDNMom (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2009 08:44:42 -0400
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Forest Bond <forest@alittletooquiet.net>, Greg KH <greg@kroah.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+In-Reply-To: <1239712106.11795.21.camel@violet>
+References: <20090414105200.GE25746@storm.local.network>
+	 <1239707258.4778.3.camel@johannes.local>
+	 <20090414113928.GA20470@storm.local.network>
+	 <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-PbJHPF3NfIYtAWGiIyCx"
+Date: Tue, 14 Apr 2009 14:43:54 +0200
+Message-Id: <1239713034.17109.10.camel@johannes.local> (sfid-20090414_144446_137532_54F46AB2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Now that we have regulatory control enable the driver to set txpower on hw
- * Also use txpower table offset so that we can match power range set by user/driver with indices on power table.
 
- Tested 2 different cards (a CM9 and an RF5112-based ubnt) and got the same output using a remote machine to measure
- per-packet rssi (conected the cards using attenuators). I also switched between various tx power levels and i saw an
- equal power change on the remote machine (so txpower changes as expected) and verified that we have the same output
- on each rate.
+--=-PbJHPF3NfIYtAWGiIyCx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Hi Marcel,
 
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    7 +++--
- drivers/net/wireless/ath/ath5k/base.c  |   10 ++++++-
- drivers/net/wireless/ath/ath5k/phy.c   |   45 ++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath5k/reset.c |    2 +-
- 4 files changed, 51 insertions(+), 13 deletions(-)
+> just to document the irony here. Two or three years ago at OLS, Kyle and
+> Greg were making fun of Ubuntu merging its 5th wireless stack into their
+> kernel. Now the staging crap is doing exactly the same.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 60c6d2e..04b7345 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1100,11 +1100,12 @@ struct ath5k_hw {
- 		/* Values in 0.25dB units */
- 		s16		txp_min_pwr;
- 		s16		txp_max_pwr;
-+		/* Values in 0.5dB units */
- 		s16		txp_offset;
- 		s16		txp_ofdm;
--		/* Values in dB units */
--		s16		txp_cck_ofdm_pwr_delta;
- 		s16		txp_cck_ofdm_gainf_delta;
-+		/* Value in dB units */
-+		s16		txp_cck_ofdm_pwr_delta;
- 	} ah_txpower;
- 
- 	struct {
-@@ -1271,7 +1272,7 @@ extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
- extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
- /* TX power setup */
- extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, u8 ee_mode, u8 txpower);
--extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 ee_mode, u8 txpower);
-+extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
- 
- /*
-  * Functions used internaly
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index ff6d4f8..3390603 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2768,13 +2768,21 @@ static int
- ath5k_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_hw *ah = sc->ah;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int ret;
- 
- 	mutex_lock(&sc->lock);
- 
- 	sc->bintval = conf->beacon_int;
--	sc->power_level = conf->power_level;
-+
-+	if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
-+	(sc->power_level != conf->power_level)) {
-+		sc->power_level = conf->power_level;
-+
-+		/* Half dB steps */
-+		ath5k_hw_set_txpower_limit(ah, (conf->power_level * 2));
-+	}
- 
- 	ret = ath5k_chan_set(sc, conf->channel);
- 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index b48b29d..bb61b8e 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -168,9 +168,6 @@ int ath5k_hw_rfgain_opt_init(struct ath5k_hw *ah)
-  * tx power and a Peak to Average Power Detector (PAPD) will try
-  * to measure the gain.
-  *
-- * TODO: Use propper tx power setting for the probe packet so
-- * that we don't observe a serious power drop on the receiver
-- *
-  * XXX:  How about forcing a tx packet (bypassing PCU arbitrator etc)
-  * just after we enable the probe so that we don't mess with
-  * standard traffic ? Maybe it's time to use sw interrupts and
-@@ -186,7 +183,7 @@ static void ath5k_hw_request_rfgain_probe(struct ath5k_hw *ah)
- 
- 	/* Send the packet with 2dB below max power as
- 	 * patent doc suggest */
--	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_max_pwr - 4,
-+	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_ofdm - 4,
- 			AR5K_PHY_PAPD_PROBE_TXPOWER) |
- 			AR5K_PHY_PAPD_PROBE_TX_NEXT, AR5K_PHY_PAPD_PROBE);
- 
-@@ -2482,8 +2479,19 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
- 		for (i = 8; i <= 15; i++)
- 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
- 
--	ah->ah_txpower.txp_min_pwr = rates[7];
--	ah->ah_txpower.txp_max_pwr = rates[0];
-+	/* Now that we have all rates setup use table offset to
-+	 * match the power range set by user with the power indices
-+	 * on PCDAC/PDADC table */
-+	for (i = 0; i < 16; i++) {
-+		rates[i] += ah->ah_txpower.txp_offset;
-+		/* Don't get out of bounds */
-+		if (rates[i] > 63)
-+			rates[i] = 63;
-+	}
-+
-+	/* Min/max in 0.25dB units */
-+	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
-+	ah->ah_txpower.txp_max_pwr = 2 * rates[0];
- 	ah->ah_txpower.txp_ofdm = rates[7];
- }
- 
-@@ -2591,16 +2599,37 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 	return 0;
- }
- 
--int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 mode, u8 txpower)
-+int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
- {
- 	/*Just a try M.F.*/
- 	struct ieee80211_channel *channel = &ah->ah_current_channel;
-+	u8 ee_mode;
- 
- 	ATH5K_TRACE(ah->ah_sc);
-+
-+	switch (channel->hw_value & CHANNEL_MODES) {
-+	case CHANNEL_A:
-+	case CHANNEL_T:
-+	case CHANNEL_XR:
-+		ee_mode = AR5K_EEPROM_MODE_11A;
-+		break;
-+	case CHANNEL_G:
-+	case CHANNEL_TG:
-+		ee_mode = AR5K_EEPROM_MODE_11G;
-+		break;
-+	case CHANNEL_B:
-+		ee_mode = AR5K_EEPROM_MODE_11B;
-+		break;
-+	default:
-+		ATH5K_ERR(ah->ah_sc,
-+			"invalid channel: %d\n", channel->center_freq);
-+		return -EINVAL;
-+	}
-+
- 	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
- 		"changing txpower to %d\n", txpower);
- 
--	return ath5k_hw_txpower(ah, channel, mode, txpower);
-+	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
- }
- 
- #undef _ATH5K_PHY
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index faede82..23d6fc8 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1001,7 +1001,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		 * Set TX power (FIXME)
- 		 */
- 		ret = ath5k_hw_txpower(ah, channel, ee_mode,
--					AR5K_TUNE_DEFAULT_TXPOWER);
-+					ah->ah_txpower.txp_max_pwr / 2);
- 		if (ret)
- 			return ret;
- 
+:)
+
+Actually, last I counted it was already 7 or 8 stacks in staging _only_.
+This (and the other patch) will add two more. Not to mention that of
+course we already have something like two and a half stacks in the
+kernel tree (mac80211, in hostapd, and libipw [former ieee80211]).
+
+> At some point I like to see some proper future development/cleanup
+> planning for drivers in the staging area. Dumping stuff in there doesn't
+> help at all and personally I don't see anybody cleaning up this mess.
+
+Which is why, for all wireless "drivers" but agnx and stlc45xx in
+staging I have requested that the linux-wireless list not be copied on
+any of the "patches" for those drivers. All of these other drivers are,
+in my opinion, entirely pointless and need to be rewritten from scratch
+using the current infrastructure. No amount of cleanup will help --
+there is a _fundamental_ design difference. Compare ar9170 (rewritten)
+with otus (vendor) for an example.
+
+Mind you, there don't seem to be many developers capable of doing that,
+and therefore all these drivers will never "make it". All wireless
+patches in staging, that haven't been proposed by people very familiar
+with the wireless code, have so far been in the "brain-dead cleanup"
+category.
+
+> Do we have an option to taint the kernel when a staging driver is used.
+> Similar to what we do with binary drivers or ndiswrapper?
+
+It's already doing that. FWIW, I trust many of those staging drivers a
+lot _less_ than, for instance, Broadcom's binary-only wl.ko driver.
+
+johannes
+
+--=-PbJHPF3NfIYtAWGiIyCx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ5IUGAAoJEKVg1VMiehFYfS0QAKuOv+GBZSXovdBoQGGZksIK
+ZOFn+Q9ydHChIfT/ANJwqnWjGes7BQRAa2As7cZ24KHzFVh4eWMHWQy/qFpOiL95
+PG74c1HdtpXICbF3Ddw4yDuo6jAKkicOWvb/oA3+ogxDz9b7RRC9aA6nW9l/Qcxa
+aQAWyQqFZcbwc5fpi7QHB7yz3AFrNj3zpoQaBWpD2GoisS9nbXet6xDnaU3TkfHF
+3WCm5SD1P3I3pDEp6mtDjLV6Q6fcGHb5h9dnmbjWIxH8BqBb5+r54AZExJd0kLwd
+vRt0yRSBwJb8iLgdsv6WuHEH1t0FQ1xQmNTceqlAubR3xqI1JnNIa0r9qHYq3cDR
+RtTNk8/pD+cmk8SBW/57ilekLzHhdgwcRhHj/5YFSEF2u+brrMNA9BjgfZDGsmK3
+3AFY22ZzskfPPd7LiOoaE19gH+VejBQqf+B/MTOyTwkFgqia0g1VZbbdVWCe691I
+x9AKTcgINeV5YRnG5JpQDCSEshVHu6DAnlU6dlPbhCjhsiMm1GugpOYhWEOaUVl6
+POOH+4d+0125t8ZDYmwubKNTNc5nFgQCQuBMAgbbtvrJ9/yAeCHyIYgkwq2jIKQY
+jlqXPwibA21lSK1O9AbhxDMGwrMgj5GXjzWtA02AxwHN8ZIvds7tVK3YPVlqHHuz
+77FWj9nv/TGiTX1C/TxN
+=HY9x
+-----END PGP SIGNATURE-----
+
+--=-PbJHPF3NfIYtAWGiIyCx--
+
