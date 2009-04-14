@@ -1,99 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55844 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46930 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbZDSILx (ORCPT
+	with ESMTP id S1752541AbZDNLtX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 04:11:53 -0400
-Subject: Re: [PATCH v2] mac80211: fix beacon loss detection after scan
+	Tue, 14 Apr 2009 07:49:23 -0400
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "John W.Linville" <linville@tuxdriver.com>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090419054719.16621.48938.stgit@tikku>
-References: <20090419054719.16621.48938.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ta4RcPAaYYa2fr8+X+/x"
-Date: Sun, 19 Apr 2009 10:11:42 +0200
-Message-Id: <1240128702.25826.3.camel@johannes.local> (sfid-20090419_101159_887657_DB4729C2)
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Greg KH <greg@kroah.com>, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+In-Reply-To: <20090414113928.GA20470@storm.local.network>
+References: <20090414105200.GE25746@storm.local.network>
+	 <1239707258.4778.3.camel@johannes.local>
+	 <20090414113928.GA20470@storm.local.network>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i0Ed4gW1EoJ+y2GI0Xw5"
+Date: Tue, 14 Apr 2009 13:48:47 +0200
+Message-Id: <1239709727.4778.6.camel@johannes.local> (sfid-20090414_134926_550622_27507293)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Ta4RcPAaYYa2fr8+X+/x
+--=-i0Ed4gW1EoJ+y2GI0Xw5
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-04-19 at 08:47 +0300, Kalle Valo wrote:
-> Currently beacon loss detection triggers after a scan. A probe request
-> is sent and a message like this is printed to the log:
->=20
-> wlan0: beacon loss from AP 00:12:17:e7:98:de - sending probe request
->=20
-> But in fact there is no beacon loss, the beacons are just not received
-> because of the ongoing scan. Fix it by updating last_beacon after
-> the scan has finished.
->=20
-> Reported-by: Jaswinder Singh Rajput <jaswinder@kernel.org>
-> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+On Tue, 2009-04-14 at 07:39 -0400, Forest Bond wrote:
 
-Thanks.
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> > Can we also please add files here saying to not bother the
+> > linux-wireless list about this crap?
+>=20
+> I would assume this is somewhat implied for any code in drivers/staging. =
+ Is
+> that not the case?
 
-> ---
->=20
->  net/mac80211/mlme.c |   10 +++++++++-
->  1 files changed, 9 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index c0f91d5..1b8509d 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2005,9 +2005,17 @@ static void ieee80211_sta_work(struct work_struct =
-*work)
-> =20
->  static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sd=
-ata)
->  {
-> -	if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION)
-> +	if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
-> +		/*
-> +		 * Need to update last_beacon to avoid beacon loss
-> +		 * test to trigger.
-> +		 */
-> +		sdata->u.mgd.last_beacon =3D jiffies;
-> +
-> +
->  		queue_work(sdata->local->hw.workqueue,
->  			   &sdata->u.mgd.work);
-> +	}
->  }
-> =20
->  /* interface setup */
->=20
->=20
+It seems to be on a per case basis -- and there's one driver at least
+(agnx) that we actually do care about because it is there only because
+it's incomplete not because the code is in some way problematic (like
+using its own 802.11 stack)
 
---=-Ta4RcPAaYYa2fr8+X+/x
+johannes
+
+--=-i0Ed4gW1EoJ+y2GI0Xw5
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ6ty6AAoJEKVg1VMiehFYjhoP/3YwErcdlrFFHKgMI7NX/tO7
-GFwh2NT18ygXVezXOGyosHZzNjv4y3SkccJXU2iXSPdXY3nFlMGIQghtIsOP1Mnf
-gigU/UcL0AkZ3Ri9QmMZgxVK/MwCXa+eE9liz3SxrR4UoMrT6TKDlqdv2aq9xvK7
-TLd6I2A6VPlvdwGrpMj93zX8IzmpzSXEMyNBHmXtRRYqx9JkicmGMwU5YOMwolsm
-gAkKHXk76K3RystrSWv2JkCCO33PEJ0yMLn2kBsbj9HxM+hvIlhmk+9P6Ta3fcNG
-PwI67FfBuv3pTVejch95etZo4+98ieM178nDHvTxI04WhJFP/18oOajQp/uADKsp
-x8g9s8DWLfLoYQKdCM+2Ax5TRmfligR1rizwPeWf4aTrn4Plee485/abH87zSPGQ
-CBpbo5cKYCI8O2FCrNDuHtdq7GkJTbVF53nVHPlPTHKaoQfp6aCOx59gvGJnMPiC
-+Yv/RWaZ1zPTBdWeVu6xGdjDljnHtWOWeuYyNW2VC2DRIfn4HMro/aalxhmKiriS
-IXvOkxU+sQ0XT8WfP3s0cfP2i+tx+qi0oqOsysNfWKJT6N2XgsGOiVLCWMYtwpuE
-ykO0b08wFUqh/sDBDidGxV/r9fCz+gyQon3Qh2gKnbb0nR1Y4/ZFZbqWV19lzHFn
-iqbmNrgJT7Xg0EKAmj0+
-=y743
+iQIcBAABAgAGBQJJ5HgcAAoJEKVg1VMiehFY3WcP/RHX1yVgf20nS+5UIdjRL370
+DBNSQcXdrZhU6upNNS45poaR7yffs8uyJtAJZe35keshMdmP2yxqSkEn/I/4r1Ux
+/NvWTYY8ArdeJqIV2QIYvuzHYvAUYeC9QK/PGvwuOTJeWjo/8COaVTc4w/GJiNOC
+FtainpEkV6ZFCWZ6/0JuCH5i2JpyQ6DO35aFu7BG4TlN1kVEyWsOoL3wDHUyRG6w
+3cNJ+oxOebNUX1jFALST15hn6GeFmbQrD9M5653KAhTfm4/KPU8HSGecGflB7NIt
+erWTS9n8gsWtxEwJgfmgeDt6c8/liOuVY4uDmYhBQ/Ma3emP1+GwOqABFAwK8DLS
+unNmCM/tz/JSGajiWUeitRVFqSj2yT+mYUvd+dN/CDXBkpAsxKsmdLEyTaFQPku7
+wx+guEcEWjUC/Vz0m2BQ4aTfbMgk+0LPHhttjYpmP+f6eyZzd75bENjcqItzb33E
+zk0CJsMRfsTXzb166ZQQ6kIpxqjcbnUeL9tBscqUqPOCqa/cCQz46yJFv4Ne/7zv
+FRQ45m+vnfVvdya8366cNMPxUKlU1tIoK7RIImzIEJFqrpV/ImGyCcZtRNluRNAk
+aasHP6G3WiPZlGzAEDfzXxFIQcH+s4T6NMSkbHmlXSHTd4/OCTx1XmGlOViJLObj
+RrW3KzcibaiRDtkQOTKn
+=4ui+
 -----END PGP SIGNATURE-----
 
---=-Ta4RcPAaYYa2fr8+X+/x--
+--=-i0Ed4gW1EoJ+y2GI0Xw5--
 
