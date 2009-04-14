@@ -1,74 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756824AbZD3N4O (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:60294 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbZDNAJb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 09:56:14 -0400
-Subject: Re: rt73usb Access point status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1guS6h3QwpnMLTtdFl1/"
-Date: Thu, 30 Apr 2009 15:55:41 +0200
-Message-Id: <1241099741.29878.3.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 13 Apr 2009 20:09:31 -0400
+Date: Mon, 13 Apr 2009 20:08:35 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: VT6656 driver source now GPL
+Message-ID: <20090414000835.GA31504@storm.local.network> (sfid-20090414_020934_042738_3843CC4F)
+References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
+In-Reply-To: <20090320131014.GG25237@storm.local.network>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-1guS6h3QwpnMLTtdFl1/
-Content-Type: text/plain
+--u3/rZRmxL6MmkK24
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-30 at 06:41 -0700, Joerg Pommnitz wrote:
-> > Based on that information, I have removed the "Yes (under development)"
-> > note from the driver page since it doesn't really support it... In fact=
-,
-> > I'm surprised it works even with that hack since hostapd usually polls
-> > the station with nullfunc frames and waits for an ack.
+Hi,
+
+On Fri, Mar 20, 2009 at 09:10:15AM -0400, Forest Bond wrote:
+> On Thu, Mar 19, 2009 at 09:45:19AM -0700, Luis R. Rodriguez wrote:
+> > On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittletooquiet.ne=
+t> wrote:
+> > > Hi,
+> > >
+> > > VIA has released a new version of the VT6656 driver source, and it no=
+w has a
+> > > proper license!
+> > >
+> > > =A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
+> > >
+> > > As you may recall, the previous version lacked a license altogether, =
+making it
+> > > unfit for distribution.
+> > >
+> > > I'd really like to see this driver integrated into the kernel. =A0Doe=
+s anyone care
+> > > to comment regarding feasibility?
+> >=20
+> > Indeed good news, what is the latest kernel it compiles for? If it
+> > compiles on Linus' tree it can be stashed into staging while it gets
+> > properly ported.
 >=20
-> Reading the mail from Ivo (http://sourceforge.net/mailarchive/message.php=
-?msg_id=3D200808082059.11968.IvDoorn%40gmail.com)
-> I gather that the ACK in question is not from the peer but from the local
-> hardware indicating that the frame was actually sent and not lost due to
-> some local error.=20
+> Just so I know who to pester*, will you be driving this?  Do you have int=
+erest
+> in also pulling in the VT6655 driver?
+>=20
+> * I won't pester that much. ;)
 
-No, the ACK in question is this one:
+I'm getting the sense that there is not a lot of developer interest in these
+drivers.  Is there anything I can do to aid in getting these drivers into t=
+he
+kernel?
 
-local			remote
-   --- nullfunc frame --->
-   <------- ACK ----------
+I would be willing to send patches, however, my experience with kernel hack=
+ing
+is limited and I don't have a lot of time available to contribute.  With a
+little direction, though, I might be able to get somewhere.
 
-Apparently rt73usb is incapable of telling the driver that it got this
-ACK frame, and as such hostapd will not be informed about that, and then
-it will expire the station if it's otherwise idle.
+Any input would be appreciated.
 
-johannes
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
 
-
---=-1guS6h3QwpnMLTtdFl1/
+--u3/rZRmxL6MmkK24
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iQIcBAABAgAGBQJJ+a3XAAoJEKVg1VMiehFYrkEQAJk+ZG+VTF6FanC3b5MYfk6I
-cZAycRFX32pfwGp0L9/inwCCejT8NzjKSX/UFHazBdyQgR/nLvMkP+FuH+a/UWFV
-fseGwQrQA7ycaw3K3HNFUE1iFvtMJuxxekHoa8qcUTinh9ILtZdMc7r0RrwlnRJ0
-UjTTobRCovJ2iWJ36CvBb16Uexjgzn60zOzC3R658cF+5iKPEonVTaqAiRZZuvHk
-p3bWaItjnWpV0FooHWjshDyHSJyfpPMT3fM92pfzG78sAlNiCpUfosNjaR0uKqs2
-th/gYKBsKyH/mbIvTXSHyNtIovqfTLbJfWWfZqvNO7kmjfCH0eyhkapS+bWP/b6+
-PYK0L547U+eYypUpPgKu0Y91NIxNcJwVU4yTBnRi0/l0BJ8whnxUmr0/6N68hrhA
-vhKzhyaKj1vgXDGpHSbFxhWWgmJw/WGvrKD8mwrCykk3wLjmCFi8KPbTVNFTLNvn
-6xBMH3mhUeL+E1zX7rsA0q44krwIEO2dl1fCTdYkLjxBIKhJAde9af/DRjGmm4AR
-cSqEPoldlVp0TwSX21veVzdokOHAKXhTFtVFW+0TplCOwVZHqbHlMXCy33Fruh6A
-o18VwgNgm5NZ2JBGzU4scgJ2eSC8TT/04CyLaWiaxpP5EQWl4zeA6lkJRejxY4QF
-MxDb9GuXnwo/tHlIskcd
-=erRu
+iD8DBQFJ49QDRO4fQQdv5AwRAuAyAKCpmupc7LhrdQRwvvj014x0gpod0gCeOrsQ
+bGUsNrBqIsdaq+nPwLaBl40=
+=CewC
 -----END PGP SIGNATURE-----
 
---=-1guS6h3QwpnMLTtdFl1/--
-
+--u3/rZRmxL6MmkK24--
