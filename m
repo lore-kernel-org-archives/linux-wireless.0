@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54833 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761190AbZDBW0N (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:26004 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618AbZDNU3v convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 18:26:13 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 5/5] mac80211: expose HT channel flags through debugfs
-Date: Thu,  2 Apr 2009 18:26:06 -0400
-Message-Id: <1238711166-2208-6-git-send-email-lrodriguez@atheros.com> (sfid-20090403_002622_490565_17DB28B1)
-In-Reply-To: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
-References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 14 Apr 2009 16:29:51 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so532715fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2009 13:29:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200904142159.59511.chunkeey@web.de>
+References: <200904142159.59511.chunkeey@web.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 14 Apr 2009 22:29:34 +0200
+Message-ID: <69e28c910904141329o731a7bcfjde0e5587c20e9058@mail.gmail.com> (sfid-20090414_234556_089193_4B3FCF4E)
+Subject: Re: [RFC] ar9170: 802.11n RX Part
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we are not going to be exporting HT40-/+
-flags for now through nl80211 we supply the channel
-flags as a whole through debugfs so users/testers can
-see whether or not HT40-/+ is allowed.
+On Tue, Apr 14, 2009 at 9:59 PM, Christian Lamparter <chunkeey@web.de> =
+wrote:
+> With this patch you can finally tune your ar9170 radio to the next ne=
+twork
+> and listen to the sound of HT.
+>
+> Of course, you won't be able to sing along with all other 11n devices=
+=2E
+> We still need a rate algo, BA support (weird stuff!) for HT before
+> we can think about coding it.
+>
+> Regards,
+> =A0 =A0 =A0 =A0Chr
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/debugfs.c     |   15 +++++++++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- 2 files changed, 18 insertions(+), 0 deletions(-)
+A rate algo is needed because wext doesn't support HT rates, and
+nl80211 doesn't yet have a rate selection feature, preventing manual
+setting of HT rates, right?
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 210b9b6..e6b36e9 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -51,6 +51,15 @@ static const struct file_operations name## _ops = {			\
- 
- DEBUGFS_READONLY_FILE(frequency, 20, "%d",
- 		      local->hw.conf.channel->center_freq);
-+DEBUGFS_READONLY_FILE(ht40allowed, 20, "%d",
-+		      !(local->hw.conf.channel->flags &
-+		      IEEE80211_CHAN_NO_HT40));
-+DEBUGFS_READONLY_FILE(ht40plusallowed, 20, "%d",
-+		      !(local->hw.conf.channel->flags &
-+		      IEEE80211_CHAN_NO_HT40PLUS));
-+DEBUGFS_READONLY_FILE(ht40minusallowed, 20, "%d",
-+		      !(local->hw.conf.channel->flags &
-+		      IEEE80211_CHAN_NO_HT40MINUS));
- DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
- 		      local->rts_threshold);
- DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
-@@ -269,6 +278,9 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
- 
- 	DEBUGFS_ADD(frequency);
-+	DEBUGFS_ADD(ht40allowed);
-+	DEBUGFS_ADD(ht40plusallowed);
-+	DEBUGFS_ADD(ht40minusallowed);
- 	DEBUGFS_ADD(rts_threshold);
- 	DEBUGFS_ADD(fragmentation_threshold);
- 	DEBUGFS_ADD(short_retry_limit);
-@@ -324,6 +336,9 @@ void debugfs_hw_add(struct ieee80211_local *local)
- void debugfs_hw_del(struct ieee80211_local *local)
- {
- 	DEBUGFS_DEL(frequency);
-+	DEBUGFS_DEL(ht40allowed);
-+	DEBUGFS_DEL(ht40plusallowed);
-+	DEBUGFS_DEL(ht40minusallowed);
- 	DEBUGFS_DEL(rts_threshold);
- 	DEBUGFS_DEL(fragmentation_threshold);
- 	DEBUGFS_DEL(short_retry_limit);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6ed78c..f48cab9 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -750,6 +750,9 @@ struct ieee80211_local {
- 		struct dentry *rcdir;
- 		struct dentry *rcname;
- 		struct dentry *frequency;
-+		struct dentry *ht40allowed;
-+		struct dentry *ht40plusallowed;
-+		struct dentry *ht40minusallowed;
- 		struct dentry *rts_threshold;
- 		struct dentry *fragmentation_threshold;
- 		struct dentry *short_retry_limit;
--- 
-1.6.0.6
+--G=E1bor
 
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
