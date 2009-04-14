@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56611 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756255AbZDSLWS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 07:22:18 -0400
-Subject: [PATCH] mac80211: fix basic rate bitmap calculation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain
-Date: Sun, 19 Apr 2009 13:22:11 +0200
-Message-Id: <1240140131.25826.4.camel@johannes.local> (sfid-20090419_132225_519575_99DA7550)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:4259 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721AbZDNCK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2009 22:10:26 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] ath9k: fix access to freed memory in ath_rx_tasklet()
+To: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	ath9k-devel@lists.ath9k.org
+Date: Mon, 13 Apr 2009 22:10:24 -0400
+Message-ID: <20090414021024.10457.67684.stgit@localhost.localdomain> (sfid-20090414_041030_840822_881DBCDF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-    commit d61272cbb35fa1c08fe94898583d880256f2dbd3
-    Author: Tomas Winkler <tomas.winkler@intel.com>
-    Date:   Thu Oct 30 17:08:08 2008 +0200
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-        mac80211: fix basic rates setting from association response
-        
-        In previous code all the rates were marked as basic.
-        
-        Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-        Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-        Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-introduced a copy/paste error (see patch).
-
-Unfortunately, this not just leads to wrong data being passed
-to the driver but is remotely exploitable for some hardware or
-driver combinations.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: stable@kernel.org [2.6.29]
+hdr->frame_control points to skb data and should not been used after the
+skb has been consumed by __ieee80211_rx().
 ---
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-19 12:27:46.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-19 12:27:51.000000000 +0200
-@@ -1577,7 +1577,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ drivers/net/wireless/ath/ath9k/recv.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 94a3328..b46badd 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -488,6 +488,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 	int hdrlen, padsize, retval;
+ 	bool decrypt_error = false;
+ 	u8 keyix;
++	__le16 fc;
  
- 	for (i = 0; i < elems.ext_supp_rates_len; i++) {
- 		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
--		bool is_basic = !!(elems.supp_rates[i] & 0x80);
-+		bool is_basic = !!(elems.ext_supp_rates[i] & 0x80);
+ 	spin_lock_bh(&sc->rx.rxbuflock);
  
- 		if (rate > 110)
- 			have_higher_than_11mbit = true;
-
-
+@@ -601,6 +602,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		/* see if any padding is done by the hw and remove it */
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++		fc = hdr->frame_control;
+ 
+ 		/* The MAC header is padded to have 32-bit boundary if the
+ 		 * packet payload is non-zero. The general calculation for
+@@ -685,7 +687,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 			sc->rx.rxotherant = 0;
+ 		}
+ 
+-		if (ieee80211_is_beacon(hdr->frame_control) &&
++		if (ieee80211_is_beacon(fc) &&
+ 				(sc->sc_flags & SC_OP_WAIT_FOR_BEACON)) {
+ 			sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
+ 			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
