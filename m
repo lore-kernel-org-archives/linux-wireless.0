@@ -1,88 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41409 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752242AbZD2VKD (ORCPT
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:60062 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbZDNEOS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 17:10:03 -0400
-Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <49F8C03D.6040909@lwfinger.net> (sfid-20090429_230225_847074_E5413886)
-References: <49F8C03D.6040909@lwfinger.net>
-	 (sfid-20090429_230225_847074_E5413886)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ydCRRDpPF75FS1BNa8Q5"
-Date: Wed, 29 Apr 2009 23:09:32 +0200
-Message-Id: <1241039372.4547.3.camel@johannes.local> (sfid-20090429_231009_993152_4FF82E4D)
-Mime-Version: 1.0
+	Tue, 14 Apr 2009 00:14:18 -0400
+Message-ID: <49E40D88.3050709@lwfinger.net> (sfid-20090414_061422_652568_EE73F0A2)
+Date: Mon, 13 Apr 2009 23:14:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Ellingsworth <david@identd.dyndns.org>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: b43legacy AP
+References: <30353c3d0904100736g69782d46g18d99edd0dd0660d@mail.gmail.com>	 <49DF9E38.5030801@lwfinger.net>	 <30353c3d0904101349o915439arffb652b98e245e10@mail.gmail.com> <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
+In-Reply-To: <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+David Ellingsworth wrote:
+> I wanted to report that I've finally been successful at getting
+> b43legacy to beacon properly. Originally, I had configured hostapd to
+> use channel 1. After reading the list of bugs for the bwi driver,
+> shown here: http://leaf.dragonflybsd.org/cgi/web-man?command=bwi , I
+> had the inclination to try channel 6. It appears b43legacy might have
+> the same bugs as the bwi driver as I immediately began seeing beacons
+> once I started using channel 6.
 
---=-ydCRRDpPF75FS1BNa8Q5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I finally got a chance to test my BCM4306/2 that uses b43legacy. It works just
+fine as an AP using channel 1. At least on my device, it does not have the
+problem of the bwi driver.
 
-Hi Larry,
-
-> I have been getting a number of page allocation failures of late on my x8=
-6_64
-> system. The user-space app that hits the problem varies; however, there i=
-s
-> always a network connection. In addition, the failure is always of order =
-1. For
-> the instance reported below, git was updating a tree mounted on an NFS vo=
-lume.
-> The problem started with 2.6.30-rc1, but persists with -rc3.
->=20
-> I have seen the problem with the b43 and p54usb wireless drivers. The use=
-r-space
-> apps include cc1, git components, and firefox; thus not all involve nfs.
->=20
-> I will be happy to supply any further information.
->=20
-> kernel: git: page allocation failure. order:1, mode:0x4020
-
-> kernel:  [<ffffffffa0220711>] ieee80211_skb_resize+0x91/0xc7 [mac80211]
-...
-> kernel: 427298 pages non-shared
-
-It's a little curious that you have order:1 allocations here. I think
-below the printout you showed you would see a line like
-	phy0: failed to reallocate TX buffer
-Is that there? Could you track down that message in the code (around
-net/mac80211/tx.c line 1368) and add to it the following:
-
-	"%d, %d, need %d, %d", skb->data_len, skb->len, head_need, tail_need
-
-and then try to reproduce this problem please? With both p54 and b43 you
-should only have packets far smaller than 4096 bytes so no order 1
-allocation should be needed, afaict.
-
-johannes
-
---=-ydCRRDpPF75FS1BNa8Q5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ+MIJAAoJEKVg1VMiehFY1GUQAK00JDonUcLjtppdllD35iXE
-liKFdRAI0o6oRru++Ui3PWyl5PwghRgwwIDXsLw+JTxsYEwykb4H0jgCjLmftgNv
-oyKq6q3PvlMT8DFd5fda2cQHXo+VBfAxXicAGBEbr29z6ecSQsVeFEa1Fq0MNzfw
-LzYAh9vtFQQ1XVTwdVeNXTuOq/04KW0BdzEg1JUaazsuDZ6STuz2M4y9p7bujM3F
-vQi3+44f62zKNG7xVnHyzpYCJzrJctYAo1TQUExzdlbzmAPwQH9HrJV1qFXE1gIc
-ioMPXrG27AlFY0fbIQu6mw6a8bVgIM9dn6DvN9j8KqwbWUzodIZgWLxULtt/G+uX
-XaKqPgrDeQvABFvWa+uUZfzFXTEuMrbrcE717mifOeHL8PhzO+4xAgtgXQqQGWIp
-IaB8Re/hZ99RisFKV7r7R9XUPqfe0hSA+HLoIeHNoo0Pr54ctM/5osFTCTpvBw4i
-2iKqQNzZmfiBN32m8tQRLNmhjT/qFRRD4nepOCFcmoqeK1zBYgokqzcahIaxazHY
-V6DYVlOT/xanZULPd6myu/COTJiklGtOdBNJ2CuAUmw/UhJKRW+ZezJ1/R+hg82A
-GtEdNgrr21G8712uU93P5GEf/E0/G0nHCSlX+WbyP31v5GdBJj9PBn0dDGk7dP7b
-jEV5NE/sZQE0rTtrWbDu
-=4yeU
------END PGP SIGNATURE-----
-
---=-ydCRRDpPF75FS1BNa8Q5--
-
+Larry
