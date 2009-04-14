@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41690 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751253AbZDQTiq (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755314AbZDNLIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 15:38:46 -0400
-Date: Fri, 17 Apr 2009 22:38:38 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Add set/get for frag/rts threshold and retry
-	limits
-Message-ID: <20090417193838.GA21250@jm.kir.nu> (sfid-20090417_213849_785295_B64B5E40)
-References: <20090417184629.GA9275@jm.kir.nu> <1239996573.5110.12.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1239996573.5110.12.camel@johannes.local>
+	Tue, 14 Apr 2009 07:08:18 -0400
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Greg KH <greg@kroah.com>, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+In-Reply-To: <20090414105200.GE25746@storm.local.network> (sfid-20090414_125216_881334_29F40447)
+References: <20090414105200.GE25746@storm.local.network>
+	 (sfid-20090414_125216_881334_29F40447)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Qte6Kih9ZZlW0PGO8cKO"
+Date: Tue, 14 Apr 2009 13:07:38 +0200
+Message-Id: <1239707258.4778.3.camel@johannes.local> (sfid-20090414_130821_899072_BB28C493)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 17, 2009 at 09:29:33PM +0200, Johannes Berg wrote:
-> > +	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
-> > +		if (local->ops->set_rts_threshold)
-> > +			local->ops->set_rts_threshold(local_to_hw(local),
-> > +						      wiphy->rts_threshold);
-> > +	}
-> 
-> That could return an error. (so do the changes the other way around)
 
-I noticed, but ended up following the existing behavior in wext.c. While
-that may not be the ideal source for good behavior, at least this is
-consistent. Should both of them be changed? What exactly should happen
-on error?
+--=-Qte6Kih9ZZlW0PGO8cKO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > +		if (changed & WIPHY_PARAM_RETRY_SHORT)
-> > +			rdev->wiphy.retry_short = retry_short;
-> > +		if (changed & WIPHY_PARAM_RETRY_LONG)
-> > +			rdev->wiphy.retry_long = retry_long;
-> > +		if (changed & WIPHY_PARAM_FRAG_THRESHOLD)
-> > +			rdev->wiphy.frag_threshold = frag_threshold;
-> > +		if (changed & WIPHY_PARAM_RTS_THRESHOLD)
-> > +			rdev->wiphy.rts_threshold = rts_threshold;
-> > +
-> > +		result = rdev->ops->set_wiphy_params(&rdev->wiphy, changed);
-> > +		if (result)
-> > +			goto bad_res;
-> > +	}
-> 
-> If that returns an error we need to roll back the values?
+On Tue, 2009-04-14 at 06:52 -0400, Forest Bond wrote:
+> This patch adds the vt6656 driver to drivers/staging.  This code was lite=
+rally
+> copied from the upstream source archive, available here:
+>=20
+>   http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
+>=20
+> Copyright: VIA Networking Technologies, Inc.
+> License: GPL
+> Authors: Jerry Chen, Kyle Hsu, Lucas Lin, Lyndon Chen, Tevin Chen, Warren=
+ Hsu,
+>          Yiching Chen
+> Signed-off-by: Forest Bond <forest@alittletooquiet.net>
+>=20
+> Patch: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driver-t=
+o-drivers-staging.patch.gz
+> Signature: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driv=
+er-to-drivers-staging.patch.gz.sig
 
-I thought about this, but ended up not doing that because the existing
-(wext) code seemed to behave in the same way. It is unclear whether the
-error there would indicate that some of the parameters were taken into
-use, but not all. Unless we provide mechanism for returning that
-information (e.g., separate calls for each parameter), I'm not sure what
-exactly should be done here. Just leaving the parameters (which were
-validated before) in struct wiphy seemed like the safest (and well,
-certainly easiest ;-) alternative.
+Can we also please add files here saying to not bother the
+linux-wireless list about this crap?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Thanks,
+Johannes
+
+--=-Qte6Kih9ZZlW0PGO8cKO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ5G54AAoJEKVg1VMiehFY/0wQAJy+i0XCzDG2xFJbdSQc37Er
+kZ7dWPIob6piZWa3Y9VOcVoxc6h3wvz5idf8/UwSMsZc7iuqieu4zbep5EJV8qRW
+/LC5n3ZVSos3S637X39Zr1OeyA+0NkcuJuUmpHJXV3r8bXm25SJzr/eFEwjVsKVb
+2aTDDfjw5mKLCr1jZfEK6mB+rRSmn1952yS0Vmi4lwpMhFO4PGJP8CUDsPx5ARyC
+pjSeYI31EhXAVd8FfCiyQIuhsoGxBU01U2qZqpnMWLaCTC4W5q0Bxz/1JNrneel1
+N01dHigz+wLhjaQxXPiwWh9gKFHTyaGPJHN5tp0VSt7gvXKKy0QAaiYrnTcnip05
+x2tf4a0LaNZIqnICM9d4IokC9o8KnIWc4hEBgU5mvy2mPBMCKkqylVdmyuRchAJw
+CB17cZC+io8ZVNzV2tteVPih86E0w0nWl9+goRZZckQcC54RlzAqET1IC4GgoVOC
+MR36cOG2nS77qT8wWoDZAsr8paJ46bMSQePX50paY6z1KVEX9s0YyhR28XVBvyLT
+8oXaIryg/XIr2u8kH0beBzSfQe2QxoBS/HhLNoX93fKDdGb7SKc50AHqL2KFYJ/y
+PKJFzR7q2ZRUdx3LNlJu9XM+/5AvZC+rF65uHndWFai+mD4edPLlLyoT4Sh76oS3
+vVtticLs0WnN8eKAZ5Mf
+=qpZd
+-----END PGP SIGNATURE-----
+
+--=-Qte6Kih9ZZlW0PGO8cKO--
+
