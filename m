@@ -1,82 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45366 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755140AbZDGUlh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58204 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767AbZDNNPu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:41:37 -0400
-Subject: Re: [PATCH v2 3/5] mac80211: check if HT40+/- is allowed before
- sending assoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com> (sfid-20090407_223826_570259_084A19A1)
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-	 <1239048958-11775-4-git-send-email-lrodriguez@atheros.com>
-	 <1239099071.22453.12.camel@johannes.local> <20090407162345.GC5758@tesla>
-	 <1239131370.6199.0.camel@johannes.local>
-	 <43e72e890904071338q4f9667ddo2958067c57442888@mail.gmail.com>
-	 (sfid-20090407_223826_570259_084A19A1)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zG7GZ2Qbtb5ePyGsAIFc"
-Date: Tue, 07 Apr 2009 22:41:03 +0200
-Message-Id: <1239136863.7475.66.camel@johannes.local> (sfid-20090407_224140_652703_55CB63AE)
-Mime-Version: 1.0
+	Tue, 14 Apr 2009 09:15:50 -0400
+Date: Tue, 14 Apr 2009 09:02:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Forest Bond <forest@alittletooquiet.net>,
+	Greg KH <greg@kroah.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090414130248.GA3291@tuxdriver.com> (sfid-20090414_151553_418915_E8A1982D)
+References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1239713034.17109.10.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 14, 2009 at 02:43:54PM +0200, Johannes Berg wrote:
+> Hi Marcel,
+> 
+> > just to document the irony here. Two or three years ago at OLS, Kyle and
+> > Greg were making fun of Ubuntu merging its 5th wireless stack into their
+> > kernel. Now the staging crap is doing exactly the same.
+> 
+> :)
+> 
+> Actually, last I counted it was already 7 or 8 stacks in staging _only_.
+> This (and the other patch) will add two more. Not to mention that of
+> course we already have something like two and a half stacks in the
+> kernel tree (mac80211, in hostapd, and libipw [former ieee80211]).
 
---=-zG7GZ2Qbtb5ePyGsAIFc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+FWIW I had started trying to consolidate some code between those three.
+I stalled-out a bit and got distracted with the rndis_wlan cfg80211
+bits, but I hope to get back to it.  Of course, hostap seems mighty
+complex internally -- it might just have to lay there.  And libipw
+and mac80211 target different types of designs, but I hope they can
+eventually share some infrastructure in lib80211.
 
-On Tue, 2009-04-07 at 13:38 -0700, Luis R. Rodriguez wrote:
+None of the above is meant to disagree about the staging crap.
+Having that stuff around is at best an optimistic attempt to help a
+few stray users... :-)
 
-> >>                 switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC=
-_OFFSET) {
-> >>                 case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-> >>                         if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
-> >>                                 cap &=3D ~IEEE80211_HT_CAP_SUP_WIDTH_2=
-0_40;
-> >>                                 cap &=3D ~IEEE80211_HT_CAP_SGI_40;
-> >>                         }
-> >>                         break;
-> >>                 case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-> >>                         if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
-> >>                                 cap &=3D ~IEEE80211_HT_CAP_SUP_WIDTH_2=
-0_40;
-> >>                                 cap &=3D ~IEEE80211_HT_CAP_SGI_40;
-> >>                         }
-> >
-> > Yeah, that looks ok.
->=20
-> That's what was there or what I added in my patches.
-
-Indeed, it's already there. I guess I got confused, sorry for the noise.
-
-johannes
-
---=-zG7GZ2Qbtb5ePyGsAIFc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ27pcAAoJEKVg1VMiehFYN8UQAMIdtAXrMYEYCiG3nFTJvwP3
-lRUbEE7gTnKnskjJRsXDl/ptucSb8QF7L+fq1P2qAx73PSrEGqgMGpJMaYXIPIB4
-WyS6eQXVb1He0ovMshh+vDaAdU/Pi/6kJVr/1JOgo4DEVvSWgkHMTv6UndanijJG
-c/iN3gzY9hFVBOpPiy7clhm8ecfX0pIqPI6WBE3zXMPcAS1Zzz+76yDWbIsNMYF7
-/Wevl78S9M4p62eg/QtbB9womxVXcN7ZA1JPINvTmwk3xYd8M626B0PxCJi7ZY0u
-L4mT2/ZFTtxnxuVcTVDVKeKSODk6W7m5LEVBW9IWY0PwkWytl/cx6WOrPzJvJHU8
-8S+lt+WDj/N5rgrg3NCAc/2v3HaxL1K25n4eOhl2K68Z5IjQyCDeNjnDsppRZ9K8
-ISJSY5VGLjy8j0DVcI70pXlpqK5l4ZXfsmg5lfS9OFvmIZ4tP3vTaG2660Bra6jt
-PPFIg7e9UBm3zX7K890GqxKZR607d3oakWdQkF6tc8d+mxOIK3bECbJomIETyhb7
-2mTI9zACNp2RjTWuCr2TrSmwxNQiFTpT/o1z09lnjWtIDPnoSjerU7hA6kikR3TI
-IgtIcyu61rIkan7mt7Ngecw/MdLfMSwy1MstTEOYHNWNxOY80+Q2Cl2H9Gbf3Yvh
-/4UceGQ0rgUxrJyuBXwL
-=uayT
------END PGP SIGNATURE-----
-
---=-zG7GZ2Qbtb5ePyGsAIFc--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
