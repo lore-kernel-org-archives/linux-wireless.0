@@ -1,121 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12239 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756770AbZDTVbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 17:31:06 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/11] iwlcore: Fix stay in table function.
-Date: Mon, 20 Apr 2009 14:37:02 -0700
-Message-Id: <1240263424-8495-10-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233117_622404_0703DCEF)
-In-Reply-To: <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
-References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-8-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
+Received: from mail3.webfaction.com ([70.85.44.146]:50782 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbZDNV5B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2009 17:57:01 -0400
+Date: Tue, 14 Apr 2009 10:19:06 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Greg KH <greg@kroah.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090414141852.GB20470@storm.local.network> (sfid-20090414_235707_613913_7B1EDECE)
+References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="d9ADC0YsG2v16Js0"
+In-Reply-To: <20090414130248.GA3291@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-Function rs_stay_in_table was flushing the rate scale table way to early. time_after
-macro in expecting long value and was failing because we passing u32 value.
+--d9ADC0YsG2v16Js0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   26 ++++++++++----------------
- 1 files changed, 10 insertions(+), 16 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 98b6b37..3504279 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -52,7 +52,7 @@
- /* max allowed rate miss before sync LQ cmd */
- #define IWL_MISSED_RATE_MAX		15
- /* max time to accum history 2 seconds */
--#define IWL_RATE_SCALE_FLUSH_INTVL   (2*HZ)
-+#define IWL_RATE_SCALE_FLUSH_INTVL   (3*HZ)
- 
- static u8 rs_ht_to_legacy[] = {
- 	IWL_RATE_6M_INDEX, IWL_RATE_6M_INDEX,
-@@ -135,7 +135,7 @@ struct iwl_lq_sta {
- 	u32 table_count;
- 	u32 total_failed;	/* total failed frames, any/all rates */
- 	u32 total_success;	/* total successful frames, any/all rates */
--	u32 flush_timer;	/* time staying in mode before new search */
-+	u64 flush_timer;	/* time staying in mode before new search */
- 
- 	u8 action_counter;	/* # mode-switch actions tried */
- 	u8 is_green;
-@@ -1025,6 +1025,7 @@ static void rs_set_stay_in_table(struct iwl_priv *priv, u8 is_legacy,
- 	lq_sta->table_count = 0;
- 	lq_sta->total_failed = 0;
- 	lq_sta->total_success = 0;
-+	lq_sta->flush_timer = jiffies;
- }
- 
- /*
-@@ -1914,8 +1915,8 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta)
- 		/* Elapsed time using current modulation mode */
- 		if (lq_sta->flush_timer)
- 			flush_interval_passed =
--			    time_after(jiffies,
--				       (unsigned long)(lq_sta->flush_timer +
-+			time_after(jiffies,
-+					(unsigned long)(lq_sta->flush_timer +
- 					IWL_RATE_SCALE_FLUSH_INTVL));
- 
- 		/*
-@@ -2249,6 +2250,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
- 			update_lq = 1;
- 			index = low;
- 		}
-+
- 		break;
- 	case 1:
- 		/* Increase starting rate, update uCode's rate table */
-@@ -2314,8 +2316,11 @@ lq_update:
- 				     tbl->current_rate, index);
- 			rs_fill_link_cmd(priv, lq_sta, tbl->current_rate);
- 			iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
--		}
-+		} else
-+			done_search = 1;
-+	}
- 
-+	if (done_search && !lq_sta->stay_in_tbl) {
- 		/* If the "active" (non-search) mode was legacy,
- 		 * and we've tried switching antennas,
- 		 * but we haven't been able to try HT modes (not available),
-@@ -2350,17 +2355,6 @@ lq_update:
- 			lq_sta->action_counter = 0;
- 			rs_set_stay_in_table(priv, 0, lq_sta);
- 		}
--
--	/*
--	 * Else, don't search for a new modulation mode.
--	 * Put new timestamp in stay-in-modulation-mode flush timer if:
--	 * 1)  Not changing rates right now
--	 * 2)  Not just finishing up a search
--	 * 3)  flush timer is empty
--	 */
--	} else {
--		if ((!update_lq) && (!done_search) && (!lq_sta->flush_timer))
--			lq_sta->flush_timer = jiffies;
- 	}
- 
- out:
--- 
-1.5.6.3
+On Tue, Apr 14, 2009 at 09:02:48AM -0400, John W. Linville wrote:
+> On Tue, Apr 14, 2009 at 02:43:54PM +0200, Johannes Berg wrote:
+> > Hi Marcel,
+> >=20
+> > > just to document the irony here. Two or three years ago at OLS, Kyle =
+and
+> > > Greg were making fun of Ubuntu merging its 5th wireless stack into th=
+eir
+> > > kernel. Now the staging crap is doing exactly the same.
+> >=20
+> > :)
+> >=20
+> > Actually, last I counted it was already 7 or 8 stacks in staging _only_.
+> > This (and the other patch) will add two more. Not to mention that of
+> > course we already have something like two and a half stacks in the
+> > kernel tree (mac80211, in hostapd, and libipw [former ieee80211]).
+>=20
+> FWIW I had started trying to consolidate some code between those three.
+> I stalled-out a bit and got distracted with the rndis_wlan cfg80211
+> bits, but I hope to get back to it.  Of course, hostap seems mighty
+> complex internally -- it might just have to lay there.  And libipw
+> and mac80211 target different types of designs, but I hope they can
+> eventually share some infrastructure in lib80211.
+>=20
+> None of the above is meant to disagree about the staging crap.
+> Having that stuff around is at best an optimistic attempt to help a
+> few stray users... :-)
 
+Well, gosh, I understand the criticism here and if I were a kernel develope=
+r I
+imagine my perspective would be much the same.  But I can't help but feel t=
+hat
+there's some amount of hypocrisy when we hammer on a manufacturer to proper=
+ly
+license their driver and then let it drop dead when they do.
+
+I understand that the problem would be solved if they manufacturers would
+suddenly "get it," but the scale of social problem preventing that is likel=
+y too
+large to change anytime soon.
+
+If kernel developers are too busy to support the hardware, why do the
+manufacturers take so much criticism for releasing binary-only drivers or b=
+adly
+licensed drivers, or for neglecting to release technical specifications?  If
+what I'm sensing is correct and there's no practical likelihood of these de=
+vices
+getting in-kernel support even with those issues resolved, the criticism al=
+most
+seems unjustified.
+
+I appreciate what the kernel developers do, of course, and my intention is =
+not
+to ruffle feathers.  But when a manufacturer that has taken a lot of critic=
+ism
+for its approach to the Linux community shows some good will, it seems like=
+ we
+ought to be able to turn that into something productive.  If we can't, what=
+ have
+we been complaining about?
+
+My apologies if I'm way off on this.  I haven't been around all that long s=
+o it
+is certainly possible.
+
+Respectfully,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--d9ADC0YsG2v16Js0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJ5JtaRO4fQQdv5AwRAqlJAJsHJuzpe0s24yWP+SyKhLICOAZNfQCg3dJR
+Bm/Jyviv9Q/Ec09Qgqpxtio=
+=jDYx
+-----END PGP SIGNATURE-----
+
+--d9ADC0YsG2v16Js0--
