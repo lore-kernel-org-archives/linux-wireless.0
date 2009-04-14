@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755579AbZDWJoz (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:59252 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbZDNXHv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 05:44:55 -0400
-Subject: [PATCH] mac80211: fix various problems in ibss code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 23 Apr 2009 11:44:21 +0200
-Message-Id: <1240479861.30082.176.camel@johannes.local> (sfid-20090423_114512_813708_5D5800AB)
-Mime-Version: 1.0
+	Tue, 14 Apr 2009 19:07:51 -0400
+Received: by fxm2 with SMTP id 2so2659941fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2009 16:07:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <69e28c910904141547h129f379aoc6f632a6858e981b@mail.gmail.com>
+References: <69e28c910904141534w7ed9b36w817f1862ff015286@mail.gmail.com>
+	<1239748653.4205.27.camel@johannes.local> <69e28c910904141547h129f379aoc6f632a6858e981b@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 15 Apr 2009 01:07:34 +0200
+Message-ID: <69e28c910904141607n1e36472fg2c921afc0afe154e@mail.gmail.com> (sfid-20090415_010756_070483_CCB716C7)
+Subject: Re: [PATCH RFC] mac80211: don't ask drivers to retry transmitting
+	NO_ACK frames
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a few problems in the IBSS code:
- a) it tries to activate interfaces that are down after scanning
- b) it crashes after scanning on an IBSS iface that isn't active
- c) since the ssid_len is used as a flag, need to make it visible
-    only after all other settings are set, this helps protect
-    against b)
+2009/4/15 G=E1bor Stefanik <netrolller.3d@gmail.com>:
+> 2009/4/15 Johannes Berg <johannes@sipsolutions.net>:
+>> On Wed, 2009-04-15 at 00:34 +0200, G=E1bor Stefanik wrote:
+>>> Set the total count of TX tries to 1 if IEEE80211_TX_CTL_NO_ACK is
+>>> set. This fixes a bug where mac80211 allowed the RC algo to request
+>>> drivers to forcibly retransmit NO_ACK (e.g. multicast) frames until
+>>> the excessive-retries limit is reached.
+>>
+>> Why not fix the rate control algorithms to use the no-ack flag inste=
+ad
+>> of is_multicast?
+>
+> I was thinking about that originally, but we have 5 RC algorithms
+> (minstrel, pid, iwl-3945-rs, iwl-agn-rs & ath9k-rs) right now, with
+> possibly more to come for future N-based devices. Fixing them all
+> one-by-one would be much more tedious, and we will still not be
+> future-proof (that is, there is always the risk of getting a new
+> driver released with its own, specific RC algorithm that suffers from
+> this bug). This way, if e.g. Whatevercom releases a driver for its
+> WhateWIFI UltraMIMO1337 chipset with its own, buggy "whatever-rs"
+> algorithm, NO_ACK will still work properly for that driver.
 
-For b), we get a system crash:
+BTW, Minstrel specifically forces NO_ACK packets to be retried the
+maximal allowed number of times.
 
-wlan0: Creating new IBSS network, BSSID ce:f9:88:76:1e:4d
-BUG: unable to handle kernel NULL pointer dereference at (null)
-IP: [<...>] ieee80211_sta_find_ibss+0x294/0x37d [mac80211]
-Call Trace:
- [<...>] ieee80211_ibss_notify_scan_completed+0x0/0x88 [mac80211]
+rc80211_minstrel.c, line 246:
+>	if (!sta || !mi || use_low_rate(skb)) {
+>		ar[0].idx =3D rate_lowest_index(sband, sta);
+>		ar[0].count =3D mp->max_retry;
+>		return;
+>	}
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ibss.c |   18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+mp->max_retry =3D hw->max_rate_tries, or 7 if hw->max_rate_tries is 0.
+The use_low_rate function is basically a check for NO_ACK.
 
---- wireless-testing.orig/net/mac80211/ibss.c	2009-04-23 11:18:12.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-04-23 11:39:16.000000000 +0200
-@@ -793,8 +793,12 @@ void ieee80211_ibss_notify_scan_complete
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (!netif_running(sdata->dev))
-+			continue;
- 		if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
- 			continue;
-+		if (!sdata->u.ibss.ssid_len)
-+			continue;
- 		sdata->u.ibss.last_scan_completed = jiffies;
- 		ieee80211_sta_find_ibss(sdata);
- 	}
-@@ -834,9 +838,6 @@ int ieee80211_ibss_join(struct ieee80211
- {
- 	struct sk_buff *skb;
- 
--	memcpy(sdata->u.ibss.ssid, params->ssid, IEEE80211_MAX_SSID_LEN);
--	sdata->u.ibss.ssid_len = params->ssid_len;
--
- 	if (params->bssid) {
- 		memcpy(sdata->u.ibss.bssid, params->bssid, ETH_ALEN);
- 		sdata->u.ibss.fixed_bssid = true;
-@@ -868,6 +869,17 @@ int ieee80211_ibss_join(struct ieee80211
- 	sdata->u.ibss.state = IEEE80211_IBSS_MLME_SEARCH;
- 	sdata->u.ibss.ibss_join_req = jiffies;
- 
-+	memcpy(sdata->u.ibss.ssid, params->ssid, IEEE80211_MAX_SSID_LEN);
-+
-+	/*
-+	 * The ssid_len setting below is used to see whether
-+	 * we are active, and we need all other settings
-+	 * before that may get visible.
-+	 */
-+	mb();
-+
-+	sdata->u.ibss.ssid_len = params->ssid_len;
-+
- 	ieee80211_recalc_radio_enable(sdata->local);
- 
- 	set_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
-
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
