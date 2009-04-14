@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:38127 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758283AbZDRQaE (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64888 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752908AbZDNAnl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 12:30:04 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] mac80211: set CLEAR_PS for pspolled frames
-Date: Sat, 18 Apr 2009 18:30:00 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
+	Mon, 13 Apr 2009 20:43:41 -0400
+Received: by fxm2 with SMTP id 2so2207761fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 17:43:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200904181830.00309.chunkeey@web.de> (sfid-20090418_183028_521523_EFE39577)
+In-Reply-To: <49E3D7E9.6090501@lwfinger.net>
+References: <42609.6548.qm@web23108.mail.ird.yahoo.com> <69e28c910904131649s7e735380i10c739d27ad0766f@mail.gmail.com>
+	<49E3D7E9.6090501@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 14 Apr 2009 02:43:25 +0200
+Message-ID: <69e28c910904131743p57af0ae1q5fae0f02d90e035@mail.gmail.com> (sfid-20090414_024349_407663_28B8F639)
+Subject: Re: [PATCH RFC] rtl8187: Call 8187L variants "RTL8187LvX" rather than
+	"RTL8187vX"
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: htl10@users.sourceforge.net,
+	John Linville <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch sets IEEE80211_TX_CTL_CLEAR_PS_FILT for outgoing
-frames for a half-wake station.
+2009/4/14 Larry Finger <Larry.Finger@lwfinger.net>:
+> G=E1bor Stefanik wrote:
+>> What do you mean by "the 'L' just isn't there most of the time"? AFA=
+IK
+>> there is no RTL8187 chip (without a letter suffix), only RTL8187L,
+>> RTL8187B and RTL8187SE, and 8187L is not much more common that 8187B=
+,
+>> to warrant calling it "RTL8187" in any case.
+>>
+>
+> For some reason, that is exactly what the vendor driver does. There a=
+re several
+> places that refer to RTL8187B, but nowhere do they talk about the RTL=
+8187. They
+> do, however, refer to the RTL8187L as the chip name on their Web pile=
+=2E
+>
+> Larry
 
-this is necessary if one wants to get ps-poll working properly with a p54 ap.
+The actual chips also have RTL8187L printed on them.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3fb04a8..4c2e19e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -409,8 +409,19 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		       sta->sta.addr);
- 	}
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--	clear_sta_flags(sta, WLAN_STA_PSPOLL);
-+	if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL)) {
-+		/*
-+		 * The sleeping station with pending data is now snoozing.
-+		 * It queried us for its buffered frames and will go back
-+		 * to deep sleep once it got everything.
-+		 *
-+		 * inform the driver, in case the hardware does powersave
-+		 * frame filtering and keeps a station  blacklist on its own
-+		 * (e.g: p54), so that frames can be delivered unimpeded.
-+		 */
- 
-+		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+	}
- 	return TX_CONTINUE;
- }
- 
+--G=E1bor
+
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
