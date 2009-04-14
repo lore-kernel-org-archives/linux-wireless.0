@@ -1,73 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56112 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761127AbZDGUkL (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:60828 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305AbZDNLpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:40:11 -0400
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20090403182724.GA7364@tuxdriver.com> (sfid-20090403_203108_005030_BC3865B6)
-References: <20090403182724.GA7364@tuxdriver.com>
-	 (sfid-20090403_203108_005030_BC3865B6)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LlcIQx/+4MzLDGz/bhTW"
-Date: Tue, 07 Apr 2009 22:39:28 +0200
-Message-Id: <1239136768.7475.62.camel@johannes.local> (sfid-20090407_224016_300710_DB355506)
-Mime-Version: 1.0
+	Tue, 14 Apr 2009 07:45:22 -0400
+Date: Tue, 14 Apr 2009 07:39:28 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Greg KH <greg@kroah.com>, Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090414113928.GA20470@storm.local.network> (sfid-20090414_134527_843729_3D8CFF17)
+References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="wac7ysb48OaltWcw"
+In-Reply-To: <1239707258.4778.3.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-LlcIQx/+4MzLDGz/bhTW
-Content-Type: text/plain
+--wac7ysb48OaltWcw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
 Hi,
 
-> Also, please consider making some sort of prepared presentation.
-> Especially welcome would be topics that are accessible to those
-> outside of the core wireless developer group, such as current
-> projects on enhancing IBSS support, extended power savings, or any
-> other user-visible topic.  I'll be happy to take such proposals in
-> private email or you can post them as part of this thread.
+On Tue, Apr 14, 2009 at 01:07:38PM +0200, Johannes Berg wrote:
+> On Tue, 2009-04-14 at 06:52 -0400, Forest Bond wrote:
+> > This patch adds the vt6656 driver to drivers/staging.  This code was li=
+terally
+> > copied from the upstream source archive, available here:
+> >=20
+> >   http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
+> >=20
+> > Copyright: VIA Networking Technologies, Inc.
+> > License: GPL
+> > Authors: Jerry Chen, Kyle Hsu, Lucas Lin, Lyndon Chen, Tevin Chen, Warr=
+en Hsu,
+> >          Yiching Chen
+> > Signed-off-by: Forest Bond <forest@alittletooquiet.net>
+> >=20
+> > Patch: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driver=
+-to-drivers-staging.patch.gz
+> > Signature: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-dr=
+iver-to-drivers-staging.patch.gz.sig
+>=20
+> Can we also please add files here saying to not bother the
+> linux-wireless list about this crap?
 
-Since I've just booked my train (will arrive 1:30pm or so on the 25th,
-leave Sunday [28th] late afternoon), here are some things I could
-possibly talk about:
+I would assume this is somewhat implied for any code in drivers/staging.  Is
+that not the case?
 
- * status of moving to nl80211/cfg80211 -- overview over new cfg80211
-   operations, maybe with Jouni?
- * power saving if Kalle can't make it
- * aggregation/11n support -- fairly technical but I've just rewritten
-   things :)
- * maybe some regulatory stuff but Luis really is the expert, unless by
-   then I've rewritten it according to my plan ;)
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
 
-johannes
-
---=-LlcIQx/+4MzLDGz/bhTW
+--wac7ysb48OaltWcw
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iQIcBAABAgAGBQJJ27n9AAoJEKVg1VMiehFYoqcQAL9x9g88HlXWBkc0VRURfHJa
-rdfgrLC+svok6EGd9USAokrrRuA+QB4FvCXOB/b46esG3axBUxT7TIIwMuIVbSOX
-5/sG+NJ+93Pc6rgrWgkM9igAV3RklTS07g7lGYo0XmDEM9FoxCcO0X2ecS8svdbT
-MkcbghphnTu+kLH0yr++w+s3nEAw/RLc2+dtR3mD5h+9NPoLfYtguuNdHHOXTSuU
-qA/6zbiFCrg6VUxGVQsiaFsa5+3ho3VEqaQVicls5OBKd1RD/5OR1rU4nnqIyF6D
-AQCIOp3a3zjB5wSi/AQpKK8zuE6Fd3KyW/NyGEHCCCNYjkZIoUXk3fcUgXLbWXZZ
-vBVsjLNKyBB3L1GavR99a3Zrj9LBUtzqEAKTVIn4MC8KD6kiJZdnsJlchtsaX5bb
-UY410eVFzxhOuhjjIhOUJB2yTURDrpntkKwBYJDL+dlG19W6j0bQaIF5qfDKXRQ9
-6dS0whR+iimOS9+VUbYV/s6jYHAoGiSasUu0wfAFdgyk1RLD955T+0/OQ+uwUbdD
-DqJVGEKwK17XhO50ytm23P6GAq8eDPyQ784ywYkdZ5P8ZJHjxMh8HDxwKvr2OwZv
-2CwFYPW5HH6WTdEePspMUbmmmhI+lTF5k+Q7IPrJXmAaKPNAht7mCM/aXBuO5TJF
-CITizcL1bdZa77wMQ3Pm
-=xDrM
+iD8DBQFJ5HXwRO4fQQdv5AwRAvnjAKC3aE06AH0gt1/z/jFH1pFAEp7b2wCePoUb
+AwWxjl7mEXcmVImzJCfukuY=
+=X6k8
 -----END PGP SIGNATURE-----
 
---=-LlcIQx/+4MzLDGz/bhTW--
-
+--wac7ysb48OaltWcw--
