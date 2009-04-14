@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41076 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752197AbZDDSPE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Apr 2009 14:15:04 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1LqAOU-0002fP-8F
-	for linux-wireless@vger.kernel.org; Sat, 04 Apr 2009 18:15:02 +0000
-Received: from 91-168-185-140.rev.libertysurf.net ([91.168.185.140])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Apr 2009 18:15:02 +0000
-Received: from h by 91-168-185-140.rev.libertysurf.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Apr 2009 18:15:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Hamlet <h@mlet.me>
-Subject: Re: [PATCH V2] rtl8187: Improve wireless statistics for RTL8187
-Date: Sat, 4 Apr 2009 18:10:09 +0000 (UTC)
-Message-ID: <loom.20090404T180348-423@post.gmane.org> (sfid-20090404_201615_527723_522AB1AE)
-References: <49375ac0.z1uZDBLv3IxmmMgD%Larry.Finger@lwfinger.net>	 <69e28c910812040444l5d76632ah288078bd3db172d4@mail.gmail.com>	 <200812041357.00103.chunkeey@web.de> <69e28c910812040514l2d325eeekef3decbcce2520b2@mail.gmail.com> <4937E3DF.4030407@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from fmmailgate03.web.de ([217.72.192.234]:60245 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751AbZDNQUY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2009 12:20:24 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Fabio Rossi <rossi.f@inwind.it>
+Subject: Re: [PATCH 2/3] p54: more SoftLED updates
+Date: Tue, 14 Apr 2009 18:20:21 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200903250312.18264.chunkeey@web.de> <200904141712.34220.rossi.f@inwind.it>
+In-Reply-To: <200904141712.34220.rossi.f@inwind.it>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200904141820.21965.chunkeey@web.de> (sfid-20090414_182031_017155_723C0370)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@...> writes:
+On Tuesday 14 April 2009 17:12:33 Fabio Rossi wrote:
+> On Wednesday 25 March 2009, Christian Lamparter wrote:
+> 
+> > This patch hopefully finishes the SoftLED code:
+> > - It adds two more LEDs (rx and radio).
+> >   (the FW claims it can support up to 16 LEDs,
+> >    but I doubt that any vendor put more than 4 on a board)
+> > - update the LEDs in a _delayed_ workqueue.
+> >   No one reported any more crashes.
+> >   (see: "PATCH] p54: fix race condition in memory management")
+> >   So we can stop burning the mm code.
+> 
+> My device has 2 LEDs and I can see 4 registrations (assoc, tx, rx and radio). 
+> Does it make sense to register LEDs which are not available?
+Well, trouble is that you can look (with your eyes) at your device and see the
+number of LEDs... This is something we cannot do with the driver. 
+(Unless we find a EEPROM field which stores the # of LEDs and 
+maybe even what they are used for?)
 
-> Is it possible for you to send me the quality and signal strength that you
-> obtain for the RTL8187 at distances of a few cm, 3m and 10m from the AP? Please
-> include which algorithm was used in the conversion.
-
-Hello.
-I really new to that, but I would be glad to help !
-I had big troubles with vanilla kernel drivers, but that's not news.
-I'm currently compiling compat-wireless-2009-04-04 and I hope results will be
-better.
-
-My device :
-Bus 001 Device 004: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless
-Adapter
-
-It's on a laptop so I can do every kind of test you can imagine ! ;-)
+4 is just a "save" guess which should cover most - if not all - customer devices.
 
 Regards,
-Hamlet
-
-PS. Please reply to my address since I'm not on the mailing-list...
-Tell me if you think I should !
-
+	Chr
