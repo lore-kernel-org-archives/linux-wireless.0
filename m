@@ -1,65 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45983 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43849 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbZDKKn4 (ORCPT
+	with ESMTP id S1753302AbZDOTjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 06:43:56 -0400
-Subject: Re: b43 rfkill LED broken in 2.6.30-rc1 from wireless-testing
+	Wed, 15 Apr 2009 15:39:53 -0400
+Subject: [RFC 2/3 v2] mac80211: disable powersave if pm_qos asks for low
+ latency
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090411061939.GA22466@khazad-dum.debian.net>
-References: <49DE6ABE.30207@lwfinger.net>
-	 <1239348727.17031.15.camel@johannes.local>
-	 <20090411061939.GA22466@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iqq5fCrkm4oIoNsYMR9b"
-Date: Sat, 11 Apr 2009 12:43:50 +0200
-Message-Id: <1239446630.17031.25.camel@johannes.local> (sfid-20090411_124400_808044_ADFAE421)
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <Kalle.Valo@nokia.com>
+In-Reply-To: <20090415171633.489000512@sipsolutions.net> (sfid-20090415_191905_551998_2087931B)
+References: <20090415171046.336006351@sipsolutions.net>
+	 <20090415171633.489000512@sipsolutions.net>
+	 (sfid-20090415_191905_551998_2087931B)
+Content-Type: text/plain
+Date: Wed, 15 Apr 2009 21:38:50 +0200
+Message-Id: <1239824330.29769.5.camel@johannes.local> (sfid-20090415_213956_659540_B4D888A8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When an application asks for a latency lower than the beacon interval
+there's nothing we can do -- we need to stay awake and not have the
+AP buffer frames for us. Add code to automatically calculate this
+constraint in mac80211 so drivers need not concern themselves with it.
 
---=-iqq5fCrkm4oIoNsYMR9b
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: rebased
 
-On Sat, 2009-04-11 at 03:19 -0300, Henrique de Moraes Holschuh wrote:
-> On Fri, 10 Apr 2009, Johannes Berg wrote:
-> > into the tree yet, as I still need to fix up a few things and get
-> > toshiba/sony/thinkpad converted :)
->=20
-> As I said, I will do the thinkpad conversion for you, but I am still wait=
-ing
-> for your reply (and maybe a new version of the rfkill rework patchset)...
+ include/linux/ieee80211.h  |    9 +++++++++
+ net/mac80211/ieee80211_i.h |    5 ++++-
+ net/mac80211/iface.c       |    4 ++--
+ net/mac80211/main.c        |   31 ++++++++++++++++++++++++-------
+ net/mac80211/mlme.c        |   36 ++++++++++++++++++++++++++++++++----
+ net/mac80211/wext.c        |    2 +-
+ 6 files changed, 72 insertions(+), 15 deletions(-)
 
-Yes, your mail's still marked unread -- I need to take some time to work
-on it.
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-15 20:32:42.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-15 20:40:22.000000000 +0200
+@@ -17,6 +17,7 @@
+ #include <linux/if_arp.h>
+ #include <linux/etherdevice.h>
+ #include <linux/rtnetlink.h>
++#include <linux/pm_qos_params.h>
+ #include <net/mac80211.h>
+ #include <asm/unaligned.h>
+ 
+@@ -515,7 +516,7 @@ static void ieee80211_change_ps(struct i
+ }
+ 
+ /* need to hold RTNL or interface lock */
+-void ieee80211_recalc_ps(struct ieee80211_local *local)
++void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ {
+ 	struct ieee80211_sub_if_data *sdata, *found = NULL;
+ 	int count = 0;
+@@ -534,10 +535,22 @@ void ieee80211_recalc_ps(struct ieee8021
+ 		count++;
+ 	}
+ 
+-	if (count == 1 && found->u.mgd.powersave)
+-		local->ps_sdata = found;
+-	else
++	if (count == 1 && found->u.mgd.powersave) {
++		s32 beaconint_us;
++
++		if (latency < 0)
++			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
++
++		beaconint_us = ieee80211_tu_to_usec(
++					found->vif.bss_conf.beacon_int);
++
++		if (beaconint_us > latency)
++			local->ps_sdata = NULL;
++		else
++			local->ps_sdata = found;
++	} else {
+ 		local->ps_sdata = NULL;
++	}
+ 
+ 	ieee80211_change_ps(local);
+ }
+@@ -2305,3 +2318,18 @@ void ieee80211_mlme_notify_scan_complete
+ 		ieee80211_restart_sta_timer(sdata);
+ 	rcu_read_unlock();
+ }
++
++int ieee80211_max_network_latency(struct notifier_block *nb,
++				  unsigned long data, void *dummy)
++{
++	s32 latency_usec = (s32) data;
++	struct ieee80211_local *local =
++		container_of(nb, struct ieee80211_local,
++			     network_latency_notifier);
++
++	mutex_lock(&local->iflist_mtx);
++	ieee80211_recalc_ps(local, latency_usec);
++	mutex_unlock(&local->iflist_mtx);
++
++	return 0;
++}
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-15 20:32:42.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-15 20:40:22.000000000 +0200
+@@ -750,6 +750,7 @@ struct ieee80211_local {
+ 	struct work_struct dynamic_ps_enable_work;
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
++	struct notifier_block network_latency_notifier;
+ 
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+@@ -938,7 +939,9 @@ int ieee80211_sta_deauthenticate(struct 
+ int ieee80211_sta_disassociate(struct ieee80211_sub_if_data *sdata, u16 reason);
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata);
+-void ieee80211_recalc_ps(struct ieee80211_local *local);
++void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
++int ieee80211_max_network_latency(struct notifier_block *nb,
++				  unsigned long data, void *dummy);
+ 
+ /* IBSS code */
+ int ieee80211_ibss_commit(struct ieee80211_sub_if_data *sdata);
+--- wireless-testing.orig/net/mac80211/main.c	2009-04-15 20:32:42.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-04-15 20:40:22.000000000 +0200
+@@ -21,6 +21,7 @@
+ #include <linux/wireless.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/bitmap.h>
++#include <linux/pm_qos_params.h>
+ #include <net/net_namespace.h>
+ #include <net/cfg80211.h>
+ 
+@@ -1038,25 +1039,38 @@ int ieee80211_register_hw(struct ieee802
+ 		}
+ 	}
+ 
++	local->network_latency_notifier.notifier_call =
++		ieee80211_max_network_latency;
++	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
++				     &local->network_latency_notifier);
++
++	if (result) {
++		rtnl_lock();
++		goto fail_pm_qos;
++	}
++
+ 	return 0;
+ 
+-fail_wep:
++ fail_pm_qos:
++	ieee80211_led_exit(local);
++	ieee80211_remove_interfaces(local);
++ fail_wep:
+ 	rate_control_deinitialize(local);
+-fail_rate:
++ fail_rate:
+ 	unregister_netdevice(local->mdev);
+ 	local->mdev = NULL;
+-fail_dev:
++ fail_dev:
+ 	rtnl_unlock();
+ 	sta_info_stop(local);
+-fail_sta_info:
++ fail_sta_info:
+ 	debugfs_hw_del(local);
+ 	destroy_workqueue(local->hw.workqueue);
+-fail_workqueue:
++ fail_workqueue:
+ 	if (local->mdev)
+ 		free_netdev(local->mdev);
+-fail_mdev_alloc:
++ fail_mdev_alloc:
+ 	wiphy_unregister(local->hw.wiphy);
+-fail_wiphy_register:
++ fail_wiphy_register:
+ 	kfree(local->int_scan_req.channels);
+ 	return result;
+ }
+@@ -1069,6 +1083,9 @@ void ieee80211_unregister_hw(struct ieee
+ 	tasklet_kill(&local->tx_pending_tasklet);
+ 	tasklet_kill(&local->tasklet);
+ 
++	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
++			       &local->network_latency_notifier);
++
+ 	rtnl_lock();
+ 
+ 	/*
+--- wireless-testing.orig/net/mac80211/iface.c	2009-04-15 20:32:42.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2009-04-15 20:40:22.000000000 +0200
+@@ -317,7 +317,7 @@ static int ieee80211_open(struct net_dev
+ 		ieee80211_set_wmm_default(sdata);
+ 	}
+ 
+-	ieee80211_recalc_ps(local);
++	ieee80211_recalc_ps(local, -1);
+ 
+ 	/*
+ 	 * ieee80211_sta_work is disabled while network interface
+@@ -574,7 +574,7 @@ static int ieee80211_stop(struct net_dev
+ 		hw_reconf_flags = 0;
+ 	}
+ 
+-	ieee80211_recalc_ps(local);
++	ieee80211_recalc_ps(local, -1);
+ 
+ 	/* do after stop to avoid reconfiguring when we stop anyway */
+ 	if (hw_reconf_flags)
+--- wireless-testing.orig/net/mac80211/wext.c	2009-04-15 20:32:42.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-04-15 20:40:22.000000000 +0200
+@@ -789,7 +789,7 @@ static int ieee80211_ioctl_siwpower(stru
+ 		ieee80211_hw_config(local,
+ 				    IEEE80211_CONF_CHANGE_DYNPS_TIMEOUT);
+ 
+-	ieee80211_recalc_ps(local);
++	ieee80211_recalc_ps(local, -1);
+ 
+ 	return 0;
+ }
+--- wireless-testing.orig/include/linux/ieee80211.h	2009-04-15 20:32:42.000000000 +0200
++++ wireless-testing/include/linux/ieee80211.h	2009-04-15 20:40:22.000000000 +0200
+@@ -1383,4 +1383,13 @@ static inline int ieee80211_freq_to_ofdm
+ 		return -1;
+ }
+ 
++/**
++ * ieee80211_tu_to_usec - convert time units (TU) to microseconds
++ * @tu: the TUs
++ */
++static inline unsigned long ieee80211_tu_to_usec(unsigned long tu)
++{
++	return 1024 * tu;
++}
++
+ #endif /* LINUX_IEEE80211_H */
 
-johannes
-
---=-iqq5fCrkm4oIoNsYMR9b
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ4HRkAAoJEKVg1VMiehFYO4sP/35OjhhtY26vVgBaTHdv6fUQ
-QlLwTMarfgZJ9ZdJ1VQ42kaCZCMnpWIx4kfp9qfEG/84kZNEfnS2q89mBw1AZWc/
-jKS5L+hdwJFbeqRNUPKzL6scwqdHuLBhTKeu5mlCZFrcTyxmtcMU/vzR6CjU7v7/
-SjxnK3yyYsbNmLaU9Zi1akYRcdYMQSLxWxxIf5bjXNUzQBhfLEox5O/Z0BE0M9MJ
-xatbdmoqJGAymV+kJts9KI53jc3RzZpmo56nLIvllLL1sBIfDj4usfFq+W2GjVe5
-n0OvVPAeJMdILDYfCelegV8yrk+2mRfV5ntqCDc8AEBNDB67cncmVWld3/ypMDb3
-6EOTyx7cK1q2Z0zVna1zXXFsqX0PLIZG6h5LnL5X9fjqGvdXBmyBBO35ZWKqTuAf
-VD+/MOzJl73i/z9UamICgCS6mUJvzUHlK3Cq1OVLOy4NHShpDVMKGHn2cPdpEFFl
-152YQ9MjImt8azBaQYv9MpYXuFKmNfTfOns8Cg+r1uJfO08T17L1sF3xpCqGhlaF
-RxLNDGswjbzRAf4JfuDaFyOVx93vNLH8c9NXoOlL9B/Nf6QDjEU2uKPxHGXTyS+L
-cpoe6DM11TAqHwYn5v+Pd/zqqvccBX9RIw27B2nLL+dCPhV2vSJUIS4jjdO93r+O
-jXF6iURi5vqmEC1bA80D
-=u2+F
------END PGP SIGNATURE-----
-
---=-iqq5fCrkm4oIoNsYMR9b--
 
