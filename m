@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:32909 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754171AbZDYQ0j convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:57962 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759392AbZDOMJ1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 12:26:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: Warning in tx.c:775 invoke_tx_handlers
-Date: Sat, 25 Apr 2009 18:23:59 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <200904251650.17142.mb@bu3sch.de> <200904251741.10310.mb@bu3sch.de> <69e28c910904250918t866e17t65ef19efc3213574@mail.gmail.com>
-In-Reply-To: <69e28c910904250918t866e17t65ef19efc3213574@mail.gmail.com>
+	Wed, 15 Apr 2009 08:09:27 -0400
+Received: by bwz17 with SMTP id 17so2867271bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 05:09:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200904251823.59956.mb@bu3sch.de> (sfid-20090425_182643_080096_15FD9145)
+In-Reply-To: <1239796656-20646-2-git-send-email-me@bobcopeland.com>
+References: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
+	 <1239796656-20646-2-git-send-email-me@bobcopeland.com>
+Date: Wed, 15 Apr 2009 15:09:25 +0300
+Message-ID: <40f31dec0904150509p69e3a854p9a62c9a3a227bfd8@mail.gmail.com> (sfid-20090415_140934_190574_04DC617D)
+Subject: Re: [PATCH 1/5] ath5k: fix initvals errors
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 25 April 2009 18:18:31 G=E1bor Stefanik wrote:
-> I guess you aren't using the latest kernel from wireless-testing.
+2009/4/15 Bob Copeland <me@bobcopeland.com>:
+> This patch corrects a few errors in the initvals tables to match thos=
+e
+> in the HAL tables. =C2=A0Namely, remove a couple of repetitions, fix =
+some
+> turbo mode errors, and correct a register for the CCK rate power tabl=
+e.
+>
+> Changes-licensed-under: ISC
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
 
-Well, it is 5 days old:
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-> [973533.018287] WARNING: at /home/mb/kernel/compat-wireless-2009-04-2=
-0/net/mac80211/tx.c:775 invoke_tx_handlers+0xde4/0xe10 [mac80211]()
+
 
 --=20
-Greetings, Michael.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
