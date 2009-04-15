@@ -1,115 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:43337 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755413AbZDXOzO (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3426 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752964AbZDOL6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 10:55:14 -0400
-Date: Fri, 24 Apr 2009 10:54:32 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090424145432.GK2830@storm.local.network> (sfid-20090424_165519_189986_C5534D4D)
-References: <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com> <20090424110329.GJ2830@storm.local.network> <49F1D036.6080607@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NqNl6FRZtoRUn5bW"
-In-Reply-To: <49F1D036.6080607@lwfinger.net>
+	Wed, 15 Apr 2009 07:58:38 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 5/5] ath5k: manipulate rxlink and descriptor address under rxbuf lock
+Date: Wed, 15 Apr 2009 07:57:36 -0400
+Message-Id: <1239796656-20646-6-git-send-email-me@bobcopeland.com> (sfid-20090415_135847_082656_78E4E78D)
+In-Reply-To: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
+References: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Grabbing an ath5k_buf then dropping the lock is racy because the
+referenced descriptor can be obtained in another thread and released
+before the buffer is handed to the hardware.  Likewise, manipulating
+sc->rxlink without the lock can lead to having multiple self-linked
+hardware descriptors.
 
---NqNl6FRZtoRUn5bW
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Changes-licensed-under: 3-Clause-BSD
 
-Hi,
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-On Fri, Apr 24, 2009 at 09:44:06AM -0500, Larry Finger wrote:
-> Forest Bond wrote:
-> >=20
-> > The following git repository has a vt6655 branch and a vt6656 branch:
-> >=20
-> >   http://www.alittletooquiet.net/media/code/vt665x.git
-> >=20
-> > The vt6655 branch contains pretty much all of the work I'll likely be a=
-ble to do
-> > for that driver.  The vt6656 branch needs more work.  I've not gone far=
-ther than
-> > build-testing either, at this point.
->=20
-> It would be a little easier for looking at the code if both vt6655 and vt=
-6656
-> directories were in the same branch of the git repo, but it's not a big d=
-eal.
->=20
-> > As I've mentioned before, some of this kind of work is really a bit out=
-side my
-> > usual domain, so if you do look at it, I'd appreciate feedback.
->=20
-> There are a number of warnings when compiling the vt6655 driver on x86_64
-> architecture that arise from pointers having 64 bits while integers have =
-32
-> bits. I think the warnings will not cause any problems.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 1a6e72f..c8c658b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1618,9 +1618,8 @@ ath5k_rx_start(struct ath5k_softc *sc)
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "cachelsz %u rxbufsize %u\n",
+ 		sc->cachelsz, sc->rxbufsize);
+ 
+-	sc->rxlink = NULL;
+-
+ 	spin_lock_bh(&sc->rxbuflock);
++	sc->rxlink = NULL;
+ 	list_for_each_entry(bf, &sc->rxbuf, list) {
+ 		ret = ath5k_rxbuf_setup(sc, bf);
+ 		if (ret != 0) {
+@@ -1629,9 +1628,9 @@ ath5k_rx_start(struct ath5k_softc *sc)
+ 		}
+ 	}
+ 	bf = list_first_entry(&sc->rxbuf, struct ath5k_buf, list);
++	ath5k_hw_set_rxdp(ah, bf->daddr);
+ 	spin_unlock_bh(&sc->rxbuflock);
+ 
+-	ath5k_hw_set_rxdp(ah, bf->daddr);
+ 	ath5k_hw_start_rx_dma(ah);	/* enable recv descriptors */
+ 	ath5k_mode_setup(sc);		/* set filters, etc. */
+ 	ath5k_hw_start_rx_pcu(ah);	/* re-enable PCU/DMA engine */
+-- 
+1.6.0.6
 
-I'll have a closer look at the warnings.
 
-> There is, however, one error, namely:
->=20
->   CC [M]  drivers/staging/vt6655/device_main.o
-> drivers/staging/vt6655/device_main.c:347: error: initializer element is n=
-ot constant
-> drivers/staging/vt6655/device_main.c:347: error: (near initialization for
-> =E2=80=98device_id_table[0].driver_data=E2=80=99)
-
-Hm, didn't see this on my system.  Not sure why.  Thanks for the patch.
-
-> Driver vt6656 also does not build, but that does not seem to be 64-bit re=
-lated.
-> If it builds on your system, let me know and I'll send you the error mess=
-ages.
-
-No, I haven't gotten that in a good state yet.
-
-> I didn't look that thoroughly at the code, but I did notice one thing. The
-> constructions like "#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)" are =
-in the
-> code so that it can build on a number of different kernels. Once it is in
-> staging, it only has to build on the current kernel and you can trim out =
-those
-> conditionals.
-
-Right, my intention was to look at those once the major build issues were s=
-orted
-out.
-
-Were you able to look over my changes for net device private data accesses =
-in
-the vt6655 driver?  That is what I'm most concerned about.
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---NqNl6FRZtoRUn5bW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJ8dKnRO4fQQdv5AwRApuVAKCiQ2+EqC6YpTbZAUPSTRU43c9SPQCfd2nN
-tbnZui4uzt/0uc6wywtX0vc=
-=S5r/
------END PGP SIGNATURE-----
-
---NqNl6FRZtoRUn5bW--
