@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38385 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755881AbZDBKD0 (ORCPT
+Received: from mail-gx0-f208.google.com ([209.85.217.208]:33312 "EHLO
+	mail-gx0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753649AbZDOPJS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 06:03:26 -0400
-Subject: Re: [PATCH] mac80211: Always send a null data frame if TIM bit is
- set.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <87ocvfiovd.fsf@litku.valot.fi> (sfid-20090402_075231_784877_7FBB0EC4)
-References: <20090302145030.GA4660@myhost.users.atheros.com>
-	 <8e92b4100903312115l2f013083jf507b66f8449a63a@mail.gmail.com>
-	 <87ocvfiovd.fsf@litku.valot.fi> (sfid-20090402_075231_784877_7FBB0EC4)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fGRrC25B8aTPJ7JPfpjT"
-Date: Thu, 02 Apr 2009 12:02:51 +0200
-Message-Id: <1238666571.4141.14.camel@johannes.local> (sfid-20090402_120330_300060_EA391D4B)
-Mime-Version: 1.0
+	Wed, 15 Apr 2009 11:09:18 -0400
+Received: by gxk4 with SMTP id 4so6807646gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 08:09:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <49E5EC66.80408@tuffmail.co.uk>
+References: <9b2b86520904150345r31851012jb6a231e02583038a@mail.gmail.com>
+	 <9b2b86520904150358u81dd977g3378ef81d7748355@mail.gmail.com>
+	 <20090415130232.GA21411@tuxdriver.com> <49E5EC66.80408@tuffmail.co.uk>
+Date: Wed, 15 Apr 2009 11:09:16 -0400
+Message-ID: <b6c5339f0904150809p308d8eedt83198f12a7887f7e@mail.gmail.com> (sfid-20090415_170939_085693_A295E835)
+Subject: Re: [ath5k-devel] BUG in freq_reg_info_regd
+From: Bob Copeland <bcopeland@gmail.com>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Apr 15, 2009 at 10:17 AM, Alan Jenkins
+<alan-jenkins@tuffmail.co.uk> wrote:
+>>> Um, also the new "ath" module taints the kernel
 
---=-fGRrC25B8aTPJ7JPfpjT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Christian Lamparter posted a patch for that yesterday.
 
-On Thu, 2009-04-02 at 08:52 +0300, Kalle Valo wrote:
+> [ =A0 =A04.176459] ath: Country alpha2 being used: 00
+> [ =A0 =A04.176556] ath: Regpair detected: 0x60
+> [ =A0 =A04.176679] BUG: unable to handle kernel NULL pointer derefere=
+nce at
+> 00000004
+> [ =A0 =A04.176874] IP: [<dffede2e>] freq_reg_info_regd+0x2a/0xf2 [cfg=
+80211]
+> [ =A0 =A04.177053] *pdpt =3D 0000000017451001 *pde =3D 00000000000000=
+00
+> [ =A0 =A04.177245] Oops: 0000 [#2]
+> [ =A0 =A04.177376] last sysfs file: /sys/class/input/input5/modalias
+> [ =A0 =A04.177477] Modules linked in: ath5k(+) snd_hwdep snd_pcm_oss
+> snd_mixer_oss uhci_hcd ehci_hcd mac80211 i2c_i801 led_class ath(P)
+> psmouse serio_raw snd_pcm i2c_core pcspkr cfg80211 atl2 intel_agp
+> snd_timer snd_page_alloc usbcore agpgart eeepc_laptop video backlight
+> output battery rfkill ac processor button evdev thermal fan ata_gener=
+ic
+> [ =A0 =A04.179388]
+> [ =A0 =A04.179475] Pid: 1641, comm: modprobe Tainted: P =A0 =A0 =A0D
+> (2.6.30-rc1-wleeepc #11) 701
+> [ =A0 =A04.179615] EIP: 0060:[<dffede2e>] EFLAGS: 00010286 CPU: 0
+> [ =A0 =A04.179732] EIP is at freq_reg_info_regd+0x2a/0xf2 [cfg80211]
+> [ =A0 =A04.179834] EAX: 00000000 EBX: df200060 ECX: 00004e20 EDX: e00=
+99524
+> [ =A0 =A04.179938] ESI: 00000060 EDI: 0024cde0 EBP: de551d70 ESP: de5=
+51d50
+> [ =A0 =A04.180003] =A0DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+> [ =A0 =A04.180003] Process modprobe (pid: 1641, ti=3Dde550000 task=3D=
+de833000
+> task.ti=3Dde550000)
 
-> I really would like to have some frame ack callback to mac80211, even
-> not all drivers support that. Otherwise we cannot reliably go to power
-> save because the AP might not receive our nullfunc frame. I have to
-> think about this and I'll try to propose something later on.
+Hmm, null pointer is probably custom_regd since reg_rule comes from
+the stack and wiphy should've been validated a lot earlier.
 
-I suppose we could well assume that we do get TX status for those
-devices that do support power save -- which devices would that affect?
+Mind posting the objdump -S net/wireless/reg.o ?
 
-johannes
-
---=-fGRrC25B8aTPJ7JPfpjT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ1I1IAAoJEKVg1VMiehFYCRkP/0W/r0XEPkzFDv7Dt37fuVRK
-uN0716NwRKXH99PC5WgN2hvZh3rztuLON2E3YVsg8pku5v09bpbSQOrmQ82mVkCC
-Saj0588UW+EIiVG0SPNfYz3HjptYPVL5Rlq3KrKuWnF1BRgUUn/W8Tm67OZjs6ML
-jRooHQ70d/0iRf6SkRWbRMPbRvT4YpLbMA2KPq82WW01eiAt6oXy/NvpwqD3n0/J
-s+7jTOGnA+Gl6p02tlawWNAu7zjw5lIhCVi9OqoG8Eysg86noFBF+995QBfR6xsY
-nyoQZT6EhQU/IjMzFEmiqJk17NKcD52F6sbSsZWRMYu9nQhqm+dNRUYDEfF+SI+n
-y3GJIOT+v8n0h+g8qFiiotHVclRmB+pYzGHF6Je5rGkolAODlZd2mQDGSsTl6AwH
-NemkyFK/gVTVT2b0vdpGw1t6mW1mecq9/qJ3L8iYvjYjto6NnK/TUrISNWm+IgD2
-vARGyDw3pIzaRfrMxFnoZEylevHZzxipQJ4a8eq3ebLg3vdQYpk6UpZeHKBTj9PI
-RggRCHVZpJOC0VNHanFq7PDBt6vd+ZEGuQslbn26BGfdkOQ6SD7h5MWS/Omt1MmC
-b++Isp65KWjangJL+YcmViKqD2oxEAi6EB8+lbtER/rzf4uI4iUImsLc/7q/iOrz
-EgL9MnOIo57iEUGyDwep
-=LzJd
------END PGP SIGNATURE-----
-
---=-fGRrC25B8aTPJ7JPfpjT--
-
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
