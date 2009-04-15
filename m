@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa4ehsobe005.messaging.microsoft.com ([216.32.181.15]:41760
-	"EHLO WA4EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754155AbZDXU6v (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:2782 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbZDOMYe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 16:58:51 -0400
-Message-ID: <49F227F8.2060504@am.sony.com> (sfid-20090424_225858_026394_26DC36BB)
-Date: Fri, 24 Apr 2009 13:58:32 -0700
-From: Geoff Levand <geoffrey.levand@am.sony.com>
+	Wed, 15 Apr 2009 08:24:34 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so3068963rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 05:24:33 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: jgarzik@pobox.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Subject: Re: [patch] net/ps3: Fix wireless AP connect error handling
-References: <49D109B4.7020808@am.sony.com> <49F0EFB9.20709@am.sony.com> <20090424201446.GD3309@tuxdriver.com>
-In-Reply-To: <20090424201446.GD3309@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <49E5C2A9.4050707@gmx.de>
+References: <49E5C2A9.4050707@gmx.de>
+Date: Wed, 15 Apr 2009 17:54:33 +0530
+Message-ID: <1fe543780904150524n596e1fadh96ee33887f68be1b@mail.gmail.com> (sfid-20090415_142437_995967_BA2CBC83)
+Subject: Re: SDIO_DEVICE_ID_MARVELL_8688WLAN not declared (snapshot
+	15.04.2009)
+From: Kiran Divekar <kirandivekar@gmail.com>
+To: ZeroBeat <ZeroBeat@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Apr 15, 2009 at 4:49 PM, ZeroBeat <ZeroBeat@gmx.de> wrote:
+> Hello Gentlemen.
+>
+> gcc reports an error during the compilation:
+>
+> compat-wireless-2009-04-15/drivers/net/wireless/libertas/if_sdio.c
+> ERROR 53:
+> =BBSDIO_DEVICE_ID_MARVELL_8688WLAN=AB
+> not declared
+>
+
 Hi,
+ Please check include/linux/mmc/sdio_ids.h file which has the
+corresponding definition. If you still see the error, can you please
+post .config file
 
-On 04/24/2009 01:14 PM, John W. Linville wrote:
-> On Thu, Apr 23, 2009 at 03:46:17PM -0700, Geoff Levand wrote:
->> From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
->> 
->> This patch fixes the bug that the driver tries to continue to
->> connect(associate) to AP even if gelic_wl_do_{wpa,wep}_setup() fails,
->> 
->> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
->> Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
->> ---
->> Hi John,
->> 
->> I didn't see this get merged in to 2.6.30 yet.  Could you let me know the status?
->> 
->> -Geoff
-> 
-> I have it queued for 2.6.31.  Does it cause a crash or other problem
-> serious enough to merit pushing it for 2.6.30?
-
-I saw this was merge to Linus's tree this morning.
-Here is the commit: c6dbe17f193c4adc8afc6884f26efb5fa27aa8af
-
-Sorry for the false alarm.
-
--Geoff
-
+Thanks
+- Kiran
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
