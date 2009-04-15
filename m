@@ -1,50 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55259 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754615AbZDBBfs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300AbZDORR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 21:35:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 1/3] cfg80211: respect API on orig_flags on channel for beacon hint
-Date: Wed,  1 Apr 2009 21:35:28 -0400
-Message-Id: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com> (sfid-20090402_033551_280164_DA676C55)
+	Wed, 15 Apr 2009 13:17:57 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Lu8kE-0002RQ-9v
+	for linux-wireless@vger.kernel.org; Wed, 15 Apr 2009 19:17:54 +0200
+Message-Id: <20090415171046.336006351@sipsolutions.net> (sfid-20090415_191800_425432_FA40D498)
+Date: Wed, 15 Apr 2009 19:10:46 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/3] mac80211 powersave improvements
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As part of our documented API we always respect the orig_flag
-settings on a channel. We forgot to follow this for the beacon
-hints.
+Hi,
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+This series contains the following:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6327e16..c3e39e1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1070,12 +1070,14 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
- 		return;
- 
--	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
-+	if ((chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
-+	    !(chan->orig_flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
- 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
- 		REG_DEBUG_BEACON_FLAG("active scanning");
- 	}
- 
--	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
-+	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
-+	    !(chan->orig_flags & IEEE80211_CHAN_NO_IBSS)) {
- 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
- 		REG_DEBUG_BEACON_FLAG("beaconing");
- 	}
--- 
-1.6.0.6
+ 1) improve powersave to only allow it when a single
+    managed interface is active
+
+ 2) disable PS when the maximum networking latency
+    applications are are willing to put up with is
+    smaller than the beacon interval -- in that case
+    we cannot allow the AP to buffer frames
+
+ 3) enable powersave by default
+
+The last part might be controversial?
+
+Should we have a default setting for the dynamic PS
+timeout?
+
+Oh also -- below is a small program to play with the
+pm_qos framework, feel free to rip it for anything.
+
+johannes
+
+/*
+ * Copyright 2009 Johannes Berg <johannes@sipsolutions.net>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ *
+ * Compile simply with:
+ *	cc -o netlatency netlatency.c
+ */
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+	int32_t v;
+	int fd;
+
+	if (argc != 2) {
+		fprintf(stderr, "Usage: %s <latency [us]>\n", argv[0]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "	latency: the maximum tolerable network latency you\n");
+		fprintf(stderr, "	         are willing to put up with [in microseconds]\n");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "This program will block until you hit Ctrl-C, at which point\n");
+		fprintf(stderr, "the file descriptor is closed and the latency requirement is\n");
+		fprintf(stderr, "unregistered again.\n");
+		return 2;
+	}
+
+	v = atoi(argv[1]);
+
+	printf("setting latency to %d.%.6d seconds\n", v/1000000, v % 1000000);
+
+	fd = open("/dev/network_latency", O_WRONLY);
+	if (fd < 0) {
+		perror("open /dev/network_latency");
+		return 1;
+	}
+	if (write(fd, &v, sizeof(v)) != sizeof(v)) {
+		perror("write to /dev/network_latency");
+		return 1;
+	}
+
+	while (1) sleep(10);
+
+	return 0;
+}
 
