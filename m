@@ -1,135 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:47078 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754028AbZDHXtn (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:35992 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756962AbZDOKpT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 19:49:43 -0400
-Message-ID: <49DD380B.5080101@oracle.com> (sfid-20090409_014948_540802_4DE450E0)
-Date: Wed, 08 Apr 2009 16:49:31 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Wed, 15 Apr 2009 06:45:19 -0400
+Received: by bwz17 with SMTP id 17so2830187bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 03:45:17 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: alan-jenkins@tuffmail.co.uk, Rusty Russell <rusty@rustcorp.com.au>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in 2.6.30-rc1 since commit acae0515 - wireless broken
-References: <49DC2DF5.3010603@lwfinger.net> <49DC31EA.8050208@linux.intel.com>	 <200904081631.09150.rusty@rustcorp.com.au>	 <49DCB976.4020200@lwfinger.net> <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com> <49DCDF9E.8000605@lwfinger.net>
-In-Reply-To: <49DCDF9E.8000605@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: alan-jenkins@tuffmail.co.uk
+Date: Wed, 15 Apr 2009 11:45:17 +0100
+Message-ID: <9b2b86520904150345r31851012jb6a231e02583038a@mail.gmail.com> (sfid-20090415_124529_804957_7A2EAE95)
+Subject: =?windows-1252?Q?net=2Fwireless=2Freg=2Ec=3A1196=3A_warning=3A_=91channel=5Fafter?=
+	=?windows-1252?Q?=92_may_be_used_uninitialised_in_this_function?=
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: "Luis R. Rodriguez" <lrodriguz@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Alan Jenkins wrote:
->> On 4/8/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>
->> Something is very wrong with request_module(), this is just the most
->> obvious symptom.  It also seems to affect libusual (loading
->> usb-storage) and FAT (loading NLS modules).
->>
->> If I hotplug my wireless device, it then loads correctly.  So I'm
->> guessing wireless modules e.g. encryption modules get loaded too
->> asynchronously.   I.e. on boot, the  sub-modules are loaded too late.
->> But when I hotplug the device, the modules are already loaded.
->>
->> Same with FAT - it fails on first attempt to mount because of missing
->> NLS module, then works on second mount,
->>
->> I agree that commit looks like it should be a no-op though :-).
->> I will try to confirm the OP's bisection by reverting the commit, acae0515.
-> 
-> I added printk's to the entry and exit from __request_module and obtained the
-> following:
-> 
-> module: __request_module entered for module snd-hda-codec-id:14f15051
-> module: loading module snd-hda-codec-id:14f15051 - call_usermodehelper returned 0
-> module: __request_module entered for module ecb(arc4)
-> module: loading module ecb(arc4) - call_usermodehelper returned 256
-> module: __request_module entered for module ecb
-> module: loading module ecb - call_usermodehelper returned 0
-> module: __request_module entered for module char-major-4-68
-> module: loading module char-major-4-68 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4
-> module: loading module char-major-4 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4-69
-> module: loading module char-major-4-69 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4
-> module: loading module char-major-4 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4-70
-> module: loading module char-major-4-70 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4
-> module: loading module char-major-4 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4-71
-> module: loading module char-major-4-71 - call_usermodehelper returned 256
-> module: __request_module entered for module char-major-4
-> module: loading module char-major-4 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> module: __request_module entered for module net-pf-10
-> module: loading module net-pf-10 - call_usermodehelper returned 256
-> 
-> According to the description of the routine, it should return 0 on success and a
-> negative number for an error. Where do the values of "256" mean?
+On 4/10/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+> Thanks pavel, please try this patch:
+>
+> From 94505af850bd0961a86e2786238ac0bbe0c44615 Mon Sep 17 00:00:00 200=
+1
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Date: Fri, 10 Apr 2009 11:07:43 -0700
+> Subject: [PATCH] cfg80211: fix bug while trying to process obeacon hi=
+nts on
+> init
+>
+> During initialization we would not have received any beacons
+> so skip processing reg beacon hints, also adds a check to
+> reg_is_world_roaming() for last_request before accessing its
+> fields.
 
-Here's a quick explanation (Linus explained this to me 6-8 years ago;
-I bet his was better than mine, but I can't find his).
+Hi again
 
-256 = 0x0100
+I'm building wireless-testing to test the rfkill-rewrite patches on
+top of.  I need to apply the patch referenced above as well.
 
-Inside the kernel, a program's exit code/status is split into 2 8-bit fields,
-so this exit status is (0x01, 0x00).  The low 8 bits (0x00 in this example)
-store an internal code for why the program is exiting (or did exit).  E.g.:
+When I applied the above patch, I noticed this unrelated warning
 
-0xlow_7_bits = 0 => exited, exit status is in "high" 8 bits
-else 0x80 bit set => core dumped, else killed, with exit status in low 7 bits
+net/wireless/reg.c: In function =91wiphy_update_regulatory=92:
+net/wireless/reg.c:1196: warning: =91channel_after=92 may be used
+uninitialised in this function
+net/wireless/reg.c:1196: note: =91channel_after=92 was declared here
+net/wireless/reg.c:1196: warning: =91channel_before=92 may be used
+uninitialised in this function
+net/wireless/reg.c:1196: note: =91channel_before=92 was declared here
 
+Looking at the code, I think it does need fixing.  There's even a
+comment which says "this finds them (or not)" - and if they're not
+found, channel_before / channel_after will be unset.
 
-So it looks like /sbin/modprobe exited with an exit status of 1...
-whatever that means (fatal error or usage() printed or module not found).
-
-
-See kernel/[signal.c & exit.c] for uses of 0x80...
-
-HTH.
--- 
-~Randy
+Regards
+Alan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
