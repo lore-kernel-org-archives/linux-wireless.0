@@ -1,154 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:49012 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754049AbZDEWa2 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:7833 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbZDOAdX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Apr 2009 18:30:28 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH] p54spi: get rid of busy-wait loops
-Date: Mon, 6 Apr 2009 00:30:25 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <> <1238965389-5706-1-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <1238965389-5706-1-git-send-email-jcmvbkbc@gmail.com>
+	Tue, 14 Apr 2009 20:33:23 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so856294fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2009 17:33:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904060030.25425.chunkeey@web.de> (sfid-20090406_003031_594696_108916E9)
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 15 Apr 2009 02:33:05 +0200
+Message-ID: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com> (sfid-20090415_023327_686599_A90C478B)
+Subject: [Proposal]TX flags
+To: radiotap@radiotap.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=000e0cd2457a2df12c04678d1893
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 05 April 2009 23:03:09 Max Filippov wrote:
-> p54spi_wakeup and p54spi_tx_frame used busy-waiting loop
-> to poll for 'ready' bits in SPI_ADRS_HOST_INTERRUPTS register.
-> With this change in place 'WR_READY timeout' messages do not
-> show anymore.
-> 
-> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
-> ---
-looks good to me.
-Acked-by: Christian Lamparter <chunkeey@web.de>
+--000e0cd2457a2df12c04678d1893
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> I wish I knew for sure why. My guess is that busy-waiting
-> somehow interferes with SPI transfer scheduling.
-> 
->  drivers/net/wireless/p54/p54spi.c |   41 ++++++++++++------------------------
->  1 files changed, 14 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index 2903672..e4e708e 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -153,14 +153,13 @@ static const struct p54spi_spi_reg p54spi_registers_array[] =
->  static int p54spi_wait_bit(struct p54s_priv *priv, u16 reg, __le32 bits)
->  {
->  	int i;
-> -	__le32 buffer;
->  
->  	for (i = 0; i < 2000; i++) {
-> -		p54spi_spi_read(priv, reg, &buffer, sizeof(buffer));
-> +		__le32 buffer = p54spi_read32(priv, reg);
->  		if ((buffer & bits) == bits)
->  			return 1;
->  
-> -		msleep(1);
-> +		msleep(0);
-I never liked msleep in workqueues. So instead of msleep(0),
-what about replacing it with udelay or remove it entirely?
+I propose the following suggested Radiotap features to be standardised:
 
-OR: maybe you can get the chip to generate IRQs when its ready,
-so we don't have to poll it at all?
+* A new, 16-bit wide "TX flags" field (field number 15), containing
+the following flags:
+   - TX failed due to excessive retries,
+   - CTS-to-self protection,
+   - RTS/CTS-handshake,
+   - Frame shall not be ACKed ("No-ACK"), and
+   - Sequence number shall not be recalculated ("No-Seq").
 
->  	}
->  	return 0;
->  }
-> @@ -171,10 +170,10 @@ static int p54spi_spi_write_dma(struct p54s_priv *priv, __le32 base,
->  	p54spi_write16(priv, SPI_ADRS_DMA_WRITE_CTRL,
->  		       cpu_to_le16(SPI_DMA_WRITE_CTRL_ENABLE));
->  
-> -	if (p54spi_wait_bit(priv, SPI_ADRS_DMA_WRITE_CTRL,
-> -			    cpu_to_le32(HOST_ALLOWED)) == 0) {
-> +	if (!p54spi_wait_bit(priv, SPI_ADRS_DMA_WRITE_CTRL,
-> +			     cpu_to_le32(HOST_ALLOWED))) {
->  		dev_err(&priv->spi->dev, "spi_write_dma not allowed "
-> -			"to DMA write.");
-> +			"to DMA write.\n");
->  		return -EAGAIN;
->  	}
->  
-> @@ -316,21 +315,15 @@ static inline void p54spi_int_ack(struct p54s_priv *priv, u32 val)
->  
->  static void p54spi_wakeup(struct p54s_priv *priv)
->  {
-> -	unsigned long timeout;
-> -	u32 ints;
-> -
->  	/* wake the chip */
->  	p54spi_write32(priv, SPI_ADRS_ARM_INTERRUPTS,
->  		       cpu_to_le32(SPI_TARGET_INT_WAKEUP));
->  
->  	/* And wait for the READY interrupt */
-> -	timeout = jiffies + HZ;
-> -
-> -	ints =  p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
-> -	while (!(ints & SPI_HOST_INT_READY)) {
-> -		if (time_after(jiffies, timeout))
-> -				goto out;
-> -		ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
-> +	if (!p54spi_wait_bit(priv, SPI_ADRS_HOST_INTERRUPTS,
-> +			     cpu_to_le32(SPI_HOST_INT_READY))) {
-> +		dev_err(&priv->spi->dev, "INT_READY timeout\n");
-> +		goto out;
->  	}
->  
->  	p54spi_int_ack(priv, SPI_HOST_INT_READY);
-> @@ -418,9 +411,7 @@ static irqreturn_t p54spi_interrupt(int irq, void *config)
->  static int p54spi_tx_frame(struct p54s_priv *priv, struct sk_buff *skb)
->  {
->  	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
-> -	unsigned long timeout;
->  	int ret = 0;
-> -	u32 ints;
->  
->  	p54spi_wakeup(priv);
->  
-> @@ -428,15 +419,11 @@ static int p54spi_tx_frame(struct p54s_priv *priv, struct sk_buff *skb)
->  	if (ret < 0)
->  		goto out;
->  
-> -	timeout = jiffies + 2 * HZ;
-> -	ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
-> -	while (!(ints & SPI_HOST_INT_WR_READY)) {
-> -		if (time_after(jiffies, timeout)) {
-> -			dev_err(&priv->spi->dev, "WR_READY timeout\n");
-> -			ret = -1;
-what about replacing the generic code "-1" with EBUSY/EIO or ETIMEDOUT?
+Rationale for these changes:
 
-> -			goto out;
-> -		}
-> -		ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
-> +	if (!p54spi_wait_bit(priv, SPI_ADRS_HOST_INTERRUPTS,
-> +			     cpu_to_le32(SPI_HOST_INT_WR_READY))) {
-> +		dev_err(&priv->spi->dev, "WR_READY timeout\n");
-> +		ret = -1;
-here too?!
+     1. The "excessive retries" flag can be used by the drivers to
+indicate that despite numerous retransmissions, the frame was never
+acknowledged. This is useful for drivers that can't return the number
+of retransmissions used, e.g. when retransmissions are handled by
+hardware, with no feedback about the retries used to the driver. This
+should never be set together with the No-ACK flag. It only makes sense
+to use this on feedback of transmitted frames. This is currently
+implemented in the Linux kernel.
+     2. The CTS-to-self protection flag is useful both when frames are
+sent and for feedback of transmissions. The userspace can send a frame
+with this flag set, to request the driver to transmit the frame with
+CTS-to-self protection (this is not implemented anywhere yet). On
+feedback, the driver can indicate that it automatically transmitted
+the frame using CTS-to-self protection, useful if the driver can't
+return the actual CTS frame (this is implemented in Linux).
+     3. The RTS/CTS handshake flag can be used the same way as the
+CTS-to-self flag, to request/feedback the use of RTS/CTS handshakes
+for transmitting frames. The feedback part is implemented in Linux.
+     4. The No-ACK flag indicates that the frame being sent shall not
+be ACKed, and as such, should only be transmitted once, with no
+retransmissions. This only makes sense when sending frames from
+userspace, and is useful for sending frames that are not to be ACKed
+according to the IEEE 802.11 specification (e.g. multicasts, ACKs,
+beacons, malformed/non-standard frames).
+     5. The No-Seq flag is used when sending frames from the
+userspace, to indicate that the frame already has its sequence number
+preconfigured, and should not be renumbered by the low-level. This is
+useful for sending fragments of a frame one-by-one (fragments need to
+have the same sequence number to allow correct reassembly).
 
-> +		goto out;
->  	}
->  
->  	p54spi_int_ack(priv, SPI_HOST_INT_WR_READY);
+This can be accomplished with the following Radiotap changes:
+* Define a new field, TX flags, at number 15, with the following parameters=
+:
+   - Field contents: an unsigned 16-bit integer,
+   - Field alignment: 2;
+   - Define bit 0 (mask 0x0001) of this field as "TX failed due to
+excessive retries",
+   - Define bit 1 (mask 0x0002) as "CTS-to-self protection",
+   - Define bit 2 (mask 0x0004) as "RTS/CTS handshake",
+   - Define bit 3 (mask 0x0008) as "Frame shall not be ACKed",
+   - Define bit 4 (mask 0x0010) as "Pre-calculated sequence number",
+   - Reserve all other bits in this field (mask 0xffe0) for future use.
 
----
+Two patches have been attached to implement these changes in:
+ * the Linux mac80211 wireless stack (already implements the field
+with bits 0, 1 and 2 for feedback only). The attached patch implements
+bits 3 and 4 for sending.
+ * the Wireshark network traffic analyzer, allowing dissection of the
+entire field.
 
-By the way a few days ago the libertas driver authors posted a patch
-which "improve the average throughput 13%."
+If no one objects to this proposal in 7 days, I will resubmit it as a
+formal RFA, to allow eventual adoption.
 
-http://marc.info/?l=linux-wireless&m=123871643203161
+--G=E1bor Stefanik
 
-I wonder if this would also work with p54spi.
-But to test this theory, one has to rewrite the driver to use kthread
-instead of hogging workqueues.... just in case you're looking for more
-TODOs ;-)
+--000e0cd2457a2df12c04678d1893
+Content-Type: text/x-patch; charset=US-ASCII; name="wireshark-radiotap-txflags.patch"
+Content-Disposition: attachment; filename="wireshark-radiotap-txflags.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ftjag5zi0
 
-Regards,
-	Chr
+IHBhY2tldC1yYWRpb3RhcC5jIHwgICA4NCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCA4NCBpbnNlcnRpb25zKCsp
+CgpJbmRleDogZXBhbi9kaXNzZWN0b3JzL3BhY2tldC1yYWRpb3RhcC5jCj09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0t
+IGVwYW4vZGlzc2VjdG9ycy9wYWNrZXQtcmFkaW90YXAuYwkocmV2aXNpb24gMjgwNDUpCisrKyBl
+cGFuL2Rpc3NlY3RvcnMvcGFja2V0LXJhZGlvdGFwLmMJKHdvcmtpbmcgY29weSkKQEAgLTEwNSw2
+ICsxMDUsNyBAQAogICAgIElFRUU4MDIxMV9SQURJT1RBUF9EQl9BTlRTSUdOQUwgPSAxMiwKICAg
+ICBJRUVFODAyMTFfUkFESU9UQVBfREJfQU5UTk9JU0UgPSAxMywKICAgICBJRUVFODAyMTFfUkFE
+SU9UQVBfRkNTID0gMTQsCisgICAgSUVFRTgwMjExX1JBRElPVEFQX1RYX0ZMQUdTID0gMTUsCiAg
+ICAgSUVFRTgwMjExX1JBRElPVEFQX1hDSEFOTkVMID0gMTgsCiAgICAgSUVFRTgwMjExX1JBRElP
+VEFQX0VYVCA9IDMxCiB9OwpAQCAtMTY4LDYgKzE2OSwxNSBAQAogI2RlZmluZQlJRUVFODAyMTFf
+UkFESU9UQVBfRl9CQURGQ1MJMHg0MAkvKiBkb2VzIG5vdCBwYXNzIEZDUyBjaGVjayAqLwogI2Rl
+ZmluZQlJRUVFODAyMTFfUkFESU9UQVBfRl9TSE9SVEdJCTB4ODAJLyogSFQgc2hvcnQgR0kgKi8K
+IAorLyogRm9yIElFRUU4MDIxMV9SQURJT1RBUF9UWF9GTEFHUyAqLworI2RlZmluZSBJRUVFODAy
+MTFfUkFESU9UQVBfRl9UWF9GQUlMCTB4MDAwMQkvKiBmYWlsZWQgZHVlIHRvIGV4Y2Vzc2l2ZQor
+CQkJCQkJICogcmV0cmllcyAqLworI2RlZmluZSBJRUVFODAyMTFfUkFESU9UQVBfRl9UWF9DVFMJ
+MHgwMDAyCS8qIHVzZWQgY3RzICdwcm90ZWN0aW9uJyAqLworI2RlZmluZSBJRUVFODAyMTFfUkFE
+SU9UQVBfRl9UWF9SVFMJMHgwMDA0CS8qIHVzZWQgcnRzL2N0cyBoYW5kc2hha2UgKi8KKyNkZWZp
+bmUgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9BQ0sJMHgwMDA4CS8qIGZyYW1lIHNob3VsZCBu
+b3QgYmUgQUNLZWQgKi8KKyNkZWZpbmUgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVEJMHgw
+MDEwCS8qIHNlcXVlbmNlIG51bWJlciBoYW5kbGVkCisJCQkJCQkgKiBieSB1c2Vyc3BhY2UgKi8K
+KwogLyogWFhYIG5lZWQgbWF4IGFycmF5IHNpemUgKi8KIHN0YXRpYyBjb25zdCBpbnQgaWVlZTgw
+MjExX2h0cmF0ZXNbMTZdID0gewogCTEzLAkJLyogSUZNX0lFRUU4MDIxMV9NQ1MwICovCkBAIC0y
+MTEsNiArMjIxLDEyIEBACiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX2NoYW5uZWxfZmxhZ3Nfc3R1
+cmJvID0gLTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX2NoYW5uZWxfZmxhZ3NfaGFsZiA9IC0x
+Owogc3RhdGljIGludCBoZl9yYWRpb3RhcF9jaGFubmVsX2ZsYWdzX3F1YXJ0ZXIgPSAtMTsKK3N0
+YXRpYyBpbnQgaGZfcmFkaW90YXBfdHhmbGFncyA9IC0xOworc3RhdGljIGludCBoZl9yYWRpb3Rh
+cF90eGZsYWdzX2ZhaWwgPSAtMTsKK3N0YXRpYyBpbnQgaGZfcmFkaW90YXBfdHhmbGFnc19jdHMg
+PSAtMTsKK3N0YXRpYyBpbnQgaGZfcmFkaW90YXBfdHhmbGFnc19ydHMgPSAtMTsKK3N0YXRpYyBp
+bnQgaGZfcmFkaW90YXBfdHhmbGFnc19ub2FjayA9IC0xOworc3RhdGljIGludCBoZl9yYWRpb3Rh
+cF90eGZsYWdzX25vc2VxID0gLTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3hjaGFubmVsID0g
+LTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3hjaGFubmVsX2ZyZXF1ZW5jeSA9IC0xOwogc3Rh
+dGljIGludCBoZl9yYWRpb3RhcF94Y2hhbm5lbF9mbGFncyA9IC0xOwpAQCAtMjYwLDYgKzI3Niw3
+IEBACiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3ByZXNlbnRfZGJfYW50c2lnbmFsID0gLTE7CiBz
+dGF0aWMgaW50IGhmX3JhZGlvdGFwX3ByZXNlbnRfZGJfYW50bm9pc2UgPSAtMTsKIHN0YXRpYyBp
+bnQgaGZfcmFkaW90YXBfcHJlc2VudF9mY3MgPSAtMTsKK3N0YXRpYyBpbnQgaGZfcmFkaW90YXBf
+cHJlc2VudF90eGZsYWdzID0gLTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3ByZXNlbnRfeGNo
+YW5uZWwgPSAtMTsKIHN0YXRpYyBpbnQgaGZfcmFkaW90YXBfcHJlc2VudF9leHQgPSAtMTsKIApA
+QCAtMjgyLDYgKzI5OSw3IEBACiBzdGF0aWMgZ2ludCBldHRfcmFkaW90YXBfcHJlc2VudCA9IC0x
+Owogc3RhdGljIGdpbnQgZXR0X3JhZGlvdGFwX2ZsYWdzID0gLTE7CiBzdGF0aWMgZ2ludCBldHRf
+cmFkaW90YXBfY2hhbm5lbF9mbGFncyA9IC0xOworc3RhdGljIGdpbnQgZXR0X3JhZGlvdGFwX3R4
+ZmxhZ3MgPSAtMTsKIHN0YXRpYyBnaW50IGV0dF9yYWRpb3RhcF94Y2hhbm5lbF9mbGFncyA9IC0x
+OwogCiBzdGF0aWMgZGlzc2VjdG9yX2hhbmRsZV90IGllZWU4MDIxMV9oYW5kbGU7CkBAIC00NTEs
+NiArNDY5LDcgQEAKICNkZWZpbmUgUkFESU9UQVBfTUFTS19EQl9BTlRTSUdOQUwgICAgICAgICAg
+MHgwMDAwMTAwMAogI2RlZmluZSBSQURJT1RBUF9NQVNLX0RCX0FOVE5PSVNFICAgICAgICAgICAw
+eDAwMDAyMDAwCiAjZGVmaW5lIFJBRElPVEFQX01BU0tfRkNTICAgICAgICAgICAgICAgICAgIDB4
+MDAwMDQwMDAKKyNkZWZpbmUgUkFESU9UQVBfTUFTS19UWEZMQUdTICAgICAgICAgICAgICAgMHgw
+MDAwODAwMAogI2RlZmluZSBSQURJT1RBUF9NQVNLX1hDSEFOTkVMICAgICAgICAgICAgICAweDAw
+MDQwMDAwCiAjZGVmaW5lIFJBRElPVEFQX01BU0tfRVhUICAgICAgICAgICAgICAgICAgIDB4ODAw
+MDAwMDAKIApAQCAtNTMwLDYgKzU0OSwxMSBAQAogCUZUX0JPT0xFQU4sIDMyLCBOVUxMLCBSQURJ
+T1RBUF9NQVNLX0ZDUywKIAkiU3BlY2lmaWVzIGlmIHRoZSBGQ1MgZmllbGQgaXMgcHJlc2VudCIs
+IEhGSUxMIH0gfSwKIAorICAgIHsgJmhmX3JhZGlvdGFwX3ByZXNlbnRfdHhmbGFncywKKyAgICAg
+IHsgIlRYIEZsYWdzIiwgInJhZGlvdGFwLnByZXNlbnQudHhmbGFncyIsCisJRlRfQk9PTEVBTiwg
+MzIsIE5VTEwsIFJBRElPVEFQX01BU0tfVFhGTEFHUywKKwkiU3BlY2lmaWVzIGlmIHRoZSBUWCBm
+bGFncyBmaWVsZCBpcyBwcmVzZW50IiwgSEZJTEwgfSB9LAorCiAgICAgeyAmaGZfcmFkaW90YXBf
+cHJlc2VudF94Y2hhbm5lbCwKICAgICAgIHsgIkNoYW5uZWwrIiwgInJhZGlvdGFwLnByZXNlbnQu
+eGNoYW5uZWwiLAogCUZUX0JPT0xFQU4sIDMyLCBOVUxMLCBSQURJT1RBUF9NQVNLX1hDSEFOTkVM
+LApAQCAtNjUzLDYgKzY3NywzNSBAQAogICAgICAgIHsgIlF1YXJ0ZXIgUmF0ZSBDaGFubmVsICg1
+TUh6IENoYW5uZWwgV2lkdGgpIiwgInJhZGlvdGFwLmNoYW5uZWwudHlwZS5xdWFydGVyIiwKIAkg
+RlRfQk9PTEVBTiwgMTYsIE5VTEwsIDB4ODAwMCwgIkNoYW5uZWwgVHlwZSBRdWFydGVyIFJhdGUi
+LCBIRklMTCB9IH0sCiAKKyAgICB7ICZoZl9yYWRpb3RhcF90eGZsYWdzLAorICAgICAgeyAiVFgg
+ZmxhZ3MiLCAicmFkaW90YXAudHhmbGFncyIsCisJRlRfVUlOVDE2LCBCQVNFX0hFWCwgTlVMTCwg
+MHgwLCAiIiwgSEZJTEwgfSB9LAorCisgICAgeyAmaGZfcmFkaW90YXBfdHhmbGFnc19mYWlsLAor
+ICAgICAgeyAiRXhjZXNzaXZlIHJldHJpZXMiLCAicmFkaW90YXAudHhmbGFncy5mYWlsIiwKKwlG
+VF9CT09MRUFOLCAxNiwgTlVMTCwgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfRkFJTCwKKwkiRnJh
+bWUgVFggZmFpbGVkIGR1ZSB0byBleGNlc3NpdmUgcmV0cmllcyIsIEhGSUxMIH0gfSwKKworICAg
+IHsgJmhmX3JhZGlvdGFwX3R4ZmxhZ3NfY3RzLAorICAgICAgeyAiQ1RTLXRvLXNlbGYiLCAicmFk
+aW90YXAudHhmbGFncy5jdHMiLAorCUZUX0JPT0xFQU4sIDE2LCBOVUxMLCBJRUVFODAyMTFfUkFE
+SU9UQVBfRl9UWF9DVFMsCisJIkZyYW1lIHVzZWQgQ1RTLXRvLXNlbGYgcHJvdGVjdGlvbiIsIEhG
+SUxMIH0gfSwKKworICAgIHsgJmhmX3JhZGlvdGFwX3R4ZmxhZ3NfcnRzLAorICAgICAgeyAiUlRT
+L0NUUyIsICJyYWRpb3RhcC50eGZsYWdzLnJ0cyIsCisJRlRfQk9PTEVBTiwgMTYsIE5VTEwsIElF
+RUU4MDIxMV9SQURJT1RBUF9GX1RYX1JUUywKKwkiRnJhbWUgd2FzIHRyYW5zbWl0dGVkIHdpdGgg
+YW4gUlRTL0NUUy1oYW5kc2hha2UiLCBIRklMTCB9IH0sCisKKyAgICB7ICZoZl9yYWRpb3RhcF90
+eGZsYWdzX25vYWNrLAorICAgICAgeyAiTm8gQUNLIGV4cGVjdGVkIiwgInJhZGlvdGFwLnR4Zmxh
+Z3Mubm9hY2siLAorCUZUX0JPT0xFQU4sIDE2LCBOVUxMLCBJRUVFODAyMTFfUkFESU9UQVBfRl9U
+WF9OT0FDSywKKwkiRnJhbWUgd2FzIHRyYW5zbWl0dGVkIG9uY2Ugd2l0aCBubyB3YWl0aW5nIGZv
+ciBhbiBBQ0siLCBIRklMTCB9IH0sCisKKyAgICB7ICZoZl9yYWRpb3RhcF90eGZsYWdzX25vc2Vx
+LAorICAgICAgeyAiTm8gc2VxdWVuY2UgY291bnRlciIsICJyYWRpb3RhcC50eGZsYWdzLm5vc2Vx
+IiwKKwlGVF9CT09MRUFOLCAxNiwgTlVMTCwgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVEs
+CisJIkZyYW1lIGhhZCBpdHMgc2VxdWVuY2UgbnVtYmVyIGNvbmZpZ3VyZWQgYnkgdXNlcnNwYWNl
+IiwgSEZJTEwgfSB9LAorCiAgICAgeyAmaGZfcmFkaW90YXBfeGNoYW5uZWwsCiAgICAgICB7ICJD
+aGFubmVsIG51bWJlciIsICJyYWRpb3RhcC54Y2hhbm5lbCIsCiAJRlRfVUlOVDMyLCBCQVNFX0RF
+QywgTlVMTCwgMHgwLCAiIiwgSEZJTEwgfSB9LApAQCAtNzgwLDYgKzgzMyw3IEBACiAgICAgJmV0
+dF9yYWRpb3RhcF9wcmVzZW50LAogICAgICZldHRfcmFkaW90YXBfZmxhZ3MsCiAgICAgJmV0dF9y
+YWRpb3RhcF9jaGFubmVsX2ZsYWdzLAorICAgICZldHRfcmFkaW90YXBfdHhmbGFncywKICAgICAm
+ZXR0X3JhZGlvdGFwX3hjaGFubmVsX2ZsYWdzCiAgIH07CiAKQEAgLTg5Niw2ICs5NTAsOCBAQAog
+CSAgICB0dmIsIDQsIDQsIFRSVUUpOwogCXByb3RvX3RyZWVfYWRkX2l0ZW0ocHJlc2VudF90cmVl
+LCBoZl9yYWRpb3RhcF9wcmVzZW50X2ZjcywKIAkgICAgdHZiLCA0LCA0LCBUUlVFKTsKKwlwcm90
+b190cmVlX2FkZF9pdGVtKHByZXNlbnRfdHJlZSwgaGZfcmFkaW90YXBfcHJlc2VudF90eGZsYWdz
+LAorCSAgICB0dmIsIDQsIDQsIFRSVUUpOwogCXByb3RvX3RyZWVfYWRkX2l0ZW0ocHJlc2VudF90
+cmVlLCBoZl9yYWRpb3RhcF9wcmVzZW50X3hjaGFubmVsLAogCSAgICB0dmIsIDQsIDQsIFRSVUUp
+OwogCXByb3RvX3RyZWVfYWRkX2l0ZW0ocHJlc2VudF90cmVlLCBoZl9yYWRpb3RhcF9wcmVzZW50
+X2V4dCwKQEAgLTEyNDIsNiArMTI5OCwzNCBAQAogCSAgICBvZmZzZXQrPTQ7CiAJICAgIGxlbmd0
+aF9yZW1haW5pbmctPTQ7CiAJICAgIGJyZWFrOworCWNhc2UgSUVFRTgwMjExX1JBRElPVEFQX1RY
+X0ZMQUdTOiB7CisJICAgIHByb3RvX2l0ZW0gKml0OworCisJICAgIGFsaWduX29mZnNldCA9IEFM
+SUdOX09GRlNFVChvZmZzZXQsIDIpOworCSAgICBvZmZzZXQgKz0gYWxpZ25fb2Zmc2V0OworCSAg
+ICBsZW5ndGhfcmVtYWluaW5nIC09IGFsaWduX29mZnNldDsKKwkgICAgaWYgKGxlbmd0aF9yZW1h
+aW5pbmcgPCAyKQorCQlicmVhazsKKwkgICAgaWYgKHRyZWUpIHsKKwkJZmxhZ3MgPSB0dmJfZ2V0
+X2xldG9ocyh0dmIsIG9mZnNldCk7CisJCWl0ID0gcHJvdG9fdHJlZV9hZGRfdWludChyYWRpb3Rh
+cF90cmVlLCBoZl9yYWRpb3RhcF90eGZsYWdzLAorCQkJdHZiLCBvZmZzZXQsIDIsIGZsYWdzKTsK
+KwkJZmxhZ3NfdHJlZSA9IHByb3RvX2l0ZW1fYWRkX3N1YnRyZWUoaXQsIGV0dF9yYWRpb3RhcF90
+eGZsYWdzKTsKKwkJcHJvdG9fdHJlZV9hZGRfYm9vbGVhbihmbGFnc190cmVlLCBoZl9yYWRpb3Rh
+cF90eGZsYWdzX2ZhaWwsCisJCQl0dmIsIG9mZnNldCwgMSwgZmxhZ3MpOworCQlwcm90b190cmVl
+X2FkZF9ib29sZWFuKGZsYWdzX3RyZWUsIGhmX3JhZGlvdGFwX3R4ZmxhZ3NfY3RzLAorCQkJdHZi
+LCBvZmZzZXQsIDEsIGZsYWdzKTsKKwkJcHJvdG9fdHJlZV9hZGRfYm9vbGVhbihmbGFnc190cmVl
+LCBoZl9yYWRpb3RhcF90eGZsYWdzX3J0cywKKwkJCXR2Yiwgb2Zmc2V0LCAxLCBmbGFncyk7CisJ
+CXByb3RvX3RyZWVfYWRkX2Jvb2xlYW4oZmxhZ3NfdHJlZSwgaGZfcmFkaW90YXBfdHhmbGFnc19u
+b2FjaywKKwkJCXR2Yiwgb2Zmc2V0LCAxLCBmbGFncyk7CisJCXByb3RvX3RyZWVfYWRkX2Jvb2xl
+YW4oZmxhZ3NfdHJlZSwgaGZfcmFkaW90YXBfdHhmbGFnc19ub3NlcSwKKwkJCXR2Yiwgb2Zmc2V0
+LCAxLCBmbGFncyk7CisJCX0KKwkJb2Zmc2V0Kz0yOworCSAgICAgICAgbGVuZ3RoX3JlbWFpbmlu
+Zy09MjsKKwkgICAgYnJlYWs7CisJfQogCWRlZmF1bHQ6CiAJICAgIC8qCiAJICAgICAqIFRoaXMg
+aW5kaWNhdGVzIGEgZmllbGQgd2hvc2Ugc2l6ZSB3ZSBkbyBub3QK
+--000e0cd2457a2df12c04678d1893
+Content-Type: text/x-patch; charset=US-ASCII; name="linux-radiotap-txflags.patch"
+Content-Disposition: attachment; filename="linux-radiotap-txflags.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ftjagcs61
+
+IERvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0IHwgICAxMiAr
+KysrKysrKysrKy0KIGluY2x1ZGUvbmV0L2llZWU4MDIxMV9yYWRpb3RhcC5oICAgICAgICAgICAg
+ICAgIHwgICAgMyArKysKIG5ldC9tYWM4MDIxMS90eC5jICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIHwgICAyMSArKysrKysrKysrKysrKysrLS0tLS0KIDMgZmlsZXMgY2hhbmdlZCwgMzAg
+aW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9u
+L25ldHdvcmtpbmcvbWFjODAyMTEtaW5qZWN0aW9uLnR4dCBiL0RvY3VtZW50YXRpb24vbmV0d29y
+a2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0CmluZGV4IDg0OTA2ZWYuLmNkODBmNGEgMTAwNjQ0
+Ci0tLSBhL0RvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0Cisr
+KyBiL0RvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0CkBAIC0z
+NiwxMCArMzYsMjAgQEAgcmFkaW90YXAgaGVhZGVycyBhbmQgdXNlZCB0byBjb250cm9sIGluamVj
+dGlvbjoKICAgIElFRUU4MDIxMV9SQURJT1RBUF9GX0ZDUzogRkNTIHdpbGwgYmUgcmVtb3ZlZCBh
+bmQgcmVjYWxjdWxhdGVkCiAgICBJRUVFODAyMTFfUkFESU9UQVBfRl9XRVA6IGZyYW1lIHdpbGwg
+YmUgZW5jcnlwdGVkIGlmIGtleSBhdmFpbGFibGUKICAgIElFRUU4MDIxMV9SQURJT1RBUF9GX0ZS
+QUc6IGZyYW1lIHdpbGwgYmUgZnJhZ21lbnRlZCBpZiBsb25nZXIgdGhhbiB0aGUKLQkJCSAgICAg
+IGN1cnJlbnQgZnJhZ21lbnRhdGlvbiB0aHJlc2hvbGQuIE5vdGUgdGhhdAorCQkJICAgICAgY3Vy
+cmVudCBmcmFnbWVudGF0aW9uIHRocmVzaG9sZC4gKE5vdGUgdGhhdAogCQkJICAgICAgdGhpcyBm
+bGFnIGlzIG9ubHkgcmVsaWFibGUgd2hlbiBzb2Z0d2FyZQogCQkJICAgICAgZnJhZ21lbnRhdGlv
+biBpcyBlbmFibGVkKQogCisKKyAqIElFRUU4MDIxMV9SQURJT1RBUF9UWF9GTEFHUworCisgICBJ
+RUVFODAyMTFfUkFESU9UQVBfRl9UWF9OT0FDSzogZnJhbWUgd2lsbCBiZSBjb25zaWRlcmVkIG9u
+ZSB0aGF0IGlzIG5vdAorCQkJCSAgZXhwZWN0ZWQgdG8gYmUgQUNLZWQsIGFuZCB3aWxsIG9ubHkg
+YmUKKwkJCQkgIHRyYW5zbWl0dGVkIG9uY2UsIHdpdGggbm8gcmV0cmFuc21pc3Npb25zLgorICAg
+SUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVE6IGZyYW1lIHdpbGwgaGF2ZSBpdHMgc2VxdWVu
+Y2UgbnVtYmVyIHJldGFpbmVkCisJCQkJICBhcyBoYW5kZWQgdG8gbWFjODAyMTEgYnkgdXNlcnNw
+YWNlLCB1c2VmdWwKKwkJCQkgIHdoZW4gaW5qZWN0aW5nIGZyYWdtZW50cyBvZiBhIHNpbmdsZSBw
+YWNrZXQuCisKIFRoZSBpbmplY3Rpb24gY29kZSBjYW4gYWxzbyBza2lwIGFsbCBvdGhlciBjdXJy
+ZW50bHkgZGVmaW5lZCByYWRpb3RhcCBmaWVsZHMKIGZhY2lsaXRhdGluZyByZXBsYXkgb2YgY2Fw
+dHVyZWQgcmFkaW90YXAgaGVhZGVycyBkaXJlY3RseS4KIApkaWZmIC0tZ2l0IGEvaW5jbHVkZS9u
+ZXQvaWVlZTgwMjExX3JhZGlvdGFwLmggYi9pbmNsdWRlL25ldC9pZWVlODAyMTFfcmFkaW90YXAu
+aAppbmRleCAyM2MzZjNkLi4yMTBkYmQ5IDEwMDY0NAotLS0gYS9pbmNsdWRlL25ldC9pZWVlODAy
+MTFfcmFkaW90YXAuaAorKysgYi9pbmNsdWRlL25ldC9pZWVlODAyMTFfcmFkaW90YXAuaApAQCAt
+MjQwLDYgKzI0MCw5IEBAIGVudW0gaWVlZTgwMjExX3JhZGlvdGFwX3R5cGUgewogCQkJCQkJICog
+cmV0cmllcyAqLwogI2RlZmluZSBJRUVFODAyMTFfUkFESU9UQVBfRl9UWF9DVFMJMHgwMDAyCS8q
+IHVzZWQgY3RzICdwcm90ZWN0aW9uJyAqLwogI2RlZmluZSBJRUVFODAyMTFfUkFESU9UQVBfRl9U
+WF9SVFMJMHgwMDA0CS8qIHVzZWQgcnRzL2N0cyBoYW5kc2hha2UgKi8KKyNkZWZpbmUgSUVFRTgw
+MjExX1JBRElPVEFQX0ZfVFhfTk9BQ0sJMHgwMDA4CS8qIGZyYW1lIHNob3VsZCBub3QgYmUgQUNL
+ZWQgKi8KKyNkZWZpbmUgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVEJMHgwMDEwCS8qIHNl
+cXVlbmNlIG51bWJlciBoYW5kbGVkCisJCQkJCQkgKiBieSB1c2Vyc3BhY2UgKi8KIAogLyogVWds
+eSBtYWNybyB0byBjb252ZXJ0IGxpdGVyYWwgY2hhbm5lbCBudW1iZXJzIGludG8gdGhlaXIgbWh6
+IGVxdWl2YWxlbnRzCiAgKiBUaGVyZSBhcmUgY2VydGlhbmx5IHNvbWUgY29uZGl0aW9ucyB0aGF0
+IHdpbGwgYnJlYWsgdGhpcyAobGlrZSBmZWVkaW5nIGl0ICczMCcpCmRpZmYgLS1naXQgYS9uZXQv
+bWFjODAyMTEvdHguYyBiL25ldC9tYWM4MDIxMS90eC5jCmluZGV4IDNmYjA0YTguLmI0NzQzNWQg
+MTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS90eC5jCisrKyBiL25ldC9tYWM4MDIxMS90eC5jCkBA
+IC02NTAsNiArNjUwLDEwIEBAIGllZWU4MDIxMV90eF9oX3NlcXVlbmNlKHN0cnVjdCBpZWVlODAy
+MTFfdHhfZGF0YSAqdHgpCiAJdTggKnFjOwogCWludCB0aWQ7CiAKKwlpZiAodW5saWtlbHkoIShp
+bmZvLT5mbGFncyAmIElFRUU4MDIxMV9UWF9DVExfQVNTSUdOX1NFUSkpKQorCQlyZXR1cm4gVFhf
+Q09OVElOVUU7CisJaW5mby0+ZmxhZ3MgJj0gfklFRUU4MDIxMV9UWF9DVExfQVNTSUdOX1NFUTsK
+KwogCS8qCiAJICogUGFja2V0IGluamVjdGlvbiBtYXkgd2FudCB0byBjb250cm9sIHRoZSBzZXF1
+ZW5jZQogCSAqIG51bWJlciwgaWYgd2UgaGF2ZSBubyBtYXRjaGluZyBpbnRlcmZhY2UgdGhlbiB3
+ZQpAQCAtOTAxLDYgKzkwNSw3IEBAIF9faWVlZTgwMjExX3BhcnNlX3R4X3JhZGlvdGFwKHN0cnVj
+dCBpZWVlODAyMTFfdHhfZGF0YSAqdHgsCiAJc3RydWN0IGllZWU4MDIxMV9yYWRpb3RhcF9oZWFk
+ZXIgKnJ0aGRyID0KIAkJKHN0cnVjdCBpZWVlODAyMTFfcmFkaW90YXBfaGVhZGVyICopIHNrYi0+
+ZGF0YTsKIAlzdHJ1Y3QgaWVlZTgwMjExX3N1cHBvcnRlZF9iYW5kICpzYmFuZDsKKwlzdHJ1Y3Qg
+aWVlZTgwMjExX3R4X2luZm8gKmluZm8gPSBJRUVFODAyMTFfU0tCX0NCKHR4LT5za2IpOwogCWlu
+dCByZXQgPSBpZWVlODAyMTFfcmFkaW90YXBfaXRlcmF0b3JfaW5pdCgmaXRlcmF0b3IsIHJ0aGRy
+LCBza2ItPmxlbik7CiAKIAlzYmFuZCA9IHR4LT5sb2NhbC0+aHcud2lwaHktPmJhbmRzW3R4LT5j
+aGFubmVsLT5iYW5kXTsKQEAgLTk0Nyw2ICs5NTIsMTMgQEAgX19pZWVlODAyMTFfcGFyc2VfdHhf
+cmFkaW90YXAoc3RydWN0IGllZWU4MDIxMV90eF9kYXRhICp0eCwKIAkJCWlmICgqaXRlcmF0b3Iu
+dGhpc19hcmcgJiBJRUVFODAyMTFfUkFESU9UQVBfRl9GUkFHKQogCQkJCXR4LT5mbGFncyB8PSBJ
+RUVFODAyMTFfVFhfRlJBR01FTlRFRDsKIAkJCWJyZWFrOworCQljYXNlIElFRUU4MDIxMV9SQURJ
+T1RBUF9UWF9GTEFHUzoKKwkJCWlmICgqaXRlcmF0b3IudGhpc19hcmcgJiBJRUVFODAyMTFfUkFE
+SU9UQVBfRl9UWF9OT0FDSykKKwkJCQlpbmZvLT5mbGFncyB8PSBJRUVFODAyMTFfVFhfQ1RMX05P
+X0FDSzsKKwkJCWlmICgqaXRlcmF0b3IudGhpc19hcmcgJiBJRUVFODAyMTFfUkFESU9UQVBfRl9U
+WF9OT1NFUSkKKwkJCQlpbmZvLT5mbGFncyAmPSB+SUVFRTgwMjExX1RYX0NUTF9BU1NJR05fU0VR
+OworCQkJYnJlYWs7CisKIAogCQkvKgogCQkgKiBQbGVhc2UgdXBkYXRlIHRoZSBmaWxlCkBAIC05
+OTksNiArMTAxMSw4IEBAIF9faWVlZTgwMjExX3R4X3ByZXBhcmUoc3RydWN0IGllZWU4MDIxMV90
+eF9kYXRhICp0eCwKIAkgKiBpdCB3aWxsIGJlIGNsZWFyZWQvbGVmdCBieSByYWRpb3RhcCBhcyBk
+ZXNpcmVkLgogCSAqLwogCXR4LT5mbGFncyB8PSBJRUVFODAyMTFfVFhfRlJBR01FTlRFRDsKKwkv
+KiBTYW1lIGhlcmUsIGNvbnRyb2xsZWQgYnkgcmFkaW90YXAgYW5kIHRoZSBzdGFjayAqLworCWlu
+Zm8tPmZsYWdzIHw9IElFRUU4MDIxMV9UWF9DVExfQVNTSUdOX1NFUTsKIAogCS8qIHByb2Nlc3Mg
+YW5kIHJlbW92ZSB0aGUgaW5qZWN0aW9uIHJhZGlvdGFwIGhlYWRlciAqLwogCXNkYXRhID0gSUVF
+RTgwMjExX0RFVl9UT19TVUJfSUYoZGV2KTsKQEAgLTEwNjIsMTMgKzEwNzYsMTAgQEAgX19pZWVl
+ODAyMTFfdHhfcHJlcGFyZShzdHJ1Y3QgaWVlZTgwMjExX3R4X2RhdGEgKnR4LAogCQkJcmV0dXJu
+IFRYX1FVRVVFRDsKIAl9CiAKLQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIoaGRyLT5hZGRy
+MSkpIHsKLQkJdHgtPmZsYWdzICY9IH5JRUVFODAyMTFfVFhfVU5JQ0FTVDsKKwlpZiAoaXNfbXVs
+dGljYXN0X2V0aGVyX2FkZHIoaGRyLT5hZGRyMSkpCiAJCWluZm8tPmZsYWdzIHw9IElFRUU4MDIx
+MV9UWF9DVExfTk9fQUNLOwotCX0gZWxzZSB7CisJZWxzZQogCQl0eC0+ZmxhZ3MgfD0gSUVFRTgw
+MjExX1RYX1VOSUNBU1Q7Ci0JCWluZm8tPmZsYWdzICY9IH5JRUVFODAyMTFfVFhfQ1RMX05PX0FD
+SzsKLQl9CiAKIAlpZiAodHgtPmZsYWdzICYgSUVFRTgwMjExX1RYX0ZSQUdNRU5URUQpIHsKIAkJ
+aWYgKCh0eC0+ZmxhZ3MgJiBJRUVFODAyMTFfVFhfVU5JQ0FTVCkgJiYK
+--000e0cd2457a2df12c04678d1893--
