@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49588 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754640AbZDGTl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:41:57 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211: changing number of queues in ops->start
-Date: Tue, 7 Apr 2009 21:40:23 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200904072024.41910.mb@bu3sch.de> <200904072133.21296.mb@bu3sch.de> <1239133078.7187.3.camel@johannes.local>
-In-Reply-To: <1239133078.7187.3.camel@johannes.local>
+Received: from fmailhost04.isp.att.net ([204.127.217.104]:33675 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185AbZDOEe3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2009 00:34:29 -0400
+Message-ID: <49E563C2.8030502@lwfinger.net> (sfid-20090415_063435_121499_E315DB09)
+Date: Tue, 14 Apr 2009 23:34:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904072140.23318.mb@bu3sch.de> (sfid-20090407_214201_463238_3FCB9439)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>,
+	Matthew Garrett <mjg@redhat.com>
+Subject: Re: [RFC v6] rfkill: rewrite
+References: <1238349195.24972.5.camel@johannes.local>	 (sfid-20090329_195345_745378_2F2074B3)  <1239745712.4205.17.camel@johannes.local>	 (sfid-20090414_234944_810890_D7EBA134) <1239750483.4205.28.camel@johannes.local>
+In-Reply-To: <1239750483.4205.28.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 April 2009 21:37:58 Johannes Berg wrote:
-> On Tue, 2009-04-07 at 21:33 +0200, Michael Buesch wrote:
-> 
-> > > Well, I suppose you could register with the max and later reduce and
-> > > stop the remaining queues you're not using... Or not stop them and drop
-> > > packets on them. That's somewhat fragile, gives people who look at tc a
-> > > wrong idea, and I can't imagine supporting it, but it should work.
-> > 
-> > mkay, I'll try this. thanks :)
-> > 
-> > I wonder, however, will mac80211 try to queue packets on queues that are stopped?
-> > And I think just dropping them is not an option, because this will cause breakage.
-> > 
-> > What about just queueing everything on a single queue, no matter what queue mac80211
-> > puts the frame into? Would this cause ordering issues?
-> > Or the other way around, is there anything that _depends_ on the higher priority queues
-> > to get sent before the higher priority queues?
-> 
-> mac80211 won't try to select a queue higher than hw->queues at
-> select_queue time, so it shouldn't try to put packets onto that queue,
-> look in wme.c.
+Johannes Berg wrote:
+> This patch completely rewrites the rfkill core to address
+> the following deficiencies:
 
-Ok I see. So you say it's OK to lower hw->queues after ieee80211_register.
-Should I reset hw->queues back to the value ieee80211_register was called with, before
-I call unregister/free? Are there resources allocated by the number of queues?
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> v3: * fix locking bugs
+>     * fix bug in input.c that made it ignore things
+>     * allow setting LED trigger name
+>     * apply default state while registering
+>     * convert HSO
+> v4: * LED triggering
+> v5: * convert sony
+>     * introduce rfkill_set_states function
+>     * change query/poll methods to require calls to
+>       rfkill_set{_sw,_hw}_state/rfkill_set_states
+>     * do not call driver from registration
+>     * remove tested-by since it changed a lot
+> v6: * fix stupid sync work bugs
 
--- 
-Greetings, Michael.
+V6 works with b43legacy.
+
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
