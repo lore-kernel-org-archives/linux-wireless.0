@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:5471 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716AbZDJQQS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873AbZDORTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 12:16:18 -0400
-MIME-Version: 1.0
-Date: Fri, 10 Apr 2009 18:16:16 +0200
-Message-ID: <15d0b9b20904100916u3ff85ff5gd7a989120b7c048f@mail.gmail.com> (sfid-20090410_181622_176019_7B058F1E)
-Subject: Additional USB identifier for otus driver [WN111v2]
-From: Daniele Napolitano <dnax88@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	akpm@linux-foundation.org, gregkh@suse.de
-Content-Type: text/plain; charset=UTF-8
+	Wed, 15 Apr 2009 13:19:31 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Lu8lm-0002TC-CE
+	for linux-wireless@vger.kernel.org; Wed, 15 Apr 2009 19:19:30 +0200
+Message-Id: <20090415171633.723852466@sipsolutions.net> (sfid-20090415_191937_921308_A4403082)
+References: <20090415171046.336006351@sipsolutions.net>
+Date: Wed, 15 Apr 2009 19:10:49 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 3/3] mac80211: enable PS by default
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a patch for Otus driver [Atheros 9k series] that provide
-support for WN111v2 USB 802.11n
-adapter.
+Enable PS by default -- rely on drivers to control the level
+using pm_qos. Due to the previous patch we turn off PS when
+necessary due to latency requirements.
 
-Otus sources tree: OAL/Otus/Linux
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
---- zdusb.h.orig	2009-04-10 17:48:17.620423000 +0200
-+++ zdusb.h	2009-04-10 17:54:41.356419568 +0200
-@@ -26,5 +26,9 @@
-
-
- #define VENDOR_DLINK            0x07D1  //Dlink
-
- #define PRODUCT_DWA160A         0x3C10
-
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-15 18:56:41.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-15 18:56:42.000000000 +0200
+@@ -2163,6 +2163,9 @@ void ieee80211_sta_setup_sdata(struct ie
+ 		IEEE80211_STA_AUTO_CHANNEL_SEL;
+ 	if (sdata->local->hw.queues >= 4)
+ 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
 +
-+#define VENDOR_NETGEAR          0x0846  //NetGear
-+#define PRODUCT_WNDA3100        0x9010
-+#define PRODUCT_WN111v2         0x9001
-
-
- #endif
-
-
---- zdusb.c.orig	2009-04-10 17:48:17.620423000 +0200
-+++ zdusb.c	2009-04-10 17:53:15.316421516 +0200
-@@ -36,7 +36,8 @@
- static struct usb_device_id zd1221_ids [] = {
-
- 	{ USB_DEVICE(VENDOR_ATHR, PRODUCT_AR9170) },
-
-         { USB_DEVICE(VENDOR_DLINK, PRODUCT_DWA160A) },
-
--	{ USB_DEVICE(0x0846, 0x9010) },
-
-+	{ USB_DEVICE(VENDOR_NETGEAR, PRODUCT_WNDA3100) },
-+	{ USB_DEVICE(VENDOR_NETGEAR, PRODUCT_WN111v2) },
-
- 	{ }					/* Terminating entry */
-
- };
-
-
-
++	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
++		ifmgd->powersave = 1;
+ }
+ 
+ /* configuration hooks */
 
 -- 
-Daniele "DnaX" Napolitano
-https://launchpad.net/~dnax88
-http://dnax.netsons.org/
+
