@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:37960 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752308AbZD1XQU (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:2761 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754865AbZDOQIh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 19:16:20 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so649194rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 16:16:20 -0700 (PDT)
+	Wed, 15 Apr 2009 12:08:37 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so3162096ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 09:08:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890904281612h23347941h5b58d58c2f9822c5@mail.gmail.com>
-References: <1240346638-18755-1-git-send-email-hauke@hauke-m.de>
-	<1240346638-18755-2-git-send-email-hauke@hauke-m.de> <43e72e890904281612h23347941h5b58d58c2f9822c5@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 28 Apr 2009 16:16:00 -0700
-Message-ID: <43e72e890904281616r16ff8293w621863a9ef06c812@mail.gmail.com> (sfid-20090429_011623_942483_6F90DE0F)
-Subject: Re: [PATCH 2/2] [compat-2.6] Symbol ksize is not exported in kernel
-	older than 2.6.29.
-To: Hauke Mehrtens <hauke@hauke-m.de>, Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <49E5F99E.1090809@tuffmail.co.uk>
+References: <9b2b86520904150345r31851012jb6a231e02583038a@mail.gmail.com>
+	 <9b2b86520904150358u81dd977g3378ef81d7748355@mail.gmail.com>
+	 <20090415130232.GA21411@tuxdriver.com> <49E5EC66.80408@tuffmail.co.uk>
+	 <b6c5339f0904150809p308d8eedt83198f12a7887f7e@mail.gmail.com>
+	 <49E5F99E.1090809@tuffmail.co.uk>
+Date: Wed, 15 Apr 2009 12:08:35 -0400
+Message-ID: <b6c5339f0904150908nb23cf89n9f36bba5a29f955e@mail.gmail.com> (sfid-20090415_180858_762070_97576927)
+Subject: Re: [ath5k-devel] BUG in freq_reg_info_regd
+From: Bob Copeland <bcopeland@gmail.com>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pavel Roskin <proski@gnu.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 28, 2009 at 4:12 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Apr 21, 2009 at 1:43 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> This reverts commit ad80a7a983e36c6d8f4ae57e4c472deb9cf1391c from wireless-testing on older kernel versions.
->> Thanks Mathijs de Bruin for reporting.
+>> Hmm, null pointer is probably custom_regd since reg_rule comes from
+>> the stack and wiphy should've been validated a lot earlier.
+>>
+>> Mind posting the objdump -S net/wireless/reg.o ?
+>>
 >
-> Thanks, all pending patches have been applied and a new tarball
-> regenerated. Sorry for the delay, I was away on vacation.
->
-> v2.6.30-rc3-22201-g807e823
-> wireless-testing latest tag:
-> master-2009-04-22
+> Sure. =A0It's 120k so I trimmed the CC list.
 
-Bleh, just updated the tags, we now get the right tags:
+Darn, no debug info..  In hindsight I should've just asked for
+the scripts/markup_oops.pl treatment :)
 
-v2.6.30-rc3-22201-g807e823
-wireless-testing latest tag:
-master-2009-04-28
-This is compat-release:
-master-2009-04-28
+Ok, I was wrong: it's last_request.  This looks very similar to the bug=
+ you
+had a few days ago to which Pavel Roskin responded.  I don't think anyt=
+hing
+changed wrt last_request initialization, so maybe some kind of module
+loading race again?
 
-  Luis
+> 00000184 <freq_reg_info_regd>:
+[...]
+> =A0 =A0 1a6: =A0 =A0 =A0 0f 45 d0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cmov=
+ne %eax,%edx
+> =A0 =A0 1a9: =A0 =A0 =A0 a1 04 00 00 00 =A0 =A0 =A0 =A0 =A0mov =A0 =A0=
+0x4,%eax
+> =A0 =A0 1ae: =A0 =A0 =A0 8b 40 04 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mov =
+=A0 =A00x4(%eax),%eax
+
+here's where it crashes, loading last_request->initiator into eax
+
+> =A0 =A0 1b1: =A0 =A0 =A0 83 f8 03 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cmp =
+=A0 =A0$0x3,%eax
+
+=3D=3D NL80211_REGDOM_SET_BY_COUNTRY_IE
+
+> =A0 =A0 1b4: =A0 =A0 =A0 74 26 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 je=
+ =A0 =A0 1dc <freq_reg_info_regd+0x58>
+> =A0 =A0 1b6: =A0 =A0 =A0 48 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+dec =A0 =A0%eax
+> =A0 =A0 1b7: =A0 =A0 =A0 74 23 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 je=
+ =A0 =A0 1dc <freq_reg_info_regd+0x58>
+> =A0 =A0 1b9: =A0 =A0 =A0 8b 73 30 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mov =
+=A0 =A00x30(%ebx),%esi
+
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
