@@ -1,63 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:65206 "EHLO
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:49651 "EHLO
 	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbZDWSCi (ORCPT
+	with ESMTP id S1751300AbZDOAsQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 14:02:38 -0400
-Received: by fxm2 with SMTP id 2so691042fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 11:02:36 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	luciano.coelho@nokia.com, Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wl12xx: third submission
-References: <87ab67b9y2.fsf@litku.valot.fi>
-	<1240507929.30082.258.camel@johannes.local>
-	<874owf8dls.fsf@litku.valot.fi>
-	<1240509453.30082.265.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 23 Apr 2009 21:02:35 +0300
-In-Reply-To: <1240509453.30082.265.camel@johannes.local> (Johannes Berg's message of "Thu\, 23 Apr 2009 19\:57\:33 +0200")
-Message-ID: <87zle76yf8.fsf@litku.valot.fi> (sfid-20090423_200241_958253_D33F431D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 14 Apr 2009 20:48:16 -0400
+Received: by fxm2 with SMTP id 2so2679213fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2009 17:48:14 -0700 (PDT)
+Subject: Re: A warning in latest -git 2.6.30-rc1
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1239638705.10251.8.camel@rc-desk>
+References: <1239576236.3814.2.camel@maxim-laptop>
+	 <1239638705.10251.8.camel@rc-desk>
+Content-Type: text/plain
+Date: Wed, 15 Apr 2009 03:48:11 +0300
+Message-Id: <1239756491.8954.10.camel@maxim-laptop> (sfid-20090415_024821_289136_4FEAD446)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, 2009-04-13 at 09:05 -0700, reinette chatre wrote:
+> Hi Maxim,
+> 
+> On Sun, 2009-04-12 at 15:43 -0700, Maxim Levitsky wrote:
+> > I have just noticed this, seems to be harmless, everything works fine:
+> > 
+> > 
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250121] ------------[ cut here ]------------
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250128] WARNING: at /home/maxim/software/kernel/linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c:496 iwl3945_mac_set_key+0x7e5/0x7f0 [iwl3945]()
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250134] Hardware name: Aspire 5720     
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250137] no space for a new keyModules linked in: uhci_hcd af_packet nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc cpufreq_powersave cpufreq_conservative cpufreq_userspace acpi_cpufreq coretemp uvcvideo videodev v4l1_compat v4l2_compat_ioctl32 sbp2 joydev iwl3945 iwlcore psmouse snd_hda_codec_realtek rfkill ehci_hcd tg3 snd_hda_intel snd_hda_codec iTCO_wdt mac80211 nvidia(P) ohci1394 ricoh_mmc sdhci_pci sdhci evdev serio_raw libphy snd_hwdep iTCO_vendor_support usbcore snd_pcm snd_timer snd_page_alloc ext3 jbd mbcache fuse
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250208] Pid: 8, comm: events/0 Tainted: P        W  2.6.30-rc1-vanilla #5
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250212] Call Trace:
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250224]  [<ffffffff802463f0>] warn_slowpath+0xd0/0x130
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250233]  [<ffffffff802c8bdf>] ? __slab_alloc+0xbf/0x760
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250241]  [<ffffffff802e60d1>] ? alloc_inode+0x51/0x60
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250247]  [<ffffffff802e3a1f>] ? __d_lookup+0xcf/0x150
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250255]  [<ffffffff8035988c>] ? security_inode_alloc+0x1c/0x20
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250262]  [<ffffffff802e5fbe>] ? inode_init_always+0x12e/0x1f0
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250277]  [<ffffffffa09dc100>] ? iwl3945_mac_set_key+0x0/0x7f0 [iwl3945]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250284]  [<ffffffff8035a416>] ? security_d_instantiate+0x16/0x30
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250291]  [<ffffffff802e2d45>] ? d_instantiate+0x45/0x50
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250313]  [<ffffffffa09b97bd>] ? iwl_scan_cancel_timeout+0x2d/0xb0 [iwlcore]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250328]  [<ffffffffa09dc8e5>] iwl3945_mac_set_key+0x7e5/0x7f0 [iwl3945]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250357]  [<ffffffffa08d72fc>] __ieee80211_key_todo+0x16c/0x330 [mac80211]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250383]  [<ffffffffa08d7630>] ? key_todo+0x0/0x10 [mac80211]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250408]  [<ffffffffa08d7615>] ieee80211_key_todo+0x15/0x30 [mac80211]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250433]  [<ffffffffa08d7639>] key_todo+0x9/0x10 [mac80211]
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250441]  [<ffffffff80259713>] worker_thread+0x1a3/0x2a0
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250448]  [<ffffffff8025e290>] ? autoremove_wake_function+0x0/0x40
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250455]  [<ffffffff80259570>] ? worker_thread+0x0/0x2a0
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250461]  [<ffffffff80259570>] ? worker_thread+0x0/0x2a0
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250467]  [<ffffffff8025dd96>] kthread+0x56/0x90
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250475]  [<ffffffff8020ceea>] child_rip+0xa/0x20
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250481]  [<ffffffff8025dd40>] ? kthread+0x0/0x90
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250487]  [<ffffffff8020cee0>] ? child_rip+0x0/0x20
+> > > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250492] ---[ end trace a941121475b47e49 ]---
+> > > 
+> > Happens often, usually after resume from disk. I have WPA2 network.
+> > 
+> > 
+> > This is vanilla kernel commit b0cbc861a3c05e634520b049b5cc27ad6febb51f
+> 
+> Sounds like you can easily reproduce it ... would it be possible to get
+> us some extra logs for this problem? Could you please run with debug
+> 0x400002 ?
+> 
+> Thank you very much
+> 
+> Reinette
+> 
+> 
 
-> On Thu, 2009-04-23 at 20:49 +0300, Kalle Valo wrote:
->
->> No problem, I can update wl12xx as soon as you finalise the interface.
->> Just let me know.
->
-> Well, I just posted it earlier as [PATCH] :)
 
-Thanks, I'll start working on it tomorrow.
+It turns out that this bug doesn't show up, when I need (with debug
+options you provided)
 
->> > how about IPv4 alignment? Could you read the packet header first,
->> > memmove that and then read the rest, i.e. do two wl12xx_spi_mem_read
->> > calls? Might or might not be more efficient...
->> 
->> SPI access add latency, it would be faster to read as much as possible
->> in one transaction.
->
-> Question is how it measures against the CPU doing memmove() on the
-> entire frame when necessary.
+I found that I enabled hw encryption, although it is disabled by
+default, and I suspect that this is due to that
 
-I don't have any numbers, but for example omap2_mcspi is scheduling
-processes etc. so I would say that memmove() is cheaper. Does anyone
-have more knowledge about this?
+I see clearly now that this warning (as expected) occures, just after
+association,  when wpa_supplicant sets keys.
 
->> Is there anything which in your opinion prevents inclusion to
->> wireless-testing?
->
-> Give that you and Bob are working on it, I don't think so. Except the
-> API issue, which means it won't compile when John merges my patch.
+I look at source for further information.
 
-The compilation fix is easy to solve, I'll take care of it.
 
-Thanks for your comments.
+Best regards,
+	Maxim Levitsky
 
--- 
-Kalle Valo
