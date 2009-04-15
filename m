@@ -1,55 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:3069 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753854AbZD1PyB convert rfc822-to-8bit (ORCPT
+Received: from CHOKECHERRY.SRV.CS.CMU.EDU ([128.2.201.117]:40633 "EHLO
+	chokecherry.srv.cs.cmu.edu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753132AbZDOTfy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 11:54:01 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so436432wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 08:54:01 -0700 (PDT)
+	Wed, 15 Apr 2009 15:35:54 -0400
+Received: from [128.2.222.132] (LIMA-2.SPEECH.CS.CMU.EDU [128.2.222.132])
+	by chokecherry.srv.cs.cmu.edu (8.13.6/8.13.6) with ESMTP id n3FJ5bY3020164
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 15:05:37 -0400 (EDT)
+Message-ID: <49E63000.4070500@cs.cmu.edu> (sfid-20090415_213556_843780_F2D895AF)
+Date: Wed, 15 Apr 2009 15:05:36 -0400
+From: David Huggins-Daines <dhuggins@cs.cmu.edu>
 MIME-Version: 1.0
-In-Reply-To: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
-References: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Tue, 28 Apr 2009 08:53:41 -0700
-Message-ID: <43e72e890904280853y419b9dcfw13722345892fa9b4@mail.gmail.com> (sfid-20090428_175414_747526_F9E58EAB)
-Subject: Re: Question about 802.11s(mesh)
-To: =?UTF-8?B?6IuP55m96b6Z?= <subailong@163.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: zd1211rw: timeout loading firmware in 2.6.29 on ARM (ep93xx)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/28 =E8=8B=8F=E7=99=BD=E9=BE=99 <subailong@163.com>:
-> Dear Luis,
-> =C2=A0=C2=A0=C2=A0=C2=A0 I'm a=C2=A0undergraduate student from China.=
-Now I'm doing some work about
-> 802.11s and have learned a lot from the =C2=A0web site=C2=A0linuxwire=
-less.org.Since
-> I'm a beginner, I=C2=A0meet some problems,and hope very much that you=
- could
-> give=C2=A0me a hand.
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0My question is:"Can all of the wireless=
- networking cards=C2=A0run in mesh
-> mode?" I think they all can.=C2=A0But =C2=A0why some can not=C2=A0as =
-it is described in=C2=A0the
-> web page http://linuxwireless.org/en/users/Drivers? Please give =C2=A0=
-me the
-> detailed reasons.
-> =C2=A0=C2=A0=C2=A0 Very sorry to trouble you, but I really need your =
-help. I'm looking
-> forward to your reply and wish you good luck everyday.
+Hi,
 
-No, softmac cards must support mesh in the driver. If you have a
-fullmac card (non-mac80211) its up to the driver itself whether or not
-mesh is supported.
+I'm having trouble with two different zd1211 based cards on an 
+ep93xx-based system using Linux 2.6.29.  Although the firmware is 
+present and in the right place, loading it consistently fails with 
+ETIMEDOUT.
 
-There is a big column for drivers which support Mesh here:
+I have the same problem with 2.6.27 and 2.6.28, as well as with the 
+wireless-testing tree from a week ago.  dmesg (with debug enabled) says:
 
-http://wireless.kernel.org/en/users/Drivers
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+usb 1-1: New USB device found, idVendor=0ace, idProduct=1215
+usb 1-1: New USB device strings: Mfr=16, Product=32, SerialNumber=0
+usb 1-1: Product: USB2.0 WLAN
+usb 1-1: Manufacturer: ZyDAS
+usb 1-1: uevent
+usb 1-1: usb_probe_device
+usb 1-1: configuration #1 chosen from 1 choice
+usb 1-1: adding 1-1:1.0 (config #1, interface 0)
+usb 1-1:1.0: uevent
+drivers/usb/core/inode.c: creating file '002'
+hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
+cfg80211: Using static regulatory domain info
+cfg80211: Regulatory domain: US
+    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+    (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+    (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: US
+zd1211rw usb_init()
+zd1211rw 1-1:1.0: usb_probe_interface
+zd1211rw 1-1:1.0: usb_probe_interface - got id
+usb 1-1: print_id() 0ace:1215 v4810 full
+hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
+ep93xx-ohci ep93xx-ohci: GetStatus roothub.portstatus [0] = 0x00100103 
+PRSC PPS PES CCS
+hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
+usb 1-1: reset full speed USB device using ep93xx-ohci and address 2
+ep93xx-ohci ep93xx-ohci: GetStatus roothub.portstatus [0] = 0x00100103 
+PRSC PPS PES CCS
+zd1211rw 1-1:1.0: zd_chip_read_mac_addr_fw()
+wmaster0 (zd1211rw): not using net_device_ops yet
+phy0: Selected rate control algorithm 'minstrel'
+wlan0 (zd1211rw): not using net_device_ops yet
+zd1211rw 1-1:1.0: probe() successful
+zd1211rw 1-1:1.0: phy0
+usbcore: registered new interface driver zd1211rw
+zd1211rw initialized
+zd1211rw 1-1:1.0: zd_usb_init_hw()
+usb 1-1: request_fw_file() fw name zd1211/zd1211b_ub
+usb 1-1: firmware: requesting zd1211/zd1211b_ub
+usb 1-1: upload_firmware() firmware device id 0x4810 is equal to the 
+actual device id
+usb 1-1: request_fw_file() fw name zd1211/zd1211b_uphr
+usb 1-1: firmware: requesting zd1211/zd1211b_uphr
+usb 1-1: upload_code() transfer size 4018
+usb 1-1: upload_code() firmware confirm return value 0x01
+usb 1-1: ifconfig timed out on ep0out len=0/0
+zd1211rw 1-1:1.0: zd_usb_init_hw() couldn't reset configuration. Error 
+number -110
+zd1211rw 1-1:1.0: zd_usb_init_hw()
+usb 1-1: request_fw_file() fw name zd1211/zd1211b_ub
+usb 1-1: firmware: requesting zd1211/zd1211b_ub
+usb 1-1: upload_firmware() firmware device id 0x4810 is equal to the 
+actual device id
+usb 1-1: request_fw_file() fw name zd1211/zd1211b_uphr
+usb 1-1: firmware: requesting zd1211/zd1211b_uphr
+usb 1-1: upload_code() transfer size 4018
+usb 1-1: ifconfig timed out on ep0out len=0/4018
+usb 1-1: USB control request for firmware upload failed. Error number -110
+usb 1-1: Could not upload firmware code uph. Error number -110
+zd1211rw 1-1:1.0: couldn't load firmware. Error number -110
