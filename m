@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34672 "EHLO vs166246.vserver.de"
+Received: from venema.h4ckr.net ([217.24.1.135]:47784 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754882AbZDFL4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 07:56:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: b43 WARN_ON
-Date: Mon, 6 Apr 2009 13:55:58 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <49D97CF5.4040808@lwfinger.net> <200904061212.10398.mb@bu3sch.de> <1239013529.13407.6.camel@johannes.local>
-In-Reply-To: <1239013529.13407.6.camel@johannes.local>
+	id S1751362AbZDPAf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2009 20:35:57 -0400
+Date: Thu, 16 Apr 2009 03:36:04 +0300
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org, j@w1.fi
+Subject: [PATCH 5/7] ath5k: Enable AP mode
+Message-ID: <20090416003604.GE4138@makis> (sfid-20090416_023601_553000_89C69A30)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904061355.58533.mb@bu3sch.de> (sfid-20090406_135644_113175_1FC0F302)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 April 2009 12:25:29 Johannes Berg wrote:
-> Actually, I think the check is invalid, or rather, rfkill.registered
-> needs to be set before registering the rfkill struct.
+ After some debuging we were hitting the following bugs so far...
 
-Would cause a wl->mutex deadlock.
+ * Due to huge channel list hostapd couldn't get infos from the driver and couldn't set
+ the channel. If we manualy set the channel after hostapd starts (by setting channel to 0 -auto),
+ beacons are sent but they wont show up on scan because they are malformed (they have channel = 0
+ because hostapd doesn't update the channel info -this is probably a hostapd bug so i'm CCing Jouni)
+ and they get dropped. Bob fixed this by only allowing standard channels to be registered
+ so now hostapd works as expected.
 
-> See, right now, and I'm not entirely happy with this, during
-> rfkill_register I call the set_block callback. The reason I'm not really
-> happy with that is that I said calling driver -> rfkill -> driver is
-> bad, but on the other hand due to locking constraints across the
-> subsystems the driver cannot take the same locks around rfkill_register
-> as in the callbacks.
+ * Docs (and HAL source) say that we must write 0 on timer0 when operating on AP mode to start
+ TSF increment but this seems to mess with DBA in many cases and beacon queue never gets started.
+ We fixed that on the previous patch.
 
-Exactly. ;)
+ We have some more things to deal with...
 
-> Additionally, the driver must be ready to service rfkill calls _before_
-> rfkill_register() is called, everything else results in a race
-> condition. Compare with the shared interrupt handlers, for instance.
+ * For some reason (hw bug or something else) after restarting hostapd a few times, beacon inteval
+ seems to change from 100ms to a sec (we get one beacon per sec).
 
-The driver _is_ ready. It's just not ready to service recursive calls
-due to the deadlock. That's what we protect against.
+ * We need to set sleep timers on STA mode and enable power saving + support PCF.
 
-> The reason I call it during rfkill_register is that I need to sync the
-> software state to the driver's block state, and that needs to be done
-> somewhere. Doing that from a work struct would be possible, but wouldn't
-> solve the locking constraints nor would it actually help since
-> rfkill_register can potentially sleep, so the work could still be
-> executed before rfkill_register returns -- the driver still needs to be
-> able to handle rfkill callbacks before rfkill_register returns.
+ ...but i think it's time we enable AP support "officialy" so that we can get more feedback from
+ users. I ran ath5k with the mentioned patches + hostapd 0.6.8 and AP mode worked fine (it had some
+ less throughput on my tests than IBSS but it worked).
 
-No. The mutex mechanism will make sure there's no deadlock and the scheduler will
-schedule the threads in correct order, if you call set_block from the workqueue.
-So I think doing the initial set_block from the workqueue asynchronously _would_ solve
-the deadlock issue.
+ Author: Jiri Slaby (Jiri added AP support on ath5k, i'm just setting the flag here)
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-> Therefore, the warning is spurious, but because of a driver bug
-> elsewhere -- I think the rfkill.registered = 1 assignment should be
-> moved up to before rfkill_register() (and be = 0 again if that fails
-> unexpectedly); I'll do that in my patch.
+---
+ drivers/net/wireless/ath/ath5k/base.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-As I said. The driver cannot service callbacks while it's registering.
-So the registered=1 must remain where it is.
-
-Simply remove the warning, please.
-
--- 
-Greetings, Michael.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 6594572..9f080a9 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -520,6 +520,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 		    IEEE80211_HW_NOISE_DBM;
+ 
+ 	hw->wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
