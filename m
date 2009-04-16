@@ -1,48 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:57806 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753462AbZDSQcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 12:32:08 -0400
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 18:32:04 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20090419143337.158810@gmx.net>
-Message-ID: <20090419163204.158820@gmx.net> (sfid-20090419_183212_246067_0771E669)
-MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240147370.898.0.camel@johannes.local> <20090419143337.158810@gmx.net>
-Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039AbZDPKjk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 06:39:40 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1LuP0M-0006EX-8l
+	for linux-wireless@vger.kernel.org; Thu, 16 Apr 2009 12:39:38 +0200
+Subject: [RFC 3/3 v2] mac80211: enable PS by default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20090415171633.723852466@sipsolutions.net> (sfid-20090415_191937_921308_A4403082)
+References: <20090415171046.336006351@sipsolutions.net>
+	 <20090415171633.723852466@sipsolutions.net>
+	 (sfid-20090415_191937_921308_A4403082)
+Content-Type: text/plain
+Date: Thu, 16 Apr 2009 12:39:06 +0200
+Message-Id: <1239878346.9737.17.camel@johannes.local> (sfid-20090416_123943_605782_E8EA05EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> In cfg80211 an indication for channel auto select is needed for IBSS =
-and
-> _STA_ mode, to implement with it the old wext interface. If not set t=
-he
-> channel shouldn't be changed. If you not want store this flag in cfg8=
-0211, you
-> must store it in the channel functions of wext to have the same behav=
-ior
-> like now.
+Enable PS by default (depending on Kconfig) -- rely on drivers
+to control the level using pm_qos. Due to the previous patch
+we turn off PS when necessary due to latency requirements.
 
-I looked in the Source:
+This has a Kconfig symbol so people can, if they really want,
+configure the default in their kernels. We may want to keep it
+at "default y" only in wireless-testing for a while.
 
-> @chan: The channel to use or %NULL if not specified
-> (auto-select based on scan results)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/Kconfig |   16 ++++++++++++++++
+ net/mac80211/mlme.c  |    3 +++
+ 2 files changed, 19 insertions(+)
 
-I think this is enough for this purpose.
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-16 12:22:35.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-16 12:34:21.000000000 +0200
+@@ -2200,6 +2200,9 @@ void ieee80211_sta_setup_sdata(struct ie
+ 		IEEE80211_STA_AUTO_CHANNEL_SEL;
+ 	if (sdata->local->hw.queues >= 4)
+ 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
++
++	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
++		ifmgd->powersave = CONFIG_MAC80211_DEFAULT_PS_VALUE;
+ }
+ 
+ /* configuration hooks */
+--- wireless-testing.orig/net/mac80211/Kconfig	2009-04-16 12:34:28.000000000 +0200
++++ wireless-testing/net/mac80211/Kconfig	2009-04-16 12:36:52.000000000 +0200
+@@ -11,6 +11,22 @@ config MAC80211
+ 	  This option enables the hardware independent IEEE 802.11
+ 	  networking stack.
+ 
++config MAC80211_DEFAULT_PS
++	bool "enable powersave by default"
++	depends on MAC80211
++	default y
++	help
++	  This option enables powersave mode by default.
++
++	  If this causes your applications to misbehave you should fix your
++	  applications instead -- they need to register their network
++	  latency requirement, see Documentation/power/pm_qos_interface.txt.
++
++config MAC80211_DEFAULT_PS_VALUE
++	int
++	default 1 if MAC80211_DEFAULT_PS
++	default 0
++
+ menu "Rate control algorithm selection"
+ 	depends on MAC80211 != n
+ 
 
-Alina
 
---=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
