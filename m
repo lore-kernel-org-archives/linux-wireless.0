@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758793AbZDGUhv (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:44563 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754302AbZDPLBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:37:51 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
- recently
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1239135878.17958.11.camel@maxim-laptop> (sfid-20090407_222443_633750_085B264D)
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
-	 <1239108689.15015.3.camel@maxim-laptop>
-	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
-	 <1239109497.15015.12.camel@maxim-laptop>
-	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
-	 <1239110412.15015.23.camel@maxim-laptop>
-	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
-	 <1239112310.15015.25.camel@maxim-laptop>
-	 <1239135878.17958.11.camel@maxim-laptop>
-	 (sfid-20090407_222443_633750_085B264D)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rTsNHbRqMDQTm6MFc5Sm"
-Date: Tue, 07 Apr 2009 22:37:17 +0200
-Message-Id: <1239136637.7475.57.camel@johannes.local> (sfid-20090407_223755_550493_561411D3)
-Mime-Version: 1.0
+	Thu, 16 Apr 2009 07:01:39 -0400
+Received: by bwz17 with SMTP id 17so332091bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 04:01:37 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/3] mac80211 powersave improvements
+References: <20090415171046.336006351@sipsolutions.net>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 16 Apr 2009 14:01:36 +0300
+In-Reply-To: <20090415171046.336006351@sipsolutions.net> (Johannes Berg's message of "Wed\, 15 Apr 2009 19\:10\:46 +0200")
+Message-ID: <87iql4981b.fsf@litku.valot.fi> (sfid-20090416_130142_806176_C3951E7E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
---=-rTsNHbRqMDQTm6MFc5Sm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Hi,
 
-On Tue, 2009-04-07 at 23:24 +0300, Maxim Levitsky wrote:
+Hallo,
 
-> First I get this in kernel logs:
->=20
->=20
-> > [   29.971903] WARNING:
-> at /home/maxim/software/kernel/linux-2.6/net/wireless/core.h:79
-> nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
+> This series contains the following:
+>
+>  1) improve powersave to only allow it when a single
+>     managed interface is active
+>
+>  2) disable PS when the maximum networking latency
+>     applications are are willing to put up with is
+>     smaller than the beacon interval -- in that case
+>     we cannot allow the AP to buffer frames
 
-Eh, I don't think that is present in a recent wireless tree.
+No problem with these.
 
-johannes
+>  3) enable powersave by default
+>
+> The last part might be controversial?
 
---=-rTsNHbRqMDQTm6MFc5Sm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I think this a bad idea. For normal users we should not enable powersave
+by default, at least not yet. I believe that there would be so much
+problems that we would have to revert the change eventually.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> Should we have a default setting for the dynamic PS
+> timeout?
 
-iQIcBAABAgAGBQJJ27l6AAoJEKVg1VMiehFYWwQP/i8S5heEHp+qyopOy2DxFtWt
-P2cxbgUzy13lyQ8L0zbZQhFUFjkBRIdC1QKwqceMuHDF/9/mc9V6QShPnGhQcp9c
-QsitprbskxZJo08dF+IMWOkZGWdPrqMvlOawbY0q+ZH9aSk76Nsufde8SvFrzwc4
-ph8MnMsRDnJn06LTTd4J4KMI8HYYGUYdOt3uk9wbk+1IK0kF/vxgnat0+iGirE0S
-kQrO/PnWKpaF7wF3Y6crIXcxUDWUtEnkXsV9677sFt6QlVJVYgs79gQRhrfsswY2
-VtjRdP3c1BdggqAn3OVtnmSXfzB5oTvOVzNzOS7W9j7DTqm0qQ73rUE8OhIqEdU/
-A8EFQguN9TFvp02dyuVj+VcrFzSL5Dbn/rdESGXxGPfZ7fZSedyiwz9oBobNu0BP
-DI9NZwJVLBsRTcTE5XI/5YEPMJIqofraAtGgvRBksJqzdJPJcGcUDAPKPv/uBaKV
-NYG1huOy+69yud+62zsc4LCcLrMAMaxj7C3q4675iCqA0I9vZ0EoU1o72Mv8Na1i
-Dl5hk7D+vKpqEG8i19XzECiJB/X0mFZ/hT2mP3VuI40vC4TNpu8sFNPVoalfDbS2
-TvcsZCGVmYa9peIOR8zGzWsirryp10hL2beHdI6FnbALrcYZZ3C2VKmvC1K7DMma
-Wp6h71O+hhSLXK4E8Or9
-=2JVt
------END PGP SIGNATURE-----
+Yes. Having timeout zero makes no sense in normal laptop use.
 
---=-rTsNHbRqMDQTm6MFc5Sm--
+> Oh also -- below is a small program to play with the
+> pm_qos framework, feel free to rip it for anything.
 
+Thanks, this is useful.
+
+-- 
+Kalle Valo
