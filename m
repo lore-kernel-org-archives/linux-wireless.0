@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:3361 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755035AbZDISWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 14:22:09 -0400
-Subject: sony-laptop still using rfkill's user_claim_unsupported
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 09 Apr 2009 11:27:58 -0700
-Message-Id: <1239301678.4684.39.camel@rc-desk> (sfid-20090409_202215_318075_A1E10E0D)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:40554 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751255AbZDPL6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 07:58:32 -0400
+Cc: nbd@openwrt.org, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com
+Content-Type: text/plain; charset=iso-8859-1
+Date: Thu, 16 Apr 2009 13:58:30 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090416003818.GF4138@makis>
+Message-ID: <20090416115830.305980@gmx.net> (sfid-20090416_135836_349228_7BE2C0C5)
+MIME-Version: 1.0
+References: <20090416003818.GF4138@makis>
+Subject: Re: [PATCH 6/7] ath5k: Implement antenna control
+To: Nick Kossifidis <mick@madwifi-project.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes and John,
+Hello Nick!
 
-I found this issue with sony-laptop when trying to compile. This patch
-gets me compiling again but I do not know which avenue it should take as
-this rfkill cleanup work is not in Linus's tree yet. What do you
-suggest?
+>  * Add code to support the various antenna scenarios supported by hw
+>=20
+>  * For now hardcode the default scenario (single or dual omnis with
+>  tx/rx diversity working and tx antenna handled by session -hw keeps
+>  track on which antenna it got ack from each ap/station and maps each
+>  ap/station to one of the antennas-).
 
-Thank you
+We should add or update an existing nl80211 call, to allow set the used=
+ antenna (multiple antennas in Draft-N?) manually, like madwifi does. T=
+his is e.g. needed for long distance links.
 
-Reinette
+Regards
+Alina
 
-
-From: Reinette Chatre <reinette.chatre@intel.com>
-
-Commit f8c80fa6d4c16b20bc6960f229faeeb8f57ac80c "rfkill: remove user_claim
-stuff" removed "user_claim_unsupported" from the rfkill struct. Remove
-usage of this member from sony-laptop.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/platform/x86/sony-laptop.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/sony-laptop.c
-index a90ec5c..3c17995 100644
---- a/drivers/platform/x86/sony-laptop.c
-+++ b/drivers/platform/x86/sony-laptop.c
-@@ -1097,7 +1097,6 @@ static int sony_nc_setup_wifi_rfkill(struct acpi_device *device)
- 	sony_wifi_rfkill->name = "sony-wifi";
- 	sony_wifi_rfkill->toggle_radio = sony_nc_rfkill_set;
- 	sony_wifi_rfkill->get_state = sony_nc_rfkill_get;
--	sony_wifi_rfkill->user_claim_unsupported = 1;
- 	sony_wifi_rfkill->data = (void *)SONY_WIFI;
- 	err = rfkill_register(sony_wifi_rfkill);
- 	if (err)
-@@ -1119,7 +1118,6 @@ static int sony_nc_setup_bluetooth_rfkill(struct acpi_device *device)
- 	sony_bluetooth_rfkill->name = "sony-bluetooth";
- 	sony_bluetooth_rfkill->toggle_radio = sony_nc_rfkill_set;
- 	sony_bluetooth_rfkill->get_state = sony_nc_rfkill_get;
--	sony_bluetooth_rfkill->user_claim_unsupported = 1;
- 	sony_bluetooth_rfkill->data = (void *)SONY_BLUETOOTH;
- 	err = rfkill_register(sony_bluetooth_rfkill);
- 	if (err)
-@@ -1140,7 +1138,6 @@ static int sony_nc_setup_wwan_rfkill(struct acpi_device *device)
- 	sony_wwan_rfkill->name = "sony-wwan";
- 	sony_wwan_rfkill->toggle_radio = sony_nc_rfkill_set;
- 	sony_wwan_rfkill->get_state = sony_nc_rfkill_get;
--	sony_wwan_rfkill->user_claim_unsupported = 1;
- 	sony_wwan_rfkill->data = (void *)SONY_WWAN;
- 	err = rfkill_register(sony_wwan_rfkill);
- 	if (err)
-@@ -1161,7 +1158,6 @@ static int sony_nc_setup_wimax_rfkill(struct acpi_device *device)
- 	sony_wimax_rfkill->name = "sony-wimax";
- 	sony_wimax_rfkill->toggle_radio = sony_nc_rfkill_set;
- 	sony_wimax_rfkill->get_state = sony_nc_rfkill_get;
--	sony_wimax_rfkill->user_claim_unsupported = 1;
- 	sony_wimax_rfkill->data = (void *)SONY_WIMAX;
- 	err = rfkill_register(sony_wimax_rfkill);
- 	if (err)
--- 
-1.5.6.3
-
-
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
