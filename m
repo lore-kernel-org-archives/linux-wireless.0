@@ -1,80 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49205 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51061 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758085AbZDSOdo (ORCPT
+	with ESMTP id S1753967AbZDPWSp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 10:33:44 -0400
-Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+	Thu, 16 Apr 2009 18:18:45 -0400
+Subject: [PATCH 2.6.30!] mac80211: validate TIM IE length
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090419142631.158790@gmx.net> (sfid-20090419_162703_506410_10175D69)
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
-	 <20090419142631.158790@gmx.net> (sfid-20090419_162703_506410_10175D69)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ykBOYMVN5llVr30ZMuxV"
-Date: Sun, 19 Apr 2009 16:33:41 +0200
-Message-Id: <1240151621.898.13.camel@johannes.local> (sfid-20090419_163346_662878_5F0F1754)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Christian Lamparter <chunkeey@web.de>
+Content-Type: text/plain
+Date: Fri, 17 Apr 2009 00:18:11 +0200
+Message-Id: <1239920291.26575.37.camel@johannes.local> (sfid-20090417_001849_051533_DC947D05)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The TIM IE must not be shorter than 4 bytes, so verify that
+when parsing it and use the proper type. To ease that adjust
+struct ieee80211_tim_ie to have a virtual bitmap of size
+at least 1.
 
---=-ykBOYMVN5llVr30ZMuxV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Also check that the TIM IE is actually present before trying
+to parse it!
 
-[resend with list]
+Because other people may need the function, make it a static
+inline in ieee80211.h.
 
-On Sun, 2009-04-19 at 16:26 +0200, Alina Friedrichsen wrote:
-> > Hmm, I forgot one thing -- you may want to create an IBSS on a specific
-> > channel, but still allow it scan for other IBSSes. I guess we need a
-> > flag for that and not make "channel set" imply fixed channel.
->=20
-> In cfg80211 an indication for channel auto select is needed for IBSS
-> and _STA_ mode, to implement with it the old wext interface. If not
-> set the channel shouldn't be changed. If you not want store this flag
-> in cfg80211, you must store it in the channel functions of wext to
-> have the same behavior like now.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I can provide a shorter fix for 2.6.30 if required.
 
-That's not what I was referring to -- and wext doesn't actually allow
-what I'm referring to afaik.
+Kalle!!
 
-When you want to create an IBSS on channel 5, what do you do?
+ include/linux/ieee80211.h  |   32 +++++++++++++++++++++++++++++++-
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mlme.c        |   24 ++----------------------
+ net/mac80211/util.c        |    6 ++++--
+ 4 files changed, 38 insertions(+), 26 deletions(-)
 
-I think you have to
-	iwconfig wlan0 essid test
-	iwconfig wlan0 channel 5
-	iwconfig wlan0 ap off # clear fixed channel bit
+--- wireless-testing.orig/include/linux/ieee80211.h	2009-04-16 23:56:05.000000000 +0200
++++ wireless-testing/include/linux/ieee80211.h	2009-04-17 00:09:21.000000000 +0200
+@@ -540,7 +540,7 @@ struct ieee80211_tim_ie {
+ 	u8 dtim_period;
+ 	u8 bitmap_ctrl;
+ 	/* variable size: 1 - 251 bytes */
+-	u8 virtual_map[0];
++	u8 virtual_map[1];
+ } __attribute__ ((packed));
+ 
+ #define WLAN_SA_QUERY_TR_ID_LEN 16
+@@ -1392,4 +1392,34 @@ static inline unsigned long ieee80211_tu
+ 	return 1024 * tu;
+ }
+ 
++/**
++ * ieee80211_check_tim - check if AID bit is set in TIM
++ * @tim: the TIM IE
++ * @tim_len: length of the TIM IE
++ * @aid: the AID to look for
++ */
++static inline bool ieee80211_check_tim(struct ieee80211_tim_ie *tim,
++				       u8 tim_len, u16 aid)
++{
++	u8 mask;
++	u8 index, indexn1, indexn2;
++
++	if (unlikely(!tim || tim_len < sizeof(*tim)))
++		return false;
++
++	aid &= 0x3fff;
++	index = aid / 8;
++	mask  = 1 << (aid & 7);
++
++	indexn1 = tim->bitmap_ctrl & 0xfe;
++	indexn2 = tim_len + indexn1 - 4;
++
++	if (index < indexn1 || index > indexn2)
++		return false;
++
++	index -= indexn1;
++
++	return !!(tim->virtual_map[index] & mask);
++}
++
+ #endif /* LINUX_IEEE80211_H */
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-16 23:56:05.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-16 23:56:06.000000000 +0200
+@@ -844,7 +844,7 @@ struct ieee802_11_elems {
+ 	u8 *fh_params;
+ 	u8 *ds_params;
+ 	u8 *cf_params;
+-	u8 *tim;
++	struct ieee80211_tim_ie *tim;
+ 	u8 *ibss_params;
+ 	u8 *challenge;
+ 	u8 *wpa;
+--- wireless-testing.orig/net/mac80211/util.c	2009-04-16 23:56:05.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2009-04-16 23:56:06.000000000 +0200
+@@ -588,8 +588,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start
+ 			elems->cf_params_len = elen;
+ 			break;
+ 		case WLAN_EID_TIM:
+-			elems->tim = pos;
+-			elems->tim_len = elen;
++			if (elen >= sizeof(struct ieee80211_tim_ie)) {
++				elems->tim = (void *)pos;
++				elems->tim_len = elen;
++			}
+ 			break;
+ 		case WLAN_EID_IBSS_PARAMS:
+ 			elems->ibss_params = pos;
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-16 23:56:05.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-17 00:07:53.000000000 +0200
+@@ -677,27 +677,6 @@ static void ieee80211_sta_wmm_params(str
+ 	}
+ }
+ 
+-static bool ieee80211_check_tim(struct ieee802_11_elems *elems, u16 aid)
+-{
+-	u8 mask;
+-	u8 index, indexn1, indexn2;
+-	struct ieee80211_tim_ie *tim = (struct ieee80211_tim_ie *) elems->tim;
+-
+-	aid &= 0x3fff;
+-	index = aid / 8;
+-	mask  = 1 << (aid & 7);
+-
+-	indexn1 = tim->bitmap_ctrl & 0xfe;
+-	indexn2 = elems->tim_len + indexn1 - 4;
+-
+-	if (index < indexn1 || index > indexn2)
+-		return false;
+-
+-	index -= indexn1;
+-
+-	return !!(tim->virtual_map[index] & mask);
+-}
+-
+ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 					   u16 capab, bool erp_valid, u8 erp)
+ {
+@@ -1805,7 +1784,8 @@ static void ieee80211_rx_mgmt_beacon(str
+ 					  care_about_ies, ncrc);
+ 
+ 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
+-		directed_tim = ieee80211_check_tim(&elems, ifmgd->aid);
++		directed_tim = ieee80211_check_tim(elems.tim, elems.tim_len,
++						   ifmgd->aid);
+ 
+ 	ncrc = crc32_be(ncrc, (void *)&directed_tim, sizeof(directed_tim));
+ 
 
-which is ... weird. OTOH with mac80211 you can also say
-	iconfig wlan0 channel -1
-
-but that's even more strange.
-
-johannes
-
---=-ykBOYMVN5llVr30ZMuxV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ6zZDAAoJEKVg1VMiehFYXIQQAL6qTtIV9UD+iYnG2feLr2a1
-qxHbBuWTq10t8E/TOL4hMEfaupVWLhdrHNylA+fbDV2sb6pvdtwfqm+oFUW9Y75f
-Qil/b4RzARx0srswDiZBpdBouLMBmh0zE6pPImG/Qre0/fHVCaEhOPj6EJiXSGQy
-lnJMSBmCffmYxAAfhbhy8xN8+tR1oHyIGc2cQI9TbkTupa12kNNTFkDawGBQ3hD8
-Zf17fWRWQJou0axmeZ5nz6SUFRUWLt3Roc1cl2qKl7lKYDaiEJCDve4xLhhlSQRW
-krjRPlHLMJP3nLaGym1imXlTR32vSbb589XjgH63hCGG/hevqaAl3ox7QhmQH8sc
-C3TZDXuTTfqIgHyIQ38hDvB9flzVHrah6CLQYTnMBUNDNjUqPdwp4hZzJmvbEpvT
-ykAhj5U0N4ZOVmr7KuUvUs5/2e9AGyB6kE+5oG2Z133qRxuo/V3J/sQ7Ori/i2V2
-fn3KR0Tzq7/dLWJgAbTgfo9Euz1iAyawPYYFUpC2qL0a6sjqePEzKgCDVAAt2KV/
-PlJHIB32Bkfp2MM9DeR7JIthSqbUPfZhYu50zjPZ/PGWwmdq2eGmXADaQ3dth9ys
-sqmemgjwMtW6HzQBZ7BhIsXy0vmzzJ5wyK3NLEVi+p5xGHSmNkck5FfC0ikT/M/V
-KwXMbYtv/n1WDSaB/Y34
-=6J/+
------END PGP SIGNATURE-----
-
---=-ykBOYMVN5llVr30ZMuxV--
 
