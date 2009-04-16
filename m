@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:36671 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755537AbZDSUCY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60644 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbZDPTAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 16:02:24 -0400
-Date: Sun, 19 Apr 2009 16:01:46 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090419200146.GB28885@storm.local.network> (sfid-20090419_220227_723836_9D3BAEBC)
-References: <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="b5gNqxB1S1yM7hjW"
-In-Reply-To: <49EB8119.1020402@lwfinger.net>
+	Thu, 16 Apr 2009 15:00:08 -0400
+Subject: Re: [Proposal]TX flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: radiotap@radiotap.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com> (sfid-20090416_204759_216782_A2928C12)
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+	 <1239902910.26575.14.camel@johannes.local>
+	 <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com>
+	 (sfid-20090416_204759_216782_A2928C12)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-WPhN+K+9zcBh68tF3De1"
+Date: Thu, 16 Apr 2009 20:59:34 +0200
+Message-Id: <1239908374.26575.20.camel@johannes.local> (sfid-20090416_210012_488863_CE5ABD58)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---b5gNqxB1S1yM7hjW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-WPhN+K+9zcBh68tF3De1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Larry,
+On Thu, 2009-04-16 at 20:47 +0200, G=C3=A1bor Stefanik wrote:
 
-On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
-> Forest Bond wrote:
-> >=20
-> > However, I did have a question:
-> >=20
-> > The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwu=
-sb.ko.
-> > Should the directories be named "viawget" and "vntwusb," respectively, =
-or is it
-> > appropriate for them to be named "vt6655" and "vt6656"?
+> Alternatively, the meanings of the {0,0} and {1,1} cases could be
+> switched around (making the {0,0} case more logical, at the expense of
+> the {1,1} one):
 >=20
-> Of course Greg has the final say, but I vote to keep the directories with=
- the
-> vt6656 name and change the name of the driver, which is defined in  the l=
-ine
-> #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor =
-driver.
+> TX Flags absent: Use RTS & CTS as needed.
+> TX Flags present: {
+> RTS=3D0, CTS=3D0: Use RTS & CTS as needed.
+> RTS=3D0, CTS=3D1: Use CTS-to-self.
+> RTS=3D1, CTS=3D0: Use RTS/CTS-handshake.
+> RTS=3D1, CTS=3D1: Use neither RTS nor CTS.
+> }
+>=20
+> (By reading the second proposal again, I find it more and more
+> sympathetic... but let the discussion decide.)
 
-This makes sense to me.  I'll proceed this way for now.  Greg, let me know =
-if
-you'd prefer I didn't do this.
+That _works_, but is impossible to describe in any feature discovery.
 
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
+johannes
 
---b5gNqxB1S1yM7hjW
+--=-WPhN+K+9zcBh68tF3De1
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD4DBQFJ64MqRO4fQQdv5AwRAjmaAJiRqFubg2kTm3jBL86CgiIcZ3bKAKDH1vwg
-SXIgfmAb66OKb2ZtvZZCjg==
-=i5iW
+iQIcBAABAgAGBQJJ54AUAAoJEKVg1VMiehFYgeEP/2CirixgZ3BMWSeFRvRfSnl5
+Qw2KnEBk9mjHE/AommNHDekFVtuthoVKEif12gb57OKjvkbaOV21KdS9qUOKfJEp
+F8GjxFzc27aULdWvdg8XnUVsB2Kl6SFRuZBTjFmlxvcAUqVdNYaE2zOqsIJEP/V3
+/jjjXo867k0DEfKnNeXyxvlXr5d2/O4KtI5u03Nw9CoHMrVB5StyuoIKVgdokTj3
+i0J1topiEX/JFse7Db4Jp3/mbWKXc0h45Nh9v4xayqEqes05QgBairijHMuGWZ21
+gL/UNQizPP6963OXDempE6z+B9A1gZuNCAr546x1DsV7fH5RKHpXTRmjw30gP+IP
+Q+2XETi+Uqxh+RpDblscxw2OROdGWN6JqcIPpiagHclBX7P5gonZwGLaGFDznCd2
++obpQDB6sljzcofis72bahntr7Uy2winzDcJmWg4dEMjph6qaUGtzlsfMUlu2CSv
+ZR7ZvU3OMIjaYYg/YDYiZBpxyEY5kt0yaJGyYZ6czFekSBrL8Zw2Hid02tRPT+Ms
+tkXVRtoz9y5qlSdeKZZaaqp/X8NRBjk3r9r4ZnEer8MBlfJxACuE76nsmWrH79rM
+m6b6y13ucFE/C/Pn62M9nrK2I1Ubr5FJZGrkc5PF86QCgss9CT1VrAXm4mNseJLZ
+wUYrjJmgrFl4ZnWBMX84
+=Ez46
 -----END PGP SIGNATURE-----
 
---b5gNqxB1S1yM7hjW--
+--=-WPhN+K+9zcBh68tF3De1--
+
