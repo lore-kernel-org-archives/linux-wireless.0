@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39887 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752873AbZDORTb (ORCPT
+Received: from elmendorf.ojctech.com ([64.198.255.10]:63793 "EHLO
+	elmendorf.ojctech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbZDPUd4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 13:19:31 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Lu8lm-0002TC-CE
-	for linux-wireless@vger.kernel.org; Wed, 15 Apr 2009 19:19:30 +0200
-Message-Id: <20090415171633.723852466@sipsolutions.net> (sfid-20090415_191937_921308_A4403082)
-References: <20090415171046.336006351@sipsolutions.net>
-Date: Wed, 15 Apr 2009 19:10:49 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 3/3] mac80211: enable PS by default
-Mime-Version: 1.0
+	Thu, 16 Apr 2009 16:33:56 -0400
+Date: Thu, 16 Apr 2009 15:33:54 -0500
+From: David Young <dyoung@pobox.com>
+To: radiotap@radiotap.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Proposal]TX flags
+Message-ID: <20090416203353.GC25412@ojctech.com> (sfid-20090416_223400_945557_1BDD1021)
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com> <1239902910.26575.14.camel@johannes.local> <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com> <1239908374.26575.20.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1239908374.26575.20.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable PS by default -- rely on drivers to control the level
-using pm_qos. Due to the previous patch we turn off PS when
-necessary due to latency requirements.
+On Thu, Apr 16, 2009 at 08:59:34PM +0200, Johannes Berg wrote:
+> On Thu, 2009-04-16 at 20:47 +0200, G?bor Stefanik wrote:
+> 
+> > Alternatively, the meanings of the {0,0} and {1,1} cases could be
+> > switched around (making the {0,0} case more logical, at the expense of
+> > the {1,1} one):
+> > 
+> > TX Flags absent: Use RTS & CTS as needed.
+> > TX Flags present: {
+> > RTS=0, CTS=0: Use RTS & CTS as needed.
+> > RTS=0, CTS=1: Use CTS-to-self.
+> > RTS=1, CTS=0: Use RTS/CTS-handshake.
+> > RTS=1, CTS=1: Use neither RTS nor CTS.
+> > }
+> > 
+> > (By reading the second proposal again, I find it more and more
+> > sympathetic... but let the discussion decide.)
+> 
+> That _works_, but is impossible to describe in any feature discovery.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |    3 +++
- 1 file changed, 3 insertions(+)
+The discovery mechanism that we have begun to discuss would have a hard
+time describing that feature at its current level of development, but
+that is not the only feature that it will have a hard time describing.
+Feature discovery may need more development before we measure new
+proposals against it.  What do you think?
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-15 18:56:41.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-15 18:56:42.000000000 +0200
-@@ -2163,6 +2163,9 @@ void ieee80211_sta_setup_sdata(struct ie
- 		IEEE80211_STA_AUTO_CHANNEL_SEL;
- 	if (sdata->local->hw.queues >= 4)
- 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
-+
-+	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
-+		ifmgd->powersave = 1;
- }
- 
- /* configuration hooks */
+Dave
 
 -- 
-
+David Young             OJC Technologies
+dyoung@ojctech.com      Urbana, IL * (217) 278-3933
