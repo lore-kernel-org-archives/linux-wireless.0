@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:51281 "EHLO
-	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbZDMUr3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119AbZDPPwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 16:47:29 -0400
-Date: Mon, 13 Apr 2009 22:44:30 +0200
-From: maximilian attems <max@stro.at>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath: add module information
-Message-ID: <20090413204430.GH31922@baikonur.stro.at> (sfid-20090413_224732_614869_B046F9C3)
-References: <200904132244.24122.chunkeey@web.de>
+	Thu, 16 Apr 2009 11:52:32 -0400
+Subject: Re: [PATCH] mac80211: Allow scan to be requested in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090416154453.GA7311@jm.kir.nu>
+References: <20090416154453.GA7311@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AWliAMEf/aLGnNxiOoSz"
+Date: Thu, 16 Apr 2009 17:51:57 +0200
+Message-Id: <1239897117.14169.8.camel@johannes.local> (sfid-20090416_175235_332231_9DE1F4A5)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200904132244.24122.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 13, 2009 at 10:44:23PM +0200, Christian Lamparter wrote:
-> diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-> index a005b91..4bb0132 100644
-> --- a/drivers/net/wireless/ath/Makefile
-> +++ b/drivers/net/wireless/ath/Makefile
-> @@ -3,5 +3,4 @@ obj-$(CONFIG_ATH9K)		+= ath9k/
->  obj-$(CONFIG_AR9170_USB)        += ar9170/
->  
->  obj-$(CONFIG_ATH_COMMON)	+= ath.o
-> -ath-objs 		:= regd.o
-> -
-> +ath-objs 		:= main.o regd.o
 
-why do you put that in a different file and not in ath.c?
+--=-AWliAMEf/aLGnNxiOoSz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-> new file mode 100644
-> index 0000000..c5eb144
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/main.c
-> @@ -0,0 +1,33 @@
-> +/*
-> + * Copyright (c) 2008-2009 Atheros Communications Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +
-> +MODULE_AUTHOR("Atheros Communications");
-> +MODULE_DESCRIPTION("Shared library for Atheros wireless LAN cards.");
-> +MODULE_LICENSE("Dual BSD/GPL");
-> +
-> +static int __init ath_init(void)
-> +{
-> +	return 0;
-> +}
-> +module_init(ath_init);
-> +
-> +static void __exit ath_exit(void)
-> +{
-> +}
-> +module_exit(ath_exit);
+On Thu, 2009-04-16 at 18:44 +0300, Jouni Malinen wrote:
+> We can allow scan requests in AP mode as long as the interface has not
+> yet been configured to send out Beacon frames (or if beaconing has
+> been disabled prior to the scan request). This makes it easier to scan
+> for neighboring BSSes during AP initialization and makes it possible
+> to run a scan without setting the interface down, if needed. Without
+> this change, the only available option would be to set the interface
+> down, move into station mode, and set the interface up, prior to
+> requesting the scan.
+>=20
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+>=20
+> ---
+>  net/mac80211/cfg.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> --- uml.orig/net/mac80211/cfg.c	2009-04-16 18:20:19.000000000 +0300
+> +++ uml/net/mac80211/cfg.c	2009-04-16 18:33:44.000000000 +0300
+> @@ -1167,7 +1167,8 @@ static int ieee80211_scan(struct wiphy *
+> =20
+>  	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION &&
+>  	    sdata->vif.type !=3D NL80211_IFTYPE_ADHOC &&
+> -	    sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT)
+> +	    sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT &&
+> +	    (sdata->vif.type !=3D NL80211_IFTYPE_AP || sdata->u.ap.beacon))
+>  		return -EOPNOTSUPP;
+
+Should this return a different error code for AP then? Maybe -EBUSY for
+AP && beacon? Then again, EBUSY is already returned for "already
+scanning". hmm.
+
+johannes
+
+--=-AWliAMEf/aLGnNxiOoSz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ51QbAAoJEKVg1VMiehFYRlgP/164Hc/VCU7sN5215UxgcLTf
+NYG1dGeTGrlCk2sEUsCMtjL9PYP2+4N9vd4h2cShI/SFvVN7V+90ZkA1BjAyD3om
+b/5Y8GfVsQV6Slu/T3tUx0BlB0aNbkYLbiWWFdMiITD1+h9Ac79HR64Yd0w3Cr6W
+j+3L5xsW4SCaAWQwJiRohorgeesjCW/rTEvej+Vnq5cpszfxxE6dJLSR7JB6mt8a
+kXS9Ud2hXcQfzO4XJW7BEAVeRjLTYJcXEaz5+wdgYTkSSk9KMo769YxD3jYQnsdn
+88joZov6Gzjs83updlcKmFhDUux0VS/TduDIwp8vtLlIDmC+0Y4k422iYzgzZr9b
+gwuUZIHeC47e9yyTBAx+5GxGs30I4Qfai6jqeQ0gce2nOUEE9TbQ8tTEffGLo5+6
+xJnhKpfm6iBqdnWwkiw4lZPtohQnxl5wyEmiDNyWuzkmwg+MqnZZNWL2clJHZTuo
++5WC8r1Ac+IAyr4bQcNJXdFL2SUuFllg2JS5WNyFIe771sOSoyXqtaJIT9tIrhuD
+JtdRpO3TL0t55COZDZ9p9lj6iflLSypsxiI+lT5B8NOelaQyzC5yOJQ40YetURYd
+BlCDG1Xdttl7dgJKHsS+G0sg6+PCu/dVFD4/jj2LGDDAayK+XuJBDiE9QgwrLy7u
+BJ0bp7xeEiyQP3IrFuy1
+=c5PA
+-----END PGP SIGNATURE-----
+
+--=-AWliAMEf/aLGnNxiOoSz--
+
