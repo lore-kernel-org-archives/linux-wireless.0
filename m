@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60808 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbZDEMDX (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:53571 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032AbZDPF6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Apr 2009 08:03:23 -0400
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <roszenrami@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <b25312890904050352n391f4707mfafca74aef8bca06@mail.gmail.com> (sfid-20090405_125234_691985_99B70D9E)
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <b25312890904050352n391f4707mfafca74aef8bca06@mail.gmail.com>
-	 (sfid-20090405_125234_691985_99B70D9E)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RJZIbBP29G2I4zeMczI2"
-Date: Sun, 05 Apr 2009 14:03:17 +0200
-Message-Id: <1238932997.3782.6.camel@johannes.local> (sfid-20090405_140334_655122_8EB074E2)
-Mime-Version: 1.0
+	Thu, 16 Apr 2009 01:58:39 -0400
+Received: by bwz17 with SMTP id 17so215937bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 22:58:37 -0700 (PDT)
+To: Greg KH <greg@kroah.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 16 Apr 2009 08:58:35 +0300
+In-Reply-To: <20090415212103.GA5202@kroah.com> (Greg KH's message of "Wed\, 15 Apr 2009 14\:21\:04 -0700")
+Message-ID: <87ws9lf8c4.fsf@litku.valot.fi> (sfid-20090416_075843_458427_EC836321)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Greg KH <greg@kroah.com> writes:
 
---=-RJZIbBP29G2I4zeMczI2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Note, whenever a "real" wireless driver goes into the tree that
+> obsoletes any of the staging drivers, please let me know and I'll
+> instantly remove it.
+>
+> Right now the otus code is staying because the ar9170 developers want it
+> to.
+>
+> But what about at76_usb?  stlc45xx?  Do they now have workable drivers
+> to replace them in the tree today?  If so, _please_ let me know.
 
-On Sun, 2009-04-05 at 13:52 +0300, Rami Rosen wrote:
+I have received a report that at76_usb has worked better than
+at76c50x-usb. Also p54spi implementation is quite new and not that much
+tested.
 
-> I believe that 802.11n implementation and design in the Linux Wireless st=
-ack
-> can be of interest/good to include (also 802.11n Linux future directions =
-).
+If it's ok for you, I would like to have both at76_usb and stlc45xx in
+the staging area for some time still. I will let you know when they can
+be removed.
 
-I'll be there unless something weird happens -- anything mac80211
-related and especially aggregation (since I rewrote it) I can cover.
-
-johannes
-
---=-RJZIbBP29G2I4zeMczI2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ2J4DAAoJEKVg1VMiehFYIsQP/RnLNEcSTmnWzU+cTM2gV1ft
-ooyTSi6jEDSXAkqQummX/Cen99IboYUNPHXXR4INmJXBJN0mDzYb2X8sRDjh1GXr
-SXz7dJb5U19YvARq9CVQ6oaqCU3GpaV2dCrDDBmCZ49JPPOkfzKpPWr4diGY31BN
-5tnsAa6XakWmL0EFuF4ngXqxvSy9KdXqOZ0Q0Mea3F99qX/2zZunnDAatglo1Fi8
-lHps1f1lfzizSUo0WnviWCoO7KGbY/C0Q+URRg6evYJjHH0dH2jEJxfka9EFZjfI
-+H8I47tkB1Z4u/gFRZlnJYyEjstlmDS2ETwgBkf00TRab9FYekhpgnlARIL3MgQS
-xkqk8vm5vFKIC8g9xRWPO4vdQ28S7TSIxHgd6tGUjzX2QqFWQVr4mRGpdZO1hfOd
-IdJQc7KbJbmEW4pHPTah6nv8a9bf5EIs3v9LPGsqDFVo7yN7x7VgLgzZuhbVFtar
-DIhL6sHXl/fB5JUMXWj3ePR8tLtG9KjuOL9RM+goZv0/GTw/PnbQNa5U0GLoR7gE
-TyRHcaFdNXgsPnsXXG3ZbrbkaRIxIar4unX6P896HMi1QInAj/dJyDnLj61wJKg4
-SpJVjLdm8q3t+wSuTa+BbkHj+NInCibqMzE0yzK9SyD13H8nld0xS7w0sPMkw8z9
-GqYlDOgvXp5umMG5F4aP
-=luPV
------END PGP SIGNATURE-----
-
---=-RJZIbBP29G2I4zeMczI2--
-
+-- 
+Kalle Valo
