@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f160.google.com ([209.85.217.160]:60821 "EHLO
-	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636AbZDMVAw convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:40195 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672AbZDPKXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 17:00:52 -0400
-Received: by gxk4 with SMTP id 4so4869325gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 14:00:51 -0700 (PDT)
+	Thu, 16 Apr 2009 06:23:20 -0400
+Received: by fxm2 with SMTP id 2so320114fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 03:23:18 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+References: <1239837672.11795.46.camel@violet>
+	<1239841291.25334.18.camel@johannes.local>
+	<87ocuxf7kv.fsf@litku.valot.fi>
+	<1239873166.9737.4.camel@johannes.local>
+	<87fxg8apgo.fsf@litku.valot.fi>
+	<1239876253.9737.12.camel@johannes.local>
+	<878wm0ap2u.fsf@litku.valot.fi>
+	<1239877115.9737.16.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 16 Apr 2009 13:23:16 +0300
+In-Reply-To: <1239877115.9737.16.camel@johannes.local> (Johannes Berg's message of "Thu\, 16 Apr 2009 12\:18\:35 +0200")
+Message-ID: <874owoaodn.fsf@litku.valot.fi> (sfid-20090416_122323_947531_634E11EC)
 MIME-Version: 1.0
-In-Reply-To: <20090413204430.GH31922@baikonur.stro.at>
-References: <200904132244.24122.chunkeey@web.de> <20090413204430.GH31922@baikonur.stro.at>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 13 Apr 2009 14:00:36 -0700
-Message-ID: <43e72e890904131400v5c484f05s13d50ada2538e555@mail.gmail.com> (sfid-20090413_230056_254370_63DD7629)
-Subject: Re: [PATCH] ath: add module information
-To: maximilian attems <max@stro.at>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 13, 2009 at 1:44 PM, maximilian attems <max@stro.at> wrote:
-> On Mon, Apr 13, 2009 at 10:44:23PM +0200, Christian Lamparter wrote:
->> diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireles=
-s/ath/Makefile
->> index a005b91..4bb0132 100644
->> --- a/drivers/net/wireless/ath/Makefile
->> +++ b/drivers/net/wireless/ath/Makefile
->> @@ -3,5 +3,4 @@ obj-$(CONFIG_ATH9K) =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- +=3D ath9k/
->> =C2=A0obj-$(CONFIG_AR9170_USB) =C2=A0 =C2=A0 =C2=A0 =C2=A0+=3D ar917=
-0/
->>
->> =C2=A0obj-$(CONFIG_ATH_COMMON) =C2=A0 =C2=A0 +=3D ath.o
->> -ath-objs =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 :=3D regd.o
->> -
->> +ath-objs =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 :=3D main.o regd=
-=2Eo
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+> On Thu, 2009-04-16 at 13:08 +0300, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > But ieee80211_sta_work() checks if we're scanning and aborts if we are.
+>> 
+>> Oh, I missed that one. Yes, you are right.
 >
-> why do you put that in a different file and not in ath.c?
+> Maybe we should just set last_beacon = jiffies on scan finished as an
+> easy workaround :)
 
-Apart from this objection, looks good -- and thanks.
+That sounds quite good actually.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I wish I had noticed the check in ieee80211_sta_work() already when I
+tried to fix this :)
+
+-- 
+Kalle Valo
