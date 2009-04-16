@@ -1,90 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out9.libero.it ([212.52.84.109]:56971 "EHLO
-	cp-out9.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760967AbZDASj6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53909 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751169AbZDPLHO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 14:39:58 -0400
-To: linville@tuxdriver.com
-Subject: [PATCH v2] ath5k: fix interpolation with equal power levels
-Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	jirislaby@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org
-From: Fabio Rossi <rossi.f@inwind.it>
-Date: Wed, 1 Apr 2009 20:37:50 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904012037.51449.rossi.f@inwind.it> (sfid-20090401_204005_036727_D93ACABD)
+	Thu, 16 Apr 2009 07:07:14 -0400
+Subject: Re: [RFC 0/3] mac80211 powersave improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87iql4981b.fsf@litku.valot.fi> (sfid-20090416_130208_558130_BEE7A112)
+References: <20090415171046.336006351@sipsolutions.net>
+	 <87iql4981b.fsf@litku.valot.fi> (sfid-20090416_130208_558130_BEE7A112)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ev8ADcIq5d2DVSekwXpD"
+Date: Thu, 16 Apr 2009 13:06:40 +0200
+Message-Id: <1239880000.9737.20.camel@johannes.local> (sfid-20090416_130720_703548_82711DB5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the EEPROM contains weird values for the power levels we have to
-fix the interpolation process.
 
-Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
----
+--=-Ev8ADcIq5d2DVSekwXpD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-v2: rebased on top of recent ath5k/ath9k/ar9170 merge series
+On Thu, 2009-04-16 at 14:01 +0300, Kalle Valo wrote:
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 9e2faae..0e3e0e0 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1487,28 +1487,35 @@ ath5k_get_linear_pcdac_min(const u8 *stepL, const u8 *stepR,
- {
- 	s8 tmp;
- 	s16 min_pwrL, min_pwrR;
--	s16 pwr_i = pwrL[0];
--
--	do {
--		pwr_i--;
--		tmp = (s8) ath5k_get_interpolated_value(pwr_i,
--						pwrL[0], pwrL[1],
--						stepL[0], stepL[1]);
--
--	} while (tmp > 1);
--
--	min_pwrL = pwr_i;
--
--	pwr_i = pwrR[0];
--	do {
--		pwr_i--;
--		tmp = (s8) ath5k_get_interpolated_value(pwr_i,
--						pwrR[0], pwrR[1],
--						stepR[0], stepR[1]);
--
--	} while (tmp > 1);
-+	s16 pwr_i;
-+
-+	if (pwrL[0] == pwrL[1])
-+		min_pwrL = pwrL[0];
-+	else {
-+		pwr_i = pwrL[0];
-+		do {
-+			pwr_i--;
-+			tmp = (s8) ath5k_get_interpolated_value(pwr_i,
-+							pwrL[0], pwrL[1],
-+							stepL[0], stepL[1]);
-+		} while (tmp > 1);
-+
-+		min_pwrL = pwr_i;
-+	}
- 
--	min_pwrR = pwr_i;
-+	if (pwrR[0] == pwrR[1])
-+		min_pwrR = pwrR[0];
-+	else {
-+		pwr_i = pwrR[0];
-+		do {
-+			pwr_i--;
-+			tmp = (s8) ath5k_get_interpolated_value(pwr_i,
-+							pwrR[0], pwrR[1],
-+							stepR[0], stepR[1]);
-+		} while (tmp > 1);
-+ 
-+		min_pwrR = pwr_i;
-+	}
- 
- 	/* Keep the right boundary so that it works for both curves */
- 	return max(min_pwrL, min_pwrR);
+> >  1) improve powersave to only allow it when a single
+> >     managed interface is active
+> >
+> >  2) disable PS when the maximum networking latency
+> >     applications are are willing to put up with is
+> >     smaller than the beacon interval -- in that case
+> >     we cannot allow the AP to buffer frames
+>=20
+> No problem with these.
+
+I'll send these along with the software beacon filtering, I think.
+
+> >  3) enable powersave by default
+> >
+> > The last part might be controversial?
+>=20
+> I think this a bad idea. For normal users we should not enable powersave
+> by default, at least not yet. I believe that there would be so much
+> problems that we would have to revert the change eventually.
+
+We can go with the configurable one -- and default y in wireless-testing
+but default n in mainline for a while. Get press coverage etc. and at
+some point flip the switch.
+
+> > Should we have a default setting for the dynamic PS
+> > timeout?
+>=20
+> Yes. Having timeout zero makes no sense in normal laptop use.
+
+So, what's a good default? Fairly long I'd say, maybe 500ms?
+
+johannes
+
+--=-Ev8ADcIq5d2DVSekwXpD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ5xE8AAoJEKVg1VMiehFYwrwP+wfIF7HBqTwVG2I6hcWTxn1u
+9dlPCcK+iyRbWjNJMrHCO7FVVEOP3rB6mIVueaiQtxvPOXyxnzFYFWGHNUr80E9C
+2DaFgY+Xwvurcnd6Orlc7PBCuqxwOqH+XURd2vbdBWJbYzwQucLip1eWZ16LPPz6
+qxRQpfpNy/clg0bHIEMMYBQs8aqn3n5hsGfXuCTyuXnT98JNpiPLKIvNwr81d05R
+WE+dnnK2WZpTsTjScRdx3DkjjIm6y1K1d7Gxjtismnv1z7MrmkZOsTNnbny811f+
+1xu6D4tCxufh6/qjEXH/Ksni466PZd+dzFKRgKj11ZL25nW5Wz106OO/up2kBeXp
+L0CWuZKXOV1vlq8fBlvEIEMWiRQIDJN1QRezx5kTYtq4IRB4qV1sk1lNLc4YGSGC
+6EmRsu7ohWJfRI5EqIALd+4HIYysX6uX9hdzjOUQgTJHGnRhTOBUTGZwv0Ec6Sx5
+/JmwVD76j8oFFVqG4T/AojGRaL0v5HyhHXismd01rgX+l2Cr2ETKdsMgks1er9Je
+9wv7zjKkQbl2i/xKeES+1R8UEep+/KN8nz9gjqFQCTHZnerIyRyiY5AAvdSNlVHm
+D8hzkFpjxuae4qBQnWE8SNhtrhPeU8AQyITLkSAZoWpC8sB37y9/xOSLFRSRWwUp
+YaXpCL/8M5UR4qeHI91t
+=ZEtc
+-----END PGP SIGNATURE-----
+
+--=-Ev8ADcIq5d2DVSekwXpD--
+
