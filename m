@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:28004 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755604AbZD1Q72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 12:59:28 -0400
-Subject: Re: iwlagn: Microcode SW error detected.  Restarting 0x82000000.
-From: reinette chatre <reinette.chatre@intel.com>
-To: Philipp Wagner <lists@philipp-wagner.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <49F70489.5070004@philipp-wagner.com>
-References: <49F70489.5070004@philipp-wagner.com>
-Content-Type: text/plain
-Date: Tue, 28 Apr 2009 10:05:34 -0700
-Message-Id: <1240938334.1207.7.camel@rc-desk> (sfid-20090428_185933_151658_25332FA0)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.156]:4590 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbZDPCjd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2009 22:39:33 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so729926fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 19:39:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <49e644a4.3DqmSbwccrtRsayP%Larry.Finger@lwfinger.net>
+References: <49e644a4.3DqmSbwccrtRsayP%Larry.Finger@lwfinger.net>
+Date: Thu, 16 Apr 2009 03:39:31 +0100
+Message-ID: <3ace41890904151939gf8cce84x54a34407f3ab575@mail.gmail.com> (sfid-20090416_043943_509522_679D5321)
+Subject: Re: [RFT/RFC V3] rtl8187: Implement TX/RX blink for LED
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Philipp,
+On Wed, Apr 15, 2009 at 9:33 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The following patch implements some control over the LED on RTL8187B and
+> RTL8187L devices. Triggers are registered for TX and RX. Whenever the
+> trigger event occurs, the LED is turned off for 1/20 second, then turned
+> back on.
+>
+> Note: For those RTL8187X devices that are built into the computer and have
+> a LED that is expected to be controlled with a radio switch, this patch will
+> not operate that LED. That will take a separate patch to be prepared later.
+>
+> Please test and comment.
+>
+> The behavior described above is found for my Level One RTL8187B. Prior to this
+> patch, the LED was on continuously. On a Netgear WG111V2 RTL8187L, the LED
+> blinks erratically. Before the patch, the LED was off.
+>
+> If you test, please report the status of the LED before and after applying the
+> patch. In addition, find the line that looks like "rtl8187: Customer ID 0x00" in
+> the dmesg output and report it. I also need to know if you have a B or L model.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-On Tue, 2009-04-28 at 06:28 -0700, Philipp Wagner wrote:
-> Hi,
-> 
-> I'm running into a
-> Microcode SW error detected.  Restarting 0x82000000.
-> error with the iwlagn driver.
-> 
-> # uname -a
-> Linux 2.6.30-rc2-git6-master_20090416115717_67cb21e9-vanilla #2 SMP Thu
-> Apr 23 19:24:36 CEST 2009 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> I uploaded a (hopefully) complete log generated with the "debug=0x43fff"
-> at http://philipp.wagner.name/temp/iwlagn-microcodeerror.txt
-> 
-> Is this a known problem? I mainly experience this problem at university
-> with many access points for the same essid and it seems to happen more
-> often with encrypted communication (802.1x) - but that's only a feeling,
-> not a fact :)
-
-Thank you for that great log. Could you please add it to
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1965 ?
-
-Thank you
-
-Reinette
-
-
+Just checking it does nothing other than outputting these lines on my
+hardware, as expected.
+rtl8187: Customer ID is 0x04
+Registered led device: rtl8187-phy0::tx
+Registered led device: rtl8187-phy0::rx
