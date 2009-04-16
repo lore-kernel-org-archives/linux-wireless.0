@@ -1,74 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36429 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbZD3TQE (ORCPT
+Received: from fmailhost05.isp.att.net ([207.115.11.55]:48331 "EHLO
+	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752396AbZDPPKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:16:04 -0400
-Date: Thu, 30 Apr 2009 15:02:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 0/5] mac80211, iwlwifi, ath9k: Fix rate scaling for
-	IEEE80211_TX_CTL_NO_ACK packets
-Message-ID: <20090430190207.GD9323@tuxdriver.com>
-References: <69e28c910904231035u7ff2d9bbnbf1a74ece718659@mail.gmail.com> <69e28c910904281353n327a6dfcjb0389f2e2e55dea2@mail.gmail.com> <20090430182806.GA9323@tuxdriver.com>
+	Thu, 16 Apr 2009 11:10:19 -0400
+Message-ID: <49E74A47.5010309@lwfinger.net> (sfid-20090416_171023_612853_25438DFD)
+Date: Thu, 16 Apr 2009 10:09:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090430182806.GA9323@tuxdriver.com>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFT/RFC V3] rtl8187: Implement TX/RX blink for LED
+References: <49e644a4.3DqmSbwccrtRsayP%Larry.Finger@lwfinger.net> <200904161142.03296.herton@mandriva.com.br>
+In-Reply-To: <200904161142.03296.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 30, 2009 at 02:28:07PM -0400, John W. Linville wrote:
-> On Tue, Apr 28, 2009 at 10:53:51PM +0200, G=E1bor Stefanik wrote:
-> > Did this get lost? I can't see it in wireless-testing.
+Herton Ronaldo Krzesinski wrote:
+> Em Quarta-feira 15 Abril 2009, =E0s 17:33:40, Larry Finger escreveu:
+>> The following patch implements some control over the LED on RTL8187B=
+ and
+>> RTL8187L devices. Triggers are registered for TX and RX. Whenever th=
+e
+>> trigger event occurs, the LED is turned off for 1/20 second, then tu=
+rned
+>> back on.
+>>
+>> Note: For those RTL8187X devices that are built into the computer an=
+d have
+>> a LED that is expected to be controlled with a radio switch, this pa=
+tch
+>> will not operate that LED. That will take a separate patch to be pre=
+pared
+>> later.
+>>
+>> Please test and comment.
 >=20
-> No, I didn't lose them.  I was waiting to process them until I had
-> a little extra time, because nearly every patch you send me requires
-> manually intervention before I can apply it.  This is quite painful
-> and it increases the time I need for merging patches exponentially.
+> It didn't work for me, I need to fix this typo in V3 patch:
 >=20
-> Please, please, please ensure that:
->=20
-> 	-- you are using a recent pull of wireless-testing;
->=20
-> 	-- you're patches are based directly on wireless-testing and
-> 	   not on top of any other patches you have not submitted;
->=20
-> 	-- you format your patch and changelog compatibly with what
-> 	   is described here:
->=20
-> 		http://linux.yyz.us/patch-format.html
->=20
-> 	-- you send the patch inline (without MIME) in email if at
-> 	   all possible;
->=20
-> 	-- if you simply must send a patch as an attachment then do
-> 	   so, but...
->=20
-> 	-- do _not_ send a patch inline _and_ attached to the same
-> 	   email
+>  ./drivers/net/wireless/rtl818x/rtl8187_leds.c
+> --- ./drivers/net/wireless/rtl818x/rtl8187_leds.c.orig	2009-04-15=20
+> 18:47:24.000000000 -0300
+> +++ ./drivers/net/wireless/rtl818x/rtl8187_leds.c	2009-04-16=20
+> 11:32:11.000000000 -0300
+> @@ -64,7 +64,7 @@ static void led_turn_off(struct work_str
+>  	 */
+>  	u8 reg;
+>  	struct rtl8187_priv *priv =3D container_of(work, struct rtl8187_pri=
+v,
+> -				    led_on.work);
+> +				    led_off.work);
+>  	struct rtl8187_led *led =3D &priv->led_tx;
+> =20
+>  	/* Don't change the LED, when the device is down. */
 
-=46orgot one:
+Thanks for catching this. That was a copy-and-paste gone wrong.
 
-	-- successfully compile a current wireless-testing tree with
-	   your patches applied...
 
+> Also, it doens't turn on led on interface up, probably because we don=
+'t have a=20
+> 'radio' led and now removed led on from init_regs, may be we could do=
+ this:
 >=20
-> The above are not strictly directed at you, G=E1bor.
+> @@ -186,8 +187,10 @@ void rtl8187_leds_init(struct ieee80211_
+>  		 "rtl8187-%s::rx", wiphy_name(dev->wiphy));
+>  	err =3D rtl8187_register_led(dev, &priv->led_rx, name,
+>  			 ieee80211_get_rx_led_name(dev), ledpin);
+> -	if (!err)
+> +	if (!err) {
+> +		queue_delayed_work(priv->dev->workqueue, &priv->led_on, 0);
+>  		return;
+> +	}
 
-That one is...
+I had thought of this as a feature in that the LED comes on when the fi=
+rst
+transmit occurs, but it is more instructive to have it on as soon as th=
+e LED
+system is ready.
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>  	/* registration of RX LED failed - unregister TX */
+>  	rtl8187_unregister_led(&priv->led_tx);
+>  error:
+>=20
+>=20
+> For the led off/stop code you added on rtl8187_stop, may be we would =
+want to=20
+> protect:
+>        rtl818x_iowrite8(priv, &priv->map->GPIO, 0x01);
+>        rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0x01);
+> inside an ifdef CONFIG_RTL8187_LEDS, but it will not work also for ot=
+her led=20
+> hardware (the ones which don't use GPIO/GP_ENABLE to set leds. we cou=
+ld do=20
+> this instead on rtl8187_leds_exit:
+>=20
+> @@ -200,6 +203,7 @@ void rtl8187_leds_exit(struct ieee80211_
+>  {
+>  	struct rtl8187_priv *priv =3D dev->priv;
+> =20
+> +	queue_delayed_work(priv->dev->workqueue, &priv->led_off, 0);
+>  	cancel_delayed_work_sync(&priv->led_off);
+>  	cancel_delayed_work_sync(&priv->led_on);
+>  	rtl8187_unregister_led(&priv->led_tx);
+>=20
+> but then it will not turn off led on interface stop, just on module r=
+emoval...
+
+If we are turning the LED on in rtl8187_leds_init(), it should be off i=
+n
+rtl8187_leds_exit(). I'll rework for V4.
+
+Thanks for the review.
+
+Larry
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
