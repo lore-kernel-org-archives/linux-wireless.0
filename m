@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39389 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754453AbZDHNkP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 09:40:15 -0400
-Message-ID: <49DCA93C.3000504@gmx.de> (sfid-20090408_154020_159478_FDCF9C2B)
-Date: Wed, 08 Apr 2009 15:40:12 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Correia <luis.f.correia@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: wireless mini summit
-References: <efe7343f0904070235n4803280au76a75490f5f07900@mail.gmail.com> <20090407135551.GB28289@tuxdriver.com>
-In-Reply-To: <20090407135551.GB28289@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:60436 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755657AbZDPR3G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 13:29:06 -0400
+Subject: Re: [Proposal]TX flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: radiotap@radiotap.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bGqLbf/IdX87x8mPyN0E"
+Date: Thu, 16 Apr 2009 19:28:30 +0200
+Message-Id: <1239902910.26575.14.camel@johannes.local> (sfid-20090416_192910_507232_096363F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2009 03:55 PM, John W. Linville wrote:
->> In order to make the appropriate plans, I would like to know if this
->> information is still valid?
->> https://fedoraproject.org/wiki/FedoraEvents/LinuxTag/SurvivalKit
->=20
-> I hope so!  If not, we'll be lost together... :-)
 
-I've just updated the section on public transport a bit (ticket=20
-prices, Tempelhof airport is closed, Sch=F6nefeld airport moved to=20
-zone C, ...)
+--=-bGqLbf/IdX87x8mPyN0E
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Please check the english pages of the LinuxTag, too:
+On Wed, 2009-04-15 at 02:33 +0200, G=C3=A1bor Stefanik wrote:
 
-http://www.linuxtag.org/2009/en/about/ueber-den-linuxtag.html
+>    - Define bit 1 (mask 0x0002) as "CTS-to-self protection",
+>    - Define bit 2 (mask 0x0004) as "RTS/CTS handshake",
 
-Seems like they open at 10 am and tickets are more expensive this year.
+Since you're defining these for injection too I think it would be useful
+to also define a way to _not_ use RTS or CTS, or define a way to use the
+default that the device would use from dot11RTSThreshold for example.
 
-/Joerg
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Otherwise, when leaving out these bits, it wouldn't be clear whether
+that means "do not use, overriding default" or "use default".
+
+johannes
+
+--=-bGqLbf/IdX87x8mPyN0E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ52q8AAoJEKVg1VMiehFYzgkP/Ru5zliynmpnGgqdzU7CrWng
+gsxzY4zpcrLUur9wXtvnaf0IvIY2c7Y2B5hXj8RUZaapG+c+mY+GTz98nithYnTC
+SJWr1ES1MDWYNMrdUrNYzyFK8A7bhl92ffVSlD/qYo5cOgmfJeEPySsAaZnVvhWo
+cf1oU+e5xneqw25XO/Bvzaj/M/cdFILACIfKjCOB1KJ5b0SRdd9aRjGDFwTaAWkD
+TzUaCPPhyR8ATVDAKJlnQL+UVmB7BfNo210jO/qr39wNvIAUmR524Miv/zC8liH+
+yDQ6lM5VKpLLL3NfwrpQdPi0SE/NN3kawVG9Gdmn+Exdekr9G+hpc94mW8cZXQbu
+ClT0L9JdPydaeRBn/BSyOodn+tlXorof/TRtHChNB1jW/qFyOfMf0pd2qJjclQka
+JPdSepIxFrUjDSFcjNib6smkE3ODzg9MAIsxhaR27Ctzcj6b1Ek65qdPTFgtmKel
+miZ+vyDmcjenvPWqe3o97VleqEFjazXhM/xKCnpSPtb4M5ZgdUUKpwtNaf3XkWzZ
+PDgKmI3jusXdMhsOrdhgPDyd5XQ1i2lc2Dok39FN6Ee+yZE4/AWutO503s/po6Xy
+PI3fNQMx7IBCxZrN9AJYNzJVaevuAlRmtygUjIWt56gBemtmq802t5XiPU9wkAhj
+23CaNgIGWojcTsYM0UKK
+=5d6O
+-----END PGP SIGNATURE-----
+
+--=-bGqLbf/IdX87x8mPyN0E--
+
