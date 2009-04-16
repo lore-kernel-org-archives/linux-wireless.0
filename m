@@ -1,72 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42600 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755349AbZDTVGs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 17:06:48 -0400
-Subject: Re: WARN on return of ieee80211_if_config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1240261096.5206.107.camel@rc-desk>
-References: <1240252271.5206.63.camel@rc-desk>
-	 <1240252511.4632.17.camel@johannes.local>
-	 <1240261096.5206.107.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fGAvB/pJ22hrZy2IPCz6"
-Date: Mon, 20 Apr 2009 23:06:14 +0200
-Message-Id: <1240261574.4632.22.camel@johannes.local> (sfid-20090420_230658_843418_2D97F728)
-Mime-Version: 1.0
+Received: from venema.h4ckr.net ([217.24.1.135]:45195 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752219AbZDPAYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2009 20:24:40 -0400
+Date: Thu, 16 Apr 2009 03:24:49 +0300
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Subject: [PATCH 2/7] ath5k: Read Spur channels from EEPROM
+Message-ID: <20090416002449.GB4138@makis> (sfid-20090416_022442_743075_30C1D825)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ *Read Spur channel information from EEPROM and use default channels for RF5413 compatible chips that don't have this info on EEPROM.
 
---=-fGAvB/pJ22hrZy2IPCz6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-On Mon, 2009-04-20 at 13:58 -0700, reinette chatre wrote:
+---
+ drivers/net/wireless/ath/ath5k/eeprom.c |   37 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath5k/eeprom.h |   20 ++++++++++++++++
+ 2 files changed, 56 insertions(+), 1 deletions(-)
 
-> > Or will this test:
-> >         if (!iwl_is_alive(priv))
-> >                 return -EAGAIN;
-> >=20
-> > kick us out before even getting to the rfkill test?
->=20
-> Yes ... and it is not immediately clear that it is caused by rfkill. The
-> STATUS_ALIVE bit that is tested here is cleared when machine is
-> suspended. When machine is resumed and HW rfkill is set then it will not
-> come up fully, see __iwl_up() that returns early with success if rfkill
-> is enabled. STATUS_ALIVE will only be set again after HW rfkill is
-> disabled and we initialize ucode again.
-
-Ok... Very confusing. Can you change the patch to have a comment that
-this should also be changed back when rfkill is integrated with
-mac80211? Maybe I'll even do that for .31.
-
-Thanks,
-Johannes
-
---=-fGAvB/pJ22hrZy2IPCz6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ7OPCAAoJEKVg1VMiehFYlSEP/1QU9+ONYf2GX1XMQZQht1gQ
-2CzdMl5wNeu7Mh6aXlNFnP64iMrp4J7NAterAtf4HpvOtQ6gNFXRUKLKDVOC4wjw
-Adsi9s0oKJR8Bm5tBdmgzEqFFpA6sntthZOwoGQnrqVP2bxSOvHpvZcftvODm4z1
-rpfT4/vM4liUJGhxy0uyoYt33YTuwBKHZ9kH6BHQJlzliYsIO0E+LXIb7C8iwj64
-mKqd4vRaNBEYS9OvM1t3vLTF4x6onAHdu8pPza2Hjkuu6dgGV2nXnsGnH15NgJHY
-hZdsjp4EMQVIXbt/ppUXUzjrsmc4YKVaYev8N8PeyjpMGKyqGOiwqI7M2fy0EEAz
-VpKji0BsSbruFVjxS6NfdpCBa/Ut/m51pDD/tScHCsFxounSrGF054QUd0eBm64c
-RSGaM3/owIpeK+RPcjEAQ1t8zJCZn2+PoNdnwMuyg+keLIFOd0Ai0uZ6al1N8RQG
-qlXKG02eobHFrbNXbRt7qV42B/cBTRLTxjouz5ZfhMichzHWBsTRDpLhqvmAaixB
-kgT3pPgX1lTZ7xPrhr7PvoTDL2l3Tt9FtbN7IQCSLfu7moNQ9ZVaVVoA0w47uGVB
-8pSBXUmx/1eOtk1tTJ3m5GOejEMy32KMDDASE8h+KZ/m+Z/fDeVOsiOrYimdfS/K
-5UdkkMly6td0Kug8H2uV
-=XXWN
------END PGP SIGNATURE-----
-
---=-fGAvB/pJ22hrZy2IPCz6--
-
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index c0fb3b0..d204546 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1694,9 +1694,40 @@ ath5k_eeprom_read_ctl_info(struct ath5k_hw *ah)
+ 	return 0;
+ }
+ 
++static int
++ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
++{
++	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
++	u32 offset;
++	u16 val;
++	int ret = 0, i;
++
++	offset = AR5K_EEPROM_CTL(ee->ee_version) +
++				AR5K_EEPROM_N_CTLS(ee->ee_version);
++
++	if (ee->ee_version < AR5K_EEPROM_VERSION_5_3) {
++		/* No spur info for 5GHz */
++		ee->ee_spur_chans[0][0] = AR5K_EEPROM_NO_SPUR;
++		/* 2 channels for 2GHz (2464/2420) */
++		ee->ee_spur_chans[0][1] = AR5K_EEPROM_5413_SPUR_CHAN_1;
++		ee->ee_spur_chans[1][1] = AR5K_EEPROM_5413_SPUR_CHAN_2;
++		ee->ee_spur_chans[2][1] = AR5K_EEPROM_NO_SPUR;
++	} else if (ee->ee_version >= AR5K_EEPROM_VERSION_5_3) {
++		for (i = 0; i < AR5K_EEPROM_N_SPUR_CHANS; i++) {
++			AR5K_EEPROM_READ(offset, val);
++			ee->ee_spur_chans[i][0] = val;
++			AR5K_EEPROM_READ(offset + AR5K_EEPROM_N_SPUR_CHANS,
++									val);
++			ee->ee_spur_chans[i][1] = val;
++			offset++;
++		}
++	}
++
++	return ret;
++}
+ 
+ /*
+- * Initialize eeprom power tables
++ * Initialize eeprom data structure
+  */
+ int
+ ath5k_eeprom_init(struct ath5k_hw *ah)
+@@ -1719,6 +1750,10 @@ ath5k_eeprom_init(struct ath5k_hw *ah)
+ 	if (err < 0)
+ 		return err;
+ 
++	err = ath5k_eeprom_read_spur_chans(ah);
++	if (err < 0)
++		return err;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index b0c0606..df9ffa0 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -211,6 +211,23 @@
+ #define AR5K_EEPROM_I_GAIN		10
+ #define AR5K_EEPROM_CCK_OFDM_DELTA	15
+ #define AR5K_EEPROM_N_IQ_CAL		2
++/* 5GHz/2GHz */
++enum ath5k_eeprom_freq_bands{
++	AR5K_EEPROM_BAND_5GHZ = 0,
++	AR5K_EEPROM_BAND_2GHZ = 1,
++	AR5K_EEPROM_N_FREQ_BANDS,
++};
++/* Spur chans per freq band */
++#define	AR5K_EEPROM_N_SPUR_CHANS	5
++/* fbin value for chan 2464 x2 */
++#define	AR5K_EEPROM_5413_SPUR_CHAN_1	1640
++/* fbin value for chan 2420 x2 */
++#define	AR5K_EEPROM_5413_SPUR_CHAN_2	1200
++#define	AR5K_EEPROM_SPUR_CHAN_MASK	0x3FFF
++#define	AR5K_EEPROM_NO_SPUR		0x8000
++#define	AR5K_SPUR_CHAN_WIDTH			87
++#define	AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz	3125
++#define	AR5K_SPUR_SYMBOL_WIDTH_TURBO_100Hz	6250
+ 
+ #define AR5K_EEPROM_READ(_o, _v) do {			\
+ 	ret = ath5k_hw_eeprom_read(ah, (_o), &(_v));	\
+@@ -436,6 +453,9 @@ struct ath5k_eeprom_info {
+ 	s8	ee_pga_desired_size_turbo[AR5K_EEPROM_N_MODES];
+ 	s8	ee_pd_gain_overlap;
+ 
++	/* Spur mitigation data (fbin values for spur channels) */
++	u16	ee_spur_chans[AR5K_EEPROM_N_SPUR_CHANS][AR5K_EEPROM_N_FREQ_BANDS];
++
+ 	u32	ee_antenna[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
+ };
+ 
