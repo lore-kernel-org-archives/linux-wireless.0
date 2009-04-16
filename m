@@ -1,129 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f118.google.com ([209.85.221.118]:48031 "EHLO
-	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbZDVIHF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 04:07:05 -0400
-Received: by qyk16 with SMTP id 16so1924240qyk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 01:07:02 -0700 (PDT)
-Subject: compat-wireless-2.6.-old won't compile
-From: Laruin d'Volts <email.port25@gmail.com>
+Received: from c.6b.1343.static.theplanet.com ([67.19.107.12]:53733 "EHLO
+	mail.bitnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752270AbZDPMFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 08:05:01 -0400
+Received: from [10.99.1.99] (unknown [77.109.121.166])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.bitnet.be (Postfix) with ESMTP id 9CB902980E1
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 06:41:38 -0500 (CDT)
+Message-ID: <49E71982.5050204@bitnet.be> (sfid-20090416_140504_474153_E49958E0)
+Date: Thu, 16 Apr 2009 13:41:54 +0200
+From: Hans Maes <Hans@bitnet.be>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 22 Apr 2009 02:55:25 -0500
-Message-Id: <1240386925.2821.1.camel@debian> (sfid-20090422_100710_184507_A6E3E864)
-Mime-Version: 1.0
+Subject: how to set antenna iw + ath5k
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OS: Debian Lenny
+Hello,
 
-some1@localhost:~/Desktop/compat-wireless-2.6-old$ make
-make -C /lib/modules/2.6.26-1-686/build
-M=3D/home/some1/Desktop/compat-wireless-2.6-old modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.26-1-686'
-  CC [M]  /home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.=
-o
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:594:
-error: redefinition of =E2=80=98ieee80211_install_qdisc=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:39:
-error: previous definition of =E2=80=98ieee80211_install_qdisc=E2=80=99=
- was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:614:
-error: redefinition of =E2=80=98ieee80211_qdisc_installed=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:42:
-error: previous definition of =E2=80=98ieee80211_qdisc_installed=E2=80=99=
- was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:620:
-error: redefinition of =E2=80=98ieee80211_wme_register=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:59:
-error: previous definition of =E2=80=98ieee80211_wme_register=E2=80=99 =
-was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:626:
-error: redefinition of =E2=80=98ieee80211_wme_unregister=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:63:
-error: previous definition of =E2=80=98ieee80211_wme_unregister=E2=80=99=
- was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:632:
-error: redefinition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:47:
-error: previous definition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=
-=99 was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:673:
-error: redefinition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:53:
-error: previous definition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=
-=80=99 was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:690:
-error: redefinition of =E2=80=98ieee80211_requeue=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:56:
-error: previous definition of =E2=80=98ieee80211_requeue=E2=80=99 was h=
-ere
-make[3]: ***
-[/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.o] Error =
-1
-make[2]: *** [/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211]
-Error 2
-make[1]: *** [_module_/home/some1/Desktop/compat-wireless-2.6-old] Erro=
-r
-2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.26-1-686'
-make: *** [modules] Error 2
-some1@localhost:~/Desktop/compat-wireless-2.6-old$ make
-make -C /lib/modules/2.6.26-1-686/build
-M=3D/home/some1/Desktop/compat-wireless-2.6-old modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.26-1-686'
-  CC [M]  /home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.=
-o
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:594:
-error: redefinition of =E2=80=98ieee80211_install_qdisc=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:39:
-error: previous definition of =E2=80=98ieee80211_install_qdisc=E2=80=99=
- was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:614:
-error: redefinition of =E2=80=98ieee80211_qdisc_installed=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:42:
-error: previous definition of =E2=80=98ieee80211_qdisc_installed=E2=80=99=
- was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:620:
-error: redefinition of =E2=80=98ieee80211_wme_register=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:59:
-error: previous definition of =E2=80=98ieee80211_wme_register=E2=80=99 =
-was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:626:
-error: redefinition of =E2=80=98ieee80211_wme_unregister=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:63:
-error: previous definition of =E2=80=98ieee80211_wme_unregister=E2=80=99=
- was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:632:
-error: redefinition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:47:
-error: previous definition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=
-=99 was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:673:
-error: redefinition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:53:
-error: previous definition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=
-=80=99 was here
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:690:
-error: redefinition of =E2=80=98ieee80211_requeue=E2=80=99
-/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:56:
-error: previous definition of =E2=80=98ieee80211_requeue=E2=80=99 was h=
-ere
-make[3]: ***
-[/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.o] Error =
-1
-make[2]: *** [/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211]
-Error 2
-make[1]: *** [_module_/home/some1/Desktop/compat-wireless-2.6-old] Erro=
-r
-2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.26-1-686'
-make: *** [modules] Error 2
-some1@localhost:~/Desktop/compat-wireless-2.6-old$=20
+I'm not sure this is the correct place to ask my question, but I've been 
+searching on google for ages now and can't seem to find an answer so I'm 
+asking it here.
+If not, please yell at me and tell me where to go whine instead ;-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm using CM11 a/b/g cards with the Atheros AR5414A Chip, which have 2 
+antenna connectors.
+I only have 1 antenna connected to the MAIN connector.
+Running a self compiled 2.6.29 kernel on a few debian lenny boxes with 
+ath5k module for the wireless cards, set up in mesh mode.
+Seems to work fine on the test bench, but behaves rather poorly in 
+production environment.
+Everything related to the mesh network setup seems to work, but I have 
+about 40% - 60% packet loss on the entire netwerk (about 15 nodes)
+
+I'm guessing this has something to do with the antenna diversity setting.
+
+Can anybody tell me how to tell the ath5k module to disable antenna 
+diversity and only use the MAIN antenna ?
+
+If this is a RTFM thingie, then I apologize, I just can't seem to find 
+it anywhere.
+
+Please reply to my personal e-mail address as well, I'm not subscribed 
+to the list.
+
+Thanks for your help.
+
+Regards,
+
+Hans
