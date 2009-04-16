@@ -1,41 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:57239 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbZDPAvz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255AbZDPL2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 20:51:55 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so63044muf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 17:51:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1239841547.25334.19.camel@johannes.local>
-References: <20090416002449.GB4138@makis>
-	 <1239841547.25334.19.camel@johannes.local>
-Date: Thu, 16 Apr 2009 03:51:54 +0300
-Message-ID: <40f31dec0904151751u3fd15d93i194d0abbb4657439@mail.gmail.com> (sfid-20090416_025159_993866_BBFDB05C)
-Subject: Re: [PATCH 2/7] ath5k: Read Spur channels from EEPROM
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	me@bobcopeland.com, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Apr 2009 07:28:15 -0400
+Subject: [PATCH 4/4 v2] mac80211: enable PS by default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090416111928.072724791@sipsolutions.net> (sfid-20090416_132312_136058_DD0B8968)
+References: <20090416111723.904720021@sipsolutions.net>
+	 <20090416111928.072724791@sipsolutions.net>
+	 (sfid-20090416_132312_136058_DD0B8968)
+Content-Type: text/plain
+Date: Thu, 16 Apr 2009 13:27:42 +0200
+Message-Id: <1239881262.9737.21.camel@johannes.local> (sfid-20090416_132817_971951_E21D4CB8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/16 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2009-04-16 at 03:24 +0300, Nick Kossifidis wrote:
->> *Read Spur channel information from EEPROM and use default channels for RF5413 compatible chips that don't have this info on EEPROM.
->
-> I think you should break the changelog at fewer columns than that.
->
-> johannes
->
+Enable PS by default (depending on Kconfig) -- rely on drivers
+to control the level using pm_qos. Due to the previous patch
+we turn off PS when necessary due to latency requirements.
 
-ACK, are 80 cols ok ?
+This has a Kconfig symbol so people can, if they really want,
+configure the default in their kernels. We may want to keep it
+at "default y" only in wireless-testing for a while.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: oops. forgot to refresh -- compile error
+
+ net/mac80211/Kconfig |   16 ++++++++++++++++
+ net/mac80211/mlme.c  |    8 ++++++++
+ 2 files changed, 24 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-16 13:07:02.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-16 13:26:52.000000000 +0200
+@@ -2181,6 +2181,7 @@ static void ieee80211_restart_sta_timer(
+ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd;
++	u32 hw_flags;
+ 
+ 	ifmgd = &sdata->u.mgd;
+ 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
+@@ -2200,6 +2201,13 @@ void ieee80211_sta_setup_sdata(struct ie
+ 		IEEE80211_STA_AUTO_CHANNEL_SEL;
+ 	if (sdata->local->hw.queues >= 4)
+ 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
++
++	hw_flags = sdata->local->hw.flags;
++
++	if (hw_flags & IEEE80211_HW_SUPPORTS_PS) {
++		ifmgd->powersave = CONFIG_MAC80211_DEFAULT_PS_VALUE;
++		sdata->local->hw.conf.dynamic_ps_timeout = 500;
++	}
+ }
+ 
+ /* configuration hooks */
+--- wireless-testing.orig/net/mac80211/Kconfig	2009-04-16 13:06:59.000000000 +0200
++++ wireless-testing/net/mac80211/Kconfig	2009-04-16 13:07:02.000000000 +0200
+@@ -11,6 +11,22 @@ config MAC80211
+ 	  This option enables the hardware independent IEEE 802.11
+ 	  networking stack.
+ 
++config MAC80211_DEFAULT_PS
++	bool "enable powersave by default"
++	depends on MAC80211
++	default y
++	help
++	  This option enables powersave mode by default.
++
++	  If this causes your applications to misbehave you should fix your
++	  applications instead -- they need to register their network
++	  latency requirement, see Documentation/power/pm_qos_interface.txt.
++
++config MAC80211_DEFAULT_PS_VALUE
++	int
++	default 1 if MAC80211_DEFAULT_PS
++	default 0
++
+ menu "Rate control algorithm selection"
+ 	depends on MAC80211 != n
+ 
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
