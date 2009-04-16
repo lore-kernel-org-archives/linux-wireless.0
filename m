@@ -1,278 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56383 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755293AbZDAB2S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 21:28:18 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2] cfg80211: send regulatory beacon hint events to userspace
-Date: Tue, 31 Mar 2009 21:28:14 -0400
-Message-Id: <1238549294-29168-1-git-send-email-lrodriguez@atheros.com> (sfid-20090401_032821_384708_793C2DE7)
+Received: from venema.h4ckr.net ([217.24.1.135]:57139 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754153AbZDPAWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2009 20:22:13 -0400
+Date: Thu, 16 Apr 2009 03:22:20 +0300
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Subject: [PATCH 1/7] ath5k: Allow user/driver to set txpower
+Message-ID: <20090416002220.GA4138@makis> (sfid-20090416_022216_018047_42681BFD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This informs userspace when a change has occured on a world
-roaming wiphy's channel which has lifted some restrictions
-due to a regulatory beacon hint.
+ * Now that we have regulatory control enable the driver to set txpower on hw
+ * Also use txpower table offset so that we can match power range set by user/driver with indices on power table.
 
-Because this is now sent to userspace through the regulatory
-multicast group we remove the debug prints we used to use as
-they are no longer necessary.
+ Tested 2 different cards (a CM9 and an RF5112-based ubnt) and got the same output using a remote machine to measure
+ per-packet rssi (conected the cards using attenuators). I also switched between various tx power levels and i saw an
+ equal power change on the remote machine (so txpower changes as expected) and verified that we have the same output
+ on each rate.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
 ---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    7 +++--
+ drivers/net/wireless/ath/ath5k/base.c  |   10 ++++++-
+ drivers/net/wireless/ath/ath5k/phy.c   |   45 ++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath5k/reset.c |    2 +-
+ 4 files changed, 51 insertions(+), 13 deletions(-)
 
-This v2 takes a cleaner approach, with nl80211 its better to think of
-objects not in terms of the contents they serve but instead of the purpose
-they serve. Doing this with this patch adds a few new attributes as cost
-but the code is a lot cleaner and easier to read.
-
- include/linux/nl80211.h |   34 ++++++++++++++++++++-
- net/wireless/nl80211.c  |   76 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 ++
- net/wireless/reg.c      |   28 ++++++++--------
- 4 files changed, 127 insertions(+), 15 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index cbe8ce3..9838f99 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -7,7 +7,7 @@
-  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-- * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
-+ * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
-  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-  * Copyright 2008 Colin McCabe <colin@cozybit.com>
-  *
-@@ -166,6 +166,22 @@
-  * 	set (%NL80211_ATTR_REG_TYPE), if the type of regulatory domain is
-  * 	%NL80211_REG_TYPE_COUNTRY the alpha2 to which we have moved on
-  * 	to (%NL80211_ATTR_REG_ALPHA2).
-+ * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP beacon
-+ * 	has been found while world roaming thus enabling active scan or
-+ * 	any mode of operation that initiates TX (beacons) on a channel
-+ * 	where we would not have been able to do either before. As an example
-+ * 	if you are world roaming (regulatory domain set to world or if your
-+ * 	driver is using a custom world roaming regulatory domain) and while
-+ * 	doing a passive scan on the 5 GHz band you find an AP there (if not
-+ * 	on a DFS channel) you will now be able to actively scan for that AP
-+ * 	or use AP mode on your card on that same channel. Note that this will
-+ * 	never be used for channels 1-11 on the 2 GHz band as they are always
-+ * 	enabled world wide. This beacon hint is only sent if your device had
-+ * 	either disabled active scanning or beaconing on a channel. We send to
-+ * 	userspace the wiphy on which we removed a restriction from
-+ * 	(%NL80211_ATTR_WIPHY) and the channel on which this occurred
-+ * 	before (%NL80211_ATTR_FREQ_BEFORE) and after (%NL80211_ATTR_FREQ_AFTER)
-+ * 	the beacon hint was processed.
-  *
-  * @NL80211_CMD_AUTHENTICATE: authentication request and notification.
-  *	This command is used both as a command (request to authenticate) and
-@@ -260,6 +276,8 @@ enum nl80211_commands {
- 	NL80211_CMD_DEAUTHENTICATE,
- 	NL80211_CMD_DISASSOCIATE,
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 60c6d2e..04b7345 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1100,11 +1100,12 @@ struct ath5k_hw {
+ 		/* Values in 0.25dB units */
+ 		s16		txp_min_pwr;
+ 		s16		txp_max_pwr;
++		/* Values in 0.5dB units */
+ 		s16		txp_offset;
+ 		s16		txp_ofdm;
+-		/* Values in dB units */
+-		s16		txp_cck_ofdm_pwr_delta;
+ 		s16		txp_cck_ofdm_gainf_delta;
++		/* Value in dB units */
++		s16		txp_cck_ofdm_pwr_delta;
+ 	} ah_txpower;
  
-+	NL80211_CMD_REG_BEACON_HINT,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -278,6 +296,7 @@ enum nl80211_commands {
- #define NL80211_CMD_ASSOCIATE NL80211_CMD_ASSOCIATE
- #define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
- #define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
-+#define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
- 
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -408,6 +427,17 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
-  *	%NL80211_CMD_DISASSOCIATE, u16
-  *
-+ * @NL80211_ATTR_FREQ_BEFORE: A channel which has suffered a regulatory change
-+ * 	due to considerations from a beacon hint. This attribute reflects
-+ * 	the state of the channel _before_ the beacon hint processing. This
-+ * 	attributes consists of a nested attribute containing
-+ * 	NL80211_FREQUENCY_ATTR_*
-+ * @NL80211_ATTR_FREQ_AFTER: A channel which has suffered a regulatory change
-+ * 	due to considerations from a beacon hint. This attribute reflects
-+ * 	the state of the channel _after_ the beacon hint processing. This
-+ * 	attributes consists of a nested attribute containing
-+ * 	NL80211_FREQUENCY_ATTR_*
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -492,6 +522,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_AUTH_TYPE,
- 	NL80211_ATTR_REASON_CODE,
- 
-+	NL80211_ATTR_FREQ_BEFORE,
-+	NL80211_ATTR_FREQ_AFTER,
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 353e1a4..ba7ac4a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3391,6 +3391,82 @@ void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
- 				NL80211_CMD_DISASSOCIATE);
- }
- 
-+static int nl80211_put_beacon_hint_channel(void *hdr,
-+					   struct sk_buff *msg,
-+					   enum nl80211_attrs attribute,
-+					   struct ieee80211_channel *chan)
-+{
-+	struct nlattr *nl_freq;
-+
-+	nl_freq = nla_nest_start(msg, attribute);
-+	if (!nl_freq)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FREQ,
-+		    chan->center_freq);
-+
-+	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_PASSIVE_SCAN);
-+	if (chan->flags & IEEE80211_CHAN_NO_IBSS)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
-+
-+	nla_nest_end(msg, nl_freq);
-+
-+	return 0;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+	return -EINVAL;
-+}
-+
-+void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
-+				    struct ieee80211_channel *channel_before,
-+				    struct ieee80211_channel *channel_after)
-+{
-+#define NL80211_PUT_BC_CHAN(_attr, _chan) do { \
-+	r = nl80211_put_beacon_hint_channel(hdr, msg, _attr, _chan); \
-+	if (r) \
-+		return; \
-+} while (0)
-+	struct sk_buff *msg;
-+	void *hdr;
-+	int r;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_BEACON_HINT);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	/*
-+	 * Since we are applying the beacon hint to a wiphy we know its
-+	 * wiphy_idx is valid
-+	 */
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy));
-+
-+	NL80211_PUT_BC_CHAN(NL80211_ATTR_FREQ_BEFORE, channel_before);
-+	NL80211_PUT_BC_CHAN(NL80211_ATTR_FREQ_AFTER, channel_after);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast(msg, 0, nl80211_regulatory_mcgrp.id, GFP_ATOMIC);
-+
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+#undef NL80211_PUT_BC_CHAN
-+}
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index b77af4a..9496eff 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -23,5 +23,9 @@ extern void nl80211_send_rx_deauth(struct cfg80211_registered_device *rdev,
- extern void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
- 				     struct net_device *netdev,
- 				     const u8 *buf, size_t len);
-+extern void
-+nl80211_send_beacon_hint_event(struct wiphy *wiphy,
-+			       struct ieee80211_channel *channel_before,
-+			       struct ieee80211_channel *channel_after);
- 
- #endif /* __NET_WIRELESS_NL80211_H */
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6327e16..60ef1e9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1049,18 +1049,10 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 			      unsigned int chan_idx,
- 			      struct reg_beacon *reg_beacon)
- {
--#ifdef CONFIG_CFG80211_REG_DEBUG
--#define REG_DEBUG_BEACON_FLAG(desc) \
--	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
--		"frequency: %d MHz (Ch %d) on %s\n", \
--		reg_beacon->chan.center_freq, \
--		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
--		wiphy_name(wiphy));
--#else
--#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
--#endif
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
-+	bool channel_changed = false;
-+	struct ieee80211_channel chan_before;
- 
- 	assert_cfg80211_lock();
- 
-@@ -1070,18 +1062,26 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
- 		return;
- 
-+	if (chan->beacon_found)
-+		return;
-+
-+	chan->beacon_found = true;
-+
-+	chan_before.center_freq = chan->center_freq;
-+	chan_before.flags = chan->flags;
-+
- 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
- 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
--		REG_DEBUG_BEACON_FLAG("active scanning");
-+		channel_changed = true;
- 	}
- 
- 	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
- 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
--		REG_DEBUG_BEACON_FLAG("beaconing");
-+		channel_changed = true;
- 	}
- 
--	chan->beacon_found = true;
--#undef REG_DEBUG_BEACON_FLAG
-+	if (channel_changed)
-+		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
- }
+ 	struct {
+@@ -1271,7 +1272,7 @@ extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
+ extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
+ /* TX power setup */
+ extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, u8 ee_mode, u8 txpower);
+-extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 ee_mode, u8 txpower);
++extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
  
  /*
--- 
-1.6.0.6
-
+  * Functions used internaly
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ff6d4f8..3390603 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2768,13 +2768,21 @@ static int
+ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_hw *ah = sc->ah;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	int ret;
+ 
+ 	mutex_lock(&sc->lock);
+ 
+ 	sc->bintval = conf->beacon_int;
+-	sc->power_level = conf->power_level;
++
++	if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
++	(sc->power_level != conf->power_level)) {
++		sc->power_level = conf->power_level;
++
++		/* Half dB steps */
++		ath5k_hw_set_txpower_limit(ah, (conf->power_level * 2));
++	}
+ 
+ 	ret = ath5k_chan_set(sc, conf->channel);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b48b29d..bb61b8e 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -168,9 +168,6 @@ int ath5k_hw_rfgain_opt_init(struct ath5k_hw *ah)
+  * tx power and a Peak to Average Power Detector (PAPD) will try
+  * to measure the gain.
+  *
+- * TODO: Use propper tx power setting for the probe packet so
+- * that we don't observe a serious power drop on the receiver
+- *
+  * XXX:  How about forcing a tx packet (bypassing PCU arbitrator etc)
+  * just after we enable the probe so that we don't mess with
+  * standard traffic ? Maybe it's time to use sw interrupts and
+@@ -186,7 +183,7 @@ static void ath5k_hw_request_rfgain_probe(struct ath5k_hw *ah)
+ 
+ 	/* Send the packet with 2dB below max power as
+ 	 * patent doc suggest */
+-	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_max_pwr - 4,
++	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_ofdm - 4,
+ 			AR5K_PHY_PAPD_PROBE_TXPOWER) |
+ 			AR5K_PHY_PAPD_PROBE_TX_NEXT, AR5K_PHY_PAPD_PROBE);
+ 
+@@ -2482,8 +2479,19 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+ 		for (i = 8; i <= 15; i++)
+ 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
+ 
+-	ah->ah_txpower.txp_min_pwr = rates[7];
+-	ah->ah_txpower.txp_max_pwr = rates[0];
++	/* Now that we have all rates setup use table offset to
++	 * match the power range set by user with the power indices
++	 * on PCDAC/PDADC table */
++	for (i = 0; i < 16; i++) {
++		rates[i] += ah->ah_txpower.txp_offset;
++		/* Don't get out of bounds */
++		if (rates[i] > 63)
++			rates[i] = 63;
++	}
++
++	/* Min/max in 0.25dB units */
++	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
++	ah->ah_txpower.txp_max_pwr = 2 * rates[0];
+ 	ah->ah_txpower.txp_ofdm = rates[7];
+ }
+ 
+@@ -2591,16 +2599,37 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	return 0;
+ }
+ 
+-int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 mode, u8 txpower)
++int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+ {
+ 	/*Just a try M.F.*/
+ 	struct ieee80211_channel *channel = &ah->ah_current_channel;
++	u8 ee_mode;
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
++
++	switch (channel->hw_value & CHANNEL_MODES) {
++	case CHANNEL_A:
++	case CHANNEL_T:
++	case CHANNEL_XR:
++		ee_mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case CHANNEL_G:
++	case CHANNEL_TG:
++		ee_mode = AR5K_EEPROM_MODE_11G;
++		break;
++	case CHANNEL_B:
++		ee_mode = AR5K_EEPROM_MODE_11B;
++		break;
++	default:
++		ATH5K_ERR(ah->ah_sc,
++			"invalid channel: %d\n", channel->center_freq);
++		return -EINVAL;
++	}
++
+ 	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
+ 		"changing txpower to %d\n", txpower);
+ 
+-	return ath5k_hw_txpower(ah, channel, mode, txpower);
++	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
+ }
+ 
+ #undef _ATH5K_PHY
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index faede82..23d6fc8 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1001,7 +1001,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		 * Set TX power (FIXME)
+ 		 */
+ 		ret = ath5k_hw_txpower(ah, channel, ee_mode,
+-					AR5K_TUNE_DEFAULT_TXPOWER);
++					ah->ah_txpower.txp_max_pwr / 2);
+ 		if (ret)
+ 			return ret;
+ 
