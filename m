@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12239 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212AbZDTVbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 17:31:01 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/11] iwlwifi driver updates 04/20/2009
-Date: Mon, 20 Apr 2009 14:36:53 -0700
-Message-Id: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233106_640869_0F9503A5)
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:65230 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672AbZDPKZu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 06:25:50 -0400
+Received: by bwz17 with SMTP id 17so313630bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 03:25:47 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ANN] iw: v0.9.12
+References: <E1LrX4n-0007Z2-7S@sipsolutions.net>
+	<1239877031.9737.15.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 16 Apr 2009 13:25:46 +0300
+In-Reply-To: <1239877031.9737.15.camel@johannes.local> (Johannes Berg's message of "Thu\, 16 Apr 2009 12\:17\:11 +0200")
+Message-ID: <87zleg99p1.fsf@litku.valot.fi> (sfid-20090416_122552_931373_431161D6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-A few fixes and cleanup. Could you please send the first patch to 2.6.30
-also? Patches 2 to 4 are waited upon and also address the "iwl3945
-registration regression" reported in
-http://marc.info/?l=linux-wireless&m=123925660426062&w=2 and applies on top
-of the fix that Johannes posted for it there
-(http://marc.info/?l=linux-wireless&m=123926378000661&w=2 ).
+>> Johannes Berg -  add plain "scan" command that triggers, waits and dumps
+>
+> So now use
+>
+> 	iw dev wlan0 scan
+>
+> instead of trigger/dump!
 
-[PATCH 01/11] iwlwifi: fix EEPROM validation mask to include OTP only devices
-[PATCH 02/11] iwlwifi: rename PROBE_OPTION_MAX_API1 to PROBE_OPTION_MAX_3945
-[PATCH 03/11] iwlwifi: improve scan support
-[PATCH 04/11] iwlwifi: support truly passive scanning
-[PATCH 05/11] iwl3945: add debugfs to 3945
-[PATCH 06/11] iwl3945: calculate debugfs isr statistics
-[PATCH 07/11] iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode
-[PATCH 08/11] iwl3945: use cancel_delayed_work_sync to cancel rfkill_poll
-[PATCH 09/11] iwlcore: Fix stay in table function.
-[PATCH 10/11] iwlwifi: remove radio disable parameter.
-[PATCH 11/11] iwlwifi: allow config if device not ready
+Oh, nice usability improvement. Thank you!
 
+/me doesn't like the trigger command
 
-Thank you
-
-Reinette
+-- 
+Kalle Valo
