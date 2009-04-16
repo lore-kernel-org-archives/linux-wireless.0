@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:32258 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760202AbZDCS15 convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:10865 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464AbZDPIj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 14:27:57 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so1317092wff.4
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 11:27:56 -0700 (PDT)
+	Thu, 16 Apr 2009 04:39:58 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so89651fga.17
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 01:39:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <69e28c910904030801k7fb2794bodaea74bb551dbcea@mail.gmail.com>
-References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
-	<1238711166-2208-3-git-send-email-lrodriguez@atheros.com>
-	<69e28c910904030801k7fb2794bodaea74bb551dbcea@mail.gmail.com>
-Date: Fri, 3 Apr 2009 11:27:41 -0700
-Message-ID: <43e72e890904031127s5223e0a3w7647ce2b0424129c@mail.gmail.com> (sfid-20090403_202801_569007_DB034E5C)
-Subject: Re: [PATCH 2/5] wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <87ws9lf8c4.fsf@litku.valot.fi>
+References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com>
+	 <87ws9lf8c4.fsf@litku.valot.fi>
+Date: Thu, 16 Apr 2009 12:39:56 +0400
+Message-ID: <73aaf0dd0904160139o159a604fv5b3ff0801124d1d3@mail.gmail.com> (sfid-20090416_104004_866938_9EAC5E99)
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Greg KH <greg@kroah.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/3 G=C3=A1bor Stefanik <netrolller.3d@gmail.com>:
-> Greetings!
+> I have received a report that at76_usb has worked better than
+> at76c50x-usb. Also p54spi implementation is quite new and not that much
+> tested.
 >
-> I think that other references to "fat" should be removed as well, in
-> favor of "HT40".
+> If it's ok for you, I would like to have both at76_usb and stlc45xx in
+> the staging area for some time still. I will let you know when they can
+> be removed.
+>
+> --
+> Kalle Valo
 
-Heh I take it you didn't get to patch #3?
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Kalle, what is the primary location for stlc45xx sources then? I see
+that version in staging is pretty old.
+-- 
+Max
