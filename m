@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51390 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757841AbZDGTwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:52:53 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211: changing number of queues in ops->start
-Date: Tue, 7 Apr 2009 21:51:15 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200904072024.41910.mb@bu3sch.de> <200904072140.23318.mb@bu3sch.de> <1239133589.7475.3.camel@johannes.local>
-In-Reply-To: <1239133589.7475.3.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904072151.15583.mb@bu3sch.de> (sfid-20090407_215256_922906_5E918C30)
+Received: from xc.sipsolutions.net ([83.246.72.84]:50551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752043AbZDPUs7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 16:48:59 -0400
+Subject: Re: [Proposal]TX flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: radiotap <radiotap@radiotap.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090416203353.GC25412@ojctech.com>
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+	 <1239902910.26575.14.camel@johannes.local>
+	 <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com>
+	 <1239908374.26575.20.camel@johannes.local>
+	 <20090416203353.GC25412@ojctech.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BGszA72U+fNSA6hGNPy2"
+Date: Thu, 16 Apr 2009 22:48:27 +0200
+Message-Id: <1239914907.26575.28.camel@johannes.local> (sfid-20090416_224901_239297_677BC011)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 April 2009 21:46:29 Johannes Berg wrote:
-> On Tue, 2009-04-07 at 21:40 +0200, Michael Buesch wrote:
-> 
-> > Ok I see. So you say it's OK to lower hw->queues after ieee80211_register.
-> 
-> Let's say it's acceptable ;)
-> 
-> > Should I reset hw->queues back to the value ieee80211_register was called with, before
-> > I call unregister/free? Are there resources allocated by the number of queues?
-> 
-> There are resources allocated, notably the qdiscs etc. in
-> alloc_ether_mq() or whatever it's called in register_hw(). But the
-> networking core should keep track of those so it shouldn't matter what
-> the value is. OTOH if it can switch back and forth the pending packets
-> are done per queue... for example ieee80211_clear_tx_pending will be
-> called at unregister times, so if it's possible to be up with 4 queues,
-> and later be up with 1, you will want to unregister with 4.
 
-Ok, sounds like a huge hack to me. :) I'll think about it.
+--=-BGszA72U+fNSA6hGNPy2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Thu, 2009-04-16 at 15:33 -0500, David Young wrote:
+
+> > > TX Flags absent: Use RTS & CTS as needed.
+> > > TX Flags present: {
+> > > RTS=3D0, CTS=3D0: Use RTS & CTS as needed.
+> > > RTS=3D0, CTS=3D1: Use CTS-to-self.
+> > > RTS=3D1, CTS=3D0: Use RTS/CTS-handshake.
+> > > RTS=3D1, CTS=3D1: Use neither RTS nor CTS.
+> > > }
+> > >=20
+> > > (By reading the second proposal again, I find it more and more
+> > > sympathetic... but let the discussion decide.)
+> >=20
+> > That _works_, but is impossible to describe in any feature discovery.
+>=20
+> The discovery mechanism that we have begun to discuss would have a hard
+> time describing that feature at its current level of development, but
+> that is not the only feature that it will have a hard time describing.
+> Feature discovery may need more development before we measure new
+> proposals against it.  What do you think?
+
+True, but why make the job harder than it is? Michael has a good point
+too. And we have free bits, I don't see why we can't add one for "do
+what I said" (wrt. rts/cts), which, if unset means to do be in automatic
+mode and ignore the other bits.
+
+Or we really do use a two-bit field with values;
+	0 automatic
+	1 neither
+	2 rts
+	3 cts
+or something.
+
+johannes
+
+--=-BGszA72U+fNSA6hGNPy2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ55mYAAoJEKVg1VMiehFYB+sP/iWFsHYWRejVcMyUxMCnqk5C
+0cyLKLkJJEelO3QsjBmgyIHI7fKCe+QsNsWsKn8HuHmIlRzXbace9K2rMVQ7I3O/
+cs3ci2vYWy8MVjXST8SVjo0AKxGhVABeGxl3QyQoAU8mFhGCxgzGqke3nXC69Oeu
+UDBJyQFOvhDHSj5RYdPVbx9NBYM9HUSjSh4aK8Qxiblmmpx/OHrAX/q3YFOp6Qz7
+v4bvBwhb/ivgfQO5SeUf0dyqsIlSTp4odWk8VB3JLjaR+MfNN+WsoQjFJu2qFKZm
+FSp4C9swjqRDop+WJCl++eUsPgC1fBSUN3+dXaDTKQV9nKBri52M9XNnCkk0Z50W
+9SFobXo6r4/3wQtnc9yEptyDyKCebZi2AguoEu5kaIG432ok/TSmxeV+vaPokTlm
+sztxsHO3JmWnasNwVAI1q30T2yW67G3LBCkquAukM5pM2TsfCmAcrnsIsySUgcCi
+LvSuGDLAryA7LW3MDJSJj/K8cvfL/M3wdDibLoTXGY4oWJ6mblE88g/ST8BBNUpj
+aAgHmh/wVop/oOMOjqPAGKXkCMIqckO5cmeWJ+AgzTO3hC1mC8bQd1Uu6swIcjbM
+Nslh0TslFDTUAYaKexiMkZojacfW3WFYiYfmq7SMfMEpm2qFS/yvkqsGoMnTSmvh
+fULZp+98Mq7IzQWRbDLM
+=pJw9
+-----END PGP SIGNATURE-----
+
+--=-BGszA72U+fNSA6hGNPy2--
+
