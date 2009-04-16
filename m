@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:41359 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760516AbZDIMI3 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:44909 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755518AbZDPNLo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 08:08:29 -0400
-Received: by bwz17 with SMTP id 17so554808bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 05:08:26 -0700 (PDT)
-Subject: Re: What is needed to inplement a AP support in a driver?
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Rami Rosen <roszenrami@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1239109862.15015.17.camel@maxim-laptop>
-References: <1239062777.4705.30.camel@maxim-laptop>
-	 <b25312890904070225t44f72ecdsd87a29f7fed341b8@mail.gmail.com>
-	 <1239109862.15015.17.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Thu, 09 Apr 2009 15:08:20 +0300
-Message-Id: <1239278900.7235.10.camel@maxim-laptop> (sfid-20090409_140834_546820_28738A43)
-Mime-Version: 1.0
+	Thu, 16 Apr 2009 09:11:44 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so180393fkq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 06:11:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <49E71982.5050204@bitnet.be>
+References: <49E71982.5050204@bitnet.be>
+Date: Thu, 16 Apr 2009 16:11:41 +0300
+Message-ID: <40f31dec0904160611l58500309wa1ba92fe3aeff843@mail.gmail.com> (sfid-20090416_151149_687464_E9B2FF93)
+Subject: Re: how to set antenna iw + ath5k
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Hans Maes <Hans@bitnet.be>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 16:11 +0300, Maxim Levitsky wrote:
-> On Tue, 2009-04-07 at 12:25 +0300, Rami Rosen wrote:
-> > Hi,
-> > > Why iwl3945 still doesn't support AP mode?
-> > see also this patch, titled: "wlwifi: disable AP mode"
-> > 
-> > http://www.spinics.net/lists/linux-wireless/msg24688.html
-> > 
-> > Regards,
-> > Rami Rosen
-> 
-> 
-> Quoiting this patch:
-> 
-> 
-> > iwlwifi does not support AP mode in any way. For one, it doesn't even
-> > buffer multicast/broadcast frames properly. We didn't allow zd1211rw AP
-> > mode to be enabled without this, so iwlwifi shouldn't be allowed to
-> > advertise AP mode either.
-> This is interesting, this means it doesn't save frames when client is in power save mode?
-> IBSS doesn't have this?
-> 
-> 
-> 
-> > 
-> > 
-> > 
-> > It also doesn't work at all, it doesn't even answer to probe requests,
-> > I'm guessing the packet injection code was disabled again.
-> Packet injection (even fragmentation) works fine here.
-> Also, now hostapd responds to probes isn't it?
-> (I was said that now hostapd sends/recieves all managment frames)
-> 
-> 
-> > 
-> > 
-> > [  471.524478] iwlagn: ERROR: APs don't scan
-> > 
-> > this is a long-standing bug, of course APs scan to know their
-> > surroundings, not sure why this is there, it's also very pointless since
-> > I can remove it by enabling software scan...
-> Here, software scan fixes it, besides many device don't have hardware scan
-> > 
-> > 
-> > 
-> > [  487.507346] iwlagn: Microcode SW error detected.  Restarting 0x2000000.
-> This probably was fixed now, there were many reports about microcode errors.
-> > 
-> 
-> 
-> I just feel, that AP mode can be done, and it isn't that hard to enable it.
-> 
+2009/4/16 Hans Maes <Hans@bitnet.be>:
+> Hello,
+>
+> I'm not sure this is the correct place to ask my question, but I've been
+> searching on google for ages now and can't seem to find an answer so I'm
+> asking it here.
+> If not, please yell at me and tell me where to go whine instead ;-)
+>
+> I'm using CM11 a/b/g cards with the Atheros AR5414A Chip, which have 2
+> antenna connectors.
+> I only have 1 antenna connected to the MAIN connector.
+> Running a self compiled 2.6.29 kernel on a few debian lenny boxes with ath5k
+> module for the wireless cards, set up in mesh mode.
+> Seems to work fine on the test bench, but behaves rather poorly in
+> production environment.
+> Everything related to the mesh network setup seems to work, but I have about
+> 40% - 60% packet loss on the entire netwerk (about 15 nodes)
+>
+> I'm guessing this has something to do with the antenna diversity setting.
+>
+> Can anybody tell me how to tell the ath5k module to disable antenna
+> diversity and only use the MAIN antenna ?
+>
+> If this is a RTFM thingie, then I apologize, I just can't seem to find it
+> anywhere.
+>
+> Please reply to my personal e-mail address as well, I'm not subscribed to
+> the list.
+>
+> Thanks for your help.
+>
+> Regards,
+>
+> Hans
 
-I am thinking, currently iwl3945 is ported to iwlagn.
-When porting is it could fix AP problems in it too?
+After this patch...
+https://lists.ath5k.org/pipermail/ath5k-devel/2009-April/002264.html
+
+It's possible to tell the driver to use one fixed antenna (in your
+case its fixed antenna A). Just change...
+ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
+
+with
+ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_FIXED_A);
+
+we will have a better way to change this in the future ;-)
 
 
-Best regards
-	Maxim Levitsky
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
