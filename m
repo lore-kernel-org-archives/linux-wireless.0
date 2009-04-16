@@ -1,126 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback-out1.mxes.net ([216.86.168.190]:1270 "EHLO
-	fallback-in1.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755559AbZD1Kk1 (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:33469 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754283AbZDPT5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 06:40:27 -0400
-Message-ID: <49F6DA14.7030608@tuffmail.co.uk> (sfid-20090428_124032_663078_26CC783E)
-Date: Tue, 28 Apr 2009 11:27:32 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
+	Thu, 16 Apr 2009 15:57:23 -0400
+From: Christian Lamparter <chunkeey@web.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>
-Subject: Re: [PATCH] [RFC] EEE PC hangs when booting off battery
-References: <49E065CF.6040408@tuffmail.co.uk>	 <200904140859.02188.bjorn.helgaas@hp.com>	 <20090414081728.10de978a@infradead.org>	 <200904140948.37633.bjorn.helgaas@hp.com> <49E5F01B.2060201@tuffmail.co.uk>	 <49EF0ABD.2080801@tuffmail.co.uk> <49F446AE.6070607@tuffmail.co.uk>	 <49F6CA0E.5040101@tuffmail.co.uk> (sfid-20090428_111942_198975_13CDA6F5) <1240912688.28835.10.camel@johannes.local>
-In-Reply-To: <1240912688.28835.10.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: p54 problem with PS
+Date: Thu, 16 Apr 2009 21:57:20 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1239823495.20927.1.camel@johannes.local>
+In-Reply-To: <1239823495.20927.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_g245Jhvo3guhOHx"
+Message-Id: <200904162157.20576.chunkeey@web.de> (sfid-20090416_215728_250340_85B23E92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> It seems the only reason lockdep doesn't warn is the detour to userspace
-> (modprobe) and the waiting for a userspace task (waiting isn't lockdep
-> annotated and I don't think it can be)
->
-> It seems you cannot load a module while under _any_ lock, ever, since
-> userspace might turn around and do something that requires that lock? I
-> think we should probably add a warning to the code that waits for the
-> userspace task:
->
-> 	debug_check_no_locks_held(current);
->
-> Or not? Some purely internal locks _might_ be ok... but how could you
-> verify that?
->
->   
->> - ieee80211_wep_init(), which is called with rtnl_lock() held, is
->> blocked in request_module() [waiting for modprobe to load a crypto module].
->>     
->
-> Right.
->
->   
->> - modprobe is blocked in a call to flush_workqueue(), caused by closing
->> a TTY.
->>     
->
-> Can you point out where? I can't find that.
->   
+--Boundary-00=_g245Jhvo3guhOHx
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I posted the calltraces earlier at
-<http://marc.info/?l=linux-wireless&m=124074566523506&w=2>.
+On Wednesday 15 April 2009 21:24:55 Johannes Berg wrote:
+> Right after associating, the AP sends us the EAPOL frame. We miss that
+> frame, due to a race condition (we add the STA info for the AP a little
+> too late and drop the frame because we don't know who it is from).
+> 
+> The AP of course retries the frame, a little later, but p54 misses the
+> TIM bit -- see the ps.pkt file.
+> 
+> We should probably make that race window smaller somehow (stop the
+> tasklet that is processing RX while processing assoc frames maybe?) but
+> this is clearly foremost a p54 problem.
 
-wait_for_completion
-flush_cpu_workqueue
-? wq_barrier_func
-flush_workqueue
-flush_scheduled_work
-tty_ldisc_release
-? tty_fasyc
-tty_release_dev
-? free_pgtables
-tty_release
-__fput
-filp_close
-sys_close
-syscall_call
+Well, I guess I figured out what's wrong: the hw spec.
+So this patch might work on PCI & USB, but could break SPI devices.
 
+Johannes, can you please test the attached patch?
 
->> - worker_thread is blocked because the workqueue item linkwatch_event()
->> is blocked on rtnl_lock.
->>     
->
-> This I know about.
->
->   
->> I've hacked up a test patch to move wep_init() outside of rtnl_lock, and
->> it solved the problem.  My one caveat is that it would probably be
->> cleaner to move it after rtnl_unlock(), instead of before rtnl_lock(). 
->> I just wasn't 100% sure if that would be safe.  Here's the patch:
->>     
->
-> That doesn't seem relevant, this just does some initialisation. However,
-> you definitely missed adding a call to wep_free().
->   
+BTW: there might be two problems:
+1. if the timeout is too low the device might be fast enough to go into ps:
+  -  either before sending a probe request
+   (firmware reports tx_status TX_PSM, so the frame wasn't sent at all)
+  - or the AP got the request and responded... 
+    But the frame was lost, because probe responds are not buffered...
 
-Hah, I should have realized something was wrong when I noticed I was
-removing more lines that I added. 
+2. there was something wrong in ieee80211_rx_mgmt_beacon
+    Sometimes the TIM was parsed, but thanks to
+    local->hw.conf.dynamic_ps_timeout == 0
+    mac80211 didn't issue a wakeup => so no data => disconnect
 
-The crypto init does cause the module load:
+    But this bug maybe comes from the old RFCs from yesterday,
+    as I didn't tried the final version yet...
 
-wait_for_completion
-call_usermodehelper_exec
-__request_module
-crypto_larval_lookup
-? extract_entropy
-crypto_alg_mod_lookup
-crypto_alloc_base
-ieee80211_wep_init
-ieee80211_register_hw
-? ath5k_hw_set_bss
-ath5k+pci_probe
-local_pci_probe
-pci_device_probe
-driver_probe_device
-__driver_attach
-bus_for_each_dev
-driver_attach
-? __driver_attach
-buad_add_driver
-driver_register
-? ktime_get_ts
-__pci_register_driver
-init_ath5k_pci
-_stext
-? init_ath5k_pci
-? proc_create_data
-? register_ieq_proc
-kernel_init
+Oh and one question:
+Some time ago, I found some useful function that converted beacon_int TUs <-> msec,
+do we still have them somewhere around and I'm just (temp) blind ?
 
+Regards,
+	Chr
 
-Thanks
-Alan
+--Boundary-00=_g245Jhvo3guhOHx
+Content-Type: text/x-patch;
+  charset="iso-8859-15";
+  name="p54ps-test.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54ps-test.diff"
 
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+index d6354fa..482071b 100644
+--- a/drivers/net/wireless/p54/p54.h
++++ b/drivers/net/wireless/p54/p54.h
+@@ -181,6 +181,7 @@ struct p54_common {
+ 	u32 tsf_low32, tsf_high32;
+ 	u32 basic_rate_mask;
+ 	u16 aid;
++	unsigned long beacon_timeout_guard;
+ 	struct sk_buff *cached_beacon;
+ 
+ 	/* cryptographic engine information */
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index ad2503a..0bd5e73 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -1058,7 +1058,8 @@ static void p54_rx_trap(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 			wiphy_name(dev->wiphy), freq);
+ 		break;
+ 	case P54_TRAP_NO_BEACON:
+-		if (priv->vif)
++		if (time_after(priv->beacon_timeout_guard, jiffies) &&
++		    priv->vif)
+ 			ieee80211_beacon_loss(priv->vif);
+ 		break;
+ 	case P54_TRAP_SCAN:
+@@ -1941,10 +1942,12 @@ static int p54_set_ps(struct ieee80211_hw *dev)
+ 	u16 mode;
+ 	int i;
+ 
+-	if (dev->conf.flags & IEEE80211_CONF_PS)
++	if (dev->conf.flags & IEEE80211_CONF_PS) {
+ 		mode = P54_PSM | P54_PSM_BEACON_TIMEOUT | P54_PSM_DTIM |
+ 		       P54_PSM_CHECKSUM | P54_PSM_MCBC;
+-	else
++		priv->beacon_timeout_guard = jiffies + msecs_to_jiffies(
++						priv->hw->conf.beacon_int);
++	} else
+ 		mode = P54_PSM_CAM;
+ 
+ 	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*psm),
+@@ -1963,8 +1966,8 @@ static int p54_set_ps(struct ieee80211_hw *dev)
+ 
+ 	psm->beacon_rssi_skip_max = 200;
+ 	psm->rssi_delta_threshold = 0;
+-	psm->nr = 10;
+-	psm->exclude[0] = 0;
++	psm->nr = 1;
++	psm->exclude[0] = WLAN_EID_TIM;
+ 
+ 	priv->tx(dev, skb);
+ 
+
+--Boundary-00=_g245Jhvo3guhOHx--
