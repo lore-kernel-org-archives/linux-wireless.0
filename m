@@ -1,158 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59599 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757357AbZDFUQH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58796 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546AbZDPLXE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 16:16:07 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 2/5] wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
-Date: Mon,  6 Apr 2009 16:15:55 -0400
-Message-Id: <1239048958-11775-3-git-send-email-lrodriguez@atheros.com> (sfid-20090406_221616_762899_97C24EB2)
-In-Reply-To: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 16 Apr 2009 07:23:04 -0400
+Message-Id: <20090416111928.072724791@sipsolutions.net> (sfid-20090416_132312_136058_DD0B8968)
+References: <20090416111723.904720021@sipsolutions.net>
+Date: Thu, 16 Apr 2009 13:17:27 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] mac80211: enable PS by default
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is more consistent with our nl80211 naming convention
-for HT40-/+.
+Enable PS by default (depending on Kconfig) -- rely on drivers
+to control the level using pm_qos. Due to the previous patch
+we turn off PS when necessary due to latency requirements.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+This has a Kconfig symbol so people can, if they really want,
+configure the default in their kernels. We may want to keep it
+at "default y" only in wireless-testing for a while.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 ++++----
- include/net/wireless.h                    |   10 +++++-----
- net/mac80211/mlme.c                       |    4 ++--
- net/wireless/reg.c                        |    8 ++++----
- 5 files changed, 17 insertions(+), 17 deletions(-)
+ net/mac80211/Kconfig |   16 ++++++++++++++++
+ net/mac80211/mlme.c  |    8 ++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index c54fb93..d558797 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -591,10 +591,10 @@ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-16 13:07:02.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-16 13:15:16.000000000 +0200
+@@ -2181,6 +2181,7 @@ static void ieee80211_restart_sta_timer(
+ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd;
++	u32 hw_flags;
  
- 	if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
- 		return !(ch_info->fat_extension_channel &
--					IEEE80211_CHAN_NO_FAT_ABOVE);
-+					IEEE80211_CHAN_NO_HT40PLUS);
- 	else if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW)
- 		return !(ch_info->fat_extension_channel &
--					IEEE80211_CHAN_NO_FAT_BELOW);
-+					IEEE80211_CHAN_NO_HT40MINUS);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 75517d0..9d73f19 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -481,8 +481,8 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 			/* First write that fat is not enabled, and then enable
- 			 * one by one */
- 			ch_info->fat_extension_channel =
--				(IEEE80211_CHAN_NO_FAT_ABOVE |
--				 IEEE80211_CHAN_NO_FAT_BELOW);
-+				(IEEE80211_CHAN_NO_HT40PLUS |
-+				 IEEE80211_CHAN_NO_HT40MINUS);
- 
- 			if (!(is_channel_valid(ch_info))) {
- 				IWL_DEBUG_INFO(priv, "Ch. %d Flags %x [%sGHz] - "
-@@ -561,7 +561,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 				fat_extension_chan = 0;
- 			else
- 				fat_extension_chan =
--					IEEE80211_CHAN_NO_FAT_BELOW;
-+					IEEE80211_CHAN_NO_HT40MINUS;
- 
- 			/* Set up driver's info for lower half */
- 			iwl_set_fat_chan_info(priv, ieeeband,
-@@ -573,7 +573,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 			iwl_set_fat_chan_info(priv, ieeeband,
- 						(eeprom_ch_index[ch] + 4),
- 						&(eeprom_ch_info[ch]),
--						IEEE80211_CHAN_NO_FAT_ABOVE);
-+						IEEE80211_CHAN_NO_HT40PLUS);
- 		}
- 	}
- 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 5211f5d..bb0a8f0 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -40,9 +40,9 @@ enum ieee80211_band {
-  *	on this channel.
-  * @IEEE80211_CHAN_NO_IBSS: IBSS is not allowed on this channel.
-  * @IEEE80211_CHAN_RADAR: Radar detection is required on this channel.
-- * @IEEE80211_CHAN_NO_FAT_ABOVE: extension channel above this channel
-+ * @IEEE80211_CHAN_NO_HT40PLUS: extension channel above this channel
-  * 	is not permitted.
-- * @IEEE80211_CHAN_NO_FAT_BELOW: extension channel below this channel
-+ * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
-  * 	is not permitted.
-  */
- enum ieee80211_channel_flags {
-@@ -50,12 +50,12 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
- 	IEEE80211_CHAN_NO_IBSS		= 1<<2,
- 	IEEE80211_CHAN_RADAR		= 1<<3,
--	IEEE80211_CHAN_NO_FAT_ABOVE	= 1<<4,
--	IEEE80211_CHAN_NO_FAT_BELOW	= 1<<5,
-+	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
-+	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
--	(IEEE80211_CHAN_NO_FAT_ABOVE | IEEE80211_CHAN_NO_FAT_BELOW)
-+	(IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
- 
- /**
-  * struct ieee80211_channel - channel definition
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7ecda9d..3670014 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -263,13 +263,13 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 
- 		switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--			if (flags & IEEE80211_CHAN_NO_FAT_ABOVE) {
-+			if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
- 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 				cap &= ~IEEE80211_HT_CAP_SGI_40;
- 			}
- 			break;
- 		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--			if (flags & IEEE80211_CHAN_NO_FAT_BELOW) {
-+			if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
- 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 				cap &= ~IEEE80211_HT_CAP_SGI_40;
- 			}
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b5810a0..8cf2208 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1218,14 +1218,14 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 	 * to include that as well.
- 	 */
- 	if (is_ht40_not_allowed(channel_before))
--		channel->flags |= IEEE80211_CHAN_NO_FAT_BELOW;
-+		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
- 	else
--		channel->flags &= ~IEEE80211_CHAN_NO_FAT_BELOW;
-+		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
- 
- 	if (is_ht40_not_allowed(channel_after))
--		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE;
-+		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
- 	else
--		channel->flags &= ~IEEE80211_CHAN_NO_FAT_ABOVE;
-+		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
+ 	ifmgd = &sdata->u.mgd;
+ 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
+@@ -2200,6 +2201,13 @@ void ieee80211_sta_setup_sdata(struct ie
+ 		IEEE80211_STA_AUTO_CHANNEL_SEL;
+ 	if (sdata->local->hw.queues >= 4)
+ 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
++
++	hw_flags = sdata->local->hw.flags;
++
++	if (hw_flags & IEEE80211_HW_SUPPORTS_PS) {
++		ifmgd->powersave = CONFIG_MAC80211_DEFAULT_PS_VALUE;
++		local->hw.conf.dynamic_ps_timeout = 500;
++	}
  }
  
- static void reg_process_ht_flags_band(struct wiphy *wiphy,
+ /* configuration hooks */
+--- wireless-testing.orig/net/mac80211/Kconfig	2009-04-16 13:06:59.000000000 +0200
++++ wireless-testing/net/mac80211/Kconfig	2009-04-16 13:07:02.000000000 +0200
+@@ -11,6 +11,22 @@ config MAC80211
+ 	  This option enables the hardware independent IEEE 802.11
+ 	  networking stack.
+ 
++config MAC80211_DEFAULT_PS
++	bool "enable powersave by default"
++	depends on MAC80211
++	default y
++	help
++	  This option enables powersave mode by default.
++
++	  If this causes your applications to misbehave you should fix your
++	  applications instead -- they need to register their network
++	  latency requirement, see Documentation/power/pm_qos_interface.txt.
++
++config MAC80211_DEFAULT_PS_VALUE
++	int
++	default 1 if MAC80211_DEFAULT_PS
++	default 0
++
+ menu "Rate control algorithm selection"
+ 	depends on MAC80211 != n
+ 
+
 -- 
-1.6.0.6
 
