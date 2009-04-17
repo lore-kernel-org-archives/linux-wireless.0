@@ -1,1022 +1,535 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754271AbZDRXiI (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46128 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751445AbZDQUMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 19:38:08 -0400
-Subject: [RFC/RFT v3] mac80211: convert to cfg80211 IBSS API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Alina Friedrichsen <x-alina@gmx.net>
-In-Reply-To: <1240095753.25826.0.camel@johannes.local> (sfid-20090419_010251_850185_2CC11FC5)
-References: <1240095037.21583.2.camel@johannes.local>
-	 (sfid-20090419_005048_160441_9345C839)  <1240095753.25826.0.camel@johannes.local>
-	 (sfid-20090419_010251_850185_2CC11FC5)
-Content-Type: text/plain
-Date: Sun, 19 Apr 2009 01:37:37 +0200
-Message-Id: <1240097857.25826.2.camel@johannes.local> (sfid-20090419_013815_192417_D2E08DAD)
-Mime-Version: 1.0
+	Fri, 17 Apr 2009 16:12:06 -0400
+Date: Fri, 17 Apr 2009 23:11:16 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2] nl80211: Add set/get for frag/rts threshold and retry
+	limits
+Message-ID: <20090417201115.GA27051@jm.kir.nu> (sfid-20090417_221522_297334_4A5818E1)
+References: <20090417184629.GA9275@jm.kir.nu> <1239996573.5110.12.camel@johannes.local> <20090417193838.GA21250@jm.kir.nu> <1239997685.4543.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1239997685.4543.1.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts mac80211 to the new cfg80211 IBSS API, the
-wext handling functions are called where appropriate.
+Add new nl80211 attributes that can be used with NL80211_CMD_SET_WIPHY
+and NL80211_CMD_GET_WIPHY to manage fragmentation/RTS threshold and
+retry limits.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Since these values are stored in struct wiphy, remove the local copy
+from mac80211 where feasible (frag & rts threshold). The retry limits
+are currently needed in struct ieee80211_conf, but these could be
+eventually removed since the driver should have access to the values
+in struct wiphy.
+
+Signed-off-by: Jouni Malinen <j@w1.fi>
+
 ---
- net/mac80211/cfg.c         |   17 ++
- net/mac80211/ibss.c        |  321 ++++++++++++++++++++-------------------------
- net/mac80211/ieee80211_i.h |   32 +---
- net/mac80211/iface.c       |   12 -
- net/mac80211/main.c        |    2 
- net/mac80211/sta_info.c    |   71 ---------
- net/mac80211/sta_info.h    |    3 
- net/mac80211/tx.c          |    6 
- net/mac80211/wext.c        |   63 +++-----
- 9 files changed, 207 insertions(+), 320 deletions(-)
+ include/linux/nl80211.h    |   24 ++++++++++++-
+ include/net/cfg80211.h     |   21 +++++++++++
+ include/net/wireless.h     |   10 +++++
+ net/mac80211/cfg.c         |   20 +++++++++++
+ net/mac80211/debugfs.c     |    8 ++--
+ net/mac80211/ieee80211_i.h |    3 -
+ net/mac80211/main.c        |    6 +--
+ net/mac80211/tx.c          |    9 ++---
+ net/mac80211/util.c        |    2 -
+ net/mac80211/wext.c        |   35 ++++++++++---------
+ net/wireless/core.c        |   10 +++++
+ net/wireless/nl80211.c     |   81 +++++++++++++++++++++++++++++++++++++++++++++
+ 12 files changed, 194 insertions(+), 35 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-19 01:30:46.000000000 +0200
-@@ -323,14 +323,6 @@ struct ieee80211_if_managed {
- 	size_t sme_auth_ie_len;
+v2: make set_wiphy_params() a notification function that does not return
+    an error code (too complex to figure out what to do on error and not
+    much of a problem if the new values are left in struct wiphy)
+
+--- uml.orig/include/linux/nl80211.h	2009-04-16 19:21:27.000000000 +0300
++++ uml/include/linux/nl80211.h	2009-04-17 22:59:46.000000000 +0300
+@@ -46,8 +46,10 @@
+  *	to get a list of all present wiphys.
+  * @NL80211_CMD_SET_WIPHY: set wiphy parameters, needs %NL80211_ATTR_WIPHY or
+  *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME,
+- *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ, and/or
+- *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
++ *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ,
++ *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE, %NL80211_ATTR_WIPHY_RETRY_SHORT,
++ *	%NL80211_ATTR_WIPHY_RETRY_LONG, %NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
++ *	and/or %NL80211_ATTR_WIPHY_RTS_THRESHOLD.
+  * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
+  *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
+  *	%NL80211_ATTR_WIPHY_NAME.
+@@ -325,6 +327,18 @@ enum nl80211_commands {
+  *	NL80211_CHAN_HT20 = HT20 only
+  *	NL80211_CHAN_HT40MINUS = secondary channel is below the primary channel
+  *	NL80211_CHAN_HT40PLUS = secondary channel is above the primary channel
++ * @NL80211_ATTR_WIPHY_RETRY_SHORT: TX retry limit for frames whose length is
++ *	less than or equal to the RTS threshold; allowed range: 1..255;
++ *	dot11ShortRetryLimit; u8
++ * @NL80211_ATTR_WIPHY_RETRY_LONG: TX retry limit for frames whose length is
++ *	greater than the RTS threshold; allowed range: 1..255;
++ *	dot11ShortLongLimit; u8
++ * @NL80211_ATTR_WIPHY_FRAG_THRESHOLD: fragmentation threshold, i.e., maximum
++ *	length in octets for frames; allowed range: 256..8000, disable
++ *	fragmentation with (u32)-1; dot11FragmentationThreshold; u32
++ * @NL80211_ATTR_WIPHY_RTS_THRESHOLD: RTS threshold (TX frames with length
++ *	larger than or equal to this use RTS/CTS handshake); allowed range:
++ *	0..65536, disable with (u32)-1; dot11RTSThreshold; u32
+  *
+  * @NL80211_ATTR_IFINDEX: network interface index of the device to operate on
+  * @NL80211_ATTR_IFNAME: network interface name
+@@ -547,6 +561,12 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_FREQ_BEFORE,
+ 	NL80211_ATTR_FREQ_AFTER,
++
++	NL80211_ATTR_WIPHY_RETRY_SHORT,
++	NL80211_ATTR_WIPHY_RETRY_LONG,
++	NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
++	NL80211_ATTR_WIPHY_RTS_THRESHOLD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- uml.orig/include/net/cfg80211.h	2009-04-16 20:31:26.000000000 +0300
++++ uml/include/net/cfg80211.h	2009-04-17 23:06:40.000000000 +0300
+@@ -658,6 +658,20 @@ struct cfg80211_disassoc_request {
  };
  
--enum ieee80211_ibss_flags {
--	IEEE80211_IBSS_AUTO_CHANNEL_SEL		= BIT(0),
--	IEEE80211_IBSS_AUTO_BSSID_SEL		= BIT(1),
--	IEEE80211_IBSS_BSSID_SET		= BIT(2),
--	IEEE80211_IBSS_PREV_BSSID_SET		= BIT(3),
--	IEEE80211_IBSS_SSID_SET			= BIT(4),
--};
--
- enum ieee80211_ibss_request {
- 	IEEE80211_IBSS_REQ_RUN	= 0,
+ /**
++ * enum wiphy_params_flags - set_wiphy_params bitfield values
++ * WIPHY_PARAM_RETRY_SHORT: wiphy->retry_short has changed
++ * WIPHY_PARAM_RETRY_LONG: wiphy->retry_long has changed
++ * WIPHY_PARAM_FRAG_THRESHOLD: wiphy->frag_threshold has changed
++ * WIPHY_PARAM_RTS_THRESHOLD: wiphy->rts_threshold has changed
++ */
++enum wiphy_params_flags {
++	WIPHY_PARAM_RETRY_SHORT		= 1 << 0,
++	WIPHY_PARAM_RETRY_LONG		= 1 << 1,
++	WIPHY_PARAM_FRAG_THRESHOLD	= 1 << 2,
++	WIPHY_PARAM_RTS_THRESHOLD	= 1 << 3,
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -732,6 +746,11 @@ struct cfg80211_disassoc_request {
+  * @assoc: Request to (re)associate with the specified peer
+  * @deauth: Request to deauthenticate from the specified peer
+  * @disassoc: Request to disassociate from the specified peer
++ *
++ * @set_wiphy_params: Notify that wiphy parameters have changed;
++ *	@changed bitfield (see &enum wiphy_params_flags) describes which values
++ *	have changed. The actual parameter values are available in
++ *	struct wiphy.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy);
+@@ -817,6 +836,8 @@ struct cfg80211_ops {
+ 			  struct cfg80211_deauth_request *req);
+ 	int	(*disassoc)(struct wiphy *wiphy, struct net_device *dev,
+ 			    struct cfg80211_disassoc_request *req);
++
++	void	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
  };
-@@ -341,17 +333,18 @@ struct ieee80211_if_ibss {
  
- 	struct sk_buff_head skb_queue;
- 
--	u8 ssid[IEEE80211_MAX_SSID_LEN];
--	u8 ssid_len;
--
--	u32 flags;
-+	unsigned long request;
-+	bool fixed_bssid;
- 
- 	u8 bssid[ETH_ALEN];
--
--	unsigned long request;
-+	u8 ssid[IEEE80211_MAX_SSID_LEN];
-+	u8 ssid_len, ie_len;
-+	u8 *ie;
-+	struct ieee80211_channel *channel;
- 
- 	unsigned long ibss_join_req;
--	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
-+	/* probe response/beacon for IBSS */
-+	struct sk_buff *presp, *skb;
- 
- 	enum {
- 		IEEE80211_IBSS_MLME_SEARCH,
-@@ -630,8 +623,6 @@ struct ieee80211_local {
- 	spinlock_t sta_lock;
- 	unsigned long num_sta;
- 	struct list_head sta_list;
--	struct list_head sta_flush_list;
--	struct work_struct sta_flush_work;
- 	struct sta_info *sta_hash[STA_HASH_SIZE];
- 	struct timer_list sta_cleanup;
- 
-@@ -946,10 +937,6 @@ int ieee80211_max_network_latency(struct
- 				  unsigned long data, void *dummy);
- 
- /* IBSS code */
--int ieee80211_ibss_commit(struct ieee80211_sub_if_data *sdata);
--int ieee80211_ibss_set_ssid(struct ieee80211_sub_if_data *sdata, char *ssid, size_t len);
--int ieee80211_ibss_get_ssid(struct ieee80211_sub_if_data *sdata, char *ssid, size_t *len);
--int ieee80211_ibss_set_bssid(struct ieee80211_sub_if_data *sdata, u8 *bssid);
- void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
- void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata);
- ieee80211_rx_result
-@@ -957,6 +944,9 @@ ieee80211_ibss_rx_mgmt(struct ieee80211_
- 		       struct ieee80211_rx_status *rx_status);
- struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 					u8 *bssid, u8 *addr, u32 supp_rates);
-+int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
-+			struct cfg80211_ibss_params *params);
-+int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
- 
- /* scan/BSS handling */
- void ieee80211_scan_work(struct work_struct *work);
---- wireless-testing.orig/net/mac80211/wext.c	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-04-19 01:16:23.000000000 +0200
-@@ -149,17 +149,14 @@ static int ieee80211_ioctl_siwfreq(struc
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--		sdata->u.ibss.flags &= ~IEEE80211_IBSS_AUTO_CHANNEL_SEL;
-+		return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
- 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_CHANNEL_SEL;
- 
- 	/* freq->e == 0: freq->m = channel; otherwise freq = m * 10^e */
- 	if (freq->e == 0) {
- 		if (freq->m < 0) {
--			if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--				sdata->u.ibss.flags |=
--					IEEE80211_IBSS_AUTO_CHANNEL_SEL;
--			else if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+			if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 				sdata->u.mgd.flags |=
- 					IEEE80211_STA_AUTO_CHANNEL_SEL;
- 			return 0;
-@@ -183,6 +180,10 @@ static int ieee80211_ioctl_giwfreq(struc
- 				   struct iw_freq *freq, char *extra)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
- 
- 	freq->m = local->hw.conf.channel->center_freq;
- 	freq->e = 6;
-@@ -195,15 +196,17 @@ static int ieee80211_ioctl_siwessid(stru
- 				    struct iw_request_info *info,
- 				    struct iw_point *data, char *ssid)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	size_t len = data->length;
- 	int ret;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
-+
- 	/* iwconfig uses nul termination in SSID.. */
- 	if (len > 0 && ssid[len - 1] == '\0')
- 		len--;
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		if (data->flags)
- 			sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_SSID_SEL;
-@@ -217,8 +220,7 @@ static int ieee80211_ioctl_siwessid(stru
- 		sdata->u.mgd.flags &= ~IEEE80211_STA_EXT_SME;
- 		ieee80211_sta_req_auth(sdata);
- 		return 0;
--	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--		return ieee80211_ibss_set_ssid(sdata, ssid, len);
-+	}
- 
- 	return -EOPNOTSUPP;
- }
-@@ -229,9 +231,13 @@ static int ieee80211_ioctl_giwessid(stru
- 				    struct iw_point *data, char *ssid)
- {
- 	size_t len;
--
- 	struct ieee80211_sub_if_data *sdata;
-+
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
-+
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		int res = ieee80211_sta_get_ssid(sdata, ssid, &len);
- 		if (res == 0) {
-@@ -240,14 +246,6 @@ static int ieee80211_ioctl_giwessid(stru
- 		} else
- 			data->flags = 0;
- 		return res;
--	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--		int res = ieee80211_ibss_get_ssid(sdata, ssid, &len);
--		if (res == 0) {
--			data->length = len;
--			data->flags = 1;
--		} else
--			data->flags = 0;
--		return res;
- 	}
- 
- 	return -EOPNOTSUPP;
-@@ -258,9 +256,11 @@ static int ieee80211_ioctl_siwap(struct 
- 				 struct iw_request_info *info,
- 				 struct sockaddr *ap_addr, char *extra)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		return cfg80211_ibss_wext_siwap(dev, info, ap_addr, extra);
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		int ret;
- 
-@@ -277,16 +277,6 @@ static int ieee80211_ioctl_siwap(struct 
- 		sdata->u.mgd.flags &= ~IEEE80211_STA_EXT_SME;
- 		ieee80211_sta_req_auth(sdata);
- 		return 0;
--	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--		if (is_zero_ether_addr((u8 *) &ap_addr->sa_data))
--			sdata->u.ibss.flags |= IEEE80211_IBSS_AUTO_BSSID_SEL |
--					       IEEE80211_IBSS_AUTO_CHANNEL_SEL;
--		else if (is_broadcast_ether_addr((u8 *) &ap_addr->sa_data))
--			sdata->u.ibss.flags |= IEEE80211_IBSS_AUTO_BSSID_SEL;
--		else
--			sdata->u.ibss.flags &= ~IEEE80211_IBSS_AUTO_BSSID_SEL;
--
--		return ieee80211_ibss_set_bssid(sdata, (u8 *) &ap_addr->sa_data);
- 	} else if (sdata->vif.type == NL80211_IFTYPE_WDS) {
- 		/*
- 		 * If it is necessary to update the WDS peer address
-@@ -312,9 +302,11 @@ static int ieee80211_ioctl_giwap(struct 
- 				 struct iw_request_info *info,
- 				 struct sockaddr *ap_addr, char *extra)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		return cfg80211_ibss_wext_giwap(dev, info, ap_addr, extra);
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		if (sdata->u.mgd.state == IEEE80211_STA_MLME_ASSOCIATED) {
- 			ap_addr->sa_family = ARPHRD_ETHER;
-@@ -322,13 +314,6 @@ static int ieee80211_ioctl_giwap(struct 
- 		} else
- 			memset(&ap_addr->sa_data, 0, ETH_ALEN);
- 		return 0;
--	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--		if (sdata->u.ibss.state == IEEE80211_IBSS_MLME_JOINED) {
--			ap_addr->sa_family = ARPHRD_ETHER;
--			memcpy(&ap_addr->sa_data, sdata->u.ibss.bssid, ETH_ALEN);
--		} else
--			memset(&ap_addr->sa_data, 0, ETH_ALEN);
--		return 0;
- 	} else if (sdata->vif.type == NL80211_IFTYPE_WDS) {
- 		ap_addr->sa_family = ARPHRD_ETHER;
- 		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
---- wireless-testing.orig/net/mac80211/ibss.c	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-04-19 01:30:29.000000000 +0200
-@@ -59,74 +59,57 @@ static void ieee80211_rx_mgmt_auth_ibss(
- 				    sdata->u.ibss.bssid, 0);
- }
- 
--static int __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
--				     const u8 *bssid, const int beacon_int,
--				     const int freq,
--				     const size_t supp_rates_len,
--				     const u8 *supp_rates,
--				     const u16 capability, u64 tsf)
-+static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
-+				      const u8 *bssid, const int beacon_int,
-+				      const int freq,
-+				      const size_t supp_rates_len,
-+				      const u8 *supp_rates,
-+				      const u16 capability, u64 tsf)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
--	int res = 0, rates, i, j;
-+	int rates, i, j;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos;
- 	struct ieee80211_supported_band *sband;
--	union iwreq_data wrqu;
- 
- 	if (local->ops->reset_tsf) {
- 		/* Reset own TSF to allow time synchronization work. */
- 		local->ops->reset_tsf(local_to_hw(local));
- 	}
- 
--	if ((ifibss->flags & IEEE80211_IBSS_PREV_BSSID_SET) &&
--	   memcmp(ifibss->bssid, bssid, ETH_ALEN) == 0)
--		return res;
--
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
--	if (!skb) {
--		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
--		       "response\n", sdata->dev->name);
--		return -ENOMEM;
--	}
-+	skb = ifibss->skb;
-+	rcu_assign_pointer(ifibss->presp, NULL);
-+	synchronize_rcu();
-+	skb->data = skb->head;
-+	skb->len = 0;
-+	skb_reset_tail_pointer(skb);
-+	skb_reserve(skb, sdata->local->hw.extra_tx_headroom);
- 
--	if (!(ifibss->flags & IEEE80211_IBSS_PREV_BSSID_SET)) {
--		/* Remove possible STA entries from other IBSS networks. */
--		sta_info_flush_delayed(sdata);
--	}
-+	if (memcmp(ifibss->bssid, bssid, ETH_ALEN))
-+		sta_info_flush(sdata->local, sdata);
- 
- 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
--	res = ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID);
--	if (res)
--		return res;
- 
- 	local->hw.conf.beacon_int = beacon_int >= 10 ? beacon_int : 10;
- 
--	sdata->drop_unencrypted = capability &
--		WLAN_CAPABILITY_PRIVACY ? 1 : 0;
-+	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
- 
--	res = ieee80211_set_freq(sdata, freq);
--
--	if (res)
--		return res;
-+	ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID);
-+	ieee80211_set_freq(sdata, freq);
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 
- 	/* Build IBSS probe response */
--
--	skb_reserve(skb, local->hw.extra_tx_headroom);
--
--	mgmt = (struct ieee80211_mgmt *)
--		skb_put(skb, 24 + sizeof(mgmt->u.beacon));
-+	mgmt = (void *) skb_put(skb, 24 + sizeof(mgmt->u.beacon));
- 	memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					  IEEE80211_STYPE_PROBE_RESP);
- 	memset(mgmt->da, 0xff, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
- 	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
--	mgmt->u.beacon.beacon_int =
--		cpu_to_le16(local->hw.conf.beacon_int);
-+	mgmt->u.beacon.beacon_int = cpu_to_le16(local->hw.conf.beacon_int);
- 	mgmt->u.beacon.timestamp = cpu_to_le64(tsf);
- 	mgmt->u.beacon.capab_info = cpu_to_le16(capability);
- 
-@@ -165,12 +148,15 @@ static int __ieee80211_sta_join_ibss(str
- 		memcpy(pos, &supp_rates[8], rates);
- 	}
- 
--	ifibss->probe_resp = skb;
-+	if (ifibss->ie_len)
-+		memcpy(skb_put(skb, ifibss->ie_len),
-+		       ifibss->ie, ifibss->ie_len);
-+
-+	rcu_assign_pointer(ifibss->presp, skb);
- 
- 	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON |
- 				   IEEE80211_IFCC_BEACON_ENABLED);
- 
--
- 	rates = 0;
- 	for (i = 0; i < supp_rates_len; i++) {
- 		int bitrate = (supp_rates[i] & 0x7f) * 5;
-@@ -181,27 +167,23 @@ static int __ieee80211_sta_join_ibss(str
- 
- 	ieee80211_sta_def_wmm_params(sdata, supp_rates_len, supp_rates);
- 
--	ifibss->flags |= IEEE80211_IBSS_PREV_BSSID_SET;
- 	ifibss->state = IEEE80211_IBSS_MLME_JOINED;
- 	mod_timer(&ifibss->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
- 
--	memset(&wrqu, 0, sizeof(wrqu));
--	memcpy(wrqu.ap_addr.sa_data, bssid, ETH_ALEN);
--	wireless_send_event(sdata->dev, SIOCGIWAP, &wrqu, NULL);
--
--	return res;
--}
--
--static int ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
--				   struct ieee80211_bss *bss)
--{
--	return __ieee80211_sta_join_ibss(sdata,
--					 bss->cbss.bssid,
--					 bss->cbss.beacon_interval,
--					 bss->cbss.channel->center_freq,
--					 bss->supp_rates_len, bss->supp_rates,
--					 bss->cbss.capability,
--					 bss->cbss.tsf);
-+	cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
-+				  mgmt, skb->len, 0, GFP_KERNEL);
-+	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
-+}
-+
-+static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
-+				    struct ieee80211_bss *bss)
-+{
-+	__ieee80211_sta_join_ibss(sdata, bss->cbss.bssid,
-+				  bss->cbss.beacon_interval,
-+				  bss->cbss.channel->center_freq,
-+				  bss->supp_rates_len, bss->supp_rates,
-+				  bss->cbss.capability,
-+				  bss->cbss.tsf);
- }
- 
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
-@@ -277,7 +259,7 @@ static void ieee80211_rx_bss_info(struct
- 		goto put_bss;
- 
- 	/* we use a fixed BSSID */
--	if (sdata->u.ibss.flags & IEEE80211_IBSS_BSSID_SET)
-+	if (sdata->u.ibss.bssid)
- 		goto put_bss;
- 
- 	/* not an IBSS */
-@@ -369,13 +351,14 @@ struct sta_info *ieee80211_ibss_add_sta(
- 	struct sta_info *sta;
- 	int band = local->hw.conf.channel->band;
- 
--	/* TODO: Could consider removing the least recently used entry and
--	 * allow new one to be added. */
-+	/*
-+	 * XXX: Consider removing the least recently used entry and
-+	 * 	allow new one to be added.
-+	 */
- 	if (local->num_sta >= IEEE80211_IBSS_MAX_STA_ENTRIES) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "%s: No room for a new IBSS STA "
--			       "entry %pM\n", sdata->dev->name, addr);
--		}
-+		if (net_ratelimit())
-+			printk(KERN_DEBUG "%s: No room for a new IBSS STA entry %pM\n",
-+			       sdata->dev->name, addr);
- 		return NULL;
- 	}
- 
-@@ -435,11 +418,11 @@ static void ieee80211_sta_merge_ibss(str
- 	mod_timer(&ifibss->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
- 
- 	ieee80211_sta_expire(sdata, IEEE80211_IBSS_INACTIVITY_LIMIT);
-+
- 	if (ieee80211_sta_active_ibss(sdata))
- 		return;
- 
--	if ((ifibss->flags & IEEE80211_IBSS_BSSID_SET) &&
--	    (!(ifibss->flags & IEEE80211_IBSS_AUTO_CHANNEL_SEL)))
-+	if (ifibss->channel)
- 		return;
- 
- 	printk(KERN_DEBUG "%s: No active IBSS STAs - trying to scan for other "
-@@ -455,7 +438,7 @@ static void ieee80211_sta_merge_ibss(str
- 	ieee80211_request_scan(sdata, &sdata->local->int_scan_req);
- }
- 
--static int ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
-@@ -466,7 +449,7 @@ static int ieee80211_sta_create_ibss(str
- 	u16 capability;
- 	int i;
- 
--	if (ifibss->flags & IEEE80211_IBSS_BSSID_SET) {
-+	if (ifibss->fixed_bssid) {
- 		memcpy(bssid, ifibss->bssid, ETH_ALEN);
- 	} else {
- 		/* Generate random, not broadcast, locally administered BSSID. Mix in
-@@ -500,14 +483,13 @@ static int ieee80211_sta_create_ibss(str
- 		*pos++ = (u8) (rate / 5);
- 	}
- 
--	return __ieee80211_sta_join_ibss(sdata,
--					 bssid, local->hw.conf.beacon_int,
--					 local->hw.conf.channel->center_freq,
--					 sband->n_bitrates, supp_rates,
--					 capability, 0);
-+	__ieee80211_sta_join_ibss(sdata, bssid, local->hw.conf.beacon_int,
-+				  local->hw.conf.channel->center_freq,
-+				  sband->n_bitrates, supp_rates,
-+				  capability, 0);
- }
- 
--static int ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
-@@ -515,9 +497,6 @@ static int ieee80211_sta_find_ibss(struc
- 	const u8 *bssid = NULL;
- 	int active_ibss;
- 
--	if (ifibss->ssid_len == 0)
--		return -EINVAL;
--
- 	active_ibss = ieee80211_sta_active_ibss(sdata);
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 	printk(KERN_DEBUG "%s: sta_find_ibss (active_ibss=%d)\n",
-@@ -525,12 +504,16 @@ static int ieee80211_sta_find_ibss(struc
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 
- 	if (active_ibss)
--		return 0;
-+		return;
- 
--	if (ifibss->flags & IEEE80211_IBSS_BSSID_SET)
-+	if (ifibss->fixed_bssid)
-+		bssid = ifibss->bssid;
-+	if (!is_zero_ether_addr(ifibss->bssid))
- 		bssid = ifibss->bssid;
--	bss = (void *)cfg80211_get_bss(local->hw.wiphy, NULL, bssid,
--				       ifibss->ssid, ifibss->ssid_len,
-+	bss = (void *)cfg80211_get_bss(local->hw.wiphy, ifibss->channel,
-+				       bssid,
-+				       ifibss->ssid,
-+				       ifibss->ssid_len,
- 				       WLAN_CAPABILITY_IBSS,
- 				       WLAN_CAPABILITY_IBSS);
- 
-@@ -540,18 +523,14 @@ static int ieee80211_sta_find_ibss(struc
- 		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 
--	if (bss &&
--	    (!(ifibss->flags & IEEE80211_IBSS_PREV_BSSID_SET) ||
--	     memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN))) {
--		int ret;
--
-+	if (bss && memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
- 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %pM"
- 		       " based on configured SSID\n",
- 		       sdata->dev->name, bss->cbss.bssid);
- 
--		ret = ieee80211_sta_join_ibss(sdata, bss);
-+		ieee80211_sta_join_ibss(sdata, bss);
- 		ieee80211_rx_bss_put(local, bss);
--		return ret;
-+		return;
- 	} else if (bss)
- 		ieee80211_rx_bss_put(local, bss);
- 
-@@ -571,20 +550,22 @@ static int ieee80211_sta_find_ibss(struc
- 
- 		/* XXX maybe racy? */
- 		if (local->scan_req)
--			return -EBUSY;
-+			return;
- 
- 		memcpy(local->int_scan_req.ssids[0].ssid,
- 		       ifibss->ssid, IEEE80211_MAX_SSID_LEN);
--		local->int_scan_req.ssids[0].ssid_len = ifibss->ssid_len;
--		return ieee80211_request_scan(sdata, &local->int_scan_req);
-+		local->int_scan_req.ssids[0].ssid_len =
-+			ifibss->ssid_len;
-+		ieee80211_request_scan(sdata, &local->int_scan_req);
- 	} else if (ifibss->state != IEEE80211_IBSS_MLME_JOINED) {
- 		int interval = IEEE80211_SCAN_INTERVAL;
- 
- 		if (time_after(jiffies, ifibss->ibss_join_req +
- 			       IEEE80211_IBSS_JOIN_TIMEOUT)) {
--			if (!(local->oper_channel->flags &
--						IEEE80211_CHAN_NO_IBSS))
--				return ieee80211_sta_create_ibss(sdata);
-+			if (!(local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)) {
-+				ieee80211_sta_create_ibss(sdata);
-+				return;
-+			}
- 			printk(KERN_DEBUG "%s: IBSS not allowed on"
- 			       " %d MHz\n", sdata->dev->name,
- 			       local->hw.conf.channel->center_freq);
-@@ -596,10 +577,7 @@ static int ieee80211_sta_find_ibss(struc
- 
- 		ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
- 		mod_timer(&ifibss->timer, jiffies + interval);
--		return 0;
- 	}
--
--	return 0;
- }
- 
- static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
-@@ -614,7 +592,7 @@ static void ieee80211_rx_mgmt_probe_req(
- 	u8 *pos, *end;
- 
- 	if (ifibss->state != IEEE80211_IBSS_MLME_JOINED ||
--	    len < 24 + 2 || !ifibss->probe_resp)
-+	    len < 24 + 2 || !ifibss->presp)
- 		return;
- 
- 	if (local->ops->tx_last_beacon)
-@@ -649,13 +627,13 @@ static void ieee80211_rx_mgmt_probe_req(
- 	}
- 	if (pos[1] != 0 &&
- 	    (pos[1] != ifibss->ssid_len ||
--	     memcmp(pos + 2, ifibss->ssid, ifibss->ssid_len) != 0)) {
-+	     !memcmp(pos + 2, ifibss->ssid, ifibss->ssid_len))) {
- 		/* Ignore ProbeReq for foreign SSID */
- 		return;
- 	}
- 
- 	/* Reply with ProbeResp */
--	skb = skb_copy(ifibss->probe_resp, GFP_KERNEL);
-+	skb = skb_copy(ifibss->presp, GFP_KERNEL);
- 	if (!skb)
- 		return;
- 
-@@ -794,88 +772,16 @@ void ieee80211_ibss_setup_sdata(struct i
- 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
- 		    (unsigned long) sdata);
- 	skb_queue_head_init(&ifibss->skb_queue);
--
--	ifibss->flags |= IEEE80211_IBSS_AUTO_BSSID_SEL |
--			IEEE80211_IBSS_AUTO_CHANNEL_SEL;
--}
--
--int ieee80211_ibss_commit(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	ifibss->flags &= ~IEEE80211_IBSS_PREV_BSSID_SET;
--
--	if (ifibss->ssid_len)
--		ifibss->flags |= IEEE80211_IBSS_SSID_SET;
--	else
--		ifibss->flags &= ~IEEE80211_IBSS_SSID_SET;
--
--	ifibss->ibss_join_req = jiffies;
--	ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
--	set_bit(IEEE80211_IBSS_REQ_RUN, &ifibss->request);
--
--	return 0;
--}
--
--int ieee80211_ibss_set_ssid(struct ieee80211_sub_if_data *sdata, char *ssid, size_t len)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	if (len > IEEE80211_MAX_SSID_LEN)
--		return -EINVAL;
--
--	if (ifibss->ssid_len != len || memcmp(ifibss->ssid, ssid, len) != 0) {
--		memset(ifibss->ssid, 0, sizeof(ifibss->ssid));
--		memcpy(ifibss->ssid, ssid, len);
--		ifibss->ssid_len = len;
--	}
--
--	return ieee80211_ibss_commit(sdata);
--}
--
--int ieee80211_ibss_get_ssid(struct ieee80211_sub_if_data *sdata, char *ssid, size_t *len)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	memcpy(ssid, ifibss->ssid, ifibss->ssid_len);
--	*len = ifibss->ssid_len;
--
--	return 0;
--}
--
--int ieee80211_ibss_set_bssid(struct ieee80211_sub_if_data *sdata, u8 *bssid)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	if (is_valid_ether_addr(bssid)) {
--		memcpy(ifibss->bssid, bssid, ETH_ALEN);
--		ifibss->flags |= IEEE80211_IBSS_BSSID_SET;
--	} else {
--		memset(ifibss->bssid, 0, ETH_ALEN);
--		ifibss->flags &= ~IEEE80211_IBSS_BSSID_SET;
--	}
--
--	if (netif_running(sdata->dev)) {
--		if (ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID)) {
--			printk(KERN_DEBUG "%s: Failed to config new BSSID to "
--			       "the low-level driver\n", sdata->dev->name);
--		}
--	}
--
--	return ieee80211_ibss_commit(sdata);
- }
- 
- /* scan finished notification */
- void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
--	struct ieee80211_if_ibss *ifibss;
- 
- 	if (sdata && sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--		ifibss = &sdata->u.ibss;
--		if ((!(ifibss->flags & IEEE80211_IBSS_PREV_BSSID_SET)) ||
--		    !ieee80211_sta_active_ibss(sdata))
--			ieee80211_sta_find_ibss(sdata);
-+		set_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
-+		queue_work(sdata->local->hw.workqueue, &sdata->u.ibss.work);
- 	}
- }
- 
-@@ -906,3 +812,68 @@ ieee80211_ibss_rx_mgmt(struct ieee80211_
- 
- 	return RX_DROP_MONITOR;
- }
-+
-+int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
-+			struct cfg80211_ibss_params *params)
-+{
-+	struct sk_buff *skb;
-+
-+	memcpy(sdata->u.ibss.ssid, params->ssid, IEEE80211_MAX_SSID_LEN);
-+	sdata->u.ibss.ssid_len = params->ssid_len;
-+	sdata->u.ibss.channel = params->channel;
-+
-+	if (params->bssid) {
-+		memcpy(sdata->u.ibss.bssid, params->bssid, ETH_ALEN);
-+		sdata->u.ibss.fixed_bssid = true;
-+	} else
-+		sdata->u.ibss.fixed_bssid = false;
-+
-+	if (params->ie) {
-+		sdata->u.ibss.ie = kmemdup(params->ie, params->ie_len,
-+					   GFP_KERNEL);
-+		if (sdata->u.ibss.ie)
-+			sdata->u.ibss.ie_len = params->ie_len;
-+	}
-+
-+	skb = dev_alloc_skb(sdata->local->hw.extra_tx_headroom +
-+			    36 /* bitrates */ +
-+			    34 /* SSID */ +
-+			    3  /* DS params */ +
-+			    4  /* IBSS params */ +
-+			    params->ie_len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	sdata->u.ibss.skb = skb;
-+	sdata->u.ibss.state = IEEE80211_IBSS_MLME_SEARCH;
-+
-+	set_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
-+	queue_work(sdata->local->hw.workqueue, &sdata->u.ibss.work);
-+
-+	return 0;
-+}
-+
-+int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct sk_buff *skb;
-+
-+	del_timer_sync(&sdata->u.ibss.timer);
-+	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
-+	cancel_work_sync(&sdata->u.ibss.work);
-+	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
-+
-+	sta_info_flush(sdata->local, sdata);
-+
-+	/* remove beacon */
-+	kfree(sdata->u.ibss.ie);
-+	skb = sdata->u.ibss.presp;
-+	rcu_assign_pointer(sdata->u.ibss.presp, NULL);
-+	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON_ENABLED);
-+	synchronize_rcu();
-+	kfree_skb(skb);
-+
-+	skb_queue_purge(&sdata->u.ibss.skb_queue);
-+	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
-+
-+	return 0;
-+}
---- wireless-testing.orig/net/mac80211/iface.c	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-04-19 01:16:23.000000000 +0200
-@@ -235,11 +235,7 @@ static int ieee80211_open(struct net_dev
- 		netif_addr_unlock_bh(local->mdev);
- 		break;
- 	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_ADHOC:
--		if (sdata->vif.type == NL80211_IFTYPE_STATION)
--			sdata->u.mgd.flags &= ~IEEE80211_STA_PREV_BSSID_SET;
--		else
--			sdata->u.ibss.flags &= ~IEEE80211_IBSS_PREV_BSSID_SET;
-+		sdata->u.mgd.flags &= ~IEEE80211_STA_PREV_BSSID_SET;
- 		/* fall through */
- 	default:
- 		conf.vif = &sdata->vif;
-@@ -327,8 +323,6 @@ static int ieee80211_open(struct net_dev
- 	 */
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		queue_work(local->hw.workqueue, &sdata->u.mgd.work);
--	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--		queue_work(local->hw.workqueue, &sdata->u.ibss.work);
- 
- 	netif_tx_start_all_queues(dev);
- 
-@@ -499,7 +493,6 @@ static int ieee80211_stop(struct net_dev
- 		/* fall through */
- 	case NL80211_IFTYPE_ADHOC:
- 		if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--			memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
- 			del_timer_sync(&sdata->u.ibss.timer);
- 			cancel_work_sync(&sdata->u.ibss.work);
- 			synchronize_rcu();
-@@ -653,7 +646,8 @@ static void ieee80211_teardown_sdata(str
- 			mesh_rmc_free(sdata);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		kfree_skb(sdata->u.ibss.probe_resp);
-+		if (WARN_ON(sdata->u.ibss.presp))
-+			kfree_skb(sdata->u.ibss.presp);
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		kfree(sdata->u.mgd.extra_ie);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-04-19 01:16:23.000000000 +0200
-@@ -1286,6 +1286,21 @@ static int ieee80211_disassoc(struct wip
+ /* temporary wext handlers */
+--- uml.orig/net/mac80211/cfg.c	2009-04-16 21:10:53.000000000 +0300
++++ uml/net/mac80211/cfg.c	2009-04-17 23:06:57.000000000 +0300
+@@ -1287,6 +1287,25 @@ static int ieee80211_disassoc(struct wip
  	return ieee80211_sta_disassociate(sdata, req->reason_code);
  }
  
-+static int ieee80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
-+			       struct cfg80211_ibss_params *params)
++static void ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 +{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = wiphy_priv(wiphy);
 +
-+	return ieee80211_ibss_join(sdata, params);
-+}
++	if (changed & WIPHY_PARAM_RETRY_SHORT)
++		local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
++	if (changed & WIPHY_PARAM_RETRY_LONG)
++		local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
++	if (changed &
++	    (WIPHY_PARAM_RETRY_SHORT | WIPHY_PARAM_RETRY_LONG))
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_RETRY_LIMITS);
 +
-+static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	return ieee80211_ibss_leave(sdata);
++	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
++		if (local->ops->set_rts_threshold)
++			local->ops->set_rts_threshold(local_to_hw(local),
++						      wiphy->rts_threshold);
++	}
 +}
 +
  struct cfg80211_ops mac80211_config_ops = {
  	.add_virtual_intf = ieee80211_add_iface,
  	.del_virtual_intf = ieee80211_del_iface,
-@@ -1322,4 +1337,6 @@ struct cfg80211_ops mac80211_config_ops 
+@@ -1323,4 +1342,5 @@ struct cfg80211_ops mac80211_config_ops 
  	.assoc = ieee80211_assoc,
  	.deauth = ieee80211_deauth,
  	.disassoc = ieee80211_disassoc,
-+	.join_ibss = ieee80211_join_ibss,
-+	.leave_ibss = ieee80211_leave_ibss,
++	.set_wiphy_params = ieee80211_set_wiphy_params,
  };
---- wireless-testing.orig/net/mac80211/sta_info.c	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.c	2009-04-19 01:16:23.000000000 +0200
-@@ -686,41 +686,10 @@ static void sta_info_debugfs_add_work(st
- }
- #endif
+--- uml.orig/net/wireless/nl80211.c	2009-04-16 20:26:25.000000000 +0300
++++ uml/net/wireless/nl80211.c	2009-04-17 23:05:47.000000000 +0300
+@@ -61,6 +61,10 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_WIPHY_TXQ_PARAMS] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_WIPHY_FREQ] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WIPHY_CHANNEL_TYPE] = { .type = NLA_U32 },
++	[NL80211_ATTR_WIPHY_RETRY_SHORT] = { .type = NLA_U8 },
++	[NL80211_ATTR_WIPHY_RETRY_LONG] = { .type = NLA_U8 },
++	[NL80211_ATTR_WIPHY_FRAG_THRESHOLD] = { .type = NLA_U32 },
++	[NL80211_ATTR_WIPHY_RTS_THRESHOLD] = { .type = NLA_U32 },
  
--static void __ieee80211_run_pending_flush(struct ieee80211_local *local)
--{
--	struct sta_info *sta;
--	unsigned long flags;
--
--	ASSERT_RTNL();
--
--	spin_lock_irqsave(&local->sta_lock, flags);
--	while (!list_empty(&local->sta_flush_list)) {
--		sta = list_first_entry(&local->sta_flush_list,
--				       struct sta_info, list);
--		list_del(&sta->list);
--		spin_unlock_irqrestore(&local->sta_lock, flags);
--		sta_info_destroy(sta);
--		spin_lock_irqsave(&local->sta_lock, flags);
--	}
--	spin_unlock_irqrestore(&local->sta_lock, flags);
--}
--
--static void ieee80211_sta_flush_work(struct work_struct *work)
--{
--	struct ieee80211_local *local =
--		container_of(work, struct ieee80211_local, sta_flush_work);
--
--	rtnl_lock();
--	__ieee80211_run_pending_flush(local);
--	rtnl_unlock();
--}
--
- void sta_info_init(struct ieee80211_local *local)
- {
- 	spin_lock_init(&local->sta_lock);
- 	INIT_LIST_HEAD(&local->sta_list);
--	INIT_LIST_HEAD(&local->sta_flush_list);
--	INIT_WORK(&local->sta_flush_work, ieee80211_sta_flush_work);
+ 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
+@@ -203,6 +207,16 @@ static int nl80211_send_wiphy(struct sk_
  
- 	setup_timer(&local->sta_cleanup, sta_info_cleanup,
- 		    (unsigned long)local);
-@@ -741,7 +710,6 @@ int sta_info_start(struct ieee80211_loca
- void sta_info_stop(struct ieee80211_local *local)
- {
- 	del_timer(&local->sta_cleanup);
--	cancel_work_sync(&local->sta_flush_work);
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/*
- 	 * Make sure the debugfs adding work isn't pending after this
-@@ -752,10 +720,7 @@ void sta_info_stop(struct ieee80211_loca
- 	cancel_work_sync(&local->sta_debugfs_add);
- #endif
+ 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->wiphy_idx);
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
++
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_SHORT,
++		   dev->wiphy.retry_short);
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_LONG,
++		   dev->wiphy.retry_long);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
++		    dev->wiphy.frag_threshold);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_RTS_THRESHOLD,
++		    dev->wiphy.rts_threshold);
++
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
+ 		   dev->wiphy.max_scan_ssids);
+ 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
+@@ -414,6 +428,9 @@ static int nl80211_set_wiphy(struct sk_b
+ 	struct cfg80211_registered_device *rdev;
+ 	int result = 0, rem_txq_params = 0;
+ 	struct nlattr *nl_txq_params;
++	u32 changed;
++	u8 retry_short = 0, retry_long = 0;
++	u32 frag_threshold = 0, rts_threshold = 0;
  
--	rtnl_lock();
- 	sta_info_flush(local, NULL);
--	__ieee80211_run_pending_flush(local);
--	rtnl_unlock();
- }
+ 	rtnl_lock();
  
- /**
-@@ -767,7 +732,7 @@ void sta_info_stop(struct ieee80211_loca
-  * @sdata: matching rule for the net device (sta->dev) or %NULL to match all STAs
+@@ -528,6 +545,70 @@ static int nl80211_set_wiphy(struct sk_b
+ 			goto bad_res;
+ 	}
+ 
++	changed = 0;
++
++	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
++		retry_short = nla_get_u8(
++			info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]);
++		if (retry_short == 0) {
++			result = -EINVAL;
++			goto bad_res;
++		}
++		changed |= WIPHY_PARAM_RETRY_SHORT;
++	}
++
++	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_LONG]) {
++		retry_long = nla_get_u8(
++			info->attrs[NL80211_ATTR_WIPHY_RETRY_LONG]);
++		if (retry_long == 0) {
++			result = -EINVAL;
++			goto bad_res;
++		}
++		changed |= WIPHY_PARAM_RETRY_LONG;
++	}
++
++	if (info->attrs[NL80211_ATTR_WIPHY_FRAG_THRESHOLD]) {
++		frag_threshold = nla_get_u32(
++			info->attrs[NL80211_ATTR_WIPHY_FRAG_THRESHOLD]);
++		if (frag_threshold < 256) {
++			result = -EINVAL;
++			goto bad_res;
++		}
++		if (frag_threshold != (u32) -1) {
++			/*
++			 * Fragments (apart from the last one) are required to
++			 * have even length. Make the fragmentation code
++			 * simpler by stripping LSB should someone try to use
++			 * odd threshold value.
++			 */
++			frag_threshold &= ~0x1;
++		}
++		changed |= WIPHY_PARAM_FRAG_THRESHOLD;
++	}
++
++	if (info->attrs[NL80211_ATTR_WIPHY_RTS_THRESHOLD]) {
++		rts_threshold = nla_get_u32(
++			info->attrs[NL80211_ATTR_WIPHY_RTS_THRESHOLD]);
++		changed |= WIPHY_PARAM_RTS_THRESHOLD;
++	}
++
++	if (changed) {
++		if (!rdev->ops->set_wiphy_params) {
++			result = -EOPNOTSUPP;
++			goto bad_res;
++		}
++
++		if (changed & WIPHY_PARAM_RETRY_SHORT)
++			rdev->wiphy.retry_short = retry_short;
++		if (changed & WIPHY_PARAM_RETRY_LONG)
++			rdev->wiphy.retry_long = retry_long;
++		if (changed & WIPHY_PARAM_FRAG_THRESHOLD)
++			rdev->wiphy.frag_threshold = frag_threshold;
++		if (changed & WIPHY_PARAM_RTS_THRESHOLD)
++			rdev->wiphy.rts_threshold = rts_threshold;
++
++		rdev->ops->set_wiphy_params(&rdev->wiphy, changed);
++	}
+ 
+  bad_res:
+ 	mutex_unlock(&rdev->mtx);
+--- uml.orig/include/net/wireless.h	2009-04-17 20:32:43.000000000 +0300
++++ uml/include/net/wireless.h	2009-04-17 20:34:21.000000000 +0300
+@@ -207,6 +207,11 @@ struct ieee80211_supported_band {
+  * @signal_type: signal type reported in &struct cfg80211_bss.
+  * @cipher_suites: supported cipher suites
+  * @n_cipher_suites: number of supported cipher suites
++ * @retry_short: Retry limit for short frames (dot11ShortRetryLimit)
++ * @retry_long: Retry limit for long frames (dot11LongRetryLimit)
++ * @frag_threshold: Fragmentation threshold (dot11FragmentationThreshold);
++ *	-1 = fragmentation disabled, only odd values >= 256 used
++ * @rts_threshold: RTS threshold (dot11RTSThreshold); -1 = RTS/CTS disabled
   */
- int sta_info_flush(struct ieee80211_local *local,
--		    struct ieee80211_sub_if_data *sdata)
-+		   struct ieee80211_sub_if_data *sdata)
- {
- 	struct sta_info *sta, *tmp;
- 	LIST_HEAD(tmp_list);
-@@ -775,7 +740,6 @@ int sta_info_flush(struct ieee80211_loca
- 	unsigned long flags;
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -229,6 +234,11 @@ struct wiphy {
+ 	int n_cipher_suites;
+ 	const u32 *cipher_suites;
  
- 	might_sleep();
--	ASSERT_RTNL();
++	u8 retry_short;
++	u8 retry_long;
++	u32 frag_threshold;
++	u32 rts_threshold;
++
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+ 	 * know whether it points to a wiphy your driver has registered
+--- uml.orig/net/mac80211/debugfs.c	2009-04-17 21:06:18.000000000 +0300
++++ uml/net/mac80211/debugfs.c	2009-04-17 21:06:56.000000000 +0300
+@@ -52,13 +52,13 @@ static const struct file_operations name
+ DEBUGFS_READONLY_FILE(frequency, 20, "%d",
+ 		      local->hw.conf.channel->center_freq);
+ DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
+-		      local->rts_threshold);
++		      local->hw.wiphy->rts_threshold);
+ DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
+-		      local->fragmentation_threshold);
++		      local->hw.wiphy->frag_threshold);
+ DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
+-		      local->hw.conf.short_frame_max_tx_count);
++		      local->hw.wiphy->retry_short);
+ DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
+-		      local->hw.conf.long_frame_max_tx_count);
++		      local->hw.wiphy->retry_long);
+ DEBUGFS_READONLY_FILE(total_ps_buffered, 20, "%d",
+ 		      local->total_ps_buffered);
+ DEBUGFS_READONLY_FILE(wep_iv, 20, "%#08x",
+--- uml.orig/net/mac80211/ieee80211_i.h	2009-04-17 20:55:22.000000000 +0300
++++ uml/net/mac80211/ieee80211_i.h	2009-04-17 20:55:32.000000000 +0300
+@@ -647,9 +647,6 @@ struct ieee80211_local {
  
- 	spin_lock_irqsave(&local->sta_lock, flags);
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
-@@ -795,39 +759,6 @@ int sta_info_flush(struct ieee80211_loca
- 	return ret;
+ 	struct rate_control_ref *rate_ctrl;
+ 
+-	int rts_threshold;
+-	int fragmentation_threshold;
+-
+ 	struct crypto_blkcipher *wep_tx_tfm;
+ 	struct crypto_blkcipher *wep_rx_tfm;
+ 	u32 wep_iv;
+--- uml.orig/net/mac80211/main.c	2009-04-17 20:41:22.000000000 +0300
++++ uml/net/mac80211/main.c	2009-04-17 20:56:29.000000000 +0300
+@@ -775,10 +775,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	/* set up some defaults */
+ 	local->hw.queues = 1;
+ 	local->hw.max_rates = 1;
+-	local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+-	local->fragmentation_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
+-	local->hw.conf.long_frame_max_tx_count = 4;
+-	local->hw.conf.short_frame_max_tx_count = 7;
++	local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
++	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	local->hw.conf.radio_enabled = true;
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
+--- uml.orig/net/mac80211/tx.c	2009-04-17 21:03:25.000000000 +0300
++++ uml/net/mac80211/tx.c	2009-04-17 21:04:56.000000000 +0300
+@@ -500,7 +500,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+ 
+ 	len = min_t(int, tx->skb->len + FCS_LEN,
+-			 tx->local->fragmentation_threshold);
++			 tx->local->hw.wiphy->frag_threshold);
+ 
+ 	/* set up the tx rate control struct we give the RC algo */
+ 	txrc.hw = local_to_hw(tx->local);
+@@ -511,8 +511,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 	txrc.max_rate_idx = tx->sdata->max_ratectrl_rateidx;
+ 
+ 	/* set up RTS protection if desired */
+-	if (tx->local->rts_threshold < IEEE80211_MAX_RTS_THRESHOLD &&
+-	    len > tx->local->rts_threshold) {
++	if (len > tx->local->hw.wiphy->rts_threshold) {
+ 		txrc.rts = rts = true;
+ 	}
+ 
+@@ -754,7 +753,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	struct sk_buff *skb = tx->skb;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+-	int frag_threshold = tx->local->fragmentation_threshold;
++	int frag_threshold = tx->local->hw.wiphy->frag_threshold;
+ 	int hdrlen;
+ 	int fragnum;
+ 
+@@ -1072,7 +1071,7 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 
+ 	if (tx->flags & IEEE80211_TX_FRAGMENTED) {
+ 		if ((tx->flags & IEEE80211_TX_UNICAST) &&
+-		    skb->len + FCS_LEN > local->fragmentation_threshold &&
++		    skb->len + FCS_LEN > local->hw.wiphy->frag_threshold &&
+ 		    !(info->flags & IEEE80211_TX_CTL_AMPDU))
+ 			tx->flags |= IEEE80211_TX_FRAGMENTED;
+ 		else
+--- uml.orig/net/mac80211/util.c	2009-04-17 21:05:16.000000000 +0300
++++ uml/net/mac80211/util.c	2009-04-17 21:05:47.000000000 +0300
+@@ -1025,7 +1025,7 @@ int ieee80211_reconfig(struct ieee80211_
+ 
+ 	/* setup RTS threshold */
+ 	if (local->ops->set_rts_threshold)
+-		local->ops->set_rts_threshold(hw, local->rts_threshold);
++		local->ops->set_rts_threshold(hw, hw->wiphy->rts_threshold);
+ 
+ 	/* reconfigure hardware */
+ 	ieee80211_hw_config(local, ~0);
+--- uml.orig/net/mac80211/wext.c	2009-04-17 20:56:15.000000000 +0300
++++ uml/net/mac80211/wext.c	2009-04-17 22:59:46.000000000 +0300
+@@ -494,21 +494,21 @@ static int ieee80211_ioctl_siwrts(struct
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 
+ 	if (rts->disabled)
+-		local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
++		local->hw.wiphy->rts_threshold = (u32) -1;
+ 	else if (!rts->fixed)
+ 		/* if the rts value is not fixed, then take default */
+-		local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+-	else if (rts->value < 0 || rts->value > IEEE80211_MAX_RTS_THRESHOLD)
++		local->hw.wiphy->rts_threshold = (u32) -1;
++	else if (rts->value < 0)
+ 		return -EINVAL;
+ 	else
+-		local->rts_threshold = rts->value;
++		local->hw.wiphy->rts_threshold = rts->value;
+ 
+ 	/* If the wlan card performs RTS/CTS in hardware/firmware,
+ 	 * configure it here */
+ 
+ 	if (local->ops->set_rts_threshold)
+ 		local->ops->set_rts_threshold(local_to_hw(local),
+-					     local->rts_threshold);
++					     local->hw.wiphy->rts_threshold);
+ 
+ 	return 0;
  }
- 
--/**
-- * sta_info_flush_delayed - flush matching STA entries from the STA table
-- *
-- * This function unlinks all stations for a given interface and queues
-- * them for freeing. Note that the workqueue function scheduled here has
-- * to run before any new keys can be added to the system to avoid set_key()
-- * callback ordering issues.
-- *
-- * @sdata: the interface
-- */
--void sta_info_flush_delayed(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta, *tmp;
--	unsigned long flags;
--	bool work = false;
--
--	spin_lock_irqsave(&local->sta_lock, flags);
--	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
--		if (sdata == sta->sdata) {
--			__sta_info_unlink(&sta);
--			if (sta) {
--				list_add_tail(&sta->list,
--					      &local->sta_flush_list);
--				work = true;
--			}
--		}
--	}
--	if (work)
--		schedule_work(&local->sta_flush_work);
--	spin_unlock_irqrestore(&local->sta_lock, flags);
--}
--
- void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 			  unsigned long exp_time)
+@@ -519,7 +519,7 @@ static int ieee80211_ioctl_giwrts(struct
  {
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2009-04-19 01:16:23.000000000 +0200
-@@ -442,8 +442,7 @@ void sta_info_init(struct ieee80211_loca
- int sta_info_start(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
- int sta_info_flush(struct ieee80211_local *local,
--		    struct ieee80211_sub_if_data *sdata);
--void sta_info_flush_delayed(struct ieee80211_sub_if_data *sdata);
-+		   struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 			  unsigned long exp_time);
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  
---- wireless-testing.orig/net/mac80211/main.c	2009-04-19 01:16:21.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-04-19 01:16:23.000000000 +0200
-@@ -209,7 +209,7 @@ int ieee80211_if_config(struct ieee80211
- 					!!rcu_dereference(sdata->u.ap.beacon);
- 				break;
- 			case NL80211_IFTYPE_ADHOC:
--				conf.enable_beacon = !!sdata->u.ibss.probe_resp;
-+				conf.enable_beacon = !!sdata->u.ibss.presp;
- 				break;
- 			case NL80211_IFTYPE_MESH_POINT:
- 				conf.enable_beacon = true;
---- wireless-testing.orig/net/mac80211/tx.c	2009-04-19 01:16:20.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-04-19 01:16:23.000000000 +0200
-@@ -2086,18 +2086,18 @@ struct sk_buff *ieee80211_beacon_get(str
- 	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
- 		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 		struct ieee80211_hdr *hdr;
-+		struct sk_buff *presp = rcu_dereference(ifibss->presp);
+-	rts->value = local->rts_threshold;
++	rts->value = local->hw.wiphy->rts_threshold;
+ 	rts->disabled = (rts->value >= IEEE80211_MAX_RTS_THRESHOLD);
+ 	rts->fixed = 1;
  
--		if (!ifibss->probe_resp)
-+		if (!presp)
- 			goto out;
+@@ -534,15 +534,14 @@ static int ieee80211_ioctl_siwfrag(struc
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  
--		skb = skb_copy(ifibss->probe_resp, GFP_ATOMIC);
-+		skb = skb_copy(presp, GFP_ATOMIC);
- 		if (!skb)
- 			goto out;
+ 	if (frag->disabled)
+-		local->fragmentation_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
++		local->hw.wiphy->frag_threshold = (u32) -1;
+ 	else if (!frag->fixed)
+-		local->fragmentation_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
+-	else if (frag->value < 256 ||
+-		 frag->value > IEEE80211_MAX_FRAG_THRESHOLD)
++		local->hw.wiphy->frag_threshold = (u32) -1;
++	else if (frag->value < 256)
+ 		return -EINVAL;
+ 	else {
+ 		/* Fragment length must be even, so strip LSB. */
+-		local->fragmentation_threshold = frag->value & ~0x1;
++		local->hw.wiphy->frag_threshold = frag->value & ~0x1;
+ 	}
  
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 						 IEEE80211_STYPE_BEACON);
--
- 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		struct ieee80211_mgmt *mgmt;
- 		u8 *pos;
+ 	return 0;
+@@ -554,7 +553,7 @@ static int ieee80211_ioctl_giwfrag(struc
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 
+-	frag->value = local->fragmentation_threshold;
++	frag->value = local->hw.wiphy->frag_threshold;
+ 	frag->disabled = (frag->value >= IEEE80211_MAX_FRAG_THRESHOLD);
+ 	frag->fixed = 1;
+ 
+@@ -573,10 +572,14 @@ static int ieee80211_ioctl_siwretry(stru
+ 		return -EINVAL;
+ 
+ 	if (retry->flags & IW_RETRY_MAX) {
++		local->hw.wiphy->retry_long = retry->value;
+ 		local->hw.conf.long_frame_max_tx_count = retry->value;
+ 	} else if (retry->flags & IW_RETRY_MIN) {
++		local->hw.wiphy->retry_short = retry->value;
+ 		local->hw.conf.short_frame_max_tx_count = retry->value;
+ 	} else {
++		local->hw.wiphy->retry_short = retry->value;
++		local->hw.wiphy->retry_long = retry->value;
+ 		local->hw.conf.long_frame_max_tx_count = retry->value;
+ 		local->hw.conf.short_frame_max_tx_count = retry->value;
+ 	}
+@@ -598,15 +601,15 @@ static int ieee80211_ioctl_giwretry(stru
+ 		/* first return min value, iwconfig will ask max value
+ 		 * later if needed */
+ 		retry->flags |= IW_RETRY_LIMIT;
+-		retry->value = local->hw.conf.short_frame_max_tx_count;
+-		if (local->hw.conf.long_frame_max_tx_count !=
+-		    local->hw.conf.short_frame_max_tx_count)
++		retry->value = local->hw.wiphy->retry_short;
++		if (local->hw.wiphy->retry_long !=
++		    local->hw.wiphy->retry_short)
+ 			retry->flags |= IW_RETRY_MIN;
+ 		return 0;
+ 	}
+ 	if (retry->flags & IW_RETRY_MAX) {
+ 		retry->flags = IW_RETRY_LIMIT | IW_RETRY_MAX;
+-		retry->value = local->hw.conf.long_frame_max_tx_count;
++		retry->value = local->hw.wiphy->retry_long;
+ 	}
+ 
+ 	return 0;
+--- uml.orig/net/wireless/core.c	2009-04-16 21:58:02.000000000 +0300
++++ uml/net/wireless/core.c	2009-04-17 20:42:35.000000000 +0300
+@@ -274,6 +274,16 @@ struct wiphy *wiphy_new(struct cfg80211_
+ 	drv->wiphy.dev.class = &ieee80211_class;
+ 	drv->wiphy.dev.platform_data = drv;
+ 
++	/*
++	 * Initialize wiphy parameters to IEEE 802.11 MIB default values.
++	 * Fragmentation and RTS threshold are disabled by default with the
++	 * special -1 value.
++	 */
++	drv->wiphy.retry_short = 7;
++	drv->wiphy.retry_long = 4;
++	drv->wiphy.frag_threshold = (u32) -1;
++	drv->wiphy.rts_threshold = (u32) -1;
++
+ 	return &drv->wiphy;
+ }
+ EXPORT_SYMBOL(wiphy_new);
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
