@@ -1,113 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([207.115.11.51]:49897 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218AbZDHRcc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 13:32:32 -0400
-Message-ID: <49DCDF9E.8000605@lwfinger.net> (sfid-20090408_193237_238015_424A6E63)
-Date: Wed, 08 Apr 2009 12:32:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from hera.kernel.org ([140.211.167.34]:53456 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753009AbZDQASi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 20:18:38 -0400
+Date: Fri, 17 Apr 2009 00:18:07 +0000
+From: Chris Wright <chrisw@sous-sol.org>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: stable@kernel.org, Arnaud Patard <apatard@mandriva.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [stable] [PATCH] rt2x00: Fix SLAB corruption during rmmod
+Message-ID: <20090417001807.GA5020@hera.kernel.org> (sfid-20090417_021842_836825_5E397F0B)
+References: <200904012118.12391.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: alan-jenkins@tuffmail.co.uk
-CC: Rusty Russell <rusty@rustcorp.com.au>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in 2.6.30-rc1 since commit acae0515 - wireless broken
-References: <49DC2DF5.3010603@lwfinger.net> <49DC31EA.8050208@linux.intel.com>	 <200904081631.09150.rusty@rustcorp.com.au>	 <49DCB976.4020200@lwfinger.net> <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com>
-In-Reply-To: <9b2b86520904081006m6e6b5276v834c3565b0f6f4c7@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <200904012118.12391.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Jenkins wrote:
-> On 4/8/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> 
-> Something is very wrong with request_module(), this is just the most
-> obvious symptom.  It also seems to affect libusual (loading
-> usb-storage) and FAT (loading NLS modules).
-> 
-> If I hotplug my wireless device, it then loads correctly.  So I'm
-> guessing wireless modules e.g. encryption modules get loaded too
-> asynchronously.   I.e. on boot, the  sub-modules are loaded too late.
-> But when I hotplug the device, the modules are already loaded.
-> 
-> Same with FAT - it fails on first attempt to mount because of missing
-> NLS module, then works on second mount,
-> 
-> I agree that commit looks like it should be a no-op though :-).
-> I will try to confirm the OP's bisection by reverting the commit, acae0515.
+* Ivo van Doorn (ivdoorn@gmail.com) wrote:
+> At rmmod stage, the code path is the following one :
+>=20
+> rt2x00lib_remove_dev
+> =A0 -> =A0rt2x00lib_uninitialize()
+> =A0 =A0 =A0 =A0 -> rt2x00rfkill_unregister()
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0-> rfkill_unregister()
+> =A0 =A0 =A0 =A0 -> rt2x00rfkill_free()
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0-> rfkill_free()
+>=20
+> The problem is that rfkill_free should not be called after rfkill_reg=
+ister
+> otherwise put_device(&rfkill->dev) will be called 2 times. This patch
+> fixes this by only calling rt2x00rfkill_free() when rt2x00rfkill_regi=
+ster()
+> hasn't been called or has failed.
+>=20
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Tested-by: Arnaud Patard <apatard@mandriva.com>
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-I added printk's to the entry and exit from __request_module and obtained the
-following:
-
-module: __request_module entered for module snd-hda-codec-id:14f15051
-module: loading module snd-hda-codec-id:14f15051 - call_usermodehelper returned 0
-module: __request_module entered for module ecb(arc4)
-module: loading module ecb(arc4) - call_usermodehelper returned 256
-module: __request_module entered for module ecb
-module: loading module ecb - call_usermodehelper returned 0
-module: __request_module entered for module char-major-4-68
-module: loading module char-major-4-68 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4
-module: loading module char-major-4 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4-69
-module: loading module char-major-4-69 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4
-module: loading module char-major-4 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4-70
-module: loading module char-major-4-70 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4
-module: loading module char-major-4 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4-71
-module: loading module char-major-4-71 - call_usermodehelper returned 256
-module: __request_module entered for module char-major-4
-module: loading module char-major-4 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-module: __request_module entered for module net-pf-10
-module: loading module net-pf-10 - call_usermodehelper returned 256
-
-According to the description of the routine, it should return 0 on success and a
-negative number for an error. Where do the values of "256" mean?
-
-Larry
+Who is the Author of this patch?  The Signed-off-by order suggests is
+Gertjan.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
