@@ -1,95 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35478 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754999AbZDFKZf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46201 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761782AbZDQSPs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 06:25:35 -0400
-Subject: Re: b43 WARN_ON
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200904061212.10398.mb@bu3sch.de>
-References: <49D97CF5.4040808@lwfinger.net>
-	 <200904061212.10398.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AG6c6oFSEO/2Yk2GUmGW"
-Date: Mon, 06 Apr 2009 12:25:29 +0200
-Message-Id: <1239013529.13407.6.camel@johannes.local> (sfid-20090406_122538_596553_AC1A0350)
-Mime-Version: 1.0
+	Fri, 17 Apr 2009 14:15:48 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1LusbL-0007xZ-Vx
+	for linux-wireless@vger.kernel.org; Fri, 17 Apr 2009 14:15:48 -0400
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n3HI7uEf020135
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2009 14:07:56 -0400
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id n3HI7uL6020133
+	for linux-wireless@vger.kernel.org; Fri, 17 Apr 2009 14:07:56 -0400
+Date: Fri, 17 Apr 2009 14:07:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [ANN] wireless-regdb: master-2009-04-16
+Message-ID: <20090417180755.GB3291@tuxdriver.com> (sfid-20090417_201602_903739_57515BBF)
+References: <E1Luqjw-00028y-LQ@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1Luqjw-00028y-LQ@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+People are reporting that regdbdump is failing to verify the signature
+on regulatory.bin with this update, so you may want to hold-off...
 
---=-AG6c6oFSEO/2Yk2GUmGW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+John
 
-On Mon, 2009-04-06 at 12:12 +0200, Michael Buesch wrote:
-> On Monday 06 April 2009 05:54:29 Larry Finger wrote:
-> > Using the latest rfkill patches posted by Johannes, I am hitting the fo=
-llowing
-> >=20
-> >         if (WARN_ON(!wl->rfkill.registered))
-> >                 return -EINVAL;
->=20
-> I think we should simply remove the warning.
-> In the previous rfkill implementation I had a reason to _not_ warn here.
-> (It had one valid codepath where it was called. I don't remember the deta=
-ils...)
->=20
-> Anyway, please feel free to do a patch that removes the warning (but not =
-the check).
+On Fri, Apr 17, 2009 at 06:16:32PM +0200, wireless@sipsolutions.net wrote:
+> 
+> A new release of wireless-regdb (master-2009-04-16) is available at:
+> 
+> http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.04.16.tar.bz2
+> 
+> SHA1 sum: 601001b97fe344fe64cdd3f9d0d80ddc9a729d02
+> 
+> 
+> For your convenience the individual regulatory.bin file can be downloaded from:
+> 
+> http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.04.16-regulatory.bin
+> 
+> SHA1 sum eb35dd05a1d9a212fc76ef56f4da9bcdc59ba64a
+> 
+> Here is the short log of the changes included in this 
+> release:
+> 
+> John W. Linville -  wireless-regdb: update regulatory.bin based on preceding changes.
+> Luis R. Rodriguez -  wireless-regdb: fix a couple of comment typos
+> Luis R. Rodriguez -  wireless-regdb: make distribution packaging easier
+> Luis R. Rodriguez -  wireless-regdb: KR few reg updates
+> Luis R. Rodriguez -  wireless-regdb: BN was missing two 5 GHz bands
+> Johannes Berg -  update/fix DE 5GHz rules
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Actually, I think the check is invalid, or rather, rfkill.registered
-needs to be set before registering the rfkill struct.
-
-See, right now, and I'm not entirely happy with this, during
-rfkill_register I call the set_block callback. The reason I'm not really
-happy with that is that I said calling driver -> rfkill -> driver is
-bad, but on the other hand due to locking constraints across the
-subsystems the driver cannot take the same locks around rfkill_register
-as in the callbacks.
-
-Additionally, the driver must be ready to service rfkill calls _before_
-rfkill_register() is called, everything else results in a race
-condition. Compare with the shared interrupt handlers, for instance.
-
-The reason I call it during rfkill_register is that I need to sync the
-software state to the driver's block state, and that needs to be done
-somewhere. Doing that from a work struct would be possible, but wouldn't
-solve the locking constraints nor would it actually help since
-rfkill_register can potentially sleep, so the work could still be
-executed before rfkill_register returns -- the driver still needs to be
-able to handle rfkill callbacks before rfkill_register returns.
-
-Therefore, the warning is spurious, but because of a driver bug
-elsewhere -- I think the rfkill.registered =3D 1 assignment should be
-moved up to before rfkill_register() (and be =3D 0 again if that fails
-unexpectedly); I'll do that in my patch.
-
-johannes
-
---=-AG6c6oFSEO/2Yk2GUmGW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ2diWAAoJEKVg1VMiehFYKycP/2qnl+mRlgxilTJaLrcGP07M
-tc6nQiWq+KM2ISF4HicMQpVifOpGV9SFTxMorPVYbd8iWAW5bk66P5oWRxZ1Z56U
-j5ExH1r336y0laMCXWWOkEoU6TsCerBNucIbVx8OGpJmZwKfvfPgcGO3zsvWt/4A
-iOX/E1kNlkqyzxTkjrt4hU3x9H82/Btmnmr8t/gZVHy/Gb/RkSbKfmkDTnRoapl3
-hn7zcXBt2TO3Qi1VfAQbSVgahOMSlGFCRDczPYN0+YUQGA1HVmtJsrptCiBQQU70
-6zKurfaTTRiRChAAyt1/E3H6MmpmnzqYPiDs44kKYxM9UXyRSCMVY3PSx7btVRcB
-pHXJh03AeVCqV1YnaQeV42XIpJiRTxlXUbOp87ccyhjtCmNeWyCH60dJZE6jXrYc
-p6wlGAihk8c+8Qav9Gh2nRqxWPOjrhfIun1yjnqPpsLbBlgJhXle/obPg8ukQST0
-atDX+xui7GPrS2jg6iNMAZr4fZBdkIVeWNoVqV9E6GzXQdJsKYnG6+/iztf6tXKg
-tke6oFovjJ13rN9F7xsBKDlovQIEJ9dLm/1loFkEWADYrP6tBDQSGfkPEGvmjTe7
-+VvJQWZZYiSOzcGnavFWktfo2+82rCeodZeoeBG7jgEO+0qPdYc4q213mlnJYrp8
-nNoMT6z7bIZUJH2Z03Ji
-=UBDR
------END PGP SIGNATURE-----
-
---=-AG6c6oFSEO/2Yk2GUmGW--
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
