@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:37867 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753558AbZDAD05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 23:26:57 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 20:26:56 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18898.56829.104723.601609@gargle.gargle.HOWL> (sfid-20090401_052705_213793_F6E53B26)
-Date: Wed, 1 Apr 2009 08:52:37 +0530
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: Vivek Natarajan <vivek.natraj@gmail.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 11/17] ath9k: Remove TIM from the interrupt mask
-In-Reply-To: <87eiwdsxlz.fsf@litku.valot.fi>
-References: <18896.38867.997551.983464@gargle.gargle.HOWL>
-	<8763hqnccb.fsf@litku.valot.fi>
-	<8e92b4100903302322t531f5badt84fab14eeab943ff@mail.gmail.com>
-	<87eiwdsxlz.fsf@litku.valot.fi>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48821 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753739AbZDQMNP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2009 08:13:15 -0400
+Subject: Re: p54 problem with PS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>
+In-Reply-To: <200904171356.58336.chunkeey@web.de> (sfid-20090417_135736_024791_EE50B564)
+References: <1239823495.20927.1.camel@johannes.local>
+	 <200904162157.20576.chunkeey@web.de>
+	 <1239913104.26575.25.camel@johannes.local>
+	 <200904171356.58336.chunkeey@web.de> (sfid-20090417_135736_024791_EE50B564)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QQj7hyvpJP7Z9u2/f0+B"
+Date: Fri, 17 Apr 2009 14:12:41 +0200
+Message-Id: <1239970361.26575.89.camel@johannes.local> (sfid-20090417_141321_432303_074A441C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> Vivek Natarajan <vivek.natraj@gmail.com> writes:
-> 
-> >> This might be useful for beacon filtering. Does the hardware know to
-> >> parse the beacons in more detail, for example ERP protection or WMM
-> >> settings?
-> >
-> > After a quick glance into the datasheet, I understand that the
-> > current version of hardware supports reading TIM, TSF and some more
-> > bits related to DTIM from a beacon.
-> 
-> Is the datasheet available somewhere?
 
-Sorry, the datasheets are not available outside. :)
+--=-QQj7hyvpJP7Z9u2/f0+B
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > As far as this patch is concerned, since ath9k can use mac80211 for
-> > sending a null data frame, it is quite redundant to enable the TIM
-> > interrupt as it can be parsed in mac80211 itself.
-> 
-> Sure. But I was thinking the possibility of having beacon filtering in
-> ath9k and then mac80211 wouldn't receive the beacons.
+On Fri, 2009-04-17 at 13:56 +0200, Christian Lamparter wrote:
 
-Atheros HW can't currently support beacon filtering, so there is no
-need to handle TIM interrupt anyway.
+> +       priv->beacon_timeout_guard =3D jiffies;
 
-Sujith
+I wonder if you shouldn't do this when CONF_PS is (first?) enabled
+instead? Or add_interface?
+
+johannes
+
+--=-QQj7hyvpJP7Z9u2/f0+B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ6HI1AAoJEKVg1VMiehFYC50P/3kIGYQWfx311tNcHPZKLfmW
+au42NHXol+4s2VvHfYhyD+BluFf29qtZBOVkAQjyQMK6eBweRnyhe2WEynx41MTZ
+dlhJ2Emon3uEw0s0kJ/0lyjCXmy8yLmanEeJe/R6NQWEMKrWRN9qghqRwRiMoNWK
+eL1SefFfUDgfPN/a8CbqmJVjiPqJB77j+jlO8cgu01OCaIjZH/d8X69lWNZRXaUk
+Bhbt6kYSGRIu9lV8TKerYjnzvPofoyVdXenDY82esupg8K7kWGBGX6eJ1Yg7RsjN
+azeN3zbQJF4Yuoj1uEUJGLS43RP0jA7EXj4wult9pbZu/g0joUXoq/79jHCM4EnW
+LOHRr4zsNsHolBJ5Kx2dfli/zy+IUYape47r2T0NusyLUOjslx0CBqZHxM4occYB
+WW1WJ7FP5RKpHYTQUKrR5O6e5+KkK9JYWmP/nYlag0ARnVdoaIpDWySBfaeROVUw
+14JtyZ6Y2xDOzuRqouqHgAAGbfMkGMkMR+imNX7HuIACueuNHLB6jbzLO6rL51Pp
+kdKgEmHaECjIFzXp4jwAkgytxO4laf5NtHRXuWRGx/jtH8JnzCodGyPJ13pHQG3h
+81bkluhlgCbZngs2P4N6u92t6W9YcFhKeqJrjvW42hu6YS0U0hHMScyecuOKqdbz
+68jAVcYrJY2WEyZbvELa
+=+kPa
+-----END PGP SIGNATURE-----
+
+--=-QQj7hyvpJP7Z9u2/f0+B--
+
