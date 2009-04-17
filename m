@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51475 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbZDUIee (ORCPT
+Received: from mail-bw0-f211.google.com ([209.85.218.211]:50311 "EHLO
+	mail-bw0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbZDQUD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 04:34:34 -0400
-Subject: Re: [PATCH] cfg80211: mark all WEXT handlers _GPL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1240302453.17388.5.camel@johannes.local> (sfid-20090421_102853_880867_3556ADF2)
-References: <1240246179.4632.6.camel@johannes.local>
-	 <1240276136.354.107.camel@debian> <1240302453.17388.5.camel@johannes.local>
-	 (sfid-20090421_102853_880867_3556ADF2)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xm8WrOd3h/DX/eH1Qcu6"
-Date: Tue, 21 Apr 2009 10:33:59 +0200
-Message-Id: <1240302839.17388.8.camel@johannes.local> (sfid-20090421_103437_872429_67AE874F)
-Mime-Version: 1.0
+	Fri, 17 Apr 2009 16:03:59 -0400
+Received: by bwz7 with SMTP id 7so312056bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2009 13:03:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+From: Davide Pesavento <davidepesa@gmail.com>
+Date: Fri, 17 Apr 2009 21:57:30 +0200
+Message-ID: <2da21fe50904171257v17ea8431h1979f0d004885600@mail.gmail.com> (sfid-20090417_220403_443847_A2C0E9C7)
+Subject: Re: ath9k and power management
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Mar 27, 2009 at 16:27, Davide Pesavento <davidepesa@gmail.com> wrote:
+> Hello,
+>
+> I'm running a 2.6.29-wl kernel, using ath9k and wpa_supplicant 0.6.9
+> (with -Dnl80211).
+> Enabling power management when connected (i.e. 'iwconfig wlan0 power
+> on'), causes the currently established connection to break and the
+> machine is no longer able to reconnect to the AP. Right after enabling
+> pm, dmesg says:
+>
+> [ 2625.513233] wlan0: beacon loss from AP 00:1b:2f:35:14:78 - sending
+> probe request
+> [ 2627.513210] wlan0: no probe response from AP 00:1b:2f:35:14:78 -
+> disassociating
+> [ 2627.514430] phy0: Removed STA 00:1b:2f:35:14:78
+> [ 2627.543407] phy0: Destroyed STA 00:1b:2f:35:14:78
+> [ 2776.444279] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [ 2776.659861] wlan0: deauthenticating by local choice (reason=3)
+> [ 2776.831004] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>
+> When I turn power management off again, wpa_supplicant is able to
+> reconnect just fine.
+> Is this a known bug? If ath9k doesn't support power management
+> properly, wouldn't it be better to reject the userspace request right
+> away?
+>
 
---=-xm8WrOd3h/DX/eH1Qcu6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is still unfixed on latest git (2.6.30-rc2-wl). The symptoms are
+exactly the same as reported above.
 
-On Tue, 2009-04-21 at 10:27 +0200, Johannes Berg wrote:
-
-> > Johannes, why don't you want them to be used by others, say some fullma=
-c
-> > drivers? These functions can be used as glue from wext to cfg80211 in
-> > the conversion period. After cfg80211 is ultimately used, they can be
-> > removed all together of course.
->=20
-> I don't expect any binary drivers to start using them anyway, but on the
-> odd chance that somebody was considering that ... I just don't want any
-> arguments at the conversion point that "we still need these symbols
-> because we released a driver that uses them" which would mean we
-> couldn't actually convert properly.
-
-s/released a driver/released a binary driver/
-
-After all, I'm saying they're ok for _GPL -- since that means in the
-case this actually happens we can then easily convert that driver too.
-
-johannes
-
---=-xm8WrOd3h/DX/eH1Qcu6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ7YTzAAoJEKVg1VMiehFYpBwQAJGP36SeWjHQSb4gpN2qprNB
-ER/T2RPbBoF1fCzUKcj3iglJnfwGnIwrlxNwVCPTDn5PxAKTEInA7LZ9q3nSW2Qa
-VAUtl8g9RhamfVow8MoFSOg+6F1woMIdWpMDWrpSdw9EF9CvDtbKnleM+ifn7B98
-+um9k+4592nyESzxKy5UuGXd1uZ9HFMA3hour6oCHsRwY14hMDfMN1/yd9Y2OJcF
-4AnpybcPFnQOS9m2J3/i+1tyb0cr8e8YIX4vcYe3RbWqVROOOq8go5W9pCixTRSW
-4beYtG7aOKPho6syLVpE7TAMBM/z+GcV38O3ZDgfj9VZawUaUDSpRr56cLAWMjfr
-4vDqD28ArUgIV8VTjwP1MfAZFBDhz9X2VxMSfZvPTML8W03QxAPizemThxquHVWZ
-B5zOIW1d3h834mzhtiUooVS5rGPvjTpgIs0/HCG0ZfGp3iZQpz8aBlLBi6eXeTfK
-X9VG0B0ZPk8mG58UWFVGiF69T5ubhMZf7xUHF3bt6XJXmZAydsj9xQFdNFvfVdvL
-8MUgmZA7l7qqP867VvvJxsWNYEpKcgoqW7SpmQb5tbvJo5b7B+JDFCl1NTgVbzfY
-2r5hEjjJM+zE4diOSMSfzsEBCQqfuWPvwtQYABDs9Kb5nKgGDTQTqHKwdzCesgoQ
-RzE8RK1IA0+Rag8dO1An
-=Fo1G
------END PGP SIGNATURE-----
-
---=-xm8WrOd3h/DX/eH1Qcu6--
-
+Regards,
+Davide
