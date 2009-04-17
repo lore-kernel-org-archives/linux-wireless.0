@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:34509 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759523AbZDQHcQ (ORCPT
+Received: from mail-qy0-f126.google.com ([209.85.221.126]:37524 "EHLO
+	mail-qy0-f126.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbZDQTa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 03:32:16 -0400
-Received: by fxm2 with SMTP id 2so760466fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2009 00:32:14 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: roaming/scan/beacon filter braindump
-References: <1239891420.8338.10.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 17 Apr 2009 10:32:12 +0300
-In-Reply-To: <1239891420.8338.10.camel@johannes.local> (Johannes Berg's message of "Thu\, 16 Apr 2009 16\:17\:00 +0200")
-Message-ID: <87ljpzhh1f.fsf@litku.valot.fi> (sfid-20090417_093222_695267_417D14EC)
+	Fri, 17 Apr 2009 15:30:26 -0400
+Received: by qyk32 with SMTP id 32so93777qyk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2009 12:30:24 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <18920.55219.833341.713847@gargle.gargle.HOWL> (sfid-20090417_213028_319909_BFB15063)
+Date: Sat, 18 Apr 2009 00:55:39 +0530
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: Add set/get for frag/rts threshold and retry limits
+In-Reply-To: <20090417185041.GA17526@jm.kir.nu>
+References: <20090417185041.GA17526@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Jouni Malinen wrote:
+> --- iw.orig/nl80211.h	2009-04-17 21:48:13.000000000 +0300
+> +++ iw/nl80211.h	2009-04-17 21:48:17.000000000 +0300
+> @@ -7,7 +7,7 @@
+>   * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
+>   * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
+>   * Copyright 2008 Michael Buesch <mb@bu3sch.de>
+> - * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
+> + * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
+>   * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
+>   * Copyright 2008 Colin McCabe <colin@cozybit.com>
 
-> Now, you may want to roam before losing the connection completely while
-> there's no traffic, so you have a good connection for when there's
-> traffic again. In order to do that, you need to watch the beacon signal
-> strength, and inform userspace (the roaming algorithm) of changes.
-> However, this isn't via the scanning -- it's via the station info.
->
-> So:
->  * need method for userspace to register what kind of signal changes it
->    is interested in (low/high threshold?)
->  * need signal change event for the AP station as multicast
+I don't think Luis would complain, but still... :-)
 
-And with hardware which support beacon filtering we want the hardware to
-notify about signal changes. This is needed to avoid unnecessary cpu
-wakeups.
-
--- 
-Kalle Valo
+Sujith
