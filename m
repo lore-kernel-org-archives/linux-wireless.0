@@ -1,88 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47428 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbZDPL2P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 07:28:15 -0400
-Subject: [PATCH 4/4 v2] mac80211: enable PS by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from web23103.mail.ird.yahoo.com ([217.146.189.43]:25274 "HELO
+	web23103.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754889AbZDQAGJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 20:06:09 -0400
+Message-ID: <169050.10379.qm@web23103.mail.ird.yahoo.com> (sfid-20090417_020614_543867_7AB59D59)
+Date: Fri, 17 Apr 2009 00:06:06 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFT/RFC V4] rtl8187: Implement TX/RX blink for LED
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090416111928.072724791@sipsolutions.net> (sfid-20090416_132312_136058_DD0B8968)
-References: <20090416111723.904720021@sipsolutions.net>
-	 <20090416111928.072724791@sipsolutions.net>
-	 (sfid-20090416_132312_136058_DD0B8968)
-Content-Type: text/plain
-Date: Thu, 16 Apr 2009 13:27:42 +0200
-Message-Id: <1239881262.9737.21.camel@johannes.local> (sfid-20090416_132817_971951_E21D4CB8)
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable PS by default (depending on Kconfig) -- rely on drivers
-to control the level using pm_qos. Due to the previous patch
-we turn off PS when necessary due to latency requirements.
 
-This has a Kconfig symbol so people can, if they really want,
-configure the default in their kernels. We may want to keep it
-at "default y" only in wireless-testing for a while.
+--- On Fri, 17/4/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: oops. forgot to refresh -- compile error
+> > You can add Signed-off-by: Herton Ronaldo Krzesinski
+> <herton@mandriva.com.br>
+> 
+> > to the patch (or Tested-by/Reviewed-by, what's more
+> appropriate, now hopefully 
+> > we will have the last version of the patch :) )
+> 
+> I think a signed-off-by is appropriate. I usually get it
+> right in 4 tries. ;)
 
- net/mac80211/Kconfig |   16 ++++++++++++++++
- net/mac80211/mlme.c  |    8 ++++++++
- 2 files changed, 24 insertions(+)
-
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-16 13:07:02.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-16 13:26:52.000000000 +0200
-@@ -2181,6 +2181,7 @@ static void ieee80211_restart_sta_timer(
- void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd;
-+	u32 hw_flags;
- 
- 	ifmgd = &sdata->u.mgd;
- 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
-@@ -2200,6 +2201,13 @@ void ieee80211_sta_setup_sdata(struct ie
- 		IEEE80211_STA_AUTO_CHANNEL_SEL;
- 	if (sdata->local->hw.queues >= 4)
- 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
-+
-+	hw_flags = sdata->local->hw.flags;
-+
-+	if (hw_flags & IEEE80211_HW_SUPPORTS_PS) {
-+		ifmgd->powersave = CONFIG_MAC80211_DEFAULT_PS_VALUE;
-+		sdata->local->hw.conf.dynamic_ps_timeout = 500;
-+	}
- }
- 
- /* configuration hooks */
---- wireless-testing.orig/net/mac80211/Kconfig	2009-04-16 13:06:59.000000000 +0200
-+++ wireless-testing/net/mac80211/Kconfig	2009-04-16 13:07:02.000000000 +0200
-@@ -11,6 +11,22 @@ config MAC80211
- 	  This option enables the hardware independent IEEE 802.11
- 	  networking stack.
- 
-+config MAC80211_DEFAULT_PS
-+	bool "enable powersave by default"
-+	depends on MAC80211
-+	default y
-+	help
-+	  This option enables powersave mode by default.
-+
-+	  If this causes your applications to misbehave you should fix your
-+	  applications instead -- they need to register their network
-+	  latency requirement, see Documentation/power/pm_qos_interface.txt.
-+
-+config MAC80211_DEFAULT_PS_VALUE
-+	int
-+	default 1 if MAC80211_DEFAULT_PS
-+	default 0
-+
- menu "Rate control algorithm selection"
- 	depends on MAC80211 != n
- 
+So there is going to be a V5? V4 tested ok here - I mean it doesn't break anything, since my device is built-in and doesn't have an LED. I'll have a tested-by or acked-by - I think acked-by is the minimal "okay, your e-mail didn't get lost" thing. 
 
 
+      
