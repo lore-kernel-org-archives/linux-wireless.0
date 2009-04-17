@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44393 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751359AbZDSRPu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 13:15:50 -0400
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 19:15:46 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240160041.28138.0.camel@johannes.local>
-Message-ID: <20090419171546.158830@gmx.net> (sfid-20090419_191552_279073_CA045D96)
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:33498 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279AbZDQDNz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2009 23:13:55 -0400
+Received: by ewy24 with SMTP id 24so30588ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 20:13:54 -0700 (PDT)
+Message-ID: <49E7F3E6.2010809@gmail.com> (sfid-20090417_051402_881430_8CBC0C68)
+Date: Fri, 17 Apr 2009 05:13:42 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240147370.898.0.camel@johannes.local>	 <20090419143337.158810@gmx.net>
- <20090419163204.158820@gmx.net>	 (sfid-20090419_183237_340935_6640098A)
- <1240160041.28138.0.camel@johannes.local>
-Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
-To: linux-wireless@vger.kernel.org
+To: Chris Wright <chrisw@sous-sol.org>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, stable@kernel.org,
+	Arnaud Patard <apatard@mandriva.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [stable] [PATCH] rt2x00: Fix SLAB corruption during rmmod
+References: <200904012118.12391.IvDoorn@gmail.com> <20090417001807.GA5020@hera.kernel.org>
+In-Reply-To: <20090417001807.GA5020@hera.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I don't think so -- how would I express "use channel 5 if you can't f=
-ind
-> anything" in a single nl80211 command?
+Hi Chris,
 
-In the normal usage, you don't need it. Either you want make all settin=
-gs fixed if you build a stationary node, or you set only the SSID if yo=
-u join the IBSS temporary with your notebook. I don't see a real reason=
- to have an optimized one command solution for that. And on multi inter=
-face wifis it's better set the channel and join the IBSS in two differe=
-nt steps. The channel setting has site-effects on the other interfaces,=
- the IBSS joining mostly don't. (except TSF and so)
+On 04/17/09 02:18, Chris Wright wrote:
+> * Ivo van Doorn (ivdoorn@gmail.com) wrote:
+>> At rmmod stage, the code path is the following one :
+>>
+>> rt2x00lib_remove_dev
+>>   ->  rt2x00lib_uninitialize()
+>>         -> rt2x00rfkill_unregister()
+>>              -> rfkill_unregister()
+>>         -> rt2x00rfkill_free()
+>>              -> rfkill_free()
+>>
+>> The problem is that rfkill_free should not be called after rfkill_register
+>> otherwise put_device(&rfkill->dev) will be called 2 times. This patch
+>> fixes this by only calling rt2x00rfkill_free() when rt2x00rfkill_register()
+>> hasn't been called or has failed.
+>>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> Tested-by: Arnaud Patard <apatard@mandriva.com>
+>> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> Who is the Author of this patch?  The Signed-off-by order suggests is
+> Gertjan.
+> 
 
-Alina
 
---=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Indeed, I have been the author of the patch.
+
+---
+Gertjan.
