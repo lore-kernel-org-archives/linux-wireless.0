@@ -1,70 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46431 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752354AbZD1UqF (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:12293 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133AbZDQCCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 16:46:05 -0400
-Date: Tue, 28 Apr 2009 16:38:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mmotm 2009-04-27-15-45 uploaded - iwl3945 oops
-Message-ID: <20090428203805.GB3321@tuxdriver.com> (sfid-20090428_224612_680067_831D88D6)
-References: <200904272305.n3RN51mu031395@imap1.linux-foundation.org> <25818.1240938876@turing-police.cc.vt.edu> <1240951184.1207.11.camel@rc-desk>
+	Thu, 16 Apr 2009 22:02:48 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so682480wff.4
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 19:02:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1240951184.1207.11.camel@rc-desk>
+In-Reply-To: <1239909821-18401-1-git-send-email-hauke@hauke-m.de>
+References: <1239909821-18401-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 16 Apr 2009 19:02:32 -0700
+Message-ID: <43e72e890904161902x77b0505dh1696abbb32db7bbf@mail.gmail.com> (sfid-20090417_040252_375633_5B0EE3E9)
+Subject: Re: [PATCH] [compat-2.6] Add include/linux/mmc/sdio_ids.h
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 28, 2009 at 01:39:44PM -0700, reinette chatre wrote:
-> On Tue, 2009-04-28 at 10:14 -0700, Valdis.Kletnieks@vt.edu wrote:
-> > On Mon, 27 Apr 2009 15:46:07 PDT, akpm@linux-foundation.org said:
-> > > The mm-of-the-moment snapshot 2009-04-27-15-45 has been uploaded to
-> > > 
-> > >    http://userweb.kernel.org/~akpm/mmotm/
-> > 
-> > Saw this while booting at home, out of range of any access points I was
-> > configured to associate with (there *are* 4 APs owned by neighbors that I can
-> > see via kismet, but wpa_supplicant isn't configured to use them).  Didn't
-> > happen this morning at my office, when there's APs in range.
-> > 
-> > This didn't happen in mmotm-0424, so it's something new in the last few days.
-> 
-> A recent patch that is related is ...
-> 
-> commit 4583f7455c6b668a4e9cab154b5a7b6c583b288a
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Thu Apr 23 10:45:04 2009 +0200
-> 
->     iwlwifi: notify on scan completion even when shutting down
-> 
->     Under certain circumstances iwlwifi can get stuck and will no
->     longer accept scan requests, because the core code (cfg80211)
->     thinks that it's still processing one. This fixes one of the
->     points where it can happen, but I've still seen it (although
->     only with my radio-off-when-idle patch).
->     
->     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->     Acked-by: Reinette Chatre <reinette.chatre@intel.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> 
-> Could you please revert this and test again?
+On Thu, Apr 16, 2009 at 12:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> The libertas driver needs some definitions out of sdio_ids.h.
+> Without this it will not compile on kernel 2.6.27 to 2.6.29.
 
-I doubt if that will help -- I just put it into wireless-2.6 and
-wireless-testing today.
+Thanks Hauke, does that file change considerably across kernels? Since
+we are not backporting the SDIO stack itself we need to ensure the
+current driver will access new fields not present in older kernel and
+when that is done backport the changes. Curious if you had a chance to
+check that.
 
-> If this does not help, could you please bisect?
-
-Better bet...unless you meant "apply" instead of "revert"...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
