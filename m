@@ -1,294 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:7833 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752013AbZDOAdX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49072 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755957AbZDQJvk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 20:33:23 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so856294fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2009 17:33:20 -0700 (PDT)
-MIME-Version: 1.0
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 15 Apr 2009 02:33:05 +0200
-Message-ID: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com> (sfid-20090415_023327_686599_A90C478B)
-Subject: [Proposal]TX flags
-To: radiotap@radiotap.org, Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=000e0cd2457a2df12c04678d1893
+	Fri, 17 Apr 2009 05:51:40 -0400
+Subject: Re: [Proposal]TX flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, radiotap@radiotap.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910904161824t7af6860dxebf3a13069b924d5@mail.gmail.com> (sfid-20090417_032507_012632_CF7AA3F9)
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+	 <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com>
+	 <1239908374.26575.20.camel@johannes.local>
+	 <200904162110.05150.mb@bu3sch.de>  <20090416204806.GD25412@ojctech.com>
+	 <69e28c910904161824t7af6860dxebf3a13069b924d5@mail.gmail.com>
+	 (sfid-20090417_032507_012632_CF7AA3F9)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UZ9g0TTlwNU2A7OJblho"
+Date: Fri, 17 Apr 2009 11:50:59 +0200
+Message-Id: <1239961859.26575.44.camel@johannes.local> (sfid-20090417_115144_928014_89774D48)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---000e0cd2457a2df12c04678d1893
-Content-Type: text/plain; charset=ISO-8859-1
+
+--=-UZ9g0TTlwNU2A7OJblho
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-I propose the following suggested Radiotap features to be standardised:
+On Fri, 2009-04-17 at 03:24 +0200, G=C3=A1bor Stefanik wrote:
 
-* A new, 16-bit wide "TX flags" field (field number 15), containing
-the following flags:
-   - TX failed due to excessive retries,
-   - CTS-to-self protection,
-   - RTS/CTS-handshake,
-   - Frame shall not be ACKed ("No-ACK"), and
-   - Sequence number shall not be recalculated ("No-Seq").
+> > I see the point that Michael is making.  What do you think?  Shall
+> > we treat it as a 2-bit wide unsigned integer field in the Tx flags,
+> > instead?
+> >
+>=20
+> IMO that is a good idea, if we accept having non-booleans in a flags
+> field. In that case, this proposal comes to my mind:
+> -Define the second and third bits (mask 0x0006) as a quad-state flag
+> indicating the use of RTS/CTS. So, we can have these values for the
+> flag (accessible as (TXFlags & 0x0006) >> 1):
+> 0: neither
+> 1: rts
+> 2: cts
+> 3: auto-select (only makes sense when sending & during feature discovery)=
+.
 
-Rationale for these changes:
+Like I said -- this doesn't help for feature discovery because there you
+may need to say "only 0 and 2 are valid values", or maybe "only 3 is a
+valid value".
 
-     1. The "excessive retries" flag can be used by the drivers to
-indicate that despite numerous retransmissions, the frame was never
-acknowledged. This is useful for drivers that can't return the number
-of retransmissions used, e.g. when retransmissions are handled by
-hardware, with no feedback about the retries used to the driver. This
-should never be set together with the No-ACK flag. It only makes sense
-to use this on feedback of transmitted frames. This is currently
-implemented in the Linux kernel.
-     2. The CTS-to-self protection flag is useful both when frames are
-sent and for feedback of transmissions. The userspace can send a frame
-with this flag set, to request the driver to transmit the frame with
-CTS-to-self protection (this is not implemented anywhere yet). On
-feedback, the driver can indicate that it automatically transmitted
-the frame using CTS-to-self protection, useful if the driver can't
-return the actual CTS frame (this is implemented in Linux).
-     3. The RTS/CTS handshake flag can be used the same way as the
-CTS-to-self flag, to request/feedback the use of RTS/CTS handshakes
-for transmitting frames. The feedback part is implemented in Linux.
-     4. The No-ACK flag indicates that the frame being sent shall not
-be ACKed, and as such, should only be transmitted once, with no
-retransmissions. This only makes sense when sending frames from
-userspace, and is useful for sending frames that are not to be ACKed
-according to the IEEE 802.11 specification (e.g. multicasts, ACKs,
-beacons, malformed/non-standard frames).
-     5. The No-Seq flag is used when sending frames from the
-userspace, to indicate that the frame already has its sequence number
-preconfigured, and should not be renumbered by the low-level. This is
-useful for sending fragments of a frame one-by-one (fragments need to
-have the same sequence number to allow correct reassembly).
+I also don't like _setting_ bits for automatic -- I have a nagging
+feeling that leaving out the entire field should be more similar to
+setting it to all-zero, rather than all-ones. It cannot ever be exactly
+the same for most fields, but still...
 
-This can be accomplished with the following Radiotap changes:
-* Define a new field, TX flags, at number 15, with the following parameters=
-:
-   - Field contents: an unsigned 16-bit integer,
-   - Field alignment: 2;
-   - Define bit 0 (mask 0x0001) of this field as "TX failed due to
-excessive retries",
-   - Define bit 1 (mask 0x0002) as "CTS-to-self protection",
-   - Define bit 2 (mask 0x0004) as "RTS/CTS handshake",
-   - Define bit 3 (mask 0x0008) as "Frame shall not be ACKed",
-   - Define bit 4 (mask 0x0010) as "Pre-calculated sequence number",
-   - Reserve all other bits in this field (mask 0xffe0) for future use.
+> Also, a proposal for feature discovery:
+> The userspace can send a packet that consists of nothing but a
+> "christmas tree" radiotap header, with no payload, but with all fields
+> and flags set that are known by the userspace app. The response could
+> be another payloadless radiotap header, copying the bits set by
+> userspace, but unsetting the ones not supported by the hardware. This
+> way, the response packet has all flags set that are supported by both
+> the sender and the userspace app.
 
-Two patches have been attached to implement these changes in:
- * the Linux mac80211 wireless stack (already implements the field
-with bits 0, 1 and 2 for feedback only). The attached patch implements
-bits 3 and 4 for sending.
- * the Wireshark network traffic analyzer, allowing dissection of the
-entire field.
+Let's keep that out of this thread -- but let me note that this has no
+advantages (and a disadvantage in complicating the API and requiring
+parsing) over unilaterally sending those bits supported by the driver --
+after all the app could do it the other way and unset whatever it cannot
+support in the full bitmap the driver gave it.
 
-If no one objects to this proposal in 7 days, I will resubmit it as a
-formal RFA, to allow eventual adoption.
+johannes
 
---G=E1bor Stefanik
+--=-UZ9g0TTlwNU2A7OJblho
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
---000e0cd2457a2df12c04678d1893
-Content-Type: text/x-patch; charset=US-ASCII; name="wireshark-radiotap-txflags.patch"
-Content-Disposition: attachment; filename="wireshark-radiotap-txflags.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ftjag5zi0
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-IHBhY2tldC1yYWRpb3RhcC5jIHwgICA4NCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCA4NCBpbnNlcnRpb25zKCsp
-CgpJbmRleDogZXBhbi9kaXNzZWN0b3JzL3BhY2tldC1yYWRpb3RhcC5jCj09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0t
-IGVwYW4vZGlzc2VjdG9ycy9wYWNrZXQtcmFkaW90YXAuYwkocmV2aXNpb24gMjgwNDUpCisrKyBl
-cGFuL2Rpc3NlY3RvcnMvcGFja2V0LXJhZGlvdGFwLmMJKHdvcmtpbmcgY29weSkKQEAgLTEwNSw2
-ICsxMDUsNyBAQAogICAgIElFRUU4MDIxMV9SQURJT1RBUF9EQl9BTlRTSUdOQUwgPSAxMiwKICAg
-ICBJRUVFODAyMTFfUkFESU9UQVBfREJfQU5UTk9JU0UgPSAxMywKICAgICBJRUVFODAyMTFfUkFE
-SU9UQVBfRkNTID0gMTQsCisgICAgSUVFRTgwMjExX1JBRElPVEFQX1RYX0ZMQUdTID0gMTUsCiAg
-ICAgSUVFRTgwMjExX1JBRElPVEFQX1hDSEFOTkVMID0gMTgsCiAgICAgSUVFRTgwMjExX1JBRElP
-VEFQX0VYVCA9IDMxCiB9OwpAQCAtMTY4LDYgKzE2OSwxNSBAQAogI2RlZmluZQlJRUVFODAyMTFf
-UkFESU9UQVBfRl9CQURGQ1MJMHg0MAkvKiBkb2VzIG5vdCBwYXNzIEZDUyBjaGVjayAqLwogI2Rl
-ZmluZQlJRUVFODAyMTFfUkFESU9UQVBfRl9TSE9SVEdJCTB4ODAJLyogSFQgc2hvcnQgR0kgKi8K
-IAorLyogRm9yIElFRUU4MDIxMV9SQURJT1RBUF9UWF9GTEFHUyAqLworI2RlZmluZSBJRUVFODAy
-MTFfUkFESU9UQVBfRl9UWF9GQUlMCTB4MDAwMQkvKiBmYWlsZWQgZHVlIHRvIGV4Y2Vzc2l2ZQor
-CQkJCQkJICogcmV0cmllcyAqLworI2RlZmluZSBJRUVFODAyMTFfUkFESU9UQVBfRl9UWF9DVFMJ
-MHgwMDAyCS8qIHVzZWQgY3RzICdwcm90ZWN0aW9uJyAqLworI2RlZmluZSBJRUVFODAyMTFfUkFE
-SU9UQVBfRl9UWF9SVFMJMHgwMDA0CS8qIHVzZWQgcnRzL2N0cyBoYW5kc2hha2UgKi8KKyNkZWZp
-bmUgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9BQ0sJMHgwMDA4CS8qIGZyYW1lIHNob3VsZCBu
-b3QgYmUgQUNLZWQgKi8KKyNkZWZpbmUgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVEJMHgw
-MDEwCS8qIHNlcXVlbmNlIG51bWJlciBoYW5kbGVkCisJCQkJCQkgKiBieSB1c2Vyc3BhY2UgKi8K
-KwogLyogWFhYIG5lZWQgbWF4IGFycmF5IHNpemUgKi8KIHN0YXRpYyBjb25zdCBpbnQgaWVlZTgw
-MjExX2h0cmF0ZXNbMTZdID0gewogCTEzLAkJLyogSUZNX0lFRUU4MDIxMV9NQ1MwICovCkBAIC0y
-MTEsNiArMjIxLDEyIEBACiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX2NoYW5uZWxfZmxhZ3Nfc3R1
-cmJvID0gLTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX2NoYW5uZWxfZmxhZ3NfaGFsZiA9IC0x
-Owogc3RhdGljIGludCBoZl9yYWRpb3RhcF9jaGFubmVsX2ZsYWdzX3F1YXJ0ZXIgPSAtMTsKK3N0
-YXRpYyBpbnQgaGZfcmFkaW90YXBfdHhmbGFncyA9IC0xOworc3RhdGljIGludCBoZl9yYWRpb3Rh
-cF90eGZsYWdzX2ZhaWwgPSAtMTsKK3N0YXRpYyBpbnQgaGZfcmFkaW90YXBfdHhmbGFnc19jdHMg
-PSAtMTsKK3N0YXRpYyBpbnQgaGZfcmFkaW90YXBfdHhmbGFnc19ydHMgPSAtMTsKK3N0YXRpYyBp
-bnQgaGZfcmFkaW90YXBfdHhmbGFnc19ub2FjayA9IC0xOworc3RhdGljIGludCBoZl9yYWRpb3Rh
-cF90eGZsYWdzX25vc2VxID0gLTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3hjaGFubmVsID0g
-LTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3hjaGFubmVsX2ZyZXF1ZW5jeSA9IC0xOwogc3Rh
-dGljIGludCBoZl9yYWRpb3RhcF94Y2hhbm5lbF9mbGFncyA9IC0xOwpAQCAtMjYwLDYgKzI3Niw3
-IEBACiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3ByZXNlbnRfZGJfYW50c2lnbmFsID0gLTE7CiBz
-dGF0aWMgaW50IGhmX3JhZGlvdGFwX3ByZXNlbnRfZGJfYW50bm9pc2UgPSAtMTsKIHN0YXRpYyBp
-bnQgaGZfcmFkaW90YXBfcHJlc2VudF9mY3MgPSAtMTsKK3N0YXRpYyBpbnQgaGZfcmFkaW90YXBf
-cHJlc2VudF90eGZsYWdzID0gLTE7CiBzdGF0aWMgaW50IGhmX3JhZGlvdGFwX3ByZXNlbnRfeGNo
-YW5uZWwgPSAtMTsKIHN0YXRpYyBpbnQgaGZfcmFkaW90YXBfcHJlc2VudF9leHQgPSAtMTsKIApA
-QCAtMjgyLDYgKzI5OSw3IEBACiBzdGF0aWMgZ2ludCBldHRfcmFkaW90YXBfcHJlc2VudCA9IC0x
-Owogc3RhdGljIGdpbnQgZXR0X3JhZGlvdGFwX2ZsYWdzID0gLTE7CiBzdGF0aWMgZ2ludCBldHRf
-cmFkaW90YXBfY2hhbm5lbF9mbGFncyA9IC0xOworc3RhdGljIGdpbnQgZXR0X3JhZGlvdGFwX3R4
-ZmxhZ3MgPSAtMTsKIHN0YXRpYyBnaW50IGV0dF9yYWRpb3RhcF94Y2hhbm5lbF9mbGFncyA9IC0x
-OwogCiBzdGF0aWMgZGlzc2VjdG9yX2hhbmRsZV90IGllZWU4MDIxMV9oYW5kbGU7CkBAIC00NTEs
-NiArNDY5LDcgQEAKICNkZWZpbmUgUkFESU9UQVBfTUFTS19EQl9BTlRTSUdOQUwgICAgICAgICAg
-MHgwMDAwMTAwMAogI2RlZmluZSBSQURJT1RBUF9NQVNLX0RCX0FOVE5PSVNFICAgICAgICAgICAw
-eDAwMDAyMDAwCiAjZGVmaW5lIFJBRElPVEFQX01BU0tfRkNTICAgICAgICAgICAgICAgICAgIDB4
-MDAwMDQwMDAKKyNkZWZpbmUgUkFESU9UQVBfTUFTS19UWEZMQUdTICAgICAgICAgICAgICAgMHgw
-MDAwODAwMAogI2RlZmluZSBSQURJT1RBUF9NQVNLX1hDSEFOTkVMICAgICAgICAgICAgICAweDAw
-MDQwMDAwCiAjZGVmaW5lIFJBRElPVEFQX01BU0tfRVhUICAgICAgICAgICAgICAgICAgIDB4ODAw
-MDAwMDAKIApAQCAtNTMwLDYgKzU0OSwxMSBAQAogCUZUX0JPT0xFQU4sIDMyLCBOVUxMLCBSQURJ
-T1RBUF9NQVNLX0ZDUywKIAkiU3BlY2lmaWVzIGlmIHRoZSBGQ1MgZmllbGQgaXMgcHJlc2VudCIs
-IEhGSUxMIH0gfSwKIAorICAgIHsgJmhmX3JhZGlvdGFwX3ByZXNlbnRfdHhmbGFncywKKyAgICAg
-IHsgIlRYIEZsYWdzIiwgInJhZGlvdGFwLnByZXNlbnQudHhmbGFncyIsCisJRlRfQk9PTEVBTiwg
-MzIsIE5VTEwsIFJBRElPVEFQX01BU0tfVFhGTEFHUywKKwkiU3BlY2lmaWVzIGlmIHRoZSBUWCBm
-bGFncyBmaWVsZCBpcyBwcmVzZW50IiwgSEZJTEwgfSB9LAorCiAgICAgeyAmaGZfcmFkaW90YXBf
-cHJlc2VudF94Y2hhbm5lbCwKICAgICAgIHsgIkNoYW5uZWwrIiwgInJhZGlvdGFwLnByZXNlbnQu
-eGNoYW5uZWwiLAogCUZUX0JPT0xFQU4sIDMyLCBOVUxMLCBSQURJT1RBUF9NQVNLX1hDSEFOTkVM
-LApAQCAtNjUzLDYgKzY3NywzNSBAQAogICAgICAgIHsgIlF1YXJ0ZXIgUmF0ZSBDaGFubmVsICg1
-TUh6IENoYW5uZWwgV2lkdGgpIiwgInJhZGlvdGFwLmNoYW5uZWwudHlwZS5xdWFydGVyIiwKIAkg
-RlRfQk9PTEVBTiwgMTYsIE5VTEwsIDB4ODAwMCwgIkNoYW5uZWwgVHlwZSBRdWFydGVyIFJhdGUi
-LCBIRklMTCB9IH0sCiAKKyAgICB7ICZoZl9yYWRpb3RhcF90eGZsYWdzLAorICAgICAgeyAiVFgg
-ZmxhZ3MiLCAicmFkaW90YXAudHhmbGFncyIsCisJRlRfVUlOVDE2LCBCQVNFX0hFWCwgTlVMTCwg
-MHgwLCAiIiwgSEZJTEwgfSB9LAorCisgICAgeyAmaGZfcmFkaW90YXBfdHhmbGFnc19mYWlsLAor
-ICAgICAgeyAiRXhjZXNzaXZlIHJldHJpZXMiLCAicmFkaW90YXAudHhmbGFncy5mYWlsIiwKKwlG
-VF9CT09MRUFOLCAxNiwgTlVMTCwgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfRkFJTCwKKwkiRnJh
-bWUgVFggZmFpbGVkIGR1ZSB0byBleGNlc3NpdmUgcmV0cmllcyIsIEhGSUxMIH0gfSwKKworICAg
-IHsgJmhmX3JhZGlvdGFwX3R4ZmxhZ3NfY3RzLAorICAgICAgeyAiQ1RTLXRvLXNlbGYiLCAicmFk
-aW90YXAudHhmbGFncy5jdHMiLAorCUZUX0JPT0xFQU4sIDE2LCBOVUxMLCBJRUVFODAyMTFfUkFE
-SU9UQVBfRl9UWF9DVFMsCisJIkZyYW1lIHVzZWQgQ1RTLXRvLXNlbGYgcHJvdGVjdGlvbiIsIEhG
-SUxMIH0gfSwKKworICAgIHsgJmhmX3JhZGlvdGFwX3R4ZmxhZ3NfcnRzLAorICAgICAgeyAiUlRT
-L0NUUyIsICJyYWRpb3RhcC50eGZsYWdzLnJ0cyIsCisJRlRfQk9PTEVBTiwgMTYsIE5VTEwsIElF
-RUU4MDIxMV9SQURJT1RBUF9GX1RYX1JUUywKKwkiRnJhbWUgd2FzIHRyYW5zbWl0dGVkIHdpdGgg
-YW4gUlRTL0NUUy1oYW5kc2hha2UiLCBIRklMTCB9IH0sCisKKyAgICB7ICZoZl9yYWRpb3RhcF90
-eGZsYWdzX25vYWNrLAorICAgICAgeyAiTm8gQUNLIGV4cGVjdGVkIiwgInJhZGlvdGFwLnR4Zmxh
-Z3Mubm9hY2siLAorCUZUX0JPT0xFQU4sIDE2LCBOVUxMLCBJRUVFODAyMTFfUkFESU9UQVBfRl9U
-WF9OT0FDSywKKwkiRnJhbWUgd2FzIHRyYW5zbWl0dGVkIG9uY2Ugd2l0aCBubyB3YWl0aW5nIGZv
-ciBhbiBBQ0siLCBIRklMTCB9IH0sCisKKyAgICB7ICZoZl9yYWRpb3RhcF90eGZsYWdzX25vc2Vx
-LAorICAgICAgeyAiTm8gc2VxdWVuY2UgY291bnRlciIsICJyYWRpb3RhcC50eGZsYWdzLm5vc2Vx
-IiwKKwlGVF9CT09MRUFOLCAxNiwgTlVMTCwgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVEs
-CisJIkZyYW1lIGhhZCBpdHMgc2VxdWVuY2UgbnVtYmVyIGNvbmZpZ3VyZWQgYnkgdXNlcnNwYWNl
-IiwgSEZJTEwgfSB9LAorCiAgICAgeyAmaGZfcmFkaW90YXBfeGNoYW5uZWwsCiAgICAgICB7ICJD
-aGFubmVsIG51bWJlciIsICJyYWRpb3RhcC54Y2hhbm5lbCIsCiAJRlRfVUlOVDMyLCBCQVNFX0RF
-QywgTlVMTCwgMHgwLCAiIiwgSEZJTEwgfSB9LApAQCAtNzgwLDYgKzgzMyw3IEBACiAgICAgJmV0
-dF9yYWRpb3RhcF9wcmVzZW50LAogICAgICZldHRfcmFkaW90YXBfZmxhZ3MsCiAgICAgJmV0dF9y
-YWRpb3RhcF9jaGFubmVsX2ZsYWdzLAorICAgICZldHRfcmFkaW90YXBfdHhmbGFncywKICAgICAm
-ZXR0X3JhZGlvdGFwX3hjaGFubmVsX2ZsYWdzCiAgIH07CiAKQEAgLTg5Niw2ICs5NTAsOCBAQAog
-CSAgICB0dmIsIDQsIDQsIFRSVUUpOwogCXByb3RvX3RyZWVfYWRkX2l0ZW0ocHJlc2VudF90cmVl
-LCBoZl9yYWRpb3RhcF9wcmVzZW50X2ZjcywKIAkgICAgdHZiLCA0LCA0LCBUUlVFKTsKKwlwcm90
-b190cmVlX2FkZF9pdGVtKHByZXNlbnRfdHJlZSwgaGZfcmFkaW90YXBfcHJlc2VudF90eGZsYWdz
-LAorCSAgICB0dmIsIDQsIDQsIFRSVUUpOwogCXByb3RvX3RyZWVfYWRkX2l0ZW0ocHJlc2VudF90
-cmVlLCBoZl9yYWRpb3RhcF9wcmVzZW50X3hjaGFubmVsLAogCSAgICB0dmIsIDQsIDQsIFRSVUUp
-OwogCXByb3RvX3RyZWVfYWRkX2l0ZW0ocHJlc2VudF90cmVlLCBoZl9yYWRpb3RhcF9wcmVzZW50
-X2V4dCwKQEAgLTEyNDIsNiArMTI5OCwzNCBAQAogCSAgICBvZmZzZXQrPTQ7CiAJICAgIGxlbmd0
-aF9yZW1haW5pbmctPTQ7CiAJICAgIGJyZWFrOworCWNhc2UgSUVFRTgwMjExX1JBRElPVEFQX1RY
-X0ZMQUdTOiB7CisJICAgIHByb3RvX2l0ZW0gKml0OworCisJICAgIGFsaWduX29mZnNldCA9IEFM
-SUdOX09GRlNFVChvZmZzZXQsIDIpOworCSAgICBvZmZzZXQgKz0gYWxpZ25fb2Zmc2V0OworCSAg
-ICBsZW5ndGhfcmVtYWluaW5nIC09IGFsaWduX29mZnNldDsKKwkgICAgaWYgKGxlbmd0aF9yZW1h
-aW5pbmcgPCAyKQorCQlicmVhazsKKwkgICAgaWYgKHRyZWUpIHsKKwkJZmxhZ3MgPSB0dmJfZ2V0
-X2xldG9ocyh0dmIsIG9mZnNldCk7CisJCWl0ID0gcHJvdG9fdHJlZV9hZGRfdWludChyYWRpb3Rh
-cF90cmVlLCBoZl9yYWRpb3RhcF90eGZsYWdzLAorCQkJdHZiLCBvZmZzZXQsIDIsIGZsYWdzKTsK
-KwkJZmxhZ3NfdHJlZSA9IHByb3RvX2l0ZW1fYWRkX3N1YnRyZWUoaXQsIGV0dF9yYWRpb3RhcF90
-eGZsYWdzKTsKKwkJcHJvdG9fdHJlZV9hZGRfYm9vbGVhbihmbGFnc190cmVlLCBoZl9yYWRpb3Rh
-cF90eGZsYWdzX2ZhaWwsCisJCQl0dmIsIG9mZnNldCwgMSwgZmxhZ3MpOworCQlwcm90b190cmVl
-X2FkZF9ib29sZWFuKGZsYWdzX3RyZWUsIGhmX3JhZGlvdGFwX3R4ZmxhZ3NfY3RzLAorCQkJdHZi
-LCBvZmZzZXQsIDEsIGZsYWdzKTsKKwkJcHJvdG9fdHJlZV9hZGRfYm9vbGVhbihmbGFnc190cmVl
-LCBoZl9yYWRpb3RhcF90eGZsYWdzX3J0cywKKwkJCXR2Yiwgb2Zmc2V0LCAxLCBmbGFncyk7CisJ
-CXByb3RvX3RyZWVfYWRkX2Jvb2xlYW4oZmxhZ3NfdHJlZSwgaGZfcmFkaW90YXBfdHhmbGFnc19u
-b2FjaywKKwkJCXR2Yiwgb2Zmc2V0LCAxLCBmbGFncyk7CisJCXByb3RvX3RyZWVfYWRkX2Jvb2xl
-YW4oZmxhZ3NfdHJlZSwgaGZfcmFkaW90YXBfdHhmbGFnc19ub3NlcSwKKwkJCXR2Yiwgb2Zmc2V0
-LCAxLCBmbGFncyk7CisJCX0KKwkJb2Zmc2V0Kz0yOworCSAgICAgICAgbGVuZ3RoX3JlbWFpbmlu
-Zy09MjsKKwkgICAgYnJlYWs7CisJfQogCWRlZmF1bHQ6CiAJICAgIC8qCiAJICAgICAqIFRoaXMg
-aW5kaWNhdGVzIGEgZmllbGQgd2hvc2Ugc2l6ZSB3ZSBkbyBub3QK
---000e0cd2457a2df12c04678d1893
-Content-Type: text/x-patch; charset=US-ASCII; name="linux-radiotap-txflags.patch"
-Content-Disposition: attachment; filename="linux-radiotap-txflags.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ftjagcs61
+iQIcBAABAgAGBQJJ6FEAAAoJEKVg1VMiehFYbpsP/iykFMyGIRj0gm9qMmpAxsRv
+OxkKY1csWpu/Xsm7w3uzWIi5KUb836tQdHuiPruMgOYbJ5H6ZAeOrto0sLzrCoSP
+zMq144e2pB/hOcM9dd7xPnF2u0RINI6mIsvTyVnpL0Sbnm3ePByAKY3ZRIpfmpVk
+Ny91Iv1gyGqegjZwaV/ioahVf3jr58eeVcLMeCwZmMppjyBWybprJ8dDaFYU59To
+QVhr8E1GhyJksP+Ye9J5hkbgB3s9zAEASTLw2zd+5NxnhqNLu5v7BDAMPNG/UurZ
+YLcBzZMu547f2YyO/ojWvhg2BU7hSSicYCnbxc7OZgFDJK09Zg+m7dQ99Wc5dweH
+Dc4qZPhykUXm5pBKJGgLx6U+YaZ+umpci8c3j6hwV/7PwWUB/K2OROX5GgX8BKhx
+k0hjhfLeO3QXazsF+UdRvhUXVNg7iMba/xDN9JaAr4U3YFg9Z4s/g/j9ZNjnxe6I
+Hp/W/bxEzX5ohU1y15jRbIgiWCyTclGJT0TNkT44JmyxHka/rR4evMPjUThZNnua
+6kgVn9mGwMHDzkO8ACMxU+IY+L8lzvM3p2nc8ZkOXJPLri8rM2wEQTmgz8bmLKnd
+xQjcsxtLB1BBFYnzT7e3Vk6uIB7xVwuSL9gPAoR5DgWyc4FXQ2dffJ2PWXXV4fOS
+1Hqf0ghGURwga3BDp7bp
+=8Lxy
+-----END PGP SIGNATURE-----
 
-IERvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0IHwgICAxMiAr
-KysrKysrKysrKy0KIGluY2x1ZGUvbmV0L2llZWU4MDIxMV9yYWRpb3RhcC5oICAgICAgICAgICAg
-ICAgIHwgICAgMyArKysKIG5ldC9tYWM4MDIxMS90eC5jICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHwgICAyMSArKysrKysrKysrKysrKysrLS0tLS0KIDMgZmlsZXMgY2hhbmdlZCwgMzAg
-aW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9u
-L25ldHdvcmtpbmcvbWFjODAyMTEtaW5qZWN0aW9uLnR4dCBiL0RvY3VtZW50YXRpb24vbmV0d29y
-a2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0CmluZGV4IDg0OTA2ZWYuLmNkODBmNGEgMTAwNjQ0
-Ci0tLSBhL0RvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0Cisr
-KyBiL0RvY3VtZW50YXRpb24vbmV0d29ya2luZy9tYWM4MDIxMS1pbmplY3Rpb24udHh0CkBAIC0z
-NiwxMCArMzYsMjAgQEAgcmFkaW90YXAgaGVhZGVycyBhbmQgdXNlZCB0byBjb250cm9sIGluamVj
-dGlvbjoKICAgIElFRUU4MDIxMV9SQURJT1RBUF9GX0ZDUzogRkNTIHdpbGwgYmUgcmVtb3ZlZCBh
-bmQgcmVjYWxjdWxhdGVkCiAgICBJRUVFODAyMTFfUkFESU9UQVBfRl9XRVA6IGZyYW1lIHdpbGwg
-YmUgZW5jcnlwdGVkIGlmIGtleSBhdmFpbGFibGUKICAgIElFRUU4MDIxMV9SQURJT1RBUF9GX0ZS
-QUc6IGZyYW1lIHdpbGwgYmUgZnJhZ21lbnRlZCBpZiBsb25nZXIgdGhhbiB0aGUKLQkJCSAgICAg
-IGN1cnJlbnQgZnJhZ21lbnRhdGlvbiB0aHJlc2hvbGQuIE5vdGUgdGhhdAorCQkJICAgICAgY3Vy
-cmVudCBmcmFnbWVudGF0aW9uIHRocmVzaG9sZC4gKE5vdGUgdGhhdAogCQkJICAgICAgdGhpcyBm
-bGFnIGlzIG9ubHkgcmVsaWFibGUgd2hlbiBzb2Z0d2FyZQogCQkJICAgICAgZnJhZ21lbnRhdGlv
-biBpcyBlbmFibGVkKQogCisKKyAqIElFRUU4MDIxMV9SQURJT1RBUF9UWF9GTEFHUworCisgICBJ
-RUVFODAyMTFfUkFESU9UQVBfRl9UWF9OT0FDSzogZnJhbWUgd2lsbCBiZSBjb25zaWRlcmVkIG9u
-ZSB0aGF0IGlzIG5vdAorCQkJCSAgZXhwZWN0ZWQgdG8gYmUgQUNLZWQsIGFuZCB3aWxsIG9ubHkg
-YmUKKwkJCQkgIHRyYW5zbWl0dGVkIG9uY2UsIHdpdGggbm8gcmV0cmFuc21pc3Npb25zLgorICAg
-SUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVE6IGZyYW1lIHdpbGwgaGF2ZSBpdHMgc2VxdWVu
-Y2UgbnVtYmVyIHJldGFpbmVkCisJCQkJICBhcyBoYW5kZWQgdG8gbWFjODAyMTEgYnkgdXNlcnNw
-YWNlLCB1c2VmdWwKKwkJCQkgIHdoZW4gaW5qZWN0aW5nIGZyYWdtZW50cyBvZiBhIHNpbmdsZSBw
-YWNrZXQuCisKIFRoZSBpbmplY3Rpb24gY29kZSBjYW4gYWxzbyBza2lwIGFsbCBvdGhlciBjdXJy
-ZW50bHkgZGVmaW5lZCByYWRpb3RhcCBmaWVsZHMKIGZhY2lsaXRhdGluZyByZXBsYXkgb2YgY2Fw
-dHVyZWQgcmFkaW90YXAgaGVhZGVycyBkaXJlY3RseS4KIApkaWZmIC0tZ2l0IGEvaW5jbHVkZS9u
-ZXQvaWVlZTgwMjExX3JhZGlvdGFwLmggYi9pbmNsdWRlL25ldC9pZWVlODAyMTFfcmFkaW90YXAu
-aAppbmRleCAyM2MzZjNkLi4yMTBkYmQ5IDEwMDY0NAotLS0gYS9pbmNsdWRlL25ldC9pZWVlODAy
-MTFfcmFkaW90YXAuaAorKysgYi9pbmNsdWRlL25ldC9pZWVlODAyMTFfcmFkaW90YXAuaApAQCAt
-MjQwLDYgKzI0MCw5IEBAIGVudW0gaWVlZTgwMjExX3JhZGlvdGFwX3R5cGUgewogCQkJCQkJICog
-cmV0cmllcyAqLwogI2RlZmluZSBJRUVFODAyMTFfUkFESU9UQVBfRl9UWF9DVFMJMHgwMDAyCS8q
-IHVzZWQgY3RzICdwcm90ZWN0aW9uJyAqLwogI2RlZmluZSBJRUVFODAyMTFfUkFESU9UQVBfRl9U
-WF9SVFMJMHgwMDA0CS8qIHVzZWQgcnRzL2N0cyBoYW5kc2hha2UgKi8KKyNkZWZpbmUgSUVFRTgw
-MjExX1JBRElPVEFQX0ZfVFhfTk9BQ0sJMHgwMDA4CS8qIGZyYW1lIHNob3VsZCBub3QgYmUgQUNL
-ZWQgKi8KKyNkZWZpbmUgSUVFRTgwMjExX1JBRElPVEFQX0ZfVFhfTk9TRVEJMHgwMDEwCS8qIHNl
-cXVlbmNlIG51bWJlciBoYW5kbGVkCisJCQkJCQkgKiBieSB1c2Vyc3BhY2UgKi8KIAogLyogVWds
-eSBtYWNybyB0byBjb252ZXJ0IGxpdGVyYWwgY2hhbm5lbCBudW1iZXJzIGludG8gdGhlaXIgbWh6
-IGVxdWl2YWxlbnRzCiAgKiBUaGVyZSBhcmUgY2VydGlhbmx5IHNvbWUgY29uZGl0aW9ucyB0aGF0
-IHdpbGwgYnJlYWsgdGhpcyAobGlrZSBmZWVkaW5nIGl0ICczMCcpCmRpZmYgLS1naXQgYS9uZXQv
-bWFjODAyMTEvdHguYyBiL25ldC9tYWM4MDIxMS90eC5jCmluZGV4IDNmYjA0YTguLmI0NzQzNWQg
-MTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS90eC5jCisrKyBiL25ldC9tYWM4MDIxMS90eC5jCkBA
-IC02NTAsNiArNjUwLDEwIEBAIGllZWU4MDIxMV90eF9oX3NlcXVlbmNlKHN0cnVjdCBpZWVlODAy
-MTFfdHhfZGF0YSAqdHgpCiAJdTggKnFjOwogCWludCB0aWQ7CiAKKwlpZiAodW5saWtlbHkoIShp
-bmZvLT5mbGFncyAmIElFRUU4MDIxMV9UWF9DVExfQVNTSUdOX1NFUSkpKQorCQlyZXR1cm4gVFhf
-Q09OVElOVUU7CisJaW5mby0+ZmxhZ3MgJj0gfklFRUU4MDIxMV9UWF9DVExfQVNTSUdOX1NFUTsK
-KwogCS8qCiAJICogUGFja2V0IGluamVjdGlvbiBtYXkgd2FudCB0byBjb250cm9sIHRoZSBzZXF1
-ZW5jZQogCSAqIG51bWJlciwgaWYgd2UgaGF2ZSBubyBtYXRjaGluZyBpbnRlcmZhY2UgdGhlbiB3
-ZQpAQCAtOTAxLDYgKzkwNSw3IEBAIF9faWVlZTgwMjExX3BhcnNlX3R4X3JhZGlvdGFwKHN0cnVj
-dCBpZWVlODAyMTFfdHhfZGF0YSAqdHgsCiAJc3RydWN0IGllZWU4MDIxMV9yYWRpb3RhcF9oZWFk
-ZXIgKnJ0aGRyID0KIAkJKHN0cnVjdCBpZWVlODAyMTFfcmFkaW90YXBfaGVhZGVyICopIHNrYi0+
-ZGF0YTsKIAlzdHJ1Y3QgaWVlZTgwMjExX3N1cHBvcnRlZF9iYW5kICpzYmFuZDsKKwlzdHJ1Y3Qg
-aWVlZTgwMjExX3R4X2luZm8gKmluZm8gPSBJRUVFODAyMTFfU0tCX0NCKHR4LT5za2IpOwogCWlu
-dCByZXQgPSBpZWVlODAyMTFfcmFkaW90YXBfaXRlcmF0b3JfaW5pdCgmaXRlcmF0b3IsIHJ0aGRy
-LCBza2ItPmxlbik7CiAKIAlzYmFuZCA9IHR4LT5sb2NhbC0+aHcud2lwaHktPmJhbmRzW3R4LT5j
-aGFubmVsLT5iYW5kXTsKQEAgLTk0Nyw2ICs5NTIsMTMgQEAgX19pZWVlODAyMTFfcGFyc2VfdHhf
-cmFkaW90YXAoc3RydWN0IGllZWU4MDIxMV90eF9kYXRhICp0eCwKIAkJCWlmICgqaXRlcmF0b3Iu
-dGhpc19hcmcgJiBJRUVFODAyMTFfUkFESU9UQVBfRl9GUkFHKQogCQkJCXR4LT5mbGFncyB8PSBJ
-RUVFODAyMTFfVFhfRlJBR01FTlRFRDsKIAkJCWJyZWFrOworCQljYXNlIElFRUU4MDIxMV9SQURJ
-T1RBUF9UWF9GTEFHUzoKKwkJCWlmICgqaXRlcmF0b3IudGhpc19hcmcgJiBJRUVFODAyMTFfUkFE
-SU9UQVBfRl9UWF9OT0FDSykKKwkJCQlpbmZvLT5mbGFncyB8PSBJRUVFODAyMTFfVFhfQ1RMX05P
-X0FDSzsKKwkJCWlmICgqaXRlcmF0b3IudGhpc19hcmcgJiBJRUVFODAyMTFfUkFESU9UQVBfRl9U
-WF9OT1NFUSkKKwkJCQlpbmZvLT5mbGFncyAmPSB+SUVFRTgwMjExX1RYX0NUTF9BU1NJR05fU0VR
-OworCQkJYnJlYWs7CisKIAogCQkvKgogCQkgKiBQbGVhc2UgdXBkYXRlIHRoZSBmaWxlCkBAIC05
-OTksNiArMTAxMSw4IEBAIF9faWVlZTgwMjExX3R4X3ByZXBhcmUoc3RydWN0IGllZWU4MDIxMV90
-eF9kYXRhICp0eCwKIAkgKiBpdCB3aWxsIGJlIGNsZWFyZWQvbGVmdCBieSByYWRpb3RhcCBhcyBk
-ZXNpcmVkLgogCSAqLwogCXR4LT5mbGFncyB8PSBJRUVFODAyMTFfVFhfRlJBR01FTlRFRDsKKwkv
-KiBTYW1lIGhlcmUsIGNvbnRyb2xsZWQgYnkgcmFkaW90YXAgYW5kIHRoZSBzdGFjayAqLworCWlu
-Zm8tPmZsYWdzIHw9IElFRUU4MDIxMV9UWF9DVExfQVNTSUdOX1NFUTsKIAogCS8qIHByb2Nlc3Mg
-YW5kIHJlbW92ZSB0aGUgaW5qZWN0aW9uIHJhZGlvdGFwIGhlYWRlciAqLwogCXNkYXRhID0gSUVF
-RTgwMjExX0RFVl9UT19TVUJfSUYoZGV2KTsKQEAgLTEwNjIsMTMgKzEwNzYsMTAgQEAgX19pZWVl
-ODAyMTFfdHhfcHJlcGFyZShzdHJ1Y3QgaWVlZTgwMjExX3R4X2RhdGEgKnR4LAogCQkJcmV0dXJu
-IFRYX1FVRVVFRDsKIAl9CiAKLQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIoaGRyLT5hZGRy
-MSkpIHsKLQkJdHgtPmZsYWdzICY9IH5JRUVFODAyMTFfVFhfVU5JQ0FTVDsKKwlpZiAoaXNfbXVs
-dGljYXN0X2V0aGVyX2FkZHIoaGRyLT5hZGRyMSkpCiAJCWluZm8tPmZsYWdzIHw9IElFRUU4MDIx
-MV9UWF9DVExfTk9fQUNLOwotCX0gZWxzZSB7CisJZWxzZQogCQl0eC0+ZmxhZ3MgfD0gSUVFRTgw
-MjExX1RYX1VOSUNBU1Q7Ci0JCWluZm8tPmZsYWdzICY9IH5JRUVFODAyMTFfVFhfQ1RMX05PX0FD
-SzsKLQl9CiAKIAlpZiAodHgtPmZsYWdzICYgSUVFRTgwMjExX1RYX0ZSQUdNRU5URUQpIHsKIAkJ
-aWYgKCh0eC0+ZmxhZ3MgJiBJRUVFODAyMTFfVFhfVU5JQ0FTVCkgJiYK
---000e0cd2457a2df12c04678d1893--
+--=-UZ9g0TTlwNU2A7OJblho--
+
