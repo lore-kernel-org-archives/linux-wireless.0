@@ -1,45 +1,408 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:45356 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933636AbZDHOOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 10:14:25 -0400
-Subject: [PATCH] airo: queue SIOCSIWAUTH-requested auth mode change for
-	next commit
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Carpenter <error27@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20090408134504.GA24452@tuxdriver.com>
-References: <alpine.DEB.2.00.0904072049540.8684@bicker>
-	 <20090408134504.GA24452@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 08 Apr 2009 10:15:17 -0400
-Message-Id: <1239200117.14879.2.camel@localhost.localdomain> (sfid-20090408_161436_350062_9E1164F9)
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42810 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755478AbZDQSus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2009 14:50:48 -0400
+Date: Fri, 17 Apr 2009 21:50:41 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: Add set/get for frag/rts threshold and retry limits
+Message-ID: <20090417185041.GA17526@jm.kir.nu> (sfid-20090417_205052_161015_338CD0FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code was clearly wrong, plus callers expect the mode change to happen as
-soon as possible, not dropped on the floor until the next time some
-other config value changes and a commit happens.
+Add commands to use the new wiphy parameter attributes with
+NL80211_CMD_SET_WIPHY and NL80211_CMD_GET_WIPHY to manage
+fragmentation/RTS threshold and retry limits.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index fc4322c..0bf2779 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -6574,11 +6574,11 @@ static int airo_set_auth(struct net_device *dev,
- 				local->config.authType = AUTH_ENCRYPT;
- 			} else
- 				return -EINVAL;
--			break;
+---
+ info.c    |   25 ++++++++
+ nl80211.h |  182 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ phy.c     |   62 +++++++++++++++++++++
+ 3 files changed, 264 insertions(+), 5 deletions(-)
+
+--- iw.orig/info.c	2009-04-17 21:48:12.000000000 +0300
++++ iw/info.c	2009-04-17 21:48:17.000000000 +0300
+@@ -254,6 +254,31 @@ static int print_phy_handler(struct nl_m
+ 	nla_for_each_nested(nl_mode, tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES], rem_mode)
+ 		printf("\t\t * %s\n", iftype_name(nl_mode->nla_type));
  
- 			/* Commit the changes to flags if needed */
- 			if (local->config.authType != currentAuthType)
- 				set_bit (FLAG_COMMIT, &local->flags);
-+			break;
- 		}
++	if (tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT])
++		printf("\tShort retry limit: %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_SHORT]));
++	if (tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG])
++		printf("\tLong retry limit: %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_RETRY_LONG]));
++	if (tb_msg[NL80211_ATTR_WIPHY_FRAG_THRESHOLD]) {
++		uint32_t t;
++		t = nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_FRAG_THRESHOLD]);
++		printf("\tFragmentation threshold: ");
++		if (t == (uint32_t) -1)
++			printf("disabled\n");
++		else
++			printf("%d\n", t);
++	}
++	if (tb_msg[NL80211_ATTR_WIPHY_RTS_THRESHOLD]) {
++		uint32_t t;
++		t = nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_RTS_THRESHOLD]);
++		printf("\tRTS/CTS threshold: ");
++		if (t == (uint32_t) -1)
++			printf("disabled\n");
++		else
++			printf("%d\n", t);
++	}
++
+ 	return NL_SKIP;
+ }
  
- 	case IW_AUTH_WPA_ENABLED:
+--- iw.orig/nl80211.h	2009-04-17 21:48:13.000000000 +0300
++++ iw/nl80211.h	2009-04-17 21:48:17.000000000 +0300
+@@ -7,7 +7,7 @@
+  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
+  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
+- * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
++ * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
+  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
+  * Copyright 2008 Colin McCabe <colin@cozybit.com>
+  *
+@@ -46,8 +46,10 @@
+  *	to get a list of all present wiphys.
+  * @NL80211_CMD_SET_WIPHY: set wiphy parameters, needs %NL80211_ATTR_WIPHY or
+  *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME,
+- *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ, and/or
+- *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
++ *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ,
++ *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE, %NL80211_ATTR_WIPHY_RETRY_SHORT,
++ *	%NL80211_ATTR_WIPHY_RETRY_LONG, %NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
++ *	and/or %NL80211_ATTR_WIPHY_RTS_THRESHOLD.
+  * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
+  *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
+  *	%NL80211_ATTR_WIPHY_NAME.
+@@ -142,6 +144,12 @@
+  *	%NL80211_ATTR_IE. If the command succeeds, the requested data will be
+  *	added to all specified management frames generated by
+  *	kernel/firmware/driver.
++ *	Note: This command has been removed and it is only reserved at this
++ *	point to avoid re-using existing command number. The functionality this
++ *	command was planned for has been provided with cleaner design with the
++ *	option to specify additional IEs in NL80211_CMD_TRIGGER_SCAN,
++ *	NL80211_CMD_AUTHENTICATE, NL80211_CMD_ASSOCIATE,
++ *	NL80211_CMD_DEAUTHENTICATE, and NL80211_CMD_DISASSOCIATE.
+  *
+  * @NL80211_CMD_GET_SCAN: get scan results
+  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
+@@ -160,6 +168,62 @@
+  * 	set (%NL80211_ATTR_REG_TYPE), if the type of regulatory domain is
+  * 	%NL80211_REG_TYPE_COUNTRY the alpha2 to which we have moved on
+  * 	to (%NL80211_ATTR_REG_ALPHA2).
++ * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP beacon
++ * 	has been found while world roaming thus enabling active scan or
++ * 	any mode of operation that initiates TX (beacons) on a channel
++ * 	where we would not have been able to do either before. As an example
++ * 	if you are world roaming (regulatory domain set to world or if your
++ * 	driver is using a custom world roaming regulatory domain) and while
++ * 	doing a passive scan on the 5 GHz band you find an AP there (if not
++ * 	on a DFS channel) you will now be able to actively scan for that AP
++ * 	or use AP mode on your card on that same channel. Note that this will
++ * 	never be used for channels 1-11 on the 2 GHz band as they are always
++ * 	enabled world wide. This beacon hint is only sent if your device had
++ * 	either disabled active scanning or beaconing on a channel. We send to
++ * 	userspace the wiphy on which we removed a restriction from
++ * 	(%NL80211_ATTR_WIPHY) and the channel on which this occurred
++ * 	before (%NL80211_ATTR_FREQ_BEFORE) and after (%NL80211_ATTR_FREQ_AFTER)
++ * 	the beacon hint was processed.
++ *
++ * @NL80211_CMD_AUTHENTICATE: authentication request and notification.
++ *	This command is used both as a command (request to authenticate) and
++ *	as an event on the "mlme" multicast group indicating completion of the
++ *	authentication process.
++ *	When used as a command, %NL80211_ATTR_IFINDEX is used to identify the
++ *	interface. %NL80211_ATTR_MAC is used to specify PeerSTAAddress (and
++ *	BSSID in case of station mode). %NL80211_ATTR_SSID is used to specify
++ *	the SSID (mainly for association, but is included in authentication
++ *	request, too, to help BSS selection. %NL80211_ATTR_WIPHY_FREQ is used
++ *	to specify the frequence of the channel in MHz. %NL80211_ATTR_AUTH_TYPE
++ *	is used to specify the authentication type. %NL80211_ATTR_IE is used to
++ *	define IEs (VendorSpecificInfo, but also including RSN IE and FT IEs)
++ *	to be added to the frame.
++ *	When used as an event, this reports reception of an Authentication
++ *	frame in station and IBSS modes when the local MLME processed the
++ *	frame, i.e., it was for the local STA and was received in correct
++ *	state. This is similar to MLME-AUTHENTICATE.confirm primitive in the
++ *	MLME SAP interface (kernel providing MLME, userspace SME). The
++ *	included NL80211_ATTR_FRAME attribute contains the management frame
++ *	(including both the header and frame body, but not FCS).
++ * @NL80211_CMD_ASSOCIATE: association request and notification; like
++ *	NL80211_CMD_AUTHENTICATE but for Association and Reassociation
++ *	(similar to MLME-ASSOCIATE.request, MLME-REASSOCIATE.request,
++ *	MLME-ASSOCIATE.confirm or MLME-REASSOCIATE.confirm primitives).
++ * @NL80211_CMD_DEAUTHENTICATE: deauthentication request and notification; like
++ *	NL80211_CMD_AUTHENTICATE but for Deauthentication frames (similar to
++ *	MLME-DEAUTHENTICATION.request and MLME-DEAUTHENTICATE.indication
++ *	primitives).
++ * @NL80211_CMD_DISASSOCIATE: disassociation request and notification; like
++ *	NL80211_CMD_AUTHENTICATE but for Disassociation frames (similar to
++ *	MLME-DISASSOCIATE.request and MLME-DISASSOCIATE.indication primitives).
++ *
++ * @NL80211_CMD_MICHAEL_MIC_FAILURE: notification of a locally detected Michael
++ *	MIC (part of TKIP) failure; sent on the "mlme" multicast group; the
++ *	event includes %NL80211_ATTR_MAC to describe the source MAC address of
++ *	the frame with invalid MIC, %NL80211_ATTR_KEY_TYPE to show the key
++ *	type, %NL80211_ATTR_KEY_IDX to indicate the key identifier, and
++ *	%NL80211_ATTR_KEY_SEQ to indicate the TSC value of the frame; this
++ *	event matches with MLME-MICHAELMICFAILURE.indication() primitive
+  *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+@@ -206,7 +270,7 @@ enum nl80211_commands {
+ 	NL80211_CMD_GET_MESH_PARAMS,
+ 	NL80211_CMD_SET_MESH_PARAMS,
+ 
+-	NL80211_CMD_SET_MGMT_EXTRA_IE,
++	NL80211_CMD_SET_MGMT_EXTRA_IE /* reserved; not used */,
+ 
+ 	NL80211_CMD_GET_REG,
+ 
+@@ -217,6 +281,15 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_REG_CHANGE,
+ 
++	NL80211_CMD_AUTHENTICATE,
++	NL80211_CMD_ASSOCIATE,
++	NL80211_CMD_DEAUTHENTICATE,
++	NL80211_CMD_DISASSOCIATE,
++
++	NL80211_CMD_MICHAEL_MIC_FAILURE,
++
++	NL80211_CMD_REG_BEACON_HINT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -230,8 +303,12 @@ enum nl80211_commands {
+  */
+ #define NL80211_CMD_SET_BSS NL80211_CMD_SET_BSS
+ #define NL80211_CMD_SET_MGMT_EXTRA_IE NL80211_CMD_SET_MGMT_EXTRA_IE
+-
+ #define NL80211_CMD_REG_CHANGE NL80211_CMD_REG_CHANGE
++#define NL80211_CMD_AUTHENTICATE NL80211_CMD_AUTHENTICATE
++#define NL80211_CMD_ASSOCIATE NL80211_CMD_ASSOCIATE
++#define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
++#define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
++#define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -250,6 +327,18 @@ enum nl80211_commands {
+  *	NL80211_CHAN_HT20 = HT20 only
+  *	NL80211_CHAN_HT40MINUS = secondary channel is below the primary channel
+  *	NL80211_CHAN_HT40PLUS = secondary channel is above the primary channel
++ * @NL80211_ATTR_WIPHY_RETRY_SHORT: TX retry limit for frames whose length is
++ *	less than or equal to the RTS threshold; allowed range: 1..255;
++ *	dot11ShortRetryLimit; u8
++ * @NL80211_ATTR_WIPHY_RETRY_LONG: TX retry limit for frames whose length is
++ *	greater than the RTS threshold; allowed range: 1..255;
++ *	dot11ShortLongLimit; u8
++ * @NL80211_ATTR_WIPHY_FRAG_THRESHOLD: fragmentation threshold, i.e., maximum
++ *	length in octets for frames; allowed range: 256..8000, disable
++ *	fragmentation with (u32)-1; dot11FragmentationThreshold; u32
++ * @NL80211_ATTR_WIPHY_RTS_THRESHOLD: RTS threshold (TX frames with length
++ *	larger than or equal to this use RTS/CTS handshake); allowed range:
++ *	0..65536, disable with (u32)-1; dot11RTSThreshold; u32
+  *
+  * @NL80211_ATTR_IFINDEX: network interface index of the device to operate on
+  * @NL80211_ATTR_IFNAME: network interface name
+@@ -334,6 +423,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_MAX_NUM_SCAN_SSIDS: number of SSIDs you can scan with
+  *	a single scan request, a wiphy attribute.
++ * @NL80211_ATTR_MAX_SCAN_IE_LEN: maximum length of information elements
++ *	that can be added to a scan request
+  *
+  * @NL80211_ATTR_SCAN_FREQUENCIES: nested attribute with frequencies (in MHz)
+  * @NL80211_ATTR_SCAN_SSIDS: nested attribute with SSIDs, leave out for passive
+@@ -349,6 +440,36 @@ enum nl80211_commands {
+  * @NL80211_ATTR_REG_TYPE: indicates the type of the regulatory domain currently
+  * 	set. This can be one of the nl80211_reg_type (%NL80211_REGDOM_TYPE_*)
+  *
++ * @NL80211_ATTR_SUPPORTED_COMMANDS: wiphy attribute that specifies
++ *	an array of command numbers (i.e. a mapping index to command number)
++ *	that the driver for the given wiphy supports.
++ *
++ * @NL80211_ATTR_FRAME: frame data (binary attribute), including frame header
++ *	and body, but not FCS; used, e.g., with NL80211_CMD_AUTHENTICATE and
++ *	NL80211_CMD_ASSOCIATE events
++ * @NL80211_ATTR_SSID: SSID (binary attribute, 0..32 octets)
++ * @NL80211_ATTR_AUTH_TYPE: AuthenticationType, see &enum nl80211_auth_type,
++ *	represented as a u32
++ * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
++ *	%NL80211_CMD_DISASSOCIATE, u16
++ *
++ * @NL80211_ATTR_KEY_TYPE: Key Type, see &enum nl80211_key_type, represented as
++ *	a u32
++ *
++ * @NL80211_ATTR_FREQ_BEFORE: A channel which has suffered a regulatory change
++ * 	due to considerations from a beacon hint. This attribute reflects
++ * 	the state of the channel _before_ the beacon hint processing. This
++ * 	attributes consists of a nested attribute containing
++ * 	NL80211_FREQUENCY_ATTR_*
++ * @NL80211_ATTR_FREQ_AFTER: A channel which has suffered a regulatory change
++ * 	due to considerations from a beacon hint. This attribute reflects
++ * 	the state of the channel _after_ the beacon hint processing. This
++ * 	attributes consists of a nested attribute containing
++ * 	NL80211_FREQUENCY_ATTR_*
++ *
++ * @NL80211_ATTR_CIPHER_SUITES: a set of u32 values indicating the supported
++ *	cipher suites
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -426,6 +547,26 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_REG_INITIATOR,
+ 	NL80211_ATTR_REG_TYPE,
+ 
++	NL80211_ATTR_SUPPORTED_COMMANDS,
++
++	NL80211_ATTR_FRAME,
++	NL80211_ATTR_SSID,
++	NL80211_ATTR_AUTH_TYPE,
++	NL80211_ATTR_REASON_CODE,
++
++	NL80211_ATTR_KEY_TYPE,
++
++	NL80211_ATTR_MAX_SCAN_IE_LEN,
++	NL80211_ATTR_CIPHER_SUITES,
++
++	NL80211_ATTR_FREQ_BEFORE,
++	NL80211_ATTR_FREQ_AFTER,
++
++	NL80211_ATTR_WIPHY_RETRY_SHORT,
++	NL80211_ATTR_WIPHY_RETRY_LONG,
++	NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
++	NL80211_ATTR_WIPHY_RTS_THRESHOLD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -445,6 +586,10 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_IE NL80211_ATTR_IE
+ #define NL80211_ATTR_REG_INITIATOR NL80211_ATTR_REG_INITIATOR
+ #define NL80211_ATTR_REG_TYPE NL80211_ATTR_REG_TYPE
++#define NL80211_ATTR_FRAME NL80211_ATTR_FRAME
++#define NL80211_ATTR_SSID NL80211_ATTR_SSID
++#define NL80211_ATTR_AUTH_TYPE NL80211_ATTR_AUTH_TYPE
++#define NL80211_ATTR_REASON_CODE NL80211_ATTR_REASON_CODE
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+@@ -978,4 +1123,31 @@ enum nl80211_bss {
+ 	NL80211_BSS_MAX = __NL80211_BSS_AFTER_LAST - 1
+ };
+ 
++/**
++ * enum nl80211_auth_type - AuthenticationType
++ *
++ * @NL80211_AUTHTYPE_OPEN_SYSTEM: Open System authentication
++ * @NL80211_AUTHTYPE_SHARED_KEY: Shared Key authentication (WEP only)
++ * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
++ * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
++ */
++enum nl80211_auth_type {
++	NL80211_AUTHTYPE_OPEN_SYSTEM,
++	NL80211_AUTHTYPE_SHARED_KEY,
++	NL80211_AUTHTYPE_FT,
++	NL80211_AUTHTYPE_NETWORK_EAP,
++};
++
++/**
++ * enum nl80211_key_type - Key Type
++ * @NL80211_KEYTYPE_GROUP: Group (broadcast/multicast) key
++ * @NL80211_KEYTYPE_PAIRWISE: Pairwise (unicast/individual) key
++ * @NL80211_KEYTYPE_PEERKEY: PeerKey (DLS)
++ */
++enum nl80211_key_type {
++	NL80211_KEYTYPE_GROUP,
++	NL80211_KEYTYPE_PAIRWISE,
++	NL80211_KEYTYPE_PEERKEY,
++};
++
+ #endif /* __LINUX_NL80211_H */
+--- iw.orig/phy.c	2009-04-17 21:48:13.000000000 +0300
++++ iw/phy.c	2009-04-17 21:48:17.000000000 +0300
+@@ -89,3 +89,65 @@ COMMAND(set, channel, "<channel> [HT20|H
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_chan);
+ COMMAND(set, channel, "<channel> [HT20|HT40+|HT40-]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_chan);
++
++static int handle_frag(struct nl80211_state *state,
++		       struct nl_cb *cb, struct nl_msg *msg,
++		       int argc, char **argv)
++{
++	if (argc != 1)
++		return 1;
++
++	unsigned int frag = strtoul(argv[0], NULL, 10);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FRAG_THRESHOLD, frag);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, frag, "<fragmentation threshold>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_frag);
++COMMAND(set, frag, "<fragmentation threshold>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_frag);
++
++static int handle_rts(struct nl80211_state *state,
++		      struct nl_cb *cb, struct nl_msg *msg,
++		      int argc, char **argv)
++{
++	if (argc != 1)
++		return 1;
++
++	unsigned int rts = strtoul(argv[0], NULL, 10);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_RTS_THRESHOLD, rts);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, rts, "<RTS/CTS threshold>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts);
++COMMAND(set, rts, "<RTS/CTS threshold>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_rts);
++
++static int handle_retry(struct nl80211_state *state,
++			struct nl_cb *cb, struct nl_msg *msg,
++			int argc, char **argv)
++{
++	if (argc != 2)
++		return 1;
++
++	unsigned int retry_short = strtoul(argv[0], NULL, 10);
++	unsigned int retry_long = strtoul(argv[1], NULL, 10);
++
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_SHORT, retry_short);
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_RETRY_LONG, retry_long);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, retry, "<short retry limit> <long retry limit>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry);
++COMMAND(set, retry, "<short retry limit> <long retry limit>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_retry);
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
