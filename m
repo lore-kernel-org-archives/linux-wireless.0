@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52332 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43474 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294AbZDPBSP (ORCPT
+	with ESMTP id S1750984AbZDQTsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 21:18:15 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+	Fri, 17 Apr 2009 15:48:11 -0400
+Subject: Re: [PATCH] nl80211: Add set/get for frag/rts threshold and retry
+ limits
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <Kalle.Valo@nokia.com>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1239844116.11795.47.camel@violet>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239841291.25334.18.camel@johannes.local>
-	 <1239844116.11795.47.camel@violet>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-J/B1sEh4gAHDcJZM5I31"
-Date: Thu, 16 Apr 2009 03:16:58 +0200
-Message-Id: <1239844618.6861.0.camel@johannes.local> (sfid-20090416_031819_457101_9FA0F1F7)
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090417193838.GA21250@jm.kir.nu>
+References: <20090417184629.GA9275@jm.kir.nu>
+	 <1239996573.5110.12.camel@johannes.local>
+	 <20090417193838.GA21250@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LyUps6XppvoBTMbUT+WH"
+Date: Fri, 17 Apr 2009 21:48:05 +0200
+Message-Id: <1239997685.4543.1.camel@johannes.local> (sfid-20090417_214814_561944_6765B474)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-J/B1sEh4gAHDcJZM5I31
+--=-LyUps6XppvoBTMbUT+WH
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-16 at 03:08 +0200, Marcel Holtmann wrote:
-
-> > Hmm. Reason 2 is "Previous authentication no longer valid" which would
-> > seem we get confused wrt. being authenticated or not (ie. we think we
-> > are, but are not). Jouni might know? Can you try wpa_supplicant from gi=
-t
-> > with -Dnl80211?
+On Fri, 2009-04-17 at 22:38 +0300, Jouni Malinen wrote:=20
+> On Fri, Apr 17, 2009 at 09:29:33PM +0200, Johannes Berg wrote:
+> > > +	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
+> > > +		if (local->ops->set_rts_threshold)
+> > > +			local->ops->set_rts_threshold(local_to_hw(local),
+> > > +						      wiphy->rts_threshold);
+> > > +	}
+> >=20
+> > That could return an error. (so do the changes the other way around)
 >=20
-> as I wrote, that is exactly what I am using. Trying to get away from
-> this WEXT crap ;)
+> I noticed, but ended up following the existing behavior in wext.c. While
+> that may not be the ideal source for good behavior, at least this is
+> consistent. Should both of them be changed? What exactly should happen
+> on error?
 
-Oops, sorry. Could you try wext anyway? I think I have the same problem
-with -Dnl80211 actually, but I continually rmmod anyway so didn't notice
-it that much.
+Well if you do the rts change first, and return early, you change none
+of the other parameters when that has an error.
+
+> > > +		result =3D rdev->ops->set_wiphy_params(&rdev->wiphy, changed);
+> > > +		if (result)
+> > > +			goto bad_res;
+> > > +	}
+> >=20
+> > If that returns an error we need to roll back the values?
+>=20
+> I thought about this, but ended up not doing that because the existing
+> (wext) code seemed to behave in the same way. It is unclear whether the
+> error there would indicate that some of the parameters were taken into
+> use, but not all. Unless we provide mechanism for returning that
+> information (e.g., separate calls for each parameter), I'm not sure what
+> exactly should be done here. Just leaving the parameters (which were
+> validated before) in struct wiphy seemed like the safest (and well,
+> certainly easiest ;-) alternative.
+
+And then here you can just mandate that it's either-or and returning an
+error means that you haven't done any of the requested changes...
+
+Or you just remove the ability to return an error and let whoever needs
+that ability for their hardware deal with it :P
 
 johannes
 
---=-J/B1sEh4gAHDcJZM5I31
+--=-LyUps6XppvoBTMbUT+WH
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ5ocIAAoJEKVg1VMiehFYQAgQAIxq88e9cukwEz/SBf4gfGxg
-YgYXFXliKt/XAVLhO+Vc4hQQL0pFKgT1S1U/ftZUdbc6L+hIFhKDuGd69QGe30mF
-Wzs0PDm/ep94ddmzLhWxDIvOH1DoiQkYZpW3TB5tb/ZdTU0cGf/bE2m6fXODO2V8
-2UCUqJK1Lm14q0scOgeYLG7xWiZ6dxXRptg21SZsKAD6qzl6xIlVszbgvcfOgJ0c
-lwK/4jxmynR5ysO25MfSEiwy8d14o0gRMLUP6vmcJ7QYmfOUVQb1SCwLvSBxJQVf
-a+5AwI+6JHhwC36xfluKZuAyng9+7t2+jRdNiupxWzjgO3ReIxr6KCzYz9L6yvFZ
-L/lQ4QJRZdmrE6gICBg2m0/7toxFORfywk9guJx+8DY5JKE4PWYIn17rvmj7h5zw
-cyAkiUSivrNiilpg8ovj1G7HEb7cyD+5kKIumufq4X33oPYC3lO5yQs7GcuTu9DI
-dwslGXo4vp6dPw25tBkDApDidVugBE/UX5yNsuFT8nBQ3Rkw8T3pp/bAP9QCi2jc
-SEnROMBP/1jAX+K85f5P2GZUPMd3zRWPVxT0obPiyErgce3qmG3KtfcFulb2C3HW
-vrW/qSb4k+qeBepA8PCXQ5Qpupcyz2MvbmR/xcIJW4OQ8lQHfVYlX/NxoVAEcynR
-HMrlKBY1EbJwrJ5JFuTd
-=bFZ9
+iQIcBAABAgAGBQJJ6NzyAAoJEKVg1VMiehFYjiIP+wczFfgl38bOIOT/RwIp9mHE
+gzGedMcbUZaRDQJKRC/DRuAMrcPzbcKoSV9Q7LGRXxg4YUYgU2YkArAOMSSdYj9s
+Vh0PUM9T42eVsDew+IndXgyRrx2Y2nMhlJ2H3lM9EDkbxonQwHuIt5peUgJkXSqc
+ZXx83cHerEqojvDhDyiNX7suxY+RmkgFqD8g7MPu/xgOaCjMCWaTNvSRWswNpc05
+NlPko10xvyEJHz5Np+FV9Xf4Cb5zQXDk0Ftg3ewCKpu06hhWswP2I4jJB00/vlk5
+UoruUhbgobPh/jY9Kq+2FQW2PbPx10U2eMznMNSauO5xX+Rz8jWqvmdaC3J5Zlk7
+4aKsBXs0ESWY+i4Y86Zll2sDsWfI3q/DfKo7cY2+7qjF/ly7+N/FqhvnfIKorHJb
+rr3mu9IxDk85lhwHPnZPUDwlySNDOSi10ofRLgOPlJRw3q0zQ4VY4RD55/ntMHn8
+rlozmhG8Sa4utRQSJoNoFI6Y87uj5vQ3o1jqmCTU5ctl4DN1EszOe2VZdDXJXVeV
+NhlaBFcAdyv6w8RmaQ9F5SCSXx9bDqFtMyGWZ/5RDVhwoKrpBUZKJjkvZkovKa8+
+IHiBBkH4lCW4SurQEVEXOoNvCYdwnvIcn+GmIq99/cqf6LMFzhwy6s0GzxeXT60m
+zB1GA3yEAstlWdCSFHXm
+=ZFC1
 -----END PGP SIGNATURE-----
 
---=-J/B1sEh4gAHDcJZM5I31--
+--=-LyUps6XppvoBTMbUT+WH--
 
