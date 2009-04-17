@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36127 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38774 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbZDKLcv (ORCPT
+	with ESMTP id S1750891AbZDQTUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 07:32:51 -0400
-Subject: [PATCH] cfg80211: convert mutex assert to macro
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 11 Apr 2009 13:32:46 +0200
-Message-Id: <1239449566.17031.40.camel@johannes.local> (sfid-20090411_133254_058378_8070CD59)
-Mime-Version: 1.0
+	Fri, 17 Apr 2009 15:20:01 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1LutbT-0004Ti-Lv
+	for linux-wireless@vger.kernel.org; Fri, 17 Apr 2009 21:19:59 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] wireless-regdb: master-2009-04-17
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1LutbT-0004Ti-Lv@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Fri, 17 Apr 2009 21:19:59 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That will make the various cases where the WARN_ON
-can happen distinguishable.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/core.h |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+A new release of wireless-regdb (master-2009-04-17) is available at:
 
---- wireless-testing.orig/net/wireless/core.h	2009-04-11 13:31:00.000000000 +0200
-+++ wireless-testing/net/wireless/core.h	2009-04-11 13:31:20.000000000 +0200
-@@ -73,10 +73,7 @@ bool wiphy_idx_valid(int wiphy_idx)
- extern struct mutex cfg80211_mutex;
- extern struct list_head cfg80211_drv_list;
- 
--static inline void assert_cfg80211_lock(void)
--{
--	WARN_ON(!mutex_is_locked(&cfg80211_mutex));
--}
-+#define assert_cfg80211_lock() WARN_ON(!mutex_is_locked(&cfg80211_mutex))
- 
- /*
-  * You can use this to mark a wiphy_idx as not having an associated wiphy.
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.04.17.tar.bz2
+
+SHA1 sum: 4b528f11865ac487237513fc227f69ed698de488
 
 
+For your convenience the individual regulatory.bin file can be downloaded from:
+
+http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.04.17-regulatory.bin
+
+SHA1 sum fb30b37c3e838f8d71f66a435febfbbef692504f
+
+Here is the short log of the changes included in this 
+release:
+
+John W. Linville -  Correct some borkage from confusion over how to use the changes in "wireless-regdb: make distribution packaging easier"...so much for "easy"... :-)
