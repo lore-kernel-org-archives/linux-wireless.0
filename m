@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hell.pl ([193.219.28.162]:58362 "EHLO hell.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751715AbZDJWxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 18:53:23 -0400
-Received: from krecik by hell.pl with local (Exim 4.63)
-	(envelope-from <krecik@hell.pl>)
-	id 1LsOS6-00042x-Vy
-	for linux-wireless@vger.kernel.org; Fri, 10 Apr 2009 23:39:59 +0200
-Date: Fri, 10 Apr 2009 23:39:58 +0200
-From: Grzegorz Nowakowski <krecik@hell.pl>
-To: linux-wireless@vger.kernel.org
-Subject: ath5k blind to nearby network
-Message-ID: <20090410213958.GA12571@hell.pl> (sfid-20090411_005328_213790_829C4DAC)
+Received: from ey-out-2122.google.com ([74.125.78.26]:15850 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753656AbZDRN3W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Apr 2009 09:29:22 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so325781eyf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Apr 2009 06:29:20 -0700 (PDT)
+Message-ID: <49E9D5AE.50509@tuffmail.co.uk> (sfid-20090418_152927_344238_3CB6642F)
+Date: Sat, 18 Apr 2009 14:29:18 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Rfkill rewrite: eeepc-laptop resume
+References: <49DCA88E.6060400@tuffmail.co.uk>	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>	 <49E98C86.2040308@tuffmail.co.uk>	 (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>	 <49E9A0C7.8040602@tuffmail.co.uk> (sfid-20090418_114338_695917_3CBF9024) <1240057470.4755.7.camel@johannes.local>
+In-Reply-To: <1240057470.4755.7.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone,
+Johannes Berg wrote:
+> On Sat, 2009-04-18 at 10:43 +0100, Alan Jenkins wrote:
+>   
+>>
+>>
+>> 1) I think we need to add a resume method to eeepc-laptop.
+>>
+>> Without this, funny things happen when I hibernate, disable wireless in
+>> the BIOS, and resume:
+>>
+>>     ath5k phy0: failed to wake up the MAC chip
+>>
+>> It's an really stupid thing to do, but it can happen.  It's bad from a
+>> UI point of view.  E.g. in network-manager, you can see a "wlan0"
+>> device, but it doesn't work.
+>>
+>> The EEE rfkill is unusual in that it hotplugs the PCI device, making
+>> eeepc-laptop something like a custom pci hotplug driver.  With your
+>> rewrite, eeepc-laptop doesn't notice the state change on resume. 
+>> Previously, the rfkill-core would restore the pre-hibernation state,
+>> which would sort everything out.  I don't think anything else does this,
+>> so we can just add a resume method to eeepc-laptop.  The resume method
+>> would re-check the state and do the PCI hotplug dance if necessary.
+>>
+>> If you agree, I can do the patch for this and send it to you.
+>>     
+>
+> Sounds good to me, yeah.
+>
+> I could make the rfkill core do that at resume, but I'm not really sure
+> it's what we want -- there are too many cases imho:
+>  * hard rfkill might have changed
+>  * soft rfkill might still be ok in hw
+>  * soft rfkill might need reconfiguring
+> etc. I think generally it's saner to let the driver sort it out -- it
+> can always ask for the current state by using set_hw_state() or so.
+>   
 
-I'm more or less ordinary Linux user: have used the system for a long
-time.  While I'm accustomed to manual tweaking of the system, I gave up
-regarding set up of secure wireless connection.  I rely on the tools,
-networkmanager at the beginning, wicd now, to do the job.  Which was
-performed rather well except lately, when I encounter strange problem.
+API nit:
 
-The short version is: my laptop doesn't see my home network (and can't
-connect to, too).
+ * This function tells the rfkill core that the device is capable of
+ * remembering soft blocks (which it is notified of via the set_block
+ * method) -- this means that the driver may ignore the return value
+ * from rfkill_set_hw_state().
 
-For longer one, there is needed some background.  The AP used is Motorola
-WR850G running DD-WRT v24-sp1 (and v24-beta few months earlier).  The
-laptop is Fujitsu-Siemens Lifebook E8310 with Atheros AR242x built in.
-For reference, there is also another laptop, HP, with Intel IPW2200 on
-board.  Both laptops run on Debian unstable with unpatched, custom configured
-2.6.29.1 kernel.  What works or worked:
+Doesn't this conflict with the declaration of rfkill_set_sw_state() as
+__must_check?
 
-- HP
-- FSC with Madwifi long time ago
-- FSC running Windows XP
-- FSC with Linux&ath5k few months ago
+Ta
+Alan
 
-What doesn't:
-- FSC with Linux&ath5k now
-- FSC with Knoppix 6.1
-
-The symptom is that with both NetworkManager and WICD (and "iwlist <if>
-scanning") I don't see my home network on the list.  I see all other
-neighbouring networks around and I'm even able to connect if any is
-open.  Too much power on AP is not an issue as I lowered it to pathetic
-level (30mW), besides HP doesn't complain.  Problem is probably not with
-hardware nor with AP as WinXP on FSC connects flawlessly.
-
-The only uncertainity is with the DD-WRT version as I'm not 100% sure if
-the FSC worked after the firmware upgrade.  Most probably, yes.  Anyway,
-WinXP still works.
-
-I mentioned Madwifi only for completness.  I had bad experience with the
-driver and I'm not going to use it unless I get really good argument
-("it works for me" is not such one).
-
-In summary, the problem seems to lie somewhere around ath5k driver on
-this paritcular laptop connecting to this particular access point.  Now
-I have no reason to believe there is an error in ath5k but I'm at loss
-what to check more.  So maybe someone suggest what additional diagnosis
-can I perform to better isolate the glitch?  Any suggestion is welcome.
-
-As I don't subscribe to this list, please CC me when replying.
-
-Thanks in advance and best regards,
--- 
-Grzegorz Nowakowski
