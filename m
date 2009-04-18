@@ -1,74 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48785 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52175 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755837AbZDGM55 (ORCPT
+	with ESMTP id S1755975AbZDRNTu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 08:57:57 -0400
-Subject: Re: [PATCH v2 1/5] cfg80211: Process regulatory max bandwidth
- checks for HT40
+	Sat, 18 Apr 2009 09:19:50 -0400
+Subject: Re: ar9710 resume hangs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1239048958-11775-2-git-send-email-lrodriguez@atheros.com>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-	 <1239048958-11775-2-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-J4bHQ7JsevKueStPqJ8s"
-Date: Tue, 07 Apr 2009 12:08:45 +0200
-Message-Id: <1239098925.22453.10.camel@johannes.local> (sfid-20090407_145817_139241_6C0470C8)
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200904181504.14870.chunkeey@web.de>
+References: <1240041582.4456.0.camel@johannes.local>
+	 <200904181504.14870.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iBGdGZbqnFteAFXDeq3N"
+Date: Sat, 18 Apr 2009 15:19:43 +0200
+Message-Id: <1240060783.4755.18.camel@johannes.local> (sfid-20090418_152010_463589_AAE400DE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-J4bHQ7JsevKueStPqJ8s
+--=-iBGdGZbqnFteAFXDeq3N
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-04-06 at 16:15 -0400, Luis R. Rodriguez wrote:
+On Sat, 2009-04-18 at 15:04 +0200, Christian Lamparter wrote:
+> On Saturday 18 April 2009 09:59:42 Johannes Berg wrote:
+> > because it tries to load firmware before userspace is up :/
+>=20
+> heh, I have 4 different machines and not a single one does=20
+> atleast one suspend & resume cycle properly.
 
-> +static bool is_ht40_not_allowed(struct ieee80211_channel *chan)
 
-I think it would be nicer on the reader to remove the not?
+Heh.
 
-> +{
-> +	if (!chan)
-> +		return true;
-> +	if (chan->flags & IEEE80211_CHAN_DISABLED)
-> +		return true;
-> +	/* This would happen when regulatory rules disallow HT40 completely */
-> +	if (IEEE80211_CHAN_NO_HT40 =3D=3D (chan->flags & (IEEE80211_CHAN_NO_HT4=
-0)))
-> +		return true;
+> here's a patch that compiles, but may not work at all.
 
-How would that happen at this point?
-
-/me stops reading.
-
-Ok, whatever, I know I want to rewrite most of this anyway.
+Huh, wouldn't it be simpler to just cache the firmware? Everything else
+seems ok as-is.
 
 johannes
 
---=-J4bHQ7JsevKueStPqJ8s
+--=-iBGdGZbqnFteAFXDeq3N
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ2yYqAAoJEKVg1VMiehFYwb8P/0KNLr0aAsx/rUYiYWSeQpm9
-eSOd8Frr473mC/C6FNrt2+x5SfeiIJ7BPI2rXOh4kAXTgSYnQzPMZs81PTNtQZ1v
-bdRPn2Mts4ZnNFtVRJ8t5Hyz+wJWnqRMMgO9lUhfP1IMDBwk8sCA2fM9ULfOD17g
-//CeXAJMDj5KO0zSSmupqYU+bNC1DcxHfYXKaZH8hI5TyTXf3N20eqbglIc2Idih
-fhGatzdVepion+Z0FGmk1Nmj04pglR59qx5lrpVDLScebQWqcMPCo9En3cOwpUUd
-5dKiEe7s3dwb5ic32ZGzuIu8X+6Je2gH5f2Y9KtNVKeDSEgzA0cGUimatVOq8F0R
-Ir6bmXVfnPI1xJEH7iZQEdqWcirRI95XX4Yh7f9fwL/QdEW0B/56uKEgczCZPWRx
-CzNLkEG8QJhqydUW49WA48j7NKy+8VYKlWVxrHR5PN89glGl6OeYkvxtB2j95b4/
-1hAF53QhKjzbacbutMMoSCmhW90efgE8MDpc8aX1w1IXrY/ShKZ9xFD5wUZ0xXBi
-DphS7KpZZvohX2npaugAksqPk8TclY0EpoHejbxWHHtkn20QCn5kGL/skg1pKnkg
-vfZ9wRKhDrQjNXt/LT3n6Uu6y2voX9eXQCZtw0iNyqlLV906LsX5j9trCSD6Qz5D
-RLRREH+RQ7nqtmytI5nd
-=UN+o
+iQIcBAABAgAGBQJJ6dNsAAoJEKVg1VMiehFYUjcP/17e+Jxcyc7tF/Q0hTKEpWQZ
+d6QgoMFEeQOmJtFBF5uTe98YujxqZ02bF8HR14vYizsel3FwR2rSq6niTgWso9MI
+e4RaaUagKNCBxwZU5dFQVY593cck+CGM4sLT8ekHrqP7zJCDW+GaAmrpOYvOKPxS
+tRVRKhr+CD3FEXTmbrED9R+zeoqFG0eqDMyZEqU7EMOB28OJIhWDQ94aBEmyyq5I
+ifSdt7Zbz1W3nNbgmToyYWu1X791jLFAuxj/Ee5lVUhqgcOcSXWkeU8N5IES0Z7y
+HZSsI9cgO6tgEhByDBPceIyyYKcQiYmcU+o//2oIPtgHzt7YIUPn1xg+mlTa8U7a
+FRRONI15gCTLPcHFyoYvCladScPaczMTkRJoNVam+CRBl6eqi42AVjeAKr7hsAkm
+NFb32ojmPmQ4X8LsimV5j/SxBcM27yU7U+DFWw1ilyVrwYeeiQTBADC1w5rYJi6G
+1EdH9XzSdD4pkB7MFk1YSDZUWin//aKcQq29oeaPIzNKb2sVouRULYHPhi2xowhO
+EcONQg3HrRIjPCEyrdv514R/VEh5Eeh7u/XFK/lKILYvxUGmJF90fc+JvW36WoM5
+c7pIOyS/SxXz2mb1UYQApr+cqd4IkA1p1XIZwnxxrh0cm1C419t82acqpnmKYRhI
+glcgI4mkJ4l78QNuR6ln
+=UU+2
 -----END PGP SIGNATURE-----
 
---=-J4bHQ7JsevKueStPqJ8s--
+--=-iBGdGZbqnFteAFXDeq3N--
 
