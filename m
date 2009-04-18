@@ -1,136 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:52147 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbZDMUoQ convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:50094 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbZDROqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 16:44:16 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFT/RFC] rtl8187: Remove redundant quality calculation
-Date: Mon, 13 Apr 2009 17:44:17 -0300
-Cc: "Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-References: <49e289df.b/+c2+59HqherrPx%Larry.Finger@lwfinger.net>
-In-Reply-To: <49e289df.b/+c2+59HqherrPx%Larry.Finger@lwfinger.net>
+	Sat, 18 Apr 2009 10:46:30 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ar9710 resume hangs
+Date: Sat, 18 Apr 2009 16:46:28 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1240041582.4456.0.camel@johannes.local> <1240060783.4755.18.camel@johannes.local> <200904181621.27807.chunkeey@web.de>
+In-Reply-To: <200904181621.27807.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Message-Id: <200904131744.17959.herton@mandriva.com.br> (sfid-20090413_224426_352007_5C6D9A1F)
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200904181646.28359.chunkeey@web.de> (sfid-20090418_164634_015595_556275B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Domingo 12 Abril 2009, =E0s 21:39:59, Larry Finger escreveu:
-> Now that mac80211 does the link quality calculation, that code can be
-> removed from this driver. In addition, the signal noise calculation
-> used by the vendor driver has been implemented for RYL8187B. The valu=
-e
-> for RTL8187L is fictional.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-> @@ -37,8 +37,8 @@ struct rtl8187_rx_info {
->
->  struct rtl8187_rx_hdr {
->  	__le32 flags;
-> -	u8 noise;
-> -	u8 signal;
-> +	u8 sq;
-> +	u8 rssi;
->  	u8 agc;
->  	u8 reserved;
->  	__le64 mac_time;
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -315,7 +315,6 @@ static void rtl8187_rx_cb(struct urb *ur
->  	struct ieee80211_rx_status rx_status =3D { 0 };
->  	int rate, signal;
->  	u32 flags;
-> -	u32 quality;
->  	unsigned long f;
->
->  	spin_lock_irqsave(&priv->rx_queue.lock, f);
-> @@ -338,13 +337,13 @@ static void rtl8187_rx_cb(struct urb *ur
->  			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
->  		flags =3D le32_to_cpu(hdr->flags);
->  		/* As with the RTL8187B below, the AGC is used to calculate
-> -		 * signal strength and quality. In this case, the scaling
-> -		 * constants are derived from the output of p54usb.
-> +		 * signal strength. In this case, the scaling constants are
-> +		 * derived from the output of p54usb.
->  		 */
-> -		quality =3D 130 - ((41 * hdr->agc) >> 6);
->  		signal =3D -4 - ((27 * hdr->agc) >> 6);
-> -		rx_status.antenna =3D (hdr->signal >> 7) & 1;
-> +		rx_status.antenna =3D (hdr->rssi >> 7) & 1;
->  		rx_status.mactime =3D le64_to_cpu(hdr->mac_time);
-> +		rx_status.noise =3D hdr->sq - 100;
->  	} else {
->  		struct rtl8187b_rx_hdr *hdr =3D
->  			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-> @@ -354,23 +353,18 @@ static void rtl8187_rx_cb(struct urb *ur
->  		 * In testing, none of these quantities show qualitative
->  		 * agreement with AP signal strength, except for the AGC,
->  		 * which is inversely proportional to the strength of the
-> -		 * signal. In the following, the quality and signal strength
-> -		 * are derived from the AGC. The arbitrary scaling constants
-> -		 * are chosen to make the results close to the values obtained
-> -		 * for a BCM4312 using b43 as the driver. The noise is ignored
-> -		 * for now.
-> +		 * signal. In the following, the signal strength is derived
-> +		 * from the AGC. The arbitrary scaling constants are chosen
-> +		 * to make the results close to the values obtained for a
-> +		 * BCM4312 using b43 as the driver.
->  		 */
->  		flags =3D le32_to_cpu(hdr->flags);
-> -		quality =3D 170 - hdr->agc;
->  		signal =3D 14 - hdr->agc / 2;
->  		rx_status.antenna =3D (hdr->rssi >> 7) & 1;
->  		rx_status.mactime =3D le64_to_cpu(hdr->mac_time);
-> +		rx_status.noise =3D hdr->snr_long2end;
+On Saturday 18 April 2009 16:21:27 Christian Lamparter wrote:
+> On Saturday 18 April 2009 15:19:43 Johannes Berg wrote:
+> > On Sat, 2009-04-18 at 15:04 +0200, Christian Lamparter wrote:
+> > > On Saturday 18 April 2009 09:59:42 Johannes Berg wrote:
+> > > > because it tries to load firmware before userspace is up :/
+> > > 
+> > > heh, I have 4 different machines and not a single one does 
+> > > atleast one suspend & resume cycle properly.
+> > 
+> > 
+> > Heh.
+> > 
+> > > here's a patch that compiles, but may not work at all.
+> > 
+> > Huh, wouldn't it be simpler to just cache the firmware? Everything else
+> > seems ok as-is.
+> > 
+> 
+> > it's better, in that it doesn't hang at resume
+> > [ 6694.110048] usb 1-1: unable to lock device for reset (-16).
+> > [ 6694.119657] ar9170usb 1-1:1.0: resume error -16
+> > [ 6695.140043] usb 1-1: unable to lock device for reset (-16).
+> > [ 6695.149649] ar9170usb 1-1:1.0: resume error -16
+> 
+> please retry with the attached version...
+> [ 8153.991223] ar9170usb 1-1:1.0: resume error -1
+> [ 8154.001191] ar9170usb 1-1:1.0: resume error -1
 
-While testing here I get on a 8187B what looks like a way of noise valu=
-e,=20
-ranging from -140/-160 dBm. It looks like to not be noise, but real SNR=
-, so=20
-may be we should do signal - snr? (I tested hdr->sq - hdr->snr_long2end=
- and it=20
-looked a bit closer to an expected noise level, -80/-120dBm, but I don'=
-t know=20
-much about this stuff).
-
->  	}
->
-> -	if (quality > 100)
-> -		quality =3D 100;
-> -	rx_status.qual =3D quality;
-> -	priv->quality =3D quality;
->  	rx_status.signal =3D signal;
->  	priv->signal =3D signal;
->  	rate =3D (flags >> 20) & 0xF;
-> @@ -1357,6 +1351,7 @@ static int __devinit rtl8187_probe(struc
->  	priv->mode =3D NL80211_IFTYPE_MONITOR;
->  	dev->flags =3D IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
->  		     IEEE80211_HW_SIGNAL_DBM |
-> +		     IEEE80211_HW_NOISE_DBM |
->  		     IEEE80211_HW_RX_INCLUDES_FCS;
->
->  	eeprom.data =3D dev;
-
---
-[]'s
-Herton
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+should be fixed... let's see if the third attempt is the lucky one.
+---
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index c9e422e..8b23386 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -623,6 +623,39 @@ static int ar9170_usb_open(struct ar9170 *ar)
+ 	return 0;
+ }
+ 
++static int ar9170_usb_init_device(struct ar9170_usb *aru)
++{
++	int err;
++
++	err = ar9170_usb_alloc_rx_irq_urb(aru);
++	if (err)
++		goto err_out;
++
++	err = ar9170_usb_alloc_rx_bulk_urbs(aru);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_usb_upload_firmware(aru);
++	if (err) {
++		err = ar9170_echo_test(&aru->common, 0x60d43110);
++		if (err) {
++			/* force user invention, by disabling the device */
++			err = usb_driver_set_configuration(aru->udev, -1);
++			dev_err(&aru->udev->dev, "device is in a bad state. "
++						 "please reconnect it!\n");
++			goto err_unrx;
++		}
++	}
++
++	return 0;
++
++err_unrx:
++	ar9170_usb_cancel_urbs(aru);
++
++err_out:
++	return err;
++}
++
+ static int ar9170_usb_probe(struct usb_interface *intf,
+ 			const struct usb_device_id *id)
+ {
+@@ -658,32 +691,16 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 
+ 	err = ar9170_usb_reset(aru);
+ 	if (err)
+-		goto err_unlock;
++		goto err_freehw;
+ 
+ 	err = ar9170_usb_request_firmware(aru);
+ 	if (err)
+-		goto err_unlock;
++		goto err_freehw;
+ 
+-	err = ar9170_usb_alloc_rx_irq_urb(aru);
++	err = ar9170_usb_init_device(aru);
+ 	if (err)
+ 		goto err_freefw;
+ 
+-	err = ar9170_usb_alloc_rx_bulk_urbs(aru);
+-	if (err)
+-		goto err_unrx;
+-
+-	err = ar9170_usb_upload_firmware(aru);
+-	if (err) {
+-		err = ar9170_echo_test(&aru->common, 0x60d43110);
+-		if (err) {
+-			/* force user invention, by disabling the device */
+-			err = usb_driver_set_configuration(aru->udev, -1);
+-			dev_err(&aru->udev->dev, "device is in a bad state. "
+-						 "please reconnect it!\n");
+-			goto err_unrx;
+-		}
+-	}
+-
+ 	err = ar9170_usb_open(ar);
+ 	if (err)
+ 		goto err_unrx;
+@@ -703,7 +720,7 @@ err_freefw:
+ 	release_firmware(aru->init_values);
+ 	release_firmware(aru->firmware);
+ 
+-err_unlock:
++err_freehw:
+ 	usb_set_intfdata(intf, NULL);
+ 	usb_put_dev(udev);
+ 	ieee80211_free_hw(ar->hw);
+@@ -730,12 +747,60 @@ static void ar9170_usb_disconnect(struct usb_interface *intf)
+ 	ieee80211_free_hw(aru->common.hw);
+ }
+ 
++#ifdef CONFIG_PM
++static int ar9170_suspend(struct usb_interface *intf,
++			  pm_message_t  message)
++{
++	struct ar9170_usb *aru = usb_get_intfdata(intf);
++
++	if (!aru)
++		return -ENODEV;
++
++	aru->common.state = AR9170_IDLE;
++	ar9170_usb_cancel_urbs(aru);
++
++	return 0;
++}
++
++static int ar9170_resume(struct usb_interface *intf)
++{
++	struct ar9170_usb *aru = usb_get_intfdata(intf);
++	int err;
++
++	if (!aru)
++		return -ENODEV;
++
++	usb_unpoison_anchored_urbs(&aru->rx_submitted);
++	usb_unpoison_anchored_urbs(&aru->tx_submitted);
++
++	err = ar9170_usb_init_device(aru);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_usb_open(&aru->common);
++	if (err)
++		goto err_unrx;
++
++	return 0;
++
++err_unrx:
++	aru->common.state = AR9170_IDLE;
++	ar9170_usb_cancel_urbs(aru);
++
++	return err;
++}
++#endif /* CONFIG_PM */
++
+ static struct usb_driver ar9170_driver = {
+ 	.name = "ar9170usb",
+ 	.probe = ar9170_usb_probe,
+ 	.disconnect = ar9170_usb_disconnect,
+ 	.id_table = ar9170_usb_ids,
+ 	.soft_unbind = 1,
++#ifdef CONFIG_PM
++	.suspend = ar9170_suspend,
++	.resume = ar9170_resume,
++#endif /* CONFIG_PM */
+ };
+ 
+ static int __init ar9170_init(void)
