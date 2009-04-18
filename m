@@ -1,159 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:56903 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764674AbZD3RIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 13:08:22 -0400
-Message-Id: <20090430165749.557066679@mini.kroah.org>
-Date: Thu, 30 Apr 2009 09:57:05 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: [patch 76/88] ath9k: implement IO serialization
-References: <20090430165549.117010404@mini.kroah.org>
-In-Reply-To: <20090430170122.GA16015@kroah.com>
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:58629 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263AbZDRSDf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Apr 2009 14:03:35 -0400
+Received: by ewy24 with SMTP id 24so621948ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Apr 2009 11:03:33 -0700 (PDT)
+Message-ID: <49EA15F3.1010908@tuffmail.co.uk> (sfid-20090418_200338_534872_30E4AC6D)
+Date: Sat, 18 Apr 2009 19:03:31 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: rfkill rewrite bug
+References: <49DCA88E.6060400@tuffmail.co.uk>	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>	 <49E98C86.2040308@tuffmail.co.uk>	 (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>	 <49E9A0C7.8040602@tuffmail.co.uk>	 (sfid-20090418_114338_695917_3CBF9024) <1240057470.4755.7.camel@johannes.local>	 <49E9F677.80109@tuffmail.co.uk>	 (sfid-20090418_174945_153562_3F1E7019) <1240070230.2978.2.camel@johannes.local>	 <49EA125F.5060303@tuffmail.co.uk> (sfid-20090418_194847_597250_4374CFCF) <1240077421.25100.0.camel@johannes.local>
+In-Reply-To: <1240077421.25100.0.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.28-stable review patch.  If anyone has any objections, please let us know.
+Johannes Berg wrote:
+> On Sat, 2009-04-18 at 18:48 +0100, Alan Jenkins wrote:
+>
+>   
+>> Ah, I think I see it now.
+>>
+>> Um, what's the use-case for calling set_sw_state() before registration? 
+>> Is it actually needed?
+>>     
+>
+> Probably not. I thought you would use it to update the core's idea of
+> your state. But the core always forces you to its idea of the state :)
+>
+>   
+>> I think it was doing _something_.  If the initial wireless state is
+>> soft-blocked, but rfkill.default_state = 1 (unblocked), then without the
+>> set_sw_state() call, the wireless would remain soft blocked.  When the
+>> first sync_work calls rfkill_set_block(false), the "prev" value would
+>> also be false, so it would return without calling .set_block().  And
+>> you'd have an inconsistency, because "/sys/class/rfkill/rfkill0/state"
+>> would say "1" (unblocked).
+>>
+>> You'd have a similar problem the other way around, if the wireless was
+>> initially enabled, but the user specified rfkill.default_state = 0.
+>>
+>> So maybe you need a "first time, force sync" flag instead.  That would
+>> also help if you had a write-only rfkill line, no?
+>>     
+>
+> Not sure what you mean -- the sync is always done on register()?
+>
+> johannes
+>   
 
-------------------
-
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-
-This is a port of:
-commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
-for 2.6.28.
-
-All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
-serialization of IO when on non-uniprocessor systems. PCI
-express devices not not require this.
-
-This should fix our only last standing open ath9k kernel.org
-bugzilla bug report:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=12110
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
- drivers/net/wireless/ath9k/ath9k.h |    4 ++--
- drivers/net/wireless/ath9k/core.c  |    1 +
- drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
- 4 files changed, 55 insertions(+), 2 deletions(-)
-
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -590,8 +590,8 @@ struct ath9k_country_entry {
- 	u8 iso[3];
- };
- 
--#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
--#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
-+#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
-+#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
- 
- #define SM(_v, _f)  (((_v) << _f##_S) & _f)
- #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
---- a/drivers/net/wireless/ath9k/core.c
-+++ b/drivers/net/wireless/ath9k/core.c
-@@ -1089,6 +1089,7 @@ int ath_init(u16 devid, struct ath_softc
- 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
- 
- 	spin_lock_init(&sc->sc_resetlock);
-+	spin_lock_init(&sc->sc_serial_rw);
- 
- 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
- 	if (ah == NULL) {
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -1040,6 +1040,7 @@ struct ath_softc {
- 	spinlock_t sc_rxbuflock;
- 	spinlock_t sc_txbuflock;
- 	spinlock_t sc_resetlock;
-+	spinlock_t sc_serial_rw;
- 	spinlock_t node_lock;
- 
- 	/* LEDs */
-@@ -1081,4 +1082,36 @@ void ath_get_currentCountry(struct ath_s
- 	struct ath9k_country_entry *ctry);
- u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp);
- 
-+/*
-+ * Read and write, they both share the same lock. We do this to serialize
-+ * reads and writes on Atheros 802.11n PCI devices only. This is required
-+ * as the FIFO on these devices can only accept sanely 2 requests. After
-+ * that the device goes bananas. Serializing the reads/writes prevents this
-+ * from happening.
-+ */
-+
-+static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
-+{
-+	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+}
-+
-+static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
-+{
-+	u32 val;
-+	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+	return val;
-+}
-+
- #endif /* CORE_H */
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -346,6 +346,25 @@ static void ath9k_hw_set_defaults(struct
- 	}
- 
- 	ah->ah_config.intr_mitigation = 0;
-+
-+	/*
-+	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
-+	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
-+	 * This means we use it for all AR5416 devices, and the few
-+	 * minor PCI AR9280 devices out there.
-+	 *
-+	 * Serialization is required because these devices do not handle
-+	 * well the case of two concurrent reads/writes due to the latency
-+	 * involved. During one read/write another read/write can be issued
-+	 * on another CPU while the previous read/write may still be working
-+	 * on our hardware, if we hit this case the hardware poops in a loop.
-+	 * We prevent this by serializing reads and writes.
-+	 *
-+	 * This issue is not present on PCI-Express devices or pre-AR5416
-+	 * devices (legacy, 802.11abg).
-+	 */
-+       if (num_possible_cpus() > 1)
-+               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
- }
- 
- static void ath9k_hw_override_ini(struct ath_hal *ah,
+Sorry, I misread the code again.  I thought rfkill_set_block() returned
+early if the new state was equal to the old one, but it doesn't.
 
 
