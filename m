@@ -1,78 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:57766 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbZDNCV2 (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:36601 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbZDRPMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 22:21:28 -0400
-Date: Mon, 13 Apr 2009 22:20:59 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Greg KH <greg@kroah.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: VT6656 driver source now GPL
-Message-ID: <20090414022058.GA25746@storm.local.network> (sfid-20090414_042131_885408_EA64016C)
-References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network> <20090414000835.GA31504@storm.local.network> <49E3D7AA.1050207@lwfinger.net> <20090414005523.GC31504@storm.local.network> <49E3E135.4040305@lwfinger.net> <20090414021119.GC17559@kroah.com>
+	Sat, 18 Apr 2009 11:12:20 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ar9170usb: fix hang on resume
+Date: Sat, 18 Apr 2009 17:12:18 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
-In-Reply-To: <20090414021119.GC17559@kroah.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200904181712.18628.chunkeey@web.de> (sfid-20090418_171224_315277_6E1753B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch fixes a hang on resume when the filesystem is not
+available and request_firmware blocks.
 
---MGYHOYXEY6WxJCY8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+However, the device does not accept the firmware on resume.
+and it will exit with:
 
-Hi,
+> firmware part 1 upload failed (-71).
+> device is in a bad state. please reconnect it!
 
-On Mon, Apr 13, 2009 at 07:11:19PM -0700, Greg KH wrote:
-> On Mon, Apr 13, 2009 at 08:04:53PM -0500, Larry Finger wrote:
-> > Forest Bond wrote:
-> > >=20
-> > > Great, this is enough to get started, at least.  I assume that the qu=
-ality bar
-> > > is low for code in drivers/staging.  Low quality work is a trademark =
-of mine, so
-> > > I should be able to tackle this. ;)
-> > >=20
-> > > Is there any reason I ought to think that it would be easier to get t=
-his
-> > > accepted in linux-staging than drivers/staging?  I'll admit that I fe=
-el better
-> > > about the layout of drivers/staging than I do about the quilt stuff in
-> > > linux-staging.
-> >=20
-> > GregKH has said that he will take it from here. I think that means that=
- he will
-> > add it to drivers/staging and get it to build.
->=20
-> Yes I will.  Can someone send me a patch?
-
-I will get you one patch for each driver adding the driver source under
-drivers/staging on linux-2.6.  If that doesn't sound right, let me know.
-Otherwise, expect to hear from me in a day or two.
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---MGYHOYXEY6WxJCY8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJ4/MKRO4fQQdv5AwRAgwvAKCIdYUANmdVEr9tK1TpJVEsegsFQwCfSg1t
-kwoh2jWYFaXY51hXmc2igEI=
-=HP9j
------END PGP SIGNATURE-----
-
---MGYHOYXEY6WxJCY8--
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index c9e422e..fddda47 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -623,6 +623,39 @@ static int ar9170_usb_open(struct ar9170 *ar)
+ 	return 0;
+ }
+ 
++static int ar9170_usb_init_device(struct ar9170_usb *aru)
++{
++	int err;
++
++	err = ar9170_usb_alloc_rx_irq_urb(aru);
++	if (err)
++		goto err_out;
++
++	err = ar9170_usb_alloc_rx_bulk_urbs(aru);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_usb_upload_firmware(aru);
++	if (err) {
++		err = ar9170_echo_test(&aru->common, 0x60d43110);
++		if (err) {
++			/* force user invention, by disabling the device */
++			err = usb_driver_set_configuration(aru->udev, -1);
++			dev_err(&aru->udev->dev, "device is in a bad state. "
++						 "please reconnect it!\n");
++			goto err_unrx;
++		}
++	}
++
++	return 0;
++
++err_unrx:
++	ar9170_usb_cancel_urbs(aru);
++
++err_out:
++	return err;
++}
++
+ static int ar9170_usb_probe(struct usb_interface *intf,
+ 			const struct usb_device_id *id)
+ {
+@@ -658,32 +691,16 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 
+ 	err = ar9170_usb_reset(aru);
+ 	if (err)
+-		goto err_unlock;
++		goto err_freehw;
+ 
+ 	err = ar9170_usb_request_firmware(aru);
+ 	if (err)
+-		goto err_unlock;
++		goto err_freehw;
+ 
+-	err = ar9170_usb_alloc_rx_irq_urb(aru);
++	err = ar9170_usb_init_device(aru);
+ 	if (err)
+ 		goto err_freefw;
+ 
+-	err = ar9170_usb_alloc_rx_bulk_urbs(aru);
+-	if (err)
+-		goto err_unrx;
+-
+-	err = ar9170_usb_upload_firmware(aru);
+-	if (err) {
+-		err = ar9170_echo_test(&aru->common, 0x60d43110);
+-		if (err) {
+-			/* force user invention, by disabling the device */
+-			err = usb_driver_set_configuration(aru->udev, -1);
+-			dev_err(&aru->udev->dev, "device is in a bad state. "
+-						 "please reconnect it!\n");
+-			goto err_unrx;
+-		}
+-	}
+-
+ 	err = ar9170_usb_open(ar);
+ 	if (err)
+ 		goto err_unrx;
+@@ -703,7 +720,7 @@ err_freefw:
+ 	release_firmware(aru->init_values);
+ 	release_firmware(aru->firmware);
+ 
+-err_unlock:
++err_freehw:
+ 	usb_set_intfdata(intf, NULL);
+ 	usb_put_dev(udev);
+ 	ieee80211_free_hw(ar->hw);
+@@ -730,12 +747,65 @@ static void ar9170_usb_disconnect(struct usb_interface *intf)
+ 	ieee80211_free_hw(aru->common.hw);
+ }
+ 
++#ifdef CONFIG_PM
++static int ar9170_suspend(struct usb_interface *intf,
++			  pm_message_t  message)
++{
++	struct ar9170_usb *aru = usb_get_intfdata(intf);
++
++	if (!aru)
++		return -ENODEV;
++
++	aru->common.state = AR9170_IDLE;
++	ar9170_usb_cancel_urbs(aru);
++
++	return 0;
++}
++
++static int ar9170_resume(struct usb_interface *intf)
++{
++	struct ar9170_usb *aru = usb_get_intfdata(intf);
++	int err;
++
++	if (!aru)
++		return -ENODEV;
++
++	usb_unpoison_anchored_urbs(&aru->rx_submitted);
++	usb_unpoison_anchored_urbs(&aru->tx_submitted);
++
++	/*
++	 * FIXME: firmware upload will fail on resume.
++	 * but this is better than a hang!
++	 */
++
++	err = ar9170_usb_init_device(aru);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_usb_open(&aru->common);
++	if (err)
++		goto err_unrx;
++
++	return 0;
++
++err_unrx:
++	aru->common.state = AR9170_IDLE;
++	ar9170_usb_cancel_urbs(aru);
++
++	return err;
++}
++#endif /* CONFIG_PM */
++
+ static struct usb_driver ar9170_driver = {
+ 	.name = "ar9170usb",
+ 	.probe = ar9170_usb_probe,
+ 	.disconnect = ar9170_usb_disconnect,
+ 	.id_table = ar9170_usb_ids,
+ 	.soft_unbind = 1,
++#ifdef CONFIG_PM
++	.suspend = ar9170_suspend,
++	.resume = ar9170_resume,
++#endif /* CONFIG_PM */
+ };
+ 
+ static int __init ar9170_init(void)
