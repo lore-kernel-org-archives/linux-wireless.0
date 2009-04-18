@@ -1,120 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbZDGNXB (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:33115 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbZDRCsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 09:23:01 -0400
-Subject: [PATCH] mac80211: correct wext transmit power handler
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 17 Apr 2009 22:48:06 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so367384qwd.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2009 19:48:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <2da21fe50904171257v17ea8431h1979f0d004885600@mail.gmail.com>
+References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
+	 <2da21fe50904171257v17ea8431h1979f0d004885600@mail.gmail.com>
+Date: Sat, 18 Apr 2009 08:18:04 +0530
+Message-ID: <8e92b4100904171948g5d961578ne46cbf1a135bfdc7@mail.gmail.com> (sfid-20090418_044814_113921_8B690D8B)
+Subject: Re: ath9k and power management
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Davide Pesavento <davidepesa@gmail.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 07 Apr 2009 15:22:28 +0200
-Message-Id: <1239110548.22453.45.camel@johannes.local> (sfid-20090407_152307_761527_9806214A)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wext makes no assumptions about the contents of
-data->txpower.fixed and data->txpower.value when
-data->txpower.disabled is set, so do not update
-the user-requested power level while disabling.
+On Sat, Apr 18, 2009 at 1:27 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+> On Fri, Mar 27, 2009 at 16:27, Davide Pesavento <davidepesa@gmail.com> wrote:
+>> Hello,
+>>
+>> I'm running a 2.6.29-wl kernel, using ath9k and wpa_supplicant 0.6.9
+>> (with -Dnl80211).
+>> Enabling power management when connected (i.e. 'iwconfig wlan0 power
+>> on'), causes the currently established connection to break and the
+>> machine is no longer able to reconnect to the AP. Right after enabling
+>> pm, dmesg says:
+>>
+>> [ 2625.513233] wlan0: beacon loss from AP 00:1b:2f:35:14:78 - sending
+>> probe request
+>> [ 2627.513210] wlan0: no probe response from AP 00:1b:2f:35:14:78 -
+>> disassociating
+>> [ 2627.514430] phy0: Removed STA 00:1b:2f:35:14:78
+>> [ 2627.543407] phy0: Destroyed STA 00:1b:2f:35:14:78
+>> [ 2776.444279] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> [ 2776.659861] wlan0: deauthenticating by local choice (reason=3)
+>> [ 2776.831004] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>
+>> When I turn power management off again, wpa_supplicant is able to
+>> reconnect just fine.
+>> Is this a known bug? If ath9k doesn't support power management
+>> properly, wouldn't it be better to reject the userspace request right
+>> away?
+>>
+>
+> This is still unfixed on latest git (2.6.30-rc2-wl). The symptoms are
+> exactly the same as reported above.
 
-Also, when wext configures a really _fixed_ power
-output [1], we should reject it instead of limiting it
-to the regulatory constraint. If the user wants to set
-a _limit_ [2] then we should honour that.
+This is the power save mechanism used in ath9k:
+An interrupt is triggered just 4ms before the target beacon time
+so that the chip can wake up and receive the beacons. In all the
+latest chipsets like AR92XX, this is working fine.I wonder why
+AR54XX has some problems related to that.
+A quick look into the debug logs shows me that this wake up interrupt
+(TIM_TIMER) stops triggering after some time which leads to beacon
+loss and disconnection.
+Although there is an option of autosleep(in latest versions) where hw can
+wakeup automatically and receive beacon instead of a sw trigger call,
+the hw may sleep for a longer duration(sometimes)  and we may need to
+have some timer mechanism to verify if the hw is hung or not.
+I did not have much time to look into this somewhat older chipsets and
+I will try to debug more if I manage to get some free time.
 
-[1] iwconfig wlan0 txpower 20dBm fixed
-[2] iwconfig wlan0 txpower 10dBm
-
-This fixes
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1942
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-For stable? I think we probably don't care enough.
-
- net/mac80211/main.c |    2 +-
- net/mac80211/wext.c |   43 ++++++++++++++++++++++++++++++++++---------
- 2 files changed, 35 insertions(+), 10 deletions(-)
-
---- wireless-testing.orig/net/mac80211/wext.c	2009-04-02 18:02:11.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-04-07 10:58:11.000000000 +0200
-@@ -417,6 +417,7 @@ static int ieee80211_ioctl_siwtxpower(st
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_channel* chan = local->hw.conf.channel;
-+	bool reconf = false;
- 	u32 reconf_flags = 0;
- 	int new_power_level;
- 
-@@ -427,14 +428,38 @@ static int ieee80211_ioctl_siwtxpower(st
- 	if (!chan)
- 		return -EINVAL;
- 
--	if (data->txpower.fixed)
--		new_power_level = min(data->txpower.value, chan->max_power);
--	else /* Automatic power level setting */
--		new_power_level = chan->max_power;
--
--	local->user_power_level = new_power_level;
--	if (local->hw.conf.power_level != new_power_level)
--		reconf_flags |= IEEE80211_CONF_CHANGE_POWER;
-+	/* only change when not disabling */
-+	if (!data->txpower.disabled) {
-+		if (data->txpower.fixed) {
-+			if (data->txpower.value < 0)
-+				return -EINVAL;
-+			new_power_level = data->txpower.value;
-+			/*
-+			 * Debatable, but we cannot do a fixed power
-+			 * level above the regulatory constraint.
-+			 * Use "iwconfig wlan0 txpower 15dBm" instead.
-+			 */
-+			if (new_power_level > chan->max_power)
-+				return -EINVAL;
-+		} else {
-+			/*
-+			 * Automatic power level setting, max being the value
-+			 * passed in from userland.
-+			 */
-+			if (data->txpower.value < 0)
-+				new_power_level = -1;
-+			else
-+				new_power_level = data->txpower.value;
-+		}
-+
-+		reconf = true;
-+
-+		/*
-+		 * ieee80211_hw_config() will limit to the channel's
-+		 * max power and possibly power constraint from AP.
-+		 */
-+		local->user_power_level = new_power_level;
-+	}
- 
- 	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
- 		local->hw.conf.radio_enabled = !(data->txpower.disabled);
-@@ -442,7 +467,7 @@ static int ieee80211_ioctl_siwtxpower(st
- 		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
- 	}
- 
--	if (reconf_flags)
-+	if (reconf || reconf_flags)
- 		ieee80211_hw_config(local, reconf_flags);
- 
- 	return 0;
---- wireless-testing.orig/net/mac80211/main.c	2009-04-07 10:44:24.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-04-07 10:44:33.000000000 +0200
-@@ -258,7 +258,7 @@ int ieee80211_hw_config(struct ieee80211
- 			(chan->max_power - local->power_constr_level) :
- 			chan->max_power;
- 
--	if (local->user_power_level)
-+	if (local->user_power_level >= 0)
- 		power = min(power, local->user_power_level);
- 
- 	if (local->hw.conf.power_level != power) {
-
-
+Thanks
+Vivek
