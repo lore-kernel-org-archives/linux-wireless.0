@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23104.mail.ird.yahoo.com ([217.146.189.44]:35378 "HELO
-	web23104.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759413AbZDNSea convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 14:34:30 -0400
-Message-ID: <2626.97720.qm@web23104.mail.ird.yahoo.com> (sfid-20090414_203458_345740_BB929A10)
-Date: Tue, 14 Apr 2009 18:34:27 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: Disable TX retries if IEEE80211_TX_CTL_NO_ACK is set
-To: =?iso-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hin-Tak Leung <hintak.leung@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:54184 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423AbZDRH7q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Apr 2009 03:59:46 -0400
+Subject: ar9710 resume hangs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-e0k8iQuac2lRIuz0M2ze"
+Date: Sat, 18 Apr 2009 09:59:42 +0200
+Message-Id: <1240041582.4456.0.camel@johannes.local> (sfid-20090418_095949_609506_38026538)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---- On Tue, 14/4/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+--=-e0k8iQuac2lRIuz0M2ze
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> On Tue, 2009-04-14 at 20:09 +0200,
-> G=E1bor Stefanik wrote:
->=20
-> > +        if (!info->flags & IEEE80211_TX_CTL_NO_ACK))
-> > +            hdr->retry =3D cpu_to_le32((info->control.rates[0].cou=
-nt - 1) << 8);
-> > +        else
-> > +            hdr->retry =3D 0;
->=20
-> Umm. You obviously didn't even _COMPILE_ that patch. Let
-> alone test it
-> properly.
+because it tries to load firmware before userspace is up :/
 
-Yeah, very naughty... patches should at a minimum satisfy the eat-you-o=
-ld-dog-food criteria, i.e. work on your own computer and do nothing bad=
- there...
+johannes
 
+--=-e0k8iQuac2lRIuz0M2ze
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIcBAABAgAGBQJJ6YhnAAoJEKVg1VMiehFY+50P/26CUtVxrTkb/91zBMU0FXm5
+VCgz0weUBefm6fKNKOWJmY0QzhSTpKLafqtnIsBFg9juAVEbKmETYipPBiJH4B8a
+N/Xjcqsr785IO+zPq6r4ORE6HanDvo+4OWrepLPWP5ls4Jz5YqvA9yiZSm/ZFrk8
+x8PYhvWvYt+TmbeYquym2/x6MmjdU4uNzTJt/lDL9fiObWAhYcr2VybiTZHOJQju
+dsscWrAs5163bPKK+WMoeDM6mjFfMP2/w5T1AircykniaC/pBBDkkFTm0X9wY/Vf
+IpfGgCVUFUPUE28weXstua/I1gNdsNi5AdbhxumcjhSyHZFcpE7qwJ9hbTWzgk1i
+zbrXvEGg3ctSBcyjBQodwYNFtTNxFLK52gFrnMtYdCSgZ5DBXx3r/V642EYLUVnP
+rjWOFJ3WlyYmMRs5xHKCYzg1Jvv/uIxrZZBXPdcaw6iIfZmIxUfWVa2BMKocfF+e
+UDPP6E7nUPV0AlbARE6c78rB3NczL5c6Hek2hgxAWfZSU4NVgVVkqVj5EHZB/Glx
+RqO8Y1Ucx+mfHPbUPaPzy3ibEjDqcb9U9Oubl66ViO4P8aZuJ+FpvTFvT7sbnv1s
+QFE5+y3oVq9nKcxc2JnHLfoy0E8dFW25ug/oNL8vUOMVZq9YFk+xyvUDvrxgHMxl
+2swiuQ//n5jj/CoqGhcs
+=Ojiu
+-----END PGP SIGNATURE-----
+
+--=-e0k8iQuac2lRIuz0M2ze--
+
