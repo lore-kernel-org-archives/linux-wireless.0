@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23108.mail.ird.yahoo.com ([217.146.189.48]:20137 "HELO
-	web23108.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750979AbZDMU30 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 16:29:26 -0400
-Message-ID: <42609.6548.qm@web23108.mail.ird.yahoo.com> (sfid-20090413_222930_120948_2E27A78F)
-Date: Mon, 13 Apr 2009 20:29:23 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH RFC] rtl8187: Call 8187L variants "RTL8187LvX" rather than  "RTL8187vX"
-To: John Linville <linville@tuxdriver.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	=?iso-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:57449 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760825AbZDSQ0Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 12:26:24 -0400
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419161316.158790@gmx.net> (sfid-20090419_181324_681308_BAEAE072)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
+	 <20090419125212.158800@gmx.net>
+	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+	 <20090419133544.158820@gmx.net>
+	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+	 <20090419140523.158830@gmx.net>
+	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
+	 <20090419151629.158790@gmx.net>
+	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
+	 <20090419155319.158810@gmx.net>
+	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
+	 <20090419161316.158790@gmx.net> (sfid-20090419_181324_681308_BAEAE072)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6bTDc9/sFgG0PKh+CIjJ"
+Date: Sun, 19 Apr 2009 18:26:21 +0200
+Message-Id: <1240158381.917.21.camel@johannes.local> (sfid-20090419_182627_951206_729611A1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---- On Mon, 13/4/09, G=E1bor Stefanik <netrolller.3d@gmail.com> wrote:
+--=-6bTDc9/sFgG0PKh+CIjJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> We call RTL8187B chips "RTL8187BvX"
-> (X is the revision), so we should
-> call RTL8187L ones "RTL8187LvX", not "RTL8187vX".
+On Sun, 2009-04-19 at 18:13 +0200, Alina Friedrichsen wrote:
+> > You don't need wpa_supplicant, you just need an SME for that. Eventuall=
+y
+> > we'll implement one in iw.
 >=20
-> Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+> You need one simple SME for compatibility with wext in the
+> kernel-space. Why not allow to access it with nl80211?
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+We might actually do that -- as part of the commands "connect" and
+"disconnect" that do not exist yet and subsume auth and assoc into one
+for hardware that doesn't support it.
 
-I don't have a preference either way - if any, I would probably prefer =
-without the change, or use a space for readability rather than 'L', bec=
-ause the 'L' just isn't there most of the time, and there is B (which i=
-s similiar but not the same) and SE (which is completely different). It=
- might be worth also to put a space after the B's.
+johannes
 
-The way that string is currently done is largely inherited from the ven=
-dor driver, I think.
+--=-6bTDc9/sFgG0PKh+CIjJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJ61CqAAoJEKVg1VMiehFYUnkP/RMY+oqPlaldb34wcESb97ke
+LnOR+etcBcKRyk09UPTV01PnywephuweS7lsaYUWJApvXy7QZaFSYlz6SWKPRIV3
+otsr7so323jegcYNVUzclLUKGxjknFX+6+RGpHcXvf3QCU4geQK+D6EEKVlqvPkZ
+9D7hzDWX8Yl6HzDTGiTskb4kCr0QI4YUIR+OQZleWFF0tuNbGDJvT+8V/9t+sJkD
+AVR0L+mbqlyB2mO2NLkUnNRul4mEru3kW0nkfXAORBOJ70wPyxRv//cQVIsLtvmE
+v/mQMgSz0UAqpL1AjU1AtNtN9ESHe3Ns4KK2hoCypsKPmuKNOTMoIiYywAz0N1+O
+J7jfiYkxAacvdsmaCZ3c8l13d2+1OS4+hoW7PEUjy6HcuKcFipKeZ/4p8Bv6vvj2
+/Ad1y1bUAMRVBeWJhllmaTg8tKJeoawTZlK+3kG8SZhIg4dobOebOhLi41ZGcbFs
+RxgiThiX3A8abcVkaLlexxX/CaNVUNs17WS34l1miYuaHKMWtJnoIp7SG1lBvVMQ
+Khy+Tk5wo0LzH008Az7gpM14aEOPVLqWwaBIlLux4cOfQjhiQBRPyuo2fIzwXa0M
+8D0FO4AbkFtMr7s9cIWxw88hdm088Gt1iklNkB09EsSIFu0NPob6W9SxaaU/dJJP
+Rg1lFxPpuHSLZ2wAjdQx
+=hUpn
+-----END PGP SIGNATURE-----
 
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-6bTDc9/sFgG0PKh+CIjJ--
+
