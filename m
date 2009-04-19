@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44321 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46975 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709AbZDWRSU (ORCPT
+	with ESMTP id S1757468AbZDSOXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 13:18:20 -0400
-Subject: Re: [RFC/RFT] mac80211: turn off radio when idle
+	Sun, 19 Apr 2009 10:23:24 -0400
+Subject: [PATCH] nl80211: send wiphy along with netdev
 From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <1240507096.27723.14.camel@rc-desk>
-References: <1240446135.30082.170.camel@johannes.local>
-	 <1240507096.27723.14.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JOdFY31zTf84wWhoO+yO"
-Date: Thu, 23 Apr 2009 19:17:49 +0200
-Message-Id: <1240507069.30082.242.camel@johannes.local> (sfid-20090423_191822_745306_6A0B875A)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 19 Apr 2009 16:23:20 +0200
+Message-Id: <1240151000.898.9.camel@johannes.local> (sfid-20090419_162327_266188_65E30287)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When listing all wireless netdevs in the system this
+is useful to print which wiphy they belong to. Just
+add the attribute, any program that doesn't care will
+just ignore it.
 
---=-JOdFY31zTf84wWhoO+yO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/nl80211.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Hi Reinette,
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-04-19 16:18:50.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-04-19 16:21:28.000000000 +0200
+@@ -542,6 +542,7 @@ static int nl80211_set_wiphy(struct sk_b
+ 
+ 
+ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
++			      struct cfg80211_registered_device *rdev,
+ 			      struct net_device *dev)
+ {
+ 	void *hdr;
+@@ -551,6 +552,7 @@ static int nl80211_send_iface(struct sk_
+ 		return -1;
+ 
+ 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_IFNAME, dev->name);
+ 	NLA_PUT_U32(msg, NL80211_ATTR_IFTYPE, dev->ieee80211_ptr->iftype);
+ 	return genlmsg_end(msg, hdr);
+@@ -585,7 +587,7 @@ static int nl80211_dump_interface(struct
+ 			}
+ 			if (nl80211_send_iface(skb, NETLINK_CB(cb->skb).pid,
+ 					       cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-					       wdev->netdev) < 0) {
++					       dev, wdev->netdev) < 0) {
+ 				mutex_unlock(&dev->devlist_mtx);
+ 				goto out;
+ 			}
+@@ -619,7 +621,8 @@ static int nl80211_get_interface(struct 
+ 	if (!msg)
+ 		goto out_err;
+ 
+-	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0, netdev) < 0)
++	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0,
++			       dev, netdev) < 0)
+ 		goto out_free;
+ 
+ 	dev_put(netdev);
 
-> > This totally messes up iwlwifi: http://paste.pocoo.org/show/113789/
-> >=20
-> > You'll see:
-> > [ 1455.006896] phy0: turning off radio - idle
-> > ...
-> > [ 1455.020180] phy0: turning on radio - scan
-> > [ 1455.020202] ieee80211 phy0: U iwl_mac_config enter to channel 1 chan=
-ged 0x1
-> > [ 1455.031724] ieee80211 phy0: U iwl_mac_config leave - RF-KILL - waiti=
-ng for uCode
-> > [ 1455.031739] ieee80211 phy0: U iwl_mac_config leave
-> > [ 1455.031752] ieee80211 phy0: U iwl_mac_hw_scan enter
-> > [ 1455.031764] ieee80211 phy0: U iwl_mac_hw_scan leave - not ready or e=
-xit pending
-> > [ 1455.031798] phy0: turning off radio - idle
-> >=20
-> > at that point, things get so confused that you can't even scan any more
-> > because something isn't properly reporting to cfg80211 that the scan
-> > ended (but wasn't successful.)
->=20
-> This seems related to the discussion about a patch we tried to submit.
-> See
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/30196/focus=
-=3D30280
-
-Related, but a different situation. Also see the patch I sent to
-iwlwifi. In the mail you quoted, mac80211 certainly handles an error if
-it's returned directly, but if ->hw_scan() returns 0 (and only then) you
-need to call the ieee80211_scan_completed() function at some point.
-
-johannes
-
---=-JOdFY31zTf84wWhoO+yO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIbBAABAgAGBQJJ8KK6AAoJEKVg1VMiehFYsjAP+JnUp8XqpmdfVELf0AD/gvMe
-wNe/wjGqCBPCIRrnywezJxGIl6hB3Oxi6b4VMfcFaz61/J+8Z5AidVJEDCfXkCTe
-iEAft8rHymsT978AsbJ9E2acpOwrMqSDF1oQtCwCP4wVTDmvoXr5As1AuiJV+/NO
-A1YbLRx3uyrCkRCcx4lHcRAohjKZjgL0t8Zcm9MWdtgEaP3AOTPuLNbjp/v6Rw4C
-bRpoffKSfRSNDXyOYxllcI0QRLBNzSTB4IcxCfCPZGebZyA2VdvWyigv8c7bEZCo
-YcgGwWRmpr9mthESZ90VW+ndfnUk87xjTKg3fYiy5Ha4C7RPDaXrmPX5NAl1jdn2
-HXq7b06Z7IcgciPWT+ooRwksiqMMWcuwUFuJsVXmfLRZPcPA9ac6r0aujWRdJH86
-0CkByM60hgvC1qu1zAN0SlDWlfAw+LyOmu56JZGEgSJfCm4Gzfg8iC2YryES1VEs
-k744Id/HwLPKsAvYj+96RsgE4xb4k6786tbJpaUs4pmBW0FkeC/q0cdoIjjHQ6lo
-ZH9noV3blz4ChMITS0mBV9b+LCkhtWwOkFaIWVnvX3h3YynT+WqfrtJfE1dHXPAD
-7MnfXv/X0BXs8CzjBY6kr7gBquF5kWxlD4LUU8hjglTVzL1FzFvTOKjo67f4xuXN
-ImcBnp8GaGO0crE6M8g=
-=dzZo
------END PGP SIGNATURE-----
-
---=-JOdFY31zTf84wWhoO+yO--
 
