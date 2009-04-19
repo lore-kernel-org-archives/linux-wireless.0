@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:14400 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579AbZDKE3x (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:39600 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752487AbZDSSPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 00:29:53 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so113789fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2009 21:29:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>
-References: <49dd785f.mp1oc4nY+m3n0uHL%Larry.Finger@lwfinger.net>
-	 <3ace41890904091453o158f5c00ldad58da3d002180e@mail.gmail.com>
-	 <49DE7E42.5020700@lwfinger.net>
-	 <3ace41890904102123o3e280edau933c8235649879c5@mail.gmail.com>
-Date: Sat, 11 Apr 2009 05:29:51 +0100
-Message-ID: <3ace41890904102129n2b62001clff35027088bedcd1@mail.gmail.com> (sfid-20090411_062957_623109_8B781B36)
-Subject: Re: [RFT/RFC] rtl8187: Implement TX/RX blink for LED
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 19 Apr 2009 14:15:05 -0400
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Alina Friedrichsen <x-alina@gmx.net>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20090419180314.23710@gmx.net>
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
+	 <20090419125212.158800@gmx.net>
+	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+	 <20090419133544.158820@gmx.net>
+	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+	 <20090419140523.158830@gmx.net>
+	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
+	 <20090419151629.158790@gmx.net>
+	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
+	 <20090419155319.158810@gmx.net>
+	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
+	 <20090419161316.158790@gmx.net>
+	 (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
+	 <20090419165443.158820@gmx.net>
+	 (sfid-20090419_185516_519795_36D34B9B) <1240160241.28138.4.camel@johannes.local>
+	 <20090419173354.158790@gmx.net> <1240163391.11795.59.camel@violet>
+	 <20090419180314.23710@gmx.net>
+Content-Type: text/plain
+Date: Sun, 19 Apr 2009 20:14:55 +0200
+Message-Id: <1240164895.11795.70.camel@violet> (sfid-20090419_201510_612001_9B6EE001)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 11, 2009 at 5:23 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+Hi Alina,
 
-> I just gave your patch against compat-wireless, and there isn't any
-> noticeable effect other than
-> these three lines in dmesg - which at least shows that the new code is active:
+> > you argue command line tools against kernel exposed API.
+> 
+> I use the command line syntax to explain the kernel API.
 
-Oh, I forgot to mention that to test this code against
-compat-wireless, appending "CONFIG_RTL8187_LEDS=y" to config.mk does
-the job.
+and that is just plain wrong to begin with. If you want a one command do
+everything, then do that in userspace and not inside a kernel API.
 
-I am wonder if we actually needs an extra Kconfig for this - at least
-in my case, the code has no ill effect with device which hasn't got an
-RX/TX LED. (other than possibly a small theoretical performance loss
-from do extra non-useful work).
+> > Both have
+> > nothing to do with each other on that level.
+> 
+> Most commands are mapped 1:1. And the API easier to understand if it is so.
+
+That just happen to be this way right now. It doesn't have to stay that
+way and if it would, that would be actually be stupid.
+
+> > If you don't like the iw
+> > syntax then fix it and provide a command that does all three task for
+> > you. No need to mess with the kernel interface for that.
+> 
+> I think now, provide a high-level command besides the low-level commands is a good idea. We need it for the old wext interface anyway. Then wext can only call this command and don't need own intelligence. So than it's only a foolish wrapper, like it should.
+
+>From my point of view, WEXT can die right now. Just doing something to
+make WEXT happy is wrong. If you want something like that then do it in
+userspace. I just don't see the need here for an extra kernel API.
+
+Regards
+
+Marcel
+
+
