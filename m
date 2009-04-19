@@ -1,98 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48693 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764553AbZDJSL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 14:11:58 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2009 11:11:58 -0700
-Date: Fri, 10 Apr 2009 11:11:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] BUG in wiphy_update_regulatory when loading
-	ath5k (on latest git)
-Message-ID: <20090410181157.GC5750@tesla> (sfid-20090410_201203_034484_04EC63C4)
-References: <49DF6216.8040303@tuffmail.co.uk> <49DF714F.9070600@tuffmail.co.uk> <1239385533.24621.11.camel@mj>
+Received: from mail.gmx.net ([213.165.64.20]:38736 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755239AbZDSQyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 12:54:47 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 18:54:43 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240158381.917.21.camel@johannes.local>
+Message-ID: <20090419165443.158820@gmx.net> (sfid-20090419_185450_075411_EA7B31C7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1239385533.24621.11.camel@mj>
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
+ (sfid-20090419_153615_967882_D1A9F951)
+ <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
+ (sfid-20090419_160555_446977_A429511B)
+ <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
+ (sfid-20090419_171702_263242_9A8C16F9)
+ <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
+ (sfid-20090419_175352_161479_A88396A3)
+ <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>
+ (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 10, 2009 at 10:45:33AM -0700, Pavel Roskin wrote:
-> On Fri, 2009-04-10 at 17:18 +0100, Alan Jenkins wrote:
-> 
-> > [   65.062652] BUG: unable to handle kernel NULL pointer dereference at
-> > 00000004
-> ...
-> > [   65.063330] Code: b8 da 17 e0 83 c0 04 e8 92 f9 ff ff 84 c0 75 2a 8b
-> > 55 d4 8b 42 28 85 c0 74 0c 83 c0 04 e8 7c f9 ff ff 84 c0 75 14 a1 bc da
-> > 17 e0 <83> 78 04 03 74 66 8b 4d d4 80 79 08 00 74 5d a1 e0 d2 17 e0 48
-> 
-> "<83> 78 04 03" is "cmpl   $0x3,0x4(%rax)", which I can find in
-> disassemly of reg_is_world_roaming(), which was inlined into
-> wiphy_update_regulatory().
-> 
-> 0x3 is almost certainly NL80211_REGDOM_SET_BY_COUNTRY_IE in
-> reg_is_world_roaming().  %rax must be 0, so we have a read at address
-> 0x4.
-> 
-> last_request must be NULL.  The "initiator" field is at offset 4, which
-> is consistent with the assembly.
-> 
-> Thus, wiphy_update_regulatory() is called before last_request was
-> assigned a value.
-> 
-> last_request only seems to get a value in __regulatory_hint(), which is
-> ultimately called by reg_todo(), a work handler.
+> We might actually do that -- as part of the commands "connect" and
+> "disconnect" that do not exist yet and subsume auth and assoc into on=
+e
+> for hardware that doesn't support it.
 
-Thanks pavel, please try this patch:
+Why not use these commands as a high-level and mode independent version=
+ of assoc/join_ibss? And then simply call it from the wext handlers?
 
->From 94505af850bd0961a86e2786238ac0bbe0c44615 Mon Sep 17 00:00:00 2001
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-Date: Fri, 10 Apr 2009 11:07:43 -0700
-Subject: [PATCH] cfg80211: fix bug while trying to process obeacon hints on init
+"Zwei Fliegen mit einer Klappe"?!
+(Translation: "Kill two birds with one stone".)
 
-During initialization we would not have received any beacons
-so skip processing reg beacon hints, also adds a check to
-reg_is_world_roaming() for last_request before accessing its
-fields.
+So you have a equivalent for:
+iwconfig wlan0 essid test
+iw dev wlan0 connect test
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+Alina
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6f25ef4..8935122 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1155,7 +1155,8 @@ static bool reg_is_world_roaming(struct wiphy *wiphy)
- 	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
- 	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
- 		return true;
--	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	if (last_request &&
-+	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
- 	    wiphy->custom_regulatory)
- 		return true;
- 	return false;
-@@ -1164,6 +1165,12 @@ static bool reg_is_world_roaming(struct wiphy *wiphy)
- /* Reap the advantages of previously found beacons */
- static void reg_process_beacons(struct wiphy *wiphy)
- {
-+	/*
-+	 * Means we are just firing up cfg80211, so no beacons would
-+	 * have been processed yet.
-+	 */
-+	if (!last_request)
-+		return;
- 	if (!reg_is_world_roaming(wiphy))
- 		return;
- 	wiphy_update_beacon_reg(wiphy);
--- 
-1.6.2.2.446.gfbdc0
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
