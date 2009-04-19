@@ -1,222 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:56878 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbZDZLeL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbZDSRTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 07:34:11 -0400
-Message-ID: <49F446AE.6070607@tuffmail.co.uk> (sfid-20090426_133419_927053_0C51615A)
-Date: Sun, 26 Apr 2009 12:34:06 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Arjan van de Ven <arjan@infradead.org>,
-	linux acpi <linux-acpi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: EEE PC hangs when booting off battery
-References: <49E065CF.6040408@tuffmail.co.uk> <200904140859.02188.bjorn.helgaas@hp.com> <20090414081728.10de978a@infradead.org> <200904140948.37633.bjorn.helgaas@hp.com> <49E5F01B.2060201@tuffmail.co.uk> <49EF0ABD.2080801@tuffmail.co.uk>
-In-Reply-To: <49EF0ABD.2080801@tuffmail.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 19 Apr 2009 13:19:14 -0400
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419171546.158830@gmx.net> (sfid-20090419_191552_279073_CA045D96)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
+	 <20090419143337.158810@gmx.net>  <20090419163204.158820@gmx.net>
+	 (sfid-20090419_183237_340935_6640098A) <1240160041.28138.0.camel@johannes.local>
+	 <20090419171546.158830@gmx.net> (sfid-20090419_191552_279073_CA045D96)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9M/C+KxYF89Wn0Rz2kyX"
+Date: Sun, 19 Apr 2009 19:19:10 +0200
+Message-Id: <1240161550.28138.6.camel@johannes.local> (sfid-20090419_191916_897805_1F525C79)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Jenkins wrote:
-> Alan Jenkins wrote:
->   
->> Bjorn Helgaas wrote:
->>   
->>     
->>> On Tuesday 14 April 2009 09:17:28 am Arjan van de Ven wrote:
->>>   
->>>     
->>>       
->>>> On Tue, 14 Apr 2009 08:59:01 -0600
->>>> Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
->>>>
->>>>     
->>>>       
->>>>         
->>>>> I can't help with the real problem of why the asynchronous battery
->>>>> init causes the hang.
->>>>>       
->>>>>         
->>>>>           
->>>> that got fixed already for the module case.
->>>>     
->>>>       
->>>>         
->>> But apparently still broken for the builtin case?  I think Alan is
->>> running pretty new bits -- he said "latest git" on April 11.
->>>   
->>>     
->>>       
->> It's now fixed, in 2.6.30-rc2.  My battery is modular btw.  I suspect
->>
->> 5d38258ec026921a7b266f4047ebeaa75db358e5 "ACPI battery: fix async boot
->> oops" [removal of __init]
->>
->> was not sufficient to fix my problem, but it was solved by the "real" fix,
->>
->> d6de2c80e9d758d2e36c21699117db6178c0f517 "async: Fix module loading
->> async-work regression" [module loading waits on async work]
->>
->>
->> I would argue there's still a question over why the asynchronous battery
->> init (_with_ the oops fix) should cause a hang in the idle routine.  But
->> since the regression is fixed, it's not exactly an urgent question.
->>   
->>     
->
-> Ugh.  Recently I tried building the battery driver into the kernel, to
-> benefit from the async work.  Later, I tried booting from the battery
-> and it hung again.
->
-> This time, the kernel did not even respond to SysRq.  I tried
-> nmi_watchdog=1 and waiting 2 minutes, but the watchdog didn't trigger
-> either.  As before, it doesn't happen with acpi=off.
->
-> I checked that this still happened in todays rc3, and it doesn't happen
-> if I revert
->
-> 0f66af530116e9f4dd97f328d91718b56a6fc5a4 "ACPI: battery: asynchronous init"
->
->   
 
-It looks like my hang is caused by linkwatch_event() deadlocking on
-rtnl_lock().  I can't see any direct connection to asynchronous battery
-init, so perhaps that is just revealing a bug by changing the timing.
+--=-9M/C+KxYF89Wn0Rz2kyX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It appears I wasn't patient enough for hung task detection.  If I leave
-it long enough, I see:
+Ahrg, can you stop sending mail to me and the list as two mails? If it's
+a problem then just reply to the list -- although I prefer to be CC'ed.
 
-<scrolled off top of screen>
-? kobject_uevent_env
-? kobject_uevent_env
-__mutex_lock_slowpath
-mutex_lock
-rtnl_lock
-linkwatch_event
-worker_thread
-? linkwatch_event
-? autoremove_wake_function
-? worker_thread
-kthread
-kernel_thread_helper
+On Sun, 2009-04-19 at 19:15 +0200, Alina Friedrichsen wrote:
+> > I don't think so -- how would I express "use channel 5 if you can't fin=
+d
+> > anything" in a single nl80211 command?
+>=20
+> In the normal usage, you don't need it. Either you want make all
+> settings fixed if you build a stationary node, or you set only the
+> SSID if you join the IBSS temporary with your notebook. I don't see a
+> real reason to have an optimized one command solution for that. And on
+> multi interface wifis it's better set the channel and join the IBSS in
+> two different steps. The channel setting has site-effects on the other
+> interfaces, the IBSS joining mostly don't. (except TSF and so)
 
+It's not about optimisations, it's about correctness. If you don't set
+all things at once you don't know what will happen since something else
+might send commands too.
 
-INFO: task modprobe:485 blocked for more than 120 seconds
-Call trace:
-? __atomic_notifier_call_chain
-schedule
-schedule_timeout
-? notify_update
-? do_con_write
-? __wake_up
-wait_for_common
-? default_wake_function
-wait_for_completion
-flush_cpu_workqueue
-? wq_barrier_func
-flush_workqueue
-flush_scheduled_work
-tty_ldisc_release
-? tty_fasyc
-tty_release_dev
-? free_pgtables
-tty_release
-__fput
-filp_close
-sys_close
-syscall_call
-? __send_remote_softirq
-? usecs_to_jiffies
+johannes
 
+--=-9M/C+KxYF89Wn0Rz2kyX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-I then seem to get another repetition of the second calltrace, followed
-by a new one
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-INFO: task swapper:1 blocked for more than 120 seconds
-Call trace:
-schedule
-schedule_timeout
-? __wake_up_common
-? wake_up
-wait_for_common
-wait_for_completion
-call_usermodehelper_exec
-__request_module
-crypto_larval_lookup
-? extract_entropy
-crypto_alg_mod_lookup
-crypto_alloc_base
-ieee80211_wep_init
-ieee80211_register_hw
-? ath5k_hw_set_bss
-ath5k+pci_probe
-local_pci_probe
-pci_device_probe
-driver_probe_device
-__driver_attach
-bus_for_each_dev
-driver_attach
-? __driver_attach
-buad_add_driver
-driver_register
-? ktime_get_ts
-__pci_register_driver
-init_ath5k_pci
-_stext
-? init_ath5k_pci
-? proc_create_data
-? register_ieq_proc
-kernel_init
-? kernel_init
-kernel_thread_helper
+iQIcBAABAgAGBQJJ610KAAoJEKVg1VMiehFYCQIP/ia+ao9y6vWok1jsmvASmPE+
+uG32T+kfO8ChfB/JfLTpQLwvgRWOmiY9H3hQEzqbz73/5nQ3pSHhG7cO6tIO3qGz
+kpE+SOqOWK7ErqVDNnxbvdxTQ9VMrRWguTUzXXMebk4o82auWeIMEmauI3AIzB00
+sdDAFmsBbYuLuXosAgIbkJkOE3bUHYshaVRlJF4r8AVqStgDxUpUK22ZRKEbhfb1
+m3DICZ8uZogre7438kWFLRqjOSG/kZnC5ASAZ04pP4bbpTbL02vmyb/feHu/1+Hn
+qwdkZkuQu8XqAbndYCbPCYWc896fkOmmNmZCFbFwnbJWsSqWI73E43YmHLUEGmCV
+jOHx80SNPeGl601R1KwyzpaAFRY9GF1vJyIPrsE7x0ReZWWNK0MmGYZpGHPwzumQ
+dDrxQh/w41xoc2wteCLWukkTqOsJoTuO0tf5DfvhZd//GWHLAc8PAjOX9pLeoHbd
+Nq5K/NlZDt1CxRQy4EiCqfE5k6V6Vzx1/UH1lrcVGXmqTIX5zXseZZNK7dvvv0w2
+/xHJYRP+C+4UYT2xGKVJp/DoANR4p17wQ9hdMB7/1lNj0PHdzBUIG1fW07k51Gnn
+wq/O+zTzldm8iaOz3BgfeT9xN3qgR6k0kJzL831CNEa+IA8FSSKvdGNF+X3jl/VD
+3Wzh1XqAxOTS1C9IpGMW
+=3ltT
+-----END PGP SIGNATURE-----
 
+--=-9M/C+KxYF89Wn0Rz2kyX--
 
-
-
-The hang happens at this point:
-
-[    0.967588] scsi 1:0:0:0: Direct-Access     ATA      SILICONMOTION SM
-n/a  PQ: 0 ANSI: 5
-[    0.968049] calling  4_sd_probe_async+0x0/0x225 @ 323
-[    0.968313] initcall 3_async_port_probe+0x0/0x95 returned 0 after
-343051 usecs
-<mark> (see below).
-[    0.968786] sd 1:0:0:0: [sda] 7815024 512-byte hardware sectors:
-(4.00 GB/3.72 GiB)
-[    0.968964] sd 1:0:0:0: [sda] Write Protect is off
-[    0.969062] sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[    0.969132] sd 1:0:0:0: [sda] Write cache: disabled, read cache:
-enabled, doesn't support DPO or FUA
-[    0.969543]  sda: sda1 sda2
-[    0.970965] sd 1:0:0:0: [sda] Attached SCSI disk
-[    0.971073] initcall 4_sd_probe_async+0x0/0x225 returned 0 after 2849
-usecs
-
-On a successful boot, the next lines are
-
-[    0.971188] async_continuing @ 1 after 2483 usec
-[    0.971305] Freeing unused kernel memory: 256k freed
-[    1.071724] calling  ata_generic_init+0x0/0x19 [ata_generic] @ 574
-[    1.073798] initcall ata_generic_init+0x0/0x19 [ata_generic] returned
-0 after 144 usecs
-[    1.183372] Clocksource tsc unstable (delta = -128600689 ns)
-[    2.035932] EXT4-fs: delayed allocation enabled
-
-Also, on a successful boot, I see these additional lines at the point
-<mark> above.
-
-[    0.968461] async_continuing @ 1 after 76663 usec
-[    0.968556] async_waiting @ 1
-
-In fact, when the hang happens I can see no "async_waiting @ 1" on my
-50-line screen.  Which makes sense if  the kernel init process is hung
-in init_athk_pci().
-
-
-Thanks
-Alan
