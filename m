@@ -1,106 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:45664 "EHLO
-	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753076AbZDMJGr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 05:06:47 -0400
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: BUG: unable to handle kernel paging request (mac80211 related??)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Date: Mon, 13 Apr 2009 11:04:52 +0200
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Message-Id: <20090413090452.D78D32C4133@tippex.mynet.homeunix.org> (sfid-20090413_110653_660248_59EC6CE3)
+Received: from mail.gmx.net ([213.165.64.20]:44354 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752189AbZDSTw2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 15:52:28 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 21:52:25 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240169513.11795.80.camel@violet>
+Message-ID: <20090419195225.158830@gmx.net> (sfid-20090419_215234_122873_38B47C97)
+MIME-Version: 1.0
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
+ (sfid-20090419_153615_967882_D1A9F951)
+ <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
+ (sfid-20090419_160555_446977_A429511B)
+ <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
+ (sfid-20090419_171702_263242_9A8C16F9)
+ <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
+ (sfid-20090419_175352_161479_A88396A3)
+ <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>	
+ (sfid-20090419_181324_681308_BAEAE072)
+ <1240158381.917.21.camel@johannes.local>	 <20090419165443.158820@gmx.net>	
+ (sfid-20090419_185516_519795_36D34B9B)
+ <1240160241.28138.4.camel@johannes.local>	 <20090419173354.158790@gmx.net>
+ <1240163391.11795.59.camel@violet>	 <20090419180314.23710@gmx.net>
+ <1240164895.11795.70.camel@violet>	 <20090419184320.158810@gmx.net>	
+ (sfid-20090419_204331_522505_5A7A007C)
+ <1240167343.28138.12.camel@johannes.local>	 <20090419190103.158790@gmx.net>	
+ (sfid-20090419_210135_646451_315341AB)
+ <1240168864.28138.13.camel@johannes.local>	 <20090419192543.158810@gmx.net>
+ <1240169513.11795.80.camel@violet>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> you know what, the next time I run into him, I ask his opinion about
+> this ;)
 
-The following BUG is the result of
-rmmod rt2500pci && modprobe rt2500pci && iwconfig wlan0 txpower auto
+Implement as few (sys)calls as possible, only as much as needed. Genera=
+lize as much as you can.
 
-The only odd thing that preceeded it was that I (10 minutes earlier), tried to
-change the wlan rate algo to minstrel from pid using the 
- /sys/module/mac80211/parameters/ieee80211_default_rc_algo file.
+He has compared operating systems as less syscalls they have:
+MS-DOS > UNIX > Mach > Amoeba
 
-Mac80211 was not a module at the time, and the file went from showing 'pid' to 
-nothing, so I'm a bit unsure as to what exacly happened. Is 
-/sys/module/*/parameters/* expected to work on non-modules?
+Alina
 
-
-rt2500pci 0000:00:0a.0: found PCI INT A -> IRQ 11
-phy21 -> rt2500pci_validate_eeprom: EEPROM recovery - NIC: 0xfff0
-phy21 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003, rev: 00000004.
-wmaster0 (rt2500pci): not using net_device_ops yet
-phy21: Selected rate control algorithm 'pid'
-wlan0 (rt2500pci): not using net_device_ops yet
-phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
-phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
-wlan0: authenticate with AP 00:18:39:c0:5f:50
-phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
-phy21 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
-wlan0: authenticate with AP 00:18:39:c0:5f:50
-wlan0: authenticate with AP 00:18:39:c0:5f:50
-wlan0: authenticate with AP 00:18:39:c0:5f:50
-wlan0: authentication with AP 00:18:39:c0:5f:50 timed out
-rt2500pci 0000:00:0a.0: found PCI INT A -> IRQ 11
-phy22 -> rt2500pci_validate_eeprom: EEPROM recovery - NIC: 0xfff0
-phy22 -> rt2x00_set_chip: Info - Chipset detected - rt: 0201, rf: 0003, rev: 00000004.
-wmaster0 (rt2500pci): not using net_device_ops yet
-phy22: Selected rate control algorithm 'pid'
-wlan0 (rt2500pci): not using net_device_ops yet
-phy22 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-phy22 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-BUG: unable to handle kernel paging request at 8b291c6a
-IP: [<cc84d5ad>] 0xcc84d5ad
-*pde = 00000000 
-Oops: 0002 [#1] 
-last sysfs file: /sys/class/net/wlan0/flags
-Modules linked in: rt2500pci rtc cdc_wdm rt2x00pci i2c_piix4 intel_agp pcspkr rt2x00lib eeprom_93cx6 uhci_hcd i2c_core agpgar
-t evdev [last unloaded: rt2500pci]
-
-Pid: 27810, comm: iwconfig Not tainted (2.6.29.1 #11) HP Vectra
-EIP: 0060:[<cc84d5ad>] EFLAGS: 00010246 CPU: 0
-EIP is at 0xcc84d5ad
-EAX: c5948d20 EBX: c5948d20 ECX: dc84e2e0 EDX: c5948dac
-ESI: c5948dac EDI: c5948dfc EBP: 00000000 ESP: cd5cde00
- DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-Process iwconfig (pid: 27810, ti=cd5cc000 task=c58c88a0 task.ti=cd5cc000)
-Stack:
- dc86f77e c5948d20 c5948160 00000000 dc86eed9 d49e50b4 00000001 c03a07a8
- 00008b26 c0353429 c5948160 cd5cdf08 c03544e1 cd5cdf08 ffffffa1 c034d5cc
- 00000000 cd5cdef8 c59c2800 c13197a0 c013748e c0161e94 db4d08fc c015f2b7
-Call Trace:
- [<dc86f77e>] rt2x00lib_config_antenna+0x74/0xaa [rt2x00lib]
- [<dc86eed9>] rt2x00mac_config+0x4f/0x6d [rt2x00lib]
- [<c0353429>] ieee80211_hw_config+0x7b/0x82
- [<c03544e1>] ieee80211_ioctl_siwtxpower+0x77/0x83
- [<c034d5cc>] ioctl_standard_call+0x49/0x286
- [<c013748e>] file_read_actor+0x79/0xcf
- [<c0161e94>] mnt_want_write+0x8/0x47
- [<c015f2b7>] touch_atime+0xe/0xce
- [<c034d2ad>] wext_handle_ioctl+0x97/0x17e
- [<c035446a>] ieee80211_ioctl_siwtxpower+0x0/0x83
- [<c02bc83f>] dev_ioctl+0x532/0x565
- [<c0135d64>] find_lock_page+0x10/0x42
- [<c0137727>] filemap_fault+0x70/0x2f5
- [<c02b25b4>] sock_ioctl+0x0/0x1d1
- [<c015a8b6>] vfs_ioctl+0x16/0x48
- [<c015ade3>] do_vfs_ioctl+0x40e/0x47f
- [<c0143fdf>] handle_mm_fault+0x1f6/0x462
- [<c02b1372>] sock_map_fd+0x46/0x50
- [<c02b1ce0>] sys_socket+0x3f/0x52
- [<c015ae80>] sys_ioctl+0x2c/0x42
- [<c0102945>] sysenter_do_call+0x12/0x25
- [<c0360000>] __ieee80211_rx_handle_packet+0x24e/0x646
-Code: d7 5c 7d 72 35 51 00 00 28 68 5a 4e 68 3c 4e 68 13 4e 75 4d d8 5c 7d 72 36 51 00 00 28 68 86 4e 6a f8 07 00 00 4e 68 88
- 4e 75 4d <d9> 5c 7d 72 37 51 00 00 28 68 3c 4e 68 11 4e 68 99 4e 75 4d da 
-EIP: [<cc84d5ad>] 0xcc84d5ad SS:ESP 0068:cd5cde00
----[ end trace 469062b162cecfcc ]---
-
-
-
-
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
