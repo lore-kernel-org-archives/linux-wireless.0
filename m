@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:34943 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754821AbZDFLrJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 07:47:09 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH] p54spi: get rid of busy-wait loops
-Date: Mon, 6 Apr 2009 13:47:06 +0200
+Received: from mail.gmx.net ([213.165.64.20]:56504 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1758080AbZDSPxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 11:53:22 -0400
 Cc: linux-wireless@vger.kernel.org
-References: <> <200904060030.25425.chunkeey@web.de> <200904060916.03555.jcmvbkbc@gmail.com>
-In-Reply-To: <200904060916.03555.jcmvbkbc@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 17:53:19 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240154704.898.18.camel@johannes.local>
+Message-ID: <20090419155319.158810@gmx.net> (sfid-20090419_175326_972960_2D11561D)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904061347.06042.chunkeey@web.de> (sfid-20090406_134714_325491_2BF7551B)
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
+ (sfid-20090419_153615_967882_D1A9F951)
+ <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
+ (sfid-20090419_160555_446977_A429511B)
+ <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>
+ (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 April 2009 07:16:02 Max Filippov wrote:
-> >
-> > By the way a few days ago the libertas driver authors posted a patch
-> > which "improve the average throughput 13%."
-> >
-> > http://marc.info/?l=linux-wireless&m=123871643203161
-> >
-> > I wonder if this would also work with p54spi.
-> > But to test this theory, one has to rewrite the driver to use kthread
-> > instead of hogging workqueues.... just in case you're looking for more
-> > TODOs ;-)
-> I'm just getting it to work. And there are still problems in tx path, e.g.
-> it cannot withstand dd if=/dev/zero | ssh ... "cat >/dev/null".
+Hello!
 
-hmm, sounds familiar. 
-(" p54usb: fix random traffic stalls (LM87)" (43af18f06d5
-and p54usb: fix packet loss with first generation devices  ")
+> It will pass in a cfg80211_bss structure instead of all those paramet=
+ers
+> once we move all the stuff into cfg80211.
 
-can you please run
-for ((size=0; size < 9000;size++)); do ping $IP -s $size
+This is not mode specific.
 
-and see if there's a connection between the stalls/hangs and the frame length?
+All members of cfg80211_bss are not known by the user-space without sca=
+nning. I don't like the idea of needing the wpa_supplicant for joining =
+an unencrypted network.
 
-Regards,
-	Chr
+I want even with nl80211 able to simply call:
+iw dev wlan0 assoc test_ssid
+like I now call:
+iwconfig wlan0 essid test_ssid
+
+> True. But I'm not much interested in technical arguments about this
+> point since I and others are convinced that this way is better.
+
+Maybe it's easier to design and implement but not necessarily the clean=
+er and more thought-out API, I think.
+
+Alina
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
