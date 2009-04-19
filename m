@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57223 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48693 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881AbZDPKTJ (ORCPT
+	with ESMTP id S1757106AbZDSP5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 06:19:09 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+	Sun, 19 Apr 2009 11:57:14 -0400
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <878wm0ap2u.fsf@litku.valot.fi> (sfid-20090416_120845_607079_60A37B4E)
-References: <1239837672.11795.46.camel@violet>
-	 <1239841291.25334.18.camel@johannes.local> <87ocuxf7kv.fsf@litku.valot.fi>
-	 <1239873166.9737.4.camel@johannes.local> <87fxg8apgo.fsf@litku.valot.fi>
-	 <1239876253.9737.12.camel@johannes.local>  <878wm0ap2u.fsf@litku.valot.fi>
-	 (sfid-20090416_120845_607079_60A37B4E)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hX8kP6XZdpNR7F57XD2x"
-Date: Thu, 16 Apr 2009 12:18:35 +0200
-Message-Id: <1239877115.9737.16.camel@johannes.local> (sfid-20090416_121913_430210_55EDD87D)
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419155319.158810@gmx.net> (sfid-20090419_175352_161479_A88396A3)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
+	 <20090419125212.158800@gmx.net>
+	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+	 <20090419133544.158820@gmx.net>
+	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+	 <20090419140523.158830@gmx.net>
+	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
+	 <20090419151629.158790@gmx.net>
+	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
+	 <20090419155319.158810@gmx.net> (sfid-20090419_175352_161479_A88396A3)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QVQVcmBYjDNn9yrQy9B3"
+Date: Sun, 19 Apr 2009 17:57:11 +0200
+Message-Id: <1240156631.917.1.camel@johannes.local> (sfid-20090419_175717_182507_19D3EB58)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-hX8kP6XZdpNR7F57XD2x
+--=-QVQVcmBYjDNn9yrQy9B3
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-16 at 13:08 +0300, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
+On Sun, 2009-04-19 at 17:53 +0200, Alina Friedrichsen wrote:
+> Hello!
 >=20
-> >> ifmgd->timer is run every two seconds, even then scanning and it calls
-> >> like this:
-> >>=20
-> >> ieee80211_sta_timer() -> ieee80211_sta_work() -> ieee80211_associated(=
-)
-> >>=20
-> >> And to my knowledge the timer is run even when scanning. Or am I missi=
-ng
-> >> something?
-> >
-> > But ieee80211_sta_work() checks if we're scanning and aborts if we are.
+> > It will pass in a cfg80211_bss structure instead of all those parameter=
+s
+> > once we move all the stuff into cfg80211.
 >=20
-> Oh, I missed that one. Yes, you are right.
+> This is not mode specific.
 
-Maybe we should just set last_beacon =3D jiffies on scan finished as an
-easy workaround :)
+Well, the struct isn't but ibss cannot use a bss structure because then
+we'd have to fake one without knowing what is around us.
+
+> All members of cfg80211_bss are not known by the user-space without
+> scanning.=20
+
+Nope. Not the IEs for the locally created IBSS for example.
+
+> I don't like the idea of needing the wpa_supplicant for joining an
+> unencrypted network.
+
+You don't need wpa_supplicant, you just need an SME for that. Eventually
+we'll implement one in iw.
 
 johannes
 
---=-hX8kP6XZdpNR7F57XD2x
+--=-QVQVcmBYjDNn9yrQy9B3
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ5wX5AAoJEKVg1VMiehFYmHsP/0xAUDa4+5dwQhycjfVwIEuO
-T02MpVASc+2LE6xUZTYTzLr6ZXi88cSiW2i6KYohCfBg1vcsp6MPKmuizhn/nOYq
-9wJ4zuNJb5oK0i5feVyUwa5P3xrpKUglQ7PnejNOhpxMr4HKVU0ytbNEPddbFoAL
-I9f639K5PjV1J4HO1UJLIWfuytRk9LpsEjxziBh8vW9X+DlgL+VFnFnQDTUaIfJX
-bfMK3+m1EZq2CTEFbR8fcyAT4Ku0xVeWuGaWcg4sj4J2//Zoh2bDytFowqOPWH7+
-DCqZR0I3scScQ0B//k/zgSx3IdqWcCpd+SxxHll4kMxyQ04RLXx+7sjjvGdowDGq
-Gs1+PzkMUT9rhTcRfYd7EaR8aVwH67SpqKFc2aHFAHQFC8nsF28DcxRsOzbGxBla
-7SWOPWuKH9FFrbWVUmStp39YjOBY2xuHdmNoSQGkp2vxUOnvS4tPoTCvWdQCEOAD
-2CzOyqdZxw6wW5BFyX+Eaju8OfTA1IOZ10WMfa5Wt2CQOL2ym8gvUzrIbbyFjesX
-auc2kNT7X4mX44TT3/XHLWuYzozt+Vj64hUQ48uGfkpBubsIolX+9XnpT93F7qET
-OJg54av3Ie/jsNZ6r0WDPjiaOPH8sriAvzCxVQrNkHXCBnYODxUVc47tjSSN5IiG
-MjKnpnKO9ZTEwOdJk6Vf
-=OYep
+iQIcBAABAgAGBQJJ60nUAAoJEKVg1VMiehFY0rEP/j8czcD/GX3RezaV8jCUeusO
+EhgF8Ft2oO8JrJ9lbirLgKbVkIiYZ/ircZeU8yLOrqA64hBHheCm0qtA4af+Yv5f
+qUBIFcM/LM9Yp3j6sPkz5Ky4FOJ7iJxJfjX9DpszOhO6Foq+aPP/AV1WgBl5q06S
+EzeUHWpTwVaLVfhzc5yvQwP/tUM1ZoD14rToe3IZszIn0pXz7niX4aeGuz/jDU3U
+hmpYrgYyDKf1iT6IWsF4fzWzLSbfDwXL9OFH9g0jxNb+iFw3V21ogwmEg1HtyRE1
+Y1C0VW95qgPFME3tPuqLfx5Wp++qPEI0DoXopD5yHP3qmcGAsqWZyGlj+NxPfxPz
+Lirv0+z5mM8nOH7k/uVquKs/CVO/hdwimywbFSc+wPHzvTjzSC5PvOfGc6477tpO
+RCYgF0XKVu2Egfd/VCVdJ3mNTIJ7PnCVXyJXw7/JWZtluzcQScQNuqC+swiKyZUs
+0S06N20is6GX6+/7WK5/d7WPD138ZG0kFGKDefC4AQ5tSqypxwRfQITf9/LH4XSH
+HZk2DSF8lyeNuT27KLyRwv8OG5pwI0GkOCaj7VMyeeK8UEsPaNx1G/5lgiHtqOk0
+x5XZ6n8KmJ/HwoXwMbMtMR2bbThAsy4Gwq35p3IRqddu9YREOC6Vkq6yaAkXcWaJ
+XeMqd0krn6DgRBtsfmHr
+=kWXx
 -----END PGP SIGNATURE-----
 
---=-hX8kP6XZdpNR7F57XD2x--
+--=-QVQVcmBYjDNn9yrQy9B3--
 
