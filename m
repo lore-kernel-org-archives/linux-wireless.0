@@ -1,123 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:48331 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752396AbZDPPKT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbZDSQ5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 11:10:19 -0400
-Message-ID: <49E74A47.5010309@lwfinger.net> (sfid-20090416_171023_612853_25438DFD)
-Date: Thu, 16 Apr 2009 10:09:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFT/RFC V3] rtl8187: Implement TX/RX blink for LED
-References: <49e644a4.3DqmSbwccrtRsayP%Larry.Finger@lwfinger.net> <200904161142.03296.herton@mandriva.com.br>
-In-Reply-To: <200904161142.03296.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 19 Apr 2009 12:57:23 -0400
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419165443.158820@gmx.net> (sfid-20090419_185516_519795_36D34B9B)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
+	 <20090419125212.158800@gmx.net>
+	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+	 <20090419133544.158820@gmx.net>
+	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+	 <20090419140523.158830@gmx.net>
+	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
+	 <20090419151629.158790@gmx.net>
+	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
+	 <20090419155319.158810@gmx.net>
+	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
+	 <20090419161316.158790@gmx.net>
+	 (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
+	 <20090419165443.158820@gmx.net> (sfid-20090419_185516_519795_36D34B9B)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FQqtpiv4kJpZ+13re/sL"
+Date: Sun, 19 Apr 2009 18:57:21 +0200
+Message-Id: <1240160241.28138.4.camel@johannes.local> (sfid-20090419_185725_960512_C926A9B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> Em Quarta-feira 15 Abril 2009, =E0s 17:33:40, Larry Finger escreveu:
->> The following patch implements some control over the LED on RTL8187B=
- and
->> RTL8187L devices. Triggers are registered for TX and RX. Whenever th=
-e
->> trigger event occurs, the LED is turned off for 1/20 second, then tu=
-rned
->> back on.
->>
->> Note: For those RTL8187X devices that are built into the computer an=
-d have
->> a LED that is expected to be controlled with a radio switch, this pa=
-tch
->> will not operate that LED. That will take a separate patch to be pre=
-pared
->> later.
->>
->> Please test and comment.
+
+--=-FQqtpiv4kJpZ+13re/sL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2009-04-19 at 18:54 +0200, Alina Friedrichsen wrote:
+> > We might actually do that -- as part of the commands "connect" and
+> > "disconnect" that do not exist yet and subsume auth and assoc into one
+> > for hardware that doesn't support it.
 >=20
-> It didn't work for me, I need to fix this typo in V3 patch:
+> Why not use these commands as a high-level and mode independent
+> version of assoc/join_ibss? And then simply call it from the wext
+> handlers?
 >=20
->  ./drivers/net/wireless/rtl818x/rtl8187_leds.c
-> --- ./drivers/net/wireless/rtl818x/rtl8187_leds.c.orig	2009-04-15=20
-> 18:47:24.000000000 -0300
-> +++ ./drivers/net/wireless/rtl818x/rtl8187_leds.c	2009-04-16=20
-> 11:32:11.000000000 -0300
-> @@ -64,7 +64,7 @@ static void led_turn_off(struct work_str
->  	 */
->  	u8 reg;
->  	struct rtl8187_priv *priv =3D container_of(work, struct rtl8187_pri=
-v,
-> -				    led_on.work);
-> +				    led_off.work);
->  	struct rtl8187_led *led =3D &priv->led_tx;
-> =20
->  	/* Don't change the LED, when the device is down. */
-
-Thanks for catching this. That was a copy-and-paste gone wrong.
-
-
-> Also, it doens't turn on led on interface up, probably because we don=
-'t have a=20
-> 'radio' led and now removed led on from init_regs, may be we could do=
- this:
+> "Zwei Fliegen mit einer Klappe"?!
+> (Translation: "Kill two birds with one stone".)
 >=20
-> @@ -186,8 +187,10 @@ void rtl8187_leds_init(struct ieee80211_
->  		 "rtl8187-%s::rx", wiphy_name(dev->wiphy));
->  	err =3D rtl8187_register_led(dev, &priv->led_rx, name,
->  			 ieee80211_get_rx_led_name(dev), ledpin);
-> -	if (!err)
-> +	if (!err) {
-> +		queue_delayed_work(priv->dev->workqueue, &priv->led_on, 0);
->  		return;
-> +	}
+> So you have a equivalent for:
+> iwconfig wlan0 essid test
+> iw dev wlan0 connect test
 
-I had thought of this as a feature in that the LED comes on when the fi=
-rst
-transmit occurs, but it is more instructive to have it on as soon as th=
-e LED
-system is ready.
+I still haven't understood why those extra commands are bothering you so
+much. Anyhow, you don't _connect_ to an IBSS so that would simply be
+_wrong_.
 
->  	/* registration of RX LED failed - unregister TX */
->  	rtl8187_unregister_led(&priv->led_tx);
->  error:
->=20
->=20
-> For the led off/stop code you added on rtl8187_stop, may be we would =
-want to=20
-> protect:
->        rtl818x_iowrite8(priv, &priv->map->GPIO, 0x01);
->        rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0x01);
-> inside an ifdef CONFIG_RTL8187_LEDS, but it will not work also for ot=
-her led=20
-> hardware (the ones which don't use GPIO/GP_ENABLE to set leds. we cou=
-ld do=20
-> this instead on rtl8187_leds_exit:
->=20
-> @@ -200,6 +203,7 @@ void rtl8187_leds_exit(struct ieee80211_
->  {
->  	struct rtl8187_priv *priv =3D dev->priv;
-> =20
-> +	queue_delayed_work(priv->dev->workqueue, &priv->led_off, 0);
->  	cancel_delayed_work_sync(&priv->led_off);
->  	cancel_delayed_work_sync(&priv->led_on);
->  	rtl8187_unregister_led(&priv->led_tx);
->=20
-> but then it will not turn off led on interface stop, just on module r=
-emoval...
 
-If we are turning the LED on in rtl8187_leds_init(), it should be off i=
-n
-rtl8187_leds_exit(). I'll rework for V4.
+johannes
 
-Thanks for the review.
+--=-FQqtpiv4kJpZ+13re/sL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Larry
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIcBAABAgAGBQJJ61ftAAoJEKVg1VMiehFYbPQQAJTcc/xMp6ElzU971ovCjy/F
+FKEevw5ChVDqsncoWG4/igRYk8JyMM3+SYTjlR0SjEOWt7wbIpQA7YaQM0Rq41iP
+TJ0+cySjOMuYRx1ZXJCW2xpnlQhmGFWfsBsJsK1x6712z3EhC+/d03+9Rs1+/nMX
+8fBCeSkjSAiKBVDKtUpw6hKh9nqHgjodmSEqPC2R1PmE/bnoRBFnpZRvkQcksktS
+Jc7PRm/yQJ87BCqZFgrhlZjeLXMw39BtBXX8+Q5AORhJNXy4LYPsC27ATLETNBZJ
+J64J6F0Sa0CiX1bBcADYaAdYUZAQSy1JmTC9CvnZCgo7Mu/OeVnwIZcwjzrZQqA/
+ygGjoBMc5zA1YfJSYVhG1poUmr/qm1bVsLJIrB2MIM6tcJb2sS0wICpZLlHKpx7f
+AM/JyGYyPZh2Z9bYL3oPERnRpRcHypItK4cfZ2+C9yhlJs/iHYzQHMoOXCoZ8NBB
+Yf71QRNXnUTfLoDxwcf0UqFVZ3G0N1LiyW3zNnEMgXgCYKPo4c6MYRqDSfst2wcm
+gOoyxU+PISkay007kTxSD62Hlpp6oc6CpsVf5+nzSQ4J83HKh7xgFXATOI309eSd
+K11Qm7L153CXth07TVulDVviiqk6WydwGcqUUTcmbdFotn1Tc2eA0wJne6jsqIxU
+y3KUI04TZl9As0pmlIup
+=btXf
+-----END PGP SIGNATURE-----
+
+--=-FQqtpiv4kJpZ+13re/sL--
+
