@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:65230 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672AbZDPKZu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56611 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756255AbZDSLWS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 06:25:50 -0400
-Received: by bwz17 with SMTP id 17so313630bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 03:25:47 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ANN] iw: v0.9.12
-References: <E1LrX4n-0007Z2-7S@sipsolutions.net>
-	<1239877031.9737.15.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 16 Apr 2009 13:25:46 +0300
-In-Reply-To: <1239877031.9737.15.camel@johannes.local> (Johannes Berg's message of "Thu\, 16 Apr 2009 12\:17\:11 +0200")
-Message-ID: <87zleg99p1.fsf@litku.valot.fi> (sfid-20090416_122552_931373_431161D6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 19 Apr 2009 07:22:18 -0400
+Subject: [PATCH] mac80211: fix basic rate bitmap calculation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomasw@gmail.com>, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Sun, 19 Apr 2009 13:22:11 +0200
+Message-Id: <1240140131.25826.4.camel@johannes.local> (sfid-20090419_132225_519575_99DA7550)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+    commit d61272cbb35fa1c08fe94898583d880256f2dbd3
+    Author: Tomas Winkler <tomas.winkler@intel.com>
+    Date:   Thu Oct 30 17:08:08 2008 +0200
 
->> Johannes Berg -  add plain "scan" command that triggers, waits and dumps
->
-> So now use
->
-> 	iw dev wlan0 scan
->
-> instead of trigger/dump!
+        mac80211: fix basic rates setting from association response
+        
+        In previous code all the rates were marked as basic.
+        
+        Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+        Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+        Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Oh, nice usability improvement. Thank you!
+introduced a copy/paste error (see patch).
 
-/me doesn't like the trigger command
+Unfortunately, this not just leads to wrong data being passed
+to the driver but is remotely exploitable for some hardware or
+driver combinations.
 
--- 
-Kalle Valo
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org [2.6.29]
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-19 12:27:46.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-19 12:27:51.000000000 +0200
+@@ -1577,7 +1577,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 
+ 	for (i = 0; i < elems.ext_supp_rates_len; i++) {
+ 		int rate = (elems.ext_supp_rates[i] & 0x7f) * 5;
+-		bool is_basic = !!(elems.supp_rates[i] & 0x80);
++		bool is_basic = !!(elems.ext_supp_rates[i] & 0x80);
+ 
+ 		if (rate > 110)
+ 			have_higher_than_11mbit = true;
+
+
