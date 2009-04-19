@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:2852 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874AbZDWSS3 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35971 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbZDSSAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 14:18:29 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so41463fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 11:18:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090423180928.GA22426@jm.kir.nu>
-References: <69e28c910904231035u7ff2d9bbnbf1a74ece718659@mail.gmail.com>
-	<20090423180928.GA22426@jm.kir.nu>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 23 Apr 2009 20:18:12 +0200
-Message-ID: <69e28c910904231118p59695f58q6f0b34f5ff9c953a@mail.gmail.com> (sfid-20090423_201837_770423_4669C569)
-Subject: Re: [PATCH 0/5] mac80211, iwlwifi, ath9k: Fix rate scaling for
-	IEEE80211_TX_CTL_NO_ACK packets
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 19 Apr 2009 14:00:50 -0400
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419174538.140620@gmx.net> (sfid-20090419_194610_734041_B2E7FCEC)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
+	 <20090419143337.158810@gmx.net>  <20090419163204.158820@gmx.net>
+	 (sfid-20090419_183237_340935_6640098A) <1240160041.28138.0.camel@johannes.local>
+	 <20090419171546.158830@gmx.net>
+	 (sfid-20090419_191552_279073_CA045D96) <1240161550.28138.6.camel@johannes.local>
+	 <20090419174538.140620@gmx.net> (sfid-20090419_194610_734041_B2E7FCEC)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-331CmDPTo6GXZP44smRp"
+Date: Sun, 19 Apr 2009 20:00:47 +0200
+Message-Id: <1240164047.28138.9.camel@johannes.local> (sfid-20090419_200052_935873_60C3752D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/23 Jouni Malinen <j@w1.fi>:
-> On Thu, Apr 23, 2009 at 07:35:55PM +0200, G=E1bor Stefanik wrote:
->> Handling of multicast/NO_ACK packets by mac80211 rate scaling is a
->> mess. Basically, the rule of thumb is that any packet with
->> IEEE80211_TX_CTL_NO_ACK (including multicasts and broadcasts, which
->> always have this flag set) should be sent at lowest rate (unless
->> overridden by radiotap - this is not covered in this patchset), with
->> no retries.
->
-> While this may be the case with the current rate control
-> implementations, this is not a good assumption to make.
-> Multicast/broadcast frames could (and often really should) be
-> transmitted at higher rate, i.e., the rate control algorithm could
-> figure out that all associated STAs should be able to receive frames =
-at
-> a higher basic rate.
->
-> As far as unicast no-ACK frames are concerned, those could (and again=
-,
-> should) be sent at higher rate, too, if the receiving STA can be assu=
-med
-> to be able to receive the frame with "large enough" probability.
->
->> So, the right thing to do in any rate scaling algorithm:
->> =A0* Check for IEEE80211_TX_CTL_NO_ACK. No need to check
->> is_multicast_ether_addr, as multicasts always have NO_ACK set.
->> =A0* If it is set, select the lowest available rate (unless overridd=
-en
->> by radiotap), with a retry count of 0 (total try count of 1).
->
-> I would not agree with these as general rules for all rate control
-> algorithms.
->
-> --
-> Jouni Malinen =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0PGP id EFC895FA
->
 
-Yes, I agree what you write - but the point of the patchset is to make
-sure that (1) all NO_ACK frames get correct treatment, not just
-multicasts and (2) NO_ACK/multicast frames aren't requested to be
-retried (which is obviously wrong, and results in always retrying till
-the limit is reached). Developing an algorithm to allow NO_ACKs to be
-transmitted at a higher rate is beyond the scope of this patchset.
+--=-331CmDPTo6GXZP44smRp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, 2009-04-19 at 19:45 +0200, Alina Friedrichsen wrote:
+
+> If you set a channel you want the IBSS on this this channel regardless
+> if one already exist or not. If you don't, you never mind on the
+> channel, even if the IBSS don't exist.
+
+No, that's not true, you could well want to create your network on a
+channel that isn't used that much or whatever.
+
+I'm going to stop reading this thread now -- there's no value in it
+unless you can actually come up with new arguments.
+
+johannes
+
+--=-331CmDPTo6GXZP44smRp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ62bMAAoJEKVg1VMiehFYwbsP/2uY5rla3S4rEt2SBTqsDAM8
+EptyDBXmJ7Bndi5LeQTIUPTbagoXrZLOkpmfueCtxFprPAxe1FBIcji17OwEupxb
+lBQv92gL1pvctclFENX3K7eDeEQg/CZDdDY7MPzk6t2NK9nH+jkWU5NnSy1tOBVU
+EiVGszZDNEwbcbOgbW4cCLq2+JzOwK9O3tlc4Odog7YtrBGGVca7vVgO4y/T2pyK
+ml/7UYtjn3kYb5QcassUHeUunKh2mrvUMkDVFLvj9ovGmJvtdd87Qez9aoC0vx72
+DVv+kpb8mIgAkpVUBUFpf/yxB1szICpbrzHEbEWv029jyXkWmCkpliUNwGIZ+KP6
+aSnHOyUBzFqohWf6fML8bvUmC3xq7bl5Do9/JVTOG7G7Z0Vs7fGVc8myuc/1XlPC
+Q5oD0YUOIREK7SdqQH7z4atK0xyktgGFqZisP8w3RNCFuQ3hoXUld/uQxwsjqk2X
+TKX+BKqcEmkT7KXkmTfdGCjgqvf3piYxSqgE1a6njDHFls2JN9pe3aqMEtuHj4Ws
+HitpeQtP93xhGLgftlO5EmUcT2FetljcnztIq8IXHeWOqT3CTMFArycK76NPi+Go
+0BMZEQs5jcCPsHqt1/Q8yss6sEGnVwnaUwCdRfYklbwCjFe8Rp6I7Fny5AWNI2XN
+8FazhUcD+yEjKk/rQaDZ
+=2Vbr
+-----END PGP SIGNATURE-----
+
+--=-331CmDPTo6GXZP44smRp--
+
