@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:36341 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286AbZDPIr4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48945 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691AbZDSTVK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 04:47:56 -0400
-Received: by fxm2 with SMTP id 2so280347fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 01:47:54 -0700 (PDT)
-To: Max Filippov <jcmvbkbc@gmail.com>
-Cc: Greg KH <greg@kroah.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com>
-	<87ws9lf8c4.fsf@litku.valot.fi>
-	<73aaf0dd0904160139o159a604fv5b3ff0801124d1d3@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 16 Apr 2009 11:47:50 +0300
-In-Reply-To: <73aaf0dd0904160139o159a604fv5b3ff0801124d1d3@mail.gmail.com> (Max Filippov's message of "Thu\, 16 Apr 2009 12\:39\:56 +0400")
-Message-ID: <87zleh9e89.fsf@litku.valot.fi> (sfid-20090416_104800_703142_4C874041)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 19 Apr 2009 15:21:10 -0400
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419190103.158790@gmx.net> (sfid-20090419_210135_646451_315341AB)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
+	 <20090419125212.158800@gmx.net>
+	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+	 <20090419133544.158820@gmx.net>
+	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+	 <20090419140523.158830@gmx.net>
+	 (sfid-20090419_160555_446977_A429511B) <1240150277.898.7.camel@johannes.local>
+	 <20090419151629.158790@gmx.net>
+	 (sfid-20090419_171702_263242_9A8C16F9) <1240154704.898.18.camel@johannes.local>
+	 <20090419155319.158810@gmx.net>
+	 (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
+	 <20090419161316.158790@gmx.net>
+	 (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
+	 <20090419165443.158820@gmx.net>
+	 (sfid-20090419_185516_519795_36D34B9B) <1240160241.28138.4.camel@johannes.local>
+	 <20090419173354.158790@gmx.net> <1240163391.11795.59.camel@violet>
+	 <20090419180314.23710@gmx.net> <1240164895.11795.70.camel@violet>
+	 <20090419184320.158810@gmx.net>
+	 (sfid-20090419_204331_522505_5A7A007C) <1240167343.28138.12.camel@johannes.local>
+	 <20090419190103.158790@gmx.net> (sfid-20090419_210135_646451_315341AB)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-umiV1QXxwrEmQHnITzAW"
+Date: Sun, 19 Apr 2009 21:21:04 +0200
+Message-Id: <1240168864.28138.13.camel@johannes.local> (sfid-20090419_212119_439041_422A4F52)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Max Filippov <jcmvbkbc@gmail.com> writes:
 
->> I have received a report that at76_usb has worked better than
->> at76c50x-usb. Also p54spi implementation is quite new and not that much
->> tested.
->>
->> If it's ok for you, I would like to have both at76_usb and stlc45xx in
->> the staging area for some time still. I will let you know when they can
->> be removed.
->
-> Kalle, what is the primary location for stlc45xx sources then?
+--=-umiV1QXxwrEmQHnITzAW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have been thinking about using staging the primary location. What do
-you think?
+On Sun, 2009-04-19 at 21:01 +0200, Alina Friedrichsen wrote:
+> > ROFL.
+> >=20
+> > Your credibility has just gone below zero.
+>=20
+> Tell me when nl80211v2 will be developed to solve the design errors of
+> the first version.
 
-> I see that version in staging is pretty old.
+Go ahead. But consider reading 802.11 first.
 
-Yeah, I have been planning to patch bomb Greg at some point with all the
-patches from the stlc45xx git tree. It's just that n800 support is
-currently broken in 2.6.30-rc1 from linux-omap tree :(
+johannes
 
--- 
-Kalle Valo
+--=-umiV1QXxwrEmQHnITzAW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ63mdAAoJEKVg1VMiehFYFcUP/3rISujukG5zm1JHuvlKMddN
+1te9oRbS3t/h2SIVjQHQs9WU3yOXaIY0I3q65PBqqe8ZyJBqqvMYIRawC48BPInW
+naDyw24WBpJ0ealXFb5xDkjeGIDKcPmcva6I7KYm9ssDnLeba1/UFAa08EDm/l4T
+rkJV1TQ2T//luFFqoRngAzIL8vkus0zvwbN4h0oejOr+lkEKFc4DJ9HEIj1jYw6m
+IxKsFCjfSmIBW2cHcLtAULGSyt6ZvBWwSLpaSuzxjVtTPqic8N2MDHeBLKdxm8Tf
+BNkIRISyhYHOcj5wCyUv1MB1cXoy/5AtgtD9KezmYRxXGB5aATIqPOuzDZ+oDHKJ
+WzMs1OIvnQx6RDA9qm8ehRCn3oYg2kozernaqFXG3XMfA9iOwM/PVGgH41v3tczn
+Raxc5tAFQzOqFjALCnoXHYNg0uqcaX7+Lmp0S0EuYylqhS3qRX70L8/ERPvDJVtT
+FZXzVmKUtzy3NUwtVDY1ydB8YuMgl6+SYL8SDE7agS/CqA6QY5UPUZZxgzP/yEfG
+sEbOBnltGChSGGy/3NcZGioquE41hAIkzN3TRs7N+GKMj5v1rTZUOFaNQcqQfWJ/
+xIS0eS81NJU9HLdJlVpYCsBYoKy6KY1oBrpiKlTf4EZxg5DC2jjlyJQYsOsLUrbA
+dpnzY12W9NFKN5vIHnu1
+=C1g1
+-----END PGP SIGNATURE-----
+
+--=-umiV1QXxwrEmQHnITzAW--
+
