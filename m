@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:26178 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556AbZDZHGs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 03:06:48 -0400
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Received: from mail.gmx.net ([213.165.64.20]:38023 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756323AbZDSOtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 10:49:06 -0400
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: 2.6.30-rc2-git2: Reported regressions from 2.6.29
-References: <EJaiQ4Wfaz.A.3YG.4v85JB@chimera> <87ljpqqi89.fsf@nokia.com>
-	<200904252357.55023.rjw@sisk.pl>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 26 Apr 2009 10:06:04 +0300
-In-Reply-To: <200904252357.55023.rjw@sisk.pl> (ext Rafael J. Wysocki's message of "Sat\, 25 Apr 2009 23\:57\:53 +0200")
-Message-ID: <87skjvopwj.fsf@nokia.com> (sfid-20090426_090654_366271_CC5CE9F6)
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 16:49:03 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240151862.898.14.camel@johannes.local>
+Message-ID: <20090419144903.158820@gmx.net> (sfid-20090419_164910_305220_3FBD5865)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240147370.898.0.camel@johannes.local>	 <20090419142631.158790@gmx.net>	
+ (sfid-20090419_162703_506410_10175D69)
+ <1240151621.898.13.camel@johannes.local>	
+ (sfid-20090419_163346_662878_5F0F1754) <1240151862.898.14.camel@johannes.local>
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Rafael J. Wysocki" <rjw@sisk.pl> writes:
+Hello Johannes!
 
->> Rafael, is it possible to send your regression mails to
->> linux-wireless@vger.kernel.org as well? Very few wireless developers
->> have time to follow netdev or lkml.
->
-> Sure, the next reports will go there too.
+> Ah, there's "iwconfig wlan0 channel auto" as an alias for this, I gue=
+ss
+> that's an acceptable way to do it.
 
-Thanks a lot. We already got a new report.
+Yes, if you want join/assoc to a network regardless of the channel. If =
+the channel is set to a different value then auto you only join/assoc n=
+etworks on the same channel.
 
--- 
-Kalle Valo
+Something is needed to implement it with cfg80211.
+
+Regards
+Alina
+
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
