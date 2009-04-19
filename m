@@ -1,202 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56370 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49205 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464AbZDSR5x (ORCPT
+	with ESMTP id S1758085AbZDSOdo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 13:57:53 -0400
-Subject: [PATCH] cfg80211/mac80211: move wext SIWMLME into cfg80211
+	Sun, 19 Apr 2009 10:33:44 -0400
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain
-Date: Sun, 19 Apr 2009 19:57:45 +0200
-Message-Id: <1240163865.28138.8.camel@johannes.local> (sfid-20090419_195756_910883_50FC6400)
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090419142631.158790@gmx.net> (sfid-20090419_162703_506410_10175D69)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
+	 <20090419142631.158790@gmx.net> (sfid-20090419_162703_506410_10175D69)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ykBOYMVN5llVr30ZMuxV"
+Date: Sun, 19 Apr 2009 16:33:41 +0200
+Message-Id: <1240151621.898.13.camel@johannes.local> (sfid-20090419_163346_662878_5F0F1754)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we have ->deauth and ->disassoc we can support the
-wext SIWMLME call directly without driver wext handlers.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |    3 ++
- net/mac80211/cfg.c         |   12 +++--------
- net/mac80211/mlme.c        |    6 -----
- net/mac80211/wext.c        |   25 ------------------------
- net/wireless/wext-compat.c |   46 ++++++++++++++++++++++++++++++++++++++++++++-
- 5 files changed, 53 insertions(+), 39 deletions(-)
+--=-ykBOYMVN5llVr30ZMuxV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/mac80211/wext.c	2009-04-19 19:47:00.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-04-19 19:47:11.000000000 +0200
-@@ -612,29 +612,6 @@ static int ieee80211_ioctl_giwretry(stru
- 	return 0;
- }
- 
--static int ieee80211_ioctl_siwmlme(struct net_device *dev,
--				   struct iw_request_info *info,
--				   struct iw_point *data, char *extra)
--{
--	struct ieee80211_sub_if_data *sdata;
--	struct iw_mlme *mlme = (struct iw_mlme *) extra;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	if (!(sdata->vif.type == NL80211_IFTYPE_STATION))
--		return -EINVAL;
--
--	switch (mlme->cmd) {
--	case IW_MLME_DEAUTH:
--		/* TODO: mlme->addr.sa_data */
--		return ieee80211_sta_deauthenticate(sdata, mlme->reason_code);
--	case IW_MLME_DISASSOC:
--		/* TODO: mlme->addr.sa_data */
--		return ieee80211_sta_disassociate(sdata, mlme->reason_code);
--	default:
--		return -EOPNOTSUPP;
--	}
--}
--
- 
- static int ieee80211_ioctl_siwencode(struct net_device *dev,
- 				     struct iw_request_info *info,
-@@ -1076,7 +1053,7 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWTHRSPY */
- 	(iw_handler) ieee80211_ioctl_siwap,		/* SIOCSIWAP */
- 	(iw_handler) ieee80211_ioctl_giwap,		/* SIOCGIWAP */
--	(iw_handler) ieee80211_ioctl_siwmlme,		/* SIOCSIWMLME */
-+	(iw_handler) cfg80211_wext_siwmlme,		/* SIOCSIWMLME */
- 	(iw_handler) NULL,				/* SIOCGIWAPLIST */
- 	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
- 	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-04-19 19:47:06.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-04-19 19:47:58.000000000 +0200
-@@ -10,6 +10,7 @@
- 
- #include <linux/wireless.h>
- #include <linux/nl80211.h>
-+#include <linux/if_arp.h>
- #include <net/iw_handler.h>
- #include <net/wireless.h>
- #include <net/cfg80211.h>
-@@ -206,7 +207,6 @@ int cfg80211_wext_giwrange(struct net_de
- 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
- 			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
- 
--
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
- 		int i;
- 		struct ieee80211_supported_band *sband;
-@@ -241,3 +241,47 @@ int cfg80211_wext_giwrange(struct net_de
- 	return 0;
- }
- EXPORT_SYMBOL(cfg80211_wext_giwrange);
-+
-+int cfg80211_wext_siwmlme(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  struct iw_point *data, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct iw_mlme *mlme = (struct iw_mlme *)extra;
-+	struct cfg80211_registered_device *rdev;
-+	union {
-+		struct cfg80211_disassoc_request disassoc;
-+		struct cfg80211_deauth_request deauth;
-+	} cmd;
-+
-+	if (!wdev)
-+		return -EOPNOTSUPP;
-+
-+	rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION)
-+		return -EINVAL;
-+
-+	if (mlme->addr.sa_family != ARPHRD_ETHER)
-+		return -EINVAL;
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+
-+	switch (mlme->cmd) {
-+	case IW_MLME_DEAUTH:
-+		if (!rdev->ops->deauth)
-+			return -EOPNOTSUPP;
-+		cmd.deauth.peer_addr = mlme->addr.sa_data;
-+		cmd.deauth.reason_code = mlme->reason_code;
-+		return rdev->ops->deauth(wdev->wiphy, dev, &cmd.deauth);
-+	case IW_MLME_DISASSOC:
-+		if (!rdev->ops->disassoc)
-+			return -EOPNOTSUPP;
-+		cmd.disassoc.peer_addr = mlme->addr.sa_data;
-+		cmd.disassoc.reason_code = mlme->reason_code;
-+		return rdev->ops->disassoc(wdev->wiphy, dev, &cmd.disassoc);
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+EXPORT_SYMBOL(cfg80211_wext_siwmlme);
---- wireless-testing.orig/include/net/cfg80211.h	2009-04-19 19:47:07.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-04-19 19:47:11.000000000 +0200
-@@ -833,6 +833,9 @@ int cfg80211_wext_siwscan(struct net_dev
- int cfg80211_wext_giwscan(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  struct iw_point *data, char *extra);
-+int cfg80211_wext_siwmlme(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  struct iw_point *data, char *extra);
- int cfg80211_wext_giwrange(struct net_device *dev,
- 			   struct iw_request_info *info,
- 			   struct iw_point *data, char *extra);
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-19 19:47:00.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-19 19:47:11.000000000 +0200
-@@ -2307,9 +2307,6 @@ int ieee80211_sta_deauthenticate(struct 
- 	printk(KERN_DEBUG "%s: deauthenticating by local choice (reason=%d)\n",
- 	       sdata->dev->name, reason);
- 
--	if (sdata->vif.type != NL80211_IFTYPE_STATION)
--		return -EINVAL;
--
- 	ieee80211_set_disassoc(sdata, true, true, reason);
- 	return 0;
- }
-@@ -2321,9 +2318,6 @@ int ieee80211_sta_disassociate(struct ie
- 	printk(KERN_DEBUG "%s: disassociating by local choice (reason=%d)\n",
- 	       sdata->dev->name, reason);
- 
--	if (sdata->vif.type != NL80211_IFTYPE_STATION)
--		return -EINVAL;
--
- 	if (!(ifmgd->flags & IEEE80211_STA_ASSOCIATED))
- 		return -ENOLINK;
- 
---- wireless-testing.orig/net/mac80211/cfg.c	2009-04-19 19:47:00.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-04-19 19:47:11.000000000 +0200
-@@ -1267,22 +1267,18 @@ static int ieee80211_assoc(struct wiphy 
- static int ieee80211_deauth(struct wiphy *wiphy, struct net_device *dev,
- 			    struct cfg80211_deauth_request *req)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	/* TODO: req->ie */
-+	/* TODO: req->ie, req->peer_addr */
- 	return ieee80211_sta_deauthenticate(sdata, req->reason_code);
- }
- 
- static int ieee80211_disassoc(struct wiphy *wiphy, struct net_device *dev,
- 			      struct cfg80211_disassoc_request *req)
- {
--	struct ieee80211_sub_if_data *sdata;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	/* TODO: req->ie */
-+	/* TODO: req->ie, req->peer_addr */
- 	return ieee80211_sta_disassociate(sdata, req->reason_code);
- }
- 
+[resend with list]
 
+On Sun, 2009-04-19 at 16:26 +0200, Alina Friedrichsen wrote:
+> > Hmm, I forgot one thing -- you may want to create an IBSS on a specific
+> > channel, but still allow it scan for other IBSSes. I guess we need a
+> > flag for that and not make "channel set" imply fixed channel.
+>=20
+> In cfg80211 an indication for channel auto select is needed for IBSS
+> and _STA_ mode, to implement with it the old wext interface. If not
+> set the channel shouldn't be changed. If you not want store this flag
+> in cfg80211, you must store it in the channel functions of wext to
+> have the same behavior like now.
+
+That's not what I was referring to -- and wext doesn't actually allow
+what I'm referring to afaik.
+
+When you want to create an IBSS on channel 5, what do you do?
+
+I think you have to
+	iwconfig wlan0 essid test
+	iwconfig wlan0 channel 5
+	iwconfig wlan0 ap off # clear fixed channel bit
+
+which is ... weird. OTOH with mac80211 you can also say
+	iconfig wlan0 channel -1
+
+but that's even more strange.
+
+johannes
+
+--=-ykBOYMVN5llVr30ZMuxV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ6zZDAAoJEKVg1VMiehFYXIQQAL6qTtIV9UD+iYnG2feLr2a1
+qxHbBuWTq10t8E/TOL4hMEfaupVWLhdrHNylA+fbDV2sb6pvdtwfqm+oFUW9Y75f
+Qil/b4RzARx0srswDiZBpdBouLMBmh0zE6pPImG/Qre0/fHVCaEhOPj6EJiXSGQy
+lnJMSBmCffmYxAAfhbhy8xN8+tR1oHyIGc2cQI9TbkTupa12kNNTFkDawGBQ3hD8
+Zf17fWRWQJou0axmeZ5nz6SUFRUWLt3Roc1cl2qKl7lKYDaiEJCDve4xLhhlSQRW
+krjRPlHLMJP3nLaGym1imXlTR32vSbb589XjgH63hCGG/hevqaAl3ox7QhmQH8sc
+C3TZDXuTTfqIgHyIQ38hDvB9flzVHrah6CLQYTnMBUNDNjUqPdwp4hZzJmvbEpvT
+ykAhj5U0N4ZOVmr7KuUvUs5/2e9AGyB6kE+5oG2Z133qRxuo/V3J/sQ7Ori/i2V2
+fn3KR0Tzq7/dLWJgAbTgfo9Euz1iAyawPYYFUpC2qL0a6sjqePEzKgCDVAAt2KV/
+PlJHIB32Bkfp2MM9DeR7JIthSqbUPfZhYu50zjPZ/PGWwmdq2eGmXADaQ3dth9ys
+sqmemgjwMtW6HzQBZ7BhIsXy0vmzzJ5wyK3NLEVi+p5xGHSmNkck5FfC0ikT/M/V
+KwXMbYtv/n1WDSaB/Y34
+=6J/+
+-----END PGP SIGNATURE-----
+
+--=-ykBOYMVN5llVr30ZMuxV--
 
