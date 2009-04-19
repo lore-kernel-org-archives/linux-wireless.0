@@ -1,87 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:57673 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbZDMWQq convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34833 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296AbZDSSeJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 18:16:46 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFT/RFC V2] rtl8187: Implement TX/RX blink for LED
-Date: Mon, 13 Apr 2009 19:16:42 -0300
-Cc: "Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-References: <49e3624d.kMco99OS/EWv0szt%Larry.Finger@lwfinger.net>
-In-Reply-To: <49e3624d.kMco99OS/EWv0szt%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Message-Id: <200904131916.42818.herton@mandriva.com.br> (sfid-20090414_001650_229934_D825A22C)
+	Sun, 19 Apr 2009 14:34:09 -0400
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419181820.158810@gmx.net> (sfid-20090419_201854_422451_34B7093F)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
+	 <20090419143337.158810@gmx.net>  <20090419163204.158820@gmx.net>
+	 (sfid-20090419_183237_340935_6640098A) <1240160041.28138.0.camel@johannes.local>
+	 <20090419171546.158830@gmx.net>
+	 (sfid-20090419_191552_279073_CA045D96) <1240161550.28138.6.camel@johannes.local>
+	 <20090419174538.140620@gmx.net>
+	 (sfid-20090419_194610_734041_B2E7FCEC) <1240164047.28138.9.camel@johannes.local>
+	 <20090419181820.158810@gmx.net> (sfid-20090419_201854_422451_34B7093F)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NEPuq+BNHMImbP26VURP"
+Date: Sun, 19 Apr 2009 20:34:06 +0200
+Message-Id: <1240166046.28138.11.camel@johannes.local> (sfid-20090419_203413_964838_EA810A43)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Segunda-feira 13 Abril 2009, =E0s 13:03:25, Larry Finger escreveu:
-> The following patch implements some control over the LED on RTL8187B =
-and
-> RTL8187L devices. Triggers are registered for TX and RX. Whenever the
-> trigger event occurs, the LED is turned off for 1/20 second, then tur=
-ned
-> back on.
->
-> Note: For those RTL8187X devices that are built into the computer and=
- have
-> a LED that is expected to be controlled with a radio switch, this pat=
-ch
-> will not operate that LED. That will take a separate patch to be prep=
-ared
-> later.
->
-> Please test and comment.
->
-> The behavior described above is found for my Level One RTL8187B. Prio=
-r to
-> this patch, the LED was on continuously. On a Netgear WG111V2 RTL8187=
-L, the
-> LED blinks erratically. Before the patch, the LED was off.
->
-> If you test, please report the status of the LED before and after app=
-lying
-> the patch. In addition, find the line that looks like "rtl8187: Custo=
-mer ID
-> 0x00" in the dmesg output and report it. I also need to know if you h=
-ave a
-> B or L model.
 
-I tested here on a Quanta IL1 mini-notebook with rtl8187b:
-- Reports Customer ID 0x00
-- Before the patch, on a cold boot, when driver loads, the wireless led=
- lights=20
-up and stays forever on (expected, one of the register writes from=20
-rtl8187b_reg_table turns it on: {0x91, 0x03, 0}, this should be removed=
- from=20
-the code and turn led up now in rtl8187_leds_init may be?).
-- After the patch it continues to turn on as expected (nothing changed)=
-, and=20
-blinks on activity, is working fine. But it doesn't turn off led on unr=
-egister,=20
-missing led_turn_off at rtl8187_unregister_led. Otherwise looks fine.
+--=-NEPuq+BNHMImbP26VURP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-BTW, thanks for doing this, led support is a nice feature :)
+On Sun, 2009-04-19 at 20:18 +0200, Alina Friedrichsen wrote:
+> > No, that's not true, you could well want to create your network on a
+> > channel that isn't used that much or whatever.
+>=20
+> Okay that's is an argument. But then I would implement it more closer
+> to the the handling of the assoc() call.
+>=20
+>  * @channel: The channel to use or %NULL if not specified
+>  * (auto-select based on scan results)
+>  * @channel_auto: Auto-select channel based on scan results,
+>  * only use the specified channel for creating a new IBSS.
 
->
-> A number of problems with version 1 of this patch have been fixed. Th=
-e most
-> important of these was a locking problem that caused the RTL8187L to =
-fail.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-<snip>
+Actually, I'm arguing in another email that the channel_auto should be
+removed in assoc... And IMHO fixed is much clearer for what we (well you
+mostly actually!) want.
 
---
-[]'s
-Herton
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-NEPuq+BNHMImbP26VURP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ626bAAoJEKVg1VMiehFYz2wP/2E8dNsO6zK5h+ErtjJHcr0I
+4L+Xu51iAkL8eIN+s+3cj01IysUhmAuV3UVgfzq1b/dELbozNh6OMNTlpxXRGPH6
+Dm1YzsANKzgU0QQtiLFh98rYYd0xOOamYS4CfkxBOPOERxKcyBPidxmOYPu3+a6I
+Ij6Jymno1DQz53Tlvyi+k5zqmrfEHfGSDeXeuolkRjv+ZmNknKhPqDHX0d38Asx0
+UIERJIfLMeDEkDpKtIe4Z8gQQIPLKHlps/K7yJJK1RIuQNS3cEWIiqyTYkQRnGGn
+9oMUMrEFDCOSbw7fTo9wjaInPtZZFQdlQQzPDDpyw+tcu5dRG5HHDc5GEDMmhwpC
+1UfDk7E8WLIaZKSEruC7hDfQDPEA7jV3uPZ4VjxNHYefaAXUqLUiW2OUAuWNcP23
+govGCy2Uny29nAccOPktbk/mgD+MTAU2J1Pp8Kq5bKOgYK6EQZt5PGpChjKk0oSN
+JXbtrcaHs8pHaBThjgpJ0+8UBLojBVEjxE/B2wbS5c51ioSy/zD6lYFvhlDxvuEL
+uvFO9pkGECePBqrBImR06pn09CGRCT1IuKFd6U+IkG37rTJB3lAtMlBPlEci/Acl
+3aJnpVH6J+Hq7aje6wr9bYUbMNptj3WWR5JE4BINqWrwSavdk2HJVqeEZi3Pt/Id
+RwCbQfXBt9+tiQ5NTrzD
+=A02T
+-----END PGP SIGNATURE-----
+
+--=-NEPuq+BNHMImbP26VURP--
+
