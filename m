@@ -1,60 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:38043 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074AbZDRRsS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55844 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209AbZDSILx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 13:48:18 -0400
-Received: by ewy24 with SMTP id 24so618644ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Apr 2009 10:48:17 -0700 (PDT)
-Message-ID: <49EA125F.5060303@tuffmail.co.uk> (sfid-20090418_194823_366142_15639075)
-Date: Sat, 18 Apr 2009 18:48:15 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rfkill rewrite bug
-References: <49DCA88E.6060400@tuffmail.co.uk>	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>	 <49E98C86.2040308@tuffmail.co.uk>	 (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>	 <49E9A0C7.8040602@tuffmail.co.uk>	 (sfid-20090418_114338_695917_3CBF9024) <1240057470.4755.7.camel@johannes.local>	 <49E9F677.80109@tuffmail.co.uk> (sfid-20090418_174945_153562_3F1E7019) <1240070230.2978.2.camel@johannes.local>
-In-Reply-To: <1240070230.2978.2.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 19 Apr 2009 04:11:53 -0400
+Subject: Re: [PATCH v2] mac80211: fix beacon loss detection after scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "John W.Linville" <linville@tuxdriver.com>,
+	Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090419054719.16621.48938.stgit@tikku>
+References: <20090419054719.16621.48938.stgit@tikku>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ta4RcPAaYYa2fr8+X+/x"
+Date: Sun, 19 Apr 2009 10:11:42 +0200
+Message-Id: <1240128702.25826.3.camel@johannes.local> (sfid-20090419_101159_887657_DB4729C2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-04-18 at 16:49 +0100, Alan Jenkins wrote:
->
->   
->>> That's odd, I thought I added a set_sw_state() to rfkill which would
->>> disable that rfkill. But there's rfkill_set_global_sw_state() which
->>> should do what you want -- can you try replacing the EEE set_sw_state
->>> call with that?
->>>       
 
+--=-Ta4RcPAaYYa2fr8+X+/x
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> No, that's done asynchronously in rfkill_sync_work(). But actually, heh,
-> that means set_sw_state can _not_ work before registering.
->   
+On Sun, 2009-04-19 at 08:47 +0300, Kalle Valo wrote:
+> Currently beacon loss detection triggers after a scan. A probe request
+> is sent and a message like this is printed to the log:
+>=20
+> wlan0: beacon loss from AP 00:12:17:e7:98:de - sending probe request
+>=20
+> But in fact there is no beacon loss, the beacons are just not received
+> because of the ongoing scan. Fix it by updating last_beacon after
+> the scan has finished.
+>=20
+> Reported-by: Jaswinder Singh Rajput <jaswinder@kernel.org>
+> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
 
-Ah, I think I see it now.
+Thanks.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Um, what's the use-case for calling set_sw_state() before registration? 
-Is it actually needed?
+> ---
+>=20
+>  net/mac80211/mlme.c |   10 +++++++++-
+>  1 files changed, 9 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index c0f91d5..1b8509d 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2005,9 +2005,17 @@ static void ieee80211_sta_work(struct work_struct =
+*work)
+> =20
+>  static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sd=
+ata)
+>  {
+> -	if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION)
+> +	if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
+> +		/*
+> +		 * Need to update last_beacon to avoid beacon loss
+> +		 * test to trigger.
+> +		 */
+> +		sdata->u.mgd.last_beacon =3D jiffies;
+> +
+> +
+>  		queue_work(sdata->local->hw.workqueue,
+>  			   &sdata->u.mgd.work);
+> +	}
+>  }
+> =20
+>  /* interface setup */
+>=20
+>=20
 
-I think it was doing _something_.  If the initial wireless state is
-soft-blocked, but rfkill.default_state = 1 (unblocked), then without the
-set_sw_state() call, the wireless would remain soft blocked.  When the
-first sync_work calls rfkill_set_block(false), the "prev" value would
-also be false, so it would return without calling .set_block().  And
-you'd have an inconsistency, because "/sys/class/rfkill/rfkill0/state"
-would say "1" (unblocked).
+--=-Ta4RcPAaYYa2fr8+X+/x
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-You'd have a similar problem the other way around, if the wireless was
-initially enabled, but the user specified rfkill.default_state = 0.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-So maybe you need a "first time, force sync" flag instead.  That would
-also help if you had a write-only rfkill line, no?
+iQIcBAABAgAGBQJJ6ty6AAoJEKVg1VMiehFYjhoP/3YwErcdlrFFHKgMI7NX/tO7
+GFwh2NT18ygXVezXOGyosHZzNjv4y3SkccJXU2iXSPdXY3nFlMGIQghtIsOP1Mnf
+gigU/UcL0AkZ3Ri9QmMZgxVK/MwCXa+eE9liz3SxrR4UoMrT6TKDlqdv2aq9xvK7
+TLd6I2A6VPlvdwGrpMj93zX8IzmpzSXEMyNBHmXtRRYqx9JkicmGMwU5YOMwolsm
+gAkKHXk76K3RystrSWv2JkCCO33PEJ0yMLn2kBsbj9HxM+hvIlhmk+9P6Ta3fcNG
+PwI67FfBuv3pTVejch95etZo4+98ieM178nDHvTxI04WhJFP/18oOajQp/uADKsp
+x8g9s8DWLfLoYQKdCM+2Ax5TRmfligR1rizwPeWf4aTrn4Plee485/abH87zSPGQ
+CBpbo5cKYCI8O2FCrNDuHtdq7GkJTbVF53nVHPlPTHKaoQfp6aCOx59gvGJnMPiC
++Yv/RWaZ1zPTBdWeVu6xGdjDljnHtWOWeuYyNW2VC2DRIfn4HMro/aalxhmKiriS
+IXvOkxU+sQ0XT8WfP3s0cfP2i+tx+qi0oqOsysNfWKJT6N2XgsGOiVLCWMYtwpuE
+ykO0b08wFUqh/sDBDidGxV/r9fCz+gyQon3Qh2gKnbb0nR1Y4/ZFZbqWV19lzHFn
+iqbmNrgJT7Xg0EKAmj0+
+=y743
+-----END PGP SIGNATURE-----
 
-Regards
-Alan
-
-
+--=-Ta4RcPAaYYa2fr8+X+/x--
 
