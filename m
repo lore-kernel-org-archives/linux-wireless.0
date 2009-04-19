@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48415 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950AbZDGTfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:35:21 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211: changing number of queues in ops->start
-Date: Tue, 7 Apr 2009 21:33:21 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200904072024.41910.mb@bu3sch.de> <1239132567.7187.1.camel@johannes.local>
-In-Reply-To: <1239132567.7187.1.camel@johannes.local>
+Received: from mail.gmx.net ([213.165.64.20]:59908 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754942AbZDSSmk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 14:42:40 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 20:42:36 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240166046.28138.11.camel@johannes.local>
+Message-ID: <20090419184236.158790@gmx.net> (sfid-20090419_204245_319645_EBB91564)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904072133.21296.mb@bu3sch.de> (sfid-20090407_213525_462007_BF1F26DC)
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240147370.898.0.camel@johannes.local>	 <20090419143337.158810@gmx.net>
+ <20090419163204.158820@gmx.net>	 (sfid-20090419_183237_340935_6640098A)
+ <1240160041.28138.0.camel@johannes.local>	 <20090419171546.158830@gmx.net>	
+ (sfid-20090419_191552_279073_CA045D96)
+ <1240161550.28138.6.camel@johannes.local>	 <20090419174538.140620@gmx.net>	
+ (sfid-20090419_194610_734041_B2E7FCEC)
+ <1240164047.28138.9.camel@johannes.local>	 <20090419181820.158810@gmx.net>
+ (sfid-20090419_201854_422451_34B7093F) <1240166046.28138.11.camel@johannes.local>
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 April 2009 21:29:27 Johannes Berg wrote:
-> On Tue, 2009-04-07 at 20:24 +0200, Michael Buesch wrote:
-> > I'm wondering how to implement QoS capability runtime detection
-> > in a mac80211 driver.
-> > 
-> > In b43 we don't know at ieee80211_register time whether the firmware does
-> > support QoS or not, because it's not loaded yet. (Reasons for not loading
-> > it that early are issues with builtin-b43, etc...).
-> > So we don't know whether we are going to load opensource fw (no QoS) or
-> > proprietary fw (QoS capable).
-> > But it seems that mac80211 requires to set hw->queues before ieee80211_register.
-> > 
-> > So what I'd need is a way to change the number of possible queues from within
-> > the ops->start handler.
-> 
-> Well, I suppose you could register with the max and later reduce and
-> stop the remaining queues you're not using... Or not stop them and drop
-> packets on them. That's somewhat fragile, gives people who look at tc a
-> wrong idea, and I can't imagine supporting it, but it should work.
+> Actually, I'm arguing in another email that the channel_auto should b=
+e
+> removed in assoc... And IMHO fixed is much clearer for what we (well =
+you
+> mostly actually!) want.
 
-mkay, I'll try this. thanks :)
+But normally you say with a NULL-Pointer, that it should be auto-detect=
+ed and if it's set, that you want set it manually. This calls how it is=
+ now breaks with this concept.
 
-I wonder, however, will mac80211 try to queue packets on queues that are stopped?
-And I think just dropping them is not an option, because this will cause breakage.
+Alina
 
-What about just queueing everything on a single queue, no matter what queue mac80211
-puts the frame into? Would this cause ordering issues?
-Or the other way around, is there anything that _depends_ on the higher priority queues
-to get sent before the higher priority queues?
-
--- 
-Greetings, Michael.
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
