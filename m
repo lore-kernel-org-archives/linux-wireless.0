@@ -1,117 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:17738 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbZD3UuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 16:50:16 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/5] iwl3945: fix lock dependency
-Date: Thu, 30 Apr 2009 13:56:26 -0700
-Message-Id: <1241124991-12492-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1241124991-12492-1-git-send-email-reinette.chatre@intel.com>
-References: <1241124991-12492-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail3.webfaction.com ([70.85.44.146]:36671 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755537AbZDSUCY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 16:02:24 -0400
+Date: Sun, 19 Apr 2009 16:01:46 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg KH <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090419200146.GB28885@storm.local.network> (sfid-20090419_220227_723836_9D3BAEBC)
+References: <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="b5gNqxB1S1yM7hjW"
+In-Reply-To: <49EB8119.1020402@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Patch seperates rx_used and rx_free into two
-different atomic contexts. We can now avoid using GFP_ATOMIC
-for skb allocation and use GFP_KERNEL.
+--b5gNqxB1S1yM7hjW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   37 ++++++++++++--------------
- 1 files changed, 17 insertions(+), 20 deletions(-)
+Hi Larry,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 5cd4321..dc0359c 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1344,15 +1344,24 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
- 	struct list_head *element;
- 	struct iwl_rx_mem_buffer *rxb;
- 	unsigned long flags;
--	spin_lock_irqsave(&rxq->lock, flags);
--	while (!list_empty(&rxq->rx_used)) {
-+
-+	while (1) {
-+		spin_lock_irqsave(&rxq->lock, flags);
-+
-+		if (list_empty(&rxq->rx_used)) {
-+			spin_unlock_irqrestore(&rxq->lock, flags);
-+			return;
-+		}
-+
- 		element = rxq->rx_used.next;
- 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
-+		list_del(element);
-+		spin_unlock_irqrestore(&rxq->lock, flags);
- 
- 		/* Alloc a new receive buffer */
- 		rxb->skb =
- 		    alloc_skb(priv->hw_params.rx_buf_size,
--				__GFP_NOWARN | GFP_ATOMIC);
-+				GFP_KERNEL);
- 		if (!rxb->skb) {
- 			if (net_ratelimit())
- 				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
-@@ -1370,18 +1379,18 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
- 		 */
- 		skb_reserve(rxb->skb, 4);
- 
--		priv->alloc_rxb_skb++;
--		list_del(element);
--
- 		/* Get physical address of RB/SKB */
- 		rxb->real_dma_addr = pci_map_single(priv->pci_dev,
- 						rxb->skb->data,
- 						priv->hw_params.rx_buf_size,
- 						PCI_DMA_FROMDEVICE);
-+
-+		spin_lock_irqsave(&rxq->lock, flags);
- 		list_add_tail(&rxb->list, &rxq->rx_free);
-+		priv->alloc_rxb_skb++;
- 		rxq->free_count++;
-+		spin_unlock_irqrestore(&rxq->lock, flags);
- 	}
--	spin_unlock_irqrestore(&rxq->lock, flags);
- }
- 
- void iwl3945_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
-@@ -1414,18 +1423,6 @@ void iwl3945_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 	spin_unlock_irqrestore(&rxq->lock, flags);
- }
- 
--/*
-- * this should be called while priv->lock is locked
-- */
--static void __iwl3945_rx_replenish(void *data)
--{
--	struct iwl_priv *priv = data;
--
--	iwl3945_rx_allocate(priv);
--	iwl3945_rx_queue_restock(priv);
--}
--
--
- void iwl3945_rx_replenish(void *data)
- {
- 	struct iwl_priv *priv = data;
-@@ -1644,7 +1641,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
- 			count++;
- 			if (count >= 8) {
- 				priv->rxq.read = i;
--				__iwl3945_rx_replenish(priv);
-+				iwl3945_rx_queue_restock(priv);
- 				count = 0;
- 			}
- 		}
--- 
-1.5.6.3
+On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
+> Forest Bond wrote:
+> >=20
+> > However, I did have a question:
+> >=20
+> > The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwu=
+sb.ko.
+> > Should the directories be named "viawget" and "vntwusb," respectively, =
+or is it
+> > appropriate for them to be named "vt6655" and "vt6656"?
+>=20
+> Of course Greg has the final say, but I vote to keep the directories with=
+ the
+> vt6656 name and change the name of the driver, which is defined in  the l=
+ine
+> #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor =
+driver.
 
+This makes sense to me.  I'll proceed this way for now.  Greg, let me know =
+if
+you'd prefer I didn't do this.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--b5gNqxB1S1yM7hjW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD4DBQFJ64MqRO4fQQdv5AwRAjmaAJiRqFubg2kTm3jBL86CgiIcZ3bKAKDH1vwg
+SXIgfmAb66OKb2ZtvZZCjg==
+=i5iW
+-----END PGP SIGNATURE-----
+
+--b5gNqxB1S1yM7hjW--
