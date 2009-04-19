@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:46861 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317AbZDXTSL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 15:18:11 -0400
+Received: from mail.gmx.net ([213.165.64.20]:46990 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756731AbZDSOF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 10:05:26 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 16:05:23 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240148519.898.3.camel@johannes.local>
+Message-ID: <20090419140523.158830@gmx.net> (sfid-20090419_160530_514781_26A1B0A0)
 MIME-Version: 1.0
-In-Reply-To: <20090422140107.GD3288@tuxdriver.com>
-References: <c4e36d110904220333u37304c79k6ab528f92b5f3718@mail.gmail.com>
-	 <20090422140107.GD3288@tuxdriver.com>
-Date: Fri, 24 Apr 2009 21:18:09 +0200
-Message-ID: <c4e36d110904241218x209a4b76kf271f7288f1a33da@mail.gmail.com> (sfid-20090424_211821_497772_0C4E7A46)
-Subject: Re: regression IWl3945 - doesn't work with recent 2.6.30-rcX
-From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>
+ (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/22 John W. Linville <linville@tuxdriver.com>:
-> On Wed, Apr 22, 2009 at 12:33:03PM +0200, Zdenek Kabelac wrote:
->> Hi
->>
->> I'm checking whether -rcX kernel could be usable on my
->> T61/4GB/C2D/x86_64 - but wireless seems to be still out of
->> functionality:
->> I'm getting lots of weird trace-back messages and it looks like
->> iwl3945 is not working at all.
->> (attached messages from fresh build of -rc3 - but it never worked ev=
-en in -rc1)
->
-> Looks like this one did _not_ make -rc3:
->
-> commit df833b1d73680f9f9dc72cbc3215edbbc6ab740d
-> Author: Reinette Chatre <reinette.chatre@intel.com>
-> Date: =A0 Tue Apr 21 10:55:48 2009 -0700
->
-> =A0 =A0iwlwifi: DMA fixes
->
-> =A0 =A0A few issues wrt DMA were uncovered when using the driver with=
- swiotlb.
-> ...
->
-> It is in wireless-2.6 and should be in net-2.6 -- please try one of t=
-hose kernels.
+Hallo Johannes!
 
+> Huh? No, it does not mostly do the same. Quite not so. Managed and IB=
+SS
+> modes are _really_ different. Almost the only thing they have in comm=
+on
+> is that they use an SSID and a BSSID.
 
-I can confirm that current upstream linux commit
-9f5a691253924fd033a58c6b1fed57bb0a4eccf4 works again with iwlwifi.
-and it already contains the patch you suggested to check.
+A character device is not the same as a block device too but it uses th=
+e same API like normal files. Thats the deference to DOS. And assoc() i=
+s the equivalent for join_ibss(), like read() or write() it can impleme=
+nted with the same interface. In WEXT it's implemented with the same in=
+terface.
 
-Zdenek
+> And an airy concept of "UNIX philosophy" really has nothing whatsoeve=
+r
+> to do with it.
+
+Unfortunately I don't have the book "Modern Operating Systems" here so =
+I can't quote it.
+
+Regards
+Alina
+
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
