@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:55733 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368AbZDZKhm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 06:37:42 -0400
-Message-ID: <49F43975.2060106@gmail.com> (sfid-20090426_123800_234508_01AA0908)
-Date: Sun, 26 Apr 2009 12:37:41 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:50932 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756953AbZDSNfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 09:35:47 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 15:35:44 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240147050.25826.5.camel@johannes.local>
+Message-ID: <20090419133544.158820@gmx.net> (sfid-20090419_153550_588554_A4B06C0C)
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 1/1] ath5k: 5211, don't crypt every protected frame
-References: <1240661363-16631-1-git-send-email-jirislaby@gmail.com> <20090426020047.GA10885@hash.localnet>
-In-Reply-To: <20090426020047.GA10885@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>
+ (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/2009 04:00 AM, Bob Copeland wrote:
-> On Sat, Apr 25, 2009 at 02:09:23PM +0200, Jiri Slaby wrote:
->> Hi guys,
->> do you remember some 5211 HW which didn't work with this?
->> --
->>
->> Set null key type even on ar5211, otherwise it en/decrypts every frame with
->> protected bit set which renders the card unusable on encrypted networks.
-> 
-> Not me.  I don't have the hardware, so I would say if your patch is known
-> to work on a 5211 then we go with it.
+Hello Johannes!
 
-Ok, thanks. Of course the HW I used (IBM T40 Thinkpad) needs the patch ;).
+> Because you don't associate with an IBSS?
+
+This is only a name, but the call does mostly the same. I think having =
+one generic API goes more along with the UNIX philosophy, than having f=
+or each mode a defend API, on which almost only the names of the calls =
+are deferent.
+
+Regards
+Alina
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
