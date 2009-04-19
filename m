@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:33289 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753837AbZDUKaS convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60045 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758463AbZDSOL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 06:30:18 -0400
-Received: by bwz7 with SMTP id 7so1679398bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 03:30:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090420135940.GB3369@tuxdriver.com>
-References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com>
-	 <200904182318.56512.IvDoorn@gmail.com>
-	 <20090420135940.GB3369@tuxdriver.com>
-Date: Tue, 21 Apr 2009 12:30:16 +0200
-Message-ID: <a32f33a40904210330w33a6cea6idf1756428e7560c7@mail.gmail.com> (sfid-20090421_123025_079499_4DE57531)
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Greg KH <greg@kroah.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 19 Apr 2009 10:11:26 -0400
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419140523.158830@gmx.net> (sfid-20090419_160555_446977_A429511B)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240097845.25826.1.camel@johannes.local>
+	 <20090419125212.158800@gmx.net>
+	 (sfid-20090419_145246_566920_BF082D12) <1240147050.25826.5.camel@johannes.local>
+	 <20090419133544.158820@gmx.net>
+	 (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
+	 <20090419140523.158830@gmx.net> (sfid-20090419_160555_446977_A429511B)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FA9XpZtFpDec//V3CeQB"
+Date: Sun, 19 Apr 2009 16:11:17 +0200
+Message-Id: <1240150277.898.7.camel@johannes.local> (sfid-20090419_161132_826594_9038E8C1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 20, 2009 at 3:59 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Sat, Apr 18, 2009 at 11:18:56PM +0200, Ivo van Doorn wrote:
->> Hi,
->>
->> > > I hope rt2800pci/usb to be included *ASAP*, because rt2800usb su=
-pports
->> > > more than 1oo USB devices and rt2800pci is included in a lot of
->> > > laptops(ask Torvalds [1] [2])
->> > >
->> > > [1] http://marc.info/?l=3Dlinux-netdev&m=3D121799144422863&w=3D2
->> > > [2] http://marc.info/?l=3Dlinux-kernel&m=3D123187052023831&w=3D2
->> >
->> > That would be great to have in, what's keeping it from happening?
->>
->> In short: A stable workable driver.
->>
->> The rt2800usb driver is pretty far (at least on my testsetup), but
->> still has problems with transmitting frames immediately after
->> association.
->
-> I read this as "it works, but some frames are lost immediately after
-> association" -- is that right?
 
-It is not "Some frames" it is "All frames" you can't get a DHCP lease,
-or use a static IP and try to do anything.
+--=-FA9XpZtFpDec//V3CeQB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Also 11n APs are not detected at all, which for a 11n client sounds
-very problematic.
+Hi!
 
-> FWIW, this sounds good enough to me
-> to get it into the mainline kernel. =A0_Please_ submit the rt2800usb
-> driver for wireless-testing/linux-next ASAP!
+Can you please spell "different" and "difference" correctly? I keep
+getting confused! "deference" is an English word too :)
 
-If the above 2 problems aren't critical for merge, then I'll send the
-patches as soon as possible.
+Anyway, I think you're confused because cfg80211_assoc_request looks
+like cfg80211_ibss_params. Trust me -- that will change.
 
-Ivo
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Either way I'm not going to argue this with you anyway, I've already
+decided to do it this way. You'd have to find many many people who agree
+with you to convince me otherwise.
+
+johannes
+
+
+--=-FA9XpZtFpDec//V3CeQB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ6zEBAAoJEKVg1VMiehFYPiAP/1uMBCbk7XwuxUZkQhfBhKK6
+SOKHIxG/miL/z24JZ0im8LRAQNp4NlQ41Q75rN1i8rGlS87gSeWmXU/KF1UcIxWH
+r7u3fYygmhTvw3Aa51XWdthNG6JOv+hZ0ie1QOK5xqK83QNzVXXXRBL7vQFXaiWU
+BS7H1dl5ibGx6iEpp9QGhOdVwR7YlHfcJd2M2cCYb421m2T5jmsC2YXFES4xv3Cz
+Bzc1uGI3vbFxucvkh7Q1zu3Rz5Sed6c33wISbgC3kXKpo0CQ6xw5ENQ0hsnUcyBJ
++WKbyk0X6eOXlQdmniqV/kvkonDo7lECK/W4ctEPHyXfdR/z5VmpiJys0QBP+iiY
+RA+nhm7QgllZxNmrRwj3VJ8KslIGp5B8Paz/VOmP+J+i4Vd0L8pBigk/gshQfGUd
+L+dS2r3bsvS2qE385iyF0AbrsNFldxjZ6QzmyoodNuJOf8nFrOBo8PZbep4V2UlI
+Zw21Bp+YgOYnIyyeXcF1BhFHLPsaXclVdqmIoyu3UcDji3V25tuPXoP/ktcZezwg
+zTNzLPGR2eF5/5y4o1SpQgaDOac4L7CQroZ7qd++WAij6ajHD79GfiuZZDfD5QfR
+Jy7bPk3/S0bOA3u9OiivttfofWS2j6cZx2zfJeMlopueQzBy+oyMFN2pRGd71qgW
+b+dvuzV6xIDLQqYfGTCF
+=8U1z
+-----END PGP SIGNATURE-----
+
+--=-FA9XpZtFpDec//V3CeQB--
+
