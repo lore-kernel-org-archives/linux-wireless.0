@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([207.115.11.53]:33454 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761895AbZDHVHZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 17:07:25 -0400
-Message-ID: <49DD11FC.6090506@lwfinger.net> (sfid-20090408_231852_359853_A4476559)
-Date: Wed, 08 Apr 2009 16:07:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:38824 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753795AbZDSSSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 14:18:25 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 20:18:20 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240164047.28138.9.camel@johannes.local>
+Message-ID: <20090419181820.158810@gmx.net> (sfid-20090419_201828_148172_7894E446)
 MIME-Version: 1.0
-To: Ivan Kuten <ivan.kuten@promwad.com>
-CC: "eugene.sobol" <eugene.sobol@promwad.com>,
-	linux-wireless@vger.kernel.org, hintak.leung@gmail.com
-Subject: Re: rtl8187 diversity
-References: <200904081530.51962.eugene.sobol@promwad.com> <49DCE741.7080406@lwfinger.net> <1e0576e9ab550ccec84402b8b0805633@promwad.com>
-In-Reply-To: <1e0576e9ab550ccec84402b8b0805633@promwad.com>
-Content-Type: text/plain; charset=UTF-8
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240147370.898.0.camel@johannes.local>	 <20090419143337.158810@gmx.net>
+ <20090419163204.158820@gmx.net>	 (sfid-20090419_183237_340935_6640098A)
+ <1240160041.28138.0.camel@johannes.local>	 <20090419171546.158830@gmx.net>	
+ (sfid-20090419_191552_279073_CA045D96)
+ <1240161550.28138.6.camel@johannes.local>	 <20090419174538.140620@gmx.net>
+ (sfid-20090419_194610_734041_B2E7FCEC) <1240164047.28138.9.camel@johannes.local>
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivan Kuten wrote:
-> 
-> Hello Larry, thanks for comments! Surely Eugene will fix patch issues and 
-> resubmit patch inline. Actually in its current stage this patch just show
-> an 
-> diversity idea and will be cleaned-up for submission with Signed-off-by.
-> Currently the question was about correctness of calculation of signal
-> quality
-> and making decision when switching between antennas should be done. Anyway
-> it will be easier to say about this when patch will be inline.
-> 
-> Btw, USB_DEVICE is already added: http://lkml.org/lkml/2008/11/17/39
+> No, that's not true, you could well want to create your network on a
+> channel that isn't used that much or whatever.
 
-I think there is a logic error in the following:
+Okay that's is an argument. But then I would implement it more closer t=
+o the the handling of the assoc() call.
 
-+void sw_antenna_diversity_timer_callback(struct rtl8187_priv *priv)
-+{
-+    static int tick_without_switch = 0;
-+    static int old_value = 0;
-+    int average = 0;
-+    int i;
-+    for ( i = 0; i < VAL_ARRAY_SIZE; ++i)
-+    {
-+        average += priv->ant_diversity.agc_array[i];
-+    }
-+    average /= VAL_ARRAY_SIZE;
-+    average /= 10; // cut 1 chipher
-+    printk("%d->%d\n", old_value, average);
-+
-+    int sub = average - old_value;
-+    if (sub < 0)
-+        sub *= -1;
-+    if (average > old_value)
-+    {
-+        priv->ant_diversity.switch_to ^= 1;
-+        queue_delayed_work(priv->hw->workqueue, &priv->antenna_work,
-+                                    msecs_to_jiffies(ANTENNA_SWITCH_TIMER_PERIOD));
-+    }
-+    old_value = average;
+ * @channel: The channel to use or %NULL if not specified
+ * (auto-select based on scan results)
+ * @channel_auto: Auto-select channel based on scan results,
+ * only use the specified channel for creating a new IBSS.
 
-The AGC value is inversely proportional to the signal strength. I think you need
-to select the antenna with the smaller, not the larger, value for the average.
+Alina
 
-Larry
-
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
