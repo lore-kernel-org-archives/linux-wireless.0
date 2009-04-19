@@ -1,35 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([207.115.11.54]:60062 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbZDNEOS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 00:14:18 -0400
-Message-ID: <49E40D88.3050709@lwfinger.net> (sfid-20090414_061422_652568_EE73F0A2)
-Date: Mon, 13 Apr 2009 23:14:00 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:43305 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754493AbZDSSn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 14:43:28 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 20:43:20 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240164895.11795.70.camel@violet>
+Message-ID: <20090419184320.158810@gmx.net> (sfid-20090419_204331_522505_5A7A007C)
 MIME-Version: 1.0
-To: David Ellingsworth <david@identd.dyndns.org>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: b43legacy AP
-References: <30353c3d0904100736g69782d46g18d99edd0dd0660d@mail.gmail.com>	 <49DF9E38.5030801@lwfinger.net>	 <30353c3d0904101349o915439arffb652b98e245e10@mail.gmail.com> <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
-In-Reply-To: <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
+ (sfid-20090419_153615_967882_D1A9F951)
+ <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
+ (sfid-20090419_160555_446977_A429511B)
+ <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
+ (sfid-20090419_171702_263242_9A8C16F9)
+ <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
+ (sfid-20090419_175352_161479_A88396A3)
+ <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>	
+ (sfid-20090419_181324_681308_BAEAE072)
+ <1240158381.917.21.camel@johannes.local>	 <20090419165443.158820@gmx.net>	
+ (sfid-20090419_185516_519795_36D34B9B)
+ <1240160241.28138.4.camel@johannes.local>	 <20090419173354.158790@gmx.net>
+ <1240163391.11795.59.camel@violet>	 <20090419180314.23710@gmx.net>
+ <1240164895.11795.70.camel@violet>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Ellingsworth wrote:
-> I wanted to report that I've finally been successful at getting
-> b43legacy to beacon properly. Originally, I had configured hostapd to
-> use channel 1. After reading the list of bugs for the bwi driver,
-> shown here: http://leaf.dragonflybsd.org/cgi/web-man?command=bwi , I
-> had the inclination to try channel 6. It appears b43legacy might have
-> the same bugs as the bwi driver as I immediately began seeing beacons
-> once I started using channel 6.
+Hello Marcel!
 
-I finally got a chance to test my BCM4306/2 that uses b43legacy. It works just
-fine as an AP using channel 1. At least on my device, it does not have the
-problem of the bwi driver.
+> and that is just plain wrong to begin with. If you want a one command=
+ do
+> everything, then do that in userspace and not inside a kernel API.
 
-Larry
+Then why not implement deferent syscalls for floppy disks, hard disk dr=
+ives, solid state disks and normal files? If you want one generic API t=
+han write an users-space library.
+
+Thought-out APIs sucks, MS-DOS rules!
+
+> >>From my point of view, WEXT can die right now. Just doing something=
+ to
+> make WEXT happy is wrong. If you want something like that then do it =
+in
+> userspace. I just don't see the need here for an extra kernel API.
+
+There is no concept, what should be in user-space and what not. It's al=
+l mixed together. Not a microkernel, no a monolithic kernel, awful.
+
+I'm not needed any more, so I can switching off myself. Bye.
+
+Alina
+
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
