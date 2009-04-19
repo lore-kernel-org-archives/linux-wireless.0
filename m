@@ -1,96 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:49363 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbZDXTgA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 15:36:00 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ar9170: handle otus' A-MPDU density definitions
-Date: Fri, 24 Apr 2009 21:35:57 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+Received: from mail.gmx.net ([213.165.64.20]:49498 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757131AbZDSQNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 12:13:19 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 18:13:16 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240156631.917.1.camel@johannes.local>
+Message-ID: <20090419161316.158790@gmx.net> (sfid-20090419_181324_681308_BAEAE072)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200904242135.57861.chunkeey@web.de> (sfid-20090424_213643_731367_9BD0F4EA)
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
+ (sfid-20090419_153615_967882_D1A9F951)
+ <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
+ (sfid-20090419_160555_446977_A429511B)
+ <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
+ (sfid-20090419_171702_263242_9A8C16F9)
+ <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>
+ (sfid-20090419_175352_161479_A88396A3) <1240156631.917.1.camel@johannes.local>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otus uses slightly different set of "Minimum MPDU Start Spacing" values
-than the 802.11n D2.0 specifies. (the whole table is shifted by one and
-therefore the 16us spacing is not officially available!)
+> You don't need wpa_supplicant, you just need an SME for that. Eventua=
+lly
+> we'll implement one in iw.
 
-And while we're at it, we also initialize our MAC's density register.
-So, this annoying _feature_ will not break TX A-MPDU later.
+You need one simple SME for compatibility with wext in the kernel-space=
+=2E Why not allow to access it with nl80211?
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
-index 95bf812..3293e0f 100644
---- a/drivers/net/wireless/ath/ar9170/hw.h
-+++ b/drivers/net/wireless/ath/ar9170/hw.h
-@@ -207,6 +207,8 @@ enum ar9170_cmd {
- #define AR9170_MAC_REG_AC1_AC0_TXOP		(AR9170_MAC_REG_BASE + 0xB44)
- #define AR9170_MAC_REG_AC3_AC2_TXOP		(AR9170_MAC_REG_BASE + 0xB48)
- 
-+#define AR9170_MAC_REG_AMPDU_SET		(AR9170_MAC_REG_BASE + 0xba0)
-+
- #define AR9170_MAC_REG_ACK_TABLE		(AR9170_MAC_REG_BASE + 0xC00)
- #define AR9170_MAC_REG_AMPDU_RX_THRESH		(AR9170_MAC_REG_BASE + 0xC50)
- 
-diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
-index c8fa307..3332f6e 100644
---- a/drivers/net/wireless/ath/ar9170/mac.c
-+++ b/drivers/net/wireless/ath/ar9170/mac.c
-@@ -72,6 +72,24 @@ int ar9170_set_qos(struct ar9170 *ar)
- 	return ar9170_regwrite_result();
- }
- 
-+static int ar9170_set_ampdu_density(struct ar9170 *ar, u8 mpdudensity)
-+{
-+	u32 val;
-+
-+	/* don't allow AMPDU density > 8us */
-+	if (mpdudensity > 6)
-+		return -EINVAL;
-+
-+	/* Watch out! Otus uses slightly different density values. */
-+	val = 0x140a00 | (mpdudensity ? (mpdudensity + 1) : 0);
-+
-+	ar9170_regwrite_begin(ar);
-+	ar9170_regwrite(AR9170_MAC_REG_AMPDU_SET, val);
-+	ar9170_regwrite_finish();
-+
-+	return ar9170_regwrite_result();
-+}
-+
- int ar9170_init_mac(struct ar9170 *ar)
- {
- 	ar9170_regwrite_begin(ar);
-@@ -296,6 +314,11 @@ int ar9170_set_operating_mode(struct ar9170 *ar)
- 	if (err)
- 		return err;
- 
-+	/* set AMPDU density to 8us. */
-+	err = ar9170_set_ampdu_density(ar, 6);
-+	if (err)
-+		return err;
-+
- 	ar9170_regwrite_begin(ar);
- 
- 	ar9170_regwrite(AR9170_MAC_REG_POWERMANAGEMENT, pm_mode);
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index 1b60906..f297a6d 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -151,8 +151,8 @@ static struct ieee80211_channel ar9170_5ghz_chantable[] = {
- 			  IEEE80211_HT_CAP_SGI_40 |			\
- 			  IEEE80211_HT_CAP_DSSSCCK40 |			\
- 			  IEEE80211_HT_CAP_SM_PS,			\
--	.ampdu_factor	= 3, /* ?? */					\
--	.ampdu_density	= 7, /* ?? */					\
-+	.ampdu_factor	= 3,						\
-+	.ampdu_density	= 6,						\
- 	.mcs		= {						\
- 		.rx_mask = { 0xFF, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, },	\
- 	},								\
+Regards
+Alina
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
