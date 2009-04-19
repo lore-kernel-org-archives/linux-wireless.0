@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9750 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932356AbZDHSdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 14:33:46 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/6] iwlagn: Sync rxon active with changes
-Date: Wed,  8 Apr 2009 11:39:29 -0700
-Message-Id: <1239215972-1795-4-git-send-email-reinette.chatre@intel.com> (sfid-20090408_203406_169367_7869E52C)
-In-Reply-To: <1239215972-1795-3-git-send-email-reinette.chatre@intel.com>
-References: <1239215972-1795-1-git-send-email-reinette.chatre@intel.com>
- <1239215972-1795-2-git-send-email-reinette.chatre@intel.com>
- <1239215972-1795-3-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:47539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757944AbZDSOxO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 10:53:14 -0400
+Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090419144108.158790@gmx.net> (sfid-20090419_164139_347477_E9AF49DE)
+References: <1240094996.21583.1.camel@johannes.local>
+	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
+	 <20090419142631.158790@gmx.net>
+	 (sfid-20090419_162703_506410_10175D69) <1240151561.898.12.camel@johannes.local>
+	 <20090419144108.158790@gmx.net> (sfid-20090419_164139_347477_E9AF49DE)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-C1icJB9HiChx0QR4sH6o"
+Date: Sun, 19 Apr 2009 16:53:10 +0200
+Message-Id: <1240152790.898.15.camel@johannes.local> (sfid-20090419_165318_220324_4EA31200)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-We need to sync rxon_active with changes after we commit rxon_assoc,
-without rxon_active will still have the old data that cause
-iwl_send_rxon_assoc to fail with no change in rxon command.
+--=-C1icJB9HiChx0QR4sH6o
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+On Sun, 2009-04-19 at 16:41 +0200, Alina Friedrichsen wrote:
+> Hello Johannes!
+>=20
+> > That's not what I was referring to -- and wext doesn't actually allow
+> > what I'm referring to afaik.
+>=20
+> You must budget it, when you want implement the old wext code clean with =
+cfg80211.
+>=20
+> > When you want to create an IBSS on channel 5, what do you do?
+> >=20
+> > I think you have to
+> > 	iwconfig wlan0 essid test
+> > 	iwconfig wlan0 channel 5
+> > 	iwconfig wlan0 ap off # clear fixed channel bit
+> >=20
+> > which is ... weird.
+>=20
+> Why not make simply the following?
+>=20
+> iwconfig wlan0 channel 5
+> iwconfig wlan0 essid test
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 1b66272..3b34b18 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2237,6 +2237,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 				     u32 changes)
- {
- 	struct iwl_priv *priv = hw->priv;
-+	int ret;
- 
- 	IWL_DEBUG_MAC80211(priv, "changes = 0x%X\n", changes);
- 
-@@ -2291,7 +2292,12 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	} else if (changes && iwl_is_associated(priv) && priv->assoc_id) {
- 			IWL_DEBUG_MAC80211(priv, "Associated Changes %d\n", changes);
--			iwl_send_rxon_assoc(priv);
-+			ret = iwl_send_rxon_assoc(priv);
-+			if (!ret)
-+				/* Sync active_rxon with latest change. */
-+				memcpy((void *)&priv->active_rxon,
-+					&priv->staging_rxon,
-+					sizeof(struct iwl_rxon_cmd));
- 	}
- 
- }
--- 
-1.5.6.3
+That fixes the channel to 5.
+
+johannes
+
+--=-C1icJB9HiChx0QR4sH6o
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ6zrTAAoJEKVg1VMiehFYuNgP/i3UBEpXs7sDgcLClvhTxMpH
+lrXqpNCV9+0rCxrx1LNOZKh9UW21aIni8bdcQNoUPvQdxDI7tKeqF9ZMMv+MKoC6
+RAmJeVV1Otz16BAy4i72n+mTyVQglfW8T2LnAG5SapNben+YXOMmFER+KQTPPZvE
+Z4WoEjnokqNSIT9+XFDnmcY+3BdFL1MUMOv1kuBNIuazjxBVc56xJ8+WJhnQLxgm
+tFCOj58AFTFP42m3pg3MebkUCeVp0WPvIje8/vmlHiRugVDJweMgejxPnyI/MgXR
+KFDxApwBWJTSA5+kMMr+sRC0kpWOi1ApFwo6DqUbRUrc8wf4P8F888yfr+Hbmr/M
++Q/4dwWlCEAkqeK3UQKHtz+OZuzyV8vVJRhpFfUDoKuZkE7ixQoowWfJRVXjsrhZ
+MmATzxlt738PjybkaEguzBkyQBy5NUEmN4Asdka+N+CRz8tAB/CESWVYVu5RTP0O
+c03Z7CzIxdqDbaRNufoikKc6KFavYVxlQa0KKJlHifQpMWOu6G8LA7a2qgcfDa+J
+7hYDTyxvgaqxokXk+P/1nrNppF7/lGNc1iSOc8zLAQvlRwPgPEByYOHKMt2BkxH9
+L6VkK15RiCOsKRKCvQnoH84w0n/2FJM5Cpp4rHtqvZj0CxJinBPgPd0y5+SFusF7
+W+eukN5YNzo8c68a9XM9
+=9/T7
+-----END PGP SIGNATURE-----
+
+--=-C1icJB9HiChx0QR4sH6o--
 
