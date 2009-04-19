@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:34589 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780AbZDVWql convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 18:46:41 -0400
-Received: by bwz7 with SMTP id 7so241353bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 15:46:39 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:33035 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756614AbZDSTZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Apr 2009 15:25:50 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 19 Apr 2009 21:25:43 +0200
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1240168864.28138.13.camel@johannes.local>
+Message-ID: <20090419192543.158810@gmx.net> (sfid-20090419_212601_032937_DA18DF77)
 MIME-Version: 1.0
-In-Reply-To: <1240439975.30082.66.camel@johannes.local>
-References: <1240439975.30082.66.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 23 Apr 2009 00:46:24 +0200
-Message-ID: <69e28c910904221546p2d568846v470deca641b26d61@mail.gmail.com> (sfid-20090423_004644_669551_45BF4FD7)
-Subject: Re: on radio_enabled
+References: <1240094996.21583.1.camel@johannes.local>	
+ (sfid-20090419_005015_625875_1781AFCD)
+ <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
+ (sfid-20090419_145246_566920_BF082D12)
+ <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
+ (sfid-20090419_153615_967882_D1A9F951)
+ <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
+ (sfid-20090419_160555_446977_A429511B)
+ <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
+ (sfid-20090419_171702_263242_9A8C16F9)
+ <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
+ (sfid-20090419_175352_161479_A88396A3)
+ <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>	
+ (sfid-20090419_181324_681308_BAEAE072)
+ <1240158381.917.21.camel@johannes.local>	 <20090419165443.158820@gmx.net>	
+ (sfid-20090419_185516_519795_36D34B9B)
+ <1240160241.28138.4.camel@johannes.local>	 <20090419173354.158790@gmx.net>
+ <1240163391.11795.59.camel@violet>	 <20090419180314.23710@gmx.net>
+ <1240164895.11795.70.camel@violet>	 <20090419184320.158810@gmx.net>	
+ (sfid-20090419_204331_522505_5A7A007C)
+ <1240167343.28138.12.camel@johannes.local>	 <20090419190103.158790@gmx.net>
+ (sfid-20090419_210135_646451_315341AB) <1240168864.28138.13.camel@johannes.local>
+Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 23, 2009 at 12:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi!
->
-> So I was looking through various drivers, and not all of them are abl=
-e
-> to handle radio_enabled gracefully.
->
-> iwlwifi, for instance, turns off the radio but then is unable to fulf=
-il
-> any configuration requests coming in while the radio is disabled.
->
-> The same is true, if I remember correctly what Ivo told me, for rt2x0=
-0.
->
-> It is not true for b43/legacy, for example, which leaves the MAC runn=
-ing
-> and thus can configure everything even if the radio is disabled.
-> Similarly for Atheros hw, I think.
->
-> Now, if we're going to use radio_enabled more, I wonder whether we
-> should completely deconfigure the hardware when we want to turn off
-> radio_enabled, and then completely reconfigure it once we enable the
-> radio again.
->
-> Pros:
-> =A0* configures all hardware correctly without the driver needing to =
-do
-> =A0 everything by itself
-> =A0* works with all hardware for sure
->
-> Cons:
-> =A0* higher latency
->
-> Also, sometimes we may want to disable the radio for just short perio=
-ds
-> of time, I think, for regulatory compliance? 11h or so? How's that
-> handled, or rather supposed to be?
->
-> johannes
->
+> Go ahead. But consider reading 802.11 first.
 
-In my opinion, the driver should be able to specify whether it can
-handle configuration-while-down correctly or not. Drivers that don't
-report as being able to do this should be configuration-cycled.
-
---G=E1bor
+Read first Andrew Tanenbaum.
 
 --=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
