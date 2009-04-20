@@ -1,42 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:5494 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbZD2EAd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 00:00:33 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so677637wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 21:00:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <24244760.54741240967923018.JavaMail.coremail@app145.163.com>
-References: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
-	<43e72e890904280853y419b9dcfw13722345892fa9b4@mail.gmail.com>
-	<45e8e6c40904281328u23c983b0r22b38d345ce0f2a1@mail.gmail.com>
-	<24244760.54741240967923018.JavaMail.coremail@app145.163.com>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Tue, 28 Apr 2009 21:00:13 -0700
-Message-ID: <43e72e890904282100o2e3991d3n8f52564fb31eedf3@mail.gmail.com> (sfid-20090429_060039_708036_098CE5AB)
-Subject: Re: Re: Question about 802.11s(mesh)
-To: =?UTF-8?B?6IuP55m96b6Z?= <subailong@163.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:12239 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756682AbZDTVbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 17:31:04 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/11] iwl3945: calculate debugfs isr statistics
+Date: Mon, 20 Apr 2009 14:36:59 -0700
+Message-Id: <1240263424-8495-7-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233115_791982_EB24E5DA)
+In-Reply-To: <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
+References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/28 =E8=8B=8F=E7=99=BD=E9=BE=99 <subailong@163.com>:
-> Thank you very much. From what you've written ,I can conclude that : =
-if I do
-> some changes with the drives ,and enable them can be used by the mac8=
-0211, I
-> can carry out MESH in IBSS mode using USB Wireless Network Card (I on=
-ly have
-> this device), am I right?
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Nope.
+This patch calculates interrupt statistics for debugfs.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   19 ++++++++++++++++---
+ 1 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 4e1331d..f4978bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1543,6 +1543,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 				"r = %d, i = %d, %s, 0x%02x\n", r, i,
+ 				get_cmd_string(pkt->hdr.cmd), pkt->hdr.cmd);
+ 			priv->rx_handlers[pkt->hdr.cmd] (priv, rxb);
++			priv->isr_stats.rx_handlers[pkt->hdr.cmd]++;
+ 		} else {
+ 			/* No handling needed */
+ 			IWL_DEBUG(priv, IWL_DL_HCMD | IWL_DL_RX | IWL_DL_ISR,
+@@ -1845,6 +1846,7 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 		/* Tell the device to stop sending interrupts */
+ 		iwl_disable_interrupts(priv);
+ 
++		priv->isr_stats.hw++;
+ 		iwl_irq_handle_error(priv);
+ 
+ 		handled |= CSR_INT_BIT_HW_ERR;
+@@ -1857,13 +1859,17 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (priv->debug_level & (IWL_DL_ISR)) {
+ 		/* NIC fires this, but we don't use it, redundant with WAKEUP */
+-		if (inta & CSR_INT_BIT_SCD)
++		if (inta & CSR_INT_BIT_SCD) {
+ 			IWL_DEBUG_ISR(priv, "Scheduler finished to transmit "
+ 				      "the frame/frames.\n");
++			priv->isr_stats.sch++;
++		}
+ 
+ 		/* Alive notification via Rx interrupt will do the real work */
+-		if (inta & CSR_INT_BIT_ALIVE)
++		if (inta & CSR_INT_BIT_ALIVE) {
+ 			IWL_DEBUG_ISR(priv, "Alive interrupt\n");
++			priv->isr_stats.alive++;
++		}
+ 	}
+ #endif
+ 	/* Safely ignore these bits for debug checks below */
+@@ -1873,6 +1879,8 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 	if (inta & CSR_INT_BIT_SW_ERR) {
+ 		IWL_ERR(priv, "Microcode SW error detected. "
+ 			"Restarting 0x%X.\n", inta);
++		priv->isr_stats.sw++;
++		priv->isr_stats.sw_err = inta;
+ 		iwl_irq_handle_error(priv);
+ 		handled |= CSR_INT_BIT_SW_ERR;
+ 	}
+@@ -1888,6 +1896,7 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 		iwl_txq_update_write_ptr(priv, &priv->txq[4]);
+ 		iwl_txq_update_write_ptr(priv, &priv->txq[5]);
+ 
++		priv->isr_stats.wakeup++;
+ 		handled |= CSR_INT_BIT_WAKEUP;
+ 	}
+ 
+@@ -1896,11 +1905,13 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 	 * notifications from uCode come through here*/
+ 	if (inta & (CSR_INT_BIT_FH_RX | CSR_INT_BIT_SW_RX)) {
+ 		iwl3945_rx_handle(priv);
++		priv->isr_stats.rx++;
+ 		handled |= (CSR_INT_BIT_FH_RX | CSR_INT_BIT_SW_RX);
+ 	}
+ 
+ 	if (inta & CSR_INT_BIT_FH_TX) {
+ 		IWL_DEBUG_ISR(priv, "Tx interrupt\n");
++		priv->isr_stats.tx++;
+ 
+ 		iwl_write32(priv, CSR_FH_INT_STATUS, (1 << 6));
+ 		if (!iwl_grab_nic_access(priv)) {
+@@ -1911,8 +1922,10 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 		handled |= CSR_INT_BIT_FH_TX;
+ 	}
+ 
+-	if (inta & ~handled)
++	if (inta & ~handled) {
+ 		IWL_ERR(priv, "Unhandled INTA bits 0x%08x\n", inta & ~handled);
++		priv->isr_stats.unhandled++;
++	}
+ 
+ 	if (inta & ~CSR_INI_SET_MASK) {
+ 		IWL_WARN(priv, "Disabled INTA bits 0x%08x were pending\n",
+-- 
+1.5.6.3
+
