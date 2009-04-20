@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:43848 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752436AbZDFKMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 06:12:52 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: b43 WARN_ON
-Date: Mon, 6 Apr 2009 12:12:10 +0200
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <49D97CF5.4040808@lwfinger.net>
-In-Reply-To: <49D97CF5.4040808@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200904061212.10398.mb@bu3sch.de> (sfid-20090406_121256_408308_6EE884A0)
+Received: from xc.sipsolutions.net ([83.246.72.84]:40697 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755620AbZDTPlw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 11:41:52 -0400
+Subject: Re: [PATCH] ar9170: rework rxstream code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200904190128.13206.chunkeey@web.de> (sfid-20090419_012821_861639_E6D0EBF4)
+References: <200904190128.13206.chunkeey@web.de>
+	 (sfid-20090419_012821_861639_E6D0EBF4)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gi16JWY9xwvCvBFrccCV"
+Date: Mon, 20 Apr 2009 17:41:19 +0200
+Message-Id: <1240242079.4632.0.camel@johannes.local> (sfid-20090420_174155_839361_899D7C4A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 April 2009 05:54:29 Larry Finger wrote:
-> Using the latest rfkill patches posted by Johannes, I am hitting the following
-> 
->         if (WARN_ON(!wl->rfkill.registered))
->                 return -EINVAL;
 
-I think we should simply remove the warning.
-In the previous rfkill implementation I had a reason to _not_ warn here.
-(It had one valid codepath where it was called. I don't remember the details...)
+--=-gi16JWY9xwvCvBFrccCV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Anyway, please feel free to do a patch that removes the warning (but not the check).
+On Sun, 2009-04-19 at 01:28 +0200, Christian Lamparter wrote:
 
-> 
-> in b43_rfkill_soft_set() as follows:
-> 
-> ------------[ cut here ]------------
-> WARNING: at drivers/net/wireless/b43/rfkill.c:77 b43_rfkill_soft_set+0x38/0xb3
-> [b43]()
-> Hardware name: HP Pavilion dv2700 Notebook PC
-> --snip--
-> ---[ end trace a1ef19d1571fdb71 ]---
-> b43 ssb0:0: firmware: requesting b43/ucode5.fw
-> b43 ssb0:0: firmware: requesting b43/pcm5.fw
-> b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
-> b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
-> b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-> b43-phy0 debug: Chip initialized
-> b43-phy0 debug: 32-bit DMA initialized
-> Registered led device: b43-phy0::tx
-> Registered led device: b43-phy0::rx
-> Registered led device: b43-phy0::radio
-> b43-phy0 debug: Wireless interface started
-> b43-phy0 debug: Adding Interface type 2
-> b43-phy0: Radio turned on by software
-> 
-> Larry
-> 
-> 
+> +static void ar9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
+> +{
+> +	struct ar9170_rx_head *head;
+> +	struct ar9170_rx_macstatus *mac;
+> +	struct ar9170_rx_phystatus *phy;
 
+Missing =3D NULL here for phy.
 
+johannes
 
--- 
-Greetings, Michael.
+--=-gi16JWY9xwvCvBFrccCV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ7JecAAoJEKVg1VMiehFYS+wP/jejnDJMHLlc8ozvShinp4ac
+pS2/h2rKEu4OnjDZZr+luXUD3aghVs4rCPrE7r0VRwuQSVk7sUE4b3oZd8BKs4qr
+VclO/LuauH2tGD11Xt1vWLRLva0bXG7Furz1XKRDx+tfYXRDLWOTjUGHMP2jJ9px
+9yykyNNIF1vIWJfe/yRafljSyNZ2i5fN5exuRnuymJCnQFmUKRtcDMoOefsUFbFm
+Ab4rnRI6YDYmciiCCHjON3LdgwmjN9n+UTOx6UtXqp9Turc9LQAMYgtkN9fbO8+z
+bMjxMZpXxvlcjG7WYol4o1H7O+XcgSy+mFfbCL+llLpaLI4+9fwMXIJU81qh/SB6
+QjoOeNwxY/VfZl6IcIbLRBv4TwEKEcTzPvI/mc3a9cxM3KE2rY3unSag8VtoEK6I
+WTADkHIx041CcuII57rHyJFaMONSgLhZesvED+0ayAJIykek5H62nU4OAQ9C4VAU
+c9gbbYmlh+hS/ccj2fxNLI4Gvw9TX1eDgIqP8YJUNGqFVUFG0gmhVJSdjOngC8cO
+MMDWZMHNkz+chU5ECfnxrrkAPpdpg3WC8M90zcqKI/vRxs5Y9yxTdHW4PAbhfwKj
+tWtARFhVmKOa1+3joqUElF4R/s1IBjGnrobcgia92RqVNn1xLDR52NeZLG0CuBox
+AJlZtxU3o/RmQSNfOaFa
+=GJCq
+-----END PGP SIGNATURE-----
+
+--=-gi16JWY9xwvCvBFrccCV--
+
