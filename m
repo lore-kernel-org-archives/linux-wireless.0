@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:50235 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758560AbZDXXDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 19:03:11 -0400
-Date: Fri, 24 Apr 2009 15:58:20 -0700
-From: Greg KH <greg@kroah.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090424225820.GE3343@kroah.com> (sfid-20090425_010317_358329_3DFC4C4D)
-References: <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com> <20090424110329.GJ2830@storm.local.network>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56836 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbZDTVPu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 17:15:50 -0400
+Date: Mon, 20 Apr 2009 17:03:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+Message-ID: <20090420210342.GH3369@tuxdriver.com> (sfid-20090420_231554_371359_6C168A90)
+References: <20090416111723.904720021@sipsolutions.net> <20090420194430.GG3369@tuxdriver.com> <1240257188.4632.19.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090424110329.GJ2830@storm.local.network>
+In-Reply-To: <1240257188.4632.19.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 24, 2009 at 07:03:29AM -0400, Forest Bond wrote:
-> Hi Greg,
-> 
-> On Sun, Apr 19, 2009 at 03:32:18PM -0700, Greg KH wrote:
-> > On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
-> > > On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
-> > > > Forest Bond wrote:
-> > > > > 
-> > > > > However, I did have a question:
-> > > > > 
-> > > > > The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwusb.ko.
-> > > > > Should the directories be named "viawget" and "vntwusb," respectively, or is it
-> > > > > appropriate for them to be named "vt6655" and "vt6656"?
-> > > > 
-> > > > Of course Greg has the final say, but I vote to keep the directories with the
-> > > > vt6656 name and change the name of the driver, which is defined in  the line
-> > > > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor driver.
+On Mon, Apr 20, 2009 at 09:53:08PM +0200, Johannes Berg wrote:
+> On Mon, 2009-04-20 at 15:44 -0400, John W. Linville wrote:
+> > On Thu, Apr 16, 2009 at 01:17:23PM +0200, Johannes Berg wrote:
+> > > This is pretty much unchanged from my previous v2 RFCs,
+> > > except that I added a default of 500ms for the dynamic
+> > > powersave timer.
 > > > 
-> > > This makes sense to me.  I'll proceed this way for now.  Greg, let me know if
-> > > you'd prefer I didn't do this.
+> > > The fourth patch is new, it adds beacon filtering to
+> > > mac80211 -- for the reasons explained in that patch.
+> > > 
+> > > For 2.6.31, we should make MAC80211_DEFAULT_PS default
+> > > off instead. John, how do you want to handle that?
 > > 
-> > No objection from me.
+> > I'm not sure I understand.  Your patch (which would go to 2.6.31)
+> > has it turned-on by default.  Which way do you want it?
 > 
-> The following git repository has a vt6655 branch and a vt6656 branch:
+> I want it turned on by default, at least in wireless-testing; Kalle
+> thinks that we should turn it off for a .31 release.
 > 
->   http://www.alittletooquiet.net/media/code/vt665x.git
-> 
-> The vt6655 branch contains pretty much all of the work I'll likely be able to do
-> for that driver.  The vt6656 branch needs more work.  I've not gone farther than
-> build-testing either, at this point.
-> 
-> As I've mentioned before, some of this kind of work is really a bit outside my
-> usual domain, so if you do look at it, I'd appreciate feedback.
-> 
-> Feel free to make requests.
+> I would think that since an easy workaround is available ("iwconfig
+> wlan0 power off") and it doesn't affect most hardware yet anyway (only
+> those supporting powersave) we should turn it on by default anyway,
+> since otherwise we won't find any bugs -- but maybe that's just me.
 
-Could you send it out as patches so it's easier to review?
+Ah, OK -- let's leave it on for now and if it is a problem we can
+turn it off in 2.6.31 during/after 2.6.31-rc1.
 
-thanks,
-
-greg k-h
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
