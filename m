@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:42280 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408AbZDROCP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 10:02:15 -0400
-Received: by ewy24 with SMTP id 24so570143ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Apr 2009 07:02:14 -0700 (PDT)
-Message-ID: <49E9DD64.7000902@tuffmail.co.uk> (sfid-20090418_160219_548696_78545365)
-Date: Sat, 18 Apr 2009 15:02:12 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Rfkill rewrite: eeepc-laptop resume
-References: <49DCA88E.6060400@tuffmail.co.uk>	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>	 <49E98C86.2040308@tuffmail.co.uk>	 (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>	 <49E9A0C7.8040602@tuffmail.co.uk>	 (sfid-20090418_114338_695917_3CBF9024) <1240057470.4755.7.camel@johannes.local>	 <49E9D5AE.50509@tuffmail.co.uk> (sfid-20090418_152951_979624_DE0ADF1D) <1240061621.4755.35.camel@johannes.local>
-In-Reply-To: <1240061621.4755.35.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:10576 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754140AbZDTSZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 14:25:08 -0400
+Subject: WARN on return of ieee80211_if_config
+From: reinette chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 11:31:11 -0700
+Message-Id: <1240252271.5206.63.camel@rc-desk> (sfid-20090420_202513_315107_6248E432)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2009-04-18 at 14:29 +0100, Alan Jenkins wrote:
->
->   
->> API nit:
->>
->>  * This function tells the rfkill core that the device is capable of
->>  * remembering soft blocks (which it is notified of via the set_block
->>  * method) -- this means that the driver may ignore the return value
->>  * from rfkill_set_hw_state().
->>
->> Doesn't this conflict with the declaration of rfkill_set_sw_state() as
->> __must_check?
->>     
->
-> Yeah, in a way it does, but I figure it's rare enough that those who
-> really can ignore it can write
-> 	(void) rfkill_set_sw_state(...)
->
-> Don't really have a strong opinion, it just seemed the mistake in the
-> other direction would be more common.
->   
-Oops... I meant to write rfkill_set_hw_state(), I think you copied me.  Ok.
+Hi Johannes,
 
-So then why is the _sw_ variant marked __must_check?  That looks like a
-mistake.  I don't see what I can sensibly do with the return value. 
-Unless you want EPO to veto a firmware-initiated enable?
+In 2.6.30 we are starting to see people encountering a WARN when
+resuming with HW rfkill enabled. The WARN is printed from
+net/mac80211/pm.c:159 in 2.6.30, for current wireless-testing it is 
+net/mac80211/util.c:1050.
 
-Thanks
-Alan
+With that function resuming multiple interfaces I do not know if it will
+make sense to return an error code if one fails. So, it seems that
+__ieee80211_resume()/ieee80211_reconfig() will always return zero. Even
+so, the case where ieee80211_if_config() fails needs to be
+accommodated. 
+
+Would something like this make sense?
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 0273023..46f2961 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -156,8 +156,11 @@ int __ieee80211_resume(struct ieee80211_hw *hw)
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_MESH_POINT:
+-			WARN_ON(ieee80211_if_config(sdata, changed));
+-			ieee80211_bss_info_change_notify(sdata, ~0);
++			if (ieee80211_if_config(sdata, changed))
++				printk(KERN_DEBUG "%s: failed to configure interface\n",
++				       sdata->dev->name);
++			else
++				ieee80211_bss_info_change_notify(sdata, ~0);
+ 			break;
+ 		case NL80211_IFTYPE_WDS:
+ 			break;
+
+
+Thank you
+
+Reinette
+
+
