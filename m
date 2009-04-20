@@ -1,154 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:40291 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731AbZDGStA convert rfc822-to-8bit (ORCPT
+Received: from cp-out8.libero.it ([212.52.84.108]:49235 "EHLO
+	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755106AbZDTV6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 14:49:00 -0400
-Received: by fxm2 with SMTP id 2so2466040fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 11:48:58 -0700 (PDT)
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-To: yi.zhu@intel.com
-Subject: 2.6.29 linus tree: iwlagn  Failed to register hw (error -2) on first try. Success on unload and retry
-Date: Tue, 7 Apr 2009 22:48:56 +0200
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+	Mon, 20 Apr 2009 17:58:55 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+Date: Mon, 20 Apr 2009 23:55:46 +0200
+Cc: Davide Pesavento <davidepesa@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20090416111723.904720021@sipsolutions.net> <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com> <1240259450.4632.20.camel@johannes.local>
+In-Reply-To: <1240259450.4632.20.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Message-Id: <200904072248.56413.a.miskiewicz@gmail.com> (sfid-20090407_204908_564470_22DBD0C0)
+Message-Id: <200904202355.46803.rossi.f@inwind.it> (sfid-20090420_235917_781692_6B049F62)
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 20 April 2009, Johannes Berg wrote:
 
-Hi,
+> But if that's just a hardware/driver bug shouldn't the driver disable PS
+> for that combination? It seems wrong to disable PS in the stack by
+> default just because one driver has a problem with it, when that driver
+> could just unset the PS support bit.
 
-Some recent commits (in last 2 days I guess) broke iwlagn driver.
-Using Linus tree as of aeeae86859f4319de0a4946b44771d9926eeed54
+I think that a printk notice message could be useful to state that the 
+powersave management is active (of course with DEBUG on, at least during the 
+first larger-user-base test period).
 
-[    5.431753] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux=
-, 1.3.27ks
-[    5.431755] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-[    5.431836] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->=
- IRQ 17
-[    5.431863] iwlagn 0000:03:00.0: setting latency timer to 64
-[    5.431965] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 5=
-350AGN REV=3D0x24
-[    5.451117] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 8=
-02.11a channels
-[    5.451202] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
-[    5.451591] phy0: Selected rate control algorithm 'iwl-agn-rs'
-[    5.458313] phy0: Failed to initialize wep: -2
-[    5.489134] iwlagn 0000:03:00.0: Failed to register hw (error -2)
-[    5.489214] iwlagn 0000:03:00.0: PCI INT A disabled
-[    5.489221] iwlagn: probe of 0000:03:00.0 failed with error -2
-
-but later I can rmmod iwlagn, modprobe iwlagnt and it starts working
-
-[ 6081.289816] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux=
-, 1.3.27ks
-[ 6081.289823] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-[ 6081.289961] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->=
- IRQ 17
-[ 6081.289980] iwlagn 0000:03:00.0: setting latency timer to 64
-[ 6081.290048] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 5=
-350AGN REV=3D0x24
-[ 6081.311015] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 8=
-02.11a channels
-[ 6081.311135] iwlagn 0000:03:00.0: irq 31 for MSI/MSI-X
-[ 6081.315120] phy1: Selected rate control algorithm 'iwl-agn-rs'
-[ 6081.352904] udev: renamed network interface wlan0 to eth1
-[ 6081.412073] lo: Disabled Privacy Extensions
-[ 6081.456266] e1000e 0000:00:19.0: irq 29 for MSI/MSI-X
-[ 6081.512131] e1000e 0000:00:19.0: irq 29 for MSI/MSI-X
-[ 6081.512781] ADDRCONF(NETDEV_UP): eth0: link is not ready
-[ 6087.465024] iwlagn 0000:03:00.0: firmware: requesting iwlwifi-5000-1=
-=2Eucode
-[ 6087.508361] iwlagn 0000:03:00.0: loaded firmware version 5.4.1.16
-[ 6087.663653] Registered led device: iwl-phy1::radio
-[ 6087.663709] Registered led device: iwl-phy1::assoc
-[ 6087.663760] Registered led device: iwl-phy1::RX
-[ 6087.663812] Registered led device: iwl-phy1::TX
-[ 6087.684486] ADDRCONF(NETDEV_UP): eth1: link is not ready
-[ 6088.796677] eth1: authenticate with AP 00:11:22:33:44:57
-[ 6088.798752] eth1: authenticated
-[ 6088.798758] eth1: associate with AP 00:11:22:33:44:57
-[ 6088.801710] eth1: RX AssocResp from 00:11:22:33:44:57 (capab=3D0x411=
- status=3D0 aid=3D1)
-[ 6088.801745] eth1: associated
-[ 6088.809628] ADDRCONF(NETDEV_CHANGE): eth1: link becomes ready
-[ 6088.810615] eth1: authenticate with AP 00:11:22:33:44:57
-[ 6088.817482] eth1: authenticated
-[ 6088.817488] eth1: associate with AP 00:11:22:33:44:57
-[ 6088.820115] eth1: RX ReassocResp from 00:11:22:33:44:57 (capab=3D0x4=
-11 status=3D0 aid=3D1)
-[ 6088.820121] eth1: associated
-
-relevant /proc/interrupts
- 30:      40965          0   PCI-MSI-edge      i915
- 31:       7515       7589   PCI-MSI-edge      iwlagn
-
-but i915 was registering later
-
-[arekm@t400 /usr/src/linux-git]$ dmesg|grep -E "(iwl|i915)"
-[    5.431753] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux=
-, 1.3.27ks
-[    5.431755] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-[    5.431836] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->=
- IRQ 17
-[    5.431863] iwlagn 0000:03:00.0: setting latency timer to 64
-[    5.431965] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 5=
-350AGN REV=3D0x24
-[    5.451117] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 8=
-02.11a channels
-[    5.451202] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
-[    5.451591] phy0: Selected rate control algorithm 'iwl-agn-rs'
-[    5.489134] iwlagn 0000:03:00.0: Failed to register hw (error -2)
-[    5.489214] iwlagn 0000:03:00.0: PCI INT A disabled
-[    5.489221] iwlagn: probe of 0000:03:00.0 failed with error -2
-[   36.476810] i915 0000:00:02.0: power state changed by ACPI to D0
-[   36.476828] i915 0000:00:02.0: PCI INT A -> GSI 16 (level, low) -> I=
-RQ 16
-[   36.476837] i915 0000:00:02.0: setting latency timer to 64
-[   36.519222] i915 0000:00:02.0: irq 30 for MSI/MSI-X
-[   37.572136] [drm] Initialized i915 1.6.0 20080730 for 0000:00:02.0 o=
-n minor 0
-[ 6081.289816] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux=
-, 1.3.27ks
-[ 6081.289823] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-[ 6081.289961] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->=
- IRQ 17
-[ 6081.289980] iwlagn 0000:03:00.0: setting latency timer to 64
-[ 6081.290048] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 5=
-350AGN REV=3D0x24
-[ 6081.311015] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 8=
-02.11a channels
-[ 6081.311135] iwlagn 0000:03:00.0: irq 31 for MSI/MSI-X
-[ 6081.315120] phy1: Selected rate control algorithm 'iwl-agn-rs'
-[ 6087.465024] iwlagn 0000:03:00.0: firmware: requesting iwlwifi-5000-1=
-=2Eucode
-[ 6087.508361] iwlagn 0000:03:00.0: loaded firmware version 5.4.1.16
-[ 6087.663653] Registered led device: iwl-phy1::radio
-[ 6087.663709] Registered led device: iwl-phy1::assoc
-[ 6087.663760] Registered led device: iwl-phy1::RX
-[ 6087.663812] Registered led device: iwl-phy1::TX
-
-CONFIG_IWLWIFI=3Dm
-CONFIG_IWLWIFI_LEDS=3Dy
-CONFIG_IWLWIFI_RFKILL=3Dy
-CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT=3Dy
-# CONFIG_IWLWIFI_DEBUG is not set
-CONFIG_IWLAGN=3Dm
-# CONFIG_IWL4965 is not set
-CONFIG_IWL5000=3Dy
-# CONFIG_IWL3945 is not set
-
-03:00.0 Network controller: Intel Corporation PRO/Wireless 5350 AGN [Ec=
-ho Peak] Network Connection
-
---=20
-Arkadiusz Mi=C5=9Bkiewicz        PLD/Linux Team
-arekm / maven.pl            http://ftp.pld-linux.org/
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fabio
