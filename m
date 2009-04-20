@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:60828 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751305AbZDNLpW (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60177 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178AbZDTR03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 07:45:22 -0400
-Date: Tue, 14 Apr 2009 07:39:28 -0400
-From: Forest Bond <forest@alittletooquiet.net>
+	Mon, 20 Apr 2009 13:26:29 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Marcel Holtmann <marcel@holtmann.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Greg KH <greg@kroah.com>, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090414113928.GA20470@storm.local.network> (sfid-20090414_134527_843729_3D8CFF17)
-References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wac7ysb48OaltWcw"
-In-Reply-To: <1239707258.4778.3.camel@johannes.local>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1240248008.4632.10.camel@johannes.local>
+References: <1239837672.11795.46.camel@violet>
+	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <1240248008.4632.10.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 18:26:25 +0100
+Message-Id: <1240248385.5260.15.camel@localhost.localdomain> (sfid-20090420_192637_427334_5B50253A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---wac7ysb48OaltWcw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> So far so good
+> 
+> > wlan0: deauthenticated (Reason: 2)
+> 
+> This is confusing. And it keeps happening:
+> 
+> > wlan0: associated
+> 
+> > wlan0: deauthenticated (Reason: 2)
+> 
+> > wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
+> > wlan0: associated
+> 
+> > wlan0: deauthenticated (Reason: 2)
+> 
+> > wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
+> > wlan0: associated
+> 
+> > wlan0: deauthenticated (Reason: 2)
+> 
+> > Do you need anything else? I have really no idea what happens here and I
+> > like to get it fixed.
+> 
+> Can you do the kernel log with timing please? It seems strange to get
+> "previous authentication is no longer valid" from the AP as a reason
+> code while associated.
 
-Hi,
+I can try but I am not home anymore. So no promises. However it keeps
+happening in a pretty constant rate. Like every 2-5 seconds interval.
 
-On Tue, Apr 14, 2009 at 01:07:38PM +0200, Johannes Berg wrote:
-> On Tue, 2009-04-14 at 06:52 -0400, Forest Bond wrote:
-> > This patch adds the vt6656 driver to drivers/staging.  This code was li=
-terally
-> > copied from the upstream source archive, available here:
-> >=20
-> >   http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
-> >=20
-> > Copyright: VIA Networking Technologies, Inc.
-> > License: GPL
-> > Authors: Jerry Chen, Kyle Hsu, Lucas Lin, Lyndon Chen, Tevin Chen, Warr=
-en Hsu,
-> >          Yiching Chen
-> > Signed-off-by: Forest Bond <forest@alittletooquiet.net>
-> >=20
-> > Patch: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driver=
--to-drivers-staging.patch.gz
-> > Signature: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-dr=
-iver-to-drivers-staging.patch.gz.sig
->=20
-> Can we also please add files here saying to not bother the
-> linux-wireless list about this crap?
+Could be the iwlagn driver for 5350 hardware doing something wrong here.
+And I also forced it to use sw_crypto.
 
-I would assume this is somewhat implied for any code in drivers/staging.  Is
-that not the case?
+Do you have any ideas so far or want me to put some extra debug code in
+there. Not sure if I get that kernel up before tomorrow morning.
 
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
+Regards
 
---wac7ysb48OaltWcw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Marcel
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQFJ5HXwRO4fQQdv5AwRAvnjAKC3aE06AH0gt1/z/jFH1pFAEp7b2wCePoUb
-AwWxjl7mEXcmVImzJCfukuY=
-=X6k8
------END PGP SIGNATURE-----
-
---wac7ysb48OaltWcw--
