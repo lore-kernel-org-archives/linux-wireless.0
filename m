@@ -1,80 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54214 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753784AbZDMQbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 12:31:10 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2009 09:31:10 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:37919 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756728AbZDTU00 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 16:26:26 -0400
+Received: by bwz7 with SMTP id 7so1422878bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2009 13:26:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18915.26566.17579.316992@gargle.gargle.HOWL> (sfid-20090413_183114_280601_CE77AD81)
-Date: Mon, 13 Apr 2009 21:56:46 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/11] ath9k: Initialize ANI timers
+In-Reply-To: <1240257188.4632.19.camel@johannes.local>
+References: <20090416111723.904720021@sipsolutions.net> <20090420194430.GG3369@tuxdriver.com>
+	<1240257188.4632.19.camel@johannes.local>
+From: Davide Pesavento <davidepesa@gmail.com>
+Date: Mon, 20 Apr 2009 22:26:09 +0200
+Message-ID: <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com> (sfid-20090420_222651_059133_FB461D0F)
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The various ANI timers have to be initialized properly when
-starting the calibration timer.
+On Mon, Apr 20, 2009 at 21:53, Johannes Berg <johannes@sipsolutions.net=
+> wrote:
+> On Mon, 2009-04-20 at 15:44 -0400, John W. Linville wrote:
+>> On Thu, Apr 16, 2009 at 01:17:23PM +0200, Johannes Berg wrote:
+>> > This is pretty much unchanged from my previous v2 RFCs,
+>> > except that I added a default of 500ms for the dynamic
+>> > powersave timer.
+>> >
+>> > The fourth patch is new, it adds beacon filtering to
+>> > mac80211 -- for the reasons explained in that patch.
+>> >
+>> > For 2.6.31, we should make MAC80211_DEFAULT_PS default
+>> > off instead. John, how do you want to handle that?
+>>
+>> I'm not sure I understand. =C2=A0Your patch (which would go to 2.6.3=
+1)
+>> has it turned-on by default. =C2=A0Which way do you want it?
+>
+> I want it turned on by default, at least in wireless-testing; Kalle
+> thinks that we should turn it off for a .31 release.
+>
+> I would think that since an easy workaround is available ("iwconfig
+> wlan0 power off") and it doesn't affect most hardware yet anyway (onl=
+y
+> those supporting powersave) we should turn it on by default anyway,
+> since otherwise we won't find any bugs -- but maybe that's just me.
+>
 
-Cc: stable@kernel.org
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   24 +++++++++++++++---------
- 1 files changed, 15 insertions(+), 9 deletions(-)
+As I've already reported [1][2], ath9k is currently broken when power
+saving is enabled, at least on AR5418 hardware. So please don't turn
+it on by default yet.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b2d129f..9564b73 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -407,6 +407,18 @@ set_timer:
- 	mod_timer(&sc->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
- }
- 
-+static void ath_start_ani(struct ath_softc *sc)
-+{
-+	unsigned long timestamp = jiffies_to_msecs(jiffies);
-+
-+	sc->ani.longcal_timer = timestamp;
-+	sc->ani.shortcal_timer = timestamp;
-+	sc->ani.checkani_timer = timestamp;
-+
-+	mod_timer(&sc->ani.timer,
-+		  jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
-+}
-+
- /*
-  * Update tx/rx chainmask. For legacy association,
-  * hard code chainmask to 1x1, for 11n association, use
-@@ -911,9 +923,7 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 		sc->nodestats.ns_avgtxrssi = ATH_RSSI_DUMMY_MARKER;
- 		sc->nodestats.ns_avgtxrate = ATH_RATE_DUMMY_MARKER;
- 
--		/* Start ANI */
--		mod_timer(&sc->ani.timer,
--			  jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
-+		ath_start_ani(sc);
- 	} else {
- 		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info DISASSOC\n");
- 		sc->curaid = 0;
-@@ -2239,12 +2249,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
- 
--	if (conf->type == NL80211_IFTYPE_AP) {
--		/* TODO: is this a suitable place to start ANI for AP mode? */
--		/* Start ANI */
--		mod_timer(&sc->ani.timer,
--			  jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
--	}
-+	if (conf->type == NL80211_IFTYPE_AP)
-+		ath_start_ani(sc);
- 
- out:
- 	mutex_unlock(&sc->mutex);
--- 
-1.6.2.2
+Thanks,
+Davide
 
+[1] http://marc.info/?l=3Dlinux-wireless&m=3D123816406913599&w=3D2
+[2] http://marc.info/?l=3Dlinux-wireless&m=3D123999864507104&w=3D2
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
