@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40333 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794AbZDVUQc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 16:16:32 -0400
-Subject: powersaving when interface is up but not associated
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Arjan van de Ven <arjan@linux.intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8GBKLmzuVSDfQKM1D85x"
-Date: Wed, 22 Apr 2009 22:15:56 +0200
-Message-Id: <1240431356.30082.18.camel@johannes.local> (sfid-20090422_221645_304467_070F1B61)
+Received: from mga03.intel.com ([143.182.124.21]:31216 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212AbZDTVrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 17:47:42 -0400
+Subject: Re: [PATCH 08/11] iwl3945: use cancel_delayed_work_sync to cancel
+ rfkill_poll
+From: reinette chatre <reinette.chatre@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
+References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-8-git-send-email-reinette.chatre@intel.com>
+	 <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 14:53:45 -0700
+Message-Id: <1240264425.5206.112.camel@rc-desk> (sfid-20090420_234745_440966_05302A9F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John,
 
---=-8GBKLmzuVSDfQKM1D85x
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Could you please submit this patch to 2.6.30 also?
 
-Hi!
+Thank you
 
-Just had this idea -- when our networking interfaces are UP, but not
-actually doing anything, the RF chains consume power. This is, often,
-the default state, since you'll have your wifi on due to NM wanting to
-find APs, but not associated, for example when on the road. Sure, you
-can manually turn it off, but...
+Reinette
 
-However, it doesn't seem necessary. When we are not associated to an AP,
-and there are no extra interfaces in mac80211 active like monitor
-interfaces, it seems that we could very well turn off the radio while
-not scanning. It would be entirely trivial for mac80211 to do this,
-probably a 20 line patch or so (need some bookkeeping about why radio is
-disabled so it's not just four lines).
 
-Thoughts?
-
-johannes
-
---=-8GBKLmzuVSDfQKM1D85x
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ73r6AAoJEKVg1VMiehFY4fMP/3sfTi2lvwiiPCFtit7WQldX
-pGxc60OBTnDQMMTPUtNQe3La2NxVZP5Q54C3aj+R9R7hNMxVKqTmEI4+5um5bhB5
-M6fP0IW2kYogCJaSXKx52eSHKfy9UuUIZjJsFuhHUq6ehh1GbkjFxJ3c2AoHPU3s
-OczAs1JjYUjgCxadL4u9aMKBY5RhEMbt/x/iZvVUusblq1IFmT/srDp8760CNpdN
-v0SQGo2lz9MHNC9E9XLNAC/dwaag2y7G7+/qWx5TrX6la1/q5zgjzh91V2APGVv8
-Hv4TbxJnysi54nuFDGVnUvJmqDI4bvaXDFn8DYAThbLL8HH75z+lnKHCbbf58z2v
-uoSmtCHkAKT2CZuuq/KemhS0ojSSZOtlkNAjbGirgXSTfLh8O/xXQihD/okVna9R
-b1TLcTrYslthH8vWp6kQQYthzd1zjIBPIYlxM9RTIi87k41taSUp95hbaTVC1awI
-+lfY8b23I22Xkc89t8C5UombXaGpbSVhANZMXvl1pYHbNjftnkSw4vNUeH8Ag3fX
-nSSnRU6NBeWPQLKg862sNe8Ziw20Ms2zFZGirhbro3AW4vQVEGtCPsNCK2+z4uME
-YwKA0NCKhOxw7g3eS8rafe9tx0/WN2D53+eAhKAwKgsNx8bdlJmzpoPNb7itMi5c
-vDPOn6MCSuPyoLkaqC3x
-=k2bY
------END PGP SIGNATURE-----
-
---=-8GBKLmzuVSDfQKM1D85x--
+On Mon, 2009-04-20 at 14:37 -0700, Chatre, Reinette wrote:
+> Users reported lockup with work still trying to run
+> after module has been unloaded.
+> 
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/30594/focus=30601
+> 
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> Reported-by: TJ <ubuntu@tjworld.net>
+> Reported-by: Huaxu Wan <huaxu.wan@linux.intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index e22282e..a776326 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -4436,7 +4436,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+>  	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+>  
+>  	iwl_rfkill_unregister(priv);
+> -	cancel_delayed_work(&priv->rfkill_poll);
+> +	cancel_delayed_work_sync(&priv->rfkill_poll);
+>  
+>  	iwl3945_dealloc_ucode_pci(priv);
+>  
 
