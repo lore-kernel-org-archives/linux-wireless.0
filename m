@@ -1,108 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39879 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:50510 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbZDORR5 (ORCPT
+	with ESMTP id S1754170AbZDTWeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 13:17:57 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Lu8kE-0002RQ-9v
-	for linux-wireless@vger.kernel.org; Wed, 15 Apr 2009 19:17:54 +0200
-Message-Id: <20090415171046.336006351@sipsolutions.net> (sfid-20090415_191800_425432_FA40D498)
-Date: Wed, 15 Apr 2009 19:10:46 +0200
+	Mon, 20 Apr 2009 18:34:23 -0400
+Subject: Re: [PATCH] mac80211: do not print WARN if config interface fails
+ during reconfigure
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/3] mac80211 powersave improvements
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1240266979-9254-1-git-send-email-reinette.chatre@intel.com>
+References: <1240266979-9254-1-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bxLXpwhWLu3W1dQPHRPs"
+Date: Tue, 21 Apr 2009 00:33:48 +0200
+Message-Id: <1240266828.17388.1.camel@johannes.local> (sfid-20090421_003426_968292_292E2D97)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-This series contains the following:
+--=-bxLXpwhWLu3W1dQPHRPs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- 1) improve powersave to only allow it when a single
-    managed interface is active
+On Mon, 2009-04-20 at 15:36 -0700, Reinette Chatre wrote:
+> It is expected that config interface will always succeed as mac80211
+> will only request what driver supports. The exception here is when a
+> device has rfkill enabled. At this time the rfkill state is unknown to
+> mac80211 and config interface can fail. When this happens we deal with
+> this error instead of printing a WARN.
 
- 2) disable PS when the maximum networking latency
-    applications are are willing to put up with is
-    smaller than the beacon interval -- in that case
-    we cannot allow the AP to buffer frames
-
- 3) enable powersave by default
-
-The last part might be controversial?
-
-Should we have a default setting for the dynamic PS
-timeout?
-
-Oh also -- below is a small program to play with the
-pm_qos framework, feel free to rip it for anything.
+Thanks. Just to make sure -- this really is just papering over the
+warning, not actually fixing it. I hope we can fix it soon by making
+mac80211 aware of rfkill.
 
 johannes
 
-/*
- * Copyright 2009 Johannes Berg <johannes@sipsolutions.net>
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- *
- * Compile simply with:
- *	cc -o netlatency netlatency.c
- */
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+>  net/mac80211/util.c |   15 +++++++++++++--
+>  1 files changed, 13 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 52ef8d4..0ee74e8 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1047,8 +1047,19 @@ int ieee80211_reconfig(struct ieee80211_local *loc=
+al)
+>  		case NL80211_IFTYPE_ADHOC:
+>  		case NL80211_IFTYPE_AP:
+>  		case NL80211_IFTYPE_MESH_POINT:
+> -			WARN_ON(ieee80211_if_config(sdata, changed));
+> -			ieee80211_bss_info_change_notify(sdata, ~0);
+> +			/*
+> +			 * Driver's config_interface can fail if rfkill is
+> +			 * enabled. Accommodate this return code.
+> +			 * FIXME: When mac80211 has knowledge of rfkill
+> +			 * state the code below can change back to:
+> +			 *   WARN(ieee80211_if_config(sdata, changed));
+> +			 *   ieee80211_bss_info_change_notify(sdata, ~0);
+> +			 */
+> +			if (ieee80211_if_config(sdata, changed))
+> +				printk(KERN_DEBUG "%s: failed to reconfigure interface\n",
+> +				       sdata->dev->name);
+> +			else
+> +				ieee80211_bss_info_change_notify(sdata, ~0);
+>  			break;
+>  		case NL80211_IFTYPE_WDS:
+>  			break;
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <unistd.h>
+--=-bxLXpwhWLu3W1dQPHRPs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-int main(int argc, char **argv)
-{
-	int32_t v;
-	int fd;
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <latency [us]>\n", argv[0]);
-		fprintf(stderr, "\n");
-		fprintf(stderr, "	latency: the maximum tolerable network latency you\n");
-		fprintf(stderr, "	         are willing to put up with [in microseconds]\n");
-		fprintf(stderr, "\n");
-		fprintf(stderr, "This program will block until you hit Ctrl-C, at which point\n");
-		fprintf(stderr, "the file descriptor is closed and the latency requirement is\n");
-		fprintf(stderr, "unregistered again.\n");
-		return 2;
-	}
+iQIcBAABAgAGBQJJ7PhIAAoJEKVg1VMiehFY0JkQAI9cRCe63kvsVXm+dSdt/0yM
+8u8cZTiwsdvHnIv9Z6hDn8DysJschRJ2g10C282AdC6+CYZ2FuSuX7jc5El6UJSP
+g02t6lcfVtmRQDWCqmQ/7kChiNijdSaq5/dYmapTg6SfyGQ4K6g2ZRHnxPDw+1MZ
+bz0PEdJb0lwq3mLD7prgRW7J85ReiLa1A2q0De0s/27vOuIjrYjS0nBTENd5B3zf
+jlvVB3+ieMlL4a8WDKehK/ZQlbe47a9DrSKu8vQEmnYc4EOS2YTCNOSwOdm31NqW
+MLTVY1kH7LtJoumWNEJ9OoFwBcRbgQjzXDiGoIEVqw9EaoRSqo5rqm9Sip+H3pK/
+VekAgdhg0QfwrKuLXWvbIZYQMKrTc4B/43Jm2sfjUGdCtX1YZmRSYGdwpjB3bxmO
+d8bbHW2R1nrFlyAzscVWmCcS2AVa7eaBN4/7/VJNhqNIl9qQJuxjFE1Sbu88qh9Z
+j7nQxptJSZlFWDUhvxC4yJDHgvitUZB3slUnvfZqBlonK9LbPNuBlOD6YKtfqLqC
+Xe7fVGg/F9CGHk1u0z1AUZFcpus7zZfJsmsbaPs4aiiTBhsExHynjr6Ut9szHxQw
+fdQwlt697tanJ+lwiL+URx9dUQlsMHDGs8eBNSVQBGVSiF4qnM6ppd/YXrKUyVKt
+x2UAiOsUCLVxqAuTrRf3
+=Bgt8
+-----END PGP SIGNATURE-----
 
-	v = atoi(argv[1]);
-
-	printf("setting latency to %d.%.6d seconds\n", v/1000000, v % 1000000);
-
-	fd = open("/dev/network_latency", O_WRONLY);
-	if (fd < 0) {
-		perror("open /dev/network_latency");
-		return 1;
-	}
-	if (write(fd, &v, sizeof(v)) != sizeof(v)) {
-		perror("write to /dev/network_latency");
-		return 1;
-	}
-
-	while (1) sleep(10);
-
-	return 0;
-}
+--=-bxLXpwhWLu3W1dQPHRPs--
 
