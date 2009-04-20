@@ -1,113 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59601 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757478AbZDFUQI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33367 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbZDTQuO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 16:16:08 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 4/5] cfg80211: check allowed channel type upon userspace requests
-Date: Mon,  6 Apr 2009 16:15:57 -0400
-Message-Id: <1239048958-11775-5-git-send-email-lrodriguez@atheros.com> (sfid-20090406_221614_954519_AC9959FB)
-In-Reply-To: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 20 Apr 2009 12:50:14 -0400
+Subject: [PATCH] cfg80211: mark all WEXT handlers _GPL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 18:49:39 +0200
+Message-Id: <1240246179.4632.6.camel@johannes.local> (sfid-20090420_185019_589856_6A4AC88F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks to nl80211 userspace can be very specific upon device
-configuration. Before processing the request for the new HT40
-channel types (HT40- or HT40+) we need to ensure we can use them
-regulatory-wise. This wasn't required with wireless extensions as
-specifying the channel type wasn't not available and configuration
-was done towards the end implicitly upon association or reception
-of beacons from the AP. For the new nl80211 we have to check this
-when configuring the interfaces explicitly.
+The fact that these are exported is a technical detail
+of the conversion period -- we don't want anybody to
+start relying on these. Ultimately we want things to
+use cfg80211 only, and once everything that is in wext
+is converted to cfg80211 drivers will not need to touch
+wext _at all_.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/wireless/nl80211.c |   47 ++++++++++++++++++++++++++---------------------
- 1 files changed, 26 insertions(+), 21 deletions(-)
+ net/wireless/scan.c        |    4 ++--
+ net/wireless/wext-compat.c |   24 ++++++++++++------------
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 411c233..4e3af27 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -431,7 +431,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
- 		struct ieee80211_channel *chan;
- 		struct ieee80211_sta_ht_cap *ht_cap;
--		u32 freq, sec_freq;
-+		u32 freq;
+--- wireless-testing.orig/net/wireless/scan.c	2009-04-20 18:47:21.000000000 +0200
++++ wireless-testing/net/wireless/scan.c	2009-04-20 18:47:45.000000000 +0200
+@@ -653,7 +653,7 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	cfg80211_put_dev(rdev);
+ 	return err;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_siwscan);
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwscan);
  
- 		if (!rdev->ops->set_channel) {
- 			result = -EOPNOTSUPP;
-@@ -457,39 +457,44 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
- 			goto bad_res;
+ static void ieee80211_scan_add_ies(struct iw_request_info *info,
+ 				   struct cfg80211_bss *bss,
+@@ -962,5 +962,5 @@ int cfg80211_wext_giwscan(struct net_dev
+ 	cfg80211_put_dev(rdev);
+ 	return res;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwscan);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwscan);
+ #endif
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-04-20 18:47:21.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-04-20 18:47:33.000000000 +0200
+@@ -57,7 +57,7 @@ int cfg80211_wext_giwname(struct net_dev
  
--		if (channel_type == NL80211_CHAN_HT40MINUS)
--			sec_freq = freq - 20;
--		else if (channel_type == NL80211_CHAN_HT40PLUS)
--			sec_freq = freq + 20;
--		else
--			sec_freq = 0;
--
--		ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
-+		if (channel_type == NL80211_CHAN_HT40MINUS ||
-+		    channel_type == NL80211_CHAN_HT40PLUS)
-+			if (chan->flags & IEEE80211_CHAN_NO_HT40)
-+				goto bad_res;
+ 	return 0;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwname);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwname);
  
--		/* no HT capabilities */
--		if (channel_type != NL80211_CHAN_NO_HT &&
--		    !ht_cap->ht_supported)
-+		if (channel_type == NL80211_CHAN_HT40MINUS &&
-+		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
- 			goto bad_res;
-+		else if (channel_type == NL80211_CHAN_HT40PLUS &&
-+			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
-+			goto bad_res;
-+
-+		/*
-+		 * At this point we know if that if HT40 was requested
-+		 * we are allowed to use it and the extension channel
-+		 * exists.
-+		 */
+ int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
+ 			  u32 *mode, char *extra)
+@@ -108,7 +108,7 @@ int cfg80211_wext_siwmode(struct net_dev
  
--		if (sec_freq) {
--			struct ieee80211_channel *schan;
-+		ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
+ 	return ret;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_siwmode);
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwmode);
  
--			/* no 40 MHz capabilities */
-+		/* no HT capabilities or intolerant */
-+		if (channel_type != NL80211_CHAN_NO_HT) {
-+			if (!ht_cap->ht_supported)
-+				goto bad_res;
- 			if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
- 			    (ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
- 				goto bad_res;
--
--			schan = ieee80211_get_channel(&rdev->wiphy, sec_freq);
--
--			/* Secondary channel not allowed */
--			if (!schan || schan->flags & IEEE80211_CHAN_DISABLED)
--				goto bad_res;
- 		}
+ int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
+ 			  u32 *mode, char *extra)
+@@ -143,7 +143,7 @@ int cfg80211_wext_giwmode(struct net_dev
+ 	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwmode);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwmode);
  
- 		result = rdev->ops->set_channel(&rdev->wiphy, chan,
- 						channel_type);
- 		if (result)
- 			goto bad_res;
-+
-+		result = rdev->ops->set_channel(&rdev->wiphy, chan,
-+						channel_type);
-+		if (result)
-+			goto bad_res;
+ 
+ int cfg80211_wext_giwrange(struct net_device *dev,
+@@ -239,7 +239,7 @@ int cfg80211_wext_giwrange(struct net_de
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwrange);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwrange);
+ 
+ int cfg80211_wext_siwmlme(struct net_device *dev,
+ 			  struct iw_request_info *info,
+@@ -283,7 +283,7 @@ int cfg80211_wext_siwmlme(struct net_dev
+ 		return -EOPNOTSUPP;
+ 	}
+ }
+-EXPORT_SYMBOL(cfg80211_wext_siwmlme);
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwmlme);
+ 
+ 
+ /**
+@@ -313,7 +313,7 @@ struct ieee80211_channel *cfg80211_wext_
  	}
  
+ }
+-EXPORT_SYMBOL(cfg80211_wext_freq);
++EXPORT_SYMBOL_GPL(cfg80211_wext_freq);
  
--- 
-1.6.0.6
+ int cfg80211_wext_siwrts(struct net_device *dev,
+ 			 struct iw_request_info *info,
+@@ -338,7 +338,7 @@ int cfg80211_wext_siwrts(struct net_devi
+ 
+ 	return err;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_siwrts);
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwrts);
+ 
+ int cfg80211_wext_giwrts(struct net_device *dev,
+ 			 struct iw_request_info *info,
+@@ -352,7 +352,7 @@ int cfg80211_wext_giwrts(struct net_devi
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwrts);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwrts);
+ 
+ int cfg80211_wext_siwfrag(struct net_device *dev,
+ 			  struct iw_request_info *info,
+@@ -379,7 +379,7 @@ int cfg80211_wext_siwfrag(struct net_dev
+ 
+ 	return err;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_siwfrag);
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwfrag);
+ 
+ int cfg80211_wext_giwfrag(struct net_device *dev,
+ 			  struct iw_request_info *info,
+@@ -393,7 +393,7 @@ int cfg80211_wext_giwfrag(struct net_dev
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwfrag);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwfrag);
+ 
+ int cfg80211_wext_siwretry(struct net_device *dev,
+ 			   struct iw_request_info *info,
+@@ -434,7 +434,7 @@ int cfg80211_wext_siwretry(struct net_de
+ 
+ 	return err;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_siwretry);
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwretry);
+ 
+ int cfg80211_wext_giwretry(struct net_device *dev,
+ 			   struct iw_request_info *info,
+@@ -464,4 +464,4 @@ int cfg80211_wext_giwretry(struct net_de
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(cfg80211_wext_giwretry);
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwretry);
+
 
