@@ -1,79 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:56008 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbZDOK6m convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 06:58:42 -0400
-Received: by bwz17 with SMTP id 17so2835311bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 03:58:39 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: alan-jenkins@tuffmail.co.uk
-In-Reply-To: <9b2b86520904150345r31851012jb6a231e02583038a@mail.gmail.com>
-References: <9b2b86520904150345r31851012jb6a231e02583038a@mail.gmail.com>
-Date: Wed, 15 Apr 2009 11:58:39 +0100
-Message-ID: <9b2b86520904150358u81dd977g3378ef81d7748355@mail.gmail.com> (sfid-20090415_125847_223279_3E6DB787)
-Subject: =?windows-1252?Q?Re=3A_net=2Fwireless=2Freg=2Ec=3A1196=3A_warning=3A_=91channel=5Faft?=
-	=?windows-1252?Q?er=92_may_be_used_uninitialised_in_this_function?=
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=windows-1252
+Received: from mga01.intel.com ([192.55.52.88]:10173 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755959AbZDTUwN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 16:52:13 -0400
+Subject: Re: WARN on return of ieee80211_if_config
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1240252511.4632.17.camel@johannes.local>
+References: <1240252271.5206.63.camel@rc-desk>
+	 <1240252511.4632.17.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 13:58:16 -0700
+Message-Id: <1240261096.5206.107.camel@rc-desk> (sfid-20090420_225217_945805_7449ED00)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Corrected Luis address]
+Hi Johannes,
 
-On 4/15/09, Alan Jenkins <sourcejedi.lkml@googlemail.com> wrote:
-> On 4/10/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
->> Thanks pavel, please try this patch:
->>
->> From 94505af850bd0961a86e2786238ac0bbe0c44615 Mon Sep 17 00:00:00 20=
-01
->> From: Luis R. Rodriguez <lrodriguez@atheros.com>
->> Date: Fri, 10 Apr 2009 11:07:43 -0700
->> Subject: [PATCH] cfg80211: fix bug while trying to process obeacon h=
-ints
->> on
->> init
->>
->> During initialization we would not have received any beacons
->> so skip processing reg beacon hints, also adds a check to
->> reg_is_world_roaming() for last_request before accessing its
->> fields.
->
-> Hi again
->
-> I'm building wireless-testing to test the rfkill-rewrite patches on
-> top of.  I need to apply the patch referenced above as well.
->
-> When I applied the above patch, I noticed this unrelated warning
->
-> net/wireless/reg.c: In function =91wiphy_update_regulatory=92:
-> net/wireless/reg.c:1196: warning: =91channel_after=92 may be used
-> uninitialised in this function
-> net/wireless/reg.c:1196: note: =91channel_after=92 was declared here
-> net/wireless/reg.c:1196: warning: =91channel_before=92 may be used
-> uninitialised in this function
-> net/wireless/reg.c:1196: note: =91channel_before=92 was declared here
->
-> Looking at the code, I think it does need fixing.  There's even a
-> comment which says "this finds them (or not)" - and if they're not
-> found, channel_before / channel_after will be unset.
+On Mon, 2009-04-20 at 11:35 -0700, Johannes Berg wrote:
+> Hi Reinette,
+> 
+> > In 2.6.30 we are starting to see people encountering a WARN when
+> > resuming with HW rfkill enabled. The WARN is printed from
+> > net/mac80211/pm.c:159 in 2.6.30, for current wireless-testing it is 
+> > net/mac80211/util.c:1050.
+> 
+> Hmm, ok, that makes sense.
+> 
+> > With that function resuming multiple interfaces I do not know if it will
+> > make sense to return an error code if one fails. So, it seems that
+> > __ieee80211_resume()/ieee80211_reconfig() will always return zero. Even
+> > so, the case where ieee80211_if_config() fails needs to be
+> > accommodated. 
+> > 
+> > Would something like this make sense?
+> > 
+> > diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+> > index 0273023..46f2961 100644
+> > --- a/net/mac80211/pm.c
+> > +++ b/net/mac80211/pm.c
+> > @@ -156,8 +156,11 @@ int __ieee80211_resume(struct ieee80211_hw *hw)
+> >  		case NL80211_IFTYPE_ADHOC:
+> >  		case NL80211_IFTYPE_AP:
+> >  		case NL80211_IFTYPE_MESH_POINT:
+> > -			WARN_ON(ieee80211_if_config(sdata, changed));
+> > -			ieee80211_bss_info_change_notify(sdata, ~0);
+> > +			if (ieee80211_if_config(sdata, changed))
+> > +				printk(KERN_DEBUG "%s: failed to configure interface\n",
+> > +				       sdata->dev->name);
+> > +			else
+> > +				ieee80211_bss_info_change_notify(sdata, ~0);
+> 
+> Not sure. That doesn't seem to make sense anyway, since iwlwifi does
+> this:
+> 
+>         if (iwl_is_rfkill(priv))
+>                 goto done;
+> ...
+>  done:
+> ...
+> 	return 0;
+> 
+> 
+> Or will this test:
+>         if (!iwl_is_alive(priv))
+>                 return -EAGAIN;
+> 
+> kick us out before even getting to the rfkill test?
+
+Yes ... and it is not immediately clear that it is caused by rfkill. The
+STATUS_ALIVE bit that is tested here is cleared when machine is
+suspended. When machine is resumed and HW rfkill is set then it will not
+come up fully, see __iwl_up() that returns early with success if rfkill
+is enabled. STATUS_ALIVE will only be set again after HW rfkill is
+disabled and we initialize ucode again.
+
+Reinette
 
 
-Um, also the new "ath" module taints the kernel
 
-ath: module 'unspecified' taints kernel.
 
-and I get a new BUG in freq_reg_info_regd.  I'll send the full trace
-as soon as someone reassures it is welcome and wireless-testing is
-really intended for testing at the current time :-).
-
-Thanks
-Alan
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
