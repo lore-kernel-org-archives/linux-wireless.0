@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([207.115.11.52]:50719 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbZDUQuD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 12:50:03 -0400
-Message-ID: <49EDF923.2020102@lwfinger.net> (sfid-20090421_185006_853360_34470F04)
-Date: Tue, 21 Apr 2009 11:49:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jack Schneider <puck@dp-indexing.com>
-CC: Peter Stuge <stuge-linux-pcmcia@cdy.org>,
-	"linux-pcmcia@lists.infradead.org" <linux-pcmcia@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problem with exclusive interrupt in hostap_cs
-References: <20090420101340.142b6bc6@dp-indexing.com>	<49ECCABE.40805@lwfinger.net> <20090420225740.25307.qmail@cdy.org> <20090421103617.05737b01@dp-indexing.com>
-In-Reply-To: <20090421103617.05737b01@dp-indexing.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:12239 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756305AbZDTVbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 17:31:03 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/11] iwlwifi: rename PROBE_OPTION_MAX_API1 to PROBE_OPTION_MAX_3945
+Date: Mon, 20 Apr 2009 14:36:55 -0700
+Message-Id: <1240263424-8495-3-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233111_921363_AF39903D)
+In-Reply-To: <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
+References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jack Schneider wrote:
->
-> Hi, All
-> Tried the orinoco_cs driver last nite and got an error, something like;
-> device not supported.. 
-> 
-> Thanks for trying..
+From: Johannes Berg <johannes@sipsolutions.net>
 
-I took a second look at the code and found that other drivers are using the
-routine prism2_interrupt() with shared interrupts, thus the patch below should
-be all that is needed.
+This limit applies to current (APIv1 and APIv2) 3945 firmware only, not
+supported firmware of any of the other cards.
 
-I trust that you will be able to build the patched driver.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 29d4074..411a5d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2469,8 +2469,8 @@ struct iwl_ssid_ie {
+ 	u8 ssid[32];
+ } __attribute__ ((packed));
+ 
+-#define PROBE_OPTION_MAX_API1		0x4
+-#define PROBE_OPTION_MAX        	0x14
++#define PROBE_OPTION_MAX_3945		4
++#define PROBE_OPTION_MAX		20
+ #define TX_CMD_LIFE_TIME_INFINITE	cpu_to_le32(0xFFFFFFFF)
+ #define IWL_GOOD_CRC_TH			cpu_to_le16(1)
+ #define IWL_MAX_SCAN_SIZE 1024
+@@ -2552,7 +2552,7 @@ struct iwl3945_scan_cmd {
+ 	struct iwl3945_tx_cmd tx_cmd;
+ 
+ 	/* For directed active scans (set to all-0s otherwise) */
+-	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX_API1];
++	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX_3945];
+ 
+ 	/*
+ 	 * Probe request frame, followed by channel list.
+-- 
+1.5.6.3
 
-
-Index: wireless-testing/drivers/net/wireless/hostap/hostap_cs.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/hostap/hostap_cs.c
-+++ wireless-testing/drivers/net/wireless/hostap/hostap_cs.c
-@@ -666,7 +666,8 @@ static int prism2_config(struct pcmcia_d
- 	 * irq structure is initialized.
- 	 */
- 	if (link->conf.Attributes & CONF_ENABLE_IRQ) {
--		link->irq.Attributes = IRQ_TYPE_EXCLUSIVE | IRQ_HANDLE_PRESENT;
-+		link->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING |
-+				       IRQ_HANDLE_PRESENT;
- 		link->irq.IRQInfo1 = IRQ_LEVEL_ID;
- 		link->irq.Handler = prism2_interrupt;
- 		link->irq.Instance = dev;
