@@ -1,75 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12239 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756650AbZDTVbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 17:31:03 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/11] iwlwifi: support truly passive scanning
-Date: Mon, 20 Apr 2009 14:36:57 -0700
-Message-Id: <1240263424-8495-5-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233112_482991_F84090E9)
-In-Reply-To: <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
-References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59700 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753307AbZDTUbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 16:31:25 -0400
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com> (sfid-20090420_222651_059133_FB461D0F)
+References: <20090416111723.904720021@sipsolutions.net>
+	 <20090420194430.GG3369@tuxdriver.com>
+	 <1240257188.4632.19.camel@johannes.local>
+	 <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com>
+	 (sfid-20090420_222651_059133_FB461D0F)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8SnfMT5ARVPq3uD1kzHx"
+Date: Mon, 20 Apr 2009 22:30:50 +0200
+Message-Id: <1240259450.4632.20.camel@johannes.local> (sfid-20090420_223127_996713_4471A3B3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
 
-If passive scanning is requested we should not ask the
-microcode to do active scanning after detecting traffic
-on a channel -- that should only be used when an active
-scan is requested but some channels are marked passive.
+--=-8SnfMT5ARVPq3uD1kzHx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 ++++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 ++++++-
- 2 files changed, 12 insertions(+), 2 deletions(-)
+On Mon, 2009-04-20 at 22:26 +0200, Davide Pesavento wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 9edcf8c..25311e1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -712,7 +712,12 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 	} else if (priv->scan_bands & BIT(IEEE80211_BAND_5GHZ)) {
- 		band = IEEE80211_BAND_5GHZ;
- 		rate = IWL_RATE_6M_PLCP;
--		scan->good_CRC_th = IWL_GOOD_CRC_TH;
-+		/*
-+		 * If active scaning is requested but a certain channel
-+		 * is marked passive, we can do active scanning if we
-+		 * detect transmissions.
-+		 */
-+		scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH : 0;
- 
- 		/* Force use of chains B and C (0x6) for scan Rx for 4965
- 		 * Avoid A (0x1) because of its off-channel reception on A-band.
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 94f10f2..5520a79 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3078,7 +3078,12 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 		band = IEEE80211_BAND_2GHZ;
- 	} else if (priv->scan_bands & BIT(IEEE80211_BAND_5GHZ)) {
- 		scan->tx_cmd.rate = IWL_RATE_6M_PLCP;
--		scan->good_CRC_th = IWL_GOOD_CRC_TH;
-+		/*
-+		 * If active scaning is requested but a certain channel
-+		 * is marked passive, we can do active scanning if we
-+		 * detect transmissions.
-+		 */
-+		scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH : 0;
- 		band = IEEE80211_BAND_5GHZ;
- 	} else {
- 		IWL_WARN(priv, "Invalid scan band count\n");
--- 
-1.5.6.3
+> As I've already reported [1][2], ath9k is currently broken when power
+> saving is enabled, at least on AR5418 hardware. So please don't turn
+> it on by default yet.
+
+But if that's just a hardware/driver bug shouldn't the driver disable PS
+for that combination? It seems wrong to disable PS in the stack by
+default just because one driver has a problem with it, when that driver
+could just unset the PS support bit.
+
+johannes
+
+--=-8SnfMT5ARVPq3uD1kzHx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ7Nt4AAoJEKVg1VMiehFYuxMP/2OXY9Ga6KAknNA9u+8iS+U2
+H0tlj+wCBWAXRPl2c/1fBicHTAnni76T0bbIJffLHzC6NNmO8Bmg7iy+VKoKC58q
+wNPrWh3POjUO5TF5lR+/uLk9n/n057qo7C4P08wzXEQnb3ccW5cqvTSg+/fvPlID
+VuyJpUwr47IcIR6PBV3eDl9cRQguagC5nJm6e4poCgzpTrQow8ZZ09QGYreo+e/8
+zvtAOBbRa5W8ML8cRBerV61ew+W/n+09cptgcwOAdsjMZ2Q8miAsEM4O7z+i8ce6
+6jp9MJKjf2xu3P3dbZJJj3UkoNTnZ7e7G0lRlBVXS74wldlVw7IhML6NClLsxLaK
+zBgCnPfs4SFVPbscqFQersYhl66DKuam8j6tZg0wOc9nEAC3scGg4R+1Ox0/ofd2
+4eE9+6u2C9FyAwLlS7+IlQWI3+t/u/rpm7ZEZAmtLaellEue4Z2PMGAhvLa4jhq2
+RfDQEn5OVtG2BmOQrRJAoYEW4IKg6pUWc46OBn0/ThQGZxsBIyu4h6w4mCa7LW+2
+N/0+SrcqnXeLEEzo3oSbha9CspYkK680ejwalhcVJGTBZBxTVinqciCNp/Z8cHya
+zRIhs+IA4poHsHx5uPLMO2+fvG7JiRRjgYK7acjJTu7gwNFzRkF/BeSP3potibUO
+TA+YDu8tr+A6fJTYpf/C
+=FRAY
+-----END PGP SIGNATURE-----
+
+--=-8SnfMT5ARVPq3uD1kzHx--
 
