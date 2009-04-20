@@ -1,78 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35274 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57145 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893AbZDCJXT (ORCPT
+	with ESMTP id S1751001AbZDTQ1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 05:23:19 -0400
-Subject: Re: [PATCH 3/5] mac80211: check if HT40+/- is allowed before
- sending assoc
+	Mon, 20 Apr 2009 12:27:39 -0400
+Subject: [PATCH] ar9170: support HT receive and channel config
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1238711166-2208-4-git-send-email-lrodriguez@atheros.com>
-References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
-	 <1238711166-2208-4-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4VoL/XYgQEgqERg+uisi"
-Date: Fri, 03 Apr 2009 11:22:44 +0200
-Message-Id: <1238750564.27712.13.camel@johannes.local> (sfid-20090403_112321_308628_76947EF6)
+To: John Linville <linville@tuxdriver.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 18:27:04 +0200
+Message-Id: <1240244824.4632.1.camel@johannes.local> (sfid-20090420_182742_813852_53D62E77)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds support for configuring HT40 channels
+and receiving HT40 to ar9170. Receiving aggregation
+doesn't seem to work right now, so it's not enabled.
+Same goes for TX aggregation, but that probably needs
+even more work.
 
---=-4VoL/XYgQEgqERg+uisi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+With this, I can receive roughly 33 Mbits/sec.
 
-On Thu, 2009-04-02 at 18:26 -0400, Luis R. Rodriguez wrote:
-> We weren't checking this at all.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/mac80211/ht.c |   11 +++++++++--
->  1 files changed, 9 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-> index 4e3c72f..01010e0 100644
-> --- a/net/mac80211/ht.c
-> +++ b/net/mac80211/ht.c
-> @@ -114,6 +114,9 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data =
-*sdata,
->  	    ieee80211_channel_to_frequency(hti->control_chan))
->  		enable_ht =3D false;
-> =20
-> +	if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40)
-> +		enable_ht =3D false;
-> +
->  	if (enable_ht) {
->  		channel_type =3D NL80211_CHAN_HT20;
+The HT capabilities are a little odd, I tried following
+otus here -- in particular having SGI_40 but not SGI_20
+is a little weird but afaict that's what otus does.
 
-And that's a bug -- it disallows HT20. But you don't need to check
-NO_HT40, just below you check each of the two options anyway.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/ath/ar9170/ar9170.h |   15 ++++++++
+ drivers/net/wireless/ath/ar9170/main.c   |   54 ++++++++++++++++++++++++++-----
+ 2 files changed, 61 insertions(+), 8 deletions(-)
 
-johannes
+--- wireless-testing.orig/drivers/net/wireless/ath/ar9170/ar9170.h	2009-04-20 18:18:08.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ar9170/ar9170.h	2009-04-20 18:18:22.000000000 +0200
+@@ -60,6 +60,21 @@ enum ar9170_bw {
+ 	__AR9170_NUM_BW,
+ };
+ 
++static inline enum ar9170_bw nl80211_to_ar9170(enum nl80211_channel_type type)
++{
++	switch (type) {
++	case NL80211_CHAN_NO_HT:
++	case NL80211_CHAN_HT20:
++		return AR9170_BW_20;
++	case NL80211_CHAN_HT40MINUS:
++		return AR9170_BW_40_BELOW;
++	case NL80211_CHAN_HT40PLUS:
++		return AR9170_BW_40_ABOVE;
++	default:
++		BUG();
++	}
++}
++
+ enum ar9170_rf_init_mode {
+ 	AR9170_RFI_NONE,
+ 	AR9170_RFI_WARM,
+--- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2009-04-20 18:18:08.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2009-04-20 18:18:22.000000000 +0200
+@@ -142,11 +142,36 @@ static struct ieee80211_channel ar9170_5
+ };
+ #undef CHAN
+ 
++#define AR9170_HT_CAP							\
++{									\
++	.ht_supported	= true,						\
++	.cap		= IEEE80211_HT_CAP_MAX_AMSDU |			\
++			  IEEE80211_HT_CAP_SM_PS |			\
++			  IEEE80211_HT_CAP_SUP_WIDTH_20_40 |		\
++			  IEEE80211_HT_CAP_SGI_40 |			\
++			  IEEE80211_HT_CAP_DSSSCCK40 |			\
++			  IEEE80211_HT_CAP_SM_PS,			\
++	.ampdu_factor	= 3, /* ?? */					\
++	.ampdu_density	= 7, /* ?? */					\
++	.mcs		= {						\
++		.rx_mask = { 0xFF, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, },	\
++	},								\
++}
++
+ static struct ieee80211_supported_band ar9170_band_2GHz = {
+ 	.channels	= ar9170_2ghz_chantable,
+ 	.n_channels	= ARRAY_SIZE(ar9170_2ghz_chantable),
+ 	.bitrates	= ar9170_g_ratetable,
+ 	.n_bitrates	= ar9170_g_ratetable_size,
++	.ht_cap		= AR9170_HT_CAP,
++};
++
++static struct ieee80211_supported_band ar9170_band_5GHz = {
++	.channels	= ar9170_5ghz_chantable,
++	.n_channels	= ARRAY_SIZE(ar9170_5ghz_chantable),
++	.bitrates	= ar9170_a_ratetable,
++	.n_bitrates	= ar9170_a_ratetable_size,
++	.ht_cap		= AR9170_HT_CAP,
+ };
+ 
+ #ifdef AR9170_QUEUE_DEBUG
+@@ -190,13 +215,6 @@ static void ar9170_dump_station_tx_statu
+ }
+ #endif /* AR9170_QUEUE_DEBUG */
+ 
+-static struct ieee80211_supported_band ar9170_band_5GHz = {
+-	.channels	= ar9170_5ghz_chantable,
+-	.n_channels	= ARRAY_SIZE(ar9170_5ghz_chantable),
+-	.bitrates	= ar9170_a_ratetable,
+-	.n_bitrates	= ar9170_a_ratetable_size,
+-};
+-
+ void ar9170_handle_tx_status(struct ar9170 *ar, struct sk_buff *skb,
+ 			     bool valid_status, u16 tx_status)
+ {
+@@ -1327,7 +1345,8 @@ static int ar9170_op_config(struct ieee8
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+ 		err = ar9170_set_channel(ar, hw->conf.channel,
+-					 AR9170_RFI_NONE, AR9170_BW_20);
++				AR9170_RFI_NONE,
++				nl80211_to_ar9170(hw->conf.channel_type));
+ 		if (err)
+ 			goto out;
+ 		/* adjust slot time for 5 GHz */
+@@ -1749,6 +1768,24 @@ static int ar9170_conf_tx(struct ieee802
+ 	return ret;
+ }
+ 
++static int ar9170_ampdu_action(struct ieee80211_hw *hw,
++			       enum ieee80211_ampdu_mlme_action action,
++			       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
++{
++	switch (action) {
++	case IEEE80211_AMPDU_RX_START:
++	case IEEE80211_AMPDU_RX_STOP:
++		/*
++		 * Something goes wrong -- RX locks up
++		 * after a while of receiving aggregated
++		 * frames -- not enabling for now.
++		 */
++		return -EOPNOTSUPP;
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++
+ static const struct ieee80211_ops ar9170_ops = {
+ 	.start			= ar9170_op_start,
+ 	.stop			= ar9170_op_stop,
+@@ -1765,6 +1802,7 @@ static const struct ieee80211_ops ar9170
+ 	.sta_notify		= ar9170_sta_notify,
+ 	.get_stats		= ar9170_get_stats,
+ 	.get_tx_stats		= ar9170_get_tx_stats,
++	.ampdu_action		= ar9170_ampdu_action,
+ };
+ 
+ void *ar9170_alloc(size_t priv_size)
 
---=-4VoL/XYgQEgqERg+uisi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ1dViAAoJEKVg1VMiehFYP4QP/Rr34bD9Ly8LfHAXez7Z+cxz
-CaO/SBjTqC4dEJ+6S6A2YwyjaXQX8M1FNVnEhtKmQgd16ZMy+CAI8mqep8qohR1r
-CzjuXym8Kns5DoeFzr/RWNVtMDxKkQscacKewV9hjJx/oamP3XKfvD+6CkGnjCCI
-fvX6sdQAjghBd4EbYEUniCxi1Qiu9GaoHjT9Nf/0nP/NV5CWW973gitCRoGgXL1x
-+8XamXDiwUXsnEjrGkdtnn66HyHS/Qv63rRK2t3zQOP+lobZxQewbwhgBxfR7YPy
-HAz57f6zt66PaNbBWh5Ahccp9qTP1t3SjlnEoJ+RsWuvHp8xsuT7dlJOr/7hPcGO
-/fg5BMtIXeYpLyoT0YFOQLr8Z/d9i7/hNkgxV0NGG9LE+/U+M2kC9O6sPNhyvO4U
-EDP4VLnOz0w0gh7siL80c+/M7q+JLpFybBi3gZe+LzlZFMHfIsmi4Isv4ODg9eAl
-Fzqfd+wR66FwOzb+pTshBDOon/ba4YzOjOBpBwld+E+9bLnvbsFQIxx1Sw2bwTH8
-xAeKwV1fIhA3mgJaPjekZDD/DmO47onON9PnoPVh+APxgrpJAWDYXZL4cKpzrfWG
-YJHYPvR4wpxilffXd6pvl+pue+DHTEX2hr0dflRLgE/VxDftib0+aFwpyyhgM4op
-PUNVGX+bYmGzmCg85fRk
-=gQ52
------END PGP SIGNATURE-----
-
---=-4VoL/XYgQEgqERg+uisi--
 
