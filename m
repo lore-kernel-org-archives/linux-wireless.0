@@ -1,250 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55258 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754319AbZDBBfs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 21:35:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
+Received: from mga11.intel.com ([192.55.52.93]:55576 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756803AbZDTVbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 17:31:07 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 3/3] cfg80211: send regulatory beacon hint events to userspace
-Date: Wed,  1 Apr 2009 21:35:30 -0400
-Message-Id: <1238636130-27747-3-git-send-email-lrodriguez@atheros.com> (sfid-20090402_033552_208421_460723C7)
-In-Reply-To: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com>
-References: <1238636130-27747-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/11] iwlwifi: remove radio disable parameter.
+Date: Mon, 20 Apr 2009 14:37:03 -0700
+Message-Id: <1240263424-8495-11-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233348_404789_D24C2B6D)
+In-Reply-To: <1240263424-8495-10-git-send-email-reinette.chatre@intel.com>
+References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-8-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-10-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This informs userspace when a change has occured on a world
-roaming wiphy's channel which has lifted some restrictions
-due to a regulatory beacon hint.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Because this is now sent to userspace through the regulatory
-multicast group we remove the debug prints we used to use as
-they are no longer necessary.
+Patch removes the "manual radio disable" parameter
+as there is no usage scenario of disabling radio using this module parameter.
+User can use iwconfig's txpower to enable and disable radio.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+This module parameter also does not work as expected. During module load
+the status of radio is set, the radio is not actually disabled. Even so,
+the moment mac80211 requests the interface to be up the radio will be
+enabled again.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- include/linux/nl80211.h |   34 +++++++++++++++++++++++++++++++-
- net/wireless/nl80211.c  |   50 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 +++
- net/wireless/reg.c      |   28 +++++++++++++-------------
- 4 files changed, 101 insertions(+), 15 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 --
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 ++------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   18 ++----------------
+ 5 files changed, 4 insertions(+), 34 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index cbe8ce3..9838f99 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -7,7 +7,7 @@
-  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-- * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
-+ * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
-  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-  * Copyright 2008 Colin McCabe <colin@cozybit.com>
-  *
-@@ -166,6 +166,22 @@
-  * 	set (%NL80211_ATTR_REG_TYPE), if the type of regulatory domain is
-  * 	%NL80211_REG_TYPE_COUNTRY the alpha2 to which we have moved on
-  * 	to (%NL80211_ATTR_REG_ALPHA2).
-+ * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP beacon
-+ * 	has been found while world roaming thus enabling active scan or
-+ * 	any mode of operation that initiates TX (beacons) on a channel
-+ * 	where we would not have been able to do either before. As an example
-+ * 	if you are world roaming (regulatory domain set to world or if your
-+ * 	driver is using a custom world roaming regulatory domain) and while
-+ * 	doing a passive scan on the 5 GHz band you find an AP there (if not
-+ * 	on a DFS channel) you will now be able to actively scan for that AP
-+ * 	or use AP mode on your card on that same channel. Note that this will
-+ * 	never be used for channels 1-11 on the 2 GHz band as they are always
-+ * 	enabled world wide. This beacon hint is only sent if your device had
-+ * 	either disabled active scanning or beaconing on a channel. We send to
-+ * 	userspace the wiphy on which we removed a restriction from
-+ * 	(%NL80211_ATTR_WIPHY) and the channel on which this occurred
-+ * 	before (%NL80211_ATTR_FREQ_BEFORE) and after (%NL80211_ATTR_FREQ_AFTER)
-+ * 	the beacon hint was processed.
-  *
-  * @NL80211_CMD_AUTHENTICATE: authentication request and notification.
-  *	This command is used both as a command (request to authenticate) and
-@@ -260,6 +276,8 @@ enum nl80211_commands {
- 	NL80211_CMD_DEAUTHENTICATE,
- 	NL80211_CMD_DISASSOCIATE,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e4762e5..a98ff4e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2361,8 +2361,6 @@ MODULE_FIRMWARE(IWL4965_MODULE_FIRMWARE(IWL4965_UCODE_API_MAX));
  
-+	NL80211_CMD_REG_BEACON_HINT,
-+
- 	/* add new commands above here */
+ module_param_named(antenna, iwl4965_mod_params.antenna, int, 0444);
+ MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
+-module_param_named(disable, iwl4965_mod_params.disable, int, 0444);
+-MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
+ module_param_named(swcrypto, iwl4965_mod_params.sw_crypto, int, 0444);
+ MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
+ module_param_named(debug, iwl4965_mod_params.debug, uint, 0444);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5bbb4f9..d731a83 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1655,9 +1655,6 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE(IWL5150_UCODE_API_MAX));
  
- 	/* used to define NL80211_CMD_MAX below */
-@@ -278,6 +296,7 @@ enum nl80211_commands {
- #define NL80211_CMD_ASSOCIATE NL80211_CMD_ASSOCIATE
- #define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
- #define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
-+#define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
+-module_param_named(disable50, iwl50_mod_params.disable, int, 0444);
+-MODULE_PARM_DESC(disable50,
+-		  "manually disable the 50XX radio (default 0 [radio on])");
+ module_param_named(swcrypto50, iwl50_mod_params.sw_crypto, bool, 0444);
+ MODULE_PARM_DESC(swcrypto50,
+ 		  "using software crypto engine (default 0 [hardware])\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index fc52d32..9e41e1b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2774,18 +2774,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto out_free_eeprom;
+ 	/* At this point both hw and priv are initialized. */
  
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -408,6 +427,17 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REASON_CODE: ReasonCode for %NL80211_CMD_DEAUTHENTICATE and
-  *	%NL80211_CMD_DISASSOCIATE, u16
-  *
-+ * @NL80211_ATTR_FREQ_BEFORE: A channel which has suffered a regulatory change
-+ * 	due to considerations from a beacon hint. This attribute reflects
-+ * 	the state of the channel _before_ the beacon hint processing. This
-+ * 	attributes consists of a nested attribute containing
-+ * 	NL80211_FREQUENCY_ATTR_*
-+ * @NL80211_ATTR_FREQ_AFTER: A channel which has suffered a regulatory change
-+ * 	due to considerations from a beacon hint. This attribute reflects
-+ * 	the state of the channel _after_ the beacon hint processing. This
-+ * 	attributes consists of a nested attribute containing
-+ * 	NL80211_FREQUENCY_ATTR_*
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -492,6 +522,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_AUTH_TYPE,
- 	NL80211_ATTR_REASON_CODE,
+-	/**********************************
+-	 * 7. Initialize module parameters
+-	 **********************************/
+-
+-	/* Disable radio (SW RF KILL) via parameter when loading driver */
+-	if (priv->cfg->mod_params->disable) {
+-		set_bit(STATUS_RF_KILL_SW, &priv->status);
+-		IWL_DEBUG_INFO(priv, "Radio disabled.\n");
+-	}
+-
+ 	/********************
+-	 * 8. Setup services
++	 * 7. Setup services
+ 	 ********************/
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl_disable_interrupts(priv);
+@@ -2809,7 +2799,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	iwl_setup_rx_handlers(priv);
  
-+	NL80211_ATTR_FREQ_BEFORE,
-+	NL80211_ATTR_FREQ_AFTER,
- 	/* add attributes here, update the policy in nl80211.c */
+ 	/**********************************
+-	 * 9. Setup and register mac80211
++	 * 8. Setup and register mac80211
+ 	 **********************************/
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d154f95..ad5b685 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3404,6 +3404,56 @@ void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
- 				NL80211_CMD_DISASSOCIATE);
- }
+ 	/* enable interrupts if needed: hw bug w/a */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 3bc2f6c..d4c60af 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -176,7 +176,6 @@ struct iwl_ops {
+ };
  
-+void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
-+				    struct ieee80211_channel *channel_before,
-+				    struct ieee80211_channel *channel_after)
-+{
-+#define NL80211_PUT_BC_CHAN(_attr, _chan) do { \
-+	nl_freq = nla_nest_start(msg, _attr); \
-+	if (!nl_freq) \
-+		goto nla_put_failure; \
-+	if (nl80211_msg_put_channel(msg, _chan)); \
-+		goto nla_put_failure; \
-+	nla_nest_end(msg, nl_freq); \
-+} while (0)
-+	struct sk_buff *msg;
-+	void *hdr;
-+	struct nlattr *nl_freq;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_BEACON_HINT);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	/*
-+	 * Since we are applying the beacon hint to a wiphy we know its
-+	 * wiphy_idx is valid
-+	 */
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy));
-+
-+	NL80211_PUT_BC_CHAN(NL80211_ATTR_FREQ_BEFORE, channel_before);
-+	NL80211_PUT_BC_CHAN(NL80211_ATTR_FREQ_AFTER, channel_after);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast(msg, 0, nl80211_regulatory_mcgrp.id, GFP_ATOMIC);
-+
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+#undef NL80211_PUT_BC_CHAN
-+}
-+
- /* initialisation/exit functions */
+ struct iwl_mod_params {
+-	int disable;		/* def: 0 = enable radio */
+ 	int sw_crypto;		/* def: 0 = using hardware encryption */
+ 	u32 debug;		/* def: 0 = minimal debug log messages */
+ 	int disable_hw_scan;	/* def: 0 = use h/w scan */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a776326..34c53ef 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4309,20 +4309,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	IWL_INFO(priv, "Detected Intel Wireless WiFi Link %s\n",
+ 		priv->cfg->name);
  
- int nl80211_init(void)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index b77af4a..9496eff 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -23,5 +23,9 @@ extern void nl80211_send_rx_deauth(struct cfg80211_registered_device *rdev,
- extern void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
- 				     struct net_device *netdev,
- 				     const u8 *buf, size_t len);
-+extern void
-+nl80211_send_beacon_hint_event(struct wiphy *wiphy,
-+			       struct ieee80211_channel *channel_before,
-+			       struct ieee80211_channel *channel_after);
+-	/***********************************
+-	 * 7. Initialize Module Parameters
+-	 * **********************************/
+-
+-	/* Initialize module parameter values here */
+-	/* Disable radio (SW RF KILL) via parameter when loading driver */
+-	if (iwl3945_mod_params.disable) {
+-		set_bit(STATUS_RF_KILL_SW, &priv->status);
+-		IWL_DEBUG_INFO(priv, "Radio disabled.\n");
+-	}
+-
+-
+ 	/***********************
+-	 * 8. Setup Services
++	 * 7. Setup Services
+ 	 * ********************/
  
- #endif /* __NET_WIRELESS_NL80211_H */
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c3e39e1..a3ed913 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1049,18 +1049,10 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 			      unsigned int chan_idx,
- 			      struct reg_beacon *reg_beacon)
- {
--#ifdef CONFIG_CFG80211_REG_DEBUG
--#define REG_DEBUG_BEACON_FLAG(desc) \
--	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
--		"frequency: %d MHz (Ch %d) on %s\n", \
--		reg_beacon->chan.center_freq, \
--		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
--		wiphy_name(wiphy));
--#else
--#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
--#endif
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
-+	bool channel_changed = false;
-+	struct ieee80211_channel chan_before;
+ 	spin_lock_irqsave(&priv->lock, flags);
+@@ -4350,7 +4338,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	iwl3945_setup_rx_handlers(priv);
  
- 	assert_cfg80211_lock();
+ 	/*********************************
+-	 * 9. Setup and Register mac80211
++	 * 8. Setup and Register mac80211
+ 	 * *******************************/
  
-@@ -1070,20 +1062,28 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
- 		return;
+ 	iwl_enable_interrupts(priv);
+@@ -4528,8 +4516,6 @@ MODULE_FIRMWARE(IWL3945_MODULE_FIRMWARE(IWL3945_UCODE_API_MAX));
  
-+	if (chan->beacon_found)
-+		return;
-+
-+	chan->beacon_found = true;
-+
-+	chan_before.center_freq = chan->center_freq;
-+	chan_before.flags = chan->flags;
-+
- 	if ((chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
- 	    !(chan->orig_flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
- 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
--		REG_DEBUG_BEACON_FLAG("active scanning");
-+		channel_changed = true;
- 	}
- 
- 	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
- 	    !(chan->orig_flags & IEEE80211_CHAN_NO_IBSS)) {
- 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
--		REG_DEBUG_BEACON_FLAG("beaconing");
-+		channel_changed = true;
- 	}
- 
--	chan->beacon_found = true;
--#undef REG_DEBUG_BEACON_FLAG
-+	if (channel_changed)
-+		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
- }
- 
- /*
+ module_param_named(antenna, iwl3945_mod_params.antenna, int, 0444);
+ MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
+-module_param_named(disable, iwl3945_mod_params.disable, int, 0444);
+-MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
+ module_param_named(swcrypto, iwl3945_mod_params.sw_crypto, int, 0444);
+ MODULE_PARM_DESC(swcrypto,
+ 		 "using software crypto (default 1 [software])\n");
 -- 
-1.6.0.6
+1.5.6.3
 
