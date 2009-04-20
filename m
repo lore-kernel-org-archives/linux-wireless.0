@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49364 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492AbZDUOAx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650AbZDTHvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 10:00:53 -0400
-Date: Tue, 21 Apr 2009 09:53:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Greg KH <greg@kroah.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
+	Mon, 20 Apr 2009 03:51:42 -0400
+Subject: [PATCH] mac80211-hwsim: allow configuring IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090421135347.GH17805@tuxdriver.com> (sfid-20090421_160057_670934_5FBCCDAC)
-References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com> <200904182318.56512.IvDoorn@gmail.com> <20090420135940.GB3369@tuxdriver.com> <a32f33a40904210330w33a6cea6idf1756428e7560c7@mail.gmail.com> <a32f33a40904210542i24ed9f85x51bfd745635c9476@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a32f33a40904210542i24ed9f85x51bfd745635c9476@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 20 Apr 2009 09:51:35 +0200
+Message-Id: <1240213895.18053.0.camel@johannes.local> (sfid-20090420_095147_326656_E43D5A70)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 21, 2009 at 02:42:46PM +0200, Ivo Van Doorn wrote:
-> On Tue, Apr 21, 2009 at 12:30 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> > On Mon, Apr 20, 2009 at 3:59 PM, John W. Linville
-> > <linville@tuxdriver.com> wrote:
-> >> On Sat, Apr 18, 2009 at 11:18:56PM +0200, Ivo van Doorn wrote:
-> >>> Hi,
-> >>>
-> >>> > > I hope rt2800pci/usb to be included *ASAP*, because rt2800usb supports
-> >>> > > more than 1oo USB devices and rt2800pci is included in a lot of
-> >>> > > laptops(ask Torvalds [1] [2])
-> >>> > >
-> >>> > > [1] http://marc.info/?l=linux-netdev&m=121799144422863&w=2
-> >>> > > [2] http://marc.info/?l=linux-kernel&m=123187052023831&w=2
-> >>> >
-> >>> > That would be great to have in, what's keeping it from happening?
-> >>>
-> >>> In short: A stable workable driver.
-> >>>
-> >>> The rt2800usb driver is pretty far (at least on my testsetup), but
-> >>> still has problems with transmitting frames immediately after
-> >>> association.
-> >>
-> >> I read this as "it works, but some frames are lost immediately after
-> >> association" -- is that right?
-> >
-> > It is not "Some frames" it is "All frames" you can't get a DHCP lease,
-> > or use a static IP and try to do anything.
-> 
-> To clarify a bit, this behavior summarizes the first minute after association,
-> after that all frames queued in the past minute are bursted out in a single shot
-> and normal traffic is possible again.
+It will not work properly, because it doesn't
+ * adjust the TSF in beacons
+ * cancel beacons when another phy sends
 
-Ah, well in that case I'd say let's get it into at least wireless-testing.
+However, it does allow testing the configuration
+interfaces and as such was useful for me.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+If you prefer to not have a "broken" implementation that's
+fine with me too, I don't really need this patch in now.
+
+ drivers/net/wireless/mac80211_hwsim.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-04-19 16:39:46.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-04-19 17:26:33.000000000 +0200
+@@ -9,7 +9,7 @@
+ 
+ /*
+  * TODO:
+- * - IBSS mode simulation (Beacon transmission with competition for "air time")
++ * - Fix IBSS beacon transmission for "air time" competition
+  * - RX filtering based on filter configuration (data->rx_filter)
+  */
+ 
+@@ -518,7 +518,8 @@ static void mac80211_hwsim_beacon_tx(voi
+ 	hwsim_check_magic(vif);
+ 
+ 	if (vif->type != NL80211_IFTYPE_AP &&
+-	    vif->type != NL80211_IFTYPE_MESH_POINT)
++	    vif->type != NL80211_IFTYPE_MESH_POINT &&
++	    vif->type != NL80211_IFTYPE_ADHOC)
+ 		return;
+ 
+ 	skb = ieee80211_beacon_get(hw, vif);
+@@ -932,6 +933,7 @@ static int __init init_mac80211_hwsim(vo
+ 		hw->wiphy->interface_modes =
+ 			BIT(NL80211_IFTYPE_STATION) |
+ 			BIT(NL80211_IFTYPE_AP) |
++			BIT(NL80211_IFTYPE_ADHOC) |
+ 			BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+ 		hw->flags = IEEE80211_HW_MFP_CAPABLE;
+
+
