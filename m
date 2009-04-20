@@ -1,108 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34919 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761767AbZCaXD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 19:03:56 -0400
-From: Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH] b43: Implement fullmac-mode support
-Date: Wed, 1 Apr 2009 00:01:44 +0100
-MIME-Version: 1.0
-To: linville@tuxdriver.com
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Message-Id: <200904010101.44380.mb@bu3sch.de> (sfid-20090401_010416_676207_3E8D6C0A)
-Content-Type: text/plain;
-  charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:54285 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539AbZDTSfq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 14:35:46 -0400
+Subject: Re: WARN on return of ieee80211_if_config
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1240252271.5206.63.camel@rc-desk>
+References: <1240252271.5206.63.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VmQd4xpLxAe2Dm5fEZEz"
+Date: Mon, 20 Apr 2009 20:35:11 +0200
+Message-Id: <1240252511.4632.17.camel@johannes.local> (sfid-20090420_203600_864098_F93622FF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recent work on the device firmware discovered a completely new hardware
-mode for b43 devices.
-All b43 devices have a bit in the MAC-control register to enable true
-hardware-fullMAC support. In fullmac mode the MAC and PHY is completely serviced
-by the firmware, so no driver support is required anymore.
 
-Full hardware MAC support has advantages and disadvantages:
+--=-VmQd4xpLxAe2Dm5fEZEz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-PRO:
-- The b43 driver does support _all_ devices (also 802.11n) in STA and AP mode.
-- The driver code is a lot simpler for the fullmac case. (It skips all of
-  the software MAC and PHY init).
-- People finally stop poking me to implement the N-PHY and LP-PHY code, yay.
+Hi Reinette,
 
-CON:
-- Packet injection is not supported in fullmac mode, yet. It's on
-  the TODO list with deadline 1.4.2010.
+> In 2.6.30 we are starting to see people encountering a WARN when
+> resuming with HW rfkill enabled. The WARN is printed from
+> net/mac80211/pm.c:159 in 2.6.30, for current wireless-testing it is=20
+> net/mac80211/util.c:1050.
 
-The feature currently is disabled by default, because it isn't tested enough.
-It can be enabled at modprobe time with the "fullmac=1" module parameter.
+Hmm, ok, that makes sense.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> With that function resuming multiple interfaces I do not know if it will
+> make sense to return an error code if one fails. So, it seems that
+> __ieee80211_resume()/ieee80211_reconfig() will always return zero. Even
+> so, the case where ieee80211_if_config() fails needs to be
+> accommodated.=20
+>=20
+> Would something like this make sense?
+>=20
+> diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+> index 0273023..46f2961 100644
+> --- a/net/mac80211/pm.c
+> +++ b/net/mac80211/pm.c
+> @@ -156,8 +156,11 @@ int __ieee80211_resume(struct ieee80211_hw *hw)
+>  		case NL80211_IFTYPE_ADHOC:
+>  		case NL80211_IFTYPE_AP:
+>  		case NL80211_IFTYPE_MESH_POINT:
+> -			WARN_ON(ieee80211_if_config(sdata, changed));
+> -			ieee80211_bss_info_change_notify(sdata, ~0);
+> +			if (ieee80211_if_config(sdata, changed))
+> +				printk(KERN_DEBUG "%s: failed to configure interface\n",
+> +				       sdata->dev->name);
+> +			else
+> +				ieee80211_bss_info_change_notify(sdata, ~0);
 
----
+Not sure. That doesn't seem to make sense anyway, since iwlwifi does
+this:
 
-John, please queue this patch for 3.6.31.
+        if (iwl_is_rfkill(priv))
+                goto done;
+...
+ done:
+...
+	return 0;
 
 
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2009-04-01 00:00:18.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2009-04-01 00:00:20.000000000 +0200
-@@ -347,6 +347,7 @@ enum {
- #define B43_MACCTL_ENABLED		0x00000001	/* MAC Enabled */
- #define B43_MACCTL_PSM_RUN		0x00000002	/* Run Microcode */
- #define B43_MACCTL_PSM_JMP0		0x00000004	/* Microcode jump to 0 */
-+#define B43_MACCTL_FULLMAC		0x00000008	/* Enable hardware full-MAC support */
- #define B43_MACCTL_SHM_ENABLED		0x00000100	/* SHM Enabled */
- #define B43_MACCTL_SHM_UPPER		0x00000200	/* SHM Upper */
- #define B43_MACCTL_IHR_ENABLED		0x00000400	/* IHR Region Enabled */
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-04-01 00:00:18.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-04-01 00:00:20.000000000 +0200
-@@ -63,6 +63,10 @@ MODULE_LICENSE("GPL");
- MODULE_FIRMWARE(B43_SUPPORTED_FIRMWARE_ID);
- 
- 
-+static int modparam_fullmac;
-+module_param_named(fullmac, modparam_fullmac, int, 0444);
-+MODULE_PARM_DESC(fullmac, "Switch the hardware into fullmac mode");
-+
- static int modparam_bad_frames_preempt;
- module_param_named(bad_frames_preempt, modparam_bad_frames_preempt, int, 0444);
- MODULE_PARM_DESC(bad_frames_preempt,
-@@ -4113,6 +4117,9 @@ static void b43_wireless_core_exit(struc
- 		return;
- 	b43_set_status(dev, B43_STAT_UNINIT);
- 
-+	if (modparam_fullmac)
-+		goto ssb_disable;
-+
- 	/* Stop the microcode PSM. */
- 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
- 	macctl &= ~B43_MACCTL_PSM_RUN;
-@@ -4132,6 +4139,7 @@ static void b43_wireless_core_exit(struc
- 		dev->wl->current_beacon = NULL;
- 	}
- 
-+ssb_disable:
- 	ssb_device_disable(dev->dev, 0);
- 	ssb_bus_may_powerdown(dev->dev->bus);
- }
-@@ -4157,6 +4165,14 @@ static int b43_wireless_core_init(struct
- 		b43_wireless_core_reset(dev, tmp);
- 	}
- 
-+	if (modparam_fullmac) {
-+		b43_write32(dev, B43_MMIO_MACCTL,
-+			    b43_read32(dev, B43_MMIO_MACCTL)
-+			    | B43_MACCTL_FULLMAC);
-+		err = 0;
-+		goto out;
-+	}
-+
- 	/* Reset all data structures. */
- 	setup_struct_wldev_for_init(dev);
- 	phy->ops->prepare_structs(dev);
+Or will this test:
+        if (!iwl_is_alive(priv))
+                return -EAGAIN;
 
--- 
-Greetings, Michael.
+kick us out before even getting to the rfkill test?
+
+johannes
+
+--=-VmQd4xpLxAe2Dm5fEZEz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ7MBcAAoJEKVg1VMiehFY6xUP/iBvL6aFnG/+ekHBi1qngYtf
+/qrTpKMIPrTpmNw7NTEUexTfWvP3o9B2I3ALIOhkEgX91a/67xUj6QyWQMuQIFWX
+alu2poXfUKMgkFVGgoF5Uw8YT9mudUlbnBAwUCp8qtDNGI3vlaSGr5qwKKj1fNGC
+umyqE1a3C85QYMBmGM6O+ri1cCBEys//8kT0DSm3B3ZzoJKw6IWfnCKLJW9CWWy0
+GLfav5T+2apdBQA+eZeLxjpmZOVKTXVHOZRUHbWZuqiRiguWU5F1VkVzj4F25iXk
+SDZ1vANTOQfqWiQtdgpuUU3QDce0Phbj6AF0IsdMJ6zJ1fWeL+25CNeU5TL5J65E
+J6d8tS3wjCD5KzmZvXe51zYdAp7x1XzadoK1MBJV9wLRR6OuU+UxusveWNgYTFQy
+glerGOTssF0vo2GiqA7gMaQIThLuy3vORvP+xha9k5egODr65W3aJPAGr8pcWn4K
+Vcp5+f3bwEKgkJBlJP3AEFDmzywVw1Ki/vbgmBppEf8VOcZkwH9rOTFXhgSAFlsN
+p7wIuGWUZNOSQTMqWSHt3n4k1Ss+BhN/GIhiKU/3A0QdfAmJG0/5K37pA0BKGyiY
+gTHLfGDHqhNNg2BeoOK9ybAqA/G31k7rfsFVgQ2Hvx9sRSxiQWR1R2RoChtH+0n2
+h4LdD3LzjMBL6jqXRUgP
+=QqH2
+-----END PGP SIGNATURE-----
+
+--=-VmQd4xpLxAe2Dm5fEZEz--
+
