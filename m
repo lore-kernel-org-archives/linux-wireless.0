@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37284 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790AbZDIPAu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 11:00:50 -0400
-Date: Thu, 9 Apr 2009 10:57:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix iwl3945 registration regression
-Message-ID: <20090409145714.GD3349@tuxdriver.com> (sfid-20090409_170054_457746_A5C7D726)
-References: <87ljqamktq.fsf@litku.valot.fi> <1239263762.32594.19.camel@johannes.local> <da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com> <49DE0A4D.7010408@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49DE0A4D.7010408@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53376 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752595AbZDTUPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 16:15:14 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] [PATCH v2] [compat-2.6] Add include/linux/mmc/sdio_ids.h
+Date: Mon, 20 Apr 2009 22:15:01 +0200
+Message-Id: <1240258501-16789-1-git-send-email-hauke@hauke-m.de> (sfid-20090420_221520_339035_4F9C6B8F)
+In-Reply-To: <43e72e890904161902x77b0505dh1696abbb32db7bbf@mail.gmail.com>
+References: <43e72e890904161902x77b0505dh1696abbb32db7bbf@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 09, 2009 at 09:46:37AM -0500, Larry Finger wrote:
-> Kalle Valo wrote:
+The sdio_ids.h only contains definitions, no structures. It is like the
+linux/pci_ids.h file for SDIO devices.
 
-> > Maybe this is the infamous module loading bug I see people talking
-> > about? I'll investigate it later.
-> 
-> Yes it is. The key is the "Failed to initialize wep", which is caused by a
-> failure to load modules ecb and arc4. Apply that patch and all will be well.
+If you do not like to include the file use this patch which adds the
+needed definition to compat.h.
 
-FWIW, I reverted the problem causing commit in the master branch
-of wireless-testing.  Hopefully the fix will be in -rc2 when
-wireless-testing gets there.
+Hauke
 
-John
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat.h |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/compat/compat.h b/compat/compat.h
+index 855a02c..f951a37 100644
+--- a/compat/compat.h
++++ b/compat/compat.h
+@@ -83,4 +83,16 @@ static inline void skb_queue_splice_tail_init(struct sk_buff_head *list,
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)) */
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
++
++#ifndef SDIO_DEVICE_ID_MARVELL_8688WLAN
++#define SDIO_DEVICE_ID_MARVELL_8688WLAN		0x9104
++#endif
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
++
+ #endif /* LINUX_26_COMPAT_H */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.1
+
