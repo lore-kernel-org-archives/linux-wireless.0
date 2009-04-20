@@ -1,122 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:45195 "EHLO venema.h4ckr.net"
+Received: from mga11.intel.com ([192.55.52.93]:35738 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752219AbZDPAYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 20:24:40 -0400
-Date: Thu, 16 Apr 2009 03:24:49 +0300
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Subject: [PATCH 2/7] ath5k: Read Spur channels from EEPROM
-Message-ID: <20090416002449.GB4138@makis> (sfid-20090416_022442_743075_30C1D825)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1756741AbZDTVbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2009 17:31:06 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 07/11] iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode
+Date: Mon, 20 Apr 2009 14:37:00 -0700
+Message-Id: <1240263424-8495-8-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233348_080638_841D20FB)
+In-Reply-To: <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
+References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
+ <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- *Read Spur channel information from EEPROM and use default channels for RF5413 compatible chips that don't have this info on EEPROM.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+This patch clean up the code for NL80211_IFTYPE_MONITOR mode,
+priv->iw_mode is set in add_interface, but add_interface is never called
+for monitor mode.
+The only way mac80211 informs us about monitor mode is through
+configuring filter; since iw_mode will never set to
+NL80211_IFTYPE_MONITOR, modify and remove all the code refer to
+NL80211_IFTYPE_MONITOR and replace with iwl_is_monitor_mode() function
+call.
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/eeprom.c |   37 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath5k/eeprom.h |   20 ++++++++++++++++
- 2 files changed, 56 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 --
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    8 ++------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
+ 8 files changed, 7 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index c0fb3b0..d204546 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -1694,9 +1694,40 @@ ath5k_eeprom_read_ctl_info(struct ath5k_hw *ah)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 2751736..fc52d32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2001,8 +2001,6 @@ static int iwl_mac_start(struct ieee80211_hw *hw)
+ 
+ out:
+ 	priv->is_open = 1;
+-	/* default to MONITOR mode */
+-	priv->iw_mode = NL80211_IFTYPE_MONITOR;
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
  	return 0;
  }
- 
-+static int
-+ath5k_eeprom_read_spur_chans(struct ath5k_hw *ah)
-+{
-+	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
-+	u32 offset;
-+	u16 val;
-+	int ret = 0, i;
-+
-+	offset = AR5K_EEPROM_CTL(ee->ee_version) +
-+				AR5K_EEPROM_N_CTLS(ee->ee_version);
-+
-+	if (ee->ee_version < AR5K_EEPROM_VERSION_5_3) {
-+		/* No spur info for 5GHz */
-+		ee->ee_spur_chans[0][0] = AR5K_EEPROM_NO_SPUR;
-+		/* 2 channels for 2GHz (2464/2420) */
-+		ee->ee_spur_chans[0][1] = AR5K_EEPROM_5413_SPUR_CHAN_1;
-+		ee->ee_spur_chans[1][1] = AR5K_EEPROM_5413_SPUR_CHAN_2;
-+		ee->ee_spur_chans[2][1] = AR5K_EEPROM_NO_SPUR;
-+	} else if (ee->ee_version >= AR5K_EEPROM_VERSION_5_3) {
-+		for (i = 0; i < AR5K_EEPROM_N_SPUR_CHANS; i++) {
-+			AR5K_EEPROM_READ(offset, val);
-+			ee->ee_spur_chans[i][0] = val;
-+			AR5K_EEPROM_READ(offset + AR5K_EEPROM_N_SPUR_CHANS,
-+									val);
-+			ee->ee_spur_chans[i][1] = val;
-+			offset++;
-+		}
-+	}
-+
-+	return ret;
-+}
- 
- /*
-- * Initialize eeprom power tables
-+ * Initialize eeprom data structure
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index c43c57d..bf7ad51 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -904,10 +904,11 @@ static u8 iwl_count_chain_bitmap(u32 chain_bitmap)
+  * never called for monitor mode. The only way mac80211 informs us about
+  * monitor mode is through configuring filters (call to configure_filter).
   */
- int
- ath5k_eeprom_init(struct ath5k_hw *ah)
-@@ -1719,6 +1750,10 @@ ath5k_eeprom_init(struct ath5k_hw *ah)
- 	if (err < 0)
- 		return err;
- 
-+	err = ath5k_eeprom_read_spur_chans(ah);
-+	if (err < 0)
-+		return err;
-+
- 	return 0;
+-static bool iwl_is_monitor_mode(struct iwl_priv *priv)
++bool iwl_is_monitor_mode(struct iwl_priv *priv)
+ {
+ 	return !!(priv->staging_rxon.filter_flags & RXON_FILTER_PROMISC_MSK);
  }
++EXPORT_SYMBOL(iwl_is_monitor_mode);
  
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
-index b0c0606..df9ffa0 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.h
-@@ -211,6 +211,23 @@
- #define AR5K_EEPROM_I_GAIN		10
- #define AR5K_EEPROM_CCK_OFDM_DELTA	15
- #define AR5K_EEPROM_N_IQ_CAL		2
-+/* 5GHz/2GHz */
-+enum ath5k_eeprom_freq_bands{
-+	AR5K_EEPROM_BAND_5GHZ = 0,
-+	AR5K_EEPROM_BAND_2GHZ = 1,
-+	AR5K_EEPROM_N_FREQ_BANDS,
-+};
-+/* Spur chans per freq band */
-+#define	AR5K_EEPROM_N_SPUR_CHANS	5
-+/* fbin value for chan 2464 x2 */
-+#define	AR5K_EEPROM_5413_SPUR_CHAN_1	1640
-+/* fbin value for chan 2420 x2 */
-+#define	AR5K_EEPROM_5413_SPUR_CHAN_2	1200
-+#define	AR5K_EEPROM_SPUR_CHAN_MASK	0x3FFF
-+#define	AR5K_EEPROM_NO_SPUR		0x8000
-+#define	AR5K_SPUR_CHAN_WIDTH			87
-+#define	AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz	3125
-+#define	AR5K_SPUR_SYMBOL_WIDTH_TURBO_100Hz	6250
+ /**
+  * iwl_set_rxon_chain - Set up Rx chain usage in "staging" RXON image
+@@ -1071,11 +1072,6 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv, int mode)
+ 						  RXON_FILTER_ACCEPT_GRP_MSK;
+ 		break;
  
- #define AR5K_EEPROM_READ(_o, _v) do {			\
- 	ret = ath5k_hw_eeprom_read(ah, (_o), &(_v));	\
-@@ -436,6 +453,9 @@ struct ath5k_eeprom_info {
- 	s8	ee_pga_desired_size_turbo[AR5K_EEPROM_N_MODES];
- 	s8	ee_pd_gain_overlap;
+-	case NL80211_IFTYPE_MONITOR:
+-		priv->staging_rxon.dev_type = RXON_DEV_TYPE_SNIFFER;
+-		priv->staging_rxon.filter_flags = RXON_FILTER_PROMISC_MSK |
+-		    RXON_FILTER_CTL2HOST_MSK | RXON_FILTER_ACCEPT_GRP_MSK;
+-		break;
+ 	default:
+ 		IWL_ERR(priv, "Unsupported interface type %d\n", mode);
+ 		break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 8ab60df..3bc2f6c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -267,6 +267,7 @@ int iwl_setup_mac(struct iwl_priv *priv);
+ int iwl_set_hw_params(struct iwl_priv *priv);
+ int iwl_init_drv(struct iwl_priv *priv);
+ void iwl_uninit_drv(struct iwl_priv *priv);
++bool iwl_is_monitor_mode(struct iwl_priv *priv);
+ void iwl_post_associate(struct iwl_priv *priv);
+ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 8f65908..fae8426 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -1102,13 +1102,6 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 	if (rx_start->phy_flags & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
+ 		rx_status.flag |= RX_FLAG_SHORTPRE;
  
-+	/* Spur mitigation data (fbin values for spur channels) */
-+	u16	ee_spur_chans[AR5K_EEPROM_N_SPUR_CHANS][AR5K_EEPROM_N_FREQ_BANDS];
-+
- 	u32	ee_antenna[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
- };
+-	/* Take shortcut when only in monitor mode */
+-	if (priv->iw_mode == NL80211_IFTYPE_MONITOR) {
+-		iwl_pass_packet_to_mac80211(priv, include_phy,
+-						 rxb, &rx_status);
+-		return;
+-	}
+-
+ 	network_packet = iwl_is_network_packet(priv, header);
+ 	if (network_packet) {
+ 		priv->last_rx_rssi = rx_status.signal;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 25311e1..799f5eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -747,7 +747,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
  
+ 	scan->tx_cmd.len = cpu_to_le16(cmd_len);
+ 
+-	if (priv->iw_mode == NL80211_IFTYPE_MONITOR)
++	if (iwl_is_monitor_mode(priv))
+ 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
+ 
+ 	scan->filter_flags |= (RXON_FILTER_ACCEPT_GRP_MSK |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index b8f18c6..17a4dd2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1078,11 +1078,6 @@ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+ 		iwl_print_hex_dump(priv, IWL_DL_DROP, (u8 *) hdr, sizeof(*hdr));
+ 		return priv->hw_params.bcast_sta_id;
+ 
+-	/* If we are in monitor mode, use BCAST. This is required for
+-	 * packet injection. */
+-	case NL80211_IFTYPE_MONITOR:
+-		return priv->hw_params.bcast_sta_id;
+-
+ 	default:
+ 		IWL_WARN(priv, "Unknown mode of operation: %d\n",
+ 			priv->iw_mode);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index c734c5f..58cdd32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -728,7 +728,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	/* drop all data frame if we are not associated */
+ 	if (ieee80211_is_data(fc) &&
+-	    (priv->iw_mode != NL80211_IFTYPE_MONITOR ||
++	    (!iwl_is_monitor_mode(priv) ||
+ 	    !(info->flags & IEEE80211_TX_CTL_INJECTED)) && /* packet injection */
+ 	    (!iwl_is_associated(priv) ||
+ 	     ((priv->iw_mode == NL80211_IFTYPE_STATION) && !priv->assoc_id) ||
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index f4978bd..e22282e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -729,7 +729,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	/* drop all data frame if we are not associated */
+ 	if (ieee80211_is_data(fc) &&
+-	    (priv->iw_mode != NL80211_IFTYPE_MONITOR) && /* packet injection */
++	    (!iwl_is_monitor_mode(priv)) && /* packet injection */
+ 	    (!iwl_is_associated(priv) ||
+ 	     ((priv->iw_mode == NL80211_IFTYPE_STATION) && !priv->assoc_id))) {
+ 		IWL_DEBUG_DROP(priv, "Dropping - !iwl_is_associated\n");
+@@ -3113,7 +3113,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 	/* select Rx antennas */
+ 	scan->flags |= iwl3945_get_antenna_flags(priv);
+ 
+-	if (priv->iw_mode == NL80211_IFTYPE_MONITOR)
++	if (iwl_is_monitor_mode(priv))
+ 		scan->filter_flags = RXON_FILTER_PROMISC_MSK;
+ 
+ 	scan->channel_count =
+-- 
+1.5.6.3
+
