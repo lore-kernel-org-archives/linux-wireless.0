@@ -1,131 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:43560 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757779AbZD2LOk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38061 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754388AbZDTXKX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 07:14:40 -0400
-Message-ID: <49F83699.3000307@tuffmail.co.uk> (sfid-20090429_131457_661451_D196F9BB)
-Date: Wed, 29 Apr 2009 12:14:33 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>
-Subject: Re: [PATCH] [RFC] EEE PC hangs when booting off battery
-References: <49E065CF.6040408@tuffmail.co.uk>	 <200904140859.02188.bjorn.helgaas@hp.com>	 <20090414081728.10de978a@infradead.org>	 <200904140948.37633.bjorn.helgaas@hp.com> <49E5F01B.2060201@tuffmail.co.uk>	 <49EF0ABD.2080801@tuffmail.co.uk> <49F446AE.6070607@tuffmail.co.uk>	 <49F6CA0E.5040101@tuffmail.co.uk> (sfid-20090428_111942_198975_13CDA6F5) <1240912688.28835.10.camel@johannes.local> <49F6DA14.7030608@tuffmail.co.uk>
-In-Reply-To: <49F6DA14.7030608@tuffmail.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 20 Apr 2009 19:10:23 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1Lw2d2-0005G0-M8
+	for linux-wireless@vger.kernel.org; Tue, 21 Apr 2009 01:10:21 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v0.9.13
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1Lw2d2-0005G0-M8@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Tue, 21 Apr 2009 01:10:20 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Jenkins wrote:
-> Johannes Berg wrote:
->   
->> That doesn't seem relevant, this just does some initialisation. However,
->> you definitely missed adding a call to wep_free().
->>   
->>     
->
-> Hah, I should have realized something was wrong when I noticed I was
-> removing more lines that I added. 
->
-> The crypto init does cause the module load:
->
-> wait_for_completion
-> call_usermodehelper_exec
-> __request_module
-> crypto_larval_lookup
-> ? extract_entropy
-> crypto_alg_mod_lookup
-> crypto_alloc_base
-> ieee80211_wep_init
-> ieee80211_register_hw
->   
 
-Here's a corrected patch complete with changelog.  If there are no other
-problems with it, can you please  apply this for 2.6.30 to keep my EeePC
-regression-free?
+A new release of iw (v0.9.13) is available at:
 
-Thanks
-Alan
+http://wireless.kernel.org/download/iw/iw-0.9.13.tar.bz2
 
------->
->From c5e9dc036247e70956d1a28e8850c3810385dda0 Mon Sep 17 00:00:00 2001
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Date: Wed, 29 Apr 2009 11:41:24 +0100
-Subject: [PATCH] mac80211: fix modprobe deadlock by not calling wep_init under rtnl_lock
+SHA1 sum: c9bb4e484c50a36d2dcc2c2be38d985b355c9a08
 
- - ieee80211_wep_init(), which is called with rtnl_lock held, blocks in
-   request_module() [waiting for modprobe to load a crypto module].
+Here is the short log of the changes included in this 
+release:
 
- - modprobe blocks in a call to flush_workqueue(), when it closes a TTY
-   [presumably when it exits].
-
- - The workqueue item linkwatch_event() blocks on rtnl_lock.
-
-There's no reason for wep_init() to be called with rtnl_lock held, so
-just move it outside the critical section.
-
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
----
- net/mac80211/main.c |   19 +++++++++----------
- 1 files changed, 9 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index fbcbed6..00968c2 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -909,6 +909,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (result < 0)
- 		goto fail_sta_info;
- 
-+	result = ieee80211_wep_init(local);
-+	if (result < 0) {
-+		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
-+		       wiphy_name(local->hw.wiphy), result);
-+		goto fail_wep;
-+	}
-+
- 	rtnl_lock();
- 	result = dev_alloc_name(local->mdev, local->mdev->name);
- 	if (result < 0)
-@@ -930,14 +937,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_rate;
- 	}
- 
--	result = ieee80211_wep_init(local);
--
--	if (result < 0) {
--		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
--		       wiphy_name(local->hw.wiphy), result);
--		goto fail_wep;
--	}
--
- 	/* add one default STA interface if supported */
- 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
- 		result = ieee80211_if_add(local, "wlan%d", NULL,
-@@ -967,13 +966,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	return 0;
- 
--fail_wep:
--	rate_control_deinitialize(local);
- fail_rate:
- 	unregister_netdevice(local->mdev);
- 	local->mdev = NULL;
- fail_dev:
- 	rtnl_unlock();
-+	ieee80211_wep_free(local);
-+fail_wep:
- 	sta_info_stop(local);
- fail_sta_info:
- 	debugfs_hw_del(local);
--- 
-1.5.4.3
-
-
-
-
+Johannes Berg -  0.9.13
+Johannes Berg -  generate version.c instead of version.o
+Johannes Berg -  Merge branch 'ibss-test'
+Johannes Berg -  update nl80211.h
+Johannes Berg -  fix bug introduced by previous commit
+Johannes Berg -  adjust to new ibss API
+Johannes Berg -  print better interface names
+Johannes Berg -  Merge branch 'master' into ibss-test
+Johannes Berg -  support "iw dev ... set type ..."
+Johannes Berg -  add "dev" command to list all wireless interfaces
+Johannes Berg -  add "phy" command as alias for "list"
+Johannes Berg -  allow more command aliasing, dev/phy commands
+Johannes Berg -  ibss join/leave/event code
+Johannes Berg -  update nl80211.h
+Johannes Berg -  make version.h depend on things
+Johannes Berg -  remove -nogit suffix when building from tarball
+Johannes Berg -  accept managed/mgd for station interface
