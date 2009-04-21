@@ -1,112 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:60206 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503AbZDFUTX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38227 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984AbZDUNAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 16:19:23 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2415845wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 13:19:21 -0700 (PDT)
+	Tue, 21 Apr 2009 09:00:52 -0400
+Date: Tue, 21 Apr 2009 08:51:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+Message-ID: <20090421125132.GC17805@tuxdriver.com> (sfid-20090421_150055_977092_2820163D)
+References: <20090416111723.904720021@sipsolutions.net> <20090420194430.GG3369@tuxdriver.com> <1240257188.4632.19.camel@johannes.local> <87ocuqfuk3.fsf@litku.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <1239048958-11775-5-git-send-email-lrodriguez@atheros.com>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-	<1239048958-11775-5-git-send-email-lrodriguez@atheros.com>
-Date: Mon, 6 Apr 2009 13:19:06 -0700
-Message-ID: <43e72e890904061319k511354ecjc8732bc51cb4be8@mail.gmail.com> (sfid-20090406_221926_190307_7ED98439)
-Subject: Re: [PATCH v2 4/5] cfg80211: check allowed channel type upon
-	userspace requests
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ocuqfuk3.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBBcHIgNiwgMjAwOSBhdCAxOjE1IFBNLCBMdWlzIFIuIFJvZHJpZ3Vlego8bHJvZHJp
-Z3VlekBhdGhlcm9zLmNvbT4gd3JvdGU6Cj4gVGhhbmtzIHRvIG5sODAyMTEgdXNlcnNwYWNlIGNh
-biBiZSB2ZXJ5IHNwZWNpZmljIHVwb24gZGV2aWNlCj4gY29uZmlndXJhdGlvbi4gQmVmb3JlIHBy
-b2Nlc3NpbmcgdGhlIHJlcXVlc3QgZm9yIHRoZSBuZXcgSFQ0MAo+IGNoYW5uZWwgdHlwZXMgKEhU
-NDAtIG9yIEhUNDArKSB3ZSBuZWVkIHRvIGVuc3VyZSB3ZSBjYW4gdXNlIHRoZW0KPiByZWd1bGF0
-b3J5LXdpc2UuIFRoaXMgd2Fzbid0IHJlcXVpcmVkIHdpdGggd2lyZWxlc3MgZXh0ZW5zaW9ucyBh
-cwo+IHNwZWNpZnlpbmcgdGhlIGNoYW5uZWwgdHlwZSB3YXNuJ3Qgbm90IGF2YWlsYWJsZSBhbmQg
-Y29uZmlndXJhdGlvbgo+IHdhcyBkb25lIHRvd2FyZHMgdGhlIGVuZCBpbXBsaWNpdGx5IHVwb24g
-YXNzb2NpYXRpb24gb3IgcmVjZXB0aW9uCj4gb2YgYmVhY29ucyBmcm9tIHRoZSBBUC4gRm9yIHRo
-ZSBuZXcgbmw4MDIxMSB3ZSBoYXZlIHRvIGNoZWNrIHRoaXMKPiB3aGVuIGNvbmZpZ3VyaW5nIHRo
-ZSBpbnRlcmZhY2VzIGV4cGxpY2l0bHkuCj4KPiBTaWduZWQtb2ZmLWJ5OiBMdWlzIFIuIFJvZHJp
-Z3VleiA8bHJvZHJpZ3VlekBhdGhlcm9zLmNvbT4KPiAtLS0KPiDCoG5ldC93aXJlbGVzcy9ubDgw
-MjExLmMgfCDCoCA0NyArKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQo+IMKgMSBmaWxlcyBjaGFuZ2VkLCAyNiBpbnNlcnRpb25zKCspLCAyMSBkZWxldGlvbnMo
-LSkKPgo+IGRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jIGIvbmV0L3dpcmVsZXNz
-L25sODAyMTEuYwo+IGluZGV4IDQxMWMyMzMuLjRlM2FmMjcgMTAwNjQ0Cj4gLS0tIGEvbmV0L3dp
-cmVsZXNzL25sODAyMTEuYwo+ICsrKyBiL25ldC93aXJlbGVzcy9ubDgwMjExLmMKPiBAQCAtNDMx
-LDcgKzQzMSw3IEBAIHN0YXRpYyBpbnQgbmw4MDIxMV9zZXRfd2lwaHkoc3RydWN0IHNrX2J1ZmYg
-KnNrYiwgc3RydWN0IGdlbmxfaW5mbyAqaW5mbykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGVu
-dW0gbmw4MDIxMV9jaGFubmVsX3R5cGUgY2hhbm5lbF90eXBlID0gTkw4MDIxMV9DSEFOX05PX0hU
-Owo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgc3RydWN0IGllZWU4MDIxMV9jaGFubmVsICpjaGFu
-Owo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgc3RydWN0IGllZWU4MDIxMV9zdGFfaHRfY2FwICpo
-dF9jYXA7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB1MzIgZnJlcSwgc2VjX2ZyZXE7Cj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCB1MzIgZnJlcTsKPgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-aWYgKCFyZGV2LT5vcHMtPnNldF9jaGFubmVsKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqByZXN1bHQgPSAtRU9QTk9UU1VQUDsKPiBAQCAtNDU3LDM5ICs0NTcsNDQgQEAg
-c3RhdGljIGludCBubDgwMjExX3NldF93aXBoeShzdHJ1Y3Qgc2tfYnVmZiAqc2tiLCBzdHJ1Y3Qg
-Z2VubF9pbmZvICppbmZvKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaWYgKCFjaGFuIHx8IGNo
-YW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fRElTQUJMRUQpCj4gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqBnb3RvIGJhZF9yZXM7Cj4KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IGlmIChjaGFubmVsX3R5cGUgPT0gTkw4MDIxMV9DSEFOX0hUNDBNSU5VUykKPiAtIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNlY19mcmVxID0gZnJlcSAtIDIwOwo+IC0gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgZWxzZSBpZiAoY2hhbm5lbF90eXBlID09IE5MODAyMTFfQ0hBTl9IVDQw
-UExVUykKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNlY19mcmVxID0gZnJl
-cSArIDIwOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgZWxzZQo+IC0gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgc2VjX2ZyZXEgPSAwOwo+IC0KPiAtIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGh0X2NhcCA9ICZyZGV2LT53aXBoeS5iYW5kc1tjaGFuLT5iYW5kXS0+aHRfY2FwOwo+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGNoYW5uZWxfdHlwZSA9PSBOTDgwMjExX0NIQU5fSFQ0
-ME1JTlVTIHx8Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjaGFubmVsX3R5cGUgPT0g
-Tkw4MDIxMV9DSEFOX0hUNDBQTFVTKQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgaWYgKGNoYW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fTk9fSFQ0MCkKPiArIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGdvdG8gYmFkX3JlczsKPgo+IC0g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgLyogbm8gSFQgY2FwYWJpbGl0aWVzICovCj4gLSDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBpZiAoY2hhbm5lbF90eXBlICE9IE5MODAyMTFfQ0hBTl9OT19IVCAmJgo+
-IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgIWh0X2NhcC0+aHRfc3VwcG9ydGVkKQo+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGNoYW5uZWxfdHlwZSA9PSBOTDgwMjExX0NIQU5fSFQ0
-ME1JTlVTICYmCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAoY2hhbi0+ZmxhZ3MgJiBJ
-RUVFODAyMTFfQ0hBTl9OT19IVDQwTUlOVVMpKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgZ290byBiYWRfcmVzOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZWxzZSBpZiAo
-Y2hhbm5lbF90eXBlID09IE5MODAyMTFfQ0hBTl9IVDQwUExVUyAmJgo+ICsgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAoY2hhbi0+ZmxhZ3MgJiBJRUVFODAyMTFfQ0hBTl9OT19I
-VDQwUExVUykpCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBnb3RvIGJhZF9y
-ZXM7Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyoKPiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgKiBBdCB0aGlzIHBvaW50IHdlIGtub3cgaWYgdGhhdCBpZiBIVDQwIHdhcyByZXF1ZXN0
-ZWQKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiB3ZSBhcmUgYWxsb3dlZCB0byB1c2UgaXQg
-YW5kIHRoZSBleHRlbnNpb24gY2hhbm5lbAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIGV4
-aXN0cy4KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKi8KPgo+IC0gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgaWYgKHNlY19mcmVxKSB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBzdHJ1Y3QgaWVlZTgwMjExX2NoYW5uZWwgKnNjaGFuOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgaHRfY2FwID0gJnJkZXYtPndpcGh5LmJhbmRzW2NoYW4tPmJhbmRdLT5odF9jYXA7Cj4KPiAt
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC8qIG5vIDQwIE1IeiBjYXBhYmlsaXRp
-ZXMgKi8KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC8qIG5vIEhUIGNhcGFiaWxpdGllcyBvciBp
-bnRvbGVyYW50ICovCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAoY2hhbm5lbF90eXBlICE9
-IE5MODAyMTFfQ0hBTl9OT19IVCkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgaWYgKCFodF9jYXAtPmh0X3N1cHBvcnRlZCkKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGdvdG8gYmFkX3JlczsKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoGlmICghKGh0X2NhcC0+Y2FwICYgSUVFRTgwMjExX0hUX0NBUF9TVVBf
-V0lEVEhfMjBfNDApIHx8Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAoaHRfY2FwLT5jYXAgJiBJRUVFODAyMTFfSFRfQ0FQXzQwTUhaX0lOVE9MRVJBTlQpKQo+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZ290byBiYWRfcmVz
-Owo+IC0KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjaGFuID0gaWVlZTgw
-MjExX2dldF9jaGFubmVsKCZyZGV2LT53aXBoeSwgc2VjX2ZyZXEpOwo+IC0KPiAtIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC8qIFNlY29uZGFyeSBjaGFubmVsIG5vdCBhbGxvd2Vk
-ICovCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAoIXNjaGFuIHx8IHNj
-aGFuLT5mbGFncyAmIElFRUU4MDIxMV9DSEFOX0RJU0FCTEVEKQo+IC0gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZ290byBiYWRfcmVzOwo+IMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgfQo+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqByZXN1bHQgPSByZGV2LT5v
-cHMtPnNldF9jaGFubmVsKCZyZGV2LT53aXBoeSwgY2hhbiwKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGNoYW5u
-ZWxfdHlwZSk7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAocmVzdWx0KQo+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZ290byBiYWRfcmVzOwo+ICsKPiArIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIHJlc3VsdCA9IHJkZXYtPm9wcy0+c2V0X2NoYW5uZWwoJnJkZXYtPndpcGh5
-LCBjaGFuLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2hhbm5lbF90eXBlKTsKPiArIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIGlmIChyZXN1bHQpCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBn
-b3RvIGJhZF9yZXM7Cj4gwqAgwqAgwqAgwqB9CgpPb3BzLCB0aGF0J3MgYSBkdXBsaWNhdGUuLiBu
-b3Qgc3VyZSBob3cgSSBtaXNzZWQgdGhhdC4gV2lsbCByZXNlbmQgdGhpcyBwYXRjaC4KCiAgTHVp
-cwo=
+On Tue, Apr 21, 2009 at 08:24:28AM +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> >> I'm not sure I understand.  Your patch (which would go to 2.6.31)
+> >> has it turned-on by default.  Which way do you want it?
+> >
+> > I want it turned on by default, at least in wireless-testing; Kalle
+> > thinks that we should turn it off for a .31 release.
+> >
+> > I would think that since an easy workaround is available ("iwconfig
+> > wlan0 power off") and it doesn't affect most hardware yet anyway (only
+> > those supporting powersave) we should turn it on by default anyway,
+> > since otherwise we won't find any bugs -- but maybe that's just me.
+> 
+> Yes, in my opinion the power save should not be enabled by default for
+> the big masses, at least not yet. My understanding is that only few
+> people have tested it and I would like to see more testing first. 
+> 
+> But if you (Johannes&John) think it's ready for the prime time, I'm not
+> going to complain :)
+
+Well there is always a trade-off.  But by the time 2.6.31 come around
+the code will have been in wireless-testing, net-next, and linux-next
+for a reasonably long time.  Hopefully we will have good confidence
+in it by then.  If not, then we can disable it by default later.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
