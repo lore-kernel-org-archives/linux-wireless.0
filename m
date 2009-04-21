@@ -1,387 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1088 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757014AbZD3T45 (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:22675 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbZDUNOm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:56:57 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Nick Kossifidis <mick@madwifi-project.org>
-Subject: [PATCH 7/9] ath5k: Add Spur filter support on newer chips
-Date: Thu, 30 Apr 2009 15:55:50 -0400
-Message-Id: <1241121352-6064-8-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
-References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+	Tue, 21 Apr 2009 09:14:42 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so908555muf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 06:14:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090419144640.GC866@hash.localnet>
+References: <20090416002220.GA4138@makis> <20090419144640.GC866@hash.localnet>
+Date: Tue, 21 Apr 2009 16:14:39 +0300
+Message-ID: <40f31dec0904210614se4c3e3asd47daa2109c4a07b@mail.gmail.com> (sfid-20090421_151446_692929_0BBBD451)
+Subject: Re: [ath5k-devel] [PATCH 1/7] ath5k: Allow user/driver to set txpower
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nick Kossifidis <mick@madwifi-project.org>
-
-* Add spur filter support for RF5413 and later chips
-
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
- Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    5 +
- drivers/net/wireless/ath/ath5k/phy.c   |  255 +++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath5k/reset.c |   35 ++---
- 3 files changed, 270 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 33da290..8137182 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1278,6 +1278,11 @@ extern int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *chann
- /* PHY calibration */
- extern int ath5k_hw_phy_calibrate(struct ath5k_hw *ah, struct ieee80211_channel *channel);
- extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
-+/* Spur mitigation */
-+bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
-+				struct ieee80211_channel *channel);
-+void ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
-+				struct ieee80211_channel *channel);
- /* Misc PHY functions */
- extern u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan);
- extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index fd93c4e..6737ba0 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1353,6 +1353,257 @@ int ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
- 	return ret;
- }
- 
-+/***************************\
-+* Spur mitigation functions *
-+\***************************/
-+
-+bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
-+				struct ieee80211_channel *channel)
-+{
-+	u8 refclk_freq;
-+
-+	if ((ah->ah_radio == AR5K_RF5112) ||
-+	(ah->ah_radio == AR5K_RF5413) ||
-+	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
-+		refclk_freq = 40;
-+	else
-+		refclk_freq = 32;
-+
-+	if ((channel->center_freq % refclk_freq != 0) &&
-+	((channel->center_freq % refclk_freq < 10) ||
-+	(channel->center_freq % refclk_freq > 22)))
-+		return true;
-+	else
-+		return false;
-+}
-+
-+void
-+ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
-+				struct ieee80211_channel *channel)
-+{
-+	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
-+	u32 mag_mask[4] = {0, 0, 0, 0};
-+	u32 pilot_mask[2] = {0, 0};
-+	/* Note: fbin values are scaled up by 2 */
-+	u16 spur_chan_fbin, chan_fbin, symbol_width, spur_detection_window;
-+	s32 spur_delta_phase, spur_freq_sigma_delta;
-+	s32 spur_offset, num_symbols_x16;
-+	u8 num_symbol_offsets, i, freq_band;
-+
-+	/* Convert current frequency to fbin value (the same way channels
-+	 * are stored on EEPROM, check out ath5k_eeprom_bin2freq) and scale
-+	 * up by 2 so we can compare it later */
-+	if (channel->hw_value & CHANNEL_2GHZ) {
-+		chan_fbin = (channel->center_freq - 2300) * 10;
-+		freq_band = AR5K_EEPROM_BAND_2GHZ;
-+	} else {
-+		chan_fbin = (channel->center_freq - 4900) * 10;
-+		freq_band = AR5K_EEPROM_BAND_5GHZ;
-+	}
-+
-+	/* Check if any spur_chan_fbin from EEPROM is
-+	 * within our current channel's spur detection range */
-+	spur_chan_fbin = AR5K_EEPROM_NO_SPUR;
-+	spur_detection_window = AR5K_SPUR_CHAN_WIDTH;
-+	/* XXX: Half/Quarter channels ?*/
-+	if (channel->hw_value & CHANNEL_TURBO)
-+		spur_detection_window *= 2;
-+
-+	for (i = 0; i < AR5K_EEPROM_N_SPUR_CHANS; i++) {
-+		spur_chan_fbin = ee->ee_spur_chans[i][freq_band];
-+
-+		/* Note: mask cleans AR5K_EEPROM_NO_SPUR flag
-+		 * so it's zero if we got nothing from EEPROM */
-+		if (spur_chan_fbin == AR5K_EEPROM_NO_SPUR) {
-+			spur_chan_fbin &= AR5K_EEPROM_SPUR_CHAN_MASK;
-+			break;
-+		}
-+
-+		if ((chan_fbin - spur_detection_window <=
-+		(spur_chan_fbin & AR5K_EEPROM_SPUR_CHAN_MASK)) &&
-+		(chan_fbin + spur_detection_window >=
-+		(spur_chan_fbin & AR5K_EEPROM_SPUR_CHAN_MASK))) {
-+			spur_chan_fbin &= AR5K_EEPROM_SPUR_CHAN_MASK;
-+			break;
-+		}
-+	}
-+
-+	/* We need to enable spur filter for this channel */
-+	if (spur_chan_fbin) {
-+		spur_offset = spur_chan_fbin - chan_fbin;
-+		/*
-+		 * Calculate deltas:
-+		 * spur_freq_sigma_delta -> spur_offset / sample_freq << 21
-+		 * spur_delta_phase -> spur_offset / chip_freq << 11
-+		 * Note: Both values have 100KHz resolution
-+		 */
-+		/* XXX: Half/Quarter rate channels ? */
-+		switch (channel->hw_value) {
-+		case CHANNEL_A:
-+			/* Both sample_freq and chip_freq are 40MHz */
-+			spur_delta_phase = (spur_offset << 17) / 25;
-+			spur_freq_sigma_delta = (spur_delta_phase >> 10);
-+			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz;
-+			break;
-+		case CHANNEL_G:
-+			/* sample_freq -> 40MHz chip_freq -> 44MHz
-+			 * (for b compatibility) */
-+			spur_freq_sigma_delta = (spur_offset << 8) / 55;
-+			spur_delta_phase = (spur_offset << 17) / 25;
-+			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz;
-+			break;
-+		case CHANNEL_T:
-+		case CHANNEL_TG:
-+			/* Both sample_freq and chip_freq are 80MHz */
-+			spur_delta_phase = (spur_offset << 16) / 25;
-+			spur_freq_sigma_delta = (spur_delta_phase >> 10);
-+			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_TURBO_100Hz;
-+			break;
-+		default:
-+			return;
-+		}
-+
-+		/* Calculate pilot and magnitude masks */
-+
-+		/* Scale up spur_offset by 1000 to switch to 100HZ resolution
-+		 * and divide by symbol_width to find how many symbols we have
-+		 * Note: number of symbols is scaled up by 16 */
-+		num_symbols_x16 = ((spur_offset * 1000) << 4) / symbol_width;
-+
-+		/* Spur is on a symbol if num_symbols_x16 % 16 is zero */
-+		if (!(num_symbols_x16 & 0xF))
-+			/* _X_ */
-+			num_symbol_offsets = 3;
-+		else
-+			/* _xx_ */
-+			num_symbol_offsets = 4;
-+
-+		for (i = 0; i < num_symbol_offsets; i++) {
-+
-+			/* Calculate pilot mask */
-+			s32 curr_sym_off =
-+				(num_symbols_x16 / 16) + i + 25;
-+
-+			/* Pilot magnitude mask seems to be a way to
-+			 * declare the boundaries for our detection
-+			 * window or something, it's 2 for the middle
-+			 * value(s) where the symbol is expected to be
-+			 * and 1 on the boundary values */
-+			u8 plt_mag_map =
-+				(i == 0 || i == (num_symbol_offsets - 1))
-+								? 1 : 2;
-+
-+			if (curr_sym_off >= 0 && curr_sym_off <= 32) {
-+				if (curr_sym_off <= 25)
-+					pilot_mask[0] |= 1 << curr_sym_off;
-+				else if (curr_sym_off >= 27)
-+					pilot_mask[0] |= 1 << (curr_sym_off - 1);
-+			} else if (curr_sym_off >= 33 && curr_sym_off <= 52)
-+				pilot_mask[1] |= 1 << (curr_sym_off - 33);
-+
-+			/* Calculate magnitude mask (for viterbi decoder) */
-+			if (curr_sym_off >= -1 && curr_sym_off <= 14)
-+				mag_mask[0] |=
-+					plt_mag_map << (curr_sym_off + 1) * 2;
-+			else if (curr_sym_off >= 15 && curr_sym_off <= 30)
-+				mag_mask[1] |=
-+					plt_mag_map << (curr_sym_off - 15) * 2;
-+			else if (curr_sym_off >= 31 && curr_sym_off <= 46)
-+				mag_mask[2] |=
-+					plt_mag_map << (curr_sym_off - 31) * 2;
-+			else if (curr_sym_off >= 46 && curr_sym_off <= 53)
-+				mag_mask[3] |=
-+					plt_mag_map << (curr_sym_off - 47) * 2;
-+
-+		}
-+
-+		/* Write settings on hw to enable spur filter */
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_BIN_MASK_CTL,
-+					AR5K_PHY_BIN_MASK_CTL_RATE, 0xff);
-+		/* XXX: Self correlator also ? */
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
-+					AR5K_PHY_IQ_PILOT_MASK_EN |
-+					AR5K_PHY_IQ_CHAN_MASK_EN |
-+					AR5K_PHY_IQ_SPUR_FILT_EN);
-+
-+		/* Set delta phase and freq sigma delta */
-+		ath5k_hw_reg_write(ah,
-+				AR5K_REG_SM(spur_delta_phase,
-+					AR5K_PHY_TIMING_11_SPUR_DELTA_PHASE) |
-+				AR5K_REG_SM(spur_freq_sigma_delta,
-+				AR5K_PHY_TIMING_11_SPUR_FREQ_SD) |
-+				AR5K_PHY_TIMING_11_USE_SPUR_IN_AGC,
-+				AR5K_PHY_TIMING_11);
-+
-+		/* Write pilot masks */
-+		ath5k_hw_reg_write(ah, pilot_mask[0], AR5K_PHY_TIMING_7);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TIMING_8,
-+					AR5K_PHY_TIMING_8_PILOT_MASK_2,
-+					pilot_mask[1]);
-+
-+		ath5k_hw_reg_write(ah, pilot_mask[0], AR5K_PHY_TIMING_9);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TIMING_10,
-+					AR5K_PHY_TIMING_10_PILOT_MASK_2,
-+					pilot_mask[1]);
-+
-+		/* Write magnitude masks */
-+		ath5k_hw_reg_write(ah, mag_mask[0], AR5K_PHY_BIN_MASK_1);
-+		ath5k_hw_reg_write(ah, mag_mask[1], AR5K_PHY_BIN_MASK_2);
-+		ath5k_hw_reg_write(ah, mag_mask[2], AR5K_PHY_BIN_MASK_3);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_BIN_MASK_CTL,
-+					AR5K_PHY_BIN_MASK_CTL_MASK_4,
-+					mag_mask[3]);
-+
-+		ath5k_hw_reg_write(ah, mag_mask[0], AR5K_PHY_BIN_MASK2_1);
-+		ath5k_hw_reg_write(ah, mag_mask[1], AR5K_PHY_BIN_MASK2_2);
-+		ath5k_hw_reg_write(ah, mag_mask[2], AR5K_PHY_BIN_MASK2_3);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_BIN_MASK2_4,
-+					AR5K_PHY_BIN_MASK2_4_MASK_4,
-+					mag_mask[3]);
-+
-+	} else if (ath5k_hw_reg_read(ah, AR5K_PHY_IQ) &
-+	AR5K_PHY_IQ_SPUR_FILT_EN) {
-+		/* Clean up spur mitigation settings and disable fliter */
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_BIN_MASK_CTL,
-+					AR5K_PHY_BIN_MASK_CTL_RATE, 0);
-+		AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_IQ,
-+					AR5K_PHY_IQ_PILOT_MASK_EN |
-+					AR5K_PHY_IQ_CHAN_MASK_EN |
-+					AR5K_PHY_IQ_SPUR_FILT_EN);
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_TIMING_11);
-+
-+		/* Clear pilot masks */
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_TIMING_7);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TIMING_8,
-+					AR5K_PHY_TIMING_8_PILOT_MASK_2,
-+					0);
-+
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_TIMING_9);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TIMING_10,
-+					AR5K_PHY_TIMING_10_PILOT_MASK_2,
-+					0);
-+
-+		/* Clear magnitude masks */
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_BIN_MASK_1);
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_BIN_MASK_2);
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_BIN_MASK_3);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_BIN_MASK_CTL,
-+					AR5K_PHY_BIN_MASK_CTL_MASK_4,
-+					0);
-+
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_BIN_MASK2_1);
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_BIN_MASK2_2);
-+		ath5k_hw_reg_write(ah, 0, AR5K_PHY_BIN_MASK2_3);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_BIN_MASK2_4,
-+					AR5K_PHY_BIN_MASK2_4_MASK_4,
-+					0);
-+	}
-+}
-+
-+/********************\
-+  Misc PHY functions
-+\********************/
-+
- int ath5k_hw_phy_disable(struct ath5k_hw *ah)
+2009/4/19 Bob Copeland <me@bobcopeland.com>:
+> On Thu, Apr 16, 2009 at 03:22:20AM +0300, Nick Kossifidis wrote:
+>> =C2=A0* Now that we have regulatory control enable the driver to set=
+ txpower on hw
+>
+> I assume this needs my patch for the CTLs (reproduced below). =C2=A0A=
+ny
+> objections to it?
+>
+> From: Bob Copeland <me@bobcopeland.com>
+> Subject: [PATCH] ath5k: use ctl settings based on current regdomain
+>
+> Update ath5k to use the ctl settings for tx power based on current
+> regulatory domain.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+> =C2=A0drivers/net/wireless/ath/ath5k/phy.c | =C2=A0 19 +++++++-------=
+-----
+> =C2=A01 files changed, 7 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wirel=
+ess/ath/ath5k/phy.c
+> index 9e2faae..0ecd16f 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -1743,8 +1743,6 @@ done:
+> =C2=A0* Get the max edge power for this channel if
+> =C2=A0* we have such data from EEPROM's Conformance Test
+> =C2=A0* Limits (CTL), and limit max power if needed.
+> - *
+> - * FIXME: Only works for world regulatory domains
+> =C2=A0*/
+> =C2=A0static void
+> =C2=A0ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+> @@ -1760,26 +1758,23 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u8 ctl_idx =3D 0xFF;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 target =3D channel->center_freq;
+>
+> - =C2=A0 =C2=A0 =C2=A0 /* Find out a CTL for our mode that's not mapp=
+ed
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0* on a specific reg domain.
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0*
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0* TODO: Map our current reg domain to on=
+e of the 3 available
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0* reg domain ids so that we can support =
+more CTLs. */
+> + =C2=A0 =C2=A0 =C2=A0 ctl_mode =3D ath_regd_get_band_ctl(&ah->ah_reg=
+ulatory, channel->band);
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0switch (channel->hw_value & CHANNEL_MODES)=
  {
- 	ATH5K_TRACE(ah->ah_sc);
-@@ -1362,10 +1613,6 @@ int ath5k_hw_phy_disable(struct ath5k_hw *ah)
- 	return 0;
- }
- 
--/********************\
--  Misc PHY functions
--\********************/
--
- /*
-  * Get the PHY Chip revision
-  */
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 69d6860..386bc8b 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -537,26 +537,6 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 	return;
- }
- 
--static bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
--				struct ieee80211_channel *channel)
--{
--	u8 refclk_freq;
--
--	if ((ah->ah_radio == AR5K_RF5112) ||
--	(ah->ah_radio == AR5K_RF5413) ||
--	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
--		refclk_freq = 40;
--	else
--		refclk_freq = 32;
--
--	if ((channel->center_freq % refclk_freq != 0) &&
--	((channel->center_freq % refclk_freq < 10) ||
--	(channel->center_freq % refclk_freq > 22)))
--		return true;
--	else
--		return false;
--}
--
- /* TODO: Half/Quarter rate */
- static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
- 				struct ieee80211_channel *channel)
-@@ -999,7 +979,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		ath5k_hw_tweak_initval_settings(ah, channel);
- 
- 		/*
--		 * Set TX power (FIXME)
-+		 * Set TX power
- 		 */
- 		ret = ath5k_hw_txpower(ah, channel, ee_mode,
- 					ah->ah_txpower.txp_max_pwr / 2);
-@@ -1025,9 +1005,22 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		/* Write OFDM timings on 5212*/
- 		if (ah->ah_version == AR5K_AR5212 &&
- 			channel->hw_value & CHANNEL_OFDM) {
-+			struct ath5k_eeprom_info *ee =
-+					&ah->ah_capabilities.cap_eeprom;
-+
- 			ret = ath5k_hw_write_ofdm_timings(ah, channel);
- 			if (ret)
- 				return ret;
-+
-+			/* Note: According to docs we can have a newer
-+			 * EEPROM on old hardware, so we need to verify
-+			 * that our hardware is new enough to have spur
-+			 * mitigation registers (delta phase etc) */
-+			if (ah->ah_mac_srev >= AR5K_SREV_AR5424 ||
-+			(ah->ah_mac_srev >= AR5K_SREV_AR5424 &&
-+			ee->ee_version >= AR5K_EEPROM_VERSION_5_3))
-+				ath5k_hw_set_spur_mitigation_filter(ah,
-+								channel);
- 		}
- 
- 		/*Enable/disable 802.11b mode on 5111
--- 
-1.6.0.6
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case CHANNEL_A:
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode =3D AR5K_=
+CTL_11A | AR5K_CTL_NO_REGDOMAIN;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode |=3D AR5K=
+_CTL_11A;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case CHANNEL_G:
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode =3D AR5K_=
+CTL_11G | AR5K_CTL_NO_REGDOMAIN;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode |=3D AR5K=
+_CTL_11G;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case CHANNEL_B:
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode =3D AR5K_=
+CTL_11B | AR5K_CTL_NO_REGDOMAIN;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode |=3D AR5K=
+_CTL_11B;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case CHANNEL_T:
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode =3D AR5K_=
+CTL_TURBO | AR5K_CTL_NO_REGDOMAIN;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode |=3D AR5K=
+_CTL_TURBO;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case CHANNEL_TG:
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode =3D AR5K_=
+CTL_TURBOG | AR5K_CTL_NO_REGDOMAIN;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl_mode |=3D AR5K=
+_CTL_TURBOG;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0case CHANNEL_XR:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Fall throug=
+h */
 
 
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
+
+
+
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
