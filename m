@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:45783 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756824AbZD3N4U (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:34092 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112AbZDUNWG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 09:56:20 -0400
-Received: by bwz7 with SMTP id 7so1817512bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2009 06:56:18 -0700 (PDT)
+	Tue, 21 Apr 2009 09:22:06 -0400
+Received: by fxm2 with SMTP id 2so2514293fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 06:22:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-Date: Thu, 30 Apr 2009 14:56:18 +0100
-Message-ID: <efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
-Subject: Re: rt73usb Access point status
-From: Luis Correia <luis.f.correia@gmail.com>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 21 Apr 2009 16:22:01 +0300
+Message-ID: <b25312890904210622v3b84eb45pdef0cb3bce253ba0@mail.gmail.com> (sfid-20090421_152211_340522_BE12C816)
+Subject: [PATCH ] [RESEND] mwl8: fix build warning.
+From: Rami Rosen <roszenrami@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>, buytenh@marvell.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joerg,
+This patch fixes a build warning in mwl8.c.
+(Marvell TOPDOG wireless driver)
 
-On Thu, Apr 30, 2009 at 14:41, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
->
->> Based on that information, I have removed the "Yes (under development)"
->> note from the driver page since it doesn't really support it... In fact,
->> I'm surprised it works even with that hack since hostapd usually polls
->> the station with nullfunc frames and waits for an ack.
->
-> Reading the mail from Ivo (http://sourceforge.net/mailarchive/message.php?msg_id=200808082059.11968.IvDoorn%40gmail.com)
-> I gather that the ACK in question is not from the peer but from the local
-> hardware indicating that the frame was actually sent and not lost due to
-> some local error.
-> --
-> Regards
-> Joerg
+The warning it fixes is: "large integer implicitly truncated to unsigned type."
 
-According to Ivo, we cannot be totally sure that the device has sent
-the frame into the air, so no actual ACK is reported back to mac80211.
-
-The hostapd hack works, as long as the stations are not very far from
-the AP, and thus not 'too many retries' need to be sent.
-
-AFAIK, this is not optimal at all, so I don't go around and say 'it
-works'. It may or may not work in your case.
-If possible, test and report back your findings.
+The rx_ctrl member of the mwl8k_rx_desc struct is 8 bit (__u8 ), whereas trying
+to assign it a 32 bit value (which is returned from  cpu_to_le32())
+causes the compiler to issue
+a truncation warning.
 
 
-Luis Correia
-rt2x00 project admin
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+--
+(wireless-next)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 57a0268..8bc016c 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -893,8 +893,7 @@ static int mwl8k_rxq_init(struct ieee80211_hw *hw,
+int index)
+               rx_desc->next_rx_desc_phys_addr =
+                       cpu_to_le32(rxq->rx_desc_dma
+                                               + nexti * sizeof(*rx_desc));
+-               rx_desc->rx_ctrl =
+-                       cpu_to_le32(MWL8K_RX_CTRL_OWNED_BY_HOST);
++               rx_desc->rx_ctrl = MWL8K_RX_CTRL_OWNED_BY_HOST;
+       }
+
+       return 0;
