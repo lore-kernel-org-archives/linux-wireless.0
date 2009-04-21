@@ -1,65 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48797 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750907AbZDQUE5 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37601
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753172AbZDUJJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2009 16:04:57 -0400
-Date: Fri, 17 Apr 2009 23:04:48 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Do not call cfg80211_send_disassoc with rcu held
-Message-ID: <20090417200448.GA24430@jm.kir.nu> (sfid-20090417_220458_872228_D83B9737)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 21 Apr 2009 05:09:12 -0400
+Date: Tue, 21 Apr 2009 02:09:04 -0700 (PDT)
+Message-Id: <20090421.020904.15963653.davem@davemloft.net> (sfid-20090421_110918_230291_00FDFFFA)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, shemminger@vyatta.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] atmel: fix netdev ops conversion
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1240304720.17388.13.camel@johannes.local>
+References: <1240304720.17388.13.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_send_mlme_event() uses GFP_KERNEL and could sleep. Better not
-call it with rcu_read_lock held.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 21 Apr 2009 11:05:20 +0200
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Jouni Malinen <j@w1.fi>
+> sparse says:
+> 
+> drivers/net/wireless/atmel.c:1501:3: warning: Initializer entry defined twice
+> drivers/net/wireless/atmel.c:1505:3:   also defined here
+> 
+> and it's correct; atmel has its own ndo_change_mtu and
+> shouldn't use eth_change_mtu.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Stephen Hemminger <shemminger@vyatta.com>
+> ---
+> It looks like you (davem) took the initial conversion, do you want this
+> one as well?
 
----
- net/mac80211/mlme.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Yep, I've got it, applied, thanks Johannes!
 
---- uml.orig/net/mac80211/mlme.c	2009-04-16 11:04:05.000000000 +0300
-+++ uml/net/mac80211/mlme.c	2009-04-17 23:00:01.000000000 +0300
-@@ -874,15 +874,6 @@ static void ieee80211_set_disassoc(struc
- 		ieee80211_rx_bss_put(local, bss);
- 	}
- 
--	if (self_disconnected) {
--		if (deauth)
--			ieee80211_send_deauth_disassoc(sdata,
--				IEEE80211_STYPE_DEAUTH, reason);
--		else
--			ieee80211_send_deauth_disassoc(sdata,
--				IEEE80211_STYPE_DISASSOC, reason);
--	}
--
- 	ifmgd->flags &= ~IEEE80211_STA_ASSOCIATED;
- 	changed |= ieee80211_reset_erp_info(sdata);
- 
-@@ -901,6 +892,15 @@ static void ieee80211_set_disassoc(struc
- 
- 	rcu_read_unlock();
- 
-+	if (self_disconnected) {
-+		if (deauth)
-+			ieee80211_send_deauth_disassoc(sdata,
-+				IEEE80211_STYPE_DEAUTH, reason);
-+		else
-+			ieee80211_send_deauth_disassoc(sdata,
-+				IEEE80211_STYPE_DISASSOC, reason);
-+	}
-+
- 	/* channel(_type) changes are handled by ieee80211_hw_config */
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
