@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46930 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541AbZDNLtX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49376 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753509AbZDUOAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 07:49:23 -0400
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Greg KH <greg@kroah.com>, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-In-Reply-To: <20090414113928.GA20470@storm.local.network>
-References: <20090414105200.GE25746@storm.local.network>
-	 <1239707258.4778.3.camel@johannes.local>
-	 <20090414113928.GA20470@storm.local.network>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i0Ed4gW1EoJ+y2GI0Xw5"
-Date: Tue, 14 Apr 2009 13:48:47 +0200
-Message-Id: <1239709727.4778.6.camel@johannes.local> (sfid-20090414_134926_550622_27507293)
-Mime-Version: 1.0
+	Tue, 21 Apr 2009 10:00:55 -0400
+Date: Tue, 21 Apr 2009 09:57:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rami Rosen <roszenrami@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>, buytenh@marvell.com
+Subject: Re: [PATCH ] [RESEND] mwl8: fix build warning.
+Message-ID: <20090421135716.GJ17805@tuxdriver.com> (sfid-20090421_160059_150069_912C4084)
+References: <b25312890904210622v3b84eb45pdef0cb3bce253ba0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b25312890904210622v3b84eb45pdef0cb3bce253ba0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 21, 2009 at 04:22:01PM +0300, Rami Rosen wrote:
+> This patch fixes a build warning in mwl8.c.
+> (Marvell TOPDOG wireless driver)
+> 
+> The warning it fixes is: "large integer implicitly truncated to unsigned type."
+> 
+> The rx_ctrl member of the mwl8k_rx_desc struct is 8 bit (__u8 ), whereas trying
+> to assign it a 32 bit value (which is returned from  cpu_to_le32())
+> causes the compiler to issue
+> a truncation warning.
+> 
+> 
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
---=-i0Ed4gW1EoJ+y2GI0Xw5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Oh, duh...I should have looked for the obvious answer... :-)
 
-On Tue, 2009-04-14 at 07:39 -0400, Forest Bond wrote:
+Thanks,
 
-> > Can we also please add files here saying to not bother the
-> > linux-wireless list about this crap?
->=20
-> I would assume this is somewhat implied for any code in drivers/staging. =
- Is
-> that not the case?
-
-It seems to be on a per case basis -- and there's one driver at least
-(agnx) that we actually do care about because it is there only because
-it's incomplete not because the code is in some way problematic (like
-using its own 802.11 stack)
-
-johannes
-
---=-i0Ed4gW1EoJ+y2GI0Xw5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ5HgcAAoJEKVg1VMiehFY3WcP/RHX1yVgf20nS+5UIdjRL370
-DBNSQcXdrZhU6upNNS45poaR7yffs8uyJtAJZe35keshMdmP2yxqSkEn/I/4r1Ux
-/NvWTYY8ArdeJqIV2QIYvuzHYvAUYeC9QK/PGvwuOTJeWjo/8COaVTc4w/GJiNOC
-FtainpEkV6ZFCWZ6/0JuCH5i2JpyQ6DO35aFu7BG4TlN1kVEyWsOoL3wDHUyRG6w
-3cNJ+oxOebNUX1jFALST15hn6GeFmbQrD9M5653KAhTfm4/KPU8HSGecGflB7NIt
-erWTS9n8gsWtxEwJgfmgeDt6c8/liOuVY4uDmYhBQ/Ma3emP1+GwOqABFAwK8DLS
-unNmCM/tz/JSGajiWUeitRVFqSj2yT+mYUvd+dN/CDXBkpAsxKsmdLEyTaFQPku7
-wx+guEcEWjUC/Vz0m2BQ4aTfbMgk+0LPHhttjYpmP+f6eyZzd75bENjcqItzb33E
-zk0CJsMRfsTXzb166ZQQ6kIpxqjcbnUeL9tBscqUqPOCqa/cCQz46yJFv4Ne/7zv
-FRQ45m+vnfVvdya8366cNMPxUKlU1tIoK7RIImzIEJFqrpV/ImGyCcZtRNluRNAk
-aasHP6G3WiPZlGzAEDfzXxFIQcH+s4T6NMSkbHmlXSHTd4/OCTx1XmGlOViJLObj
-RrW3KzcibaiRDtkQOTKn
-=4ui+
------END PGP SIGNATURE-----
-
---=-i0Ed4gW1EoJ+y2GI0Xw5--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
