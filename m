@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58014 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936101AbZDCSao (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:40655 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754AbZDUKrd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 14:30:44 -0400
-Date: Fri, 3 Apr 2009 14:27:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Linux wireless mini-summit -- Berlin, June 2009
-Message-ID: <20090403182724.GA7364@tuxdriver.com> (sfid-20090403_203108_005030_BC3865B6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 21 Apr 2009 06:47:33 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090420182937.GA30428@jm.kir.nu>
+References: <1239837672.11795.46.camel@violet>
+	 <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <20090420182937.GA30428@jm.kir.nu>
+Content-Type: text/plain
+Date: Tue, 21 Apr 2009 11:47:30 +0100
+Message-Id: <1240310850.5260.21.camel@localhost.localdomain> (sfid-20090421_124737_260312_F4F65C99)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
+Hi Jouni,
 
-As you may know, we are planning on having a wireless summit meeting
-in Berlin, Germany this June.  This meeting is in cooperation with
-the Fedora FUDCon event, which will be accomodating us under the
-guise of a "hackfest".  This event also overlaps (and co-locates)
-with LinuxTag 2009.  Details are available here:
+> > so I had time to log the details now. I still have the problem that the
+> > association only works once. If it ever breaks it never works again. I
+> > hope this is not something stupid in the iwlagn driver for the 5350
+> > hardware.
+> 
+> Is the problem you described in the first message on this thread
+> something different or is this still expected to be the same issue? I'm
+> trying to understand the part about this being somehow tied to scanning
+> (NM enabled vs. disabled). Does this happen if you have NM disabled
+> (i.e., nothing triggering background scans)?
 
-	https://fedoraproject.org/wiki/FUDCon:Berlin_2009
+the scanning comes into play since it triggers the initial
+disassociation. You can do that manually by killing wpa_supplicant and
+get the same effect.
 
-FUDCon's are typically self-organizing under the BarCamp model.
-However, I have secured a promise that we will be allocated space
-for 1-2 dozen people on at least Friday 26 June and Saturday 27 June
-for our wireless event.  I personally encourage everyone not only to
-attend LinuxTag but also to participate in the rest of FUDCon!
+> > This is from wpa_supplicant (latest version from GIT of course):
+> > 
+> > CTRL-EVENT-SCAN-RESULTS 
+> 
+> ..
+> 
+> When you have a chance to run this again, I would be interested in
+> seeing more details debug log from wpa_supplicant (-ddt on command
+> line). From this excerpt, it seems like the issue would not be in
+> association, but on something after that. This kind of log could be
+> produced, e.g., when EAPOL frames are not delivered at all for some
+> reason, but the log does not have enough details to confirm whether that
+> was the case.
 
-So, here I open the floor for discussion of agenda items for our
-wireless meeting/hackfest.  What do we think is important to discuss
-face-to-face this year?  What isn't getting done?  What is getting
-done wrong?  What do we need that we didn't realize last year?
+I will try to get you the detailed logs. I am not at home right now, but
+hopefully my travel access points lets me reproduce it. However I do
+have seen the same thing with an AP not using any security at all.
 
-Also, please consider making some sort of prepared presentation.
-Especially welcome would be topics that are accessible to those
-outside of the core wireless developer group, such as current
-projects on enhancing IBSS support, extended power savings, or any
-other user-visible topic.  I'll be happy to take such proposals in
-private email or you can post them as part of this thread.
+> > Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
+> > Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
+> > Associated with 00:1f:3f:19:d8:b7
+> > CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
+> 
+> Would you happen to have any idea on how timing for the last two
+> entries, i.e., how long time it took from association to disconnection?
 
-Hopefully this gets the discussion started...please comment!
+Like 2-5 seconds. Not more.
 
-John
+> > wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
+> > wlan0: associated
+> 
+> > wlan0: deauthenticated (Reason: 2)
+> 
+> This would indicate that the AP accepted association, but for some
+> reason, decided to kick the STA out. Which AP is it?
 
-P.S.  We are also planning a meeting in Portland this September for
-those unable or unwilling to travel outside of North America for
-whatever reason -- stay tuned.
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+It is an AVM Fritz!Box 7270 with their latest firmware. Could the
+enabled WPS mess things up here?
+
+> If the deauthentication did not happen immediately after association,
+> this could be indication of failed 4-way handshake; wpa_supplicant debug
+> log would hopefully help in figuring out whether that is the case. If
+> wpa_supplicant log does not show any EAPOL frames, it would be
+> interesting to see a wireless capture log showing all the frames the AP
+> is sending out during the authentication process.
+
+Will try to get you all the details needed. Funny part here is that the
+problems stated with my 5350 card. The old 4965 in my X61 used to work
+perfectly fine with the exact same access point.
+
+Regards
+
+Marcel
+
+
