@@ -1,93 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from CHOKECHERRY.SRV.CS.CMU.EDU ([128.2.201.117]:40633 "EHLO
-	chokecherry.srv.cs.cmu.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753132AbZDOTfy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 15:35:54 -0400
-Received: from [128.2.222.132] (LIMA-2.SPEECH.CS.CMU.EDU [128.2.222.132])
-	by chokecherry.srv.cs.cmu.edu (8.13.6/8.13.6) with ESMTP id n3FJ5bY3020164
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 15:05:37 -0400 (EDT)
-Message-ID: <49E63000.4070500@cs.cmu.edu> (sfid-20090415_213556_843780_F2D895AF)
-Date: Wed, 15 Apr 2009 15:05:36 -0400
-From: David Huggins-Daines <dhuggins@cs.cmu.edu>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: zd1211rw: timeout loading firmware in 2.6.29 on ARM (ep93xx)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37064 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752071AbZDUUoH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 16:44:07 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] [compat-2.6] Symbol ksize is not exported in kernel older than 2.6.29.
+Date: Tue, 21 Apr 2009 22:43:58 +0200
+Message-Id: <1240346638-18755-2-git-send-email-hauke@hauke-m.de> (sfid-20090421_224410_016474_E580CAF6)
+In-Reply-To: <1240346638-18755-1-git-send-email-hauke@hauke-m.de>
+References: <1240346638-18755-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This reverts commit ad80a7a983e36c6d8f4ae57e4c472deb9cf1391c from wireless-testing on older kernel versions.
+Thanks Mathijs de Bruin for reporting.
 
-I'm having trouble with two different zd1211 based cards on an 
-ep93xx-based system using Linux 2.6.29.  Although the firmware is 
-present and in the right place, loading it consistently fails with 
-ETIMEDOUT.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat.diff |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 64 insertions(+), 0 deletions(-)
 
-I have the same problem with 2.6.27 and 2.6.28, as well as with the 
-wireless-testing tree from a week ago.  dmesg (with debug enabled) says:
+diff --git a/compat/compat.diff b/compat/compat.diff
+index e265090..5d35d27 100644
+--- a/compat/compat.diff
++++ b/compat/compat.diff
+@@ -669,3 +669,67 @@
+  cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
+  
+  ccflags-y += -D__CHECK_ENDIAN__
++--- a/net/wireless/core.h
+++++ b/net/wireless/core.h
++@@ -85,7 +85,11 @@ struct cfg80211_internal_bss {
++ 	struct rb_node rbn;
++ 	unsigned long ts;
++ 	struct kref ref;
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
++ 	bool hold, ies_allocated;
+++#else
+++	bool hold;
+++#endif
++ 
++ 	/* must be last because of priv member */
++ 	struct cfg80211_bss pub;
++--- a/net/wireless/scan.c
+++++ b/net/wireless/scan.c
++@@ -58,10 +58,12 @@ static void bss_release(struct kref *ref)
++ 	bss = container_of(ref, struct cfg80211_internal_bss, ref);
++ 	if (bss->pub.free_priv)
++ 		bss->pub.free_priv(&bss->pub);
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
++ 
++ 	if (bss->ies_allocated)
++ 		kfree(bss->pub.information_elements);
++ 
+++#endif
++ 	kfree(bss);
++ }
++ 
++@@ -364,13 +366,26 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
++ 
++ 	found = rb_find_bss(dev, res);
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
++ 	if (found) {
+++#else
+++	if (found && overwrite) {
+++		list_replace(&found->list, &res->list);
+++		rb_replace_node(&found->rbn, &res->rbn,
+++				&dev->bss_tree);
+++		/* XXX: workaround */
+++		res->hold = found->hold;
+++		kref_put(&found->ref, bss_release);
+++		found = res;
+++	} else if (found) {
+++#endif
++ 		kref_get(&found->ref);
++ 		found->pub.beacon_interval = res->pub.beacon_interval;
++ 		found->pub.tsf = res->pub.tsf;
++ 		found->pub.signal = res->pub.signal;
++ 		found->pub.capability = res->pub.capability;
++ 		found->ts = res->ts;
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
++ 
++ 		/* overwrite IEs */
++ 		if (overwrite) {
++@@ -399,6 +414,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
++ 			}
++ 		}
++ 
+++#endif
++ 		kref_put(&res->ref, bss_release);
++ 	} else {
++ 		/* this "consumes" the reference */
+-- 
+1.6.2.1
 
-usb 1-1: New USB device found, idVendor=0ace, idProduct=1215
-usb 1-1: New USB device strings: Mfr=16, Product=32, SerialNumber=0
-usb 1-1: Product: USB2.0 WLAN
-usb 1-1: Manufacturer: ZyDAS
-usb 1-1: uevent
-usb 1-1: usb_probe_device
-usb 1-1: configuration #1 chosen from 1 choice
-usb 1-1: adding 1-1:1.0 (config #1, interface 0)
-usb 1-1:1.0: uevent
-drivers/usb/core/inode.c: creating file '002'
-hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
-cfg80211: Using static regulatory domain info
-cfg80211: Regulatory domain: US
-    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-    (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
-    (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
-cfg80211: Calling CRDA for country: US
-zd1211rw usb_init()
-zd1211rw 1-1:1.0: usb_probe_interface
-zd1211rw 1-1:1.0: usb_probe_interface - got id
-usb 1-1: print_id() 0ace:1215 v4810 full
-hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
-ep93xx-ohci ep93xx-ohci: GetStatus roothub.portstatus [0] = 0x00100103 
-PRSC PPS PES CCS
-hub 1-0:1.0: state 7 ports 3 chg 0000 evt 0002
-usb 1-1: reset full speed USB device using ep93xx-ohci and address 2
-ep93xx-ohci ep93xx-ohci: GetStatus roothub.portstatus [0] = 0x00100103 
-PRSC PPS PES CCS
-zd1211rw 1-1:1.0: zd_chip_read_mac_addr_fw()
-wmaster0 (zd1211rw): not using net_device_ops yet
-phy0: Selected rate control algorithm 'minstrel'
-wlan0 (zd1211rw): not using net_device_ops yet
-zd1211rw 1-1:1.0: probe() successful
-zd1211rw 1-1:1.0: phy0
-usbcore: registered new interface driver zd1211rw
-zd1211rw initialized
-zd1211rw 1-1:1.0: zd_usb_init_hw()
-usb 1-1: request_fw_file() fw name zd1211/zd1211b_ub
-usb 1-1: firmware: requesting zd1211/zd1211b_ub
-usb 1-1: upload_firmware() firmware device id 0x4810 is equal to the 
-actual device id
-usb 1-1: request_fw_file() fw name zd1211/zd1211b_uphr
-usb 1-1: firmware: requesting zd1211/zd1211b_uphr
-usb 1-1: upload_code() transfer size 4018
-usb 1-1: upload_code() firmware confirm return value 0x01
-usb 1-1: ifconfig timed out on ep0out len=0/0
-zd1211rw 1-1:1.0: zd_usb_init_hw() couldn't reset configuration. Error 
-number -110
-zd1211rw 1-1:1.0: zd_usb_init_hw()
-usb 1-1: request_fw_file() fw name zd1211/zd1211b_ub
-usb 1-1: firmware: requesting zd1211/zd1211b_ub
-usb 1-1: upload_firmware() firmware device id 0x4810 is equal to the 
-actual device id
-usb 1-1: request_fw_file() fw name zd1211/zd1211b_uphr
-usb 1-1: firmware: requesting zd1211/zd1211b_uphr
-usb 1-1: upload_code() transfer size 4018
-usb 1-1: ifconfig timed out on ep0out len=0/4018
-usb 1-1: USB control request for firmware upload failed. Error number -110
-usb 1-1: Could not upload firmware code uph. Error number -110
-zd1211rw 1-1:1.0: couldn't load firmware. Error number -110
