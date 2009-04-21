@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58700 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281AbZDUIzr (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:34139 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbZDUFgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 04:55:47 -0400
-Subject: [PATCH] rndis_wlan: make some symbols static
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 21 Apr 2009 10:55:10 +0200
-Message-Id: <1240304110.17388.9.camel@johannes.local> (sfid-20090421_105551_484867_B5CDE7F6)
-Mime-Version: 1.0
+	Tue, 21 Apr 2009 01:36:54 -0400
+Received: by bwz7 with SMTP id 7so1570509bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2009 22:36:52 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org
+Subject: p54: power save disable patch twice
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 21 Apr 2009 08:36:50 +0300
+Message-ID: <87hc0iftzh.fsf@litku.valot.fi> (sfid-20090421_073658_496873_F73536A8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sparse complains, correctly, about these:
+Hi John,
 
-drivers/net/wireless/rndis_wlan.c:418:21: warning: symbol 'rndis_config_ops' was not declared. Should it be static?
-drivers/net/wireless/rndis_wlan.c:423:6: warning: symbol 'rndis_wiphy_privid' was not declared. Should it be static?
+I noticed that latest wireless-testing had this patch twice:
 
-Fix that.
+    p54: deactivate broken powersave function
+    
+    This patch deactivates powersave in station mode.
+    
+    It does not work correctly yet, so the code does more harm than
+    good.
+    
+    Reported-by: Johannes Berg <johannes@sipsolutions.net>
+    Signed-off-by: Christian Lamparter <chunkeey@web.de>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/rndis_wlan.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The first patch removes IEEE80211_HW_SUPPORTS_PS and
+IEEE80211_HW_PS_NULLFUNC_STACK, and the second patch removes only
+IEEE80211_HW_BEACON_FILTER. I assume that the idea was to remove
+everything in one go.
 
---- wireless-testing.orig/drivers/net/wireless/rndis_wlan.c	2009-04-21 10:53:35.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/rndis_wlan.c	2009-04-21 10:53:47.000000000 +0200
-@@ -415,12 +415,12 @@ static int rndis_change_virtual_intf(str
- static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_scan_request *request);
- 
--struct cfg80211_ops rndis_config_ops = {
-+static struct cfg80211_ops rndis_config_ops = {
- 	.change_virtual_intf = rndis_change_virtual_intf,
- 	.scan = rndis_scan,
- };
- 
--void *rndis_wiphy_privid = &rndis_wiphy_privid;
-+static void *rndis_wiphy_privid = &rndis_wiphy_privid;
- 
- static const int bcm4320_power_output[4] = { 25, 50, 75, 100 };
- 
-
-
+-- 
+Kalle Valo
