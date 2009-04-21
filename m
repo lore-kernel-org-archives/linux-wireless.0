@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42783 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751871AbZDWUvr (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:37643 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253AbZDUT4T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 16:51:47 -0400
-Date: Thu, 23 Apr 2009 23:51:27 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Make nl80211_send_mlme_timeout() static
-Message-ID: <20090423205127.GA32208@jm.kir.nu> (sfid-20090423_225151_835215_FB01D849)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 21 Apr 2009 15:56:19 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1240248773.4632.13.camel@johannes.local>
+References: <1239837672.11795.46.camel@violet>
+	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <1240248008.4632.10.camel@johannes.local>
+	 <1240248385.5260.15.camel@localhost.localdomain>
+	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 21 Apr 2009 20:56:15 +0100
+Message-Id: <1240343775.3327.3.camel@localhost.localdomain> (sfid-20090421_215623_171016_458DA260)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nl80211_send_mlme_timeout() is supposed to be used only within
-nl80211.c, so it can be made static.
+Hi Johannes,
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> > I can try but I am not home anymore. So no promises. However it keeps
+> > happening in a pretty constant rate. Like every 2-5 seconds interval.
+> 
+> Ok. The thing I don't understand is why the AP would deauth you. And
+> with that reason code to boot.
+> 
+> > Could be the iwlagn driver for 5350 hardware doing something wrong here.
+> > And I also forced it to use sw_crypto.
+> 
+> I suppose I could try 5350. But I see no reason it would influence the
+> auth/assoc handshake.
 
----
- net/wireless/nl80211.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+so I have built the latest wireless-testing tree with a new patches sent
+by Reinette fixing the DMA issue. So far I have no problems and I am
+unable to re-produce it. However this is a different AP and I disabled
+the power control feature for now.
 
---- uml.orig/net/wireless/nl80211.c	2009-04-23 23:47:11.000000000 +0300
-+++ uml/net/wireless/nl80211.c	2009-04-23 23:47:36.000000000 +0300
-@@ -3696,9 +3696,9 @@ void nl80211_send_disassoc(struct cfg802
- 				NL80211_CMD_DISASSOCIATE);
- }
- 
--void nl80211_send_mlme_timeout(struct cfg80211_registered_device *rdev,
--			       struct net_device *netdev, int cmd,
--			       const u8 *addr)
-+static void nl80211_send_mlme_timeout(struct cfg80211_registered_device *rdev,
-+				      struct net_device *netdev, int cmd,
-+				      const u8 *addr)
- {
- 	struct sk_buff *msg;
- 	void *hdr;
+I also updated wpa_supplicant and iw to the latest code and assume that
+no fix in there silently fixed it for me.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+So we are suspecting that this issue was because of me having 3GB of RAM
+and running on a 64-bit kernel. Does this makes sense and could be the
+problem why it kept failing until I unload the iwlagn driver?
+
+Regards
+
+Marcel
+
+
