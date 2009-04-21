@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:36871 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbZDJEez (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:35119 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874AbZDUNJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 00:34:55 -0400
-Received: by bwz17 with SMTP id 17so881415bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 21:34:53 -0700 (PDT)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Another regression in 2.6.30-rc1
-References: <49DE1638.8060906@lwfinger.net>
+	Tue, 21 Apr 2009 09:09:54 -0400
+Received: by bwz7 with SMTP id 7so1749338bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 06:09:53 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+References: <20090416111723.904720021@sipsolutions.net>
+	<20090420194430.GG3369@tuxdriver.com>
+	<1240257188.4632.19.camel@johannes.local>
+	<87ocuqfuk3.fsf@litku.valot.fi> <20090421125132.GC17805@tuxdriver.com>
 From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 10 Apr 2009 07:34:52 +0300
-In-Reply-To: <49DE1638.8060906@lwfinger.net> (Larry Finger's message of "Thu\, 09 Apr 2009 10\:37\:28 -0500")
-Message-ID: <873achunwz.fsf@litku.valot.fi> (sfid-20090410_063458_477179_F2708FD6)
+Date: Tue, 21 Apr 2009 16:09:48 +0300
+In-Reply-To: <20090421125132.GC17805@tuxdriver.com> (John W. Linville's message of "Tue\, 21 Apr 2009 08\:51\:32 -0400")
+Message-ID: <87d4b6f90j.fsf@litku.valot.fi> (sfid-20090421_150958_387609_CE1D03B2)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-> If you are implementing kernel 2.6.30-rc1 from wireless-testing, there is a
-> regression that will hit you if you have the ACPI battery routines enabled. The
-> symptom is an oops on boot with the line "> BUG: unable to handle kernel NULL
-> pointer dereference at (null)". The patch for this, which comes from
-> 2.6.30-rc1-git1 in Linus's tree, is as follows:
+>> Yes, in my opinion the power save should not be enabled by default for
+>> the big masses, at least not yet. My understanding is that only few
+>> people have tested it and I would like to see more testing first. 
+>> 
+>> But if you (Johannes&John) think it's ready for the prime time, I'm not
+>> going to complain :)
+>
+> Well there is always a trade-off.  But by the time 2.6.31 come around
+> the code will have been in wireless-testing, net-next, and linux-next
+> for a reasonably long time.  Hopefully we will have good confidence
+> in it by then.  If not, then we can disable it by default later.
 
-Thanks Larry, this was very helpful. After cherry picking this commit
-wireless-testing is booting without errors for me.
-
-In general sharing regressions and workarounds in this list is a very
-good idea. I'm sure most of the people (including me) don't have time to
-follow lkml and find fixes for all regressions.
+That sounds good. With those three trees there should be quite a lot of
+testers.
 
 -- 
 Kalle Valo
