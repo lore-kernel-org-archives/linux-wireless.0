@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:49889 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbZDNAZb (ORCPT
+Received: from mail-qy0-f118.google.com ([209.85.221.118]:39325 "EHLO
+	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbZDUQFU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 20:25:31 -0400
-Message-ID: <49E3D7E9.6090501@lwfinger.net> (sfid-20090414_022534_284133_E93B18AD)
-Date: Mon, 13 Apr 2009 19:25:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Apr 2009 12:05:20 -0400
+Received: by qyk16 with SMTP id 16so1218186qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 09:05:19 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: htl10@users.sourceforge.net,
-	John Linville <linville@tuxdriver.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RFC] rtl8187: Call 8187L variants "RTL8187LvX" rather
- than 	"RTL8187vX"
-References: <42609.6548.qm@web23108.mail.ird.yahoo.com> <69e28c910904131649s7e735380i10c739d27ad0766f@mail.gmail.com>
-In-Reply-To: <69e28c910904131649s7e735380i10c739d27ad0766f@mail.gmail.com>
+From: Joe McEachern <joe@qacafe.com>
+Date: Tue, 21 Apr 2009 12:04:51 -0400
+Message-ID: <204608400904210904r37f0a354n5fc6dddfa48da7ac@mail.gmail.com> (sfid-20090421_180524_426746_B857AD88)
+Subject: cfg80211 ksize undefined building on 2.6.28-11
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-G=E1bor Stefanik wrote:
-> What do you mean by "the 'L' just isn't there most of the time"? AFAI=
-K
-> there is no RTL8187 chip (without a letter suffix), only RTL8187L,
-> RTL8187B and RTL8187SE, and 8187L is not much more common that 8187B,
-> to warrant calling it "RTL8187" in any case.
->=20
+Hi,
 
-=46or some reason, that is exactly what the vendor driver does. There a=
-re several
-places that refer to RTL8187B, but nowhere do they talk about the RTL81=
-87. They
-do, however, refer to the RTL8187L as the chip name on their Web pile.
+Trying to build the latest compat-wireless-2009-04-20 on ubuntu Jaunty
+produces an undefined symbol ksize.
 
-Larry
+$ more git-describe
+v2.6.30-rc2-21670-gff8f5b2
 
+Linux cdrouter 2.6.28-11-generic #42-Ubuntu SMP Fri Apr 17 01:58:03
+UTC 2009 x86_64 GNU/Linux
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Building modules, stage 2.
+  MODPOST 42 modules
+WARNING: "ksize"
+[/home/qacafe/driver_4_21/compat-wireless-2009-04-20/net/wireless/cfg80211.ko]
+undefined!
+
+I can upgrade to the 2.6.29 kernel to resolve this but I have other
+issues with 2.6.29. Is there a work around for 2.6.28 kernels?
+
+Thanks,
+
+Joe
