@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4993 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862AbZDSOls (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37778 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128AbZDUJF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 10:41:48 -0400
-Date: Sun, 19 Apr 2009 10:40:48 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 4/7] ath5k: Beaconing fixes
-Message-ID: <20090419144048.GA866@hash.localnet> (sfid-20090419_164150_837294_8458764C)
-References: <20090416002951.GD4138@makis>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090416002951.GD4138@makis>
+	Tue, 21 Apr 2009 05:05:56 -0400
+Subject: [PATCH] atmel: fix netdev ops conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 21 Apr 2009 11:05:20 +0200
+Message-Id: <1240304720.17388.13.camel@johannes.local> (sfid-20090421_110601_997149_6B60284C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2009 at 03:29:51AM +0300, Nick Kossifidis wrote:
->  * Fix num_tx_pending function, we never read the register :P that's why we
->  got all those "beacon queue 7 didn't stop messages".
-> 
-> @@ -160,7 +160,8 @@ u32 ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
->  	if (ah->ah_version == AR5K_AR5210)
->  		return false;
+sparse says:
 
-This was pre-existing code, but what's with ath5k_hw_num_tx_pending
-returning true and false in some cases when it's supposed to return a 
-u32?
+drivers/net/wireless/atmel.c:1501:3: warning: Initializer entry defined twice
+drivers/net/wireless/atmel.c:1505:3:   also defined here
 
-> -	pending = (AR5K_QUEUE_STATUS(queue) & AR5K_QCU_STS_FRMPENDCNT);
-> +	pending = ath5k_hw_reg_read(ah, AR5K_QUEUE_STATUS(queue));
-> +	pending &= AR5K_QCU_STS_FRMPENDCNT;
+and it's correct; atmel has its own ndo_change_mtu and
+shouldn't use eth_change_mtu.
 
-Heh, oops.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Hemminger <shemminger@vyatta.com>
+---
+It looks like you (davem) took the initial conversion, do you want this
+one as well?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+ drivers/net/wireless/atmel.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+--- wireless-testing.orig/drivers/net/wireless/atmel.c	2009-04-21 11:01:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/atmel.c	2009-04-21 11:01:22.000000000 +0200
+@@ -1500,11 +1500,10 @@ static const struct net_device_ops atmel
+ 	.ndo_stop		= atmel_close,
+ 	.ndo_change_mtu 	= atmel_change_mtu,
+ 	.ndo_set_mac_address 	= atmel_set_mac_address,
+ 	.ndo_start_xmit 	= start_tx,
+ 	.ndo_do_ioctl 		= atmel_ioctl,
+-	.ndo_change_mtu		= eth_change_mtu,
+ 	.ndo_validate_addr	= eth_validate_addr,
+ };
+ 
+ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+ 				   const AtmelFWType fw_type,
+
 
