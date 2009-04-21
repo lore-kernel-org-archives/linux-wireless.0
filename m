@@ -1,74 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41739 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751677AbZDHOZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 10:25:00 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
-	recently
-From: Dan Williams <dcbw@redhat.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:51475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbZDUIee (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 04:34:34 -0400
+Subject: Re: [PATCH] cfg80211: mark all WEXT handlers _GPL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1239108689.15015.3.camel@maxim-laptop>
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
-	 <1239108689.15015.3.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Wed, 08 Apr 2009 10:26:19 -0400
-Message-Id: <1239200779.14879.9.camel@localhost.localdomain> (sfid-20090408_162509_525318_0267B6CE)
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <1240302453.17388.5.camel@johannes.local> (sfid-20090421_102853_880867_3556ADF2)
+References: <1240246179.4632.6.camel@johannes.local>
+	 <1240276136.354.107.camel@debian> <1240302453.17388.5.camel@johannes.local>
+	 (sfid-20090421_102853_880867_3556ADF2)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xm8WrOd3h/DX/eH1Qcu6"
+Date: Tue, 21 Apr 2009 10:33:59 +0200
+Message-Id: <1240302839.17388.8.camel@johannes.local> (sfid-20090421_103437_872429_67AE874F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 15:51 +0300, Maxim Levitsky wrote:
-> On Tue, 2009-04-07 at 10:18 +0200, Johannes Berg wrote:
-> > On Tue, 2009-04-07 at 03:00 +0300, Maxim Levitsky wrote:
-> > 
-> > > I noticed that always first attempt at scan fails when NM asks for scan.
-> > > I also noticed that this happens with quite recent kernels (I think
-> > > 2,6.28) didn't have this behavior.
-> > 
-> > I'm pretty sure it did.
-> I am sure that on older kernel there was no -EBUSY error returned to
-> userspace. It probably just stalled the client.
-> 
-> 
-> > 
-> > > Looking a bit deeper I discovered that each time NM disconnects from a
-> > > networks it sets random ssid/essid to the card (using wireless
-> > > extensions)
-> > 
-> > This forces a scan
-> > 
-> > > After that scan fails for some time.
-> > > 
-> > > as a NM free example you can run 
-> > > 
-> > > iwconfig wlan0 essid dummy
-> > > iwlist scan
-> > 
-> > and then this fails with EBUSY.
-> Thanks for explanation.
-> Since NM has its reasons to clear essid (to prevent unwanted
-> association), then what can be  done to prevent this (and still use
-> wireless extensions, since nl80211 support isn't yet mature)?
 
-Honestly I think this should be handled by the driver or wpa_supplicant.
-Recent supplicant versions will already send a bogus SSID and BSSID to
-the driver when a forced disconnection happens, but that's not enough to
-stop some drivers like 2.6.27's iwl3945 from continually attempting
-reconnection to an SSID in other cases.
+--=-xm8WrOd3h/DX/eH1Qcu6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The problem is that wext has no mechanism for saying "stop doing
-whatever you're doing dammit and wait for me to tell you what to do
-next".  I guess that would really be !IFF_UP, but of course you can't
-scan then on most parts.
+On Tue, 2009-04-21 at 10:27 +0200, Johannes Berg wrote:
 
-In the end, I'm probably going to patch the supplicant to handle this
-and remove that code from NM.  It's really old code and things have
-moved on since then.
+> > Johannes, why don't you want them to be used by others, say some fullma=
+c
+> > drivers? These functions can be used as glue from wext to cfg80211 in
+> > the conversion period. After cfg80211 is ultimately used, they can be
+> > removed all together of course.
+>=20
+> I don't expect any binary drivers to start using them anyway, but on the
+> odd chance that somebody was considering that ... I just don't want any
+> arguments at the conversion point that "we still need these symbols
+> because we released a driver that uses them" which would mean we
+> couldn't actually convert properly.
 
-Dan
+s/released a driver/released a binary driver/
 
+After all, I'm saying they're ok for _GPL -- since that means in the
+case this actually happens we can then easily convert that driver too.
+
+johannes
+
+--=-xm8WrOd3h/DX/eH1Qcu6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ7YTzAAoJEKVg1VMiehFYpBwQAJGP36SeWjHQSb4gpN2qprNB
+ER/T2RPbBoF1fCzUKcj3iglJnfwGnIwrlxNwVCPTDn5PxAKTEInA7LZ9q3nSW2Qa
+VAUtl8g9RhamfVow8MoFSOg+6F1woMIdWpMDWrpSdw9EF9CvDtbKnleM+ifn7B98
++um9k+4592nyESzxKy5UuGXd1uZ9HFMA3hour6oCHsRwY14hMDfMN1/yd9Y2OJcF
+4AnpybcPFnQOS9m2J3/i+1tyb0cr8e8YIX4vcYe3RbWqVROOOq8go5W9pCixTRSW
+4beYtG7aOKPho6syLVpE7TAMBM/z+GcV38O3ZDgfj9VZawUaUDSpRr56cLAWMjfr
+4vDqD28ArUgIV8VTjwP1MfAZFBDhz9X2VxMSfZvPTML8W03QxAPizemThxquHVWZ
+B5zOIW1d3h834mzhtiUooVS5rGPvjTpgIs0/HCG0ZfGp3iZQpz8aBlLBi6eXeTfK
+X9VG0B0ZPk8mG58UWFVGiF69T5ubhMZf7xUHF3bt6XJXmZAydsj9xQFdNFvfVdvL
+8MUgmZA7l7qqP867VvvJxsWNYEpKcgoqW7SpmQb5tbvJo5b7B+JDFCl1NTgVbzfY
+2r5hEjjJM+zE4diOSMSfzsEBCQqfuWPvwtQYABDs9Kb5nKgGDTQTqHKwdzCesgoQ
+RzE8RK1IA0+Rag8dO1An
+=Fo1G
+-----END PGP SIGNATURE-----
+
+--=-xm8WrOd3h/DX/eH1Qcu6--
 
