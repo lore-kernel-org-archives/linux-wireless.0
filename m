@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:37752 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539AbZDFHOl (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:33289 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753837AbZDUKaS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 03:14:41 -0400
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: ath9k becon loss messages
-Date: Mon, 6 Apr 2009 09:14:31 +0200
-Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	LKML <linux-kernel@vger.kernel.org>
-References: <1238923439.4120.9.camel@localhost.localdomain> <1238925174.4120.12.camel@localhost.localdomain> <87bprbif2f.fsf@litku.valot.fi>
-In-Reply-To: <87bprbif2f.fsf@litku.valot.fi>
+	Tue, 21 Apr 2009 06:30:18 -0400
+Received: by bwz7 with SMTP id 7so1679398bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 03:30:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200904060914.32245.helmut.schaa@gmail.com> (sfid-20090406_091445_006004_7AFB768E)
+In-Reply-To: <20090420135940.GB3369@tuxdriver.com>
+References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com>
+	 <200904182318.56512.IvDoorn@gmail.com>
+	 <20090420135940.GB3369@tuxdriver.com>
+Date: Tue, 21 Apr 2009 12:30:16 +0200
+Message-ID: <a32f33a40904210330w33a6cea6idf1756428e7560c7@mail.gmail.com> (sfid-20090421_123025_079499_4DE57531)
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Greg KH <greg@kroah.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sonntag, 5. April 2009 schrieb Kalle Valo:
-> Jaswinder Singh Rajput <jaswinder@kernel.org> writes:
-> 
-> >> And besides that, I think one can easily remotely trigger this
-> >> message and flood the logs. So it should probably _also_ be
-> >> ratelimited.
-> >
-> > normally it prints after 120 seconds:
-> >
-> > [ 1078.848434] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> > [ 1198.822913] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> > [ 1318.824931] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+On Mon, Apr 20, 2009 at 3:59 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Sat, Apr 18, 2009 at 11:18:56PM +0200, Ivo van Doorn wrote:
+>> Hi,
+>>
+>> > > I hope rt2800pci/usb to be included *ASAP*, because rt2800usb su=
+pports
+>> > > more than 1oo USB devices and rt2800pci is included in a lot of
+>> > > laptops(ask Torvalds [1] [2])
+>> > >
+>> > > [1] http://marc.info/?l=3Dlinux-netdev&m=3D121799144422863&w=3D2
+>> > > [2] http://marc.info/?l=3Dlinux-kernel&m=3D123187052023831&w=3D2
+>> >
+>> > That would be great to have in, what's keeping it from happening?
+>>
+>> In short: A stable workable driver.
+>>
+>> The rt2800usb driver is pretty far (at least on my testsetup), but
+>> still has problems with transmitting frames immediately after
+>> association.
+>
+> I read this as "it works, but some frames are lost immediately after
+> association" -- is that right?
 
-> Then there is something happening in ath9k or your AP which prevents
-> ath9k from receiving beacons. Try pinging your AP with 100 ms
-> interval. Do you see anything happening in 120 s intervals?
+It is not "Some frames" it is "All frames" you can't get a DHCP lease,
+or use a static IP and try to do anything.
 
-NetworkManager typically scans every 120 seconds and I can also trigger
-the messages by a manual scan with iwlist. I did not dig any further but
-the messages seem to appear right at the end of the scan. Tried with iwlagn
-and both sw_scan and hw_scan.
+Also 11n APs are not detected at all, which for a 11n client sounds
+very problematic.
 
-Helmut
+> FWIW, this sounds good enough to me
+> to get it into the mainline kernel. =A0_Please_ submit the rt2800usb
+> driver for wireless-testing/linux-next ASAP!
+
+If the above 2 problems aren't critical for merge, then I'll send the
+patches as soon as possible.
+
+Ivo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
