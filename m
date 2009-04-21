@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44188 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756255AbZDSMwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 08:52:17 -0400
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 14:52:12 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240097845.25826.1.camel@johannes.local>
-Message-ID: <20090419125212.158800@gmx.net> (sfid-20090419_145221_478827_197EF455)
-MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240097845.25826.1.camel@johannes.local>
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+Received: from mga09.intel.com ([134.134.136.24]:53063 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750884AbZDUIhv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 04:37:51 -0400
+Subject: Re: [PATCH] cfg80211: mark all WEXT handlers _GPL
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <1240302453.17388.5.camel@johannes.local>
+References: <1240246179.4632.6.camel@johannes.local>
+	 <1240276136.354.107.camel@debian> <1240302453.17388.5.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 21 Apr 2009 16:31:54 +0800
+Message-Id: <1240302714.354.130.camel@debian> (sfid-20090421_103754_577676_6B7E75F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
+On Tue, 2009-04-21 at 16:27 +0800, Johannes Berg wrote:
+> On Tue, 2009-04-21 at 09:08 +0800, Zhu Yi wrote:
+> > On Tue, 2009-04-21 at 00:49 +0800, Johannes Berg wrote:
+> > > The fact that these are exported is a technical detail
+> > > of the conversion period -- we don't want anybody to
+> > > start relying on these. Ultimately we want things to
+> > > use cfg80211 only, and once everything that is in wext
+> > > is converted to cfg80211 drivers will not need to touch
+> > > wext _at all_.
+> > 
+> > Johannes, why don't you want them to be used by others, say some fullmac
+> > drivers? These functions can be used as glue from wext to cfg80211 in
+> > the conversion period. After cfg80211 is ultimately used, they can be
+> > removed all together of course.
+> 
+> I don't expect any binary drivers to start using them anyway, but on the
+> odd chance that somebody was considering that ... I just don't want any
+> arguments at the conversion point that "we still need these symbols
+> because we released a driver that uses them" which would mean we
+> couldn't actually convert properly.
 
-> This adds IBSS API along with (preliminary) wext handlers.
-> The wext handlers can only do IBSS so you need to call them
-> from your own wext handlers if the mode is IBSS.
+Fair enough, no binary drivers. I don't have any problem with your
+patch. Just the comment "we don't want anybody to start relying on
+these" makes me confuse.
 
-Why make not assoc() and disassoc() to a generic mode independent call?=
- Only the handling is deferent on each mode.
+Thanks,
+-yi
 
-Regards
-Alina
-
---=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
