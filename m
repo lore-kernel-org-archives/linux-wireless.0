@@ -1,104 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([207.115.11.53]:44469 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbZDHSFG (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:52351 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbZDUFYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 14:05:06 -0400
-Message-ID: <49DCE741.7080406@lwfinger.net> (sfid-20090408_200510_290484_59892DE0)
-Date: Wed, 08 Apr 2009 13:04:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Apr 2009 01:24:32 -0400
+Received: by bwz7 with SMTP id 7so1567945bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2009 22:24:30 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] mac80211 powersave work
+References: <20090416111723.904720021@sipsolutions.net>
+	<20090420194430.GG3369@tuxdriver.com>
+	<1240257188.4632.19.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 21 Apr 2009 08:24:28 +0300
+In-Reply-To: <1240257188.4632.19.camel@johannes.local> (Johannes Berg's message of "Mon\, 20 Apr 2009 21\:53\:08 +0200")
+Message-ID: <87ocuqfuk3.fsf@litku.valot.fi> (sfid-20090421_072440_347837_BAA6B1F9)
 MIME-Version: 1.0
-To: "eugene.sobol" <eugene.sobol@promwad.com>
-CC: linux-wireless@vger.kernel.org, ivan.kuten@promwad.com,
-	hintak.leung@gmail.com
-Subject: Re: rtl8187 diversity
-References: <200904081530.51962.eugene.sobol@promwad.com>
-In-Reply-To: <200904081530.51962.eugene.sobol@promwad.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-eugene.sobol wrote:
-> Hello!
-> 
-> We are using RTL8187L module (with 2 antenna) from Abocom on our Blackfin DSP 
-> based board.
-> We have to enable antenna diversity for that module.
-> 
-> We have done some workaround realted with it:
-> I got compat-wireless archive from: 
-> http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-old.tar.bz2
-> I added switch-antenna related code from rtl8187L_linux_26.1036.1105.2008 
-> driver.
-> I added simple logic how to evaluate quality of signal by AGC and switch 
-> between antennas.
-> 
-> Following code shows how does swiching between antennas work (from 
-> rtl8187L_linux_26.1036.1105.2008 ) :
-> +           write_nic_byte(priv, 0x7f, ((0x01009b90 & 0xff000000) >> 24));
-> +           write_nic_byte(priv, 0x7e, ((0x01009b90 & 0x00ff0000) >> 16));
-> +           write_nic_byte(priv, 0x7d, ((0x01009b90 & 0x0000ff00) >> 8));
-> +           write_nic_byte(priv, 0x7c, ((0x01009b90 & 0x000000ff) >> 0));
-> +
-> +           // Rx OFDM.
-> +           /* original code from realtek driver */
-> +           write_nic_byte(priv, 0x7f, ((0x000090a6 & 0xff000000) >> 24));
-> +           write_nic_byte(priv, 0x7e, ((0x000090a6 & 0x00ff0000) >> 16));
-> +           write_nic_byte(priv, 0x7d, ((0x000090a6 & 0x0000ff00) >> 8));
-> +           write_nic_byte(priv, 0x7c, ((0x000090a6 & 0x000000ff) >> 0));
-> +
-> +           // Tx Antenna.
-> +           /* original code from realtek driver */
-> +           write_nic_byte(priv, ANTSEL, 0x03); // Config TX antenna.
-> 
-> This is code example shows switching to one of two antennas. Other code you 
-> can see in attached patch.
-> 
-> During handling every packet, the AGC value recording to an array. Every 
-> second driver calculate average value from AGC's array and makes decision 
-> have to do switch to other antenna or not.
-> 
-> Compat drivers for chip on our board shows better results than 
-> rtl8187L_linux_26.1036.1105.2008 driver,
-> compat driver                                             ~ 800-1000Kbytes/sec
-> rtl8187L_linux_26.1036.1105.2008 driver ~ 200Kbytes/sec
-> 
-> Please correct me if I chose not correct parameter for evaluating signal 
-> quality information.
-> 
-> However while testing, the switching between antennas doesn't give any 
-> download speed improvements.
-> May be we missed some point.
-> 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-My first comment is that the patch should be in-line rather than as an
-attachment. Reviewing is easier.
+>> I'm not sure I understand.  Your patch (which would go to 2.6.31)
+>> has it turned-on by default.  Which way do you want it?
+>
+> I want it turned on by default, at least in wireless-testing; Kalle
+> thinks that we should turn it off for a .31 release.
+>
+> I would think that since an easy workaround is available ("iwconfig
+> wlan0 power off") and it doesn't affect most hardware yet anyway (only
+> those supporting powersave) we should turn it on by default anyway,
+> since otherwise we won't find any bugs -- but maybe that's just me.
 
-You should be using the wireless-testing tree to derive your patches. Otherwise,
-they cannot be applied. For example, the following hunk is already in w-t:
+Yes, in my opinion the power save should not be enabled by default for
+the big masses, at least not yet. My understanding is that only few
+people have tested it and I would like to see more testing first. 
 
-@@ -257,6 +261,7 @@
+But if you (Johannes&John) think it's ready for the prime time, I'm not
+going to complain :)
 
-        usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
-                          buf, skb->len, rtl8187_tx_cb, skb);
-+       urb->transfer_flags |= URB_ZERO_PACKET;
-        rc = usb_submit_urb(urb, GFP_ATOMIC);
-        if (rc < 0) {
-                usb_free_urb(urb);
-
-
-I don't like the idea of having the antenna diversity as a compile-time option.
-That works OK for a single user, but it fails when distros are considered. They
-would have to have it on for all cases even though very few users would need it.
-Does the EEPROM for your device have special encoding that indicates the
-presence of multiple antennas? You should be able to compile the antenna
-diversity code unconditionally and use such a special EEPROM value.
-Alternatively, the USB ID's (13d1:abe6) could be used to select its execution.
-
-You should run the patch through the scripts/checkpatch.pl routine. Yours shows
-55 errors and 34 warnings.
-
-Please split out the part that adds the new USB_DEVICE and submit it now. That
-will be needed no matter what happens to the antenna diversity code.
-
-Larry
+-- 
+Kalle Valo
