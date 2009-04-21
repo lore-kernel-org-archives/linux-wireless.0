@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:46660 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbZDYKaN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33864 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbZDUUqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 06:30:13 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2] ar9170: handle otus' A-MPDU density definitions
-Date: Sat, 25 Apr 2009 12:30:10 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200904242135.57861.chunkeey@web.de> <1240645349.18031.52.camel@johannes.local>
-In-Reply-To: <1240645349.18031.52.camel@johannes.local>
+	Tue, 21 Apr 2009 16:46:07 -0400
+Date: Tue, 21 Apr 2009 16:32:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rami Rosen <roszenrami@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>, buytenh@marvell.com
+Subject: Re: [PATCH ] [RESEND] mwl8: fix build warning.
+Message-ID: <20090421203253.GM3369@tuxdriver.com> (sfid-20090421_224610_376128_6ADF6690)
+References: <b25312890904210622v3b84eb45pdef0cb3bce253ba0@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200904251230.10689.chunkeey@web.de> (sfid-20090425_123030_446057_10C48021)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b25312890904210622v3b84eb45pdef0cb3bce253ba0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 25 April 2009 09:42:29 Johannes Berg wrote:
-> On Fri, 2009-04-24 at 21:35 +0200, Christian Lamparter wrote:
-> > +	.ampdu_factor	= 3,						\
-> > +	.ampdu_density	= 6,						\
+On Tue, Apr 21, 2009 at 04:22:01PM +0300, Rami Rosen wrote:
+> This patch fixes a build warning in mwl8.c.
+> (Marvell TOPDOG wireless driver)
 > 
-> FWIW, I also tried some varying values. This should indicate what you're
-> able to receive though, not what you're able to transmit since you
-> control that anyway.
-yeah... in fact the _correct_ value according to otus is 0 (unrestricted),
-however that's a bit hard to believe... and ath9k's (not the same
-mac... I know) default works rather well.
-[I see about 65 Mbits sustainable throughput and peaks in the lower 80.]
+> The warning it fixes is: "large integer implicitly truncated to unsigned type."
+> 
+> The rx_ctrl member of the mwl8k_rx_desc struct is 8 bit (__u8 ), whereas trying
+> to assign it a 32 bit value (which is returned from  cpu_to_le32())
+> causes the compiler to issue
+> a truncation warning.
+> 
+> 
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+> 
+> --
+> (wireless-next)
+> 
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index 57a0268..8bc016c 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -893,8 +893,7 @@ static int mwl8k_rxq_init(struct ieee80211_hw *hw,
+> int index)
+>                rx_desc->next_rx_desc_phys_addr =
+>                        cpu_to_le32(rxq->rx_desc_dma
+>                                                + nexti * sizeof(*rx_desc));
+> -               rx_desc->rx_ctrl =
+> -                       cpu_to_le32(MWL8K_RX_CTRL_OWNED_BY_HOST);
+> +               rx_desc->rx_ctrl = MWL8K_RX_CTRL_OWNED_BY_HOST;
+>        }
+> 
+>        return 0;
 
-> I think we currently don't have a setting though for what to transmit with...
-> this might need to be added somewhere depending on the RA.
-well, there should be a table or some bits in phy_control for this purpose...
-But it looks like otus only has this single MAC knob and the safest setting
-otus allows is 7 = 8us... 
+This patch is whitspace damaged.  I manually recreated it since it
+is so simple, but please do be more careful with future patches.
 
-of course it would be nice if ieee80211_bss_ht_conf in bss_conf, could be
-replaced by ieee80211_sta_ht_cap which has the necessary elements.
-
-after all this chip was designed as a client adapter, so there's no need 
-to handle multiple a-mpdu density at the same time... 
-
-Regards,
-	Chr
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
