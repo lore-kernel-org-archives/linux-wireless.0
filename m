@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55576 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756768AbZDTVbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 17:31:06 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/11] iwl3945: use cancel_delayed_work_sync to cancel rfkill_poll
-Date: Mon, 20 Apr 2009 14:37:01 -0700
-Message-Id: <1240263424-8495-9-git-send-email-reinette.chatre@intel.com> (sfid-20090420_233119_605451_859854EB)
-In-Reply-To: <1240263424-8495-8-git-send-email-reinette.chatre@intel.com>
-References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
- <1240263424-8495-8-git-send-email-reinette.chatre@intel.com>
+Received: from smtp3.dnainternet.fi ([87.94.96.71]:40992 "EHLO
+	smtp3.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbZDUQsN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 12:48:13 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 1/2] rndis_wlan: fix initialization order for workqueue&workers
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Date: Tue, 21 Apr 2009 19:48:07 +0300
+Message-ID: <20090421164807.3635.43002.stgit@fate.lan> (sfid-20090421_184817_926987_CBB73CBA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Users reported lockup with work still trying to run
-after module has been unloaded.
+rndis_wext_link_change() might be called from rndis_command() at
+initialization stage and priv->workqueue/priv->work have not been
+initialized yet. This causes invalid opcode at rndis_wext_bind on
+some brands of bcm4320.
 
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/30594/focus=30601
+Fix by initializing workqueue/workers in rndis_wext_bind() before
+rndis_command is used.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Reported-by: TJ <ubuntu@tjworld.net>
-Reported-by: Huaxu Wan <huaxu.wan@linux.intel.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index e22282e..a776326 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4436,7 +4436,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+ drivers/net/wireless/rndis_wlan.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 109e603..d8b2e6a 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2384,6 +2384,12 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	mutex_init(&priv->command_lock);
+ 	spin_lock_init(&priv->stats_lock);
  
- 	iwl_rfkill_unregister(priv);
--	cancel_delayed_work(&priv->rfkill_poll);
-+	cancel_delayed_work_sync(&priv->rfkill_poll);
++	/* because rndis_command() sleeps we need to use workqueue */
++	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
++	INIT_WORK(&priv->work, rndis_wext_worker);
++	INIT_DELAYED_WORK(&priv->stats_work, rndis_update_wireless_stats);
++	INIT_DELAYED_WORK(&priv->scan_work, rndis_get_scan_results);
++
+ 	/* try bind rndis_host */
+ 	retval = generic_rndis_bind(usbdev, intf, FLAG_RNDIS_PHYM_WIRELESS);
+ 	if (retval < 0)
+@@ -2454,17 +2460,18 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	disassociate(usbdev, 1);
+ 	netif_carrier_off(usbdev->net);
  
- 	iwl3945_dealloc_ucode_pci(priv);
+-	/* because rndis_command() sleeps we need to use workqueue */
+-	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
+-	INIT_DELAYED_WORK(&priv->stats_work, rndis_update_wireless_stats);
+ 	queue_delayed_work(priv->workqueue, &priv->stats_work,
+ 		round_jiffies_relative(STATS_UPDATE_JIFFIES));
+-	INIT_DELAYED_WORK(&priv->scan_work, rndis_get_scan_results);
+-	INIT_WORK(&priv->work, rndis_wext_worker);
  
--- 
-1.5.6.3
+ 	return 0;
+ 
+ fail:
++	cancel_delayed_work_sync(&priv->stats_work);
++	cancel_delayed_work_sync(&priv->scan_work);
++	cancel_work_sync(&priv->work);
++	flush_workqueue(priv->workqueue);
++	destroy_workqueue(priv->workqueue);
++
+ 	kfree(priv);
+ 	return retval;
+ }
 
