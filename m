@@ -1,109 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:44685 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754887AbZD1RPh (ORCPT
-	<RFC822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 13:15:37 -0400
-To: Andrew Morton <akpm@linux-foundation.org>, yi.zhu@intel.com,
-	reinette.chatre@intel.com
-Cc: linux-kernel@vger.kernel.org, mm-commits@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: mmotm 2009-04-27-15-45 uploaded - iwl3945 oops
-In-Reply-To: Your message of "Mon, 27 Apr 2009 15:46:07 PDT."
-             <200904272305.n3RN51mu031395@imap1.linux-foundation.org>
-From: Valdis.Kletnieks@vt.edu
-References: <200904272305.n3RN51mu031395@imap1.linux-foundation.org>
+Received: from xc.sipsolutions.net ([83.246.72.84]:32868 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbZDUVU0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 17:20:26 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1240343775.3327.3.camel@localhost.localdomain>
+References: <1239837672.11795.46.camel@violet>
+	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <1240248008.4632.10.camel@johannes.local>
+	 <1240248385.5260.15.camel@localhost.localdomain>
+	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
+	 <1240343775.3327.3.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ULw+AuwIx3vY7z8v2MsS"
+Date: Tue, 21 Apr 2009 23:19:52 +0200
+Message-Id: <1240348792.17388.46.camel@johannes.local> (sfid-20090421_232030_897368_8033CB57)
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1240938876_4310P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Tue, 28 Apr 2009 13:14:36 -0400
-Message-ID: <25818.1240938876@turing-police.cc.vt.edu> (sfid-20090428_191544_578908_2048B189)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1240938876_4310P
-Content-Type: text/plain; charset=us-ascii
 
-On Mon, 27 Apr 2009 15:46:07 PDT, akpm@linux-foundation.org said:
-> The mm-of-the-moment snapshot 2009-04-27-15-45 has been uploaded to
-> 
->    http://userweb.kernel.org/~akpm/mmotm/
+--=-ULw+AuwIx3vY7z8v2MsS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Saw this while booting at home, out of range of any access points I was
-configured to associate with (there *are* 4 APs owned by neighbors that I can
-see via kismet, but wpa_supplicant isn't configured to use them).  Didn't
-happen this morning at my office, when there's APs in range.
+Hi Marcel,
 
-This didn't happen in mmotm-0424, so it's something new in the last few days.
+> so I have built the latest wireless-testing tree with a new patches sent
+> by Reinette fixing the DMA issue. So far I have no problems and I am
+> unable to re-produce it. However this is a different AP and I disabled
+> the power control feature for now.
 
-[  519.180281] iwl3945 0000:0c:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
-[  519.680281] iwl3945 0000:0c:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-[  519.926455] ------------[ cut here ]------------
-[  519.926461] WARNING: at net/mac80211/scan.c:282 warn_slowpath_null+0xd/0xf()
-[  519.926465] Hardware name: Latitude D820                   
-[  519.926476] BUG: unable to handle kernel NULL pointer dereference at (null)
-[  519.926485] IP: [<ffffffff802384ff>] warn_slowpath_fmt+0x7d/0xd0
-[  519.926494] PGD 7ead4067 PUD 7f8e3067 PMD 0 
-[  519.926504] Oops: 0000 [#1] PREEMPT SMP 
-[  519.926512] last sysfs file: /sys/devices/platform/dock.0/docked
-[  519.926518] CPU 1 
-[  519.926522] Modules linked in: sunrpc nvidia(P) [last unloaded: microcode]
-[  519.926536] Pid: 649, comm: iwl3945 Tainted: P           2.6.30-rc3-mmotm0427 #1 Latitude D820                   
-[  519.926541] RIP: 0010:[<ffffffff802384ff>]  [<ffffffff802384ff>] warn_slowpath_fmt+0x7d/0xd0
-[  519.926551] RSP: 0018:ffff88007e7e3c70  EFLAGS: 00010286
-[  519.926555] RAX: 0000000000000042 RBX: 000000000000011a RCX: 00000000ffffffff
-[  519.926560] RDX: ffff8800010f1000 RSI: ffffffff8064d3b3 RDI: ffffffff80239038
-[  519.926564] RBP: ffff88007e7e3dd0 R08: 0000000000000082 R09: 0000000000000000
-[  519.926569] R10: 0000000000000005 R11: 0000000000000000 R12: ffffffff8082531c
-[  519.926574] R13: 0000000000000000 R14: ffff88007e7e3c70 R15: ffff8800010f0100
-[  519.926579] FS:  0000000000000000(0000) GS:ffff8800010f1000(0000) knlGS:0000000000000000
-[  519.926584] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-[  519.926589] CR2: 0000000000000000 CR3: 000000007ead5000 CR4: 00000000000006e0
-[  519.926593] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  519.926598] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  519.926604] Process iwl3945 (pid: 649, threadinfo ffff88007e7e2000, task ffff88007e794500)
-[  519.926608] Stack:
-[  519.926611]  6f6c735f6e726177 756e5f6874617077 302f6478302b6c6c ffffffff80006678
-[  519.926620]  ffff880000000000 ffff88007f8008c0 ffff88007e7e3d20 0000000000000046
-[  519.926631]  0000000000000002 0000000000000000 ffffffff8046e959 0000000000000000
-[  519.926643] Call Trace:
-[  519.926647]  [<ffffffff8046e959>] ? iwl_rx_queue_update_write_ptr+0x2d/0xd8
-[  519.926657]  [<ffffffff80259a62>] ? trace_hardirqs_off_caller+0x1f/0xa2
-[  519.926667]  [<ffffffff8064fd91>] ? _spin_unlock_irqrestore+0x5b/0x69
-[  519.926677]  [<ffffffff8046e9f2>] ? iwl_rx_queue_update_write_ptr+0xc6/0xd8
-[  519.926684]  [<ffffffff80473c3e>] ? iwl_bg_scan_completed+0x0/0x65
-[  519.926692]  [<ffffffff8023855f>] warn_slowpath_null+0xd/0xf
-[  519.926699]  [<ffffffff80612dc9>] ieee80211_scan_completed+0x4d/0x367
-[  519.926709]  [<ffffffff80473c3e>] ? iwl_bg_scan_completed+0x0/0x65
-[  519.926716]  [<ffffffff80473c76>] iwl_bg_scan_completed+0x38/0x65
-[  519.926723]  [<ffffffff802488e0>] worker_thread+0x251/0x369
-[  519.926731]  [<ffffffff80248887>] ? worker_thread+0x1f8/0x369
-[  519.926738]  [<ffffffff8064fd70>] ? _spin_unlock_irqrestore+0x3a/0x69
-[  519.926745]  [<ffffffff8024cb21>] ? autoremove_wake_function+0x0/0x34
-[  519.926753]  [<ffffffff8024868f>] ? worker_thread+0x0/0x369
-[  519.926760]  [<ffffffff8024c728>] kthread+0x55/0x80
-[  519.926767]  [<ffffffff8020c1ba>] child_rip+0xa/0x20
-[  519.926774]  [<ffffffff802305ac>] ? finish_task_switch+0x7f/0xc9
-[  519.926782]  [<ffffffff8020bb80>] ? restore_args+0x0/0x30
-[  519.926790]  [<ffffffff8024c6d3>] ? kthread+0x0/0x80
-[  519.926796]  [<ffffffff8020c1b0>] ? child_rip+0x0/0x20
-[  519.926802] Code: 77 a5 7b 80 31 c0 e8 98 4e 41 00 bf 05 00 00 00 e8 e7 ad 2a 00 48 85 c0 74 11 48 89 c6 48 c7 c7 92 a5 7b 80 31 c0 e8 78 4e 41 00 <41> 80 7d 00 00 74 23 48 8d 45 10 48 8d 75 90 48 89 45 98 c7 45 
-[  519.926904] RIP  [<ffffffff802384ff>] warn_slowpath_fmt+0x7d/0xd0
-[  519.926912]  RSP <ffff88007e7e3c70>
-Apr 28 01:50:28 turing-police kernel: [  519.926915] CR2: 0000000000000000
-Apr 28 01:50:28 turing-police kernel: [  519.926920] ---[ end trace 00d0bec46e95e015 ]---
+Ok.
 
+> I also updated wpa_supplicant and iw to the latest code and assume that
+> no fix in there silently fixed it for me.
 
---==_Exmh_1240938876_4310P
-Content-Type: application/pgp-signature
+I wouldn't suspect any significant changes there -- for sure not iw :)
+
+> So we are suspecting that this issue was because of me having 3GB of RAM
+> and running on a 64-bit kernel. Does this makes sense and could be the
+> problem why it kept failing until I unload the iwlagn driver?
+
+I couldn't say. Nothing here makes much sense to me, unfortunately.
+
+johannes
+
+--=-ULw+AuwIx3vY7z8v2MsS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFJ9zl8cC3lWbTT17ARAoZKAJ4sQOQ7Jh2Y2bOqcl/Mi3hO4YtW3gCgolBq
-ZvwiBAkNrmI1W2hKCnqkia4=
-=upf7
+iQIcBAABAgAGBQJJ7jh2AAoJEKVg1VMiehFY04kP/2z67ulGYkQ45dtuGbTTv4IY
+oBp8/8Yfs+XLlIbNMceDAH1Ts3/WIc9mvD0IjrnIiyQQFV9XbQee4ebAytHILexS
+IaD1pXxysk73JoMPMb4HxFmwNTYlMyJfGhygQvBXgHGfif5U+C0ODe+wfG7lb1JY
+OxnpiVgUWeoTgCz0JEM5Al+D+aGAMaXKuLW9ACK6lgZibxO8BSLjQ2COsYf+4GUw
+w5g2ntJoO4hKHHVn/1vz5/1j81fVHEepTWn5s7DzFpq/svOwnC562PciWGxUum6Z
+J8sBmncdqHDAJqi8XFzXKDV91qfpnckrd4mkbKPYP6rnYrbddJ0O39A0kKLPi6Im
+O5Fv7ccAzusqaNNmnssYrdjDTMIL7tJs82/slL4BRRTcgdi70hfe26vyNj3/2p+U
+PbDB7/Xy+OXow/vquV1aNvbTEFVk00rJRHxsgk3o5pMagdC1Hon5g6SQQldwZH9I
+Wh6XHx/ezsfF/KEKp5aXGOlifVIxp1SlkbgKGiRGH3PGX9EhEb1CF5HC+mPqYQuB
+CzByBpVysrMgxuWpLMak/rWQnKKkCiCxA900UH8Nk4rCZuI0Ca4HXTSgtefp+UKC
+vyONLmfGKOxqoR81wAvt11pMHV4n05mtDJiV19+0GMeK+nATkpdXpgT4SxzUIdtC
+7X1pHfvPRXfxKDe5D0la
+=t5MR
 -----END PGP SIGNATURE-----
 
---==_Exmh_1240938876_4310P--
+--=-ULw+AuwIx3vY7z8v2MsS--
+
