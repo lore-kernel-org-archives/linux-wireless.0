@@ -1,69 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:45340 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750755AbZDVXII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 19:08:08 -0400
-Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1240426517.12282.11.camel@localhost.localdomain>
-References: <1240419177.12282.3.camel@localhost.localdomain>
-	 <20090422170852.GA7298@jm.kir.nu>
-	 <1240426517.12282.11.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 22 Apr 2009 19:09:12 -0400
-Message-Id: <1240441752.14995.8.camel@localhost.localdomain> (sfid-20090423_010814_139577_1AF283AD)
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:4362 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752516AbZDVDl3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 23:41:29 -0400
+Date: Tue, 21 Apr 2009 23:38:45 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: kalle.valo@nokia.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wl12xx: update to 2.6.29 mac80211 hw scan API
+Message-ID: <20090422033845.GA8849@hash.localnet> (sfid-20090422_054134_006780_83A8B214)
+References: <1238897428-19639-1-git-send-email-me@bobcopeland.com> <1238897428-19639-2-git-send-email-me@bobcopeland.com> <1238921906.3782.5.camel@johannes.local> <20090405143357.GA21913@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090405143357.GA21913@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-04-22 at 19:55 +0100, Marcel Holtmann wrote:
-> Hi Jouni,
-> 
-> > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
-> > > instead of WEXT. I don't seem to be able to control the from the command
-> > > line and the -D option doesn't take.
-> > 
-> > I would assume you are doing this with NM. You could either change it to
-> > register the interface (this is not from -D option, but from the D-Bus
-> > message) with the nl80211 driver or try to build wpa_supplicant without
-> > WEXT support (which would make the nl80211 wrapper the default one). I
-> > don't think either of these are yet acceptable as a generic solution,
-> > but making NM request driver "nl80211,wext" could be a suitable first
-> > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
-> > first try with nl80211 and if needed, fall back to WEXT).
-> 
-> I am doing manual testing and with ConnMan. However I would prefer to
-> have a global driver setting "nl80211,wext" that I can give on the
-> command line and that will then chosen as default if the addInterface
-> method doesn't give a driver. I really don't need a per interface
-> setting here.
+The ops->hw_scan callback now takes a struct *cfg80211_scan_request,
+and the scan_completed notifier takes a parameter to indicate whether
+the scan was aborted.
 
-Um, you can specify a driver for the interface you add in the dbus call
-for addInterface.  Add a "driver" key to your dict with the driver you
-want in the value.  Is there a bug with that?
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-Dan
+Kalle, this is just an update to 1/6, the others in the series are
+probably ok as-is.
 
-> > > Can we fix this somehow? I really wanna get rid of using WEXT.
-> > 
-> > There still one remaining WEXT operation even with driver_nl80211.c in
-> > wpa_supplicant, so we are not yet there, but there is work going on in
-> > getting that added to nl80211 after which point -Dnl80211 (or
-> > -Dnl80211,wext for more likely distro use) should allow this goal to be
-> > met.
-> 
-> Fair enough, but we are getting there and when testing, I like to be
-> using as much nl80211 as possible.
-> 
-> Regards
-> 
-> Marcel
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v2: just added the max_scan_ssids.
+
+ drivers/net/wireless/wl12xx/event.c |    2 +-
+ drivers/net/wireless/wl12xx/main.c  |   15 ++++++++++++---
+ 2 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 5c3b22b..7095772 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -37,7 +37,7 @@ static int wl12xx_event_scan_complete(struct wl12xx *wl,
+ 
+ 	if (wl->scanning) {
+ 		mutex_unlock(&wl->mutex);
+-		ieee80211_scan_completed(wl->hw);
++		ieee80211_scan_completed(wl->hw, false);
+ 		mutex_lock(&wl->mutex);
+ 		wl->scanning = false;
+ 	}
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7c4e538..e4d1e12 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -511,7 +511,7 @@ static void wl12xx_op_stop(struct ieee80211_hw *hw)
+ 
+ 	if (wl->scanning) {
+ 		mutex_unlock(&wl->mutex);
+-		ieee80211_scan_completed(wl->hw);
++		ieee80211_scan_completed(wl->hw, true);
+ 		mutex_lock(&wl->mutex);
+ 		wl->scanning = false;
+ 	}
+@@ -1092,15 +1092,23 @@ out:
+ 
+ }
+ 
+-static int wl12xx_op_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
++static int wl12xx_op_hw_scan(struct ieee80211_hw *hw,
++			     struct cfg80211_scan_request *req)
+ {
+ 	struct wl12xx *wl = hw->priv;
+ 	int ret;
++	u8 *ssid = NULL;
++	size_t ssid_len = 0;
+ 
+ 	wl12xx_debug(DEBUG_MAC80211, "mac80211 hw scan");
+ 
++	if (req->n_ssids) {
++		ssid = req->ssids[0].ssid;
++		ssid_len = req->ssids[0].ssid_len;
++	}
++
+ 	mutex_lock(&wl->mutex);
+-	ret = wl12xx_hw_scan(hw->priv, ssid, len, 1, 0, 13, 3);
++	ret = wl12xx_hw_scan(hw->priv, ssid, ssid_len, 1, 0, 13, 3);
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return ret;
+@@ -1237,6 +1245,7 @@ static int wl12xx_init_ieee80211(struct wl12xx *wl)
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		IEEE80211_HW_NOISE_DBM;
+ 
++	wl->hw->wiphy->max_scan_ssids = 1;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl12xx_band_2ghz;
+ 
+ 	SET_IEEE80211_DEV(wl->hw, &wl->spi->dev);
+-- 
+1.6.0.6
+
 
