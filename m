@@ -1,280 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39605 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbZDVU7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 16:59:05 -0400
-Subject: Re: [RFC 2/2] mac80211: unify config_interface and bss_info_changed
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090422154644.464399343@sipsolutions.net>
-References: <20090422154559.528196740@sipsolutions.net>
-	 <20090422154644.464399343@sipsolutions.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:49260 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbZDVPqM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 11:46:12 -0400
+Subject: [PATCH] nl80211: allow configuring IBSS beacon interval
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Wed, 22 Apr 2009 14:05:09 -0700
-Message-Id: <1240434309.29805.73.camel@rc-desk> (sfid-20090422_225910_679296_6B907C68)
+Date: Wed, 22 Apr 2009 17:45:38 +0200
+Message-Id: <1240415138.11910.0.camel@johannes.local> (sfid-20090422_174615_790158_BA429593)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Make the JOIN_IBSS command look at the beacon interval
+attribute to see if the user requested a specific beacon
+interval, if not default to 100 TU (wext too).
 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/nl80211.h |    4 +++-
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/ibss.c     |    3 +++
+ net/wireless/nl80211.c  |   12 +++++++++++-
+ 4 files changed, 19 insertions(+), 2 deletions(-)
 
-On Wed, 2009-04-22 at 08:46 -0700, Johannes Berg wrote:
-> The config_interface method is a little strange, it contains the
-> BSSID and beacon updates, while bss_info_changed contains most
-> other BSS information for each interface. This patch removes
-> config_interface and rolls all the information it previously
-> passed to drivers into bss_info_changed.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Tested with ar9170, zd1211, p54 and iwlagn.
-
-Thank you very much for testing it.
-
-
-[...]
-
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.c        2009-04-22 15:56:25.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.c     2009-04-22 15:56:29.000000000 +0200
-> @@ -2543,7 +2543,6 @@ static struct ieee80211_ops iwl_hw_ops =
->         .add_interface = iwl_mac_add_interface,
->         .remove_interface = iwl_mac_remove_interface,
->         .config = iwl_mac_config,
-> -       .config_interface = iwl_mac_config_interface,
->         .configure_filter = iwl_configure_filter,
->         .set_key = iwl_mac_set_key,
->         .update_tkip_key = iwl_mac_update_tkip_key,
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c       2009-04-22 15:56:48.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c    2009-04-22 17:38:00.000000000 +0200
-> @@ -2231,15 +2231,63 @@ static void iwl_ht_conf(struct iwl_priv
-> 
->  #define IWL_DELAY_NEXT_SCAN_AFTER_ASSOC (HZ*6)
->  void iwl_bss_info_changed(struct ieee80211_hw *hw,
-> -                                    struct ieee80211_vif *vif,
-> -                                    struct ieee80211_bss_conf *bss_conf,
-> -                                    u32 changes)
-> +                         struct ieee80211_vif *vif,
-> +                         struct ieee80211_bss_conf *bss_conf,
-> +                         u32 changes)
->  {
->         struct iwl_priv *priv = hw->priv;
->         int ret;
-> 
->         IWL_DEBUG_MAC80211(priv, "changes = 0x%X\n", changes);
-> 
-> +       if (!iwl_is_alive(priv))
-> +               return;
-> +
-> +       mutex_lock(&priv->mutex);
-> +
-> +       if ((changes & BSS_CHANGED_BSSID) && !iwl_is_rfkill(priv)) {
-> +               /* If there is currently a HW scan going on in the background
-> +                * then we need to cancel it else the RXON below will fail. */
-> +               if (iwl_scan_cancel_timeout(priv, 100)) {
-> +                       IWL_WARN(priv, "Aborted scan still in progress "
-> +                                   "after 100ms\n");
-> +                       IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
-> +                       mutex_unlock(&priv->mutex);
-> +                       return;
-> +               }
-> +               memcpy(priv->staging_rxon.bssid_addr,
-> +                      bss_conf->bssid, ETH_ALEN);
-> +
-> +               /* TODO: Audit driver for usage of these members and see
-> +                * if mac80211 deprecates them (priv->bssid looks like it
-> +                * shouldn't be there, but I haven't scanned the IBSS code
-> +                * to verify) - jpk */
-> +               memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
-> +
-> +               if (priv->iw_mode == NL80211_IFTYPE_AP)
-> +                       iwlcore_config_ap(priv);
-> +               else {
-> +                       int rc = iwlcore_commit_rxon(priv);
-> +                       if ((priv->iw_mode == NL80211_IFTYPE_STATION) && rc)
-> +                               iwl_rxon_add_station(
-> +                                       priv, priv->active_rxon.bssid_addr, 1);
-> +               }
-> +       } else {
-> +               iwl_scan_cancel_timeout(priv, 100);
-> +               priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
-> +               iwlcore_commit_rxon(priv);
-> +       }
-
-I do not think the above if clause fully captures what was done in
-iwl_mac_config_interface(). If rfkill is enabled we do not want to send
-a command to the device. This is possible in this else clause. Perhaps
-the else can have an extra check like ...
-
-...
-} else if (!iwl_is_rfkill(priv)) {
-...
-
-> +
-> +       if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
-> +           changes & BSS_CHANGED_BEACON) {
-> +               struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
-> +
-> +               if (beacon)
-> +                       iwl_mac_beacon_update(hw, beacon);
-> +       }
-> +
-> +       mutex_unlock(&priv->mutex);
-> +
->         if (changes & BSS_CHANGED_ERP_PREAMBLE) {
->                 IWL_DEBUG_MAC80211(priv, "ERP_PREAMBLE %d\n",
->                                    bss_conf->use_short_preamble);
-> @@ -2297,7 +2345,7 @@ void iwl_bss_info_changed(struct ieee802
->                                         &priv->staging_rxon,
->                                         sizeof(struct iwl_rxon_cmd));
->         }
-> -
-> +       IWL_DEBUG_MAC80211(priv, "leave\n");
-
-Why did you choose not to copy the code dealing with AP mode from
-iwl_mac_config_interface()? I know that the driver does not currently
-support it, but removing this code makes it harder for the case if this
-support is added back. Considering the code is not currently used, would
-you be ok with adding it as commented code?
-
->  }
->  EXPORT_SYMBOL(iwl_bss_info_changed);
-> 
-> @@ -2578,106 +2626,6 @@ out:
->  }
->  EXPORT_SYMBOL(iwl_mac_config);
-> 
-> -int iwl_mac_config_interface(struct ieee80211_hw *hw,
-> -                                       struct ieee80211_vif *vif,
-> -                                   struct ieee80211_if_conf *conf)
-> -{
-> -       struct iwl_priv *priv = hw->priv;
-> -       int rc;
-> -
-> -       if (conf == NULL)
-> -               return -EIO;
-> -
-> -       if (priv->vif != vif) {
-> -               IWL_DEBUG_MAC80211(priv, "leave - priv->vif != vif\n");
-> -               return 0;
-> -       }
-> -
-> -       if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
-> -           conf->changed & IEEE80211_IFCC_BEACON) {
-> -               struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
-> -               if (!beacon)
-> -                       return -ENOMEM;
-> -               mutex_lock(&priv->mutex);
-> -               rc = iwl_mac_beacon_update(hw, beacon);
-> -               mutex_unlock(&priv->mutex);
-> -               if (rc)
-> -                       return rc;
-> -       }
-> -
-> -       if (!iwl_is_alive(priv))
-> -               return -EAGAIN;
-> -
-> -       mutex_lock(&priv->mutex);
-> -
-> -       if (conf->bssid)
-> -               IWL_DEBUG_MAC80211(priv, "bssid: %pM\n", conf->bssid);
-> -
-> -/*
-> - * very dubious code was here; the probe filtering flag is never set:
-> - *
-> -       if (unlikely(test_bit(STATUS_SCANNING, &priv->status)) &&
-> -           !(priv->hw->flags & IEEE80211_HW_NO_PROBE_FILTERING)) {
-> - */
-> -
-> -       if (priv->iw_mode == NL80211_IFTYPE_AP) {
-> -               if (!conf->bssid) {
-> -                       conf->bssid = priv->mac_addr;
-> -                       memcpy(priv->bssid, priv->mac_addr, ETH_ALEN);
-> -                       IWL_DEBUG_MAC80211(priv, "bssid was set to: %pM\n",
-> -                                          conf->bssid);
-> -               }
-> -               if (priv->ibss_beacon)
-> -                       dev_kfree_skb(priv->ibss_beacon);
-> -
-> -               priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
-> -       }
-
-This is the AP code I refer to above ...
-
-> -
-> -       if (iwl_is_rfkill(priv))
-> -               goto done;
-> -
-> -       if (conf->bssid && !is_zero_ether_addr(conf->bssid) &&
-> -           !is_multicast_ether_addr(conf->bssid)) {
-> -               /* If there is currently a HW scan going on in the background
-> -                * then we need to cancel it else the RXON below will fail. */
-> -               if (iwl_scan_cancel_timeout(priv, 100)) {
-> -                       IWL_WARN(priv, "Aborted scan still in progress "
-> -                                   "after 100ms\n");
-> -                       IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
-> -                       mutex_unlock(&priv->mutex);
-> -                       return -EAGAIN;
-> -               }
-> -               memcpy(priv->staging_rxon.bssid_addr, conf->bssid, ETH_ALEN);
-> -
-> -               /* TODO: Audit driver for usage of these members and see
-> -                * if mac80211 deprecates them (priv->bssid looks like it
-> -                * shouldn't be there, but I haven't scanned the IBSS code
-> -                * to verify) - jpk */
-> -               memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-> -
-> -               if (priv->iw_mode == NL80211_IFTYPE_AP)
-> -                       iwlcore_config_ap(priv);
-> -               else {
-> -                       rc = iwlcore_commit_rxon(priv);
-> -                       if ((priv->iw_mode == NL80211_IFTYPE_STATION) && rc)
-> -                               iwl_rxon_add_station(
-> -                                       priv, priv->active_rxon.bssid_addr, 1);
-> -               }
-> -
-> -       } else {
-> -               iwl_scan_cancel_timeout(priv, 100);
-> -               priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
-> -               iwlcore_commit_rxon(priv);
-> -       }
-> -
-> - done:
-> -       IWL_DEBUG_MAC80211(priv, "leave\n");
-> -       mutex_unlock(&priv->mutex);
-> -
-> -       return 0;
-> -}
-> -EXPORT_SYMBOL(iwl_mac_config_interface);
-> -
->  int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
->                          struct ieee80211_tx_queue_stats *stats)
->  {
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h       2009-04-22 15:55:47.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h    2009-04-22 15:55:53.000000000 +0200
-> @@ -281,9 +281,6 @@ void iwl_mac_remove_interface(struct iee
->                                  struct ieee80211_if_init_conf *conf);
->  int iwl_mac_config(struct ieee80211_hw *hw, u32 changed);
->  void iwl_config_ap(struct iwl_priv *priv);
-> -int iwl_mac_config_interface(struct ieee80211_hw *hw,
-> -                               struct ieee80211_vif *vif,
-> -                               struct ieee80211_if_conf *conf);
->  int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
->                          struct ieee80211_tx_queue_stats *stats);
->  void iwl_mac_reset_tsf(struct ieee80211_hw *hw);
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c   2009-04-22 15:56:02.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c        2009-04-22 15:56:07.000000000 +0200
-> @@ -4016,7 +4016,6 @@ static struct ieee80211_ops iwl3945_hw_o
->         .add_interface = iwl_mac_add_interface,
->         .remove_interface = iwl_mac_remove_interface,
->         .config = iwl_mac_config,
-> -       .config_interface = iwl_mac_config_interface,
->         .configure_filter = iwl_configure_filter,
->         .set_key = iwl3945_mac_set_key,
->         .get_tx_stats = iwl_mac_get_tx_stats,
-
-Reinette
-
+--- wireless-testing.orig/include/linux/nl80211.h	2009-04-22 14:33:51.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2009-04-22 14:34:37.000000000 +0200
+@@ -230,7 +230,9 @@
+  *	and optionally a MAC (as BSSID) and FREQ_FIXED attribute if those
+  *	should be fixed rather than automatically determined. Can only be
+  *	executed on a network interface that is UP, and fixed BSSID/FREQ
+- *	may be rejected.
++ *	may be rejected. Another optional parameter is the beacon interval,
++ *	given in the %NL80211_ATTR_BEACON_INTERVAL attribute, which if not
++ *	given defaults to 100 TU (102.4ms).
+  * @NL80211_CMD_LEAVE_IBSS: Leave the IBSS -- no special arguments, the IBSS is
+  *	determined by the network interface.
+  *
+--- wireless-testing.orig/include/net/cfg80211.h	2009-04-22 14:34:50.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-04-22 14:35:15.000000000 +0200
+@@ -733,6 +733,7 @@ struct cfg80211_disassoc_request {
+  *	IBSSs to join on other channels.
+  * @ie: information element(s) to include in the beacon
+  * @ie_len: length of that
++ * @beacon_interval: beacon interval to use
+  */
+ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+@@ -740,6 +741,7 @@ struct cfg80211_ibss_params {
+ 	struct ieee80211_channel *channel;
+ 	u8 *ie;
+ 	u8 ssid_len, ie_len;
++	u16 beacon_interval;
+ 	bool channel_fixed;
+ };
+ 
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-04-22 14:34:43.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-04-22 14:37:33.000000000 +0200
+@@ -3159,6 +3159,8 @@ static int nl80211_join_ibss(struct sk_b
+ 	struct wiphy *wiphy;
+ 	int err;
+ 
++	memset(&ibss, 0, sizeof(ibss));
++
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+ 
+@@ -3167,6 +3169,15 @@ static int nl80211_join_ibss(struct sk_b
+ 	    !nla_len(info->attrs[NL80211_ATTR_SSID]))
+ 		return -EINVAL;
+ 
++	ibss.beacon_interval = 100;
++
++	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
++		ibss.beacon_interval =
++			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
++		if (ibss.beacon_interval < 1 || ibss.beacon_interval > 10000)
++			return -EINVAL;
++	}
++
+ 	rtnl_lock();
+ 
+ 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+@@ -3189,7 +3200,6 @@ static int nl80211_join_ibss(struct sk_b
+ 	}
+ 
+ 	wiphy = &drv->wiphy;
+-	memset(&ibss, 0, sizeof(ibss));
+ 
+ 	if (info->attrs[NL80211_ATTR_MAC])
+ 		ibss.bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
+--- wireless-testing.orig/net/wireless/ibss.c	2009-04-22 14:37:47.000000000 +0200
++++ wireless-testing/net/wireless/ibss.c	2009-04-22 14:38:08.000000000 +0200
+@@ -116,6 +116,9 @@ static int cfg80211_ibss_wext_join(struc
+ 	enum ieee80211_band band;
+ 	int i;
+ 
++	if (!wdev->wext.beacon_interval)
++		wdev->wext.beacon_interval = 100;
++
+ 	/* try to find an IBSS channel if none requested ... */
+ 	if (!wdev->wext.channel) {
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
 
 
