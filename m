@@ -1,55 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30786 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759567AbZDTWaQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 18:30:16 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] mac80211: do not print WARN if config interface fails during reconfigure
-Date: Mon, 20 Apr 2009 15:36:18 -0700
-Message-Id: <1240266979-9254-1-git-send-email-reinette.chatre@intel.com> (sfid-20090421_003031_397105_37C96189)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60096
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752308AbZDVARq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2009 20:17:46 -0400
+Date: Tue, 21 Apr 2009 17:17:38 -0700 (PDT)
+Message-Id: <20090421.171738.228844739.davem@davemloft.net> (sfid-20090422_021754_901389_418D9AC9)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-04-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090421212503.GN3369@tuxdriver.com>
+References: <20090421212503.GN3369@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is expected that config interface will always succeed as mac80211
-will only request what driver supports. The exception here is when a
-device has rfkill enabled. At this time the rfkill state is unknown to
-mac80211 and config interface can fail. When this happens we deal with
-this error instead of printing a WARN.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 21 Apr 2009 17:25:03 -0400
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- net/mac80211/util.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 52ef8d4..0ee74e8 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1047,8 +1047,19 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		case NL80211_IFTYPE_ADHOC:
- 		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_MESH_POINT:
--			WARN_ON(ieee80211_if_config(sdata, changed));
--			ieee80211_bss_info_change_notify(sdata, ~0);
-+			/*
-+			 * Driver's config_interface can fail if rfkill is
-+			 * enabled. Accommodate this return code.
-+			 * FIXME: When mac80211 has knowledge of rfkill
-+			 * state the code below can change back to:
-+			 *   WARN(ieee80211_if_config(sdata, changed));
-+			 *   ieee80211_bss_info_change_notify(sdata, ~0);
-+			 */
-+			if (ieee80211_if_config(sdata, changed))
-+				printk(KERN_DEBUG "%s: failed to reconfigure interface\n",
-+				       sdata->dev->name);
-+			else
-+				ieee80211_bss_info_change_notify(sdata, ~0);
- 			break;
- 		case NL80211_IFTYPE_WDS:
- 			break;
--- 
-1.5.6.3
-
+Pulled, thanks John.
