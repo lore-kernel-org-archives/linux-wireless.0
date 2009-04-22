@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4991 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774AbZD3T4p (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56196 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754437AbZDVRay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:56:45 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH 5/9] ath5k: Enable AP mode
-Date: Thu, 30 Apr 2009 15:55:48 -0400
-Message-Id: <1241121352-6064-6-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
-References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+	Wed, 22 Apr 2009 13:30:54 -0400
+Date: Wed, 22 Apr 2009 13:28:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	jussi.kivilinna@mbnet.fi
+Subject: Re: linux-next: Tree for April 22 (rndis_wlan)
+Message-ID: <20090422172804.GE3288@tuxdriver.com> (sfid-20090422_193118_764214_6C9F083D)
+References: <20090422154247.dbffd285.sfr@canb.auug.org.au> <49EF4B73.2050702@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49EF4B73.2050702@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Slaby <jirislaby@gmail.com>
+On Wed, Apr 22, 2009 at 09:53:07AM -0700, Randy Dunlap wrote:
+> Stephen Rothwell wrote:
+> > Hi all,
+> > 
+> > Changes since 20090421:
+> > 
+> > For those who care about the order of trees, I have moved the merging of
+> > all the fs trees together and nearer the start of the process.
+> > 
+> > This tree will not build a powerpc allyesconfig.
+> > 
+> > The net tree lost its conflict.
+> > 
+> > The wireless tree gained a conflict against eahc of the v4l-dvb and
+> > wireless-current trees and a build failure due to an interaction with the
+> > acpi tree for which I reverted a commit.
+> 
+> ERROR: "wiphy_free" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_wext_siwscan" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_wext_siwmode" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "__ieee80211_get_channel" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "wiphy_unregister" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_inform_bss" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "wiphy_new" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "wiphy_register" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_wext_giwrange" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_wext_giwmode" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_wext_giwscan" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> ERROR: "cfg80211_scan_done" [drivers/net/wireless/rndis_wlan.ko] undefined!
 
-After some debuging we were hitting the following bugs so far...
+> # CONFIG_CFG80211 is not set
 
- * Due to huge channel list hostapd couldn't get infos from the driver
- and couldn't set the channel. If we manualy set the channel after
- hostapd starts (by setting channel to 0 -auto), beacons are sent
- but they wont show up on scan because they are malformed (they have
- channel = 0 because hostapd doesn't update the channel info -this is
- probably a hostapd bug so i'm CCing Jouni) and they get dropped. Bob
- fixed this by only allowing standard channels to be registered so
- now hostapd works as expected.
+No doubt this is the problem...
 
- * Docs (and HAL source) say that we must write 0 on timer0 when
- operating on AP mode to start TSF increment but this seems to
- mess with DBA in many cases and beacon queue never gets started.
- We fixed that on the previous patch.
-
- We have some more things to deal with...
-
- * For some reason (hw bug or something else) after restarting hostapd
- a few times, beacon inteval seems to change from 100ms to a sec
- (we get one beacon per sec).
-
- * We need to set sleep timers on STA mode and enable power saving +
- support PCF.
-
- ...but i think it's time we enable AP support "officialy" so that
- we can get more feedback from users. I ran ath5k with the mentioned
- patches + hostapd 0.6.8 and AP mode worked fine (it had some less
- throughput on my tests than IBSS but it worked).
-
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
- Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    1 +
+
+>From bce85c97aeeb9c34098951e9ef3de425c6830b63 Mon Sep 17 00:00:00 2001
+From: John W. Linville <linville@tuxdriver.com>
+Date: Wed, 22 Apr 2009 13:27:08 -0400
+Subject: [PATCH] rndis_wlan: select CFG80211 in Kconfig
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/Kconfig |    1 +
  1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index b48ff7d..912ffc5 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -516,6 +516,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 		    IEEE80211_HW_NOISE_DBM;
- 
- 	hw->wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 11c2481..2d8434f 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -337,6 +337,7 @@ config USB_NET_RNDIS_WLAN
+ 	select USB_NET_CDCETHER
+ 	select USB_NET_RNDIS_HOST
+ 	select WIRELESS_EXT
++	select CFG80211
+ 	---help---
+ 	  This is a driver for wireless RNDIS devices.
+ 	  These are USB based adapters found in devices such as:
 -- 
 1.6.0.6
 
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
