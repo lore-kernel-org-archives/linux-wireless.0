@@ -1,70 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53532 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752339AbZDMP7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 11:59:12 -0400
-Subject: Re: A warning in latest -git 2.6.30-rc1
-From: reinette chatre <reinette.chatre@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1239576236.3814.2.camel@maxim-laptop>
-References: <1239576236.3814.2.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Mon, 13 Apr 2009 09:05:05 -0700
-Message-Id: <1239638705.10251.8.camel@rc-desk> (sfid-20090413_175915_345262_BAEC5960)
+Received: from xc.sipsolutions.net ([83.246.72.84]:49261 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbZDVPru (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 11:47:50 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Lweft-0004kN-65
+	for linux-wireless@vger.kernel.org; Wed, 22 Apr 2009 17:47:49 +0200
+Message-Id: <20090422154559.528196740@sipsolutions.net> (sfid-20090422_174753_922175_623E8F6D)
+Date: Wed, 22 Apr 2009 17:45:59 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/2] mac80211 maintenance
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maxim,
+Here are two large mac80211 maintenance patches (including driver updates)
+that fix some of the callback mess.
 
-On Sun, 2009-04-12 at 15:43 -0700, Maxim Levitsky wrote:
-> I have just noticed this, seems to be harmless, everything works fine:
-> 
-> 
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250121] ------------[ cut here ]------------
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250128] WARNING: at /home/maxim/software/kernel/linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c:496 iwl3945_mac_set_key+0x7e5/0x7f0 [iwl3945]()
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250134] Hardware name: Aspire 5720     
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250137] no space for a new keyModules linked in: uhci_hcd af_packet nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc cpufreq_powersave cpufreq_conservative cpufreq_userspace acpi_cpufreq coretemp uvcvideo videodev v4l1_compat v4l2_compat_ioctl32 sbp2 joydev iwl3945 iwlcore psmouse snd_hda_codec_realtek rfkill ehci_hcd tg3 snd_hda_intel snd_hda_codec iTCO_wdt mac80211 nvidia(P) ohci1394 ricoh_mmc sdhci_pci sdhci evdev serio_raw libphy snd_hwdep iTCO_vendor_support usbcore snd_pcm snd_timer snd_page_alloc ext3 jbd mbcache fuse
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250208] Pid: 8, comm: events/0 Tainted: P        W  2.6.30-rc1-vanilla #5
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250212] Call Trace:
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250224]  [<ffffffff802463f0>] warn_slowpath+0xd0/0x130
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250233]  [<ffffffff802c8bdf>] ? __slab_alloc+0xbf/0x760
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250241]  [<ffffffff802e60d1>] ? alloc_inode+0x51/0x60
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250247]  [<ffffffff802e3a1f>] ? __d_lookup+0xcf/0x150
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250255]  [<ffffffff8035988c>] ? security_inode_alloc+0x1c/0x20
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250262]  [<ffffffff802e5fbe>] ? inode_init_always+0x12e/0x1f0
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250277]  [<ffffffffa09dc100>] ? iwl3945_mac_set_key+0x0/0x7f0 [iwl3945]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250284]  [<ffffffff8035a416>] ? security_d_instantiate+0x16/0x30
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250291]  [<ffffffff802e2d45>] ? d_instantiate+0x45/0x50
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250313]  [<ffffffffa09b97bd>] ? iwl_scan_cancel_timeout+0x2d/0xb0 [iwlcore]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250328]  [<ffffffffa09dc8e5>] iwl3945_mac_set_key+0x7e5/0x7f0 [iwl3945]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250357]  [<ffffffffa08d72fc>] __ieee80211_key_todo+0x16c/0x330 [mac80211]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250383]  [<ffffffffa08d7630>] ? key_todo+0x0/0x10 [mac80211]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250408]  [<ffffffffa08d7615>] ieee80211_key_todo+0x15/0x30 [mac80211]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250433]  [<ffffffffa08d7639>] key_todo+0x9/0x10 [mac80211]
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250441]  [<ffffffff80259713>] worker_thread+0x1a3/0x2a0
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250448]  [<ffffffff8025e290>] ? autoremove_wake_function+0x0/0x40
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250455]  [<ffffffff80259570>] ? worker_thread+0x0/0x2a0
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250461]  [<ffffffff80259570>] ? worker_thread+0x0/0x2a0
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250467]  [<ffffffff8025dd96>] kthread+0x56/0x90
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250475]  [<ffffffff8020ceea>] child_rip+0xa/0x20
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250481]  [<ffffffff8025dd40>] ? kthread+0x0/0x90
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250487]  [<ffffffff8020cee0>] ? child_rip+0x0/0x20
-> > Apr 13 00:35:22 maxim-laptop kernel: [ 3495.250492] ---[ end trace a941121475b47e49 ]---
-> > 
-> Happens often, usually after resume from disk. I have WPA2 network.
-> 
-> 
-> This is vanilla kernel commit b0cbc861a3c05e634520b049b5cc27ad6febb51f
+Comments welcome -- especially on the driver changes!
 
-Sounds like you can easily reproduce it ... would it be possible to get
-us some extra logs for this problem? Could you please run with debug
-0x400002 ?
-
-Thank you very much
-
-Reinette
-
+johannes
 
