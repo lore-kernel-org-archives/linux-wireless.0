@@ -1,92 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58625 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753661AbZDWNQU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58245 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753754AbZDVJEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 09:16:20 -0400
-Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1240487875.18245.37.camel@localhost.localdomain>
-References: <1240419177.12282.3.camel@localhost.localdomain>
-	 <20090422170852.GA7298@jm.kir.nu>
-	 <1240426517.12282.11.camel@localhost.localdomain>
-	 <1240441752.14995.8.camel@localhost.localdomain>
-	 <1240475973.30504.1.camel@localhost.localdomain>
-	 <1240484281.18245.16.camel@localhost.localdomain>
-	 <1240485352.15894.3.camel@localhost.localdomain>
-	 <1240487875.18245.37.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 23 Apr 2009 14:16:12 +0100
-Message-Id: <1240492572.15894.7.camel@localhost.localdomain> (sfid-20090423_151624_348019_A171592D)
+	Wed, 22 Apr 2009 05:04:22 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1240385542.3404.5.camel@localhost.localdomain>
+References: <1239837672.11795.46.camel@violet>
+	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <1240248008.4632.10.camel@johannes.local>
+	 <1240248385.5260.15.camel@localhost.localdomain>
+	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
+	 <1240343775.3327.3.camel@localhost.localdomain>
+	 <1240348792.17388.46.camel@johannes.local>
+	 <1240385542.3404.5.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0rj7da77B9o2LqsizkCB"
+Date: Wed, 22 Apr 2009 11:03:49 +0200
+Message-Id: <1240391029.20308.1.camel@johannes.local> (sfid-20090422_113345_450115_FD6F47A8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
 
-> > > > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
-> > > > > > > > instead of WEXT. I don't seem to be able to control the from the command
-> > > > > > > > line and the -D option doesn't take.
-> > > > > > > 
-> > > > > > > I would assume you are doing this with NM. You could either change it to
-> > > > > > > register the interface (this is not from -D option, but from the D-Bus
-> > > > > > > message) with the nl80211 driver or try to build wpa_supplicant without
-> > > > > > > WEXT support (which would make the nl80211 wrapper the default one). I
-> > > > > > > don't think either of these are yet acceptable as a generic solution,
-> > > > > > > but making NM request driver "nl80211,wext" could be a suitable first
-> > > > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
-> > > > > > > first try with nl80211 and if needed, fall back to WEXT).
-> > > > > > 
-> > > > > > I am doing manual testing and with ConnMan. However I would prefer to
-> > > > > > have a global driver setting "nl80211,wext" that I can give on the
-> > > > > > command line and that will then chosen as default if the addInterface
-> > > > > > method doesn't give a driver. I really don't need a per interface
-> > > > > > setting here.
-> > > > > 
-> > > > > Um, you can specify a driver for the interface you add in the dbus call
-> > > > > for addInterface.  Add a "driver" key to your dict with the driver you
-> > > > > want in the value.  Is there a bug with that?
-> > > > 
-> > > > I know that I can do that. I was just looking for a global configuration
-> > > > switch to default to nl80211,wext via D-Bus system activation and not
-> > > > via changing the code.
-> > > 
-> > > Even with system activation you still need to call addInterface, which
-> > > can take the driver.  I still don't quite understand what you're getting
-> > > at here, I guess...  When you say "not change code" you mean in the
-> > > process that's calling wpa_supplicant?
-> > 
-> > that is exactly what I mean. So to switch NM to use nl80211 you would
-> > have to change the NM code. I prefer to have this a command line option
-> > so people can turn it back to wext in case something breaks. Or a vendor
-> > driver for that matter (not that I care about these).
-> 
-> That's exactly why it's hardcoded, so people can't change it just on a
-> whim, and break their stuff.  It's great and desired to try nl80211 to,
-> as a developer, test it out and make sure it works with nl80211 (and fix
-> supplicant bugs that come up) but, of course, that shouldn't be done for
-> end-users.
-> 
-> The real fix here is to do what Johannes and I were talking about two
-> nights ago; provide udev-based driver hints for those drivers supporting
-> nl80211, or else have NM inspect the driver directly with netlink and
-> determine whether it supports nl80211, and then direct wpa_supplicant to
-> use nl80211 instead of wext.  I'll take a patch to do that, because I
-> want to kill wext as much as you do.
-> 
-> But hacking that stuff in without doing it the right way is only
-> suitable for development, and given that, I'd be against any sort of
-> change to wpa_supplicant as you've proposed.
+--=-0rj7da77B9o2LqsizkCB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-the latest version of wpa_supplicant can specific a list of drivers like
-nl80211,wext so it effectively falls back to wext if nl80211 decides
-this doesn't work or is not present. Should we not just add driver
-quirks/blacklist into wpa_supplicant then?
+Hi,
 
-Regards
+> one other weird thing happens now (except wireless-testing tree and
+> suspend/resume is broken). The first connection attempt fails horribly:
+>=20
+> CTRL-EVENT-SCAN-RESULTS=20
+> Trying to authenticate with 00:23:ab:xx:xx:xx (SSID=3D'Guest' freq=3D2412=
+ MHz)
+> Trying to associate with 00:23:ab:xx:xx:xx (SSID=3D'Guest' freq=3D2412 MH=
+z)
+> Associated with 00:23:ab:xx:xx:xx
+> CTRL-EVENT-CONNECTED - Connection to 00:23:ab:xx:xx:xx completed (auth) [=
+id=3D2 id_str=3D]
+> CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
+> l2_packet_receive - recvfrom: Network is down
+> Failed to initiate AP scan.
+> Failed to initiate AP scan.
+> ^CCTRL-EVENT-TERMINATING - signal 2 received
+>=20
+> So starting wpa_supplicant does its job fine, then running dhclient I
+> end up in the disconnect and network down and after that scanning fails.
 
-Marcel
+???
 
+And the below kernel message is all yo uget?
+
+> Killing wpa_supplicant and dhclient and then trying again works fine. So
+> far I have seen that only after a fresh boot.
+>=20
+> Found this one in dmesg:
+>=20
+> ------------[ cut here ]------------
+> WARNING: at net/wireless/nl80211.c:205 nl80211_send_wiphy+0x4b/0x988
+> [cfg80211]()
+> Hardware name: 7454CTO
+> Modules linked in: fuse rfcomm sco bnep l2cap binfmt_misc
+> snd_hda_codec_conexant iwlagn iwlcore snd_hda_intel i2400m_usb
+> snd_hda_codec i2400m mac80211 uvcvideo snd_pcm btusb snd_timer snd wimax
+> cfg80211 soundcore bluetooth snd_page_alloc uhci_hcd ehci_hcd [last
+> unloaded: microcode]
+> Pid: 3274, comm: wpa_supplicant Tainted: G        W  2.6.30-rc2-wl #1
+> Call Trace:
+>  [<ffffffff80236604>] warn_slowpath+0xb1/0xe5
+>  [<ffffffff8039a44a>] ? extract_buf+0x84/0xe4
+>  [<ffffffffa0055e04>] nl80211_send_wiphy+0x4b/0x988 [cfg80211]
+
+What tree are you using? This warning totally confuses me -- there's no
+code to produce it! It was a spurious warning Luis added some time ago,
+we removed right away again and now it's haunting us.
+
+johannes
+
+--=-0rj7da77B9o2LqsizkCB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ7t1yAAoJEKVg1VMiehFYIBAP/RoI4c2E+R8s+Qi1clyqKber
+hoRUMWAF/Lfw4uPx1mM83ehJ64uV6e3scqRq6tJklk1SthR/inUZCl2TfKLm9pho
+LOeUlY5G6J+tblDaQQ+19JDj8r7cmC6RSxeEhcNkc7MLMhr2Xm8xLxgH4oZhcG8X
+QkYlgKzJbto7G2a6nN6ytp4q6ufWt8+8u6R/zt0UHVZnqSUwZDe3BM6k8qgwLGZc
+iGAQyuQuDVydXXwFKhbyjutrU5XmenHFvr4+tp53val3MxWDz1bllL4iIENWC96n
+4g6I3s4aMgwc6iEfnUz/tbKkNERMCobl3HWs977i/8/YbIyWGpiAb0NRZmFyN257
+ZhBfJSLSjufAfo1NhXbe7oziYP2iSQR0uLuMMQBwHSFZ1IBx8QkSwJUsyquDtrny
+lhKZ0DGmX+OsUIAzKd8S0EyXSLhtynLpWktJhDFIOJ5J63blz2m3b4lU0c7g0Dtr
+d+b2d8ggfEq4QdAC1vP95DoBPI/S2qtRqgTRhYxrejDHeoxxfY/7efhRbd4vkzJf
+Qtuh5+Trgmo/N/+sOHmSTcs3d+9lDHFFgfM5M7JJ8G0Dy01Zz8cLVQml36//0u9q
+czALDEld/rdfuyxUF1Z1KeG7S5hgF6BnC6n4t7SPK5eVrOUYxrbi4xdAXIweVnel
+z+Yre74avKneDtlPwk02
+=o0Df
+-----END PGP SIGNATURE-----
+
+--=-0rj7da77B9o2LqsizkCB--
 
