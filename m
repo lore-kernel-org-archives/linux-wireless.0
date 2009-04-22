@@ -1,61 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:38019 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759987AbZDBPXQ (ORCPT
+Received: from rcsinet12.oracle.com ([148.87.113.124]:24051 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756724AbZDVTGA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 11:23:16 -0400
-Message-ID: <49D4D833.9070107@lwfinger.net> (sfid-20090402_172321_919980_B05D83F6)
-Date: Thu, 02 Apr 2009 10:22:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Apr 2009 15:06:00 -0400
+Message-ID: <49EF6AB9.3000900@oracle.com> (sfid-20090422_210643_307580_29D08977)
+Date: Wed, 22 Apr 2009 12:06:33 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: How does rfkill work?
-References: <49D44635.80306@lwfinger.net>	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net> <1238684527.4141.63.camel@johannes.local>
-In-Reply-To: <1238684527.4141.63.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	jussi.kivilinna@mbnet.fi
+Subject: Re: linux-next: Tree for April 22 (rndis_wlan)
+References: <20090422154247.dbffd285.sfr@canb.auug.org.au> <49EF4B73.2050702@oracle.com> <20090422172804.GE3288@tuxdriver.com>
+In-Reply-To: <20090422172804.GE3288@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2009-04-02 at 09:44 -0500, Larry Finger wrote:
->=20
->>> Can you check the contents of
->>> 	/sys/class/leds/b43legacy-...::radio/trigger
->>> please?
->> The first thing I noticed is that "radio" gets truncated to "rad", t=
-hus the file
->> is /sys/class/leds/b43legacy-phy0\:\:rad/trigger,
->=20
-> Cute. Must be that the limit is 20 bytes (19+NUL) in the buffer it us=
-es
-> in led core code.
->=20
->>  with contents "none ide-disk
->> ADP1-online BAT0-charging-or-full BAT0-charging BAT0-full phy0rx phy=
-0tx
->> phy0assoc phy0radio [(]". I unloaded and reloaded the driver and fou=
-nd that the
->> "[(]" characters changed to "[=EF=BF=BDW[=EF=BF=BD]". It appears tha=
-t something is putting
->> garbage in that file.
->=20
-> Ouch. That's bad. I'll try to figure it out. I don't see how my patch
-> changes this -- does this happen without my patch too?
+John W. Linville wrote:
+> On Wed, Apr 22, 2009 at 09:53:07AM -0700, Randy Dunlap wrote:
+>> Stephen Rothwell wrote:
+>>> Hi all,
+>>>
+>>> Changes since 20090421:
+>>>
+>>> For those who care about the order of trees, I have moved the merging of
+>>> all the fs trees together and nearer the start of the process.
+>>>
+>>> This tree will not build a powerpc allyesconfig.
+>>>
+>>> The net tree lost its conflict.
+>>>
+>>> The wireless tree gained a conflict against eahc of the v4l-dvb and
+>>> wireless-current trees and a build failure due to an interaction with the
+>>> acpi tree for which I reverted a commit.
+>> ERROR: "wiphy_free" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_wext_siwscan" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_wext_siwmode" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "__ieee80211_get_channel" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "wiphy_unregister" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_inform_bss" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "wiphy_new" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "wiphy_register" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_wext_giwrange" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_wext_giwmode" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_wext_giwscan" [drivers/net/wireless/rndis_wlan.ko] undefined!
+>> ERROR: "cfg80211_scan_done" [drivers/net/wireless/rndis_wlan.ko] undefined!
+> 
+>> # CONFIG_CFG80211 is not set
+> 
+> No doubt this is the problem...
 
-Without your "rfkill rewrite" patch, but with "rfkill-remove-unused-cod=
-e",
-"rfkill-remove-deprecated", and "rfkill-remove-user-claim" patches, the=
- file
-/sys/class/..../trigger contains "none ide-disk BAT0-charging-or-full
-BAT0-charging BAT0-full ADP1-online phy0rx phy0tx phy0assoc phy0radio [=
-rfkill0]"
+Yes, that builds.  Thanks.
 
-Now I know what should be inside the [].
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+> 
+> From bce85c97aeeb9c34098951e9ef3de425c6830b63 Mon Sep 17 00:00:00 2001
+> From: John W. Linville <linville@tuxdriver.com>
+> Date: Wed, 22 Apr 2009 13:27:08 -0400
+> Subject: [PATCH] rndis_wlan: select CFG80211 in Kconfig
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/Kconfig |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index 11c2481..2d8434f 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -337,6 +337,7 @@ config USB_NET_RNDIS_WLAN
+>  	select USB_NET_CDCETHER
+>  	select USB_NET_RNDIS_HOST
+>  	select WIRELESS_EXT
+> +	select CFG80211
+>  	---help---
+>  	  This is a driver for wireless RNDIS devices.
+>  	  These are USB based adapters found in devices such as:
+
+
+-- 
+~Randy
