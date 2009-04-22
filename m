@@ -1,26 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33983
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755980AbZDTWeo (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:9612 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650AbZDVNIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 18:34:44 -0400
-Date: Mon, 20 Apr 2009 15:34:36 -0700 (PDT)
-Message-Id: <20090420.153436.239569866.davem@davemloft.net> (sfid-20090421_003448_919989_C061AEA0)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-04-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090420211024.GI3369@tuxdriver.com>
-References: <20090420211024.GI3369@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 22 Apr 2009 09:08:25 -0400
+Received: by yx-out-2324.google.com with SMTP id 3so1437612yxj.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 06:08:23 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 22 Apr 2009 15:08:23 +0200
+Message-ID: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com> (sfid-20090422_150829_055649_B8FABB2F)
+Subject: Measure RSSI in adhoc networks
+From: Kai Timmer <email@kait.de>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 20 Apr 2009 17:10:25 -0400
+Hello,
+I need to get the rssi values in an adhoc network from every available
+node separately.
+I noticed that on some of my devices, in a adhoc network, there are
+all values set to 0. Some other devices are showing values. I am not
+sure how to interpret this values. If there are more than 2 nodes in
+the adhoc network, it has to be some kind of average value. Am I right
+with this? And if yes, is there any way to get the rssi value for
+every available node?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+I am not sure if this is the right place to ask these questions, if it
+is not, please redirect me to a more fitting place.
 
-Pulled, thanks a lot!
+Greets,
+-- 
+Kai Timmer
+Email : email@kait.de
+Jabber: kai@kait.de
