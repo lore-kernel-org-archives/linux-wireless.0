@@ -1,77 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:33635 "EHLO
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:55250 "EHLO
 	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755585AbZDPNh7 (ORCPT
+	with ESMTP id S1753333AbZDVUeS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 09:37:59 -0400
-Received: by fxm2 with SMTP id 2so420905fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 06:37:57 -0700 (PDT)
+	Wed, 22 Apr 2009 16:34:18 -0400
+Received: by fxm2 with SMTP id 2so187680fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 13:34:17 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: luciano.coelho@nokia.com, Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wl12xx: second submission
+References: <87hc0gcue2.fsf@litku.valot.fi>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Apr 2009 23:34:15 +0300
+In-Reply-To: <87hc0gcue2.fsf@litku.valot.fi> (Kalle Valo's message of "Wed\, 22 Apr 2009 23\:20\:53 +0300")
+Message-ID: <87d4b4ctrs.fsf@litku.valot.fi> (sfid-20090422_223423_310441_3B3B88BB)
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0904160611l58500309wa1ba92fe3aeff843@mail.gmail.com>
-References: <49E71982.5050204@bitnet.be> <40f31dec0904160611l58500309wa1ba92fe3aeff843@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 16 Apr 2009 15:37:42 +0200
-Message-ID: <69e28c910904160637j5769be3au94821d48bfecf6f2@mail.gmail.com> (sfid-20090416_153803_578448_3FEC1F43)
-Subject: Re: how to set antenna iw + ath5k
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Hans Maes <Hans@bitnet.be>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2009 at 3:11 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2009/4/16 Hans Maes <Hans@bitnet.be>:
->> Hello,
->>
->> I'm not sure this is the correct place to ask my question, but I've been
->> searching on google for ages now and can't seem to find an answer so I'm
->> asking it here.
->> If not, please yell at me and tell me where to go whine instead ;-)
->>
->> I'm using CM11 a/b/g cards with the Atheros AR5414A Chip, which have 2
->> antenna connectors.
->> I only have 1 antenna connected to the MAIN connector.
->> Running a self compiled 2.6.29 kernel on a few debian lenny boxes with ath5k
->> module for the wireless cards, set up in mesh mode.
->> Seems to work fine on the test bench, but behaves rather poorly in
->> production environment.
->> Everything related to the mesh network setup seems to work, but I have about
->> 40% - 60% packet loss on the entire netwerk (about 15 nodes)
->>
->> I'm guessing this has something to do with the antenna diversity setting.
->>
->> Can anybody tell me how to tell the ath5k module to disable antenna
->> diversity and only use the MAIN antenna ?
->>
->> If this is a RTFM thingie, then I apologize, I just can't seem to find it
->> anywhere.
->>
->> Please reply to my personal e-mail address as well, I'm not subscribed to
->> the list.
->>
->> Thanks for your help.
->>
->> Regards,
->>
->> Hans
->
-> After this patch...
-> https://lists.ath5k.org/pipermail/ath5k-devel/2009-April/002264.html
->
-> It's possible to tell the driver to use one fixed antenna (in your
-> case its fixed antenna A). Just change...
-> ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
->
-> with
-> ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_FIXED_A);
->
-> we will have a better way to change this in the future ;-)
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-I wonder if just exporting that as a modparam is a good-enough
-choice... though perhaps the best solution would be something like "iw
-phy phy0 antenna 1 up/down". Or perhaps we should make antenna
-diversity depend on the PCI ID, defaulting to 1 antenna when diversity
-support cannot be determined.
+> Hi John,
+>
+> here is the second submission of wl12xx, a driver for TI wl1251 chipset:
+>
+> http://www.valot.fi/kalle/tmp/wl12xx/20090422/
+
+Hold on. I compiled this only with a merge of linux-omap and
+wireless-testing. Because of this I didn't notice that there are mach
+includes which won't compile in wireless-testing:
+
+#include <mach/board.h>
+#include <mach/board-nokia.h>
+
+But I'm too tired to fix them now, I'll do that tomorrow.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Kalle Valo
