@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38736 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755239AbZDSQyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 12:54:47 -0400
+Received: from senator.holtmann.net ([87.106.208.187]:41825 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbZDVSzW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 14:55:22 -0400
+Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jouni Malinen <j@w1.fi>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 18:54:43 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240158381.917.21.camel@johannes.local>
-Message-ID: <20090419165443.158820@gmx.net> (sfid-20090419_185450_075411_EA7B31C7)
-MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
- (sfid-20090419_145246_566920_BF082D12)
- <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
- (sfid-20090419_153615_967882_D1A9F951)
- <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
- (sfid-20090419_160555_446977_A429511B)
- <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
- (sfid-20090419_171702_263242_9A8C16F9)
- <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
- (sfid-20090419_175352_161479_A88396A3)
- <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>
- (sfid-20090419_181324_681308_BAEAE072) <1240158381.917.21.camel@johannes.local>
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20090422170852.GA7298@jm.kir.nu>
+References: <1240419177.12282.3.camel@localhost.localdomain>
+	 <20090422170852.GA7298@jm.kir.nu>
+Content-Type: text/plain
+Date: Wed, 22 Apr 2009 19:55:17 +0100
+Message-Id: <1240426517.12282.11.camel@localhost.localdomain> (sfid-20090422_205528_760508_1B137A01)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> We might actually do that -- as part of the commands "connect" and
-> "disconnect" that do not exist yet and subsume auth and assoc into on=
-e
-> for hardware that doesn't support it.
+Hi Jouni,
 
-Why not use these commands as a high-level and mode independent version=
- of assoc/join_ibss? And then simply call it from the wext handlers?
+> > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
+> > instead of WEXT. I don't seem to be able to control the from the command
+> > line and the -D option doesn't take.
+> 
+> I would assume you are doing this with NM. You could either change it to
+> register the interface (this is not from -D option, but from the D-Bus
+> message) with the nl80211 driver or try to build wpa_supplicant without
+> WEXT support (which would make the nl80211 wrapper the default one). I
+> don't think either of these are yet acceptable as a generic solution,
+> but making NM request driver "nl80211,wext" could be a suitable first
+> step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
+> first try with nl80211 and if needed, fall back to WEXT).
 
-"Zwei Fliegen mit einer Klappe"?!
-(Translation: "Kill two birds with one stone".)
+I am doing manual testing and with ConnMan. However I would prefer to
+have a global driver setting "nl80211,wext" that I can give on the
+command line and that will then chosen as default if the addInterface
+method doesn't give a driver. I really don't need a per interface
+setting here.
 
-So you have a equivalent for:
-iwconfig wlan0 essid test
-iw dev wlan0 connect test
+> > Can we fix this somehow? I really wanna get rid of using WEXT.
+> 
+> There still one remaining WEXT operation even with driver_nl80211.c in
+> wpa_supplicant, so we are not yet there, but there is work going on in
+> getting that added to nl80211 after which point -Dnl80211 (or
+> -Dnl80211,wext for more likely distro use) should allow this goal to be
+> met.
 
-Alina
+Fair enough, but we are getting there and when testing, I like to be
+using as much nl80211 as possible.
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards
+
+Marcel
+
+
