@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:47016 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720AbZDTJUc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 05:20:32 -0400
-Received: by gxk10 with SMTP id 10so344081gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2009 02:20:31 -0700 (PDT)
-Message-ID: <49EC3E5B.8060403@tuffmail.co.uk> (sfid-20090420_112036_234494_DAA3E5BF)
-Date: Mon, 20 Apr 2009 10:20:27 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from c.6b.1343.static.theplanet.com ([67.19.107.12]:47083 "EHLO
+	mail.bitnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750906AbZDVKCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 06:02:31 -0400
+Received: from [91.87.219.137] (unknown [91.87.219.137])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.bitnet.be (Postfix) with ESMTP id 08AB7298280
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 05:02:29 -0500 (CDT)
+Message-ID: <49EEEB4D.1090104@bitnet.be> (sfid-20090422_120235_353092_B8E19A8F)
+Date: Wed, 22 Apr 2009 12:02:53 +0200
+From: Hans Maes <Hans@bitnet.be>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rfkill rewrite bug
-References: <49DCA88E.6060400@tuffmail.co.uk>	 (sfid-20090408_153722_059382_FB44D658) <1239204090.16477.1.camel@johannes.local>	 <49DCDD2E.80705@tuffmail.co.uk>  <49E38BBC.5010708@tuffmail.co.uk>	 (sfid-20090413_205524_915082_56358705) <1239741968.4205.1.camel@johannes.local>	 <49E98C86.2040308@tuffmail.co.uk>	 (sfid-20090418_101208_980691_83127E2F) <1240043283.5792.0.camel@johannes.local>	 <49E9A0C7.8040602@tuffmail.co.uk>	 (sfid-20090418_114338_695917_3CBF9024) <1240057470.4755.7.camel@johannes.local>	 <49EA10F3.3070309@tuffmail.co.uk>	 (sfid-20090418_194244_839181_896F358B) <1240077571.25100.3.camel@johannes.local>	 <49EC3366.7080206@tuffmail.co.uk> (sfid-20090420_103348_397116_B4EBC1A4) <1240217064.28218.0.camel@johannes.local>
-In-Reply-To: <1240217064.28218.0.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: regulatory db: MAX EIRP for BE wrong?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2009-04-20 at 09:33 +0100, Alan Jenkins wrote:
->
->   
->> Ok, revised patch is below. Don't forget the set_sw_state() ->
->> set_global_sw_state() change; I didn't include that.
->>     
->
-> Ok, will do. Thanks for the patch, I'll integrate it into mine.
->
->   
->> Note that there other pending changes to the rfkill code in eeepc-laptop.
->>
->> "[PATCH] eee-laptop: Register as a pci-hotplug device"
->> <http://thread.gmane.org/gmane.linux.kernel/791730/focus=38724>
->>
->> "[PATCH] eeepc-laptop: Work around rfkill firmware bug"
->> <http://thread.gmane.org/gmane.linux.acpi.devel/38424>
->>
->> The second is mine; sorry for not warning about it sooner.  So you/we
->> probably need to co-ordinate with the maintainer.  I'd CC linux-acpi,
->> because that's where most platform driver changes are submitted.
->>     
->
-> Ok, thanks for the heads up. Do you think this will generate significant
-> conflicts?
->   
+Hello,
 
-I'm not quite sure what would be considered significant, but it's not
-trivial.  At a high level, I don't think the new behaviours conflict
-with the new rfkill semantics :-).  But the firmware bug workaround
-can't be resolved completely mechanically.  And the pci-hotplug patch
-touches the rfkill error path.
+According to 
+http://wireless.kernel.org/en/developers/Regulatory/Database?alpha2=BE 
+the max EIRP for BE (Belgium) on the 5490-5710 Mhz band is 27dBm (500mW)
+
+I was under the impression that it is actually 30dBm (1W) on that band, 
+according to BIPT (Belgian Institute for Post and Telecommunications) 
+regulations.
+
+I've been trying to find a link to an official BIPT document but can't 
+find one right now.
+However, scroll to "Table 3" in this cisco document 
+http://www.cisco.com/en/US/docs/routers/access/wireless/rcsi/radiocom.html 
+to see that Cisco uses 30dBm (1000mW) in their products.
+
+Would it be possible to update the reg db ?
+
+If you need extra information, let me know.
+
+Thanks!
+
+Regards,
+
+Hans
