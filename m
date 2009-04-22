@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:4590 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753493AbZDPCjd (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:40477 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752698AbZDVTv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 22:39:33 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so729926fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 19:39:31 -0700 (PDT)
+	Wed, 22 Apr 2009 15:51:56 -0400
+Received: by fxm2 with SMTP id 2so165790fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:51:54 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/6] wl12xx: separate platform data into arch-independent code
+References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
+	<1238897428-19639-4-git-send-email-me@bobcopeland.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Apr 2009 22:51:52 +0300
+In-Reply-To: <1238897428-19639-4-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Sat\,  4 Apr 2009 22\:10\:25 -0400")
+Message-ID: <87fxg0eaav.fsf@litku.valot.fi> (sfid-20090422_215159_955436_C16BFB2B)
 MIME-Version: 1.0
-In-Reply-To: <49e644a4.3DqmSbwccrtRsayP%Larry.Finger@lwfinger.net>
-References: <49e644a4.3DqmSbwccrtRsayP%Larry.Finger@lwfinger.net>
-Date: Thu, 16 Apr 2009 03:39:31 +0100
-Message-ID: <3ace41890904151939gf8cce84x54a34407f3ab575@mail.gmail.com> (sfid-20090416_043943_509522_679D5321)
-Subject: Re: [RFT/RFC V3] rtl8187: Implement TX/RX blink for LED
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 15, 2009 at 9:33 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> The following patch implements some control over the LED on RTL8187B and
-> RTL8187L devices. Triggers are registered for TX and RX. Whenever the
-> trigger event occurs, the LED is turned off for 1/20 second, then turned
-> back on.
->
-> Note: For those RTL8187X devices that are built into the computer and have
-> a LED that is expected to be controlled with a radio switch, this patch will
-> not operate that LED. That will take a separate patch to be prepared later.
->
-> Please test and comment.
->
-> The behavior described above is found for my Level One RTL8187B. Prior to this
-> patch, the LED was on continuously. On a Netgear WG111V2 RTL8187L, the LED
-> blinks erratically. Before the patch, the LED was off.
->
-> If you test, please report the status of the LED before and after applying the
-> patch. In addition, find the line that looks like "rtl8187: Customer ID 0x00" in
-> the dmesg output and report it. I also need to know if you have a B or L model.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Bob Copeland <me@bobcopeland.com> writes:
 
-Just checking it does nothing other than outputting these lines on my
-hardware, as expected.
-rtl8187: Customer ID is 0x04
-Registered led device: rtl8187-phy0::tx
-Registered led device: rtl8187-phy0::rx
+> In order to build the wl12xx driver on any arch, extract the SPI
+> config struct into include/linux/spi/ and remove the OMAP tag-based
+> retrieval.  The board code can then set the platform data on
+> the spi struct device before probe.
+
+I dropped this one because I had done this a bit differently. Basically
+I moved all gpio code from wl12xx to the board file:
+
+struct wl12xx_platform_data {
+       void (*set_power)(bool enable);
+};
+
+And the irq is delivered in spi_board_info.irq. Please take a look and
+comment.
+
+-- 
+Kalle Valo
