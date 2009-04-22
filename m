@@ -1,70 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46839 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755122AbZDEJbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Apr 2009 05:31:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Subject: Re: ath9k becon loss messages
-Date: Sun, 5 Apr 2009 11:29:38 +0200
-Cc: Sujith <Sujith.Manoharan@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	LKML <linux-kernel@vger.kernel.org>
-References: <1238923439.4120.9.camel@localhost.localdomain>
-In-Reply-To: <1238923439.4120.9.camel@localhost.localdomain>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:53536 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754300AbZDVTxb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 15:53:31 -0400
+Received: by mail-bw0-f163.google.com with SMTP id 7so163629bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:53:31 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/6] wl12xx: update set_key callback to match current API
+References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
+	<1238897428-19639-7-git-send-email-me@bobcopeland.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Apr 2009 22:53:28 +0300
+In-Reply-To: <1238897428-19639-7-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Sat\,  4 Apr 2009 22\:10\:28 -0400")
+Message-ID: <873ac0ea87.fsf@litku.valot.fi> (sfid-20090422_215333_678144_9B64A095)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200904051129.38904.mb@bu3sch.de> (sfid-20090405_113158_987381_7200A27A)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 05 April 2009 11:23:59 Jaswinder Singh Rajput wrote:
-> With latest linus tree I am getting, .config file attached:
-> 
-> [   22.895051] r8169: eth0: link down
-> [   22.897564] ADDRCONF(NETDEV_UP): eth0: link is not ready
-> [   22.928047] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [   22.982292] libvirtd used greatest stack depth: 4200 bytes left
-> [   63.709879] wlan0: authenticate with AP 00:11:95:9e:df:f6
-> [   63.712096] wlan0: authenticated
-> [   63.712127] wlan0: associate with AP 00:11:95:9e:df:f6
-> [   63.726831] wlan0: RX AssocResp from 00:11:95:9e:df:f6 (capab=0x471 status=0 aid=1)
-> [   63.726855] wlan0: associated
-> [   63.730093] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [   74.296087] wlan0: no IPv6 routers present
-> [   79.349044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  119.358200] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  179.354292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  259.366044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  359.348292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  361.953459] packagekitd used greatest stack depth: 4160 bytes left
-> [  478.824258] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  598.813343] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  718.817292] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  838.824567] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [  958.815402] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1078.848434] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1198.822913] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1318.824931] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1438.814157] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1558.827336] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1678.823011] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1798.830589] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 1918.828044] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 2038.827224] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 2116.517152] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 2158.840243] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
-> [ 2278.827427] wlan0: beacon loss from AP 00:11:95:9e:df:f6 - sending probe request
+Bob Copeland <me@bobcopeland.com> writes:
 
+> Use the new prototype for ops->set_key which now takes a vif pointer
+> and sta pointer instead of a pair of addresses.  Remove the debug
+> statement for local_addr since wl12xx_op_set_key doesn't use the vif
+> pointer anyway.
 
-I think this message should only show if CONFIG_MAC80211_VERBOSE_DEBUG is set.
-It's kind of expected that we lose a beacon once in a while, so we shouldn't print
-verbose messages to the kernel log (even if they are KERN_DEBUG).
-
-And besides that, I think one can easily remotely trigger this message and flood the logs.
-So it should probably _also_ be ratelimited.
+Applied.
 
 -- 
-Greetings, Michael.
+Kalle Valo
