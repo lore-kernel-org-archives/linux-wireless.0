@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38229 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751274AbZDUNAw (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:54299 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbZDVFEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 09:00:52 -0400
-Date: Tue, 21 Apr 2009 08:58:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: p54: power save disable patch twice
-Message-ID: <20090421125820.GE17805@tuxdriver.com> (sfid-20090421_150057_770394_5E47AA20)
-References: <87hc0iftzh.fsf@litku.valot.fi>
+	Wed, 22 Apr 2009 01:04:22 -0400
+Received: by fxm2 with SMTP id 2so2888717fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2009 22:04:21 -0700 (PDT)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+References: <1239837672.11795.46.camel@violet>
+	<1239875168.9737.10.camel@johannes.local>
+	<1240247636.5260.11.camel@localhost.localdomain>
+	<1240248008.4632.10.camel@johannes.local>
+	<1240248385.5260.15.camel@localhost.localdomain>
+	<1240248773.4632.13.camel@johannes.local>
+	<1240343775.3327.3.camel@localhost.localdomain>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Apr 2009 08:04:18 +0300
+In-Reply-To: <1240343775.3327.3.camel@localhost.localdomain> (Marcel Holtmann's message of "Tue\, 21 Apr 2009 20\:56\:15 +0100")
+Message-ID: <874owhffe5.fsf@litku.valot.fi> (sfid-20090422_070426_647642_CA604F51)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87hc0iftzh.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 21, 2009 at 08:36:50AM +0300, Kalle Valo wrote:
-> Hi John,
-> 
-> I noticed that latest wireless-testing had this patch twice:
-> 
->     p54: deactivate broken powersave function
->     
->     This patch deactivates powersave in station mode.
->     
->     It does not work correctly yet, so the code does more harm than
->     good.
->     
->     Reported-by: Johannes Berg <johannes@sipsolutions.net>
->     Signed-off-by: Christian Lamparter <chunkeey@web.de>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> The first patch removes IEEE80211_HW_SUPPORTS_PS and
-> IEEE80211_HW_PS_NULLFUNC_STACK, and the second patch removes only
-> IEEE80211_HW_BEACON_FILTER. I assume that the idea was to remove
-> everything in one go.
+Marcel Holtmann <marcel@holtmann.org> writes:
 
-The original patch was against the master branch and did all of
-them together.  But I sent it to 2.6.30, which didn't ahve the
-beacon filter part.  So I applied it in two parts (more or less).
-I probably should alter the commit message for the second part.
+> so I have built the latest wireless-testing tree with a new patches sent
+> by Reinette fixing the DMA issue. So far I have no problems and I am
+> unable to re-produce it. However this is a different AP and I disabled
+> the power control feature for now.
+>
+> I also updated wpa_supplicant and iw to the latest code and assume that
+> no fix in there silently fixed it for me.
+>
+> So we are suspecting that this issue was because of me having 3GB of RAM
+> and running on a 64-bit kernel. Does this makes sense and could be the
+> problem why it kept failing until I unload the iwlagn driver?
 
-Thanks for the reminder!
+I would say that don't make any assumptions until you manage to test
+with the original AP. APs can be broken so many ways.
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
