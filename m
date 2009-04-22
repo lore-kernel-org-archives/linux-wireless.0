@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound-dub.frontbridge.com ([213.199.154.16]:32742 "EHLO
-	IE1EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbZD1V7n (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:53449 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752220AbZDVTpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 17:59:43 -0400
-Message-ID: <49F77C32.8020207@am.sony.com> (sfid-20090428_235949_770669_87683ED3)
-Date: Tue, 28 Apr 2009 14:59:14 -0700
-From: Geoff Levand <geoffrey.levand@am.sony.com>
+	Wed, 22 Apr 2009 15:45:33 -0400
+Received: by fxm2 with SMTP id 2so162414fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:45:31 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: kalle.valo@nokia.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/6] wl12xx updates
+References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Apr 2009 22:45:30 +0300
+In-Reply-To: <1238897428-19639-1-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Sat\,  4 Apr 2009 22\:10\:22 -0400")
+Message-ID: <87skk0ealh.fsf@litku.valot.fi> (sfid-20090422_214537_160520_6D724D18)
 MIME-Version: 1.0
-To: jgarzik@pobox.com
-CC: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Subject: [patch] net/ps3: Update maintainer
-References: <49D10994.2010204@am.sony.com>
-In-Reply-To: <49D10994.2010204@am.sony.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Bob Copeland <me@bobcopeland.com> writes:
 
-Update the MAINTAINERS entry for PS3 NETWORK SUPPORT.
+> Hi Kalle,
 
-CC: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
----
-Hi Jeff,
+Hi Bob,
 
-This is a re-send.  I haven't seen this one get merged
-into 2.6.30 yet.  Could you let me know the status?
+> Here are some patches that bring wl12xx back to compiling state for
+> current wireless-testing.  This is on top of your original patch
+> from your web page.  Review at your leisure, and feel free to roll
+> them all up into your eventual post for inclusion.
+>
+> Of note, possible incompatible changes are patch 2 which removes ssid
+> from the join command, and patch 3 which changes the platform setup
+> so it can compile on any platform.  Only compile-tested for now.
 
--Geoff
+Very cool! I took latest wl12xx code and applied your patches on top of
+that. I managed to get working connection with 2.6.30-rc2-omap1 (from
+linux-omap). So your patches work in a real device.
 
- MAINTAINERS |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I'll send all the patches later tonight and try to convince John to take
+wl12xx to wireless-testing.
 
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3503,8 +3503,8 @@ L:	linux-ide@vger.kernel.org
- S:	Maintained
- 
- PS3 NETWORK SUPPORT
--P:	Masakazu Mokuno
--M:	mokuno@sm.sony.co.jp
-+P:	Geoff Levand
-+M:	geoffrey.levand@am.sony.com
- L:	netdev@vger.kernel.org
- L:	cbe-oss-dev@ozlabs.org
- S:	Supported
-
-
-
-
-
+-- 
+Kalle Valo
