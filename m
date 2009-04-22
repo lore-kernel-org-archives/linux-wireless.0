@@ -1,128 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:43163 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbZDOBwD (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:51151 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbZDVJT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2009 21:52:03 -0400
-Date: Tue, 14 Apr 2009 21:51:16 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Greg KH <greg@kroah.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090415015116.GJ20470@storm.local.network> (sfid-20090415_035209_295453_65F7243E)
-References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com>
+	Wed, 22 Apr 2009 05:19:58 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by toronto053.server4you.de (Postfix) with ESMTP id 337D052F343
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 11:22:02 +0200 (CEST)
+Received: from toronto053.server4you.de ([127.0.0.1])
+	by localhost (toronto053.server4you.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id K3PPcbz7EvCq for <linux-wireless@vger.kernel.org>;
+	Wed, 22 Apr 2009 11:21:59 +0200 (CEST)
+Date: Wed, 22 Apr 2009 11:21:59 +0200
+From: Daniel Wagner <wagi@monom.org>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] Simulate medium behavior
+Message-ID: <20090422092159.GA24586@toronto053.server4you.de> (sfid-20090422_113107_838388_2485F0AE)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WWBpDPuG52WufD7Q"
-In-Reply-To: <20090415011020.GC10045@kroah.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---WWBpDPuG52WufD7Q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
 Hi,
 
-On Tue, Apr 14, 2009 at 06:10:20PM -0700, Greg KH wrote:
-> On Tue, Apr 14, 2009 at 10:19:06AM -0400, Forest Bond wrote:
-> > Hi,
-> >=20
-> > On Tue, Apr 14, 2009 at 09:02:48AM -0400, John W. Linville wrote:
-> > > On Tue, Apr 14, 2009 at 02:43:54PM +0200, Johannes Berg wrote:
-> > > > Hi Marcel,
-> > > >=20
-> > > > > just to document the irony here. Two or three years ago at OLS, K=
-yle and
-> > > > > Greg were making fun of Ubuntu merging its 5th wireless stack int=
-o their
-> > > > > kernel. Now the staging crap is doing exactly the same.
->=20
-> Yes we are.  But we are doing it correctly :)
->=20
-> Turns out that people actually want to use their hardware, and no one
-> else was working on merging these drivers, so that is what staging is
-> for.
->=20
-> > Well, gosh, I understand the criticism here and if I were a kernel deve=
-loper I
-> > imagine my perspective would be much the same.  But I can't help but fe=
-el that
-> > there's some amount of hypocrisy when we hammer on a manufacturer to pr=
-operly
-> > license their driver and then let it drop dead when they do.
->=20
-> I agree.
->=20
-> > I understand that the problem would be solved if they manufacturers wou=
-ld
-> > suddenly "get it," but the scale of social problem preventing that is l=
-ikely too
-> > large to change anytime soon.
->=20
-> Agreed.
->=20
-> > If kernel developers are too busy to support the hardware, why do the
-> > manufacturers take so much criticism for releasing binary-only drivers =
-or badly
-> > licensed drivers, or for neglecting to release technical specifications=
-?  If
-> > what I'm sensing is correct and there's no practical likelihood of thes=
-e devices
-> > getting in-kernel support even with those issues resolved, the criticis=
-m almost
-> > seems unjustified.
-> >=20
-> > I appreciate what the kernel developers do, of course, and my intention=
- is not
-> > to ruffle feathers.  But when a manufacturer that has taken a lot of cr=
-iticism
-> > for its approach to the Linux community shows some good will, it seems =
-like we
-> > ought to be able to turn that into something productive.  If we can't, =
-what have
-> > we been complaining about?
-> >=20
-> > My apologies if I'm way off on this.  I haven't been around all that lo=
-ng so it
-> > is certainly possible.
->=20
-> You aren't way off at all.
->=20
-> Thanks for the patches, I'll get to them in a few days when my "real
-> job" calms down a bit.  They're now in my queue, and will not get lost.
+I'm still working improving the scan behavior of NM. Yes, I'm
+terrible slow.  One thing which would help for this work is to
+simulate the wireless medium.
 
-Thanks, Greg.  Your reputation is well-deserved, to say the least.
+Below is my humble try to get a knob for enabling/disabling 
+tx/rx. The variable name 'medium' is not really good, though
+I didn't come up with something better.
 
-I need to get you some new patches, anyway, as the upstream sources depend =
-on
-header files that I failed to provide as they sit in a separate includes
-directory.  I'll get this sent as soon as time permits (probably today or
-tomorrow).
+Writing a 0 to /debug/ieee80211/phy*/hwsim/medium enables rx/tx for
+the specific phy. Writing anything but 0 disables rx/tx.  Not a very
+good API. It could be made something more realistic like reception
+quality is 80% associated some statistical dropping algorithm. Any
+thoughts?
 
--Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
+Is this the right direction I'm heading to?
 
---WWBpDPuG52WufD7Q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+thanks,
+daniel
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+---
+ drivers/net/wireless/mac80211_hwsim.c |   32 +++++++++++++++++++++++++++++++-
+ 1 files changed, 31 insertions(+), 1 deletions(-)
 
-iD8DBQFJ5T2URO4fQQdv5AwRAnmCAKCDLBSahsKETPAweDgrxEkZqb8ucACgr+k0
-iEeGK0smZOKWGO4pWjOwvnc=
-=NkaE
------END PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index d4fdc8b..6373226 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -291,6 +291,9 @@ struct mac80211_hwsim_data {
+ 	bool ps_poll_pending;
+ 	struct dentry *debugfs;
+ 	struct dentry *debugfs_ps;
++
++	struct dentry *debugfs_medium;
++	unsigned int medium;
+ };
+ 
+ 
+@@ -399,6 +402,11 @@ static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 	rx_status.rate_idx = info->control.rates[0].idx;
+ 	/* TODO: simulate signal strength (and optional packet drop) */
+ 
++	if (data->medium != 0) {
++		/* drop packet, no ack received */
++		return false;
++	}
++
+ 	if (data->ps != PS_DISABLED)
+ 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+ 
+@@ -412,7 +420,8 @@ static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 
+ 		if (!data2->started || !data2->radio_enabled ||
+ 		    !hwsim_ps_rx_ok(data2, skb) ||
+-		    data->channel->center_freq != data2->channel->center_freq)
++		    data->channel->center_freq != data2->channel->center_freq ||
++		    data2->medium != 0)
+ 			continue;
+ 
+ 		nskb = skb_copy(skb, GFP_ATOMIC);
+@@ -725,6 +734,7 @@ static void mac80211_hwsim_free(void)
+ 	spin_unlock_bh(&hwsim_radio_lock);
+ 
+ 	list_for_each_entry(data, &tmplist, list) {
++		debugfs_remove(data->debugfs_medium);
+ 		debugfs_remove(data->debugfs_ps);
+ 		debugfs_remove(data->debugfs);
+ 		ieee80211_unregister_hw(data->hw);
+@@ -876,6 +886,22 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
+ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_ps, hwsim_fops_ps_read, hwsim_fops_ps_write,
+ 			"%llu\n");
+ 
++static int hwsim_fops_medium_read(void *dat, u64 *val)
++{
++	struct mac80211_hwsim_data *data = dat;
++	*val = data->medium;
++	return 0;
++}
++
++static int hwsim_fops_medium_write(void *dat, u64 val)
++{
++	struct mac80211_hwsim_data *data = dat;
++	data->medium = val;
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_medium, hwsim_fops_medium_read, hwsim_fops_medium_write,
++			"%llu\n");
+ 
+ static int __init init_mac80211_hwsim(void)
+ {
+@@ -1106,6 +1132,10 @@ static int __init init_mac80211_hwsim(void)
+ 						       data->debugfs, data,
+ 						       &hwsim_fops_ps);
+ 
++		data->debugfs_medium = debugfs_create_file("medium", 0666,
++							   data->debugfs, data,
++							   &hwsim_fops_medium);
++
+ 		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
+ 			    (unsigned long) hw);
+ 
+-- 
+1.6.0.2.GIT
 
---WWBpDPuG52WufD7Q--
