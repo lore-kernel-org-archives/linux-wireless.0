@@ -1,45 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost06.isp.att.net ([207.115.11.56]:36711 "EHLO
-	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbZDJE7n (ORCPT
+Received: from smtp3.dnainternet.fi ([87.94.96.71]:50152 "EHLO
+	smtp3.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbZDVH7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 00:59:43 -0400
-Message-ID: <49DED22E.4000001@lwfinger.net> (sfid-20090410_065946_469700_355608C2)
-Date: Thu, 09 Apr 2009 23:59:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Apr 2009 03:59:41 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH v2.6.30] rndis_wlan: fix initialization order for
+	workqueue&workers
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Date: Wed, 22 Apr 2009 10:59:37 +0300
+Message-ID: <20090422075937.13750.89092.stgit@fate.lan> (sfid-20090422_095945_574650_12EF8ACD)
 MIME-Version: 1.0
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Another regression in 2.6.30-rc1
-References: <49DE1638.8060906@lwfinger.net> <873achunwz.fsf@litku.valot.fi>
-In-Reply-To: <873achunwz.fsf@litku.valot.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> 
-> Thanks Larry, this was very helpful. After cherry picking this commit
-> wireless-testing is booting without errors for me.
-> 
-> In general sharing regressions and workarounds in this list is a very
-> good idea. I'm sure most of the people (including me) don't have time to
-> follow lkml and find fixes for all regressions.
+rndis_wext_link_change() might be called from rndis_command() at
+initialization stage and priv->workqueue/priv->work have not been
+initialized yet. This causes invalid opcode at rndis_wext_bind on
+some brands of bcm4320.
 
-I make a point of following Linus's tree quite closely during the merge process
-so that the number of rebuilds is not too large when I do a bisection. For some
-reason, the stuff that comes in just before -rc1 seems to have the most
-problems. I had 3 regressions from the last two batches of commits. Fortunately,
-I only had to bisect two of them, but it was interesting while finding the
-third. At every kernel build I had to test whether the patches for the other 2
-cases needed to be installed. The 3rd regression and one of the others were from
-successive commits! Murphy rules.
+Fix by initializing workqueue/workers in rndis_wext_bind() before
+rndis_command is used.
 
-When I know of unfixed problems in the wireless-testing tree, I will certainly
-continue to post whatever info I have, just as I rely on the members of this
-list when I have a problem.
+This bug has existed since 2.6.25, reported at:
+	http://bugzilla.kernel.org/show_bug.cgi?id=12794
 
-Larry
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
+ drivers/net/wireless/rndis_wlan.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index db91db7..bebf735 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2558,6 +2558,11 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	mutex_init(&priv->command_lock);
+ 	spin_lock_init(&priv->stats_lock);
+ 
++	/* because rndis_command() sleeps we need to use workqueue */
++	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
++	INIT_WORK(&priv->work, rndis_wext_worker);
++	INIT_DELAYED_WORK(&priv->stats_work, rndis_update_wireless_stats);
++
+ 	/* try bind rndis_host */
+ 	retval = generic_rndis_bind(usbdev, intf, FLAG_RNDIS_PHYM_WIRELESS);
+ 	if (retval < 0)
+@@ -2603,16 +2608,17 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	disassociate(usbdev, 1);
+ 	netif_carrier_off(usbdev->net);
+ 
+-	/* because rndis_command() sleeps we need to use workqueue */
+-	priv->workqueue = create_singlethread_workqueue("rndis_wlan");
+-	INIT_DELAYED_WORK(&priv->stats_work, rndis_update_wireless_stats);
+ 	queue_delayed_work(priv->workqueue, &priv->stats_work,
+ 		round_jiffies_relative(STATS_UPDATE_JIFFIES));
+-	INIT_WORK(&priv->work, rndis_wext_worker);
+ 
+ 	return 0;
+ 
+ fail:
++	cancel_delayed_work_sync(&priv->stats_work);
++	cancel_work_sync(&priv->work);
++	flush_workqueue(priv->workqueue);
++	destroy_workqueue(priv->workqueue);
++
+ 	kfree(priv);
+ 	return retval;
+ }
 
