@@ -1,200 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1041 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752775AbZD3T4u (ORCPT
+Received: from mail-qy0-f118.google.com ([209.85.221.118]:48031 "EHLO
+	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbZDVIHF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:56:50 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Nick Kossifidis <mick@madwifi-project.org>
-Subject: [PATCH 1/9] ath5k: Allow user/driver to set txpower
-Date: Thu, 30 Apr 2009 15:55:44 -0400
-Message-Id: <1241121352-6064-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
-References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+	Wed, 22 Apr 2009 04:07:05 -0400
+Received: by qyk16 with SMTP id 16so1924240qyk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 01:07:02 -0700 (PDT)
+Subject: compat-wireless-2.6.-old won't compile
+From: Laruin d'Volts <email.port25@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 22 Apr 2009 02:55:25 -0500
+Message-Id: <1240386925.2821.1.camel@debian> (sfid-20090422_100710_184507_A6E3E864)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nick Kossifidis <mick@madwifi-project.org>
+OS: Debian Lenny
 
-* Now that we have regulatory control enable the driver to set
- txpower on hw
+some1@localhost:~/Desktop/compat-wireless-2.6-old$ make
+make -C /lib/modules/2.6.26-1-686/build
+M=3D/home/some1/Desktop/compat-wireless-2.6-old modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.26-1-686'
+  CC [M]  /home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.=
+o
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:594:
+error: redefinition of =E2=80=98ieee80211_install_qdisc=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:39:
+error: previous definition of =E2=80=98ieee80211_install_qdisc=E2=80=99=
+ was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:614:
+error: redefinition of =E2=80=98ieee80211_qdisc_installed=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:42:
+error: previous definition of =E2=80=98ieee80211_qdisc_installed=E2=80=99=
+ was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:620:
+error: redefinition of =E2=80=98ieee80211_wme_register=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:59:
+error: previous definition of =E2=80=98ieee80211_wme_register=E2=80=99 =
+was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:626:
+error: redefinition of =E2=80=98ieee80211_wme_unregister=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:63:
+error: previous definition of =E2=80=98ieee80211_wme_unregister=E2=80=99=
+ was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:632:
+error: redefinition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:47:
+error: previous definition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=
+=99 was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:673:
+error: redefinition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:53:
+error: previous definition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=
+=80=99 was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:690:
+error: redefinition of =E2=80=98ieee80211_requeue=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:56:
+error: previous definition of =E2=80=98ieee80211_requeue=E2=80=99 was h=
+ere
+make[3]: ***
+[/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.o] Error =
+1
+make[2]: *** [/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211]
+Error 2
+make[1]: *** [_module_/home/some1/Desktop/compat-wireless-2.6-old] Erro=
+r
+2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.26-1-686'
+make: *** [modules] Error 2
+some1@localhost:~/Desktop/compat-wireless-2.6-old$ make
+make -C /lib/modules/2.6.26-1-686/build
+M=3D/home/some1/Desktop/compat-wireless-2.6-old modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.26-1-686'
+  CC [M]  /home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.=
+o
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:594:
+error: redefinition of =E2=80=98ieee80211_install_qdisc=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:39:
+error: previous definition of =E2=80=98ieee80211_install_qdisc=E2=80=99=
+ was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:614:
+error: redefinition of =E2=80=98ieee80211_qdisc_installed=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:42:
+error: previous definition of =E2=80=98ieee80211_qdisc_installed=E2=80=99=
+ was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:620:
+error: redefinition of =E2=80=98ieee80211_wme_register=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:59:
+error: previous definition of =E2=80=98ieee80211_wme_register=E2=80=99 =
+was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:626:
+error: redefinition of =E2=80=98ieee80211_wme_unregister=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:63:
+error: previous definition of =E2=80=98ieee80211_wme_unregister=E2=80=99=
+ was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:632:
+error: redefinition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:47:
+error: previous definition of =E2=80=98ieee80211_ht_agg_queue_add=E2=80=
+=99 was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:673:
+error: redefinition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:53:
+error: previous definition of =E2=80=98ieee80211_ht_agg_queue_remove=E2=
+=80=99 was here
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.c:690:
+error: redefinition of =E2=80=98ieee80211_requeue=E2=80=99
+/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.h:56:
+error: previous definition of =E2=80=98ieee80211_requeue=E2=80=99 was h=
+ere
+make[3]: ***
+[/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211/wme.o] Error =
+1
+make[2]: *** [/home/some1/Desktop/compat-wireless-2.6-old/net/mac80211]
+Error 2
+make[1]: *** [_module_/home/some1/Desktop/compat-wireless-2.6-old] Erro=
+r
+2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.26-1-686'
+make: *** [modules] Error 2
+some1@localhost:~/Desktop/compat-wireless-2.6-old$=20
 
- * Also use txpower table offset so that we can match
- power range set by user/driver with indices on power table.
-
- Tested 2 different cards (a CM9 and an RF5112-based ubnt) and got
- the same output using a remote machine to measure per-packet rssi
- (conected the cards using attenuators). I also switched between
- various tx power levels and i saw an equal power change on the remote
- machine (so txpower changes as expected) and verified that we have
- the same output on each rate.
-
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
- Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    7 +++--
- drivers/net/wireless/ath/ath5k/base.c  |   11 +++++++-
- drivers/net/wireless/ath/ath5k/phy.c   |   45 ++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath5k/reset.c |    2 +-
- 4 files changed, 52 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 60c6d2e..04b7345 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1100,11 +1100,12 @@ struct ath5k_hw {
- 		/* Values in 0.25dB units */
- 		s16		txp_min_pwr;
- 		s16		txp_max_pwr;
-+		/* Values in 0.5dB units */
- 		s16		txp_offset;
- 		s16		txp_ofdm;
--		/* Values in dB units */
--		s16		txp_cck_ofdm_pwr_delta;
- 		s16		txp_cck_ofdm_gainf_delta;
-+		/* Value in dB units */
-+		s16		txp_cck_ofdm_pwr_delta;
- 	} ah_txpower;
- 
- 	struct {
-@@ -1271,7 +1272,7 @@ extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
- extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
- /* TX power setup */
- extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, u8 ee_mode, u8 txpower);
--extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 ee_mode, u8 txpower);
-+extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
- 
- /*
-  * Functions used internaly
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 7b80ceb..d70856a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2747,12 +2747,21 @@ static int
- ath5k_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_hw *ah = sc->ah;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int ret;
- 
- 	mutex_lock(&sc->lock);
- 
--	sc->power_level = conf->power_level;
-+	sc->bintval = conf->beacon_int;
-+
-+	if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
-+	(sc->power_level != conf->power_level)) {
-+		sc->power_level = conf->power_level;
-+
-+		/* Half dB steps */
-+		ath5k_hw_set_txpower_limit(ah, (conf->power_level * 2));
-+	}
- 
- 	ret = ath5k_chan_set(sc, conf->channel);
- 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index b48b29d..bb61b8e 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -168,9 +168,6 @@ int ath5k_hw_rfgain_opt_init(struct ath5k_hw *ah)
-  * tx power and a Peak to Average Power Detector (PAPD) will try
-  * to measure the gain.
-  *
-- * TODO: Use propper tx power setting for the probe packet so
-- * that we don't observe a serious power drop on the receiver
-- *
-  * XXX:  How about forcing a tx packet (bypassing PCU arbitrator etc)
-  * just after we enable the probe so that we don't mess with
-  * standard traffic ? Maybe it's time to use sw interrupts and
-@@ -186,7 +183,7 @@ static void ath5k_hw_request_rfgain_probe(struct ath5k_hw *ah)
- 
- 	/* Send the packet with 2dB below max power as
- 	 * patent doc suggest */
--	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_max_pwr - 4,
-+	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_ofdm - 4,
- 			AR5K_PHY_PAPD_PROBE_TXPOWER) |
- 			AR5K_PHY_PAPD_PROBE_TX_NEXT, AR5K_PHY_PAPD_PROBE);
- 
-@@ -2482,8 +2479,19 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
- 		for (i = 8; i <= 15; i++)
- 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
- 
--	ah->ah_txpower.txp_min_pwr = rates[7];
--	ah->ah_txpower.txp_max_pwr = rates[0];
-+	/* Now that we have all rates setup use table offset to
-+	 * match the power range set by user with the power indices
-+	 * on PCDAC/PDADC table */
-+	for (i = 0; i < 16; i++) {
-+		rates[i] += ah->ah_txpower.txp_offset;
-+		/* Don't get out of bounds */
-+		if (rates[i] > 63)
-+			rates[i] = 63;
-+	}
-+
-+	/* Min/max in 0.25dB units */
-+	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
-+	ah->ah_txpower.txp_max_pwr = 2 * rates[0];
- 	ah->ah_txpower.txp_ofdm = rates[7];
- }
- 
-@@ -2591,16 +2599,37 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 	return 0;
- }
- 
--int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 mode, u8 txpower)
-+int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
- {
- 	/*Just a try M.F.*/
- 	struct ieee80211_channel *channel = &ah->ah_current_channel;
-+	u8 ee_mode;
- 
- 	ATH5K_TRACE(ah->ah_sc);
-+
-+	switch (channel->hw_value & CHANNEL_MODES) {
-+	case CHANNEL_A:
-+	case CHANNEL_T:
-+	case CHANNEL_XR:
-+		ee_mode = AR5K_EEPROM_MODE_11A;
-+		break;
-+	case CHANNEL_G:
-+	case CHANNEL_TG:
-+		ee_mode = AR5K_EEPROM_MODE_11G;
-+		break;
-+	case CHANNEL_B:
-+		ee_mode = AR5K_EEPROM_MODE_11B;
-+		break;
-+	default:
-+		ATH5K_ERR(ah->ah_sc,
-+			"invalid channel: %d\n", channel->center_freq);
-+		return -EINVAL;
-+	}
-+
- 	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
- 		"changing txpower to %d\n", txpower);
- 
--	return ath5k_hw_txpower(ah, channel, mode, txpower);
-+	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
- }
- 
- #undef _ATH5K_PHY
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index faede82..23d6fc8 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1001,7 +1001,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		 * Set TX power (FIXME)
- 		 */
- 		ret = ath5k_hw_txpower(ah, channel, ee_mode,
--					AR5K_TUNE_DEFAULT_TXPOWER);
-+					ah->ah_txpower.txp_max_pwr / 2);
- 		if (ret)
- 			return ret;
- 
--- 
-1.6.0.6
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
