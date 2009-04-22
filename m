@@ -1,129 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28153 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201AbZD1Wzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 18:55:49 -0400
-Subject: Re: regression IWl3945 - doesn't work with recent 2.6.30-rcX
-From: reinette chatre <reinette.chatre@intel.com>
-To: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <c4e36d110904270059m3e43d6ccl18cc2ec6954e5649@mail.gmail.com>
-References: <c4e36d110904220333u37304c79k6ab528f92b5f3718@mail.gmail.com>
-	 <20090422140107.GD3288@tuxdriver.com>
-	 <c4e36d110904241218x209a4b76kf271f7288f1a33da@mail.gmail.com>
-	 <c4e36d110904270059m3e43d6ccl18cc2ec6954e5649@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 28 Apr 2009 16:02:03 -0700
-Message-Id: <1240959723.1207.104.camel@rc-desk> (sfid-20090429_005601_345092_028008E7)
+Received: from xc.sipsolutions.net ([83.246.72.84]:60593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809AbZDVMPa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 08:15:30 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1240401205.3313.3.camel@localhost.localdomain>
+References: <1239837672.11795.46.camel@violet>
+	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <1240248008.4632.10.camel@johannes.local>
+	 <1240248385.5260.15.camel@localhost.localdomain>
+	 (sfid-20090420_192718_984250_38AB6869)  <1240248773.4632.13.camel@johannes.local>
+	 <1240343775.3327.3.camel@localhost.localdomain>
+	 <1240348792.17388.46.camel@johannes.local>
+	 <1240385542.3404.5.camel@localhost.localdomain>
+	 <1240391029.20308.1.camel@johannes.local>
+	 <1240391541.10072.2.camel@localhost.localdomain>
+	 <1240393523.21978.1.camel@johannes.local>
+	 <1240399028.10072.14.camel@localhost.localdomain>
+	 <1240401205.3313.3.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FyWd7nilbZ6svqOVEE4W"
+Date: Wed, 22 Apr 2009 14:14:57 +0200
+Message-Id: <1240402497.21978.12.camel@johannes.local> (sfid-20090422_141534_153467_78700ED6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-04-27 at 00:59 -0700, Zdenek Kabelac wrote:
-> 2009/4/24 Zdenek Kabelac <zdenek.kabelac@gmail.com>:
-> > 2009/4/22 John W. Linville <linville@tuxdriver.com>:
-> >> On Wed, Apr 22, 2009 at 12:33:03PM +0200, Zdenek Kabelac wrote:
-> >>> Hi
-> >>>
-> >>> I'm checking whether -rcX kernel could be usable on my
-> >>> T61/4GB/C2D/x86_64 - but wireless seems to be still out of
-> >>> functionality:
-> >>> I'm getting lots of weird trace-back messages and it looks like
-> >>> iwl3945 is not working at all.
-> >>> (attached messages from fresh build of -rc3 - but it never worked even in -rc1)
-> >>
-> >> Looks like this one did _not_ make -rc3:
-> >>
-> >> commit df833b1d73680f9f9dc72cbc3215edbbc6ab740d
-> >> Author: Reinette Chatre <reinette.chatre@intel.com>
-> >> Date:   Tue Apr 21 10:55:48 2009 -0700
-> >>
-> >>    iwlwifi: DMA fixes
-> >>
-> >>    A few issues wrt DMA were uncovered when using the driver with swiotlb.
-> >> ...
-> >>
-> >> It is in wireless-2.6 and should be in net-2.6 -- please try one of those kernels.
-> >
-> >
-> > I can confirm that current upstream linux commit
-> > 9f5a691253924fd033a58c6b1fed57bb0a4eccf4 works again with iwlwifi.
-> > and it already contains the patch you suggested to check.
-> >
-> 
-> 
-> While Wifi seems to be working well - I've noticed once attached long
-> INFO message during suspend.
-> 
-> Zdenek
-> 
-> -----------
-> 
-> Linux version 2.6.30-rc3-00324-g8087eae (gcc version 4.4.0 20090414
-> (Red Hat 4.4.0-0.34) (GCC) ) #55 SMP Fri Apr 24 20:22:26 CEST 2009
-> Command line: ro root=/dev/sda5 selinux=0 no_console_suspend
-> ...
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> virbr0: no IPv6 routers present
-> wlan0: authenticate with AP 00:11:d8:da:65:40
-> wlan0: authenticated
-> wlan0: associate with AP 00:11:d8:da:65:40
-> wlan0: RX AssocResp from 00:11:d8:da:65:40 (capab=0x401 status=0 aid=4)
-> wlan0: associated
-> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> wlan0: disassociating by local choice (reason=3)
-> audit(1240599276.009:18266): audit_enabled=0 old=1 auid=4294967295
-> ses=4294967295 res=1
-> wlan0: no IPv6 routers present
-> fuse init (API version 7.11)
-> wlan0: authenticate with AP 00:11:d8:da:65:40
-> wlan0: authenticated
-> wlan0: associate with AP 00:11:d8:da:65:40
-> wlan0: RX AssocResp from 00:11:d8:da:65:40 (capab=0x401 status=0 aid=4)
-> wlan0: associated
-> wlan0: no probe response from AP 00:11:d8:da:65:40 - disassociating
-> wlan0: deauthenticated (Reason: 7)
-> wlan0: authenticate with AP 00:11:d8:da:65:40
-> wlan0: authenticate with AP 00:11:d8:da:65:40
-> wlan0: authenticate with AP 00:11:d8:da:65:40
-> wlan0: authenticated
-> wlan0: associate with AP 00:11:d8:da:65:40
-> wlan0: RX ReassocResp from 00:11:d8:da:65:40 (capab=0x401 status=0 aid=4)
-> wlan0: associated
-> 
-> ..........
-> 
-> =========================================================
-> [ INFO: possible irq lock inversion dependency detected ]
-> 2.6.30-rc3-00324-g8087eae #55
-> ---------------------------------------------------------
-> swapper/0 just changed the state of lock:
->  (&(&priv->scan_check)->timer){+.-...}, at: [<ffffffff80250d90>]
-> run_timer_softirq+0x120/0x2e0
-> but this lock was taken by another, HARDIRQ-safe lock in the past:
->  (&priv->lock){-.-...}
-> 
-> and interrupts could create inverse lock ordering between them.
-> 
-> 
 
-The locking used to protect scan_check is not consistent and is so
-because we overusing the priv->lock spinlock. scan_check is used in
-three places (iwl_rx_scan_complete_notif, iwl3945_bg_request_scan, and
-iwl3945_set_mode). In iwl_rx_scan_complete_notif the access is protected
-with priv->lock, while the other two use priv->mutex. The protection in
-iwl_rx_scan_complete_notif with priv->lock is not necessary ... but a
-significant effort is required to change this. We are starting to move
-in this direction. A workaround will be to acquire priv->lock in
-iwl3945_bg_request_scan and iwl3945_set_mode, but that will be ugly. 
+--=-FyWd7nilbZ6svqOVEE4W
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-We can leave this code as is in 2.6.30 because inverse lock ordering is
-not possible here as priv->mutex cannot be obtained in
-iwl_rx_scan_complete_notif path as it (the mutex) sleeps and this code
-path doesn't (it is run in a tasklet).
+Hi,
 
-Reinette
+> > > I just don't see anything in the kernel that would ever set the
+> > > interface down, as indicated there.
+>=20
+> so I have installed the latest wireless-testing kernel now.
+>=20
+> CTRL-EVENT-SCAN-RESULTS=20
+> Trying to authenticate with 00:1f:f3:fa:58:59 (SSID=3D'HON Circle' freq=
+=3D2452 MHz)
+> Trying to associate with 00:1f:f3:fa:58:59 (SSID=3D'HON Circle' freq=3D24=
+52 MHz)
+> Could not read SSID from driver.
+> WPA: No SSID info found (msg 1 of 4).
+> Associated with 00:1f:f3:fa:58:59
+> WPA: Key negotiation completed with 00:1f:f3:fa:58:59 [PTK=3DCCMP GTK=3DC=
+CMP]
+> CTRL-EVENT-CONNECTED - Connection to 00:1f:f3:fa:58:59 completed (auth) [=
+id=3D1 id_str=3D]
+>=20
+> <starting dhclient wlan0 now>
+>=20
+> CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
+> l2_packet_receive - recvfrom: Network is down
 
+I still don't understand this. Is the AP disconnecting you? Are you
+running NM on the side?
+
+johannes
+
+--=-FyWd7nilbZ6svqOVEE4W
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ7wo+AAoJEKVg1VMiehFYRK8P/10zl02e2XnofHyMUqU4vA/y
+NdgTqm6gRx/FiXKKfjJzBp5hqJHe7dzuLYk39Dh0di0UnfY52aJsT7I5Hk+/cSX1
+V99tuolFOPqMap/5Zaha10Chl/R8DIDqsEgqc9nBcwfZ1/gzEof1s3Qq+eyExbwg
++ddrQBEsV5sC4GTdu0cmhSOrsno51fdDI9O7BxFx/hmniMro9pslTYDVR6pl34P2
+yCOCAUXzp21rPow8U/erF1JcTUsxAukKfU6d6Uyt5TiYfQZP1ZGyKbkKgxzSmZIE
+V30cJD66xzTGb9xyYc83ZTxQ0UJm9b57inwexiPmCb6Hq1uSd3cL/CYEH3MTtOjH
+cC1Tf7arINDr3a2X/6dNh6+8f28xhxfym5mDMyvr0mknEMXzrEEuqGwKKTApGAYX
+hWSTKEn4vfqW0DIJh7GhrY10VzqgULa9rlnhtdAxfY2U7xHz3N9NApK4CDPfkVFr
+Hkh7UuMWVS/x2HvadlKtbRd80bqyii/BnCgEBdUmpwtP32im8Fn/ikn9wxSzke3c
+TOlQK0/yb4NYHYawKP6gP1VqGIwdkdLAG55mKql26ukGU6LiOFdwF6yTwqLxCPpL
+B0Sq+bk2iKokUeDWAqaDfKsoTBCymkY5k1Z1JZN0KyTmFDTLdavvp5KIhiRo+NVB
+6IgFrt4p0v65YbR2DS9u
+=ek1t
+-----END PGP SIGNATURE-----
+
+--=-FyWd7nilbZ6svqOVEE4W--
 
