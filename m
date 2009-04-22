@@ -1,31 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:44356 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbZDCOLk (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:35095 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbZDVH1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 10:11:40 -0400
-Received: by bwz17 with SMTP id 17so985835bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 07:11:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2da21fe50903310240m2f18adf2ma23f095be397a9ea@mail.gmail.com>
-References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
-	<87ljqr58oa.fsf@litku.valot.fi> <2da21fe50903271208m1c369c88lba8399416dace43a@mail.gmail.com>
-	<8e92b4100903300238p4b0cbd3fh754a3dddbf904fa7@mail.gmail.com>
-	<2da21fe50903300631o39779ac9ge42252fd4697dce@mail.gmail.com>
-	<8e92b4100903302354x66276239m48a14f2182d959c7@mail.gmail.com>
-	<2da21fe50903310240m2f18adf2ma23f095be397a9ea@mail.gmail.com>
-Date: Fri, 3 Apr 2009 16:11:22 +0200
-Message-ID: <2da21fe50904030711o1c7744e6i1df68a27abc9e76f@mail.gmail.com> (sfid-20090403_161155_345581_74D2DD3F)
-Subject: Re: ath9k and power management
-From: Davide Pesavento <davidepesa@gmail.com>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>, mcgrof@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Apr 2009 03:27:23 -0400
+Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <874owhffe5.fsf@litku.valot.fi>
+References: <1239837672.11795.46.camel@violet>
+	 <1239875168.9737.10.camel@johannes.local>
+	 <1240247636.5260.11.camel@localhost.localdomain>
+	 <1240248008.4632.10.camel@johannes.local>
+	 <1240248385.5260.15.camel@localhost.localdomain>
+	 <1240248773.4632.13.camel@johannes.local>
+	 <1240343775.3327.3.camel@localhost.localdomain>
+	 <874owhffe5.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Wed, 22 Apr 2009 08:27:18 +0100
+Message-Id: <1240385238.3404.0.camel@localhost.localdomain> (sfid-20090422_092727_321071_BC3D586A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Any progress on this?
+Hi Kalle,
 
-Thanks,
-Davide
+> > so I have built the latest wireless-testing tree with a new patches sent
+> > by Reinette fixing the DMA issue. So far I have no problems and I am
+> > unable to re-produce it. However this is a different AP and I disabled
+> > the power control feature for now.
+> >
+> > I also updated wpa_supplicant and iw to the latest code and assume that
+> > no fix in there silently fixed it for me.
+> >
+> > So we are suspecting that this issue was because of me having 3GB of RAM
+> > and running on a 64-bit kernel. Does this makes sense and could be the
+> > problem why it kept failing until I unload the iwlagn driver?
+> 
+> I would say that don't make any assumptions until you manage to test
+> with the original AP. APs can be broken so many ways.
+
+I would agree with that in general, but I haven been using that AP for
+over a year now successfully with the 4965 card in my X61. No problems
+ever.
+
+Regards
+
+Marcel
+
+
