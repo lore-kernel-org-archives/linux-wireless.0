@@ -1,29 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:39082 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753980AbZDVTyI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 15:54:08 -0400
-Received: by bwz7 with SMTP id 7so164062bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:54:07 -0700 (PDT)
-To: Bob Copeland <me@bobcopeland.com>
+Received: from bu3sch.de ([62.75.166.246]:54017 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422AbZDVSan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2009 14:30:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: donpetrus@arcor.de
+Subject: Re:
+Date: Wed, 22 Apr 2009 20:28:46 +0200
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] wl12xx: enable station mode
-References: <1240371860-9001-1-git-send-email-me@bobcopeland.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 22 Apr 2009 22:54:05 +0300
-In-Reply-To: <1240371860-9001-1-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Tue\, 21 Apr 2009 23\:44\:18 -0400")
-Message-ID: <87y6tscvmq.fsf@litku.valot.fi> (sfid-20090422_215413_110257_6177EDA9)
+References: <24433858.1240423925259.JavaMail.ngmail@webmail10.arcor-online.net>
+In-Reply-To: <24433858.1240423925259.JavaMail.ngmail@webmail10.arcor-online.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200904222028.46967.mb@bu3sch.de> (sfid-20090422_203046_640421_5653E05E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+On Wednesday 22 April 2009 20:12:05 donpetrus@arcor.de wrote:
+> 
+> Hello, there is no possible to download  compat-wireless-2.6.tar.bz2 
+> After clicking on it nothing happens -
+> Thanks and best regards,
+> Petrus
 
-> Add the interface_modes bitmask.
-
-Applied.
+Please click harder.
 
 -- 
-Kalle Valo
+Greetings, Michael.
