@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:64294 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbZDPGAt (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4411 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211AbZDVDov (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 02:00:49 -0400
-Received: by fxm2 with SMTP id 2so223201fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 23:00:48 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: avoid crashing when no scan sdata
-References: <1239823995.20927.3.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 16 Apr 2009 09:00:46 +0300
-In-Reply-To: <1239823995.20927.3.camel@johannes.local> (Johannes Berg's message of "Wed\, 15 Apr 2009 21\:33\:15 +0200")
-Message-ID: <87skk9f88h.fsf@litku.valot.fi> (sfid-20090416_080052_485108_63492D81)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 21 Apr 2009 23:44:51 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: kalle.valo@nokia.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/3] wl12xx: enable station mode
+Date: Tue, 21 Apr 2009 23:44:18 -0400
+Message-Id: <1240371860-9001-1-git-send-email-me@bobcopeland.com> (sfid-20090422_054515_261080_CEE95616)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Add the interface_modes bitmask.
 
-> Using the scan_sdata variable here is terribly wrong,
-> if there has never been a scan then we fail. However,
-> we need a bandaid...
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: stable@kernel.org [2.6.29]
-> ---
-> John, for 2.6.29 and 2.6.30 we need this bandaid -- my new work to
-> properly fix this can only go into 2.6.31.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-Sorry, I did this mistake. Thanks for fixing it!
+Kalle, couple more minor updates here.
 
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 61e51bc..2e01295 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1239,6 +1239,7 @@ static int wl12xx_init_ieee80211(struct wl12xx *wl)
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		IEEE80211_HW_NOISE_DBM;
+ 
++	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl12xx_band_2ghz;
+ 
 -- 
-Kalle Valo
+1.6.0.6
+
+
