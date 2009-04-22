@@ -1,55 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40896 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752188AbZDPBIo (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:45674 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbZDVTzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 21:08:44 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <Kalle.Valo@nokia.com>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1239841291.25334.18.camel@johannes.local>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239841291.25334.18.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 16 Apr 2009 03:08:36 +0200
-Message-Id: <1239844116.11795.47.camel@violet> (sfid-20090416_030846_975400_60FBAE0B)
-Mime-Version: 1.0
+	Wed, 22 Apr 2009 15:55:35 -0400
+Received: by fxm2 with SMTP id 2so167638fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 12:55:33 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] wl12xx: remove struct platform device
+References: <1240371860-9001-1-git-send-email-me@bobcopeland.com>
+	<1240371860-9001-3-git-send-email-me@bobcopeland.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Apr 2009 22:55:31 +0300
+In-Reply-To: <1240371860-9001-3-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Tue\, 21 Apr 2009 23\:44\:20 -0400")
+Message-ID: <87prf4cvkc.fsf@litku.valot.fi> (sfid-20090422_215537_385776_F8034412)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Bob Copeland <me@bobcopeland.com> writes:
 
-> > After a long debugging session with Reinette we finally tracked down
-> > what is going on here. A full scan with this card takes 7-9 seconds and
-> > that seems to be too long and trigger IEEE80211_MONITORING_INTERVAL
-> > which then deauthenticates us with the AP (reason=6). 
-> 
-> Yeah, this is a bug. We analysed this problem a couple of days ago and I
-> thought Kalle was going to fix it -- maybe he forgot. I forgot what
-> exactly it was and how to fix it, hmm. Right now I'm confused and can't
-> seem to reproduce my analysis. I thought it had something to do with
-> using a different timer but we do seem to use the regular mgd.timer, so
-> I'm not sure.
-> 
-> > Problem then is
-> > that the attempt authenticate/associate with the AP fails with all the
-> > time (reason=2). Bringing the interface down/up again doesn't help. It
-> > seems that some internal mac80211 states are messed up. Some times the
-> > whole process stalls completely and nothing happens anymore. Only
-> > unloading and reloading the driver or rebooting helps.
-> 
-> Hmm. Reason 2 is "Previous authentication no longer valid" which would
-> seem we get confused wrt. being authenticated or not (ie. we think we
-> are, but are not). Jouni might know? Can you try wpa_supplicant from git
-> with -Dnl80211?
+> As far as I can tell this was only for the sysfs file, so now
+> that it's gone we can kill the wl12xx_device struct.
 
-as I wrote, that is exactly what I am using. Trying to get away from
-this WEXT crap ;)
+Agree, applied.
 
-Regards
-
-Marcel
-
-
+-- 
+Kalle Valo
