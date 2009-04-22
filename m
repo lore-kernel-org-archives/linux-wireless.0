@@ -1,111 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:54840 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763886AbZD3OLI (ORCPT
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:59850 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbZDVTgI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 10:11:08 -0400
-Date: Thu, 30 Apr 2009 11:11:04 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>,
-	Matthew Garrett <mjg@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC v6] rfkill: rewrite
-Message-ID: <20090430141104.GB28027@khazad-dum.debian.net>
-References: <1238349195.24972.5.camel@johannes.local> <1239745712.4205.17.camel@johannes.local> <1239750483.4205.28.camel@johannes.local> <20090430031903.GD18827@khazad-dum.debian.net> <1241081621.27613.14.camel@johannes.local>
+	Wed, 22 Apr 2009 15:36:08 -0400
+Message-ID: <49EF7190.7010004@lwfinger.net> (sfid-20090422_213614_123419_64A30C25)
+Date: Wed, 22 Apr 2009 14:35:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1241081621.27613.14.camel@johannes.local>
+To: Eugene Sobol <eugene.sobol@promwad.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 diversity
+References: <200904221953.23265.eugene.sobol@promwad.com>
+In-Reply-To: <200904221953.23265.eugene.sobol@promwad.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 30 Apr 2009, Johannes Berg wrote:
-> On Thu, 2009-04-30 at 00:19 -0300, Henrique de Moraes Holschuh wrote:
-> > I am halfway on the thinkpad-acpi conversion. It is going slow because
-> > I have to cleanup the entire thing to have the code look even remotely
-> > sane now that HW and SW states are to be tracked separately by the
-> > backend driver, and I lost the RFKILL_STATE_* stuff.
+Eugene Sobol wrote:
 > 
-> Hmm. I didn't think it was that much of a problem for the other drivers
-> at least.
+> This is reworked patch for antenna diversity in rtl8187 compat wireless.
+>  - removed proc file system functionality 
+>  - reworked calculation of agc 
+>  - fixed codestyle
+> Next step I will create for 2.6.30 RC2 
 
-I will cope, it just slows things down.  What is really annoying me is that
-I have to find a way to get the new rfkill running on 2.6.28 to be able to
-test the code properly.  Fortunately, that just means net/rfkill, as the
-only module I need that connects to rfkill is thinkpad-acpi itself.
+It would be better if the patch were made for wireless-testing, which contains
+some changes that will not appear in mainline until 2.6.31.
 
-> > Also, due to races, it is _impossible_ to assure the backend driver
-> > that the set_block hook will never be called when the radio is
-> > hard-blocked.  Best to change the description of that hook to make it
-> > clear that it could happen, but that the rfkill core will try to
-> > optimize away such changes.  Here's the race:
-> > 
-> >            A                                  B
-> > rfkill_set_block
-> >     saves state in "prev"
-> >     ...                            rfkill_set_hw_state(true)
-> >     call set_block hook
-> >       but radio IS hard-blocked
-> >       and the core WAS informed
-> >       of this
-> 
-> Good point. I wonder what's more important -- it would be almost trivial
-> to change this by using a spinlock instead of atomic bit operations.
+--snip--
 
-Yeah, as long as it is a spinlock variant that can be used safely in any
-context, it should work fine, as contention would be quite rare (unless
-there is a pathological case in one driver that makes it always call some
-set_foo just when the core is going to call it back...)
+        {USB_DEVICE(0x03f0, 0xca02), .driver_info = DEVICE_RTL8187},
+        /* Sitecom */
+        {USB_DEVICE(0x0df6, 0x000d), .driver_info = DEVICE_RTL8187},
++
 
-> > If I am not wrong, one could change rfkill_set_sw_state and
-> > rfkill_set_states to return an error if rfkill_set_block is on the way
-> > (that can be done lockless).  For rfkill_set_states, document that the
-> > hw state WILL be updated regardless, but that the sw state might not
-> > be.
-> > 
-> > Or one could kick the problem to the backend driver (which will have
-> > any required locking anyway), by giving the set_block hook the duty of
-> > calling set_sw_state when it succeeds.  The return status might be
-> > kept should we ever start passing it down to other layers like
-> > userspace, or you can remove it.
-> 
-> Thanks for your analysis. It does seem like a problem, and even locking
-> in rfkill can't really avoid the problem [1]. However, why would we
-> require the driver to postpone that? Your idea is sound, but I think we
-> can do it in the core. It might require a spinlock there, but that's
-> acceptable, I didn't use atomic operations to make it faster but to make
-> it simpler.
+What is the vendor for your device? At http://www.linux-usb.org/usb.ids, this ID
+is shown as belonging to A-MAX Technology Macao Commercial Offshore Co. Ltd.
+That is quite a mouthful, and the above line might say "A-Max Technology",
+unless you have a different vendor.
 
-Well, as long as the race is closed, and the kernel doesn't stay around
-spinning with interrupts disabled for long periods, I'm fine :-)
++       {USB_DEVICE(0x13d1, 0xabe6), .driver_info = DEVICE_RTL8187},
++
 
->  * rfkill_set_block can set a flag "I'm in an update"
->  * a concurrent rfkill_set_sw_state will check that flag, and update the
->    "prev" variable instead of the real variable
->  * on errors, rfkill_set_block will then revert to whatever the last
->    set_sw_state said
+There should not be a blank line here.
 
-That could work.  It is still required to make it clear that the set_block
-hook can be called with a hardware block active, even if it normally won't
-be, so that backend drivers are aware of the possibility.
+--snip--
 
-> That way, if the driver returns an error from ops->set_block, we will
-> really revert to what the driver last told us with set_sw_state. It
-> would seem to get this prev/in-update handling correct we need to add a
-> spinlock, but concurrent rfkill_set_block()s are already prevented by
-> the mutex so no additional locking would be needed there.
-> 
-> Does that sound correct/acceptable?
+@@ -724,6 +738,8 @@
+        u32 reg;
+        int ret;
 
-I think so, but I'd need to look at the finished patch to be even remotely
-sure. I am not very good at Linux locking yet, in particular I am quite weak
-at the more esotheric (but really useful) readers/writers locks, RCU, and
-other such stuff.
++       priv->hw = dev;
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+This will not be needed. See the comment in the patch for rtl8187.h.
+
+--snip--
+
+@@ -970,6 +995,85 @@
+        rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
+ }
+
++#define ANTENNA_DIVERSITY_TIMER_PERIOD 1000
++#define ANTENNA_SWITCH_TIMER_PERIOD    300
++#define ANTENNA_MAX_AGC_DIFF 15
++void sw_antenna_diversity_timer_callback(struct rtl8187_priv *priv)
++{
++       static int average_old;
++       int average_current = 0;
++       int i, sub;
++
++       if (!priv->ant_diversity_enabled)
++               return;
++       for (i = 0; i < VAL_ARRAY_SIZE; ++i)
++               average_current += priv->ant_diversity.agc_array[i];
++
++       average_current /= VAL_ARRAY_SIZE;
++       sub = average_current - average_old;
++       if (sub > ANTENNA_MAX_AGC_DIFF) {
++               priv->ant_diversity.switch_to ^= 1;
++               queue_delayed_work(priv->hw->workqueue, &priv->antenna_work,
++                               msecs_to_jiffies(ANTENNA_SWITCH_TIMER_PERIOD));
+
+Should be priv->dev->workqueue. Everywhere you have priv->hw, it should be
+priv->dev.
+
+--snip--
+
+@@ -1123,6 +1229,7 @@
+                        break;
+                default:
+                        chip_name = "RTL8187vB (default)";
++                       priv->ant_diversity_enabled = 1;
+
+Is the default branch correct here? What is the value read from 0xFFE1? I'm
+concerned that antenna diversity might be turned on for some unit that doesn't
+support it.
+
+The rtl8187se vendor driver in drivers/staging does the equivalent of:
+
+        rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, \
+		 RTL818X_EEPROM_CMD_CONFIG);
+        if (rtl818x_ioread8(priv, &priv->map->CONFIG2) & 1 << 6)
+		priv->ant_diversity_enabled = 1;
+	else
+		priv->ant_diversity_enabled = 0;
+
+This method should be tested to see if it works for USB devices in general, and
+yours in particular.
+
+--snip--
+
+ struct rtl8187_priv {
+        /* common between rtl818x drivers */
+        struct rtl818x_csr *map;
+        const struct rtl818x_rf_ops *rf;
+        struct ieee80211_vif *vif;
++       struct ieee80211_hw *hw;
+
+Look about 15 lines down and see the "struct ieee80211hw *dev". It should be
+used. It is badly named, but changing it would be disruptive.
+
+Good work. This version is much improved.
+
+Larry
