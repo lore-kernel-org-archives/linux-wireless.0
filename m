@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:43372 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbZD3J6L convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57530 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752417AbZDVRI6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 05:58:11 -0400
-Received: by bwz7 with SMTP id 7so1693566bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2009 02:58:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <efe7343f0904300251q4650d17nb062cc28b011580d@mail.gmail.com>
-References: <wfbpqkvlm0.fsf@calligramme.charmers>
-	 <wfzldytr8l.fsf@calligramme.charmers>
-	 <efe7343f0904300251q4650d17nb062cc28b011580d@mail.gmail.com>
-Date: Thu, 30 Apr 2009 10:58:09 +0100
-Message-ID: <efe7343f0904300258u7d29ff3cu9ca8ea3b3038ebab@mail.gmail.com> (sfid-20090430_115816_491036_20248F26)
-Subject: Re: rt73usb Access point status
-From: Luis Correia <luis.f.correia@gmail.com>
-To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+	Wed, 22 Apr 2009 13:08:58 -0400
+Date: Wed, 22 Apr 2009 20:08:52 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Marcel Holtmann <marcel@holtmann.org>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
+Message-ID: <20090422170852.GA7298@jm.kir.nu> (sfid-20090422_190902_787643_D1BB9D20)
+References: <1240419177.12282.3.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1240419177.12282.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jon,
+On Wed, Apr 22, 2009 at 05:52:57PM +0100, Marcel Holtmann wrote:
 
-got the specifics.
+> I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
+> instead of WEXT. I don't seem to be able to control the from the command
+> line and the -D option doesn't take.
 
-On Thu, Apr 30, 2009 at 10:51, Luis Correia <luis.f.correia@gmail.com> =
-wrote:
-> Hi,
->
-> On Thu, Apr 30, 2009 at 10:39, Jon Fairbairn <jon.fairbairn@cl.cam.ac=
-=2Euk> wrote:
->>
->> Since no one responded to my previous post, I thought maybe
->> the subject line wasn't attractive enough...
->>
->> On the wiki at <http://wireless.kernel.org/en/users/Drivers>
->> in the AP column it says "yes" with a footnote to the effect that
->> it's "in development". =A0Please can someone clarify this for me?
->>
->> Can I reasonably expect to get an AP going with a usb dongle
->> that requires this driver? Building the latest patched
->> version of the driver is fine, but modifying the driver code
->> would be beyond my (present) capabilities.
->
-> Yes, you would manage to get it going without major hassles, but as
-> always YMMV...
->
-> I know that the Portuguese Classmate-PC clone, Magalh=E3es, has a
-> rt73usb and the guys have managed to get it going with a 2.6.27 kerne=
-l
-> + hostapd. I can ask for specifics if you need.
+I would assume you are doing this with NM. You could either change it to
+register the interface (this is not from -D option, but from the D-Bus
+message) with the nl80211 driver or try to build wpa_supplicant without
+WEXT support (which would make the nl80211 wrapper the default one). I
+don't think either of these are yet acceptable as a generic solution,
+but making NM request driver "nl80211,wext" could be a suitable first
+step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
+first try with nl80211 and if needed, fall back to WEXT).
 
-The solution they have found is not optimal, b ut works in their scenar=
-io.
+> Can we fix this somehow? I really wanna get rid of using WEXT.
 
-You will need to modify hostapd, according to this blog post:
-http://eznemegy.blog.hu/2008/12/14/using_rt2x00_wireless_driver_with_ho=
-stapd
+There still one remaining WEXT operation even with driver_nl80211.c in
+wpa_supplicant, so we are not yet there, but there is work going on in
+getting that added to nl80211 after which point -Dnl80211 (or
+-Dnl80211,wext for more likely distro use) should allow this goal to be
+met.
 
-HTH
-
->> --
->> J=F3n Fairbairn =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 Jon.Fairbairn@cl.cam.ac.uk
-
-Luis Correia
-rt2x00 project admin
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
