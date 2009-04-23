@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:62832 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730AbZD2UP1 (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:49966 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754362AbZDWKgf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2009 16:15:27 -0400
-Received: by fxm2 with SMTP id 2so1416280fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2009 13:15:26 -0700 (PDT)
-Subject: [BUG] Connection fails after few minutes (iwl3945)
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 29 Apr 2009 23:15:21 +0300
-Message-Id: <1241036121.9017.5.camel@maxim-laptop> (sfid-20090429_221531_809530_6073C29C)
-Mime-Version: 1.0
+	Thu, 23 Apr 2009 06:36:35 -0400
+Received: by ewy24 with SMTP id 24so424797ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 03:36:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1240442334.14995.12.camel@localhost.localdomain>
+References: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com>
+	 <1240442334.14995.12.camel@localhost.localdomain>
+Date: Thu, 23 Apr 2009 12:36:33 +0200
+Message-ID: <5b8543210904230336j177998c4m1e0af03fbb3584df@mail.gmail.com> (sfid-20090423_123638_386390_3F8D98D2)
+Subject: Re: Measure RSSI in adhoc networks
+From: Kai Timmer <email@kait.de>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I usually use iwlwifi-git as my main kernel.
+2009/4/23 Dan Williams <dcbw@redhat.com>:
+> You can only get an RSSI if there are other nodes in the network, and
+> then you get the RSSI of *that* node, as received by your node. =C2=A0=
+You
+> can't measure your own RSSI, because RSSI =3D *Received* Signal Stren=
+gth
+> Indicator, and you can't really receive your own traffic since you're
+> radiating tons of power on TX and that completely deafens the RX chai=
+n.
 
-I have just pulled (actually I did that yesterday, but nothing changed
-meanwhile), and now wireless ceases to work after few minutes.
-(reassociation helps for another few minutes)
+Ok, that was clear to me. I don't know where you read that i want my
+own RSSI? That would just make no sense.
 
-I'll bisect this.
+> Not all drivers report RSSI in adhoc mode at this time. =C2=A0But eve=
+n if
+> they did, they could only report RSSI when they receive a beacon or
+> traffic from some other node in the adhoc network, and that's pretty
+> useless because it doesn't give you a general quality of the "network=
+",
+> it gives you a specific quality of the radio path between two points =
+in
+> the network.
 
-I noticed that 'iw dev  wlan0 station dump' reports large inactive
-times, but tx/rx continues to increase.
+Maybe i should point out, what i am trying to do :)
+I need the RSSI values for distance measurements between the nodes. So
+what i need is not a "quality value" for the whole network, but the
+recieved mW from every reachable point in the network. So i think the
+RSSI value for every network node (if i can print them out seperatly)
+should do the job.
 
-Only change in configuration, was that I disabled rfkill support.
-
-Last known working version was around 2.6.30-rc2.
-
-Best regards,
-	Maxim Levitsky
-
+Greets,
+--=20
+Kai Timmer
+Email : email@kait.de
+Jabber: kai@kait.de
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
