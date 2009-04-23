@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:21457 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397AbZDIOUh (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755762AbZDWIQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 10:20:37 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so701735fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 07:20:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1239263762.32594.19.camel@johannes.local>
-References: <87ljqamktq.fsf@litku.valot.fi>
-	 <1239263762.32594.19.camel@johannes.local>
-Date: Thu, 9 Apr 2009 17:20:34 +0300
-Message-ID: <da94abde0904090720t3c9d5f88ta25b2b2bf71cba35@mail.gmail.com> (sfid-20090409_162041_373130_798E3D50)
-Subject: Re: [PATCH] fix iwl3945 registration regression
-From: Kalle Valo <kalle.valo@iki.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 23 Apr 2009 04:16:53 -0400
+Subject: Re: [PATCH] mac80211: calculate maximum sleep interval
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <874owfdctm.fsf@litku.valot.fi> (sfid-20090423_095534_138805_55F8E4DE)
+References: <1240418677.30082.3.camel@johannes.local>
+	 <874owfdctm.fsf@litku.valot.fi> (sfid-20090423_095534_138805_55F8E4DE)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AAbRo/uupmrmRW/24Kae"
+Date: Thu, 23 Apr 2009 10:16:14 +0200
+Message-Id: <1240474574.30082.171.camel@johannes.local> (sfid-20090423_101721_740850_11ADF2B1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 9, 2009 at 10:56 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> I forgot that iwl3945 registration is separate from iwlagn.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks, this fixed the problem for me.
+--=-AAbRo/uupmrmRW/24Kae
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tested-by: Kalle Valo <kalle.valo@iki.fi>
+On Thu, 2009-04-23 at 10:55 +0300, Kalle Valo wrote:
 
-Although I wasn't able to get iwl3945 working yet:
+> > + * @max_sleep_interval: the maximum number of beacon intervals to slee=
+p for
+> > + *	before checking the beacon for a TIM bit (managed mode only); this
+> > + *	value will be only achievable between DTIM frames, the hardware
+> > + *	needs to check for the multicast traffic bit in DTIM beacons.
+> > + *	This variable is valid only when the CONF_PS flag is set.
+>=20
+> I would prefer to call it max_sleep_period. Or maybe even wakeup period,
+> because it's about waking up here.
+>=20
+> For me interval, for example beacon interval, means that the unit is TU.
+> But this might be just me.
 
-Apr  9 17:06:57 tikku kernel: [   16.586612] iwl3945: Intel(R)
-PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26kd
-Apr  9 17:06:57 tikku kernel: [   16.591406] iwl3945: Copyright(c)
-2003-2009 Intel Corporation
-Apr  9 17:06:57 tikku kernel: [   16.596203] iwl3945 0000:03:00.0: PCI
-INT A -> GSI 17 (level, low) -> IRQ 17
-Apr  9 17:06:57 tikku kernel: [   16.600996] iwl3945 0000:03:00.0:
-setting latency timer to 64
-Apr  9 17:06:57 tikku kernel: [   16.660038] iwl3945 0000:03:00.0:
-Tunable channels: 13 802.11bg, 23 802.11a channels
-Apr  9 17:06:57 tikku kernel: [   16.664799] iwl3945 0000:03:00.0:
-Detected Intel Wireless WiFi Link 3945ABG
-Apr  9 17:06:57 tikku kernel: [   16.669786] iwl3945 0000:03:00.0: irq
-29 for MSI/MSI-X
-Apr  9 17:06:57 tikku kernel: [   16.675157] phy0: Selected rate
-control algorithm 'iwl-3945-rs'
-Apr  9 17:06:57 tikku kernel: [   16.681674] phy0: Failed to initialize wep: -2
-Apr  9 17:06:57 tikku kernel: [   16.695543] iwl3945 0000:03:00.0:
-Failed to register hw (error -2)
-Apr  9 17:06:57 tikku kernel: [   16.700576] iwl3945 0000:03:00.0: PCI
-INT A disabled
-Apr  9 17:06:57 tikku kernel: [   16.705359] iwl3945: probe of
-0000:03:00.0 failed with error -2
+Good argument. I'll post a follow-up patch to rename it (to make it
+easier).
 
-Maybe this is the infamous module loading bug I see people talking
-about? I'll investigate it later.
+johannes
 
-> This looks like my mistake, sorry!
+--=-AAbRo/uupmrmRW/24Kae
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-No problem! That's why we are here, testing latest and greatest wireless code :)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Kalle
+iQIcBAABAgAGBQJJ8CPLAAoJEKVg1VMiehFYgQcP+wRaT0Mb1ZztjzqhjbZYaBU5
+2247N+Z43qDlRlAGkg1okudh9Md4/Lc6MSpJQAd+JlWpRhvx1dL9cjrKsSRM3kk+
+jnyXrX+1cwYeElQFR7wGXHYr82Wcp02Y4T1RDD8NDMhvlY1xsyK+s1Cw6Xl8dnhf
+6D5K/LVuWhP2rWcZOpiRAqNLJ9nToD9FlaiV6au/qnVZ530DCRnZqVSuLvTBZadS
+meY4T8rBib14EwIMTDIsqFCJZH6tAoIgPkOnrgxjDoolQMI8XAD8wxGvaIV31yzM
+xhxZMlr+6g2YzZgIaDGz8zbeylRv3ugZUUaxaYODBsVW0Mm3mo4rSYNYE+TxjFMz
+83MW6+rcR1vjWJYe3vIHOsC0X646iT5IFBuJDzvSziNGJfxT2RNNNW2JR7wVKcss
+ZBVbbfFvHt8CQ4X7KpMzjD45l28OejBZ2HfXtnxkkNrgtkzyV8M7fCDgPtR+X2s2
+mwXHHsI4AFOF2WwKBuyT7RSxXaV43Gy1MBfprOru7IZsFFctJH1nXU+afL+4GuJi
+O0ouZvbweGPI2F+/6rQ3vSGx1btOcCp27vExkTKxXLi9Kl47iBH9RL3ZJE9jOiBK
+Qv5GRIDJXEJO/XzsnAbBnB+0cN00HGQUFh74bo2Sx8ZbZW03qlowepNcJKHx8Boc
+oAgH0ZefnG1zEyeOvzt+
+=2uAB
+-----END PGP SIGNATURE-----
+
+--=-AAbRo/uupmrmRW/24Kae--
+
