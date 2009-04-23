@@ -1,84 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35299 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754101AbZDCJYD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 05:24:03 -0400
-Subject: Re: [PATCH 4/5] cfg80211: check allowed channel type upon
- userspace requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1238711166-2208-5-git-send-email-lrodriguez@atheros.com>
-References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
-	 <1238711166-2208-5-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QFGJdNLX+zcJ3PaoLnwY"
-Date: Fri, 03 Apr 2009 11:23:27 +0200
-Message-Id: <1238750607.27712.14.camel@johannes.local> (sfid-20090403_112406_038181_B96DE74B)
+Received: from mga02.intel.com ([134.134.136.20]:5489 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751163AbZDWRMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2009 13:12:10 -0400
+Subject: Re: [RFC/RFT] mac80211: turn off radio when idle
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <1240446135.30082.170.camel@johannes.local>
+References: <1240446135.30082.170.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 10:18:16 -0700
+Message-Id: <1240507096.27723.14.camel@rc-desk> (sfid-20090423_191214_953451_9931261D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-QFGJdNLX+zcJ3PaoLnwY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2009-04-22 at 17:22 -0700, Johannes Berg wrote:
+> When we aren't doing anything in mac80211, we can turn off
+> the radio. Not doing anything means:
+> 
+>  * no monitor interfaces
+>  * no AP/mesh/wds interfaces
+>  * any station interfaces are in DISABLED state
+>  * any IBSS interfaces aren't trying to be in a network
+>  * we aren't trying to scan
+> 
+> By creating a new function that verifies these conditions and
+> calling it at strategic points where the states of those
+> conditions change, we can easily make mac80211 turn off the
+> radio whenever we are idle to save power.
+> 
+> Additionally, this fixes a small quirk where a recalculated
+> powersave state is passed to the driver even if the hardware
+> is about to stopped completely.
+> 
+> Finally, also return an error (-ENOLINK) when somebody tries
+> to join an IBSS, connect to an AP or scan when the radio was
+> manually disabled with iwconfig.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> This totally messes up iwlwifi: http://paste.pocoo.org/show/113789/
+> 
+> You'll see:
+> [ 1455.006896] phy0: turning off radio - idle
+> ...
+> [ 1455.020180] phy0: turning on radio - scan
+> [ 1455.020202] ieee80211 phy0: U iwl_mac_config enter to channel 1 changed 0x1
+> [ 1455.031724] ieee80211 phy0: U iwl_mac_config leave - RF-KILL - waiting for uCode
+> [ 1455.031739] ieee80211 phy0: U iwl_mac_config leave
+> [ 1455.031752] ieee80211 phy0: U iwl_mac_hw_scan enter
+> [ 1455.031764] ieee80211 phy0: U iwl_mac_hw_scan leave - not ready or exit pending
+> [ 1455.031798] phy0: turning off radio - idle
+> 
+> at that point, things get so confused that you can't even scan any more
+> because something isn't properly reporting to cfg80211 that the scan
+> ended (but wasn't successful.)
 
-On Thu, 2009-04-02 at 18:26 -0400, Luis R. Rodriguez wrote:
+This seems related to the discussion about a patch we tried to submit.
+See
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/30196/focus=30280
 
-> @@ -457,6 +457,24 @@ static int nl80211_set_wiphy(struct sk_buff *skb, st=
-ruct genl_info *info)
->  		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
->  			goto bad_res;
-> =20
-> +		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS ||
-> +		    channel_type =3D=3D NL80211_CHAN_HT40PLUS)
-> +			if (chan->flags & IEEE80211_CHAN_NO_HT40)
-> +				goto bad_res;
-> +
-> +		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS &&
-> +		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
-> +			goto bad_res;
-> +		else if (channel_type =3D=3D NL80211_CHAN_HT40PLUS &&
-> +			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
-> +			goto bad_res;
-> +
-> +		/*
-> +		 * At this point we know if that if HT40 was requested
-> +		 * we are allowed to use it and the extension channel
-> +		 * exists.
-> +		 */
-> +
->  		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS)
->  			sec_freq =3D freq - 20;
->  		else if (channel_type =3D=3D NL80211_CHAN_HT40PLUS)
+Reinette
 
-And here you should remove the code below this where we still see the
-first three lines.
-
-johannes
-
---=-QFGJdNLX+zcJ3PaoLnwY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ1dWNAAoJEKVg1VMiehFYMscP+wXwUatyDRo6bd8vd8yXGOCw
-gOwYGcOE8MCCsaeUnt19xxrtCCEbK24uHzusFC0BKL7QVsVsXCFaV4uclmMUvruA
-lze08zDQxTd8NVT+JYr6nAn4SthATZce9MZ8liAAtUkimSfXMSjBTLt0hmjNj7wg
-2bLl+DpH1Xwmil2UQj5spfglo8HH08/jUk1Xyf4XTqr1fyPb2NJzqncI1p5x3LDG
-fY8wPGElYHt5jEwXuJA6V34iT9fHXRyyb93mxYG59WcEdvKQOw587vOrNW+htHNA
-Ej3jIfbnwLZ7RF5/q1J+tWsMs6zuB4EDGVcATPnM8ynTmjxzMG1YcYZlW7JsDuyZ
-s6hJPAvITWJgdPVxxN4vWrgVdVxYh13NLkCfK0/zk/cPRkKg+Dol8u4Wj0/4oSVX
-6uZqC81ubMGnid4IqJIVOt1WC6plVZWDClJjpdFU/HyfJcge2SKuWjGzlZXk6o2w
-mKBOaR7EVyqmSysnwzxNpgj+2RRREMLUPXHwbKRBejVfe6YksSLds9LY7VSlldYF
-gZQuQqqy3kTDtqOKI2gu9GFup46NKGpa8rwab2c3Y0VFi5devDitGbtQU8J5DaY7
-tg8snL4RJl2mUH0NFpIwV9BEm6c+KHtv1o0F50SK8WWe1FGzbG1YfOnbUq1s9OFN
-O0yo0rwS1/M4ijLktj3X
-=RZQr
------END PGP SIGNATURE-----
-
---=-QFGJdNLX+zcJ3PaoLnwY--
 
