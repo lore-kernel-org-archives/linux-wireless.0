@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44608 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758167AbZDSOho (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 10:37:44 -0400
-Subject: Re: [RFC/RFT] cfg80211/nl80211: add IBSS API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1240151621.898.13.camel@johannes.local> (sfid-20090419_163346_662878_5F0F1754)
-References: <1240094996.21583.1.camel@johannes.local>
-	 (sfid-20090419_005015_625875_1781AFCD) <1240147370.898.0.camel@johannes.local>
-	 <20090419142631.158790@gmx.net>
-	 (sfid-20090419_162703_506410_10175D69)  <1240151621.898.13.camel@johannes.local>
-	 (sfid-20090419_163346_662878_5F0F1754)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QP+RYCpP8hgKof0OWdlc"
-Date: Sun, 19 Apr 2009 16:37:42 +0200
-Message-Id: <1240151862.898.14.camel@johannes.local> (sfid-20090419_163746_719531_29EA15A2)
+Received: from mx2.redhat.com ([66.187.237.31]:33990 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750890AbZDWK4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2009 06:56:54 -0400
+Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <1240475973.30504.1.camel@localhost.localdomain>
+References: <1240419177.12282.3.camel@localhost.localdomain>
+	 <20090422170852.GA7298@jm.kir.nu>
+	 <1240426517.12282.11.camel@localhost.localdomain>
+	 <1240441752.14995.8.camel@localhost.localdomain>
+	 <1240475973.30504.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 06:58:01 -0400
+Message-Id: <1240484281.18245.16.camel@localhost.localdomain> (sfid-20090423_125658_802666_36563851)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-04-23 at 09:39 +0100, Marcel Holtmann wrote:
+> Hi Dan,
+> 
+> > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
+> > > > > instead of WEXT. I don't seem to be able to control the from the command
+> > > > > line and the -D option doesn't take.
+> > > > 
+> > > > I would assume you are doing this with NM. You could either change it to
+> > > > register the interface (this is not from -D option, but from the D-Bus
+> > > > message) with the nl80211 driver or try to build wpa_supplicant without
+> > > > WEXT support (which would make the nl80211 wrapper the default one). I
+> > > > don't think either of these are yet acceptable as a generic solution,
+> > > > but making NM request driver "nl80211,wext" could be a suitable first
+> > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
+> > > > first try with nl80211 and if needed, fall back to WEXT).
+> > > 
+> > > I am doing manual testing and with ConnMan. However I would prefer to
+> > > have a global driver setting "nl80211,wext" that I can give on the
+> > > command line and that will then chosen as default if the addInterface
+> > > method doesn't give a driver. I really don't need a per interface
+> > > setting here.
+> > 
+> > Um, you can specify a driver for the interface you add in the dbus call
+> > for addInterface.  Add a "driver" key to your dict with the driver you
+> > want in the value.  Is there a bug with that?
+> 
+> I know that I can do that. I was just looking for a global configuration
+> switch to default to nl80211,wext via D-Bus system activation and not
+> via changing the code.
 
---=-QP+RYCpP8hgKof0OWdlc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Even with system activation you still need to call addInterface, which
+can take the driver.  I still don't quite understand what you're getting
+at here, I guess...  When you say "not change code" you mean in the
+process that's calling wpa_supplicant?
 
-On Sun, 2009-04-19 at 16:33 +0200, Johannes Berg wrote:
+Dan
 
-> When you want to create an IBSS on channel 5, what do you do?
->=20
-> I think you have to
-> 	iwconfig wlan0 essid test
-> 	iwconfig wlan0 channel 5
-> 	iwconfig wlan0 ap off # clear fixed channel bit
->=20
-> which is ... weird. OTOH with mac80211 you can also say
-> 	iconfig wlan0 channel -1
-
-Ah, there's "iwconfig wlan0 channel auto" as an alias for this, I guess
-that's an acceptable way to do it.
-
-johannes
-
---=-QP+RYCpP8hgKof0OWdlc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ6zczAAoJEKVg1VMiehFY3bUP/iaT7bz2G5Nm/Z7voK9MWY0+
-6082bVWjy7+UNC78EP0JngLEU7eOBAdS5Ao7gJ6ZUV1ioifmk9sPd68VuKOOPMcE
-LzK0Wzs2ZiYkJvFIms9f2e7izdBui/QUVq5ypn/75vaPNAm+7Mha35R915PkviHC
-ZRWA8lhCOSecmLoU8oXRcxgOJFXCNDjupNGCFkUFX+9NUZvN+WFGQ7hpDVR2w51z
-CU2mix1tmpR6WV+k7U2dBauek/rFqp7FwVXZD0HIZsnln6Wc77Rzo7heK/BjcAAZ
-1TxeZSb7KJ/xTDxeNc32hFbK1uVqgx02X+pvP4SpOaMqYCKgzKG00PSFEeqkosvw
-onaFaTiN1iURBz/9fTkNWaf8pGVdJxxZzRG9mG8aTOcASoUrDYV8bcW+xgjL4uCa
-UOfkDf/6LYa9UzyQypVhukLkBC+vVqPO20l7xmSq/NcDBhft8CTM9WnA7oF6XZpO
-YkVogMnw5sY4J2azbvJf8TxVwGTRS8LVkpEYG++F2cbJjHGdd2+fXjAElA05L8Yn
-aINc1/AQvmIVuhER+COpRZmPd1ao4AShxBymq8HBkxEISrSVgoBPVyJYq7AhWqO+
-XkmWPSEa4AUmVWxzqzkGsyChDznLxBCL3hPUX8Z2HSCCWI2gQZ+cPmucTazfz7yP
-mpZnq1SPE4hbGtorNeAr
-=D3qc
------END PGP SIGNATURE-----
-
---=-QP+RYCpP8hgKof0OWdlc--
 
