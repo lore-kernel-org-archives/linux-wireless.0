@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48803
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752169AbZDZAp4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 20:45:56 -0400
-Date: Sat, 25 Apr 2009 17:45:49 -0700 (PDT)
-Message-Id: <20090425.174549.207994669.davem@davemloft.net> (sfid-20090426_024650_012670_0626A4F5)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-04-24
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090424200504.GC3309@tuxdriver.com>
-References: <20090424200504.GC3309@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:42452 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751576AbZDWRR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2009 13:17:27 -0400
+Subject: Re: [PATCH] iwlwifi: notify on scan completion even when shutting
+ down
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1240476304.30082.174.camel@johannes.local>
+References: <1240476304.30082.174.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 10:23:34 -0700
+Message-Id: <1240507414.27723.15.camel@rc-desk> (sfid-20090423_191730_625998_9D02451D)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 24 Apr 2009 16:05:05 -0400
-
-> Here is a huge pull request for net-next-2.6, the first one this
-> cycle.  There is the usual huge round of driver and mac80211 updates.
-> Among other things is some movement of code to enable sharing some bits
-> between ath5k, ath9k, and ar9170.  Also included is the beginngin of
-> migration of rndis_wlan to the cfg80211 API, the first non-mac80211
-> driver to do that.
+On Thu, 2009-04-23 at 01:45 -0700, Johannes Berg wrote:
+> Under certain circumstances iwlwifi can get stuck and will no
+> longer accept scan requests, because the core code (cfg80211)
+> thinks that it's still processing one. This fixes one of the
+> points where it can happen, but I've still seen it (although
+> only with my radio-off-when-idle patch).
 > 
-> Please let me know if there are problems!
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-scan.c	2009-04-21 23:36:10.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-scan.c	2009-04-23 10:43:08.000000000 +0200
+> @@ -814,12 +814,12 @@ void iwl_bg_scan_completed(struct work_s
+>  
+>  	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+>  
+> -	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> -		return;
+> -
+>  	priv->scan_request = NULL;
+>  	ieee80211_scan_completed(priv->hw, false);
+>  
+> +	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +		return;
+> +
+>  	/* Since setting the TXPOWER may have been deferred while
+>  	 * performing the scan, fire one off */
+>  	mutex_lock(&priv->mutex);
+> 
+> 
 
-Since I had pulled net-2.6 into net-next-2.6, aparently after you
-built this tree, there was a conflict to deal with in net/mac80211/pm.c
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-I hope I got it right ;-)
+Thank you
 
-Pulled, thanks a lot!
+Reinette
+
+
