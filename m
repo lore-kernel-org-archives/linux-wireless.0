@@ -1,92 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48343 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756753AbZDALFS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 07:05:18 -0400
-Subject: more thoughts on power saving (was: wireless powersaving (in NM?))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1237891149.4320.73.camel@johannes.local> (sfid-20090324_133306_274219_3B7517AB)
-References: <1237891149.4320.73.camel@johannes.local>
-	 (sfid-20090324_133306_274219_3B7517AB)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H0p0vghamGstR7Y/BBUW"
-Date: Wed, 01 Apr 2009 13:04:39 +0200
-Message-Id: <1238583879.5970.195.camel@johannes.local> (sfid-20090401_130541_956793_D008053E)
+Received: from mx2.redhat.com ([66.187.237.31]:41892 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751644AbZDWL4p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2009 07:56:45 -0400
+Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <1240485352.15894.3.camel@localhost.localdomain>
+References: <1240419177.12282.3.camel@localhost.localdomain>
+	 <20090422170852.GA7298@jm.kir.nu>
+	 <1240426517.12282.11.camel@localhost.localdomain>
+	 <1240441752.14995.8.camel@localhost.localdomain>
+	 <1240475973.30504.1.camel@localhost.localdomain>
+	 <1240484281.18245.16.camel@localhost.localdomain>
+	 <1240485352.15894.3.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 07:57:55 -0400
+Message-Id: <1240487875.18245.37.camel@localhost.localdomain> (sfid-20090423_135649_839561_06BA351A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-04-23 at 12:15 +0100, Marcel Holtmann wrote:
+> Hi Dan,
+> 
+> > > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
+> > > > > > > instead of WEXT. I don't seem to be able to control the from the command
+> > > > > > > line and the -D option doesn't take.
+> > > > > > 
+> > > > > > I would assume you are doing this with NM. You could either change it to
+> > > > > > register the interface (this is not from -D option, but from the D-Bus
+> > > > > > message) with the nl80211 driver or try to build wpa_supplicant without
+> > > > > > WEXT support (which would make the nl80211 wrapper the default one). I
+> > > > > > don't think either of these are yet acceptable as a generic solution,
+> > > > > > but making NM request driver "nl80211,wext" could be a suitable first
+> > > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
+> > > > > > first try with nl80211 and if needed, fall back to WEXT).
+> > > > > 
+> > > > > I am doing manual testing and with ConnMan. However I would prefer to
+> > > > > have a global driver setting "nl80211,wext" that I can give on the
+> > > > > command line and that will then chosen as default if the addInterface
+> > > > > method doesn't give a driver. I really don't need a per interface
+> > > > > setting here.
+> > > > 
+> > > > Um, you can specify a driver for the interface you add in the dbus call
+> > > > for addInterface.  Add a "driver" key to your dict with the driver you
+> > > > want in the value.  Is there a bug with that?
+> > > 
+> > > I know that I can do that. I was just looking for a global configuration
+> > > switch to default to nl80211,wext via D-Bus system activation and not
+> > > via changing the code.
+> > 
+> > Even with system activation you still need to call addInterface, which
+> > can take the driver.  I still don't quite understand what you're getting
+> > at here, I guess...  When you say "not change code" you mean in the
+> > process that's calling wpa_supplicant?
+> 
+> that is exactly what I mean. So to switch NM to use nl80211 you would
+> have to change the NM code. I prefer to have this a command line option
+> so people can turn it back to wext in case something breaks. Or a vendor
+> driver for that matter (not that I care about these).
 
---=-H0p0vghamGstR7Y/BBUW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's exactly why it's hardcoded, so people can't change it just on a
+whim, and break their stuff.  It's great and desired to try nl80211 to,
+as a developer, test it out and make sure it works with nl80211 (and fix
+supplicant bugs that come up) but, of course, that shouldn't be done for
+end-users.
 
-Hi,
+The real fix here is to do what Johannes and I were talking about two
+nights ago; provide udev-based driver hints for those drivers supporting
+nl80211, or else have NM inspect the driver directly with netlink and
+determine whether it supports nl80211, and then direct wpa_supplicant to
+use nl80211 instead of wext.  I'll take a patch to do that, because I
+want to kill wext as much as you do.
 
-So I had a few more thoughts.
+But hacking that stuff in without doing it the right way is only
+suitable for development, and given that, I'd be against any sort of
+change to wpa_supplicant as you've proposed.
 
-Let me start with a story :)
+Dan
 
-        I use my N810 device for landline calls via SIP these days.
-        Every time I'm in a call, audio is very choppy and I can barely
-        understand the person I'm talking to -- my fix is to "ping -i
-        0.05" the device to disable its powersaving...
-
-
-Now, why is audio choppy? I was blaming it on the wireless powersaving,
-and disabling that clearly fixes it. But is the problem really just
-there? I think it might also be the application -- its playback buffer
-is smaller than the networking latency I am experiencing due to
-wireless. I think I could probably tolerate an additional audio latency
-of 150ms (my beacon interval being 102.4ms) or so, if audio wasn't
-choppy. That means the application (telepathy sofiasip I guess) would
-have to have 150ms or so playback buffer to make the playback smooth
-with delay. [1]
-
-Typical voip codecs will use between 8 and 64 Kibps net, adding IP
-overhead and whatever you might be somewhere between 10 and 90 Kibps
-which means you need to transfer at most 10KB per second -- which even
-at a data rate of 1Mbps can be done, again with lots of overhead, in
-much less than half the beacon interval (correct me if I'm wrong),
-therefore your radio could still be sleeping quite a while!
-
-Therefore, to properly do pm_qos, would the application request a 150ms
-network latency in accordance with its playback buffer? Or this broken
-application request 20ms and thereby disable PS completely?
-
-johannes
-
-[1] I don't quite see why this doesn't happen automatically, it seems it
-must discard packets that don't fit into its idea of the stream timing
-
-
---=-H0p0vghamGstR7Y/BBUW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ00pFAAoJEKVg1VMiehFYtzYQALAUNM5s1cVLviXbEyZUHicz
-N2bfVvxLJnBDNX4Q18gToIC2bK1w8iuTKPY9j6AHivax8HDaKtqTrGUqLNLjT7pJ
-cy9SZlKg7bLxg5Cfi6CzMTcCxTXD6Avl+S9dSL7VPOd1WNTwdvnnuqwMe/vbJ6RO
-pb4mw/4OooNKdtyL4Bvp26FLBZ1PRgkt0b7cajn7cHHPpTcu1l2JImCrRq7pwqge
-MkatSDJ5UgrT/0w1ypSFWY2mfhtWao5ohAQs/zeOgiPJtqV1JGSAjxVlfyBjP05u
-4NaQuL1FZPUlko5wN/eOY+psAfFi+CzyvqWsm8h2+7ZCOCjVk2prwaJqh8PD3gJR
-oQXQEbmN8he1wkQD2R+dUCspgemhtUcm8k5muUPdbBMIrhJOcXlH4hGuZt46AhkP
-Ff7qHzwP21xsFBR565VWK+RunB3YToCXwk4CAYc9x34LrbNZ5UmWuT9U1cwtIAn3
-lacxpNmnkGajh0QE/nSYAxzjKj/U7WaFieDQTPVFJvBGuvEyg4L7AvnONYpLbwzj
-RDTpJP+gPetOaCjQs0Mh8M+XvaIRUgYc0N9ywU0J3qPHyxCTcFwSXrZfJpZmhGCE
-gNfjRM4uGs9v8zI/01/GVilFsAaB/SMeDCGga1PlgleL/J7y/dL80JE0wuhwjQHt
-9kNrnvMfZPeepuLucwwc
-=lsa8
------END PGP SIGNATURE-----
-
---=-H0p0vghamGstR7Y/BBUW--
 
