@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42875 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754753AbZDUTlF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 15:41:05 -0400
-Date: Tue, 21 Apr 2009 19:40:26 +0000
-From: Chris Wright <chrisw@sous-sol.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, chunkeey@web.de, me@bobcopeland.com,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [stable] [PATCH] atheros: fix propagation of bad EEPROM on
-	regulatory init
-Message-ID: <20090421194026.GC30916@hera.kernel.org> (sfid-20090421_214110_640009_10676DCD)
-References: <1239673306-13954-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:40154 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757179AbZDWIVa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2009 04:21:30 -0400
+Received: by bwz7 with SMTP id 7so397129bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 01:21:28 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	"Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: calculate maximum sleep interval
+References: <1240418677.30082.3.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 23 Apr 2009 11:21:26 +0300
+In-Reply-To: <1240418677.30082.3.camel@johannes.local> (Johannes Berg's message of "Wed\, 22 Apr 2009 18\:44\:37 +0200")
+Message-ID: <87mya7bx15.fsf@litku.valot.fi> (sfid-20090423_102150_333235_67492A2E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1239673306-13954-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Luis R. Rodriguez (lrodriguez@atheros.com) wrote:
-> When the EEPROM is not in good condition we cannot continue so
-> we currently bail out but only ath5k is bailing out properly.
-> Both ath9k and ar9170 were proceeding and if a user were to run
-> into this they'd see an obscure panic. Lets propagate the error
-> as intended and make sure we inform the user by lifting the
-> error message from debug to a kernel error.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Looks like this still isn't upstream.
+> The maximum sleep interval, for powersave purposes, is
+> determined by the DTIM period (it may not be larger)
+> and the required networking latency (it must be small
+> enough to fulfil those constraints).
+>
+> This makes mac80211 calculate the maximum sleep interval
+> based on those constraints, and pass it to the driver.
+> Then the driver should instruct the device to sleep at
+> most that long.
+>
+> Note that the device is responsible for aligning the
+> maximum sleep interval between DTIMs, we make sure it's
+> not longer but it needs to make sure it's between them.
+>
+> Also, group some powersave documentation together and
+> make it more explicit that we support managed mode only,
+> and no IBSS powersaving (yet).
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-> Stable note: You can find a port of this page here:
-> 
-> http://bombadil.infradead.org/~mcgrof/patches/ath9k/ath9k-fix-eeprom.patch.txt
+Reviewed-by: Kalle Valo <kalle.valo@iki.fi>
 
-(Thanks for the backport ;-)
--chris
+-- 
+Kalle Valo
