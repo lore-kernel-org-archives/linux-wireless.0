@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:38359 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219AbZDVSXp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60685 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831AbZDWIi7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 14:23:45 -0400
-Message-ID: <49EF609A.9070609@lwfinger.net> (sfid-20090422_202349_253927_E6D2994D)
-Date: Wed, 22 Apr 2009 13:23:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
+	Thu, 23 Apr 2009 04:38:59 -0400
+Subject: [PATCH] mac80211: internally clear failed scans properly
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-Subject: Re: patch staging-rtl8187se-fix-compilation-warnings-and-procfs-directory-leak.patch
- added to gregkh-2.6 tree
-References: <1240421701553@kroah.org>
-In-Reply-To: <1240421701553@kroah.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 10:38:26 +0200
+Message-Id: <1240475906.30082.173.camel@johannes.local> (sfid-20090423_103902_328111_22848920)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+When the IBSS code wants to scan, but that fails, we can
+get stuck in a situation where you can never scan again.
+Fix this by properly notifying ourselves when the scan
+request has failed.
 
-gregkh@suse.de wrote:
-> This is a note to let you know that I've just added the patch titled
-> 
->     Subject: Staging: rtl8187se: Fix compilation warnings and procfs directory leak
-> 
-> to my gregkh-2.6 tree.  Its filename is
-> 
->     staging-rtl8187se-fix-compilation-warnings-and-procfs-directory-leak.patch
-> 
-> This tree can be found at 
->     http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ibss.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Just to let you know, Bernhard Schiffner has reported using this driver for an
-8-hour stretch with numerous downloads, etc. with no hiccups. Actually, he was
-using a stripped-down version with about 4000 lines of dead code removed. That
-is my starting point for the mainline driver.
+--- wireless-testing.orig/net/mac80211/ibss.c	2009-04-23 10:33:18.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2009-04-23 10:33:19.000000000 +0200
+@@ -447,7 +447,8 @@ static void ieee80211_sta_merge_ibss(str
+ 	memcpy(sdata->local->int_scan_req.ssids[0].ssid,
+ 	       ifibss->ssid, IEEE80211_MAX_SSID_LEN);
+ 	sdata->local->int_scan_req.ssids[0].ssid_len = ifibss->ssid_len;
+-	ieee80211_request_scan(sdata, &sdata->local->int_scan_req);
++	if (ieee80211_request_scan(sdata, &sdata->local->int_scan_req))
++		ieee80211_scan_failed(sdata->local);
+ }
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+@@ -565,7 +566,8 @@ static void ieee80211_sta_find_ibss(stru
+ 		       ifibss->ssid, IEEE80211_MAX_SSID_LEN);
+ 		local->int_scan_req.ssids[0].ssid_len =
+ 			ifibss->ssid_len;
+-		ieee80211_request_scan(sdata, &local->int_scan_req);
++		if (ieee80211_request_scan(sdata, &local->int_scan_req))
++			ieee80211_scan_failed(local);
+ 	} else if (ifibss->state != IEEE80211_IBSS_MLME_JOINED) {
+ 		int interval = IEEE80211_SCAN_INTERVAL;
+ 
 
-Larry
+
