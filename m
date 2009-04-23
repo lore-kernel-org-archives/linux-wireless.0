@@ -1,22 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:3307 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756958AbZDXOAi (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:53368 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752143AbZDWISY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 10:00:38 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so184187fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Apr 2009 07:00:37 -0700 (PDT)
+	Thu, 23 Apr 2009 04:18:24 -0400
+Received: by fxm2 with SMTP id 2so398670fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 01:18:22 -0700 (PDT)
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: John Linville <linville@tuxdriver.com>,
+	"Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: add driver ops wrappers
-References: <1240505572.30082.233.camel@johannes.local>
-	<87y6tqd32q.fsf@litku.valot.fi>
-	<1240565019.5066.2.camel@johannes.local>
+Subject: Re: [PATCH] mac80211: calculate maximum sleep interval
+References: <1240418677.30082.3.camel@johannes.local>
+	<874owfdctm.fsf@litku.valot.fi>
+	<1240474574.30082.171.camel@johannes.local>
 From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 24 Apr 2009 17:00:34 +0300
-In-Reply-To: <1240565019.5066.2.camel@johannes.local> (Johannes Berg's message of "Fri\, 24 Apr 2009 11\:23\:39 +0200")
-Message-ID: <878wlqb18d.fsf@litku.valot.fi> (sfid-20090424_160043_323147_EA5BF712)
+Date: Thu, 23 Apr 2009 11:18:20 +0300
+In-Reply-To: <1240474574.30082.171.camel@johannes.local> (Johannes Berg's message of "Thu\, 23 Apr 2009 10\:16\:14 +0200")
+Message-ID: <87r5zjbx6b.fsf@litku.valot.fi> (sfid-20090423_101828_847317_A2070D32)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
@@ -24,23 +25,24 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Fri, 2009-04-24 at 08:37 +0300, Kalle Valo wrote:
+> On Thu, 2009-04-23 at 10:55 +0300, Kalle Valo wrote:
 >
->> But I'm just concerned about the drv prefix, with very bad luck it might
->> create conflicts with some other component. What about using
->> ieee80211_drv, for example?
+>> > + * @max_sleep_interval: the maximum number of beacon intervals to sleep for
+>> > + *	before checking the beacon for a TIM bit (managed mode only); this
+>> > + *	value will be only achievable between DTIM frames, the hardware
+>> > + *	needs to check for the multicast traffic bit in DTIM beacons.
+>> > + *	This variable is valid only when the CONF_PS flag is set.
+>> 
+>> I would prefer to call it max_sleep_period. Or maybe even wakeup period,
+>> because it's about waking up here.
+>> 
+>> For me interval, for example beacon interval, means that the unit is TU.
+>> But this might be just me.
 >
-> Hmm. I kinda share your concern, but since these are all static inlines
-> they don't really pollute any namespace, at least not for linking, so
-> conflicts could only arise when another subsystem suddenly exports the
-> same name, in a header file that we include. 
+> Good argument. I'll post a follow-up patch to rename it (to make it
+> easier).
 
-Yes. And the chances for this to happen are next to zero.
-
-> In the end I decided not to worry about it just because it otherwise
-> gets very long.
-
-I agree now, this is fine as it is.
+Thanks.
 
 -- 
 Kalle Valo
