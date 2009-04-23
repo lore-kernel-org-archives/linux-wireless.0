@@ -1,62 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f160.google.com ([209.85.217.160]:34409 "EHLO
-	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384AbZDHO6p convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 10:58:45 -0400
-Received: by gxk4 with SMTP id 4so320708gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Apr 2009 07:58:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49DCA8E3.3060603@gmail.com>
-References: <49DCA8E3.3060603@gmail.com>
-Date: Wed, 8 Apr 2009 10:58:42 -0400
-Message-ID: <b6c5339f0904080758k2be9ae3dm1a98b564f3b10867@mail.gmail.com> (sfid-20090408_165848_526493_1A4F6624)
-Subject: Re: [Fwd: Re: Trouble Associating with ath5k on AR5212]
-From: Bob Copeland <me@bobcopeland.com>
-To: Will Keaney <keaneyw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx2.redhat.com ([66.187.237.31]:33992 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752285AbZDWNoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2009 09:44:44 -0400
+Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <1240492572.15894.7.camel@localhost.localdomain>
+References: <1240419177.12282.3.camel@localhost.localdomain>
+	 <20090422170852.GA7298@jm.kir.nu>
+	 <1240426517.12282.11.camel@localhost.localdomain>
+	 <1240441752.14995.8.camel@localhost.localdomain>
+	 <1240475973.30504.1.camel@localhost.localdomain>
+	 <1240484281.18245.16.camel@localhost.localdomain>
+	 <1240485352.15894.3.camel@localhost.localdomain>
+	 <1240487875.18245.37.camel@localhost.localdomain>
+	 <1240492572.15894.7.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 09:45:52 -0400
+Message-Id: <1240494352.20268.2.camel@localhost.localdomain> (sfid-20090423_154447_660629_98BC2D4D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 8, 2009 at 9:38 AM, Will Keaney <keaneyw@gmail.com> wrote:
->> Hmm, you should be seeing association requests in any case. =A0How a=
-re
->> you starting the wireless network? =A0Can you try setting the -dd op=
-tion
->> to wpa_supplicant?
->>
-> I'm starting it by modprobing ath5k or ath_pci, depending on what nee=
-ds
-> to be tested. =A0udev calls Gentoo's init script for the interface th=
-at's
-> created, which starts wpa_supplicant. =A0I can add debugging flags as=
- well.
+On Thu, 2009-04-23 at 14:16 +0100, Marcel Holtmann wrote:
+> Hi Dan,
+> 
+> > > > > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
+> > > > > > > > > instead of WEXT. I don't seem to be able to control the from the command
+> > > > > > > > > line and the -D option doesn't take.
+> > > > > > > > 
+> > > > > > > > I would assume you are doing this with NM. You could either change it to
+> > > > > > > > register the interface (this is not from -D option, but from the D-Bus
+> > > > > > > > message) with the nl80211 driver or try to build wpa_supplicant without
+> > > > > > > > WEXT support (which would make the nl80211 wrapper the default one). I
+> > > > > > > > don't think either of these are yet acceptable as a generic solution,
+> > > > > > > > but making NM request driver "nl80211,wext" could be a suitable first
+> > > > > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
+> > > > > > > > first try with nl80211 and if needed, fall back to WEXT).
+> > > > > > > 
+> > > > > > > I am doing manual testing and with ConnMan. However I would prefer to
+> > > > > > > have a global driver setting "nl80211,wext" that I can give on the
+> > > > > > > command line and that will then chosen as default if the addInterface
+> > > > > > > method doesn't give a driver. I really don't need a per interface
+> > > > > > > setting here.
+> > > > > > 
+> > > > > > Um, you can specify a driver for the interface you add in the dbus call
+> > > > > > for addInterface.  Add a "driver" key to your dict with the driver you
+> > > > > > want in the value.  Is there a bug with that?
+> > > > > 
+> > > > > I know that I can do that. I was just looking for a global configuration
+> > > > > switch to default to nl80211,wext via D-Bus system activation and not
+> > > > > via changing the code.
+> > > > 
+> > > > Even with system activation you still need to call addInterface, which
+> > > > can take the driver.  I still don't quite understand what you're getting
+> > > > at here, I guess...  When you say "not change code" you mean in the
+> > > > process that's calling wpa_supplicant?
+> > > 
+> > > that is exactly what I mean. So to switch NM to use nl80211 you would
+> > > have to change the NM code. I prefer to have this a command line option
+> > > so people can turn it back to wext in case something breaks. Or a vendor
+> > > driver for that matter (not that I care about these).
+> > 
+> > That's exactly why it's hardcoded, so people can't change it just on a
+> > whim, and break their stuff.  It's great and desired to try nl80211 to,
+> > as a developer, test it out and make sure it works with nl80211 (and fix
+> > supplicant bugs that come up) but, of course, that shouldn't be done for
+> > end-users.
+> > 
+> > The real fix here is to do what Johannes and I were talking about two
+> > nights ago; provide udev-based driver hints for those drivers supporting
+> > nl80211, or else have NM inspect the driver directly with netlink and
+> > determine whether it supports nl80211, and then direct wpa_supplicant to
+> > use nl80211 instead of wext.  I'll take a patch to do that, because I
+> > want to kill wext as much as you do.
+> > 
+> > But hacking that stuff in without doing it the right way is only
+> > suitable for development, and given that, I'd be against any sort of
+> > change to wpa_supplicant as you've proposed.
+> 
+> the latest version of wpa_supplicant can specific a list of drivers like
+> nl80211,wext so it effectively falls back to wext if nl80211 decides
+> this doesn't work or is not present. Should we not just add driver
+> quirks/blacklist into wpa_supplicant then?
 
-Ok, please do and post the log.
+I fail to see how fallbacks are helpful here, it seems to me that it
+will simply make it completely unknown which driver is being used at the
+time without getting debugging logs from the supplicant.  Frankly, I'd
+rather know *exactly* what driver NM is requesting the supplicant use,
+so I know exactly what to expect.
 
-> When testing with the guest wireless at work today, I got the attache=
-d
-> error in dmesg. =A0I only got it once, and haven't been able to repro=
-duce
-> it, but thought it might be of interest.
+And if there are quirks, the supplicant driver needs to get fixed.  Not
+worked around.  Fixed.  Otherwise the supplicant gets littered with
+workarounds, making unmaintainable and fragile code.
 
-Very much so, thanks for the report (probably has no bearing on your ca=
-se,
-but this is the first example since we added more debugging).
+Dan
 
-> [ 6260.056213] Hardware name: 6459CTO
-> [ 6260.056218] invalid hw_rix: 1a
 
-0x1a is ATH5K_RATE_CODE_2M, certainly a valid rate for 2 GHz.. somethin=
-g's
-broken.  This is pretty rare though so I think it is some sort of race
-condition when switching over to 5 GHz.
-
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
