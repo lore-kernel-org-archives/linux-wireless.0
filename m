@@ -1,199 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:41767 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599AbZDRNER (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:58625 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753661AbZDWNQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 09:04:17 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: ar9710 resume hangs
-Date: Sat, 18 Apr 2009 15:04:14 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1240041582.4456.0.camel@johannes.local>
-In-Reply-To: <1240041582.4456.0.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_O/c6JbdSD2Bgp4v"
-Message-Id: <200904181504.14870.chunkeey@web.de> (sfid-20090418_150421_634886_53621519)
+	Thu, 23 Apr 2009 09:16:20 -0400
+Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <1240487875.18245.37.camel@localhost.localdomain>
+References: <1240419177.12282.3.camel@localhost.localdomain>
+	 <20090422170852.GA7298@jm.kir.nu>
+	 <1240426517.12282.11.camel@localhost.localdomain>
+	 <1240441752.14995.8.camel@localhost.localdomain>
+	 <1240475973.30504.1.camel@localhost.localdomain>
+	 <1240484281.18245.16.camel@localhost.localdomain>
+	 <1240485352.15894.3.camel@localhost.localdomain>
+	 <1240487875.18245.37.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 23 Apr 2009 14:16:12 +0100
+Message-Id: <1240492572.15894.7.camel@localhost.localdomain> (sfid-20090423_151624_348019_A171592D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_O/c6JbdSD2Bgp4v
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hi Dan,
 
-On Saturday 18 April 2009 09:59:42 Johannes Berg wrote:
-> because it tries to load firmware before userspace is up :/
+> > > > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
+> > > > > > > > instead of WEXT. I don't seem to be able to control the from the command
+> > > > > > > > line and the -D option doesn't take.
+> > > > > > > 
+> > > > > > > I would assume you are doing this with NM. You could either change it to
+> > > > > > > register the interface (this is not from -D option, but from the D-Bus
+> > > > > > > message) with the nl80211 driver or try to build wpa_supplicant without
+> > > > > > > WEXT support (which would make the nl80211 wrapper the default one). I
+> > > > > > > don't think either of these are yet acceptable as a generic solution,
+> > > > > > > but making NM request driver "nl80211,wext" could be a suitable first
+> > > > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
+> > > > > > > first try with nl80211 and if needed, fall back to WEXT).
+> > > > > > 
+> > > > > > I am doing manual testing and with ConnMan. However I would prefer to
+> > > > > > have a global driver setting "nl80211,wext" that I can give on the
+> > > > > > command line and that will then chosen as default if the addInterface
+> > > > > > method doesn't give a driver. I really don't need a per interface
+> > > > > > setting here.
+> > > > > 
+> > > > > Um, you can specify a driver for the interface you add in the dbus call
+> > > > > for addInterface.  Add a "driver" key to your dict with the driver you
+> > > > > want in the value.  Is there a bug with that?
+> > > > 
+> > > > I know that I can do that. I was just looking for a global configuration
+> > > > switch to default to nl80211,wext via D-Bus system activation and not
+> > > > via changing the code.
+> > > 
+> > > Even with system activation you still need to call addInterface, which
+> > > can take the driver.  I still don't quite understand what you're getting
+> > > at here, I guess...  When you say "not change code" you mean in the
+> > > process that's calling wpa_supplicant?
+> > 
+> > that is exactly what I mean. So to switch NM to use nl80211 you would
+> > have to change the NM code. I prefer to have this a command line option
+> > so people can turn it back to wext in case something breaks. Or a vendor
+> > driver for that matter (not that I care about these).
+> 
+> That's exactly why it's hardcoded, so people can't change it just on a
+> whim, and break their stuff.  It's great and desired to try nl80211 to,
+> as a developer, test it out and make sure it works with nl80211 (and fix
+> supplicant bugs that come up) but, of course, that shouldn't be done for
+> end-users.
+> 
+> The real fix here is to do what Johannes and I were talking about two
+> nights ago; provide udev-based driver hints for those drivers supporting
+> nl80211, or else have NM inspect the driver directly with netlink and
+> determine whether it supports nl80211, and then direct wpa_supplicant to
+> use nl80211 instead of wext.  I'll take a patch to do that, because I
+> want to kill wext as much as you do.
+> 
+> But hacking that stuff in without doing it the right way is only
+> suitable for development, and given that, I'd be against any sort of
+> change to wpa_supplicant as you've proposed.
 
-heh, I have 4 different machines and not a single one does 
-atleast one suspend & resume cycle properly.
+the latest version of wpa_supplicant can specific a list of drivers like
+nl80211,wext so it effectively falls back to wext if nl80211 decides
+this doesn't work or is not present. Should we not just add driver
+quirks/blacklist into wpa_supplicant then?
 
-here's a patch that compiles, but may not work at all.
+Regards
 
-regards,
-	chr
+Marcel
 
---Boundary-00=_O/c6JbdSD2Bgp4v
-Content-Type: text/x-patch;
-  charset="UTF-8";
-  name="ar9170usb-resume.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="ar9170usb-resume.diff"
 
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index c9e422e..361cb89 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -623,6 +623,43 @@ static int ar9170_usb_open(struct ar9170 *ar)
- 	return 0;
- }
- 
-+static int ar9170_usb_init_device(struct ar9170_usb *aru)
-+{
-+	int err;
-+
-+	err = ar9170_usb_reset(aru);
-+	if (err)
-+		goto err_out;
-+
-+	err = ar9170_usb_alloc_rx_irq_urb(aru);
-+	if (err)
-+		goto err_out;
-+
-+	err = ar9170_usb_alloc_rx_bulk_urbs(aru);
-+	if (err)
-+		goto err_unrx;
-+
-+	err = ar9170_usb_upload_firmware(aru);
-+	if (err) {
-+		err = ar9170_echo_test(&aru->common, 0x60d43110);
-+		if (err) {
-+			/* force user invention, by disabling the device */
-+			err = usb_driver_set_configuration(aru->udev, -1);
-+			dev_err(&aru->udev->dev, "device is in a bad state. "
-+						 "please reconnect it!\n");
-+			goto err_unrx;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_unrx:
-+	ar9170_usb_cancel_urbs(aru);
-+
-+err_out:
-+	return err;
-+}
-+
- static int ar9170_usb_probe(struct usb_interface *intf,
- 			const struct usb_device_id *id)
- {
-@@ -656,34 +693,14 @@ static int ar9170_usb_probe(struct usb_interface *intf,
- 	aru->common.exec_cmd = ar9170_usb_exec_cmd;
- 	aru->common.callback_cmd = ar9170_usb_callback_cmd;
- 
--	err = ar9170_usb_reset(aru);
--	if (err)
--		goto err_unlock;
--
- 	err = ar9170_usb_request_firmware(aru);
- 	if (err)
--		goto err_unlock;
-+		goto err_freehw;
- 
--	err = ar9170_usb_alloc_rx_irq_urb(aru);
-+	err = ar9170_usb_init_device(aru);
- 	if (err)
- 		goto err_freefw;
- 
--	err = ar9170_usb_alloc_rx_bulk_urbs(aru);
--	if (err)
--		goto err_unrx;
--
--	err = ar9170_usb_upload_firmware(aru);
--	if (err) {
--		err = ar9170_echo_test(&aru->common, 0x60d43110);
--		if (err) {
--			/* force user invention, by disabling the device */
--			err = usb_driver_set_configuration(aru->udev, -1);
--			dev_err(&aru->udev->dev, "device is in a bad state. "
--						 "please reconnect it!\n");
--			goto err_unrx;
--		}
--	}
--
- 	err = ar9170_usb_open(ar);
- 	if (err)
- 		goto err_unrx;
-@@ -703,7 +720,7 @@ err_freefw:
- 	release_firmware(aru->init_values);
- 	release_firmware(aru->firmware);
- 
--err_unlock:
-+err_freehw:
- 	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(udev);
- 	ieee80211_free_hw(ar->hw);
-@@ -730,12 +747,57 @@ static void ar9170_usb_disconnect(struct usb_interface *intf)
- 	ieee80211_free_hw(aru->common.hw);
- }
- 
-+#ifdef CONFIG_PM
-+static int ar9170_suspend(struct usb_interface *intf,
-+			  pm_message_t  message)
-+{
-+	struct ar9170_usb *aru = usb_get_intfdata(intf);
-+
-+	if (!aru)
-+		return -ENODEV;
-+
-+	aru->common.state = AR9170_IDLE;
-+	ar9170_usb_cancel_urbs(aru);
-+
-+	return 0;
-+}
-+
-+static int ar9170_resume(struct usb_interface *intf)
-+{
-+	struct ar9170_usb *aru = usb_get_intfdata(intf);
-+	int err;
-+
-+	if (!aru)
-+		return -ENODEV;
-+
-+	err = ar9170_usb_init_device(aru);
-+	if (err)
-+		goto err_unrx;
-+
-+	err = ar9170_usb_open(&aru->common);
-+	if (err)
-+		goto err_unrx;
-+
-+	return 0;
-+
-+err_unrx:
-+	aru->common.state = AR9170_IDLE;
-+	ar9170_usb_cancel_urbs(aru);
-+
-+	return err;
-+}
-+#endif /* CONFIG_PM */
-+
- static struct usb_driver ar9170_driver = {
- 	.name = "ar9170usb",
- 	.probe = ar9170_usb_probe,
- 	.disconnect = ar9170_usb_disconnect,
- 	.id_table = ar9170_usb_ids,
- 	.soft_unbind = 1,
-+#ifdef CONFIG_PM
-+	.suspend = ar9170_suspend,
-+	.resume = ar9170_resume,
-+#endif /* CONFIG_PM */
- };
- 
- static int __init ar9170_init(void)
-
---Boundary-00=_O/c6JbdSD2Bgp4v--
