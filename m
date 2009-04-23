@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38620 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763541AbZDBPCm (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:36625 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754322AbZDWRgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 11:02:42 -0400
-Subject: Re: How does rfkill work?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <49D4CF50.2060100@lwfinger.net>
-References: <49D44635.80306@lwfinger.net>
-	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oIowGumMasmKjuBKZnhC"
-Date: Thu, 02 Apr 2009 17:02:07 +0200
-Message-Id: <1238684527.4141.63.camel@johannes.local> (sfid-20090402_170309_941471_1472BFB8)
-Mime-Version: 1.0
+	Thu, 23 Apr 2009 13:36:17 -0400
+Received: by fxm2 with SMTP id 2so678146fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 10:36:15 -0700 (PDT)
+MIME-Version: 1.0
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 23 Apr 2009 19:36:00 +0200
+Message-ID: <69e28c910904231036g4598e93apa7e88737a054063b@mail.gmail.com> (sfid-20090423_193621_314754_F7A067EC)
+Subject: [PATCH 1/5] mac80211: Fix handling of retry count of NO_ACK frames in
+	minstrel
+To: John Linville <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Content-Type: multipart/mixed; boundary=000e0cd250481e9a0a04683c5138
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-oIowGumMasmKjuBKZnhC
-Content-Type: text/plain; charset="UTF-8"
+--000e0cd250481e9a0a04683c5138
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-02 at 09:44 -0500, Larry Finger wrote:
+Make the retry count zero (total try count =3D 1) for frames with
+IEEE80211_TX_CTL_NO_ACK set.
 
-> > Can you check the contents of
-> > 	/sys/class/leds/b43legacy-...::radio/trigger
-> > please?
->=20
-> The first thing I noticed is that "radio" gets truncated to "rad", thus t=
-he file
-> is /sys/class/leds/b43legacy-phy0\:\:rad/trigger,
+Also remove the check for is_multicast_ether_addr in use_low_rate,
+which is redundant because all multicasts have IEEE80211_TX_CTL_NO_ACK
+set.
 
-Cute. Must be that the limit is 20 bytes (19+NUL) in the buffer it uses
-in led core code.
+Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
 
->  with contents "none ide-disk
-> ADP1-online BAT0-charging-or-full BAT0-charging BAT0-full phy0rx phy0tx
-> phy0assoc phy0radio [(]". I unloaded and reloaded the driver and found th=
-at the
-> "[(]" characters changed to "[=EF=BF=BDW[=EF=BF=BD]". It appears that som=
-ething is putting
-> garbage in that file.
+---
+Patch also available as an attachment if Gmail linewraps it.
 
-Ouch. That's bad. I'll try to figure it out. I don't see how my patch
-changes this -- does this happen without my patch too?
+ rc80211_minstrel.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstre=
+l.c
+index 3824990..5196006 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -80,8 +80,7 @@ use_low_rate(struct sk_buff *skb)
+ 	fc =3D le16_to_cpu(hdr->frame_control);
 
---=-oIowGumMasmKjuBKZnhC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+ 	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) ||
+-		(fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_DATA ||
+-		is_multicast_ether_addr(hdr->addr1));
++		(fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_DATA);
+ }
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ1NNsAAoJEKVg1VMiehFYbbAP/3hgUXqWHWjE6NCPKrNRqw1b
-bUxBQ0VEbT0JOEchRp8wTL9ZwaZLLbtmRBwHzNdy5OqSWr8soJW9BFIMn7HQzuvU
-h3ilJZg1ggEqdNhttj4T4bpdnGYqrUOW2PXEjx1VRlSMJdc5ECuMiReAwKPBUAME
-2+jZVSHi9WsLpCs7UlNxTYb8S8mcNzs06q/1czy7VQX4+6OKodzKm3oJ4hMNJ4rO
-E1SfUN/w37cfMXuiezhrapGUFFphKC9Gk/Sm0nMyW7VxsDGZH+hiw39XOE51JWmA
-YrHGuuluAr9eFu/psK4PhaxkWgrTQvjeoHcgRoCvxE+XRovhgDX9ClKZ+gk7L3XG
-JPI+Tmfvss6FCyT5U23OnJU+WTL/Ne+6C6vICulrpoRL2pdoD+CJE9YV+ewQOrI0
-Js9RGs4FcB74z0X7bFekSnkHxjZrWnNFKXlxuxNDSPaxHdbodOEa2ZqT2jtpdDQB
-UAWV/jb1uIOjSrt9aCEQBLqGGAJLX60tdsPattRmxBizSjZLRMye13yJ6CwIn/58
-JTTPKa70WcMYuCIGaAng2pbHukW4ahPLR4OQSmOGjg28nYbPeYkT7dQHA9gG1XeG
-uVL3HnQn1TtGGvMYeipp/KBvSAGmgRBL9LQUsdbThefe5O8vNTO6i0P9fhomxxxT
-C18TH+mTVFfu+R2J7bXt
-=jMmV
------END PGP SIGNATURE-----
+@@ -245,7 +244,10 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *st=
+a,
 
---=-oIowGumMasmKjuBKZnhC--
+ 	if (!sta || !mi || use_low_rate(skb)) {
+ 		ar[0].idx =3D rate_lowest_index(sband, sta);
+-		ar[0].count =3D mp->max_retry;
++		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
++			ar[0].count =3D 1;
++		else
++			ar[0].count =3D mp->max_retry;
+ 		return;
+ 	}
 
+--000e0cd250481e9a0a04683c5138
+Content-Type: text/x-patch; charset=US-ASCII; name="minstrel-fix-no-ack-retry-count.patch"
+Content-Disposition: attachment;
+	filename="minstrel-fix-no-ack-retry-count.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ftvqdtz20
+
+IHJjODAyMTFfbWluc3RyZWwuYyB8ICAgIDggKysrKystLS0KIDEgZmlsZSBjaGFuZ2VkLCA1IGlu
+c2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3Jj
+ODAyMTFfbWluc3RyZWwuYyBiL25ldC9tYWM4MDIxMS9yYzgwMjExX21pbnN0cmVsLmMKaW5kZXgg
+MzgyNDk5MC4uNTE5NjAwNiAxMDA2NDQKLS0tIGEvbmV0L21hYzgwMjExL3JjODAyMTFfbWluc3Ry
+ZWwuYworKysgYi9uZXQvbWFjODAyMTEvcmM4MDIxMV9taW5zdHJlbC5jCkBAIC04MCw4ICs4MCw3
+IEBAIHVzZV9sb3dfcmF0ZShzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQogCWZjID0gbGUxNl90b19jcHUo
+aGRyLT5mcmFtZV9jb250cm9sKTsKIAogCXJldHVybiAoKGluZm8tPmZsYWdzICYgSUVFRTgwMjEx
+X1RYX0NUTF9OT19BQ0spIHx8Ci0JCShmYyAmIElFRUU4MDIxMV9GQ1RMX0ZUWVBFKSAhPSBJRUVF
+ODAyMTFfRlRZUEVfREFUQSB8fAotCQlpc19tdWx0aWNhc3RfZXRoZXJfYWRkcihoZHItPmFkZHIx
+KSk7CisJCShmYyAmIElFRUU4MDIxMV9GQ1RMX0ZUWVBFKSAhPSBJRUVFODAyMTFfRlRZUEVfREFU
+QSk7CiB9CiAKIApAQCAtMjQ1LDcgKzI0NCwxMCBAQCBtaW5zdHJlbF9nZXRfcmF0ZSh2b2lkICpw
+cml2LCBzdHJ1Y3QgaWVlZTgwMjExX3N0YSAqc3RhLAogCiAJaWYgKCFzdGEgfHwgIW1pIHx8IHVz
+ZV9sb3dfcmF0ZShza2IpKSB7CiAJCWFyWzBdLmlkeCA9IHJhdGVfbG93ZXN0X2luZGV4KHNiYW5k
+LCBzdGEpOwotCQlhclswXS5jb3VudCA9IG1wLT5tYXhfcmV0cnk7CisJCWlmIChpbmZvLT5mbGFn
+cyAmIElFRUU4MDIxMV9UWF9DVExfTk9fQUNLKQorCQkJYXJbMF0uY291bnQgPSAxOworCQllbHNl
+CisJCQlhclswXS5jb3VudCA9IG1wLT5tYXhfcmV0cnk7CiAJCXJldHVybjsKIAl9CiAK
+--000e0cd250481e9a0a04683c5138--
