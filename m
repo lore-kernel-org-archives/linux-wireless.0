@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49273 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753511AbZDGTaB (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:39816 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754211AbZDXUrR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 15:30:01 -0400
-Subject: Re: mac80211: changing number of queues in ops->start
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200904072024.41910.mb@bu3sch.de>
-References: <200904072024.41910.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gA1auIjvcpQ8u44beNEZ"
-Date: Tue, 07 Apr 2009 21:29:27 +0200
-Message-Id: <1239132567.7187.1.camel@johannes.local> (sfid-20090407_213008_420261_482587B3)
-Mime-Version: 1.0
+	Fri, 24 Apr 2009 16:47:17 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for April 24 (p54 build error) (and pull request: wireless-next-2.6 2009-04-24)
+Date: Fri, 24 Apr 2009 22:47:14 +0200
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	davem@davemloft.net
+References: <20090424150456.ff35e4ea.sfr@canb.auug.org.au> <49F1FD4B.2020909@oracle.com>
+In-Reply-To: <49F1FD4B.2020909@oracle.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200904242247.15042.chunkeey@web.de> (sfid-20090424_224724_561218_9C958527)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 24 April 2009 19:56:27 Randy Dunlap wrote:
+> 
+> drivers/net/wireless/p54/p54.h:193: error: array type has incomplete element type
+> 
+> struct p54_led_dev definition is controlled by
+> #ifdef CONFIG_P54_LEDS (is not set)
+> 
+> but the struct declaration is controlled by
+> #ifdef CONFIG_MAC80211_LEDS (=y)
+> 
+meh, [p54: more SoftLED updates] broke it
+( dce072580e095d1fb7be59a1be30dc0e8307821b )
 
---=-gA1auIjvcpQ8u44beNEZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+this also affects "pull request: wireless-next-2.6 2009-04-24"
 
-On Tue, 2009-04-07 at 20:24 +0200, Michael Buesch wrote:
-> I'm wondering how to implement QoS capability runtime detection
-> in a mac80211 driver.
->=20
-> In b43 we don't know at ieee80211_register time whether the firmware does
-> support QoS or not, because it's not loaded yet. (Reasons for not loading
-> it that early are issues with builtin-b43, etc...).
-> So we don't know whether we are going to load opensource fw (no QoS) or
-> proprietary fw (QoS capable).
-> But it seems that mac80211 requires to set hw->queues before ieee80211_re=
-gister.
->=20
-> So what I'd need is a way to change the number of possible queues from wi=
-thin
-> the ops->start handler.
+and the current wireless-testing!
 
-Well, I suppose you could register with the max and later reduce and
-stop the remaining queues you're not using... Or not stop them and drop
-packets on them. That's somewhat fragile, gives people who look at tc a
-wrong idea, and I can't imagine supporting it, but it should work.
+however the patches on the linux-wireless are all fine?!
+(see: http://osdir.com/ml/linux-wireless/2009-03/msg01240.html )
 
-johannes
+I guess there was merge conflict with [p54: more SoftLED updates] 
+and [p54: replace MAC80211_LEDS with P54_LEDS in p54.h] ?
 
---=-gA1auIjvcpQ8u44beNEZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ26mVAAoJEKVg1VMiehFY4XwP/i64qd2wUbf/ql5oB5nW7TCw
-okK6ZadN+Gr5vHAdpmvf1ztmvP/zxvqA3wDlc1+phGTjOeVzkfoRBrnF0fbCx8dN
-DDUL77yZHdUbsWQoYMNFADFjukh9R+cclRxJ10S+uIO4m6cP6u09gBSA8QqFdx3m
-2MqhIu4vZhokx3tHoC3IlGDUu1lkdrzel5Croo0UkKXEEyNazk2RsaYmOlwXgXNB
-BoyFNMUf/B5Cv+m2pW0bkAF34N7ZJpNYE6jPN6fu8JRCrXA4eVs6c3/vs2YFsLTr
-Pxq9fvxkrVGIevXcioeWdM2xCwQ0JyRuHRNWZpTfZ4+aAyRvlKm2Oyy/sN18W9AE
-olDlLACyUnaoA6AiazeBuQptCOYKdSlUUBUJcQb5+KAWjST6Vd2ojFzwaO7cl2d0
-5blZxIKZHljgVsoPc98E0K9/YMuFHvnht2TzHOHa0hAzg8KJK2nJUpVPI+YgrFnP
-YtgGNA0JFVK+pez5J3g/EegYLcypAPY+eeKR3HOfqjjk5JQKuSBKTUPAb0Qc4MqS
-aJz0L/BRa6n1s1ZjdYPYqHE+uprdKwJt8A+r3y6W9XR5+EmqS+2gxxVBxKf1KWpB
-EzWUGcsITWPDk7GbWXff9xyXuzskIvhCGj4NHJ2ZfalpZXpg22Y3GAhm+OAdM6rF
-T9k2akRuiicnSq0tXqHF
-=qAAm
------END PGP SIGNATURE-----
-
---=-gA1auIjvcpQ8u44beNEZ--
-
+Regards,
+	Chr
+---
+In case someone want to fix it manually... here's the undo:
+---
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+index 7fda1a9..db3df94 100644
+--- a/drivers/net/wireless/p54/p54.h
++++ b/drivers/net/wireless/p54/p54.h
+@@ -189,10 +189,10 @@ struct p54_common {
+ 	unsigned long *used_rxkeys;
+ 
+ 	/* LED management */
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ 	struct p54_led_dev leds[4];
+ 	struct delayed_work led_work;
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 	u16 softled_state;		/* bit field of glowing LEDs */
+ 
+ 	/* statistics */
