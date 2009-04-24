@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:46981 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750988AbZDVXR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 19:17:58 -0400
-Subject: Re: Measure RSSI in adhoc networks
-From: Dan Williams <dcbw@redhat.com>
-To: Kai Timmer <email@kait.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com>
-References: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 22 Apr 2009 19:18:54 -0400
-Message-Id: <1240442334.14995.12.camel@localhost.localdomain> (sfid-20090423_011801_918552_51A4450B)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42426 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822AbZDXTpy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2009 15:45:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas: fix format warning
+Date: Fri, 24 Apr 2009 15:39:17 -0400
+Message-Id: <1240601958-7273-1-git-send-email-linville@tuxdriver.com> (sfid-20090424_214557_824534_7FC69232)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-04-22 at 15:08 +0200, Kai Timmer wrote:
-> Hello,
-> I need to get the rssi values in an adhoc network from every available
-> node separately.
-> I noticed that on some of my devices, in a adhoc network, there are
-> all values set to 0. Some other devices are showing values. I am not
-> sure how to interpret this values. If there are more than 2 nodes in
-> the adhoc network, it has to be some kind of average value. Am I right
-> with this? And if yes, is there any way to get the rssi value for
-> every available node?
+drivers/net/wireless/libertas/if_spi.c: In function =E2=80=98if_spi_c2h=
+_data=E2=80=99:
+drivers/net/wireless/libertas/if_spi.c:733: warning: format =E2=80=98%u=
+=E2=80=99 expects type =E2=80=98unsigned int=E2=80=99, but argument 4 h=
+as type =E2=80=98long unsigned int=E2=80=99
 
-You can only get an RSSI if there are other nodes in the network, and
-then you get the RSSI of *that* node, as received by your node.  You
-can't measure your own RSSI, because RSSI = *Received* Signal Strength
-Indicator, and you can't really receive your own traffic since you're
-radiating tons of power on TX and that completely deafens the RX chain.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/libertas/if_spi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Not all drivers report RSSI in adhoc mode at this time.  But even if
-they did, they could only report RSSI when they receive a beacon or
-traffic from some other node in the adhoc network, and that's pretty
-useless because it doesn't give you a general quality of the "network",
-it gives you a specific quality of the radio path between two points in
-the network.
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wirel=
+ess/libertas/if_spi.c
+index 97493e2..dccd01f 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -731,7 +731,7 @@ static int if_spi_c2h_data(struct if_spi_card *card=
+)
+ 		goto out;
+ 	} else if (len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
+ 		lbs_pr_err("%s: error: card has %d bytes of data, but "
+-			   "our maximum skb size is %u\n",
++			   "our maximum skb size is %lu\n",
+ 			   __func__, len, MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
+ 		err =3D -EINVAL;
+ 		goto out;
+--=20
+1.6.0.6
 
-Dan
-
-> I am not sure if this is the right place to ask these questions, if it
-> is not, please redirect me to a more fitting place.
-> 
-> Greets,
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
