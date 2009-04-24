@@ -1,73 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43360 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbZDPBE6 (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:33916 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230AbZDXLEH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 21:04:58 -0400
-Subject: Re: [PATCH 2/7] ath5k: Read Spur channels from EEPROM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	me@bobcopeland.com, nbd@openwrt.org
-In-Reply-To: <40f31dec0904151751u3fd15d93i194d0abbb4657439@mail.gmail.com> (sfid-20090416_025226_608021_1AD90341)
-References: <20090416002449.GB4138@makis>
-	 <1239841547.25334.19.camel@johannes.local>
-	 <40f31dec0904151751u3fd15d93i194d0abbb4657439@mail.gmail.com>
-	 (sfid-20090416_025226_608021_1AD90341)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rtC9RZq6wFLXjsoSEau7"
-Date: Thu, 16 Apr 2009 03:04:19 +0200
-Message-Id: <1239843860.4669.1.camel@johannes.local> (sfid-20090416_030502_337781_1B1ACB56)
-Mime-Version: 1.0
+	Fri, 24 Apr 2009 07:04:07 -0400
+Date: Fri, 24 Apr 2009 07:03:29 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Greg KH <greg@kroah.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090424110329.GJ2830@storm.local.network> (sfid-20090424_130413_071122_2498A62E)
+References: <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="dwWFXG4JqVa0wfCP"
+In-Reply-To: <20090419223218.GA30599@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-rtC9RZq6wFLXjsoSEau7
-Content-Type: text/plain
+--dwWFXG4JqVa0wfCP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-16 at 03:51 +0300, Nick Kossifidis wrote:
-> 2009/4/16 Johannes Berg <johannes@sipsolutions.net>:
-> > On Thu, 2009-04-16 at 03:24 +0300, Nick Kossifidis wrote:
-> >> *Read Spur channel information from EEPROM and use default channels fo=
-r RF5413 compatible chips that don't have this info on EEPROM.
-> >
-> > I think you should break the changelog at fewer columns than that.
-> >
-> > johannes
-> >
+Hi Greg,
+
+On Sun, Apr 19, 2009 at 03:32:18PM -0700, Greg KH wrote:
+> On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
+> > On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
+> > > Forest Bond wrote:
+> > > >=20
+> > > > However, I did have a question:
+> > > >=20
+> > > > The vt6655 driver builds viawget.ko, and the vt6656 driver builds v=
+ntwusb.ko.
+> > > > Should the directories be named "viawget" and "vntwusb," respective=
+ly, or is it
+> > > > appropriate for them to be named "vt6655" and "vt6656"?
+> > >=20
+> > > Of course Greg has the final say, but I vote to keep the directories =
+with the
+> > > vt6656 name and change the name of the driver, which is defined in  t=
+he line
+> > > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the ven=
+dor driver.
+> >=20
+> > This makes sense to me.  I'll proceed this way for now.  Greg, let me k=
+now if
+> > you'd prefer I didn't do this.
 >=20
-> ACK, are 80 cols ok ?
+> No objection from me.
 
-I don't know if there's a standard on that, I tend to use around 60-70,
-but 80 seems good too. It's not just the "doesn't fit terminal" argument
-anyway, it's much easier to read if it's less.
+The following git repository has a vt6655 branch and a vt6656 branch:
 
-johannes
+  http://www.alittletooquiet.net/media/code/vt665x.git
 
---=-rtC9RZq6wFLXjsoSEau7
+The vt6655 branch contains pretty much all of the work I'll likely be able =
+to do
+for that driver.  The vt6656 branch needs more work.  I've not gone farther=
+ than
+build-testing either, at this point.
+
+As I've mentioned before, some of this kind of work is really a bit outside=
+ my
+usual domain, so if you do look at it, I'd appreciate feedback.
+
+Feel free to make requests.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--dwWFXG4JqVa0wfCP
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iQIcBAABAgAGBQJJ5oQRAAoJEKVg1VMiehFYSbgQAMHku5hyENr4wnKBnk7Aydxw
-C7nUpIlVJ+aBU0o+EuciB8RzUpOP87MAZfS+GMvv6hzMi3t07SDSzom3+ZOCZdyJ
-QMmKrw3KeHZ6AWqAM2RaX0a8R/v9jMbJpWwJ3rC4k+kgCoPVAhsFINL7Cwc3C1oZ
-AZvw2AQXRbIW0mTQP2ufrYfSSxT3Nyk25NBux1ujNpsDL+R574suDFbvlLqcyCqM
-z7XaL8HxHkuJywQ0riy0RH3UtzaQNV6VHnOA/2rQbaWjESatqAS3ncuvjrMinr8z
-yEmbrisHqB0XKvpsTfgSZfBbm5nHjSBFnC2Sxl/GwdlFLJS5CtbR0GZow6d8D6u5
-R4TJgc3H5OUhPDru92x+zSyzdESnQAcDTUb6CFo3AhIkZdHf71v3s9jYp++9tuT5
-1MH0+NFksKALHZpf2bVRRExYEYMR+slBTG6L7lnVgFjjrPRqYY4m4unT85HHYDWE
-nfUm8wiKEZiCiXzv212u3zNCCCDsln5WEX/xZJY8wcpnDHUDsUymbreuQewB1X6f
-47vOtWtKXhyBflFd0bTqPz5RcptObqU3RZOAfMz5G3gtnq+CnB4aAqQ1ibS5N4Z+
-RWZzwp9shRr0qZcz0Sgcc/iWhMGjS0E+R3QZRmUzAtPC33KkW9jGvPs2MPIU7Myh
-q22uQBNw7F6RUvglR3r+
-=zgdz
+iD8DBQFJ8ZyBRO4fQQdv5AwRAn9cAKDRnowfb0WEGPFE4UmyLMg6CtQHhgCggM+N
+ZvfFP7WdO/9eJy6VzlWQk4c=
+=WTva
 -----END PGP SIGNATURE-----
 
---=-rtC9RZq6wFLXjsoSEau7--
-
+--dwWFXG4JqVa0wfCP--
