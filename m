@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:2493 "EHLO Viola.Opus1.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756541AbZDIExM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 00:53:12 -0400
-Received: from [10.1.1.4] ([204.17.34.178]) by Opus1.COM (PMDF V6.2-X27 #9830)
- with ESMTPSA id <01N7K5BT706Q96CA3H@Opus1.COM> for
- linux-wireless@vger.kernel.org; Wed, 08 Apr 2009 20:59:35 -0700 (MST)
-Date: Wed, 08 Apr 2009 20:59:34 -0700
-From: gavron@wetwork.net
-Subject: Re: Problems with 2.6.30-rc1
-In-reply-to: <49DD149B.2060300@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>
-Message-id: <49DD72A6.7060002@wetwork.net> (sfid-20090409_065315_490202_70FB6828)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20090408182021.GA4112@aragorn.home.lxtec.de>
- <200904082050.00327.mb@bu3sch.de> <49DCF537.8000702@lwfinger.net>
- <20090408192634.GB3717@samweis.home.lxtec.de> <49DD149B.2060300@lwfinger.net>
+Received: from fg-out-1718.google.com ([72.14.220.153]:59673 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbZDXGZA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2009 02:25:00 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so121470fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 23:24:58 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: on radio_enabled
+References: <1240439975.30082.66.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 24 Apr 2009 09:24:56 +0300
+In-Reply-To: <1240439975.30082.66.camel@johannes.local> (Johannes Berg's message of "Thu\, 23 Apr 2009 00\:39\:35 +0200")
+Message-ID: <87tz4ed0w7.fsf@litku.valot.fi> (sfid-20090424_082507_068366_AD5B0CE0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I had the same problem on my iwlagn notebook.  This patch successfully 
-fixed that as well!
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Thanks, Larry :)
+> Now, if we're going to use radio_enabled more, I wonder whether we
+> should completely deconfigure the hardware when we want to turn off
+> radio_enabled, and then completely reconfigure it once we enable the
+> radio again.
 
-Ehud
+I assume that you mean op_stop() and op_start() here.
 
-Larry Finger wrote:
-> If you are having problems with wireless networking using 2.6.30-rc1 from
-> Linus's Linux-2.6 git tree, the fix is the following (Note: This is _NOT_ needed
-> for wireless-testing!!!):
+> Pros:
+>  * configures all hardware correctly without the driver needing to do
+>    everything by itself
+>  * works with all hardware for sure
 >
-> ---
-> Fix try_then_request_module to use waiting __request_module again.
->
-> Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
-> ---
->  include/linux/kmod.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> Index: linux-2.6.30-rc1/include/linux/kmod.h
-> ===================================================================
-> --- linux-2.6.30-rc1.orig/include/linux/kmod.h	2009-04-08 12:47:54.000000000 +0200
-> +++ linux-2.6.30-rc1/include/linux/kmod.h	2009-04-08 17:39:35.000000000 +0200
-> @@ -34,7 +34,7 @@ extern int __request_module(bool wait, c
->  #define request_module(mod...) __request_module(true, mod)
->  #define request_module_nowait(mod...) __request_module(false, mod)
->  #define try_then_request_module(x, mod...) \
-> -	((x) ?: (__request_module(false, mod), (x)))
-> +	((x) ?: (__request_module(true, mod), (x)))
->  #else
->  static inline int request_module(const char *name, ...) { return -ENOSYS; }
->  static inline int request_module_nowait(const char *name, ...) { return -ENOSYS; }
->
->   
+> Cons:
+>  * higher latency
+
+>From stlc45xx and wl12xx perspective I would like to have low latency as
+possible for the radio on/off case. This is what I had in mind:
+
+interface down:
+
+o chip is powered off while down
+o ifup uploads firmware and initialises it
+o ifup might take hundreds of milliseconds, at least with 1271
+
+radio off:
+
+o chip is powered on
+o firmware possibly sleeping/hibernating
+o radios turned off
+o very low latency (<5 ms) to wakeup
+o small power consuption during radio off
+
+This way it would be possible to have a bit faster scans when not
+associated (with radio off), but still have a possibility to completely
+turn of chip from user space for a longer periods of time (with
+interface down).
 
 -- 
-Legal Disclaimer that you are now contractually bound to under all laws with no recourse:
-http://attrition.org/security/rants/z/disclaimers.html
-
+Kalle Valo
