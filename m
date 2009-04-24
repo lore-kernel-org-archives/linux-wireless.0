@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23370 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765463AbZDAV1t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 17:27:49 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/3] iwlwifi: add debug messages when start aggregation queue
-Date: Wed,  1 Apr 2009 14:33:25 -0700
-Message-Id: <1238621605-14846-4-git-send-email-reinette.chatre@intel.com> (sfid-20090401_232756_658468_07D74590)
-In-Reply-To: <1238621605-14846-3-git-send-email-reinette.chatre@intel.com>
-References: <1238621605-14846-1-git-send-email-reinette.chatre@intel.com>
- <1238621605-14846-2-git-send-email-reinette.chatre@intel.com>
- <1238621605-14846-3-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:46861 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbZDXTSL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2009 15:18:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <20090422140107.GD3288@tuxdriver.com>
+References: <c4e36d110904220333u37304c79k6ab528f92b5f3718@mail.gmail.com>
+	 <20090422140107.GD3288@tuxdriver.com>
+Date: Fri, 24 Apr 2009 21:18:09 +0200
+Message-ID: <c4e36d110904241218x209a4b76kf271f7288f1a33da@mail.gmail.com> (sfid-20090424_211821_497772_0C4E7A46)
+Subject: Re: regression IWl3945 - doesn't work with recent 2.6.30-rcX
+From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+2009/4/22 John W. Linville <linville@tuxdriver.com>:
+> On Wed, Apr 22, 2009 at 12:33:03PM +0200, Zdenek Kabelac wrote:
+>> Hi
+>>
+>> I'm checking whether -rcX kernel could be usable on my
+>> T61/4GB/C2D/x86_64 - but wireless seems to be still out of
+>> functionality:
+>> I'm getting lots of weird trace-back messages and it looks like
+>> iwl3945 is not working at all.
+>> (attached messages from fresh build of -rc3 - but it never worked ev=
+en in -rc1)
+>
+> Looks like this one did _not_ make -rc3:
+>
+> commit df833b1d73680f9f9dc72cbc3215edbbc6ab740d
+> Author: Reinette Chatre <reinette.chatre@intel.com>
+> Date: =A0 Tue Apr 21 10:55:48 2009 -0700
+>
+> =A0 =A0iwlwifi: DMA fixes
+>
+> =A0 =A0A few issues wrt DMA were uncovered when using the driver with=
+ swiotlb.
+> ...
+>
+> It is in wireless-2.6 and should be in net-2.6 -- please try one of t=
+hose kernels.
 
-This patch adding few more debug messages if encounter error when driver
-try to start tx aggregation queue. Also change from IWL_ERR to
-IWL_DEBUG_HT is the HW legacy queue is empty when driver request to move
-to aggregation queue.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+I can confirm that current upstream linux commit
+9f5a691253924fd033a58c6b1fed57bb0a4eccf4 works again with iwlwifi.
+and it already contains the patch you suggested to check.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index b13862a..57ea320 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1168,8 +1168,10 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
- 			__func__, ra, tid);
- 
- 	sta_id = iwl_find_station(priv, ra);
--	if (sta_id == IWL_INVALID_STATION)
-+	if (sta_id == IWL_INVALID_STATION) {
-+		IWL_ERR(priv, "Start AGG on invalid station\n");
- 		return -ENXIO;
-+	}
- 
- 	if (priv->stations[sta_id].tid[tid].agg.state != IWL_AGG_OFF) {
- 		IWL_ERR(priv, "Start AGG when state is not IWL_AGG_OFF !\n");
-@@ -1177,8 +1179,10 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
- 	}
- 
- 	txq_id = iwl_txq_ctx_activate_free(priv);
--	if (txq_id == -1)
-+	if (txq_id == -1) {
-+		IWL_ERR(priv, "No free aggregation queue available\n");
- 		return -ENXIO;
-+	}
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	tid_data = &priv->stations[sta_id].tid[tid];
-@@ -1192,7 +1196,7 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
- 		return ret;
- 
- 	if (tid_data->tfds_in_queue == 0) {
--		IWL_ERR(priv, "HW queue is empty\n");
-+		IWL_DEBUG_HT(priv, "HW queue is empty\n");
- 		tid_data->agg.state = IWL_AGG_ON;
- 		ieee80211_start_tx_ba_cb_irqsafe(priv->hw, ra, tid);
- 	} else {
--- 
-1.5.6.3
-
+Zdenek
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
