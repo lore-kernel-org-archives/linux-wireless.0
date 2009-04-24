@@ -1,101 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33992 "EHLO mx2.redhat.com"
+Received: from kroah.org ([198.145.64.141]:50235 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752285AbZDWNoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 09:44:44 -0400
-Subject: Re: Using wpa_supplicant in D-Bus mode with nl80211 driver
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1240492572.15894.7.camel@localhost.localdomain>
-References: <1240419177.12282.3.camel@localhost.localdomain>
-	 <20090422170852.GA7298@jm.kir.nu>
-	 <1240426517.12282.11.camel@localhost.localdomain>
-	 <1240441752.14995.8.camel@localhost.localdomain>
-	 <1240475973.30504.1.camel@localhost.localdomain>
-	 <1240484281.18245.16.camel@localhost.localdomain>
-	 <1240485352.15894.3.camel@localhost.localdomain>
-	 <1240487875.18245.37.camel@localhost.localdomain>
-	 <1240492572.15894.7.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 23 Apr 2009 09:45:52 -0400
-Message-Id: <1240494352.20268.2.camel@localhost.localdomain> (sfid-20090423_154447_660629_98BC2D4D)
-Mime-Version: 1.0
+	id S1758560AbZDXXDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2009 19:03:11 -0400
+Date: Fri, 24 Apr 2009 15:58:20 -0700
+From: Greg KH <greg@kroah.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090424225820.GE3343@kroah.com> (sfid-20090425_010317_358329_3DFC4C4D)
+References: <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com> <20090424110329.GJ2830@storm.local.network>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090424110329.GJ2830@storm.local.network>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-04-23 at 14:16 +0100, Marcel Holtmann wrote:
-> Hi Dan,
+On Fri, Apr 24, 2009 at 07:03:29AM -0400, Forest Bond wrote:
+> Hi Greg,
 > 
-> > > > > > > > > I am trying to use wpa_supplicant in D-Bus mode with the nl80211 driver
-> > > > > > > > > instead of WEXT. I don't seem to be able to control the from the command
-> > > > > > > > > line and the -D option doesn't take.
-> > > > > > > > 
-> > > > > > > > I would assume you are doing this with NM. You could either change it to
-> > > > > > > > register the interface (this is not from -D option, but from the D-Bus
-> > > > > > > > message) with the nl80211 driver or try to build wpa_supplicant without
-> > > > > > > > WEXT support (which would make the nl80211 wrapper the default one). I
-> > > > > > > > don't think either of these are yet acceptable as a generic solution,
-> > > > > > > > but making NM request driver "nl80211,wext" could be a suitable first
-> > > > > > > > step when moving to wpa_supplicant 0.7.x (this makes wpa_supplicant
-> > > > > > > > first try with nl80211 and if needed, fall back to WEXT).
-> > > > > > > 
-> > > > > > > I am doing manual testing and with ConnMan. However I would prefer to
-> > > > > > > have a global driver setting "nl80211,wext" that I can give on the
-> > > > > > > command line and that will then chosen as default if the addInterface
-> > > > > > > method doesn't give a driver. I really don't need a per interface
-> > > > > > > setting here.
-> > > > > > 
-> > > > > > Um, you can specify a driver for the interface you add in the dbus call
-> > > > > > for addInterface.  Add a "driver" key to your dict with the driver you
-> > > > > > want in the value.  Is there a bug with that?
+> On Sun, Apr 19, 2009 at 03:32:18PM -0700, Greg KH wrote:
+> > On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
+> > > On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
+> > > > Forest Bond wrote:
 > > > > > 
-> > > > > I know that I can do that. I was just looking for a global configuration
-> > > > > switch to default to nl80211,wext via D-Bus system activation and not
-> > > > > via changing the code.
+> > > > > However, I did have a question:
+> > > > > 
+> > > > > The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwusb.ko.
+> > > > > Should the directories be named "viawget" and "vntwusb," respectively, or is it
+> > > > > appropriate for them to be named "vt6655" and "vt6656"?
 > > > > 
-> > > > Even with system activation you still need to call addInterface, which
-> > > > can take the driver.  I still don't quite understand what you're getting
-> > > > at here, I guess...  When you say "not change code" you mean in the
-> > > > process that's calling wpa_supplicant?
+> > > > Of course Greg has the final say, but I vote to keep the directories with the
+> > > > vt6656 name and change the name of the driver, which is defined in  the line
+> > > > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the vendor driver.
 > > > 
-> > > that is exactly what I mean. So to switch NM to use nl80211 you would
-> > > have to change the NM code. I prefer to have this a command line option
-> > > so people can turn it back to wext in case something breaks. Or a vendor
-> > > driver for that matter (not that I care about these).
+> > > This makes sense to me.  I'll proceed this way for now.  Greg, let me know if
+> > > you'd prefer I didn't do this.
 > > 
-> > That's exactly why it's hardcoded, so people can't change it just on a
-> > whim, and break their stuff.  It's great and desired to try nl80211 to,
-> > as a developer, test it out and make sure it works with nl80211 (and fix
-> > supplicant bugs that come up) but, of course, that shouldn't be done for
-> > end-users.
-> > 
-> > The real fix here is to do what Johannes and I were talking about two
-> > nights ago; provide udev-based driver hints for those drivers supporting
-> > nl80211, or else have NM inspect the driver directly with netlink and
-> > determine whether it supports nl80211, and then direct wpa_supplicant to
-> > use nl80211 instead of wext.  I'll take a patch to do that, because I
-> > want to kill wext as much as you do.
-> > 
-> > But hacking that stuff in without doing it the right way is only
-> > suitable for development, and given that, I'd be against any sort of
-> > change to wpa_supplicant as you've proposed.
+> > No objection from me.
 > 
-> the latest version of wpa_supplicant can specific a list of drivers like
-> nl80211,wext so it effectively falls back to wext if nl80211 decides
-> this doesn't work or is not present. Should we not just add driver
-> quirks/blacklist into wpa_supplicant then?
+> The following git repository has a vt6655 branch and a vt6656 branch:
+> 
+>   http://www.alittletooquiet.net/media/code/vt665x.git
+> 
+> The vt6655 branch contains pretty much all of the work I'll likely be able to do
+> for that driver.  The vt6656 branch needs more work.  I've not gone farther than
+> build-testing either, at this point.
+> 
+> As I've mentioned before, some of this kind of work is really a bit outside my
+> usual domain, so if you do look at it, I'd appreciate feedback.
+> 
+> Feel free to make requests.
 
-I fail to see how fallbacks are helpful here, it seems to me that it
-will simply make it completely unknown which driver is being used at the
-time without getting debugging logs from the supplicant.  Frankly, I'd
-rather know *exactly* what driver NM is requesting the supplicant use,
-so I know exactly what to expect.
+Could you send it out as patches so it's easier to review?
 
-And if there are quirks, the supplicant driver needs to get fixed.  Not
-worked around.  Fixed.  Otherwise the supplicant gets littered with
-workarounds, making unmaintainable and fragile code.
+thanks,
 
-Dan
-
-
+greg k-h
