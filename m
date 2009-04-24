@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:46915 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbZDOXVS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37073 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754211AbZDXUPy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 19:21:18 -0400
-Received: from [192.168.1.42] (p5487ABF9.dip.t-dialin.net [84.135.171.249])
-	by mail.holtmann.org (Postfix) with ESMTP id A34F38B45D
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 01:21:21 +0200 (CEST)
-Subject: Problem with IEEE80211_MONITORING_INTERVAL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 16 Apr 2009 01:21:12 +0200
-Message-Id: <1239837672.11795.46.camel@violet> (sfid-20090416_012123_293746_81110E23)
-Mime-Version: 1.0
+	Fri, 24 Apr 2009 16:15:54 -0400
+Date: Fri, 24 Apr 2009 16:14:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Geoff Levand <geoffrey.levand@am.sony.com>
+Cc: jgarzik@pobox.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Subject: Re: [patch] net/ps3: Fix wireless AP connect error handling
+Message-ID: <20090424201446.GD3309@tuxdriver.com> (sfid-20090424_221614_057924_AC7E8CBC)
+References: <49D109B4.7020808@am.sony.com> <49F0EFB9.20709@am.sony.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49F0EFB9.20709@am.sony.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+On Thu, Apr 23, 2009 at 03:46:17PM -0700, Geoff Levand wrote:
+> From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+> 
+> This patch fixes the bug that the driver tries to continue to
+> connect(associate) to AP even if gelic_wl_do_{wpa,wep}_setup() fails,
+> 
+> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+> Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
+> ---
+> Hi John,
+> 
+> I didn't see this get merged in to 2.6.30 yet.  Could you let me know the status?
+> 
+> -Geoff
 
-so I have an Lenovo X200 with an Intel 5350 cards. This card contains
-WiFi and WiMAX radios (not shared). The association with an AP keeps
-breaking all the time and it is pretty hard to establish a durable
-connection.
+I have it queued for 2.6.31.  Does it cause a crash or other problem
+serious enough to merit pushing it for 2.6.30?
 
-After a long debugging session with Reinette we finally tracked down
-what is going on here. A full scan with this card takes 7-9 seconds and
-that seems to be too long and trigger IEEE80211_MONITORING_INTERVAL
-which then deauthenticates us with the AP (reason=6). Problem then is
-that the attempt authenticate/associate with the AP fails with all the
-time (reason=2). Bringing the interface down/up again doesn't help. It
-seems that some internal mac80211 states are messed up. Some times the
-whole process stalls completely and nothing happens anymore. Only
-unloading and reloading the driver or rebooting helps.
-
-Increasing the IEEE80211_MONITORING_INTERVAL to 10 seconds doesn't
-trigger the deauthentication with the AP anymore (or less likely).
-
-During debugging I verified that only the scan actually triggers the
-deauthentication. If I don't scan (NM disabled) then everything works
-smoothly.
-
-I am running the latest wireless-testing tree (based on 2.6.30-rc2) from
-today and the wpa_supplicant from GIT with nl80211 driver.
-
-Regards
-
-Marcel
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
