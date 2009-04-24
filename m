@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:35088 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbZDYMKE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53941 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288AbZDXJYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Apr 2009 08:10:04 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/1] ath5k: 5211, don't crypt every protected frame
-Date: Sat, 25 Apr 2009 14:09:23 +0200
-Message-Id: <1240661363-16631-1-git-send-email-jirislaby@gmail.com> (sfid-20090425_141012_026618_F2387970)
+	Fri, 24 Apr 2009 05:24:17 -0400
+Subject: Re: [PATCH] mac80211: add driver ops wrappers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <87y6tqd32q.fsf@litku.valot.fi> (sfid-20090424_073822_071232_0014077F)
+References: <1240505572.30082.233.camel@johannes.local>
+	 <87y6tqd32q.fsf@litku.valot.fi> (sfid-20090424_073822_071232_0014077F)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QqZFeHERUzBTVN/7C06a"
+Date: Fri, 24 Apr 2009 11:23:39 +0200
+Message-Id: <1240565019.5066.2.camel@johannes.local> (sfid-20090424_112420_537963_BD89FC62)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
-do you remember some 5211 HW which didn't work with this?
---
 
-Set null key type even on ar5211, otherwise it en/decrypts every frame with
-protected bit set which renders the card unusable on encrypted networks.
+--=-QqZFeHERUzBTVN/7C06a
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-Cc: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/pcu.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, 2009-04-24 at 08:37 +0300, Kalle Valo wrote:
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 55122f1..5f07e87 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -1003,7 +1003,7 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
- 	 * Note2: Windows driver (ndiswrapper) sets this to
- 	 *        0x00000714 instead of 0x00000007
- 	 */
--	if (ah->ah_version > AR5K_AR5211) {
-+	if (ah->ah_version >= AR5K_AR5211) {
- 		ath5k_hw_reg_write(ah, AR5K_KEYTABLE_TYPE_NULL,
- 				AR5K_KEYTABLE_TYPE(entry));
- 
--- 
-1.6.2.4
+> But I'm just concerned about the drv prefix, with very bad luck it might
+> create conflicts with some other component. What about using
+> ieee80211_drv, for example?
+
+Hmm. I kinda share your concern, but since these are all static inlines
+they don't really pollute any namespace, at least not for linking, so
+conflicts could only arise when another subsystem suddenly exports the
+same name, in a header file that we include. In the end I decided not to
+worry about it just because it otherwise gets very long.
+
+johannes
+
+--=-QqZFeHERUzBTVN/7C06a
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ8YUSAAoJEKVg1VMiehFYZ0IQAKhE0IY14bLZSu9nCsNIGqr+
+bB6+67mu0wD30VqBleGPmU3sYLl6Ta+N2enKY++E97n8DQ57AZmU3pSf/NBVmJks
+aPGl/1crjFYR78y+vthOVouJtbMnFwH7EWGU2OLYGVwHnZ9AU1fNmGVsJklm6DCs
+Nh6CmDR1CqtvN2Yatg7gNt/VBSpSAatgcwnRy5H+Rvzy8SOzZRlQAlkBVaHTvMMe
+YRungzLwUvQxEjOWuznHfP4fOPwmFDyPcuDlQVj8iMU6Gl4gNOy2Png6UiGgCcSP
+pj0MFRHeqXbVKBGRupgIlLBt2LnEAUdXcTnQPnYaaEC16GSLyIGj2m+d9d0+rPL6
+0HvLUNMz6BDE5Ec8nlsFiB2MKYKjwyCgsQ7rKzAxDszrj/eF8GprF+Wf3OLqENz6
+N1VEw8ulj9goH6bvLGipDl/N9toUJa3jNXlG33Mpg4nXnC0TkUC+tXK62SRbedXp
+Pn1WCqQdjNtHoSsKholRO1qCC1r6UGq4SHb0UgF44tDGSveVbq3seDuKEpTV67Ah
+Tzvf+719i3N4ivDqzl5FwaEQ5ICp2pJJ4qYiiGK9tNrOjjn2GOVhgzL6kfeRGLum
+5oZd1jaVFnLUTdA0H9+xpuatsI6q/5HZd5udD4WGHUG/5VcbTOS1vYaAi1IlruxC
+dydJ0UxFUrRKiS1Y2n2m
+=JoiY
+-----END PGP SIGNATURE-----
+
+--=-QqZFeHERUzBTVN/7C06a--
 
