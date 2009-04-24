@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31216 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212AbZDTVrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 17:47:42 -0400
-Subject: Re: [PATCH 08/11] iwl3945: use cancel_delayed_work_sync to cancel
- rfkill_poll
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
-References: <1240263424-8495-1-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-2-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-3-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-4-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-5-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-6-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-7-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-8-git-send-email-reinette.chatre@intel.com>
-	 <1240263424-8495-9-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Mon, 20 Apr 2009 14:53:45 -0700
-Message-Id: <1240264425.5206.112.camel@rc-desk> (sfid-20090420_234745_440966_05302A9F)
-Mime-Version: 1.0
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:62343 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752247AbZDXFhx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2009 01:37:53 -0400
+Received: by fxm2 with SMTP id 2so915096fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2009 22:37:51 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: add driver ops wrappers
+References: <1240505572.30082.233.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 24 Apr 2009 08:37:49 +0300
+In-Reply-To: <1240505572.30082.233.camel@johannes.local> (Johannes Berg's message of "Thu\, 23 Apr 2009 18\:52\:52 +0200")
+Message-ID: <87y6tqd32q.fsf@litku.valot.fi> (sfid-20090424_073757_077345_ADEDB910)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Could you please submit this patch to 2.6.30 also?
+> In order to later add tracing or verifications to the driver
+> calls mac80211 makes, this patch adds static inline wrappers
+> for all operations.
+>
+> All calls are now written as
+>
+> 	drv_<op>(local, ...);
+>
+> instead of
+>
+> 	local->ops-><op>(&local->hw, ...);
+>
+> Where necessary, the wrappers also do existence checking and
+> return default values as appropriate.
 
-Thank you
+Also grepping is easier this way. I think this is a good change to have,
+especially I'm interested of tracing driver calls. Until now I have
+added debug messages to all drivers I maintain.
 
-Reinette
+But I'm just concerned about the drv prefix, with very bad luck it might
+create conflicts with some other component. What about using
+ieee80211_drv, for example?
 
-
-On Mon, 2009-04-20 at 14:37 -0700, Chatre, Reinette wrote:
-> Users reported lockup with work still trying to run
-> after module has been unloaded.
-> 
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/30594/focus=30601
-> 
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> Reported-by: TJ <ubuntu@tjworld.net>
-> Reported-by: Huaxu Wan <huaxu.wan@linux.intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index e22282e..a776326 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -4436,7 +4436,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
->  	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
->  
->  	iwl_rfkill_unregister(priv);
-> -	cancel_delayed_work(&priv->rfkill_poll);
-> +	cancel_delayed_work_sync(&priv->rfkill_poll);
->  
->  	iwl3945_dealloc_ucode_pci(priv);
->  
-
+-- 
+Kalle Valo
