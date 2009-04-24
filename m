@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40905 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbZDPBMM (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:53461 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756973AbZDXTlb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 21:12:12 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <Kalle.Valo@nokia.com>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1239842656.25334.20.camel@johannes.local>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239841291.25334.18.camel@johannes.local>
-	 (sfid-20090416_022212_435684_EEC24EF6)  <1239842656.25334.20.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 16 Apr 2009 03:12:05 +0200
-Message-Id: <1239844325.11795.50.camel@violet> (sfid-20090416_031214_117620_3A83FBE3)
-Mime-Version: 1.0
+	Fri, 24 Apr 2009 15:41:31 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ar9170: uncomment powermgt case handle
+Date: Fri, 24 Apr 2009 21:41:18 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200904242141.19266.chunkeey@web.de> (sfid-20090424_214151_442826_5B6EE961)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+This patch uncomment a few lines that survived the RFCs.
+However, there is not much to worry about, since AP mode is
+not officially advertised and supported.
 
-> > > After a long debugging session with Reinette we finally tracked down
-> > > what is going on here. A full scan with this card takes 7-9 seconds and
-> > > that seems to be too long and trigger IEEE80211_MONITORING_INTERVAL
-> > > which then deauthenticates us with the AP (reason=6). 
-> > 
-> > Yeah, this is a bug. We analysed this problem a couple of days ago and I
-> > thought Kalle was going to fix it -- maybe he forgot. I forgot what
-> > exactly it was and how to fix it, hmm. Right now I'm confused and can't
-> > seem to reproduce my analysis. I thought it had something to do with
-> > using a different timer but we do seem to use the regular mgd.timer, so
-> > I'm not sure.
-> 
-> Hmm. Can't seem to find what's going on -- can you enable
-> CONFIG_MAC80211_VERBOSE_DEBUG and check for the beacon loss messages?
-
-I did that already and yes, I see the beacon loss message. Increasing
-IEEE80211_MONITORING_INTERVAL to 10 seconds fixes this, but that can't
-be the real solution for it.
-
-Also even when it deauth, it should then be able to authenticate and
-associate again. If I end up in this situation basically only a reboot
-fixes it.
-
-Regards
-
-Marcel
-
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 4ee3223..f28a4c2 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -268,9 +268,9 @@ int ar9170_set_operating_mode(struct ar9170 *ar)
+ 		case NL80211_IFTYPE_ADHOC:
+ 			pm_mode |= AR9170_MAC_REG_POWERMGT_IBSS;
+ 			break;
+-/*		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_AP:
+ 			pm_mode |= AR9170_MAC_REG_POWERMGT_AP;
+-			break;*/
++			break;
+ 		case NL80211_IFTYPE_WDS:
+ 			pm_mode |= AR9170_MAC_REG_POWERMGT_AP_WDS;
+ 			break;
