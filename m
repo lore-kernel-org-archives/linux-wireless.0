@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42426 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822AbZDXTpy (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:37516 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbZDYTL7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 15:45:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
+	Sat, 25 Apr 2009 15:11:59 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] p54usb: remove some dead code
+Date: Sat, 25 Apr 2009 21:11:55 +0200
 Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libertas: fix format warning
-Date: Fri, 24 Apr 2009 15:39:17 -0400
-Message-Id: <1240601958-7273-1-git-send-email-linville@tuxdriver.com> (sfid-20090424_214557_824534_7FC69232)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200904252111.56133.chunkeey@web.de> (sfid-20090425_211203_424965_B6427EEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/libertas/if_spi.c: In function =E2=80=98if_spi_c2h=
-_data=E2=80=99:
-drivers/net/wireless/libertas/if_spi.c:733: warning: format =E2=80=98%u=
-=E2=80=99 expects type =E2=80=98unsigned int=E2=80=99, but argument 4 h=
-as type =E2=80=98long unsigned int=E2=80=99
+Since "p54: prevent upload of wrong firmwares" we no longer allow
+outdated LM86 firmwares to be uploaded on ISL3887 (LM87) devices.
+Therefore we can purge this buggy legacy code altogether.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- drivers/net/wireless/libertas/if_spi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wirel=
-ess/libertas/if_spi.c
-index 97493e2..dccd01f 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -731,7 +731,7 @@ static int if_spi_c2h_data(struct if_spi_card *card=
-)
- 		goto out;
- 	} else if (len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
- 		lbs_pr_err("%s: error: card has %d bytes of data, but "
--			   "our maximum skb size is %u\n",
-+			   "our maximum skb size is %lu\n",
- 			   __func__, len, MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
- 		err =3D -EINVAL;
- 		goto out;
---=20
-1.6.0.6
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 6cc6cbc..44ab3cc 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -206,53 +206,6 @@ static int p54u_init_urbs(struct ieee80211_hw *dev)
+ 	return ret;
+ }
+ 
+-static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb)
+-{
+-	struct p54u_priv *priv = dev->priv;
+-	struct urb *addr_urb, *data_urb;
+-	int err = 0;
+-
+-	addr_urb = usb_alloc_urb(0, GFP_ATOMIC);
+-	if (!addr_urb)
+-		return;
+-
+-	data_urb = usb_alloc_urb(0, GFP_ATOMIC);
+-	if (!data_urb) {
+-		usb_free_urb(addr_urb);
+-		return;
+-	}
+-
+-	usb_fill_bulk_urb(addr_urb, priv->udev,
+-			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  &((struct p54_hdr *)skb->data)->req_id, 4,
+-			  p54u_tx_dummy_cb, dev);
+-	usb_fill_bulk_urb(data_urb, priv->udev,
+-			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len, FREE_AFTER_TX(skb) ?
+-			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
+-	addr_urb->transfer_flags |= URB_ZERO_PACKET;
+-	data_urb->transfer_flags |= URB_ZERO_PACKET;
+-
+-	usb_anchor_urb(addr_urb, &priv->submitted);
+-	err = usb_submit_urb(addr_urb, GFP_ATOMIC);
+-	if (err) {
+-		usb_unanchor_urb(addr_urb);
+-		goto out;
+-	}
+-
+-	usb_anchor_urb(data_urb, &priv->submitted);
+-	err = usb_submit_urb(data_urb, GFP_ATOMIC);
+-	if (err)
+-		usb_unanchor_urb(data_urb);
+-
+- out:
+-	usb_free_urb(addr_urb);
+-	usb_free_urb(data_urb);
+-
+-	if (err)
+-		p54_free_skb(dev, skb);
+-}
+-
+ static __le32 p54u_lm87_chksum(const __le32 *data, size_t length)
+ {
+ 	u32 chk = 0;
+@@ -954,13 +907,10 @@ static int __devinit p54u_probe(struct usb_interface *intf,
+ 	priv->common.stop = p54u_stop;
+ 	if (recognized_pipes < P54U_PIPE_NUMBER) {
+ 		priv->hw_type = P54U_3887;
++		dev->extra_tx_headroom += sizeof(struct lm87_tx_hdr);
++		priv->common.tx_hdr_len = sizeof(struct lm87_tx_hdr);
++		priv->common.tx = p54u_tx_lm87;
+ 		err = p54u_upload_firmware_3887(dev);
+-		if (priv->common.fw_interface == FW_LM87) {
+-			dev->extra_tx_headroom += sizeof(struct lm87_tx_hdr);
+-			priv->common.tx_hdr_len = sizeof(struct lm87_tx_hdr);
+-			priv->common.tx = p54u_tx_lm87;
+-		} else
+-			priv->common.tx = p54u_tx_3887;
+ 	} else {
+ 		priv->hw_type = P54U_NET2280;
+ 		dev->extra_tx_headroom += sizeof(struct net2280_tx_hdr);
