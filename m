@@ -1,56 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46990 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756731AbZDSOF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 10:05:26 -0400
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 16:05:23 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240148519.898.3.camel@johannes.local>
-Message-ID: <20090419140523.158830@gmx.net> (sfid-20090419_160530_514781_26A1B0A0)
+Received: from mail3.webfaction.com ([70.85.44.146]:41507 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbZDYAJN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2009 20:09:13 -0400
+Date: Fri, 24 Apr 2009 20:08:30 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Greg KH <greg@kroah.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090425000830.GO2830@storm.local.network> (sfid-20090425_020918_108781_9B628253)
+References: <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network> <20090419170950.GA28885@storm.local.network> <49EB8119.1020402@lwfinger.net> <20090419200146.GB28885@storm.local.network> <20090419223218.GA30599@kroah.com> <20090424110329.GJ2830@storm.local.network> <20090424225820.GE3343@kroah.com>
 MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
- (sfid-20090419_145246_566920_BF082D12)
- <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>
- (sfid-20090419_153615_967882_D1A9F951) <1240148519.898.3.camel@johannes.local>
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-To: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="IpgPcFyQO6wM49Um"
+In-Reply-To: <20090424225820.GE3343@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hallo Johannes!
 
-> Huh? No, it does not mostly do the same. Quite not so. Managed and IB=
-SS
-> modes are _really_ different. Almost the only thing they have in comm=
-on
-> is that they use an SSID and a BSSID.
+--IpgPcFyQO6wM49Um
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-A character device is not the same as a block device too but it uses th=
-e same API like normal files. Thats the deference to DOS. And assoc() i=
-s the equivalent for join_ibss(), like read() or write() it can impleme=
-nted with the same interface. In WEXT it's implemented with the same in=
-terface.
+Hi,
 
-> And an airy concept of "UNIX philosophy" really has nothing whatsoeve=
-r
-> to do with it.
+On Fri, Apr 24, 2009 at 03:58:20PM -0700, Greg KH wrote:
+> On Fri, Apr 24, 2009 at 07:03:29AM -0400, Forest Bond wrote:
+> > Hi Greg,
+> >=20
+> > On Sun, Apr 19, 2009 at 03:32:18PM -0700, Greg KH wrote:
+> > > On Sun, Apr 19, 2009 at 04:01:46PM -0400, Forest Bond wrote:
+> > > > On Sun, Apr 19, 2009 at 02:52:57PM -0500, Larry Finger wrote:
+> > > > > Forest Bond wrote:
+> > > > > >=20
+> > > > > > However, I did have a question:
+> > > > > >=20
+> > > > > > The vt6655 driver builds viawget.ko, and the vt6656 driver buil=
+ds vntwusb.ko.
+> > > > > > Should the directories be named "viawget" and "vntwusb," respec=
+tively, or is it
+> > > > > > appropriate for them to be named "vt6655" and "vt6656"?
+> > > > >=20
+> > > > > Of course Greg has the final say, but I vote to keep the director=
+ies with the
+> > > > > vt6656 name and change the name of the driver, which is defined i=
+n  the line
+> > > > > #define DEVICE_NAME "vntwusb" in file include/device_cfg.h in the=
+ vendor driver.
+> > > >=20
+> > > > This makes sense to me.  I'll proceed this way for now.  Greg, let =
+me know if
+> > > > you'd prefer I didn't do this.
+> > >=20
+> > > No objection from me.
+> >=20
+> > The following git repository has a vt6655 branch and a vt6656 branch:
+> >=20
+> >   http://www.alittletooquiet.net/media/code/vt665x.git
+> >=20
+> > The vt6655 branch contains pretty much all of the work I'll likely be a=
+ble to do
+> > for that driver.  The vt6656 branch needs more work.  I've not gone far=
+ther than
+> > build-testing either, at this point.
+> >=20
+> > As I've mentioned before, some of this kind of work is really a bit out=
+side my
+> > usual domain, so if you do look at it, I'd appreciate feedback.
+> >=20
+> > Feel free to make requests.
+>=20
+> Could you send it out as patches so it's easier to review?
 
-Unfortunately I don't have the book "Modern Operating Systems" here so =
-I can't quote it.
+Yes, I would've preferred that but the first patch is >1MB, so I figured it
+might be more useful to point you to a git repository, rather than send out=
+ a
+compressed patch.  I can send it out uncompressed if you prefer, or I can j=
+ust
+send all but the first patch (which only copies files from the upstream arc=
+hive,
+anyway).
 
-Regards
-Alina
-
+-Forest
 --=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--IpgPcFyQO6wM49Um
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJ8lR+RO4fQQdv5AwRAm3KAJ9+F8pInDPV1SMn05dfiDCC6TmrNgCgrXY6
+ufdmrQUA1kxYbcoc7ZOumH4=
+=46jj
+-----END PGP SIGNATURE-----
+
+--IpgPcFyQO6wM49Um--
