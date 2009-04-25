@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:49442 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbZDGGKT (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:34194 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbZDYTcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 02:10:19 -0400
+	Sat, 25 Apr 2009 15:32:11 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ar9170usb: reset device on resume
+Date: Sat, 25 Apr 2009 21:32:09 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1238932997.3782.6.camel@johannes.local>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <b25312890904050352n391f4707mfafca74aef8bca06@mail.gmail.com>
-	 <1238932997.3782.6.camel@johannes.local>
-Date: Tue, 7 Apr 2009 09:10:15 +0300
-Message-ID: <dac45060904062310o3861d05kf1ef24450cd70011@mail.gmail.com> (sfid-20090407_081024_132092_842A7571)
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Mark Ryden <markryde@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rami Rosen <roszenrami@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200904252132.09966.chunkeey@web.de> (sfid-20090425_213220_315292_D6B160E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
- There is a lot of interest in Linux Wireless around the world.  I
-believe that many who cannot attend (like me), will be happy if videos
-and slides of the presentations will be available afterwards. (as was
-done in other Fedora FUDCon  conferences in the past).
+This patch takes care of an outstanding comment in
+"[PATCH] ar9170usb: fix hang on resume" commit message.
+
+>However, the device does not accept the firmware on resume.
+>and it will exit with:
+>
+>> firmware part 1 upload failed (-71).
+>> device is in a bad state. please reconnect it!
+
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+Johannes,
+
+does this two-liner breathe life into the device after resume?
 
 Regards,
-Mark
-
-
-On Sun, Apr 5, 2009 at 3:03 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2009-04-05 at 13:52 +0300, Rami Rosen wrote:
->
->> I believe that 802.11n implementation and design in the Linux Wireless stack
->> can be of interest/good to include (also 802.11n Linux future directions ).
->
-> I'll be there unless something weird happens -- anything mac80211
-> related and especially aggregation (since I rewrote it) I can cover.
->
-> johannes
->
+	Chr
+---
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index fddda47..368fc2d 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -689,6 +689,7 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 	aru->common.exec_cmd = ar9170_usb_exec_cmd;
+ 	aru->common.callback_cmd = ar9170_usb_callback_cmd;
+ 
++	udev->reset_resume = 1;
+ 	err = ar9170_usb_reset(aru);
+ 	if (err)
+ 		goto err_freehw;
+@@ -805,6 +806,7 @@ static struct usb_driver ar9170_driver = {
+ #ifdef CONFIG_PM
+ 	.suspend = ar9170_suspend,
+ 	.resume = ar9170_resume,
++	.reset_resume = ar9170_resume,
+ #endif /* CONFIG_PM */
+ };
+ 
