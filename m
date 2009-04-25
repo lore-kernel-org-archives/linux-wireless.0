@@ -1,31 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([207.115.11.52]:41566 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759883AbZDJDIr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2009 23:08:47 -0400
-Message-ID: <49DEB82E.4070900@lwfinger.net> (sfid-20090410_050848_982458_CDB50041)
-Date: Thu, 09 Apr 2009 22:08:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:51140 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753232AbZDYUb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Apr 2009 16:31:29 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: b43 rfkill LED broken in 2.6.30-rc1 from wireless-testing
-References: <49DE6ABE.30207@lwfinger.net>
-In-Reply-To: <49DE6ABE.30207@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH] cfg80211: Remove unnecessary ksize() call
+Date: Sat, 25 Apr 2009 22:28:55 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200904252228.55381.mb@bu3sch.de> (sfid-20090425_223151_379012_A6B9A323)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Johannes,
-> 
-> Boy is the rfkill subsystem fragile.
-> 
-> After all our debugging of the control of the b43 LED with the rfkill switch, it
-> is broken again with 2.6.30-rc1.
+This removes an unnecessary ksize() call. krealloc() will do this
+test internally and won't perform any allocation if the space is
+already sufficient to hold the data.
+So remove the redundant check.
 
-I found the problem and will be submitting a patch ASAP.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Larry
+---
+ net/wireless/scan.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
+--- wireless-testing.orig/net/wireless/scan.c
++++ wireless-testing/net/wireless/scan.c
+@@ -384,11 +384,9 @@ cfg80211_bss_update(struct cfg80211_regi
+ 			} else {
+ 				u8 *ies = found->pub.information_elements;
+ 
+-				if (found->ies_allocated) {
+-					if (ksize(ies) < ielen)
+-						ies = krealloc(ies, ielen,
+-							       GFP_ATOMIC);
+-				} else
++				if (found->ies_allocated)
++					ies = krealloc(ies, ielen, GFP_ATOMIC);
++				else
+ 					ies = kmalloc(ielen, GFP_ATOMIC);
+ 
+ 				if (ies) {
+
+-- 
+Greetings, Michael.
