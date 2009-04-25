@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40554 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751255AbZDPL6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 07:58:32 -0400
-Cc: nbd@openwrt.org, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com
-Content-Type: text/plain; charset=iso-8859-1
-Date: Thu, 16 Apr 2009 13:58:30 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20090416003818.GF4138@makis>
-Message-ID: <20090416115830.305980@gmx.net> (sfid-20090416_135836_349228_7BE2C0C5)
+Received: from bu3sch.de ([62.75.166.246]:52792 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750992AbZDYUkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Apr 2009 16:40:22 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH RFC] cfg80211: Add ies_allocated check before copying ies
+Date: Sat, 25 Apr 2009 22:36:34 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
 MIME-Version: 1.0
-References: <20090416003818.GF4138@makis>
-Subject: Re: [PATCH 6/7] ath5k: Implement antenna control
-To: Nick Kossifidis <mick@madwifi-project.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200904252236.34802.mb@bu3sch.de> (sfid-20090425_224027_954886_CB21AE0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Nick!
+I don't fully understand the code, but let's imagine the following situation:
 
->  * Add code to support the various antenna scenarios supported by hw
->=20
->  * For now hardcode the default scenario (single or dual omnis with
->  tx/rx diversity working and tx antenna handled by session -hw keeps
->  track on which antenna it got ack from each ap/station and maps each
->  ap/station to one of the antennas-).
+- cfg80211_bss_update was called and the ie was stored to allocated space.
+- The information_elements pointer is changed to the allocated space.
+- cfg80211_bss_update is called again, but now the ie fits into the
+  space after the "found" structure.
+- But the information_elements pointer still points to the allocated space.
+  So it may overrun the buffer and crash.
 
-We should add or update an existing nl80211 call, to allow set the used=
- antenna (multiple antennas in Draft-N?) manually, like madwifi does. T=
-his is e.g. needed for long distance links.
+Is this scenario possible?
+If yes, please consider the following patch.
 
-Regards
-Alina
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+ net/wireless/scan.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- wireless-testing.orig/net/wireless/scan.c
++++ wireless-testing/net/wireless/scan.c
+@@ -378,6 +378,11 @@ cfg80211_bss_update(struct cfg80211_regi
+ 			size_t ielen = res->pub.len_information_elements;
+ 
+ 			if (ksize(found) >= used + ielen) {
++				if (found->ies_allocated) {
++					kfree(found->pub.information_elements);
++					found->ies_allocated = false;
++					found->pub.information_elements = (u8 *)found + used;
++				}
+ 				memcpy(found->pub.information_elements,
+ 				       res->pub.information_elements, ielen);
+ 				found->pub.len_information_elements = ielen;
+
+-- 
+Greetings, Michael.
