@@ -1,45 +1,1279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56415 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964AbZDVPeU (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:46766 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753500AbZDYOcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 11:34:20 -0400
-Subject: [PATCH] iwl3945: fix section type conflict on powerpc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Wed, 22 Apr 2009 17:33:41 +0200
-Message-Id: <1240414421.5198.3.camel@johannes.local> (sfid-20090422_173424_185353_6F31F183)
-Mime-Version: 1.0
+	Sat, 25 Apr 2009 10:32:39 -0400
+Date: Sat, 25 Apr 2009 10:31:32 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Greg KH <greg@kroah.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 2/8] Add includes to drivers/staging/vt6655.
+Message-ID: <20090425143132.GB11201@storm.local.network> (sfid-20090425_163244_541773_A892201B)
+References: <20090425001405.GB23173@kroah.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="neYutvxvOLaeuPCA"
+In-Reply-To: <20090425001405.GB23173@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For some reason on powerpc I get:
 
-drivers/net/wireless/iwlwifi/iwl3945-base.c:1416: error:
-	__ksymtab_iwl3945_rx_queue_reset causes a section type conflict
-drivers/net/wireless/iwlwifi/iwl3945-base.c:1416: error:
-	__ksymtab_iwl3945_rx_queue_reset causes a section type conflict
+--neYutvxvOLaeuPCA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The function doesn't need to be exported, and unexporting fixes it,
-so I'm not thinking about what is causing it.
+Add includes to drivers/staging/vt6655.  These came from the includes direc=
+tory
+in the upstream source archive.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Forest Bond <forest@alittletooquiet.net>
 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/staging/vt6655/device_cfg.h |  142 ++++++++++
+ drivers/staging/vt6655/iocmd.h      |  481 +++++++++++++++++++++++++++++++=
+++++
+ drivers/staging/vt6655/iowpa.h      |  159 ++++++++++++
+ drivers/staging/vt6655/ttype.h      |  386 ++++++++++++++++++++++++++++
+ 4 files changed, 1168 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/staging/vt6655/device_cfg.h
+ create mode 100644 drivers/staging/vt6655/iocmd.h
+ create mode 100644 drivers/staging/vt6655/iowpa.h
+ create mode 100644 drivers/staging/vt6655/ttype.h
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-04-22 17:16:53.614082341 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-04-22 17:16:55.382327490 +0200
-@@ -1413,7 +1413,6 @@ void iwl3945_rx_queue_reset(struct iwl_p
- 	rxq->free_count = 0;
- 	spin_unlock_irqrestore(&rxq->lock, flags);
- }
--EXPORT_SYMBOL(iwl3945_rx_queue_reset);
- 
- /*
-  * this should be called while priv->lock is locked
+diff --git a/drivers/staging/vt6655/device_cfg.h b/drivers/staging/vt6655/d=
+evice_cfg.h
+new file mode 100644
+index 0000000..9e18f7c
+--- /dev/null
++++ b/drivers/staging/vt6655/device_cfg.h
+@@ -0,0 +1,142 @@
++/*
++ * Copyright (c) 1996, 2003 VIA Networking, Inc. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ *=20
++ *
++ * File: device_cfg.h
++ *
++ * Purpose: Driver configuration header
++ * Author: Lyndon Chen
++ *
++ * Date: Dec 17, 2002
++ *
++ */ =20
++#ifndef __DEVICE_CONFIG_H
++#define __DEVICE_CONFIG_H
++
++//#include <linux/config.h>
++#include <linux/types.h>
++
++#if !defined(__TTYPE_H__)
++#include "ttype.h"
++#endif
++
++
++
++typedef __u8    UINT8,   *PUINT8;
++typedef __u16   UINT16,  *PUINT16;
++typedef __u32   UINT32,  *PUINT32;
++
++
++#ifndef VOID
++#define VOID            void
++#endif
++
++#ifndef CONST
++#define CONST           const
++#endif
++
++#ifndef STATIC
++#define STATIC          static
++#endif
++
++#ifndef DEF
++#define DEF
++#endif
++
++#ifndef IN
++#define IN
++#endif
++
++#ifndef OUT
++#define OUT
++#endif
++
++typedef
++struct _version {
++    UINT8   major;
++    UINT8   minor;
++    UINT8   build;
++} version_t, *pversion_t;
++
++#ifndef FALSE
++#define FALSE   (0)
++#endif
++
++#ifndef TRUE
++#define TRUE    (!(FALSE))
++#endif
++
++#define VID_TABLE_SIZE      64
++#define MCAST_TABLE_SIZE    64
++#define MCAM_SIZE           32
++#define VCAM_SIZE           32
++#define TX_QUEUE_NO         8
++
++#define DEVICE_NAME         "viawget"
++#define DEVICE_FULL_DRV_NAM "VIA Networking Solomon-A/B/G Wireless LAN Ada=
+pter Driver"
++
++#ifndef MAJOR_VERSION
++#define MAJOR_VERSION       1
++#endif
++
++#ifndef MINOR_VERSION
++#define MINOR_VERSION       17
++#endif
++
++#ifndef DEVICE_VERSION
++#define DEVICE_VERSION       "1.19.12"
++#endif
++//config file=20
++#include <linux/fs.h>
++#include <linux/fcntl.h>
++#ifndef CONFIG_PATH
++#define CONFIG_PATH            "/etc/vntconfiguration.dat"
++#endif
++
++//Max: 2378=3D2312Payload + 30HD +4CRC + 2Padding + 4Len + 8TSF + 4RSR
++#define PKT_BUF_SZ          2390
++
++
++#define MALLOC(x,y)         kmalloc((x),(y))
++#define FREE(x)             kfree((x))
++#define MAX_UINTS           8
++#define OPTION_DEFAULT      { [0 ... MAX_UINTS-1] =3D -1}
++
++
++
++typedef enum  _chip_type{
++    VT3253=3D1   =20
++} CHIP_TYPE, *PCHIP_TYPE;
++
++
++=20
++#ifdef VIAWET_DEBUG
++#define ASSERT(x) { \
++    if (!(x)) { \
++        printk(KERN_ERR "assertion %s failed: file %s line %d\n", #x,\
++        __FUNCTION__, __LINE__);\
++        *(int*) 0=3D0;\
++    }\
++}
++#define DBG_PORT80(value)                   outb(value, 0x80)
++#else
++#define ASSERT(x)
++#define DBG_PORT80(value)                  =20
++#endif
++
++
++#endif
+diff --git a/drivers/staging/vt6655/iocmd.h b/drivers/staging/vt6655/iocmd.h
+new file mode 100644
+index 0000000..2fff3a4
+--- /dev/null
++++ b/drivers/staging/vt6655/iocmd.h
+@@ -0,0 +1,481 @@
++/*
++ * Copyright (c) 1996, 2003 VIA Networking, Inc. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * File: iocmd.h
++ *
++ * Purpose: Handles the viawget ioctl private interface functions
++ *
++ * Author: Lyndon Chen
++ *
++ * Date: May 8, 2002
++ *
++ */=20
++=20
++#ifndef __IOCMD_H__
++#define __IOCMD_H__
++
++#if !defined(__TTYPE_H__)
++#include "ttype.h"
++#endif
++
++
++/*---------------------  Export Definitions -------------------------*/
++
++#if !defined(DEF)
++#define DEF
++#endif
++
++//typedef int BOOL;
++//typedef uint32_t u32;
++//typedef uint16_t u16;
++//typedef uint8_t u8;
++
++
++// ioctl Command code
++#define MAGIC_CODE	                 0x3142
++#define IOCTL_CMD_TEST	            (SIOCDEVPRIVATE + 0)
++#define IOCTL_CMD_SET			    (SIOCDEVPRIVATE + 1)
++#define IOCTL_CMD_HOSTAPD           (SIOCDEVPRIVATE + 2)
++#define IOCTL_CMD_WPA               (SIOCDEVPRIVATE + 3)
++
++
++typedef enum tagWMAC_CMD {
++   =20
++    WLAN_CMD_BSS_SCAN,
++    WLAN_CMD_BSS_JOIN,
++    WLAN_CMD_DISASSOC,
++    WLAN_CMD_SET_WEP,=09
++    WLAN_CMD_GET_LINK,
++    WLAN_CMD_GET_LISTLEN,
++    WLAN_CMD_GET_LIST,
++    WLAN_CMD_GET_MIB,
++    WLAN_CMD_GET_STAT,
++    WLAN_CMD_STOP_MAC,
++    WLAN_CMD_START_MAC,
++    WLAN_CMD_AP_START,
++    WLAN_CMD_SET_HOSTAPD,
++    WLAN_CMD_SET_HOSTAPD_STA,
++    WLAN_CMD_SET_802_1X,
++    WLAN_CMD_SET_HOST_WEP,
++    WLAN_CMD_SET_WPA,       =20
++    WLAN_CMD_GET_NODE_CNT,
++     WLAN_CMD_ZONETYPE_SET,
++    WLAN_CMD_GET_NODE_LIST
++       =20
++} WMAC_CMD, DEF* PWMAC_CMD;
++
++	typedef enum tagWZONETYPE {
++  ZoneType_USA=3D0,
++  ZoneType_Japan=3D1,
++  ZoneType_Europe=3D2
++}WZONETYPE;
++
++#define ADHOC	0
++#define INFRA	1
++#define BOTH	2
++#define AP	    3
++
++#define ADHOC_STARTED	   1
++#define ADHOC_JOINTED	   2
++
++  =20
++#define PHY80211a 	    0
++#define PHY80211b       1
++#define PHY80211g       2  =20
++
++#define SSID_ID                0
++#define SSID_MAXLEN            32
++#define BSSID_LEN              6
++#define WEP_NKEYS              4
++#define WEP_KEYMAXLEN          29
++#define WEP_40BIT_LEN          5
++#define WEP_104BIT_LEN         13=20
++#define WEP_232BIT_LEN         16=20
++
++
++// Ioctl interface structure
++// Command structure
++//
++#pragma pack(1)
++typedef struct tagSCmdRequest {
++	U8 	    name[16];=09
++	void	*data;
++	U16	    wResult;
++	U16     wCmdCode;
++} SCmdRequest, *PSCmdRequest;
++
++
++//
++// Scan
++//
++
++typedef struct tagSCmdScan {
++   =20
++    U8	    ssid[SSID_MAXLEN + 2];
++   =20
++} SCmdScan, *PSCmdScan;  =20
++
++
++//
++// BSS Join
++//=20
++
++typedef struct tagSCmdBSSJoin {
++   =20
++    U16	    wBSSType;
++    U16     wBBPType;
++    U8	    ssid[SSID_MAXLEN + 2];
++    U32	    uChannel;
++    BOOL    bPSEnable;=09
++    BOOL    bShareKeyAuth;
++
++} SCmdBSSJoin, *PSCmdBSSJoin;
++
++typedef struct tagSCmdZoneTypeSet {
++
++ BOOL       bWrite;
++ WZONETYPE  ZoneType;=20
++
++} SCmdZoneTypeSet, *PSCmdZoneTypeSet;
++
++#ifdef WPA_SM_Transtatus
++typedef struct tagSWPAResult {
++         char	ifname[100];
++         U8		proto;
++         U8   key_mgmt;
++         U8   eap_type;
++         BOOL authenticated;
++} SWPAResult, *PSWPAResult;
++#endif
++
++
++typedef struct tagSCmdStartAP {
++   =20
++    U16	    wBSSType;
++    U16     wBBPType;
++    U8	    ssid[SSID_MAXLEN + 2];
++    U32 	uChannel;
++    U32     uBeaconInt;
++    BOOL    bShareKeyAuth;
++    U8      byBasicRate;
++
++} SCmdStartAP, *PSCmdStartAP;
++
++
++typedef struct tagSCmdSetWEP {
++
++    BOOL    bEnableWep;
++    U8      byKeyIndex;
++    U8      abyWepKey[WEP_NKEYS][WEP_KEYMAXLEN];
++    BOOL    bWepKeyAvailable[WEP_NKEYS];   =20
++    U32     auWepKeyLength[WEP_NKEYS];
++
++} SCmdSetWEP, *PSCmdSetWEP;
++
++
++
++typedef struct tagSBSSIDItem {
++
++	U32	    uChannel;
++    U8      abyBSSID[BSSID_LEN];
++    U8      abySSID[SSID_MAXLEN + 1];
++    //2006-1116-01,<Modify> by NomadZhao
++    //U16	    wBeaconInterval;
++    //U16	    wCapInfo;
++    //U8      byNetType;
++    U8      byNetType;
++    U16	    wBeaconInterval;
++    U16	    wCapInfo;        // for address of byNetType at align 4
++
++    BOOL    bWEPOn;
++    U32     uRSSI;
++   =20
++} SBSSIDItem;
++
++
++typedef struct tagSBSSIDList {
++
++	U32		    uItem;
++	SBSSIDItem	sBSSIDList[0];   =20
++} SBSSIDList, *PSBSSIDList;
++
++
++typedef struct tagSCmdLinkStatus {
++
++    BOOL    bLink;
++	U16	    wBSSType;
++	U8      byState;   =20
++    U8      abyBSSID[BSSID_LEN];
++    U8      abySSID[SSID_MAXLEN + 2];
++    U32     uChannel;
++    U32     uLinkRate;
++   =20
++} SCmdLinkStatus, *PSCmdLinkStatus;
++
++//
++// 802.11 counter
++//
++typedef struct tagSDot11MIBCount {
++    U32 TransmittedFragmentCount;
++    U32 MulticastTransmittedFrameCount;
++    U32 FailedCount;
++    U32 RetryCount;
++    U32 MultipleRetryCount;
++    U32 RTSSuccessCount;
++    U32 RTSFailureCount;
++    U32 ACKFailureCount;
++    U32 FrameDuplicateCount;
++    U32 ReceivedFragmentCount;
++    U32 MulticastReceivedFrameCount;
++    U32 FCSErrorCount;
++} SDot11MIBCount, DEF* PSDot11MIBCount;
++
++
++
++//
++// statistic counter
++//
++typedef struct tagSStatMIBCount {
++    //
++    // ISR status count
++    //
++    U32   dwIsrTx0OK;
++    U32   dwIsrTx1OK;
++    U32   dwIsrBeaconTxOK;
++    U32   dwIsrRxOK;
++    U32   dwIsrTBTTInt;
++    U32   dwIsrSTIMERInt;
++    U32   dwIsrUnrecoverableError;
++    U32   dwIsrSoftInterrupt;
++    U32   dwIsrRxNoBuf;
++    /////////////////////////////////////
++
++    U32   dwIsrUnknown;               // unknown interrupt count
++
++    // RSR status count
++    //
++    U32   dwRsrFrmAlgnErr;
++    U32   dwRsrErr;
++    U32   dwRsrCRCErr;
++    U32   dwRsrCRCOk;
++    U32   dwRsrBSSIDOk;
++    U32   dwRsrADDROk;
++    U32   dwRsrICVOk;
++    U32   dwNewRsrShortPreamble;
++    U32   dwRsrLong;
++    U32   dwRsrRunt;
++       =20
++    U32   dwRsrRxControl;
++    U32   dwRsrRxData;
++    U32   dwRsrRxManage;
++
++    U32   dwRsrRxPacket;
++    U32   dwRsrRxOctet;
++    U32   dwRsrBroadcast;
++    U32   dwRsrMulticast;
++    U32   dwRsrDirected;
++    // 64-bit OID
++    U32   ullRsrOK;
++   =20
++    // for some optional OIDs (64 bits) and DMI support   =20
++    U32   ullRxBroadcastBytes;
++    U32   ullRxMulticastBytes;
++    U32   ullRxDirectedBytes;
++    U32   ullRxBroadcastFrames;
++    U32   ullRxMulticastFrames;
++    U32   ullRxDirectedFrames;   =20
++
++    U32   dwRsrRxFragment;
++    U32   dwRsrRxFrmLen64;
++    U32   dwRsrRxFrmLen65_127;
++    U32   dwRsrRxFrmLen128_255;
++    U32   dwRsrRxFrmLen256_511;
++    U32   dwRsrRxFrmLen512_1023;
++    U32   dwRsrRxFrmLen1024_1518;
++
++    // TSR0,1 status count
++    //
++    U32   dwTsrTotalRetry[2];        // total collision retry count
++    U32   dwTsrOnceRetry[2];         // this packet only occur one collisi=
+on
++    U32   dwTsrMoreThanOnceRetry[2]; // this packet occur more than one co=
+llision
++    U32   dwTsrRetry[2];             // this packet has ever occur collisi=
+on,=20
++                                       // that is (dwTsrOnceCollision0 + d=
+wTsrMoreThanOnceCollision0)
++    U32   dwTsrACKData[2];
++    U32   dwTsrErr[2];                  =20
++    U32   dwAllTsrOK[2];
++    U32   dwTsrRetryTimeout[2];
++    U32   dwTsrTransmitTimeout[2];
++
++    U32   dwTsrTxPacket[2];
++    U32   dwTsrTxOctet[2];
++    U32   dwTsrBroadcast[2];
++    U32   dwTsrMulticast[2];
++    U32   dwTsrDirected[2];
++
++    // RD/TD count
++    U32   dwCntRxFrmLength;
++    U32   dwCntTxBufLength;
++
++    U8    abyCntRxPattern[16];
++    U8    abyCntTxPattern[16];
++
++    // Software check....
++    U32   dwCntRxDataErr;             // rx buffer data software compare C=
+RC err count
++    U32   dwCntDecryptErr;            // rx buffer data software compare C=
+RC err count
++    U32   dwCntRxICVErr;              // rx buffer data software compare C=
+RC err count
++    U32    idxRxErrorDesc;             // index for rx data error RD
++
++    // 64-bit OID
++    U32   ullTsrOK[2];
++   =20
++    // for some optional OIDs (64 bits) and DMI support
++    U32   ullTxBroadcastFrames[2];
++    U32   ullTxMulticastFrames[2];
++    U32   ullTxDirectedFrames[2];   =20
++    U32   ullTxBroadcastBytes[2];
++    U32   ullTxMulticastBytes[2];
++    U32   ullTxDirectedBytes[2];
++} SStatMIBCount, DEF* PSStatMIBCount;
++
++
++typedef struct tagSNodeItem {
++    // STA info
++    U16            wAID;   =20
++    U8             abyMACAddr[6];
++    U16            wTxDataRate;
++    U16            wInActiveCount;
++    U16            wEnQueueCnt;
++    U16            wFlags;   =20
++    BOOL           bPWBitOn;   =20
++    U8             byKeyIndex;
++    U16            wWepKeyLength;
++    U8            abyWepKey[WEP_KEYMAXLEN];
++    // Auto rate fallback vars=20
++    BOOL           bIsInFallback;
++    U32            uTxFailures;
++    U32            uTxAttempts;
++    U16            wFailureRatio;
++   =20
++} SNodeItem;
++
++
++typedef struct tagSNodeList {
++
++	U32		    uItem;
++	SNodeItem	sNodeList[0];   =20
++=09
++} SNodeList, *PSNodeList;
++
++
++
++typedef struct tagSCmdValue {
++   =20
++    U32     dwValue;
++   =20
++} SCmdValue,  *PSCmdValue;
++
++
++//
++// hostapd & viawget ioctl related
++//
++
++
++// VIAGWET_IOCTL_HOSTAPD ioctl() cmd:=20
++enum {
++	VIAWGET_HOSTAPD_FLUSH =3D 1,
++	VIAWGET_HOSTAPD_ADD_STA =3D 2,
++	VIAWGET_HOSTAPD_REMOVE_STA =3D 3,
++	VIAWGET_HOSTAPD_GET_INFO_STA =3D 4,
++	VIAWGET_HOSTAPD_SET_ENCRYPTION =3D 5,
++	VIAWGET_HOSTAPD_GET_ENCRYPTION =3D 6,
++	VIAWGET_HOSTAPD_SET_FLAGS_STA =3D 7,
++	VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR =3D 8,
++	VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT =3D 9,
++	VIAWGET_HOSTAPD_MLME =3D 10,
++	VIAWGET_HOSTAPD_SCAN_REQ =3D 11,
++	VIAWGET_HOSTAPD_STA_CLEAR_STATS =3D 12,=09
++};
++
++
++#define VIAWGET_HOSTAPD_GENERIC_ELEMENT_HDR_LEN \
++((int) (&((struct viawget_hostapd_param *) 0)->u.generic_elem.data))
++
++// Maximum length for algorithm names (-1 for nul termination) used in ioc=
+tl()
++=20
++
++
++struct viawget_hostapd_param {
++	U32 cmd;
++	U8 sta_addr[6];
++	union {
++		struct {
++			U16 aid;
++			U16 capability;
++			U8 tx_supp_rates;
++		} add_sta;
++		struct {
++			U32 inactive_sec;
++		} get_info_sta;
++		struct {
++			U8 alg;
++			U32 flags;
++			U32 err;
++			U8 idx;
++			U8 seq[8];=20
++			U16 key_len;
++			U8 key[0];
++		} crypt;
++		struct {
++			U32 flags_and;
++			U32 flags_or;
++		} set_flags_sta;
++		struct {
++			U16 rid;
++			U16 len;
++			U8 data[0];
++		} rid;
++		struct {
++			U8 len;
++			U8 data[0];
++		} generic_elem;
++		struct {
++			U16 cmd;
++			U16 reason_code;
++		} mlme;
++		struct {
++			U8 ssid_len;
++			U8 ssid[32];
++		} scan_req;
++	} u;
++};
++
++//2006-1116-01,<Add> by NomadZhao
++#pragma pack()
++
++/*---------------------  Export Classes  ----------------------------*/
++   =20
++/*---------------------  Export Variables  --------------------------*/
++
++
++/*---------------------  Export Types  ------------------------------*/
++
++
++/*---------------------  Export Functions  --------------------------*/
++
++
++
++#endif //__IOCMD_H__
+diff --git a/drivers/staging/vt6655/iowpa.h b/drivers/staging/vt6655/iowpa.h
+new file mode 100644
+index 0000000..392b3f7
+--- /dev/null
++++ b/drivers/staging/vt6655/iowpa.h
+@@ -0,0 +1,159 @@
++/*
++ * Copyright (c) 1996, 2003 VIA Networking, Inc. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * File: iowpa.h
++ *
++ * Purpose: Handles wpa supplicant ioctl interface
++ *
++ * Author: Lyndon Chen
++ *
++ * Date: May 8, 2002
++ *
++ */=20
++=20
++#ifndef __IOWPA_H__
++#define __IOWPA_H__
++
++
++/*---------------------  Export Definitions -------------------------*/
++
++
++#define WPA_IE_LEN 64
++
++
++//WPA related
++/*
++typedef enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa=
+_alg;
++typedef enum { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
++	       CIPHER_WEP104 } wpa_cipher;
++typedef enum { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
++	       KEY_MGMT_802_1X_NO_WPA, KEY_MGMT_WPA_NONE } wpa_key_mgmt;
++*/	      =20
++
++enum {
++	VIAWGET_SET_WPA =3D 1,
++	VIAWGET_SET_KEY =3D 2,
++	VIAWGET_SET_SCAN =3D 3,
++	VIAWGET_GET_SCAN =3D 4,
++	VIAWGET_GET_SSID =3D 5,=09
++	VIAWGET_GET_BSSID =3D 6,	=09
++	VIAWGET_SET_DROP_UNENCRYPT =3D 7,=09
++	VIAWGET_SET_DEAUTHENTICATE =3D 8,=09
++	VIAWGET_SET_ASSOCIATE =3D 9,
++	VIAWGET_SET_DISASSOCIATE=3D 10	=09
++};
++
++
++enum {
++	VIAWGET_ASSOC_MSG =3D 1,
++	VIAWGET_DISASSOC_MSG =3D 2,
++	VIAWGET_PTK_MIC_MSG =3D 3,
++	VIAWGET_GTK_MIC_MSG =3D 4,
++	VIAWGET_CCKM_ROAM_MSG =3D 5,
++	VIAWGET_DEVICECLOSE_MSG =3D 6
++};
++
++
++
++#pragma pack(1)
++typedef struct viawget_wpa_header {
++	u8 type;
++	u16 req_ie_len;	=09
++	u16 resp_ie_len;=09
++} viawget_wpa_header;
++
++
++
++struct viawget_wpa_param {
++	u32 cmd;=09
++	u8 addr[6];=09
++	union {
++		struct {
++			u8 len;
++			u8 data[0];
++		} generic_elem;
++	=09
++		struct {
++        	u8 bssid[6];
++			u8 ssid[32];        =09
++			u8 ssid_len;		=09
++        	u8 *wpa_ie;
++        	u16 wpa_ie_len;
++        	int pairwise_suite;
++        	int group_suite;
++        	int key_mgmt_suite;
++        	int auth_alg;
++        	int mode;
++
++		} wpa_associate;	=09
++			   =20
++		struct {
++	        int alg_name;
++	        u16 key_index;
++	        u16 set_tx;
++	        u8 *seq;
++	        u16 seq_len;
++	        u8 *key;
++	        u16 key_len;
++		} wpa_key;
++
++		struct {
++			u8 ssid_len;
++			u8 ssid[32];
++		} scan_req;
++
++		struct {
++			u16 scan_count;
++			u8 *buf;
++		} scan_results;	=09
++	=09
++	} u;=09
++
++};
++
++#pragma pack(1)
++struct viawget_scan_result {
++	u8 bssid[6];
++	u8 ssid[32];
++	u16 ssid_len;
++	u8 wpa_ie[WPA_IE_LEN];
++	u16 wpa_ie_len;
++	u8 rsn_ie[WPA_IE_LEN];
++	u16 rsn_ie_len;
++	int freq; // MHz=20
++	int caps; // e.g. privacy
++	int qual; // signal quality=20
++	int noise;
++	int level;
++	int maxrate;
++};
++
++//2006-1116-01,<Add> by NomadZhao
++#pragma pack()
++/*---------------------  Export Classes  ----------------------------*/
++   =20
++/*---------------------  Export Variables  --------------------------*/
++
++
++/*---------------------  Export Types  ------------------------------*/
++
++
++/*---------------------  Export Functions  --------------------------*/
++
++
++
++#endif //__IOWPA_H__
+diff --git a/drivers/staging/vt6655/ttype.h b/drivers/staging/vt6655/ttype.h
+new file mode 100644
+index 0000000..3a075a6
+--- /dev/null
++++ b/drivers/staging/vt6655/ttype.h
+@@ -0,0 +1,386 @@
++/*
++ * File: ttype.h
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Purpose: define basic common types and macros
++ *
++ * Author: Tevin Chen
++ *
++ * Date: May 21, 1996
++ *
++ */
++
++
++#ifndef __TTYPE_H__
++#define __TTYPE_H__
++
++
++/******* Common definitions and typedefs *********************************=
+**/
++
++#ifndef VOID
++#define VOID            void
++#endif
++
++#ifndef CONST
++#define CONST           const
++#endif
++
++#ifndef STATIC
++#define STATIC          static
++#endif
++
++#ifndef IN
++#define IN
++#endif
++
++#ifndef OUT
++#define OUT
++#endif
++
++#ifndef TxInSleep  =20
++#define TxInSleep
++#endif
++#if! defined(__CPU8051)
++typedef int             BOOL;
++#else   // __CPU8051
++#define BOOL            int
++#endif  // __CPU8051
++
++#if !defined(TRUE)
++#define TRUE            1
++#endif
++#if !defined(FALSE)
++#define FALSE           0
++#endif
++
++
++#if !defined(SUCCESS)
++#define SUCCESS         0
++#endif
++#if !defined(FAILED)
++#define FAILED          -1
++#endif
++
++//2007-0809-01<Add>by MikeLiu
++#ifndef  update_BssList
++#define update_BssList
++#endif
++
++
++
++#ifndef WPA_SM_Transtatus
++#define WPA_SM_Transtatus
++#endif
++
++#ifndef Calcu_LinkQual
++#define Calcu_LinkQual
++#endif
++
++#ifndef Calcu_LinkQual
++#define Calcu_LinkQual
++#endif
++
++/****** Simple typedefs  *************************************************=
+**/
++
++#if! defined(__CPU8051)
++
++/* These lines assume that your compiler's longs are 32 bits and
++ * shorts are 16 bits. It is already assumed that chars are 8 bits,
++ * but it doesn't matter if they're signed or unsigned.
++ */
++
++typedef signed char             I8;     /* 8-bit signed integer */
++typedef signed short            I16;    /* 16-bit signed integer */
++typedef signed long             I32;    /* 32-bit signed integer */
++
++typedef unsigned char           U8;     /* 8-bit unsigned integer */
++typedef unsigned short          U16;    /* 16-bit unsigned integer */
++typedef unsigned long           U32;    /* 32-bit unsigned integer */
++
++
++#if defined(__WIN32)
++typedef signed __int64          I64;    /* 64-bit signed integer */
++typedef unsigned __int64        U64;    /* 64-bit unsigned integer */
++#endif // __WIN32
++
++
++typedef char            CHAR;
++typedef signed short    SHORT;
++typedef signed int      INT;
++typedef signed long     LONG;
++
++typedef unsigned char   UCHAR;
++typedef unsigned short  USHORT;
++typedef unsigned int    UINT;
++typedef unsigned long   ULONG;
++typedef unsigned long long	ULONGLONG; //64 bit
++typedef unsigned long long	ULONGULONG;
++
++
++
++typedef unsigned char   BYTE;           //  8-bit
++typedef unsigned short  WORD;           // 16-bit
++typedef unsigned long   DWORD;          // 32-bit
++
++// QWORD is for those situation that we want
++// an 8-byte-aligned 8 byte long structure
++// which is NOT really a floating point number.
++typedef union tagUQuadWord {           =20
++    struct {
++        DWORD   dwLowDword;
++        DWORD   dwHighDword;
++    } u;
++    double      DoNotUseThisField;     =20
++} UQuadWord;                           =20
++typedef UQuadWord       QWORD;          // 64-bit
++
++
++
++#ifndef _TCHAR_DEFINED
++typedef char            TCHAR;
++typedef char*           PTCHAR;
++typedef unsigned char   TBYTE;
++typedef unsigned char*  PTBYTE;
++#define _TCHAR_DEFINED
++#endif
++
++#else   // __CPU8051
++
++#define U8              unsigned char
++#define U16             unsigned short
++#define U32             unsigned long
++
++#define USHORT          unsigned short
++#define UINT            unsigned int
++
++#define BYTE            unsigned char
++#define WORD            unsigned short
++#define DWORD           unsigned long
++
++
++#endif  // __CPU8051
++
++
++// maybe this should be defined in <limits.h>
++#define U8_MAX          0xFFU
++#define U16_MAX         0xFFFFU
++#define U32_MAX         0xFFFFFFFFUL
++
++#define BYTE_MAX        0xFFU
++#define WORD_MAX        0xFFFFU
++#define DWORD_MAX       0xFFFFFFFFUL
++
++
++
++
++/******* 32-bit vs. 16-bit definitions and typedefs **********************=
+**/
++
++#if !defined(NULL)
++#ifdef __cplusplus
++#define NULL            0
++#else
++#define NULL            ((void *)0)
++#endif // __cplusplus
++#endif // !NULL
++
++
++
++
++#if defined(__WIN32) || defined(__CPU8051)
++
++#if !defined(FAR)
++#define FAR =20
++#endif
++#if !defined(NEAR)
++#define NEAR=20
++#endif
++#if !defined(DEF)
++#define DEF
++#endif
++#if !defined(CALLBACK)
++#define CALLBACK  =20
++#endif
++
++#else  // !__WIN32__
++
++#if !defined(FAR)
++#define FAR            =20
++#endif
++#if !defined(NEAR)
++#define NEAR           =20
++#endif
++#if !defined(DEF)
++// default pointer type is FAR, if you want near pointer just redefine it =
+to NEAR
++#define DEF            =20
++#endif
++#if !defined(CALLBACK)
++#define CALLBACK       =20
++#endif
++
++#endif // !__WIN32__
++
++
++
++
++/****** Common pointer types *********************************************=
+**/
++
++#if! defined(__CPU8051)
++
++typedef signed char DEF*        PI8;
++typedef signed short DEF*       PI16;
++typedef signed long DEF*        PI32;
++
++typedef unsigned char DEF*      PU8;
++typedef unsigned short DEF*     PU16;
++typedef unsigned long DEF*      PU32;
++
++#if defined(__WIN32)
++typedef signed __int64 DEF*     PI64;
++typedef unsigned __int64 DEF*   PU64;
++#endif // __WIN32
++
++#if !defined(_WIN64)
++typedef unsigned long   ULONG_PTR;      // 32-bit
++typedef unsigned long   DWORD_PTR;      // 32-bit
++#endif // _WIN64
++
++
++// boolean pointer
++typedef int DEF*            PBOOL;
++typedef int NEAR*           NPBOOL;
++typedef int FAR*            LPBOOL;
++
++typedef int DEF*            PINT;
++typedef int NEAR*           NPINT;
++typedef int FAR*            LPINT;
++typedef const int DEF*      PCINT;
++typedef const int NEAR*     NPCINT;
++typedef const int FAR*      LPCINT;
++
++typedef unsigned int DEF*           PUINT;
++typedef const unsigned int DEF*     PCUINT;
++
++typedef long DEF*           PLONG;
++typedef long NEAR*          NPLONG;
++typedef long FAR*           LPLONG;
++//typedef const long DEF*     PCLONG;
++typedef const long NEAR*    NPCLONG;
++typedef const long FAR*     LPCLONG;
++
++typedef BYTE DEF*           PBYTE;
++typedef BYTE NEAR*          NPBYTE;
++typedef BYTE FAR*           LPBYTE;
++typedef const BYTE DEF*     PCBYTE;
++typedef const BYTE NEAR*    NPCBYTE;
++typedef const BYTE FAR*     LPCBYTE;
++
++typedef WORD DEF*           PWORD;
++typedef WORD NEAR*          NPWORD;
++typedef WORD FAR*           LPWORD;
++typedef const WORD DEF*     PCWORD;
++typedef const WORD NEAR*    NPCWORD;
++typedef const WORD FAR*     LPCWORD;
++
++typedef DWORD DEF*          PDWORD;
++typedef DWORD NEAR*         NPDWORD;
++typedef DWORD FAR*          LPDWORD;
++typedef const DWORD DEF*    PCDWORD;
++typedef const DWORD NEAR*   NPCDWORD;
++typedef const DWORD FAR*    LPCDWORD;
++
++typedef QWORD DEF*          PQWORD;
++typedef QWORD NEAR*         NPQWORD;
++typedef QWORD FAR*          LPQWORD;
++typedef const QWORD DEF*    PCQWORD;
++typedef const QWORD NEAR*   NPCQWORD;
++typedef const QWORD FAR*    LPCQWORD;
++
++typedef void DEF*           PVOID;
++typedef void NEAR*          NPVOID;
++typedef void FAR*           LPVOID;
++
++// handle declaration
++#ifdef STRICT
++typedef void *HANDLE;
++#else
++typedef PVOID HANDLE;
++#endif
++
++//
++// ANSI (Single-byte Character) types
++//
++typedef char DEF*           PCH;
++typedef char NEAR*          NPCH;
++typedef char FAR*           LPCH;
++typedef const char DEF*     PCCH;
++typedef const char NEAR*    NPCCH;
++typedef const char FAR*     LPCCH;
++
++typedef char DEF*           PSTR;
++typedef char NEAR*          NPSTR;
++typedef char FAR*           LPSTR;
++typedef const char DEF*     PCSTR;
++typedef const char NEAR*    NPCSTR;
++typedef const char FAR*     LPCSTR;
++
++#endif  // !__CPU8051
++
++
++
++
++/****** Misc definitions, types ******************************************=
+**/
++
++// parameter prefix
++#ifndef IN
++#define IN
++#endif
++
++#ifndef OUT
++#define OUT
++#endif
++
++
++// unreferenced parameter macro to avoid warning message in MS C
++#if defined(__TURBOC__)
++
++//you should use "#pragma argsused" to avoid warning message in Borland C
++#ifndef UNREFERENCED_PARAMETER
++#define UNREFERENCED_PARAMETER(x)=20
++#endif
++
++#else
++
++#ifndef UNREFERENCED_PARAMETER
++//#define UNREFERENCED_PARAMETER(x) x
++#define UNREFERENCED_PARAMETER(x)=20
++#endif
++
++#endif
++
++
++// in-line assembly prefix
++#if defined(__TURBOC__)
++#define ASM             asm
++#else  // !__TURBOC__
++#define ASM             _asm
++#endif // !__TURBOC__
++
++
++
++
++#endif // __TTYPE_H__
++
++
+--=20
+1.5.4.3
 
 
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--neYutvxvOLaeuPCA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJ8x7ERO4fQQdv5AwRAj0mAKDWXv+pxZaiWM2YoCU2tUZ8HMGhJwCfX5rb
+a8fw4SSCmjkQcFtL89Nu+yY=
+=syXn
+-----END PGP SIGNATURE-----
+
+--neYutvxvOLaeuPCA--
