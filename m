@@ -1,90 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1229 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756323AbZDSOra (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:45956 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753120AbZDZONh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 10:47:30 -0400
-Date: Sun, 19 Apr 2009 10:46:40 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 1/7] ath5k: Allow user/driver to set txpower
-Message-ID: <20090419144640.GC866@hash.localnet> (sfid-20090419_164734_329363_8CC4DDE6)
-References: <20090416002220.GA4138@makis>
+	Sun, 26 Apr 2009 10:13:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090416002220.GA4138@makis>
+In-Reply-To: <49F43975.2060106@gmail.com>
+References: <1240661363-16631-1-git-send-email-jirislaby@gmail.com>
+	 <20090426020047.GA10885@hash.localnet> <49F43975.2060106@gmail.com>
+Date: Sun, 26 Apr 2009 17:13:35 +0300
+Message-ID: <40f31dec0904260713o97f5cs95f87d72e8772e64@mail.gmail.com> (sfid-20090426_161341_757893_4534F294)
+Subject: Re: [PATCH 1/1] ath5k: 5211, don't crypt every protected frame
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2009 at 03:22:20AM +0300, Nick Kossifidis wrote:
->  * Now that we have regulatory control enable the driver to set txpower on hw
+2009/4/26 Jiri Slaby <jirislaby@gmail.com>:
+> On 04/26/2009 04:00 AM, Bob Copeland wrote:
+>> On Sat, Apr 25, 2009 at 02:09:23PM +0200, Jiri Slaby wrote:
+>>> Hi guys,
+>>> do you remember some 5211 HW which didn't work with this?
+>>> --
+>>>
+>>> Set null key type even on ar5211, otherwise it en/decrypts every fr=
+ame with
+>>> protected bit set which renders the card unusable on encrypted netw=
+orks.
+>>
+>> Not me. =C2=A0I don't have the hardware, so I would say if your patc=
+h is known
+>> to work on a 5211 then we go with it.
+>
+> Ok, thanks. Of course the HW I used (IBM T40 Thinkpad) needs the patc=
+h ;).
+>
 
-I assume this needs my patch for the CTLs (reproduced below).  Any 
-objections to it?
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-From: Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH] ath5k: use ctl settings based on current regdomain
-
-Update ath5k to use the ctl settings for tx power based on current
-regulatory domain.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/phy.c |   19 +++++++------------
- 1 files changed, 7 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 9e2faae..0ecd16f 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1743,8 +1743,6 @@ done:
-  * Get the max edge power for this channel if
-  * we have such data from EEPROM's Conformance Test
-  * Limits (CTL), and limit max power if needed.
-- *
-- * FIXME: Only works for world regulatory domains
-  */
- static void
- ath5k_get_max_ctl_power(struct ath5k_hw *ah,
-@@ -1760,26 +1758,23 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
- 	u8 ctl_idx = 0xFF;
- 	u32 target = channel->center_freq;
- 
--	/* Find out a CTL for our mode that's not mapped
--	 * on a specific reg domain.
--	 *
--	 * TODO: Map our current reg domain to one of the 3 available
--	 * reg domain ids so that we can support more CTLs. */
-+	ctl_mode = ath_regd_get_band_ctl(&ah->ah_regulatory, channel->band);
-+
- 	switch (channel->hw_value & CHANNEL_MODES) {
- 	case CHANNEL_A:
--		ctl_mode = AR5K_CTL_11A | AR5K_CTL_NO_REGDOMAIN;
-+		ctl_mode |= AR5K_CTL_11A;
- 		break;
- 	case CHANNEL_G:
--		ctl_mode = AR5K_CTL_11G | AR5K_CTL_NO_REGDOMAIN;
-+		ctl_mode |= AR5K_CTL_11G;
- 		break;
- 	case CHANNEL_B:
--		ctl_mode = AR5K_CTL_11B | AR5K_CTL_NO_REGDOMAIN;
-+		ctl_mode |= AR5K_CTL_11B;
- 		break;
- 	case CHANNEL_T:
--		ctl_mode = AR5K_CTL_TURBO | AR5K_CTL_NO_REGDOMAIN;
-+		ctl_mode |= AR5K_CTL_TURBO;
- 		break;
- 	case CHANNEL_TG:
--		ctl_mode = AR5K_CTL_TURBOG | AR5K_CTL_NO_REGDOMAIN;
-+		ctl_mode |= AR5K_CTL_TURBOG;
- 		break;
- 	case CHANNEL_XR:
- 		/* Fall through */
--- 
-1.6.0.6
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
