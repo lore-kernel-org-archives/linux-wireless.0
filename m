@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:63988 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752275AbZDVUU6 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48803
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752169AbZDZAp4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 16:20:58 -0400
-Received: by bwz7 with SMTP id 7so178002bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2009 13:20:56 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: luciano.coelho@nokia.com, Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-Subject: wl12xx: second submission
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 22 Apr 2009 23:20:53 +0300
-Message-ID: <87hc0gcue2.fsf@litku.valot.fi> (sfid-20090422_222101_942112_9138A98A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 25 Apr 2009 20:45:56 -0400
+Date: Sat, 25 Apr 2009 17:45:49 -0700 (PDT)
+Message-Id: <20090425.174549.207994669.davem@davemloft.net> (sfid-20090426_024650_012670_0626A4F5)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-04-24
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090424200504.GC3309@tuxdriver.com>
+References: <20090424200504.GC3309@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 24 Apr 2009 16:05:05 -0400
 
-here is the second submission of wl12xx, a driver for TI wl1251 chipset:
+> Here is a huge pull request for net-next-2.6, the first one this
+> cycle.  There is the usual huge round of driver and mac80211 updates.
+> Among other things is some movement of code to enable sharing some bits
+> between ath5k, ath9k, and ar9170.  Also included is the beginngin of
+> migration of rndis_wlan to the cfg80211 API, the first non-mac80211
+> driver to do that.
+> 
+> Please let me know if there are problems!
 
-http://www.valot.fi/kalle/tmp/wl12xx/20090422/
+Since I had pulled net-2.6 into net-next-2.6, aparently after you
+built this tree, there was a conflict to deal with in net/mac80211/pm.c
 
-Changes since last submission from February 10:
+I hope I got it right ;-)
 
-o update to 2.6.29 (bob)
-o sysfs interface removed (bob)
-o netlink interface removed 
-o lots of bug fixes
-o platform data for proper board file support
-
-Please consider for including the driver to wireless-testing. Bob is
-planning to add SDIO support to the driver and it's easier for us to
-have the driver in wireless-testing. And if all goes well, it would be
-nice to get the driver into 2.6.31. But that's up to you, of course.
-
--- 
-Kalle Valo
+Pulled, thanks a lot!
