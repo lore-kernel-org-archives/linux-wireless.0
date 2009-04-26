@@ -1,89 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59593 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753686AbZDFUQH (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:57020 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755670AbZDZMlD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 16:16:07 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 5/5] mac80211: expose HT channel flags through debugfs
-Date: Mon,  6 Apr 2009 16:15:58 -0400
-Message-Id: <1239048958-11775-6-git-send-email-lrodriguez@atheros.com> (sfid-20090406_221611_351265_E6939604)
-In-Reply-To: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
-References: <1239048958-11775-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 26 Apr 2009 08:41:03 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so446780eyd.37
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Apr 2009 05:41:00 -0700 (PDT)
+Message-ID: <49F4565B.2000201@gmail.com> (sfid-20090426_144116_257682_AD1F33C8)
+Date: Sun, 26 Apr 2009 14:40:59 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
+MIME-Version: 1.0
+To: chunkeey@web.de
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] ar9170: wrong test on outlen in ar9170_usb_exec_cmd() ?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we are not going to be exporting HT40-/+
-flags for now through nl80211 we supply the channel
-flags as a whole through debugfs so users/testers can
-see whether or not HT40-/+ is allowed.
+remove redundant test: outlen is unsigned
 
-Screenshot on channel 1 (2.412 GHz):
-
-[root@pogo ~]# mount -t debugfs debugfs /debug/
-[root@pogo ~]# cat /debug/ieee80211/phy0/ht40minusallowed
-0
-[root@pogo ~]# cat /debug/ieee80211/phy0/ht40plusallowed
-1
-[root@pogo ~]# umount /debug
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 ---
- net/mac80211/debugfs.c     |   10 ++++++++++
- net/mac80211/ieee80211_i.h |    2 ++
- 2 files changed, 12 insertions(+), 0 deletions(-)
+Maybe you want to test outlen < MAX, but what should MAX be?
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 210b9b6..fa15a88 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -51,6 +51,12 @@ static const struct file_operations name## _ops = {			\
+diff --git a/drivers/net/wireless/ar9170/usb.c b/drivers/net/wireless/ar9170/usb.c
+index fddda47..dfd39e9 100644
+--- a/drivers/net/wireless/ar9170/usb.c
++++ b/drivers/net/wireless/ar9170/usb.c
+@@ -350,7 +350,7 @@ static int ar9170_usb_exec_cmd(struct ar9170 *ar, enum ar9170_cmd cmd,
+ 		goto err_unbuf;
+ 	}
  
- DEBUGFS_READONLY_FILE(frequency, 20, "%d",
- 		      local->hw.conf.channel->center_freq);
-+DEBUGFS_READONLY_FILE(ht40plusallowed, 20, "%d",
-+		      !(local->hw.conf.channel->flags &
-+		      IEEE80211_CHAN_NO_HT40PLUS));
-+DEBUGFS_READONLY_FILE(ht40minusallowed, 20, "%d",
-+		      !(local->hw.conf.channel->flags &
-+		      IEEE80211_CHAN_NO_HT40MINUS));
- DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
- 		      local->rts_threshold);
- DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
-@@ -269,6 +275,8 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
- 
- 	DEBUGFS_ADD(frequency);
-+	DEBUGFS_ADD(ht40plusallowed);
-+	DEBUGFS_ADD(ht40minusallowed);
- 	DEBUGFS_ADD(rts_threshold);
- 	DEBUGFS_ADD(fragmentation_threshold);
- 	DEBUGFS_ADD(short_retry_limit);
-@@ -324,6 +332,8 @@ void debugfs_hw_add(struct ieee80211_local *local)
- void debugfs_hw_del(struct ieee80211_local *local)
- {
- 	DEBUGFS_DEL(frequency);
-+	DEBUGFS_DEL(ht40plusallowed);
-+	DEBUGFS_DEL(ht40minusallowed);
- 	DEBUGFS_DEL(rts_threshold);
- 	DEBUGFS_DEL(fragmentation_threshold);
- 	DEBUGFS_DEL(short_retry_limit);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6ed78c..f7b192a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -750,6 +750,8 @@ struct ieee80211_local {
- 		struct dentry *rcdir;
- 		struct dentry *rcname;
- 		struct dentry *frequency;
-+		struct dentry *ht40plusallowed;
-+		struct dentry *ht40minusallowed;
- 		struct dentry *rts_threshold;
- 		struct dentry *fragmentation_threshold;
- 		struct dentry *short_retry_limit;
--- 
-1.6.0.6
-
+-	if (outlen >= 0 && aru->readlen != outlen) {
++	if (aru->readlen != outlen) {
+ 		err = -EMSGSIZE;
+ 		goto err_unbuf;
+ 	}
