@@ -1,34 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([204.127.217.105]:41318 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbZDBFAX (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:35872 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164AbZDZTLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2009 01:00:23 -0400
-Message-ID: <49D44635.80306@lwfinger.net> (sfid-20090402_070027_645519_62BB6F09)
-Date: Wed, 01 Apr 2009 23:59:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 26 Apr 2009 15:11:25 -0400
+Received: by fxm2 with SMTP id 2so1936389fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Apr 2009 12:11:23 -0700 (PDT)
+Message-ID: <49F4B1D8.5060309@gmail.com> (sfid-20090426_211129_579712_A39CB2E3)
+Date: Sun, 26 Apr 2009 21:11:20 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: How does rfkill work?
+To: Tobias Klauser <tklauser@distanz.ch>
+CC: mickflemm@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH] ath5k: Storage class should be before const qualifier
+References: <1240750720-9768-1-git-send-email-tklauser@distanz.ch>
+In-Reply-To: <1240750720-9768-1-git-send-email-tklauser@distanz.ch>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On 04/26/2009 02:58 PM, Tobias Klauser wrote:
+> commit 8e218fb24faef0bfe95bc91b3c05261e20439527 reverted the previous
+> patch (commit 925be8a3077351edbf2b59ca689105df214a0792).
 
-I'm having trouble getting the radio LED to work on b43legacy. When the LED's
-are registered, I get LED index 0 registered with names of "b43legacy-phy0::tx"
-and "b43legacy-phy0::rx", and LED index 1 with a name as of
-"b43legacy-phy0::radio". I placed printk's at the entrance to
-b43legacy_led_brightness_set(), which is the callback routine. I see a number of
-calls to modify LED index 0, which I assume are due to RX/TX activity, but only
-a single call for LED index 1 when the LED's are still being registered. There
-are no such calls generated when the radio switch is moved.
-
-I don't see where/how a particular LED is attached to the rfkill event. Could
-you point me to some code that does that?
-
-Thanks,
-
-Larry
+Ok, once again :):
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
