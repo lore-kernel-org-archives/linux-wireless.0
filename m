@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60423 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751236AbZDWVAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 17:00:14 -0400
-Date: Fri, 24 Apr 2009 00:00:00 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Send timeout event on failed direct probe
-Message-ID: <20090423210000.GA3260@jm.kir.nu> (sfid-20090423_230018_498068_3E0A7831)
+Received: from bu3sch.de ([62.75.166.246]:38363 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752412AbZDZJaB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Apr 2009 05:30:01 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] cfg80211: Use the correct IE buffer pointer
+Date: Sun, 26 Apr 2009 11:27:33 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200904261127.33386.mb@bu3sch.de> (sfid-20090426_113008_607302_B8D06AF5)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the direct probe times out, we need to send the authentication
-timeout event to notify SME in the same way as we notify on timeout
-with authentication frames since the direct probe is run as part of
-the authentication attempt.
+If the IE buffer was allocated, the pub.information_elements pointer
+was also changed to the allocated space. So we must not assume anymore
+that the pointer points at the "found" tail.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+So if it was allocated previously, take the codebranch that grows the
+buffer size (if necessary) and put the data into the allocated buffer.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
- net/mac80211/mlme.c |    2 +-
+
+The original code will probably not overrun the buffer, because the buffer is always
+guaranteed to be bigger than ksize(found)-used. But I think it's a bad idea anyway to poke with
+a dangling pointer. ;)
+
+
+ net/wireless/scan.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- uml.orig/net/mac80211/mlme.c	2009-04-23 23:52:15.000000000 +0300
-+++ uml/net/mac80211/mlme.c	2009-04-23 23:54:36.000000000 +0300
-@@ -882,7 +882,7 @@ static void ieee80211_direct_probe(struc
- 		printk(KERN_DEBUG "%s: direct probe to AP %pM timed out\n",
- 		       sdata->dev->name, ifmgd->bssid);
- 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
--		ieee80211_sta_send_apinfo(sdata);
-+		cfg80211_send_auth_timeout(sdata->dev, ifmgd->bssid);
+--- wireless-testing.orig/net/wireless/scan.c
++++ wireless-testing/net/wireless/scan.c
+@@ -377,7 +377,7 @@ cfg80211_bss_update(struct cfg80211_regi
+ 			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
+ 			size_t ielen = res->pub.len_information_elements;
  
- 		/*
- 		 * Most likely AP is not in the range so remove the
+-			if (ksize(found) >= used + ielen) {
++			if (!found->ies_allocated && ksize(found) >= used + ielen) {
+ 				memcpy(found->pub.information_elements,
+ 				       res->pub.information_elements, ielen);
+ 				found->pub.len_information_elements = ielen;
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings, Michael.
