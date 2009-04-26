@@ -1,77 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:45917 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbZDFPTC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 11:19:02 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: ath9k becon loss messages
-References: <1238923439.4120.9.camel@localhost.localdomain>
-	<200904061217.31134.mb@bu3sch.de> <87tz52xepy.fsf@litku.valot.fi>
-	<200904061251.10965.helmut.schaa@gmail.com>
-	<da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 06 Apr 2009 18:18:56 +0300
-In-Reply-To: <da94abde0904060405k280b3094jc20d0f7a4e6e759d@mail.gmail.com> (Kalle Valo's message of "Mon\, 6 Apr 2009 14\:05\:46 +0300")
-Message-ID: <87iqlhdd3z.fsf@litku.valot.fi> (sfid-20090406_171908_978335_B06F8522)
+Received: from bu3sch.de ([62.75.166.246]:58110 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751629AbZDZImS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Apr 2009 04:42:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH RFC] cfg80211: Add ies_allocated check before copying ies
+Date: Sun, 26 Apr 2009 10:40:10 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+References: <200904252236.34802.mb@bu3sch.de> <1240734752.17781.3.camel@johannes.local>
+In-Reply-To: <1240734752.17781.3.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904261040.10838.mb@bu3sch.de> (sfid-20090426_104223_646600_498FC60A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> writes:
+On Sunday 26 April 2009 10:32:32 Johannes Berg wrote:
+> On Sat, 2009-04-25 at 22:36 +0200, Michael Buesch wrote:
+> > I don't fully understand the code, but let's imagine the following situation:
+> > 
+> > - cfg80211_bss_update was called and the ie was stored to allocated space.
+> > - The information_elements pointer is changed to the allocated space.
+> > - cfg80211_bss_update is called again, but now the ie fits into the
+> >   space after the "found" structure.
+> > - But the information_elements pointer still points to the allocated space.
+> >   So it may overrun the buffer and crash.
+> > 
+> > Is this scenario possible?
+> > If yes, please consider the following patch.
+> 
+> Yeah, looks like a bug, good catch. I don't think the fix is correct
+> though -- you lose the data in this case.
+> 
+> I think it should simply be:
+> 
+> >  			size_t ielen = res->pub.len_information_elements;
+> >  
+> > -			if (ksize(found) >= used + ielen) {
+> > +			if (!found->ies_allocated && ksize(found) >= used + ielen) {
+> >  				memcpy(found->pub.information_elements,
+> >  				       res->pub.information_elements, ielen);
+> >  				found->pub.len_information_elements = ielen;
+> > 
+> 
+> so that the else branch gets a chance to reallocate if necessary, would
+> you agree?
 
-> On Mon, Apr 6, 2009 at 1:51 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
->
->> Maybe this issue could be
->> avoided by making the beacon loss detection smarter then just checking if no
->> beacon was received within the last two seconds.
->
-> Definitely the beacon loss logic should be smarter, but I think that
-> should be improved separately. I just have tried to do small changes
-> at a time to avoid regressions and I didn't even consider improving
-> the beacon loss logic.
-
-I reverted my beacon filter patches but added a similar "beacon loss"
-message. With iwl3945 I was able to reproduce the problem even by just
-associating to an AP and issuing 'iwlist wlan0 scan':
-
-Apr  6 15:09:31 tikku kernel: [ 3692.544221] beacon loss (reverted version)
-Apr  6 15:09:46 tikku kernel: [ 3707.654520] beacon loss (reverted version)
-Apr  6 15:09:53 tikku kernel: [ 3714.314057] beacon loss (reverted version)
-
-So the good news is that this is not a new regression, the problem just
-appeared because of the new printk I added to my beacon filtering
-patches.
-
-I'm suffering from flu right now (damn the finnish weather), but I tried
-to investigate this a bit. The problem happens when mac80211 does not
-receive anything for two seconds while scanning. For example, at my home
-there are only few APs and scanning takes a long time due to 11a support
-in iwl3945, so I can reproduce the problem easily.
-
-I'm working on implementing a proper fix, but due to my condition it
-might take few days before I'm able to finish it. But in the mean time,
-Michael's patch, changing the "beacon loss" messages visible only when
-CONFIG_MAC80211_VERBOSE_DEBUG is enabled, is the way to go forward. The
-message is useful for developers (eg. we found this bug because of the
-message), but it's better that users don't see it. I would like to have
-the patch for 2.6.30.
-
-When I'm able to implement the proper fix, I think it should first have
-proper testing in wireles-testing before pushing it to mainline. So
-maybe the proper fix is 2.6.31 material, just to be on the safe side
-here.
-
-John, what do you think?
+Yeah I first also considered this option, but I thought that the code likes to
+prefer putting the stuff into the "found" tail, if it fits.
+But yes, your fix is perfectly fine. If it was allocated once, it will always be
+allocated (and grown) from then on.
+It won't shrink the buffer anymore for future ies that are smaller, but I guess that's OK.
 
 -- 
-Kalle Valo
+Greetings, Michael.
