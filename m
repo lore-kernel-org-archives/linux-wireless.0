@@ -1,65 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:37919 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756728AbZDTU00 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:54886 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbZDZONX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 16:26:26 -0400
-Received: by bwz7 with SMTP id 7so1422878bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2009 13:26:24 -0700 (PDT)
+	Sun, 26 Apr 2009 10:13:23 -0400
+Received: by ewy24 with SMTP id 24so1732506ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Apr 2009 07:13:21 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/5] rt2x00: Move iv_len into tx descriptor data
+Date: Sun, 26 Apr 2009 16:08:30 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-In-Reply-To: <1240257188.4632.19.camel@johannes.local>
-References: <20090416111723.904720021@sipsolutions.net> <20090420194430.GG3369@tuxdriver.com>
-	<1240257188.4632.19.camel@johannes.local>
-From: Davide Pesavento <davidepesa@gmail.com>
-Date: Mon, 20 Apr 2009 22:26:09 +0200
-Message-ID: <2da21fe50904201326m3d843b64u1c3b56d2593bb7cb@mail.gmail.com> (sfid-20090420_222651_059133_FB461D0F)
-Subject: Re: [PATCH 0/4] mac80211 powersave work
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904261608.30384.IvDoorn@gmail.com> (sfid-20090426_161330_326133_95C5E29F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 20, 2009 at 21:53, Johannes Berg <johannes@sipsolutions.net=
-> wrote:
-> On Mon, 2009-04-20 at 15:44 -0400, John W. Linville wrote:
->> On Thu, Apr 16, 2009 at 01:17:23PM +0200, Johannes Berg wrote:
->> > This is pretty much unchanged from my previous v2 RFCs,
->> > except that I added a default of 500ms for the dynamic
->> > powersave timer.
->> >
->> > The fourth patch is new, it adds beacon filtering to
->> > mac80211 -- for the reasons explained in that patch.
->> >
->> > For 2.6.31, we should make MAC80211_DEFAULT_PS default
->> > off instead. John, how do you want to handle that?
->>
->> I'm not sure I understand. =C2=A0Your patch (which would go to 2.6.3=
-1)
->> has it turned-on by default. =C2=A0Which way do you want it?
->
-> I want it turned on by default, at least in wireless-testing; Kalle
-> thinks that we should turn it off for a .31 release.
->
-> I would think that since an easy workaround is available ("iwconfig
-> wlan0 power off") and it doesn't affect most hardware yet anyway (onl=
-y
-> those supporting powersave) we should turn it on by default anyway,
-> since otherwise we won't find any bugs -- but maybe that's just me.
->
+By placing the iv_len into the tx descriptor data and
+by passing this data to the crypto IV handlers we can
+save multiple calls to ieee80211_get_hdrlen_from_skb()
+and some if-statements when copying/removing the IV data
+from the outgoing frame.
 
-As I've already reported [1][2], ath9k is currently broken when power
-saving is enabled, at least on AR5418 hardware. So please don't turn
-it on by default yet.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00crypto.c |   19 +++++++++----------
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |   10 ++++++----
+ drivers/net/wireless/rt2x00/rt2x00queue.c  |    8 ++------
+ drivers/net/wireless/rt2x00/rt2x00queue.h  |    2 ++
+ 4 files changed, 19 insertions(+), 20 deletions(-)
 
-Thanks,
-Davide
+diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+index 0b41845..ae31581 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
++++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+@@ -66,6 +66,7 @@ void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
+ 
+ 	txdesc->key_idx = hw_key->hw_key_idx;
+ 	txdesc->iv_offset = ieee80211_get_hdrlen_from_skb(entry->skb);
++	txdesc->iv_len = hw_key->iv_len;
+ 
+ 	if (!(hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV))
+ 		__set_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc->flags);
+@@ -103,34 +104,32 @@ unsigned int rt2x00crypto_tx_overhead(struct rt2x00_dev *rt2x00dev,
+ 	return overhead;
+ }
+ 
+-void rt2x00crypto_tx_copy_iv(struct sk_buff *skb, unsigned int iv_len)
++void rt2x00crypto_tx_copy_iv(struct sk_buff *skb, struct txentry_desc *txdesc)
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+-	unsigned int header_length = ieee80211_get_hdrlen_from_skb(skb);
+ 
+-	if (unlikely(!iv_len))
++	if (unlikely(!txdesc->iv_len))
+ 		return;
+ 
+ 	/* Copy IV/EIV data */
+-	memcpy(skbdesc->iv, skb->data + header_length, iv_len);
++	memcpy(skbdesc->iv, skb->data + txdesc->iv_offset, txdesc->iv_len);
+ }
+ 
+-void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, unsigned int iv_len)
++void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, struct txentry_desc *txdesc)
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+-	unsigned int header_length = ieee80211_get_hdrlen_from_skb(skb);
+ 
+-	if (unlikely(!iv_len))
++	if (unlikely(!txdesc->iv_len))
+ 		return;
+ 
+ 	/* Copy IV/EIV data */
+-	memcpy(skbdesc->iv, skb->data + header_length, iv_len);
++	memcpy(skbdesc->iv, skb->data + txdesc->iv_offset, txdesc->iv_len);
+ 
+ 	/* Move ieee80211 header */
+-	memmove(skb->data + iv_len, skb->data, header_length);
++	memmove(skb->data + txdesc->iv_len, skb->data, txdesc->iv_offset);
+ 
+ 	/* Pull buffer to correct size */
+-	skb_pull(skb, iv_len);
++	skb_pull(skb, txdesc->iv_len);
+ 
+ 	/* IV/EIV data has officially be stripped */
+ 	skbdesc->flags |= FRAME_DESC_IV_STRIPPED;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index a631613..af3c47b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -295,8 +295,10 @@ void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
+ 				       struct txentry_desc *txdesc);
+ unsigned int rt2x00crypto_tx_overhead(struct rt2x00_dev *rt2x00dev,
+ 				      struct sk_buff *skb);
+-void rt2x00crypto_tx_copy_iv(struct sk_buff *skb, unsigned int iv_len);
+-void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, unsigned int iv_len);
++void rt2x00crypto_tx_copy_iv(struct sk_buff *skb,
++			     struct txentry_desc *txdesc);
++void rt2x00crypto_tx_remove_iv(struct sk_buff *skb,
++			       struct txentry_desc *txdesc);
+ void rt2x00crypto_tx_insert_iv(struct sk_buff *skb);
+ void rt2x00crypto_rx_insert_iv(struct sk_buff *skb, unsigned int align,
+ 			       unsigned int header_length,
+@@ -319,12 +321,12 @@ static inline unsigned int rt2x00crypto_tx_overhead(struct rt2x00_dev *rt2x00dev
+ }
+ 
+ static inline void rt2x00crypto_tx_copy_iv(struct sk_buff *skb,
+-					   unsigned int iv_len)
++					   struct txentry_desc *txdesc)
+ {
+ }
+ 
+ static inline void rt2x00crypto_tx_remove_iv(struct sk_buff *skb,
+-					     unsigned int iv_len)
++					     struct txentry_desc *txdesc)
+ {
+ }
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index a5664bd..6f78915 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -368,7 +368,6 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
+ 	struct txentry_desc txdesc;
+ 	struct skb_frame_desc *skbdesc;
+-	unsigned int iv_len = 0;
+ 	u8 rate_idx, rate_flags;
+ 
+ 	if (unlikely(rt2x00queue_full(queue)))
+@@ -390,9 +389,6 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	entry->skb = skb;
+ 	rt2x00queue_create_tx_descriptor(entry, &txdesc);
+ 
+-	if (IEEE80211_SKB_CB(skb)->control.hw_key != NULL)
+-		iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
+-
+ 	/*
+ 	 * All information is retrieved from the skb->cb array,
+ 	 * now we should claim ownership of the driver part of that
+@@ -415,9 +411,9 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc.flags) &&
+ 	    !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc.flags)) {
+ 		if (test_bit(DRIVER_REQUIRE_COPY_IV, &queue->rt2x00dev->flags))
+-			rt2x00crypto_tx_copy_iv(skb, iv_len);
++			rt2x00crypto_tx_copy_iv(skb, &txdesc);
+ 		else
+-			rt2x00crypto_tx_remove_iv(skb, iv_len);
++			rt2x00crypto_tx_remove_iv(skb, &txdesc);
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 97e2ab0..e3bfd73 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -280,6 +280,7 @@ enum txentry_desc_flags {
+  * @cipher: Cipher type used for encryption.
+  * @key_idx: Key index used for encryption.
+  * @iv_offset: Position where IV should be inserted by hardware.
++ * @iv_len: Length of IV data.
+  */
+ struct txentry_desc {
+ 	unsigned long flags;
+@@ -302,6 +303,7 @@ struct txentry_desc {
+ 	enum cipher cipher;
+ 	u16 key_idx;
+ 	u16 iv_offset;
++	u16 iv_len;
+ };
+ 
+ /**
+-- 
+1.6.2.3
 
-[1] http://marc.info/?l=3Dlinux-wireless&m=3D123816406913599&w=3D2
-[2] http://marc.info/?l=3Dlinux-wireless&m=3D123999864507104&w=3D2
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
