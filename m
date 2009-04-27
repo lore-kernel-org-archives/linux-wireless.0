@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:32034 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754248AbZDPRHS convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:36746 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760743AbZD0V6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 13:07:18 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so494412rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2009 10:07:17 -0700 (PDT)
+	Mon, 27 Apr 2009 17:58:34 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so58406eyd.37
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Apr 2009 14:58:33 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: rt2x00: Add new USB ID for rt2800usb
+Date: Mon, 27 Apr 2009 23:58:31 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-In-Reply-To: <1239727902-11866-1-git-send-email-hauke@hauke-m.de>
-References: <1239727902-11866-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 16 Apr 2009 10:07:02 -0700
-Message-ID: <43e72e890904161007h43d131e5uc98018037e84d544@mail.gmail.com> (sfid-20090416_190723_870861_69A04CF8)
-Subject: Re: [PATCH] [compat-2.6] Reflect changes in wireless-testing.
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200904272358.31224.IvDoorn@gmail.com> (sfid-20090427_235846_420871_7E0A01FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 14, 2009 at 9:51 AM, Hauke Mehrtens <hauke@hauke-m.de> wrot=
-e:
-> * Change the location of ath5k, ath9k and ar9170.
-> * modify some scripts to work with recent version of wireless-testing=
-=2E
-> =C2=A0* ath9k will be loaded if madwifi is deactivated.
-> =C2=A0* Broadcoms wl.ko will be deactivated if b43 or b43legacy are l=
-oaded.
-> =C2=A0* Many modules were added or chanced their name in the last mon=
-ths.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Applied and new tarball generated, thanks!
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Updated from /home/wireless/wireless-testing, git-describe says:
-v2.6.30-rc2-21665-gca0be26
-wireless-testing latest tag:
-master-2009-04-15
-This is compat-release:
-master-2009-04-15
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index f5a31d9..9d967b0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -2943,6 +2943,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Linksys */
+ 	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1737, 0x0077), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Logitec */
+ 	{ USB_DEVICE(0x0789, 0x0162), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0789, 0x0163), USB_DEVICE_DATA(&rt2800usb_ops) },
+-- 
+1.6.2.3
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
