@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:42478 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755493AbZDASru (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:59111 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbZD0ABB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 14:47:50 -0400
+	Sun, 26 Apr 2009 20:01:01 -0400
+Message-ID: <49F4F5B1.4020201@gmail.com> (sfid-20090427_020111_395065_3B3C6593)
+Date: Mon, 27 Apr 2009 02:00:49 +0200
+From: Niel Lambrechts <niel.lambrechts@gmail.com>
 MIME-Version: 1.0
-Date: Wed, 1 Apr 2009 11:47:33 -0700
-Message-ID: <43e72e890904011147p5e22eaeejac3fddd2b9cddcfc@mail.gmail.com> (sfid-20090401_204756_381893_FF0AC086)
-Subject: Atheros Linux wireless support - ramifications of reverse engineering
-	alien technology
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+To: "linux.kernel" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: 2.6.30-rc3: iwlagn probe timeouts (regression)
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow Linux wireless hackers,
+Hi,
 
-We regret to inform you that Atheros is no longer going to be working
-with the upstream Linux kernel community. We have received notice from
-the Atheros Alien Reverse Engineering Division (AARED) that we have
-given away too much information by opening up our drivers, furthermore
-our batch of newly arrived organic-based wireless technology at AARED
-is far too advanced and current wireless research cannot explain our
-achieved max thoughput figures which violate The Shannon Theorem [1].
-The AARED also fears that the FOSS community will start creating
-communication portals to parallel universes with our hardware[2], a
-feature which is theoretically possible with our latest organic-based
-wireless technology, but unfortunately cannot be allowed due to
-regulatory consideration near the Council Chambers of Zion [3].
+In earlier 2.6.30 (rc1 and 2) kernel tests I suffered the "beacon loss,
+sending probe request" problem, during which my connection would
+intermittently fail and reconnect. With the latest git kernel which
+seems to include a patch (ad935687dbe7307f5abd9e3f610a965a287324a9) for
+at least some of this, my card (Intel 5300AGN REV=0x24) completely fails
+to associate and I get:
 
-We may be able to address the communication portal regulatory
-considerations through CRDA [4] and for this we do ask for you advice,
-but please be aware that we already are facing hard questions from the
-NSA, specifically from Agent Smith [5]. The NSA ultimately fears that
-the alien community we have reversed engineered their wireless
-technology from may be watching us and may soon start sending hostile
-ships to earth for retribution, these concerns are coming directly
-from The Architect [6].
+Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::radio
+Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::assoc
+Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::RX
+Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::TX
+Apr 27 01:32:36 linux-7vph kernel: ADDRCONF(NETDEV_UP): wlan0: link is
+not ready
+Apr 27 01:32:40 linux-7vph sudo:   niella : TTY=pts/2 ; PWD=/home/niella
+; USER=root ; COMMAND=/usr/bin/tail -f /var/log/messages
+Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 1
+Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 2
+Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 3
+Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e timed out
+Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 1
+Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 1
+Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 2
+Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 3
+Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e timed out
+Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 1
+Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 1
+Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 2
+Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e try 3
+Apr 27 01:33:43 linux-7vph kernel: wlan0: direct probe to AP
+00:1d:92:1d:1e:8e timed out
 
-  The Atheros Linux team
+I do not have any similar problems with 2.6.29 or 2.6.28 at the exact
+same physical location.
 
-[1] http://en.wikipedia.org/wiki/Shannon_theorem
-[2] http://www.sciam.com/article.cfm?id=the-great-cosmic-roller-coaster-ride
-[3] http://en.wikipedia.org/wiki/Zion_(The_Matrix)
-[4] http://wireless.kernel.org/en/developers/Regulatory/CRDA
-[5] http://en.wikipedia.org/wiki/Agent_Smith
-[6] http://en.wikipedia.org/wiki/Architect_(The_Matrix)
+I can try to bisect in a day or two if need be.
+
+Regards,
+Niel
