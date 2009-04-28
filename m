@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:34139 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbZDUFgy (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:3069 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbZD1PyB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 01:36:54 -0400
-Received: by bwz7 with SMTP id 7so1570509bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2009 22:36:52 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org
-Subject: p54: power save disable patch twice
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 21 Apr 2009 08:36:50 +0300
-Message-ID: <87hc0iftzh.fsf@litku.valot.fi> (sfid-20090421_073658_496873_F73536A8)
+	Tue, 28 Apr 2009 11:54:01 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so436432wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 08:54:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
+References: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Tue, 28 Apr 2009 08:53:41 -0700
+Message-ID: <43e72e890904280853y419b9dcfw13722345892fa9b4@mail.gmail.com> (sfid-20090428_175414_747526_F9E58EAB)
+Subject: Re: Question about 802.11s(mesh)
+To: =?UTF-8?B?6IuP55m96b6Z?= <subailong@163.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+2009/4/28 =E8=8B=8F=E7=99=BD=E9=BE=99 <subailong@163.com>:
+> Dear Luis,
+> =C2=A0=C2=A0=C2=A0=C2=A0 I'm a=C2=A0undergraduate student from China.=
+Now I'm doing some work about
+> 802.11s and have learned a lot from the =C2=A0web site=C2=A0linuxwire=
+less.org.Since
+> I'm a beginner, I=C2=A0meet some problems,and hope very much that you=
+ could
+> give=C2=A0me a hand.
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0My question is:"Can all of the wireless=
+ networking cards=C2=A0run in mesh
+> mode?" I think they all can.=C2=A0But =C2=A0why some can not=C2=A0as =
+it is described in=C2=A0the
+> web page http://linuxwireless.org/en/users/Drivers? Please give =C2=A0=
+me the
+> detailed reasons.
+> =C2=A0=C2=A0=C2=A0 Very sorry to trouble you, but I really need your =
+help. I'm looking
+> forward to your reply and wish you good luck everyday.
 
-I noticed that latest wireless-testing had this patch twice:
+No, softmac cards must support mesh in the driver. If you have a
+fullmac card (non-mac80211) its up to the driver itself whether or not
+mesh is supported.
 
-    p54: deactivate broken powersave function
-    
-    This patch deactivates powersave in station mode.
-    
-    It does not work correctly yet, so the code does more harm than
-    good.
-    
-    Reported-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: Christian Lamparter <chunkeey@web.de>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+There is a big column for drivers which support Mesh here:
 
-The first patch removes IEEE80211_HW_SUPPORTS_PS and
-IEEE80211_HW_PS_NULLFUNC_STACK, and the second patch removes only
-IEEE80211_HW_BEACON_FILTER. I assume that the idea was to remove
-everything in one go.
+http://wireless.kernel.org/en/users/Drivers
 
--- 
-Kalle Valo
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
