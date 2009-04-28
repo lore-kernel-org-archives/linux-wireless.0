@@ -1,178 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:42837 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754510AbZDKHu0 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495AbZD1I6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 03:50:26 -0400
-Received: by ewy9 with SMTP id 9so1423585ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Apr 2009 00:50:24 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [PATCH] rt2x00: prevent double kfree when failing to register hardware
-Date: Sat, 11 Apr 2009 09:50:20 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200904101805.14986.herton@mandriva.com.br>
-In-Reply-To: <200904101805.14986.herton@mandriva.com.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200904110950.21334.IvDoorn@gmail.com> (sfid-20090411_095032_275945_F9F80ACE)
+	Tue, 28 Apr 2009 04:58:41 -0400
+Subject: Re: Measure RSSI in adhoc networks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kai Timmer <email@kait.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <5b8543210904280059v4100bfackdb14ba19eaaeca9a@mail.gmail.com> (sfid-20090428_095918_112941_3E0DD7B3)
+References: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com>
+	 <1240442334.14995.12.camel@localhost.localdomain>
+	 <5b8543210904230336j177998c4m1e0af03fbb3584df@mail.gmail.com>
+	 <1240483530.30082.178.camel@johannes.local>
+	 <5b8543210904230439r45c982fbn66c1a2080adcd442@mail.gmail.com>
+	 <43e72e890904271752yd080607x910ef06c45f124d@mail.gmail.com>
+	 <5b8543210904280059v4100bfackdb14ba19eaaeca9a@mail.gmail.com>
+	 (sfid-20090428_095918_112941_3E0DD7B3)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VNmm1/b5cFFadKtqrnLn"
+Date: Tue, 28 Apr 2009 10:58:37 +0200
+Message-Id: <1240909117.19534.5.camel@johannes.local> (sfid-20090428_105846_234282_D9899978)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 10 April 2009, Herton Ronaldo Krzesinski wrote:
-> In a scenario where there isn't any firmware available, we will have =
-a
-> double kfree of rt2x00dev->spec.channels_info when ieee80211_register=
-_hw
-> returns an error status inside rt2x00lib_probe_hw.
->=20
-> The problem is that if ieee80211_register_hw fails, we call
-> rt2x00lib_remove_hw twice:
-> * first inside rt2x00lib_probe_hw upon failure of ieee80211_register_=
-hw
-> * error status is returned to rt2x00lib_probe_dev, which then sees it=
- and
->   calls in this case rt2x00lib_remove_dev that will again run
->   rt2x00lib_remove_hw
->=20
-> Prevent this avoiding calling rt2x00lib_remove_hw inside
-> rt2x00lib_probe_hw
->=20
-> Problem was detected with CONFIG_DEBUG_PAGEALLOC=3Dy, CONFIG_SLUB_DEB=
-UG=3Dy,
-> CONFIG_SLUB_DEBUG_ON=3Dy, that dumps this with no firmware available:
->=20
-> rt61pci 0000:00:07.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-> wmaster0 (rt61pci): not using net_device_ops yet
-> phy0: Selected rate control algorithm 'pid'
-> phy0: Failed to initialize wep: -2
-> phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> BUG kmalloc-128: Object already free
-> ---------------------------------------------------------------------=
---------
->=20
-> INFO: Allocated in rt61pci_probe_hw+0x3e5/0x6e0 [rt61pci] age=3D340 c=
-pu=3D0 pid=3D21
-> INFO: Freed in rt2x00lib_remove_hw+0x59/0x70 [rt2x00lib] age=3D0 cpu=3D=
-0 pid=3D21
-> INFO: Slab 0xc13ac3e0 objects=3D23 used=3D10 fp=3D0xdd59f6e0 flags=3D=
-0x400000c3
-> INFO: Object 0xdd59f6e0 @offset=3D1760 fp=3D0xdd59f790
->=20
-> Bytes b4 0xdd59f6d0:  15 00 00 00 b2 8a fb ff 5a 5a 5a 5a 5a 5a 5a 5a=
- ....=B2.=FB=FFZZZZZZZZ
->   Object 0xdd59f6e0:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f6f0:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f700:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f710:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f720:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f730:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f740:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- kkkkkkkkkkkkkkkk
->   Object 0xdd59f750:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b a5=
- kkkkkkkkkkkkkkk=A5
->  Redzone 0xdd59f760:  bb bb bb bb                                    =
- =BB=BB=BB=BB
->  Padding 0xdd59f788:  5a 5a 5a 5a 5a 5a 5a 5a                        =
- ZZZZZZZZ
-> Pid: 21, comm: stage1 Not tainted 2.6.29.1-desktop-1.1mnb #1
-> Call Trace:
->  [<c01abbb3>] print_trailer+0xd3/0x120
->  [<c01abd37>] object_err+0x37/0x50
->  [<c01acf57>] __slab_free+0xe7/0x2f0
->  [<c01ad1de>] kfree+0x7e/0xd0
->  [<e0e4a239>] ? rt2x00lib_remove_hw+0x59/0x70 [rt2x00lib]
->  [<e0e4a239>] ? rt2x00lib_remove_hw+0x59/0x70 [rt2x00lib]
->  [<e0e4a239>] rt2x00lib_remove_hw+0x59/0x70 [rt2x00lib]
->  [<e0e4acc7>] rt2x00lib_remove_dev+0x37/0x50 [rt2x00lib]
->  [<e0e4b087>] rt2x00lib_probe_dev+0x1a7/0x3b0 [rt2x00lib]
->  [<e0eb288f>] rt2x00pci_probe+0xdf/0x1ee [rt2x00pci]
->  [<c026b9ee>] local_pci_probe+0xe/0x10
->  [<c026c750>] pci_device_probe+0x60/0x80
->  [<c02d5c2a>] driver_probe_device+0x9a/0x2e0
->  [<c02d5ef9>] __driver_attach+0x89/0x90
->  [<c02d541b>] bus_for_each_dev+0x4b/0x70
->  [<c026c690>] ? pci_device_remove+0x0/0x40
->  [<c02d59d9>] driver_attach+0x19/0x20
->  [<c02d5e70>] ? __driver_attach+0x0/0x90
->  [<c02d4cef>] bus_add_driver+0x1cf/0x2a0
->  [<c026c690>] ? pci_device_remove+0x0/0x40
->  [<c02d60c9>] driver_register+0x69/0x140
->  [<c026c9b0>] __pci_register_driver+0x40/0x80
->  [<e0ecc000>] ? rt61pci_init+0x0/0x19 [rt61pci]
->  [<e0ecc017>] rt61pci_init+0x17/0x19 [rt61pci]
->  [<c0101116>] do_one_initcall+0x26/0x1c0
->  [<c01ab90c>] ? slab_pad_check+0x3c/0x120
->  [<c01ab90c>] ? slab_pad_check+0x3c/0x120
->  [<c01ac8da>] ? check_object+0xda/0x210
->  [<c01b0026>] ? percpu_free+0x46/0x50
->  [<c01ad09e>] ? __slab_free+0x22e/0x2f0
->  [<c01b0026>] ? percpu_free+0x46/0x50
->  [<c01b0026>] ? percpu_free+0x46/0x50
->  [<c01b0026>] ? percpu_free+0x46/0x50
->  [<c01687ec>] ? stop_machine_destroy+0x3c/0x40
->  [<c015e515>] ? load_module+0xa5/0x1c50
->  [<e0ec5000>] ? rt61pci_eepromregister_read+0x0/0x40 [rt61pci]
->  [<e0eb2000>] ? rt2x00pci_write_tx_data+0x0/0x90 [rt2x00pci]
->  [<c03ac2fb>] ? mutex_lock+0xb/0x20
->  [<c03ac2fb>] ? mutex_lock+0xb/0x20
->  [<c017ad16>] ? tracepoint_update_probe_range+0x76/0xa0
->  [<c017ad6f>] ? tracepoint_module_notify+0x2f/0x40
->  [<c03b02ed>] ? notifier_call_chain+0x2d/0x70
->  [<c014f0ed>] ? __blocking_notifier_call_chain+0x4d/0x60
->  [<c014f11a>] ? blocking_notifier_call_chain+0x1a/0x20
->  [<c0160156>] sys_init_module+0x96/0x1d0
->  [<c019dad6>] ? sys_munmap+0x46/0x60
->  [<c0105546>] syscall_call+0x7/0xb
-> FIX kmalloc-128: Object at 0xdd59f6e0 not freed
-> rt61pci 0000:00:07.0: PCI INT A disabled
-> rt61pci: probe of 0000:00:07.0 failed with error -2
->=20
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+--=-VNmm1/b5cFFadKtqrnLn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
-John please queue this for 2.6.30 as well.
-Thanks.
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
+On Tue, 2009-04-28 at 09:59 +0200, Kai Timmer wrote:
+> 2009/4/28 Luis R. Rodriguez <mcgrof@gmail.com>:
+> > The ar6000 driver uses wext and not cfg80211 which all new shiny
+> > mac80211 drivers use. The command Johannes gave you was for cfg80211
+> > devices.
 >=20
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wi=
-reless/rt2x00/rt2x00dev.c
-> index 05f94e2..5752aaa 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -646,10 +646,8 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev =
-*rt2x00dev)
->  	 * Register HW.
->  	 */
->  	status =3D ieee80211_register_hw(rt2x00dev->hw);
-> -	if (status) {
-> -		rt2x00lib_remove_hw(rt2x00dev);
-> +	if (status)
->  		return status;
-> -	}
-> =20
->  	set_bit(DEVICE_STATE_REGISTERED_HW, &rt2x00dev->flags);
-> =20
+> Thats what i thought. But is there a wext equivalent to these commands?
 
+No.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-VNmm1/b5cFFadKtqrnLn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ9sU6AAoJEKVg1VMiehFYuOsP/3TXlTP1F6iV+baYSHW+7nCq
+4Rjvl2cWraIW1BiRZ0Zr+cslwM2q2bJTd68U8jwe7j3P0Cdn/A94A/iFosyCBCzU
+EHrtgRPbgpB1ncQsQ/kTsc8d3smarhJfy2lh6EwxeipCBXa7QNaqKesqyTO8scov
+Sm+dGeQWzY1ObUYSWGrEDkCt1GQ5fih/r6DGC1FysZ2CiswkeSjtWnWPmN5Eyq/b
+kl4hlngC0AWZ2/8rWHr8PJPvTMxAGxPECXMRChHMw+aWH0v9bmhwWjzuUG+1qk7F
+gsuhbY4FSCVby0bT6oHsubZ9oodWKh+ZrEIFGVKjw09Ot8I5RGmqDKIGlTIMkOa5
+lvvDCKXlrUWFwvKGe4zSAZsexutDHmL+cYjbCsgqprmvz6w4R+iQQel38BNJqez9
+0L86MWcljenI6e6Cv2MbMNKFFWrfxrv8N+LZbUd32kBksL3ULjRCjUVNPm1Ez6bs
+lhMOPjNzeSnjrxKzu8cUUgmDcyWzg/cqnnJKadHhoUMOtaS4Z+Qd+huIppYX1/mH
+I1nfOf5jbRRqI8Rra8i8F89qaPUzEaPXTm8E/JJC9k89ssGEA223vvEldxFiTB+L
+jGwp6vuvdoqJqE3rWCiMhkQOGStYsvopphxlIIXhPT31JI8vUjfh5noNvQsxQaAu
+ogOQFxyHUqgXlqqtecua
+=wAUq
+-----END PGP SIGNATURE-----
+
+--=-VNmm1/b5cFFadKtqrnLn--
+
