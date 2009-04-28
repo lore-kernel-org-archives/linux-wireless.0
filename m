@@ -1,97 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:16964 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755869AbZD1JTQ (ORCPT
+Received: from turboconrad.planet-school.de ([194.116.187.5]:56611 "EHLO
+	turboconrad.planet-school.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754030AbZD1NfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 05:19:16 -0400
-Message-ID: <49F6CA0E.5040101@tuffmail.co.uk> (sfid-20090428_111942_198975_13CDA6F5)
-Date: Tue, 28 Apr 2009 10:19:10 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Tue, 28 Apr 2009 09:35:07 -0400
+Received: from turboconrad.planet-school.de (turbolabarbara.planet-school.de [194.116.187.109])
+	by turboconrad.planet-school.de (Postfix) with ESMTP id 30D5D11B2030
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 15:28:37 +0200 (CEST)
+Received: from [138.246.14.80] (unknown [138.246.14.80])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: mail@philipp-wagner.com)
+	by turboconrad.planet-school.de (Postfix) with ESMTP id 14ED8116DA7C
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 15:28:36 +0200 (CEST)
+Message-ID: <49F70489.5070004@philipp-wagner.com> (sfid-20090428_153513_409292_4FEBDE78)
+Date: Tue, 28 Apr 2009 15:28:41 +0200
+From: Philipp Wagner <lists@philipp-wagner.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Arjan van de Ven <arjan@infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>
-Subject: [PATCH] [RFC] EEE PC hangs when booting off battery
-References: <49E065CF.6040408@tuffmail.co.uk> <200904140859.02188.bjorn.helgaas@hp.com> <20090414081728.10de978a@infradead.org> <200904140948.37633.bjorn.helgaas@hp.com> <49E5F01B.2060201@tuffmail.co.uk> <49EF0ABD.2080801@tuffmail.co.uk> <49F446AE.6070607@tuffmail.co.uk>
-In-Reply-To: <49F446AE.6070607@tuffmail.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: iwlagn: Microcode SW error detected.  Restarting 0x82000000.
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found a regression where my EEE hangs at boot time, if the battery is
-present.
+Hi,
 
-I'm confident it's a regression because it disappears if I revert
-Arjan's asynchronous battery initialisation.  However, the evidence
-points to a deadlock in the wireless stack which has simply been
-uncovered by timing changes.
+I'm running into a
+Microcode SW error detected.  Restarting 0x82000000.
+error with the iwlagn driver.
 
-If I leave the system long enough, I get a series of hung task
-warnings.  They suggest the following deadlock:
+# uname -a
+Linux 2.6.30-rc2-git6-master_20090416115717_67cb21e9-vanilla #2 SMP Thu
+Apr 23 19:24:36 CEST 2009 x86_64 x86_64 x86_64 GNU/Linux
 
-- ieee80211_wep_init(), which is called with rtnl_lock() held, is
-blocked in request_module() [waiting for modprobe to load a crypto module].
-- modprobe is blocked in a call to flush_workqueue(), caused by closing
-a TTY.
-- worker_thread is blocked because the workqueue item linkwatch_event()
-is blocked on rtnl_lock.
+I uploaded a (hopefully) complete log generated with the "debug=0x43fff"
+at http://philipp.wagner.name/temp/iwlagn-microcodeerror.txt
 
+Is this a known problem? I mainly experience this problem at university
+with many access points for the same essid and it seems to happen more
+often with encrypted communication (802.1x) - but that's only a feeling,
+not a fact :)
 
-I've hacked up a test patch to move wep_init() outside of rtnl_lock, and
-it solved the problem.  My one caveat is that it would probably be
-cleaner to move it after rtnl_unlock(), instead of before rtnl_lock(). 
-I just wasn't 100% sure if that would be safe.  Here's the patch:
-
----8<---
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index fbcbed6..fffa7f9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -909,6 +909,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (result < 0)
- 		goto fail_sta_info;
- 
-+	result = ieee80211_wep_init(local);
-+	if (result < 0) {
-+		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
-+		       wiphy_name(local->hw.wiphy), result);
-+		goto fail_wep;
-+	}
-+
- 	rtnl_lock();
- 	result = dev_alloc_name(local->mdev, local->mdev->name);
- 	if (result < 0)
-@@ -930,14 +937,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_rate;
- 	}
- 
--	result = ieee80211_wep_init(local);
--
--	if (result < 0) {
--		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
--		       wiphy_name(local->hw.wiphy), result);
--		goto fail_wep;
--	}
--
- 	/* add one default STA interface if supported */
- 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
- 		result = ieee80211_if_add(local, "wlan%d", NULL,
-@@ -967,13 +966,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	return 0;
- 
--fail_wep:
--	rate_control_deinitialize(local);
- fail_rate:
- 	unregister_netdevice(local->mdev);
- 	local->mdev = NULL;
- fail_dev:
- 	rtnl_unlock();
-+fail_wep:
- 	sta_info_stop(local);
- fail_sta_info:
- 	debugfs_hw_del(local);
-
-
+Philipp
