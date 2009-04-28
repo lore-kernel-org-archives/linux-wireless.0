@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:56715 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874AbZDKPgL (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3944 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbZD1CSz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 11:36:11 -0400
-Message-ID: <49E0B8DA.8030708@lwfinger.net> (sfid-20090411_173615_138494_CD750C93)
-Date: Sat, 11 Apr 2009 10:35:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: David Ellingsworth <david@identd.dyndns.org>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: b43legacy AP
-References: <30353c3d0904100736g69782d46g18d99edd0dd0660d@mail.gmail.com>	 <49DF9E38.5030801@lwfinger.net>	 <30353c3d0904101349o915439arffb652b98e245e10@mail.gmail.com> <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
-In-Reply-To: <30353c3d0904110756qfc35928x265db523bd1f86be@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 27 Apr 2009 22:18:55 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] ath5k: correct interrupt storm warning
+Date: Mon, 27 Apr 2009 22:18:10 -0400
+Message-Id: <1240885090-16390-2-git-send-email-me@bobcopeland.com> (sfid-20090428_041857_765216_ACEDA878)
+In-Reply-To: <1240885090-16390-1-git-send-email-me@bobcopeland.com>
+References: <1240885090-16390-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Ellingsworth wrote:
-> I wanted to report that I've finally been successful at getting
-> b43legacy to beacon properly. Originally, I had configured hostapd to
-> use channel 1. After reading the list of bugs for the bwi driver,
-> shown here: http://leaf.dragonflybsd.org/cgi/web-man?command=bwi , I
-> had the inclination to try channel 6. It appears b43legacy might have
-> the same bugs as the bwi driver as I immediately began seeing beacons
-> once I started using channel 6.
+Ben Greear points out that the "too many interrupts" message will
+never print in the intended case since the interrupt counter
+will be -1 after the loop.  Change it to pre-decrement so it will
+be 0 on the thousandth iteration.
 
-I just tested and my 4311/1 running b43legacy sends beacons on channel 1. The
-problem is likely in the initialization of the 4306 units. That is something I
-will be investigating.
+Cc: Ben Greear <greearb@candelatech.com>
 
-As far as I can tell, it should be OK to submit the b43legacy beacon patches.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ff05ee9..a546465 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2525,7 +2525,7 @@ ath5k_intr(int irq, void *dev_id)
+ 				ath5k_hw_update_mib_counters(ah, &sc->ll_stats);
+ 			}
+ 		}
+-	} while (ath5k_hw_is_intr_pending(ah) && counter-- > 0);
++	} while (ath5k_hw_is_intr_pending(ah) && --counter > 0);
+ 
+ 	if (unlikely(!counter))
+ 		ATH5K_WARN(sc, "too many interrupts, giving up for now\n");
+-- 
+1.6.0.6
+
+
