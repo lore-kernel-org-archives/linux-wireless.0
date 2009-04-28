@@ -1,49 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:36870 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752014AbZDNCgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 22:36:10 -0400
-Date: Mon, 13 Apr 2009 19:33:45 -0700
-From: Greg KH <greg@kroah.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: VT6656 driver source now GPL
-Message-ID: <20090414023345.GA17901@kroah.com> (sfid-20090414_043613_672291_BAEA6DE7)
-References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network> <20090414000835.GA31504@storm.local.network> <49E3D7AA.1050207@lwfinger.net> <20090414005523.GC31504@storm.local.network> <49E3E135.4040305@lwfinger.net> <20090414021119.GC17559@kroah.com> <20090414022058.GA25746@storm.local.network>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090414022058.GA25746@storm.local.network>
+Received: from xc.sipsolutions.net ([83.246.72.84]:41944 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966AbZD1J6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2009 05:58:15 -0400
+Subject: Re: [PATCH] [RFC] EEE PC hangs when booting off battery
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arjan van de Ven <arjan@infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>
+In-Reply-To: <49F6CA0E.5040101@tuffmail.co.uk> (sfid-20090428_111942_198975_13CDA6F5)
+References: <49E065CF.6040408@tuffmail.co.uk>
+	 <200904140859.02188.bjorn.helgaas@hp.com>
+	 <20090414081728.10de978a@infradead.org>
+	 <200904140948.37633.bjorn.helgaas@hp.com> <49E5F01B.2060201@tuffmail.co.uk>
+	 <49EF0ABD.2080801@tuffmail.co.uk> <49F446AE.6070607@tuffmail.co.uk>
+	 <49F6CA0E.5040101@tuffmail.co.uk> (sfid-20090428_111942_198975_13CDA6F5)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ssrFuVECca1fp0kSm0VT"
+Date: Tue, 28 Apr 2009 11:58:08 +0200
+Message-Id: <1240912688.28835.10.camel@johannes.local> (sfid-20090428_115823_684720_9FC38F57)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 13, 2009 at 10:20:59PM -0400, Forest Bond wrote:
-> Hi,
-> 
-> On Mon, Apr 13, 2009 at 07:11:19PM -0700, Greg KH wrote:
-> > On Mon, Apr 13, 2009 at 08:04:53PM -0500, Larry Finger wrote:
-> > > Forest Bond wrote:
-> > > > 
-> > > > Great, this is enough to get started, at least.  I assume that the quality bar
-> > > > is low for code in drivers/staging.  Low quality work is a trademark of mine, so
-> > > > I should be able to tackle this. ;)
-> > > > 
-> > > > Is there any reason I ought to think that it would be easier to get this
-> > > > accepted in linux-staging than drivers/staging?  I'll admit that I feel better
-> > > > about the layout of drivers/staging than I do about the quilt stuff in
-> > > > linux-staging.
-> > > 
-> > > GregKH has said that he will take it from here. I think that means that he will
-> > > add it to drivers/staging and get it to build.
-> > 
-> > Yes I will.  Can someone send me a patch?
-> 
-> I will get you one patch for each driver adding the driver source under
-> drivers/staging on linux-2.6.  If that doesn't sound right, let me know.
 
-That would be fine.
+--=-ssrFuVECca1fp0kSm0VT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-thanks,
+It seems the only reason lockdep doesn't warn is the detour to userspace
+(modprobe) and the waiting for a userspace task (waiting isn't lockdep
+annotated and I don't think it can be)
 
-greg k-h
+It seems you cannot load a module while under _any_ lock, ever, since
+userspace might turn around and do something that requires that lock? I
+think we should probably add a warning to the code that waits for the
+userspace task:
+
+	debug_check_no_locks_held(current);
+
+Or not? Some purely internal locks _might_ be ok... but how could you
+verify that?
+
+> - ieee80211_wep_init(), which is called with rtnl_lock() held, is
+> blocked in request_module() [waiting for modprobe to load a crypto module=
+].
+
+Right.
+
+> - modprobe is blocked in a call to flush_workqueue(), caused by closing
+> a TTY.
+
+Can you point out where? I can't find that.
+
+> - worker_thread is blocked because the workqueue item linkwatch_event()
+> is blocked on rtnl_lock.
+
+This I know about.
+
+> I've hacked up a test patch to move wep_init() outside of rtnl_lock, and
+> it solved the problem.  My one caveat is that it would probably be
+> cleaner to move it after rtnl_unlock(), instead of before rtnl_lock().=20
+> I just wasn't 100% sure if that would be safe.  Here's the patch:
+
+That doesn't seem relevant, this just does some initialisation. However,
+you definitely missed adding a call to wep_free().
+
+johannes
+
+--=-ssrFuVECca1fp0kSm0VT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ9tMuAAoJEKVg1VMiehFYSxYQAInSVwhErD9Q6+48V4JpDp2l
+3imRtIkdF7+ZFwa2SdF/kiBYP+s+XF1sdulp7PHCtbqdHk4cvoi+XKHOawqo1wYr
+qpI2AKDfOf2rzoczAcK4YW2w6BftgxTTqoUVfLKxPb5KUUChjkJnqrRv5UJEyXBv
+kWRQSbcT4obujlPIBhnPo93wtlvBSQujU1vPrdqs3G5gaSbQtJlZRjFUuJg35Pke
+CEn4nJ62kFeyGZl2eI+QDpyODn7SFUWXuyNTOXgWMcTZsnSlZm7GOTfTi9jBBNEB
+FW4ynZ+itvAkxsDIB2cIEsiC0fygxrDDtDcMHFeQWXWdIOiZSMdcgRK6jaxj1sCh
+qIwq1uuQ4DU4kobHciOBn00GJgNKT3mViS6CbUjXbqN42/+S9BZOY2IG6YPTmoRb
+mn7NcVzA6oy9HVYU2LcBmDuez1lg4w7U7+f1+peCgpAbV4EJ/J0F91TJFNFvGBOK
+dHDhxGwdmCQWurgI6FyL37rxSW42Ho6clicm2epdmZ/yG2DRRYD68Vj20IqCEowA
+rOfO57ypb/1G71EkyNfCWr9ITTNs+WSQhWFm1YO8U9IgAelIJH/MQLTQ0mKR6Zoe
+PYosgETnBt2Nh+p8BRt2gI2+D9W9T7G/IBZaSmMjGLrHjMKIC02Dpkqkri2injDc
+9FjC2xhtyugVVRruZXil
+=pqaC
+-----END PGP SIGNATURE-----
+
+--=-ssrFuVECca1fp0kSm0VT--
+
