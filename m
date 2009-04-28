@@ -1,142 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1054 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534AbZD3T4w (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:34756 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbZD1U6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:56:52 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Nick Kossifidis <mick@madwifi-project.org>
-Subject: [PATCH 3/9] ath5k: Put remaining EEPROM data on ee struct
-Date: Thu, 30 Apr 2009 15:55:46 -0400
-Message-Id: <1241121352-6064-4-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
-References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+	Tue, 28 Apr 2009 16:58:41 -0400
+Message-ID: <49F76DF2.5070704@gmail.com> (sfid-20090428_225846_755730_3AFA4A12)
+Date: Tue, 28 Apr 2009 22:58:26 +0200
+From: Niel Lambrechts <niel.lambrechts@gmail.com>
+MIME-Version: 1.0
+To: reinette chatre <reinette.chatre@intel.com>
+CC: "linux.kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.30-rc3: iwlagn probe timeouts (regression)
+References: <49F4F5B1.4020201@gmail.com> <1240852777.29221.6.camel@rc-desk>
+In-Reply-To: <1240852777.29221.6.camel@rc-desk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nick Kossifidis <mick@madwifi-project.org>
+On 04/27/2009 07:19 PM, reinette chatre wrote:
+> Hi Niel,
+>
+> On Sun, 2009-04-26 at 17:00 -0700, Niel Lambrechts wrote:
+>   
+>> Hi,
+>>
+>> In earlier 2.6.30 (rc1 and 2) kernel tests I suffered the "beacon loss,
+>> sending probe request" problem, during which my connection would
+>> intermittently fail and reconnect. With the latest git kernel which
+>> seems to include a patch (ad935687dbe7307f5abd9e3f610a965a287324a9) for
+>> at least some of this, my card (Intel 5300AGN REV=0x24) completely fails
+>> to associate and I get:
+>>
+>> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::radio
+>> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::assoc
+>> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::RX
+>> Apr 27 01:32:36 linux-7vph kernel: Registered led device: iwl-phy0::TX
+>> Apr 27 01:32:36 linux-7vph kernel: ADDRCONF(NETDEV_UP): wlan0: link is
+>> not ready
+>> Apr 27 01:32:40 linux-7vph sudo:   niella : TTY=pts/2 ; PWD=/home/niella
+>> ; USER=root ; COMMAND=/usr/bin/tail -f /var/log/messages
+>> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 1
+>> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 2
+>> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 3
+>> Apr 27 01:33:16 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e timed out
+>> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 1
+>> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 1
+>> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 2
+>> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 3
+>> Apr 27 01:33:29 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e timed out
+>> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 1
+>> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 1
+>> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 2
+>> Apr 27 01:33:42 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e try 3
+>> Apr 27 01:33:43 linux-7vph kernel: wlan0: direct probe to AP
+>> 00:1d:92:1d:1e:8e timed out
+>>
+>> I do not have any similar problems with 2.6.29 or 2.6.28 at the exact
+>> same physical location.
+>>
+>> I can try to bisect in a day or two if need be.
+>>     
+>
+> >From what I can tell we did not send any iwlagn patches to 2.6.30 that
+> are related to this behavior. Please do try a bisect. 
+>   
+Okidoki, I've managed to bisect it:
 
-* Put remaining EEPROM information on ee struct and remove is_hb63
- function.
+commit 47afbaf5af9454a7a1a64591e20cbfcc27ca67a8
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Tue Apr 7 15:22:28 2009 +0200
 
- Now we also have rfkill stuff available.
+    mac80211: correct wext transmit power handler
+---------
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
- Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/eeprom.c |   24 +++++++++++-------------
- drivers/net/wireless/ath/ath5k/eeprom.h |   15 ++++++++++-----
- drivers/net/wireless/ath/ath5k/reset.c  |    5 +++--
- 3 files changed, 24 insertions(+), 20 deletions(-)
+Under normal working circumstances, I get a reported 30-42% signal
+strength to my wireless router, with the problematic kernels I just kept
+getting probe attempts followed by the timeout, as per my original post.
 
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index 587c5b8..8c9dd01 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -156,6 +156,17 @@ ath5k_eeprom_init_header(struct ath5k_hw *ah)
- 		ee->ee_db[AR5K_EEPROM_MODE_11G][0] = (val >> 3) & 0x7;
- 	}
- 
-+	AR5K_EEPROM_READ(AR5K_EEPROM_IS_HB63, val);
-+
-+	if ((ah->ah_mac_version == (AR5K_SREV_AR2425 >> 4)) && val)
-+		ee->ee_is_hb63 = true;
-+	else
-+		ee->ee_is_hb63 = false;
-+
-+	AR5K_EEPROM_READ(AR5K_EEPROM_RFKILL, val);
-+	ee->ee_rfkill_pin = (u8) AR5K_REG_MS(val, AR5K_EEPROM_RFKILL_GPIO_SEL);
-+	ee->ee_rfkill_pol = val & AR5K_EEPROM_RFKILL_POLARITY ? true : false;
-+
- 	return 0;
- }
- 
-@@ -1789,16 +1800,3 @@ int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
- 
- 	return 0;
- }
--
--bool ath5k_eeprom_is_hb63(struct ath5k_hw *ah)
--{
--	u16 data;
--
--	ath5k_hw_eeprom_read(ah, AR5K_EEPROM_IS_HB63, &data);
--
--	if ((ah->ah_mac_version == (AR5K_SREV_AR2425 >> 4)) && data)
--		return true;
--	else
--		return false;
--}
--
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
-index df9ffa0..46e4d22 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.h
-@@ -26,6 +26,13 @@
- #define AR5K_EEPROM_MAGIC_5210		0x0000145a /* 5210 */
- 
- #define	AR5K_EEPROM_IS_HB63		0x000b	/* Talon detect */
-+
-+#define AR5K_EEPROM_RFKILL		0x0f
-+#define AR5K_EEPROM_RFKILL_GPIO_SEL	0x0000001c
-+#define AR5K_EEPROM_RFKILL_GPIO_SEL_S	2
-+#define AR5K_EEPROM_RFKILL_POLARITY	0x00000002
-+#define AR5K_EEPROM_RFKILL_POLARITY_S	1
-+
- #define AR5K_EEPROM_REG_DOMAIN		0x00bf	/* EEPROM regdom */
- #define AR5K_EEPROM_CHECKSUM		0x00c0	/* EEPROM checksum */
- #define AR5K_EEPROM_INFO_BASE		0x00c0	/* EEPROM header */
-@@ -66,11 +73,6 @@
- #define AR5K_EEPROM_HDR_RFKILL(_v)	(((_v) >> 14) & 0x1)	/* Device has RFKill support */
- #define AR5K_EEPROM_HDR_T_5GHZ_DIS(_v)	(((_v) >> 15) & 0x1)	/* Disable turbo for 5Ghz */
- 
--#define AR5K_EEPROM_RFKILL_GPIO_SEL	0x0000001c
--#define AR5K_EEPROM_RFKILL_GPIO_SEL_S	2
--#define AR5K_EEPROM_RFKILL_POLARITY	0x00000002
--#define AR5K_EEPROM_RFKILL_POLARITY_S	1
--
- /* Newer EEPROMs are using a different offset */
- #define AR5K_EEPROM_OFF(_v, _v3_0, _v3_3) \
- 	(((_v) >= AR5K_EEPROM_VERSION_3_3) ? _v3_3 : _v3_0)
-@@ -386,6 +388,9 @@ struct ath5k_eeprom_info {
- 	u16	ee_version;
- 	u16	ee_header;
- 	u16	ee_ant_gain;
-+	u8	ee_rfkill_pin;
-+	bool	ee_rfkill_pol;
-+	bool	ee_is_hb63;
- 	u16	ee_misc0;
- 	u16	ee_misc1;
- 	u16	ee_misc2;
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 23d6fc8..9e5c4b4 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -508,7 +508,7 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 
- 		if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
- 			scal = AR5K_PHY_SCAL_32MHZ_2417;
--		else if (ath5k_eeprom_is_hb63(ah))
-+		else if (ee->ee_is_hb63)
- 			scal = AR5K_PHY_SCAL_32MHZ_HB63;
- 		else
- 			scal = AR5K_PHY_SCAL_32MHZ;
-@@ -599,9 +599,10 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
- 	/* Set DAC/ADC delays */
- 	if (ah->ah_version == AR5K_AR5212) {
- 		u32 scal;
-+		struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
- 		if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
- 			scal = AR5K_PHY_SCAL_32MHZ_2417;
--		else if (ath5k_eeprom_is_hb63(ah))
-+		else if (ee->ee_is_hb63)
- 			scal = AR5K_PHY_SCAL_32MHZ_HB63;
- 		else
- 			scal = AR5K_PHY_SCAL_32MHZ;
--- 
-1.6.0.6
-
-
+Regards,
+Niel
