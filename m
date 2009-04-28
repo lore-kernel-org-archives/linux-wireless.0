@@ -1,81 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f118.google.com ([209.85.221.118]:46081 "EHLO
-	mail-qy0-f118.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbZDGNUT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758672AbZD1VwA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 09:20:19 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
- recently
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1239110010.22453.41.camel@johannes.local>
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
-	 <1239108689.15015.3.camel@maxim-laptop>
-	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
-	 <1239109497.15015.12.camel@maxim-laptop>
-	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 07 Apr 2009 16:20:12 +0300
-Message-Id: <1239110412.15015.23.camel@maxim-laptop> (sfid-20090407_152026_597162_E2ABA456)
+	Tue, 28 Apr 2009 17:52:00 -0400
+Subject: Re: wireless: remove some (bogus?) 'may be used uninitialized'
+ warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IyzBxnfpTryUIizBBxH0"
+Date: Tue, 28 Apr 2009 23:51:29 +0200
+Message-Id: <1240955489.593.11.camel@johannes.local> (sfid-20090428_235206_966773_8B5A5534)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 15:13 +0200, Johannes Berg wrote:
-> On Tue, 2009-04-07 at 16:04 +0300, Maxim Levitsky wrote:
-> 
-> > > > > > Looking a bit deeper I discovered that each time NM disconnects from a
-> > > > > > networks it sets random ssid/essid to the card (using wireless
-> > > > > > extensions)
-> > > > > 
-> > > > > This forces a scan
-> > > > > 
-> > > > > > After that scan fails for some time.
-> > > > > > 
-> > > > > > as a NM free example you can run 
-> > > > > > 
-> > > > > > iwconfig wlan0 essid dummy
-> > > > > > iwlist scan
-> > > > > 
-> > > > > and then this fails with EBUSY.
-> > > > Thanks for explanation.
-> > > > Since NM has its reasons to clear essid (to prevent unwanted
-> > > > association), then what can be  done to prevent this (and still use
-> > > > wireless extensions, since nl80211 support isn't yet mature)?
-> > > 
-> > > Nothing. Wext sucks, news at 11, yadda.
-> > Thanks.
-> > Everything understood.
-> 
-> Of course, we can go back to dropping the scan request, but that
-> wouldn't be very nice.
-> 
-> Is this creating any problems?
-Yep, but dropping the request won't help ether.
-Problem is that wpa_supplicant will attempt to scan before association,
-scan fails (it doesn't know it is already running) thus it waits 10
-seconds. (I patched it to wait 2 seconds).
 
-It happens if user first disconnects, and then reconnects to a network
-(typical test I do for time it takes to connect)
+--=-IyzBxnfpTryUIizBBxH0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Now I patched it not to clear essid on disconnect, and this helped
-reduce connect times by about 2 seconds.
+Hi John,
 
-now it takes just 3~4 seconds to connect to open network, and ~6 seconds
-to WPA2 network.
+commit aa61eccbbd46faa89a7ebb06e642779a8fffa2c2
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Fri Apr 24 15:35:42 2009 -0400
 
-(This is with patched dhclient, I reduced its timeouts, but this is
-another story.... it seems that first DHCPREQUEST never succeeds, and I
-tested this with 2 cards, and few wireless networks)
+    wireless: remove some (bogus?) 'may be used uninitialized' warnings
+   =20
+    net/mac80211/tx.c: In function =E2=80=98ieee80211_tx_h_select_key=E2=80=
+=99:
+    net/mac80211/tx.c:448: warning: =E2=80=98key=E2=80=99 may be used unini=
+tialized in this function
+
+This warning is totally _wrong_, and I would prefer you reverted this
+commit because otherwise we may miss actually valid warnings when
+editing those functions.
+
+The fact that you get this warning is due to the, IMHO entirely stupid,
+CONFIG_TRACE_BRANCH_PROFILING, which redefines if() as a macro. As one
+would expect according to the GIGO principle [1], this causes the
+compiler some problems. Can you turn that off in your config instead? :)
+
+johannes
+
+[1] http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out
 
 
-Best regards,
-	Maxim Levitsky
+--=-IyzBxnfpTryUIizBBxH0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> 
-> johannes
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ93peAAoJEKVg1VMiehFY4McQAKChk49dtxJ9n82wzTJEPeXt
+uNGk5iLpXf4695wnCMzKe2WhqCLEx2y3T6UANogLxIHATFtJblPJDS0br9nfIYGX
+PrptYchkJeim679m/CF3DUYINaMnsC9QFJOpDgPStt0/xtLOAzyXnA5mn+20FKyX
+mKuW4f9a17rGzLQJdt3tuT8dSe9e5W3BkmplDK9noZgFJQREnOmsyfwVT8zC/RQo
+Lbn+MKG71OEGgrt3rkgxqoUnKb+NeBNOxVVu7STEGQCvEYp5kE/esKpVOgT84B49
+JxvMJcC3i4VABZFSHtHO3fhA063gGZMw93pJ7qyxaIDzFx6JHi+A5fuh+3S8VHnA
+wCuOkTKkWXBxTkujmIqNikdEHA+DByhf44rbSljqeaxk14g7yflpdHARNGi9sV0t
+rAPOFLTnnFMoLfS4JBJLFHKs8IL7S4scRUmJnFP93omg4lmAEigDSbDfwCtmrnrt
+8Gpi+voMHjUWRg2jjEJ/o1wVKHXHXOCQKaPhZmEZ7JJofRn1WJ1IFbIXSfxl7Mb7
+TAi2BAtxFv8Skw0DC0SRw/vs4Ww2SuTQe5Q2XeQhmTsmDdG3/x8cOYCAziBjnMzB
+Mszje28YtzKMmlIOP5eykfXYdYlUFqoBFcdlkYyHgueqHVEhNQrS+xIbaYme79pa
+pALnmFHGLyH/GBNCsvJV
+=xonw
+-----END PGP SIGNATURE-----
+
+--=-IyzBxnfpTryUIizBBxH0--
 
