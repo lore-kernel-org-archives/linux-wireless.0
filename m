@@ -1,68 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753357AbZDCJCM (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:32172 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753179AbZD1XMj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 05:02:12 -0400
-Subject: Re: How does rfkill work?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1238733303.19390.0.camel@violet>
-References: <49D44635.80306@lwfinger.net>
-	 <1238666206.4141.12.camel@johannes.local>  <49D4CF50.2060100@lwfinger.net>
-	 <1238684527.4141.63.camel@johannes.local> <1238733303.19390.0.camel@violet>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YVLeGFrUwBkF8PEZNttQ"
-Date: Fri, 03 Apr 2009 11:01:35 +0200
-Message-Id: <1238749295.27712.0.camel@johannes.local> (sfid-20090403_110216_414079_03400137)
-Mime-Version: 1.0
+	Tue, 28 Apr 2009 19:12:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so598151wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 16:12:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1240346638-18755-2-git-send-email-hauke@hauke-m.de>
+References: <1240346638-18755-1-git-send-email-hauke@hauke-m.de>
+	<1240346638-18755-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 28 Apr 2009 16:12:19 -0700
+Message-ID: <43e72e890904281612h23347941h5b58d58c2f9822c5@mail.gmail.com> (sfid-20090429_011246_425657_0B8298E2)
+Subject: Re: [PATCH 2/2] [compat-2.6] Symbol ksize is not exported in kernel
+	older than 2.6.29.
+To: Hauke Mehrtens <hauke@hauke-m.de>, Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 21, 2009 at 1:43 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This reverts commit ad80a7a983e36c6d8f4ae57e4c472deb9cf1391c from wireless-testing on older kernel versions.
+> Thanks Mathijs de Bruin for reporting.
 
---=-YVLeGFrUwBkF8PEZNttQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks, all pending patches have been applied and a new tarball
+regenerated. Sorry for the delay, I was away on vacation.
 
-Hi Marcel,
+v2.6.30-rc3-22201-g807e823
+wireless-testing latest tag:
+master-2009-04-22
+This is compat-release:
+master-2009-04-28
 
-> > > The first thing I noticed is that "radio" gets truncated to "rad", th=
-us the file
-> > > is /sys/class/leds/b43legacy-phy0\:\:rad/trigger,
-> >=20
-> > Cute. Must be that the limit is 20 bytes (19+NUL) in the buffer it uses
-> > in led core code.
->=20
-> then this needs fixing in the LED core. We don't have a length limit in
-> the driver core anymore. Is this an older kernel?
-
-No, I was mistaken, this is the limit Larry pointed out, and that was
-already lifted (bus_id).
-
-johannes
-
---=-YVLeGFrUwBkF8PEZNttQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ1dBrAAoJEKVg1VMiehFYGlcP/34+40F7BU49429znocKYPLZ
-fsr8E38O0S3vk89bkCjFn/Pl98mlnbj3J0SdGWUb++/pfmy11w/83IdU3bUyNmMs
-OOfdy+VKdImAuVRLo1OuQamhVZDlljnTydwo0HHBVsUPeSPFSgsepJkGGKBpsszg
-Qs0zwXZ8cBM3pOWJLAgKlXKgYiIaIZPP+nOcbvqZpMo+7v9kqQEeVeRbMdoByXkc
-seKa1dXQWK/qJZZwRI0vY9DL9mkGWqI9dTO0W6K6m1pfTgRTkV6rjvvJCFXGuIPA
-1LBdiG6gA1M+bM+/ak++UCpOWcsX5War7X+ntV/IIOEc/c0X4dzTPhXfNPed0Up1
-mdiQ0uTIWinHAuWMeaKI3wdufoWq9xkeCnMMZtFhr7EZNZaGdABWLj2gVDdCJZmR
-v9xsU0UeEu03qiew4Vmsp2fQkhncuZL6U3LoS6N/dtfAZp7MvZA5rxbEZdmDuLrE
-t+DktuMSgJ32FBdEkUdChifOB5BR4nMfADA8hJOCFaYiUucn37FX5mwUe3ec1nDE
-ZCVsoPAohgpjPBuJXdecZb+y4V2P1EJSw3NHdAAHWDQW1m68e5v4kq8asm5S4e3N
-W3A5bH2YmjOcLfx5pMbpa7r+58TqXelFjyScIw1XKl41GTNMM/+NbuKJiX2555ku
-njIivi7PmFuBNWRQHuMc
-=WZ51
------END PGP SIGNATURE-----
-
---=-YVLeGFrUwBkF8PEZNttQ--
-
+  Luis
