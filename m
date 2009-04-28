@@ -1,74 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44981 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753640AbZD3Lx7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 07:53:59 -0400
-Subject: Re: [RFC] regulatory information interpretation rules
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Richard Farina <sidhayn@gmail.com>
-In-Reply-To: <1238065059.4331.28.camel@johannes.local> (sfid-20090326_115820_137341_2C611338)
-References: <1237712542.5100.766.camel@johannes.local>
-	 (sfid-20090322_100234_495492_0385D4F0)  <1238065059.4331.28.camel@johannes.local>
-	 (sfid-20090326_115820_137341_2C611338)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ck2q6Zb7J8de75Ld7Gl5"
-Date: Thu, 30 Apr 2009 13:53:21 +0200
-Message-Id: <1241092401.29878.1.camel@johannes.local> (sfid-20090430_135404_495596_A4A7DA36)
+Received: from main.gmane.org ([80.91.229.2]:52809 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755232AbZD1KuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2009 06:50:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Lykt0-0003rf-Lz
+	for linux-wireless@vger.kernel.org; Tue, 28 Apr 2009 10:50:02 +0000
+Received: from 193.160.199.2 ([193.160.199.2])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 10:50:02 +0000
+Received: from bjorn by 193.160.199.2 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 10:50:02 +0000
+To: linux-wireless@vger.kernel.org
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Subject: "No ProbeResp from current AP" and then nothing more happens
+Date: Tue, 28 Apr 2009 12:32:33 +0200
+Message-ID: <87ocuhysou.fsf@nemi.mork.no> (sfid-20090428_125016_987218_1BFCC891)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---=-Ck2q6Zb7J8de75Ld7Gl5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm still configuring my wireless interface manually using iwconfig, an=
+d
+do not run any management daemons like wpasupplicant etc.  This provide=
+s
+the basic functionality I'm interested in.
 
-On Thu, 2009-03-26 at 11:57 +0100, Johannes Berg wrote:
+But from time to time, I get the message=20
+"No ProbeResp from current AP <ap address> - assume out of range"
+and then my connection is dead.  I've found no other way out of this
+(using only iwconfig/ifconfig) than trigger a reassociation by
+temporariliy configuring different (non-existing) essid.
 
->  4) This is easier to formulate algorithmically:
->     USE_FLAGS =3D 0
->     for k =3D 1 .. n
->         if CENTER in (MIN_k, MAX_k]:
->             USE_FLAGS |=3D FLAGS_k
+The wireless network consists of a large number of APs, and there are
+always more than one accessible AP when this error occurs.  I suppose
+the reason for the probe failure may be a temporary AP failure
+(crash/whatever).  However, as you can see from the log below, the erro=
+r
+condition is permanent after such a timeout - even if the associated AP
+become available again.  It does associate with the same AP after
+manually triggering reassociation.
 
-That wasn't what I intended... What I did intend to say is this:
+I'm currently using the iwlagn driver as you can see, but I've
+previously had the same (or similar?) issues with both the ath5k and th=
+e
+b43 driver.
 
-USE_FLAGS =3D 0
-for k =3D 1 .. n
-    if (CENTER - BW/2, CENTER + BW/2) intersects (MIN_k, MAX_k]
-        USE_FLAGS |=3D FLAGS_k
 
-since we want to take into account all flags even if the channel just
-overlaps a little with a specific range.
+ -> iwconfig wlan0 essid "bar"; ifup wlan0=20
+Apr 28 08:13:10 nemi kernel: [272487.353682] iwlagn 0000:03:00.0: PCI I=
+NT A -> GSI 17 (level, low) -> IRQ 17
+Apr 28 08:13:10 nemi kernel: [272487.353857] iwlagn 0000:03:00.0: irq 2=
+6 for MSI/MSI-X
+Apr 28 08:13:10 nemi kernel: [272487.379825] Registered led device: iwl=
+-phy1:radio
+Apr 28 08:13:10 nemi kernel: [272487.379853] Registered led device: iwl=
+-phy1:assoc
+Apr 28 08:13:10 nemi kernel: [272487.379877] Registered led device: iwl=
+-phy1:RX
+Apr 28 08:13:10 nemi kernel: [272487.379906] Registered led device: iwl=
+-phy1:TX
+Apr 28 08:13:11 nemi kernel: [272487.395683] ADDRCONF(NETDEV_UP): wlan0=
+: link is not ready
+Apr 28 08:13:11 nemi kernel: [272487.404641] wlan0: direct probe to AP =
+00:22:90:f9:63:b2 try 1
+Apr 28 08:13:11 nemi kernel: [272487.407965] wlan0 direct probe respond=
+ed
+Apr 28 08:13:11 nemi kernel: [272487.407970] wlan0: authenticate with A=
+P 00:22:90:f9:63:b2
+Apr 28 08:13:11 nemi kernel: [272487.410950] wlan0: authenticated
+Apr 28 08:13:11 nemi kernel: [272487.410954] wlan0: associate with AP 0=
+0:22:90:f9:63:b2
+Apr 28 08:13:11 nemi kernel: [272487.414565] wlan0: RX AssocResp from 0=
+0:22:90:f9:63:b2 (capab=3D0x421 status=3D0 aid=3D1)
+Apr 28 08:13:11 nemi kernel: [272487.414569] wlan0: associated
+Apr 28 08:13:11 nemi kernel: [272487.419542] ADDRCONF(NETDEV_CHANGE): w=
+lan0: link becomes ready
+Apr 28 08:13:21 nemi kernel: [272497.760019] wlan0: no IPv6 routers pre=
+sent
 
-johannes
+  -> then it works until:
+Apr 28 09:51:31 nemi kernel: [278388.088590] wlan0: No ProbeResp from c=
+urrent AP 00:22:90:f9:63:b2 - assume out of range
 
---=-Ck2q6Zb7J8de75Ld7Gl5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+ -> which leaves the interface in a non-functional state until I do:
+ -> iwconfig wlan0 essid "foo"; iwconfig wlan0 essid "bar"
+Apr 28 10:13:05 nemi kernel: [279681.489584] wlan0: direct probe to AP =
+00:22:90:f9:63:b2 try 1
+Apr 28 10:13:05 nemi kernel: [279681.492237] wlan0 direct probe respond=
+ed
+Apr 28 10:13:05 nemi kernel: [279681.492242] wlan0: authenticate with A=
+P 00:22:90:f9:63:b2
+Apr 28 10:13:05 nemi kernel: [279681.494645] wlan0: authenticated
+Apr 28 10:13:05 nemi kernel: [279681.494651] wlan0: associate with AP 0=
+0:22:90:f9:63:b2
+Apr 28 10:13:05 nemi kernel: [279681.497428] wlan0: RX AssocResp from 0=
+0:22:90:f9:63:b2 (capab=3D0x421 status=3D0 aid=3D3)
+Apr 28 10:13:05 nemi kernel: [279681.497434] wlan0: associated
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I've been trying to get a grasp of what happens here, and am wondering
+whether it would make sense to force a scan after a direct probe
+timeout?  Could this be done with something like:
 
-iQIcBAABAgAGBQJJ+ZEuAAoJEKVg1VMiehFYa1oP/1SGfNsOUJHtKwaTADkmdMb4
-ruufPSl76EUqacLI+PlZyALXCatBOEsZjJVH7neM7AoihpP+q27blAOoHjc4JqIe
-zkIn3iBpoFhVI2KVupiwjy1CsHO+GzYK3IOkwwhr7Z7TWfZOSkeibus3fzFfm6N4
-vc1sJ0blMbTUSkvb0sDkCuuIVTIGF77DQbjxGS+KXLy002VE93std2W99eqoQPxJ
-r+PQaVH9OAGefQ0tujhQTMd8HTLaqxczyiFV7kMY7E/999VuEMA3xtxrH/K9VuHE
-XqevJ1S9wFnvQVyLlc7lkehPEK9LNML7KQd6o2b9vA5jLkWBZx6NtcKuplKhKE4q
-OlZY0BkZqZkttCe12v9WQSzTXaJkLO7QqQYueV7yJiGECYqz/WNScrTBo/YuTj56
-pxMq5Y24pDa152qRZUR6eatX49nNMopOs0oyv5M+1A4Eoexm/fD7k31gqtV7CVuU
-NpLVNiogeBbqZSFlN1iOMWuUiaTk45QtBEhD5burA7RejX6XZok5BZ8cy/g8qCjH
-kLNTahbKSd0FLBiIUK39tNWV5VRIjYmrhjld+WkWGDfqDTZd/TGRyDlbesnrht9v
-tmnjKV+S2spsWh+NLjnGpb73qZUAukV0O8M0g0QDiCZ1eSwyXU4jPyEnyBpb2wVt
-t3XB5CwGnPECNqmOUIYx
-=ugzH
------END PGP SIGNATURE-----
 
---=-Ck2q6Zb7J8de75Ld7Gl5--
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 132938b..a12c408 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -679,6 +679,7 @@ static void ieee80211_direct_probe(struct ieee80211=
+_sub_if_data *sdata)
+                 * due to state =3D=3D IEEE80211_STA_MLME_DIRECT_PROBE.
+                 * Hence, queue the STAs work again
+                 */
++               set_bit(IEEE80211_STA_REQ_SCAN, &ifmgd->request);
+                queue_work(local->hw.workqueue, &ifmgd->work);
+                return;
+        }
 
+I'm of course going to test this, but it would help alot if someone
+knowing the code could say "that's ridiculous" or "please test".  The
+error condition is quite rare, and I guess I'll have to test for weeks
+to be somewhat certain whether a workaround really helps or not.
+
+
+Bj=C3=B8rn
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
