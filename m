@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47626 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160AbZDVNa4 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:37960 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbZD1XQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 09:30:56 -0400
-Date: Wed, 22 Apr 2009 09:27:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-Message-ID: <20090422132723.GC3288@tuxdriver.com> (sfid-20090422_153100_730025_48613A12)
-References: <1240248385.5260.15.camel@localhost.localdomain> <1240248773.4632.13.camel@johannes.local> <1240343775.3327.3.camel@localhost.localdomain> <1240348792.17388.46.camel@johannes.local> <1240385542.3404.5.camel@localhost.localdomain> <1240391029.20308.1.camel@johannes.local> <1240391541.10072.2.camel@localhost.localdomain> <1240393523.21978.1.camel@johannes.local> <1240399028.10072.14.camel@localhost.localdomain> <1240401205.3313.3.camel@localhost.localdomain>
+	Tue, 28 Apr 2009 19:16:20 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so649194rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 16:16:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1240401205.3313.3.camel@localhost.localdomain>
+In-Reply-To: <43e72e890904281612h23347941h5b58d58c2f9822c5@mail.gmail.com>
+References: <1240346638-18755-1-git-send-email-hauke@hauke-m.de>
+	<1240346638-18755-2-git-send-email-hauke@hauke-m.de> <43e72e890904281612h23347941h5b58d58c2f9822c5@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 28 Apr 2009 16:16:00 -0700
+Message-ID: <43e72e890904281616r16ff8293w621863a9ef06c812@mail.gmail.com> (sfid-20090429_011623_942483_6F90DE0F)
+Subject: Re: [PATCH 2/2] [compat-2.6] Symbol ksize is not exported in kernel
+	older than 2.6.29.
+To: Hauke Mehrtens <hauke@hauke-m.de>, Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 22, 2009 at 12:53:25PM +0100, Marcel Holtmann wrote:
+On Tue, Apr 28, 2009 at 4:12 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Apr 21, 2009 at 1:43 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> This reverts commit ad80a7a983e36c6d8f4ae57e4c472deb9cf1391c from wireless-testing on older kernel versions.
+>> Thanks Mathijs de Bruin for reporting.
+>
+> Thanks, all pending patches have been applied and a new tarball
+> regenerated. Sorry for the delay, I was away on vacation.
+>
+> v2.6.30-rc3-22201-g807e823
+> wireless-testing latest tag:
+> master-2009-04-22
 
-> <starting dhclient wlan0 now>
-> 
-> CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-> l2_packet_receive - recvfrom: Network is down
-> CTRL-EVENT-SCAN-RESULTS 
-> Trying to authenticate with 00:1f:f3:fa:58:59 (SSID='HON Circle' freq=2452 MHz)
-> Trying to associate with 00:1f:f3:fa:58:59 (SSID='HON Circle' freq=2452 MHz)
-> Associated with 00:1f:f3:fa:58:59
-> WPA: Key negotiation completed with 00:1f:f3:fa:58:59 [PTK=CCMP GTK=CCMP]
-> CTRL-EVENT-CONNECTED - Connection to 00:1f:f3:fa:58:59 completed (reauth) [id=1 id_str=]
-> 
-> For some reason the dhclient triggers the disconnect and I see the
-> network down. With this kernel it reconnects properly and then dhclient
-> succeeds. This is against an N-capable AirPort Express.
+Bleh, just updated the tags, we now get the right tags:
 
-IIRC, dhclient is prone to 'bouncing' the interface (i.e. down/up).
-I have seen it do that, but I can't remember what the circumstances
-were.  Anyway, maybe it was worth mentioning...
+v2.6.30-rc3-22201-g807e823
+wireless-testing latest tag:
+master-2009-04-28
+This is compat-release:
+master-2009-04-28
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
