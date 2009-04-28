@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6249 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757002AbZDTWoK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 18:44:10 -0400
-Subject: Re: [PATCH] mac80211: do not print WARN if config interface fails
- during reconfigure
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+Received: from yx-out-2324.google.com ([74.125.44.29]:40298 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754468AbZD1U2G convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2009 16:28:06 -0400
+Received: by yx-out-2324.google.com with SMTP id 3so441485yxj.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 13:28:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890904280853y419b9dcfw13722345892fa9b4@mail.gmail.com>
+References: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
+	 <43e72e890904280853y419b9dcfw13722345892fa9b4@mail.gmail.com>
+Date: Tue, 28 Apr 2009 13:28:04 -0700
+Message-ID: <45e8e6c40904281328u23c983b0r22b38d345ce0f2a1@mail.gmail.com> (sfid-20090428_222812_421730_99539D5A)
+Subject: Re: Question about 802.11s(mesh)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: =?GB2312?B?y9Ww18H6?= <subailong@163.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1240266828.17388.1.camel@johannes.local>
-References: <1240266979-9254-1-git-send-email-reinette.chatre@intel.com>
-	 <1240266828.17388.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 20 Apr 2009 15:50:14 -0700
-Message-Id: <1240267814.5206.113.camel@rc-desk> (sfid-20090421_004414_559714_38CBB0FC)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-04-20 at 15:33 -0700, Johannes Berg wrote:
-> On Mon, 2009-04-20 at 15:36 -0700, Reinette Chatre wrote:
-> > It is expected that config interface will always succeed as mac80211
-> > will only request what driver supports. The exception here is when a
-> > device has rfkill enabled. At this time the rfkill state is unknown to
-> > mac80211 and config interface can fail. When this happens we deal with
-> > this error instead of printing a WARN.
-> 
-> Thanks. Just to make sure -- this really is just papering over the
-> warning, not actually fixing it. I hope we can fix it soon by making
-> mac80211 aware of rfkill.
+On Tue, Apr 28, 2009 at 8:53 AM, Luis R. Rodriguez
+<mcgrof@winlab.rutgers.edu> wrote:
+> 2009/4/28 =CB=D5=B0=D7=C1=FA <subailong@163.com>:
+>>      My question is:"Can all of the wireless networking cards run in=
+ mesh
+>> mode?" I think they all can. But  why some can not as it is describe=
+d in the
+>> web page http://linuxwireless.org/en/users/Drivers? Please give  me =
+the
+>> detailed reasons.
 
-Yes it is ... I did this because kerneloops.org exists.
+Each driver must support several things as listed on this page under "M=
+ESH":
+http://wireless.kernel.org/en/developers/Documentation/mac80211/API
+in order to support mac80211's draft-802.11s mesh.  Basically it must
+allow a mesh-mode interface, support mesh beaconing, and support
+certain RX filters.  So drives do this and have been tested (for
+example, ath5k, b43, and zd1211rw).  Others do use the mac80211 stack
+but either haven't been tested or don't support something that mesh
+mode requires.  Any mac80211 driver that supports beaconing (at least
+for AP or IBSS) should be able to support mesh mode after making the
+changes listed in the API document.
 
-Reinette
-
-
+--=20
+Andrey Yurovsky
+cozybit Inc.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
