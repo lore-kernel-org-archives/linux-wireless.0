@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbZDKLeO (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46431 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbZD1UqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2009 07:34:14 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
- recently
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1239395434.13792.3.camel@maxim-laptop> (sfid-20090410_223110_294055_69850902)
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
-	 <1239108689.15015.3.camel@maxim-laptop>
-	 (sfid-20090407_145137_740898_8D0C40FD)  <1239109001.22453.40.camel@johannes.local>
-	 <1239109497.15015.12.camel@maxim-laptop>
-	 (sfid-20090407_150534_375314_4DA28551)  <1239110010.22453.41.camel@johannes.local>
-	 <1239110412.15015.23.camel@maxim-laptop>
-	 (sfid-20090407_152021_060436_AEF9110F)  <1239110860.4084.0.camel@johannes.local>
-	 <1239112310.15015.25.camel@maxim-laptop>
-	 <1239135878.17958.11.camel@maxim-laptop>
-	 (sfid-20090407_222443_633750_085B264D)  <1239136637.7475.57.camel@johannes.local>
-	 <1239395434.13792.3.camel@maxim-laptop>
-	 (sfid-20090410_223110_294055_69850902)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cIiVCE7xJKDOing6CbRd"
-Date: Sat, 11 Apr 2009 13:34:11 +0200
-Message-Id: <1239449651.17031.42.camel@johannes.local> (sfid-20090411_133417_212159_B921F452)
-Mime-Version: 1.0
+	Tue, 28 Apr 2009 16:46:05 -0400
+Date: Tue, 28 Apr 2009 16:38:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mmotm 2009-04-27-15-45 uploaded - iwl3945 oops
+Message-ID: <20090428203805.GB3321@tuxdriver.com> (sfid-20090428_224612_680067_831D88D6)
+References: <200904272305.n3RN51mu031395@imap1.linux-foundation.org> <25818.1240938876@turing-police.cc.vt.edu> <1240951184.1207.11.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1240951184.1207.11.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 28, 2009 at 01:39:44PM -0700, reinette chatre wrote:
+> On Tue, 2009-04-28 at 10:14 -0700, Valdis.Kletnieks@vt.edu wrote:
+> > On Mon, 27 Apr 2009 15:46:07 PDT, akpm@linux-foundation.org said:
+> > > The mm-of-the-moment snapshot 2009-04-27-15-45 has been uploaded to
+> > > 
+> > >    http://userweb.kernel.org/~akpm/mmotm/
+> > 
+> > Saw this while booting at home, out of range of any access points I was
+> > configured to associate with (there *are* 4 APs owned by neighbors that I can
+> > see via kismet, but wpa_supplicant isn't configured to use them).  Didn't
+> > happen this morning at my office, when there's APs in range.
+> > 
+> > This didn't happen in mmotm-0424, so it's something new in the last few days.
+> 
+> A recent patch that is related is ...
+> 
+> commit 4583f7455c6b668a4e9cab154b5a7b6c583b288a
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Thu Apr 23 10:45:04 2009 +0200
+> 
+>     iwlwifi: notify on scan completion even when shutting down
+> 
+>     Under certain circumstances iwlwifi can get stuck and will no
+>     longer accept scan requests, because the core code (cfg80211)
+>     thinks that it's still processing one. This fixes one of the
+>     points where it can happen, but I've still seen it (although
+>     only with my radio-off-when-idle patch).
+>     
+>     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>     Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> 
+> Could you please revert this and test again?
 
---=-cIiVCE7xJKDOing6CbRd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I doubt if that will help -- I just put it into wireless-2.6 and
+wireless-testing today.
 
-On Fri, 2009-04-10 at 23:30 +0300, Maxim Levitsky wrote:
+> If this does not help, could you please bisect?
 
-> It is.
->=20
-> I have just compiled iwlwifi.git tree, and same message is there:
->=20
->=20
->=20
-> > [ 1666.298390] ------------[ cut here ]------------
-> > [ 1666.298395] WARNING: at /home/maxim/software/kernel/linux-2.6/net/wi=
-reless/core.h:79 nl80211_send_wiphy+0x8bd/0xa20 [cfg80211]()
-> > [ 1666.298399] Hardware name: Aspire 5720    =20
+Better bet...unless you meant "apply" instead of "revert"...
 
-> > [ 1666.298473] Pid: 13164, comm: wpa_supplicant Tainted: P           2.=
-6.29-wl #19
-> > [ 1666.298477] Call Trace:
-> > [ 1666.298490]  [<ffffffff80241320>] warn_slowpath+0xd0/0x130
-> > [ 1666.298504]  [<ffffffffa00f9ac6>] ? nl80211_get_wiphy+0x56/0xd0 [cfg=
-80211]
-> > [ 1666.298512]  [<ffffffff802a8263>] ? __alloc_pages_internal+0xe3/0x4f=
-0
-> > [ 1666.298525]  [<ffffffffa00f965d>] nl80211_send_wiphy+0x8bd/0xa20 [cf=
-g80211]
-
-Then your stacktrace is crap -- please apply the patch I just sent you.
-
-> On top of that I need to note that NM doesn't show signal strenghts
-> correctly.
-> Instead it shows 100% for all AP except the current active one.
-
-Separate thing -- don't hide it in this thread. I'll not even think
-about looking at it here.
-
-johannes
-
---=-cIiVCE7xJKDOing6CbRd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ4IAxAAoJEKVg1VMiehFY334QALQJkG7apQeycmp9qmTBs7D1
-qW6anewEsc++yTamU1/8TS7PBMTx5+fI+7NXq8c5LKnkkIJsrWR/a18q0jyTUN9I
-SSH7m4Y6x20qLm4ZNbPS0+hYwaukAtlfK2ebqlJ5NjLXea6mNesn1nQ22s7/ivt4
-HipzY8cmxt4x+TDD4IvpQEhieCZagqM5VlUBvd6INrUpm616VeAGpPRXG5JNrnkf
-PvrWT2QFk7karxfF7OVANzyPLbqfVw1TsTiGeouVWJMw6/qUHRV93Uf9mFvfFBrq
-F0Kf1pw212EEFWD85k6mfz+Z+enTEjd6Ib2k9RzmuA+hcxaREQLQtIkC1i4syyBq
-S4TRcQwVZ2CSLUa7ZrCjAlGnXIcDvWXYrj7HzJ94qAW4KDH28w1oThMjzu1AoGeW
-GteRy52XhleZdlzDrWURYlq05oidnMyFS1QTgsV5FtkdZGhsbuX6cXVNqVpPiOjI
-HNIPxTS1k0RCSod0eX6rE0JOpuIdCG0GK8ep6PV2bb/Wg39jheh2fVrvJAIqy5MK
-ulGwKJHWqXA8HFJiQNKiTDg07f1kqCaPeATQ/a5oBaMPHv8HRVsaOPPUFoWpy7v1
-JF3my1iYJlPTitIloR9aKqU6szOf8kK9k8dJ4Chr5tuKrmS5B6uqNijoSlIAqqCk
-UVnH9z/PNKSWhjTz3EBm
-=wnPM
------END PGP SIGNATURE-----
-
---=-cIiVCE7xJKDOing6CbRd--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
