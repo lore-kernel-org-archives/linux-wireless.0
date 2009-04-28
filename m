@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34465 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538AbZDWKqG (ORCPT
+Received: from outbound-dub.frontbridge.com ([213.199.154.16]:32742 "EHLO
+	IE1EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104AbZD1V7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 06:46:06 -0400
-Subject: Re: Measure RSSI in adhoc networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kai Timmer <email@kait.de>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <5b8543210904230336j177998c4m1e0af03fbb3584df@mail.gmail.com> (sfid-20090423_123638_386390_3F8D98D2)
-References: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com>
-	 <1240442334.14995.12.camel@localhost.localdomain>
-	 <5b8543210904230336j177998c4m1e0af03fbb3584df@mail.gmail.com>
-	 (sfid-20090423_123638_386390_3F8D98D2)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DCkE+aACIFVo/X6F7l1/"
-Date: Thu, 23 Apr 2009 12:45:30 +0200
-Message-Id: <1240483530.30082.178.camel@johannes.local> (sfid-20090423_124611_128566_7F2B7692)
-Mime-Version: 1.0
+	Tue, 28 Apr 2009 17:59:43 -0400
+Message-ID: <49F77C32.8020207@am.sony.com> (sfid-20090428_235949_770669_87683ED3)
+Date: Tue, 28 Apr 2009 14:59:14 -0700
+From: Geoff Levand <geoffrey.levand@am.sony.com>
+MIME-Version: 1.0
+To: jgarzik@pobox.com
+CC: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Subject: [patch] net/ps3: Update maintainer
+References: <49D10994.2010204@am.sony.com>
+In-Reply-To: <49D10994.2010204@am.sony.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
---=-DCkE+aACIFVo/X6F7l1/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Update the MAINTAINERS entry for PS3 NETWORK SUPPORT.
 
-On Thu, 2009-04-23 at 12:36 +0200, Kai Timmer wrote:
+CC: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
+---
+Hi Jeff,
 
-> I need the RSSI values for distance measurements between the nodes.=20
+This is a re-send.  I haven't seen this one get merged
+into 2.6.30 yet.  Could you let me know the status?
 
-Note that is very unreliable...
+-Geoff
 
-> So
-> what i need is not a "quality value" for the whole network, but the
-> recieved mW from every reachable point in the network. So i think the
-> RSSI value for every network node (if i can print them out seperatly)
-> should do the job.
+ MAINTAINERS |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-iw dev wlan0 station dump
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3503,8 +3503,8 @@ L:	linux-ide@vger.kernel.org
+ S:	Maintained
+ 
+ PS3 NETWORK SUPPORT
+-P:	Masakazu Mokuno
+-M:	mokuno@sm.sony.co.jp
++P:	Geoff Levand
++M:	geoffrey.levand@am.sony.com
+ L:	netdev@vger.kernel.org
+ L:	cbe-oss-dev@ozlabs.org
+ S:	Supported
 
-johannes
 
---=-DCkE+aACIFVo/X6F7l1/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ8EbGAAoJEKVg1VMiehFYvjUP+wR1nXxsm2BW4YHgUwuRdcGe
-xyFGRZcRhytP3H4Sv5v0SRDBVmjehP1Z+nAlMIvq+Yy1BovRR1dQRLQo/5xKx7Uq
-6ClxCsMAGF6WAd/pY3plKpbvzYAFiC+E/xmWzgCCYMmPlvswL/BXZzla/AAlhOcy
-92Auno4THGqQiZg0vPYbCtQCfeGRf9+nC3xPE+HodNWDR/dA++cHdn7AC2GFDT35
-3b4cGmRKVKkofCbejKkLu+gKX5RZKL9CyP6KmkPK8aLlSQEDxybNQxyDng4m5NFV
-xvR6R8LDzQfPFCyRmfT3F7C4YuK+r6wKx0m8pdLSdvHad65hS9Wvr0vweLl1vsnA
-/HGO6CYHlabbo97RbDw3RgikFKM9qdR7sOjoycsWGHKn3LsK1wfo0iQ4xxEHjS+m
-Zwsm6wmj3rwdInEHzYsDvxo8g1W/TITvClUMyoT9ETdgYCzu4/18lZNKOLsEVtCK
-Ee+fjzElRxzHtfdvxyE8TqZA4KetSWVtFTZ0xrThJkJ1cTrgX4CYWXX1clmnTdz2
-F8/v5wiu8DnrSUhoIM3guO/dduEc+IrYrrmxHeGJp8zMe6kHFZ8iS5qerbaIr2Uc
-IdRD7kUI5EPDAJYAhdOn6ByLoPIUEVFpUFWI/iJ/stAUNpPdchChFkikF0SNGD6K
-OSuX/KIe8TTeLsPBw/CL
-=TcOy
------END PGP SIGNATURE-----
-
---=-DCkE+aACIFVo/X6F7l1/--
 
