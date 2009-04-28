@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:45956 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbZDZONh convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36481 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754241AbZD1VsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Apr 2009 10:13:37 -0400
-MIME-Version: 1.0
-In-Reply-To: <49F43975.2060106@gmail.com>
-References: <1240661363-16631-1-git-send-email-jirislaby@gmail.com>
-	 <20090426020047.GA10885@hash.localnet> <49F43975.2060106@gmail.com>
-Date: Sun, 26 Apr 2009 17:13:35 +0300
-Message-ID: <40f31dec0904260713o97f5cs95f87d72e8772e64@mail.gmail.com> (sfid-20090426_161341_757893_4534F294)
-Subject: Re: [PATCH 1/1] ath5k: 5211, don't crypt every protected frame
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 28 Apr 2009 17:48:06 -0400
+Subject: Re: 2.6.30-rc3: iwlagn probe timeouts (regression)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Niel Lambrechts <niel.lambrechts@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1240954959.593.5.camel@johannes.local> (sfid-20090428_234319_487972_6219E84E)
+References: <49F4F5B1.4020201@gmail.com> <1240852777.29221.6.camel@rc-desk>
+	 <49F76DF2.5070704@gmail.com>
+	 (sfid-20090428_225846_755730_3AFA4A12)  <1240954959.593.5.camel@johannes.local>
+	 (sfid-20090428_234319_487972_6219E84E)
+Content-Type: text/plain
+Date: Tue, 28 Apr 2009 23:47:35 +0200
+Message-Id: <1240955255.593.7.camel@johannes.local> (sfid-20090428_234813_444358_FCECA530)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/26 Jiri Slaby <jirislaby@gmail.com>:
-> On 04/26/2009 04:00 AM, Bob Copeland wrote:
->> On Sat, Apr 25, 2009 at 02:09:23PM +0200, Jiri Slaby wrote:
->>> Hi guys,
->>> do you remember some 5211 HW which didn't work with this?
->>> --
->>>
->>> Set null key type even on ar5211, otherwise it en/decrypts every fr=
-ame with
->>> protected bit set which renders the card unusable on encrypted netw=
-orks.
->>
->> Not me. =C2=A0I don't have the hardware, so I would say if your patc=
-h is known
->> to work on a 5211 then we go with it.
->
-> Ok, thanks. Of course the HW I used (IBM T40 Thinkpad) needs the patc=
-h ;).
->
+On Tue, 2009-04-28 at 23:42 +0200, Johannes Berg wrote:
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+> Ok, that's confusing. It doesn't even change any code that is normally
+> executed, at least not significantly since local->user_power_level is
+> usually 0; checking
+> 	if (local->user_power_level)
+> vs. checking
+> 	if (local->user_power_level >= 0)
+> shouldn't make a difference in that case (although I admit that I forgot
+> a few cases in that commit, will fix).
+> 
+> Can you please verify that the code behaves correctly if you revert just
+> this commit? Unless you're playing with "iwconfig wlan0 txpower .." I
+> don't see a reason for this to cause a problem.
 
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Scratch that, try this patch instead. Sorry, stupid mistake! mac80211
+never asks the driver to set a txpower level, and keeps the variable set
+to 0, but the driver looks at it anyway. Bug on both accounts, I guess,
+but mac80211 should set the variable and tell the driver anyway.
+
+johannes
+
+---
+ net/mac80211/main.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- wireless-testing.orig/net/mac80211/main.c	2009-04-28 23:43:49.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-04-28 23:47:22.000000000 +0200
+@@ -764,6 +764,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
+ 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	local->hw.conf.radio_enabled = true;
++	local->user_power_level = -1;
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
+ 	mutex_init(&local->iflist_mtx);
+
+
