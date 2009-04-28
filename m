@@ -1,83 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552AbZDVWkK (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:10603 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894AbZD1UyN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 18:40:10 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Lwl6s-0000v4-UG
-	for linux-wireless@vger.kernel.org; Thu, 23 Apr 2009 00:40:07 +0200
-Subject: on radio_enabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hiLMxtnIG2OP+FhMvRY/"
-Date: Thu, 23 Apr 2009 00:39:35 +0200
-Message-Id: <1240439975.30082.66.camel@johannes.local> (sfid-20090423_004017_994884_20399A62)
-Mime-Version: 1.0
+	Tue, 28 Apr 2009 16:54:13 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so851075fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 13:54:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <69e28c910904231035u7ff2d9bbnbf1a74ece718659@mail.gmail.com>
+References: <69e28c910904231035u7ff2d9bbnbf1a74ece718659@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 28 Apr 2009 22:53:51 +0200
+Message-ID: <69e28c910904281353n327a6dfcjb0389f2e2e55dea2@mail.gmail.com> (sfid-20090428_225434_299786_06FCCD82)
+Subject: Re: [PATCH 0/5] mac80211, iwlwifi, ath9k: Fix rate scaling for
+	IEEE80211_TX_CTL_NO_ACK packets
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Did this get lost? I can't see it in wireless-testing.
 
---=-hiLMxtnIG2OP+FhMvRY/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+2009/4/23 G=E1bor Stefanik <netrolller.3d@gmail.com>:
+> Handling of multicast/NO_ACK packets by mac80211 rate scaling is a
+> mess. Basically, the rule of thumb is that any packet with
+> IEEE80211_TX_CTL_NO_ACK (including multicasts and broadcasts, which
+> always have this flag set) should be sent at lowest rate (unless
+> overridden by radiotap - this is not covered in this patchset), with
+> no retries.
+>
+> So, the right thing to do in any rate scaling algorithm:
+> =A0* Check for IEEE80211_TX_CTL_NO_ACK. No need to check
+> is_multicast_ether_addr, as multicasts always have NO_ACK set.
+> =A0* If it is set, select the lowest available rate (unless overridde=
+n
+> by radiotap), with a retry count of 0 (total try count of 1).
+>
+> However, the actual rate scaling algorithms get this wrong in various=
+ ways:
+> =A0* Minstrel checks for both is_multicast_ether_addr and
+> IEEE80211_TX_CTL_NO_ACK (redundant, since the former implies the
+> latter), and sets the rate to the lowest (correct), and the retry
+> count to the max (wrong).
+> =A0* PID only checks is_multicast_ether_addr (completely leaving out
+> unicasts with IEEE80211_TX_CTL_NO_ACK set by e.g. Radiotap), setting
+> the rate to the lowest (correct). However, the same logic is used for
+> determining retry count of multicasts as for unicasts (wrong).
+> =A0* Iwlwifi's rate scaling algorithms behave like PID. In addition,
+> they appear to not care about retry count at all, which is handled in
+> the drivers themselves I guess.
+> =A0* Ath5k's algorithm correctly sets both the rate and the retry cou=
+nt
+> - but incorrectly bases its checks on is_multicast_ether_addr instead
+> of IEEE80211_TX_CTL_NO_ACK, again missing unicasts with this flag set=
+=2E
+>
+> Most PHYs can gracefully handle this error (with the help of a no-ACK
+> knob in the PHY TX header that disables retries), but those that have
+> no such knob, and instead depend on getting a correct retry count of =
+0
+> (total try count of 1), such as RTL818x, end up always transmitting
+> multicast/NO_ACK frames multiple times, as (incorrectly) requested by
+> the RC algorithm.
+>
+> Signed-off-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Cc: Nick Kossifidis <mickflemm@gmail.com>
+> Cc: Louis R. Rodriguez <mcgrof@gmail.com>
+>
+> G=E1bor Stefanik (5):
+> =A0mac80211: Fix handling of retry count of NO_ACK frames in minstrel
+> =A0mac80211: Fix handling of retry count of NO_ACK frames in PID
+> =A0iwlwifi: Fix handling of retry count of NO_ACK frames for iwl-{394=
+5|agn}-rs
+> =A0ath5k: Fix handling of retry count of NO_ACK frames
+> =A0mac80211: Warn if the rate controller requests retries for a NO_AC=
+K frame
+>
+> =A0drivers/net/wireless/ath/ath9k/rc.c =A0 =A0 =A0 =A0| =A0 =A06 +++-=
+--
+> =A0drivers/net/wireless/iwlwifi/iwl-3945-rs.c | =A0 =A07 ++++---
+> =A0drivers/net/wireless/iwlwifi/iwl-agn-rs.c =A0| =A0 14 +++++++-----=
+--
+> =A0net/mac80211/rc80211_minstrel.c =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A08 =
++++++---
+> =A0net/mac80211/rc80211_pid_algo.c =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A08 =
++++++---
+> =A0net/mac80211/tx.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0| =A0 =A04 ++++
+> =A06 files changed, 28 insertions(+), 19 deletions(-)
+>
 
-Hi!
 
-So I was looking through various drivers, and not all of them are able
-to handle radio_enabled gracefully.
 
-iwlwifi, for instance, turns off the radio but then is unable to fulfil
-any configuration requests coming in while the radio is disabled.
-
-The same is true, if I remember correctly what Ivo told me, for rt2x00.
-
-It is not true for b43/legacy, for example, which leaves the MAC running
-and thus can configure everything even if the radio is disabled.
-Similarly for Atheros hw, I think.
-
-Now, if we're going to use radio_enabled more, I wonder whether we
-should completely deconfigure the hardware when we want to turn off
-radio_enabled, and then completely reconfigure it once we enable the
-radio again.
-
-Pros:
- * configures all hardware correctly without the driver needing to do
-   everything by itself
- * works with all hardware for sure
-
-Cons:
- * higher latency
-
-Also, sometimes we may want to disable the radio for just short periods
-of time, I think, for regulatory compliance? 11h or so? How's that
-handled, or rather supposed to be?
-
-johannes
-
---=-hiLMxtnIG2OP+FhMvRY/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ75ykAAoJEKVg1VMiehFYbMYP/1Xep2GYDY1CHb2eZTcCM7Wz
-ClheqrKJ/6j3wDAIu7IZQa6fuKAunJfaBixHWm1IdCfsgzkcpkFJKvXn7a+MDIse
-dARgsT6/hUrAy1tXSSdCTSRk3F9aKxQw9Smw0M+n9iES/MIZpwi+7/4xNtIoej27
-LlLRwpSa6gfXrtk/0ttsUeLv5/XcSQg6N5loK53ocCLzvcdRDSRVP9gcEzpl+3uI
-p3QhQeK7iFXq4EgnOV6qz3G6qqp3eR+SJNInMpu24sdlBBov12yt+UOXchdRG7vK
-IuplGqXYzStJrvzUNs13v2VdwvzipgVcR4crGBkxs/u7hZkaaMQ7cTKFpk7RCRIy
-9+AU2eIivmE7AHnFhRHjkUg7pDt/XNufyJqJ6JCOkoaQlFIY5Ap9Gmb2gX97mPic
-RGgatd98RQybRIGvKwhKBAKqKUWb9Q/6o+qWE7PfFmwEuf0Mejj38ledhUqQKOeG
-AjjWh1qckkY7CsFeUfY1fCvNYCdGo1EnMU+d+WajYy8SvNF6lj7SCPHp8hWnAecf
-3DL62XTGNlp1pvjqJVTB3zhNV5SrhnlAwN7rdSdhlXLugBlcMrnQuyRfl4jFy5UB
-3osCtu7NKrTlVpbB//2cvVvMvcXRiiuCbKH5Rwr1rwIHzh1zTwQMbMqlQY3NtE1Q
-tXkMupi1IY/0q4HaEofo
-=XbCm
------END PGP SIGNATURE-----
-
---=-hiLMxtnIG2OP+FhMvRY/--
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
