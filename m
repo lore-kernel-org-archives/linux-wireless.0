@@ -1,199 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:37543 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892AbZDCLFf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43014 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757861AbZD1VnO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 07:05:35 -0400
-Received: by fxm2 with SMTP id 2so926111fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 04:05:32 -0700 (PDT)
-Message-ID: <49D5ED77.3030206@gmail.com> (sfid-20090403_130544_085732_2CD606E8)
-Date: Fri, 03 Apr 2009 13:05:27 +0200
-From: Till Kamppeter <till.kamppeter@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	Jussi Kukkonen <jku@linux.intel.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Google Summer of Code 2009: Another wireless application
-References: <68f4d6130903241108j590d49adj10446169f7c3c06b@mail.gmail.com> 	<43e72e890903241256l39f5b1f9i49ce2b7a6e8099c3@mail.gmail.com> 	<49CD0FCF.3060706@gmail.com> <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com>
-In-Reply-To: <43e72e890903271126p7a302460lffdd5cd8d6ebe807@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 28 Apr 2009 17:43:14 -0400
+Subject: Re: 2.6.30-rc3: iwlagn probe timeouts (regression)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Niel Lambrechts <niel.lambrechts@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49F76DF2.5070704@gmail.com> (sfid-20090428_225846_755730_3AFA4A12)
+References: <49F4F5B1.4020201@gmail.com> <1240852777.29221.6.camel@rc-desk>
+	 <49F76DF2.5070704@gmail.com> (sfid-20090428_225846_755730_3AFA4A12)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-99LFL4bzdi94wsIWWbyk"
+Date: Tue, 28 Apr 2009 23:42:39 +0200
+Message-Id: <1240954959.593.5.camel@johannes.local> (sfid-20090428_234319_487972_6219E84E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-we got another application on wireless. See below. Who has not done so 
-yet, do not forget to apply as mentor at the LF.
+--=-99LFL4bzdi94wsIWWbyk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-    Till
+On Tue, 2009-04-28 at 22:58 +0200, Niel Lambrechts wrote:
 
---------------------
+> >> Apr 27 01:33:43 linux-7vph kernel: wlan0: direct probe to AP
+> >> 00:1d:92:1d:1e:8e timed out
 
-Title:  	 Impove Wireless Roaming
-Student: 	Mircea Gherzan
-Mentor: 	No mentor assigned
-Possible Mentors: 	None
-Abstract:
-Wireless roaming functionality is currently provided to mobile Linux 
-users by the wpa_supplicant daemon. However, there is no assistance 
-coming from the in-kernel wireless stack (mac80211). The roaming 
-experience can be improved by providing such assistance in the form of 
-scanning triggers. This project aims to design and implement such 
-triggers and to modify the supplicant accordingly in order to enhance 
-the roaming.
-Content:
-About myself
+(etc)
+=20
+> Okidoki, I've managed to bisect it:
+>=20
+> commit 47afbaf5af9454a7a1a64591e20cbfcc27ca67a8
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Tue Apr 7 15:22:28 2009 +0200
+>=20
+>     mac80211: correct wext transmit power handler
 
-I'm a final year student in Computer Science at the Techical University of
-Bucharest, Romania (graduation: June 2009). Becaouse of my result, I was 
-invited
-to work as an Undergraduate Teaching Assistant (UTA) in the CS department,
-being part of the following teams:
-* Operating Systems (Spring 2008, Spring 2009)
-* Object Oriented Programming (Fall 2007, Fall 2008)
-* Data Structures (Spring 2009)
+Ok, that's confusing. It doesn't even change any code that is normally
+executed, at least not significantly since local->user_power_level is
+usually 0; checking
+	if (local->user_power_level)
+vs. checking
+	if (local->user_power_level >=3D 0)
+shouldn't make a difference in that case (although I admit that I forgot
+a few cases in that commit, will fix).
 
-I have completed the following internships:
-* Vodafone Romania (Summer 2007) - UNIX scripting and development 
-(CORBA, Oracle
-   Call Interface)
-* BitDefender (Summer 2008) - part of the Core Libraries team, I was 
-doing C++
-   coding and profiling for a high-performance web-server of internal use.
+Can you please verify that the code behaves correctly if you revert just
+this commit? Unless you're playing with "iwconfig wlan0 txpower .." I
+don't see a reason for this to cause a problem.
 
-I am currently an intern at Ixia, part of the IxOS Linux team, doing kernel
-programming (device drivers, networking, CryptoAPI).
+johannes
 
-I am looking forward to completing a M.Sc. Degree at the Techical 
-University of
-Dreden (Germany), for they have a very powerful group in Operating Systems.
+--=-99LFL4bzdi94wsIWWbyk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-I am present on the #linux-wireless channel with the nickname mike85.
-Coding skills and setup
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-I use Debian Sid since a couple of years. My development machine is a T500
-ThinkPad with an Intel IWL5300 AGN card. I also have access to two other
-machines with Atheros and Intel wireless cards.
+iQIcBAABAgAGBQJJ93hLAAoJEKVg1VMiehFY6BAP/ihl7mer3CF5k5DR0G+dRqlc
+Uskg6pMWxz7rlHWp59tqqUWeNb0d4fAkkJzGgJgDhZwakgJ9aEHO1xKRmqUwC5ry
+3UC3alM9jiSzCAHk/SAwcvsGO6hRe/DsNxQm86p/FOYL86eAgU/kTQMaH4SGoLZW
+xE72QZBUxBOVIDmn5hWtWHPoXMPTHbGSlzgC6TaN3ubIdEwiJq6cNI5GtHOCzNEv
+CFMY+ZFxMCISXHqz/IA1Oi8vzF6c6AE6zB4rEYGMiRHhkte5PGRRo3FZNsBXO/5C
+tiWkAsZBD9m239hwbEQFbEFPzB2oLT412S+ioXAhBXpGfRfCj3kYP86gOsrUYOuG
+lm3TT7TWWLJav5sS+zDHdcfJg7vmQdj6Mb4dIs560OrAuNFF27nL7Y8zMYcwoqKo
+33bcTO32SgBR88K3dtLTg0vAIsD8+icWsETDactK/9EKrrHgVXTy+D4ubzt54M67
+eiHThKZ7M1SBsolKjToh2yWjz0UiiG/M1azYQcB9HSVOSl0Gd9CucBkd7XkqPEV7
+CKuN3F5JW9/8uGIoxODdteEW/GEIeyf44lebR2f6Hq9t/Q4iRqdNNZUNjGa0ZikV
+AXOFRyR7J5fXxhmWJoLa+uMf2c7pJkzTOr3OxlAIVR3N8OchAt1hTkFHx94lh1la
+Ds29TuYVMeJlkWRnuMae
+=TscX
+-----END PGP SIGNATURE-----
 
-I have a strong command of C, C++, Java and Linux system programming. I 
-am also
-familiar with kernel programming, doing it now part of my internship and 
-having
-_practiced_ it at the university. I also have embedded programming 
-skills, one
-of my projects being a Bluetooth-controlled rover whose sources and 
-schematics
-now serve as learning material for younger students.
-
-Apart from kernel/system programming, I am also familiar with various
-technologies, like RMI, CORBA, RPC, RMI, OpenMP, MPI and with some scripting
-languages (perl, python). I am comfortable with git (using it a lot at 
-school)
-and svn.
-
-I have good knowledge of networking concepts, completing Cisco CCNA 
-courses and
-being among the top student in the networking related courses.
-
-I therefore think I have the desired knowledge to complete the project.
-Me and linux-wireless
-
-My involvement in the Linux wireless community has been limited to 
-testing and
-submitting bug reports on the kernel bugzilla. As an user, I was an early
-adopter (non mainline days) of the mac80211 stack and of the iwlwifi 
-drivers.
-
-Two years ago I started an open source project: MoTorr, a J2ME based 
-BitTorrent
-client. The project is hosted on SourceForge.
-
-I have chosen to apply for the roaming project because it :
-* involves both kernel-space and user-space programming
-* adds huge value to the mobile end-user experience
-
-An important factor in my decision was the feedback received on the mailing
-list after my initial enquiry. The ideas of Holger Schurig and Helmut Schaa
-helped me a lot in writing this application.
-
-I expect my work to provide and smooth and power-efficient roaming experince
-for mobile users. I am a laptop user myself, I would simply love my machine
-to roam faster while moving around the campus.
-The project
-
-It aims to achieve better roaming capabilities for the users, by enabling a
-better cooperation between the mac80211 and wpa_supplicant.
-
-I have chosen this particular ideea from the list beacause it posed some
-interesting challanges in terms of:
-* right placement of the code (kernel- vs user-space)
-* design (interface for different decision making algorithms)
-
-I think I am suited to carry this project because I have experience in both
-types of programming involved and I am familiar with the concepts of
-802.11 networks. I also find the wireless kernel code well documented 
-and easy
-to understand and hack on.
-
-Naturally, I am willing to invest at least 40h/week in the project 
-during GSoC.
-However, this number might increase, for I am aware of the problems 
-arising in
-kernel development and testing such code, but I am willing work as much as
-required to keep up with the schedule and providy quality code.
-A minor exception would be the first week, where I will probably assign only
-30 hours: it is the last week of my intership at Ixia.
-
-I see this project as my opportunity of becoming part of the kernel 
-community
-and therefore it is quite obvious that I  will continue to contribute after
-GSoC ends.
-
-Some technical considerations:
-* from the very beginning I consider NM to be out of the picture
-* the main decisions are:
-     * _if_ to roam belongs to the kernel
-     * AP selection should be done in wpa_supplicant
-* "if" decision should be done considering:
-     * signal strength
-     * missed beacons
-* for decisions based on signal stregth, drivers shoud be assigned a scaling
-   factor in order to get a driver-independent threshold
-* scanning hints should be relayed from the kernel to the supplicant
-Preliminary Schedule
-
-A final schedule will be discussed on the list upon acceptance.
-
-* Before May 23rd:
-     * get more familiar with kernel and wpa_supplicant code
-     * read the O'Reilly book on 802.11 _in detail_
-     * discuss the ideas even more on the mailing list
-     * create a test setup at my house (at least 2 APs)
-     * GeoClue integration research
-     * start coding (why not?) if consesus on the mailing lists has been 
-reached
-     * set up a blog, wiki page and other communication means, if necessary
-* May 23rd - June 1st:
-     * design a common interface for roaming decision algorithms
-         (like rate-selection)
-     * deliverable: wireless-testing patch
-* June:
-     * write kernel triggers
-     * nl80211 interface additions.
-     * deliverables: patches for wireless-testing
-* July - August 10th:
-     * add support to the triggers in wpa_supplicant (generic and driver 
-code)
-     * GeoClue client behaviour in the supplicant
-     * deliverable: wpa_supplicant patch
-* August 10th onward:
-     * integration testing
-     * fine tuning, bugfixing
-     * writing documentation
-* After GSoC:
-     * code clean-ups, refactoring, etc
-
-Additional info: 	http://swarm.cs.pub.ro/~mgherzan/soc_roaming.txt
+--=-99LFL4bzdi94wsIWWbyk--
 
