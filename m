@@ -1,429 +1,384 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:49650 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbZDHLUa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60624 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751109AbZD2Jcv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 07:20:30 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] p54: generate channel list dynamically
-Date: Wed, 8 Apr 2009 13:20:49 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200904081320.49607.chunkeey@web.de> (sfid-20090408_132035_499932_A325DA1D)
+	Wed, 29 Apr 2009 05:32:51 -0400
+Subject: [PATCH] mac80211: tell driver when idle
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 29 Apr 2009 11:32:17 +0200
+Message-Id: <1240997537.593.35.camel@johannes.local> (sfid-20090429_113258_830522_7A916290)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enhances the eeprom parser to generate customized
-channel list for every device. 
----
-Larry,
+When we aren't doing anything in mac80211, we can turn off
+much of the hardware, depending on the driver/hw. Not doing
+anything, aka being idle, means:
 
-I'm thinking of splitting up p54common.c into small files...
-e.g: one file each for eeprom, mac, led and main/lib code.
-So I'm asking for your opinion "before" I waste time with it.
+ * no monitor interfaces
+ * no AP/mesh/wds interfaces
+ * any station interfaces are in DISABLED state
+ * any IBSS interfaces aren't trying to be in a network
+ * we aren't trying to scan
 
-Regards,
-	Chr
+By creating a new function that verifies these conditions and calling
+it at strategic points where the states of those conditions change,
+we can easily make mac80211 tell the driver when we are idle to save
+power.
+
+Additionally, this fixes a small quirk where a recalculated powersave
+state is passed to the driver even if the hardware is about to stopped
+completely.
+
+This patch intentionally doesn't touch radio_enabled because that is
+currently implemented to be a soft rfkill which is inappropriate here
+when we need to be able to wake up with low latency.
+
+One thing I'm not entirely sure about is this:
+
+  phy0: device no longer idle - in use
+  wlan0: direct probe to AP 00:11:24:91:07:4d try 1
+  wlan0 direct probe responded
+  wlan0: authenticate with AP 00:11:24:91:07:4d
+  wlan0: authenticated
+> phy0: device now idle
+> phy0: device no longer idle - in use
+  wlan0: associate with AP 00:11:24:91:07:4d
+  wlan0: RX AssocResp from 00:11:24:91:07:4d (capab=0x401 status=0 aid=1)
+  wlan0: associated
+
+Is it appropriate to go into idle state for a short time when we have
+just authenticated, but not associated yet? This happens only with the
+userspace SME, because we cannot really know how long it will wait
+before asking us to associate. Would going idle after a short timeout
+be more appropriate? We may need to revisit this, depending on what
+happens.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
-index 53d3ed8..fe8bca4 100644
---- a/drivers/net/wireless/p54/p54.h
-+++ b/drivers/net/wireless/p54/p54.h
-@@ -171,6 +171,7 @@ struct p54_common {
- 	struct p54_cal_database *curve_data;
- 	struct p54_cal_database *output_limit;
- 	struct p54_rssi_linear_approximation rssical_db[IEEE80211_NUM_BANDS];
-+	struct ieee80211_supported_band *band_table[IEEE80211_NUM_BANDS];
+ drivers/net/wireless/mac80211_hwsim.c |    6 +-
+ include/net/mac80211.h                |    8 +++
+ net/mac80211/ibss.c                   |    5 ++
+ net/mac80211/ieee80211_i.h            |    2 
+ net/mac80211/iface.c                  |   78 +++++++++++++++++++++++++++++++++-
+ net/mac80211/mlme.c                   |   10 ++++
+ net/mac80211/scan.c                   |   17 +++----
+ 7 files changed, 112 insertions(+), 14 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-04-29 00:00:05.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-04-29 00:01:52.000000000 +0200
+@@ -985,6 +985,8 @@ int ieee80211_if_change_type(struct ieee
+ 			     enum nl80211_iftype type);
+ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
++u32 __ieee80211_recalc_idle(struct ieee80211_local *local);
++void ieee80211_recalc_idle(struct ieee80211_local *local);
  
- 	/* BBP/MAC state */
- 	u8 mac_addr[ETH_ALEN];
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index b6ebd48..3fba936 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -19,6 +19,7 @@
- #include <linux/init.h>
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
-+#include <linux/sort.h>
+ /* tx handling */
+ void ieee80211_clear_tx_pending(struct ieee80211_local *local);
+--- wireless-testing.orig/net/mac80211/iface.c	2009-04-29 00:00:05.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2009-04-29 00:01:52.000000000 +0200
+@@ -301,6 +301,8 @@ static int ieee80211_open(struct net_dev
+ 	if (sdata->flags & IEEE80211_SDATA_PROMISC)
+ 		atomic_inc(&local->iff_promiscs);
  
- #include <net/mac80211.h>
- #ifdef CONFIG_P54_LEDS
-@@ -51,30 +52,6 @@ static struct ieee80211_rate p54_bgrates[] = {
- 	{ .bitrate = 540, .hw_value = 11, },
- };
++	hw_reconf_flags |= __ieee80211_recalc_idle(local);
++
+ 	local->open_count++;
+ 	if (hw_reconf_flags) {
+ 		ieee80211_hw_config(local, hw_reconf_flags);
+@@ -548,6 +550,10 @@ static int ieee80211_stop(struct net_dev
  
--static struct ieee80211_channel p54_bgchannels[] = {
--	{ .center_freq = 2412, .hw_value = 1, },
--	{ .center_freq = 2417, .hw_value = 2, },
--	{ .center_freq = 2422, .hw_value = 3, },
--	{ .center_freq = 2427, .hw_value = 4, },
--	{ .center_freq = 2432, .hw_value = 5, },
--	{ .center_freq = 2437, .hw_value = 6, },
--	{ .center_freq = 2442, .hw_value = 7, },
--	{ .center_freq = 2447, .hw_value = 8, },
--	{ .center_freq = 2452, .hw_value = 9, },
--	{ .center_freq = 2457, .hw_value = 10, },
--	{ .center_freq = 2462, .hw_value = 11, },
--	{ .center_freq = 2467, .hw_value = 12, },
--	{ .center_freq = 2472, .hw_value = 13, },
--	{ .center_freq = 2484, .hw_value = 14, },
--};
--
--static struct ieee80211_supported_band band_2GHz = {
--	.channels = p54_bgchannels,
--	.n_channels = ARRAY_SIZE(p54_bgchannels),
--	.bitrates = p54_bgrates,
--	.n_bitrates = ARRAY_SIZE(p54_bgrates),
--};
--
- static struct ieee80211_rate p54_arates[] = {
- 	{ .bitrate = 60, .hw_value = 4, },
- 	{ .bitrate = 90, .hw_value = 5, },
-@@ -86,51 +63,6 @@ static struct ieee80211_rate p54_arates[] = {
- 	{ .bitrate = 540, .hw_value = 11, },
- };
+ 	sdata->bss = NULL;
  
--static struct ieee80211_channel p54_achannels[] = {
--	{ .center_freq = 4920 },
--	{ .center_freq = 4940 },
--	{ .center_freq = 4960 },
--	{ .center_freq = 4980 },
--	{ .center_freq = 5040 },
--	{ .center_freq = 5060 },
--	{ .center_freq = 5080 },
--	{ .center_freq = 5170 },
--	{ .center_freq = 5180 },
--	{ .center_freq = 5190 },
--	{ .center_freq = 5200 },
--	{ .center_freq = 5210 },
--	{ .center_freq = 5220 },
--	{ .center_freq = 5230 },
--	{ .center_freq = 5240 },
--	{ .center_freq = 5260 },
--	{ .center_freq = 5280 },
--	{ .center_freq = 5300 },
--	{ .center_freq = 5320 },
--	{ .center_freq = 5500 },
--	{ .center_freq = 5520 },
--	{ .center_freq = 5540 },
--	{ .center_freq = 5560 },
--	{ .center_freq = 5580 },
--	{ .center_freq = 5600 },
--	{ .center_freq = 5620 },
--	{ .center_freq = 5640 },
--	{ .center_freq = 5660 },
--	{ .center_freq = 5680 },
--	{ .center_freq = 5700 },
--	{ .center_freq = 5745 },
--	{ .center_freq = 5765 },
--	{ .center_freq = 5785 },
--	{ .center_freq = 5805 },
--	{ .center_freq = 5825 },
--};
--
--static struct ieee80211_supported_band band_5GHz = {
--	.channels = p54_achannels,
--	.n_channels = ARRAY_SIZE(p54_achannels),
--	.bitrates = p54_arates,
--	.n_bitrates = ARRAY_SIZE(p54_arates),
--};
--
- int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -486,6 +418,257 @@ static struct p54_cal_database *p54_convert_db(struct pda_custom_wrapper *src,
- 	return dst;
- }
- 
-+#define CHAN_HAS_CAL		BIT(0)
-+#define CHAN_HAS_LIMIT		BIT(1)
-+#define CHAN_HAS_CURVE		BIT(2)
-+#define CHAN_HAS_ALL		(CHAN_HAS_CAL | CHAN_HAS_LIMIT | CHAN_HAS_CURVE)
++	hw_reconf_flags |= __ieee80211_recalc_idle(local);
 +
-+struct p54_channel_entry {
-+	u16 freq;
-+	u16 data;
-+	int index;
-+	enum ieee80211_band band;
-+};
++	ieee80211_recalc_ps(local, -1);
 +
-+struct p54_channel_list {
-+	struct p54_channel_entry *channels;
-+	size_t entries;
-+	size_t max_entries;
-+	size_t band_channel_num[IEEE80211_NUM_BANDS];
-+};
-+
-+static int p54_get_band_from_freq(u16 freq)
-+{
-+	/* FIXME: sync these values with the 802.11 spec */
-+
-+	if ((freq >= 2412) && (freq <= 2484))
-+		return IEEE80211_BAND_2GHZ;
-+
-+	if ((freq >= 4920) && (freq <= 5825))
-+		return IEEE80211_BAND_5GHZ;
-+
-+	return -1;
-+}
-+
-+static int p54_compare_channels(const void *_a,
-+				const void *_b)
-+{
-+	const struct p54_channel_entry *a = _a;
-+	const struct p54_channel_entry *b = _b;
-+
-+	return a->index - b->index;
-+}
-+
-+static int p54_fill_band_bitrates(struct ieee80211_hw *dev,
-+				  struct ieee80211_supported_band *band_entry,
-+				  enum ieee80211_band band)
-+{
-+	/* TODO: generate rate array dynamically */
-+
-+	switch (band) {
-+	case IEEE80211_BAND_2GHZ:
-+		band_entry->bitrates = p54_bgrates;
-+		band_entry->n_bitrates = ARRAY_SIZE(p54_bgrates);
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		band_entry->bitrates = p54_arates;
-+		band_entry->n_bitrates = ARRAY_SIZE(p54_arates);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int p54_generate_band(struct ieee80211_hw *dev,
-+			     struct p54_channel_list *list,
-+			     enum ieee80211_band band)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct ieee80211_supported_band *tmp, *old;
-+	unsigned int i, j;
-+	int ret = -ENOMEM;
-+
-+	if ((!list->entries) || (!list->band_channel_num[band]))
-+		return 0;
-+
-+	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
-+	if (!tmp)
-+		goto err_out;
-+
-+	tmp->channels = kzalloc(sizeof(struct ieee80211_channel) *
-+				list->band_channel_num[band], GFP_KERNEL);
-+	if (!tmp->channels)
-+		goto err_out;
-+
-+	ret = p54_fill_band_bitrates(dev, tmp, band);
-+	if (ret)
-+		goto err_out;
-+
-+	for (i = 0, j = 0; (j < list->band_channel_num[band]) &&
-+			   (i < list->entries); i++) {
-+
-+		if (list->channels[i].band != band)
-+			continue;
-+
-+		if (list->channels[i].data != CHAN_HAS_ALL) {
-+			printk(KERN_ERR "%s:%s%s%s is/are missing for "
-+					"channel:%d [%d MHz].\n",
-+			       wiphy_name(dev->wiphy),
-+			       (list->channels[i].data & CHAN_HAS_CAL ? "" :
-+				" [iqauto calibration data]"),
-+			       (list->channels[i].data & CHAN_HAS_LIMIT ? "" :
-+				" [output power limits]"),
-+			       (list->channels[i].data & CHAN_HAS_CURVE ? "" :
-+				" [curve data]"),
-+			       list->channels[i].index, list->channels[i].freq);
-+		}
-+
-+		tmp->channels[j].band = list->channels[i].band;
-+		tmp->channels[j].center_freq = list->channels[i].freq;
-+		j++;
-+	}
-+
-+	tmp->n_channels = list->band_channel_num[band];
-+	old = priv->band_table[band];
-+	priv->band_table[band] = tmp;
-+	if (old) {
-+		kfree(old->channels);
-+		kfree(old);
-+	}
-+
-+	return 0;
-+
-+err_out:
-+	if (tmp) {
-+		kfree(tmp->channels);
-+		kfree(tmp);
-+	}
-+
-+	return ret;
-+}
-+
-+static void p54_update_channel_param(struct p54_channel_list *list,
-+				     u16 freq, u16 data)
-+{
-+	int band, i;
-+
-+	/*
-+	 * usually all lists in the eeprom are mostly sorted.
-+	 * so it's very likely that the entry we are looking for
-+	 * is right at the end of the list
-+	 */
-+	for (i = list->entries; i >= 0; i--) {
-+		if (freq == list->channels[i].freq) {
-+			list->channels[i].data |= data;
-+			break;
-+		}
-+	}
-+
-+	if ((i < 0) && (list->entries < list->max_entries)) {
-+		/* entry does not exist yet. Initialize a new one. */
-+		band = p54_get_band_from_freq(freq);
-+
-+		/*
-+		 * filter out frequencies which don't belong into
-+		 * any supported band.
-+		 */
-+		if (band < 0)
-+			return ;
-+
-+		i = list->entries++;
-+		list->band_channel_num[band]++;
-+
-+		list->channels[i].freq = freq;
-+		list->channels[i].data = data;
-+		list->channels[i].band = band;
-+		list->channels[i].index = ieee80211_frequency_to_channel(freq);
-+		/* TODO: parse output_limit and fill max_power */
-+	}
-+}
-+
-+static int p54_generate_channel_lists(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	struct p54_channel_list *list;
-+	unsigned int i, j, max_channel_num;
-+	int ret = -ENOMEM;
-+	u16 freq;
-+
-+	if ((priv->iq_autocal_len != priv->curve_data->entries) ||
-+	    (priv->iq_autocal_len != priv->output_limit->entries))
-+		printk(KERN_ERR "%s: EEPROM is damaged... you may not be able"
-+				"to use all channels with this device.\n",
-+				wiphy_name(dev->wiphy));
-+
-+	max_channel_num = max_t(unsigned int, priv->output_limit->entries,
-+				priv->iq_autocal_len);
-+	max_channel_num = max_t(unsigned int, max_channel_num,
-+				priv->curve_data->entries);
-+
-+	list = kzalloc(sizeof(*list), GFP_KERNEL);
-+	if (!list)
-+		goto free;
-+
-+	list->max_entries = max_channel_num;
-+	list->channels = kzalloc(sizeof(struct p54_channel_entry) *
-+				 max_channel_num, GFP_KERNEL);
-+	if (!list->channels)
-+		goto free;
-+
-+	for (i = 0; i < max_channel_num; i++) {
-+		if (i < priv->iq_autocal_len) {
-+			freq = le16_to_cpu(priv->iq_autocal[i].freq);
-+			p54_update_channel_param(list, freq, CHAN_HAS_CAL);
-+		}
-+
-+		if (i < priv->output_limit->entries) {
-+			freq = le16_to_cpup((__le16 *) (i *
-+					    priv->output_limit->entry_size +
-+					    priv->output_limit->offset +
-+					    priv->output_limit->data));
-+
-+			p54_update_channel_param(list, freq, CHAN_HAS_LIMIT);
-+		}
-+
-+		if (i < priv->curve_data->entries) {
-+			freq = le16_to_cpup((__le16 *) (i *
-+					    priv->curve_data->entry_size +
-+					    priv->curve_data->offset +
-+					    priv->curve_data->data));
-+
-+			p54_update_channel_param(list, freq, CHAN_HAS_CURVE);
-+		}
-+	}
-+
-+	/* sort the list by the channel index */
-+	sort(list->channels, list->entries, sizeof(struct p54_channel_entry),
-+	     p54_compare_channels, NULL);
-+
-+	for (i = 0, j = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		if (list->band_channel_num[i]) {
-+			ret = p54_generate_band(dev, list, i);
-+			if (ret)
-+				goto free;
-+
-+			j++;
-+		}
-+	}
-+	if (j == 0) {
-+		/* no useable band available. */
-+		ret = -EINVAL;
-+	}
-+
-+free:
-+	if (list) {
-+		kfree(list->channels);
-+		kfree(list);
-+	}
-+
-+	return ret;
-+}
-+
- int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -653,13 +836,19 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 		goto err;
+ 	if (local->open_count == 0) {
+ 		if (netif_running(local->mdev))
+ 			dev_close(local->mdev);
+@@ -565,8 +571,6 @@ static int ieee80211_stop(struct net_dev
+ 		hw_reconf_flags = 0;
  	}
  
-+	err = p54_generate_channel_lists(dev);
-+	if (err)
-+		goto err;
+-	ieee80211_recalc_ps(local, -1);
+-
+ 	/* do after stop to avoid reconfiguring when we stop anyway */
+ 	if (hw_reconf_flags)
+ 		ieee80211_hw_config(local, hw_reconf_flags);
+@@ -892,3 +896,73 @@ void ieee80211_remove_interfaces(struct 
+ 		unregister_netdevice(sdata->dev);
+ 	}
+ }
 +
- 	priv->rxhw = synth & PDR_SYNTH_FRONTEND_MASK;
- 	if (priv->rxhw == PDR_SYNTH_FRONTEND_XBOW)
- 		p54_init_xbow_synth(dev);
- 	if (!(synth & PDR_SYNTH_24_GHZ_DISABLED))
--		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
-+		dev->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+			priv->band_table[IEEE80211_BAND_2GHZ];
- 	if (!(synth & PDR_SYNTH_5_GHZ_DISABLED))
--		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
-+		dev->wiphy->bands[IEEE80211_BAND_5GHZ] =
-+			priv->band_table[IEEE80211_BAND_5GHZ];
- 	if ((synth & PDR_SYNTH_RX_DIV_MASK) == PDR_SYNTH_RX_DIV_SUPPORTED)
- 		priv->rx_diversity_mask = 3;
- 	if ((synth & PDR_SYNTH_TX_DIV_MASK) == PDR_SYNTH_TX_DIV_SUPPORTED)
-@@ -2661,6 +2850,11 @@ EXPORT_SYMBOL_GPL(p54_register_common);
- void p54_free_common(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
-+	unsigned int i;
++static u32 ieee80211_idle_off(struct ieee80211_local *local,
++			      const char *reason)
++{
++	if (!(local->hw.conf.flags & IEEE80211_CONF_IDLE))
++		return 0;
 +
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+		kfree(priv->band_table[i]);
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++	printk(KERN_DEBUG "%s: device no longer idle - %s\n",
++	       wiphy_name(local->hw.wiphy), reason);
++#endif
 +
- 	kfree(priv->iq_autocal);
- 	kfree(priv->output_limit);
- 	kfree(priv->curve_data);
++	local->hw.conf.flags &= ~IEEE80211_CONF_IDLE;
++	return IEEE80211_CONF_CHANGE_IDLE;
++}
++
++static u32 ieee80211_idle_on(struct ieee80211_local *local)
++{
++	if (local->hw.conf.flags & IEEE80211_CONF_IDLE)
++		return 0;
++
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++	printk(KERN_DEBUG "%s: device now idle\n",
++	       wiphy_name(local->hw.wiphy));
++#endif
++
++	local->hw.conf.flags |= IEEE80211_CONF_IDLE;
++	return IEEE80211_CONF_CHANGE_IDLE;
++}
++
++u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	int count = 0;
++
++	if (local->hw_scanning || local->sw_scanning)
++		return ieee80211_idle_off(local, "scanning");
++
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!netif_running(sdata->dev))
++			continue;
++		/* do not count disabled managed interfaces */
++		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++		    sdata->u.mgd.state == IEEE80211_STA_MLME_DISABLED)
++			continue;
++		/* do not count unused IBSS interfaces */
++		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
++		    !sdata->u.ibss.ssid_len)
++			continue;
++		/* count everything else */
++		count++;
++	}
++
++	if (!count)
++		return ieee80211_idle_on(local);
++	else
++		return ieee80211_idle_off(local, "in use");
++
++	return 0;
++}
++
++void ieee80211_recalc_idle(struct ieee80211_local *local)
++{
++	u32 chg;
++
++	mutex_lock(&local->iflist_mtx);
++	chg = __ieee80211_recalc_idle(local);
++	mutex_unlock(&local->iflist_mtx);
++	ieee80211_hw_config(local, chg);
++}
+--- wireless-testing.orig/net/mac80211/ibss.c	2009-04-29 00:00:05.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2009-04-29 00:01:52.000000000 +0200
+@@ -862,6 +862,8 @@ int ieee80211_ibss_join(struct ieee80211
+ 
+ 	sdata->u.ibss.ssid_len = params->ssid_len;
+ 
++	ieee80211_recalc_idle(sdata->local);
++
+ 	set_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
+ 	queue_work(sdata->local->hw.workqueue, &sdata->u.ibss.work);
+ 
+@@ -889,6 +891,9 @@ int ieee80211_ibss_leave(struct ieee8021
+ 
+ 	skb_queue_purge(&sdata->u.ibss.skb_queue);
+ 	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
++	sdata->u.ibss.ssid_len = 0;
++
++	ieee80211_recalc_idle(sdata->local);
+ 
+ 	return 0;
+ }
+--- wireless-testing.orig/net/mac80211/scan.c	2009-04-29 00:00:05.000000000 +0200
++++ wireless-testing/net/mac80211/scan.c	2009-04-29 00:01:52.000000000 +0200
+@@ -302,17 +302,9 @@ void ieee80211_scan_completed(struct iee
+ 	/* we only have to protect scan_req and hw/sw scan */
+ 	mutex_unlock(&local->scan_mtx);
+ 
+-	if (was_hw_scan) {
+-		/*
+-		 * Somebody might have requested channel change during scan
+-		 * that we won't have acted upon, try now. ieee80211_hw_config
+-		 * will set the flag based on actual changes.
+-		 */
+-		ieee80211_hw_config(local, 0);
+-		goto done;
+-	}
+-
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++	if (was_hw_scan)
++		goto done;
+ 
+ 	netif_tx_lock_bh(local->mdev);
+ 	netif_addr_lock(local->mdev);
+@@ -351,6 +343,7 @@ void ieee80211_scan_completed(struct iee
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+  done:
++	ieee80211_recalc_idle(local);
+ 	ieee80211_mlme_notify_scan_completed(local);
+ 	ieee80211_ibss_notify_scan_completed(local);
+ 	ieee80211_mesh_notify_scan_completed(local);
+@@ -471,6 +464,8 @@ static int __ieee80211_start_scan(struct
+ 	 * dependency, so that the scan completed calls
+ 	 * have more locking freedom.
+ 	 */
++
++	ieee80211_recalc_idle(local);
+ 	mutex_unlock(&local->scan_mtx);
+ 
+ 	if (local->ops->hw_scan)
+@@ -487,6 +482,8 @@ static int __ieee80211_start_scan(struct
+ 		} else
+ 			local->sw_scanning = false;
+ 
++		ieee80211_recalc_idle(local);
++
+ 		local->scan_req = NULL;
+ 		local->scan_sdata = NULL;
+ 	}
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-04-29 00:01:49.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-04-29 00:01:52.000000000 +0200
+@@ -897,6 +897,7 @@ static void ieee80211_direct_probe(struc
+ 		printk(KERN_DEBUG "%s: direct probe to AP %pM timed out\n",
+ 		       sdata->dev->name, ifmgd->bssid);
+ 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(local);
+ 		cfg80211_send_auth_timeout(sdata->dev, ifmgd->bssid);
+ 
+ 		/*
+@@ -945,6 +946,7 @@ static void ieee80211_authenticate(struc
+ 		       " timed out\n",
+ 		       sdata->dev->name, ifmgd->bssid);
+ 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(local);
+ 		cfg80211_send_auth_timeout(sdata->dev, ifmgd->bssid);
+ 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
+ 				sdata->local->hw.conf.channel->center_freq,
+@@ -1041,6 +1043,7 @@ static void ieee80211_set_disassoc(struc
+ 
+ 	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT) {
+ 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(local);
+ 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
+ 				sdata->local->hw.conf.channel->center_freq,
+ 				ifmgd->ssid, ifmgd->ssid_len);
+@@ -1128,6 +1131,7 @@ static void ieee80211_associate(struct i
+ 		       " timed out\n",
+ 		       sdata->dev->name, ifmgd->bssid);
+ 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(local);
+ 		cfg80211_send_assoc_timeout(sdata->dev, ifmgd->bssid);
+ 		ieee80211_rx_bss_remove(sdata, ifmgd->bssid,
+ 				sdata->local->hw.conf.channel->center_freq,
+@@ -1148,6 +1152,7 @@ static void ieee80211_associate(struct i
+ 		printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
+ 		       "mixed-cell disabled - abort association\n", sdata->dev->name);
+ 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(local);
+ 		return;
+ 	}
+ 
+@@ -1286,6 +1291,7 @@ static void ieee80211_auth_completed(str
+ 	if (ifmgd->flags & IEEE80211_STA_EXT_SME) {
+ 		/* Wait for SME to request association */
+ 		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(sdata->local);
+ 	} else
+ 		ieee80211_associate(sdata);
+ }
+@@ -1522,6 +1528,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 		if (ifmgd->flags & IEEE80211_STA_EXT_SME) {
+ 			/* Wait for SME to decide what to do next */
+ 			ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++			ieee80211_recalc_idle(local);
+ 		}
+ 		return;
+ 	}
+@@ -2090,6 +2097,7 @@ static int ieee80211_sta_config_auth(str
+ 		} else {
+ 			ifmgd->assoc_scan_tries = 0;
+ 			ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++			ieee80211_recalc_idle(local);
+ 		}
+ 	}
+ 	return -1;
+@@ -2133,6 +2141,8 @@ static void ieee80211_sta_work(struct wo
+ 	} else if (!test_and_clear_bit(IEEE80211_STA_REQ_RUN, &ifmgd->request))
+ 		return;
+ 
++	ieee80211_recalc_idle(local);
++
+ 	switch (ifmgd->state) {
+ 	case IEEE80211_STA_MLME_DISABLED:
+ 		break;
+--- wireless-testing.orig/include/net/mac80211.h	2009-04-29 00:00:05.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-04-29 00:01:52.000000000 +0200
+@@ -533,10 +533,16 @@ struct ieee80211_rx_status {
+  *
+  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
+  * @IEEE80211_CONF_PS: Enable 802.11 power save mode (managed mode only)
++ * @IEEE80211_CONF_IDLE: The device is running, but idle; if the flag is set
++ *	the driver should be prepared to handle configuration requests but
++ *	may turn the device off as much as possible. Typically, this flag will
++ *	be set when an interface is set UP but not associated or scanning, but
++ *	it can also be unset in that case when monitor interfaces are active.
+  */
+ enum ieee80211_conf_flags {
+ 	IEEE80211_CONF_RADIOTAP		= (1<<0),
+ 	IEEE80211_CONF_PS		= (1<<1),
++	IEEE80211_CONF_IDLE		= (1<<2),
+ };
+ 
+ 
+@@ -551,6 +557,7 @@ enum ieee80211_conf_flags {
+  * @IEEE80211_CONF_CHANGE_POWER: the TX power changed
+  * @IEEE80211_CONF_CHANGE_CHANNEL: the channel/channel_type changed
+  * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
++ * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
+  */
+ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_RADIO_ENABLED	= BIT(0),
+@@ -561,6 +568,7 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_POWER		= BIT(5),
+ 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+ 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
++	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
+ };
+ 
+ static inline __deprecated enum ieee80211_conf_changed
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-04-29 00:01:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-04-29 00:01:52.000000000 +0200
+@@ -554,9 +554,11 @@ static int mac80211_hwsim_config(struct 
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 
+-	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d)\n",
++	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d idle=%d ps=%d)\n",
+ 	       wiphy_name(hw->wiphy), __func__,
+-	       conf->channel->center_freq, conf->radio_enabled);
++	       conf->channel->center_freq, conf->radio_enabled,
++	       !!(conf->flags & IEEE80211_CONF_IDLE),
++	       !!(conf->flags & IEEE80211_CONF_PS));
+ 
+ 	data->channel = conf->channel;
+ 	data->radio_enabled = conf->radio_enabled;
+
+
