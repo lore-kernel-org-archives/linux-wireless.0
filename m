@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:51435 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750932AbZD3TP7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 15:15:59 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1LzbNR-0008TH-1G
-	for linux-wireless@vger.kernel.org; Thu, 30 Apr 2009 20:52:57 +0200
-From: Andreas Schwab <schwab@linux-m68k.org>
-To: reinette chatre
-	<public-reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@hugh.gmane.org>
-Cc: Andreas Schwab
-	<public-schwab-Td1EMuHUCqxL1ZNQvxDV9g@hugh.gmane.org>,
-	"linux-wireless-u79uwXL29TY76Z2rM5mHXA\@public.gmane.org"
-	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
-	"linux-kernel-u79uwXL29TY76Z2rM5mHXA\@public.gmane.org"
-	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
-Subject: Re: iwlwifi: remove EXPORT_SYMBOL for static symbol
-References: <m24ow6vah1.fsf@igel.home> <1241112119.10498.11.camel@rc-desk>
-	<m24ow6xd9y.fsf@igel.home> <1241116390.10498.50.camel@rc-desk>
-Date: Thu, 30 Apr 2009 20:33:23 +0200
-In-Reply-To: <1241116390.10498.50.camel@rc-desk> (reinette chatre's message of
-	"Thu, 30 Apr 2009 11:33:10 -0700")
-Message-ID: <m2zldyvvnw.fsf@igel.home>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53426 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753474AbZD2TqA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Apr 2009 15:46:00 -0400
+Date: Wed, 29 Apr 2009 15:43:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Alban Browaeys <prahal@yahoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/5] rt2x00: Fix the interval for rfkill and link_tuner.
+Message-ID: <20090429194307.GC3306@tuxdriver.com> (sfid-20090429_214608_090420_2B0E7EB6)
+References: <200904261608.30384.IvDoorn@gmail.com> <200904261608.50411.IvDoorn@gmail.com> <200904261609.11447.IvDoorn@gmail.com> <20090428185709.GA3321@tuxdriver.com> <a32f33a40904281318r7b26e5c2ja5ebefe19ecaa089@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a32f33a40904281318r7b26e5c2ja5ebefe19ecaa089@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 28, 2009 at 10:18:02PM +0200, Ivo Van Doorn wrote:
+> On Tue, Apr 28, 2009 at 8:57 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Sun, Apr 26, 2009 at 04:09:11PM +0200, Ivo van Doorn wrote:
+> >> From: Alban Browaeys <prahal@yahoo.com>
+> >>
+> >> extra parenthesis made the value an argument and the value of the
+> >> define empty. This was triggering those very fast.
+> >>
+> >> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
+> >> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> >
+> > ???
+> >
+> > If that were so, wouldn't that have caused compile-time errors?
+> 
+> I've CCed Alban so he can explain the issue he experienced..
+> 
+> For me this patch is just a style-fix, because those
+> parenthesis were useless anyway.
 
+I'd be happy to take it as a style fix, but it needs an appropriate
+changelog for that.
 
-reinette chatre
-<reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
-
-> Thanks. Even though this patch obsoletes
-> 6269b731560d69c5eaa929909891edec39496d71 it still makes sense to have
-> that patch in the repo as it removes another unnecessary EXPORT_SYMBOL.
-> I would thus prefer that both patches are included.
-
-I agree.
-
-Andreas.
-
+John
 -- 
-Andreas Schwab, schwab@linux-m68k.org
-GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
