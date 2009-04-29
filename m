@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:35519 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761551AbZDSRKh (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33999 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbZD2JwU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 13:10:37 -0400
-Date: Sun, 19 Apr 2009 13:09:51 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Greg KH <greg@kroah.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090419170950.GA28885@storm.local.network> (sfid-20090419_191101_724088_54FFFA63)
-References: <20090414105200.GE25746@storm.local.network> <1239707258.4778.3.camel@johannes.local> <20090414113928.GA20470@storm.local.network> <1239709727.4778.6.camel@johannes.local> <1239712106.11795.21.camel@violet> <1239713034.17109.10.camel@johannes.local> <20090414130248.GA3291@tuxdriver.com> <20090414141852.GB20470@storm.local.network> <20090415011020.GC10045@kroah.com> <20090415015116.GJ20470@storm.local.network>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
-In-Reply-To: <20090415015116.GJ20470@storm.local.network>
+	Wed, 29 Apr 2009 05:52:20 -0400
+Subject: Re: [PATCH] mac80211: tell driver when idle
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1240997537.593.35.camel@johannes.local> (sfid-20090429_113258_830522_7A916290)
+References: <1240997537.593.35.camel@johannes.local>
+	 (sfid-20090429_113258_830522_7A916290)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NIz+1uhNBBDQHeuUF7KL"
+Date: Wed, 29 Apr 2009 11:51:47 +0200
+Message-Id: <1240998707.593.36.camel@johannes.local> (sfid-20090429_115224_281059_8EC4231C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-NIz+1uhNBBDQHeuUF7KL
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Wed, 2009-04-29 at 11:32 +0200, Johannes Berg wrote:
+> When we aren't doing anything in mac80211, we can turn off
+> much of the hardware, depending on the driver/hw. Not doing
+> anything, aka being idle, means:
+>=20
+>  * no monitor interfaces
+>  * no AP/mesh/wds interfaces
+>  * any station interfaces are in DISABLED state
+>  * any IBSS interfaces aren't trying to be in a network
+>  * we aren't trying to scan
 
-On Tue, Apr 14, 2009 at 09:51:16PM -0400, Forest Bond wrote:
-> I need to get you some new patches, anyway, as the upstream sources depen=
-d on
-> header files that I failed to provide as they sit in a separate includes
-> directory.  I'll get this sent as soon as time permits (probably today or
-> tomorrow).
+Please ignore this patch -- it has a small locking bug.
 
-I have some new patches almost ready, including Kconfig files and Makefiles=
-=2E  I
-am in the process of resolving a few build failures.
+johannes
 
-However, I did have a question:
-
-The vt6655 driver builds viawget.ko, and the vt6656 driver builds vntwusb.k=
-o.
-Should the directories be named "viawget" and "vntwusb," respectively, or i=
-s it
-appropriate for them to be named "vt6655" and "vt6656"?
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---G4iJoqBmSsgzjUCe
+--=-NIz+1uhNBBDQHeuUF7KL
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFJ61reRO4fQQdv5AwRAtLZAKDHpj/++2ZtbR2dqP1cS4mUCGRVBgCeLtwt
-CKMSzOfxeAQr/QgIWqGHuz4=
-=9ixY
+iQIcBAABAgAGBQJJ+CMvAAoJEKVg1VMiehFYfMAQALvQiW1KvLqKlnqbm05awuzK
+gAbOuu3V0XR9b230rfW2VZJV4iqnysD3G5yFGXKY76RJuREsPhvj3sGAtgNKNQOZ
+jZeLRPjYoI0G9xC3AsT4hIB1ETlHQ1g7g0SB0SoAhlWbXL2L/XP5wKjxya+OSQF8
+2LRQV+tUWsS0czEunTGAmEp7nZgUQOY+QpmHYw8PYPpJoQwvK+lZM7P5+nSAXflr
+u4jhX9AKXM6CsBmxc3iUzQ44Ubw0eD5iI6VgGurLBtnMA1vUaCJZftZsLM4Exxdc
+jHXASWrkHy8QsowtRKrwqvr/SV2HmmQmdyEEvtP6EUvQx83Z5M1NEISQ7AfygqgH
+eyjnmUiafhuSM9lzIGF+krJ6PjIGYIkFkDIGO/GUNyQIa0vR2jE0UBmZJDSDPHYQ
+oLcdZbLGioyv3kWiBZkC84eoiHd1YY/riszK4t2szekdjPtVW8HaRXYVSxzAszrN
+qoxc8V3LtwS7TZE+KYPgx+bzE6dT+syzTC6mX0mybfx6Kj8RCpxEr/rtKpIrskPG
+tMXTJcFkxZO0GyIe0jX3hIHjFL+e8OhbAdvT0jr/v5n/9Nlc3t8Vj2ZZ/o/HznUk
+PC3hoiAAT0qk1RoewoVQLeoyowot9Q+uhkPejqlj75YTdjHjdLM+bokMdOnUJyCq
+I499f+dXXvPMHGVnZQ3W
+=AHfw
 -----END PGP SIGNATURE-----
 
---G4iJoqBmSsgzjUCe--
+--=-NIz+1uhNBBDQHeuUF7KL--
+
