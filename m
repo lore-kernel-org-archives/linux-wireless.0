@@ -1,80 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60574 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759653AbZDRSxb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53380 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756190AbZD2I2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 14:53:31 -0400
-Date: Sat, 18 Apr 2009 21:53:15 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Make nl80211_send_mlme_event() atomic
-Message-ID: <20090418185315.GA2334@jm.kir.nu> (sfid-20090418_205350_438971_35AD06B5)
-References: <20090417200448.GA24430@jm.kir.nu> <20090417202752.GA27686@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090417202752.GA27686@jm.kir.nu>
+	Wed, 29 Apr 2009 04:28:44 -0400
+Subject: Re: 2.6.30-rc3: iwlagn probe timeouts (regression)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Niel Lambrechts <niel.lambrechts@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49F78F40.1060904@gmail.com> (sfid-20090429_012115_069726_86F3227D)
+References: <49F4F5B1.4020201@gmail.com> <1240852777.29221.6.camel@rc-desk>
+	 <49F76DF2.5070704@gmail.com>
+	 (sfid-20090428_225846_755730_3AFA4A12)  <1240954959.593.5.camel@johannes.local>
+	 (sfid-20090428_234319_487972_6219E84E) <1240955255.593.7.camel@johannes.local>
+	 <49F78F40.1060904@gmail.com> (sfid-20090429_012115_069726_86F3227D)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kt3JHYCnkO3dOqKl0JMx"
+Date: Wed, 29 Apr 2009 10:28:08 +0200
+Message-Id: <1240993688.593.16.camel@johannes.local> (sfid-20090429_102850_844911_D5B6BAEE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of the code paths sending deauth/disassoc events ends up calling
-this function with rcu_read_lock held, so we must use GFP_ATOMIC in
-allocation routines.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Jouni Malinen <j@w1.fi>
+--=-kt3JHYCnkO3dOqKl0JMx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/wireless/nl80211.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Wed, 2009-04-29 at 01:20 +0200, Niel Lambrechts wrote:
 
-(patch managed to modify incorrect function with some pending patches,
-so there is some extra context here to make sure these changes end up
-in nl80211_send_mlme_event() regardless of whether the other patches
-are applied or not since this fix is needed for both 2.6.30 and
-current wireless-testing.git)
+> Thanks for the help, reverting the commit did indeed fix things for me -
+> I tested that earlier this evening with the latest git kernel...
 
---- uml.orig/net/wireless/nl80211.c	2009-04-17 23:05:47.000000000 +0300
-+++ uml/net/wireless/nl80211.c	2009-04-18 21:38:40.000000000 +0300
-@@ -3483,17 +3483,17 @@ nla_put_failure:
- static void nl80211_send_mlme_event(struct cfg80211_registered_device *rdev,
- 				    struct net_device *netdev,
- 				    const u8 *buf, size_t len,
- 				    enum nl80211_commands cmd)
- {
- 	struct sk_buff *msg;
- 	void *hdr;
- 
--	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
- 	if (!msg)
- 		return;
- 
- 	hdr = nl80211hdr_put(msg, 0, 0, 0, cmd);
- 	if (!hdr) {
- 		nlmsg_free(msg);
- 		return;
- 	}
-@@ -3502,17 +3502,17 @@ static void nl80211_send_mlme_event(stru
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
- 	NLA_PUT(msg, NL80211_ATTR_FRAME, len, buf);
- 
- 	if (genlmsg_end(msg, hdr) < 0) {
- 		nlmsg_free(msg);
- 		return;
- 	}
- 
--	genlmsg_multicast(msg, 0, nl80211_mlme_mcgrp.id, GFP_KERNEL);
-+	genlmsg_multicast(msg, 0, nl80211_mlme_mcgrp.id, GFP_ATOMIC);
- 	return;
- 
-  nla_put_failure:
- 	genlmsg_cancel(msg, hdr);
- 	nlmsg_free(msg);
- }
- 
- void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
+Ok, thanks.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> > Scratch that, try this patch instead. Sorry, stupid mistake! mac80211
+> > never asks the driver to set a txpower level, and keeps the variable se=
+t
+> > to 0, but the driver looks at it anyway. Bug on both accounts, I guess,
+> > but mac80211 should set the variable and tell the driver anyway.
+> >  =20
+> and so does your patch, although I had to patch by hand, as my version
+> of the file still looked like this:
+>=20
+>    local->hw.conf.long_frame_max_tx_count =3D 4;
+>    local->hw.conf.short_frame_max_tx_count =3D 7;
+>    local->hw.conf.radio_enabled =3D true;
+> +   local->user_power_level =3D -1;
+>=20
+> Can I more or less bargain that this fix will make in in time before the
+> final 2.6.30 kernel is released?
+
+Yes. Thanks for testing that too. I'm sorry that it was such a stupid
+bug and you spent so much time hunting it.
+
+johannes
+
+--=-kt3JHYCnkO3dOqKl0JMx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ+A+VAAoJEKVg1VMiehFYdsUP/jPjWLY0JSzlBLLhvIvkUNFp
+u98hGeBmTA/UyEW0SnYv9jRN4Db4GeTE6sMpZbqLC8fZHlcyv/bxjgNmoR/BcITb
+mA7LvPxsIsknxmtPNoW8UcsIFT2CsPy2HS+52K8n7ljd/KMRRmwpoqmXTN6GEzZQ
+PqMYAIXC7tWZn/m9sGFjpevEI2rpuBtvZskf1awb+vdy/JZg1RuqLY58M3G8JdQg
+Wx8QbeK+HFFwVEl2f9cv+Tlk6fFux1o2tRZV4pUfWGU6VpjJvrTUFcI6Bnv1arTH
+hLBDbhrKwFx9X7EDVqtHOVfbVHAA0Shni5fahvaruaTpRqrjmi4tKX/rCyidxonb
+9PGXag8Nx2NuUU5kHZtzMbCKdA5lQLwk1BhRcmnS8zEy33yTmusb609ipTj6GUCK
+l0JP9zbcwnd4qyxj5GNOvZVdliR0TXJMKJcYJE36fBJ3iVcS5a/UjuhKLDa9nQrh
+StJz8inazizOfK8oJ07KnnBixXnTeCY7PLok0ctRzk/wsTbOvDUbFI+cWi8O1odq
+Bf6R0HCzwQ2KFDBjbNJw/rd5bqRVTAXNvd+PkjlHZMVz07DABirvAJZO/5Adt9yL
+tCON6NjNpoLiAB6ifyqK11Rlt8kOz9ve95Bm3f+6mmU4m8FRqbwv2KIW2MbXYa3F
+sYZbHE/fJZ2Ei/Vt3S3g
+=t7cN
+-----END PGP SIGNATURE-----
+
+--=-kt3JHYCnkO3dOqKl0JMx--
+
