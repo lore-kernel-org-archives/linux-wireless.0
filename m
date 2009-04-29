@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:28524 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbZD1AxF (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60860 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754366AbZD2POu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2009 20:53:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so160199wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Apr 2009 17:53:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5b8543210904230439r45c982fbn66c1a2080adcd442@mail.gmail.com>
-References: <5b8543210904220608l484d0d2dv73b0d66cdc167ce@mail.gmail.com>
-	<1240442334.14995.12.camel@localhost.localdomain> <5b8543210904230336j177998c4m1e0af03fbb3584df@mail.gmail.com>
-	<1240483530.30082.178.camel@johannes.local> <5b8543210904230439r45c982fbn66c1a2080adcd442@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 27 Apr 2009 17:52:50 -0700
-Message-ID: <43e72e890904271752yd080607x910ef06c45f124d@mail.gmail.com> (sfid-20090428_025324_996048_E04999B7)
-Subject: Re: Measure RSSI in adhoc networks
-To: Kai Timmer <email@kait.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 29 Apr 2009 11:14:50 -0400
+Subject: Re: [PATCH] mac80211: tell driver when idle
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241015999.593.62.camel@johannes.local>
+References: <1240997537.593.35.camel@johannes.local>
+	 <1241015587.997.76.camel@localhost.localdomain>
+	 <1241015999.593.62.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 29 Apr 2009 08:14:45 -0700
+Message-Id: <1241018085.4104.4.camel@localhost.localdomain> (sfid-20090429_171458_742703_C4414F2D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 23, 2009 at 4:39 AM, Kai Timmer <email@kait.de> wrote:
-> 2009/4/23 Johannes Berg <johannes@sipsolutions.net>:
->> On Thu, 2009-04-23 at 12:36 +0200, Kai Timmer wrote:
->>
->>> I need the RSSI values for distance measurements between the nodes.
->>
->> Note that is very unreliable...
->
-> I know, it is a work for my diploma thesis. I'm trying to combine it
-> with some kind of round trip time measurements. It is in the very
-> early stages,...
->
->>> So
->>> what i need is not a "quality value" for the whole network, but the
->>> recieved mW from every reachable point in the network. So i think the
->>> RSSI value for every network node (if i can print them out seperatly)
->>> should do the job.
->>
->> iw dev wlan0 station dump
->
-> That works on my laptop, but on not on my Openmoko Freerunner devices.
-> There I get the following:
->
-> runner1:~# iw dev eth1 station dump
-> nl80211 not found.
->
-> I assume that something with the freerunner wireless driver is not
-> compatible with the linux wireless stack. The driver is called
-> "ar6000".
+Hi Johannes,
 
-The ar6000 driver uses wext and not cfg80211 which all new shiny
-mac80211 drivers use. The command Johannes gave you was for cfg80211
-devices.
+> > > Is it appropriate to go into idle state for a short time when we have
+> > > just authenticated, but not associated yet? This happens only with the
+> > > userspace SME, because we cannot really know how long it will wait
+> > > before asking us to associate. Would going idle after a short timeout
+> > > be more appropriate? We may need to revisit this, depending on what
+> > > happens.
+> > 
+> > what about having the hardware set a value for how long something should
+> > be idle before you tell it. I am more thinking about some sort penalty
+> > value from the hardware that can not do this quickly.
+> 
+> You're only referring to this case of between auth/assoc, right? I'm not
+> sure it makes sense to have this HW dependent, the time between
+> auth/assoc really only depend on how fast the SME is. If we first wait a
+> bit, because HW advertises some "penalty value", and then the SME is
+> just a little bit slower than that value, we'd get an even worse
+> situation, no?
 
-  Luis
+there can be always a situation where this ends up badly. You tell the
+hardware that it can sleep now, but then you change your mind because
+userspace finally got its act together. Bad luck.
+
+My point here is only that if the hardware needs a certain amount of
+time before it makes sense to sleep, it should just tell mac80211 this
+and it should be honored.
+
+The default should be that we try how good the hardware can handle
+mac80211 being aggressive with switching to idle. Maybe auth/assoc is a
+special case anyway and we should have a sensible timeout value. We
+could ask userspace to tell use that value when doing auth, but that
+feels kinda ugly to me.
+
+Regards
+
+Marcel
+
+
