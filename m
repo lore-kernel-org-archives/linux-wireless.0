@@ -1,71 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59882 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41409 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755762AbZDWIQx (ORCPT
+	with ESMTP id S1752242AbZD2VKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 04:16:53 -0400
-Subject: Re: [PATCH] mac80211: calculate maximum sleep interval
+	Wed, 29 Apr 2009 17:10:03 -0400
+Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <874owfdctm.fsf@litku.valot.fi> (sfid-20090423_095534_138805_55F8E4DE)
-References: <1240418677.30082.3.camel@johannes.local>
-	 <874owfdctm.fsf@litku.valot.fi> (sfid-20090423_095534_138805_55F8E4DE)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AAbRo/uupmrmRW/24Kae"
-Date: Thu, 23 Apr 2009 10:16:14 +0200
-Message-Id: <1240474574.30082.171.camel@johannes.local> (sfid-20090423_101721_740850_11ADF2B1)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <49F8C03D.6040909@lwfinger.net> (sfid-20090429_230225_847074_E5413886)
+References: <49F8C03D.6040909@lwfinger.net>
+	 (sfid-20090429_230225_847074_E5413886)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ydCRRDpPF75FS1BNa8Q5"
+Date: Wed, 29 Apr 2009 23:09:32 +0200
+Message-Id: <1241039372.4547.3.camel@johannes.local> (sfid-20090429_231009_993152_4FF82E4D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-AAbRo/uupmrmRW/24Kae
+--=-ydCRRDpPF75FS1BNa8Q5
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-04-23 at 10:55 +0300, Kalle Valo wrote:
+Hi Larry,
 
-> > + * @max_sleep_interval: the maximum number of beacon intervals to slee=
-p for
-> > + *	before checking the beacon for a TIM bit (managed mode only); this
-> > + *	value will be only achievable between DTIM frames, the hardware
-> > + *	needs to check for the multicast traffic bit in DTIM beacons.
-> > + *	This variable is valid only when the CONF_PS flag is set.
+> I have been getting a number of page allocation failures of late on my x8=
+6_64
+> system. The user-space app that hits the problem varies; however, there i=
+s
+> always a network connection. In addition, the failure is always of order =
+1. For
+> the instance reported below, git was updating a tree mounted on an NFS vo=
+lume.
+> The problem started with 2.6.30-rc1, but persists with -rc3.
 >=20
-> I would prefer to call it max_sleep_period. Or maybe even wakeup period,
-> because it's about waking up here.
+> I have seen the problem with the b43 and p54usb wireless drivers. The use=
+r-space
+> apps include cc1, git components, and firefox; thus not all involve nfs.
 >=20
-> For me interval, for example beacon interval, means that the unit is TU.
-> But this might be just me.
+> I will be happy to supply any further information.
+>=20
+> kernel: git: page allocation failure. order:1, mode:0x4020
 
-Good argument. I'll post a follow-up patch to rename it (to make it
-easier).
+> kernel:  [<ffffffffa0220711>] ieee80211_skb_resize+0x91/0xc7 [mac80211]
+...
+> kernel: 427298 pages non-shared
+
+It's a little curious that you have order:1 allocations here. I think
+below the printout you showed you would see a line like
+	phy0: failed to reallocate TX buffer
+Is that there? Could you track down that message in the code (around
+net/mac80211/tx.c line 1368) and add to it the following:
+
+	"%d, %d, need %d, %d", skb->data_len, skb->len, head_need, tail_need
+
+and then try to reproduce this problem please? With both p54 and b43 you
+should only have packets far smaller than 4096 bytes so no order 1
+allocation should be needed, afaict.
 
 johannes
 
---=-AAbRo/uupmrmRW/24Kae
+--=-ydCRRDpPF75FS1BNa8Q5
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ8CPLAAoJEKVg1VMiehFYgQcP+wRaT0Mb1ZztjzqhjbZYaBU5
-2247N+Z43qDlRlAGkg1okudh9Md4/Lc6MSpJQAd+JlWpRhvx1dL9cjrKsSRM3kk+
-jnyXrX+1cwYeElQFR7wGXHYr82Wcp02Y4T1RDD8NDMhvlY1xsyK+s1Cw6Xl8dnhf
-6D5K/LVuWhP2rWcZOpiRAqNLJ9nToD9FlaiV6au/qnVZ530DCRnZqVSuLvTBZadS
-meY4T8rBib14EwIMTDIsqFCJZH6tAoIgPkOnrgxjDoolQMI8XAD8wxGvaIV31yzM
-xhxZMlr+6g2YzZgIaDGz8zbeylRv3ugZUUaxaYODBsVW0Mm3mo4rSYNYE+TxjFMz
-83MW6+rcR1vjWJYe3vIHOsC0X646iT5IFBuJDzvSziNGJfxT2RNNNW2JR7wVKcss
-ZBVbbfFvHt8CQ4X7KpMzjD45l28OejBZ2HfXtnxkkNrgtkzyV8M7fCDgPtR+X2s2
-mwXHHsI4AFOF2WwKBuyT7RSxXaV43Gy1MBfprOru7IZsFFctJH1nXU+afL+4GuJi
-O0ouZvbweGPI2F+/6rQ3vSGx1btOcCp27vExkTKxXLi9Kl47iBH9RL3ZJE9jOiBK
-Qv5GRIDJXEJO/XzsnAbBnB+0cN00HGQUFh74bo2Sx8ZbZW03qlowepNcJKHx8Boc
-oAgH0ZefnG1zEyeOvzt+
-=2uAB
+iQIcBAABAgAGBQJJ+MIJAAoJEKVg1VMiehFY1GUQAK00JDonUcLjtppdllD35iXE
+liKFdRAI0o6oRru++Ui3PWyl5PwghRgwwIDXsLw+JTxsYEwykb4H0jgCjLmftgNv
+oyKq6q3PvlMT8DFd5fda2cQHXo+VBfAxXicAGBEbr29z6ecSQsVeFEa1Fq0MNzfw
+LzYAh9vtFQQ1XVTwdVeNXTuOq/04KW0BdzEg1JUaazsuDZ6STuz2M4y9p7bujM3F
+vQi3+44f62zKNG7xVnHyzpYCJzrJctYAo1TQUExzdlbzmAPwQH9HrJV1qFXE1gIc
+ioMPXrG27AlFY0fbIQu6mw6a8bVgIM9dn6DvN9j8KqwbWUzodIZgWLxULtt/G+uX
+XaKqPgrDeQvABFvWa+uUZfzFXTEuMrbrcE717mifOeHL8PhzO+4xAgtgXQqQGWIp
+IaB8Re/hZ99RisFKV7r7R9XUPqfe0hSA+HLoIeHNoo0Pr54ctM/5osFTCTpvBw4i
+2iKqQNzZmfiBN32m8tQRLNmhjT/qFRRD4nepOCFcmoqeK1zBYgokqzcahIaxazHY
+V6DYVlOT/xanZULPd6myu/COTJiklGtOdBNJ2CuAUmw/UhJKRW+ZezJ1/R+hg82A
+GtEdNgrr21G8712uU93P5GEf/E0/G0nHCSlX+WbyP31v5GdBJj9PBn0dDGk7dP7b
+jEV5NE/sZQE0rTtrWbDu
+=4yeU
 -----END PGP SIGNATURE-----
 
---=-AAbRo/uupmrmRW/24Kae--
+--=-ydCRRDpPF75FS1BNa8Q5--
 
