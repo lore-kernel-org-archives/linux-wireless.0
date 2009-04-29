@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48866 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063AbZDGNAF (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:33576 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbZD2OdL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 09:00:05 -0400
-Subject: Re: attempt to scan fails (device busy) if essid/ssid was changed
- recently
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1239108689.15015.3.camel@maxim-laptop> (sfid-20090407_145137_740898_8D0C40FD)
-References: <1239062401.4705.23.camel@maxim-laptop>
-	 (sfid-20090407_020013_939126_90578556)  <1239092296.22453.1.camel@johannes.local>
-	 <1239108689.15015.3.camel@maxim-laptop>
-	 (sfid-20090407_145137_740898_8D0C40FD)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FXUH2CrM6OWQI2KTx2n2"
-Date: Tue, 07 Apr 2009 14:56:41 +0200
-Message-Id: <1239109001.22453.40.camel@johannes.local> (sfid-20090407_150009_750581_7626B1EC)
+	Wed, 29 Apr 2009 10:33:11 -0400
+Subject: Re: [PATCH] mac80211: tell driver when idle
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1240997537.593.35.camel@johannes.local>
+References: <1240997537.593.35.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 29 Apr 2009 07:33:07 -0700
+Message-Id: <1241015587.997.76.camel@localhost.localdomain> (sfid-20090429_163317_028923_85061847)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-FXUH2CrM6OWQI2KTx2n2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> When we aren't doing anything in mac80211, we can turn off
+> much of the hardware, depending on the driver/hw. Not doing
+> anything, aka being idle, means:
+> 
+>  * no monitor interfaces
+>  * no AP/mesh/wds interfaces
+>  * any station interfaces are in DISABLED state
+>  * any IBSS interfaces aren't trying to be in a network
+>  * we aren't trying to scan
+> 
+> By creating a new function that verifies these conditions and calling
+> it at strategic points where the states of those conditions change,
+> we can easily make mac80211 tell the driver when we are idle to save
+> power.
+> 
+> Additionally, this fixes a small quirk where a recalculated powersave
+> state is passed to the driver even if the hardware is about to stopped
+> completely.
+> 
+> This patch intentionally doesn't touch radio_enabled because that is
+> currently implemented to be a soft rfkill which is inappropriate here
+> when we need to be able to wake up with low latency.
+> 
+> One thing I'm not entirely sure about is this:
+> 
+>   phy0: device no longer idle - in use
+>   wlan0: direct probe to AP 00:11:24:91:07:4d try 1
+>   wlan0 direct probe responded
+>   wlan0: authenticate with AP 00:11:24:91:07:4d
+>   wlan0: authenticated
+> > phy0: device now idle
+> > phy0: device no longer idle - in use
+>   wlan0: associate with AP 00:11:24:91:07:4d
+>   wlan0: RX AssocResp from 00:11:24:91:07:4d (capab=0x401 status=0 aid=1)
+>   wlan0: associated
+> 
+> Is it appropriate to go into idle state for a short time when we have
+> just authenticated, but not associated yet? This happens only with the
+> userspace SME, because we cannot really know how long it will wait
+> before asking us to associate. Would going idle after a short timeout
+> be more appropriate? We may need to revisit this, depending on what
+> happens.
 
-On Tue, 2009-04-07 at 15:51 +0300, Maxim Levitsky wrote:
+what about having the hardware set a value for how long something should
+be idle before you tell it. I am more thinking about some sort penalty
+value from the hardware that can not do this quickly.
 
-> > > I noticed that always first attempt at scan fails when NM asks for sc=
-an.
-> > > I also noticed that this happens with quite recent kernels (I think
-> > > 2,6.28) didn't have this behavior.
-> >=20
-> > I'm pretty sure it did.
+Regards
 
-> I am sure that on older kernel there was no -EBUSY error returned to
-> userspace. It probably just stalled the client.
-
-Can't imagine it did, maybe it just dropped the request though without
-indicating an error.
-
-> > > Looking a bit deeper I discovered that each time NM disconnects from =
-a
-> > > networks it sets random ssid/essid to the card (using wireless
-> > > extensions)
-> >=20
-> > This forces a scan
-> >=20
-> > > After that scan fails for some time.
-> > >=20
-> > > as a NM free example you can run=20
-> > >=20
-> > > iwconfig wlan0 essid dummy
-> > > iwlist scan
-> >=20
-> > and then this fails with EBUSY.
-> Thanks for explanation.
-> Since NM has its reasons to clear essid (to prevent unwanted
-> association), then what can be  done to prevent this (and still use
-> wireless extensions, since nl80211 support isn't yet mature)?
-
-Nothing. Wext sucks, news at 11, yadda.
-
-johannes
-
---=-FXUH2CrM6OWQI2KTx2n2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ202HAAoJEKVg1VMiehFYa1wP/2N4Qs2BTqNir8AoSn4OA01U
-HuoW4JzCTvOB5H3fawtYBoKaCQQCoo3fHvsakZh8qJsdYdopKb4uRyl89l264JFY
-1ckkUGNxrZevt+oKMYAVyy4xasQU+JxG2zx6T3RtBKCyNH3S3s3aouQUW2ghDvCL
-M7LqeJia+ZgSM26DcVMRzgKAi2W0I0LfuA+4DBt5ElN+0K8R1IFoAJ4y42u8qcr3
-Dpc2QU/ytH0G3uE/KM57BuBIIkuc66L0InAxfof5HwddhLOuapeXceP7MY3+xdFL
-x+9vAQjNB5fcch0qYGOAYVJcjXCkjKXr3jXEMlIKY97gDletmlWwT1hcerFNJTRK
-VfaNuMCqpPAYcSvQbIUqeZxy4z+127Fv0mZhCmSrsujs2XOby5U4CWzmPfQaNlV5
-tU/FZWOHk3dQANLPnrdkzLiS2a8ktmvJiLMeyhTSRqY9tXhkOEF9su2rTVkvxSOA
-+Jg2tVAAJUSztIcWRDgXWJCDa1B+UG5uIe84AGPVTmxdCUvDoEe09E1n2r4mVr9p
-5zkneU5aXJwRDXHuMuqf4zkvRfMZj+QQVcu5qaD8QyanzZ/aTaLy0lTki2GYD6CG
-L0FgyOwmsQO5u1Wlu07vvmMtDOVMIUXDSyWg9/RTU6AQlFE6lPSYo9sidQ8h3sBK
-jQSv2CLTotcmWrxE2c9A
-=co6y
------END PGP SIGNATURE-----
-
---=-FXUH2CrM6OWQI2KTx2n2--
+Marcel
+ 
 
