@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:34429 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219AbZDRRjS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42179 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbZD2Xjc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2009 13:39:18 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2 v2] mac80211: set CLEAR_PS for pspolled frames
-Date: Sat, 18 Apr 2009 19:39:15 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200904181830.00309.chunkeey@web.de>
-In-Reply-To: <200904181830.00309.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200904181939.16164.chunkeey@web.de> (sfid-20090418_193922_013770_DBD44F3B)
+	Wed, 29 Apr 2009 19:39:32 -0400
+Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <49F8E145.1050708@lwfinger.net>
+References: <49F8C03D.6040909@lwfinger.net>
+	 (sfid-20090429_230225_847074_E5413886)  <1241039372.4547.3.camel@johannes.local>
+	 (sfid-20090429_231009_993152_4FF82E4D) <1241040451.5067.0.camel@johannes.local>
+	 <49F8E145.1050708@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kyK/pAUYx0XbStFT5uCy"
+Date: Thu, 30 Apr 2009 01:39:02 +0200
+Message-Id: <1241048343.25477.7.camel@johannes.local> (sfid-20090430_013938_527079_F1BC29BD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch sets IEEE80211_TX_CTL_CLEAR_PS_FILT for outgoing
-frames for a half-wake station.
- 
-this is necessary if one wants to get ps-poll working properly with a p54 ap.
- 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-changes:
-	added a explanation, why we can safely remove the filter now.
----
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3fb04a8..f336cc7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -409,8 +409,24 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		       sta->sta.addr);
- 	}
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--	clear_sta_flags(sta, WLAN_STA_PSPOLL);
-+	if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL)) {
-+		/*
-+		 * The sleeping station with pending data is now snoozing.
-+		 * It queried us for its buffered frames and will go back
-+		 * to deep sleep once it got everything.
-+		 *
-+		 * inform the driver, in case the hardware does powersave
-+		 * frame filtering and keeps a station  blacklist on its own
-+		 * (e.g: p54), so that frames can be delivered unimpeded.
-+		 *
-+		 * Note: It should be save to disable the filter now.
-+		 * As, it is really unlikely that we still have any pending
-+		 * frame for this station in the hw's buffers/fifos left,
-+		 * that is not rejected with a unsuccessful tx_status yet.
-+		 */
- 
-+		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+	}
- 	return TX_CONTINUE;
- }
- 
+
+--=-kyK/pAUYx0XbStFT5uCy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+(dropped lkml, added netdev)
+
+> I get the "failed to reallocate TX buffer" message. Not all are related t=
+o the
+> page allocation failure. I am also getting "b43-phy0 debug: DMA RX:
+> setup_rx_descbuffer() failed" messages.
+>=20
+> So far, the numbers printed by the revised printk are:
+>=20
+> kernel: phy0: failed to reallocate TX buffer 0, 404, need 0, 0
+> kernel: protocol 0008 is buggy, dev eth1
+>=20
+> kernel: phy0: failed to reallocate TX buffer 0, 1728, need 0, 18
+>=20
+> Device eth1 is the b43 wireless device.
+
+Thanks.
+
+This is a little odd -- I don't see why
+	pskb_expand_head(skb, 0, 0)
+or
+	pskb_expand_head(skb, 0, 18)
+
+would try to do an order 1 allocation when skb->len is 404 or 1728. It
+looks like something is forcing larger alignments than should be
+necessary, but I have no idea what.
+
+(for netdev: http://mid.gmane.org/49F8C03D.6040909@lwfinger.net has more
+information)
+
+johannes
+
+--=-kyK/pAUYx0XbStFT5uCy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ+OUTAAoJEKVg1VMiehFY+ikP/2wAY9DzRMAxVjO6OvaAI4z9
+uoGlLITnQ4d+cgZh3C6cJ/fR2nQxpCO1EuvEaIySHBFIGQXo4zoiuDIroXjqPqtf
+NGfXDlRyEzGcCI7eSJmcEP+euc3II1whEOOaX71Ht8eFk2HG/Genyiv8YJJWT475
+Q2Ynjhhl7mWYxpa3AJCavtb9DDP7JT8wfF1ENCySHGKa75+VRF7ED9O/VfBYeLxr
+EBBcoapmXrfKs3vp2Z431XifMthbsf++HckMwTIK24ZWlxGxnF/bNtYP5264d2xT
+uMZUl8UpeksuvrdZ5f+Hs3+MK41Hxn1KbaWGovftd3yy6c5emt/bATE1CJBYTAeV
+wVmtW/mcyQQBz88w3ZmWGgBbfkc/OBWQdURcKzpnrBwONjuSasLf9Np7/EBSp24F
+BgDRiVcYQGcnOHCF9kYE9YlaHEiR3v6uiRJx7kDAyEq8V3RT0tVKX+jj5xx/r+7U
+7mE0F8sLwEJQNnyGPiVf4IyJjMO6c+bWeqWu3Ms3VSPvHxAetZRgcUWy8/L/L5J/
+KQeQz7vD1TYJXSJrwoLr8XluqL/e7uq/68ynZbEGwyTrEfAXQIHRQkk2VQZkmF/W
+YHBOaPxAocbNvgihhf+2TePFOr3FHzX/W0r62xuzULpc7I5XYWV624wKx8MmLSWc
+Dbn6pHP0GsfFFJnDom6f
+=1LYg
+-----END PGP SIGNATURE-----
+
+--=-kyK/pAUYx0XbStFT5uCy--
+
