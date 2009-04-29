@@ -1,87 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:51990 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbZDJFN7 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754129AbZD2QLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2009 01:13:59 -0400
-Received: by ewy9 with SMTP id 9so1000252ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2009 22:13:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49DED22E.4000001@lwfinger.net>
-References: <49DE1638.8060906@lwfinger.net> <873achunwz.fsf@litku.valot.fi>
-	 <49DED22E.4000001@lwfinger.net>
-Date: Fri, 10 Apr 2009 07:13:56 +0200
-Message-ID: <2d0a357f0904092213m124305adu5eddc25ccd2b6591@mail.gmail.com> (sfid-20090410_071404_047982_82786BFF)
-Subject: Re: Another regression in 2.6.30-rc1
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 29 Apr 2009 12:11:52 -0400
+Subject: Re: [PATCH] mac80211: tell driver when idle
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241018085.4104.4.camel@localhost.localdomain>
+References: <1240997537.593.35.camel@johannes.local>
+	 <1241015587.997.76.camel@localhost.localdomain>
+	 <1241015999.593.62.camel@johannes.local>
+	 <1241018085.4104.4.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zYqR1SFfC8y3h/T7JLyB"
+Date: Wed, 29 Apr 2009 18:11:19 +0200
+Message-Id: <1241021479.22715.6.camel@johannes.local> (sfid-20090429_181158_321843_D17BD743)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
 
-I think it is a good choice to put informations about regressions in
-Linus-tree in a separate Email as you did for wireless-tesing ML.
-I reported about ACPI-battery issue [1] already, but I think it
-"disappeared" in the flood of replies.
+--=-zYqR1SFfC8y3h/T7JLyB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Kind Regards,
-Sedat
+Hi,
 
-[1] http://marc.info/?l=3Dlinux-wireless&m=3D123919839513697&w=3D2
+> there can be always a situation where this ends up badly. You tell the
+> hardware that it can sleep now, but then you change your mind because
+> userspace finally got its act together. Bad luck.
 
-On Fri, Apr 10, 2009 at 6:59 AM, Larry Finger <Larry.Finger@lwfinger.ne=
-t> wrote:
-> Kalle Valo wrote:
->>
->> Thanks Larry, this was very helpful. After cherry picking this commi=
-t
->> wireless-testing is booting without errors for me.
->>
->> In general sharing regressions and workarounds in this list is a ver=
-y
->> good idea. I'm sure most of the people (including me) don't have tim=
-e to
->> follow lkml and find fixes for all regressions.
->
-> I make a point of following Linus's tree quite closely during the mer=
-ge process
-> so that the number of rebuilds is not too large when I do a bisection=
-=2E For some
-> reason, the stuff that comes in just before -rc1 seems to have the mo=
-st
-> problems. I had 3 regressions from the last two batches of commits. F=
-ortunately,
-> I only had to bisect two of them, but it was interesting while findin=
-g the
-> third. At every kernel build I had to test whether the patches for th=
-e other 2
-> cases needed to be installed. The 3rd regression and one of the other=
-s were from
-> successive commits! Murphy rules.
->
-> When I know of unfixed problems in the wireless-testing tree, I will =
-certainly
-> continue to post whatever info I have, just as I rely on the members =
-of this
-> list when I have a problem.
->
-> Larry
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Right.
+
+> My point here is only that if the hardware needs a certain amount of
+> time before it makes sense to sleep, it should just tell mac80211 this
+> and it should be honored.
+
+I don't really see how that makes sense though. Why would the hardware
+"need[] a certain amount of time before it makes sense to sleep"? How
+would it not make sense to go to sleep whenever possible, right away,
+however long the hardware needs to actually go to sleep then?
+
+Yes, it's possible that the hardware takes a little while to wake up
+again, but we can only account for that if we can predict when we need
+to wake up again in the future, but we definitely can't. So yes, while
+it doesn't make sense to tell the hw we're idle when we will only be
+idle for 50ms and the hw needs 30 to go into idle and 30 to get out of
+it, I'm not sure how telling it that it needs 30ms will help mac80211.
+Going to idle and coming out of it is meant to be synchronous, so
+mac80211 will always wait for the driver to finish that operation.
+
+> The default should be that we try how good the hardware can handle
+> mac80211 being aggressive with switching to idle. Maybe auth/assoc is a
+> special case anyway and we should have a sensible timeout value. We
+> could ask userspace to tell use that value when doing auth, but that
+> feels kinda ugly to me.
+
+Being idle between auth and assoc probably is a special case, yeah. So
+far iwlwifi has handled it just fine for me though, so I'm inclined to
+not worry about it too much. Well, with the race fix...
+
+johannes
+
+--=-zYqR1SFfC8y3h/T7JLyB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ+HwkAAoJEKVg1VMiehFYkKcP/1VlVx9w14OV2/q+3zypA0qZ
+8ejsxoNdrsIO8LCNI4mjMBuJLj3HDC+pNJKzcxo47CYkJ7ajjS8soyVzZlvAtJ1P
+Ob3HuU0VmRRriRSydL9cxgXZCI892Im2eb4bzyw7gTnPXjXw7EHa5r4g68nAult0
+kM3KApfr4kzQ8wyfI5NwuSvJJsFlisw/kh1yqPaHqcxI9c415Hgxc27si+8vRtxw
+0ilhKPoDqhoaPFu4AKzCk7yvNjMLB/TbdMIu+V9R98RtiEERhInsIFFU1Wj/n5Fv
+symGtR4PKiCzvA86ux2CDSgkDADH65kS4lm1JUPdBeR3Dwkb641siK4IyvT+++Tr
+fyqjjlZzAJAgX+SO6/v4B/VW2CUGmOJIIvImM324vcPwPjb3+DTxSaAPNLnBYQA9
+ab2O1cTlXfOM4qjms/11DWPyY0fPxcGy23cJ5/BMkdjX+fxsNPA9S3Gle6pRkcuY
+/Ns4U8cIoPPbnrET1ALTXUIr7efpHxKXMjDHwQdrgHvwQ7LZN79CmtBl6Xlv4JUM
+2qq2l30LixgoG7txD9vb37FcNgaVYBgMed+S27ruvRU4JGE67CNHtmFHek3WXoWV
+TP3yPZAZDZVs1woEbImvs7hPL5YrxPQA+ZKaTnDmQbuKxPtkJzlX+XbIhJB6JA8B
+w2WKddYz/hxE+6wiqBas
+=49gZ
+-----END PGP SIGNATURE-----
+
+--=-zYqR1SFfC8y3h/T7JLyB--
+
