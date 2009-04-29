@@ -1,48 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:63948 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756811AbZDCOo2 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49879
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751099AbZD2Wyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 10:44:28 -0400
-Subject: Re: [PATCH] leds: Increase trigger name maximum size
-From: Richard Purdie <rpurdie@linux.intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <49D536FA.2050307@lwfinger.net>
-References: <49d5059a.f3z10uf0HvyIItSz%Larry.Finger@lwfinger.net>
-	 <49D536FA.2050307@lwfinger.net>
-Content-Type: text/plain
-Date: Fri, 03 Apr 2009 15:45:04 +0100
-Message-Id: <1238769904.5347.11.camel@dax.rpnet.com> (sfid-20090403_164439_367898_9902B61C)
+	Wed, 29 Apr 2009 18:54:37 -0400
+Date: Wed, 29 Apr 2009 15:54:31 -0700 (PDT)
+Message-Id: <20090429.155431.126804752.davem@davemloft.net> (sfid-20090430_005442_076549_8E115799)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-04-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090429223111.GA17013@tuxdriver.com>
+References: <20090429223111.GA17013@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 29 Apr 2009 18:31:12 -0400
 
-On Thu, 2009-04-02 at 17:06 -0500, Larry Finger wrote:
-> Larry Finger wrote:
-> > On my HP dv2815 laptop, the total length of the triggers for my b43legacy
-> > wireless device exceeds the maximum value of 50 defined in
-> > include/linux/leds.h. As a result, the list is garbled.
-> > 
-> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > ---
-> 
-> Richard,
-> 
-> Please drop this. That length change is a red herring. Something is corrupting
-> the list of triggers, but this length is not it.
-> 
-> Sorry for the noise.
+> Another round intended for 2.6.30.  I think most of the fixes are
+> self-explanatory (at least with their changelogs) this time (for a
+> change)...please let me know if there are problems!
 
-I was about to raise some concerns about this patch as its just hiding
-some underlying memory corruption. I don't think this is related to the
-LED code but let me know if it turns out to be.
-
-Cheers,
-
-Richard
--- 
-Richard Purdie
-Intel Open Source Technology Centre
-
+Pulled, thanks!
