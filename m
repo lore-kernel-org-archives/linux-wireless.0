@@ -1,82 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:45129 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572AbZDCQgS (ORCPT
+Received: from fmailhost06.isp.att.net ([207.115.11.56]:61061 "EHLO
+	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753650AbZD2XXK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2009 12:36:18 -0400
-Received: by bwz17 with SMTP id 17so1044401bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2009 09:36:14 -0700 (PDT)
-Message-ID: <49D63AF5.4080302@gmail.com> (sfid-20090403_183622_788837_CE736EE9)
-Date: Fri, 03 Apr 2009 18:36:05 +0200
-From: Witold Sowa <witold.sowa@gmail.com>
+	Wed, 29 Apr 2009 19:23:10 -0400
+Message-ID: <49F8E145.1050708@lwfinger.net> (sfid-20090430_012316_460274_D053342A)
+Date: Wed, 29 Apr 2009 18:22:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: GSoC proposal - AP mode for NetworkManager
-Content-Type: text/plain; charset=ISO-8859-2
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
+References: <49F8C03D.6040909@lwfinger.net>	 (sfid-20090429_230225_847074_E5413886)  <1241039372.4547.3.camel@johannes.local>	 (sfid-20090429_231009_993152_4FF82E4D) <1241040451.5067.0.camel@johannes.local>
+In-Reply-To: <1241040451.5067.0.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Johannes Berg wrote:
+> On Wed, 2009-04-29 at 23:09 +0200, Johannes Berg wrote:
+> 
+>> 	"%d, %d, need %d, %d", skb->data_len, skb->len, head_need, tail_need
+> 
+> actually, I think I want
+> 
+> 	skb_tail_pointer(skb) - skb->head
+> 
+> instead of skb->data_len.
 
-I have just sent my proposal to Google Summer of Code project: AP mode
-support for NetworkManager.
-You can read it here:
-http://student.agh.edu.pl/~wsowa/gsoc.txt
+I get the "failed to reallocate TX buffer" message. Not all are related to the
+page allocation failure. I am also getting "b43-phy0 debug: DMA RX:
+setup_rx_descbuffer() failed" messages.
 
-Since, I haven't received reply form Dan Williams, I will allow myself
-to take the liberty of quoting below the mail I sent him. It contains
-general description of my idea and some questions. Request for comments :-)
+So far, the numbers printed by the revised printk are:
 
-Thanks,
-Witold Sowa
+kernel: phy0: failed to reallocate TX buffer 0, 404, need 0, 0
+kernel: protocol 0008 is buggy, dev eth1
 
-"Hi,
+kernel: phy0: failed to reallocate TX buffer 0, 1728, need 0, 18
 
-I am interested in realization of 'Add AP support to Network Manager'
-Google Summer of Code project witch you are mentoring and I'd like to
-discuss my ideas and ask some questions.
+Device eth1 is the b43 wireless device.
 
-First of all, you wrote on
-http://wireless.kernel.org/en/developers/GSoC/2009/Add_AP_Support_to_Network_Manager
-that hostapd functionality will be incorporated into wpa_supplicant
-soon. Actually, I couldn't find any information about it, so here is the
-basic question: Does wpa_supplicant incorporate AP functionality or when
-will it do?
-
-I went through a few docs, mailing lists and cursorily through source
-codes of hostapd and NetworkManager before I found your note about
-incorporating AP into wpa_supplicant. That's why I developed a general
-idea of realization the project using hostapd:
-
-1. hostapd should be modified in such a way that it could be configured
-via dbus just like wpa_supplicant can be. This would require creating a
-dbus interface and moving most of configuration options from config file
-to the dbus interface. This will probably turn most of hostapd's code
-upside down, and this would be probably the most difficult and time
-consuming part.
-
-2. hostapd should be started and kept alive by NetworkManager just like
-wpa_supplicant is now (using some dbus service - I'm not sure how it
-works for wpa_supplicant and NM now). NM should then use hostapd's dbus
-interface to communicate with it.
-
-3. Some additional dbus interfaces should be added to NM, which will
-allow client applications like nm-applet, knetworkmanager, etc. set
-wireless interface in AP (master) mode and configure it.
-
-4. Fancy GUI controls would be added to nm-applet which will let user to
-set his own AP "with 2 simple mouse clicks ;-)".
-
-As you can see first two points seem to boil down to making hostapd
-usage simmilar to wpa_supplicant so it could be a good idea to move
-hostapd functionality to wpa_supplicant instead - if it hasn't already
-been done. In case it has been done, I could focus only on points 3 and 4.
-
-I will be grateful if you tell me what is your opinion about my
-approach, what should I take notice of and what is state of
-incorporating hostapd into wpa_supplicant. I will appreciate any
-suggestions or advice too.
-
-Regards,
-Witold Sowa"
-
+Larry
