@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([207.115.11.51]:59943 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763768AbZDHPiY (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:5494 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbZD2EAd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2009 11:38:24 -0400
-Message-ID: <49DCC4E0.4060703@lwfinger.net> (sfid-20090408_173839_769216_5A0196C6)
-Date: Wed, 08 Apr 2009 10:38:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 29 Apr 2009 00:00:33 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so677637wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 21:00:33 -0700 (PDT)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] p54: generate channel list dynamically
-References: <200904081320.49607.chunkeey@web.de>
-In-Reply-To: <200904081320.49607.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <24244760.54741240967923018.JavaMail.coremail@app145.163.com>
+References: <30715795.1255391240909093356.JavaMail.coremail@bj163app124.163.com>
+	<43e72e890904280853y419b9dcfw13722345892fa9b4@mail.gmail.com>
+	<45e8e6c40904281328u23c983b0r22b38d345ce0f2a1@mail.gmail.com>
+	<24244760.54741240967923018.JavaMail.coremail@app145.163.com>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Tue, 28 Apr 2009 21:00:13 -0700
+Message-ID: <43e72e890904282100o2e3991d3n8f52564fb31eedf3@mail.gmail.com> (sfid-20090429_060039_708036_098CE5AB)
+Subject: Re: Re: Question about 802.11s(mesh)
+To: =?UTF-8?B?6IuP55m96b6Z?= <subailong@163.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> I'm thinking of splitting up p54common.c into small files...
-> e.g: one file each for eeprom, mac, led and main/lib code.
-> So I'm asking for your opinion "before" I waste time with it.
+2009/4/28 =E8=8B=8F=E7=99=BD=E9=BE=99 <subailong@163.com>:
+> Thank you very much. From what you've written ,I can conclude that : =
+if I do
+> some changes with the drives ,and enable them can be used by the mac8=
+0211, I
+> can carry out MESH in IBSS mode using USB Wireless Network Card (I on=
+ly have
+> this device), am I right?
 
-Christian,
+Nope.
 
-With this patch applied, p54common.c is 77K characters, which is on the edge of
-being unwieldy. I would not object to splitting it into the 4 categories you
-mention.
-
-As we are roughly 2 months from the 2.6.31 merge, this might be a good time to
-do it as there would be plenty of time for testing.
-
-I have not yet tested this patch as I'm currently chasing a regression in
-2.6.30-rc1 from Linus's tree. Once that is squared away, then I'll test the
-channel list changes. I do approve of the concept.
-
-Larry
-
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
