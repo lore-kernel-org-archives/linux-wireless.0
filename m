@@ -1,66 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38041 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753031AbZDVJjO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 05:39:14 -0400
-Subject: Re: [RFC] Simulate medium behavior
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Wagner <wagi@monom.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090422092159.GA24586@toronto053.server4you.de> (sfid-20090422_113107_838388_2485F0AE)
-References: <20090422092159.GA24586@toronto053.server4you.de>
-	 (sfid-20090422_113107_838388_2485F0AE)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MaV5cNQUyB8hQPnpFbW+"
-Date: Wed, 22 Apr 2009 11:38:08 +0200
-Message-Id: <1240393088.21756.3.camel@johannes.local> (sfid-20090422_113916_734012_C11E038C)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:40697 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754271AbZD2WVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Apr 2009 18:21:47 -0400
+Message-Id: <20090429220929.995031553@mini.kroah.org> (sfid-20090430_002159_684585_8645450C)
+Date: Wed, 29 Apr 2009 15:07:46 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: [patch 47/58] ath9k: implement IO serialization
+References: <20090429220659.339950874@mini.kroah.org>
+In-Reply-To: <20090429221657.GA11765@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2.6.27-stable review patch.  If anyone has any objections, please let us know.
 
---=-MaV5cNQUyB8hQPnpFbW+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+------------------
 
-Hi,
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-> Writing a 0 to /debug/ieee80211/phy*/hwsim/medium enables rx/tx for
-> the specific phy. Writing anything but 0 disables rx/tx.  Not a very
-> good API. It could be made something more realistic like reception
-> quality is 80% associated some statistical dropping algorithm. Any
-> thoughts?
->=20
-> Is this the right direction I'm heading to?
+This is a port of:
+commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
+for 2.6.27
 
-This looks like a very simple knob, just a little more work could get
-you much further -- have you seen this email/thread?
+All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
+serialization of IO when on non-uniprocessor systems. PCI
+express devices not not require this.
 
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/25001
+This should fix our only last standing open ath9k kernel.org
+bugzilla bug report:
 
-johannes
+http://bugzilla.kernel.org/show_bug.cgi?id=12110
 
---=-MaV5cNQUyB8hQPnpFbW+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    4 ++--
+ drivers/net/wireless/ath9k/core.c  |    1 +
+ drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
+ 4 files changed, 55 insertions(+), 2 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -591,8 +591,8 @@ struct ath9k_country_entry {
+ 	u8 iso[3];
+ };
+ 
+-#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
+-#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
++#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
++#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
+ 
+ #define SM(_v, _f)  (((_v) << _f##_S) & _f)
+ #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -1120,6 +1120,7 @@ int ath_init(u16 devid, struct ath_softc
+ 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
+ 
+ 	spin_lock_init(&sc->sc_resetlock);
++	spin_lock_init(&sc->sc_serial_rw);
+ 
+ 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
+ 	if (ah == NULL) {
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -1022,6 +1022,7 @@ struct ath_softc {
+ 	spinlock_t sc_rxbuflock;
+ 	spinlock_t sc_txbuflock;
+ 	spinlock_t sc_resetlock;
++	spinlock_t sc_serial_rw;
+ 	spinlock_t node_lock;
+ };
+ 
+@@ -1069,4 +1070,36 @@ void ath_skb_unmap_single(struct ath_sof
+ void ath_mcast_merge(struct ath_softc *sc, u32 mfilt[2]);
+ enum ath9k_ht_macmode ath_cwm_macmode(struct ath_softc *sc);
+ 
++/*
++ * Read and write, they both share the same lock. We do this to serialize
++ * reads and writes on Atheros 802.11n PCI devices only. This is required
++ * as the FIFO on these devices can only accept sanely 2 requests. After
++ * that the device goes bananas. Serializing the reads/writes prevents this
++ * from happening.
++ */
++
++static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
++{
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++}
++
++static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
++{
++	u32 val;
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++	return val;
++}
++
+ #endif /* CORE_H */
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -369,6 +369,25 @@ static void ath9k_hw_set_defaults(struct
+ 	}
+ 
+ 	ah->ah_config.intr_mitigation = 0;
++
++	/*
++	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
++	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
++	 * This means we use it for all AR5416 devices, and the few
++	 * minor PCI AR9280 devices out there.
++	 *
++	 * Serialization is required because these devices do not handle
++	 * well the case of two concurrent reads/writes due to the latency
++	 * involved. During one read/write another read/write can be issued
++	 * on another CPU while the previous read/write may still be working
++	 * on our hardware, if we hit this case the hardware poops in a loop.
++	 * We prevent this by serializing reads and writes.
++	 *
++	 * This issue is not present on PCI-Express devices or pre-AR5416
++	 * devices (legacy, 802.11abg).
++	 */
++       if (num_possible_cpus() > 1)
++               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
+ }
+ 
+ static inline void ath9k_hw_override_ini(struct ath_hal *ah,
 
-iQIcBAABAgAGBQJJ7uV9AAoJEKVg1VMiehFYbuIP/i2SbIgtu9Sn17Cm5oJ18Oj2
-/ZGhLk1v3xJ3BQx8SByZO9T3FW7P+kEguVW6B37xGNINZCUK87mEU/J/mtOUHV12
-7QtVkoJ+zi+s3xqOXYdtRMfgAdWDN2mLrWEjRCZZ4/AUsfit4SDOqEN8Ne1Y4qHh
-t5qdOYcK811UpJA0aAeToyeC/EOL96Azj3yNvzGXYx2P/V9F2XYD0XcLVL3+7ZAk
-KWjwYNbfW2ysFPUhvReKE/WjzdQp8lQr7xAHKs+ekagC3ZJ0XUqqSYzbtQjFPLXl
-FgxLKuRf9f2o9it198vdZ0scZmHqfxIRQhmAtlnlqwiyNzFpngN90tg9dhTJKD+U
-//L/WZfuYWtvDHVwm2Z/a73Y04OoCk8zDZlXzfIM8F+lUTlMylzEZelKcFcn8BeK
-MnPwN3yteTwStyfj++8zjSXAGJvpi2SKgGKoBg7Yhwmw+vhepQEXl2lWkcseHJSl
-UnHpPnO0OQwS84tgTgVjPgVxx0ISkgQ8tRUris5V0O6/e5Qk448c819oXhdchMew
-d6iR3EZ3b2IM/czSFx6G9BhPi/4ifzt4RDF4HY5qBRufXE1euMnMBZmthkFn9Ub/
-3RrqsDs1mFGyD2zCuE1dJpfdrkNXDI9hn0DZPT0OX2Z69IAcebLzW4eL7vK4Pt4v
-3jzdSkH5YbTuuHnNikIA
-=5Mce
------END PGP SIGNATURE-----
-
---=-MaV5cNQUyB8hQPnpFbW+--
 
