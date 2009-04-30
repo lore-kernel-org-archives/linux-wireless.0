@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:2698 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752567AbZDYAYg (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60937 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933308AbZD3PxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2009 20:24:36 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1183566wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Apr 2009 17:24:36 -0700 (PDT)
-From: Huang Weiyi <weiyi.huang@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
-Subject: [PATCH] cfg80211: remove duplicated #include
-Date: Sat, 25 Apr 2009 08:24:24 +0800
-Message-Id: <1240619064-2472-1-git-send-email-weiyi.huang@gmail.com> (sfid-20090425_022441_192798_32E42813)
+	Thu, 30 Apr 2009 11:53:20 -0400
+Date: Thu, 30 Apr 2009 12:53:16 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>,
+	Matthew Garrett <mjg@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC v6] rfkill: rewrite
+Message-ID: <20090430155316.GF28027@khazad-dum.debian.net>
+References: <1238349195.24972.5.camel@johannes.local> <1239745712.4205.17.camel@johannes.local> <1239750483.4205.28.camel@johannes.local> <20090430031903.GD18827@khazad-dum.debian.net> <1241104014.29878.12.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1241104014.29878.12.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove duplicated #include in net/wireless/core.h.
+On Thu, 30 Apr 2009, Johannes Berg wrote:
+> > The return values for rfkill_alloc() are not the same on the stub and
+> > real functions.  The stub function uses ERR_PTR, while the real
+> > function uses NULL for any errors.   Please make them do the same
+> > thing, and it is probably a damn good idea to document in the
+> > kerneldoc what kind of return values one should expect when you return
+> > a pointer and the function can fail (i.e. NULL or ERR_PTR).
+> 
+> Actually, I was going to clean this up, and then I noticed you're
+> wrong. :) Returning ERR_PTR(-ENODEV) is intentional, in the non-RFKILL
+> case. Imagine a driver like this:
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
----
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 0a592e4..fcee83a 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -10,7 +10,6 @@
- #include <linux/netdevice.h>
- #include <linux/kref.h>
- #include <linux/rbtree.h>
--#include <linux/mutex.h>
- #include <net/genetlink.h>
- #include <net/wireless.h>
- #include <net/cfg80211.h>
+Well, that's confusing as all heck... document it, please?  I still think in
+that case, we'd be better off if rfkill_alloc always uses the ERR_PTR
+convention.
 
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
