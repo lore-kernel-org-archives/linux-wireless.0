@@ -1,96 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:52792 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751835AbZDNAxJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 20:53:09 -0400
-Date: Mon, 13 Apr 2009 17:40:38 -0700
-From: Greg KH <greg@kroah.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: VT6656 driver source now GPL
-Message-ID: <20090414004037.GA31049@kroah.com> (sfid-20090414_025314_296358_2CC72DDB)
-References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network> <20090414000835.GA31504@storm.local.network> <43e72e890904131712y55ba7f16sa8cb568128afeaeb@mail.gmail.com> <20090414002246.GB31504@storm.local.network>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090414002246.GB31504@storm.local.network>
+Received: from kroah.org ([198.145.64.141]:56914 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764616AbZD3RIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2009 13:08:24 -0400
+Message-Id: <20090430165749.719640973@mini.kroah.org>
+Date: Thu, 30 Apr 2009 09:57:06 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: [patch 77/88] ath9k: AR9280 PCI devices must serialize IO as well
+References: <20090430165549.117010404@mini.kroah.org>
+In-Reply-To: <20090430170122.GA16015@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 13, 2009 at 08:22:46PM -0400, Forest Bond wrote:
-> Hi,
->=20
-> On Mon, Apr 13, 2009 at 05:12:02PM -0700, Luis R. Rodriguez wrote:
-> > On Mon, Apr 13, 2009 at 5:08 PM, Forest Bond <forest@alittletooquie=
-t.net> wrote:
-> > > Hi,
-> > >
-> > > On Fri, Mar 20, 2009 at 09:10:15AM -0400, Forest Bond wrote:
-> > >> On Thu, Mar 19, 2009 at 09:45:19AM -0700, Luis R. Rodriguez wrot=
-e:
-> > >> > On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittleto=
-oquiet.net> wrote:
-> > >> > > Hi,
-> > >> > >
-> > >> > > VIA has released a new version of the VT6656 driver source, =
-and it now has a
-> > >> > > proper license!
-> > >> > >
-> > >> > > =A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_=
-x86.zip
-> > >> > >
-> > >> > > As you may recall, the previous version lacked a license alt=
-ogether, making it
-> > >> > > unfit for distribution.
-> > >> > >
-> > >> > > I'd really like to see this driver integrated into the kerne=
-l. =A0Does anyone care
-> > >> > > to comment regarding feasibility?
-> > >> >
-> > >> > Indeed good news, what is the latest kernel it compiles for? I=
-f it
-> > >> > compiles on Linus' tree it can be stashed into staging while i=
-t gets
-> > >> > properly ported.
-> > >>
-> > >> Just so I know who to pester*, will you be driving this? =A0Do y=
-ou have interest
-> > >> in also pulling in the VT6655 driver?
-> > >>
-> > >> * I won't pester that much. ;)
-> > >
-> > > I'm getting the sense that there is not a lot of developer intere=
-st in these
-> > > drivers. =A0Is there anything I can do to aid in getting these dr=
-ivers into the
-> > > kernel?
-> > >
-> > > I would be willing to send patches, however, my experience with k=
-ernel hacking
-> > > is limited and I don't have a lot of time available to contribute=
-=2E =A0With a
-> > > little direction, though, I might be able to get somewhere.
-> > >
-> > > Any input would be appreciated.
-> > >
-> >=20
-> > Best thing is to stash them into staging and hope someone will be
-> > interested in porting it.
->=20
-> Would it be helpful if I sent patches that do nothing more than add t=
-he source
-> files as they exist currently to staging, or is there more that needs=
- to happen
-> for the source files to be appropriate for inclusion there?
+2.6.28-stable review patch.  If anyone has any objections, please let us know.
 
-That would be a good start, I can take it from there.
+------------------
 
-thanks,
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is a port of:
+commit SHA1 5ec905a8df3fa877566ba98298433fbfb3d688cc
+for 2.6.28
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -3311,7 +3311,8 @@ static struct ath_hal *ath9k_hw_do_attac
+ 	}
+ 
+ 	if (ah->ah_config.serialize_regmode == SER_REG_MODE_AUTO) {
+-		if (ah->ah_macVersion == AR_SREV_VERSION_5416_PCI) {
++		if (ah->ah_macVersion == AR_SREV_VERSION_5416_PCI ||
++		    (AR_SREV_9280(ah) && !ah->ah_isPciExpress)) {
+ 			ah->ah_config.serialize_regmode =
+ 				SER_REG_MODE_ON;
+ 		} else {
+
+
