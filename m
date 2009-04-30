@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49366 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753127AbZDUOAx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2009 10:00:53 -0400
-Date: Tue, 21 Apr 2009 09:52:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Greg KH <greg@kroah.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>, dcbw@redhat.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090421135257.GG17805@tuxdriver.com> (sfid-20090421_160057_838422_D2DF5F2A)
-References: <49E632A1.1050605@gmail.com> <20090415212103.GA5202@kroah.com> <200904182318.56512.IvDoorn@gmail.com> <20090420135940.GB3369@tuxdriver.com> <a32f33a40904210330w33a6cea6idf1756428e7560c7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <a32f33a40904210330w33a6cea6idf1756428e7560c7@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:55496 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754688AbZD3S1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2009 14:27:08 -0400
+Subject: Re: iwlwifi: remove EXPORT_SYMBOL for static symbol
+From: reinette chatre <reinette.chatre@intel.com>
+To: Andreas Schwab <schwab@linux-m68k.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <m24ow6xd9y.fsf@igel.home>
+References: <m24ow6vah1.fsf@igel.home> <1241112119.10498.11.camel@rc-desk>
+	 <m24ow6xd9y.fsf@igel.home>
+Content-Type: text/plain
+Date: Thu, 30 Apr 2009 11:33:10 -0700
+Message-Id: <1241116390.10498.50.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 21, 2009 at 12:30:16PM +0200, Ivo Van Doorn wrote:
-> On Mon, Apr 20, 2009 at 3:59 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Sat, Apr 18, 2009 at 11:18:56PM +0200, Ivo van Doorn wrote:
-> >> Hi,
-> >>
-> >> > > I hope rt2800pci/usb to be included *ASAP*, because rt2800usb =
-supports
-> >> > > more than 1oo USB devices and rt2800pci is included in a lot o=
-f
-> >> > > laptops(ask Torvalds [1] [2])
-> >> > >
-> >> > > [1] http://marc.info/?l=3Dlinux-netdev&m=3D121799144422863&w=3D=
-2
-> >> > > [2] http://marc.info/?l=3Dlinux-kernel&m=3D123187052023831&w=3D=
-2
-> >> >
-> >> > That would be great to have in, what's keeping it from happening=
-?
-> >>
-> >> In short: A stable workable driver.
-> >>
-> >> The rt2800usb driver is pretty far (at least on my testsetup), but
-> >> still has problems with transmitting frames immediately after
-> >> association.
+Andreas,
+
+On Thu, 2009-04-30 at 10:27 -0700, Andreas Schwab wrote:
+> 
+> reinette chatre
+> <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
+> 
+> > On Thu, 2009-04-30 at 00:58 -0700, Andreas Schwab wrote:
+> >> It does not make sense to apply EXPORT_SYMBOL to a static symbol.  Fixes
+> >> this build error:
+> >> 
+> >> drivers/net/wireless/iwlwifi/iwl3945-base.c:1697: error: __ksymtab_iwl3945_rx_queue_reset causes a section type conflict
+> >> 
+> >> Signed-off-by: Andreas Schwab <schwab-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+> >> ---
+> >> This obsoletes 6269b731560d69c5eaa929909891edec39496d71, which was
 > >
-> > I read this as "it works, but some frames are lost immediately afte=
-r
-> > association" -- is that right?
->=20
-> It is not "Some frames" it is "All frames" you can't get a DHCP lease=
-,
-> or use a static IP and try to do anything.
+> >>From which repo is this commit id? 
+> 
+> That's from davem/net-2.6 or linville/wireless-2.6.git
 
-Is this permanent?  Or does it start working at some point?
 
-> Also 11n APs are not detected at all, which for a 11n client sounds
-> very problematic.
+Thanks. Even though this patch obsoletes
+6269b731560d69c5eaa929909891edec39496d71 it still makes sense to have
+that patch in the repo as it removes another unnecessary EXPORT_SYMBOL.
+I would thus prefer that both patches are included.
 
-If 11g works then I think that is good enough to merge.
+Reinette
 
-> > FWIW, this sounds good enough to me
-> > to get it into the mainline kernel. =A0_Please_ submit the rt2800us=
-b
-> > driver for wireless-testing/linux-next ASAP!
->=20
-> If the above 2 problems aren't critical for merge, then I'll send the
-> patches as soon as possible.
-
-If there is no traffic at all then I guess it can still wait -- ping
-seems like a reasonable requirement.  But 11n is not a requirement
-for merge.
-
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
