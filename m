@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:39478 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbZD1USE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44981 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753640AbZD3Lx7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2009 16:18:04 -0400
-Received: by fxm2 with SMTP id 2so781020fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2009 13:18:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090428185709.GA3321@tuxdriver.com>
-References: <200904261608.30384.IvDoorn@gmail.com>
-	 <200904261608.50411.IvDoorn@gmail.com>
-	 <200904261609.11447.IvDoorn@gmail.com>
-	 <20090428185709.GA3321@tuxdriver.com>
-Date: Tue, 28 Apr 2009 22:18:02 +0200
-Message-ID: <a32f33a40904281318r7b26e5c2ja5ebefe19ecaa089@mail.gmail.com> (sfid-20090428_221815_008175_98CF88AD)
-Subject: Re: [PATCH 3/5] rt2x00: Fix the interval for rfkill and link_tuner.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Alban Browaeys <prahal@yahoo.com>
+	Thu, 30 Apr 2009 07:53:59 -0400
+Subject: Re: [RFC] regulatory information interpretation rules
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Michael Green <Michael.Green@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Richard Farina <sidhayn@gmail.com>
+In-Reply-To: <1238065059.4331.28.camel@johannes.local> (sfid-20090326_115820_137341_2C611338)
+References: <1237712542.5100.766.camel@johannes.local>
+	 (sfid-20090322_100234_495492_0385D4F0)  <1238065059.4331.28.camel@johannes.local>
+	 (sfid-20090326_115820_137341_2C611338)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ck2q6Zb7J8de75Ld7Gl5"
+Date: Thu, 30 Apr 2009 13:53:21 +0200
+Message-Id: <1241092401.29878.1.camel@johannes.local> (sfid-20090430_135404_495596_A4A7DA36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 28, 2009 at 8:57 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Sun, Apr 26, 2009 at 04:09:11PM +0200, Ivo van Doorn wrote:
->> From: Alban Browaeys <prahal@yahoo.com>
->>
->> extra parenthesis made the value an argument and the value of the
->> define empty. This was triggering those very fast.
->>
->> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
->> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
->
-> ???
->
-> If that were so, wouldn't that have caused compile-time errors?
 
-I've CCed Alban so he can explain the issue he experienced..
+--=-Ck2q6Zb7J8de75Ld7Gl5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-For me this patch is just a style-fix, because those
-parenthesis were useless anyway.
+On Thu, 2009-03-26 at 11:57 +0100, Johannes Berg wrote:
 
-Ivo
+>  4) This is easier to formulate algorithmically:
+>     USE_FLAGS =3D 0
+>     for k =3D 1 .. n
+>         if CENTER in (MIN_k, MAX_k]:
+>             USE_FLAGS |=3D FLAGS_k
+
+That wasn't what I intended... What I did intend to say is this:
+
+USE_FLAGS =3D 0
+for k =3D 1 .. n
+    if (CENTER - BW/2, CENTER + BW/2) intersects (MIN_k, MAX_k]
+        USE_FLAGS |=3D FLAGS_k
+
+since we want to take into account all flags even if the channel just
+overlaps a little with a specific range.
+
+johannes
+
+--=-Ck2q6Zb7J8de75Ld7Gl5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ+ZEuAAoJEKVg1VMiehFYa1oP/1SGfNsOUJHtKwaTADkmdMb4
+ruufPSl76EUqacLI+PlZyALXCatBOEsZjJVH7neM7AoihpP+q27blAOoHjc4JqIe
+zkIn3iBpoFhVI2KVupiwjy1CsHO+GzYK3IOkwwhr7Z7TWfZOSkeibus3fzFfm6N4
+vc1sJ0blMbTUSkvb0sDkCuuIVTIGF77DQbjxGS+KXLy002VE93std2W99eqoQPxJ
+r+PQaVH9OAGefQ0tujhQTMd8HTLaqxczyiFV7kMY7E/999VuEMA3xtxrH/K9VuHE
+XqevJ1S9wFnvQVyLlc7lkehPEK9LNML7KQd6o2b9vA5jLkWBZx6NtcKuplKhKE4q
+OlZY0BkZqZkttCe12v9WQSzTXaJkLO7QqQYueV7yJiGECYqz/WNScrTBo/YuTj56
+pxMq5Y24pDa152qRZUR6eatX49nNMopOs0oyv5M+1A4Eoexm/fD7k31gqtV7CVuU
+NpLVNiogeBbqZSFlN1iOMWuUiaTk45QtBEhD5burA7RejX6XZok5BZ8cy/g8qCjH
+kLNTahbKSd0FLBiIUK39tNWV5VRIjYmrhjld+WkWGDfqDTZd/TGRyDlbesnrht9v
+tmnjKV+S2spsWh+NLjnGpb73qZUAukV0O8M0g0QDiCZ1eSwyXU4jPyEnyBpb2wVt
+t3XB5CwGnPECNqmOUIYx
+=ugzH
+-----END PGP SIGNATURE-----
+
+--=-Ck2q6Zb7J8de75Ld7Gl5--
+
