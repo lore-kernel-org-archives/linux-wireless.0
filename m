@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:7146 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbZDFTsX convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48016 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbZD3IKA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2009 15:48:23 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2403995wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2009 12:48:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890904031128i7c14d809q93dee61ba964c717@mail.gmail.com>
-References: <1238711166-2208-1-git-send-email-lrodriguez@atheros.com>
-	<1238711166-2208-3-git-send-email-lrodriguez@atheros.com>
-	<69e28c910904030801k7fb2794bodaea74bb551dbcea@mail.gmail.com>
-	<43e72e890904031127s5223e0a3w7647ce2b0424129c@mail.gmail.com>
-	<43e72e890904031128i7c14d809q93dee61ba964c717@mail.gmail.com>
-Date: Mon, 6 Apr 2009 12:48:06 -0700
-Message-ID: <43e72e890904061248u1be026b5n2c5a47cec025581@mail.gmail.com> (sfid-20090406_214826_765847_66E21576)
-Subject: Re: [PATCH 2/5] wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Apr 2009 04:10:00 -0400
+Subject: Re: iwlwifi: remove EXPORT_SYMBOL for static symbol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreas Schwab <schwab@linux-m68k.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vget.kernel.org
+In-Reply-To: <m24ow6vah1.fsf@igel.home> (sfid-20090430_095859_848503_CEFFB30C)
+References: <m24ow6vah1.fsf@igel.home>
+	 (sfid-20090430_095859_848503_CEFFB30C)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-g1aNS0cpVjs7sRVHcHlm"
+Date: Thu, 30 Apr 2009 10:09:26 +0200
+Message-Id: <1241078967.25477.8.camel@johannes.local> (sfid-20090430_101013_474024_E3B7BCA2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 3, 2009 at 11:28 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> 2009/4/3 Luis R. Rodriguez <lrodriguez@atheros.com>:
->> 2009/4/3 G=C3=A1bor Stefanik <netrolller.3d@gmail.com>:
->>> Greetings!
->>>
->>> I think that other references to "fat" should be removed as well, i=
-n
->>> favor of "HT40".
->>
->> Heh I take it you didn't get to patch #3?
->
-> Oh wait, never mind. I'll address this.
 
-Eh I won't have time to rename that stuff but please feel free to send
-on top. I'll post a new series in a bit.
+--=-g1aNS0cpVjs7sRVHcHlm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, 2009-04-30 at 09:58 +0200, Andreas Schwab wrote:
+> It does not make sense to apply EXPORT_SYMBOL to a static symbol.  Fixes
+> this build error:
+>=20
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:1697: error:
+> __ksymtab_iwl3945_rx_queue_reset causes a section type conflict
+>=20
+> Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+> ---
+> This obsoletes 6269b731560d69c5eaa929909891edec39496d71, which was
+> misattributed as a compiler bug.
+
+At least in my tree the function isn't static...(yet I still got the
+compiler error)?
+
+johannes
+
+--=-g1aNS0cpVjs7sRVHcHlm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ+Vy0AAoJEKVg1VMiehFY2OAP/AomeAp34Xh0iYWBzC0noZ5M
+3K6miUr1ppUCKNuzCFeHKOw/NiX6IuAo4zDp93I/lyHQ+Yy6W43UAvOVSnMy5NfY
+RCSzqsZVgpCVVy+GJr+Te1DqDVpPFeTlXXNuqapX0ocKOHJkAf535KKx8qbBLNMe
+vRdXsSIEmgjobspmXxM8E/+tsWO1gR8XOQtZN+ppQITgcs4XxxEFU1/6mzLXmbvv
+en4hrLMyloSC58X/q8/g7M4U2qhqJHvxnCdwoliNuar0w3qi16CvZ9eLbSSzdMlg
+xWcTiW6CgYnuVyaxRojXMrZGfv0OeJCFwed8kZHxaZfF+3JZLhg5/k72po/67vMG
+RYD3eGgnVzeGw+w+G+vz8Zn2/oTMbgYW6wBhH6I+ZPEO4alHIVFujZR/rKEQM6s9
+m2scz4wWLZJ1fJAiJ2S9NAxQZUhfas4A7nj4slsVVI9QYLVod7tKIm0OGdfN2Uu4
+Gi0LyJbxj2dESI9WR8kwDgO6lK2Ho3TAbvHPbzrgGjtqzIvFSNi2UnPp0ClZgETI
+TZC2RAQc9oO1qtmfa5tK72JVVmdYYBbKa6oY08xp4rGi4hPGdet61iaWmBW3Mwt9
+NwAHVFWL0KU3+B7hpKTzDYDtZmegD4kBVw0idSSNYZFTpf6/BBbZWjOCgw08WaaQ
+Qtxer0ulkPABvwBiYtp8
+=pQh5
+-----END PGP SIGNATURE-----
+
+--=-g1aNS0cpVjs7sRVHcHlm--
+
