@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38712 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756218AbZDVKkk (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:45783 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756824AbZD3N4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 06:40:40 -0400
-Subject: [PATCH] mac80211: remove IEEE80211_CONF_CHANGE_DYNPS_TIMEOUT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 22 Apr 2009 12:40:07 +0200
-Message-Id: <1240396807.21978.4.camel@johannes.local> (sfid-20090422_124044_329409_C80C76A9)
-Mime-Version: 1.0
+	Thu, 30 Apr 2009 09:56:20 -0400
+Received: by bwz7 with SMTP id 7so1817512bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2009 06:56:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <557754.25367.qm@web51403.mail.re2.yahoo.com>
+References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
+Date: Thu, 30 Apr 2009 14:56:18 +0100
+Message-ID: <efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
+Subject: Re: rt73usb Access point status
+From: Luis Correia <luis.f.correia@gmail.com>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just setting IEEE80211_CONF_CHANGE_PS should be sufficient
-for changes in the power saving things. The driver already
-tells us whether it wants notification of dynps via the
-"have dynps support" hw flag.
+Hi Joerg,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |   10 ++++------
- net/mac80211/wext.c    |    3 +--
- 2 files changed, 5 insertions(+), 8 deletions(-)
+On Thu, Apr 30, 2009 at 14:41, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
+>
+>> Based on that information, I have removed the "Yes (under development)"
+>> note from the driver page since it doesn't really support it... In fact,
+>> I'm surprised it works even with that hack since hostapd usually polls
+>> the station with nullfunc frames and waits for an ack.
+>
+> Reading the mail from Ivo (http://sourceforge.net/mailarchive/message.php?msg_id=200808082059.11968.IvDoorn%40gmail.com)
+> I gather that the ACK in question is not from the peer but from the local
+> hardware indicating that the frame was actually sent and not lost due to
+> some local error.
+> --
+> Regards
+> Joerg
 
---- wireless-testing.orig/include/net/mac80211.h	2009-04-21 23:35:30.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-04-21 23:37:27.000000000 +0200
-@@ -532,8 +532,7 @@ enum ieee80211_conf_flags {
-  * @IEEE80211_CONF_CHANGE_BEACON_INTERVAL: the beacon interval changed
-  * @IEEE80211_CONF_CHANGE_LISTEN_INTERVAL: the listen interval changed
-  * @IEEE80211_CONF_CHANGE_RADIOTAP: the radiotap flag changed
-- * @IEEE80211_CONF_CHANGE_PS: the PS flag changed
-- * @IEEE80211_CONF_CHANGE_DYNPS_TIMEOUT: the dynamic PS timeout changed
-+ * @IEEE80211_CONF_CHANGE_PS: the PS flag or dynamic PS timeout changed
-  * @IEEE80211_CONF_CHANGE_POWER: the TX power changed
-  * @IEEE80211_CONF_CHANGE_CHANNEL: the channel/channel_type changed
-  * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
-@@ -544,10 +543,9 @@ enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_LISTEN_INTERVAL	= BIT(2),
- 	IEEE80211_CONF_CHANGE_RADIOTAP		= BIT(3),
- 	IEEE80211_CONF_CHANGE_PS		= BIT(4),
--	IEEE80211_CONF_CHANGE_DYNPS_TIMEOUT	= BIT(5),
--	IEEE80211_CONF_CHANGE_POWER		= BIT(6),
--	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(7),
--	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(8),
-+	IEEE80211_CONF_CHANGE_POWER		= BIT(5),
-+	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
-+	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/wext.c	2009-04-21 23:35:29.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-04-21 23:37:27.000000000 +0200
-@@ -622,8 +622,7 @@ static int ieee80211_ioctl_siwpower(stru
- 	conf->dynamic_ps_timeout = timeout;
- 
- 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
--		ieee80211_hw_config(local,
--				    IEEE80211_CONF_CHANGE_DYNPS_TIMEOUT);
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 
- 	ieee80211_recalc_ps(local, -1);
- 
+According to Ivo, we cannot be totally sure that the device has sent
+the frame into the air, so no actual ACK is reported back to mac80211.
+
+The hostapd hack works, as long as the stations are not very far from
+the AP, and thus not 'too many retries' need to be sent.
+
+AFAIK, this is not optimal at all, so I don't go around and say 'it
+works'. It may or may not work in your case.
+If possible, test and report back your findings.
 
 
+Luis Correia
+rt2x00 project admin
