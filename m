@@ -1,47 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46683 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754704AbZDVVDZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2009 17:03:25 -0400
-Subject: [PATCH] mac80211: fix PS vs. scan race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 22 Apr 2009 23:02:51 +0200
-Message-Id: <1240434171.30082.21.camel@johannes.local> (sfid-20090422_230332_838939_0838D463)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:36796 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754193AbZD3UuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2009 16:50:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/5] iwlwifi: update key flags at time key is set
+Date: Thu, 30 Apr 2009 13:56:30 -0700
+Message-Id: <1241124991-12492-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1241124991-12492-5-git-send-email-reinette.chatre@intel.com>
+References: <1241124991-12492-1-git-send-email-reinette.chatre@intel.com>
+ <1241124991-12492-2-git-send-email-reinette.chatre@intel.com>
+ <1241124991-12492-3-git-send-email-reinette.chatre@intel.com>
+ <1241124991-12492-4-git-send-email-reinette.chatre@intel.com>
+ <1241124991-12492-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When somebody changes the PS parameters while scanning
-is in progress, we enable PS -- during the scan. This
-is clearly not desirable, and we can just abort enabling
-PS when scanning since when the scan finishes it will
-be taken care of.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+We need to be symmetrical in what is done when key is set and cleared.
+This is important wrt the key flags as they are used during key
+clearing and if they are not set when the key is set the key cannot be
+cleared completely.
+
+This addresses the many occurences of the WARN found in
+iwl_set_tkip_dynamic_key_info() and tracked in
+http://www.kerneloops.org/searchweek.php?search=iwl_set_dynamic_key
+
+If calling iwl_set_tkip_dynamic_key_info()/iwl_remove_dynamic_key()
+pair a few times in a row will cause that we run out of key space.
+This is because the index stored in the key flags is used by
+iwl_remove_dynamic_key() to decide if it should remove the key.
+Unfortunately the key flags, and hence the key index is currently only
+set at the time the key is written to the device (in
+iwl_update_tkip_key()) and _not_ in iwl_set_tkip_dynamic_key_info().
+Fix this by setting flags in iwl_set_tkip_dynamic_key_info().
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/mlme.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-sta.c |   21 +++++++++++----------
+ 1 files changed, 11 insertions(+), 10 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-22 22:57:45.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-22 22:58:56.000000000 +0200
-@@ -487,6 +487,13 @@ static void ieee80211_enable_ps(struct i
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 28dd225..0eb939c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -719,6 +719,14 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
  {
- 	struct ieee80211_conf *conf = &local->hw.conf;
- 
-+	/*
-+	 * If we are scanning right now then the parameters will
-+	 * take effect when scan finishes.
-+	 */
-+	if (local->hw_scanning || local->sw_scanning)
-+		return;
+ 	unsigned long flags;
+ 	int ret = 0;
++	__le16 key_flags = 0;
 +
- 	if (conf->dynamic_ps_timeout > 0 &&
- 	    !(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)) {
- 		mod_timer(&local->dynamic_ps_timer, jiffies +
-
++	key_flags |= (STA_KEY_FLG_TKIP | STA_KEY_FLG_MAP_KEY_MSK);
++	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
++	key_flags &= ~STA_KEY_FLG_INVALID;
++
++	if (sta_id == priv->hw_params.bcast_sta_id)
++		key_flags |= STA_KEY_MULTICAST_MSK;
+ 
+ 	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+ 	keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+@@ -738,6 +746,9 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+ 		"no space for a new key");
+ 
++	priv->stations[sta_id].sta.key.key_flags = key_flags;
++
++
+ 	/* This copy is acutally not needed: we get the key with each TX */
+ 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+ 
+@@ -754,9 +765,7 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ {
+ 	u8 sta_id = IWL_INVALID_STATION;
+ 	unsigned long flags;
+-	__le16 key_flags = 0;
+ 	int i;
+-	DECLARE_MAC_BUF(mac);
+ 
+ 	sta_id = priv->cfg->ops->smgmt->find_station(priv, addr);
+ 	if (sta_id == IWL_INVALID_STATION) {
+@@ -771,16 +780,8 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 
+-	key_flags |= (STA_KEY_FLG_TKIP | STA_KEY_FLG_MAP_KEY_MSK);
+-	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
+-	key_flags &= ~STA_KEY_FLG_INVALID;
+-
+-	if (sta_id == priv->hw_params.bcast_sta_id)
+-		key_flags |= STA_KEY_MULTICAST_MSK;
+-
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 
+-	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8) iv32;
+ 
+ 	for (i = 0; i < 5; i++)
+-- 
+1.5.6.3
 
