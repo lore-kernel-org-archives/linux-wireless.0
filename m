@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([207.115.11.52]:59547 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbZDNBFL (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1092 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754767AbZD3T47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2009 21:05:11 -0400
-Message-ID: <49E3E135.4040305@lwfinger.net> (sfid-20090414_030515_514076_9E0DCEDE)
-Date: Mon, 13 Apr 2009 20:04:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Forest Bond <forest@alittletooquiet.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Greg KH <greg@kroah.com>
-Subject: Re: VT6656 driver source now GPL
-References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network> <20090414000835.GA31504@storm.local.network> <49E3D7AA.1050207@lwfinger.net> <20090414005523.GC31504@storm.local.network>
-In-Reply-To: <20090414005523.GC31504@storm.local.network>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 30 Apr 2009 15:56:59 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Paride Legovini <legovini@spiro.fisica.unipd.it>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 9/9] Add LED support for AR5BXB6 IBM Thinkpad PCIe adapters
+Date: Thu, 30 Apr 2009 15:55:52 -0400
+Message-Id: <1241121352-6064-10-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forest Bond wrote:
-> 
-> Great, this is enough to get started, at least.  I assume that the quality bar
-> is low for code in drivers/staging.  Low quality work is a trademark of mine, so
-> I should be able to tackle this. ;)
-> 
-> Is there any reason I ought to think that it would be easier to get this
-> accepted in linux-staging than drivers/staging?  I'll admit that I feel better
-> about the layout of drivers/staging than I do about the quilt stuff in
-> linux-staging.
+From: Paride Legovini <legovini@spiro.fisica.unipd.it>
 
-GregKH has said that he will take it from here. I think that means that he will
-add it to drivers/staging and get it to build.
+Add LED support on the IBM ThinkPad 11a/b/g Wireless LAN Mini Express
+Adapter (AR5BXB6), found on the IBM/Lenovo Thinkpad X60/T60/Z60 series.
 
-Larry
+Signed-off-by: Paride Legovini <legovini@spiro.fisica.unipd.it>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/led.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index cbdc0b3..876725f 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -53,8 +53,6 @@
+ 
+ /* Devices we match on for LED config info (typically laptops) */
+ static const struct pci_device_id ath5k_led_devices[] = {
+-	/* IBM-specific AR5212 */
+-	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
+ 	/* AR5211 */
+ 	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211), ATH_LED(0, 0) },
+ 	/* HP Compaq nc6xx, nc4000, nx6000 */
+@@ -69,6 +67,10 @@ static const struct pci_device_id ath5k_led_devices[] = {
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
+ 	/* Fukato Datacask Jupiter 1014a (mrb74@gmx.at) */
+ 	{ ATH_SDEVICE(PCI_VENDOR_ID_AZWAVE, 0x1026), ATH_LED(3, 0) },
++	/* IBM ThinkPad AR5BXB6 (legovini@spiro.fisica.unipd.it) */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a), ATH_LED(1, 0) },
++	/* IBM-specific AR5212 (all others) */
++	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
+ 	{ }
+ };
+ 
+-- 
+1.6.0.6
+
+
