@@ -1,202 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:46895 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753659AbZDARAd convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1041 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752775AbZD3T4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2009 13:00:33 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so135461wff.4
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Apr 2009 10:00:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1238574545.5970.137.camel@johannes.local>
-References: <1238549294-29168-1-git-send-email-lrodriguez@atheros.com>
-	<1238574545.5970.137.camel@johannes.local>
-Date: Wed, 1 Apr 2009 10:00:16 -0700
-Message-ID: <43e72e890904011000j3d7fb694j28921a3245dd7ed7@mail.gmail.com> (sfid-20090401_190037_370090_B00297A1)
-Subject: Re: [PATCH v2] cfg80211: send regulatory beacon hint events to
-	userspace
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Apr 2009 15:56:50 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Nick Kossifidis <mick@madwifi-project.org>
+Subject: [PATCH 1/9] ath5k: Allow user/driver to set txpower
+Date: Thu, 30 Apr 2009 15:55:44 -0400
+Message-Id: <1241121352-6064-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 1, 2009 at 1:29 AM, Johannes Berg <johannes@sipsolutions.ne=
-t> wrote:
-> On Tue, 2009-03-31 at 21:28 -0400, Luis R. Rodriguez wrote:
->
->> + * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP =
-beacon
->> + * =C2=A0 has been found while world roaming thus enabling active s=
-can or
->> + * =C2=A0 any mode of operation that initiates TX (beacons) on a ch=
-annel
->> + * =C2=A0 where we would not have been able to do either before. As=
- an example
->> + * =C2=A0 if you are world roaming (regulatory domain set to world =
-or if your
->> + * =C2=A0 driver is using a custom world roaming regulatory domain)=
- and while
->> + * =C2=A0 doing a passive scan on the 5 GHz band you find an AP the=
-re (if not
->> + * =C2=A0 on a DFS channel) you will now be able to actively scan f=
-or that AP
->> + * =C2=A0 or use AP mode on your card on that same channel. Note th=
-at this will
->> + * =C2=A0 never be used for channels 1-11 on the 2 GHz band as they=
- are always
->> + * =C2=A0 enabled world wide. This beacon hint is only sent if your=
- device had
->> + * =C2=A0 either disabled active scanning or beaconing on a channel=
-=2E We send to
->> + * =C2=A0 userspace the wiphy on which we removed a restriction fro=
-m
->> + * =C2=A0 (%NL80211_ATTR_WIPHY) and the channel on which this occur=
-red
->> + * =C2=A0 before (%NL80211_ATTR_FREQ_BEFORE) and after (%NL80211_AT=
-TR_FREQ_AFTER)
->> + * =C2=A0 the beacon hint was processed.
->
->
-> I wonder -- are there other reasons we may ever update the regdomain?=
- I
-> could imagine the CMD being REG_UPDATE with an ATTR_REASON or so? Or
-> just using REG_CHANGE with NL80211_REGDOM_TYPE_WORLD _and_ the new
-> channel change attributes?
+From: Nick Kossifidis <mick@madwifi-project.org>
 
-I don't follow what you were saying.
+* Now that we have regulatory control enable the driver to set
+ txpower on hw
 
-=46YI -- we only call this when world roaming.
+ * Also use txpower table offset so that we can match
+ power range set by user/driver with indices on power table.
 
->> +static int nl80211_put_beacon_hint_channel(void *hdr,
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
-struct sk_buff *msg,
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
-enum nl80211_attrs attribute,
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
-struct ieee80211_channel *chan)
->> +{
->> + =C2=A0 =C2=A0 struct nlattr *nl_freq;
->> +
->> + =C2=A0 =C2=A0 nl_freq =3D nla_nest_start(msg, attribute);
->> + =C2=A0 =C2=A0 if (!nl_freq)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto nla_put_failure;
->> +
->> + =C2=A0 =C2=A0 NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FREQ,
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan->cent=
-er_freq);
->> +
->> + =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 NLA_PUT_FLAG(msg, NL8021=
-1_FREQUENCY_ATTR_PASSIVE_SCAN);
->> + =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_NO_IBSS)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 NLA_PUT_FLAG(msg, NL8021=
-1_FREQUENCY_ATTR_NO_IBSS);
->> +
->> + =C2=A0 =C2=A0 nla_nest_end(msg, nl_freq);
->> +
->> + =C2=A0 =C2=A0 return 0;
->
-> I think you should send all possible channel attributes here -- pleas=
-e
-> refactor the code and extract the bit that sends a channel from
-> nl80211_send_wiphy(), this bit:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FR=
-EQ,...)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0..
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MA=
-X_TX_POWER,...)
->
-> put it into a new function that takes a msg and channel pointer and c=
-all
-> it twice.
+ Tested 2 different cards (a CM9 and an RF5112-based ubnt) and got
+ the same output using a remote machine to measure per-packet rssi
+ (conected the cards using attenuators). I also switched between
+ various tx power levels and i saw an equal power change on the remote
+ machine (so txpower changes as expected) and verified that we have
+ the same output on each rate.
 
-Heh.. sure.
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+ Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    7 +++--
+ drivers/net/wireless/ath/ath5k/base.c  |   11 +++++++-
+ drivers/net/wireless/ath/ath5k/phy.c   |   45 ++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath5k/reset.c |    2 +-
+ 4 files changed, 52 insertions(+), 13 deletions(-)
 
-> Does the relaxing we do on receiving beacons only apply to a single
-> wiphy though?
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 60c6d2e..04b7345 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1100,11 +1100,12 @@ struct ath5k_hw {
+ 		/* Values in 0.25dB units */
+ 		s16		txp_min_pwr;
+ 		s16		txp_max_pwr;
++		/* Values in 0.5dB units */
+ 		s16		txp_offset;
+ 		s16		txp_ofdm;
+-		/* Values in dB units */
+-		s16		txp_cck_ofdm_pwr_delta;
+ 		s16		txp_cck_ofdm_gainf_delta;
++		/* Value in dB units */
++		s16		txp_cck_ofdm_pwr_delta;
+ 	} ah_txpower;
+ 
+ 	struct {
+@@ -1271,7 +1272,7 @@ extern unsigned int ath5k_hw_get_def_antenna(struct ath5k_hw *ah);
+ extern int ath5k_hw_phy_disable(struct ath5k_hw *ah);
+ /* TX power setup */
+ extern int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel, u8 ee_mode, u8 txpower);
+-extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 ee_mode, u8 txpower);
++extern int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
+ 
+ /*
+  * Functions used internaly
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7b80ceb..d70856a 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2747,12 +2747,21 @@ static int
+ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_hw *ah = sc->ah;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	int ret;
+ 
+ 	mutex_lock(&sc->lock);
+ 
+-	sc->power_level = conf->power_level;
++	sc->bintval = conf->beacon_int;
++
++	if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
++	(sc->power_level != conf->power_level)) {
++		sc->power_level = conf->power_level;
++
++		/* Half dB steps */
++		ath5k_hw_set_txpower_limit(ah, (conf->power_level * 2));
++	}
+ 
+ 	ret = ath5k_chan_set(sc, conf->channel);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b48b29d..bb61b8e 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -168,9 +168,6 @@ int ath5k_hw_rfgain_opt_init(struct ath5k_hw *ah)
+  * tx power and a Peak to Average Power Detector (PAPD) will try
+  * to measure the gain.
+  *
+- * TODO: Use propper tx power setting for the probe packet so
+- * that we don't observe a serious power drop on the receiver
+- *
+  * XXX:  How about forcing a tx packet (bypassing PCU arbitrator etc)
+  * just after we enable the probe so that we don't mess with
+  * standard traffic ? Maybe it's time to use sw interrupts and
+@@ -186,7 +183,7 @@ static void ath5k_hw_request_rfgain_probe(struct ath5k_hw *ah)
+ 
+ 	/* Send the packet with 2dB below max power as
+ 	 * patent doc suggest */
+-	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_max_pwr - 4,
++	ath5k_hw_reg_write(ah, AR5K_REG_SM(ah->ah_txpower.txp_ofdm - 4,
+ 			AR5K_PHY_PAPD_PROBE_TXPOWER) |
+ 			AR5K_PHY_PAPD_PROBE_TX_NEXT, AR5K_PHY_PAPD_PROBE);
+ 
+@@ -2482,8 +2479,19 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+ 		for (i = 8; i <= 15; i++)
+ 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
+ 
+-	ah->ah_txpower.txp_min_pwr = rates[7];
+-	ah->ah_txpower.txp_max_pwr = rates[0];
++	/* Now that we have all rates setup use table offset to
++	 * match the power range set by user with the power indices
++	 * on PCDAC/PDADC table */
++	for (i = 0; i < 16; i++) {
++		rates[i] += ah->ah_txpower.txp_offset;
++		/* Don't get out of bounds */
++		if (rates[i] > 63)
++			rates[i] = 63;
++	}
++
++	/* Min/max in 0.25dB units */
++	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
++	ah->ah_txpower.txp_max_pwr = 2 * rates[0];
+ 	ah->ah_txpower.txp_ofdm = rates[7];
+ }
+ 
+@@ -2591,16 +2599,37 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	return 0;
+ }
+ 
+-int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 mode, u8 txpower)
++int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+ {
+ 	/*Just a try M.F.*/
+ 	struct ieee80211_channel *channel = &ah->ah_current_channel;
++	u8 ee_mode;
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
++
++	switch (channel->hw_value & CHANNEL_MODES) {
++	case CHANNEL_A:
++	case CHANNEL_T:
++	case CHANNEL_XR:
++		ee_mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case CHANNEL_G:
++	case CHANNEL_TG:
++		ee_mode = AR5K_EEPROM_MODE_11G;
++		break;
++	case CHANNEL_B:
++		ee_mode = AR5K_EEPROM_MODE_11B;
++		break;
++	default:
++		ATH5K_ERR(ah->ah_sc,
++			"invalid channel: %d\n", channel->center_freq);
++		return -EINVAL;
++	}
++
+ 	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
+ 		"changing txpower to %d\n", txpower);
+ 
+-	return ath5k_hw_txpower(ah, channel, mode, txpower);
++	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
+ }
+ 
+ #undef _ATH5K_PHY
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index faede82..23d6fc8 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1001,7 +1001,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		 * Set TX power (FIXME)
+ 		 */
+ 		ret = ath5k_hw_txpower(ah, channel, ee_mode,
+-					AR5K_TUNE_DEFAULT_TXPOWER);
++					ah->ah_txpower.txp_max_pwr / 2);
+ 		if (ret)
+ 			return ret;
+ 
+-- 
+1.6.0.6
 
-We do it per wiphy if the wiphy is world roaming.
 
->> + =C2=A0 =C2=A0 /*
->> + =C2=A0 =C2=A0 =C2=A0* Since we are applying the beacon hint to a w=
-iphy we know its
->> + =C2=A0 =C2=A0 =C2=A0* wiphy_idx is valid
->> + =C2=A0 =C2=A0 =C2=A0*/
->> + =C2=A0 =C2=A0 NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(w=
-iphy));
->
-> You're sending out the wiphy here.
-
-Hm? We're sending its wiphy_idx here.
-
-> And I just realised there's a bug in the existing code:
->
->> @@ -1070,18 +1062,26 @@ static void handle_reg_beacon(struct wiphy *=
-wiphy,
->> =C2=A0 =C2=A0 =C2=A0 if (likely(chan->center_freq !=3D reg_beacon->c=
-han.center_freq))
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
->>
->> + =C2=A0 =C2=A0 if (chan->beacon_found)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
->> +
->> + =C2=A0 =C2=A0 chan->beacon_found =3D true;
->> +
->> + =C2=A0 =C2=A0 chan_before.center_freq =3D chan->center_freq;
->> + =C2=A0 =C2=A0 chan_before.flags =3D chan->flags;
->> +
->> =C2=A0 =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) =
-{
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan->flags &=3D ~I=
-EEE80211_CHAN_PASSIVE_SCAN;
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 REG_DEBUG_BEACON_FLAG("a=
-ctive scanning");
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 channel_changed =3D true=
-;
->> =C2=A0 =C2=A0 =C2=A0 }
->>
->> =C2=A0 =C2=A0 =C2=A0 if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan->flags &=3D ~I=
-EEE80211_CHAN_NO_IBSS;
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 REG_DEBUG_BEACON_FLAG("b=
-eaconing");
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 channel_changed =3D true=
-;
->> =C2=A0 =C2=A0 =C2=A0 }
->
-> This is incorrect, it has to be like this:
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if ((chan->flags & FLAG) && !(chan->orig_f=
-lags & FLAG)) {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0chan->flags &=3D=
- ~FLAG;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0channel_change=
-d =3D true;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
->
-> to take into account the flags the _driver_ had already set on the
-> channel. This is important for Intel hardware -- if you lift the IBSS
-> restriction on a channel that iwlwifi thinks should not use IBSS then
-> the firmware will hate you if you try to use it anyway. Now, I think
-> iwlwifi isn't world-roaming in that sense, but it should still be fix=
-ed!
-
-Ew, sure it can go in as a separate patch.
-
-> Does this mean though you're sending one event per wiphy? Just
-> wondering, it's probably acceptable.
-
-Indeed as this flags won't change for for all wiphys, only for wiphys
-for which the regulatory beacon hint had an effect on a change of a
-channel. This will also be sent for each channel changed on the wiphy.
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
