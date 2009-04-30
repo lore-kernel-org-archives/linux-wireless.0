@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elmendorf.ojctech.com ([64.198.255.10]:63788 "EHLO
-	elmendorf.ojctech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754775AbZDPUsM (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.10]:36939 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbZD3H6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 16:48:12 -0400
-Date: Thu, 16 Apr 2009 15:48:06 -0500
-From: David Young <dyoung@pobox.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	G?bor Stefanik <netrolller.3d@gmail.com>,
-	radiotap@radiotap.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Proposal]TX flags
-Message-ID: <20090416204806.GD25412@ojctech.com> (sfid-20090416_224832_547326_2E4662B6)
-References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com> <69e28c910904161147h5a68d3b5nd054b043d6ad2719@mail.gmail.com> <1239908374.26575.20.camel@johannes.local> <200904162110.05150.mb@bu3sch.de>
+	Thu, 30 Apr 2009 03:58:54 -0400
+From: Andreas Schwab <schwab@linux-m68k.org>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi: remove EXPORT_SYMBOL for static symbol
+CC: linux-kernel@vger.kernel.org, netdev@vget.kernel.org
+Date: Thu, 30 Apr 2009 09:58:50 +0200
+Message-ID: <m24ow6vah1.fsf@igel.home> (sfid-20090430_095859_848503_CEFFB30C)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200904162110.05150.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2009 at 09:10:04PM +0200, Michael Buesch wrote:
-> On Thursday 16 April 2009 20:59:34 Johannes Berg wrote:
-> > On Thu, 2009-04-16 at 20:47 +0200, G?bor Stefanik wrote:
-> > 
-> > > Alternatively, the meanings of the {0,0} and {1,1} cases could be
-> > > switched around (making the {0,0} case more logical, at the expense of
-> > > the {1,1} one):
-> > > 
-> > > TX Flags absent: Use RTS & CTS as needed.
-> > > TX Flags present: {
-> > > RTS=0, CTS=0: Use RTS & CTS as needed.
-> > > RTS=0, CTS=1: Use CTS-to-self.
-> > > RTS=1, CTS=0: Use RTS/CTS-handshake.
-> > > RTS=1, CTS=1: Use neither RTS nor CTS.
-> 
-> The first and the last thing let my head explode, because it's not
-> what somebody would expect from such bits. This kind of logic is also
-> used in wext. And it's why I hate wext. "bit0 means x, bit1 means y,
-> buuuuuuuuuuuuuuuut iff both bits are set the whole logic is inverted
-> and whatever..."  That complicates _every_ single test of the bit
-> (always need if (bit0 is set but not bit1)) It produces spaghetti code
-> interpreting these bits with lots of branches and special conditions
-> that nobody does understand by reading the code alone.  If you can't
-> encode your functionality into a boolean, do _NOT_ use bits to encode
-> it.  Use integers to encode tristate or quadstate or whatever.  You
-> essentially _did_ that already, if you look at your bits. You use the
-> two individual bits as 2bit integer value. So why not spell it out and
-> use an integer field for that information?
+It does not make sense to apply EXPORT_SYMBOL to a static symbol.  Fixes
+this build error:
 
-G?bor,
+drivers/net/wireless/iwlwifi/iwl3945-base.c:1697: error: __ksymtab_iwl3945_rx_queue_reset causes a section type conflict
 
-I see the point that Michael is making.  What do you think?  Shall
-we treat it as a 2-bit wide unsigned integer field in the Tx flags,
-instead?
+Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+---
+This obsoletes 6269b731560d69c5eaa929909891edec39496d71, which was
+misattributed as a compiler bug.
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Dave
+--- linux-2.6.30-rc4.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-04-30 08:59:41.000000000 +0200
++++ linux-2.6.30-rc4/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-04-30 09:34:14.000000000 +0200
+@@ -1745,7 +1745,6 @@ static void iwl3945_rx_queue_free(struct
+ 	rxq->bd = NULL;
+ 	rxq->rb_stts  = NULL;
+ }
+-EXPORT_SYMBOL(iwl3945_rx_queue_free);
+ 
+ 
+ /* Convert linear signal-to-noise ratio into dB */
 
 -- 
-David Young             OJC Technologies
-dyoung@ojctech.com      Urbana, IL * (217) 278-3933
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
