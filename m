@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43305 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754493AbZDSSn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Apr 2009 14:43:28 -0400
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 19 Apr 2009 20:43:20 +0200
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1240164895.11795.70.camel@violet>
-Message-ID: <20090419184320.158810@gmx.net> (sfid-20090419_204331_522505_5A7A007C)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59663 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbZD3SbG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2009 14:31:06 -0400
+Date: Thu, 30 Apr 2009 14:28:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>, Tomas Winkler <tomasw@gmail.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 0/5] mac80211, iwlwifi, ath9k: Fix rate scaling for
+	IEEE80211_TX_CTL_NO_ACK packets
+Message-ID: <20090430182806.GA9323@tuxdriver.com>
+References: <69e28c910904231035u7ff2d9bbnbf1a74ece718659@mail.gmail.com> <69e28c910904281353n327a6dfcjb0389f2e2e55dea2@mail.gmail.com>
 MIME-Version: 1.0
-References: <1240094996.21583.1.camel@johannes.local>	
- (sfid-20090419_005015_625875_1781AFCD)
- <1240097845.25826.1.camel@johannes.local>	 <20090419125212.158800@gmx.net>	
- (sfid-20090419_145246_566920_BF082D12)
- <1240147050.25826.5.camel@johannes.local>	 <20090419133544.158820@gmx.net>	
- (sfid-20090419_153615_967882_D1A9F951)
- <1240148519.898.3.camel@johannes.local>	 <20090419140523.158830@gmx.net>	
- (sfid-20090419_160555_446977_A429511B)
- <1240150277.898.7.camel@johannes.local>	 <20090419151629.158790@gmx.net>	
- (sfid-20090419_171702_263242_9A8C16F9)
- <1240154704.898.18.camel@johannes.local>	 <20090419155319.158810@gmx.net>	
- (sfid-20090419_175352_161479_A88396A3)
- <1240156631.917.1.camel@johannes.local>	 <20090419161316.158790@gmx.net>	
- (sfid-20090419_181324_681308_BAEAE072)
- <1240158381.917.21.camel@johannes.local>	 <20090419165443.158820@gmx.net>	
- (sfid-20090419_185516_519795_36D34B9B)
- <1240160241.28138.4.camel@johannes.local>	 <20090419173354.158790@gmx.net>
- <1240163391.11795.59.camel@violet>	 <20090419180314.23710@gmx.net>
- <1240164895.11795.70.camel@violet>
-Subject: Re: [RFC/RFT v2] cfg80211/nl80211: add IBSS API
-To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910904281353n327a6dfcjb0389f2e2e55dea2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Marcel!
+On Tue, Apr 28, 2009 at 10:53:51PM +0200, G=E1bor Stefanik wrote:
+> Did this get lost? I can't see it in wireless-testing.
 
-> and that is just plain wrong to begin with. If you want a one command=
- do
-> everything, then do that in userspace and not inside a kernel API.
+No, I didn't lose them.  I was waiting to process them until I had
+a little extra time, because nearly every patch you send me requires
+manually intervention before I can apply it.  This is quite painful
+and it increases the time I need for merging patches exponentially.
 
-Then why not implement deferent syscalls for floppy disks, hard disk dr=
-ives, solid state disks and normal files? If you want one generic API t=
-han write an users-space library.
+Please, please, please ensure that:
 
-Thought-out APIs sucks, MS-DOS rules!
+	-- you are using a recent pull of wireless-testing;
 
-> >>From my point of view, WEXT can die right now. Just doing something=
- to
-> make WEXT happy is wrong. If you want something like that then do it =
-in
-> userspace. I just don't see the need here for an extra kernel API.
+	-- you're patches are based directly on wireless-testing and
+	   not on top of any other patches you have not submitted;
 
-There is no concept, what should be in user-space and what not. It's al=
-l mixed together. Not a microkernel, no a monolithic kernel, awful.
+	-- you format your patch and changelog compatibly with what
+	   is described here:
 
-I'm not needed any more, so I can switching off myself. Bye.
+		http://linux.yyz.us/patch-format.html
 
-Alina
+	-- you send the patch inline (without MIME) in email if at
+	   all possible;
 
+	-- if you simply must send a patch as an attachment then do
+	   so, but...
+
+	-- do _not_ send a patch inline _and_ attached to the same
+	   email
+
+The above are not strictly directed at you, G=E1bor.  You just were
+lucky enough to be asking at the right time...
+
+Thanks,
+
+John
+
+P.S.  Out of these five patches, 4 of them required manual intervention=
+=2E..
 --=20
-Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
-hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
-flat/?ac=3DOM.AD.PD003K11308T4569a
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
