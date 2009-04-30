@@ -1,68 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:45489 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755378AbZDGUT6 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1066 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754767AbZD3T4z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2009 16:19:58 -0400
-Received: by fxm2 with SMTP id 2so2501800fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2009 13:19:56 -0700 (PDT)
-Subject: Re: Making promisc mode work with WPA encryption?
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090407161718.GA19733@jm.kir.nu>
-References: <1239063352.4705.40.camel@maxim-laptop>
-	 <20090407161718.GA19733@jm.kir.nu>
-Content-Type: text/plain
-Date: Tue, 07 Apr 2009 23:19:52 +0300
-Message-Id: <1239135592.17958.6.camel@maxim-laptop> (sfid-20090407_222005_756047_6435975A)
-Mime-Version: 1.0
+	Thu, 30 Apr 2009 15:56:55 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 8/9] ath5k: use ctl settings based on current regdomain
+Date: Thu, 30 Apr 2009 15:55:51 -0400
+Message-Id: <1241121352-6064-9-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-04-07 at 19:17 +0300, Jouni Malinen wrote:
-> On Tue, Apr 07, 2009 at 03:15:52AM +0300, Maxim Levitsky wrote:
-> 
-> > But I could arrange small program that listens to device in monitor or
-> > maybe even just promisc mode, and records WPA handshakes. For every
-> > handshake it could install the key in kernel driver, so it would use it
-> > for decryption, and show the traffic on device in promisc mode. Is it
-> > possible to do today? I guess not.
-> 
-> No, and I don't see why this should ever end up in the kernel.. It is
-> better done in userspace for such a special case. The key configuration
-> interface does not support configuring different keys based on the
-> receiver address and most hardware acceleration designs would not
-> support matching the key in this way, so the standard mechanism used for
-> decrypting packets to the STA in normal case does not really suit this
-> type of need.
-> 
-I mostly agree.
-But then maybe its better not to show unencryped frames at all on
-promisc interface?
+Update ath5k to use the ctl settings for tx power based on current
+regulatory domain.
 
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   19 +++++++------------
+ 1 files changed, 7 insertions(+), 12 deletions(-)
 
-> > All this program has to know is the PSK.
-> > (I could even arrange WPA supplicant to do this job - it knows all keys
-> > already)
-> 
-> Sure, you could figure out the PTK for each STA when using WPA-Personal
-> (but not so for WPA-Enterprise/EAP), but that is only one part of the
-> task. The problem comes from decrypting packets that were not designed
-> to be decrypted (unicast frames to other STAs).
-Exactly. this why I thought it would be nice if kernel could do that and
-present a virtual promisc mode.
-Userspace helper could do all the job figuring the keys, and kernel
-would just use keys to decrypt the traffic.
-I could even hack the wpa_supplicant on all systems that belong to my
-network to exchange the keys.
-
-
-Anyway, thanks,
-	Best regards,
-		Maxim Levitsky
-
-
-
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 6737ba0..d0d1c35 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -2158,8 +2158,6 @@ done:
+  * Get the max edge power for this channel if
+  * we have such data from EEPROM's Conformance Test
+  * Limits (CTL), and limit max power if needed.
+- *
+- * FIXME: Only works for world regulatory domains
+  */
+ static void
+ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+@@ -2175,26 +2173,23 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+ 	u8 ctl_idx = 0xFF;
+ 	u32 target = channel->center_freq;
+ 
+-	/* Find out a CTL for our mode that's not mapped
+-	 * on a specific reg domain.
+-	 *
+-	 * TODO: Map our current reg domain to one of the 3 available
+-	 * reg domain ids so that we can support more CTLs. */
++	ctl_mode = ath_regd_get_band_ctl(&ah->ah_regulatory, channel->band);
++
+ 	switch (channel->hw_value & CHANNEL_MODES) {
+ 	case CHANNEL_A:
+-		ctl_mode = AR5K_CTL_11A | AR5K_CTL_NO_REGDOMAIN;
++		ctl_mode |= AR5K_CTL_11A;
+ 		break;
+ 	case CHANNEL_G:
+-		ctl_mode = AR5K_CTL_11G | AR5K_CTL_NO_REGDOMAIN;
++		ctl_mode |= AR5K_CTL_11G;
+ 		break;
+ 	case CHANNEL_B:
+-		ctl_mode = AR5K_CTL_11B | AR5K_CTL_NO_REGDOMAIN;
++		ctl_mode |= AR5K_CTL_11B;
+ 		break;
+ 	case CHANNEL_T:
+-		ctl_mode = AR5K_CTL_TURBO | AR5K_CTL_NO_REGDOMAIN;
++		ctl_mode |= AR5K_CTL_TURBO;
+ 		break;
+ 	case CHANNEL_TG:
+-		ctl_mode = AR5K_CTL_TURBOG | AR5K_CTL_NO_REGDOMAIN;
++		ctl_mode |= AR5K_CTL_TURBOG;
+ 		break;
+ 	case CHANNEL_XR:
+ 		/* Fall through */
+-- 
+1.6.0.6
 
 
