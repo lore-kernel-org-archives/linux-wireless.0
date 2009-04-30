@@ -1,83 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:34918 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756484AbZCaW0Y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 18:26:24 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so94543fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 15:26:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49D1E3D4.5040507@promwad.com>
-References: <49D0BD2B.9090102@promwad.com>
-	 <3ace41890903301208r5feda139w50a1eb7f6b717873@mail.gmail.com>
-	 <49D1E3D4.5040507@promwad.com>
-Date: Tue, 31 Mar 2009 23:26:21 +0100
-Message-ID: <3ace41890903311526g1119b4d9l87278843f14ca3be@mail.gmail.com> (sfid-20090401_002628_234980_0559410C)
-Subject: Re: rtl8187 diversity
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: ivan.kuten@promwad.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from kroah.org ([198.145.64.141]:56903 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764674AbZD3RIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2009 13:08:22 -0400
+Message-Id: <20090430165749.557066679@mini.kroah.org>
+Date: Thu, 30 Apr 2009 09:57:05 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: [patch 76/88] ath9k: implement IO serialization
+References: <20090430165549.117010404@mini.kroah.org>
+In-Reply-To: <20090430170122.GA16015@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 31, 2009 at 10:35 AM, Ivan Kuten <ivan.kuten@promwad.com> w=
-rote:
-> Hin-Tak Leung wrote:
->>
->> On Mon, Mar 30, 2009 at 1:38 PM, Ivan Kuten <ivan.kuten@promwad.com>
->> wrote:
->>>
->>> Hello!
->>>
->>> Anybody is working on adding antenna diversity feature to rtl8187 d=
-river?
->>
->> Which of rtl8187 comes with multiple antenna, etc which would benefi=
-t
->> from this feature?
->>
->
-> We are using WMG2503 module (with 2 antenna) from Abocom on our Black=
-fin DSP
-> based board.
-> We did some preliminary work based on rtl8187L_linux_26.1036.1105.200=
-8,
-> however there are too
-> many unclear points.
+2.6.28-stable review patch.  If anyone has any objections, please let us know.
 
-If you have already thought about this, and how to go about it, care
-to share? Some of us have spent some time
-looking at rtl8187L_linux_26.1036.1105.2008 so may be able to chip in.
+------------------
 
->
-> Regards,
-> Ivan
->
->>> Regards,
->>> Ivan
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wir=
-eless"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wire=
-less"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+This is a port of:
+commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
+for 2.6.28.
+
+All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
+serialization of IO when on non-uniprocessor systems. PCI
+express devices not not require this.
+
+This should fix our only last standing open ath9k kernel.org
+bugzilla bug report:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12110
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    4 ++--
+ drivers/net/wireless/ath9k/core.c  |    1 +
+ drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
+ 4 files changed, 55 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -590,8 +590,8 @@ struct ath9k_country_entry {
+ 	u8 iso[3];
+ };
+ 
+-#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
+-#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
++#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
++#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
+ 
+ #define SM(_v, _f)  (((_v) << _f##_S) & _f)
+ #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -1089,6 +1089,7 @@ int ath_init(u16 devid, struct ath_softc
+ 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
+ 
+ 	spin_lock_init(&sc->sc_resetlock);
++	spin_lock_init(&sc->sc_serial_rw);
+ 
+ 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
+ 	if (ah == NULL) {
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -1040,6 +1040,7 @@ struct ath_softc {
+ 	spinlock_t sc_rxbuflock;
+ 	spinlock_t sc_txbuflock;
+ 	spinlock_t sc_resetlock;
++	spinlock_t sc_serial_rw;
+ 	spinlock_t node_lock;
+ 
+ 	/* LEDs */
+@@ -1081,4 +1082,36 @@ void ath_get_currentCountry(struct ath_s
+ 	struct ath9k_country_entry *ctry);
+ u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp);
+ 
++/*
++ * Read and write, they both share the same lock. We do this to serialize
++ * reads and writes on Atheros 802.11n PCI devices only. This is required
++ * as the FIFO on these devices can only accept sanely 2 requests. After
++ * that the device goes bananas. Serializing the reads/writes prevents this
++ * from happening.
++ */
++
++static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
++{
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		iowrite32(val, ah->ah_sc->mem + reg_offset);
++}
++
++static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
++{
++	u32 val;
++	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
++		unsigned long flags;
++		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
++	} else
++		val = ioread32(ah->ah_sc->mem + reg_offset);
++	return val;
++}
++
+ #endif /* CORE_H */
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -346,6 +346,25 @@ static void ath9k_hw_set_defaults(struct
+ 	}
+ 
+ 	ah->ah_config.intr_mitigation = 0;
++
++	/*
++	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
++	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
++	 * This means we use it for all AR5416 devices, and the few
++	 * minor PCI AR9280 devices out there.
++	 *
++	 * Serialization is required because these devices do not handle
++	 * well the case of two concurrent reads/writes due to the latency
++	 * involved. During one read/write another read/write can be issued
++	 * on another CPU while the previous read/write may still be working
++	 * on our hardware, if we hit this case the hardware poops in a loop.
++	 * We prevent this by serializing reads and writes.
++	 *
++	 * This issue is not present on PCI-Express devices or pre-AR5416
++	 * devices (legacy, 802.11abg).
++	 */
++       if (num_possible_cpus() > 1)
++               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
+ }
+ 
+ static void ath9k_hw_override_ini(struct ath_hal *ah,
+
+
