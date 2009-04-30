@@ -1,66 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56639 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433AbZDWIdM (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:35303 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750869AbZD3DTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2009 04:33:12 -0400
-Subject: [PATCH] mac80211: rename max_sleep_interval to max_sleep_period
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 23 Apr 2009 10:32:36 +0200
-Message-Id: <1240475556.30082.172.camel@johannes.local> (sfid-20090423_103317_372659_22EC0A8F)
-Mime-Version: 1.0
+	Wed, 29 Apr 2009 23:19:07 -0400
+Date: Thu, 30 Apr 2009 00:19:03 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>,
+	Matthew Garrett <mjg@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC v6] rfkill: rewrite
+Message-ID: <20090430031903.GD18827@khazad-dum.debian.net> (sfid-20090430_051929_493760_B2C0523B)
+References: <1238349195.24972.5.camel@johannes.local> <1239745712.4205.17.camel@johannes.local> <1239750483.4205.28.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1239750483.4205.28.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle points out that max_sleep_interval is somewhat confusing
-because the value is measured in beacon intervals, and not in
-TU. Rename it to max_sleep_period to be consistent with things
-like DTIM period that are also measured in beacon intervals.
+I am halfway on the thinkpad-acpi conversion. It is going slow because
+I have to cleanup the entire thing to have the code look even remotely
+sane now that HW and SW states are to be tracked separately by the
+backend driver, and I lost the RFKILL_STATE_* stuff.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Not sure I like wakeup interval, it seems, although unlikely, that
-a driver could wake up quicker than this, and often need to due to
-the DTIM interval.
+Anyway, in the process (using v7 of the patch, taken from the URL you
+posted sometime ago), I noticed this:
 
- include/net/mac80211.h |    4 ++--
- net/mac80211/mlme.c    |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+The return values for rfkill_alloc() are not the same on the stub and
+real functions.  The stub function uses ERR_PTR, while the real
+function uses NULL for any errors.   Please make them do the same
+thing, and it is probably a damn good idea to document in the
+kerneldoc what kind of return values one should expect when you return
+a pointer and the function can fail (i.e. NULL or ERR_PTR).
 
---- wireless-testing.orig/include/net/mac80211.h	2009-04-23 10:26:57.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-04-23 10:30:29.000000000 +0200
-@@ -559,7 +559,7 @@ enum ieee80211_conf_changed {
-  * @beacon_int: beacon interval (TODO make interface config)
-  *
-  * @listen_interval: listen interval in units of beacon interval
-- * @max_sleep_interval: the maximum number of beacon intervals to sleep for
-+ * @max_sleep_period: the maximum number of beacon intervals to sleep for
-  *	before checking the beacon for a TIM bit (managed mode only); this
-  *	value will be only achievable between DTIM frames, the hardware
-  *	needs to check for the multicast traffic bit in DTIM beacons.
-@@ -584,7 +584,7 @@ struct ieee80211_conf {
- 	int beacon_int;
- 	u32 flags;
- 	int power_level, dynamic_ps_timeout;
--	int max_sleep_interval;
-+	int max_sleep_period;
- 
- 	u16 listen_interval;
- 	bool radio_enabled;
---- wireless-testing.orig/net/mac80211/mlme.c	2009-04-23 10:27:14.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-04-23 10:27:23.000000000 +0200
-@@ -555,7 +555,7 @@ void ieee80211_recalc_ps(struct ieee8021
- 				maxslp = min_t(int, dtimper,
- 						    latency / beaconint_us);
- 
--			local->hw.conf.max_sleep_interval = maxslp;
-+			local->hw.conf.max_sleep_period = maxslp;
- 			local->ps_sdata = found;
- 		}
- 	} else {
+Also, I have a question: are hooks ever called in atomic/interrupt
+context?  Just about every ACPI and I2C driver needs to sleep to do
+their magic, so I sure hope the answer is "no", otherwise life
+suddenly got a whole lot more complicated for thinkpad-acpi..
 
+Also, due to races, it is _impossible_ to assure the backend driver
+that the set_block hook will never be called when the radio is
+hard-blocked.  Best to change the description of that hook to make it
+clear that it could happen, but that the rfkill core will try to
+optimize away such changes.  Here's the race:
 
+           A                                  B
+rfkill_set_block
+    saves state in "prev"
+    ...                            rfkill_set_hw_state(true)
+    call set_block hook
+      but radio IS hard-blocked
+      and the core WAS informed
+      of this
+
+Also, it looks like the SW state rollback done by rfkill_set_block can
+sw-unblock a radio when it shouldn't on races very similar as the one
+above, but involving sw-blocking.
+
+I don't see a way to do safe state rollback in a lockless rfkill core
+if set_sw_state can happen at any time.  Please enlighten me if I am
+wrong (and I hope I am) :-(
+
+If I am not wrong, one could change rfkill_set_sw_state and
+rfkill_set_states to return an error if rfkill_set_block is on the way
+(that can be done lockless).  For rfkill_set_states, document that the
+hw state WILL be updated regardless, but that the sw state might not
+be.
+
+Or one could kick the problem to the backend driver (which will have
+any required locking anyway), by giving the set_block hook the duty of
+calling set_sw_state when it succeeds.  The return status might be
+kept should we ever start passing it down to other layers like
+userspace, or you can remove it.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
