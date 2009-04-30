@@ -1,271 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:45316 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbZDTROB (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36413 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754814AbZD3QJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2009 13:14:01 -0400
-Subject: Re: Problem with IEEE80211_MONITORING_INTERVAL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1239875168.9737.10.camel@johannes.local>
-References: <1239837672.11795.46.camel@violet>
-	 (sfid-20090416_012123_293746_81110E23)  <1239875168.9737.10.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 20 Apr 2009 18:13:56 +0100
-Message-Id: <1240247636.5260.11.camel@localhost.localdomain> (sfid-20090420_191411_172352_6A2463CE)
+	Thu, 30 Apr 2009 12:09:40 -0400
+Subject: Re: [RFC v6] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
+	Dirk Opfer <Dirk@Opfer-Online.de>,
+	Matthew Garrett <mjg@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <20090430155316.GF28027@khazad-dum.debian.net>
+References: <1238349195.24972.5.camel@johannes.local>
+	 <1239745712.4205.17.camel@johannes.local>
+	 <1239750483.4205.28.camel@johannes.local>
+	 <20090430031903.GD18827@khazad-dum.debian.net>
+	 <1241104014.29878.12.camel@johannes.local>
+	 <20090430155316.GF28027@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tRgbRxxx/UT7ZoTwabhO"
+Date: Thu, 30 Apr 2009 18:09:08 +0200
+Message-Id: <1241107748.29878.19.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-> > After a long debugging session with Reinette we finally tracked down
-> > what is going on here. A full scan with this card takes 7-9 seconds and
-> > that seems to be too long and trigger IEEE80211_MONITORING_INTERVAL
-> > which then deauthenticates us with the AP (reason=6).
-> 
-> Note to everybody: _Please_ provide the exact output. This text above
-> makes it sound like we deauth from the AP, when in reality the AP has
-> deauth'ed us.
-> 
-> Maybe your AP is just buggy and can't handle you going away for more
-> than a couple of seconds? It _looks_ like it sends you a deauth frame
-> while you're scanning (please verify using wireshark or similar), we
-> miss that deauth because we're off the channel, and then when we get
-> back and start sending data again the AP complains that we're no longer
-> authenticated.
-> 
-> Sorry, but there's not enough information here to tell what really is
-> going wrong. The known bug shouldn't be able to cause this behaviour.
+--=-tRgbRxxx/UT7ZoTwabhO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-so I had time to log the details now. I still have the problem that the
-association only works once. If it ever breaks it never works again. I
-hope this is not something stupid in the iwlagn driver for the 5350
-hardware.
+On Thu, 2009-04-30 at 12:53 -0300, Henrique de Moraes Holschuh wrote:
 
-This is from wpa_supplicant (latest version from GIT of course):
+> > Actually, I was going to clean this up, and then I noticed you're
+> > wrong. :) Returning ERR_PTR(-ENODEV) is intentional, in the non-RFKILL
+> > case. Imagine a driver like this:
+>=20
+> Well, that's confusing as all heck... document it, please? =20
 
-CTRL-EVENT-SCAN-RESULTS 
-CTRL-EVENT-SCAN-RESULTS 
-WPS-AP-AVAILABLE 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-WPA: Key negotiation completed with 00:1f:3f:19:d8:b7 [PTK=CCMP GTK=CCMP]
-CTRL-EVENT-CONNECTED - Connection to 00:1f:3f:19:d8:b7 completed (auth) [id=0 id_str=]
-CTRL-EVENT-SCAN-RESULTS 
-CTRL-EVENT-SCAN-RESULTS 
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-WPA: 4-Way Handshake failed - pre-shared key may be incorrect
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Trying to associate with 00:1f:3f:19:d8:b7 (SSID='Holtmann' freq=2462 MHz)
-Associated with 00:1f:3f:19:d8:b7
-^CCTRL-EVENT-TERMINATING - signal 2 received
+Well, ok. I don't really think it's all that confusing since you don't
+need to think about the non-RFKILL code, you can just write the code as
+though rfkill was always enabled.
 
-As you see it keeps scanning, authenticating, associating and then it
-never completes.
+> I still think in
+> that case, we'd be better off if rfkill_alloc always uses the ERR_PTR
+> convention.
 
-And this is the debug output from the kernel side (latest
-wireless-testing with all debug options enabled):
+Umm, no, think again. If we do that, the driver won't do
+	if (!rf)
+but
+	if (IS_ERR(rf))
+and the advantage is lost.
 
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX AssocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-cfg80211: Calling CRDA for country: DE
-wlan0: beacon loss from AP 00:1f:3f:19:d8:b7 - sending probe request
-wlan0: beacon loss from AP 00:1f:3f:19:d8:b7 - sending probe request
-wlan0: no probe response from AP 00:1f:3f:19:d8:b7 - disassociating
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticated (Reason: 2)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: direct probe to AP 00:1f:3f:19:d8:b7 try 1
-wlan0 direct probe responded
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticated (Reason: 2)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticated (Reason: 2)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticated (Reason: 2)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticated (Reason: 2)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: direct probe to AP 00:1f:3f:19:d8:b7 try 1
-wlan0: direct probe to AP 00:1f:3f:19:d8:b7 try 2
-wlan0: direct probe to AP 00:1f:3f:19:d8:b7 try 3
-wlan0 direct probe responded
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticated (Reason: 2)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticate with AP 00:1f:3f:19:d8:b7
-wlan0: authenticated
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: associate with AP 00:1f:3f:19:d8:b7
-wlan0: RX ReassocResp from 00:1f:3f:19:d8:b7 (capab=0x431 status=0 aid=2)
-wlan0: associated
-phy0: Allocated STA 00:1f:3f:19:d8:b7
-phy0: Inserted STA 00:1f:3f:19:d8:b7
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1f:3f:19:d8:b7)
-wlan0: switched to short slot time (BSSID=00:1f:3f:19:d8:b7)
-wlan0: deauthenticating by local choice (reason=3)
-phy0: Removed STA 00:1f:3f:19:d8:b7
-phy0: Destroyed STA 00:1f:3f:19:d8:b7
+This is exactly what debugfs does too.
 
-Do you need anything else? I have really no idea what happens here and I
-like to get it fixed.
+johannes
 
-Regards
+--=-tRgbRxxx/UT7ZoTwabhO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Marcel
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJ+c0iAAoJEKVg1VMiehFYUNMP/2ykYS05wuSgWwKD5kiA1i98
+1BHyjjkOLR43VJNPH3xAml5t9SsuFbYl/XsX5G6TGRUbikjJ9UKlJdUppV3DP78I
+E9y9/jBqMtxwG1wk8NlQhMRDMr4gT4Rq3N/jbP67S+0BhCrM+3brr/5G8oumOD7e
+oQG2bYrXG45XgLQwPyiRFgHF9J9R3fWTA1v/rzaWtcGxpTQGU/BS5XDRk63Htfvr
+20+SieToNZRpG4iqCgN0LYgDve1aci1UZX1LbzMIP0RPozDMW9lNsDZYPsP3kHUu
+c/TDVg2HDDFOawg0pHtDwpnj3VuEzGNxNWy5nPfBwxePzff23xNQcNTHDetjr3rm
+/IClnT4Qu05wpjhtI/H6L5Enej37ToSvlEYOQ24Y5LAqlwNGoi3MC2b+OOjPfO/I
+H82ebjrSiu+cpG4j0TQ8XaCtHYzpY9Eb8/N4FfgF4davmW6tjN1RQCm033OTWf6S
+5sRNQfDumkp4o58ht3WkSL6KWWbjwT5gNqfdrJTiSesfRf7TI5sMs9LVfKbulL8h
+qAgOWDAjZWQMtOxPStRskYGu9eFwp/tseWMWsyBRppWBsvXN0sleSUVc3KzLZJhg
+X5e51ojNqbSvdzgScIhpEWmDWhQYXrJaaPAcXCwVS1oun8jPqifaFNBHyxfE3DCI
+t8VnKLq0rKK/aXjrAKvW
+=m6Mi
+-----END PGP SIGNATURE-----
+
+--=-tRgbRxxx/UT7ZoTwabhO--
 
