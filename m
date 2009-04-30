@@ -1,107 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1611 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756276AbZDECLI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237AbZD3KFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Apr 2009 22:11:08 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: kalle.valo@nokia.com
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/6] wl12xx: separate platform data into arch-independent code
-Date: Sat,  4 Apr 2009 22:10:25 -0400
-Message-Id: <1238897428-19639-4-git-send-email-me@bobcopeland.com> (sfid-20090405_041124_022826_C6844045)
-In-Reply-To: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
-References: <1238897428-19639-1-git-send-email-me@bobcopeland.com>
+	Thu, 30 Apr 2009 06:05:44 -0400
+Subject: Re: rt73usb Access point status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <efe7343f0904300258u7d29ff3cu9ca8ea3b3038ebab@mail.gmail.com> (sfid-20090430_115816_491036_20248F26)
+References: <wfbpqkvlm0.fsf@calligramme.charmers>
+	 <wfzldytr8l.fsf@calligramme.charmers>
+	 <efe7343f0904300251q4650d17nb062cc28b011580d@mail.gmail.com>
+	 <efe7343f0904300258u7d29ff3cu9ca8ea3b3038ebab@mail.gmail.com>
+	 (sfid-20090430_115816_491036_20248F26)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2XbiM7vx+Lk3JxH9BPUG"
+Date: Thu, 30 Apr 2009 12:05:10 +0200
+Message-Id: <1241085910.27613.16.camel@johannes.local> (sfid-20090430_120548_435169_4CA54321)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to build the wl12xx driver on any arch, extract the SPI
-config struct into include/linux/spi/ and remove the OMAP tag-based
-retrieval.  The board code can then set the platform data on
-the spi struct device before probe.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/wl12xx/main.c   |    7 ++++---
- drivers/net/wireless/wl12xx/wl12xx.h |    5 ++---
- include/linux/spi/wl12xx_spi.h       |   18 ++++++++++++++++++
- 3 files changed, 24 insertions(+), 6 deletions(-)
- create mode 100644 include/linux/spi/wl12xx_spi.h
+--=-2XbiM7vx+Lk3JxH9BPUG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9de45c7..dd3c277 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1266,6 +1266,7 @@ static int __devinit wl12xx_probe(struct spi_device *spi)
- 	struct wl12xx *wl;
- 	int ret, i;
- 	static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
-+	struct wl12xx_platform_data *pdata = spi->dev.platform_data;
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl12xx_ops);
- 	if (!hw) {
-@@ -1279,9 +1280,9 @@ static int __devinit wl12xx_probe(struct spi_device *spi)
- 	wl->hw = hw;
- 	dev_set_drvdata(&spi->dev, wl);
- 	wl->spi = spi;
--	wl->config = omap_get_config(OMAP_TAG_WLAN_CX3110X,
--				     struct omap_wlan_cx3110x_config);
--	if (wl->config == NULL) {
-+
-+	wl->config = pdata;
-+	if (!wl->config) {
- 		ret = -ENODEV;
- 		goto out_free;
- 	}
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 1856b07..6f0b33d 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -28,9 +28,8 @@
- #include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/bitops.h>
-+#include <linux/spi/wl12xx_spi.h>
- #include <net/mac80211.h>
--#include <mach/board.h>
--#include <mach/board-nokia.h>
- 
- #define DRIVER_NAME "wl12xx"
- #define DRIVER_PREFIX DRIVER_NAME ": "
-@@ -175,7 +174,7 @@ struct wl12xx {
- 	bool mac80211_registered;
- 
- 	struct spi_device *spi;
--	const struct omap_wlan_cx3110x_config *config;
-+	const struct wl12xx_platform_data *config;
- 
- 	enum wl12xx_state state;
- 	struct mutex mutex;
-diff --git a/include/linux/spi/wl12xx_spi.h b/include/linux/spi/wl12xx_spi.h
-new file mode 100644
-index 0000000..4011d00
---- /dev/null
-+++ b/include/linux/spi/wl12xx_spi.h
-@@ -0,0 +1,18 @@
-+/*
-+ * wl12xx_spi.h
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2. This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+#ifndef _WL12XX_SPI_H
-+#define _WL12XX_SPI_H
-+
-+struct wl12xx_platform_data {
-+	u8  chip_type;
-+	s16 power_gpio;
-+	s16 irq_gpio;
-+	s16 spi_cs_gpio;
-+};
-+
-+#endif
--- 
-1.6.0.6
 
+> The solution they have found is not optimal, b ut works in their scenario=
+.
+>=20
+> You will need to modify hostapd, according to this blog post:
+> http://eznemegy.blog.hu/2008/12/14/using_rt2x00_wireless_driver_with_host=
+apd
+
+Based on that information, I have removed the "Yes (under development)"
+note from the driver page since it doesn't really support it... In fact,
+I'm surprised it works even with that hack since hostapd usually polls
+the station with nullfunc frames and waits for an ack.
+
+johannes
+
+--=-2XbiM7vx+Lk3JxH9BPUG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ+XfSAAoJEKVg1VMiehFYxWoQAMTUbUMMwbbo7w7XurJAD7OH
+Sh4mqqowde2e4etA5VPWmRkjpJSbKFyUgDSKtjunSKGwyeq8bNYQNapNrCdzDB+E
+/QyNHte9trfY3uXqH2/g+5o7yqm6MJKN2U4ZgTqD/MfP+6hPwuU6l1HlS0kkWI0W
+mE2Ym5eNseNpB655NVQbWQtqKL9fVqzjQSbfYenDHRww/IKUCVY0TM7yAup9kUpz
+QgyJ308NYhePU/Qu5YPo/DEWOuJLGEh2wuatxzS/BnzZg/JS7rNvKDWKdOtiAXi8
+tPPsNn9BV0SVeqOUlow+C51XKkqEyZ0NUQTzvdHyqgHt9opiDbfeD740fAUOfvyu
+29oFlq77Aa4sJfbuX3zvKCLfWMSFnUhLE3zZ023GcUHqcKpbL3WmkCM4pgZVnoAA
+SjZ85LGelvN4AvO8l6KNmVAM+SkfrNgzQ4CVCHjLOj0iASclVeY5o6n/j/Q5VCQX
+jH3qox0LWSIijENX+3e6QwcDCPuabZ6oEZg0R6YhGq2Oj3LDIjcOVmAW+gUog2bN
+R1FcU85EQZlY2pf9GWADSodu1OZgttbYkZPJF40cd/iJuVce/ClXY1LIkLg4mZ0l
+9uy2Bl/PoxVW4jAiz9Jpnb43awjIrXC+2LZ2wLIwebwzwmq4Ui+Eq8Gd+KD/JdJA
+Bfcq3w9Lfte7/8O4bs7O
+=F4kT
+-----END PGP SIGNATURE-----
+
+--=-2XbiM7vx+Lk3JxH9BPUG--
 
