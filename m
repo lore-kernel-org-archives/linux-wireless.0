@@ -1,84 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53909 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbZDPLHO (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1072 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755625AbZD3T44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2009 07:07:14 -0400
-Subject: Re: [RFC 0/3] mac80211 powersave improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87iql4981b.fsf@litku.valot.fi> (sfid-20090416_130208_558130_BEE7A112)
-References: <20090415171046.336006351@sipsolutions.net>
-	 <87iql4981b.fsf@litku.valot.fi> (sfid-20090416_130208_558130_BEE7A112)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ev8ADcIq5d2DVSekwXpD"
-Date: Thu, 16 Apr 2009 13:06:40 +0200
-Message-Id: <1239880000.9737.20.camel@johannes.local> (sfid-20090416_130720_703548_82711DB5)
-Mime-Version: 1.0
+	Thu, 30 Apr 2009 15:56:56 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Nick Kossifidis <mick@madwifi-project.org>
+Subject: [PATCH 4/9] ath5k: Beaconing fixes
+Date: Thu, 30 Apr 2009 15:55:47 -0400
+Message-Id: <1241121352-6064-5-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
+References: <1241121352-6064-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Nick Kossifidis <mick@madwifi-project.org>
 
---=-Ev8ADcIq5d2DVSekwXpD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+* Write next beacon timer even on AP mode since without this we get
+ no beacons + ath9k does it too.  Docs say that we must write 0 on
+ this register on AP mode to start TSF increment, we do both to be
+ on the safe side.
 
-On Thu, 2009-04-16 at 14:01 +0300, Kalle Valo wrote:
+ * Fix num_tx_pending function, we never read the register :P that's
+ why we got all those "beacon queue 7 didn't stop messages".
 
-> >  1) improve powersave to only allow it when a single
-> >     managed interface is active
-> >
-> >  2) disable PS when the maximum networking latency
-> >     applications are are willing to put up with is
-> >     smaller than the beacon interval -- in that case
-> >     we cannot allow the AP to buffer frames
->=20
-> No problem with these.
+ * Put full prioriy on beacon queue, lock all queues with lower
+ priority using the arblock and also bypass any arblock by seting
+ the arblock ignore flag.
 
-I'll send these along with the software beacon filtering, I think.
+ * For the CAB queue (do we need this thing ?, it seems crap) since
+ it's supposed to fire up after each beacon (we don't use it on driver
+ part, ath9k/MadWiFi does), don't make it DBA gated but instead make
+ it fire after each beacon by using the beacon sent gated flag.
 
-> >  3) enable powersave by default
-> >
-> > The last part might be controversial?
->=20
-> I think this a bad idea. For normal users we should not enable powersave
-> by default, at least not yet. I believe that there would be so much
-> problems that we would have to revert the change eventually.
+ * Increase bmiss threshold to 10, that's what we used on MadWiFi for
+ a long time. Also when we have pending frames on the beacon queue (we
+ got a beacon that didn't make it on the air) it's more likely that
+ the beacon queue never started, probably due to faulty DBA setting,
+ so change that "beacon queue didn't stop" message.
 
-We can go with the configurable one -- and default y in wireless-testing
-but default n in mainline for a while. Get press coverage etc. and at
-some point flip the switch.
+ Tested this with AP mode and IBSS mode and seems to work fine ;-)
 
-> > Should we have a default setting for the dynamic PS
-> > timeout?
->=20
-> Yes. Having timeout zero makes no sense in normal laptop use.
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+ Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   64 +++++++++++++++++----------------
+ drivers/net/wireless/ath/ath5k/pcu.c  |    4 +-
+ drivers/net/wireless/ath/ath5k/qcu.c  |    7 +++-
+ 3 files changed, 40 insertions(+), 35 deletions(-)
 
-So, what's a good default? Fairly long I'd say, maybe 500ms?
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index d70856a..b48ff7d 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1738,35 +1738,6 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
+ 	}
+ }
+ 
+-static void ath5k_tasklet_beacon(unsigned long data)
+-{
+-	struct ath5k_softc *sc = (struct ath5k_softc *) data;
+-
+-	/*
+-	 * Software beacon alert--time to send a beacon.
+-	 *
+-	 * In IBSS mode we use this interrupt just to
+-	 * keep track of the next TBTT (target beacon
+-	 * transmission time) in order to detect wether
+-	 * automatic TSF updates happened.
+-	 */
+-	if (sc->opmode == NL80211_IFTYPE_ADHOC) {
+-		/* XXX: only if VEOL suppported */
+-		u64 tsf = ath5k_hw_get_tsf64(sc->ah);
+-		sc->nexttbtt += sc->bintval;
+-		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+-				"SWBA nexttbtt: %x hw_tu: %x "
+-				"TSF: %llx\n",
+-				sc->nexttbtt,
+-				TSF_TO_TU(tsf),
+-				(unsigned long long) tsf);
+-	} else {
+-		spin_lock(&sc->block);
+-		ath5k_beacon_send(sc);
+-		spin_unlock(&sc->block);
+-	}
+-}
+-
+ static void
+ ath5k_tasklet_rx(unsigned long data)
+ {
+@@ -2120,7 +2091,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 		sc->bmisscount++;
+ 		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+ 			"missed %u consecutive beacons\n", sc->bmisscount);
+-		if (sc->bmisscount > 3) {		/* NB: 3 is a guess */
++		if (sc->bmisscount > 10) {	/* NB: 10 is a guess */
+ 			ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+ 				"stuck beacon time (%u missed)\n",
+ 				sc->bmisscount);
+@@ -2141,10 +2112,12 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	 * are still pending on the queue.
+ 	 */
+ 	if (unlikely(ath5k_hw_stop_tx_dma(ah, sc->bhalq))) {
+-		ATH5K_WARN(sc, "beacon queue %u didn't stop?\n", sc->bhalq);
++		ATH5K_WARN(sc, "beacon queue %u didn't start/stop ?\n", sc->bhalq);
+ 		/* NB: hw still stops DMA, so proceed */
+ 	}
+ 
++	/* Note: Beacon buffer is updated on beacon_update when mac80211
++	 * calls config_interface */
+ 	ath5k_hw_set_txdp(ah, sc->bhalq, bf->daddr);
+ 	ath5k_hw_start_tx_dma(ah, sc->bhalq);
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "TXDP[%u] = %llx (%p)\n",
+@@ -2301,6 +2274,35 @@ ath5k_beacon_config(struct ath5k_softc *sc)
+ 	ath5k_hw_set_imr(ah, sc->imask);
+ }
+ 
++static void ath5k_tasklet_beacon(unsigned long data)
++{
++	struct ath5k_softc *sc = (struct ath5k_softc *) data;
++
++	/*
++	 * Software beacon alert--time to send a beacon.
++	 *
++	 * In IBSS mode we use this interrupt just to
++	 * keep track of the next TBTT (target beacon
++	 * transmission time) in order to detect wether
++	 * automatic TSF updates happened.
++	 */
++	if (sc->opmode == NL80211_IFTYPE_ADHOC) {
++		/* XXX: only if VEOL suppported */
++		u64 tsf = ath5k_hw_get_tsf64(sc->ah);
++		sc->nexttbtt += sc->bintval;
++		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
++				"SWBA nexttbtt: %x hw_tu: %x "
++				"TSF: %llx\n",
++				sc->nexttbtt,
++				TSF_TO_TU(tsf),
++				(unsigned long long) tsf);
++	} else {
++		spin_lock(&sc->block);
++		ath5k_beacon_send(sc);
++		spin_unlock(&sc->block);
++	}
++}
++
+ 
+ /********************\
+ * Interrupt handling *
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 5f07e87..579aa0a 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -736,8 +736,8 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
+ 	/* When in AP mode zero timer0 to start TSF */
+ 	if (ah->ah_op_mode == NL80211_IFTYPE_AP)
+ 		ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
+-	else
+-		ath5k_hw_reg_write(ah, next_beacon, AR5K_TIMER0);
++
++	ath5k_hw_reg_write(ah, next_beacon, AR5K_TIMER0);
+ 	ath5k_hw_reg_write(ah, timer1, AR5K_TIMER1);
+ 	ath5k_hw_reg_write(ah, timer2, AR5K_TIMER2);
+ 	ath5k_hw_reg_write(ah, timer3, AR5K_TIMER3);
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 5094c39..73407b3 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -160,7 +160,8 @@ u32 ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
+ 	if (ah->ah_version == AR5K_AR5210)
+ 		return false;
+ 
+-	pending = (AR5K_QUEUE_STATUS(queue) & AR5K_QCU_STS_FRMPENDCNT);
++	pending = ath5k_hw_reg_read(ah, AR5K_QUEUE_STATUS(queue));
++	pending &= AR5K_QCU_STS_FRMPENDCNT;
+ 
+ 	/* It's possible to have no frames pending even if TXE
+ 	 * is set. To indicate that q has not stopped return
+@@ -401,14 +402,16 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_DFS_MISC(queue),
+ 				(AR5K_DCU_MISC_ARBLOCK_CTL_GLOBAL <<
+ 				AR5K_DCU_MISC_ARBLOCK_CTL_S) |
++				AR5K_DCU_MISC_ARBLOCK_IGNORE |
+ 				AR5K_DCU_MISC_POST_FR_BKOFF_DIS |
+ 				AR5K_DCU_MISC_BCN_ENABLE);
+ 			break;
+ 
+ 		case AR5K_TX_QUEUE_CAB:
+ 			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
+-				AR5K_QCU_MISC_FRSHED_DBA_GT |
++				AR5K_QCU_MISC_FRSHED_BCN_SENT_GT |
+ 				AR5K_QCU_MISC_CBREXP_DIS |
++				AR5K_QCU_MISC_RDY_VEOL_POLICY |
+ 				AR5K_QCU_MISC_CBREXP_BCN_DIS);
+ 
+ 			ath5k_hw_reg_write(ah, ((AR5K_TUNE_BEACON_INTERVAL -
+-- 
+1.6.0.6
 
-johannes
-
---=-Ev8ADcIq5d2DVSekwXpD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ5xE8AAoJEKVg1VMiehFYwrwP+wfIF7HBqTwVG2I6hcWTxn1u
-9dlPCcK+iyRbWjNJMrHCO7FVVEOP3rB6mIVueaiQtxvPOXyxnzFYFWGHNUr80E9C
-2DaFgY+Xwvurcnd6Orlc7PBCuqxwOqH+XURd2vbdBWJbYzwQucLip1eWZ16LPPz6
-qxRQpfpNy/clg0bHIEMMYBQs8aqn3n5hsGfXuCTyuXnT98JNpiPLKIvNwr81d05R
-WE+dnnK2WZpTsTjScRdx3DkjjIm6y1K1d7Gxjtismnv1z7MrmkZOsTNnbny811f+
-1xu6D4tCxufh6/qjEXH/Ksni466PZd+dzFKRgKj11ZL25nW5Wz106OO/up2kBeXp
-L0CWuZKXOV1vlq8fBlvEIEMWiRQIDJN1QRezx5kTYtq4IRB4qV1sk1lNLc4YGSGC
-6EmRsu7ohWJfRI5EqIALd+4HIYysX6uX9hdzjOUQgTJHGnRhTOBUTGZwv0Ec6Sx5
-/JmwVD76j8oFFVqG4T/AojGRaL0v5HyhHXismd01rgX+l2Cr2ETKdsMgks1er9Je
-9wv7zjKkQbl2i/xKeES+1R8UEep+/KN8nz9gjqFQCTHZnerIyRyiY5AAvdSNlVHm
-D8hzkFpjxuae4qBQnWE8SNhtrhPeU8AQyITLkSAZoWpC8sB37y9/xOSLFRSRWwUp
-YaXpCL/8M5UR4qeHI91t
-=ZEtc
------END PGP SIGNATURE-----
-
---=-Ev8ADcIq5d2DVSekwXpD--
 
