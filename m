@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:57962 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759392AbZDOMJ1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2009 08:09:27 -0400
-Received: by bwz17 with SMTP id 17so2867271bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2009 05:09:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1239796656-20646-2-git-send-email-me@bobcopeland.com>
-References: <1239796656-20646-1-git-send-email-me@bobcopeland.com>
-	 <1239796656-20646-2-git-send-email-me@bobcopeland.com>
-Date: Wed, 15 Apr 2009 15:09:25 +0300
-Message-ID: <40f31dec0904150509p69e3a854p9a62c9a3a227bfd8@mail.gmail.com> (sfid-20090415_140934_190574_04DC617D)
-Subject: Re: [PATCH 1/5] ath5k: fix initvals errors
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, jirislaby@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:17738 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750736AbZD3UuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2009 16:50:15 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/5] iwlwifi driver updates 04/30/2009
+Date: Thu, 30 Apr 2009 13:56:25 -0700
+Message-Id: <1241124991-12492-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/15 Bob Copeland <me@bobcopeland.com>:
-> This patch corrects a few errors in the initvals tables to match thos=
-e
-> in the HAL tables. =C2=A0Namely, remove a couple of repetitions, fix =
-some
-> turbo mode errors, and correct a register for the CCK rate power tabl=
-e.
->
-> Changes-licensed-under: ISC
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
+In this series we change the locking in the 3945 RX path to
+increase the likelihood for allocation to succeed by enabling GFP_KERNEL
+allocation instead of GFP_ATOMIC. We disable PS support temporarily until
+some issues with it are resolved. We also include some cleanup.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+We include one patch that addresses a problem tracked by kerneloops.org.
+For this fix we provide a patch that applies to wireless-testing and a
+second patch that applies to linux-2.6.
+
+[PATCH 1/5] iwl3945: fix lock dependency
+[PATCH 2/5] iwlagn: disable PS support for iwlagn
+[PATCH 3/5] iwlwifi: "is_fat" bit in rate scale match RXON flag
+[PATCH 4/5] iwlwifi: replace test_and_set_bit by set_bit in clear stations function
+[PATCH 5/5] iwlwifi: update key flags at time key is set
+[PATCH 1/1 v2.6.30] iwlwifi: update key flags at time key is set
 
 
+Thank you
 
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reinette
+
