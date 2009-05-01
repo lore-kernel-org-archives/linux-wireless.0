@@ -1,117 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46724 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152AbZE0FsK (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64588 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778AbZEAFpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 01:48:10 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1M9Bzn-000143-8Q
-	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 01:48:11 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n4R5jBZb007450
-	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 07:45:11 +0200
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id n4R5jB3Y007449
-	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 07:45:11 +0200
-From: Jeff Hansen <x@jeffhansen.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	ath9k-devel@lists.ath9k.org, Jeff Hansen <x@jeffhansen.com>
-Date: Wed, 27 May 2009 05:05:14 +0000
-Message-Id: <1243400715-13561-3-git-send-email-x@jeffhansen.com>
-In-Reply-To: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
-References: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
-Subject: [PATCH 3/4] ath9k: Add "debug" file to debugfs
+	Fri, 1 May 2009 01:45:12 -0400
+Received: by fxm2 with SMTP id 2so2189946fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2009 22:45:10 -0700 (PDT)
+To: Jamie Lentin <jm@lentin.co.uk>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Chances of WPA with at76c505a-rfmd2958
+References: <alpine.DEB.1.10.0904301926090.24512@woodchuck.wormnet.eu>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 01 May 2009 08:45:08 +0300
+In-Reply-To: <alpine.DEB.1.10.0904301926090.24512@woodchuck.wormnet.eu> (Jamie Lentin's message of "Thu\, 30 Apr 2009 19\:49\:50 +0100 \(BST\)")
+Message-ID: <87r5z99y1n.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the debug file to the ath9k debugfs, which lets you modify
-the debug_mask at runtime, without having to reload the ath9k module.
+Jamie Lentin <jm@lentin.co.uk> writes:
 
-Signed-off-by: Jeff Hansen <x@jeffhansen.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |   38 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/debug.h |    1 +
- 2 files changed, 39 insertions(+), 0 deletions(-)
+> Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index d50821c..e2ff4a2 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -45,6 +45,38 @@ static int ath9k_debugfs_open(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
-+static ssize_t read_file_debug(struct file *file, char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	char buf[32];
-+	unsigned int len = 0;
-+	len += snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.debug_mask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	unsigned long mask;
-+	char buf[32];
-+	if (copy_from_user(buf, user_buf, (sizeof(buf) - 1) < count ?
-+		(sizeof(buf) - 1) : count))
-+		return 0;
-+	buf[sizeof(buf)-1] = 0;
-+	if (strict_strtoul(buf, 0, &mask) == 0)
-+		sc->debug.debug_mask = mask;
-+	return count;
-+}
-+
-+static const struct file_operations fops_debug = {
-+	.read = read_file_debug,
-+	.write = write_file_debug,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE
-+};
-+
- static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
- {
-@@ -462,6 +494,11 @@ int ath9k_init_debug(struct ath_softc *sc)
- 	if (!sc->debug.debugfs_phy)
- 		goto err;
- 
-+	sc->debug.debugfs_debug = debugfs_create_file("debug",
-+		S_IRUGO | S_IWUSR, sc->debug.debugfs_phy, sc, &fops_debug);
-+	if (!sc->debug.debugfs_debug)
-+		goto err;
-+
- 	sc->debug.debugfs_dma = debugfs_create_file("dma", S_IRUGO,
- 				       sc->debug.debugfs_phy, sc, &fops_dma);
- 	if (!sc->debug.debugfs_dma)
-@@ -499,6 +536,7 @@ void ath9k_exit_debug(struct ath_softc *sc)
- 	debugfs_remove(sc->debug.debugfs_rcstat);
- 	debugfs_remove(sc->debug.debugfs_interrupt);
- 	debugfs_remove(sc->debug.debugfs_dma);
-+	debugfs_remove(sc->debug.debugfs_debug);
- 	debugfs_remove(sc->debug.debugfs_phy);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index cf9146a..edda15b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -95,6 +95,7 @@ struct ath_stats {
- struct ath9k_debug {
- 	int debug_mask;
- 	struct dentry *debugfs_phy;
-+	struct dentry *debugfs_debug;
- 	struct dentry *debugfs_dma;
- 	struct dentry *debugfs_interrupt;
- 	struct dentry *debugfs_rcstat;
+Hello,
+
+> I've got this chip within my OQO 01+, generally the driver seems very
+> stable (thankyou for your work!), 
+
+Which driver? There is at76c50x-usb (using mac80211) and at76_usb in
+staging (which is going away sometime in the future). Because
+at76c50x-usb is the path forward, I will omit at76_usb here.
+
+> however when trying to use WPA with the chip the association
+> conversation fails.
+
+Yes, at76c50x-usb doesn't support WPA right now.
+
+> Of course, I can provide the logs from both the device and hostapd on
+> the other end, but suspect that the answer will fall into one of the
+> categories:-
+>
+> (a) Be patient!  Test it once I've said the driver supports it.
+>
+> (b) Go off and try and implement x, y and z, see what happens.
+>
+> (c) Not a chance with this chip, sorry.  The firmware can't send x, so
+> the association won't ever work.
+>
+> WPA would be very useful for me, so would be glad to help in any way.
+> If the answer is (c), ah well, still nice to know though.
+
+The answer is (b). At least some chipsets seem to support WPA. I'm busy
+with other projects right now and I don't have time to implement WPA
+support, but I can give you hints. I see two ways forward:
+
+1) use mac80211 to encrypt the frames
+
+Currently encryption happens in hardware, but also mac80211 can do it.
+And mac80211 sw encryption supports TKIP and AES, so with luck you will
+get WPA working with that method. Remove .set_key from at76_ops and see
+what happens.
+
+2) enable firmware support for WPA
+
+Milan Plzik had some patches for at76_usb which added WPA firmware
+support. The patches are here:
+
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-legacy.git;a=shortlog;h=at76
+
+You can port them for at76c50x-usb and get WPA working. First check that
+the WPA firmware supports your device, though.
+
+If you need any help, send email to me and this list. We'll help you as
+we can.
+
 -- 
-1.6.0.4
-
-
+Kalle Valo
