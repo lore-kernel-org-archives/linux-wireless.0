@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:36312 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755696AbZEKVxb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 17:53:31 -0400
-Message-ID: <4A089E49.7080403@gmail.com>
-Date: Mon, 11 May 2009 23:53:13 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Justin Mattock <justinmattock@gmail.com>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
-References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-In-Reply-To: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:60876 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753765AbZEAPwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 May 2009 11:52:16 -0400
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: reinette chatre <reinette.chatre@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241179203.8086.3.camel@maxim-laptop>
+References: <1241179203.8086.3.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 01 May 2009 08:58:33 -0700
+Message-Id: <1241193513.10498.97.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding some CCs.
+Maxim,
 
-On 05/11/2009 07:02 PM, Justin Mattock wrote:
-> I've been trying to diagnose an issue
-> with 2.6.30-rc4. At first thinking it
-> was not the kernel, but the network manager
-> (in my case I use wicd).
-> with 2.6.29-rc8 the system starts up,
-> connects no problem.
-> but as soon as I load 2.6.30-rc4
-> I get limited connection to none.
-> in dmesg I see:
+On Fri, 2009-05-01 at 05:00 -0700, Maxim Levitsky wrote:
+> Don't know if this is new regression, or just exposed race condition,
+> but currently using rfkill, and/or s2disk sometimes leaves the card in
+> state in which it can't scan.
+
+Could you please provide more details of this scenario? 
+
 > 
-> [   36.337419] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 1
-> [   36.530106] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 2
-> [   36.730100] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 3
-> [   36.930101] wlan0: direct probe to AP 00:1e:2a:00:67:f0 timed out
-> [   44.421728] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 1
-> [   44.620080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 2
-> [   44.820080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 3
-> [   45.020076] wlan0: direct probe to AP 00:1e:2a:00:67:f0 timed out
+> Tested with and without hardware scanning.
 > 
-> The type of encryption used is just
-> a standard WEP key(no WPA).
+> It just returns -EBUSY till I reload the driver.
 > 
-> has this been resolved already?
-> 
-> Also I'm noticing(but not that big of a deal)
-> if I set in sysctl.conf:
-> 
-> net.ipv4.conf.all.arp_ignore=8
-> net.ipv4.conf.wlan0.arp_ignore=8
-> net.ipv4.conf.wmaster0.arp_ignore=8
-> net.ipv4.conf.lo.arp_ignore=8
-> net.ipv4.conf.all.arp_announce=2
-> net.ipv4.conf.wlan0.arp_announce=2
-> net.ipv4.conf.wmaster0.arp_announce=2
-> net.ipv4.conf.lo.arp_announce=2
-> 
-> watching a movie on hulu, about 15/20 minuets
-> into enjoyment, hulu craps out(starts re-buffering)
-> then re initializes after about 30 secs later.
-> but if I comment those out(set back to default)
-> hulu will run fine.
-> 
+> I use iwlwifi.git, iwl3945
+
+Reinette
 
