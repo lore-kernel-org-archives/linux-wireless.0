@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f177.google.com ([209.85.222.177]:58695 "EHLO
-	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbZE0VCG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 17:02:06 -0400
-Received: by pzk7 with SMTP id 7so3851837pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 14:02:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1243450447-11749-1-git-send-email-lrodriguez@atheros.com>
-References: <1243450447-11749-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 27 May 2009 14:01:46 -0700
-Message-ID: <43e72e890905271401k67377bc5w28267060fd054b4b@mail.gmail.com>
-Subject: Re: [PATCH] ar9170: add AVM FRITZ devices
-To: linville@tuxdriver.com, Christian Lamparter <chunkeey@web.de>,
-	Yuan-Gu Wei <Yuan-Gu.Wei@atheros.com>,
-	Joerg Albert <jal2@gmx.de>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Peter Grabienski <Peter.Grabienski@atheros.com>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	Michael Fortin <Michael.Fortin@atheros.com>,
-	Johnny Cheng <Johnny.Cheng@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59802 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754814AbZEALMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 May 2009 07:12:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] Fixes compile error with CONFIG_PM=n
+Date: Fri,  1 May 2009 13:12:36 +0200
+Message-Id: <1241176356-27531-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 27, 2009 at 11:54 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> This adds:
->
-> USB 0x057C:0x8401       AVM FRITZ!WLAN USB Stick N
-> USB 0x057C:0x8402       AVM FRITZ!WLAN USB Stick N 2.4
->
-> Cc: Peter Grabienski <Peter.Grabienski@Atheros.com>
-> Cc: Stephen Chen <Stephen.Chen@Atheros.com>
-> Cc: Michael Fortin <Michael.Fortin@Atheros.com>
-> Cc: Johnny Cheng <Johnny.Cheng@Atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+/drivers/net/wireless/p54/p54usb.c: In function 'p54u_probe':
+/drivers/net/wireless/p54/p54usb.c:923: error: 'struct usb_device' has no member named 'reset_resume'
 
-Actually please hold off on this.. Christian pointed out an issue
-reported with these devices which would need to be addressed before
-adding it to ar9170usb.
+In the struct usb_device the reset_resume attribute is only available when CONFIG_PM is defined.
 
-The issue seems to be related to the 2-stage firmware by the "linux"
-solution and conflicts with the bootcode size used by the AVM fritz
-cards. As it turns out the 2-stage firmware is no longer needed as the
-regulatory control is not handled by ath.ko, the common shared module.
-Keep in mind ar9170usb doesn't yet support setting TX power so it will
-work with a default tx power setting, whatever that is for both the
-2-stage firmware or the 1-stage firmware.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/p54/p54usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Anyway, a possible solution here is to try to add support for the
-1-stage firmware. I had some initial patches for this [1] but didn't
-get a chance to finish up on it. I was at least able to scan.
-Christian, you also noted some differences on tx status reporting. I
-suspect though that if the 1-stage firmware is used and issues
-corrected (as done by the otus driver, see the patch e-mail) then
-ar9170 would work well with the AVM devices.
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index ec6c954..f40c0f4 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -919,9 +919,11 @@ static int __devinit p54u_probe(struct usb_interface *intf,
+ 	priv->common.open = p54u_open;
+ 	priv->common.stop = p54u_stop;
+ 	if (recognized_pipes < P54U_PIPE_NUMBER) {
++#ifdef CONFIG_PM
+ 		/* ISL3887 needs a full reset on resume */
+ 		udev->reset_resume = 1;
+ 		err = p54u_device_reset(dev);
++#endif
+ 
+ 		priv->hw_type = P54U_3887;
+ 		dev->extra_tx_headroom += sizeof(struct lm87_tx_hdr);
+-- 
+1.6.2.1
 
-[1] http://marc.info/?l=linux-wireless&m=124124074016450&w=2
-
-  Luis
