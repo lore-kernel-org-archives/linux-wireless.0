@@ -1,67 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757487AbZEOIcN (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:41752 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753645AbZEAJmg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 04:32:13 -0400
-Subject: Re: Scan while TX/RX'ing a lot of data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
-In-Reply-To: <200905151011.50915.hs4233@mail.mn-solutions.de>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	 <1242327298.4227.25.camel@localhost.localdomain>
-	 <200905151011.50915.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Vkm2uYGl0mjmwI1VRl4A"
-Date: Fri, 15 May 2009 10:31:47 +0200
-Message-Id: <1242376307.5799.41.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 1 May 2009 05:42:36 -0400
+Received: by bwz7 with SMTP id 7so2237266bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 02:42:35 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 1 May 2009 10:42:35 +0100
+Message-ID: <9b2b86520905010242q443eb19bnc9e2c86a23605c2d@mail.gmail.com>
+Subject: Re: rfkill rewrite
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 4/18/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sat, 2009-04-18 at 10:43 +0100, Alan Jenkins wrote:
+>
+>> >> When I looked at the code earlier, I saw no obvious replacement for
+>> >> rfkill_set_default().  So I tried disabling the wireless and rebooting
+>> >> to see what happened.  It didn't like that :-).
+>> >>
+>> >
+>> > Ok that wasn't too hard -- try this on top if you get a chance:
+>> >
+>>
+>> Great, that fixes the crash.
+>>
+>>
+>> 1) I think we need to add a resume method to eeepc-laptop.
+>>
+>> Without this, funny things happen when I hibernate, disable wireless in
+>> the BIOS, and resume:
+>>
+>>     ath5k phy0: failed to wake up the MAC chip
+>>
+>> It's an really stupid thing to do, but it can happen.  It's bad from a
+>> UI point of view.  E.g. in network-manager, you can see a "wlan0"
+>> device, but it doesn't work.
+>>
+>> The EEE rfkill is unusual in that it hotplugs the PCI device, making
+>> eeepc-laptop something like a custom pci hotplug driver.  With your
+>> rewrite, eeepc-laptop doesn't notice the state change on resume.
+>> Previously, the rfkill-core would restore the pre-hibernation state,
+>> which would sort everything out.  I don't think anything else does this,
+>> so we can just add a resume method to eeepc-laptop.  The resume method
+>> would re-check the state and do the PCI hotplug dance if necessary.
+>>
+>> If you agree, I can do the patch for this and send it to you.
+>
+> Sounds good to me, yeah.
+>
+> I could make the rfkill core do that at resume, but I'm not really sure
+> it's what we want -- there are too many cases imho:
+>  * hard rfkill might have changed
+>  * soft rfkill might still be ok in hw
+>  * soft rfkill might need reconfiguring
+> etc. I think generally it's saner to let the driver sort it out -- it
+> can always ask for the current state by using set_hw_state() or so.
 
---=-Vkm2uYGl0mjmwI1VRl4A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I just realized or remembered something non-obvious.  This means _all_
+rfkill drivers need a resume handler.  They don't at the moment, so
+this would need to be fixed and documented.  In which case, it's
+probably simpler for the core to do it.
 
-On Fri, 2009-05-15 at 10:11 +0200, Holger Schurig wrote:
+You need this to handle hibernation.  If the rfkill state persists
+across hibernation (which mine does, even in S5), you can always cause
+the state to change, by pressing the wireless toggle key _while the
+hibernation image is being written to disk_.  At that stage, all
+devices are active, so that s2disk can interact with the user and
+write the image wherever it chooses.  The kernel will not "remember"
+the state change on resume, since it happened after the kernel image
+was snapshotted.
 
-[...]
+If the rfkill state does _not_ persist over hibernation, then clearly
+the state can change on resume and you will again need a resume
+handler,
 
-good thoughts
+On my EeePC, this is just more dramatic because it can de-power a PCI
+device without notifying the driver.  But the new rfkill design will
+require all devices to have a resume method, because there is no
+get_state() callback.  Otherwise, reading  of
+/sys/class/rfkill/rfkill*/state after resume from hibernation may
+return an incorrect result.  I don't think we should allow that to
+happen.
 
-> Also, I think that the background-scan stuff belongs more or less=20
-> in the "let roaming not suck" department. I wonder where the=20
-> GSOC people are now ...
-
-That particular project wasn't accepted. We get to work on it
-ourselves ;)
-
-johannes
-
---=-Vkm2uYGl0mjmwI1VRl4A
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKDShvAAoJEODzc/N7+QmaOQYP/i7da8t7JjlSjBmUBQX96Dqd
-ZVi/va20Zv6zeT2PZT4I7KT5FXNSo1XgUlYe2I1X8sJDpT/4MjVOS/xEolN2DOea
-5jEqKDNG2nKeLVJ8kI7ZundSjw197sE7amcwoQTNhEcujXUlfIhjU0kVGQntCCvP
-6zejB7zZTdM7bIF4l1oAKcH//RrduzH4O4S0d4CM+tN/MPYygq2gbU3+e5+LWp/o
-bkNmEnIzUyOpAMhL2jEU+cqgWkCC5GOBc7iocMFyYE6WQCjpSJ32jCmjCZoyMitg
-tQ4zmiopvur+pKv9ha4NdxpEaiHZnKiYSMpawl9uHD5a0ka7aey6itpw7iyB7GCx
-jooMcKvI0JMFZdJAV8P3ACNWz2AS9yd+C1ilz71O7rrkVACM/mweSRaBwP9qFXsP
-tMoXO8k+IQq5psr1IReZOhN0CY95mgvTVkJScBExM0CMUIvuqcrIp5zWFQLXirIc
-Uh8XOehWRb1oMvG12dvekxXuno+9xHjbBbJXQJDLOY5UJE85rpgp9KmU9aILROKs
-XX3igOb7krNVRDH/T3roHRktEPSi5vE1JJN6Z3vto0ovqS8/g8NGVdR7xWITXz1D
-iebLjuqAFhvKsgv8OWBKqK0vF+Qof2v7YKoDwuGCOrgwnXnZNbofMt5TVWh5A1D3
-W5Va77wcjPuy0nRPQVuB
-=dNMQ
------END PGP SIGNATURE-----
-
---=-Vkm2uYGl0mjmwI1VRl4A--
-
+Regards
+Alan
