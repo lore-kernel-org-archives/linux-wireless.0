@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:28609 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbZERSWj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 14:22:39 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so957657rvb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 11:22:40 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 18 May 2009 11:22:17 -0700
-Message-ID: <43e72e890905181122w38f83785p2134a5142a9f0905@mail.gmail.com>
-Subject: Plan of attack for enhancements for scan while associated
-To: Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com, Gaurav.Jauhar@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Received: from chilli.pcug.org.au ([203.10.76.44]:46012 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070AbZEAFVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 May 2009 01:21:49 -0400
+Date: Fri, 1 May 2009 15:21:44 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Greg KH <greg@kroah.com>
+Cc: linux-next@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: linux-next: driver-core tree build warning
+Message-Id: <20090501152144.500e619a.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut, Senthil has indicated interest in working on this, Johannes
-had pointed out you might have some initial work on this already? Can
-you post your patch, it might help?
+--Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Just so we're clear this would be an enhancement for wext/nl80211
-regular scan -- when we're associated we'd do scans by going to a new
-channel and then coming back to our operating channel to able to
-receive frames. We'd do this for each channel we can scan on until
-we're done with all of them.
+Hi Greg,
 
-We could possibly allow for a debugfs parameters to allow users to
-tune this to say scan over x channels before going to the operating
-channel, as well as change the time between moving to a new channel.
-This would probably help mostly with tuning this while debugging or
-figuring out ideal default values.
+Today's linux-next build (x86_64 allmodconfig) produced these warnings:
 
-New userspace can simply make use of nl80211 scan on an individual
-freq request and figure things out on its own.
+drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_cfg':
+drivers/net/wireless/ipw2x00/ipw2100.c:3491: warning: passing argument 1 of=
+ 'dev_get_drvdata' from incompatible pointer type
+include/linux/device.h:457: note: expected 'const struct device *' but argu=
+ment is of type 'struct device **'
+drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_status':
+drivers/net/wireless/ipw2x00/ipw2100.c:3500: warning: passing argument 1 of=
+ 'dev_get_drvdata' from incompatible pointer type
+include/linux/device.h:457: note: expected 'const struct device *' but argu=
+ment is of type 'struct device **'
+drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_capability':
+drivers/net/wireless/ipw2x00/ipw2100.c:3509: warning: passing argument 1 of=
+ 'dev_get_drvdata' from incompatible pointer type
+include/linux/device.h:457: note: expected 'const struct device *' but argu=
+ment is of type 'struct device **'
+drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_rf_kill':
+drivers/net/wireless/ipw2x00/ipw2100.c:4227: warning: passing argument 1 of=
+ 'dev_get_drvdata' from incompatible pointer type
+include/linux/device.h:457: note: expected 'const struct device *' but argu=
+ment is of type 'struct device **'
 
-  Luis
+Introduced by commit 73119f5e60e3b16577e99e2f035039bed0d2dcca ("Wireless:
+remove driver_data direct access of struct device").
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkn6hugACgkQjjKRsyhoI8yLuQCgmlYPYwARXT6GDx6Y/KRTtN2O
+WdkAn198M+rgYZ4PwVce8elkD2aLt8Zw
+=1NqE
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo--
