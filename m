@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:24302 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752189AbZESBn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 21:43:58 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] cfg80211: fix compile error with CONFIG_CFG80211_DEBUGFS
-To: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Date: Mon, 18 May 2009 21:43:52 -0400
-Message-ID: <20090519014352.19524.10495.stgit@mj.roinet.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:37423 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002AbZEAMHG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 May 2009 08:07:06 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1349345ywb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 05:07:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1241036667.12942.0.camel@maxim-laptop>
+References: <1240761579.10972.11.camel@maxim-laptop>
+	 <1241036667.12942.0.camel@maxim-laptop>
+Date: Fri, 1 May 2009 08:07:06 -0400
+Message-ID: <b6c5339f0905010507x75b14181t7263eb1717cd278e@mail.gmail.com>
+Subject: Re: PHY hangs on AR2425 (AR5007EG)
+From: Bob Copeland <bcopeland@gmail.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If CONFIG_CFG80211_DEBUGFS is enabled and CONFIG_MAC80211_DEBUGFS is
-not, compilation fails in net/wireless/debugfs.c:
+On Wed, Apr 29, 2009 at 4:24 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+>> The issue is that if I load its TX unit up to it's maximum throughput,
+>> it stalls each and every few seconds, and only way to
+>
+> Are you aware of that bug?
 
-net/wireless/debugfs.c: In function 'cfg80211_debugfs_drv_add':
-net/wireless/debugfs.c:117: error: 'struct cfg80211_registered_device'
-has no member named 'debugfs'
+Yeah, thanks, haven't lost the report but haven't
+had a chance to investigate so far.
 
-The debugfs filed is needed if and only if CONFIG_CFG80211_DEBUGFS is
-enabled, so use that instead of CONFIG_MAC80211_DEBUGFS.
+By load TX up, do you mean you are sending large
+files, using ping, iperf, or.. ?
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-
- net/wireless/core.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9511c2b..ab512bc 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -51,7 +51,7 @@ struct cfg80211_registered_device {
- 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
- 	unsigned long suspend_at;
- 
--#ifdef CONFIG_MAC80211_DEBUGFS
-+#ifdef CONFIG_CFG80211_DEBUGFS
- 	/* Debugfs entries */
- 	struct wiphy_debugfsdentries {
- 		struct dentry *rts_threshold;
+-- 
+Bob Copeland %% www.bobcopeland.com
