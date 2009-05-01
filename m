@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:49180 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753501AbZEPJEN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 05:04:13 -0400
-Received: by ewy24 with SMTP id 24so2991234ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 02:04:13 -0700 (PDT)
-Message-ID: <4A0671F7.4010908@gmail.com>
-Date: Sun, 10 May 2009 07:19:35 +0100
-From: Dave <kilroyd@googlemail.com>
-MIME-Version: 1.0
-To: Howard Chu <hyc@highlandsun.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: orinoco_cs and WPA-EAP?
-References: <4A065AFD.8000604@highlandsun.com>	 <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>	 <4A0DC4A9.8050505@highlandsun.com>  <4A0DD39D.6070001@gmail.com> <1242429170.10933.30.camel@localhost.localdomain> <4A0E0579.70507@highlandsun.com>
-In-Reply-To: <4A0E0579.70507@highlandsun.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from chilli.pcug.org.au ([203.10.76.44]:56707 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099AbZEAHLj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 May 2009 03:11:39 -0400
+Date: Fri, 1 May 2009 17:11:34 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Greg KH <greg@kroah.com>
+Cc: linux-next@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-next: driver-core tree build warning
+Message-Id: <20090501171134.f8fa430a.sfr@canb.auug.org.au>
+In-Reply-To: <20090501061118.GA19234@kroah.com>
+References: <20090501152144.500e619a.sfr@canb.auug.org.au>
+	<20090501054727.GB19020@kroah.com>
+	<20090501061118.GA19234@kroah.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Howard Chu wrote:
-> Dan Williams wrote:
->> On Fri, 2009-05-15 at 21:42 +0100, Dave wrote:
->>> Before enabling wpa_supplicant, can you try scan for your AP (as root):
->>>
->>> iwlist ethX scan essid YYYYY
-> 
-> That works fine. In fact, just "iwlist scan" returns the same result - only 
-> the info for my AP is returned. (There are at least 6 APs visible from an 
-> another laptop sitting nearby.)
+--Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The fact we can parse the scan result from your AP is good. It indicates
-the AP doesn't transmit a large list of IEs which trip the card up. The
-fact we can't see the other APs... I'll assume that's your dodgy antenna :)
+Hi Greg,
 
->>> I'm interested in what it returns, and whether dmesg reports 'Ext scan
->>> results too large' or something similar.
-> 
-> No, it just continues with the stream of "frame lost" messages:
-> 
-> eth2: Information frame lost. (10 times, followed by 1
-> __ratelimit: 2 callbacks suppressed  (then 10 more frame lost messages, and so on)
+On Thu, 30 Apr 2009 23:11:18 -0700 Greg KH <greg@kroah.com> wrote:
+>
+> On Thu, Apr 30, 2009 at 10:47:27PM -0700, Greg KH wrote:
+> > Ah crap, my bad.  I'll go fix this up, it passed my build tests, I
+> > wonder why this isn't an error, I missed the warning.
 
-I had thought you didn't get the frame lost messages until you tried to
-authenticate. If you always receive them, then it might just be due to
-an AP you're not interested in (and you might be able to ignore these
-warnings).
+I assume it is actually valid C (just not good C :-)).
 
-A few questions:
+> I've sent an updated version of the patch that fixes this to John and
+> the wireless mailing list and updated my tree as well.
 
-1. How far is wpa_supplicant getting in authentication? Use -dd
-2. If it authenticates, did you check whether you could dhcp on eth2?
+Thanks.
 
-It would also be nice to identify the source of your frame lost
-messages. Any chance you could have a look at the wireless traffic with
-another card in monitor mode?
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
+--Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC
+Content-Type: application/pgp-signature
 
-Regards,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-Dave.
+iEYEARECAAYFAkn6oKYACgkQjjKRsyhoI8wKNQCfUHPGuqXD1opzCdrWiGZcweJd
+sq0AnjM2yrZmKsX4LjfyEWx4TjB1O8xG
+=5gJR
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC--
