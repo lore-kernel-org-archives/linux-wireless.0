@@ -1,75 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:48621 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbZENUtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 16:49:45 -0400
-Subject: Re: Scan while TX/RX'ing a lot of data
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
-In-Reply-To: <1242327995.5799.4.camel@johannes.local>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	 <1242327298.4227.25.camel@localhost.localdomain>
-	 <1242327995.5799.4.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 14 May 2009 16:50:31 -0400
-Message-Id: <1242334231.4227.126.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:47463 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbZEBEjc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 May 2009 00:39:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/2] cfg80211: add debugfs HT40 allow map
+Date: Sat,  2 May 2009 00:39:30 -0400
+Message-Id: <1241239170-11443-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1241239170-11443-1-git-send-email-lrodriguez@atheros.com>
+References: <1241239170-11443-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-05-14 at 21:06 +0200, Johannes Berg wrote:
-> On Thu, 2009-05-14 at 14:54 -0400, Dan Williams wrote:
-> 
-> > Libertas splits scans up into 3 parts with a short return to the
-> > operating channel between each part.  There's nothing that requires
-> > cfg80211 for that to work...
-> 
-> Yeah that was my idea too, just return to the operating channel after
-> having scanned a channel or two and wait for the next beacon, and
-> possibly receive traffic if indicated in that beacon. It takes a bit of
-> synchronisation and isn't easy to implement, but it's definitely
-> possible.
-> 
-> > The problem here is that at any time an application (say, wifi location
-> > app) could ask for the list of access points.  If you don't scan
-> > periodically, all APs other than your associated AP (and others on the
-> > same channel) will gradually drop off because their beacons are
-> > received.  Hard to wifi position or get area statistics if there's only
-> > one AP in the list.
-> 
-> The other thing we should do is bump the AP list timeout, I think -- 10
-> seconds is very small. But then again we really need such apps to query
-> NM anyway.
-> 
-> > Secondarily, scanning is a tradeoff between better roaming latency and
-> > continuous high throughput.  If you don't scan, you have no idea what's
-> > around, and when you move and the current AP becomes marginal, you
-> > *have* to take the hit no matter what, so you can scan and find a new AP
-> > to associate with.
-> 
-> Yeah, that too.
-> 
-> > I would have though that the periodic scanning would be more of an
-> > annoyance when doing VOIP or SSH other latency sensitive tasks, but when
-> > just downloading a file, a few second drop in transfer rate gets lost in
-> > the bucket in the grand scheme of things.
-> 
-> ssh isn't too bad, at least not after I fixed the timings... before I
-> got very annoyed with ar9170. OTOH with VoIP it would suck to have a
-> small hiccup every 2 minutes -- maybe then we should postpone
-> indefinitely and only do it if the signal strength fluctuates?
+Here's a screenshot of what this looks like with ath9k:
 
-If there was a reliable mechanism to figure out whether there was a
-certain QoS level of traffic flowing through the card, this would be
-easier to do automatically.  AFAIK all the APIs these days are
-socket-based, and that doesn't help us get from app -> interface without
-a lot of intermediate steps.  How does mac80211 figure out what to put
-into each of the 4 buckets for wifi QoS / WMM?
+mcgrof@pogo /debug/ieee80211/phy0 $ cat ht40allow_map
+2412 HT40  +
+2417 HT40  +
+2422 HT40  +
+2427 HT40  +
+2432 HT40 -+
+2437 HT40 -+
+2442 HT40 -+
+2447 HT40 -
+2452 HT40 -
+2457 HT40 -
+2462 HT40 -
+2467 Disabled
+2472 Disabled
+2484 Disabled
+5180 HT40  +
+5200 HT40 -+
+5220 HT40 -+
+5240 HT40 -+
+5260 HT40 -+
+5280 HT40 -+
+5300 HT40 -+
+5320 HT40 -
+5500 HT40  +
+5520 HT40 -+
+5540 HT40 -+
+5560 HT40 -+
+5580 HT40 -+
+5600 HT40 -+
+5620 HT40 -+
+5640 HT40 -+
+5660 HT40 -+
+5680 HT40 -+
+5700 HT40 -
+5745 HT40  +
+5765 HT40 -+
+5785 HT40 -+
+5805 HT40 -+
+5825 HT40 -
 
-Dan
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.h    |    1 +
+ net/wireless/debugfs.c |   61 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 62 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 5756e80..b705149 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -58,6 +58,7 @@ struct cfg80211_registered_device {
+ 		struct dentry *fragmentation_threshold;
+ 		struct dentry *short_retry_limit;
+ 		struct dentry *long_retry_limit;
++		struct dentry *ht40allow_map;
+ 	} debugfs;
+ #endif
+ 
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index 3211e0e..679ddfc 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -44,6 +44,65 @@ DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
+ DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
+ 		      wiphy->retry_long);
+ 
++static int ht_print_chan(struct ieee80211_channel *chan,
++			 char *buf, int buf_size, int offset)
++{
++	if (WARN_ON(offset > buf_size))
++		return 0;
++
++	if (chan->flags & IEEE80211_CHAN_DISABLED)
++		return snprintf(buf + offset,
++				buf_size - offset,
++				"%d Disabled\n",
++				chan->center_freq);
++
++	return snprintf(buf + offset,
++			buf_size - offset,
++			"%d HT40 %c%c\n",
++			chan->center_freq,
++			(chan->flags & IEEE80211_CHAN_NO_HT40MINUS) ? ' ' : '-',
++			(chan->flags & IEEE80211_CHAN_NO_HT40PLUS)  ? ' ' : '+');
++}
++
++static ssize_t ht40allow_map_read(struct file *file,
++				  char __user *user_buf,
++				  size_t count, loff_t *ppos)
++{
++	struct wiphy *wiphy = file->private_data;
++	char *buf;
++	unsigned int offset = 0, buf_size = PAGE_SIZE, i, r;
++	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
++
++	buf = kzalloc(buf_size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&cfg80211_mutex);
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		sband = wiphy->bands[band];
++		if (!sband)
++			continue;
++		for (i = 0; i < sband->n_channels; i++)
++			offset += ht_print_chan(&sband->channels[i],
++						buf, buf_size, offset);
++	}
++
++	mutex_unlock(&cfg80211_mutex);
++
++	r = simple_read_from_buffer(user_buf, count, ppos, buf, offset);
++
++	kfree(buf);
++
++	return r;
++}
++
++static const struct file_operations ht40allow_map_ops = {
++	.read = ht40allow_map_read,
++	.open = cfg80211_open_file_generic,
++};
++
+ #define DEBUGFS_ADD(name)						\
+ 	drv->debugfs.name = debugfs_create_file(#name, S_IRUGO, phyd,	\
+ 						  &drv->wiphy, &name## _ops);
+@@ -59,6 +118,7 @@ void cfg80211_debugfs_drv_add(struct cfg80211_registered_device *drv)
+ 	DEBUGFS_ADD(fragmentation_threshold);
+ 	DEBUGFS_ADD(short_retry_limit);
+ 	DEBUGFS_ADD(long_retry_limit);
++	DEBUGFS_ADD(ht40allow_map);
+ }
+ 
+ void cfg80211_debugfs_drv_del(struct cfg80211_registered_device *drv)
+@@ -67,4 +127,5 @@ void cfg80211_debugfs_drv_del(struct cfg80211_registered_device *drv)
+ 	DEBUGFS_DEL(fragmentation_threshold);
+ 	DEBUGFS_DEL(short_retry_limit);
+ 	DEBUGFS_DEL(long_retry_limit);
++	DEBUGFS_DEL(ht40allow_map);
+ }
+-- 
+1.6.0.6
 
