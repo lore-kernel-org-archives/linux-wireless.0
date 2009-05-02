@@ -1,66 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54313 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbZEaGW1 (ORCPT
+Received: from mail-bw0-f163.google.com ([209.85.218.163]:48186 "EHLO
+	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbZEBKec convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 02:22:27 -0400
-Date: Sun, 31 May 2009 02:22:17 -0400
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] Crda oopses the system
-Message-ID: <20090531062217.GB23972@bombadil.infradead.org>
-References: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com> <1242256950.3241.13.camel@maxim-laptop> <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com> <1242258469.3241.19.camel@maxim-laptop> <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com> <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com> <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop> <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com> <1242986902.5544.8.camel@maxim-laptop>
+	Sat, 2 May 2009 06:34:32 -0400
+Received: by bwz7 with SMTP id 7so2684857bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2009 03:34:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1242986902.5544.8.camel@maxim-laptop>
+In-Reply-To: <wfk54zu7t6.fsf@calligramme.charmers>
+References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
+	 <efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
+	 <wfk54zu7t6.fsf@calligramme.charmers>
+Date: Sat, 2 May 2009 11:34:31 +0100
+Message-ID: <efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
+Subject: Re: rt73usb Access point status
+From: Luis Correia <luis.f.correia@gmail.com>
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 22, 2009 at 01:08:22PM +0300, Maxim Levitsky wrote:
-> I am talking about 
-> 
-> BUG_ON(!country_ie_regdomain);
-> in net/wireless/reg.c
+Jon,
 
-Please try this patch and leave a window open with this running:
+On Sat, May 2, 2009 at 11:18, Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk=
+> wrote:
+>
+> Luis Correia
+> <luis.f.correia@gmail.com>
+> writes:
+>
+> Hi Luis; thanks for your replies... more below:
+>
+>> On Thu, Apr 30, 2009 at 14:41, Joerg Pommnitz <pommnitz@yahoo.com> w=
+rote:
+>>> Reading the mail from Ivo
+>>> (http://sourceforge.net/mailarchive/message.php?msg_id=3D2008080820=
+59.11968.IvDoorn%40gmail.com)
+>
+> I found that before I posted and found it discouraging,
+> hence the question.
+>
+>>> I gather that the ACK in question is not from the peer but from the=
+ local
+>>> hardware indicating that the frame was actually sent and not lost d=
+ue to
+>>> some local error.
+>>
+>> According to Ivo, we cannot be totally sure that the device has sent
+>> the frame into the air, so no actual ACK is reported back to mac8021=
+1.
+>>
+>> The hostapd hack works, as long as the stations are not very far fro=
+m
+>> the AP, and thus not 'too many retries' need to be sent.
+>
+> So is the bug really in hostapd?
 
-iw event
+No, the bug is not in hostapd.
 
-Please be sure to grab iw from git, not sure if the reg events
-have all gone into an official release yet. What I'm looking for
-is whether or not a previous 11d setting was already processed
-or if the !country_ie_regdomain condition happens from the first
-11d processing.
+As Johannes says, the bug is in the driver.
+Apparently, the driver is unable to get the ACK from the hardware and
+thus unable to report that ACK back to hostapd.
 
-  Luis
+So the hostapd hack works, as long as there are enough room for
+retransmit supposely lost frames.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f87ac1d..1b60dfc 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2171,7 +2171,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	 * the country IE rd with what CRDA believes that country should have
- 	 */
- 
--	BUG_ON(!country_ie_regdomain);
-+	if (WARN_ON(!country_ie_regdomain)) {
-+		kfree(rd);
-+		rd = NULL;
-+		return -EINVAL;
-+	}
- 	BUG_ON(rd == country_ie_regdomain);
- 
- 	/*
-@@ -2268,6 +2272,8 @@ int regulatory_init(void)
- 	if (IS_ERR(reg_pdev))
- 		return PTR_ERR(reg_pdev);
- 
-+	country_ie_regdomain = NULL;
-+
- 	spin_lock_init(&reg_requests_lock);
- 	spin_lock_init(&reg_pending_beacons_lock);
- 
+I can't explain this well enough in English, sorry.
+
+>> AFAIK, this is not optimal at all, so I don't go around and say 'it
+>> works'. It may or may not work in your case.
+>
+> Since I would want to make an AP that generally worked, I
+> don't think it would be enough.
+>
+>> If possible, test and report back your findings.
+>
+> I don't currently have a dongle. I'd be happy to buy one and
+> test it (I really don't mind going through a fair number of
+> patch/test/report back cycles, it's just writing code that's
+> not currently something I can do), but not if there's a
+> demarcation dispute as to who owns the bug!
+
+To be completely honest with you in this whole AP issue, here's what I
+used to say to my friends: "if you need an AP working flawlessly under
+Linux, got with the Atheros b/g hardware".
+But that was in the madwifi days, I haven't tested it with the current
+mac80211 based driver.
+
+And again YMMV :)
+
+> --
+> J=F3n Fairbairn =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 Jon.Fairbairn@cl.cam.ac.uk
+
+p.s. there are tons of Cheap AP's out there, it's just a matter of find=
+ them :)
+
+Luis Correia
+rt2x00 project admin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
