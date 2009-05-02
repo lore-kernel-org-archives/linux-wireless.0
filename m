@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:44686 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbZENWRr convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35072 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750786AbZEBEhW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 18:17:47 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so947531wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 15:17:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	<1242327298.4227.25.camel@localhost.localdomain> <43e72e890905141207m3c27588ex13190b2ed6010e30@mail.gmail.com>
-	<1242334636.4227.134.camel@localhost.localdomain> <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 May 2009 15:17:28 -0700
-Message-ID: <43e72e890905141517m4f7f6d27i5e89044dfd058e3a@mail.gmail.com>
-Subject: Re: Scan while TX/RX'ing a lot of data
-To: Dan Williams <dcbw@redhat.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 2 May 2009 00:37:22 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 3/5] mac80211: check if HT40+/- is allowed before sending assoc
+Date: Sat,  2 May 2009 00:37:19 -0400
+Message-Id: <1241239041-2367-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1241239041-2367-1-git-send-email-lrodriguez@atheros.com>
+References: <1241239041-2367-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 2:26 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, May 14, 2009 at 1:57 PM, Dan Williams <dcbw@redhat.com> wrote:
+We weren't checking this at all.
 
->> Maybe if there was a way to figure out how full mac80211's QoS buckets
->> were, that would help?  Or get a frame counts from each of the 4 QoS
->> buckets individually?  That would allow NM to make more intelligent
->> decisions about stuff.  Maybe a more detailed nl80211 stats interface
->> would do the trick here.
->
-> Would help for debugging too anyway, since QOS uses the new device
-> queues maybe that might already be available?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/mlme.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-I should note the netdevice queues we use are _in_ mac80211 and do not
-actually represent each _device_ hardware queue. We use them for
-queuing frames for master interface to then send to the driver. Still
--- it seems this may be helpful. This would help with TX, we would
-need something else for RX.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 02f93fa..b1ed8c9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -122,10 +122,14 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+ 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+ 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-				channel_type = NL80211_CHAN_HT40PLUS;
++				if (!(local->hw.conf.channel->flags &
++				    IEEE80211_CHAN_NO_HT40PLUS))
++					channel_type = NL80211_CHAN_HT40PLUS;
+ 				break;
+ 			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-				channel_type = NL80211_CHAN_HT40MINUS;
++				if (!(local->hw.conf.channel->flags &
++				    IEEE80211_CHAN_NO_HT40MINUS))
++					channel_type = NL80211_CHAN_HT40MINUS;
+ 				break;
+ 			}
+ 		}
+-- 
+1.6.0.6
 
-  Luis
