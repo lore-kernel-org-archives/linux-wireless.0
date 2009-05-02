@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53441 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbZESOpP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 10:45:15 -0400
-Date: Tue, 19 May 2009 10:41:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	gregkh@suse.de, johannes@sipsolutions.net,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Staging: agnx: switch config_interface to
-	bss_info_changed
-Message-ID: <20090519144131.GB2691@tuxdriver.com>
-References: <1242127393-4298-1-git-send-email-a.beregalov@gmail.com> <20090512164448.GJ16247@kroah.com> <a4423d670905121037i3ea96b01s68367c082802684d@mail.gmail.com> <20090512190254.GB1957@kroah.com> <a4423d670905121315g503f4f0ep6a60e9051a2aeb9d@mail.gmail.com> <a4423d670905190512x296f6b1cgaa7815fb4f17cac7@mail.gmail.com>
+Received: from 42.248.sfcn.org ([160.7.248.42]:39352 "HELO mail.mypals.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754895AbZEBVx4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 May 2009 17:53:56 -0400
+From: Alf <alf@mypals.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ath5k in 2.6.29.1 won't associate with AP
+Date: Sat, 2 May 2009 15:53:54 -0600
+Cc: linux-wireless@vger.kernel.org
+References: <200905021218.23747.alf@mypals.org> <1241298894.13562.28.camel@johannes.local>
+In-Reply-To: <1241298894.13562.28.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <a4423d670905190512x296f6b1cgaa7815fb4f17cac7@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200905021553.55173.alf@mypals.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2009 at 04:12:50PM +0400, Alexander Beregalov wrote:
-> 2009/5/13 Alexander Beregalov <a.beregalov@gmail.com>:
-> > 2009/5/12 Greg KH <greg@kroah.com>:
-> >> On Tue, May 12, 2009 at 09:37:56PM +0400, Alexander Beregalov wrote:
-> >>> 2009/5/12 Greg KH <greg@kroah.com>:
-> >>> > On Tue, May 12, 2009 at 03:23:13PM +0400, Alexander Beregalov wrote:
-> >>> >> Fix this build error:
-> >>> >> drivers/staging/agnx/pci.c: In function 'agnx_config_interface':
-> >>> >> drivers/staging/agnx/pci.c:315: error: dereferencing pointer to incomplete type
-> >>> >> ..
-> >>> >> drivers/staging/agnx/pci.c:424: error: unknown field 'config_interface' specified in initializer
-> >>> >>
-> >>> >> config_interface was removed in 2d0ddec5b2b
-> >>> >> ("mac80211: unify config_interface and bss_info_changed")
-> >>> >
-> >>> > I do not see that patch in Linus's tree.  Is it in some other tree
-> >>> > (wireless?) and not yet in mainline?
-> >>> Yes, it is in wireless from linux-next.
-> >>> You asked to send patches based on linux-next, right?
-> >>> Should I always mark patches for staging-next tree as [PATCH -next] ?
-> >>
-> >> Hm, yes, -staging patches need to be against -next, but I have to be
-> >> able to build these somehow on my own without the wireless tree...
-> >>
-> >> I think something like this might better go through the wireless tree as
-> >> it depends on changes that happen there.  Sound good to you?
-> > Ok, thanks Greg.
+On Saturday 02 May 2009 03:14:54 pm Johannes Berg wrote:
+> On Sat, 2009-05-02 at 12:18 -0600, Alf wrote:
+> > It seems I am able to associate with an AP (not just my AP)
+> > sporadically. It seems that when it works, it works reliably, but
+> > that's only 10% of the time, if that.  I have turned on debugging on
+> > ath5 and on mac80211 but the debug messages don't offer anything
+> > useful.  The only thing I get is this:
 > >
-> >> If so, please send them to the wireless maintainer.
-> > John, will you apply it?
-> 
-> John?
+> > May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+> > May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2
+> > May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
+> > May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
+> > May  2 12:08:28 wlan0 direct probe responded
+>
+> What kernel are you using?
 
-*grumble*
+I did see your next message, but just to be sure:
 
-I guess I will...
+2.6.29.1
 
-John
+Also, this is what lspci reports:
+00:07.0 Ethernet controller: Atheros Communications Inc. AR2413 802.11bg NIC 
+(rev 01)
+        Subsystem: D-Link System Inc D-Link AirPlus G DWL-G510 Wireless PCI 
+Adapter(rev.B)
+        Flags: bus master, medium devsel, latency 96, IRQ 18
+        Memory at e0120000 (32-bit, non-prefetchable) [size=64K]
+        Capabilities: [44] Power Management version 2
+
+Some Google searches in other lists said this card didn't work in Linux and 
+that I should use madwifi.  I patched my kernel with the latest madwifi 
+snapshot but that didn't work either.  I was able to associate with the the 
+AP, but I could never get a DHCP response.  I also just tried the wireless-
+testing tree and it didn't associate.
+
+Does anyone know if this card is supported?  Anybody know why this card 
+works sometimes but most of the time it can't associate with the AP?
+
+Any help would be appreciated.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Alf
+@
