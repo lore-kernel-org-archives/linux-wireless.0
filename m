@@ -1,59 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:42200 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755638AbZERPNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:13:21 -0400
-Date: Mon, 18 May 2009 17:11:02 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Jonathan Corbet <corbet@lwn.net>, Martin Bammer <mrb74@gmx.at>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.30-rc6: Reported regressions from 2.6.29
-Message-ID: <20090518151102.GA6241@elte.hu>
-References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera> <20090517073327.GC1583@elte.hu> <20090518145725.GB18607@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090518145725.GB18607@redhat.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:50256 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbZEBEeS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 May 2009 00:34:18 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
+Subject: [PATCH] cfg80211: fix bug while trying to process beacon hints on init
+Date: Sat,  2 May 2009 00:34:15 -0400
+Message-Id: <1241238855-29306-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+During initialization we would not have received any beacons
+so skip processing reg beacon hints, also adds a check to
+reg_is_world_roaming() for last_request before accessing its
+fields.
 
-* Oleg Nesterov <oleg@redhat.com> wrote:
+This should fix this:
 
-> On 05/17, Ingo Molnar wrote:
-> >
-> > > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13107
-> > > Subject		: LTP 20080131 causes defunct processes w/2.6.30-rc1
-> > > Submitter	: Kumar Gala <galak@kernel.crashing.org>
-> > > Date		: 2009-04-09 15:43 (38 days old)
-> > > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=b3bfa0cba867f23365b81658b47efd906830879b
-> > > References	: http://marc.info/?l=linux-kernel&m=123929187208953&w=4
-> > > 		  http://lkml.org/lkml/2009/4/10/193
-> > > Handled-By	: Sukadev Bhattiprolu <sukadev@linux.vnet.ibm.com>
-> >
-> > Oleg says in that thread that it's as-designed, and followup
-> > questions were not replied to (yet).
-> 
-> Yes, I think this is false alarm. Perhaps I missed something, and 
-> I am waiting for more info from Kumar, but it looks like ltp was 
-> already changed to skip the "{ PTRACE_ATTACH, 1, EPERM }" test on 
-> kernels after 2.6.25
+BUG: unable to handle kernel NULL pointer dereference at
 
-Btw., why did the patch (and the revert) make any difference to the 
-test? Timing differences look improbable.
+IP: [<e0171332>] wiphy_update_regulatory+0x20f/0x295
 
-	Ingo
+*pdpt = 0000000008bf1001 *pde = 0000000000000000
+Oops: 0000 [#1]
+last sysfs file: /sys/class/backlight/eeepc/brightness
+Modules linked in: ath5k(+) mac80211 led_class cfg80211
+go_bit cfbcopyarea cfbimgblt cfbfillrect ipv6
+ydev usual_tables(P) snd_hda_codec_realtek snd_hda_intel
+nd_hwdep uhci_hcd snd_pcm_oss snd_mixer_oss i2c_i801
+e serio_raw i2c_core pcspkr atl2 snd_pcm intel_agp
+re agpgart eeepc_laptop snd_page_alloc ac video backlight
+rfkill button processor evdev thermal fan ata_generic
+
+Pid: 2909, comm: modprobe Tainted: Pc #112) 701
+EIP: 0060:[<e0171332>] EFLAGS: 00010246 CPU: 0
+EIP is at wiphy_update_regulatory+0x20f/0x295 [cfg80211]
+EAX: 00000000 EBX: c5da0000 ECX: 00000000 EDX: c5da0060
+ESI: 0000001a EDI: c5da0060 EBP: df3bdd70 ESP: df3bdd40
+ DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+Process modprobe (pid: 2909, ti=df3bc000 task=c5d030000)
+Stack:
+ df3bdd90 c5da0060 c04277e0 00000001 00000044 c04277e402
+ 00000002 c5da0000 0000001a c5da0060 df3bdda8 e01706a2 02
+ 00000282 000080d0 00000068 c5d53500 00000080 0000028240
+Call Trace:
+ [<e01706a2>] ? wiphy_register+0x122/0x1b7 [cfg80211]
+ [<e0328e02>] ? ieee80211_register_hw+0xd8/0x346
+ [<e06a7c9f>] ? ath5k_hw_set_bssid_mask+0x71/0x78 [ath5k]
+ [<e06b0c52>] ? ath5k_pci_probe+0xa5c/0xd0a [ath5k]
+ [<c01a6037>] ? sysfs_find_dirent+0x16/0x27
+ [<c01fec95>] ? local_pci_probe+0xe/0x10
+ [<c01ff526>] ? pci_device_probe+0x48/0x66
+ [<c024c9fd>] ? driver_probe_device+0x7f/0xf2
+ [<c024cab3>] ? __driver_attach+0x43/0x5f
+ [<c024c0af>] ? bus_for_each_dev+0x39/0x5a
+ [<c024c8d0>] ? driver_attach+0x14/0x16
+ [<c024ca70>] ? __driver_attach+0x0/0x5f
+ [<c024c5b3>] ? bus_add_driver+0xd7/0x1e7
+ [<c024ccb9>] ? driver_register+0x7b/0xd7
+ [<c01ff827>] ? __pci_register_driver+0x32/0x85
+ [<e00a8018>] ? init_ath5k_pci+0x18/0x30 [ath5k]
+ [<c0101131>] ? _stext+0x49/0x10b
+ [<e00a8000>] ? init_ath5k_pci+0x0/0x30 [ath5k]
+ [<c012f452>] ? __blocking_notifier_call_chain+0x40/0x4c
+ [<c013a714>] ? sys_init_module+0x87/0x18b
+ [<c0102804>] ? sysenter_do_call+0x12/0x22
+Code: b8 da 17 e0 83 c0 04 e8 92 f9 ff ff 84 c0 75 2a 8b
+85 c0 74 0c 83 c0 04 e8 7c f9 ff ff 84 c0 75 14 a1 bc da
+4 03 74 66 8b 4d d4 80 79 08 00 74 5d a1 e0 d2 17 e0 48
+EIP: [<e0171332>] wiphy_update_regulatory+0x20f/0x295
+SP 0068:df3bdd40
+CR2: 0000000000000004
+---[ end trace 830f2dd2a95fd1a8 ]---
+
+This issue is hard to reproduce, but it was noticed and discussed on
+this thread:
+
+http://marc.info/?t=123938022700005&r=1&w=2
+
+Cc: stable@kernel.org
+Reported-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+ net/wireless/reg.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 11481b4..d68950d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1135,7 +1135,8 @@ static bool reg_is_world_roaming(struct wiphy *wiphy)
+ 	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
+ 	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
+ 		return true;
+-	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	if (last_request &&
++	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+ 	    wiphy->custom_regulatory)
+ 		return true;
+ 	return false;
+@@ -1144,6 +1145,12 @@ static bool reg_is_world_roaming(struct wiphy *wiphy)
+ /* Reap the advantages of previously found beacons */
+ static void reg_process_beacons(struct wiphy *wiphy)
+ {
++	/*
++	 * Means we are just firing up cfg80211, so no beacons would
++	 * have been processed yet.
++	 */
++	if (!last_request)
++		return;
+ 	if (!reg_is_world_roaming(wiphy))
+ 		return;
+ 	wiphy_update_beacon_reg(wiphy);
+-- 
+1.6.0.6
+
