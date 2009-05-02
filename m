@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:44791 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754942AbZEMXrz (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35073 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826AbZEBEhX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 19:47:55 -0400
-Received: by fxm2 with SMTP id 2so982271fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 16:47:54 -0700 (PDT)
-Subject: Re: [BUG] Crda oopses the system
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
-References: <1241499867.4816.18.camel@maxim-laptop>
-	 <1242140728.5626.3.camel@maxim-laptop>
-	 <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
-	 <1242149671.5210.2.camel@maxim-laptop>
-	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
-	 <1242166051.26484.7.camel@maxim-laptop>
-	 <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
-	 <1242256104.3241.4.camel@maxim-laptop>
-	 <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
-	 <1242256950.3241.13.camel@maxim-laptop>
-	 <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 14 May 2009 02:47:49 +0300
-Message-Id: <1242258469.3241.19.camel@maxim-laptop>
-Mime-Version: 1.0
+	Sat, 2 May 2009 00:37:23 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/5] cfg80211: HT bandwidth checks
+Date: Sat,  2 May 2009 00:37:16 -0400
+Message-Id: <1241239041-2367-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-05-13 at 16:28 -0700, Luis R. Rodriguez wrote:
-> On Wed, May 13, 2009 at 4:22 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> > On Wed, 2009-05-13 at 16:12 -0700, Luis R. Rodriguez wrote:
-> >> On Wed, May 13, 2009 at 4:08 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> >> > On Wed, 2009-05-13 at 14:28 -0700, Luis R. Rodriguez wrote:
-> >>
-> >> >> Anyway please try the patches I posted and I'll finish reviewing this
-> >> >> in the meantime.
-> >> > I don't see anything yet.
-> >>
-> >> wget this and git am it, it has all the patches:
-> >>
-> >> http://bombadil.infradead.org/~mcgrof/patches/wl/race-fixes-2009-05-13.patch
-> >>
-> >>   Luis
-> >
-> >
-> > Thanks a lot.
-> > I will test this as soon as be at university again. (next sunday).
-> 
-> Oh wow, that seems like eons to me. Hm..  yeah oh well.
-For me it isn't... I have a pile of homeworks....
+This is a respin of the HT40 bandwidth patches with the
+fixes pointed out by Jouni. This time I leave out the debugfs
+stuff for another series which will follow up.
 
-Anyway, I was supposed to be at lectures tomorrow, but there will be 'a
-student day', which I obviously don't attend, only to continue linux
-hacking... 
+Luis R. Rodriguez (5):
+  cfg80211: Process regulatory max bandwidth checks for HT40
+  wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
+  mac80211: check if HT40+/- is allowed before sending assoc
+  cfg80211: check allowed channel type upon userspace requests
+  mac80211/cfg80211: move wiphy specific debugfs entries to cfg80211
 
-So thanks,
-	Maxim Levitsky
-
-I wish I had time to set up, an ath5k in AP mode. There are rumors that
-it works more or less now, then I could use the same beacon frame to
-test.
-
-
-Best regards,
-	Maxim Levitsky
+ drivers/net/wireless/ath/regd.c           |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 +-
+ include/net/cfg80211.h                    |   22 ++-
+ net/mac80211/debugfs.c                    |   16 ---
+ net/mac80211/ieee80211_i.h                |    4 -
+ net/mac80211/mlme.c                       |   12 +-
+ net/wireless/Kconfig                      |    8 +
+ net/wireless/Makefile                     |    1 +
+ net/wireless/core.c                       |    5 +
+ net/wireless/core.h                       |   11 ++
+ net/wireless/debugfs.c                    |   70 ++++++++++
+ net/wireless/debugfs.h                    |   14 ++
+ net/wireless/nl80211.c                    |   39 +++---
+ net/wireless/reg.c                        |  201 +++++++++++++++++++++++------
+ 15 files changed, 319 insertions(+), 106 deletions(-)
+ create mode 100644 net/wireless/debugfs.c
+ create mode 100644 net/wireless/debugfs.h
 
