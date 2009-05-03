@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38872 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755791AbZE1Huj (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57805 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754941AbZECSHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 03:50:39 -0400
-Date: Thu, 28 May 2009 00:49:25 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: linux-wireless@vger.kernel.org
-Cc: bugzilla-daemon@bugzilla.kernel.org,
-	bugme-daemon@bugzilla.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Jason Andryuk <jandryuk@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	karllinuxtest.relton@ntlworld.com
-Subject: Re: [Bugme-new] [Bug 13312] New: at76c50x-usb mutex deadlock
-Message-Id: <20090528004925.d6d9be31.akpm@linux-foundation.org>
-In-Reply-To: <bug-13312-10286@http.bugzilla.kernel.org/>
-References: <bug-13312-10286@http.bugzilla.kernel.org/>
+	Sun, 3 May 2009 14:07:44 -0400
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241227946.5192.3.camel@maxim-laptop>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/YDY9sX7BIEUNia43T9f"
+Date: Sun, 03 May 2009 20:07:40 +0200
+Message-Id: <1241374060.13562.37.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
+--=-/YDY9sX7BIEUNia43T9f
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 14 May 2009 20:54:54 GMT bugzilla-daemon@bugzilla.kernel.org wrote:
+On Sat, 2009-05-02 at 04:32 +0300, Maxim Levitsky wrote:
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=13312
-> 
->            Summary: at76c50x-usb mutex deadlock
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 2.6.30-rc5
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: network-wireless
->         AssignedTo: drivers_network-wireless@kernel-bugs.osdl.org
->         ReportedBy: karllinuxtest.relton@ntlworld.com
->                 CC: kalle.valo@iki.fi
->         Regression: No
-> 
-> 
-> at76_dwork_hw_scan() does a mutex_lock and then calls
-> ieee80211_scan_completed(). This in turn calls at76_config() which then tries
-> to do the same mutex_lock and thus the driver goes into deadlock.
-> 
-> I believe the solution would be for at76_dwork_hw_scan() to unlock the mutex
-> before calling ieee80211_scan_completed(). I've tried this with my card, and it
-> does indeed avoid the lockup - though I have yet to get the card working
-> properly with this driver.
-> 
+> > * iwlwifi.git - very close to current head, yesterday HEAD
+> > * disable_hw_scan=3D1 - this bug is present regardless of this setting,
+> > yet this rules out firmware interactions during rfkill.
 
-umm, is anyone looking at
-drivers_network-wireless@kernel-bugs.osdl.org?  This one seems a bit of
-a no-brainer?
+Are you absolutely sure this also happens with disable_hw_scan=3D1? That
+seems rather strange. Can you please also put a printk into
+net/wireless/scan.c:cfg80211_scan_done, and provide separate logs w/ and
+w/o disable_hw_scan=3D1.
+
+johannes
+
+--=-/YDY9sX7BIEUNia43T9f
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ/d1pAAoJEKVg1VMiehFYruIQAKZ6GfVPCSYnNBLJYsnRzF6y
+DjEfhjnLo6XxnS3TiMbopE41u8TxcAJ9GJxsPVI/RQWSccvW16dTPOKRA2nufyB0
+SkH/J8GWmHd7kqa43CSP/ctChOwBymfv9lHpCGoscfsYE3mJeR+dWDu+wbxPThwP
+dFyNbJb4UP6dgRkO69LNHi1Zygrt+XY9P4gX/05/ywRti+lArM4+x2bIUruD/g+R
+j01uA5geaYTm6ses2kqWIf7K+ZAc4DGCvm8K7Lbph50xr6GbmF4RNJUO2h45SPjC
+1Cgm2FF63wh9JMWbyESiKwiW58r/QCFl4Beq89Bd4aYmzhDP644GIkUXvuzydTc3
+iV4g9fhV3FhlQuqL4LTwXiDbTbJYQa5WLAcMAMzdsSKryslbbfruhRP9gHJZwkfJ
+UfT6I2I39IBezN2MTy7r9bh+jl58xo7MVWgdYZMVhZw0vkiNAd2rHz1YOtegm3ZZ
+bQYH1/sIDWt2KIbR+EZSKx0AzWetAFljA8F5sgfqPf6sVpQkeYiExRVK1JgvN++I
+FshBIsuYZdTh72Jrf6+4oj2rgqtUvEiGPsdFbZw749xer9BC3SRH9teMUGPCjl1f
+R+mjbl2Sis49DEiGbCj81SQ0t8vLvEaBh0yJyhKsE1YZYOmkN/6H0hLHIQYAdIlw
+OF7s+erQtK7/R8hathaN
+=Vufx
+-----END PGP SIGNATURE-----
+
+--=-/YDY9sX7BIEUNia43T9f--
 
