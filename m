@@ -1,124 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:36764 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753705AbZEIACb (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:34635 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566AbZECVqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 20:02:31 -0400
-Subject: Re: Warning when terminating wpa_supplicant (wext driver)
-From: Marcel Holtmann <marcel@holtmann.org>
+	Sun, 3 May 2009 17:46:10 -0400
+Received: by fxm2 with SMTP id 2so3348271fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 03 May 2009 14:46:09 -0700 (PDT)
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Maxim Levitsky <maximlevitsky@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <1241705979.27208.31.camel@johannes.local>
-References: <1241677107.2918.4.camel@localhost.localdomain>
-	 <1241696104.27208.2.camel@johannes.local>
-	 <1241704437.4903.15.camel@localhost.localdomain>
-	 <1241705979.27208.31.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 17:02:11 -0700
-Message-Id: <1241827331.4903.75.camel@localhost.localdomain>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241374060.13562.37.camel@johannes.local>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+	 <1241374060.13562.37.camel@johannes.local>
+Content-Type: multipart/mixed; boundary="=-ZmuF6qpMMgWroQiB2dV5"
+Date: Mon, 04 May 2009 00:46:03 +0300
+Message-Id: <1241387163.10486.6.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-> > > Copying Wey-Yi, but I think she's aware of this? It's definitely a
-> > > driver issue. I _suspect_, but am not sure, that the driver kills the
-> > > aggregation session when we disassoc or something and we only tell it
-> > > about the STA removal after that, when it already killed the STA. Thus
-> > > it would be a consequence of iwlwifi not implementing a proper
-> > > sta_notify() callback.
-> > 
-> > I don't see it with nl80211 driver, but that might be pure luck.
+--=-ZmuF6qpMMgWroQiB2dV5
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+On Sun, 2009-05-03 at 20:07 +0200, Johannes Berg wrote:
+> On Sat, 2009-05-02 at 04:32 +0300, Maxim Levitsky wrote:
 > 
-> Hmm, ok, that points to something else maybe... Now I wish I had my
-> ftrace-mac80211 patch ready. Well, the patch is almost ready but we
-> can't use ftrace in modules yet...
+> > > * iwlwifi.git - very close to current head, yesterday HEAD
+> > > * disable_hw_scan=1 - this bug is present regardless of this setting,
+> > > yet this rules out firmware interactions during rfkill.
 > 
-> Maybe there's some timing issue. I still think it's iwlwifi getting
-> confused about what mac80211 is telling it as described, but it seems
-> it's a little more subtle than what I said.
+> Are you absolutely sure this also happens with disable_hw_scan=1? That
+> seems rather strange. Can you please also put a printk into
+> net/wireless/scan.c:cfg80211_scan_done, and provide separate logs w/ and
+> w/o disable_hw_scan=1.
+> 
+> johannes
 
-something similar now happened during normal operation:
+Yes, sure
+For record I use iwlwifi.git commit
+5a94b6d38100b7056a5a347e5c51359d924d305d
 
-phy0: AddBA: ssn=277, dialog_token=1 tid=0 timeout=0ba_policy=1
-addba: d0 08 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-addba: 00 1c f0 62 88 5b e0 54 03 00 01 02 10 00 00 50 
-addba: 11 
-Rx A-MPDU request on tid 0 result 0
-wlan0: CTS protection enabled (BSSID=00:1c:f0:xx:xx:xx)
-wlan0: CTS protection disabled (BSSID=00:1c:f0:xx:xx:xx)
-wlan0: no probe response from AP 00:1c:f0:xx:xx:xx - disassociating
-Tx BA session stop requested for 00:1c:f0:xx:xx:xx tid 0
-iwlagn 0000:03:00.0: Invalid station for AGG tid 0
-------------[ cut here ]------------
-WARNING: at net/mac80211/agg-tx.c:142 ___ieee80211_stop_tx_ba_session+0x6b/0x7e [mac80211]()
-Hardware name: 7454CTO
-Modules linked in: usb_storage option usbserial iwlagn iwlcore mac80211 cfg80211 tun fuse sco bluetooth binfmt_misc uinput snd_hda_codec_conexant snd_hda_inte
-l snd_hda_codec snd_pcm snd_timer snd mbm uvcvideo soundcore cdc_ether i2400m usbnet cdc_acm cdc_wdm mii wimax snd_page_alloc uhci_hcd ehci_hcd [last unloaded
-: cfg80211]
-Pid: 27738, comm: phy0 Tainted: G        W  2.6.30-rc4-wl #17
-Call Trace:
- [<ffffffff80234b58>] warn_slowpath+0xb1/0xe5
- [<ffffffffa0412bd2>] ? iwl_tx_agg_stop+0xc5/0x2bd [iwlcore]
- [<ffffffffa043612c>] ? iwl_mac_ampdu_action+0x2ab/0x332 [iwlagn]
- [<ffffffffa03d2b02>] ___ieee80211_stop_tx_ba_session+0x6b/0x7e [mac80211]
- [<ffffffffa03d2c80>] __ieee80211_stop_tx_ba_session+0x63/0x7b [mac80211]
- [<ffffffffa03d290c>] ieee80211_sta_tear_down_BA_sessions+0x1b/0x3b [mac80211]
- [<ffffffffa03d5a66>] ieee80211_set_disassoc+0xe4/0x2c9 [mac80211]
- [<ffffffffa03d6c77>] ieee80211_associated+0x18b/0x1b0 [mac80211]
- [<ffffffffa03d89c6>] ieee80211_sta_work+0x85d/0x8bb [mac80211]
- [<ffffffff80548227>] ? _spin_unlock_irqrestore+0x8/0x30
- [<ffffffffa03d8169>] ? ieee80211_sta_work+0x0/0x8bb [mac80211]
- [<ffffffff80244081>] worker_thread+0x132/0x1d8
- [<ffffffff80247c7e>] ? autoremove_wake_function+0x0/0x38
- [<ffffffff80243f4f>] ? worker_thread+0x0/0x1d8
- [<ffffffff80243f4f>] ? worker_thread+0x0/0x1d8
- [<ffffffff8024791a>] kthread+0x56/0x83
- [<ffffffff8020bf6a>] child_rip+0xa/0x20
- [<ffffffff802478c4>] ? kthread+0x0/0x83
- [<ffffffff8020bf60>] ? child_rip+0x0/0x20
----[ end trace b434b88b93a5b684 ]---
-Rx BA session stop requested for 00:1c:f0:xx:xx:xx tid 0
-iwlagn 0000:03:00.0: Invalid station for AGG tid 0
-HW problem - can not stop rx aggregation for tid 0
-phy0: device now idle
-phy0: Removed STA 00:1c:f0:xx:xx:xx
-mac80211-phy0: failed to remove key (0, 00:1c:f0:xx:xx:xx) from hardware (-22)
-phy0: Destroyed STA 00:1c:f0:xx:xx:xx
-phy0: device no longer idle - scanning
-phy0: device now idle
-phy0: device no longer idle - in use
-wlan0: authenticate with AP 00:1c:f0:xx:xx:xx
-wlan0: authenticate with AP 00:1c:f0:xx:xx:xx
-wlan0: authenticated
-phy0: device now idle
-phy0: device no longer idle - in use
-wlan0: associate with AP 00:1c:f0:xx:xx:xx
-wlan0: RX ReassocResp from 00:1c:f0:xx:xx:xx (capab=0x431 status=0 aid=4)
-wlan0: associated
-phy0: Allocated STA 00:1c:f0:xx:xx:xx
-phy0: Inserted STA 00:1c:f0:xx:xx:xx
-wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-wlan0: switched to short barker preamble (BSSID=00:1c:f0:xx:xx:xx)
-wlan0: switched to short slot time (BSSID=00:1c:f0:xx:xx:xx)
-Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-activated addBA response timer on tid 0
-switched off addBA timer for tid 0 
-Aggregation is on for tid 0 
-phy0: AddBA: ssn=118, dialog_token=1 tid=0 timeout=0ba_policy=1
-addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-addba: 00 1c f0 62 88 5b 30 8e 03 00 01 02 10 00 00 60 
-addba: 07 
-Rx A-MPDU request on tid 0 result 0
 
-Regards
+Logs attached.
+This bug can be reliably reproduced, happens every 5~10 times when I
+turn rfkill on/off, but today again this happened after resume from
+disk.
 
-Marcel
+Sorry for misleading MAC80211, I noticed that long ago, but this was for
+debugging only.
 
+Current diff attached too.
+
+
+
+
+--=-ZmuF6qpMMgWroQiB2dV5
+Content-Disposition: attachment; filename="scanlog"
+Content-Type: text/plain; name="scanlog"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+maxim@maxim-laptop:~$ cat /sys/module/iwl3945/parameters/disable_hw_scan 
+1
+
+May  4 00:28:48 maxim-laptop kernel: [  495.686773] iwl3945 0000:06:00.0: Radio Frequency Kill Switch is On:
+May  4 00:28:48 maxim-laptop kernel: [  495.686778] Kill switch must be turned off for wireless networking to work.
+May  4 00:28:49 maxim-laptop kernel: [  496.376281] iwl3945 0000:06:00.0: Error sending REPLY_LEDS_CMD: enqueue_hcmd failed: -5
+May  4 00:28:49 maxim-laptop kernel: [  496.440209] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
+May  4 00:28:49 maxim-laptop kernel: [  496.440216] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
+May  4 00:28:49 maxim-laptop kernel: [  496.440226] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+May  4 00:28:49 maxim-laptop kernel: [  496.561097] cfg80211: scan requested
+May  4 00:28:49 maxim-laptop kernel: [  496.561105] __ieee80211_start_scan: scan requested
+May  4 00:28:49 maxim-laptop kernel: [  496.680161] wlan0: deauthenticating by local choice (reason=3)
+May  4 00:28:56 maxim-laptop kernel: [  503.222373] Registered led device: iwl-phy0::radio
+May  4 00:28:56 maxim-laptop kernel: [  503.222416] Registered led device: iwl-phy0::assoc
+May  4 00:28:56 maxim-laptop kernel: [  503.222449] Registered led device: iwl-phy0::RX
+May  4 00:28:56 maxim-laptop kernel: [  503.222483] Registered led device: iwl-phy0::TX
+May  4 00:28:56 maxim-laptop kernel: [  503.300956] wlan0: direct probe to AP 00:21:63:76:b3:a4 try 1
+May  4 00:28:56 maxim-laptop kernel: [  503.306274] wlan0 direct probe responded
+May  4 00:28:56 maxim-laptop kernel: [  503.306282] wlan0: authenticate with AP 00:21:63:76:b3:a4
+May  4 00:28:56 maxim-laptop kernel: [  503.309830] wlan0: authenticated
+May  4 00:28:56 maxim-laptop kernel: [  503.309838] wlan0: associate with AP 00:21:63:76:b3:a4
+May  4 00:28:56 maxim-laptop kernel: [  503.331597] wlan0: RX AssocResp from 00:21:63:76:b3:a4 (capab=0x401 status=0 aid=2)
+May  4 00:28:56 maxim-laptop kernel: [  503.331604] wlan0: associated
+May  4 00:28:56 maxim-laptop kernel: [  503.376487] wlan0: disassociating by local choice (reason=3)
+May  4 00:28:56 maxim-laptop kernel: [  503.466026] wlan0: authenticate with AP 00:21:63:76:b3:a4
+May  4 00:28:56 maxim-laptop kernel: [  503.466121] cfg80211: scan requested
+May  4 00:28:56 maxim-laptop kernel: [  503.466126] cfg80211: can't scan, already scanning
+May  4 00:28:56 maxim-laptop kernel: [  503.470264] wlan0: authenticated
+May  4 00:28:56 maxim-laptop kernel: [  503.470271] wlan0: associate with AP 00:21:63:76:b3:a4
+May  4 00:28:56 maxim-laptop kernel: [  503.471184] wlan0: authenticated
+May  4 00:28:56 maxim-laptop kernel: [  503.471188] wlan0: associate with AP 00:21:63:76:b3:a4
+May  4 00:29:17 maxim-laptop kernel: [  524.167149] cfg80211: scan requested
+May  4 00:29:17 maxim-laptop kernel: [  524.167156] cfg80211: can't scan, already scanning
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+
+maxim@maxim-laptop:~$ cat /sys/module/iwl3945/parameters/disable_hw_scan 
+0
+
+
+May  4 00:33:58 maxim-laptop kernel: [  805.657465] iwl3945 0000:06:00.0: Radio Frequency Kill Switch is On:
+May  4 00:33:58 maxim-laptop kernel: [  805.657471] Kill switch must be turned off for wireless networking to work.
+May  4 00:34:04 maxim-laptop kernel: [  811.173430] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
+May  4 00:34:04 maxim-laptop kernel: [  811.173438] iwl3945 0000:06:00.0: Error setting new configuration (-5).
+May  4 00:34:04 maxim-laptop kernel: [  811.173450] wlan0: direct probe to AP 00:21:63:4c:41:34 try 1
+May  4 00:34:04 maxim-laptop kernel: [  811.252620] wlan0: deauthenticating by local choice (reason=3)
+May  4 00:34:17 maxim-laptop kernel: [  824.212764] Registered led device: iwl-phy0::radio
+May  4 00:34:17 maxim-laptop kernel: [  824.212845] Registered led device: iwl-phy0::assoc
+May  4 00:34:17 maxim-laptop kernel: [  824.212879] Registered led device: iwl-phy0::RX
+May  4 00:34:17 maxim-laptop kernel: [  824.212910] Registered led device: iwl-phy0::TX
+May  4 00:34:17 maxim-laptop kernel: [  824.384165] wlan0: direct probe to AP 00:21:63:4c:41:34 try 1
+May  4 00:34:17 maxim-laptop kernel: [  824.475392] cfg80211: scan requested
+May  4 00:34:17 maxim-laptop kernel: [  824.475401] __ieee80211_start_scan: scan requested
+May  4 00:34:17 maxim-laptop kernel: [  824.475627] cfg80211: scan requested
+May  4 00:34:17 maxim-laptop kernel: [  824.475632] cfg80211: can't scan, already scanning
+May  4 00:34:17 maxim-laptop kernel: [  824.582579] wlan0: direct probe to AP 00:21:63:4c:41:34 try 2
+May  4 00:34:17 maxim-laptop kernel: [  824.586617] wlan0 direct probe responded
+May  4 00:34:17 maxim-laptop kernel: [  824.586622] wlan0: authenticate with AP 00:21:63:4c:41:34
+May  4 00:34:17 maxim-laptop kernel: [  824.590000] wlan0: authenticated
+May  4 00:34:17 maxim-laptop kernel: [  824.590005] wlan0: associate with AP 00:21:63:4c:41:34
+May  4 00:34:17 maxim-laptop kernel: [  824.592160] wlan0: RX AssocResp from 00:21:63:4c:41:34 (capab=0x401 status=0 aid=1)
+May  4 00:34:17 maxim-laptop kernel: [  824.592165] wlan0: associated
+May  4 00:34:17 maxim-laptop kernel: [  824.595337] wlan0: disassociating by local choice (reason=3)
+May  4 00:34:17 maxim-laptop kernel: [  825.010593] __ieee80211_start_scan: scan requested
+May  4 00:34:38 maxim-laptop kernel: [  845.170857] cfg80211: scan requested
+May  4 00:34:38 maxim-laptop kernel: [  845.170865] cfg80211: can't scan, already scanning
+
+
+--=-ZmuF6qpMMgWroQiB2dV5
+Content-Disposition: attachment; filename="test_patch.diff"
+Content-Type: text/x-patch; name="test_patch.diff"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 127bd54..47969d5 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -276,6 +276,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	bool was_hw_scan;
+ 
++	printk("ieee80211_scan_completed: aborted=%i\n", aborted);
+ 	mutex_lock(&local->scan_mtx);
+ 
+ 	if (WARN_ON(!local->hw_scanning && !local->sw_scanning)) {
+@@ -354,6 +355,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 	ieee80211_mlme_notify_scan_completed(local);
+ 	ieee80211_ibss_notify_scan_completed(local);
+ 	ieee80211_mesh_notify_scan_completed(local);
++	printk("ieee80211_scan_completed: exit\n");
+ }
+ EXPORT_SYMBOL(ieee80211_scan_completed);
+ 
+@@ -424,8 +426,11 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	int rc;
+ 
+-	if (local->scan_req)
++	printk("__ieee80211_start_scan: scan requested\n");
++	if (local->scan_req) {
++		printk("__ieee80211_start_scan: scan failed - busy\n");
+ 		return -EBUSY;
++	}
+ 
+ 	if (local->ops->hw_scan) {
+ 		u8 *ies;
+@@ -491,6 +496,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		local->scan_sdata = NULL;
+ 	}
+ 
++	printk("__ieee80211_start_scan: scan requested OK\n");
+ 	return rc;
+ }
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 10b4887..88602fe 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -23,6 +23,7 @@ void cfg80211_scan_done(struct cfg80211_scan_request *request, bool aborted)
+ #ifdef CONFIG_WIRELESS_EXT
+ 	union iwreq_data wrqu;
+ #endif
++	printk("cfg80211_scan_done: scan done. aborted=%d\n", aborted);
+ 
+ 	dev = dev_get_by_index(&init_net, request->ifidx);
+ 	if (!dev)
+@@ -585,11 +586,14 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 		return -ENETDOWN;
+ 
+ 	rdev = cfg80211_get_dev_from_ifindex(dev->ifindex);
++	
++	printk("cfg80211: scan requested\n");
+ 
+ 	if (IS_ERR(rdev))
+ 		return PTR_ERR(rdev);
+ 
+ 	if (rdev->scan_req) {
++		printk("cfg80211: can't scan, already scanning\n");
+ 		err = -EBUSY;
+ 		goto out;
+ 	}
+@@ -644,6 +648,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 	rdev->scan_req = creq;
+ 	err = rdev->ops->scan(wiphy, dev, creq);
+ 	if (err) {
++		printk("cfg80211: scan failed. error=%d\n", err);
+ 		rdev->scan_req = NULL;
+ 		kfree(creq);
+ 	}
+
+--=-ZmuF6qpMMgWroQiB2dV5--
 
