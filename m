@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out12.libero.it ([212.52.84.112]:41175 "EHLO
-	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386AbZEDSyK (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:44607 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752264AbZEDRs1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 14:54:10 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: report operating frequency rather than current
-Date: Mon, 4 May 2009 20:53:18 +0200
-Cc: Richard Farina <sidhayn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1241452330.8683.49.camel@johannes.local> <49FF2FE8.8010004@gmail.com> <20090504181357.GA19022@tuxdriver.com>
-In-Reply-To: <20090504181357.GA19022@tuxdriver.com>
-MIME-Version: 1.0
-Message-Id: <200905042053.19091.rossi.f@inwind.it>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Mon, 4 May 2009 13:48:27 -0400
+Subject: Re: [PATCH] add support for showing power constraint IE
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241458558.8683.84.camel@johannes.local>
+References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
+	 <1241453408.8683.53.camel@johannes.local>
+	 <1241454909.2903.17.camel@localhost.localdomain>
+	 <1241455125.8683.60.camel@johannes.local>
+	 <1241455848.2903.18.camel@localhost.localdomain>
+	 <1241456088.8683.62.camel@johannes.local>
+	 <1241456863.2903.29.camel@localhost.localdomain>
+	 <1241458558.8683.84.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 10:48:15 -0700
+Message-Id: <1241459295.2903.40.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 04 May 2009, John W. Linville wrote:
+Hi Johannes,
 
-> On Mon, May 04, 2009 at 02:11:52PM -0400, Richard Farina wrote:
-> > Johannes Berg wrote:
-> >> Umm, if _you_ set channel 11 then you _will_ see channel 11. It's just
-> >> that when it's scanning and happens to be on channel 132 instead of 11,
-> >> while you previously set 11, you will _after_ this patch see 11, not
-> >> 132.
-> >
-> > Yes, and at what point does it seem like a good idea to hide the channel
-> > the wifi card is on?  If I set channel 11 and it is scanning instead of
-> > locked on channel 11 then I should see the current channel the hardware
-> > is on.  This seems like an aweful idea to me, granted, it may help a few
-> > people that don't understand how scanning works, but hiding the truth is
-> > never a good idea. NACK.
->
-> I can see what you mean, but I think showing seemingly random
-> fluctuations in channel assignments is at best distracting.  Don't you
-> agree that most people are more interested in seeing the configuration
-> state than the transient state of the hardware?
+> > 	Vendor specific: OUI 00:90:4c, data: 33 0c 10 1f ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > 	Vendor specific: OUI 00:90:4c, data: 34 03 00 05 00 00 00 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > 	Unknown IE (45): 0c 10 1f ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00
+> > 	Unknown IE (61): 03 00 01 00 00 00 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > 	WPS:	 * Version: 1.0
+> > 		 * Manufacturer: D-Link Systems
+> > 		 * Model: DIR-615
+> > 		 * Device name: Wireless N Router
+> > 		 * Config methods: Label
+> > 
+> > I didn't find any specs to decode IE 45 and 61 since all of them mark
+> > these as reserved. Not sure if these are defined in future specs or if
+> > they are deprecated IE. And it seems its data is similar to what is in
+> > the vendor specific elements.
+> 
+> Both are HT.
 
-I want to report my experience. There was a bug in the ath5k driver with a 
-hanging result during scanning mode. I was able to discover the problem 
-thanks to the iwconfig output.
+do we have the specs somewhere then I might can give it a try. Also WMM
+needs some improvements.
 
-In alternative, is it possible to add a status flag so that iwconfig from user 
-space can report scanning mode is operative?
+> > The other one that keeps showing up in my area is:
+> > 
+> > 	Unknown IE (47): 06
+> 
+> "Broadcom proprietary" -- seems it would make sense to ignore that.
 
-Fabio
+Since it not showing up until you give -u there is no need to ignore it,
+but where do you find that this is Broadcom proprietary and why the f*
+they get to use an official IE number?
+
+> > And I do have some other vendor specific ones, that I don't really care
+> > about and we might even never know what they are:
+> > 
+> > 	Vendor specific: OUI 00:03:7f, data: 01 01 00 17 00 00
+> > 	Vendor specific: OUI 00:03:7f, data: 02 01 01 4d 00 03 a4 00 00
+> > 	Vendor specific: OUI 00:03:2f, data: 01 00 01
+> 
+> You can check wireshark, sometimes it has something useful. I think
+> there are pre-wifi HT IEs too in some vendor IE, might be one of these.
+> 
+> https://mentor.ieee.org/802.11/documents?x_dcn=31&x_year=2009 is useful
+> too (at least for 2009, for next year somebody will have to find the DCN
+> again)
+
+I found an indication of what bit 1 of extended capabilities means. I do
+have seen an AP with that somewhere around :)
+
+Regards
+
+Marcel
+
+
