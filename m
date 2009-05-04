@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46931 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756111AbZE1QFG (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54571 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756959AbZEDRX1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 12:05:06 -0400
-Date: Thu, 28 May 2009 19:05:01 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Subject: Re: ath9k locks up when bringing up a mesh point interface
-Message-ID: <20090528160501.GA6648@jm.kir.nu>
-References: <45e8e6c40905271630x39bcfca6w72560150222e7960@mail.gmail.com> <20090528085555.GA20314@jm.kir.nu> <45e8e6c40905280740i3ed1c25dkd0b1a86fe791f3b9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45e8e6c40905280740i3ed1c25dkd0b1a86fe791f3b9@mail.gmail.com>
+	Mon, 4 May 2009 13:23:27 -0400
+Subject: Re: [PATCH] add support for showing power constraint IE
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241456088.8683.62.camel@johannes.local>
+References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
+	 <1241453408.8683.53.camel@johannes.local>
+	 <1241454909.2903.17.camel@localhost.localdomain>
+	 <1241455125.8683.60.camel@johannes.local>
+	 <1241455848.2903.18.camel@localhost.localdomain>
+	 <1241456088.8683.62.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 10:23:15 -0700
+Message-Id: <1241457795.2903.32.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 28, 2009 at 07:40:36AM -0700, Andrey Yurovsky wrote:
+Hi Johannes,
 
-> Thanks.  For what it's worth, substituting rt2x00 for ath9k works (ie:
-> one can bring up a mesh) on the same kernel, so it likely has
-> something to do with the driver.
+> > just re-based and added the patch for the WPA/RSN length checks. So we
+> > should be good now in this area.
+> 
+> Thanks, applied, and really pushed out now.
+> 
+> Do you think I should cut a new release with all the shiny new parsing
+> code, or will you work on more :)
 
-OK, I traced it to the driver. It looks like mac80211 is asking the
-driver to setup beaconing with beacon interval of zero (struct
-ieee80211_bss_conf::beacon_int == 0) which does not sound correct to
-me.. The adhoc mode beacon setup (which is also shared for mesh) in
-ath9k does not exactly like this and ends up in an infinite loop trying
-to figure out how many beacon frames have been transfered before the
-current TSF..
+one other thing that comes to my mind is to have a convenient "iw scan"
+alias to just trigger scanning all all interfaces. The "dev wlan0" thing
+is driving my crazy. And most people just have one card only anyway.
 
-We can obviously add a sanity check to the driver to avoid the busy
-loop, but I would assume that something in the mac80211 mesh code could
-also be changed to provide a more reason beacon interval to the driver.
+Do we really need the "dev" versus "phy" details here. I guess they are
+needed in case someone renames "wlan0" to "phy0" by accident, but
+personally I prefer that the "dev" one is optional and it falls back to
+just use the interface name.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards
+
+Marcel
+
+
