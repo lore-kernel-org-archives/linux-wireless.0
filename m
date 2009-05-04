@@ -1,111 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:48686 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755727AbZE1QDo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47840 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751797AbZEDSew (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 12:03:44 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFT 1/2] ar9170: add initial support for 1-stage firmware
-Date: Thu, 28 May 2009 18:03:43 +0200
-Cc: linux-wireless@vger.kernel.org, jal2@gmx.de,
-	Peter.Grabienski@atheros.com, Stephen.Chen@atheros.com,
-	Michael.Fortin@atheros.com, Johnny.Cheng@atheros.com,
-	Yuan-Gu.Wei@atheros.com, otus-devel@lists.madwifi-project.org
-References: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com> <1243475326-28867-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1243475326-28867-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200905281803.44198.chunkeey@web.de>
+	Mon, 4 May 2009 14:34:52 -0400
+Subject: Re: [PATCH] mac80211: report operating frequency rather than
+ current
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49FF3453.7020802@gmail.com>
+References: <1241452330.8683.49.camel@johannes.local>
+	 <49FF2AE5.6040104@gmail.com> <1241460130.8683.85.camel@johannes.local>
+	 <49FF2FE8.8010004@gmail.com> <1241460944.8683.92.camel@johannes.local>
+	 <49FF3453.7020802@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-90htkvM9tIpLQ149Iq5D"
+Date: Mon, 04 May 2009 20:34:20 +0200
+Message-Id: <1241462060.8683.95.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 28 May 2009 03:48:45 Luis R. Rodriguez wrote:
-> You can get the stage 1 firmware from here:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/ar9170.fw
-> 
-> Its license:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/LICENSE
-> 
-> It seems with some devices this works, with some others
-> I see only scan working. We shall not push this firmware
-> into the linux-firmware tree until these issues have been
-> resolved.
-> 
-> Cc: Peter Grabienski <Peter.Grabienski@Atheros.com>
-> Cc: Stephen Chen <Stephen.Chen@Atheros.com>
-> Cc: Michael Fortin <Michael.Fortin@Atheros.com>
-> Cc: Johnny Cheng <Johnny.Cheng@Atheros.com>
-> Cc: Yuan-Gu Wei <Yuan-Gu.Wei@atheros.com>
-> Cc: Joerg Albert <jal2@gmx.de>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ar9170/phy.c |   13 ++++++++++---
->  drivers/net/wireless/ath/ar9170/usb.c |   22 +++++++++++++++++-----
->  2 files changed, 27 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
-> index 6ce2075..0675dc8 100644
-> --- a/drivers/net/wireless/ath/ar9170/phy.c
-> +++ b/drivers/net/wireless/ath/ar9170/phy.c
-> @@ -39,6 +39,7 @@
->  #include <linux/bitrev.h>
->  #include "ar9170.h"
->  #include "cmd.h"
-> +#include "usb.h"
->  
->  static int ar9170_init_power_cal(struct ar9170 *ar)
->  {
-> @@ -996,6 +997,10 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
->  	int idx, i, n;
->  	u8 ackpower, ackchains, f;
->  	u8 pwr_freqs[AR5416_MAX_NUM_TGT_PWRS];
-> +	struct ar9170_usb *aru;
-> +
-> +	/* All ar9170 devices are USB */
-> +	aru = container_of(ar, struct ar9170_usb, common);
->  
->  	if (freq < 3000)
->  		f = freq - 2300;
-> @@ -1102,9 +1107,11 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
->  	else
->  		ackpower = ar->power_5G_leg[0] & 0x3f;
->  
-> -	ar9170_regwrite(0x1c3694, ackpower << 20 | ackchains << 26);
-> -	ar9170_regwrite(0x1c3bb4, ackpower << 5 | ackchains << 11 |
-> -				  ackpower << 21 | ackchains << 27);
-> +	if (aru->init_values)  {
-> +		ar9170_regwrite(0x1c3694, ackpower << 20 | ackchains << 26);
-> +		ar9170_regwrite(0x1c3bb4, ackpower << 5 | ackchains << 11 |
-> +					  ackpower << 21 | ackchains << 27);
-> +	}
->  
->  	ar9170_regwrite_finish();
->  	return ar9170_regwrite_result();
-I guess you can drop this changes. see hpmain.c line 4039, 4061, 4069
 
---> #if_N_def ZM_OTUS_LINUX_PHASE_2 <--
-zfDelayWriteInternalReg(dev, 0x1c3694, ((hpPriv->tPow2x2g[0]&0x3f) << 20) | (0x5<<26));
-zfDelayWriteInternalReg(dev, 0x1c3bb4, ((hpPriv->tPow2x2g[0]&0x3f) << 5 ) | (0x5<<11) |
-                                           ((hpPriv->tPow2x2g[0]&0x3f) << 21) | (0x5<<27)  );
-#endif
+--=-90htkvM9tIpLQ149Iq5D
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-so, the current ar9170 code is actually _wrong_ (but works!)...
-and we should not touch these fields with the 2-stage firmware.
+On Mon, 2009-05-04 at 14:30 -0400, Richard Farina wrote:
 
-OT: since the firmware will (inevitably end up in the firmware-git-tree)
-we should convert it to ihex, so it can be downloaded with the git-web.
-(this can be done by: objcopy -I binary -O ihex ar9170.fw ar9170.fw.ihex )
+> And if the card claims to be associated but ends up stuck on another=20
+> channel?
 
-And for future: it might be a good idea to add a little header/tail on the
-firmware files. e.g.: 
-	- firmware version and variant (e.g. 1-stage or 2-stage firmware)
-	- supported hardware variants/interfaces
-	- maybe API revision / feature bitmap
-	- maybe more: e.g: vendor string / build / build-date / build no. etc.
+Then your network breaks anyway? And you see messages in the log that it
+failed to switch channel? We're talking about mac80211 devices :)
 
-Regards,
-	Chr
+> I can't see a good reason for this at all but if no one agrees=20
+> with me then it is well without your power to simply overrule me.
+>=20
+> I think it is an awful idea, and intel being broken isn't an excuse to=20
+> break everything else.  If the card isn't on the right channel because=20
+> of some random failure this patch ensures there is no way to=20
+> troubleshoot.  If you want to display current channel that is the=20
+> hardware channel, if you want to display "Channel the AP I'm associated=20
+> to is on" then call it something other than "Current Channel"
+
+It's not just Intel... All fullmac devices, ie. everything not using
+mac80211, shows the same behaviour.
+
+And trying to say "current channel" is "hardware channel" runs into the
+nice pitfall that, unfortunately, wext is so undefined that you can't
+really say either. I think the channel it's trying to use makes a whole
+lot more sense because otherwise a user who just randomly does
+"iwconfig" will be mightily confused if for example wpa_supplicant had
+just requested a scan.
+
+johannes
+
+--=-90htkvM9tIpLQ149Iq5D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ/zUpAAoJEKVg1VMiehFYnMYQAKb2rxD1Gq2z9gFf5Z3tzCTC
+AsCf7O/odJPdPNVeIMXMUo363I8OoDW/OUhTYQTboGMk/cLsKJGBx1XPA8Jqll3B
+00sVt563kOoJcefQ/3PumLiYaV9TJkMhxee5Us9nWYjl0dsUGCZO+4/m1aEke5eY
+FXD5cCDe0EpvB54Zmw/0QoLQPyMpaw2udsifhCoRZUe49WjHQ5P1e+K+HaKwQZJm
+j1GejBXl/9wOnSa5l1W+oHde9QsFafjAuj/WJDuMVlw0fbA9ByuAcD/VNqSJXH98
+udKQiSnxUeJhGtCdw7r8NrQyJBcRz5kMF/4O3+hNGRIhN1Byv6lL8pwvvgDnLUFi
+7nE3YyITmPs9URs1tV79DeRfZkpZtSDwaoBoCIqdgW3umXJ2sB7z602v92unC97h
+xupp75JGQw0c18eMk/nDPVGgBUce4OhLcSn+jANw1QdrxJuFoxnkmzKLtWSLI/b0
+W1sEDYwwA2IFkPFz+7I7tOVJv1Xze30EH4Ts0o5S3RlnmYVzCe4xChgfyJ7w17uT
+cg84xq3IAUccV/dxlw5j/6dFW8GgHHCxpnEW+mL0ewqTQ0vb2DyEvMDiFoObkuIj
+DKMpphfIr0yv4PfInT4M+n+mrEDJTpuqjpLCBapJItU2vkUiKjNAPttfQbAGZpXw
+ISKe96yeDDDHcl+Fcm1Q
+=AENy
+-----END PGP SIGNATURE-----
+
+--=-90htkvM9tIpLQ149Iq5D--
+
