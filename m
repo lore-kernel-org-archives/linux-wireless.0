@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out2.libero.it ([212.52.84.102]:39998 "EHLO
-	cp-out2.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752392AbZEVKMH convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46141 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756735AbZEDPwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 06:12:07 -0400
-Date: Fri, 22 May 2009 12:12:00 +0200
-Message-Id: <KK1J00$BAC7E4518757B17D1805E790669D6D1D@libero.it>
-Subject: Re: mac80211: TDMA approach feasible?
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-From: "ffileppo" <ffileppo@libero.it>
-To: "kalle\.valo" <kalle.valo@iki.fi>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+	Mon, 4 May 2009 11:52:43 -0400
+Subject: [PATCH] mac80211: report operating frequency rather than current
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 17:52:10 +0200
+Message-Id: <1241452330.8683.49.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+It's not very helpful to see, in iwconfig, the current frequency
+the card is tuned to if that frequency is currently somewhere
+across the board because we're scanning. Since we keep track of
+the frequency the user wants, display that instead.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/wext.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/wext.c	2009-05-04 17:41:53.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-05-04 17:42:02.000000000 +0200
+@@ -185,7 +185,7 @@ static int ieee80211_ioctl_giwfreq(struc
+ 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+ 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
  
-> > I was wondering if with mac80211 is now possible (and what effort is
-> > needed) to implement a TDMA approach. In particular I would like to:
-> > override 802.11 MPDU frame format, eliminate RTS/CTS exchange,
-> > eliminate automatic ACK and retransmission, eliminate virtual carrier
-> > sense (NAV), control PHY clear channel assessment and control
-> > transmission backoff.
-> 
-> Most of this is usually implemented in firmware, so you need access to
-> firmware sources.
-> 
+-	freq->m = local->hw.conf.channel->center_freq;
++	freq->m = local->oper_channel->center_freq;
+ 	freq->e = 6;
+ 
+ 	return 0;
 
-Hi,
-thanks for your answer.
-
-If these features are implemented in firmware, it should be possible to modify them if using for example Ath5k (which is a completely FOSS Linux driver) Right? Could you give me any directions?
-
-Talking about the TDMA implementation I was wondering if it is possible to achieve a time granularity of 1?s using commercial-of-the-shelf wifi cards (e.g. atheros ones).
-
-I would appreciate any ideas or thoughts on this matter.
-
-Thank you,
-
-Francesco
 
