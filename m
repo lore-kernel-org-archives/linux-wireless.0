@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38242 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbZEWIYY (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42170 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085AbZEDFKB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 May 2009 04:24:24 -0400
-Subject: Re: [PATCH 5/5] libertas: fix WPA adhoc network creation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1243037398.2495.14.camel@localhost.localdomain>
-References: <1243037398.2495.14.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3ClGg2P83ukPWffxPX0J"
-Date: Sat, 23 May 2009 10:24:21 +0200
-Message-Id: <1243067061.4606.43.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 4 May 2009 01:10:01 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH] add basic support for parsing country information element
+Date: Sun,  3 May 2009 22:09:47 -0700
+Message-Id: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+---
+ scan.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
---=-3ClGg2P83ukPWffxPX0J
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-05-22 at 20:09 -0400, Dan Williams wrote:
-> Oddly enough, the firmware's JOIN/START commands don't appear to have
-> any facility for setting custom IEs, thus the started adhoc network
-> doesn't advertise its WPA capability in the beacon.  Whee!
-
-We don't even properly support WPA IBSS in mac80211...
-
-johannes
-
---=-3ClGg2P83ukPWffxPX0J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKF7KxAAoJEODzc/N7+QmaTsIQALFREjvNWrTF1vQJZ1kU9JGs
-zQTsEvqq/F5oz0PP5lWwj4TUmWW1jwQce067go5ROR/I4P0Hdj08wkjFps6p/TT4
-wLC3lfN50vQolkWpu8UCWzfw+WxRqVl3P+NdXZynjgGm/OSYf54FJl/Jb+R6y268
-EFHfWSSVLlr4ymu5QTHmp7EW/5IqHKDdKVYrGY9OixocqmwKKK8pkIevPKgBb2nh
-h4GwU7DJlecIRMm2C37bs8yVHiIlLmgk8hYca9ockq/cJmE75vPaRZDikIs2E56s
-UIhlI/SNOdkci2FfavdrlMnBwqLXbloPikhizqHqrGP8wonyraYyY6G6B6zIhTg4
-jTgd7TLuo/yM6ha7AnJ1xRfQaMjwNlvFXfmUVdk2mIWltWAS38o03+AWg8MWvhK8
-OLPU7oJhX0UolPdHCMf1TDFVePYhH6vg14DxKIl5TDzlMebfkntUCzQH+dE9qSS6
-H5bexyK/51lKk600WQxUpNv+u8+wppeuy7b9BEgSuYN6NJfSSMT2UU3v/b2ocSYQ
-Ro5QGitThZveLFrChYiaRQ1fHhsRLKrjU1KP21pc1M0pOEHEiWK6oyQT8vxhnyNN
-InXd2qMRPnUFrQ00l1xIdo/QD0hI46b+5cpwp3JhmtNsC3hjW+vp3hade1nf7pN5
-6z7hGbLCrdEquX7WczQX
-=qEF5
------END PGP SIGNATURE-----
-
---=-3ClGg2P83ukPWffxPX0J--
+diff --git a/scan.c b/scan.c
+index 2976115..c503487 100644
+--- a/scan.c
++++ b/scan.c
+@@ -91,6 +91,16 @@ static void print_ign(unsigned char type, unsigned char len, unsigned char *data
+ 	/* ignore for now, not too useful */
+ }
+ 
++static void print_country(unsigned char type, unsigned char len, unsigned char *data)
++{
++	int i;
++
++	printf("\tCountry: %.*s data:", 3, data);
++	for(i=0; i<len-3; i++)
++		printf(" %.02x", data[i + 3]);
++	printf("\n");
++}
++
+ static void print_erp(unsigned char type, unsigned char len, unsigned char *data)
+ {
+ 	if (data[0] == 0x00)
+@@ -245,6 +255,7 @@ static const printfn ieprinters[] = {
+ 	[1] = print_supprates,
+ 	[3] = print_ds,
+ 	[5] = print_ign,
++	[7] = print_country,
+ 	[42] = print_erp,
+ 	[48] = print_rsn,
+ 	[50] = print_supprates,
+-- 
+1.6.0.6
 
