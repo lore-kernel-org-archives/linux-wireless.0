@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:47273 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753415AbZEZF6I (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754402AbZEDH6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 01:58:08 -0400
-Received: by bwz22 with SMTP id 22so3532311bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2009 22:58:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A1B2186.3070107@gmx.net>
-References: <4A199FED.7000609@gmx.net>
-	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>
-	 <4A1B00E7.5070801@gmx.net>
-	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>
-	 <4A1B2186.3070107@gmx.net>
-Date: Tue, 26 May 2009 06:58:08 +0100
-Message-ID: <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>
-Subject: Re: RTL 8185
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Barkle <barkle@gmx.net>
+	Mon, 4 May 2009 03:58:46 -0400
+Subject: Re: [PATCH] add basic support for parsing country information
+ element
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1241423772.8683.8.camel@johannes.local>
+References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
+	 <1241423772.8683.8.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GG0APd+9GPz8ivZuoYR+"
+Date: Mon, 04 May 2009 09:58:43 +0200
+Message-Id: <1241423924.8683.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2009 at 11:53 PM, Barkle <barkle@gmx.net> wrote:
 
-> I need encryption, but it doesn't matter if I use the right values. The
-> result is the same.
+--=-GG0APd+9GPz8ivZuoYR+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Look, your wpa_supplicant config says you are not using encryption, so
-there is no need to use it at all (or did you edit that out as
-well)??? If you keep editing out info nobody can help you...
+Everything else looks good.
 
->> Please gIve compat-wireless a go.
->>
->
-> Please be a little pacient with me. I work on it.
-> Do you need any further information?
+johannes
 
-I am asking to a 2nd time - try compat-wireless. Despite what you
-might believe, the latest rc kernel does not give you the latest
-wireless driver code; the latest compat-wireless does. It takes only a
-few minutes to install (it just replaces the 50 wireless related
-kernel modules.
+--=-GG0APd+9GPz8ivZuoYR+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Since you have a 32-bit intel CPU, if you don't mind downgrade the
-kernel back to about 2.6.26 or 2.6.24, you might consider switching to
-the realtek vendor driver. It is a bit ugly but it works well enough
-with older kernels on 32-bit intel platforms. The code is on realtek's
-web site.
-http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=1&PFid=1&Level=6&Conn=5&DownTypeID=3&GetDown=false&Downloads=true
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-You also have the choice of using ndiswrapper, on 32-bit intel platforms.
+iQIcBAABAgAGBQJJ/qAxAAoJEKVg1VMiehFYm2UQAIvlVc2qJe1lr1xktglIf0Ij
+arYE74C34QZZhK0obZ97PSEIdjtX37aLdps8GvdTR3W4ZQr/B75Yu9SnpIvKB5NG
+Qsktu+pmfy6BjBElS6RhOio50tRvjWfCj4dNlm4yIY3CLjcWuEVydT4j9VPL2dpB
+Vx6uFt/Z5s+UTQLmo21xgMw9w3fsa73SA5mNUOUgeB4pJrnHycJXC1lee2wqVBjV
+00ExWidbr2AxvreC3AQKMKma4SL7CT07TijtBV7Uk70laBVjlIbv3ft9ZBJLfgfb
+DgRQUd43tLj+w7UGvBaDM72TBcgQFogjEdEV3k5TjnGqTWsac4kmbbaSslXyvHQW
+Tfdjb5/2xqV0MqNS9OorcNmQx6lft53UbjIEig7jzja2UbJeZTi+2ntGHv4V/Hdc
+GDx0AwpZkwMLlRFPpicPbB1mbj2YZxp/GfyPLZb40VHFHfAHYwXPe47f4d43Jhy8
+gSq/5PqD3b1mbE2UQE9lLpUfRaDLp6g+fvyWAKQ3SROuAtSsgep+6WDwHZvkOTpL
+W+mcLjqtcJeeJt5Q7/N2WypVbf3hBRcZa+FuWuJej/6hLkoK/0l4V3WxW85d2MII
+myylgDbdbkwZCBFF3Ozph79vb6SboIeHiemyvohc5fBqwOuXebQGnKtV9TikEXOz
+f9HkR6IYY90JT5ApR50l
+=Uvws
+-----END PGP SIGNATURE-----
+
+--=-GG0APd+9GPz8ivZuoYR+--
+
