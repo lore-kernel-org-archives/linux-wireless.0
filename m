@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:51995 "EHLO
+Received: from senator.holtmann.net ([87.106.208.187]:37679 "EHLO
 	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbZEGGSp (ORCPT
+	with ESMTP id S1751158AbZEDItE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2009 02:18:45 -0400
-Received: from [192.168.1.193] (S0106001cf062885c.vc.shawcable.net [24.82.155.236])
-	by mail.holtmann.org (Postfix) with ESMTP id 774698B547
-	for <linux-wireless@vger.kernel.org>; Thu,  7 May 2009 08:18:48 +0200 (CEST)
-Subject: Warning when terminating wpa_supplicant (wext driver)
+	Mon, 4 May 2009 04:49:04 -0400
 From: Marcel Holtmann <marcel@holtmann.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Wed, 06 May 2009 23:18:27 -0700
-Message-Id: <1241677107.2918.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH 4/6] add human readable decoding for capability information field
+Date: Mon,  4 May 2009 01:48:45 -0700
+Message-Id: <1241426927-14902-4-git-send-email-marcel@holtmann.org>
+In-Reply-To: <1241426927-14902-3-git-send-email-marcel@holtmann.org>
+References: <1241426927-14902-1-git-send-email-marcel@holtmann.org>
+ <1241426927-14902-2-git-send-email-marcel@holtmann.org>
+ <1241426927-14902-3-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+---
+ scan.c |   44 +++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 41 insertions(+), 3 deletions(-)
 
-so I am running the wireless-testing.git tree from today and when
-terminating wpa_supplicant (wext driver), I get this warning in my
-kernel logs:
-
-------------[ cut here ]------------
-WARNING: at net/mac80211/agg-tx.c:142 ___ieee80211_stop_tx_ba_session+0x6b/0x7e [mac80211]()
-Hardware name: 7454CTO
-Modules linked in: tun fuse sco bluetooth binfmt_misc uinput iwlagn snd_hda_codec_conexant snd_hda_intel iwlcore snd_hda_codec i2400m_usb mbm cdc_ether i2400m usbnet uvcvideo snd_pcm mii mac80211 cdc_acm cdc_wdm snd_timer snd cfg80211 wimax soundcore snd_page_alloc uhci_hcd ehci_hcd [last unloaded: microcode]
-Pid: 2741, comm: wpa_supplicant Not tainted 2.6.30-rc4-wl #17
-Call Trace:
- [<ffffffff80234b58>] warn_slowpath+0xb1/0xe5
- [<ffffffffa014bda4>] ? iwl_tx_agg_stop+0x297/0x2bd [iwlcore]
- [<ffffffffa018612c>] ? iwl_mac_ampdu_action+0x2ab/0x332 [iwlagn]
- [<ffffffffa0088b02>] ___ieee80211_stop_tx_ba_session+0x6b/0x7e [mac80211]
- [<ffffffffa0088c80>] __ieee80211_stop_tx_ba_session+0x63/0x7b [mac80211]
- [<ffffffffa008890c>] ieee80211_sta_tear_down_BA_sessions+0x1b/0x3b [mac80211]
- [<ffffffffa008f105>] ieee80211_stop+0x9f/0x561 [mac80211]
- [<ffffffff80548124>] ? _spin_unlock_bh+0x1e/0x20
- [<ffffffff804b4583>] ? dev_deactivate+0x156/0x186
- [<ffffffff804a72f3>] dev_close+0x74/0x96
- [<ffffffff804a6f93>] dev_change_flags+0xba/0x180
- [<ffffffff804e3008>] devinet_ioctl+0x278/0x604
- [<ffffffff804e423e>] inet_ioctl+0x92/0xaa
- [<ffffffff80497b8e>] sock_ioctl+0x1f1/0x21b
- [<ffffffff802a5970>] vfs_ioctl+0x2a/0x78
- [<ffffffff802a5dfa>] do_vfs_ioctl+0x43c/0x478
- [<ffffffff802a5e8b>] sys_ioctl+0x55/0x77
- [<ffffffff8020af6b>] system_call_fastpath+0x16/0x1b
----[ end trace 8a26567db4679b5c ]---
-
-The hardware is an Intel 5350 card if that actually matters.
-
-Regards
-
-Marcel
-
+diff --git a/scan.c b/scan.c
+index 0cd3aa8..8cd1f90 100644
+--- a/scan.c
++++ b/scan.c
+@@ -13,6 +13,20 @@
+ #include "nl80211.h"
+ #include "iw.h"
+ 
++#define WLAN_CAPABILITY_ESS		(1<<0)
++#define WLAN_CAPABILITY_IBSS		(1<<1)
++#define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
++#define WLAN_CAPABILITY_CF_POLL_REQUEST	(1<<3)
++#define WLAN_CAPABILITY_PRIVACY		(1<<4)
++#define WLAN_CAPABILITY_SHORT_PREAMBLE	(1<<5)
++#define WLAN_CAPABILITY_PBCC		(1<<6)
++#define WLAN_CAPABILITY_CHANNEL_AGILITY	(1<<7)
++#define WLAN_CAPABILITY_SPECTRUM_MGMT	(1<<8)
++#define WLAN_CAPABILITY_QOS		(1<<9)
++#define WLAN_CAPABILITY_SHORT_SLOT_TIME	(1<<10)
++#define WLAN_CAPABILITY_APSD		(1<<11)
++#define WLAN_CAPABILITY_DSSS_OFDM	(1<<13)
++
+ struct scan_params {
+ 	bool unknown;
+ };
+@@ -333,9 +347,33 @@ static int print_bss_handler(struct nl_msg *msg, void *arg)
+ 	if (bss[NL80211_BSS_BEACON_INTERVAL])
+ 		printf("\tbeacon interval: %d\n",
+ 			nla_get_u16(bss[NL80211_BSS_BEACON_INTERVAL]));
+-	if (bss[NL80211_BSS_CAPABILITY])
+-		printf("\tcapability: 0x%.4x\n",
+-			nla_get_u16(bss[NL80211_BSS_CAPABILITY]));
++	if (bss[NL80211_BSS_CAPABILITY]) {
++		__u16 capa = nla_get_u16(bss[NL80211_BSS_CAPABILITY]);
++		printf("\tcapability:");
++		if (capa & WLAN_CAPABILITY_ESS)
++			printf(" ESS");
++		if (capa & WLAN_CAPABILITY_IBSS)
++			printf(" IBSS");
++		if (capa & WLAN_CAPABILITY_PRIVACY)
++			printf(" Privacy");
++		if (capa & WLAN_CAPABILITY_SHORT_PREAMBLE)
++			printf(" ShortPreamble");
++		if (capa & WLAN_CAPABILITY_PBCC)
++			printf(" PBCC");
++		if (capa & WLAN_CAPABILITY_CHANNEL_AGILITY)
++			printf(" ChannelAgility");
++		if (capa & WLAN_CAPABILITY_SPECTRUM_MGMT)
++			printf(" SpectrumMgmt");
++		if (capa & WLAN_CAPABILITY_QOS)
++			printf(" QoS");
++		if (capa & WLAN_CAPABILITY_SHORT_SLOT_TIME)
++			printf(" ShortSlotTime");
++		if (capa & WLAN_CAPABILITY_APSD)
++			printf(" APSD");
++		if (capa & WLAN_CAPABILITY_DSSS_OFDM)
++			printf(" DSSS-OFDM");
++		printf(" (0x%.4x)\n", capa);
++	}
+ 	if (bss[NL80211_BSS_SIGNAL_MBM]) {
+ 		int s = nla_get_u32(bss[NL80211_BSS_SIGNAL_MBM]);
+ 		printf("\tsignal: %d.%.2d dBm\n", s/100, s%100);
+-- 
+1.6.0.6
 
