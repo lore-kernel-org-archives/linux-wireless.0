@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([204.127.217.101]:42791 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753112AbZESSc3 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48580 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215AbZEDIyF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 14:32:29 -0400
-Message-ID: <4A12FB24.40408@lwfinger.net>
-Date: Tue, 19 May 2009 13:32:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Andrey Yurovsky <yurovsky@gmail.com>,
-	Wladimir Hirnij <counter-strike@bk.ru>,
-	linux-wireless@vger.kernel.org
-Subject: Re: 
-References: <E1M5voF-0003wt-00.counter-strike-bk-ru@f144.mail.ru> 	<45e8e6c40905181614i20c330b8sc982b0acc565708a@mail.gmail.com> <69e28c910905191014o5ac0f99ard03f3750ec6a4f0c@mail.gmail.com>
-In-Reply-To: <69e28c910905191014o5ac0f99ard03f3750ec6a4f0c@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 4 May 2009 04:54:05 -0400
+Subject: Re: [PATCH] add basic support for parsing country information
+ element
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241424042.8683.10.camel@johannes.local>
+References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
+	 <1241423772.8683.8.camel@johannes.local>
+	 <1241423935.2899.7.camel@localhost.localdomain>
+	 <1241424042.8683.10.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 01:53:54 -0700
+Message-Id: <1241427234.2899.12.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> Decoded version:
+Hi Johannes,
+
+> > > IIRC the third characters there is a space if it's in- and outdoor, it
+> > > might make sense to parse it instead of just printing it?
+> > 
+> > that explains why I have seen USI here and couldn't make sense of it and
+> > just declared that AP broken :)
 > 
-> The rtl8187se is not supported by the mainline driver.  There's a
-> driver for it in staging though, and there's a vendor driver hosted
-> here:
-> http://code.google.com/p/msi-wind-linux/
-> ...I would try to build and load that driver for now.
+> Heh, no, I think only "I", "O" and " " are valid there as the third
+> character :)
 
-The driver in staging _IS_ the vendor driver with a leak in the procfs fixed and
-the code brought up to the latest kernels. It will work. There is no need to use
-the vendor driver and to redo those fixes.
+added decoding for I and O to it :)
 
-I am working on an rtl8187se driver that uses mac80211 and that will be suitable
-to be included in mainline kernels. I estimate that I am about 25% done.
+Regards
 
-Larry
+Marcel
+
+
