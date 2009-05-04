@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755367AbZEBVIS (ORCPT
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:54645 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756276AbZEDP3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2009 17:08:18 -0400
-Subject: Re: [PATCH] add option to dump unknown IEs with scan command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
+	Mon, 4 May 2009 11:29:17 -0400
+Received: by ewy24 with SMTP id 24so4027111ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 08:29:16 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Alexandre Becholey <alexandre@shockfish.com>
+Subject: Re: IEEE80211 Acknowledgement
+Date: Mon, 4 May 2009 17:29:13 +0200
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241294844-27746-1-git-send-email-marcel@holtmann.org>
-References: <1241294844-27746-1-git-send-email-marcel@holtmann.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/eN/gE/3zLPxgIKCqr0n"
-Date: Sat, 02 May 2009 23:08:17 +0200
-Message-Id: <1241298497.13562.27.camel@johannes.local>
-Mime-Version: 1.0
+References: <49FF06BB.2090106@shockfish.com>
+In-Reply-To: <49FF06BB.2090106@shockfish.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200905041729.13805.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-/eN/gE/3zLPxgIKCqr0n
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just as side information for other readers:
 
-I like this, thanks, applied and pushed out.
+Alexandre is looking into the problem of rt2500usb/rt73usb and
+possibly other USB drivers, that they cannot report the ACK status
+of frames to mac80211 which is problematic for hostapd.
 
-johannes
+> I'm trying to catch Acknowlegement frames in the mac80211, but I don't 
+> managed to. Thus I'm wondering if they follow another path than the 
+> frames that aren't control ones?
 
---=-/eN/gE/3zLPxgIKCqr0n
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Have you made sure that mac80211 has called the configure_filter()
+callback function with the FIF_CONTROL flag enabled?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ/LY+AAoJEKVg1VMiehFYs/0P/jflnyasOHdJMzclJh9vJIoS
-DX180uTuFnSvQ0kPNEviak1vHwiYQoVUOEP+UiLItrNpox5jPYzGUU/WNbPRfFvL
-PezILgeX70D0wHW3NqeIAC2rE4Av+wBUuAJ8oBFV5WoB2a8+HuE0LAXlW/wAZil6
-toh8PTVWkoZuXCJ3yvUKtQ4clZu3gmaaxhUIDJb4kK5JnRX0sWgdtEFlPIzrBLrj
-ekrkK2Eo2ZwYzxAZ1UMOxJ7DJft5vkjWRyVEvmGzE0JY6jRPA886FVmyEzW6BbX9
-+PLPEyYnhBI1EZ3FYjOLI0uVR9/yQkS6TMDLtNaAoWCFQj5MS3NKyXVeHDWxM8/B
-a8XthTivsnx+4i7cc8B72euyp4TuxmWQtbUAo6IMp8/mnNQylt7n1PvKvis4t3R+
-dMmMMEIbMXe+gr2aQp9wNcGYf8CW+eYJdUc+F/L9+P/AFmc0sb2vg+Rtbx/R1j9Y
-l4EcI0CD5Y7Jv9S+Fqa+/Jn68kswjMriyDM1izWoyvkgQ6oBbj7/bawzeSwHz+ch
-4NJ0PpFWnD2h/BEs+/In3Qir9rGmK7aTOxcAtH4sNnaB95ViQQEFbJaW/GZ0XCRA
-FNsq50d6erNVRHQREAwImI8G88noNTkP9wkAZp6yaVOezOiNa6V5ypQO6NyaGcu8
-dC3NZsH7B7vN/Ta4oWNF
-=PMCu
------END PGP SIGNATURE-----
-
---=-/eN/gE/3zLPxgIKCqr0n--
-
+Ivo
