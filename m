@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:63504 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbZELT73 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:34880 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755454AbZEDPw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 15:59:29 -0400
-Received: by fxm2 with SMTP id 2so202097fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 12:59:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242156469.14227.7.camel@johannes.local>
-References: <1242125077.4331.0.camel@johannes.local>
-	 <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
-	 <3ace41890905121208s2029db39p730b2e174cd4b1e6@mail.gmail.com>
-	 <1242156469.14227.7.camel@johannes.local>
-Date: Tue, 12 May 2009 20:59:28 +0100
-Message-ID: <3ace41890905121259jeb504d7v78fe8f062fca7d21@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
-From: Hin-Tak Leung <hintak.leung@gmail.com>
+	Mon, 4 May 2009 11:52:56 -0400
+Subject: Re: [PATCH] add basic support for parsing country information
+ element
+From: Marcel Holtmann <marcel@holtmann.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241437035.8683.37.camel@johannes.local>
+References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
+	 <1241423772.8683.8.camel@johannes.local>
+	 <1241423924.8683.9.camel@johannes.local>
+	 <1241427107.2899.9.camel@localhost.localdomain>
+	 <1241435567.8683.35.camel@johannes.local>
+	 <1241437035.8683.37.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 08:52:44 -0700
+Message-Id: <1241452364.2903.3.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/12/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-05-12 at 20:05 +0100, Hin-Tak Leung wrote:
->
->> I tried this, NM/wpa_suplicany still doesn't work, but if I shut those
->> down and do it the old fashioned iwconfig way, I can get
->> connectivity...
->
-> That's odd. Are you getting "connectivity" with a WEP network then?
+Hi Johannes,
 
-Yes,
+> > I've committed everything, and am doing some minor cleanups. I also
+> > noticed we don't validate everything as good as we should so I'm adding
+> > some support for that.
+> 
+> I've done that now, and pushed it out, but I think the RSN IE printing
+> you added (and I renamed to print_rsn_ie) is missing some input length
+> validation, could you take a look at that please? In particular it takes
+> the count from the IE, but doesn't verify it fits, I think?
+
+I can have a look at it since it is by no means perfect, but at least we
+know have something that allows us to not bother with iwlist.
+
+Btw. I named it WPA2 on purpose since not everybody using iw will
+understand that it is actually named RSN. In the end it is your call,
+just to let you know why I did it. One of my first patches actually did
+use RSN in it :)
+
+Regards
+
+Marcel
 
 
-On 5/12/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-05-12 at 20:08 +0100, Hin-Tak Leung wrote:
->
->> BTW, nm fails to connect with
->>  <WARN>  nm_device_wifi_disable_encryption(): error setting key for
->> device wlan2: No such file or directory
->
-> As Dan said, you can ignore this message. However, I'm certainly no
-> longer getting it. Are you sure you rebooted into the correct kernel and
-> loaded the correct cfg80211 module?
-
-This is a different one from the last - it was 'Invalid argument' ,
-now 'No such file or directory' - but wlan2 is certainly there...
-
-I am operating in compat-wireless, so it is just make clean && make ,
-etc, blow away /lib/module/<ver>/updates, depmod -a ; and I did run
-modprobe -v to see it is loaded from the alternative...
-
-> I have now tested WPA-PSK and WEP with wpa_supplicant and WEP with
-> manual configuration and it all works.
-
-I'll give it another try with NM/wpa_supplicant...
