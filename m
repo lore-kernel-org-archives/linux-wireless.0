@@ -1,164 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50173 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754687AbZEOXHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 19:07:12 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH v2.6.30] iwlwifi:  do not cancel delayed work inside spin_lock_irqsave
-Date: Fri, 15 May 2009 16:13:46 -0700
-Message-Id: <1242429226-8313-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1242429226-8313-4-git-send-email-reinette.chatre@intel.com>
-References: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
- <1242429226-8313-2-git-send-email-reinette.chatre@intel.com>
- <1242429226-8313-3-git-send-email-reinette.chatre@intel.com>
- <1242429226-8313-4-git-send-email-reinette.chatre@intel.com>
+Received: from mail-qy0-f133.google.com ([209.85.221.133]:60237 "EHLO
+	mail-qy0-f133.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932181AbZEDSMF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2009 14:12:05 -0400
+Received: by qyk39 with SMTP id 39so358444qyk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 11:12:04 -0700 (PDT)
+Message-ID: <49FF2FE8.8010004@gmail.com>
+Date: Mon, 04 May 2009 14:11:52 -0400
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: report operating frequency rather than current
+References: <1241452330.8683.49.camel@johannes.local>	 <49FF2AE5.6040104@gmail.com> <1241460130.8683.85.camel@johannes.local>
+In-Reply-To: <1241460130.8683.85.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Johannes Berg wrote:
+> On Mon, 2009-05-04 at 13:50 -0400, Richard Farina wrote:
+>   
+>> Johannes Berg wrote:
+>>     
+>>> It's not very helpful to see, in iwconfig, the current frequency
+>>> the card is tuned to if that frequency is currently somewhere
+>>> across the board because we're scanning. Since we keep track of
+>>> the frequency the user wants, display that instead.
+>>>
+>>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>>> ---
+>>>  net/mac80211/wext.c |    2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> --- wireless-testing.orig/net/mac80211/wext.c	2009-05-04 17:41:53.000000000 +0200
+>>> +++ wireless-testing/net/mac80211/wext.c	2009-05-04 17:42:02.000000000 +0200
+>>> @@ -185,7 +185,7 @@ static int ieee80211_ioctl_giwfreq(struc
+>>>  	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+>>>  		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
+>>>  
+>>> -	freq->m = local->hw.conf.channel->center_freq;
+>>> +	freq->m = local->oper_channel->center_freq;
+>>>  	freq->e = 6;
+>>>  
+>>>  	return 0;
+>>>
+>>>
+>>>   
+>>>       
+>> Nack.  People should see the hardware channel. If I set channel 6 and my 
+>> wifi card is on channel 11 I need to see 11 not 6.  Doesn't make any 
+>> sense to show some imaginary idealistic "I wish it was on channel 6" 
+>> when the hardware is on channel 11.  Am I missing something here?
+>>     
+>
+> Umm, if _you_ set channel 11 then you _will_ see channel 11. It's just
+> that when it's scanning and happens to be on channel 132 instead of 11,
+> while you previously set 11, you will _after_ this patch see 11, not
+> 132.
+>
+>   
+Yes, and at what point does it seem like a good idea to hide the channel 
+the wifi card is on?  If I set channel 11 and it is scanning instead of 
+locked on channel 11 then I should see the current channel the hardware 
+is on.  This seems like an aweful idea to me, granted, it may help a few 
+people that don't understand how scanning works, but hiding the truth is 
+never a good idea. NACK.
 
-Calling cancel_delayed_work() from inside
-spin_lock_irqsave, introduces a potential deadlock.
+-Rick Farina
 
-As explained by Johannes Berg <johannes@sipsolutions.net>
-
-A - lock
-T - timer
-
-phase                   CPU 1           CPU 2
----------------------------------------------
-
-some place that calls
-cancel_timer_sync()
-(which is the | code)
-                                        lock-irq(A)
-|                                       "lock-irq"(T)
-|                                       "unlock"(T)
-|                                       wait(T)
-                                        unlock(A)
-
-timer softirq
-                        "lock"(T)
-                        run(T)
-                        "unlock"(T)
-
-irq handler
-          lock(A)
-          unlock(A)
-
-Now all that again, interleaved, leading to deadlock:
-
-                                        lock-irq(A)
-                        "lock"(T)
-                         run(T)
-IRQ during or maybe
-before run(T) -->        lock(A)
-                                        "lock-irq"(T)
-                                        wait(T)
-
-We fix this by moving the call to cancel_delayed_work() into workqueue.
-There are cases where the work may not actually be queued or running
-at the time we are trying to cancel it, but cancel_delayed_work() is
-able to deal with this.
-
-Also cleanup iwl_set_mode related to this call. This function
-(iwl_set_mode) is only called when bringing interface up and there will
-thus not be any scanning done. No need to try to cancel scanning.
-
-Fixes http://bugzilla.kernel.org/show_bug.cgi?id=13224, which was also
-reported at http://marc.info/?l=linux-wireless&m=124081921903223&w=2 .
-
-Tested-by: Miles Lane <miles.lane@gmail.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
-
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 -------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ++-------
- 3 files changed, 6 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 1ef4192..0e6e7ff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -669,13 +669,6 @@ static int iwl_set_mode(struct iwl_priv *priv, int mode)
- 	if (!iwl_is_ready_rf(priv))
- 		return -EAGAIN;
- 
--	cancel_delayed_work(&priv->scan_check);
--	if (iwl_scan_cancel_timeout(priv, 100)) {
--		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
--		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
--		return -EAGAIN;
--	}
--
- 	iwl_commit_rxon(priv);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 23644cf..a879e9c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -227,9 +227,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 
--	/* The scan completion notification came in, so kill that timer... */
--	cancel_delayed_work(&priv->scan_check);
--
- 	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
- 		       (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ)) ?
- 						"2.4" : "5.2",
-@@ -712,6 +709,8 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		goto done;
-@@ -925,6 +924,8 @@ void iwl_bg_scan_completed(struct work_struct *work)
- 
- 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 617c423..12a2d35 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -782,13 +782,6 @@ static int iwl3945_set_mode(struct iwl_priv *priv, int mode)
- 	if (!iwl_is_ready_rf(priv))
- 		return -EAGAIN;
- 
--	cancel_delayed_work(&priv->scan_check);
--	if (iwl_scan_cancel_timeout(priv, 100)) {
--		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
--		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
--		return -EAGAIN;
--	}
--
- 	iwl3945_commit_rxon(priv);
- 
- 	return 0;
-@@ -3300,6 +3293,8 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		goto done;
--- 
-1.5.6.3
+> johannes
+>   
 
