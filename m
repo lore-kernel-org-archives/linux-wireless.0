@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43915 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506AbZESAnY (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:56097 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752320AbZEDQfV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 20:43:24 -0400
-Date: Mon, 18 May 2009 20:43:24 -0400 (EDT)
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-cc: LKML <linux-kernel@vger.kernel.org>, jirislaby@gmail.com,
-	lrodriguez@atheros.com, me@bobcopeland.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ath5k: prevent infinite loop
-In-Reply-To: <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com>
-References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com> <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Mon, 4 May 2009 12:35:21 -0400
+Subject: Re: [PATCH] add support for showing power constraint IE
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241453408.8683.53.camel@johannes.local>
+References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
+	 <1241453408.8683.53.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 09:35:09 -0700
+Message-Id: <1241454909.2903.17.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
-On Tue, 19 May 2009, Nick Kossifidis wrote:
+> > +static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t *data)
+> > +{
+> > +	printf(" %d db\n", data[0]);
 > 
-> This is already fixed on wireless-testing ;-)
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
+> s/db/dB/ -- fixed, applied and pushed, thanks.
 
-Thanks, but this does only half. Although I did not hit this in my laptop, 
-it can be an issue. If step[0] == step[1] you have the same problem.
+so how sure are you that you pushed it? I don't see it.
 
--- Steve
+Regards
+
+Marcel
+
 
