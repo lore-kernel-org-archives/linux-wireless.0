@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54936 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753269AbZEKS6t (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:2650 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbZEDSiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 14:58:49 -0400
-Message-Id: <20090511185754.653711567@atheros.com>
-Date: Mon, 11 May 2009 21:57:54 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] nl80211/mac80211: Fix station mode key setup issues 
+	Mon, 4 May 2009 14:38:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <1241453096-8517-1-git-send-email-jirislaby@gmail.com>
+References: <1241453096-8517-1-git-send-email-jirislaby@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 4 May 2009 11:38:04 -0700
+Message-ID: <43e72e890905041138q4bf43405u7fca133dac991dc4@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mac80211: minstrel, fix memory corruption
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using nl80211, we cannot currently set drop_unencrypted flag that
-was used with WEXT to avoid need for IEEE 802.1X port control in station
-mode. Because of this, we cannot currently set the keys in a secure way.
-In addition, we do not support setting the expected RSC for keys either
-with WEXT or nl80211 which is needed to avoid leaving a window for
-replaying broadcast frames.
+On Mon, May 4, 2009 at 9:04 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> minstrel doesn't count max rate count in fact, since it doesn't use
+> a loop variable `i' and hence allocs space only for bitrates found in
+> the first band.
+>
+> Fix it by involving the `i' as an index so that it traverses all the
+> bands now and finds the real max bitrate count.
+>
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Felix Fietkau <nbd@openwrt.org>
 
-This set of patches addresses these issues and allows nl80211 to
-securely set up keys in station mode. This is on top of the pending
-MFP patches, RX-drop-unencrypted-based-on-key-setup, and WEXT key
-handling to cfg80211 patches (from Johannes).
+Cc: stable@kernel.org
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
