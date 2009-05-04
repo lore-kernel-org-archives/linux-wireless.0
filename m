@@ -1,82 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kara.rubysoft.com ([64.34.171.174]:41220 "EHLO
-	kara.rubysoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595AbZE0Ei1 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47166 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbZEDEqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 00:38:27 -0400
-Date: Tue, 26 May 2009 22:27:57 -0600 (MDT)
-From: Jeff Hansen <x@jeffhansen.com>
-Reply-To: Jeff Hansen <x@jeffhansen.com>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] WMM settings and AP performance
-In-Reply-To: <1243362167.2923.17.camel@jm-desktop>
-Message-ID: <Pine.LNX.4.64.0905262226480.6614@ren>
-References: <Pine.LNX.4.64.0905251926300.11772@ren>  <20090526174640.GC9370@tesla>
-  <1243361510.2923.10.camel@jm-desktop> <1243362167.2923.17.camel@jm-desktop>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+	Mon, 4 May 2009 00:46:35 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH] add support for parsing WPA and RSN/WPA2 information elements
+Date: Sun,  3 May 2009 21:46:21 -0700
+Message-Id: <1241412381-2778-1-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni,
+---
+ scan.c |  156 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 150 insertions(+), 6 deletions(-)
 
-I re-submitted all of my patches, including a patch that fixes this 
-problem.  I also tried the settings below, and got comparable performance.
+diff --git a/scan.c b/scan.c
+index 91e94ed..d383243 100644
+--- a/scan.c
++++ b/scan.c
+@@ -13,6 +13,9 @@
+ #include "nl80211.h"
+ #include "iw.h"
+ 
++static unsigned char vendor_oui[3] = { 0x00, 0x50, 0xf2 };
++static unsigned char cipher_oui[3] = { 0x00, 0x0f, 0xac };
++
+ struct scan_params {
+ 	bool unknown;
+ };
+@@ -41,6 +44,14 @@ COMMAND(scan, trigger, NULL,
+ 
+ typedef void (*printfn)(unsigned char type, unsigned char len, unsigned char *data);
+ 
++static void tab_on_first(bool *first)
++{
++	if (!*first)
++		printf("\t");
++	else
++		*first = false;
++}
++
+ static void print_ssid(unsigned char type, unsigned char len, unsigned char *data)
+ {
+ 	int i;
+@@ -80,20 +91,152 @@ static void print_ign(unsigned char type, unsigned char len, unsigned char *data
+ 	/* ignore for now, not too useful */
+ }
+ 
++static void print_cipher(const unsigned char *oui, unsigned char *data)
++{
++	if (memcmp(data, oui, 3) == 0) {
++		switch (data[3]) {
++		case 0x00:
++			printf("Use group cipher suite");
++			break;
++		case 0x01:
++			printf("WEP-40");
++			break;
++		case 0x02:
++			printf("TKIP");
++			break;
++		case 0x04:
++			printf("CCMP");
++			break;
++		case 0x05:
++			printf("WEP-104");
++			break;
++		default:
++			printf("Reserved (%.02x)", data[3]);
++			break;
++		}
++	} else if (memcmp(data, vendor_oui, 3) == 0)
++		printf("Vendor specific (%.02x)", data[3]);
++	else
++		printf("Other");
++}
++
++static void print_auth(const unsigned char *oui, unsigned char *data)
++{
++	if (memcmp(data, oui, 3) == 0) {
++		switch (data[3]) {
++		case 0x01:
++			printf("802.1x");
++			break;
++		case 0x02:
++			printf("PSK");
++			break;
++		default:
++			printf("Reserved (%.02x)", data[3]);
++			break;
++		}
++	} else if (memcmp(data, vendor_oui, 3) == 0)
++		printf("Vendor specific (%.02x)", data[3]);
++	else
++		printf("Other");
++}
++
++static void print_wpa(const char *ie, const unsigned char *oui,
++		      unsigned char len, unsigned char *data)
++{
++	bool first = true;
++	__u16 version, count, capa;
++	int i;
++
++	printf("\t%s:", ie);
++
++	if (len < 2) {
++		printf(" <too short> data:");
++		for(i = 0; i < len; i++)
++			printf(" %.02x", data[i]);
++		printf("\n");
++		return;
++	}
++
++	version = data[0] + (data[1] << 8);
++	tab_on_first(&first);
++	printf("\t * Version: %d\n", version);
++
++	data += 2;
++	len -= 2;
++
++	if (len < 4) {
++		tab_on_first(&first);
++		printf("\t * Group cipher: TKIP\n");
++		printf("\t * Pairwise ciphers: TKIP\n");
++		return;
++	}
++
++	tab_on_first(&first);
++	printf("\t * Group cipher: ");
++	print_cipher(oui, data);
++	printf("\n");
++
++	data += 4;
++	len -= 4;
++
++	if (len < 2) {
++		tab_on_first(&first);
++		printf("\t * Pairwise ciphers: TKIP\n");
++		return;
++	}
++
++	count = data[0] | (data[1] << 8);
++	tab_on_first(&first);
++	printf("\t * Pairwise ciphers:");
++	for (i=0; i<count; i++) {
++		printf(" ");
++		print_cipher(oui, data + 2 + (i * 4));
++	}
++	printf("\n");
++
++	data += 2 + (count * 4);
++	len -= 2 + (count * 4);
++
++	if (len < 2)
++		return;
++
++	count = data[0] | (data[1] << 8);
++	tab_on_first(&first);
++	printf("\t * Authentication suites:");
++	for (i=0; i<count; i++) {
++		printf(" ");
++		print_auth(oui, data + 2 + (i * 4));
++	}
++	printf("\n");
++
++	data += 2 + (count * 4);
++	len -= 2 + (count * 4);
++
++	if (len < 2)
++		return;
++
++	capa = data[0] | (data[1] << 8);
++	tab_on_first(&first);
++	printf("\t * Capabilities: 0x%.4x\n", capa);
++}
++
++static void print_rsn(unsigned char type, unsigned char len, unsigned char *data)
++{
++	print_wpa("WPA2", cipher_oui, len, data);
++}
++
+ static const printfn ieprinters[] = {
+ 	[0] = print_ssid,
+ 	[1] = print_supprates,
+ 	[3] = print_ds,
+ 	[5] = print_ign,
++	[48] = print_rsn,
+ 	[50] = print_supprates,
+ };
+ 
+-static void tab_on_first(bool *first)
++static void print_wifi_wpa(unsigned char type, unsigned char len, unsigned char *data)
+ {
+-	if (!*first)
+-		printf("\t");
+-	else
+-		*first = false;
++	print_wpa("WPA", vendor_oui, len, data);
+ }
+ 
+ static void print_wifi_wps(unsigned char type, unsigned char len, unsigned char *data)
+@@ -177,6 +320,7 @@ static void print_wifi_wps(unsigned char type, unsigned char len, unsigned char
+ }
+ 
+ static const printfn wifiprinters[] = {
++	[1] = print_wifi_wpa,
+ 	[4] = print_wifi_wps,
+ };
+ 
+@@ -193,7 +337,7 @@ static void print_vendor(unsigned char len, unsigned char *data,
+ 		return;
+ 	}
+ 
+-	if (len >= 4 && data[0] == 0x00 && data[1] == 0x50 && data[2] == 0xF2) {
++	if (len >= 4 && memcmp(data, vendor_oui, 3) == 0) {
+ 		if (data[3] < ARRAY_SIZE(wifiprinters) && wifiprinters[data[3]])
+ 			return wifiprinters[data[3]](data[3], len - 4, data + 4);
+ 		if (!params->unknown)
+-- 
+1.6.0.6
 
--Jeff
-
----------------------------------------------------
-"If someone's gotta do it, it might as well be me."
-                 x@jeffhansen.com
-
-On Tue, 26 May 2009, Jouni Malinen wrote:
-
-> On Tue, 2009-05-26 at 11:11 -0700, Jouni Malinen wrote:
->> On Tue, 2009-05-26 at 10:46 -0700, Luis Rodriguez wrote:
->>> On Mon, May 25, 2009 at 06:52:41PM -0700, Jeff Hansen wrote:
->
->> That 25/30 Mbps to 2 Mbps is quite a huge difference and in order for
->> QoS parameters to cause something like this, they would need to be
->> seriously wrong..
->
-> And well, it turns out that the values are indeed seriously wrong.. cw
-> min and max values are swapped by
-> b4af0b7ffa5f448bd12f81d2539ee2155919d493.
->
-> Jeff: if you have a chance, you could try swapping the cw_max = aCWmin
-> and cw_min = aCWmax value to actually set cw_max = aCWmax and cw_min =
-> aCWmin.. In addition to this, I would actually recommend adding the
-> explicit tx_queue_data* parameters into hostapd.conf even if you are not
-> using WMM. This should work around the current bug and it will also set
-> the parameters in a way which are more suitable for an AP (the defaults
-> set in mac80211 are for station mode). In other words, add following
-> into hostapd.conf:
->
-> tx_queue_data3_aifs=7
-> tx_queue_data3_cwmin=15
-> tx_queue_data3_cwmax=1023
-> tx_queue_data3_burst=0
->
-> tx_queue_data2_aifs=3
-> tx_queue_data2_cwmin=15
-> tx_queue_data2_cwmax=63
-> tx_queue_data2_burst=0
->
-> tx_queue_data1_aifs=1
-> tx_queue_data1_cwmin=7
-> tx_queue_data1_cwmax=15
-> tx_queue_data1_burst=3.0
->
-> tx_queue_data0_aifs=1
-> tx_queue_data0_cwmin=3
-> tx_queue_data0_cwmax=7
-> tx_queue_data0_burst=1.5
->
-> - Jouni
->
->
->
