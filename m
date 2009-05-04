@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.infomaniak.ch ([84.16.68.89]:39330 "EHLO
-	smtp1.infomaniak.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973AbZERNJS (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47316 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757772AbZEDQu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 09:09:18 -0400
-From: Alexandre Becholey <alexandre.becholey@epfl.ch>
-To: linux-wireless@vger.kernel.org
-Cc: Alexandre Becholey <alexandre.becholey@epfl.ch>
-Subject: [PATCH]rt73usb: fix for master mode.
-Date: Mon, 18 May 2009 14:55:36 +0200
-Message-Id: <1242651336-12621-1-git-send-email-alexandre.becholey@epfl.ch>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="------------1.6.3"
+	Mon, 4 May 2009 12:50:59 -0400
+Subject: Re: [PATCH] add support for showing power constraint IE
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241455125.8683.60.camel@johannes.local>
+References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
+	 <1241453408.8683.53.camel@johannes.local>
+	 <1241454909.2903.17.camel@localhost.localdomain>
+	 <1241455125.8683.60.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 09:50:48 -0700
+Message-Id: <1241455848.2903.18.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------1.6.3
-Content-Type: text/plain; charset=UTF-8; format=fixed
-Content-Transfer-Encoding: 8bit
+Hi Johannes,
 
-Report status unknown as if there were successfully transmitted.
-This will avoid hostapd to disassociate because it doesn't understand what a status unknown is.
+> > > > +static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t *data)
+> > > > +{
+> > > > +	printf(" %d db\n", data[0]);
+> > > 
+> > > s/db/dB/ -- fixed, applied and pushed, thanks.
+> > 
+> > so how sure are you that you pushed it? I don't see it.
+> 
+> Sorry, seems I didn't hit enter. Definitely pushed now.
 
-Signed-off-by: Alexandre Becholey <alexandre.becholey@epfl.ch>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+just re-based and added the patch for the WPA/RSN length checks. So we
+should be good now in this area.
 
+Regards
 
---------------1.6.3
-Content-Type: text/x-patch; name="0001-rt73usb-fix-for-master-mode.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="0001-rt73usb-fix-for-master-mode.patch"
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index f227084..0bbee06 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -280,6 +280,9 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 		if (test_bit(TXDONE_SUCCESS, &txdesc->flags))
- 			tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+                /* Report unkown status as if it was success */
-+                else if (test_bit(TXDONE_UNKNOWN, &txdesc->flags))
-+                        tx_info->flags |= IEEE80211_TX_STAT_ACK;
- 		else if (test_bit(TXDONE_FAILURE, &txdesc->flags))
- 			rt2x00dev->low_level_stats.dot11ACKFailureCount++;
- 	}
-
---------------1.6.3--
+Marcel
 
 
