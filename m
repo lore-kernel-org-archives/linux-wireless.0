@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:40872 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756241AbZEMOjT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbZEDQk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 10:39:19 -0400
-Date: Wed, 13 May 2009 17:38:59 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Rui Paulo <rpaulo@freebsd.org>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: Interop testing of 802.11s
-Message-ID: <20090513143859.GA28358@jm.kir.nu>
-References: <64642731-8767-4063-9479-E6F2E5222EB6@freebsd.org> <1242221616.11182.4.camel@localhost.localdomain> <E9323507-2720-4F87-A666-6CB61C084F9B@freebsd.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E9323507-2720-4F87-A666-6CB61C084F9B@freebsd.org>
+	Mon, 4 May 2009 12:40:27 -0400
+Subject: Re: IEEE80211 Acknowledgement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Alexandre Becholey <alexandre@shockfish.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200905041835.35104.IvDoorn@gmail.com>
+References: <49FF06BB.2090106@shockfish.com>
+	 <200905041729.13805.IvDoorn@gmail.com>
+	 <1241451174.8683.48.camel@johannes.local>
+	 <200905041835.35104.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s99QIhTuTZXljTuAZEyB"
+Date: Mon, 04 May 2009 18:39:55 +0200
+Message-Id: <1241455195.8683.61.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 03:06:18PM +0100, Rui Paulo wrote:
 
-> I believe more recent drafts have changed some small things, namely OUIs 
-> and IEs.
+--=-s99QIhTuTZXljTuAZEyB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Now that IEEE 802.11s/D3.0 actually passed the 75% threshold in the IEEE
-802.11 working group ballot, it would be nice to get the implementation
-in Linux updated to match with the latest draft. I did review most of
-the draft, but have not yet checked how close the current Linux
-implementation is to this. I'm not sure when I would have enough time to
-work on this, so I would not mind if there were other people showing up
-with interest to work on this.. ;-)
+On Mon, 2009-05-04 at 18:35 +0200, Ivo van Doorn wrote:
 
-Being able to run interoperability tests with two independent
-implementations would obviously be quite useful both from the view point
-of getting better implementations and also to be able to figure out if
-there are still unclear areas in the draft that would need to be cleared
-up before the amendment to the standard gets published.
+> Well I believe the idea would be that (I'll see if I can dig up a referen=
+ce
+> to the initial discussion about this feature on this list) the driver set=
+s a flag
+> that mac80211 needs to keep a list of all frames send out to the driver a=
+nd
+> listens for ACK's.
+>=20
+> As soon as a ACK was passed from driver to mac80211 it could check if
+> the corresponding frame=20
+      ^^^^^^^^^^^^^^^^^^^
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Here's the problem. What I'm saying is that there's no way to knowing
+what the "corresponding frame" is.
+
+johannes
+
+--=-s99QIhTuTZXljTuAZEyB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ/xpYAAoJEKVg1VMiehFYJuIP/RlkIyt33Vh+piNoKH8Bb+Ih
+Poz7svxx7RjvTkEM/W9nOudDH4AfsvjC2Y1vktqXgDLDyhxAauLH3YdKcCyHnyGG
+eh8Igij0g928O+jBXE8OsnY1svX3JZb3BJgPoQuxXEC/H69l6M3O/NdANwHJIIbv
+JMu9ZMwaDV5z+Of7hrm9I+WL4rNN7N9asCdF9kHRMIB/4vgfSF41oAvLy7oWOpr2
+n/EIY0fCtBrOoNMyl+vRjDiGllAxsKlJ6nszlIMFkjlS5eSSovMexoTV3JOy9kx0
+YENbfRfqRJObUMrxq2W3wuQt+gnseJfMp9wVN7AsAJQdrXNre2Y0u+t2rXEUHcPX
+RF074imJWP+/mZtDpqBqj/qMRySC0lJLuH8U95V0MLmJmsDQQdX5fJKZq+8fvrd/
+jLAKMe5b4Nii6vPToWjMkbzhnopjIji/vpu6c4+vaiEM68nh606/5kb1E5CKPw4S
+izFXiKF4S/CIz2MmW8ePfqU/zOouVQnYZIJoTjKu11gqPomJSoFOjMZMEfjnIhBW
+NxIq/iC795Bn4F+ZD6DJuaxh3JBYsBPD+UiCjwjEego/5h+lsy/SIw2/thRGakqC
+2LO7CSasRYUyDoI2rezcp/yGC1MaihOdw8S8W2dAoAFs4Q9GBJ7Dh6v52cEZnUKF
+UNkNBWgi+mNcBsklXYDh
+=otb7
+-----END PGP SIGNATURE-----
+
+--=-s99QIhTuTZXljTuAZEyB--
+
