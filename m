@@ -1,58 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:62940 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752713AbZESMMv convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52631 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758078AbZEDQSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 08:12:51 -0400
-MIME-Version: 1.0
-In-Reply-To: <a4423d670905121315g503f4f0ep6a60e9051a2aeb9d@mail.gmail.com>
-References: <1242127393-4298-1-git-send-email-a.beregalov@gmail.com>
-	 <20090512164448.GJ16247@kroah.com>
-	 <a4423d670905121037i3ea96b01s68367c082802684d@mail.gmail.com>
-	 <20090512190254.GB1957@kroah.com>
-	 <a4423d670905121315g503f4f0ep6a60e9051a2aeb9d@mail.gmail.com>
-Date: Tue, 19 May 2009 16:12:50 +0400
-Message-ID: <a4423d670905190512x296f6b1cgaa7815fb4f17cac7@mail.gmail.com>
-Subject: Re: [PATCH] Staging: agnx: switch config_interface to
-	bss_info_changed
-From: Alexander Beregalov <a.beregalov@gmail.com>
-To: Greg KH <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: gregkh@suse.de, johannes@sipsolutions.net,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 May 2009 12:18:12 -0400
+Subject: Re: [PATCH] add basic support for parsing country information
+ element
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241453361.2903.15.camel@localhost.localdomain>
+References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
+	 <1241423772.8683.8.camel@johannes.local>
+	 <1241423924.8683.9.camel@johannes.local>
+	 <1241427107.2899.9.camel@localhost.localdomain>
+	 <1241435567.8683.35.camel@johannes.local>
+	 <1241437035.8683.37.camel@johannes.local>
+	 <1241452364.2903.3.camel@localhost.localdomain>
+	 <1241452664.8683.51.camel@johannes.local>
+	 <1241453361.2903.15.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-F559KpTBdY+uZVWzkhxg"
+Date: Mon, 04 May 2009 18:17:42 +0200
+Message-Id: <1241453862.8683.59.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/13 Alexander Beregalov <a.beregalov@gmail.com>:
-> 2009/5/12 Greg KH <greg@kroah.com>:
->> On Tue, May 12, 2009 at 09:37:56PM +0400, Alexander Beregalov wrote:
->>> 2009/5/12 Greg KH <greg@kroah.com>:
->>> > On Tue, May 12, 2009 at 03:23:13PM +0400, Alexander Beregalov wrote:
->>> >> Fix this build error:
->>> >> drivers/staging/agnx/pci.c: In function 'agnx_config_interface':
->>> >> drivers/staging/agnx/pci.c:315: error: dereferencing pointer to incomplete type
->>> >> ..
->>> >> drivers/staging/agnx/pci.c:424: error: unknown field 'config_interface' specified in initializer
->>> >>
->>> >> config_interface was removed in 2d0ddec5b2b
->>> >> ("mac80211: unify config_interface and bss_info_changed")
->>> >
->>> > I do not see that patch in Linus's tree.  Is it in some other tree
->>> > (wireless?) and not yet in mainline?
->>> Yes, it is in wireless from linux-next.
->>> You asked to send patches based on linux-next, right?
->>> Should I always mark patches for staging-next tree as [PATCH -next] ?
->>
->> Hm, yes, -staging patches need to be against -next, but I have to be
->> able to build these somehow on my own without the wireless tree...
->>
->> I think something like this might better go through the wireless tree as
->> it depends on changes that happen there.  Sound good to you?
-> Ok, thanks Greg.
->
->> If so, please send them to the wireless maintainer.
-> John, will you apply it?
 
-John?
+--=-F559KpTBdY+uZVWzkhxg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2009-05-04 at 09:09 -0700, Marcel Holtmann wrote:
+
+> > Certainly. I just don't want to have it crash on an AP that advertises
+> > completely bogus information :)
+>=20
+> if nobody beats me to it, then I will fix this. Just have to deal with
+> some other stuff first.
+
+Alright, thanks. Not too pressing I guess. Just should be done before I
+cut the next release.
+
+> tried the RSN/WPA2 too, but it is too long :)
+>=20
+> On a different note, what is your preferred coding style for loops?
+>=20
+> 	for (i =3D 0; i < len; i++) {
+>=20
+> or
+>=20
+> 	for(i=3D0; i<len-3; i++)
+>=20
+> I was using the latter one since I assumed that is what you want (it is
+> not my preferred one). Then I realized that you are using both or that
+> something slipped in. Do you want me to send a patch to fix this?
+
+Oh, well, I prefer the former, but some other people put in the latter,
+and I didn't really care too much. No need to send a patch though.
+
+johannes
+
+--=-F559KpTBdY+uZVWzkhxg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ/xUhAAoJEKVg1VMiehFYdaEP/2eWbfpKcjtRixC35Zgqvj5I
+gVLVCVTz2o6dynTQNo3S9+L9iHSbaBbIvcdogBgy9Dc+XZ/6irNVCm2vEur50Ndm
+9eteC60fklUscwL/x7a1/xcQE3OO5zu4VXhz/3wJTS16WeupIRZa5yOL+LNXERwG
+LcpHGLv3nOwOGEmsvMdk4cbX7s9IfwGXg6rKkklOycq16h4d1xfjDWyQmNTkvpcX
+kmawSwP9rR8/bBQoECFeBNxq2YaxHp8LWrbXsBkzQiz0P7alvfAWTcARmdA8Cfwp
+p1A2gESBM/hAujvcFAom2X2/bGYsMUz3iGUDsFghrL43r8DbJGpTMu8xJGJBuNJW
+5dKFCy+m4cNvv19MNlUwbA2XGP/TFiGzaCD6YBiPmSofXaLSLieqbR9TJQPnGVqe
+6EqGXsQalvjkQ5+guRQxnWtDfWx5iekQvJf+YeQeTHMnpJWkM30TK0hYqqsPbCPe
+n0+R7RmZDOH7/FjCQXL13Wd9rYfF/XBNLvD6rsFPKYLDFl/iXzySX1jwDxnKrB7L
+XJe42VnKui+J237/NSxI6rAfAPZacsKIcRcRe13jxZNeI1c1bgsLWg7mwAbAo23Z
+E0NVlWfJr82McWKSVE0aIAiEkxee3jSQF3yleUfN2X8N16uBuYH5d9WmIjh5BEv3
+NE+1CmOlxiZ2hGetV6Tu
+=eJ3B
+-----END PGP SIGNATURE-----
+
+--=-F559KpTBdY+uZVWzkhxg--
+
