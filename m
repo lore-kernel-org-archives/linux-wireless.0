@@ -1,70 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:59379 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753814AbZEUCNF convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48498 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758863AbZEDSEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 22:13:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so263980wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 19:13:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910905200137o4e501ed2r65b5b79a1b5a087e@mail.gmail.com>
-References: <a8e1da0905192221y449e9820x63d46a6dcbfc1dfc@mail.gmail.com>
-	 <69e28c910905200137o4e501ed2r65b5b79a1b5a087e@mail.gmail.com>
-Date: Thu, 21 May 2009 10:13:05 +0800
-Message-ID: <a8e1da0905201913i7318ee4aoe4e579632cc566b6@mail.gmail.com>
-Subject: Re: b43 lp-phy status
-From: Dave Young <hidave.darkstar@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 May 2009 14:04:14 -0400
+Subject: Re: [PATCH] add support for showing power constraint IE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241459295.2903.40.camel@localhost.localdomain>
+References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
+	 <1241453408.8683.53.camel@johannes.local>
+	 <1241454909.2903.17.camel@localhost.localdomain>
+	 <1241455125.8683.60.camel@johannes.local>
+	 <1241455848.2903.18.camel@localhost.localdomain>
+	 <1241456088.8683.62.camel@johannes.local>
+	 <1241456863.2903.29.camel@localhost.localdomain>
+	 <1241458558.8683.84.camel@johannes.local>
+	 <1241459295.2903.40.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-krMizoYlHiVe8JiOt8Q5"
+Date: Mon, 04 May 2009 20:03:44 +0200
+Message-Id: <1241460224.8683.87.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/20 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Wed, May 20, 2009 at 7:21 AM, Dave Young <hidave.darkstar@gmail.com> wrote:
->> Hi, michael
->>
->> What's the status of b43 for lp-phy? Is is possible to use it with
->> basic functionality now?
->>
->> I have such wireless dev in my dell 5400 laptop.
->>
->> Now I just use the broadcom hybrid driver which can not pass building
->> in latest kernel by default. I make some change to it's wl_linux.c to
->> make it compiled. Although the wl.ko works, it has some nasty bug
->> which will be triggered after modprobe the module several times.
->>
->> Could you tell what I can do for the b43 lpy? ie. some testing?
->
-> Unfortunately no substantial code additions related to LP have been
-> checked in so far - the reverse engineering is complete, but Michael
-> is the only person working on converting the specs to code, and he's
-> too busy to work on LP.
->
-> (Should someone send me a Dell 1395, I could probably start working on
-> it, but I'm busy with zd1211rw & iwlagn right now.)
 
-Thanks for your response. Then are there some guideline to do such coding?
+--=-krMizoYlHiVe8JiOt8Q5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->
->>
->> --
->> Regards
->> dave
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
+On Mon, 2009-05-04 at 10:48 -0700, Marcel Holtmann wrote:
 
+> > Both are HT.
+>=20
+> do we have the specs somewhere then I might can give it a try. Also WMM
+> needs some improvements.
 
+The IEs are defined in structs in include/linux/ieee80211.h.
 
--- 
-Regards
-dave
+> > > The other one that keeps showing up in my area is:
+> > >=20
+> > > 	Unknown IE (47): 06
+> >=20
+> > "Broadcom proprietary" -- seems it would make sense to ignore that.
+>=20
+> Since it not showing up until you give -u there is no need to ignore it,
+> but where do you find that this is Broadcom proprietary and why the f*
+> they get to use an official IE number?
+
+Check the link I gave you - lots of companies have IEs rather than
+vendor IEs, predates the vendor IE I guess.
+
+> > > And I do have some other vendor specific ones, that I don't really ca=
+re
+> > > about and we might even never know what they are:
+> > >=20
+> > > 	Vendor specific: OUI 00:03:7f, data: 01 01 00 17 00 00
+> > > 	Vendor specific: OUI 00:03:7f, data: 02 01 01 4d 00 03 a4 00 00
+> > > 	Vendor specific: OUI 00:03:2f, data: 01 00 01
+> >=20
+> > You can check wireshark, sometimes it has something useful. I think
+> > there are pre-wifi HT IEs too in some vendor IE, might be one of these.
+> >=20
+> > https://mentor.ieee.org/802.11/documents?x_dcn=3D31&x_year=3D2009 is us=
+eful
+> > too (at least for 2009, for next year somebody will have to find the DC=
+N
+> > again)
+>=20
+> I found an indication of what bit 1 of extended capabilities means. I do
+> have seen an AP with that somewhere around :)
+
+Actually extended capabilities aren't bits but values, I think? But
+that's something about HT too, iirc.
+
+johannes
+
+--=-krMizoYlHiVe8JiOt8Q5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ/y39AAoJEKVg1VMiehFY/nQP/0qD9df2CwlgIBloXy14Yh9D
+j9WK7nVZBwQnwe5zYdXPjZpOHLd7hdrBv2iJqMtZzH+EVZCXv97aYMroC+EOyPlw
+oLYavLiuh3oqMme3m75xjQQZ+6LPzTNoVKYqlIWhztSLTwpU0NyAOjZoSjBtCMlB
+JUn8IsPH30KVI/3ElFVP66IHrTM3sv1THe36pXk3u/NSghAKU8Ar2Z9Qxm/aQ+Ov
+8iE6Q22wANL6jQ8PAOokEjUTERLswzZLKQ+k+zl+vUrrpujzdXinaW1mn23rf3h2
+Uw+rOQCk45xjcpi1AufpkR4PM669qtz4PiEcOBf1QPzKrmoBAeWzXibem9nfu+hS
+cjc1wzsSMowR9/W1U/4FnMgo1Vs9ZsslXu6YmFwLMsfOVhdW+yk6h7xHb+0ayzQk
+pWLAvygpNV/y0zwp/sbece6J0bNjpB75WLL0rX33zVQp5NHXkvGMpoPs6MhLWFgI
+KS7XXlqkiQA63L7n7w1bGy6XgjBRLVnVi43D0jt8hSWH/U822FqXY7ABQ77sW0+Q
+M/i5GIttte3jd7nCYMVuCm1ao/KGXcO0fQCt+GFVIk6B3sWMAlpAALqiOjJQp5U2
+P5ZViLUnUnoqJbAdZNFjPQVoA8kSXT3jj8N3jdsGmSRz10t4weqFPpr/fdT9so/G
++vQcNhIC8SnVRZsBq9K3
+=A75b
+-----END PGP SIGNATURE-----
+
+--=-krMizoYlHiVe8JiOt8Q5--
+
