@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57560 "EHLO
+Received: from senator.holtmann.net ([87.106.208.187]:41881 "EHLO
 	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750872AbZEaTFD (ORCPT
+	with ESMTP id S1751007AbZEDItD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 15:05:03 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
+	Mon, 4 May 2009 04:49:03 -0400
 From: Marcel Holtmann <marcel@holtmann.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: alan-jenkins@tuffmail.co.uk,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243778069.5299.0.camel@johannes.local>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
-	 <1243778069.5299.0.camel@johannes.local>
-Content-Type: text/plain
-Date: Sun, 31 May 2009 21:03:48 +0200
-Message-Id: <1243796628.6570.37.camel@localhost.localdomain>
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH 3/6] add support for showing extended capabilities IE
+Date: Mon,  4 May 2009 01:48:44 -0700
+Message-Id: <1241426927-14902-3-git-send-email-marcel@holtmann.org>
+In-Reply-To: <1241426927-14902-2-git-send-email-marcel@holtmann.org>
+References: <1241426927-14902-1-git-send-email-marcel@holtmann.org>
+ <1241426927-14902-2-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+---
+ scan.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-> > How should userspace test CONFIG_RFKILL_INPUT to determine whether
-> > it's safe to start the daemon?  With the old core, debian-eeepc
-> > scripts check if the module rfkill-input exists (which should work
-> > even if it's built in).  If it exists, the scripts don't perform any
-> > rfkill actions.  (Yeah, according to the doc this is not allowed
-> > because the scripts don't use "claim", but you can see how it's
-> > useful).
-> > 
-> > The new rfkill-input isn't a module, so I'm not sure how your daemon
-> > would test for it.
-> 
-> Maybe we should add an ioctl that disables rfkill-input if present.
-
-I am against it. Can we just add a module parameter that allows us to
-disable it. I am against cluttering a new interface with legacy stuff
-since we are removing rfkill-input and replacing it by rfkilld anyway in
-a near future (meaning when I am back from vacation).
-
-Regards
-
-Marcel
-
+diff --git a/scan.c b/scan.c
+index 5b5d300..0cd3aa8 100644
+--- a/scan.c
++++ b/scan.c
+@@ -114,6 +114,16 @@ static void print_erp(unsigned char type, unsigned char len, unsigned char *data
+ 	printf("\n");
+ }
+ 
++static void print_capabilities(unsigned char type, unsigned char len, unsigned char *data)
++{
++	int i;
++
++	printf("\tExtended capabilties:");
++	for(i=0; i<len; i++)
++		printf(" %.02x", data[i]);
++	printf("\n");
++}
++
+ static const printfn ieprinters[] = {
+ 	[0] = print_ssid,
+ 	[1] = print_supprates,
+@@ -122,6 +132,7 @@ static const printfn ieprinters[] = {
+ 	[7] = print_country,
+ 	[42] = print_erp,
+ 	[50] = print_supprates,
++	[127] = print_capabilities,
+ };
+ 
+ static void tab_on_first(bool *first)
+-- 
+1.6.0.6
 
