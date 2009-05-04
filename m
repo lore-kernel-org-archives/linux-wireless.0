@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53415 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751431AbZEIIIx (ORCPT
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:37590 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757931AbZEDQfh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 04:08:53 -0400
-Date: Sat, 9 May 2009 11:08:38 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Mon, 4 May 2009 12:35:37 -0400
+Received: by ewy24 with SMTP id 24so4098225ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 09:35:37 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: IEEE80211 Acknowledgement
+Date: Mon, 4 May 2009 18:35:34 +0200
+Cc: Alexandre Becholey <alexandre@shockfish.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
-	reorder buffer
-Message-ID: <20090509080838.GA1206@jm.kir.nu>
-References: <20090505173512.349795688@atheros.com> <20090505173550.273830766@atheros.com> <1241709323.4903.25.camel@localhost.localdomain> <1241833703.4903.83.camel@localhost.localdomain>
+References: <49FF06BB.2090106@shockfish.com> <200905041729.13805.IvDoorn@gmail.com> <1241451174.8683.48.camel@johannes.local>
+In-Reply-To: <1241451174.8683.48.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1241833703.4903.83.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200905041835.35104.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 08, 2009 at 06:48:23PM -0700, Marcel Holtmann wrote:
+On Monday 04 May 2009, Johannes Berg wrote:
+> On Mon, 2009-05-04 at 17:29 +0200, Ivo van Doorn wrote:
+> > Hi,
+> > 
+> > Just as side information for other readers:
+> > 
+> > Alexandre is looking into the problem of rt2500usb/rt73usb and
+> > possibly other USB drivers, that they cannot report the ACK status
+> > of frames to mac80211 which is problematic for hostapd.
+> 
+> I realise that this probably doesn't help and is tangential to the
+> question being asked, but I do not think processing ACK frames in
+> software is possible for this, since the software does not know which
+> frame was transmitted, due to four queues being used, and retries etc.
 
-> > I can confirm that this used to be a regular situation between my X200
-> > and a D-Link access point.
+Well I believe the idea would be that (I'll see if I can dig up a reference
+to the initial discussion about this feature on this list) the driver sets a flag
+that mac80211 needs to keep a list of all frames send out to the driver and
+listens for ACK's.
 
-Which D-Link model is that AP? I think I should try to get one of those
-added to me test bed.. ;-)
+As soon as a ACK was passed from driver to mac80211 it could check if
+the corresponding frame was in the list and remove the frame from the list
+and generate a tx_status response indicating success.
+Off course all frames must be checked for the timeout value as well to see
+if the frame wasn't send (in which case the tx_status event is send as well).
 
-> so I finally got the debug output for you. Took only over a day :)
+There shouldn't be a problem with multi-queue with this if the list of frames
+is put onto a single list instead of one list per queue.
+As for the retries and other statistics, do we honestly care?
+At the moment rt2500usb/rt73usb indicate the frame has not been acked
+and set the retry value to 1. If we somehow can tell if the frame was send out
+or not, isn't that a step forward already? The retry value is needed for the
+rate algorithm, but it is receiving the same incorrect value now as well, so it wouldn't
+be a step backward in that perspective. ;)
 
-Thanks! Would you happen to have timing information available for these
-(e.g., from klogd)? It looks like the AP is sending out an ADDBA Request
-to update some parameters, but we currently ignore that request.
-However, at least in this particular case, our RX reorder bug head_seq
-matches with the ssn from the ADDBA Request, so I'm not sure whether
-ignoring the ADDBA contents is really causing harm here (anyway, we
-should really process these updates, too).
-
-The timeouts on RX reorder frames look similar to what I have seen in my
-tests and the workaround was indeed trying to address that type of
-issue, so it is nice to hear that it helped in this case, too.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Ivo
