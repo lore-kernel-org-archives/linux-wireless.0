@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60177 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756344AbZEMJVA (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:8516 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752485AbZEDSxr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 05:21:00 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC v2 0/5] WoW suport
-Date: Wed, 13 May 2009 05:20:56 -0400
-Message-Id: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 4 May 2009 14:53:47 -0400
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 4 May 2009 11:53:39 -0700
+Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
+Message-ID: <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
+References: <1241213459.7082.54.camel@maxim-laptop>
+In-Reply-To: <1241213459.7082.54.camel@maxim-laptop>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's take II, this time with some cfg80211 and minimal mac80211 integration.
-I'm not too sure on the parts needed on mac80211 yet so could use some help there.
+When one of our devices cannot figure out what the actual noise level is, it reports -127.
 
-Unfortunately it doesn't work yet :( but then again I haven't yet tested this
-on another device. I'll do so eventually.
+Newer devices are better at old devices at figuring noise level.  IIRC, 3945 cannot figure noise for CCK signals, and may not be possible with OFDM as well.
 
-Luis R. Rodriguez (5):
-  mac80211: fix idle trigger upon resume
-  mac80211: inform devices when we are suspending on the stop callback
-  cfg80211: add WoW support
-  mac80211: add WoW support
-  ath9k: Add Wake-on-Wireless-LAN support
+-- Ben -- 
 
- drivers/net/wireless/adm8211.c              |    2 +-
- drivers/net/wireless/at76c50x-usb.c         |    2 +-
- drivers/net/wireless/ath/ar9170/main.c      |    2 +-
- drivers/net/wireless/ath/ath5k/base.c       |    4 +-
- drivers/net/wireless/ath/ath9k/Makefile     |    1 +
- drivers/net/wireless/ath/ath9k/ath9k.h      |   17 +
- drivers/net/wireless/ath/ath9k/debug.c      |    1 -
- drivers/net/wireless/ath/ath9k/debug.h      |    1 +
- drivers/net/wireless/ath/ath9k/hw.c         |   22 ++
- drivers/net/wireless/ath/ath9k/hw.h         |   21 +
- drivers/net/wireless/ath/ath9k/initvals.h   |   31 ++
- drivers/net/wireless/ath/ath9k/main.c       |   23 ++-
- drivers/net/wireless/ath/ath9k/pci.c        |  105 +++++
- drivers/net/wireless/ath/ath9k/reg.h        |  154 ++++++++
- drivers/net/wireless/ath/ath9k/wow.c        |  543 +++++++++++++++++++++++++++
- drivers/net/wireless/b43/main.c             |    2 +-
- drivers/net/wireless/b43legacy/main.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- drivers/net/wireless/libertas_tf/main.c     |    2 +-
- drivers/net/wireless/mac80211_hwsim.c       |    2 +-
- drivers/net/wireless/mwl8k.c                |    2 +-
- drivers/net/wireless/p54/p54common.c        |    2 +-
- drivers/net/wireless/rt2x00/rt2x00.h        |    2 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c     |    2 +-
- drivers/net/wireless/rtl818x/rtl8180_dev.c  |    2 +-
- drivers/net/wireless/rtl818x/rtl8187_dev.c  |    2 +-
- drivers/net/wireless/wl12xx/main.c          |    2 +-
- drivers/net/wireless/zd1211rw/zd_mac.c      |    2 +-
- include/linux/nl80211.h                     |   37 ++
- include/net/cfg80211.h                      |   28 ++
- include/net/mac80211.h                      |   15 +-
- net/mac80211/cfg.c                          |   11 +
- net/mac80211/driver-ops.h                   |    2 +-
- net/mac80211/ieee80211_i.h                  |    2 +
- net/mac80211/iface.c                        |    4 +
- net/mac80211/pm.c                           |    8 +
- net/mac80211/util.c                         |    8 +
- net/wireless/nl80211.c                      |  121 ++++++
- 39 files changed, 1166 insertions(+), 27 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
-
+>-----Original Message-----
+>From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
+>Sent: Friday, May 01, 2009 5:31 PM
+>To: iwlwifi maling list
+>Cc: linux-wireless
+>Subject: [ipw3945-devel] IWL3945 always reports noise levels of -127
+>
+>This is minor, and qute old issue, but botting in ubuntu 
+>kernel, 'fixes'
+>it so it must be a regression.
+>
+>Sorry for not reporting this earlier.
+>
+>Best regards,
+>	Maxim Levitsky
+>
+>
+>
+>---------------------------------------------------------------
+>---------------
+>Register Now & Save for Velocity, the Web Performance & Operations 
+>Conference from O'Reilly Media. Velocity features a full day of 
+>expert-led, hands-on workshops and two days of sessions from industry 
+>leaders in dedicated Performance & Operations tracks. Use code 
+>vel09scf 
+>and Save an extra 15% before 5/3. http://p.sf.net/sfu/velocityconf
+>_______________________________________________
+>Ipw3945-devel mailing list
+>Ipw3945-devel@lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>
