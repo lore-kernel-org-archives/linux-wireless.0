@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55412 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751271AbZENSak (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:36228 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751608AbZEDFsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 14:30:40 -0400
-Message-Id: <20090514183036.280876573@atheros.com>
-References: <20090514182845.684003914@atheros.com>
-Date: Thu, 14 May 2009 21:28:46 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 4 May 2009 01:48:11 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 1/4] ath9k: Fix a check for multicast address for virtual wiphy
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH] add basic support for parsing WMM information element
+Date: Sun,  3 May 2009 22:47:58 -0700
+Message-Id: <1241416078-3824-1-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The broadcast bit is in the first, not the last octet..
-
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ scan.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:04:12.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:12:18.000000000 +0300
-@@ -637,7 +637,7 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 		}
+diff --git a/scan.c b/scan.c
+index 1f7ed07..5caa504 100644
+--- a/scan.c
++++ b/scan.c
+@@ -277,6 +277,28 @@ static void print_wifi_wpa(unsigned char type, unsigned char len, unsigned char
+ 	print_wpa("WPA", vendor_oui, len, data);
+ }
  
- 		/* Send the frame to mac80211 */
--		if (hdr->addr1[5] & 0x01) {
-+		if (is_multicast_ether_addr(hdr->addr1)) {
- 			int i;
- 			/*
- 			 * Deliver broadcast/multicast frames to all suitable
-
++static void print_wifi_wmm(unsigned char type, unsigned char len, unsigned char *data)
++{
++	int i;
++
++	printf("\tWMM ");
++	switch (data[0]) {
++	case 0x00:
++		printf("information:");
++		break;
++	case 0x01:
++		printf("parameter:");
++		break;
++	default:
++		printf("type %d:", data[0]);
++		break;
++	}
++
++	for(i=0; i<len-1; i++)
++		printf(" %.02x", data[i + 1]);
++	printf("\n");
++}
++
+ static void print_wifi_wps(unsigned char type, unsigned char len, unsigned char *data)
+ {
+ 	bool first = true;
+@@ -359,6 +381,7 @@ static void print_wifi_wps(unsigned char type, unsigned char len, unsigned char
+ 
+ static const printfn wifiprinters[] = {
+ 	[1] = print_wifi_wpa,
++	[2] = print_wifi_wmm,
+ 	[4] = print_wifi_wps,
+ };
+ 
 -- 
+1.6.0.6
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
