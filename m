@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8516 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485AbZEDSxr convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38235 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754238AbZEDMQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 14:53:47 -0400
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 4 May 2009 11:53:39 -0700
-Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
-Message-ID: <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-References: <1241213459.7082.54.camel@maxim-laptop>
-In-Reply-To: <1241213459.7082.54.camel@maxim-laptop>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 4 May 2009 08:16:05 -0400
+Date: Mon, 4 May 2009 08:12:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+Message-ID: <20090504121221.GA31147@tuxdriver.com>
+References: <20090403182724.GA7364@tuxdriver.com> <1239136768.7475.62.camel@johannes.local> <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When one of our devices cannot figure out what the actual noise level is, it reports -127.
+On Sun, May 03, 2009 at 11:43:38AM +0300, Kalle Valo wrote:
+> On Tue, Apr 7, 2009 at 11:39 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > Hi,
+>=20
+> Hello,
+>=20
+> >> Also, please consider making some sort of prepared presentation.
+> >> Especially welcome would be topics that are accessible to those
+> >> outside of the core wireless developer group, such as current
+> >> projects on enhancing IBSS support, extended power savings, or any
+> >> other user-visible topic. =A0I'll be happy to take such proposals =
+in
+> >> private email or you can post them as part of this thread.
+> >
+> > Since I've just booked my train (will arrive 1:30pm or so on the 25=
+th,
+> > leave Sunday [28th] late afternoon), here are some things I could
+> > possibly talk about:
+> >
+> > =A0* status of moving to nl80211/cfg80211 -- overview over new cfg8=
+0211
+> > =A0 operations, maybe with Jouni?
+> > =A0* power saving if Kalle can't make it
+>=20
+> I can now confirm that I'm joining the summit as well \o/
+>=20
+> I will arrive to Berlin on Thursday before noon and will leave on
+> Sunday evening.
+>=20
+> Kalle
 
-Newer devices are better at old devices at figuring noise level.  IIRC, 3945 cannot figure noise for CCK signals, and may not be possible with OFDM as well.
+Excellent news!  Anyone else?
 
--- Ben -- 
-
->-----Original Message-----
->From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
->Sent: Friday, May 01, 2009 5:31 PM
->To: iwlwifi maling list
->Cc: linux-wireless
->Subject: [ipw3945-devel] IWL3945 always reports noise levels of -127
->
->This is minor, and qute old issue, but botting in ubuntu 
->kernel, 'fixes'
->it so it must be a regression.
->
->Sorry for not reporting this earlier.
->
->Best regards,
->	Maxim Levitsky
->
->
->
->---------------------------------------------------------------
->---------------
->Register Now & Save for Velocity, the Web Performance & Operations 
->Conference from O'Reilly Media. Velocity features a full day of 
->expert-led, hands-on workshops and two days of sessions from industry 
->leaders in dedicated Performance & Operations tracks. Use code 
->vel09scf 
->and Save an extra 15% before 5/3. http://p.sf.net/sfu/velocityconf
->_______________________________________________
->Ipw3945-devel mailing list
->Ipw3945-devel@lists.sourceforge.net
->https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
+John
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
