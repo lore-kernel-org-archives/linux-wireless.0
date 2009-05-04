@@ -1,107 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58123 "EHLO
+Received: from senator.holtmann.net ([87.106.208.187]:35119 "EHLO
 	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbZEKEqS (ORCPT
+	with ESMTP id S1755909AbZEDQJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 00:46:18 -0400
-Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
- reorder buffer
+	Mon, 4 May 2009 12:09:32 -0400
+Subject: Re: [PATCH] add basic support for parsing country information
+ element
 From: Marcel Holtmann <marcel@holtmann.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1241914138.2783.4.camel@localhost.localdomain>
-References: <20090505173512.349795688@atheros.com>
-	 <20090505173550.273830766@atheros.com>
-	 <1241709323.4903.25.camel@localhost.localdomain>
-	 <1241833703.4903.83.camel@localhost.localdomain>
-	 <20090509080838.GA1206@jm.kir.nu>
-	 <1241914138.2783.4.camel@localhost.localdomain>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241452664.8683.51.camel@johannes.local>
+References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
+	 <1241423772.8683.8.camel@johannes.local>
+	 <1241423924.8683.9.camel@johannes.local>
+	 <1241427107.2899.9.camel@localhost.localdomain>
+	 <1241435567.8683.35.camel@johannes.local>
+	 <1241437035.8683.37.camel@johannes.local>
+	 <1241452364.2903.3.camel@localhost.localdomain>
+	 <1241452664.8683.51.camel@johannes.local>
 Content-Type: text/plain
-Date: Sun, 10 May 2009 21:45:50 -0700
-Message-Id: <1242017150.3384.5.camel@localhost.localdomain>
+Date: Mon, 04 May 2009 09:09:21 -0700
+Message-Id: <1241453361.2903.15.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+Hi Johannes,
 
-> > > so I finally got the debug output for you. Took only over a day :)
+> > > I've done that now, and pushed it out, but I think the RSN IE printing
+> > > you added (and I renamed to print_rsn_ie) is missing some input length
+> > > validation, could you take a look at that please? In particular it takes
+> > > the count from the IE, but doesn't verify it fits, I think?
 > > 
-> > Thanks! Would you happen to have timing information available for these
-> > (e.g., from klogd)? It looks like the AP is sending out an ADDBA Request
-> > to update some parameters, but we currently ignore that request.
-> > However, at least in this particular case, our RX reorder bug head_seq
-> > matches with the ssn from the ADDBA Request, so I'm not sure whether
-> > ignoring the ADDBA contents is really causing harm here (anyway, we
-> > should really process these updates, too).
-> > 
-> > The timeouts on RX reorder frames look similar to what I have seen in my
-> > tests and the workaround was indeed trying to address that type of
-> > issue, so it is nice to hear that it helped in this case, too.
+> > I can have a look at it since it is by no means perfect, but at least we
+> > know have something that allows us to not bother with iwlist.
 > 
-> so I enabled timing information for dmesg and got another report. It is
-> not exactly the same and I don't know how and why it happened.
-> 
-> [  249.579036] phy0: AddBA: ssn=50, dialog_token=1 tid=0 timeout=0ba_policy=1
-> [  249.579046] addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-> [  249.579052] addba: 00 1c f0 62 88 5b 30 8f 03 00 01 02 10 00 00 20 
-> [  249.579057] addba: 03 
-> [  249.579073] Rx A-MPDU request on tid 0 result 0
-> [  250.572022] phy0: AddBA: ssn=178, dialog_token=2 tid=0 timeout=0ba_policy=1
-> [  250.572032] addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-> [  250.572038] addba: 00 1c f0 62 88 5b e0 8f 03 00 02 02 10 00 00 20 
-> [  250.572042] addba: 0b 
-> [  250.572048] phy0: RX reorder buf: head_seq=178 ssn=50 buf_size=64 stored_mpdu_num=0 timeout=0 index=0; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-> [  250.572108] unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
-> [  266.263651] Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-> [  266.263659] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-> [  266.263726] activated addBA response timer on tid 0
-> [  266.265534] wrong addBA response token, tid 0
-> [  267.263467] addBA response timer expired on tid 0
-> [  267.263516] Stopping Tx BA session for 00:1c:f0:xx:xx:xx tid 0
-> [  326.083081] Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-> [  326.083097] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-> [  326.083197] activated addBA response timer on tid 0
-> [  326.088517] wrong addBA response token, tid 0
-> [  327.080206] addBA response timer expired on tid 0
-> [  327.080262] Stopping Tx BA session for 00:1c:f0:xx:xx:xx tid 0
-> 
-> This kernel is running latest wireless-testing.git with debug patch and
-> the disassoc change (for testing) from Johannes.
+> Certainly. I just don't want to have it crash on an AP that advertises
+> completely bogus information :)
 
-I had problems with my DIR-615 and Intel 5350 card. No stable connection
-at all. No idea why it breaks down. Worked fine for the last few days
-and today it breaks after a few bytes. Maybe my environment is not clean
-enough. So I switched to use a Time Capsule in A-band only mode. Seems
-more stable with exactly the same kernel. The reorder details from the
-debug patch are still showing up:
+if nobody beats me to it, then I will fix this. Just have to deal with
+some other stuff first.
 
-[20236.165674] Open BA session requested for 00:1f:f3:xx:x:xx tid 0
-[20236.165688] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1f:f3:xx:xx:xx tid = 0
-[20236.165769] activated addBA response timer on tid 0
-[20236.166197] switched off addBA timer for tid 0 
-[20236.166202] Aggregation is on for tid 0 
-[21108.747984] phy0: AddBA: ssn=347, dialog_token=1 tid=0 timeout=0ba_policy=1
-[21108.747994] addba: d0 00 3c 00 00 16 eb 05 46 5c 00 1f f3 c3 a3 21 
-[21108.748000] addba: 00 1f f3 c3 a3 21 20 7e 03 00 01 02 10 00 00 b0 
-[21108.748005] addba: 15 
-[21108.748021] Rx A-MPDU request on tid 0 result 0
-[21108.996253] phy0: AddBA: ssn=609, dialog_token=2 tid=0 timeout=0ba_policy=1
-[21108.996264] addba: d0 00 3c 00 00 16 eb 05 46 5c 00 1f f3 c3 a3 21 
-[21108.996270] addba: 00 1f f3 c3 a3 21 50 7e 03 00 02 02 10 00 00 10 
-[21108.996274] addba: 26 
-[21108.996281] phy0: RX reorder buf: head_seq=609 ssn=347 buf_size=64 stored_mpdu_num=0 timeout=0 index=6; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-[21108.996342] unexpected AddBA Req from 00:1f:f3:xx:xx:xx on tid 0
-[21114.164106] phy0: AddBA: ssn=686, dialog_token=3 tid=1 timeout=0ba_policy=1
-[21114.164110] addba: d0 00 3c 00 00 16 eb 05 46 5c 00 1f f3 c3 a3 21 
-[21114.164112] addba: 00 1f f3 c3 a3 21 f0 81 03 00 03 06 10 00 00 e0 
-[21114.164114] addba: 2a 
-[21114.164122] Rx A-MPDU request on tid 1 result 0
-[21122.003948] delba from 00:1f:f3:c3:a3:21 (initiator) tid 1 reason code 1
-[21122.003958] Rx BA session stop requested for 00:1f:f3:xx:xx:xx tid 1
+> > Btw. I named it WPA2 on purpose since not everybody using iw will
+> > understand that it is actually named RSN. In the end it is your call,
+> > just to let you know why I did it. One of my first patches actually did
+> > use RSN in it :)
+> 
+> :)
+> I was going to call it RSN/WPA2 but that was too long for nice
+> displaying. Now that I think about it though, I think RSN is more
+> correct because WPA2 certification doesn't include any 11w things which
+> this will include. I suspect something like WPA3 will be done for that.
+> Who knows :)
+
+tried the RSN/WPA2 too, but it is too long :)
+
+On a different note, what is your preferred coding style for loops?
+
+	for (i = 0; i < len; i++) {
+
+or
+
+	for(i=0; i<len-3; i++)
+
+I was using the latter one since I assumed that is what you want (it is
+not my preferred one). Then I realized that you are using both or that
+something slipped in. Do you want me to send a patch to fix this?
 
 Regards
 
