@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58192 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbZE1PsM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44091 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbZEDLNU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 11:48:12 -0400
-Subject: Re: [PATCH v2] rfkill: create useful userspace interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243525481.10632.6.camel@johannes.local>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <1243525481.10632.6.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 28 May 2009 17:47:53 +0200
-Message-Id: <1243525673.23344.0.camel@localhost.localdomain>
+	Mon, 4 May 2009 07:13:20 -0400
+Subject: Re: [PATCH] add basic support for parsing country information
+ element
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1241427107.2899.9.camel@localhost.localdomain>
+References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
+	 <1241423772.8683.8.camel@johannes.local>
+	 <1241423924.8683.9.camel@johannes.local>
+	 <1241427107.2899.9.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-51WhxR2DnPdJrxqUP81F"
+Date: Mon, 04 May 2009 13:12:47 +0200
+Message-Id: <1241435567.8683.35.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-> The new code added by this patch will make rfkill create
-> a misc character device /dev/rfkill that userspace can use
-> to control rfkill soft blocks and get status of devices as
-> well as events when the status changes.
-> 
-> Using it is very simple -- when you open it you can read
-> a number of times to get the initial state, and every
-> further read blocks (you can poll) on getting the next
-> event from the kernel. The same structure you read is
-> also used when writing to it to change the soft block of
-> a given device, all devices of a given type, or all
-> devices.
-> 
-> This also makes CONFIG_RFKILL_INPUT selectable again in
-> order to be able to test without it present since its
-> functionality can now be replaced by userspace entirely
-> and distros and users may not want the input part of
-> rfkill interfering with their userspace code. We will
-> also write a userspace daemon to handle all that and
-> consequently add the input code to the feature removal
-> schedule.
+--=-51WhxR2DnPdJrxqUP81F
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-patch looks really good and the interface is nice and simple :)
+Hi Marcel,
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> I re-sent the patches now in a different order so that the WPA stuff is
+> the latest in case you want extra fixes. I didn't include all defined
+> ciphers since I would have to dig though specs again. However it should
+> now be pretty easy to extend it since the basic parsing is available.
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+I've committed everything, and am doing some minor cleanups. I also
+noticed we don't validate everything as good as we should so I'm adding
+some support for that.
 
-Regards
+johannes
 
-Marcel
+--=-51WhxR2DnPdJrxqUP81F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJ/s2sAAoJEKVg1VMiehFY+nsQAJhcrqQIYGAyxW+7mlQm6iNw
+4Na+lIIoDVp9LpyJeusKpPdYOmBu4Oxi1U0aIv5qXybR1I45An/P/9/NDtErFuIp
+sJPMvFW7B2Xr6qGpQqtqthXUqR8sqngLNr8L5YSPs/T8KBvJ2i8ANCJeUBmpYWV2
+NccAKILkilwSKDF02j+FnPaVMiRzMHjMVsT5CQj4WpaG1jVukJSmhofYNMMwbvEp
+glb5832WvcnsPKZiCo1zbHE/9GbqTDg/kaipifw6WIjEnSb6Nc6mlBODpiHd/19T
+UFb4PzYaN8om5NxsiHfEtiw1/zBo2H/VztPrSfcjwY0WlPM/dZ9gDT4pIRMsbz2a
+cds7uqqIYxm2t2dfMSB0Fa+WYzCgVsIrKnSCzH6jt0x/81fUqBn18byLI2TqiBjf
+PyT0P4HLxc51ADRQua7BIj0DLQ2KnT+UhMvC4WxW1EcI6sG28jHWB0/SZAaqghOb
+PC8e/6LlvGZd8QlwovJERzqVNAD8PuoLTYHUerC0aUl5583cu7yb98n08FNvBpCK
+wHGwAjcz2o75sTdIn26E7iY8neSSj0xPTNjvA8NiZYJwsU4+hAU8coVZB1E1a1E1
+X2gH8PcU09rxrsItalV4Jg1ZlLxrs0ulUkwhUxeD/75viC35oF2Gxie8H82wHhtS
+kSWZFMG+F3eVuD8A7r37
+=iatL
+-----END PGP SIGNATURE-----
+
+--=-51WhxR2DnPdJrxqUP81F--
 
