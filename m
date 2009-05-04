@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46723 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbZE0FsK (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:38786 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757475AbZEDRAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 01:48:10 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1M9Bzn-000140-4A
-	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 01:48:11 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n4R5jApe007438
-	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 07:45:10 +0200
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id n4R5jAlp007437
-	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 07:45:10 +0200
-From: Jeff Hansen <x@jeffhansen.com>
+	Mon, 4 May 2009 13:00:18 -0400
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+From: Samuel Ortiz <samuel@sortiz.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	ath9k-devel@lists.ath9k.org, Jeff Hansen <x@jeffhansen.com>
-Date: Wed, 27 May 2009 05:05:12 +0000
-Message-Id: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
-Subject: [PATCH 1/4] ath9k: Reset SC_OP_TSF_RESET flag after stuck beacon
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20090504121221.GA31147@tuxdriver.com>
+References: <20090403182724.GA7364@tuxdriver.com>
+	 <1239136768.7475.62.camel@johannes.local>
+	 <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
+	 <20090504121221.GA31147@tuxdriver.com>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 19:02:24 +0200
+Message-Id: <1241456544.7236.0.camel@sortiz-mobl>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a TrendNet 652-BRP running OpenWRT + ath9k very well.  The only
-problem is that the beacon gets stuck maybe once a day.  After
-Vasanthakumar Thiagarajan's "ath9k: cleanup beacon parameters
-configuration" patch, ath9k would nearly re-configure the beacons after it
-detected the stuck beacon, and did a reset.  But it would fail the
-SC_OP_TSF_RESET check in ath_beacon_config_ap.  This patch gets the beacon
-fully reconfigured after the reset.
+Hi John,
 
-Signed-off-by: Jeff Hansen <x@jeffhansen.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Mon, 2009-05-04 at 08:12 -0400, John W. Linville wrote:
+> On Sun, May 03, 2009 at 11:43:38AM +0300, Kalle Valo wrote:
+> > On Tue, Apr 7, 2009 at 11:39 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > > Hi,
+> > 
+> > Hello,
+> > 
+> > >> Also, please consider making some sort of prepared presentation.
+> > >> Especially welcome would be topics that are accessible to those
+> > >> outside of the core wireless developer group, such as current
+> > >> projects on enhancing IBSS support, extended power savings, or any
+> > >> other user-visible topic.  I'll be happy to take such proposals in
+> > >> private email or you can post them as part of this thread.
+> > >
+> > > Since I've just booked my train (will arrive 1:30pm or so on the 25th,
+> > > leave Sunday [28th] late afternoon), here are some things I could
+> > > possibly talk about:
+> > >
+> > >  * status of moving to nl80211/cfg80211 -- overview over new cfg80211
+> > >   operations, maybe with Jouni?
+> > >  * power saving if Kalle can't make it
+> > 
+> > I can now confirm that I'm joining the summit as well \o/
+> > 
+> > I will arrive to Berlin on Thursday before noon and will leave on
+> > Sunday evening.
+> > 
+> > Kalle
+> 
+> Excellent news!  Anyone else?
+I will most likely be there as well.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index a21b213..0c67ed2 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -411,6 +411,7 @@ void ath_beacon_tasklet(unsigned long data)
- 		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
- 			DPRINTF(sc, ATH_DBG_BEACON,
- 				"beacon is officially stuck\n");
-+			sc->sc_flags |= SC_OP_TSF_RESET;
- 			ath_reset(sc, false);
- 		}
- 
--- 
-1.6.0.4
+Cheers,
+Samuel.
 
+
+> John
 
