@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:56329 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756142AbZE3Wh2 (ORCPT
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:57919 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753570AbZEDTDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 18:37:28 -0400
-Received: by bwz22 with SMTP id 22so6792909bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 15:37:29 -0700 (PDT)
-Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
- wireless on my system
+	Mon, 4 May 2009 15:03:46 -0400
+Received: by bwz22 with SMTP id 22so659852bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 12:03:45 -0700 (PDT)
+Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
 From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1243717165.5312.3.camel@maxim-laptop>
-References: <1243716437.26585.4.camel@maxim-laptop>
-	 <1243716540.13863.32.camel@johannes.local>
-	 <1243717165.5312.3.camel@maxim-laptop>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
+References: <1241213459.7082.54.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
 Content-Type: text/plain
-Date: Sun, 31 May 2009 01:37:24 +0300
-Message-Id: <1243723044.25886.2.camel@maxim-laptop>
+Date: Mon, 04 May 2009 22:03:36 +0300
+Message-Id: <1241463816.4816.1.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-05-30 at 23:59 +0300, Maxim Levitsky wrote:
-> On Sat, 2009-05-30 at 22:49 +0200, Johannes Berg wrote:
-> > On Sat, 2009-05-30 at 23:47 +0300, Maxim Levitsky wrote:
-> > > I use nl80211 wpa_suppicant driver.
-> > > With this commit (have just bisected) I can't connect to same AP twice,
-> > > and usually only a module reload, or somtimes restart of supplicant
-> > > help.
-> > > Actually usually I can't connect again after first successful connection
-> > > at all.
-> > 
-> > Grab Luis's fix.
-> > 
-> > johannes
+On Mon, 2009-05-04 at 11:53 -0700, Cahill, Ben M wrote:
+> When one of our devices cannot figure out what the actual noise level is, it reports -127.
 > 
-> I might sound lazy, but I have searched by mailbox and I haven't see a
-> mail from Luis R. Rodriguez, after the point we discussed the oops I
-> have been getting on my system due to BUG_ON in crda code (which still
-> isn't fixed)
-> 
-> 
-> What fix? to what module? kernel drivers, supplicant?
-> 
+> Newer devices are better at old devices at figuring noise level.  IIRC, 3945 cannot figure noise for CCK signals, and may not be possible with OFDM as well.
 
-It appears that I don't receive half of mails of linux-wireless
-nether they are in spam folder.
+Why then it did work on older kernel ?
+(and noise levels seemed to be correct)
 
-I am subscribed to linux-wireless@vger.kernel.org>
-
-For example I see no trace of new intel fullmac driver.
-
-Is gmail that bad?
-
-Best regards,
+Regards,
 	Maxim Levitsky
 
