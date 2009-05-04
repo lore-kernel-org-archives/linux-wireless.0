@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:21137 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752467AbZEGCUa (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:41877 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbZEDItB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 22:20:30 -0400
-To: ext Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>,
-	"linux-next\@vger.kernel.org" <linux-next@vger.kernel.org>
-Subject: Re: [PATCH next-20090506] wireless: WL12XX should depend on GENERIC_HARDIRQS
-References: <Pine.LNX.4.64.0905062229370.23257@anakin>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 07 May 2009 05:19:21 +0300
-In-Reply-To: <Pine.LNX.4.64.0905062229370.23257@anakin> (ext Geert Uytterhoeven's message of "Wed\, 6 May 2009 22\:35\:58 +0200")
-Message-ID: <871vr1bqom.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 4 May 2009 04:49:01 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH 1/6] add support for parsing ERP information element
+Date: Mon,  4 May 2009 01:48:42 -0700
+Message-Id: <1241426927-14902-1-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Geert Uytterhoeven <geert@linux-m68k.org> writes:
+---
+ scan.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-> m68k allmodconfig:
-> | drivers/net/wireless/wl12xx/main.c: In function 'wl12xx_probe':
-> | drivers/net/wireless/wl12xx/main.c:1273: error: implicit declaration of function 'set_irq_type'
-> | make[1]: *** [drivers/net/wireless/wl12xx/main.o] Error 1
->
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-
-Acked-by: Kalle Valo <kalle.valo@nokia.com>
-
+diff --git a/scan.c b/scan.c
+index 91e94ed..d4a4832 100644
+--- a/scan.c
++++ b/scan.c
+@@ -80,11 +80,27 @@ static void print_ign(unsigned char type, unsigned char len, unsigned char *data
+ 	/* ignore for now, not too useful */
+ }
+ 
++static void print_erp(unsigned char type, unsigned char len, unsigned char *data)
++{
++	if (data[0] == 0x00)
++		return;
++
++	printf("\tERP:");
++	if (data[0] & 0x01)
++		printf(" NonERP_Present");
++	if (data[0] & 0x02)
++		printf(" Use_Protection");
++	if (data[0] & 0x04)
++		printf(" Barker_Preamble_Mode");
++	printf("\n");
++}
++
+ static const printfn ieprinters[] = {
+ 	[0] = print_ssid,
+ 	[1] = print_supprates,
+ 	[3] = print_ds,
+ 	[5] = print_ign,
++	[42] = print_erp,
+ 	[50] = print_supprates,
+ };
+ 
 -- 
-Kalle Valo
+1.6.0.6
+
