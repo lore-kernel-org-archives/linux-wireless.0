@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:45131 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753650AbZESORa (ORCPT
+Received: from mail.vyatta.com ([76.74.103.46]:54162 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751394AbZEDOxr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 10:17:30 -0400
-Received: by fxm2 with SMTP id 2so3903049fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 07:17:30 -0700 (PDT)
-Subject: Re: [BUG] Crda oopses the system
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
-References: <1241499867.4816.18.camel@maxim-laptop>
-	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
-	 <1242166051.26484.7.camel@maxim-laptop>
-	 <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
-	 <1242256104.3241.4.camel@maxim-laptop>
-	 <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
-	 <1242256950.3241.13.camel@maxim-laptop>
-	 <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
-	 <1242258469.3241.19.camel@maxim-laptop>
-	 <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
-	 <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 19 May 2009 17:17:27 +0300
-Message-Id: <1242742647.23110.10.camel@ibm172>
+	Mon, 4 May 2009 10:53:47 -0400
+Date: Mon, 4 May 2009 07:53:42 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: "John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+Message-ID: <20090504075342.5fd770fd@nehalam>
+In-Reply-To: <20090504121221.GA31147@tuxdriver.com>
+References: <20090403182724.GA7364@tuxdriver.com>
+	<1239136768.7475.62.camel@johannes.local>
+	<da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
+	<20090504121221.GA31147@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-05-14 at 10:20 -0400, Bob Copeland wrote:
-> On Wed, May 13, 2009 at 8:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >>
-> >> I wish I had time to set up, an ath5k in AP mode. There are rumors that
-> >> it works more or less now, then I could use the same beacon frame to
-> >> test.
-> >
-> > It does and if it doesn't its a bug.
-> 
-> Just FYI, it's known to have problems if the STA uses power saving --
-> ath5k never updates the beacon.  I have a patch that should work in the
-> relevant bugzilla but I haven't been back to retest it (at first I
-> thought it was causing hangs, but later realized the hangs were due to
-> other bugs in w-t).
-> 
+On Mon, 4 May 2009 08:12:21 -0400
+"John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org> w=
+rote:
 
+> On Sun, May 03, 2009 at 11:43:38AM +0300, Kalle Valo wrote:
+> > On Tue, Apr 7, 2009 at 11:39 PM, Johannes Berg
+> > <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org> wrote:
+> > > Hi,
+> >=20
+> > Hello,
+> >=20
+> > >> Also, please consider making some sort of prepared presentation.
+> > >> Especially welcome would be topics that are accessible to those
+> > >> outside of the core wireless developer group, such as current
+> > >> projects on enhancing IBSS support, extended power savings, or a=
+ny
+> > >> other user-visible topic. =C2=A0I'll be happy to take such propo=
+sals in
+> > >> private email or you can post them as part of this thread.
+> > >
+> > > Since I've just booked my train (will arrive 1:30pm or so on the =
+25th,
+> > > leave Sunday [28th] late afternoon), here are some things I could
+> > > possibly talk about:
+> > >
+> > > =C2=A0* status of moving to nl80211/cfg80211 -- overview over new=
+ cfg80211
+> > > =C2=A0 operations, maybe with Jouni?
+> > > =C2=A0* power saving if Kalle can't make it
+> >=20
+> > I can now confirm that I'm joining the summit as well \o/
+> >=20
+> > I will arrive to Berlin on Thursday before noon and will leave on
+> > Sunday evening.
+> >=20
+> > Kalle
+>=20
+> Excellent news!  Anyone else?
+>=20
+> John
 
-Just to say the truth, I haven't took my laptop with me, thus I still
-haven't tested this. I just happened that I has to do such.
-
-
-I ether make my ath5k send same beacon at home, or bring it here for
-next week.
-
-
-Anyway I think it won't hurt to merge these patches anyway.
-
-
-Best regards, and really sorry,
-	Maxim Levitsky
-
+I am going to be in France during that period. I might make it,=20
+but it requires convincing my spouse that Berlin is worth visting.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
