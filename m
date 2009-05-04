@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comar.pardus.org.tr ([193.140.100.220]:42263 "EHLO
-	pardus.org.tr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754581AbZEXWHW (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:58673 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756855AbZEDQFN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2009 18:07:22 -0400
-Message-ID: <4A19C51D.7020609@pardus.org.tr>
-Date: Mon, 25 May 2009 01:07:25 +0300
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.30-rc7: Reported regressions from 2.6.29
-References: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera>
-In-Reply-To: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 May 2009 12:05:13 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 1/2] mac80211: minstrel, fix memory corruption
+Date: Mon,  4 May 2009 18:04:55 +0200
+Message-Id: <1241453096-8517-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13326
-> Subject		: [PATCH]Null pointer dereference in rtc-cmos driver
-> Submitter	: Ozan Çağlayan <ozan@pardus.org.tr>
-> Date		: 2009-05-14 16:16 (11 days old)
-> References	: http://marc.info/?l=linux-kernel&m=124231783704696&w=4
->   
+minstrel doesn't count max rate count in fact, since it doesn't use
+a loop variable `i' and hence allocs space only for bitrates found in
+the first band.
 
-Just to notice that the patch for this is at:
+Fix it by involving the `i' as an index so that it traverses all the
+bands now and finds the real max bitrate count.
 
-http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/driver-core.current/driver-core-do-not-oops-when-driver_unregister-is-called-for-unregistered-drivers.patch
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Can at least be marked as "has a patch".
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 3824990..70df3dc 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -476,7 +476,7 @@ minstrel_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+ 		return NULL;
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+-		sband = hw->wiphy->bands[hw->conf.channel->band];
++		sband = hw->wiphy->bands[i];
+ 		if (sband->n_bitrates > max_rates)
+ 			max_rates = sband->n_bitrates;
+ 	}
+-- 
+1.6.2.4
 
-Thanks,
-Ozan Caglayan
