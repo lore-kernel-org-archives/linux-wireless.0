@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:35633 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754749AbZEPJcX (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:37703 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749AbZEDIxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 05:32:23 -0400
-Received: by ewy24 with SMTP id 24so3000064ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 02:32:24 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: rt73usb Access point status
-Date: Sat, 16 May 2009 11:32:21 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Alexandre Becholey <alexandre@shockfish.com>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com> <20090512215817.bd1c6895.cjsthompson@gmail.com> <wf4ovlo25e.fsf@calligramme.charmers>
-In-Reply-To: <wf4ovlo25e.fsf@calligramme.charmers>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200905161132.21437.IvDoorn@gmail.com>
+	Mon, 4 May 2009 04:53:34 -0400
+Subject: Re: [PATCH] add support for parsing WPA and RSN/WPA2 information
+ elements
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090504080658.GA3141@jm.kir.nu>
+References: <1241412381-2778-1-git-send-email-marcel@holtmann.org>
+	 <20090504080658.GA3141@jm.kir.nu>
+Content-Type: text/plain
+Date: Mon, 04 May 2009 01:53:24 -0700
+Message-Id: <1241427204.2899.11.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 16 May 2009, Jon Fairbairn wrote:
-> "Christoph .J Thompson" <cjsthompson@gmail.com> writes:
+Hi Jouni,
+
+> > +static void print_auth(const unsigned char *oui, unsigned char *data)
+> > +{
+> > +	if (memcmp(data, oui, 3) == 0) {
+> > +		switch (data[3]) {
+> > +		case 0x01:
+> > +			printf("802.1x");
 > 
-> > On Tue, 12 May 2009 09:16:12 +0100
-> > Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk> wrote:
-> >> Is there any prospec of persuading Ralink either to release
-> >> a mended version of the firmware or to free the old version?
-> >
-> > I think Ivo van Doorn said he didn't want to bother RaLink with that. I was
-> > thinking about writing to them about it but that's difficult because I don't
-> > really understand the technical specifics of the issue.
+> s/802.1x/IEEE 802.1X/
 > 
-> Me neither; in particular, does it work as an AP in Windows?
-> If so, how does it get round the bug in the driver?
+> > +			break;
+> > +		case 0x02:
+> > +			printf("PSK");
+> > +			break;
+> 
+> If you want more coverage here, IEEE 802.11r-2008 adds 00-0F-AC:3 (FT
+> authentication negotiated over IEEE 802.1X) and 00-0F-AC:4 (FT
+> authentication using PSK). Please note that these are defined only for
+> OUI 00-0F-AC, though.
+> 
+> In addition, IEEE 802.11w will be adding 00-0F-AC:5 (IEEE 802.1X or
+> PMKSA caching with SHA256 Key Derivation) and 00-0F-AC-6 (PSK with
+> SHA256 Key Derivation).
 
-Simply by indicating that every single frame passed to the driver has
-been send out succesfully and thus completely ignoring the real status.
+we can add them later. I just wanna have basic support for parsing the
+WPA IE. However can you point me to download links for the specs. I get
+easily lost in the amount of WiFi/802.11 specs.
 
-I am awaiting a patch from Alexandre which will add that same behavior
-to rt2x00.
+> > +static void print_wpa(const char *ie, const unsigned char *oui,
+> > +		      unsigned char len, unsigned char *data)
+> > +{
+> 
+> > +	if (len < 4) {
+> > +		tab_on_first(&first);
+> > +		printf("\t * Group cipher: TKIP\n");
+> > +		printf("\t * Pairwise ciphers: TKIP\n");
+> 
+> These default are correct for WPA IE, but not for RSN IE/WPA2. However,
+> it looks like this function is used for both and as such, the WPA2 case
+> should print out CCMP here (and same below if only the pairwise cipher
+> suite field is omitted).
 
-Ivo
+Fixed that.
+
+> In addition, this could show the default AKM value (IEEE 802.1X) if it
+> is not included in the IE.
+
+And added a default for that.
+
+Regards
+
+Marcel
+
+
