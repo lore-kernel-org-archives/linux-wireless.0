@@ -1,78 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:54761 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763351AbZEAAEN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60988 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbZEEVta (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 20:04:13 -0400
-Date: Thu, 30 Apr 2009 20:03:31 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Greg KH <greg@kroah.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH 7/8] vt6655: Replace net_device->priv accesses with
-	netdev_priv calls.
-Message-ID: <20090501000330.GC6996@storm.local.network>
-References: <20090425001405.GB23173@kroah.com> <20090425143235.GG11201@storm.local.network>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xo44VMWPx7vlQ2+2"
-In-Reply-To: <20090425143235.GG11201@storm.local.network>
+	Tue, 5 May 2009 17:49:30 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1M1SW1-0000Ck-AW
+	for linux-wireless@vger.kernel.org; Tue, 05 May 2009 23:49:29 +0200
+Subject: Re: virtual rfkill button
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1241482353.8683.111.camel@johannes.local>
+References: <1241482353.8683.111.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yOjd0A5t6cisjnUzB0W9"
+Date: Tue, 05 May 2009 23:48:58 +0200
+Message-Id: <1241560138.4969.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---xo44VMWPx7vlQ2+2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-yOjd0A5t6cisjnUzB0W9
+Content-Type: multipart/mixed; boundary="=-99l0Agrjyd4HZR742WUy"
+
+
+--=-99l0Agrjyd4HZR742WUy
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+That didn't work, the attached one does... Also a module to show rfkill
+working (for my new API rfkill).
 
-I haven't had a chance to test this on real hardware yet.  Sorry, I will tr=
-y to
-do this soon.
+The Makefile for the test module is a simple:
+obj-m +=3D fake-rfkill.o
 
-On Sat, Apr 25, 2009 at 10:32:35AM -0400, Forest Bond wrote:
-> @@ -1226,11 +1227,6 @@ static BOOL device_init_info(struct pci_dev* pcid,=
- PSDevice* ppDevice,
-> =20
->      PSDevice p;
->     =20
-> -    *ppDevice =3D kmalloc(sizeof(DEVICE_INFO),GFP_ATOMIC);
-> -   =20
-> -    if (*ppDevice =3D=3D NULL)
-> -        return FALSE;
-> -       =20
->      memset(*ppDevice,0,sizeof(DEVICE_INFO));
->     =20
->      if (pDevice_Infos =3D=3D NULL) {
+and then you do
+make -f /lib/modules/$(uname -r)/build/Makefile M=3D$(pwd)
 
-I realized that I did not remove the corresponding kfree calls for this rem=
-oved
-kmalloc.  Should I resend, or is it better to send an additional patch to be
-applied on top of the original patches?
+johannes
 
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
 
---xo44VMWPx7vlQ2+2
+--=-99l0Agrjyd4HZR742WUy
+Content-Disposition: attachment; filename="fake-rfkill.c"
+Content-Type: text/x-csrc; name="fake-rfkill.c"; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+I2luY2x1ZGUgPGxpbnV4L3Jma2lsbC5oPg0KI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KDQpN
+T0RVTEVfTElDRU5TRSgiR1BMIik7DQpNT0RVTEVfQVVUSE9SKCJKb2hhbm5lcyBCZXJnIDxqb2hh
+bm5lc0BzaXBzb2x1dGlvbnMubmV0PiIpOw0KDQpzdGF0aWMgc3RydWN0IHJma2lsbCAqcmZrOw0K
+DQpzdGF0aWMgdm9pZCB0ZXN0X3BvbGwoc3RydWN0IHJma2lsbCAqcmZraWxsLCB2b2lkICpkYXRh
+KQ0Kew0KCXByaW50ayhLRVJOX0RFQlVHICJwb2xsIHRlc3QgcmZraWxsXG4iKTsNCn0NCg0Kc3Rh
+dGljIHZvaWQgdGVzdF9xdWVyeShzdHJ1Y3QgcmZraWxsICpyZmtpbGwsIHZvaWQgKmRhdGEpDQp7
+DQoJcHJpbnRrKEtFUk5fREVCVUcgInF1ZXJ5IHRlc3QgcmZraWxsXG4iKTsNCn0NCg0Kc3RhdGlj
+IGludCB0ZXN0X3NldF9ibG9jayh2b2lkICpkYXRhLCBib29sIGJsb2NrZWQpDQp7DQoJcHJpbnRr
+KEtFUk5fREVCVUcgInNldCB0ZXN0IHJma2lsbCAoJXMpXG4iLA0KCQlibG9ja2VkID8gImJsb2Nr
+ZWQiIDogImFjdGl2ZSIpOw0KCXJldHVybiAwOw0KfQ0KDQpzdGF0aWMgc3RydWN0IHJma2lsbF9v
+cHMgb3BzID0gew0KCS5wb2xsID0gdGVzdF9wb2xsLA0KCS5xdWVyeSA9IHRlc3RfcXVlcnksDQoJ
+LnNldF9ibG9jayA9IHRlc3Rfc2V0X2Jsb2NrLA0KfTsNCg0KaW50IG1vZF9pbml0KHZvaWQpDQp7
+DQoJaW50IGVycjsNCg0KCXJmayA9IHJma2lsbF9hbGxvYygiZmFrZSIsIE5VTEwsIFJGS0lMTF9U
+WVBFX1dMQU4sICZvcHMsIE5VTEwpOw0KCWlmICghcmZrKQ0KCQlyZXR1cm4gLUVOT01FTTsNCgll
+cnIgPSByZmtpbGxfcmVnaXN0ZXIocmZrKTsNCglpZiAoZXJyKQ0KCQlyZmtpbGxfZGVzdHJveShy
+ZmspOw0KCXJldHVybiBlcnI7DQp9DQptb2R1bGVfaW5pdChtb2RfaW5pdCk7DQoNCnZvaWQgbW9k
+X2V4aXQodm9pZCkNCnsNCglyZmtpbGxfdW5yZWdpc3RlcihyZmspOw0KCXJma2lsbF9kZXN0cm95
+KHJmayk7DQp9DQptb2R1bGVfZXhpdChtb2RfZXhpdCk7DQo=
+
+
+--=-99l0Agrjyd4HZR742WUy
+Content-Disposition: attachment; filename="virt-rfkill.c"
+Content-Transfer-Encoding: base64
+Content-Type: text/x-csrc; name="virt-rfkill.c"; charset="UTF-8"
+
+LyoNCiAqIENvcHlyaWdodCAoYykgMjAwOQkJSm9oYW5uZXMgQmVyZw0KICogQ29weXJpZ2h0IChj
+KSAyMDA5CQlMdWlzIFIuIFJvZHJpZ3Vleg0KICogDQogKiBQZXJtaXNzaW9uIHRvIHVzZSwgY29w
+eSwgbW9kaWZ5LCBhbmQvb3IgZGlzdHJpYnV0ZSB0aGlzIHNvZnR3YXJlIGZvciBhbnkNCiAqIHB1
+cnBvc2Ugd2l0aCBvciB3aXRob3V0IGZlZSBpcyBoZXJlYnkgZ3JhbnRlZCwgcHJvdmlkZWQgdGhh
+dCB0aGUgYWJvdmUNCiAqIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3Rp
+Y2UgYXBwZWFyIGluIGFsbCBjb3BpZXMuDQogKiANCiAqIFRIRSBTT0ZUV0FSRSBJUyBQUk9WSURF
+RCAiQVMgSVMiIEFORCBUSEUgQVVUSE9SIERJU0NMQUlNUyBBTEwgV0FSUkFOVElFUw0KICogV0lU
+SCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJTkNMVURJTkcgQUxMIElNUExJRUQgV0FSUkFOVElF
+UyBPRg0KICogTUVSQ0hBTlRBQklMSVRZIEFORCBGSVRORVNTLiBJTiBOTyBFVkVOVCBTSEFMTCBU
+SEUgQVVUSE9SIEJFIExJQUJMRSBGT1INCiAqIEFOWSBTUEVDSUFMLCBESVJFQ1QsIElORElSRUNU
+LCBPUiBDT05TRVFVRU5USUFMIERBTUFHRVMgT1IgQU5ZIERBTUFHRVMNCiAqIFdIQVRTT0VWRVIg
+UkVTVUxUSU5HIEZST00gTE9TUyBPRiBVU0UsIERBVEEgT1IgUFJPRklUUywgV0hFVEhFUiBJTiBB
+Tg0KICogQUNUSU9OIE9GIENPTlRSQUNULCBORUdMSUdFTkNFIE9SIE9USEVSIFRPUlRJT1VTIEFD
+VElPTiwgQVJJU0lORyBPVVQgT0YNCiAqIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgVVNFIE9S
+IFBFUkZPUk1BTkNFIE9GIFRISVMgU09GVFdBUkUuDQogKi8NCg0KI2luY2x1ZGUgPHN0ZGlvLmg+
+DQojaW5jbHVkZSA8c3RyaW5nLmg+DQojaW5jbHVkZSA8ZXJybm8uaD4NCiNpbmNsdWRlIDxmY250
+bC5oPg0KI2luY2x1ZGUgPGxpbnV4L3VpbnB1dC5oPg0KI2luY2x1ZGUgPHVuaXN0ZC5oPg0KDQov
+Kg0KICogWW91IHdpbGwgbmVlZCBDT05GSUdfSU5QVVRfVUlOUFVUIGVuYWJsZWQsIGlmDQogKiBl
+bmFibGVkIGFzIGEgbW9kdWxlIG1vZHByb2JlIHVpbnB1dA0KICovDQoNCmludCBtYWluKGludCBh
+cmdjLCBjaGFyICoqYXJndikNCnsNCglzdHJ1Y3QgdWlucHV0X3VzZXJfZGV2IGRldjsNCglzdHJ1
+Y3QgaW5wdXRfZXZlbnQgZXY7DQoJaW50IGZkLCByZXQ7DQoNCgkvKiBUZWxscyB0aGUga2VybmVs
+IHRvIGttYWxsb2MoKSBhIHVpbnB1dCBkZXZpY2UgZm9yIHVzICovDQoJZmQgPSBvcGVuKCIvZGV2
+L2lucHV0L3VpbnB1dCIsIE9fV1JPTkxZIHwgT19OREVMQVkpOw0KCWlmIChmZCA8IDApIHsNCgkJ
+cGVycm9yKCJvcGVuIHVpbnB1dCIpOw0KCQlpZiAoZXJybm8gPT0gRU5PRU5UKQ0KCQkJZnByaW50
+ZihzdGRlcnIsICJUcnkgXCJtb2Rwcm9iZSB1aW5wdXRcIi5cbiIpOw0KCQlyZXR1cm4gMTsNCgl9
+DQoNCgltZW1zZXQoJmRldiwgMCwgc2l6ZW9mKGRldikpOw0KCXN0cmNweShkZXYubmFtZSwgInZp
+cnQtcmZraWxsIik7DQoNCgkvKiBzZXRzIHVwIHVpbnB1dCBkZXZpY2UsIGFsbCB3ZSBuZWVkIGlz
+IGEgbmFtZSAqLw0KCXJldCA9IHdyaXRlKGZkLCAmZGV2LCBzaXplb2YoZGV2KSk7DQoJaWYgKHJl
+dCAhPSBzaXplb2YoZGV2KSkgew0KCQlwZXJyb3IoIndyaXRlIHNldHVwIik7DQoJCXJldHVybiAx
+Ow0KCX0NCg0KCS8qIHNldHMgIkVWX0tFWSIgYml0IG9uIHRoZSB0aGUgdWlucHV0IGRldidzIGV2
+Yml0ICovDQoJaWYgKGlvY3RsKGZkLCBVSV9TRVRfRVZCSVQsIEVWX0tFWSkpIHsNCgkJcGVycm9y
+KCJzZXQga2V5IGV2ZW50Iik7DQoJCXJldHVybiAxOw0KCX0NCg0KCS8qIHNldHMgIktFWV9XTEFO
+IiBiaXQgb24gdGhlIHRoZSB1aW5wdXQgZGV2J3Mga2V5Yml0ICovDQoJaWYgKGlvY3RsKGZkLCBV
+SV9TRVRfS0VZQklULCBLRVlfV0xBTikpIHsNCgkJcGVycm9yKCJzZXQgd2xhbiBrZXkiKTsNCgkJ
+cmV0dXJuIDE7DQoJfQ0KDQoJLyogY3JlYXRlIGFuIGlucHV0IGRldmljZSBmb3IgdWlucHV0IGRl
+dmljZSAqLw0KCXJldCA9IGlvY3RsKGZkLCBVSV9ERVZfQ1JFQVRFKTsNCglpZiAocmV0KSB7DQoJ
+CXBlcnJvcigiY3JlYXRlIGlucHV0IGRldmljZSIpOw0KCQlyZXR1cm4gMTsNCgl9DQoNCgkvKg0K
+CSAqIHdyaXRlIGV2ZW50cyAtLSBvbmNlIGEgdWlucHV0IGRldmljZSBoYXMgYmVlbiBzZXQgdXAg
+d3JpdGVzDQoJICogaW5qZWN0IGV2ZW50cyB3aGljaCBzaG93IHVwIGluIHRoZSB2aXJ0dWFsIGlu
+cHV0IGRldmljZS4NCgkgKi8NCgltZW1zZXQoJmV2LCAwLCBzaXplb2YoZXYpKTsNCglldi50eXBl
+ID0gRVZfS0VZOw0KCWV2LmNvZGUgPSBLRVlfV0xBTjsNCgkvKiBidXR0b24gZG93biAqLw0KCWV2
+LnZhbHVlID0gMTsNCglyZXQgPSB3cml0ZShmZCwgJmV2LCBzaXplb2YoZXYpKTsNCglpZiAocmV0
+ICE9IHNpemVvZihldikpIHsNCgkJcGVycm9yKCJ3cml0ZSBldmVudCIpOw0KCQlyZXR1cm4gMTsN
+Cgl9DQoJLyogYW5kIHVwIGFnYWluIC0gdGhhdCdzIGEgcHJlc3MgKi8NCglldi52YWx1ZSA9IDA7
+DQoJcmV0ID0gd3JpdGUoZmQsICZldiwgc2l6ZW9mKGV2KSk7DQoJaWYgKHJldCAhPSBzaXplb2Yo
+ZXYpKSB7DQoJCXBlcnJvcigid3JpdGUgZXZlbnQiKTsNCgkJcmV0dXJuIDE7DQoJfQ0KDQoJcmV0
+dXJuIDA7DQp9DQo=
+
+
+--=-99l0Agrjyd4HZR742WUy--
+
+--=-yOjd0A5t6cisjnUzB0W9
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFJ+jxSRO4fQQdv5AwRAoCAAJ45lt0ihV9Hp/ecG6R68yqpkH6rvwCeLBqO
-4eWk8mbJwhjvxD82ZHJN8FM=
-=+dWs
+iQIcBAABAgAGBQJKALRHAAoJEKVg1VMiehFYCPgP/2nXVO3Vm5GxGTNdC7kQLNdE
+dEybGUmjDXAUsRv83TDhwIGWK2ns9e1+iR1pbm9B1yBMPTseP5f+TAjFWiomYMoy
+NOs854W8vNeVUGNhTBNKMSUABSWe5/DnoN7JEIoV1F+3HAG7AKUW90BD7FyJg1KG
+1aai4xgjxq9bpyAVOqniWtAChCXEj/nin3gy/WELEIG290MPPX83KlQFIlcKdvRm
+bfGoqOAL2NWsHLw3wwGgO7DA0QZrS63mvd7Z/IJzix6gUODBXFdIysESaW2X/GOK
+UeqIEarZndVsGD3jjnzxvNUu4/l4WIc+GMCYvfsuOUi7f5xSNnl+z12tL92jBihi
+WQFjkFTVnD+/4DSd+5tzR3s5YxkH/szVpJBenzXSPWxfBiGtUxGTflB0H/Fhhy+4
+q4uP8qAv4rYJJ2BF6l6YOx3d4vbRkSHXSJmNS5JMAvL3WznCG/q35Jz9yctxIqqK
+z2oni9YVRlbN6qwpcyggNmSja4/KO8SGK2vDrFWf2Mnc7krE31s0BDMuP6Ak92n9
+wSXdLWMNNv5nrGsq+Zt9kcQKVq9Sg+AU/cV40ELvX38SBz2Yv6WXmEazngEXMo3q
+nJIZo+jMdKvD2gFOVjz/pzPZO5pCwJVLMQz6czTkSuAZU8Ao1+GeWloUywbEspkF
+ezfMuxd3Bdcw0fmV8cu+
+=BAHf
 -----END PGP SIGNATURE-----
 
---xo44VMWPx7vlQ2+2--
+--=-yOjd0A5t6cisjnUzB0W9--
+
