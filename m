@@ -1,30 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:64910 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389AbZEKIp5 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58762
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752557AbZEETAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 04:45:57 -0400
-Message-ID: <4A07E5C7.5030000@gmail.com>
-Date: Mon, 11 May 2009 10:45:59 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Oops in wireless from today's git
-References: <c6b1100b0905101239n564e4379v5460c281260950bc@mail.gmail.com>	 <4A074682.6010403@gmail.com>	 <c6b1100b0905101529tfafe11p3ddcbf4b604ddd29@mail.gmail.com>	 <4A07C905.8010805@gmail.com> <c6b1100b0905110138r804136aqce6111b17cabc5fb@mail.gmail.com>
-In-Reply-To: <c6b1100b0905110138r804136aqce6111b17cabc5fb@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 5 May 2009 15:00:39 -0400
+Date: Tue, 05 May 2009 12:00:34 -0700 (PDT)
+Message-Id: <20090505.120034.213663073.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-05-05
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090505181009.GA2788@tuxdriver.com>
+References: <20090505181009.GA2788@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2009 10:38 AM, Chris Clayton wrote:
-> Thanks Jiri. That patch applies (with offsets) and prevents the oops.
-> I think the patch that caused this oops was sent to stable, so  I
-> guess this needs pushing to Linus quite quickly so that it can go to
-> stable too.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 5 May 2009 14:10:09 -0400
 
-Yes, you're right, it now oopses with cards that support only one 802.11
-band, but it's still better than silently corrupting memory. Of course,
-the oops-fixing patch should be merged into the stable aswell.
+> Yet another round of fixes intended for 2.6.30...
+> 
+> Included is the removal of another unnecessary EXPORT_SYMBOL that seems
+> to be irritating some versions of GCC, the correction of a WARN_ON check
+> that generates spurious log noise, a fix for a missing length value that
+> leads to bad data being passed to userland, the correction of a WARN in
+> iwl_set_tkip_dynamic_key_info, fixes for a couple of cfg80211 Oopsen, a
+> one-line comment correction in cfg80211, and a couple of memory
+> corruption fixes related to mac80211 rate control algorithms.  One of
+> these last two looks a little big, but it is mostly moving a hunk of
+> code around.
+ ...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
-Thanks for testing.
+Pulled, thanks!
