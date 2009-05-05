@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:44456 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559AbZEHSrH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39169 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbZEEQE3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 14:47:07 -0400
-Received: by ewy24 with SMTP id 24so2032281ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 11:47:06 -0700 (PDT)
-Date: Fri, 8 May 2009 21:46:57 +0300
-From: Kadianakis George <desnacked@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and hidden ESSIDs in 2.6.28
-Message-ID: <20090508184656.GB4529@grayskull>
-References: <20090424180506.GA6026@grayskull> <20090508184135.GA4529@grayskull>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090508184135.GA4529@grayskull>
+	Tue, 5 May 2009 12:04:29 -0400
+Subject: Re: [PATCH] add support for parsing WPA and RSN/WPA2 information
+ elements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <1241538965.2987.6.camel@localhost.localdomain>
+References: <1241412381-2778-1-git-send-email-marcel@holtmann.org>
+	 <20090504080658.GA3141@jm.kir.nu>
+	 <1241427204.2899.11.camel@localhost.localdomain>
+	 <20090505083516.GA30908@jm.kir.nu>
+	 <1241538965.2987.6.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lMdh+AmcYD7OpXZ6Oirb"
+Date: Tue, 05 May 2009 18:03:54 +0200
+Message-Id: <1241539434.28069.15.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21:41 Fri 08 May     , Kadianakis George wrote:
-> So, any ideas?
-> Do you need any extra info?
 
-Original post (http://marc.info/?l=linux-wireless&m=124059633132688&w=2):
+--=-lMdh+AmcYD7OpXZ6Oirb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Greetings,
+On Tue, 2009-05-05 at 08:56 -0700, Marcel Holtmann wrote:
 
-this bug: http://bugs.gentoo.org/show_bug.cgi?id=262862 seems to
-reveal a bug in mac80211 being unable to handle APs that don't
-broadcast their ESSIDs.
+> thanks for the pointers, but I do leave this now for someone else to
+> fix. The basic RSN parsing code is in iw now and adding new ciphers etc.
+> is pretty simple :)
 
-The issue appeared in the 2.6.28 versions (2.6.27 worked alright) of
-the Linux kernel and it seems to be fixed in 2.6.29.
+I've done it already ;)
 
-A bugzilla entry for this specific bug was created over here:
-http://bugs.gentoo.org/show_bug.cgi?id=267368
+johannes
 
-Any ideas on what caused it and which patch fixed it?
+--=-lMdh+AmcYD7OpXZ6Oirb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Thanks
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJKAGNoAAoJEKVg1VMiehFYo5YP/jjKfcIzdMRUOxREEkf8tyyD
+fj9AL5dFdSp0AFCnOV21ga/AwxIc22m3LQh5s8hBm5VkZt6ZmkD2QrDTK4xNsP//
+iRwte7FWzAFmyLtdUQG66owWYEGVZtA9izM/dXyKSEX6byVVLf0mv79XevkDLthH
+v8Hae2EpuKW5su+NfLKqT9dUXqx1xe6k6sJ0iA81lyb2cCHKAoxN4OMAjS40KJMX
+fuhlGcqZRu75hsFTLNHVVPyKjZxNikw9tYxgQ/TT+2Nujp0+lhhog03ybzJILf6V
+QZ0GUeziX37Y7UTjyd6SGxgtyDFNJ6mo1IC7UgRAgGtv1AVnqlGISveU0RUuzKiv
+HwDxE6dzkTKrHmE+vTvZ4k5qkG6lBUTC3m+pmUUDa4ixSczh0EeDUMt+CAnNbTdZ
+5Ah9Vfdocf9SUFGXessvu+OFYDSW4eS6Kam3/MbhDhjhsPQViPIdfSbsD5tjQqJy
+SXp16Vh5PkG0zdu3dIT9c5cnIZuN0sjd0BSkBe9K1gb/6uozCzz8XOhHI0UUp5VW
+nA7y+TEV7mU+WAxz74bPnixf6wycZcUbx0dOTmwF9PYuVxWqmxI8RtuPe9xsztNl
+BSw0ERLaCWNdTLm9gOGCV/foPeUHUJrEKFvi/iAfymIRZBv+lW73L2V2hMd2HeKs
+nn343rdgsBgTiYBOG3CO
+=0Cj0
+-----END PGP SIGNATURE-----
+
+--=-lMdh+AmcYD7OpXZ6Oirb--
+
