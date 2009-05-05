@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:54645 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756276AbZEDP3R (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:44446 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbZEEP4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 11:29:17 -0400
-Received: by ewy24 with SMTP id 24so4027111ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 08:29:16 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Alexandre Becholey <alexandre@shockfish.com>
-Subject: Re: IEEE80211 Acknowledgement
-Date: Mon, 4 May 2009 17:29:13 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <49FF06BB.2090106@shockfish.com>
-In-Reply-To: <49FF06BB.2090106@shockfish.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200905041729.13805.IvDoorn@gmail.com>
+	Tue, 5 May 2009 11:56:20 -0400
+Subject: Re: [PATCH] add support for parsing WPA and RSN/WPA2 information
+ elements
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090505083516.GA30908@jm.kir.nu>
+References: <1241412381-2778-1-git-send-email-marcel@holtmann.org>
+	 <20090504080658.GA3141@jm.kir.nu>
+	 <1241427204.2899.11.camel@localhost.localdomain>
+	 <20090505083516.GA30908@jm.kir.nu>
+Content-Type: text/plain
+Date: Tue, 05 May 2009 08:56:05 -0700
+Message-Id: <1241538965.2987.6.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Jouni,
 
-Just as side information for other readers:
+> > we can add them later. I just wanna have basic support for parsing the
+> > WPA IE. However can you point me to download links for the specs. I get
+> > easily lost in the amount of WiFi/802.11 specs.
+> 
+> IEEE 802.11r-2008 is available through the GetIEEE 802 Program
+> (http://standards.ieee.org/getieee802/802.11.html), but IEEE 802.11w
+> drafts are not yet publicly available (i.e., only for IEEE 802.11 WG
+> members at this point). Anyway, as far as the RSN IE assigned values are
+> concerned, you can get the latest information from the IEEE 802.11 ANA
+> database:
+> https://mentor.ieee.org/802.11/dcn/09/11-09-0031-04-0000-ana-database-assigned-number-authority.xls
+> 
+> (the 7.3.2.25.* tabs are for RSN IE)
 
-Alexandre is looking into the problem of rt2500usb/rt73usb and
-possibly other USB drivers, that they cannot report the ACK status
-of frames to mac80211 which is problematic for hostapd.
+thanks for the pointers, but I do leave this now for someone else to
+fix. The basic RSN parsing code is in iw now and adding new ciphers etc.
+is pretty simple :)
 
-> I'm trying to catch Acknowlegement frames in the mac80211, but I don't 
-> managed to. Thus I'm wondering if they follow another path than the 
-> frames that aren't control ones?
+Regards
 
-Have you made sure that mac80211 has called the configure_filter()
-callback function with the FIF_CONTROL flag enabled?
+Marcel
 
-Ivo
+
