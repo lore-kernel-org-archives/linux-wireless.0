@@ -1,62 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:46547 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751225AbZENSyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 14:54:09 -0400
-Subject: Re: Scan while TX/RX'ing a lot of data
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
-In-Reply-To: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 14 May 2009 14:54:58 -0400
-Message-Id: <1242327298.4227.25.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33001 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753534AbZEEIfZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2009 04:35:25 -0400
+Date: Tue, 5 May 2009 11:35:16 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] add support for parsing WPA and RSN/WPA2 information
+	elements
+Message-ID: <20090505083516.GA30908@jm.kir.nu>
+References: <1241412381-2778-1-git-send-email-marcel@holtmann.org> <20090504080658.GA3141@jm.kir.nu> <1241427204.2899.11.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1241427204.2899.11.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-05-14 at 10:52 -0700, Luis R. Rodriguez wrote:
-> I'm told Network Manager scans every 60 seconds. When TX'ing or RX'ing
-> a lot of data you will see a big dip in throughput and sometimes it
-> may cause issues with some connections. Jouni pointed out a possible
-> nice option here: split the scans per channel through time. Now with
-> nl80211 this is possible but right now Network Manager uses wext
-> through wpa_supplicant in many distributions and this won't change for
-> a bit (maybe by the next major distribution releases?). Since we're
-> stuck with wext for the current distribution releases I'd like to hear
-> feedback on a possible nice solution. Should we simply cancel scan?
+On Mon, May 04, 2009 at 01:53:24AM -0700, Marcel Holtmann wrote:
 
-Libertas splits scans up into 3 parts with a short return to the
-operating channel between each part.  There's nothing that requires
-cfg80211 for that to work...
+> we can add them later. I just wanna have basic support for parsing the
+> WPA IE. However can you point me to download links for the specs. I get
+> easily lost in the amount of WiFi/802.11 specs.
 
-Something I've tossed around for a while is counting traffic on the
-device and if its over a certain bitrate for a period of time, postpone
-the scan for a while.  But after a certain amount of time, there's going
-to be a scan no matter what.
+IEEE 802.11r-2008 is available through the GetIEEE 802 Program
+(http://standards.ieee.org/getieee802/802.11.html), but IEEE 802.11w
+drafts are not yet publicly available (i.e., only for IEEE 802.11 WG
+members at this point). Anyway, as far as the RSN IE assigned values are
+concerned, you can get the latest information from the IEEE 802.11 ANA
+database:
+https://mentor.ieee.org/802.11/dcn/09/11-09-0031-04-0000-ana-database-assigned-number-authority.xls
 
-The problem here is that at any time an application (say, wifi location
-app) could ask for the list of access points.  If you don't scan
-periodically, all APs other than your associated AP (and others on the
-same channel) will gradually drop off because their beacons are
-received.  Hard to wifi position or get area statistics if there's only
-one AP in the list.
+(the 7.3.2.25.* tabs are for RSN IE)
 
-Secondarily, scanning is a tradeoff between better roaming latency and
-continuous high throughput.  If you don't scan, you have no idea what's
-around, and when you move and the current AP becomes marginal, you
-*have* to take the hit no matter what, so you can scan and find a new AP
-to associate with.
-
-I would have though that the periodic scanning would be more of an
-annoyance when doing VOIP or SSH other latency sensitive tasks, but when
-just downloading a file, a few second drop in transfer rate gets lost in
-the bucket in the grand scheme of things.
-
-Dan
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
