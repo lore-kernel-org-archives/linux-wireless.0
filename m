@@ -1,97 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:57732 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbZEYLOQ (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54561 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754625AbZEERf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2009 07:14:16 -0400
-Received: by fxm12 with SMTP id 12so1251971fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2009 04:14:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
-References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com>
-	 <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
-	 <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com>
-	 <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com>
-	 <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com>
-	 <20090407160812.GA5758@tesla>
-	 <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
-Date: Mon, 25 May 2009 12:14:15 +0100
-Message-ID: <3ace41890905250414n37798736yc0a5090a67206129@mail.gmail.com>
-Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 5 May 2009 13:35:57 -0400
+Message-Id: <20090505173550.273830766@atheros.com>
+References: <20090505173512.349795688@atheros.com>
+Date: Tue, 05 May 2009 20:35:14 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 2/3] mac80211: Add a timeout for frames in the RX reorder buffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2009 at 8:08 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-For 32-bit, it seems to work alright, except for one oop
-> in AP mode when a client connects so far (out of a few connects).
+This patch allows skbs to be released from the RX reorder buffer in
+case they have been there for an unexpectedly long time without us
+having received the missing frames before them. Previously, these
+frames were only released when the reorder window moved and that could
+take very long time unless new frames were received constantly (e.g.,
+TCP connections could be killed more or less indefinitely).
 
-I think I found the reason of oops - it is a regression newly
-introduced in 3.0.0.56, actually...
-Diff below, which probably has some white space problems from
-cut-and-paste, but should be obvious...
+This situation should not happen very frequently, but it looks like
+there are some scenarious that trigger it for some reason. As such,
+this should be considered mostly a workaround to speed up recovery
+from unexpected siutation that could result in connections hanging for
+long periods of time.
 
-------------------------------------------------------
->From 7a12176808ba628b80aeadc44bc27a042735387a Mon Sep 17 00:00:00 2001
-From: Hin-Tak Leung <HinTak.Leung@gmail.com>
-Date: Mon, 25 May 2009 11:43:32 +0100
-Subject: [PATCH] fix NULL pointer deference in newly-introduced in 3.0.0.56
+The changes here will only check for timeout situation when adding new
+RX frames to the reorder buffer. It does not handle all possible
+cases, but seems to help for most cases that could result from common
+network usage (e.g., TCP retrying at least couple of times). For more
+completely coverage, a timer could be used to periodically check
+whether there are any frames remaining in the reorder buffer if no new
+frames are received.
 
-Tchal_WaitChalRsp()  AsocTimeOut() can be called with arg=NULL
-from zd_SendTChalMsg() and zd_SendTAsocMsg() respectively. New to 3.0.0.56
-is code to clear frame description, which does not check for NULL input.
-Tchal_WaitChalRsp() oops is observed in AP mode when a client tries to connect.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- ar2524drv/src/zdasocsvc.c |    3 +++
- ar2524drv/src/zdauthrsp.c |    3 +++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+ net/mac80211/agg-rx.c   |    8 +++++++-
+ net/mac80211/rx.c       |   47 ++++++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h |    2 ++
+ 3 files changed, 55 insertions(+), 2 deletions(-)
 
-diff --git a/ar2524drv/src/zdasocsvc.c b/ar2524drv/src/zdasocsvc.c
-index 90bba79..780a950 100644
---- a/ar2524drv/src/zdasocsvc.c
-+++ b/ar2524drv/src/zdasocsvc.c
-@@ -659,6 +659,8 @@ BOOLEAN AsocTimeOut(Signal_t *signal)
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2009-04-29 17:10:10.000000000 +0300
++++ wireless-testing/net/mac80211/agg-rx.c	2009-05-05 20:21:33.000000000 +0300
+@@ -68,6 +68,7 @@ void __ieee80211_stop_rx_ba_session(stru
+ 	spin_lock_bh(&sta->lock);
+ 	/* free resources */
+ 	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
++	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_time);
+ 
+ 	if (!sta->ampdu_mlme.tid_rx[tid]->shutdown) {
+ 		kfree(sta->ampdu_mlme.tid_rx[tid]);
+@@ -268,13 +269,18 @@ void ieee80211_process_addba_request(str
+ 	/* prepare reordering buffer */
+ 	tid_agg_rx->reorder_buf =
+ 		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
+-	if (!tid_agg_rx->reorder_buf) {
++	tid_agg_rx->reorder_time =
++		kcalloc(buf_size, sizeof(unsigned long), GFP_ATOMIC);
++	if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		if (net_ratelimit())
+ 			printk(KERN_ERR "can not allocate reordering buffer "
+ 			       "to tid %d\n", tid);
+ #endif
++		kfree(tid_agg_rx->reorder_buf);
++		kfree(tid_agg_rx->reorder_time);
+ 		kfree(sta->ampdu_mlme.tid_rx[tid]);
++		sta->ampdu_mlme.tid_rx[tid] = NULL;
+ 		goto end;
  	}
- 	
- 	mRequestFlag |= CONNECT_TOUT_SET;
-+  if(signal != NULL)
-+  {
-     if(signal->frmInfo.frmDesc != NULL)
-     {
-         freeFdesc(signal->frmInfo.frmDesc);
-@@ -666,6 +668,7 @@ BOOLEAN AsocTimeOut(Signal_t *signal)
-     }
-     pdot11Obj->ReleaseBuffer(signal->buf);
-     freeSignal(signal);
-+  }
- 	return FALSE;
- }
-
-diff --git a/ar2524drv/src/zdauthrsp.c b/ar2524drv/src/zdauthrsp.c
-index 081b9bb..27c2bb9 100644
---- a/ar2524drv/src/zdauthrsp.c
-+++ b/ar2524drv/src/zdauthrsp.c
-@@ -198,6 +198,8 @@ BOOLEAN Tchal_WaitChalRsp(Signal_t *signal)
- 		UpdateStaStatus(&Sta, STATION_STATE_NOT_AUTH, vapId);
- 		AuthRspState = STE_AUTH_RSP_IDLE;
- 	}
-+  if(signal != NULL)
-+  {
-     if(signal->frmInfo.frmDesc != NULL)
-     {
-         freeFdesc(signal->frmInfo.frmDesc);
-@@ -205,6 +207,7 @@ BOOLEAN Tchal_WaitChalRsp(Signal_t *signal)
-     }
-     pdot11Obj->ReleaseBuffer(signal->buf);
-     freeSignal(signal);
-+  }
- 	return FALSE;
- }
+ 
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-04-21 15:34:55.000000000 +0300
++++ wireless-testing/net/mac80211/sta_info.h	2009-05-05 20:21:33.000000000 +0300
+@@ -88,6 +88,7 @@ struct tid_ampdu_tx {
+  * struct tid_ampdu_rx - TID aggregation information (Rx).
+  *
+  * @reorder_buf: buffer to reorder incoming aggregated MPDUs
++ * @reorder_time: jiffies when skb was added
+  * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
+  * @head_seq_num: head sequence number in reordering buffer.
+  * @stored_mpdu_num: number of MPDUs in reordering buffer
+@@ -99,6 +100,7 @@ struct tid_ampdu_tx {
+  */
+ struct tid_ampdu_rx {
+ 	struct sk_buff **reorder_buf;
++	unsigned long *reorder_time;
+ 	struct timer_list session_timer;
+ 	u16 head_seq_num;
+ 	u16 stored_mpdu_num;
+--- wireless-testing.orig/net/mac80211/rx.c	2009-05-05 20:21:24.000000000 +0300
++++ wireless-testing/net/mac80211/rx.c	2009-05-05 20:26:31.000000000 +0300
+@@ -2313,6 +2313,15 @@ no_frame:
+ 
+ 
+ /*
++ * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
++ * the skb was added to the buffer longer than this time ago, the earlier
++ * frames that have not yet been received are assumed to be lost and the skb
++ * can be released for processing. This may also release other skb's from the
++ * reorder buffer if there are no additional gaps between the frames.
++ */
++#define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
++
++/*
+  * As it function blongs to Rx path it must be called with
+  * the proper rcu_read_lock protection for its flow.
+  */
+@@ -2377,13 +2386,49 @@ static u8 ieee80211_sta_manage_reorder_b
+ 
+ 	/* put the frame in the reordering buffer */
+ 	tid_agg_rx->reorder_buf[index] = skb;
++	tid_agg_rx->reorder_time[index] = jiffies;
+ 	memcpy(tid_agg_rx->reorder_buf[index]->cb, rxstatus,
+ 	       sizeof(*rxstatus));
+ 	tid_agg_rx->stored_mpdu_num++;
+ 	/* release the buffer until next missing frame */
+ 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
+ 						% tid_agg_rx->buf_size;
+-	while (tid_agg_rx->reorder_buf[index]) {
++	if (!tid_agg_rx->reorder_buf[index] &&
++	    tid_agg_rx->stored_mpdu_num > 1) {
++		/*
++		 * No buffers ready to be released, but check whether any
++		 * frames in the reorder buffer have timed out.
++		 */
++		int j;
++		int skipped = 1;
++		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
++		     j = (j + 1) % tid_agg_rx->buf_size) {
++			if (tid_agg_rx->reorder_buf[j] == NULL) {
++				skipped++;
++				continue;
++			}
++			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
++					HZ / 10))
++				break;
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++			if (net_ratelimit())
++				printk(KERN_DEBUG "%s: release an RX reorder "
++				       "frame due to timeout on earlier "
++				       "frames\n",
++				       wiphy_name(hw->wiphy));
++#endif
++			ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
++
++			/*
++			 * Increment the head seq# also for the skipped slots.
++			 */
++			tid_agg_rx->head_seq_num =
++				(tid_agg_rx->head_seq_num + skipped) &
++				SEQ_MASK;
++			skipped = 0;
++		}
++	} else while (tid_agg_rx->reorder_buf[index]) {
+ 		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
+ 		index =	seq_sub(tid_agg_rx->head_seq_num,
+ 			tid_agg_rx->ssn) % tid_agg_rx->buf_size;
 
 -- 
-1.6.0.6
 
----------------------------------------------------------
+-- 
+Jouni Malinen                                            PGP id EFC895FA
