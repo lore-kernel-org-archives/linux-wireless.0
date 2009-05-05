@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:37695 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbZEDIv6 (ORCPT
+Received: from smtp1.infomaniak.ch ([84.16.68.89]:46112 "EHLO
+	smtp1.infomaniak.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbZEEHoR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 04:51:58 -0400
-Subject: Re: [PATCH] add basic support for parsing country information
- element
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241423924.8683.9.camel@johannes.local>
-References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
-	 <1241423772.8683.8.camel@johannes.local>
-	 <1241423924.8683.9.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 04 May 2009 01:51:47 -0700
-Message-Id: <1241427107.2899.9.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Tue, 5 May 2009 03:44:17 -0400
+Message-ID: <49FFEE42.3080102@shockfish.com>
+Date: Tue, 05 May 2009 09:44:02 +0200
+From: Alexandre Becholey <alexandre@shockfish.com>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: IEEE80211 Acknowledgement
+References: <49FF06BB.2090106@shockfish.com> <200905041855.17435.IvDoorn@gmail.com> <1241456546.8683.67.camel@johannes.local> <200905041905.44646.IvDoorn@gmail.com>
+In-Reply-To: <200905041905.44646.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Ivo van Doorn wrote:
+> On Monday 04 May 2009, Johannes Berg wrote:
+>   
+>> On Mon, 2009-05-04 at 18:55 +0200, Ivo van Doorn wrote:
+>>     
+>>> On Monday 04 May 2009, Johannes Berg wrote:
+>>>       
+>>>> On Mon, 2009-05-04 at 18:35 +0200, Ivo van Doorn wrote:
+>>>>
+>>>>         
+>>>>> Well I believe the idea would be that (I'll see if I can dig up a reference
+>>>>> to the initial discussion about this feature on this list) the driver sets a flag
+>>>>> that mac80211 needs to keep a list of all frames send out to the driver and
+>>>>> listens for ACK's.
+>>>>>
+>>>>> As soon as a ACK was passed from driver to mac80211 it could check if
+>>>>> the corresponding frame 
+>>>>>           
+>>>>       ^^^^^^^^^^^^^^^^^^^
+>>>>
+>>>> Here's the problem. What I'm saying is that there's no way to knowing
+>>>> what the "corresponding frame" is.
+>>>>         
+>>> Hmm, so would there be any alternatives of fixing this problem?
+>>>       
+>> The proper way of fixing this would be a firmware upgrade ;)
+>>
+>> Working around it would be possible if the driver queued only a single
+>> frame to the hardware, when it knew the frame needed ACK status, and
+>> flushed all queues before that frame, so it knows exactly about the
+>> frame... This has HUGE overhead and performance impact though, and
+>> requires lots of work in mac80211 to not request status for every frame
+>> to start with.
+>>
+>> Since this breaks hostapd operation quite significantly, and I don't see
+>> hostapd changing to accommodate this since that essentially breaks the
+>> ability to be spec compliant (I'm fairly certain some places require
+>> checking for ACK).
+>>
+>> An easier way would be to fake a ACK reception in the driver for every
+>> frame...
+>>     
+>
+> Ok, well I'll go with this route then. Since firmware upgrades for
+> older hardware like rt73usb sounds very unlikely. And for rt2500usb
+> it is plain impossible (no firmware ;))
+>
+> Alexandre: Well that seems to make your project a lot easier...
+>
+> Ivo
+>   
 
-> Everything else looks good.
 
-I re-sent the patches now in a different order so that the WPA stuff is
-the latest in case you want extra fixes. I didn't include all defined
-ciphers since I would have to dig though specs again. However it should
-now be pretty easy to extend it since the basic parsing is available.
+Thanks for your answers! I'm gonna try it that way :)
 
-This bring iw scan at the same stage what we had with iwlist and so
-another piece to deprecate WEXT.
-
-Regards
-
-Marcel
-
-
+Alexandre
