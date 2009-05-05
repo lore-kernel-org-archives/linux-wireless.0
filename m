@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:32853 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753610AbZEUNpU (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:65072 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752676AbZEEDFw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 09:45:20 -0400
-Date: Thu, 21 May 2009 09:38:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ortiz, Samuel" <samuel.ortiz@intel.com>
-Subject: Re: [PATCH 1/2] wireless: move some utility functions from
-	mac80211 to cfg80211
-Message-ID: <20090521133839.GA2744@tuxdriver.com>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com> <1242872340-27417-2-git-send-email-yi.zhu@intel.com> <f6ca9fed0905210012t2b494db5w3169ef2e8db2b04b@mail.gmail.com> <1242889781.24825.611.camel@debian> <1242897719.5471.1.camel@johannes.local>
+	Mon, 4 May 2009 23:05:52 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so3247728rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 20:05:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1242897719.5471.1.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 4 May 2009 20:05:37 -0700
+Message-ID: <43e72e890905042005vb96f57aid70c476e38685dfe@mail.gmail.com>
+Subject: oops during stress test - today's wl
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2009 at 11:21:59AM +0200, Johannes Berg wrote:
-> On Thu, 2009-05-21 at 15:09 +0800, Zhu Yi wrote:
-> 
-> > > Isn't lib80211 a better place for those ?
-> > > Its purpose is sharing code between fullmac and softmac drivers.
-> > 
-> > These functions are moved from mac80211 which currently doesn't link
-> > with lib80211. Johannes might have more to comment.
-> 
-> Yeah, lib80211's stated purpose is to share code, but on the other hand
-> code that mac80211 and fullmac drivers may need seems better suited in
-> cfg80211 since lib80211 also ships a large code bit of crypto routines
-> etc. that are just useless for this and mac80211.
+mcgrof@pogo ~/wireless-testing (git::master)$ git-describe
+v2.6.30-rc4-22720-gb2382a4
 
-The crypto stuff is mostly in separate modules.
+While running iperf, after about 1 hour.
 
-I would rather see these in lib80211, but I'll work that out myself.
+http://bombadil.infradead.org/~mcgrof/oops-img/09-05/oops-01-v2.6.30-rc4-22720-gb2382a4.jpg
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Image probably doesn't help much.. but its what I got.. I'd look more
+but its getting late here, so I'm out. I'll use netconsole tomorrow.
+
+  Luis
