@@ -1,73 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56930
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757350AbZE2Ik0 (ORCPT
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:49789 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753063AbZEEQQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 04:40:26 -0400
-Date: Fri, 29 May 2009 01:40:25 -0700 (PDT)
-Message-Id: <20090529.014025.223389403.davem@davemloft.net>
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH 9/10]: irda: Use SKB queue and list helpers instead of
- doing it by-hand.
-From: David Miller <davem@davemloft.net>
+	Tue, 5 May 2009 12:16:37 -0400
+Received: by bwz22 with SMTP id 22so1404092bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 09:16:36 -0700 (PDT)
+Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241535034.4816.20.camel@maxim-laptop>
+References: <1241213459.7082.54.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
+	 <1241463816.4816.1.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
+	 <1241535034.4816.20.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Tue, 05 May 2009 19:16:30 +0300
+Message-Id: <1241540190.4816.25.camel@maxim-laptop>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-05-05 at 17:50 +0300, Maxim Levitsky wrote:
+> On Mon, 2009-05-04 at 12:27 -0700, Cahill, Ben M wrote:
+> > 
+> > >-----Original Message-----
+> > >From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
+> > >Sent: Monday, May 04, 2009 3:04 PM
+> > >To: Cahill, Ben M
+> > >Cc: iwlwifi maling list; linux-wireless
+> > >Subject: RE: [ipw3945-devel] IWL3945 always reports noise 
+> > >levels of -127
+> > >
+> > >On Mon, 2009-05-04 at 11:53 -0700, Cahill, Ben M wrote:
+> > >> When one of our devices cannot figure out what the actual 
+> > >noise level is, it reports -127.
+> > >> 
+> > >> Newer devices are better at old devices at figuring noise 
+> > >level.  IIRC, 3945 cannot figure noise for CCK signals, and 
+> > >may not be possible with OFDM as well.
+> > >
+> > >Why then it did work on older kernel ?
+> > >(and noise levels seemed to be correct)
+> > 
+> > Hmmm, good point, and I don't know the answer!  :-(
+> > 
+> 
+> And I do know it now (this is what I suspected...)
+> This is firmware issue.
+> 
+> I forced the driver to use older firmware iwlwifi-3945-1.ucode,
+> and noise levels are back.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/irda/irlap_frame.c |   18 ++----------------
- 1 files changed, 2 insertions(+), 16 deletions(-)
 
-diff --git a/net/irda/irlap_frame.c b/net/irda/irlap_frame.c
-index 2562ebc..7af2e74 100644
---- a/net/irda/irlap_frame.c
-+++ b/net/irda/irlap_frame.c
-@@ -982,17 +982,12 @@ void irlap_resend_rejected_frames(struct irlap_cb *self, int command)
- {
- 	struct sk_buff *tx_skb;
- 	struct sk_buff *skb;
--	int count;
- 
- 	IRDA_ASSERT(self != NULL, return;);
- 	IRDA_ASSERT(self->magic == LAP_MAGIC, return;);
- 
--	/* Initialize variables */
--	count = skb_queue_len(&self->wx_list);
--
- 	/*  Resend unacknowledged frame(s) */
--	skb = skb_peek(&self->wx_list);
--	while (skb != NULL) {
-+	skb_queue_walk(&self->wx_list, skb) {
- 		irlap_wait_min_turn_around(self, &self->qos_tx);
- 
- 		/* We copy the skb to be retransmitted since we will have to
-@@ -1011,21 +1006,12 @@ void irlap_resend_rejected_frames(struct irlap_cb *self, int command)
- 		/*
- 		 *  Set poll bit on the last frame retransmitted
- 		 */
--		if (count-- == 1)
-+		if (skb_queue_is_last(&self->wx_list, skb))
- 			tx_skb->data[1] |= PF_BIT; /* Set p/f bit */
- 		else
- 			tx_skb->data[1] &= ~PF_BIT; /* Clear p/f bit */
- 
- 		irlap_send_i_frame(self, tx_skb, command);
--
--		/*
--		 *  If our skb is the last buffer in the list, then
--		 *  we are finished, if not, move to the next sk-buffer
--		 */
--		if (skb == skb_peek_tail(&self->wx_list))
--			skb = NULL;
--		else
--			skb = skb->next;
- 	}
- #if 0 /* Not yet */
- 	/*
--- 
-1.6.3
+Indeed old microcode reports values like that:
+rssi:017 agc:000 sig_avg:5437 noise_diff:580
+
+
+New microcode reports this instead:
+rssi:018 agc:000 sig_avg:140 noise_diff:000
+
+
+noise_diff is always zero now, and range for sig_avg changed.
+
+I also noticed that with older firmware I couldn't set the tx speed
+Thus what recently fixed it was a firmware update!
+(But in both cases OFDM rated were used)
+
+Thats all nothing to debug any more here.
+
+
+Best regards,
+	Maxim Levitsky
 
