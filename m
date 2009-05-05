@@ -1,35 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58201 "EHLO mga11.intel.com"
+Received: from tur.go2.pl ([193.17.41.50]:45871 "EHLO tur.go2.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751060AbZEaGuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 02:50:12 -0400
-Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890905302327x23d0479bkb825ea05832c5ffd@mail.gmail.com>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
-	 <20090526222433.GA23972@bombadil.infradead.org>
-	 <1243736227.3623.180.camel@debian>
-	 <43e72e890905302327x23d0479bkb825ea05832c5ffd@mail.gmail.com>
-Content-Type: text/plain
-Date: Sun, 31 May 2009 14:42:06 +0800
-Message-Id: <1243752126.3623.375.camel@debian>
-Mime-Version: 1.0
+	id S1752750AbZEESpt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2009 14:45:49 -0400
+Received: from poczta.o2.pl (mx12.go2.pl [193.17.41.142])
+	by tur.go2.pl (o2.pl Mailer 2.0.1) with ESMTP id 9FA46230AA8
+	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2009 20:45:45 +0200 (CEST)
+Received: from poczta.o2.pl (mx12 [127.0.0.1])
+	by poczta.o2.pl (Postfix) with ESMTP id 28A72104033
+	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2009 20:44:36 +0200 (CEST)
+Received: from localhost.localdomain (inet20908nj-0.nat.umts.dynamic.eranet.pl [213.158.196.116])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by poczta.o2.pl (Postfix) with ESMTP
+	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2009 20:44:32 +0200 (CEST)
+Message-ID: <4A0088EE.7010804@o2.pl>
+Date: Tue, 05 May 2009 20:43:58 +0200
+From: Karol Szuster <qflon@o2.pl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: minstrel, fix memory corruption
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-05-31 at 14:27 +0800, Luis R. Rodriguez wrote:
-> 
-> What is the 11n configuration on these devices? Do they have 2
-> streams? Or are they just 1 stream?
+Hi,
 
-It has 1x1, 1x2 and 2x2 on for both 20MHz and 40MHz channels. The
-firmware HT support is not quite ready at this point. So we haven't done
-anything 11n related in the driver yet.
-
-Thanks,
--yi
-
+There is another problem with this piece of code. The sband will be NULL
+after second iteration on single band device and cause null pointer
+dereference. Everything is working with dual band card. Sorry, but i
+don't know how to explain this clearly in English. I have looked on the
+second patch for pid algorithm and found similar bug.
