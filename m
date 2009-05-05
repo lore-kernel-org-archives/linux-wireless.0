@@ -1,65 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web36808.mail.mud.yahoo.com ([209.191.85.59]:39958 "HELO
-	web36808.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753018AbZEZDni convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2009 23:43:38 -0400
-Message-ID: <394878.84106.qm@web36808.mail.mud.yahoo.com>
-Date: Mon, 25 May 2009 20:43:40 -0700 (PDT)
-From: Jean-Pierre Poulin <jeanpierrepoulin@yahoo.com>
-Subject: Suggestions on low-cost Linux/ARM-friendly WiFi module or chipset...
-To: linux-wireless@vger.kernel.org
+Received: from ey-out-2122.google.com ([74.125.78.24]:47318 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686AbZEEIeW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2009 04:34:22 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so1154021eyd.37
+        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 01:34:21 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Alexandre Becholey <alexandre@shockfish.com>
+Subject: Re: IEEE80211 Acknowledgement
+Date: Tue, 5 May 2009 10:34:19 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <49FF06BB.2090106@shockfish.com> <200905041905.44646.IvDoorn@gmail.com> <49FFEE42.3080102@shockfish.com>
+In-Reply-To: <49FFEE42.3080102@shockfish.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200905051034.19820.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 05 May 2009, Alexandre Becholey wrote:
+> Ivo van Doorn wrote:
+> > On Monday 04 May 2009, Johannes Berg wrote:
+> >   
+> >> On Mon, 2009-05-04 at 18:55 +0200, Ivo van Doorn wrote:
+> >>     
+> >>> On Monday 04 May 2009, Johannes Berg wrote:
+> >>>       
+> >>>> On Mon, 2009-05-04 at 18:35 +0200, Ivo van Doorn wrote:
+> >>>>
+> >>>>         
+> >>>>> Well I believe the idea would be that (I'll see if I can dig up a reference
+> >>>>> to the initial discussion about this feature on this list) the driver sets a flag
+> >>>>> that mac80211 needs to keep a list of all frames send out to the driver and
+> >>>>> listens for ACK's.
+> >>>>>
+> >>>>> As soon as a ACK was passed from driver to mac80211 it could check if
+> >>>>> the corresponding frame 
+> >>>>>           
+> >>>>       ^^^^^^^^^^^^^^^^^^^
+> >>>>
+> >>>> Here's the problem. What I'm saying is that there's no way to knowing
+> >>>> what the "corresponding frame" is.
+> >>>>         
+> >>> Hmm, so would there be any alternatives of fixing this problem?
+> >>>       
+> >> The proper way of fixing this would be a firmware upgrade ;)
+> >>
+> >> Working around it would be possible if the driver queued only a single
+> >> frame to the hardware, when it knew the frame needed ACK status, and
+> >> flushed all queues before that frame, so it knows exactly about the
+> >> frame... This has HUGE overhead and performance impact though, and
+> >> requires lots of work in mac80211 to not request status for every frame
+> >> to start with.
+> >>
+> >> Since this breaks hostapd operation quite significantly, and I don't see
+> >> hostapd changing to accommodate this since that essentially breaks the
+> >> ability to be spec compliant (I'm fairly certain some places require
+> >> checking for ACK).
+> >>
+> >> An easier way would be to fake a ACK reception in the driver for every
+> >> frame...
+> >>     
+> >
+> > Ok, well I'll go with this route then. Since firmware upgrades for
+> > older hardware like rt73usb sounds very unlikely. And for rt2500usb
+> > it is plain impossible (no firmware ;))
+> >
+> > Alexandre: Well that seems to make your project a lot easier...
+> >
+> > Ivo
+> >   
+> 
+> 
+> Thanks for your answers! I'm gonna try it that way :)
 
-Hello,
- 
-May I obtain your recommendation on a Linux + ARM friendly WiFi module or chipset?
- 
-The solution we’re looking for must have the following features:
-- WiFi features: 802.11b + 802.11g with WPA & WEP encryption.
-- Driver: Binary driver built for Linux+ARM9 *or* Driver source buildable for Linux 2.6.28.2
-- Electronic Interface: SDIO (strongly) preferred, then parallel bus, then SPI, and least preferred: USB
-- Physical interface: SMD-mounting (strongly) preferred, then SD-card, then USB stick
-- Size: Smaller the better (especially on ‘thickness’), but not critical.
-- Power efficiency: Irrelevant / Not critical.
-- Cost: Extremely critical!!
-- Range: The greater the better, but low-cost is much more important.
-- Antenna considerations: Small built-in chip antenna preferred.  External whip antenna a minus.
- 
-Working backwards on this from the currently available drivers (we’re building our Linux image ontop OpenWRT for the $2.80 NXP LPC313x), the following drivers are ‘easily accessible’ in OpenWRT… but we have yet to find the low-cost manufacturers that can provide the physical WiFi solution itself…
- 
-               
-kmod-libertas............................ Marvell 88W8015 Wireless Driver 
-kmod-mac80211..................... Linux 802.11 Wireless Networking Stack 
-kmod-mac80211-hwsim........................ mac80211 HW simulation device 
-kmod-p54-common................................. Prism54 Drivers (COMMON) 
-kmod-p54-usb....................................... Prism54 Drivers (USB) 
-kmod-rt2500-usb............. Ralink Drivers for RT2x00 cards (RT2500 USB) 
-kmod-rt2800-usb............. Ralink Drivers for RT2x00 cards (RT2870 USB) 
-kmod-rt2x00-lib.................... Ralink Drivers for RT2x00 cards (LIB) 
-kmod-rt2x00-usb.................... Ralink Drivers for RT2x00 cards (USB) 
-kmod-rt73-usb................. Ralink Drivers for RT2x00 cards (RT73 USB) 
-kmod-zd1211rw....................................... Zydas ZD1211 support 
- 
-In addition, searching through the list of drivers at Linux Wireless, we were impressed by the comprehensive selection but – as device prices are not listed – it is very difficult to ascertain which inexpensive WiFi solution can run on our board.
- 
-Finally, as the cost of the total WiFi solution is so important, our ‘upper range’ for cost is about $11 per interface (1K qty), as our ‘plan B’ is simply to insert one of the many $13 USB-WiFi interface (such as those found on eBay) inside the product enclosure.  Some questions:
- 
-Q1: Given our above-stated needs… which do you recommend: the ‘module approach’, the ‘chipset approach’ or the ‘insert consumer product’ approach?
- 
-Q2: What is the ‘most famous’ / ‘most supported’ Linux/ARM-friendly low-cost WiFi solution currently available?
- 
-Q3: Can you recommend some low-cost (Taiwanese / Chinese) WiFi manufacturers that supplies low-cost Linux-compatible solutions?
- 
-Q4: For reference, what do you think is the cost of the ‘absolute lowest cost’ WiFi solution currently available?
- 
-Many thanks for any hint / suggestion you can provide!
- 
-   Jean-Pierre
+Just as a hint, please do not replace all instances of TXDONE_UNKNOWN
+with TXDONE_SUCCESS. I rather see the driver report TXDONE_UNKNOWN to
+rt2x00lib, and the decision to report that state as success should be done there.
 
-
-      
+Ivo
