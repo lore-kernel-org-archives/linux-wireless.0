@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:42021 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433AbZERGb4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 02:31:56 -0400
-MIME-Version: 1.0
-In-Reply-To: <20090516163610.8a012268.akpm@linux-foundation.org>
-References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera>
-	 <385Pu-agh7M.A.SU.iYzDKB@chimera>
-	 <20090516163610.8a012268.akpm@linux-foundation.org>
-Date: Mon, 18 May 2009 09:31:47 +0300
-Message-ID: <84144f020905172331x6032394fn172f02e36298192d@mail.gmail.com>
-Subject: Re: [Bug #13319] Page allocation failures with b43 and p54usb
-From: Pekka Enberg <penberg@cs.helsinki.fi>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, adrian@newgolddream.dyndns.info
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:61659 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752775AbZEFUeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 May 2009 16:34:16 -0400
+Subject: Re: [BUG] Crda oopses the system
+From: Pavel Roskin <proski@gnu.org>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241606838.18657.1.camel@maxim-laptop>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <43e72e890905051146n48bdad57s9db40a6e016cb81b@mail.gmail.com>
+	 <1241606838.18657.1.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Wed, 06 May 2009 16:34:16 -0400
+Message-Id: <1241642056.3289.6.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
+Hello!
 
-On Sat, 16 May 2009 21:20:45 +0200 (CEST) "Rafael J. Wysocki"
-<rjw@sisk.pl> wrote:
->> This message has been generated automatically as a part of a report
->> of recent regressions.
->>
->> The following bug entry is on the current list of known regressions
->> from 2.6.29.  Please verify if it still should be listed and let me know
->> (either way).
->>
->>
->> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=13319
->> Subject               : Page allocation failures with b43 and p54usb
->> Submitter     : Larry Finger <Larry.Finger@lwfinger.net>
->> Date          : 2009-04-29 21:01 (18 days old)
->> References    : http://marc.info/?l=linux-kernel&m=124103897101088&w=4
->> Handled-By    : Johannes Berg <johannes@sipsolutions.net>
+(Dropping the Intel list; I not subscribed to it and I don't think it's
+Intel specific)
 
-On Sun, May 17, 2009 at 2:36 AM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> Well..  order-1 GFP_ATOMIC allocations are unreliable.  The networking
-> code should hanlde the situation and recover.  I assume that is
-> happening in this case?
->
-> Perhaps we did something in that code after 2.6.29 which increased the
-> frequency of the order-1 allocation attempts?  Maybe earlier kernels
-> used order-0 all the time?  Those are much more reliable.
+On Wed, 2009-05-06 at 13:47 +0300, Maxim Levitsky wrote:
+> On Tue, 2009-05-05 at 11:46 -0700, Luis R. Rodriguez wrote:
+> > On Mon, May 4, 2009 at 10:04 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> > > Here what I see:
+> > >
+> > >
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109054] Process crda (pid: 29344, threadinfo ffff88007deaa000, task ffff880067369600)
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109058] Stack:
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109061]  0000000000000034 ffff88003fb8a640 0000000000000000 ffff8800634f5c20
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109069]  ffff88007deaba28 ffffffffa00eb3d0 000004f87deab9c8 ffff88003fb8a640
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109077]  0000000000000000 ffff8800634f5c24 ffff8800634f5c2c ffff8800634f5c34
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109086] Call Trace:
+> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109091]  [<ffffffffa00eb3d0>] nl80211_set_reg+0x100/0x2b0 [cfg80211]
 
-I wonder if this is related:
+It would be great if you run:
+gdb /lib/modules/`uname -r`/kernel/net/wireless/cfg80211.ko
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13069
+And then inside gdb:
+l *nl80211_set_reg+0x100
 
-Both point to post 2.6.29... Hmm.
+And then send us the output.
+
+-- 
+Regards,
+Pavel Roskin
