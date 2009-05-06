@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:49814 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912AbZEaMD6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58415 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbZEFRbN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 08:03:58 -0400
-Received: by fxm12 with SMTP id 12so5246376fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 05:03:58 -0700 (PDT)
-Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
- wireless on my system
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1243764691.21851.1.camel@johannes.local>
-References: <1243716437.26585.4.camel@maxim-laptop>
-	 <1243716540.13863.32.camel@johannes.local>
-	 <1243717165.5312.3.camel@maxim-laptop>
-	 <1243723044.25886.2.camel@maxim-laptop>
-	 <1243764691.21851.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Sun, 31 May 2009 15:03:54 +0300
-Message-Id: <1243771434.5248.3.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 6 May 2009 13:31:13 -0400
+Date: Wed, 6 May 2009 13:25:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] ath5k: scanning while transmitting causes oops
+	on 802.11a capable card
+Message-ID: <20090506172513.GB30070@tuxdriver.com>
+References: <1241626486.30590.13.camel@mj> <b6c5339f0905060936u37f3994cx97cc2344224777a5@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6c5339f0905060936u37f3994cx97cc2344224777a5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-05-31 at 12:11 +0200, Johannes Berg wrote:
-> On Sun, 2009-05-31 at 01:37 +0300, Maxim Levitsky wrote:
+On Wed, May 06, 2009 at 12:36:13PM -0400, Bob Copeland wrote:
+> On Wed, May 6, 2009 at 12:14 PM, Pavel Roskin <proski@gnu.org> wrote:
+> > Hello!
+> >
+> > If I scan by "iw dev wlan0 scan" while sending data through the
+> > interface, I get a BUG in net/mac80211/tx.c:
 > 
-> > It appears that I don't receive half of mails of linux-wireless
-> > nether they are in spam folder.
-> > 
-> > I am subscribed to linux-wireless@vger.kernel.org>
-> > 
-> > For example I see no trace of new intel fullmac driver.
-> > 
-> > Is gmail that bad?
-> 
-> Strange, I have no idea. FWIW, the patch is archived for the list, so it
-> must have gotten to it:
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/33606
-> 
-> johannes
+> Agreed... Also I think the same thing happens for rx for ath5k,
+> explaining the 'unknown rate index' warnings (sc->curband changes
+> during scan but we process a beacon from 2ghz band, that one at
+> least just needs some synchronization in the driver).
 
-Thanks,
+Ah, that could be -- I sure am tired of reading bug reports about
+that...
 
-Well it turns out, that somehow I wasn't subscribed to linux-wireless,
-but since I am subscribed to ath5k-devel, LKML, I do receive most of its
-mails, and thus I didn't notice this till now, so sorry for this
-mistake.
-
-Best regards,
-	Maxim Levitsky
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
