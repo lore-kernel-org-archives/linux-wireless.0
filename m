@@ -1,78 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:49789 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753063AbZEEQQh (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46896 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753959AbZEFRfM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 12:16:37 -0400
-Received: by bwz22 with SMTP id 22so1404092bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 09:16:36 -0700 (PDT)
-Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1241535034.4816.20.camel@maxim-laptop>
-References: <1241213459.7082.54.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-	 <1241463816.4816.1.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
-	 <1241535034.4816.20.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Tue, 05 May 2009 19:16:30 +0300
-Message-Id: <1241540190.4816.25.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 6 May 2009 13:35:12 -0400
+Date: Wed, 6 May 2009 20:35:06 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: =?utf-8?Q?=5BPATCH=5D=C2=A0nl80211?=
+	=?utf-8?Q?=3A?= Add support for configuring MFP
+Message-ID: <20090506173506.GB2960@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-05 at 17:50 +0300, Maxim Levitsky wrote:
-> On Mon, 2009-05-04 at 12:27 -0700, Cahill, Ben M wrote:
-> > 
-> > >-----Original Message-----
-> > >From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
-> > >Sent: Monday, May 04, 2009 3:04 PM
-> > >To: Cahill, Ben M
-> > >Cc: iwlwifi maling list; linux-wireless
-> > >Subject: RE: [ipw3945-devel] IWL3945 always reports noise 
-> > >levels of -127
-> > >
-> > >On Mon, 2009-05-04 at 11:53 -0700, Cahill, Ben M wrote:
-> > >> When one of our devices cannot figure out what the actual 
-> > >noise level is, it reports -127.
-> > >> 
-> > >> Newer devices are better at old devices at figuring noise 
-> > >level.  IIRC, 3945 cannot figure noise for CCK signals, and 
-> > >may not be possible with OFDM as well.
-> > >
-> > >Why then it did work on older kernel ?
-> > >(and noise levels seemed to be correct)
-> > 
-> > Hmmm, good point, and I don't know the answer!  :-(
-> > 
-> 
-> And I do know it now (this is what I suspected...)
-> This is firmware issue.
-> 
-> I forced the driver to use older firmware iwlwifi-3945-1.ucode,
-> and noise levels are back.
+NL80211_CMD_ASSOCIATE request must be able to indicate whether
+management frame protection (IEEE 802.11w) is being used. mac80211 was
+able to use MFP in client mode only with WEXT, but the new
+NL80211_ATTR_USE_MFP attribute will allow this to be done with
+nl80211, too.
 
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Indeed old microcode reports values like that:
-rssi:017 agc:000 sig_avg:5437 noise_diff:580
+---
+ include/linux/nl80211.h |    6 ++++++
+ include/net/cfg80211.h  |    2 ++
+ net/mac80211/cfg.c      |    8 ++++++++
+ net/wireless/nl80211.c  |    3 +++
+ 4 files changed, 19 insertions(+)
 
+--- uml.orig/include/linux/nl80211.h	2009-05-06 20:24:57.000000000 +0300
++++ uml/include/linux/nl80211.h	2009-05-06 20:25:00.000000000 +0300
+@@ -494,6 +494,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_TIMED_OUT: a flag indicating than an operation timed out; this
+  *	is used, e.g., with %NL80211_CMD_AUTHENTICATE event
+  *
++ * @NL80211_ATTR_USE_MFP: a flag indicating that management frame protection
++ *	(IEEE 802.11w) is used for the association; this attribute can be used
++ *	with %NL80211_CMD_ASSOCIATE request
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -596,6 +600,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TIMED_OUT,
+ 
++	NL80211_ATTR_USE_MFP,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- uml.orig/include/net/cfg80211.h	2009-05-06 20:24:57.000000000 +0300
++++ uml/include/net/cfg80211.h	2009-05-06 20:25:00.000000000 +0300
+@@ -672,6 +672,7 @@ struct cfg80211_auth_request {
+  * @ssid_len: Length of ssid in octets
+  * @ie: Extra IEs to add to (Re)Association Request frame or %NULL
+  * @ie_len: Length of ie buffer in octets
++ * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+  */
+ struct cfg80211_assoc_request {
+ 	struct ieee80211_channel *chan;
+@@ -680,6 +681,7 @@ struct cfg80211_assoc_request {
+ 	size_t ssid_len;
+ 	const u8 *ie;
+ 	size_t ie_len;
++	bool use_mfp;
+ };
+ 
+ /**
+--- uml.orig/net/mac80211/cfg.c	2009-05-06 20:24:57.000000000 +0300
++++ uml/net/mac80211/cfg.c	2009-05-06 20:25:00.000000000 +0300
+@@ -1253,6 +1253,14 @@ static int ieee80211_assoc(struct wiphy 
+ 	if (ret)
+ 		return ret;
+ 
++	if (req->use_mfp) {
++		sdata->u.mgd.mfp = IEEE80211_MFP_REQUIRED;
++		sdata->u.mgd.flags |= IEEE80211_STA_MFP_ENABLED;
++	} else {
++		sdata->u.mgd.mfp = IEEE80211_MFP_DISABLED;
++		sdata->u.mgd.flags &= ~IEEE80211_STA_MFP_ENABLED;
++	}
++
+ 	sdata->u.mgd.flags |= IEEE80211_STA_EXT_SME;
+ 	sdata->u.mgd.state = IEEE80211_STA_MLME_ASSOCIATE;
+ 	ieee80211_sta_req_auth(sdata);
+--- uml.orig/net/wireless/nl80211.c	2009-05-06 20:24:57.000000000 +0300
++++ uml/net/wireless/nl80211.c	2009-05-06 20:25:00.000000000 +0300
+@@ -122,6 +122,7 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_REASON_CODE] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_FREQ_FIXED] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TIMED_OUT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_USE_MFP] = { .type = NLA_FLAG },
+ };
+ 
+ /* IE validation */
+@@ -3012,6 +3013,8 @@ static int nl80211_associate(struct sk_b
+ 		req.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+ 	}
+ 
++	req.use_mfp = info->attrs[NL80211_ATTR_USE_MFP] != NULL;
++
+ 	err = drv->ops->assoc(&drv->wiphy, dev, &req);
+ 
+ out:
 
-New microcode reports this instead:
-rssi:018 agc:000 sig_avg:140 noise_diff:000
-
-
-noise_diff is always zero now, and range for sig_avg changed.
-
-I also noticed that with older firmware I couldn't set the tx speed
-Thus what recently fixed it was a firmware update!
-(But in both cases OFDM rated were used)
-
-Thats all nothing to debug any more here.
-
-
-Best regards,
-	Maxim Levitsky
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
