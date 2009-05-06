@@ -1,173 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:4943 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756972AbZE1Isx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 04:48:53 -0400
-Date: Thu, 28 May 2009 12:48:36 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
-Subject: Re: [PATCH 2/5] net: add IEEE 802.15.4 partial implementation
-Message-ID: <20090528084836.GA6793@doriath.ww600.siemens.net>
-References: <20090526112157.GA19976@doriath.ww600.siemens.net> <1243336988-20109-1-git-send-email-dbaryshkov@gmail.com> <1243336988-20109-2-git-send-email-dbaryshkov@gmail.com> <1243480131.16597.174.camel@deadeye>
+Received: from mail.atheros.com ([12.36.123.2]:35091 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750980AbZEFGH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 May 2009 02:07:57 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 23:07:58 -0700
+Date: Wed, 6 May 2009 11:36:55 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: oops during stress test - today's wl
+Message-ID: <20090506060646.GF18158@vasanth-laptop>
+References: <43e72e890905042005vb96f57aid70c476e38685dfe@mail.gmail.com> <1241509306.25337.4.camel@johannes.local> <43e72e890905051227n11b128bap4d250e66294a29ce@mail.gmail.com> <43e72e890905051829k5df86692m34209f871e384127@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243480131.16597.174.camel@deadeye>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890905051829k5df86692m34209f871e384127@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 28, 2009 at 04:08:51AM +0100, Ben Hutchings wrote:
-> On Tue, 2009-05-26 at 15:23 +0400, Dmitry Eremin-Solenikov wrote:
-> [...]
-> > diff --git a/include/net/ieee802154/af_ieee802154.h b/include/net/ieee802154/af_ieee802154.h
-> > new file mode 100644
-> > index 0000000..6eb7f51
-> > --- /dev/null
-> > +++ b/include/net/ieee802154/af_ieee802154.h
-> [...]
-> > +#ifdef __KERNEL__
-> > +#include <linux/skbuff.h>
-> > +#include <linux/netdevice.h>
+On Wed, May 06, 2009 at 06:59:02AM +0530, Luis R. Rodriguez wrote:
+> On Tue, May 5, 2009 at 12:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Tue, May 5, 2009 at 12:41 AM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> >> On Mon, 2009-05-04 at 20:05 -0700, Luis R. Rodriguez wrote:
+> >>> mcgrof@pogo ~/wireless-testing (git::master)$ git-describe
+> >>> v2.6.30-rc4-22720-gb2382a4
+> >>>
+> >>> While running iperf, after about 1 hour.
+> >>>
+> >>> http://bombadil.infradead.org/~mcgrof/oops-img/09-05/oops-01-v2.6.30-rc4-22720-gb2382a4.jpg
+> >>>
+> >>> Image probably doesn't help much.. but its what I got.. I'd look more
+> >>> but its getting late here, so I'm out. I'll use netconsole tomorrow.
+> >>
+> >> Yeah, doesn't really help... I would suspect the driver to be honest,
+> >> since the scan code is trying to TX a frame and it's already in
+> >> ieee80211_tx() (and probably in __ieee80211_tx which gets inlined).
+> >
+> > Right on --
+> >
+> > [57158.757990] wlan1: no probe response from AP 00:03:7f:0c:c2:5d -
+> > disassociating
+> > [57559.563565] cfg80211: Found new beacon on frequency: 5200 MHz (Ch 40) on phy2
+> > [57559.669684] cfg80211: Found new beacon on frequency: 5220 MHz (Ch 44) on phy2
+> > [57563.415178] cfg80211: Found new beacon on frequency: 5745 MHz (Ch
+> > 149) on phy2
+> > [57563.478395] cfg80211: Found new beacon on frequency: 5765 MHz (Ch
+> > 153) on phy2
+> > [57563.737684] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
+> > [57563.754972] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
+> > [57563.763958] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
+> > [57563.765895] wlan1: authenticated
+> > [57563.765930] wlan1: associate with AP 00:03:7f:0c:c2:5d
+> > [57563.779535] wlan1: RX ReassocResp from 00:03:7f:0c:c2:5d
+> > (capab=0x421 status=0 aid=1)
+> > [57563.779595] wlan1: associated
+> > [57633.747150] wlan1: deauthenticating by local choice (reason=3)
+> > [57634.224023] wlan1: deauthenticating by local choice (reason=3)
+> > [57654.246527] ADDRCONF(NETDEV_UP): wlan1: link is not ready
+> > [57659.942571] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
+> > [57659.945696] wlan1: authenticated
+> > [57659.945735] wlan1: associate with AP 00:03:7f:0c:c2:5d
+> > [57659.951992] wlan1: RX AssocResp from 00:03:7f:0c:c2:5d (capab=0x421
+> > status=0 aid=1)
+> > [57659.952054] wlan1: associated
+> > [57659.962379] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+> > [57670.356717] wlan1: no IPv6 routers present
+> > [58264.676456] wlan1: deauthenticated (Reason: 2)
+> > [58265.671832] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 1
+> > [58265.671832] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 1
+> > [58265.881845] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 2
+> > [58265.881845] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 2
+> > [58265.887928] wlan1 direct probe responded
+> > [58265.887966] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
+> > [58265.887928] wlan1 direct probe responded
+> > [58265.887966] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
+> > [58265.890837] wlan1: authenticated
+> > [58265.890871] wlan1: associate with AP 00:03:7f:0c:c2:5d
+> > [58265.890837] wlan1: authenticated
+> > [58265.890871] wlan1: associate with AP 00:03:7f:0c:c2:5d
+> > [58265.898987] wlan1: RX ReassocResp from 00:03:7f:0c:c2:5d
+> > (capab=0x421 status=0 aid=1)
+> > [58265.899041] wlan1: associated
+> > [58265.898987] wlan1: RX ReassocResp from 00:03:7f:0c:c2:5d
+> > (capab=0x421 status=0 aid=1)
+> > [58265.899041] wlan1: associated
+> > [58266.391122] ------------[ cut here ]------------
+> > [58266.391166] kernel BUG at drivers/net/wireless/ath/ath9k/rc.c:746!
+> > [58266.391202] invalid opcode: 0000 [#1] PREEMPT SMP
+> > [58266.391253] last sysfs file:
+> > /sys/devices/system/cpu/cpu3/cache/index2/shared_cpu_map
+> > [58266.391303] CPU 3
+> > [58266.391333] Modules linked in: netconsole ath9k configfs ipv6
+> > cpufreq_ondemand powernow_k8[58266.391122] ------------[ cut here
+> > ]------------
+> >  freq_table binfmt_misc loop dm_multipath scsi_dh arc4 ecb mac80211
+> > rfkill af_packet led_class ath sr_mod cfg80211 e1000 evdev shpchp
+> > cdrom evbug[58266.391166] kernel BUG at
+> > drivers/net/wireless/ath/ath9k/rc.c:746!
 > 
-> The struct declarations would be sufficient.
-
-Do you mean just:
-struct sk_buff;
-struct net_device;
-
+> This is this assert:
 > 
-> > +extern struct proto ieee802154_raw_prot;
-> > +extern struct proto ieee802154_dgram_prot;
-> > +void ieee802154_raw_deliver(struct net_device *dev, struct sk_buff *skb);
-> > +int ieee802154_dgram_deliver(struct net_device *dev, struct sk_buff *skb);
-> > +#endif
-> > +
-> > +#endif
-
-> > --- /dev/null
-> > +++ b/include/net/ieee802154/const.h
-> [...]
-> > +/* Time related constants, in microseconds.
-> > + *
-> > + * The 1SYM_TIME values are shown how much time is needed to transmit one
-> > + * symbol across media.
-> > + * The callculation is following:
-> > + * For a 2450 MHZ radio freq rate is 62,5 ksym/sec. A byte (8 bit) transfered
-> > + * by low 4 bits in first symbol, high 4 bits in next symbol. So, to transmit
-> > + * 1 byte in 2450Mhz freq 2 symbols are needed. Therefore we have 31,25 kbyte/sec
-> > + * rate. 1 symbol transfered in 16*10^(-6) sec, or 16 microseconds.
-> > + * For a 868Mhz and 915Mhz, 1 symbol is equal to 1 byte. So, we have 20kbyte/sec
-> > + * and 40 kbyte/sec respectively. And 5*10^(-5) sec and 2,5*10(-5) sec,
-> > + * or 50 and 25 microseconds respectively for 868Mhz and 915Mhz freq.
-> > + */
+>         ASSERT((rate_table->info[rate].valid &&
+>                 (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
+>                (rate_table->info[rate].valid_single_stream &&
+>                 !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
 > 
-> This is so verbose as to be unhelpful.  Since the following constants
-> only refer to symbol time, it should be sufficient to refer to the
-> specified symbol rates.
 
-const.h was inherited from the previous implementation of our stack.
-I somehow missed that it needs a bit of polishing. A great bit.
+This is odd. Hitting this assert means that we have selected a wrong
+rate index wrt the type of stream. There may be a bug in rc init
+which gets exposed after assoc/reassoc and disassoc.
 
-> > +#endif /* IEEE802154_CONST_H */
-> > diff --git a/include/net/ieee802154/crc.h b/include/net/ieee802154/crc.h
-> > new file mode 100644
-> > index 0000000..5b37218
-> > --- /dev/null
-> > +++ b/include/net/ieee802154/crc.h
-> > @@ -0,0 +1,38 @@
-> > +/*
-> > + * based on crc-itu-t.c.
-> > + * Basically it's CRC-ITU-T but with inverted bit numbering
-> 
-> This can probably be handled by crc_itu_t_bitreversed():
-> 
-> http://svn.debian.org/wsvn/kernel/dists/trunk/linux-2.6/debian/patches/features/all/lib-crcitut-bit-reversed.patch
-> 
-> (That patch hasn't gone anywhere yet as Greg K-H is dragging his heels
-> over actually fixing his crap, but feel free to resubmit it as part of
-> your own patch series.)
+> What's this WLAN_RC_DS_FLAG? I see we set it if our hardware supports
+> ATH9K_CAP_DS, the current tx_chainmask is not 1 (which in turn we get
+> from the EEPROM), and.. if sta->ht_cap.mcs.rx_mask[1]..
 
-Fine, I'll use this patch.
-
-> [...]
-> > --- /dev/null
-> > +++ b/include/net/ieee802154/nl.h
-> [...]
-> > +/* commands */
-> > +/* REQ should be responded with CONF
-> > + * and INDIC with RESP
-> > + */
-> > +enum {
-> > +	__IEEE802154_COMMAND_INVALID,
-> > +
-> > +	IEEE802154_ASSOCIATE_REQ,
-> > +	IEEE802154_ASSOCIATE_CONF,
-> > +	IEEE802154_DISASSOCIATE_REQ,
-> > +	IEEE802154_DISASSOCIATE_CONF,
-> > +	IEEE802154_GET_REQ,
-> > +	IEEE802154_GET_CONF,
-> > +/* 	IEEE802154_GTS_REQ, */
-> > +/* 	IEEE802154_GTS_CONF, */
-> 
-> Why are some of these commented out?  Since they're apparently exposed
-> to user-space you can't insert them later.
-
-Those are not implemented yet. We planned on appending them later to the
-end of this enum. Most probably I'll just uncomment them and add simple
-stubs returning an error instead.
-
-> 
-> [...]
-> > --- /dev/null
-> > +++ b/net/ieee802154/beacon.c
-> [...]
-> > +	/* TODO GTS */
-> > +	gts = 0;
-> > +
-> > +	if (flags & IEEE802154_BEACON_FLAG_GTSPERMIT)
-> > +		gts |= IEEE802154_BEACON_GTS_PERMIT;
-> > +	memcpy(skb_put(skb, sizeof(gts)), &gts, sizeof(gts));
-> > +
-> > +	/* FIXME pending address */
-> > +	addr16_cnt = 0;
-> > +	addr64_cnt = 0;
-> > +#if 0
-> > +	/* need more thinking about this */
-> > +	list_for_each_entry(l, al->list, list) {
-> > +		struct ieee802154_addr *s = container_of(l, struct list_head, list);
-> > +		if (s->addr_type == IEEE802154_ADDR_LONG)
-> > +			addr16_cnt++;
-> > +
-> > +		if (s->addr_type == IEEE802154_ADDR_SHORT)
-> > +			addr64_cnt++;
-> > +	}
-> > +#endif
-> 
-> This all looks very unfinished - as do several other sections with
-> FIXME, #if 0, commented-out code...
-
-As I said, the code is in early stage of development. 
+WLAN_RC_DS_FLAG means the rate control is going to be initialized
+with dual stream rates.
 
 > 
-> [...]
-> > +#define IEEE802154_FETCH_U64(skb, var)			\
-> > +	do {						\
-> > +		if (skb->len < IEEE802154_ADDR_LEN)	\
-> 
-> I see what you did there...
+> I see rate private structure
+> for the sta gets updated during get rate but there is no locking for
+> this but I also don't see dire consequences for this yet.
 
-???
-
-> > +			goto exit_error;		\
-> > +		fetch_skb_u64(skb, &var);		\
-> > +	} while (0)
-> [...]
+This is protected by rcu_read_lock()?
 
 
--- 
-With best wishes
-Dmitry
-
+Vasanth
