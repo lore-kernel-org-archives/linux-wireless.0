@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:54070 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbZENRe5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 13:34:57 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so680651fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:34:57 -0700 (PDT)
-Message-ID: <4A0C5643.7070400@gmail.com>
-Date: Thu, 14 May 2009 17:34:59 +0000
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-MIME-Version: 1.0
-To: linville@tuxdriver.com, dsd@gentoo.org, kune@deine-taler.de
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] zd1211rw: Replace ZD_CS_MULTICAST with ZD_CS_NO_ACK
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:17199 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754181AbZEFV35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 May 2009 17:29:57 -0400
+Subject: Re: [ath5k-devel] ath5k: scanning while transmitting causes oops
+ on 802.11a capable card
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <1241641605.4029.10.camel@johannes.local>
+References: <1241626486.30590.13.camel@mj>
+	 <b6c5339f0905060936u37f3994cx97cc2344224777a5@mail.gmail.com>
+	 <20090506172513.GB30070@tuxdriver.com>  <1241640751.3289.2.camel@mj>
+	 <1241641605.4029.10.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 06 May 2009 17:29:55 -0400
+Message-Id: <1241645395.3293.3.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to my tests, all that ZD_CS_MULTICAST does is to
-disable retrying/waiting for an ACK. Reflect this by renaming
-the bit to ZD_CS_NO_ACK and setting it based on
-IEEE80211_TX_CTL_NO_ACK, instead of is_multicast_ether_addr.
+On Wed, 2009-05-06 at 22:26 +0200, Johannes Berg wrote:
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-v2: No word-wrap.
+> Huh? That's confusing. Also, you say you get a BUG but point out a
+> WARN_ON_ONCE, was that an oversight or does something crash there?
 
- drivers/net/wireless/zd1211rw/zd_mac.c |    6 +++---
- drivers/net/wireless/zd1211rw/zd_mac.h |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Sorry, I meant WARN_ON_ONCE.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 85c27ac..d1ec99f 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -430,9 +430,9 @@ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
- 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
- 		cs->control |= ZD_CS_NEED_RANDOM_BACKOFF;
- 
--	/* Multicast */
--	if (is_multicast_ether_addr(header->addr1))
--		cs->control |= ZD_CS_MULTICAST;
-+	/* No ACK expected (multicast, etc.) */
-+	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-+		cs->control |= ZD_CS_NO_ACK;
- 
- 	/* PS-POLL */
- 	if (ieee80211_is_pspoll(header->frame_control))
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
-index 4c05d3e..7c27591 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-@@ -87,7 +87,7 @@ struct zd_ctrlset {
- 
- /* zd_ctrlset control field */
- #define ZD_CS_NEED_RANDOM_BACKOFF	0x01
--#define ZD_CS_MULTICAST			0x02
-+#define ZD_CS_NO_ACK			0x02
- 
- #define ZD_CS_FRAME_TYPE_MASK		0x0c
- #define ZD_CS_DATA_FRAME		0x00
+> OTOH, I can see one thing happening -- it would access scan_channel.
+> Patch should fix that, does it help?
+
+Yes, that does the trick!  Several scans with iw and iwlist while flood
+pinging the AP don't cause any kernel messages.  Thank you!
+
 -- 
-1.5.6.3
-
+Regards,
+Pavel Roskin
