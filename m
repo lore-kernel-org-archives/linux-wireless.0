@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:61474 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762384AbZENAcP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 20:32:15 -0400
-Received: by bwz22 with SMTP id 22so987600bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 17:32:15 -0700 (PDT)
+Received: from 42.248.sfcn.org ([160.7.248.42]:52313 "HELO mail.mypals.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752387AbZEFDmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2009 23:42:37 -0400
+From: Alf <alf@mypals.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: ath5k in 2.6.29.1 won't associate with AP
+Date: Tue, 5 May 2009 21:42:38 -0600
+Cc: Tulio Magno Quites Machado Filho <tuliom@quites.com.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <200905021218.23747.alf@mypals.org> <20090504224952.GB9342@joutaro.lan> <b6c5339f0905042236o7ab21feai5aef015510428d02@mail.gmail.com>
+In-Reply-To: <b6c5339f0905042236o7ab21feai5aef015510428d02@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
-References: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 14 May 2009 02:31:55 +0200
-Message-ID: <69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
-Subject: Re: WoW for ath5k
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200905052142.38780.alf@mypals.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> w=
-rote:
-> BTW legacy-hal has this stuff :) Just grep for ATH_WOW
->
-> =A0Luis
+On Monday 04 May 2009 11:36:06 pm Bob Copeland wrote:
+> Yes, 2413 should work -- also can you try latest
+> wireless-testing tree?  It has a boatload of updates for
+> ath5k.  If something there works then we can perhaps narrow
+> it down a bit.
 
-Wow! :-)
+I tried it a few days ago and it still didn't work.  Even the latest 
+snapshot from madwifi didn't work.  They only thing that has worked is 
+ndiswrapper.
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Alf
+@
