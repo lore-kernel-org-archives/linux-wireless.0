@@ -1,226 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s25.blu0.hotmail.com ([65.55.111.100]:28551 "EHLO
-	blu0-omc2-s25.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750996AbZEFQpd (ORCPT
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:49662 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbZEFSlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 12:45:33 -0400
-Message-ID: <BLU0-SMTP609AAD39FAACE615C91C30C2660@phx.gbl>
-Date: Wed, 06 May 2009 11:45:31 -0500
-From: Brett Ussher <breusshe@hotmail.com>
+	Wed, 6 May 2009 14:41:20 -0400
+Received: by gxk10 with SMTP id 10so469024gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2009 11:41:20 -0700 (PDT)
+Message-ID: <4A01D9C8.5070501@gmail.com>
+Date: Wed, 06 May 2009 14:41:12 -0400
+From: Will Keaney <keaneyw@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Problem with compat-wireless for 2009-05-06
-Content-Type: multipart/mixed;
- boundary="------------060903030302000303030104"
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Soft Lockup With rfkill_input and thinkpad_acpi
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig52E9F6362F0D8120B1293A13"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060903030302000303030104
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig52E9F6362F0D8120B1293A13
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Downloaded and tried to install compat-wireless-2009-05-06.tar.bz2.  
-Downloaded fine.  Make went fine, make install had an issue.  When it 
-would run "athenable ath5k" portion of the make install, it would go 
-into a loop trying to mv a .ko file.  I made a change to the modlib.sh 
-file that seems to have fixed the issue.  The problem was that the path 
-modlib.sh was generating the following output:
+I have been unable to boot any wireless-testing kernel since
+2.6.30-rc1.  After quite a lot of testing, I've narrowed the problem
+down to a combination of two options. RFKILL_INPUT, in combination with
+THINKPAD_ACPI, causes a soft lockup.  Either of these options are fine
+if enabled individually, but when used in combination with each other
+the system immediately locks up.  Right now, I have RFKILL and
+THINKPAD_ACPI built into the kernel, and RFKILL_INPUT configured as a
+module.  This enables me to boot and use my computer, but the system
+locks up as soon as I modprobe rfkill_input.  The trace from the soft
+lockup is below.
+When I get some more time to focus on this, I'll try to do some
+git-bisect work.  If anyone else can lend a hand on this, I'd appreciate =
+it.
 
-/lib/modules/2.6.27-11-generic/updates/drivers/net/wireless/ath/ath5k/ath5k.ko
-Disabling ath5k ...mv: cannot stat 
-`/lib/modules/2.6.27-11-generic//lib/modules/2.6.27-11-generic/updates/drivers/net/wireless/ath/ath5k/ath5k.ko': 
-No such file or directory
-[ERROR]    Module is still being detected:
+Thanks,
 
-Notice the double use of the "/lib/modules/2.6.27-11-generic/" path in 
-the second line of the output.  I have commented out line 41 of 
-modlib.sh and added line 42:
+Will Keaney
 
-#        mv -f /lib/modules/$VER/$CHECK 
-/lib/modules/$VER/${CHECK}${IGNORE_SUFFIX}
-        mv -f $CHECK ${CHECK}${IGNORE_SUFFIX}
-
-This change seems to have fix athenable.  I think the reason for the 
-repeated path output is that $CHECK uses "modprobe -l" which gives a 
-full path output for the driver file it finds, thus, "/lib/modules/$VER" 
-is not required in line 41.
-
-While looking at this problem, I found another in the iwl-enable 
-script.  Actually, two.  The USAGE statement uses $IWL, not $IWL_NEW at 
-line 20.  Also, at line 38 (39 in attached copy) $MODULE is doing a 
-string match with "iwl4954", not "iwl4965".  I've commented out these 
-two lines and made corrects on the line below them (lines 21 and 40 in 
-attached copy).
-
-I also discovered that the module_enable function in modlib.sh didn't 
-work right.  Since I'm using compat-wireless, the drivers are being 
-installed to the "update" folder, not "kernel" in the 
-"/lib/modules/`uname -r`" folder.  However, somebody at the end of the 
-enable_module function put in a break with a comment above it stating, 
-"Lets only do this for the first module found".  Well, that means the 
-module in the "kernel" folder is enabled, but not the one in the the 
-"update" folder.  That means the module will not load (incompatible 
-versions).  I have commented out this break statement on line 86 (in 
-attached copy of modlib.sh).  It works fine now.
-
-Hope these changes help.
-
--- 
-Brett D. Ussher
-
-
---------------060903030302000303030104
-Content-Type: text/plain;
- name="iwl-enable"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="iwl-enable"
-
-#!/bin/bash
-#
-# Copyright 2007	Luis R. Rodriguez <lrodriguez@atheros.com>
-#
-# Makes sure either iwlagn (new) or iwl4965 (old)
-# is enabled to be used. This allows us to choose any driver without 
-# blacklisting each other.
-
-. /usr/lib/compat-wireless/modlib.sh
-
-if [[ $UID -ne 0 ]]; then
-	echo "Run with root privileges"
-	exit
-fi
-
-IWL_NEW="iwlagn"
-IWL_OLD="iwl4965"
-
-# Appended to module file at the end when we want to ignore one
-#USAGE="Usage: $0 [ $IWL | $IWL_OLD ]"
-USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD ]"
-function enable_iwlagn {
-	module_disable $IWL_OLD
-	for i in $IWL_NEW; do
-		module_enable $i
-	done
-}
-
-# Default behavior: disables the old iwl4965 driver and enables iwlagn
-if [ $# -eq 0 ]; then
-	enable_iwlagn
-	exit
-elif [ $# -ne 1 ]; then
-	echo "$USAGE"
-	exit
-fi
-
-MODULE=$1
-#if [ "$MODULE" == "iwl4954" ]; then
-if [ "$MODULE" == "iwl4965" ]; then
-	module_disable $IWL_NEW
-	module_enable $IWL_OLD
-elif [ "$MODULE" == "iwlagn" ]; then
-	enable_iwlagn
-else
-	echo "$USAGE"
-	exit
-fi
-
---------------060903030302000303030104
-Content-Type: application/x-sh;
- name="modlib.sh"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="modlib.sh"
-
-#!/bin/bash
-#
-# Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-#
-# You can use these to enable/disable modules without blacklisting them
-
-# Make sure our imporant paths are included
-PATH=$PATH:/usr/sbin:/sbin
-
-# Appended to module file at the end when we want to ignore one
-IGNORE_SUFFIX=".ignore"
-VER=`uname -r`
-
-# If 'module' is found, its renamed to 'module.ignore'
-function module_disable {
-	# Basic check to see if this is a module available for loading
-	MODULE_CHECK=`modprobe -l $1`
-	if [ -z $MODULE_CHECK ]; then
-		echo "Module $1 not detected -- this is fine"
-		return
-	fi
-	MODULE=$1
-	MODULE_KO=${MODULE}.ko
-	# In case there are more than one of these modules. This can 
-	# happen, for example if your distribution provides one and you have
-	# compiled one in yourself later.
-	MODULE_COUNT=`find /lib/modules/$VER/ -name $MODULE_KO | wc -l`
-	ALL_MODULES=`find /lib/modules/$VER/ -name $MODULE_KO`
-	COUNT=1
-	CHECK=`modprobe -l $MODULE`
-	while  [ ! -z $CHECK ]; do
-		if [[ $MODULE_COUNT -gt 1 ]]; then
-			if [[ $COUNT -eq 1 ]]; then
-				echo -en "$MODULE_COUNT $MODULE modules found "
-				echo -e "we'll disable all of them"
-			fi
-			echo -en "Disabling $MODULE ($COUNT) ..."
-		else
-			echo -en "Disabling $MODULE ..."
-		fi
-#		mv -f /lib/modules/$VER/$CHECK /lib/modules/$VER/${CHECK}${IGNORE_SUFFIX}
-		mv -f $CHECK ${CHECK}${IGNORE_SUFFIX}
-		depmod -ae
-		CHECK_AGAIN=`modprobe -l $MODULE`
-		if [ "$CHECK" != "$CHECK_AGAIN" ]; then
-			echo -e "\t[OK]\tModule disabled:"
-			echo "$CHECK"
-		else
-			echo -e "[ERROR]\tModule is still being detected:"
-			echo "$CHECK"
-		fi
-		let COUNT=$COUNT+1
-		CHECK=$CHECK_AGAIN
-	done
-}
-
-# If 'module.ignore' is found, rename it back to 'module'
-function module_enable {
-	MODULE=$1
-	MODULE_KO=${MODULE}.ko
-	IGNORED_MODULE=${MODULE_KO}${IGNORE_SUFFIX}
-	# In case there are more than one of these modules. This can 
-	# happen, for example if your distribution provides one and you have
-	# compiled one in yourself later.
-	ALL_MODULES=`find /lib/modules/$VER/ -name $IGNORED_MODULE`
-	for i in $ALL_MODULES; do
-		echo -en "Enabling $MODULE ..."
-		DIR=`dirname $i`
-		mv $i $DIR/$MODULE_KO
-		depmod -ae
-		CHECK=`modprobe -l $MODULE`
-		if [ "$DIR/$MODULE_KO" != $CHECK ]; then
-			if [ -z $CHECK ]; then
-				echo -e "\t[ERROR]\tModule could not be enabled"
-			else
-				echo -en "\t[OK]\tModule renamed but another "
-				echo "module file is being preferred"
-				echo -e "Renamed module:\t\t$DIR/$MODULE_KO"
-				echo -e "Preferred module:\t$CHECK"
-			fi
-		else
-			echo -e "\t[OK]\tModule enabled: "
-			echo "$DIR/$MODULE_KO"
-		fi
-		# Lets only do this for the first module found
-#		break
-	done
-}
+BUG: soft lockup =EF=BF=BD CPU#0 stuck for 61s! [events/0:10]
+Modules linked in: rfkill_input nvidia(P) oss_usb oss_hdaudio osscore cpu=
+freq_ondemand acpi_cpufreq freq_table sdhci_pci video sdhci i2c_i801 yent=
+a_socket mmc_core rsrc_nonstatic e1000e pcmcia_core i2c_core output rtc p=
+cspkr ricoh_mmc battery processor ac button thermal evdev
+Irq event stamp: 12860
+Hardirqs last enabled at (12859): [<ffffffff8056ce0a>] _spin_unlock_irqre=
+store+0x3f/0x81
+Hardirqs last disabled at (12860):[<ffffffff8056d03d>] _spin_lock_irq+0x1=
+2/0x49
+Softirqs last enabled at (9806): [<ffffffff8024184f>] __do_softirq+0x247/=
+0x264
+Softirqs last disabled at (9793): [<ffffffff8020c43c>] call_softirq+0x1c/=
+0x28
+CPU 0:
+Modules linked in: rfkill_input nvidia(P) oss_usb oss_hdaudio osscore cpu=
+freq_ondemand acpi_cpufreq freq_table sdhci_pci video sdhci i2c_i801 yent=
+a_socket mmc_core rsrc_nonstatic e1000e pcmcia_core i2c_core output rtc p=
+cspkr ricoh_mmc battery processor ac button thermal evdev
+Pid: 10, comm.: events/0 Tainted: P           2.6.30-rc4-wl-22697-gd0df3f=
+8 #90 6459CTO
+RIP: 0010:[<ffffffff80559748>]  [<ffffffff80559748>] __read_lock_failed+0=
+x5/0x20
+RSP: 0000:ffff88013b903d68  EFLAGS: 00000292
+RAX: 0000000000000000 RBX: ffff88013b903d80 RCX: 0000000000000002
+RDX: 0000000000000000 RSI: ffffffff806dafdd RDI: ffffffff80788078
+RBP: ffffffff8020be4e R08: 0000000000000002 R09: 0000000000000000
+R10: ffffffff80470bf2 R11: ffffffff80470bf2 R12: 0000000000000001
+R13: 0000000000010bc0 R14: ffff88013b902000 R15: 0000000000000001
+FS: 0000000000000000(0000) GS:ffff880028054000(0000) knlGS:00000000000000=
+00
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 00000000010e00f0 CR3: 0000000000201000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Call Trace:
+ [<ffffffff8036ec09>] ? _raw_read_lock+0x47/0x4c
+ [<ffffffff8056d31a>] ? _read_lock+0x41/0x46
+ [<ffffffff80470bf2>] ? led_trigger_event+0x22/0x77
+ [<ffffffff80470bf2>] ? led_trigger_event+0x22/0x77
+ [<ffffffff80557f8d>] ? rfkill_led_trigger+0x27/0x29
+ [<ffffffff80558bb4>] ? rfkill_epo+0xb0/0xb5
+ [<ffffffffa0016090>] ? rfkill_task_handler+0x90/0x1b0 [rfkill_input]
+ [<ffffffff8024ce04>] ? worker_thread+0x27b/0x3b0
+ [<ffffffff8024cda8>] ? worker_thread+0x21f/0x3b0
+ [<ffffffffa0016000>] ? rfkill_task_handler+0x0/0x1b0 [rfkill_input]
+ [<ffffffff802513d2>] ? autoremove_wake_function+0x0/0x38
+ [<ffffffff8024cb89>] ? worker_thread+0x0/0x3b0
+ [<ffffffff80250f1d>] ? kthread+0x56/0x83
+ [<ffffffff8020c33a>] ? child_rip+0xa/0x20
+ [<ffffffff8020bd00>] ? restore_args+0x0/0x30
+ [<ffffffff80250ea2>] ? kthreadd+0x10a/0x12f
+ [<ffffffff80250ec7>] ? kthread+0x0/0x83
+ [<ffffffff8020c330>] ? child_rip+0x0/0x20
 
 
---------------060903030302000303030104--
+
+
+--------------enig52E9F6362F0D8120B1293A13
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAkoB2cwACgkQjfayWCA8dDEG5ACdGxcYe3d+z2ZMgJglwsFOSpA7
+hO8AnRVnBbr+oiW5pBRGU5UkIvOANb8H
+=RWzX
+-----END PGP SIGNATURE-----
+
+--------------enig52E9F6362F0D8120B1293A13--
