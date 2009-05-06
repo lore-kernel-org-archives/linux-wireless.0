@@ -1,173 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54248 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbZELTTL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41232 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbZEFGp4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 15:19:11 -0400
-Subject: [PATCH] mac80211: IBSS supported rate fixes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 12 May 2009 21:18:38 +0200
-Message-Id: <1242155918.14227.3.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 6 May 2009 02:45:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] cfg80211: fix bug when last_request is not set on freq_reg_info_regd()
+Date: Wed,  6 May 2009 02:45:55 -0400
+Message-Id: <1241592355-10095-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mac80211 announces a rate set with no basic rates,
-this fixes it to use 1/2 or 6/9 Mbit as basic rates by default.
-Additionally, mac80211 will currently adopt the peer's entire
-rate set, rather than just the basic rate set; fix that too.
+When using the custom regulatory domain API its possible for last_request
+to be NULL. This fixes this oops:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+BUG: unable to handle kernel NULL pointer dereference at 00000004
+IP: [<f8eb9c50>] :cfg80211:freq_reg_info_regd+0x24/0x121
+*pdpt = 0000000036590001 *pde = 0000000000000000
+Oops: 0000 [#1] SMP
+last sysfs file: /sys/devices/platform/dcdbas/smi_data_buf_phys_addr
+Modules linked in: ath9k(N+) mac80211(N) cfg80211(N) (ETC)
+Supported: No
+
+Pid: 26324, comm: modprobe Tainted: G          (2.6.27.19-5-pae #1)
+EIP: 0060:[<f8eb9c50>] EFLAGS: 00210286 CPU: 1
+EIP is at freq_reg_info_regd+0x24/0x121 [cfg80211]
+EAX: 00000000 EBX: f544e060 ECX: f7dddd94 EDX: 0024cde0
+ESI: f8f4c43c EDI: 00000000 EBP: 00000000 ESP: f7dddd44
+ DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Process modprobe (pid: 26324, ti=f7ddc000 task=f3ca0370 task.ti=f7ddc000)
+Stack: c0505300 f544eb54 f7dddd94 0024cde0 f8f343ba f8f593c8 f544e060 00000000
+       00000000 f8eba025 f7dddd90 f8f4c43c 00000000 00000004 00000f40 f8f4c43c
+       f544e060 f544f2d4 00000000 00000000 00000000 f544f590 f544eb54 f544f329
+Call Trace:
+ [<f8eba025>] wiphy_apply_custom_regulatory+0xb1/0x14e [cfg80211]
+ [<f8f337a4>] ath_attach+0x707/0x9ed [ath9k]
+ [<f8f39f36>] ath_pci_probe+0x18d/0x29a [ath9k]
+ [<c023c7ba>] pci_device_probe+0xa3/0xe4
+ [<c02a860b>] really_probe+0xd7/0x1de
+ [<c02a87e7>] __driver_attach+0x37/0x55
+ [<c02a7eed>] bus_for_each_dev+0x31/0x57
+ [<c02a83bd>] driver_attach+0x16/0x18
+ [<c02a78e6>] bus_add_driver+0xec/0x21b
+ [<c02a8959>] driver_register+0x85/0xe2
+ [<c023c9bb>] __pci_register_driver+0x3c/0x69
+ [<f8e8f043>] ath9k_init+0x43/0x68 [ath9k]
+ [<c010112b>] _stext+0x3b/0x116
+ [<c014a872>] sys_init_module+0x8a/0x19e
+ [<c01049ad>] sysenter_do_call+0x12/0x21
+ [<ffffe430>] 0xffffe430
+ =======================
+Code: 0f 94 c0 c3 31 c0 c3 55 57 56 53 89 c3 83 ec 14 8b 74 24 2c 89 54 24 0c 89 4c 24 08 85 f6 75 06 8b 35 28 6c ec f8 a1 2c 6c ec f8 <8b> 40 04 83 f8 03 74 3a 48 74 37 8b 43 28 85 c0 74 30 89 c6 8b
+EIP: [<f8eb9c50>] freq_reg_info_regd+0x24/0x121 [cfg80211] SS:ESP 0068:f7dddd44
+
+Reported-by: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/ibss.c |   67 +++++++++++++++++++++++++++++++---------------------
- 1 file changed, 40 insertions(+), 27 deletions(-)
+ net/wireless/reg.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ibss.c	2009-05-12 20:53:06.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-05-12 21:14:05.000000000 +0200
-@@ -63,19 +63,18 @@ static void ieee80211_rx_mgmt_auth_ibss(
- static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				      const u8 *bssid, const int beacon_int,
- 				      struct ieee80211_channel *chan,
--				      const size_t supp_rates_len,
--				      const u8 *supp_rates,
-+				      const u32 basic_rates,
- 				      const u16 capability, u64 tsf)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
--	int rates, i, j;
-+	int rates, i;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos;
- 	struct ieee80211_supported_band *sband;
- 	u32 bss_change;
--
-+	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 
- 	/* Reset own TSF to allow time synchronization work. */
- 	drv_reset_tsf(local);
-@@ -101,6 +100,16 @@ static void __ieee80211_sta_join_ibss(st
- 
- 	sband = local->hw.wiphy->bands[chan->band];
- 
-+	/* build supported rates array */
-+	pos = supp_rates;
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		int rate = sband->bitrates[i].bitrate;
-+		u8 basic = 0;
-+		if (basic_rates & BIT(i))
-+			basic = 0x80;
-+		*pos++ = basic | (u8) (rate / 5);
-+	}
-+
- 	/* Build IBSS probe response */
- 	mgmt = (void *) skb_put(skb, 24 + sizeof(mgmt->u.beacon));
- 	memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
-@@ -118,7 +127,7 @@ static void __ieee80211_sta_join_ibss(st
- 	*pos++ = ifibss->ssid_len;
- 	memcpy(pos, ifibss->ssid, ifibss->ssid_len);
- 
--	rates = supp_rates_len;
-+	rates = sband->n_bitrates;
- 	if (rates > 8)
- 		rates = 8;
- 	pos = skb_put(skb, 2 + rates);
-@@ -140,8 +149,8 @@ static void __ieee80211_sta_join_ibss(st
- 	*pos++ = 0;
- 	*pos++ = 0;
- 
--	if (supp_rates_len > 8) {
--		rates = supp_rates_len - 8;
-+	if (sband->n_bitrates > 8) {
-+		rates = sband->n_bitrates - 8;
- 		pos = skb_put(skb, 2 + rates);
- 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
- 		*pos++ = rates;
-@@ -162,15 +171,7 @@ static void __ieee80211_sta_join_ibss(st
- 	bss_change |= BSS_CHANGED_BEACON_ENABLED;
- 	ieee80211_bss_info_change_notify(sdata, bss_change);
- 
--	rates = 0;
--	for (i = 0; i < supp_rates_len; i++) {
--		int bitrate = (supp_rates[i] & 0x7f) * 5;
--		for (j = 0; j < sband->n_bitrates; j++)
--			if (sband->bitrates[j].bitrate == bitrate)
--				rates |= BIT(j);
--	}
--
--	ieee80211_sta_def_wmm_params(sdata, supp_rates_len, supp_rates);
-+	ieee80211_sta_def_wmm_params(sdata, sband->n_bitrates, supp_rates);
- 
- 	ifibss->state = IEEE80211_IBSS_MLME_JOINED;
- 	mod_timer(&ifibss->timer,
-@@ -184,15 +185,35 @@ static void __ieee80211_sta_join_ibss(st
- static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_bss *bss)
- {
-+	struct ieee80211_supported_band *sband;
-+	u32 basic_rates;
-+	int i, j;
- 	u16 beacon_int = bss->cbss.beacon_interval;
- 
- 	if (beacon_int < 10)
- 		beacon_int = 10;
- 
-+	sband = sdata->local->hw.wiphy->bands[bss->cbss.channel->band];
-+
-+	basic_rates = 0;
-+
-+	for (i = 0; i < bss->supp_rates_len; i++) {
-+		int rate = (bss->supp_rates[i] & 0x7f) * 5;
-+		bool is_basic = !!(bss->supp_rates[i] & 0x80);
-+
-+		for (j = 0; j < sband->n_bitrates; j++) {
-+			if (sband->bitrates[j].bitrate == rate) {
-+				if (is_basic)
-+					basic_rates |= BIT(j);
-+				break;
-+			}
-+		}
-+	}
-+
- 	__ieee80211_sta_join_ibss(sdata, bss->cbss.bssid,
- 				  beacon_int,
- 				  bss->cbss.channel,
--				  bss->supp_rates_len, bss->supp_rates,
-+				  basic_rates,
- 				  bss->cbss.capability,
- 				  bss->cbss.tsf);
- }
-@@ -449,9 +470,7 @@ static void ieee80211_sta_create_ibss(st
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
--	u8 *pos;
- 	u8 bssid[ETH_ALEN];
--	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 	u16 capability;
- 	int i;
- 
-@@ -480,15 +499,9 @@ static void ieee80211_sta_create_ibss(st
- 	else
- 		sdata->drop_unencrypted = 0;
- 
--	pos = supp_rates;
--	for (i = 0; i < sband->n_bitrates; i++) {
--		int rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
--	}
--
- 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
--				  ifibss->channel, sband->n_bitrates,
--				  supp_rates, capability, 0);
-+				  ifibss->channel, 3, /* first two are basic */
-+				  capability, 0);
- }
- 
- static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 48db569..0d07913 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -860,7 +860,8 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 	 * Follow the driver's regulatory domain, if present, unless a country
+ 	 * IE has been processed or a user wants to help complaince further
+ 	 */
+-	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	if (last_request &&
++	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+ 	    last_request->initiator != NL80211_REGDOM_SET_BY_USER &&
+ 	    wiphy->regd)
+ 		regd = wiphy->regd;
+-- 
+1.5.6.4
 
