@@ -1,210 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:43153 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762266AbZE0Msh (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.189]:28239 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753780AbZEFPgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 08:48:37 -0400
-From: Jeff Hansen <x@jeffhansen.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	Jeff Hansen <x@jeffhansen.com>
-Date: Wed, 27 May 2009 12:48:28 +0000
-Message-Id: <1243428510-14931-2-git-send-email-x@jeffhansen.com>
-In-Reply-To: <1243428510-14931-1-git-send-email-x@jeffhansen.com>
-References: <1243428510-14931-1-git-send-email-x@jeffhansen.com>
-Subject: [PATCH 2/4] ath9k: Combine legacy and 11n rc statistics
+	Wed, 6 May 2009 11:36:11 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so105703fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2009 08:36:09 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890905051146n48bdad57s9db40a6e016cb81b@mail.gmail.com>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <43e72e890905051146n48bdad57s9db40a6e016cb81b@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 06 May 2009 13:47:18 +0300
+Message-Id: <1241606838.18657.1.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch combines the legacy and 11n rcstats into one, using the normal
-rate table indices instead of two separate indices for each mode.  Legacy
-rates also get all of the PER and retry information, now, too.
+On Tue, 2009-05-05 at 11:46 -0700, Luis R. Rodriguez wrote:
+> On Mon, May 4, 2009 at 10:04 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> > Here what I see:
+> >
+> >
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109054] Process crda (pid: 29344, threadinfo ffff88007deaa000, task ffff880067369600)
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109058] Stack:
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109061]  0000000000000034 ffff88003fb8a640 0000000000000000 ffff8800634f5c20
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109069]  ffff88007deaba28 ffffffffa00eb3d0 000004f87deab9c8 ffff88003fb8a640
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109077]  0000000000000000 ffff8800634f5c24 ffff8800634f5c2c ffff8800634f5c34
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109086] Call Trace:
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109091]  [<ffffffffa00eb3d0>] nl80211_set_reg+0x100/0x2b0 [cfg80211]
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109107]  [<ffffffff803e697f>] ? nla_parse+0xef/0x110
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109118]  [<ffffffff80513716>] genl_rcv_msg+0x1b6/0x1f0
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109126]  [<ffffffff80513560>] ? genl_rcv_msg+0x0/0x1f0
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109132]  [<ffffffff80512d49>] netlink_rcv_skb+0x89/0xb0
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109140]  [<ffffffff80513547>] genl_rcv+0x27/0x40
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109146]  [<ffffffff805128a9>] ? netlink_sendmsg+0x159/0x300
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109153]  [<ffffffff80512734>] netlink_unicast+0x2c4/0x2e0
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109161]  [<ffffffff804f356e>] ? __alloc_skb+0x6e/0x150
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109169]  [<ffffffff8051294e>] netlink_sendmsg+0x1fe/0x300
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109176]  [<ffffffff804ea607>] sock_sendmsg+0x127/0x140
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109183]  [<ffffffff8025be50>] ? autoremove_wake_function+0x0/0x40
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109193]  [<ffffffff8029f986>] ? get_page_from_freelist+0x3b6/0x650
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109201]  [<ffffffff80299985>] ? find_lock_page+0x25/0x70
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109208]  [<ffffffff804e924b>] ? move_addr_to_kernel+0x2b/0x40
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109214]  [<ffffffff804f4b8c>] ? verify_iovec+0x3c/0xd0
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109221]  [<ffffffff804ea7a9>] sys_sendmsg+0x189/0x320
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109228]  [<ffffffff804eb635>] ? move_addr_to_user+0x65/0x80
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109235]  [<ffffffff802b1651>] ? handle_mm_fault+0x1e1/0x830
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109243]  [<ffffffff803d8f21>] ? __up_read+0x91/0xb0
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109252]  [<ffffffff8020bf2b>] system_call_fastpath+0x16/0x1b
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109261] Code: a1 00 00 00 0f be 50 39 0f be 70 38 48 c7 c7 70 07 0f a0 31 c0 e8 15 da 49 e0 e9 55 fe ff ff 0f 0b eb fe 0f 0b eb fe 0f 0b eb fe <0f> 0b eb fe 48 8b 35 e5 38 01 00 4c 89 e7 e8 05 f9 ff ff 49 89
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109329] RIP  [<ffffffffa00e4f58>] set_regdom+0x428/0x4c0 [cfg80211]
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109344]  RSP <ffff88007deab978>
+> >> May  4 16:35:14 maxim-laptop kernel: [16939.109350] ---[ end trace 695815cef5ce0efe ]---
+> >>
+> >
+> > This happens @ my university where APs send country code, and thus NM calls crda to apply it.
+> > (I already applied it in initscripts)
+> >
+> > intel 3945 device, iwlwifi.git commit
+> > #5a94b6d38100b7056a5a347e5c51359d924d305d
+> 
+> Please use wireless-testing.
+> 
+>   Luis
 
-Signed-off-by: Jeff Hansen <x@jeffhansen.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |  111 ++++++++++----------------------
- drivers/net/wireless/ath/ath9k/debug.h |    9 +--
- 2 files changed, 35 insertions(+), 85 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 97df20c..80115ea 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -224,111 +224,66 @@ static const struct file_operations fops_interrupt = {
- 	.owner = THIS_MODULE
- };
- 
--static void ath_debug_stat_11n_rc(struct ath_softc *sc, struct sk_buff *skb)
--{
--	struct ath_tx_info_priv *tx_info_priv = NULL;
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_tx_rate *rates = tx_info->status.rates;
--	int final_ts_idx, idx;
--
--	tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
--	final_ts_idx = tx_info_priv->tx.ts_rateindex;
--	idx = sc->cur_rate_table->info[rates[final_ts_idx].idx].dot11rate;
--
--	sc->debug.stats.n_rcstats[idx].success++;
--}
--
--static void ath_debug_stat_legacy_rc(struct ath_softc *sc, struct sk_buff *skb)
-+void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb)
- {
- 	struct ath_tx_info_priv *tx_info_priv = NULL;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *rates = tx_info->status.rates;
- 	int final_ts_idx, idx;
-+	struct ath_rc_stats *stats;
- 
- 	tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
- 	final_ts_idx = tx_info_priv->tx.ts_rateindex;
- 	idx = rates[final_ts_idx].idx;
--
--	sc->debug.stats.legacy_rcstats[idx].success++;
-+	stats = &sc->debug.stats.rcstats[idx];
-+	stats->success++;
- }
- 
--void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb)
--{
--	if (conf_is_ht(&sc->hw->conf))
--		ath_debug_stat_11n_rc(sc, skb);
--	else
--		ath_debug_stat_legacy_rc(sc, skb);
--}
--
--/* FIXME: legacy rates, later on .. */
- void ath_debug_stat_retries(struct ath_softc *sc, int rix,
- 			    int xretries, int retries, u8 per)
- {
--	if (conf_is_ht(&sc->hw->conf)) {
--		int idx = sc->cur_rate_table->info[rix].dot11rate;
-+	struct ath_rc_stats *stats = &sc->debug.stats.rcstats[rix];
- 
--		sc->debug.stats.n_rcstats[idx].xretries += xretries;
--		sc->debug.stats.n_rcstats[idx].retries += retries;
--		sc->debug.stats.n_rcstats[idx].per = per;
--	}
-+	stats->xretries += xretries;
-+	stats->retries += retries;
-+	stats->per = per;
- }
- 
--static ssize_t ath_read_file_stat_11n_rc(struct file *file,
--					 char __user *user_buf,
--					 size_t count, loff_t *ppos)
-+static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
-+				size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	char buf[1024];
--	unsigned int len = 0;
-+	char *buf;
-+	unsigned int len = 0, max;
- 	int i = 0;
-+	ssize_t retval;
- 
--	len += sprintf(buf, "%7s %13s %8s %8s %6s\n\n", "Rate", "Success",
--		       "Retries", "XRetries", "PER");
--
--	for (i = 0; i <= 15; i++) {
--		len += snprintf(buf + len, sizeof(buf) - len,
--				"%5s%3d: %8u %8u %8u %8u\n", "MCS", i,
--				sc->debug.stats.n_rcstats[i].success,
--				sc->debug.stats.n_rcstats[i].retries,
--				sc->debug.stats.n_rcstats[i].xretries,
--				sc->debug.stats.n_rcstats[i].per);
--	}
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
-+	if (sc->cur_rate_table == NULL)
-+		return 0;
- 
--static ssize_t ath_read_file_stat_legacy_rc(struct file *file,
--					    char __user *user_buf,
--					    size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	char buf[512];
--	unsigned int len = 0;
--	int i = 0;
-+	max = 80 + sc->cur_rate_table->rate_cnt * 64;
-+	buf = kmalloc(max + 1, GFP_KERNEL);
-+	if (buf == NULL)
-+		return 0;
-+	buf[max] = 0;
- 
--	len += sprintf(buf, "%7s %13s\n\n", "Rate", "Success");
-+	len += sprintf(buf, "%5s %15s %8s %9s %3s\n\n", "Rate", "Success",
-+		       "Retries", "XRetries", "PER");
- 
- 	for (i = 0; i < sc->cur_rate_table->rate_cnt; i++) {
--		len += snprintf(buf + len, sizeof(buf) - len, "%5u: %12u\n",
--				sc->cur_rate_table->info[i].ratekbps / 1000,
--				sc->debug.stats.legacy_rcstats[i].success);
-+		u32 ratekbps = sc->cur_rate_table->info[i].ratekbps;
-+		struct ath_rc_stats *stats = &sc->debug.stats.rcstats[i];
-+
-+		len += snprintf(buf + len, max - len,
-+			"%3u.%d: %8u %8u %8u %8u\n", ratekbps / 1000,
-+			(ratekbps % 1000) / 100, stats->success,
-+			stats->retries, stats->xretries,
-+			stats->per);
- 	}
- 
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
--				size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--
--	if (sc->cur_rate_table == NULL)
--		return 0;
--
--	if (conf_is_ht(&sc->hw->conf))
--		return ath_read_file_stat_11n_rc(file, user_buf, count, ppos);
--	else
--		return ath_read_file_stat_legacy_rc(file, user_buf, count ,ppos);
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+	return retval;
- }
- 
- static const struct file_operations fops_rcstat = {
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index db845cf..cf9146a 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -80,11 +80,7 @@ struct ath_interrupt_stats {
- 	u32 dtim;
- };
- 
--struct ath_legacy_rc_stats {
--	u32 success;
--};
--
--struct ath_11n_rc_stats {
-+struct ath_rc_stats {
- 	u32 success;
- 	u32 retries;
- 	u32 xretries;
-@@ -93,8 +89,7 @@ struct ath_11n_rc_stats {
- 
- struct ath_stats {
- 	struct ath_interrupt_stats istats;
--	struct ath_legacy_rc_stats legacy_rcstats[12];	/* max(11a,11b,11g) */
--	struct ath_11n_rc_stats n_rcstats[16];		/* 0..15 MCS rates */
-+	struct ath_rc_stats rcstats[RATE_TABLE_SIZE];
- };
- 
- struct ath9k_debug {
--- 
-1.6.0.4
+I did, wireless-testing as of yesterday, crashes kernel in same way
+
+Regards,
+	Maxim Levitsky
 
