@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59103 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbZEDQ3K (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:40755 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753126AbZEFHrb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 12:29:10 -0400
-Subject: Re: [PATCH] add basic support for parsing country information
- element
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241453862.8683.59.camel@johannes.local>
-References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
-	 <1241423772.8683.8.camel@johannes.local>
-	 <1241423924.8683.9.camel@johannes.local>
-	 <1241427107.2899.9.camel@localhost.localdomain>
-	 <1241435567.8683.35.camel@johannes.local>
-	 <1241437035.8683.37.camel@johannes.local>
-	 <1241452364.2903.3.camel@localhost.localdomain>
-	 <1241452664.8683.51.camel@johannes.local>
-	 <1241453361.2903.15.camel@localhost.localdomain>
-	 <1241453862.8683.59.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 04 May 2009 09:28:58 -0700
-Message-Id: <1241454538.2903.16.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Wed, 6 May 2009 03:47:31 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] ath9k: remove redundant AR9285 checks
+Date: Wed,  6 May 2009 09:47:30 +0200
+Message-Id: <1241596050-9924-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+The AR_SREV_9285_1[12]_OR_LATER macros already contains the
+AR_SREV_9285 check.
 
-> > On a different note, what is your preferred coding style for loops?
-> > 
-> > 	for (i = 0; i < len; i++) {
-> > 
-> > or
-> > 
-> > 	for(i=0; i<len-3; i++)
-> > 
-> > I was using the latter one since I assumed that is what you want (it is
-> > not my preferred one). Then I realized that you are using both or that
-> > something slipped in. Do you want me to send a patch to fix this?
-> 
-> Oh, well, I prefer the former, but some other people put in the latter,
-> and I didn't really care too much. No need to send a patch though.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    6 +++---
+ drivers/net/wireless/ath/ath9k/hw.c    |    3 +--
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-I will sent a patch since I prefer the former too, but assumed you liked
-that latter one and that was my mistake in cluttering the code with more
-mixed coding style than needed.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index a197041..a32d7e7 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -863,7 +863,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	}
+ 
+ 	if (longcal) {
+-		if (AR_SREV_9285(ah) && AR_SREV_9285_11_OR_LATER(ah))
++		if (AR_SREV_9285_11_OR_LATER(ah))
+ 			ath9k_hw_9285_pa_cal(ah);
+ 
+ 		if (OLC_FOR_AR9280_20_LATER)
+@@ -917,7 +917,7 @@ static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
+ 
+ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
++	if (AR_SREV_9285_12_OR_LATER(ah)) {
+ 		if (!ar9285_clc(ah, chan))
+ 			return false;
+ 	} else {
+@@ -947,7 +947,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	}
+ 
+ 	/* Do PA Calibration */
+-	if (AR_SREV_9285(ah) && AR_SREV_9285_11_OR_LATER(ah))
++	if (AR_SREV_9285_11_OR_LATER(ah))
+ 		ath9k_hw_9285_pa_cal(ah);
+ 
+ 	/* Do NF Calibration after DC offset and other calibrations */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 02f4015..599f63a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1345,8 +1345,7 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
+ 	if (AR_SREV_9280(ah))
+ 		REG_WRITE_ARRAY(&ah->iniModesRxGain, modesIndex, regWrites);
+ 
+-	if (AR_SREV_9280(ah) || (AR_SREV_9285(ah) &&
+-	    AR_SREV_9285_12_OR_LATER(ah)))
++	if (AR_SREV_9280(ah) || AR_SREV_9285_12_OR_LATER(ah))
+ 		REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
+ 
+ 	for (i = 0; i < ah->iniCommon.ia_rows; i++) {
+-- 
+1.5.3.2
 
