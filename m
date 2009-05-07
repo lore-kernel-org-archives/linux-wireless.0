@@ -1,34 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:57919 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753570AbZEDTDq (ORCPT
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:51058 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbZEGNL5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 15:03:46 -0400
-Received: by bwz22 with SMTP id 22so659852bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 12:03:45 -0700 (PDT)
-Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-References: <1241213459.7082.54.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-Content-Type: text/plain
-Date: Mon, 04 May 2009 22:03:36 +0300
-Message-Id: <1241463816.4816.1.camel@maxim-laptop>
-Mime-Version: 1.0
+	Thu, 7 May 2009 09:11:57 -0400
+Received: by gxk10 with SMTP id 10so1395812gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2009 06:11:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A029F31.6090405@bitnet.be>
+References: <4A029F31.6090405@bitnet.be>
+Date: Thu, 7 May 2009 09:11:54 -0400
+Message-ID: <b6c5339f0905070611m399aaaa1vbbe19567bd3bbf21@mail.gmail.com>
+Subject: Re: ath5k antenna control patch
+From: Bob Copeland <me@bobcopeland.com>
+To: Hans Maes <Hans@bitnet.be>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-05-04 at 11:53 -0700, Cahill, Ben M wrote:
-> When one of our devices cannot figure out what the actual noise level is, it reports -127.
-> 
-> Newer devices are better at old devices at figuring noise level.  IIRC, 3945 cannot figure noise for CCK signals, and may not be possible with OFDM as well.
+On Thu, May 7, 2009 at 4:43 AM, Hans Maes <Hans@bitnet.be> wrote:
+> Hello,
+>
+> Could somebody tell me if there is any reason why the patch implementing the
+> ath5k antenna control doesn't seem to be committed yet ?
 
-Why then it did work on older kernel ?
-(and noise levels seemed to be correct)
+It has been -- commit 854cb14db8... in wireless-testing.
 
-Regards,
-	Maxim Levitsky
-
+-- 
+Bob Copeland %% www.bobcopeland.com
