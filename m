@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:34111 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbZERPNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:13:10 -0400
-Date: Mon, 18 May 2009 16:57:25 +0200
-From: Oleg Nesterov <oleg@redhat.com>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Jonathan Corbet <corbet@lwn.net>, Martin Bammer <mrb74@gmx.at>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.30-rc6: Reported regressions from 2.6.29
-Message-ID: <20090518145725.GB18607@redhat.com>
-References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera> <20090517073327.GC1583@elte.hu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090517073327.GC1583@elte.hu>
+Received: from senator.holtmann.net ([87.106.208.187]:56384 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754387AbZEGPPn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2009 11:15:43 -0400
+Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
+ reorder buffer
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090505173550.273830766@atheros.com>
+References: <20090505173512.349795688@atheros.com>
+	 <20090505173550.273830766@atheros.com>
+Content-Type: text/plain
+Date: Thu, 07 May 2009 08:15:23 -0700
+Message-Id: <1241709323.4903.25.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17, Ingo Molnar wrote:
->
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13107
-> > Subject		: LTP 20080131 causes defunct processes w/2.6.30-rc1
-> > Submitter	: Kumar Gala <galak@kernel.crashing.org>
-> > Date		: 2009-04-09 15:43 (38 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=b3bfa0cba867f23365b81658b47efd906830879b
-> > References	: http://marc.info/?l=linux-kernel&m=123929187208953&w=4
-> > 		  http://lkml.org/lkml/2009/4/10/193
-> > Handled-By	: Sukadev Bhattiprolu <sukadev@linux.vnet.ibm.com>
->
-> Oleg says in that thread that it's as-designed, and followup
-> questions were not replied to (yet).
+Hi Jouni,
 
-Yes, I think this is false alarm. Perhaps I missed something, and
-I am waiting for more info from Kumar, but it looks like ltp was
-already changed to skip the "{ PTRACE_ATTACH, 1, EPERM }" test
-on kernels after 2.6.25
+> This patch allows skbs to be released from the RX reorder buffer in
+> case they have been there for an unexpectedly long time without us
+> having received the missing frames before them. Previously, these
+> frames were only released when the reorder window moved and that could
+> take very long time unless new frames were received constantly (e.g.,
+> TCP connections could be killed more or less indefinitely).
+> 
+> This situation should not happen very frequently, but it looks like
+> there are some scenarious that trigger it for some reason. As such,
+> this should be considered mostly a workaround to speed up recovery
+> from unexpected siutation that could result in connections hanging for
+> long periods of time.
 
-Oleg.
+I can confirm that this used to be a regular situation between my X200
+and a D-Link access point. I was originally thinking this was a driver
+issue, but your patch makes it possible to use wireless-testing tree
+again. I am not kidding here, before your patch it was impossible to use
+it at all. For me it was a real frequent situation. It is still present,
+but now it handles it more gracefully:
+
+Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
+iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
+activated addBA response timer on tid 0
+switched off addBA timer for tid 0 
+Aggregation is on for tid 0 
+Rx A-MPDU request on tid 0 result 0
+unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
+phy0: release an RX reorder frame due to timeout on earlier frames
+phy0: release an RX reorder frame due to timeout on earlier frames
+
+My VPN connection doesn't always like it, but that could also be a total
+different issue with the provider.
+
+Regards
+
+Marcel
+
 
