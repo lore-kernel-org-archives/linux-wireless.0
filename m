@@ -1,121 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto053.server4you.de ([62.75.220.53]:52248 "EHLO
-	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbZERRra (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 13:47:30 -0400
-Date: Mon, 18 May 2009 19:49:25 +0200
-From: Daniel Wagner <wagi@monom.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@gmail.com
-Subject: [PATCH v3] mac80211_hwsim: Group radios
-Message-ID: <20090518174925.GB3886@newton.monom.org>
+Received: from 42.248.sfcn.org ([160.7.248.42]:44473 "HELO mail.mypals.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750812AbZEGEAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2009 00:00:25 -0400
+From: Alf <alf@mypals.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: ath5k in 2.6.29.1 won't associate with AP
+Date: Wed, 6 May 2009 22:00:26 -0600
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Tulio Magno Quites Machado Filho <tuliom@quites.com.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <200905021218.23747.alf@mypals.org> <200905052142.38780.alf@mypals.org> <40f31dec0905060454s513c5eeas44389e6527eed1fd@mail.gmail.com>
+In-Reply-To: <40f31dec0905060454s513c5eeas44389e6527eed1fd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200905062200.26857.alf@mypals.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 06 May 2009 05:54:13 am Nick Kossifidis wrote:
+> Can you please post the full dmesg output when ath5k loads ?
 
-Currently all radios receive all traffic on the simulated air
-if they are tuned to the same channel. This patch introduces
-the concept of grouping, which allows to assign a radio to
-certain group. Only radios in the same group can 'see' each other.
+This is with debugging turned on.
 
-Each bit in /debug/ieee80211/phy*/hwsim/group
-represents one group. By default all radios belong to the same group "1",
-e.g. bit 1 is set. Additionally a radio can belong to several groups.
+========== dmesg ==========
+15:43:35 ath5k 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18         
+15:43:35 ath5k 0000:00:07.0: registered as 'phy0'                               
+15:43:35 phy0: Selected rate control algorithm 'minstrel'                       
+15:43:35 ath5k phy0: Atheros AR2413 chip found (MAC: 0x78, PHY: 0x45)           
+15:43:39 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:43:39 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2                      
+15:43:39 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3                      
+15:43:39 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out                  
+15:43:50 wlan0: authenticate with AP 00:30:bd:60:d3:44                          
+15:43:50 wlan0: authenticate with AP 00:30:bd:60:d3:44                          
+15:43:50 wlan0: authenticate with AP 00:30:bd:60:d3:44                          
+15:43:51 wlan0: authentication with AP 00:30:bd:60:d3:44 timed out              
+15:44:01 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:44:01 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2                      
+15:44:02 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3                      
+15:44:02 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out                  
+15:44:12 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:44:12 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2                      
+15:44:13 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3                      
+15:44:13 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out                  
+15:44:29 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:44:29 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:44:30 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2                      
+15:44:30 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3                      
+15:44:30 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out                  
+15:44:47 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:44:47 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1                      
+15:44:47 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2                      
+15:44:47 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
+15:44:47 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
+15:44:55 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:44:55 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2
+15:44:55 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
+15:44:56 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
+15:45:05 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:05 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:05 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:05 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2
+15:45:05 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
+15:45:06 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
+15:45:16 wlan0: authenticate with AP 00:30:bd:60:d3:44
+15:45:16 wlan0: authenticate with AP 00:30:bd:60:d3:44
+15:45:16 wlan0: authenticate with AP 00:30:bd:60:d3:44
+15:45:17 wlan0: authenticate with AP 00:30:bd:60:d3:44
+15:45:17 wlan0: authentication with AP 00:30:bd:60:d3:44 timed out
+15:45:34 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:34 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:35 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2
+15:45:35 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
+15:45:35 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
+15:45:46 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:46 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
+15:45:46 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2
+15:45:46 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
+15:45:46 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
+======== end dmesg ========
 
-Signed-off-by: Daniel Wagner <wagi@monom.org>
----
-
-v3: Add a comment about the new variable in the mac80211_hwsim_data struct.
-
-v2: Explain the patch a bit better in the commit message.
-
- drivers/net/wireless/mac80211_hwsim.c |   35 ++++++++++++++++++++++++++++++++-
- 1 files changed, 34 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 61a4ad7..574b8bb 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -291,6 +291,14 @@ struct mac80211_hwsim_data {
- 	bool ps_poll_pending;
- 	struct dentry *debugfs;
- 	struct dentry *debugfs_ps;
-+
-+	/*
-+	 * Only radios in the same group can communicate together (the
-+	 * channel has to match too). Each bit represents a group. A
-+	 * radio can be in more then one group.
-+	 */
-+	u64 group;
-+	struct dentry *debugfs_group;
- };
- 
- 
-@@ -412,7 +420,8 @@ static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- 
- 		if (!data2->started || !data2->radio_enabled ||
- 		    !hwsim_ps_rx_ok(data2, skb) ||
--		    data->channel->center_freq != data2->channel->center_freq)
-+		    data->channel->center_freq != data2->channel->center_freq ||
-+		    !(data->group & data2->group))
- 			continue;
- 
- 		nskb = skb_copy(skb, GFP_ATOMIC);
-@@ -720,6 +729,7 @@ static void mac80211_hwsim_free(void)
- 	spin_unlock_bh(&hwsim_radio_lock);
- 
- 	list_for_each_entry(data, &tmplist, list) {
-+		debugfs_remove(data->debugfs_group);
- 		debugfs_remove(data->debugfs_ps);
- 		debugfs_remove(data->debugfs);
- 		ieee80211_unregister_hw(data->hw);
-@@ -872,6 +882,24 @@ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_ps, hwsim_fops_ps_read, hwsim_fops_ps_write,
- 			"%llu\n");
- 
- 
-+static int hwsim_fops_group_read(void *dat, u64 *val)
-+{
-+	struct mac80211_hwsim_data *data = dat;
-+	*val = data->group;
-+	return 0;
-+}
-+
-+static int hwsim_fops_group_write(void *dat, u64 val)
-+{
-+	struct mac80211_hwsim_data *data = dat;
-+	data->group = val;
-+	return 0;
-+}
-+
-+DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
-+			hwsim_fops_group_read, hwsim_fops_group_write,
-+			"%llx\n");
-+
- static int __init init_mac80211_hwsim(void)
- {
- 	int i, err = 0;
-@@ -976,6 +1004,8 @@ static int __init init_mac80211_hwsim(void)
- 
- 			hw->wiphy->bands[band] = sband;
- 		}
-+		/* By default all radios are belonging to the first group */
-+		data->group = 1;
- 
- 		/* Work to be done prior to ieee80211_register_hw() */
- 		switch (regtest) {
-@@ -1100,6 +1130,9 @@ static int __init init_mac80211_hwsim(void)
- 		data->debugfs_ps = debugfs_create_file("ps", 0666,
- 						       data->debugfs, data,
- 						       &hwsim_fops_ps);
-+		data->debugfs_group = debugfs_create_file("group", 0666,
-+							data->debugfs, data,
-+							&hwsim_fops_group);
- 
- 		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
- 			    (unsigned long) hw);
 -- 
-1.6.2.4
-
+Alf
+@
