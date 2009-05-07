@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755020AbZEHRbo (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:40290 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbZEGIEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 13:31:44 -0400
-Subject: [PATCH v2] iwlwifi: make iwl_set_rate static
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1241772804.1567.29.camel@johannes.local>
-References: <1241772804.1567.29.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 19:31:42 +0200
-Message-Id: <1241803902.4495.28.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 7 May 2009 04:04:49 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 7 May 2009 01:04:30 -0700
+Message-ID: <43e72e890905070104u59eebcceu18718a733e388cc9@mail.gmail.com>
+Subject: New kernel recommendations for ath9k
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's not needed outside iwl-core.c
+For those not subscribed to the ath9k wiki on wireless.kernel.org [1]
+(which we recommend you do if you're a user) here's a quick note to
+let you know our latest kernel recommendations for using ath9k:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
- 2 files changed, 1 insertion(+), 4 deletions(-)
+  *  >= 2.6.27.22
+  *  >= 2.6.28.10
+  *  2.6.29
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 10:53:34.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 19:30:16.000000000 +0200
-@@ -363,8 +363,6 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_fl
- 
- u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv);
- 
--void iwl_set_rate(struct iwl_priv *priv);
--
- u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx);
- 
- static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 13:48:01.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 19:30:21.000000000 +0200
-@@ -1124,7 +1124,7 @@ void iwl_connection_init_rx_config(struc
- }
- EXPORT_SYMBOL(iwl_connection_init_rx_config);
- 
--void iwl_set_rate(struct iwl_priv *priv)
-+static void iwl_set_rate(struct iwl_priv *priv)
- {
- 	const struct ieee80211_supported_band *hw = NULL;
- 	struct ieee80211_rate *rate;
-@@ -1170,7 +1170,6 @@ void iwl_set_rate(struct iwl_priv *priv)
- 		priv->staging_rxon.ofdm_basic_rates =
- 		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
- }
--EXPORT_SYMBOL(iwl_set_rate);
- 
- void iwl_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- {
+If you want 802.11n support or AP support you'll want at least 2.6.29.
+If you happen to have one of our new 1x1 AR9285 devices (all AR9285
+devices are 1x1) then you'll need at least 2.6.29. If you want to
+start using ath9k on APs with AHB you will need at least 2.6.30 (still
+in RC series).
 
+As usual if you happen to be stuck on older kernels for one reason or
+another you can always use compat-wireless [2] and if that happens to
+be a little too bleeding edge we have now compat-wireless releases for
+stable kernel releases, starting as of the 2.6.30-rc series [3].
 
+  Luis
+
+[1] http://wireless.kernel.org/en/users/Drivers/ath9k
+[2] http://wireless.kernel.org/en/users/Download
+[3] http://wireless.kernel.org/en/users/Download/stable
