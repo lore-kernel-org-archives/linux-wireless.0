@@ -1,113 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:43967 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751463AbZEVTTx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 15:19:53 -0400
-Date: Fri, 22 May 2009 21:19:40 +0200
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-wireless@vger.kernel.org
-Cc: andrey@cozybit.com, libertas-dev@lists.infradead.org
-Subject: [PATCH] net/libertas: make SPI interface big endian aware
-Message-ID: <20090522191940.GA3570@www.tglx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Received: from wf-out-1314.google.com ([209.85.200.172]:32453 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759286AbZEGIKK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2009 04:10:10 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 7 May 2009 01:09:50 -0700
+Message-ID: <43e72e890905070109m9c75ea3jc4eda264ba9aaa1@mail.gmail.com>
+Subject: [ANN] Linux wireless backports page and release for 2.6.30-rc4
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The comment (which I remove) says that the translation is done SPI routines.
-IMHO this can't work because the SPI driver does not know whether the incomming
-bytes are part of the registers/bytes which need to be flipped or part of
-packet data which has to remain untouched.
-While adding le helpers I also removed spu_write_u32() which has no users.
+The stable kernel series Linux wireless backports was announced a
+couple of weeks ago [1]. These will keep on moving forward and to
+follow them you can subscribe to the respective new wiki page for this
+[2]. The latest release (just uploaded) is for 2.6.30-rc4:
 
-Tested-by: Andrey Yurovsky <andrey@cozybit.com>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- drivers/net/wireless/libertas/if_spi.c |   34 +++++++++++++++----------------
- 1 files changed, 16 insertions(+), 18 deletions(-)
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30/compat-wireless-2.6.30-rc4.tar.bz2
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 07311e7..8cf5d65 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -119,9 +119,6 @@ static struct chip_ident chip_id_to_device_name[] = {
-  * First we have to put a SPU register name on the bus. Then we can
-  * either read from or write to that register.
-  *
-- * For 16-bit transactions, byte order on the bus is big-endian.
-- * We don't have to worry about that here, though.
-- * The translation takes place in the SPI routines.
-  */
- 
- static void spu_transaction_init(struct if_spi_card *card)
-@@ -147,7 +144,7 @@ static void spu_transaction_finish(struct if_spi_card *card)
- static int spu_write(struct if_spi_card *card, u16 reg, const u8 *buf, int len)
- {
- 	int err = 0;
--	u16 reg_out = reg | IF_SPI_WRITE_OPERATION_MASK;
-+	u16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
- 
- 	/* You must give an even number of bytes to the SPU, even if it
- 	 * doesn't care about the last one.  */
-@@ -169,16 +166,10 @@ out:
- 
- static inline int spu_write_u16(struct if_spi_card *card, u16 reg, u16 val)
- {
--	return spu_write(card, reg, (u8 *)&val, sizeof(u16));
--}
-+	u16 buff;
- 
--static inline int spu_write_u32(struct if_spi_card *card, u16 reg, u32 val)
--{
--	/* The lower 16 bits are written first. */
--	u16 out[2];
--	out[0] = val & 0xffff;
--	out[1] = (val & 0xffff0000) >> 16;
--	return spu_write(card, reg, (u8 *)&out, sizeof(u32));
-+	buff = cpu_to_le16(val);
-+	return spu_write(card, reg, (u8 *)&buff, sizeof(u16));
- }
- 
- static inline int spu_reg_is_port_reg(u16 reg)
-@@ -198,7 +189,7 @@ static int spu_read(struct if_spi_card *card, u16 reg, u8 *buf, int len)
- 	unsigned int i, delay;
- 	int err = 0;
- 	u16 zero = 0;
--	u16 reg_out = reg | IF_SPI_READ_OPERATION_MASK;
-+	u16 reg_out = cpu_to_le16(reg | IF_SPI_READ_OPERATION_MASK);
- 
- 	/* You must take an even number of bytes from the SPU, even if you
- 	 * don't care about the last one.  */
-@@ -236,18 +227,25 @@ out:
- /* Read 16 bits from an SPI register */
- static inline int spu_read_u16(struct if_spi_card *card, u16 reg, u16 *val)
- {
--	return spu_read(card, reg, (u8 *)val, sizeof(u16));
-+	u16 buf;
-+	int ret;
-+
-+	ret = spu_read(card, reg, (u8 *)&buf, sizeof(buf));
-+	if (ret == 0)
-+		*val = le16_to_cpup(&buf);
-+	return ret;
- }
- 
- /* Read 32 bits from an SPI register.
-  * The low 16 bits are read first. */
- static int spu_read_u32(struct if_spi_card *card, u16 reg, u32 *val)
- {
--	u16 buf[2];
-+	u32 buf;
- 	int err;
--	err = spu_read(card, reg, (u8 *)buf, sizeof(u32));
-+
-+	err = spu_read(card, reg, (u8 *)&buf, sizeof(buf));
- 	if (!err)
--		*val = buf[0] | (buf[1] << 16);
-+		*val = le32_to_cpup(&buf);
- 	return err;
- }
- 
--- 
-1.6.2.4
+I've actually tested this on 2.6.27 with both ath5k and ath9k.
 
+  Luis
+
+[1] http://marc.info/?l=linux-wireless&m=123915293222504&w=2
+[2] http://wireless.kernel.org/en/users/Download/stable
