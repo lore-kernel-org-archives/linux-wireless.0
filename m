@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40075 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753032AbZEONpK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54864 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755020AbZEHRbo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 09:45:10 -0400
-Date: Fri, 15 May 2009 09:38:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Yousef Alhashemi <yousef.alhashemi@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Any clean-up work?
-Message-ID: <20090515133826.GC2773@tuxdriver.com>
-References: <cbd616c00905150614sa13ba93y88a1297b10a69d8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cbd616c00905150614sa13ba93y88a1297b10a69d8@mail.gmail.com>
+	Fri, 8 May 2009 13:31:44 -0400
+Subject: [PATCH v2] iwlwifi: make iwl_set_rate static
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241772804.1567.29.camel@johannes.local>
+References: <1241772804.1567.29.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 08 May 2009 19:31:42 +0200
+Message-Id: <1241803902.4495.28.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 15, 2009 at 06:14:23AM -0700, Yousef Alhashemi wrote:
+It's not needed outside iwl-core.c
 
-> Now I understand that networking (or the networking subsystem) is
-> fairly complicated, but I was wondering if the there is any clean up
-> work that I can help with (that will hopefully get me familiarized
-> with the kernel in general, and the networking stuff in particular).
-> I'm also wondering if anyone here would be willing to give me a little
-> bit of hand-holding with the more advanced stuff (if help is needed in
-> a particular area but that area is too difficult for a starter like me
-> to undertake).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-drivers/staging has an embarassingly large number of wireless drivers
-in it.  They are there for various reasons, mostly centering around
-either attrocious style/maintainability issues or flagrant duplication
-of functionality with mainline kernel infrastructure (i.e. should be
-using mac80211 instead of their internal stack).  If you have (or
-can get) access to any of the covered wireless hardware, anything
-you can do to correct style/maintainability issues, keep up-to-date
-with changing kernel APIs, and (especially) porting to the mac80211
-infrastructure would be most useful.
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 10:53:34.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 19:30:16.000000000 +0200
+@@ -363,8 +363,6 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_fl
+ 
+ u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv);
+ 
+-void iwl_set_rate(struct iwl_priv *priv);
+-
+ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx);
+ 
+ static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 13:48:01.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 19:30:21.000000000 +0200
+@@ -1124,7 +1124,7 @@ void iwl_connection_init_rx_config(struc
+ }
+ EXPORT_SYMBOL(iwl_connection_init_rx_config);
+ 
+-void iwl_set_rate(struct iwl_priv *priv)
++static void iwl_set_rate(struct iwl_priv *priv)
+ {
+ 	const struct ieee80211_supported_band *hw = NULL;
+ 	struct ieee80211_rate *rate;
+@@ -1170,7 +1170,6 @@ void iwl_set_rate(struct iwl_priv *priv)
+ 		priv->staging_rxon.ofdm_basic_rates =
+ 		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
+ }
+-EXPORT_SYMBOL(iwl_set_rate);
+ 
+ void iwl_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ {
 
-Hth!
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
