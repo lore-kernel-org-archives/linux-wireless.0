@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f191.google.com ([209.85.216.191]:39924 "EHLO
-	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756922AbZEMXQ0 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58376 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486AbZEHROn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 19:16:26 -0400
-Received: by pxi29 with SMTP id 29so395960pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 16:16:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242253626.10076.9.camel@johannes.local>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
-	<1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
-	<1242208388.14227.46.camel@johannes.local> <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
-	<b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
-	<1242253626.10076.9.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 13 May 2009 16:08:59 -0700
-Message-ID: <43e72e890905131608y4e6400c9x31e37459d7ec4b51@mail.gmail.com>
-Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending on
-	the stop callback
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <bcopeland@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 May 2009 13:14:43 -0400
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <da94abde0905080956g3c6f49f3ta38412d886cfb2ec@mail.gmail.com>
+References: <20090403182724.GA7364@tuxdriver.com>
+	 <1241774338.1567.36.camel@johannes.local>
+	 <da94abde0905080956g3c6f49f3ta38412d886cfb2ec@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vO9VkcPfz5wS7xP9WsNY"
+Date: Fri, 08 May 2009 19:14:34 +0200
+Message-Id: <1241802874.4495.25.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 3:27 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-05-13 at 14:00 -0400, Bob Copeland wrote:
->> On Wed, May 13, 2009 at 1:20 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->> > On Wed, May 13, 2009 at 2:53 AM, Johannes Berg
->> > <johannes@sipsolutions.net> wrote:
->> >> On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
->> >>> We inform the drivers so they can take appropriate actions durin=
-g
->> >>> suspend for WoW support.
->> >>
->> >>> -static void ar9170_op_stop(struct ieee80211_hw *hw)
->> >>> +static void ar9170_op_stop(struct ieee80211_hw *hw, bool suspen=
-d)
->>
->> Just curious, why can't the bus suspend method just turn the radio b=
-ack on?
->> You have to set up the wow parameters later anyway.
->>
->> I think it'd be cleaner if the stack knew about WoW somehow rather t=
-han
->> doing stuff behind its back in the driver. =C2=A0Then suspend/resume=
- could do
->> the right thing (e.g. ops->wow_enable() instead of stop) if the driv=
-er was
->> WoW-capable.
->
-> That's a good point. Somehow I thought this was intimately tied to
-> suspend. And I think for cfg80211 that makes sense, since cfg80211
-> doesn't do much for suspend. But for mac80211 you're right in that it
-> would make sense to
-> =C2=A0* keep the radio on
 
-This is implicit by not calling stop, right?
+--=-vO9VkcPfz5wS7xP9WsNY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> =C2=A0* not call stop
 
-This makes sense for ath9k so far -- I was just exiting out.
+> > Feel free to edit and add suggestions
+>=20
+> What about proper roaming support? I think it will be the thing we are
+> lacking after power save is finished. There was talk about having GSoC
+> project, what happened to it?
 
-> =C2=A0* maybe not remove all the sta info structs
+That project was not accepted - and we even got three.
 
-Which ones? In my tests I'm just not removing any.
+> I'm interested about roaming, but I don't how much time if any I can
+> find for implementing it. But I could make a summary of all
+> discussions we have had here during the last year and maybe try to
+> start some discussion at the summit. What others think?
 
-> =C2=A0* and whatever else may be necessary -- that might even depend =
-on the
-> =C2=A0 wow mode
+Sounds useful. Helmut will have input too I guess, and he'll be there.
 
-So lets start with a basic goal -- magic packet. If you think about it
-though if you disassociate you won't get this magic packet so I guess
-that's also why we have link-change trigger (or called disassoc
-trigger on some other hardware?). Anyway out of these link change and
-magic packet seem like a reasonable goal to get working first. For
-that besides the above I'm not sure what else is required.
+johannes
 
-I'm building this stuff now on a box with a card that is supposed to
-have WoW working so I'll know for sure if we are missing something
-soon.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-vO9VkcPfz5wS7xP9WsNY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKBGhzAAoJEODzc/N7+QmacyAP/1qnZoGECt6YYxvMWdkH4q3/
+AdyJGG1Nhj+AZ7JuTZ1DVPeTJfb/F9qMIZkuxLP0MBo4dZqj+v9Rnxb1fs+lh5MB
+CHtaFAB9ajKMZJZNJUSkFDkm9Xy1BUTh2QxBkG6KaTH8ZJdwygqK3JowxddR+2Gb
+vL/ZSeaXf55BuTt9ggjLliv1f95UAQ+ZuMXWNh3+AOE5f5veZjnURiYWnsDU2Pxj
+0582ctHVBbdhxQVsz6lJ3OaYZOpKHTaXkq83FCCfr8YIPZlYxmLPV3E3qdujNP++
+ydKeru5clQut2zdxpYQ564lb9Z+zUGTex4ZircByNuJf+sgAayrVoaG/pH1PH0a+
+NR+HTLUSQRJJeE70dCrA4AcuSgijla44QSSa5R93VhXlAjk7pCgz+crjBI6gE4P6
+6ZSof8hvFB0ZnBBpyWeYgnpCgdQreN/ldE2ICBYdkV7/NpJoLt26htAHp3t6Q726
+9m0jBy6/s59px5GsXIx7ubXGNkMbQEamrwA8jbLVYtu7I96Y0FiTFzEWaVwlFYZT
+11TwVQ+Wd0C6ZP8hWWR4lqNbh1hJmE7M1a3heV1nqVt35AYZYD4E5RpBpgmcwJ0I
+KnbFTWTofkURy2sOazZdqXfs1bMmLAZpzZhgUwnetMGj8zNbUd3xtNuHM/5Ly801
+GIYGXtYjCq53Mt0Xobq/
+=gUYc
+-----END PGP SIGNATURE-----
+
+--=-vO9VkcPfz5wS7xP9WsNY--
+
