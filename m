@@ -1,84 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:17399 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760005AbZEOIMY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755190AbZEHRaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 04:12:24 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Scan while TX/RX'ing a lot of data
-Date: Fri, 15 May 2009 10:11:50 +0200
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com> <1242327298.4227.25.camel@localhost.localdomain>
-In-Reply-To: <1242327298.4227.25.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200905151011.50915.hs4233@mail.mn-solutions.de>
+	Fri, 8 May 2009 13:30:10 -0400
+Subject: Re: [PATCH] iwlwifi: make iwl_set_rate static
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241803921.6198.459.camel@rc-desk>
+References: <1241772804.1567.29.camel@johannes.local>
+	 <1241803921.6198.459.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nQVY2+YCQS7sTJrVd+i+"
+Date: Fri, 08 May 2009 19:30:03 +0200
+Message-Id: <1241803803.4495.26.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 14 May 2009 20:54:58 Dan Williams wrote:
-> Libertas splits scans up into 3 parts with a short return to
-> the operating channel between each part.  There's nothing that
-> requires cfg80211 for that to work...
 
-Hey, it's up-to 4 channels (MRVDRV_MAX_CHANNELS_PER_SCAN).
+--=-nQVY2+YCQS7sTJrVd+i+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yeah, I had to implement this "stuttering scan" because the 
-firmware that I had access to cannot send 
-power-save-null-packets to the AP. Without that, I could not 
-notify to the current AP that I'm away, and if the AP has data 
-for me, which I don't ack for more than 1000ms, then the AP 
-might have disassociated me in the mean-time.
+On Fri, 2009-05-08 at 10:32 -0700, reinette chatre wrote:
 
+> To make this complete, could you please also remove the EXPORT_SYMBOL of
+> this function and also its declaration in iwl-core.h?
 
-So basically I changed the scanning into a state-machine. I get a 
-list of channels to scan (e.g. "all channels", if the request 
-comes from WEXT). The a scan-worker calls the logic of the 
-state-machine. The state-machine does it's work and either 
-re-schedules the workqueue. Or, if every channel has been 
-visitied, it emits the SIOCGIWSCAN event.
+Oh, yes, I forgot the export.
 
-It a bit more complicated, because one can force a full scan 
-(e.g. when initially associating).
+johannes
 
+--=-nQVY2+YCQS7sTJrVd+i+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> Something I've tossed around for a while is counting traffic
-> on the device and if its over a certain bitrate for a period
-> of time, postpone the scan for a while.  But after a certain
-> amount of time, there's going to be a scan no matter what.
+-----BEGIN PGP SIGNATURE-----
 
-Traffic could for example modify the time for delays between 
-re-schedules of the scan-state-machine.
+iQIcBAABAgAGBQJKBGwVAAoJEODzc/N7+Qma06wP/2mKeLIwGfqMbAsRDQFBZY8a
+twZaLR3Rh4wWry7UOk17/ebTyTMybwY7OZCHvF3scRoPiIBX187UuHFsFQXh3oQt
+EqDA381xDv5JHYjq3DEu+9kKulgi2Mp6Lg3Vnf3YmBSeZYdXTdsetFeiOZDw/uOx
+Ux/T7B5Y9mY53povhJ1dfpUCM0IfrXu0aWYYMAGj5YkWHkai4YGr9V+WBU8qohJz
+41NjvRZ3rYj1+M+VXVQqhxVdgg0X1B+qaGXl5X4NKc8ANxqPMCo0/YhhmMo1hMI3
+uqE7e/d1FilzI4FDuknZ2ow+bctYkSiTPiaUTqxFNBxU2w5i2uD2qspJyf5Rdgyf
+x5fDJsz6DIH5j3ej8KuZUxbGcVS0xoldgL3yRdbNS0wCTb4qhSDGM1ORQElDVf58
+Zz6PnDRKZZ9PQnLWd3cRKkQiETyYJ+qwh6cOsAWJCD54/atvE7LJAb04qsHDTj60
+KZpHJaPBz1xKNKVjJp6wbMaAN49OQAaNLBP+3RBt6PppdNSbnVHBtce+GFhuNwBz
+DXi5u+BOA0BuWowEpvxYSI3iBo0G0XP1q4AowJHfrbDX/mXqWMvdmezxe6S/AfIY
+IsqMJ0vC4+gVGMinCuHX9cjDy9wg1KFjDRHvqTP0MwNvqYe+wK4DFUiFAAJP53e/
+9/xLqQy4RaWEpvIwUGza
+=rXu5
+-----END PGP SIGNATURE-----
 
+--=-nQVY2+YCQS7sTJrVd+i+--
 
-> Secondarily, scanning is a tradeoff between better roaming
-> latency and continuous high throughput.
-
-Kind of a QoS thingy?
-
-
-> If you don't scan, 
-> you have no idea what's around, and when you move and the
-> current AP becomes marginal, you *have* to take the hit no
-> matter what, so you can scan and find a new AP to associate
-> with.
-
-TeX does it's layouting by minimizing (calculated) uglyness. 
-Maybe a background-scan-decision can be done on (calculated) 
-urgentness?  E.g. if background scan is enabled at all, the 
-urgentness of background scan increases in time. "Huge" amount 
-of traffic decreases the urgentness. And only if urgentness 
-get's to some level we do the background scan for the next n 
-channels. Throw in the possibility of of a full-scan and a sane 
-user-space and this scheme might actually work.
-
-
-
-Also, I think that the background-scan stuff belongs more or less 
-in the "let roaming not suck" department. I wonder where the 
-GSOC people are now ...
