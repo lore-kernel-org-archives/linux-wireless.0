@@ -1,88 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53264 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813AbZEKOGi (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:61500 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752746AbZEHQap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 10:06:38 -0400
-Subject: [PATCH v2] wext: fix get_wireless_stats locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090511125442.GB2721@tuxdriver.com>
-References: <1241953217.12068.0.camel@johannes.local>
-	 <20090511125442.GB2721@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 11 May 2009 16:06:36 +0200
-Message-Id: <1242050796.29777.9.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 8 May 2009 12:30:45 -0400
+Received: by ewy24 with SMTP id 24so1937714ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 09:30:45 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: rt2x00: Fix chipset detection for rt73usb
+Date: Fri, 8 May 2009 18:30:43 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200905081830.43618.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, get_wireless_stats is racy by _design_. This is
-because it returns a buffer, which needs to be statically
-allocated since it cannot be freed if it was allocated
-dynamically. Also, SIOCGIWSTATS and /proc/net/wireless use
-no common lock, and /proc/net/wireless accesses are not
-synchronised against each other. This is a design flaw in
-get_wireless_stats since the beginning.
+The lower 4 bytes of the chipset revision must contain
+a non-zero value. This bug was introduced by
 
-This patch fixes it by wrapping /proc/net/wireless accesses
-with the RTNL so they are protected against each other and
-SIOCGIWSTATS. The more correct method of fixing this would
-be to pass in the buffer instead of returning it and have
-the caller take care of synchronisation of the buffer, but
-even then most drivers probably assume that their callback
-is protected by the RTNL like all other wext callbacks.
+	commit: fbebe7c588a341d7a39ce0b0ea5bd5c58f906b07
+	rt2x00: Simplify rt2x00_check_rev
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+	rt2x00_check_rev() was too specific for rt2500usb and rt73usb,
+	by adding the mask argument (instead of hardcoding it into
+	the function itself) we can use the function in rt2800usb as
+	well.
+
+	v2: Fix revision mask for rt2800usb
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-v2: don't hold lock across open/release but rather start/stop
+ drivers/net/wireless/rt2x00/rt73usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- net/wireless/wext.c |   22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
-
---- wireless-testing.orig/net/wireless/wext.c	2009-05-11 13:34:00.000000000 +0200
-+++ wireless-testing/net/wireless/wext.c	2009-05-11 16:02:31.000000000 +0200
-@@ -649,14 +649,28 @@ static int wireless_seq_show(struct seq_
- 	return 0;
- }
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 4f94a61..dc2ad94 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1847,7 +1847,7 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
  
-+static void *wireless_dev_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(dev_base_lock)
-+{
-+	rtnl_lock();
-+	return dev_seq_start(seq, pos);
-+}
-+
-+static void wireless_dev_seq_stop(struct seq_file *seq, void *v)
-+	__releases(dev_base_lock)
-+{
-+	dev_seq_stop(seq, v);
-+	rtnl_unlock();
-+}
-+
- static const struct seq_operations wireless_seq_ops = {
--	.start = dev_seq_start,
-+	.start = wireless_dev_seq_start,
- 	.next  = dev_seq_next,
--	.stop  = dev_seq_stop,
-+	.stop  = wireless_dev_seq_stop,
- 	.show  = wireless_seq_show,
- };
- 
--static int wireless_seq_open(struct inode *inode, struct file *file)
-+static int seq_open_wireless(struct inode *inode, struct file *file)
- {
- 	return seq_open_net(inode, file, &wireless_seq_ops,
- 			    sizeof(struct seq_net_private));
-@@ -664,7 +678,7 @@ static int wireless_seq_open(struct inod
- 
- static const struct file_operations wireless_seq_fops = {
- 	.owner	 = THIS_MODULE,
--	.open    = wireless_seq_open,
-+	.open    = seq_open_wireless,
- 	.read    = seq_read,
- 	.llseek  = seq_lseek,
- 	.release = seq_release_net,
-
+ 	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0x25730) ||
+-	    !rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
++	    rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
+ 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+ 		return -ENODEV;
+ 	}
+-- 
+1.6.2.3
 
