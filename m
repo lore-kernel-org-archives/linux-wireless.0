@@ -1,88 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41510 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbZEIBsn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 21:48:43 -0400
-Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
- reorder buffer
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1241709323.4903.25.camel@localhost.localdomain>
-References: <20090505173512.349795688@atheros.com>
-	 <20090505173550.273830766@atheros.com>
-	 <1241709323.4903.25.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 18:48:23 -0700
-Message-Id: <1241833703.4903.83.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:20126 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757060AbZEHUiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2009 16:38:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/11] iwlagn: show current rate scale data in debugfs
+Date: Fri,  8 May 2009 13:44:43 -0700
+Message-Id: <1241815486-13510-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1241815486-13510-8-git-send-email-reinette.chatre@intel.com>
+References: <1241815486-13510-1-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-2-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-3-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-4-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-5-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-6-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-7-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> > This patch allows skbs to be released from the RX reorder buffer in
-> > case they have been there for an unexpectedly long time without us
-> > having received the missing frames before them. Previously, these
-> > frames were only released when the reorder window moved and that could
-> > take very long time unless new frames were received constantly (e.g.,
-> > TCP connections could be killed more or less indefinitely).
-> > 
-> > This situation should not happen very frequently, but it looks like
-> > there are some scenarious that trigger it for some reason. As such,
-> > this should be considered mostly a workaround to speed up recovery
-> > from unexpected siutation that could result in connections hanging for
-> > long periods of time.
-> 
-> I can confirm that this used to be a regular situation between my X200
-> and a D-Link access point. I was originally thinking this was a driver
-> issue, but your patch makes it possible to use wireless-testing tree
-> again. I am not kidding here, before your patch it was impossible to use
-> it at all. For me it was a real frequent situation. It is still present,
-> but now it handles it more gracefully:
-> 
-> Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-> iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-> activated addBA response timer on tid 0
-> switched off addBA timer for tid 0 
-> Aggregation is on for tid 0 
-> Rx A-MPDU request on tid 0 result 0
-> unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
-> phy0: release an RX reorder frame due to timeout on earlier frames
-> phy0: release an RX reorder frame due to timeout on earlier frames
+Add "rate_scale_data" debugfs file to show current bit rate (HT and Legacy),
+plus additional information (rssi, noise, tsf, beacon time stamp).
 
-so I finally got the debug output for you. Took only over a day :)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   42 +++++++++++++++++++++++++++++
+ 1 files changed, 42 insertions(+), 0 deletions(-)
 
-phy0: AddBA: ssn=195, dialog_token=1 tid=0 timeout=0ba_policy=1
-addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-addba: 00 1c f0 62 88 5b 50 d7 03 00 01 02 10 00 00 30 
-addba: 0c 
-Rx A-MPDU request on tid 0 result 0
-Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-activated addBA response timer on tid 0
-switched off addBA timer for tid 0 
-Aggregation is on for tid 0 
-phy0: AddBA: ssn=371, dialog_token=2 tid=0 timeout=0ba_policy=1
-addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-addba: 00 1c f0 62 88 5b 90 f0 03 00 02 02 10 00 00 30 
-addba: 17 
-phy0: RX reorder buf: head_seq=371 ssn=195 buf_size=64 stored_mpdu_num=0 timeout=0 index=48; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
-phy0: release an RX reorder frame due to timeout on earlier frames
-phy0: RX reorder buf: head_seq=2001 ssn=195 buf_size=64 stored_mpdu_num=3 timeout=0 index=14; - - - - - - - - - - - - - - - - 236 229 0 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-phy0: release an RX reorder frame due to timeout on earlier frames
-phy0: RX reorder buf: head_seq=2004 ssn=195 buf_size=64 stored_mpdu_num=2 timeout=0 index=17; - - - - - - - - - - - - - - - - - 229 0 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-phy0: release an RX reorder frame due to timeout on earlier frames
-phy0: RX reorder buf: head_seq=2197 ssn=195 buf_size=64 stored_mpdu_num=3 timeout=0 index=18; - - - - - - - - - - - - - - - - - - - 124 124 0 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-phy0: release an RX reorder frame due to timeout on earlier frames
-phy0: RX reorder buf: head_seq=2199 ssn=195 buf_size=64 stored_mpdu_num=2 timeout=0 index=20; - - - - - - - - - - - - - - - - - - - - 124 0 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 3fa06af..4c88e87 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -161,6 +161,7 @@ struct iwl_lq_sta {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct dentry *rs_sta_dbgfs_scale_table_file;
+ 	struct dentry *rs_sta_dbgfs_stats_table_file;
++	struct dentry *rs_sta_dbgfs_rate_scale_data_file;
+ 	struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
+ 	u32 dbg_fixed_rate;
+ #endif
+@@ -2984,6 +2985,43 @@ static const struct file_operations rs_sta_dbgfs_stats_table_ops = {
+ 	.open = open_file_generic,
+ };
+ 
++static ssize_t rs_sta_dbgfs_rate_scale_data_read(struct file *file,
++			char __user *user_buf, size_t count, loff_t *ppos)
++{
++	char buff[120];
++	int desc = 0;
++	ssize_t ret;
++
++	struct iwl_lq_sta *lq_sta = file->private_data;
++	struct iwl_priv *priv;
++	struct iwl_scale_tbl_info *tbl = &lq_sta->lq_info[lq_sta->active_tbl];
++
++	priv = lq_sta->drv;
++
++	if (is_Ht(tbl->lq_type))
++		desc += sprintf(buff+desc,
++				"Bit Rate= %d Mb/s\n",
++				tbl->expected_tpt[lq_sta->last_txrate_idx]);
++	else
++		desc += sprintf(buff+desc,
++				"Bit Rate= %d Mb/s\n",
++				iwl_rates[lq_sta->last_txrate_idx].ieee >> 1);
++	desc += sprintf(buff+desc,
++			"Signal Level= %d dBm\tNoise Level= %d dBm\n",
++			priv->last_rx_rssi, priv->last_rx_noise);
++	desc += sprintf(buff+desc,
++			"Tsf= 0x%llx\tBeacon time= 0x%08X\n",
++			priv->last_tsf, priv->last_beacon_time);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
++	return ret;
++}
++
++static const struct file_operations rs_sta_dbgfs_rate_scale_data_ops = {
++	.read = rs_sta_dbgfs_rate_scale_data_read,
++	.open = open_file_generic,
++};
++
+ static void rs_add_debugfs(void *priv, void *priv_sta,
+ 					struct dentry *dir)
+ {
+@@ -2994,6 +3032,9 @@ static void rs_add_debugfs(void *priv, void *priv_sta,
+ 	lq_sta->rs_sta_dbgfs_stats_table_file =
+ 		debugfs_create_file("rate_stats_table", 0600, dir,
+ 			lq_sta, &rs_sta_dbgfs_stats_table_ops);
++	lq_sta->rs_sta_dbgfs_rate_scale_data_file =
++		debugfs_create_file("rate_scale_data", 0600, dir,
++			lq_sta, &rs_sta_dbgfs_rate_scale_data_ops);
+ 	lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file =
+ 		debugfs_create_u8("tx_agg_tid_enable", 0600, dir,
+ 		&lq_sta->tx_agg_tid_en);
+@@ -3005,6 +3046,7 @@ static void rs_remove_debugfs(void *priv, void *priv_sta)
+ 	struct iwl_lq_sta *lq_sta = priv_sta;
+ 	debugfs_remove(lq_sta->rs_sta_dbgfs_scale_table_file);
+ 	debugfs_remove(lq_sta->rs_sta_dbgfs_stats_table_file);
++	debugfs_remove(lq_sta->rs_sta_dbgfs_rate_scale_data_file);
+ 	debugfs_remove(lq_sta->rs_sta_dbgfs_tx_agg_tid_en_file);
+ }
+ #endif
+-- 
+1.5.6.3
 
