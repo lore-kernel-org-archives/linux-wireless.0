@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([204.127.217.105]:57223 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbZEOWRJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40374 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754813AbZEHUh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 18:17:09 -0400
-Message-ID: <4A0DE9CC.5050109@lwfinger.net>
-Date: Fri, 15 May 2009 17:16:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
-References: <49F8C03D.6040909@lwfinger.net> <1241040451.5067.0.camel@johannes.local> <49F8E145.1050708@lwfinger.net> <200905152349.47940.rjw@sisk.pl>
-In-Reply-To: <200905152349.47940.rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 8 May 2009 16:37:59 -0400
+Subject: Re: [PATCH] mac80211: fix scan channel race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241814505.3412.0.camel@mj>
+References: <1241698981.27208.8.camel@johannes.local>
+	 <1241814505.3412.0.camel@mj>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NX2z8USZ98rzVejCFEz9"
+Date: Fri, 08 May 2009 22:37:55 +0200
+Message-Id: <1241815075.23610.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
->>
->> kernel: phy0: failed to reallocate TX buffer 0, 404, need 0, 0
->> kernel: protocol 0008 is buggy, dev eth1
->>
->> kernel: phy0: failed to reallocate TX buffer 0, 1728, need 0, 18
->>
->> Device eth1 is the b43 wireless device.
-> 
-> Can you please tell me what the status of this bug is?
 
-I have not had the opportunity to trace this bug.
+--=-NX2z8USZ98rzVejCFEz9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2009-05-08 at 16:28 -0400, Pavel Roskin wrote:
+> On Thu, 2009-05-07 at 14:23 +0200, Johannes Berg wrote:
+>=20
+> > Pavel, I would appreciate if you could give it a quick test run, I don'=
+t
+> > seem to have a dual-band card with me right now.
+>=20
+> It's working fine with ath5k.  Sorry for delay.
+
+No worries, thanks for testing!
+
+johannes
+
+--=-NX2z8USZ98rzVejCFEz9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKBJgcAAoJEODzc/N7+QmaCbIP/jTWpi1ZSDkc6VrMuIWicUII
++O7JVEBWm9UWKSPhq9PcNkNxVS3qoARmkEQmTucxcXBM/C9q5eJZ1OrZ64Hwsvo1
+LA/IdfmDm84xgfDZAZlEmKw+cj3cEhEO8D//C0W+jAIjozxZWiYGADp1JPMri28o
+I1f74Hvz1/bCsCZL7oJfaJ1MBfkYm39+2Z1jWUHkE52sGUna5zG/+EN1R27KQsS8
+GGm0MSmzXawyhoOcxCAdFtSxPwPGVOh2Vr5Q76OXQlxLHC27PTGH1IWl7n3jOtH/
+qDY93hpXWKDSZNlS1CgV9rxcX9vTyDMKhVWKQnnsK+sDjE3LvOPx7zAOSaEBzp86
+PGnFr569Wyk7iX1XPfD/dIsW7QDxUPIVC0h4jh6sQ64C9FLZ1lnjwHxs4PYZD8B0
+UphjlM2pUN9TrJ+Pg6y9Qx8Ev5UzweGEHrc85YZXOLx0N2t0g7IwOrPC/YWYQbZN
+CNmtvxBbHULFMdb1fyr4KwVLB3MHMSI8Onhhb+kWgCbmeqZCYPWYpgZ/b7wvAmsX
+kPy1+6kyGxve94o5Jt5P2wKwqHTvWtqsZJ7IIQflRN4te2He958tGpebPC4/Utrf
+VEiOvdsKUDiQVgvfdz+x9Yq1MgHKs+MEs/6wzAnKjORZ6JAMPtkIRtD5SQW2JfWI
++LdTZHpTqTdbKJe/grnp
+=bN72
+-----END PGP SIGNATURE-----
+
+--=-NX2z8USZ98rzVejCFEz9--
 
