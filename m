@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37050 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbZEKT1D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 15:27:03 -0400
-Subject: Re: [PATCH 0/4] nl80211/mac80211: Fix station mode key setup issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090511185754.653711567@atheros.com>
-References: <20090511185754.653711567@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SdSTCkc+IXYUa5NowSN2"
-Date: Mon, 11 May 2009 21:26:58 +0200
-Message-Id: <1242070018.3873.47.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:43899 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757469AbZEHRPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2009 13:15:00 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 10:15:01 -0700
+Date: Fri, 8 May 2009 10:15:14 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jason Daly <jason2@primarykey.ca>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [ath9k-devel] New kernel recommendations for ath9k
+Message-ID: <20090508171514.GA8123@tesla>
+References: <43e72e890905070104u59eebcceu18718a733e388cc9@mail.gmail.com> <4A02B1CA.3060708@hiramoto.org> <43e72e890905071020v26857c52p3abea96be04ef1d9@mail.gmail.com> <6818156.7441241761835737.JavaMail.james@prod3.pk.lan> <1241773324.1567.33.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1241773324.1567.33.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, May 08, 2009 at 02:02:04AM -0700, Johannes Berg wrote:
+> On Sat, 2009-05-09 at 01:50 -0400, Jason Daly wrote:
+> > Thanks for the kernel info.
+> >
+> > How do you configure hostapd to work in N mode with ath9k?  Currently
+> > the hw_mode parameter found in hostapd.conf does not accept anything
+> > greater than g.
+> 
+> N isn't "greater than" G. N is more features than G. Just set the N
+> options in the config file. You may need a git hostapd, I don't know for
+> sure.
+> 
+> Also, please set your clock and timezone correctly _before_ you say
+> "thank you"!. You have posted on
+>         Sat, 09 May 2009 01:50:12 -0400 (07:50 CEST)
+> 
+> which is clearly impossible.
+> 
+Also check out:
 
---=-SdSTCkc+IXYUa5NowSN2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+http://wireless.kernel.org/en/users/Documentation/hostapd
 
-On Mon, 2009-05-11 at 21:57 +0300, Jouni Malinen wrote:
-> When using nl80211, we cannot currently set drop_unencrypted flag that
-> was used with WEXT to avoid need for IEEE 802.1X port control in station
-> mode. Because of this, we cannot currently set the keys in a secure way.
-> In addition, we do not support setting the expected RSC for keys either
-> with WEXT or nl80211 which is needed to avoid leaving a window for
-> replaying broadcast frames.
->=20
-> This set of patches addresses these issues and allows nl80211 to
-> securely set up keys in station mode. This is on top of the pending
-> MFP patches, RX-drop-unencrypted-based-on-key-setup, and WEXT key
-> handling to cfg80211 patches (from Johannes).
-
-Looks good to me, thanks. One thing I'm not sure about though, is there
-no need to push the RSC to hardware for some hw crypto designs? But even
-if needed that can always be a separate patch.
-
-johannes
-
---=-SdSTCkc+IXYUa5NowSN2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCHv8AAoJEODzc/N7+Qmas8AQANOg0TElIhj3eAHcvLq0hyIc
-aIIO5oq4o8nMp26l/DXyGFspxiLhR9KhM5oaC6h6ebUEhl/AtSA+64Tz7CcVppLz
-eeiDjHIawlNWNVImjyemcbmVuFlhXazdg/MP3yjuoloBV1RfRO2PUnYeCmo10OaN
-f9GgA5cMODAMEc7EVTqgtK9SEH3PDh9xxCXttkF2YmuvQQFvfLjrqOYI4DX8QYjp
-5xf3tsMqihLBtHflXlXVUU5pL+W6cHawSEzg8p3P8cRxl8cEDQmuuWaiysolejFI
-IboFraW7Sk31BN1HTAzOjamVNP1g+LR4NuZcyRHNduNnTHAHSmP6yILGsQr5CCzN
-s36Fk29CJ8bU2WBfTSk9SdtwBgw/il1R3cqirLEBD1RpRlgqziFJVJqC/PcJsqHA
-e43IN2IEOXcAiL7q5VsDg8YtEze6TEg1Bu6ot9qIoq0h0yMFijrhTrux7wFUk9uQ
-WjsEsAyLk071sB/IlefSy0I4NlXKHj8WqctqVfHnJZfL9cSYTXew8bcxvamuMXSa
-w37zmeuhDV+2yUBNw6DOmndgxDR2wvywF6/16jpwMBwo/MKb4x8bypzMk9Kbx2TT
-h17mqIvwL3Tbj+T5uexX9D9ioPtPZEZFqoyTkzOdepHYzkwpdpIYBq+DTWj499wp
-0A814ZOxJGRqEWdWpOYn
-=xb+t
------END PGP SIGNATURE-----
-
---=-SdSTCkc+IXYUa5NowSN2--
-
+  Luis
