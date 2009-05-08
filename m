@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.infomaniak.ch ([84.16.68.89]:60397 "EHLO
-	smtp1.infomaniak.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755126AbZERLMZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 07:12:25 -0400
-Message-ID: <4A1142A5.2090800@shockfish.com>
-Date: Mon, 18 May 2009 13:12:37 +0200
-From: Alexandre Becholey <alexandre@shockfish.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Ivo van Doorn <ivdoorn@gmail.com>,
-	Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: rt73usb Access point status
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com> <20090512215817.bd1c6895.cjsthompson@gmail.com> <wf4ovlo25e.fsf@calligramme.charmers> <200905161132.21437.IvDoorn@gmail.com>
-In-Reply-To: <200905161132.21437.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:23129 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763113AbZEHXTJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2009 19:19:09 -0400
+Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
+From: reinette chatre <reinette.chatre@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Cahill, Ben M" <ben.m.cahill@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241549807.29173.1.camel@maxim-laptop>
+References: <1241213459.7082.54.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
+	 <1241463816.4816.1.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
+	 <1241535034.4816.20.camel@maxim-laptop>
+	 <1241540190.4816.25.camel@maxim-laptop>
+	 <02B3067C068D0549A8CCFCB17D4D318B3569A467@orsmsx502.amr.corp.intel.com>
+	 <1241549807.29173.1.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 08 May 2009 16:25:34 -0700
+Message-Id: <1241825134.6198.630.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn wrote:
-> On Saturday 16 May 2009, Jon Fairbairn wrote:
->   
->> "Christoph .J Thompson" <cjsthompson@gmail.com> writes:
->>
->>     
->>> On Tue, 12 May 2009 09:16:12 +0100
->>> Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk> wrote:
->>>       
->>>> Is there any prospec of persuading Ralink either to release
->>>> a mended version of the firmware or to free the old version?
->>>>         
->>> I think Ivo van Doorn said he didn't want to bother RaLink with that. I was
->>> thinking about writing to them about it but that's difficult because I don't
->>> really understand the technical specifics of the issue.
->>>       
->> Me neither; in particular, does it work as an AP in Windows?
->> If so, how does it get round the bug in the driver?
->>     
->
-> Simply by indicating that every single frame passed to the driver has
-> been send out succesfully and thus completely ignoring the real status.
->
-> I am awaiting a patch from Alexandre which will add that same behavior
-> to rt2x00.
->
-> Ivo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
-Ok, I'll sent it soon.
+Maxim,
 
-I was trying to figure out the problem with the ARP packets when the 
-wireless interface is bridged with an ethernet. It seems to be a known 
-issue:
-https://lists.linux-foundation.org/pipermail/bridge/2009-May/006382.html
-http://www.linuxfoundation.org/en/Net:Bridge#It_doesn.27t_work_with_my_Wireless_card.21 
-(kinda old... last modification from 2007)
+On Tue, 2009-05-05 at 11:56 -0700, Maxim Levitsky wrote:
+> On Tue, 2009-05-05 at 11:45 -0700, Cahill, Ben M wrote:
+> > Excellent information.  Thank you.
+> > 
+> > We just issued new 3945 uCode within the past week or two ... Is that also showing the problem (noise_diff = 0)?
+> > 
+> Yes, I have just installed it to be sure.
+> Exactly same looking output.
+> 
 
-Alexandre
+This will take some coordination to resolve. Could you please open a new
+bug at http://www.intellinuxwireless.org/bugzilla/ ? 
+
+Thank you
+
+Reinette
+
