@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59704 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbZERUPN (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64675 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbZEHQ4i convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 16:15:13 -0400
-Date: Mon, 18 May 2009 16:03:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH 2/2 V2] b43legacy: Fix locking problem
-Message-ID: <20090518200354.GK2814@tuxdriver.com>
-References: <4A0DD306.30705@lwfinger.net>
+	Fri, 8 May 2009 12:56:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A0DD306.30705@lwfinger.net>
+In-Reply-To: <1241774338.1567.36.camel@johannes.local>
+References: <20090403182724.GA7364@tuxdriver.com>
+	 <1241774338.1567.36.camel@johannes.local>
+Date: Fri, 8 May 2009 19:56:38 +0300
+Message-ID: <da94abde0905080956g3c6f49f3ta38412d886cfb2ec@mail.gmail.com>
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+From: Kalle Valo <kalle.valo@iki.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 15, 2009 at 03:39:34PM -0500, Larry Finger wrote:
-> Commit abb1d2bca0fc429c136747a64e675dd4d8906f36 introduced a locking
-> problem in b43legacy that caused the system to freeze upon booting.
-> 
-> Signed-off-by: Larry Finger@lwfinger.net
-> ---
-> 
-> John,
-> 
-> This is 2.6.31 material. I hope that you do not have trouble with
-> this patch. While on the road, my normal method is not available.
-> 
-> This is resent as V2 to eliminate some patch offsets that resulted
-> from the changes in V2 of patch 1.
-> 
-> Larry
+On Fri, May 8, 2009 at 12:18 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> So, here I open the floor for discussion of agenda items for our
+>> wireless meeting/hackfest. =A0What do we think is important to discu=
+ss
+>> face-to-face this year? =A0What isn't getting done? =A0What is getti=
+ng
+>> done wrong? =A0What do we need that we didn't realize last year?
+>
+> I've tried to capture the discussion from here on the wiki:
+>
+> http://wireless.kernel.org/en/developers/Summits/Berlin-2009
 
-This conflicted w/ a patch from Johannes, and I couldn't easily
-figure-out how to resolve them.  Since his claimed to fix something
-else along with this problem, I just applied his.
+Good idea.
 
-Also, please don't refer to commit IDs directly, especially ones
-that aren't already in linux-2.6.  Instead, please refer to the
-patch subject.  If the commit is already in linux-2.6, then a short
-reference to the commit ID is acceptable.
+> Feel free to edit and add suggestions
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+What about proper roaming support? I think it will be the thing we are
+lacking after power save is finished. There was talk about having GSoC
+project, what happened to it?
+
+I'm interested about roaming, but I don't how much time if any I can
+find for implementing it. But I could make a summary of all
+discussions we have had here during the last year and maybe try to
+start some discussion at the summit. What others think?
+
+> or put yourself into "confirmed
+> attendees" (do we want that? it seemed we should say who will be ther=
+e)
+
+It's nice to know in advance who will be there. So yes, at least I
+want such a list :)
+
+Kalle
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
