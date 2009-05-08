@@ -1,503 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:55465 "EHLO coco.kroah.org"
+Received: from mga09.intel.com ([134.134.136.24]:47912 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761830AbZD3W3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 18:29:43 -0400
-Date: Thu, 30 Apr 2009 15:24:01 -0700
-From: Greg Kroah-Hartman <gregkh@suse.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Subject: [PATCH] Wireless: remove driver_data direct access of struct device
-Message-ID: <20090430222401.GA18675@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1756102AbZEHUiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2009 16:38:21 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/11] iwlwifi: fix PS disable status race
+Date: Fri,  8 May 2009 13:44:37 -0700
+Message-Id: <1241815486-13510-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1241815486-13510-2-git-send-email-reinette.chatre@intel.com>
+References: <1241815486-13510-1-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@suse.de>
+From: Johannes Berg <johannes@sipsolutions.net>
 
-In the near future, the driver core is going to not allow direct access
-to the driver_data pointer in struct device.  Instead, the functions
-dev_get_drvdata() and dev_set_drvdata() should be used.  These functions
-have been around since the beginning, so are backwards compatible with
-all older kernel versions.
+iwlwifi internally needs to keep track of whether PS
+is enabled in the firmware or not. To do this, it keeps
+a bit in the status flags, called STATUS_POWER_PMI.
 
+The code to set this bit looks as follows:
 
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+static int iwl_set_power(struct iwl_priv *priv, void *cmd)
+{
+	return iwl_send_cmd_pdu_async(priv, POWER_TABLE_CMD,
+				      sizeof(struct iwl_powertable_cmd),
+				      cmd, NULL);
+}
+
+int iwl_power_update_mode(...)
+{
+	[...]
+	if (final_mode != IWL_POWER_MODE_CAM)
+		set_bit(STATUS_POWER_PMI, &priv->status);
+
+	iwl_update_power_cmd(priv, &cmd, final_mode);
+	cmd.keep_alive_beacons = 0;
+
+	if (final_mode == IWL_POWER_INDEX_5)
+		cmd.flags |= IWL_POWER_FAST_PD;
+
+	ret = iwl_set_power(priv, &cmd);
+
+	if (final_mode == IWL_POWER_MODE_CAM)
+		clear_bit(STATUS_POWER_PMI, &priv->status);
+	else
+		set_bit(STATUS_POWER_PMI, &priv->status);
+
+	if (priv->cfg->ops->lib->update_chain_flags && update_chains)
+		priv->cfg->ops->lib->update_chain_flags(priv);
+	[...]
+}
+
+Now, this bit really needs to track what the _firmware_
+thinks, not what the driver thinks. Therefore, there is
+a race condition here -- the driver sets the bit before
+it knows that the async command sent to the card in the
+iwl_set_power function has been processed. As a result,
+the call to update_chain_flags() may think that the card
+has been woken up (PMI bit cleared) while in reality it
+hasn't processed the async POWER_TABLE_CMD yet.
+
+This leads to bugs -- any commands the update_chain_flags
+function sends can get stuck and subsequent commands also
+fail.
+
+The fix is almost trivial: since there's no reason to send
+an async command here (in fact, there almost never should
+be since many mac80211 callbacks can sleep) just make the
+function wait for the card to process the command and then
+return and clear the PMI bit.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/atmel_cs.c             |    2 -
- drivers/net/wireless/ipw2x00/ipw2100.c      |    8 ++--
- drivers/net/wireless/ipw2x00/ipw2200.c      |   47 ++++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   20 +++++------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   26 ++++++++-------
- 5 files changed, 53 insertions(+), 50 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-power.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
---- a/drivers/net/wireless/atmel_cs.c
-+++ b/drivers/net/wireless/atmel_cs.c
-@@ -279,7 +279,7 @@ static int atmel_config(struct pcmcia_de
- 	struct pcmcia_device_id *did;
- 
- 	dev = link->priv;
--	did = handle_to_dev(link).driver_data;
-+	did = dev_get_drvdata(&handle_to_dev(link));
- 
- 	DEBUG(0, "atmel_config(0x%p)\n", link);
- 
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -3488,7 +3488,7 @@ static DEVICE_ATTR(pci, S_IRUGO, show_pc
- static ssize_t show_cfg(struct device *d, struct device_attribute *attr,
- 			char *buf)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 47c8945..c913069 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -106,9 +106,8 @@ static struct iwl_power_vec_entry range_2[IWL_POWER_MAX] = {
+ /* set card power command */
+ static int iwl_set_power(struct iwl_priv *priv, void *cmd)
  {
--	struct ipw2100_priv *p = d->driver_data;
-+	struct ipw2100_priv *p = dev_get_drvdata(&d);
- 	return sprintf(buf, "0x%08x\n", (int)p->config);
+-	return iwl_send_cmd_pdu_async(priv, POWER_TABLE_CMD,
+-				      sizeof(struct iwl_powertable_cmd),
+-				      cmd, NULL);
++	return iwl_send_cmd_pdu(priv, POWER_TABLE_CMD,
++				sizeof(struct iwl_powertable_cmd), cmd);
  }
- 
-@@ -3497,7 +3497,7 @@ static DEVICE_ATTR(cfg, S_IRUGO, show_cf
- static ssize_t show_status(struct device *d, struct device_attribute *attr,
- 			   char *buf)
- {
--	struct ipw2100_priv *p = d->driver_data;
-+	struct ipw2100_priv *p = dev_get_drvdata(&d);
- 	return sprintf(buf, "0x%08x\n", (int)p->status);
- }
- 
-@@ -3506,7 +3506,7 @@ static DEVICE_ATTR(status, S_IRUGO, show
- static ssize_t show_capability(struct device *d, struct device_attribute *attr,
- 			       char *buf)
- {
--	struct ipw2100_priv *p = d->driver_data;
-+	struct ipw2100_priv *p = dev_get_drvdata(&d);
- 	return sprintf(buf, "0x%08x\n", (int)p->capability);
- }
- 
-@@ -4224,7 +4224,7 @@ static ssize_t show_rf_kill(struct devic
- 	   1 - SW based RF kill active (sysfs)
- 	   2 - HW based RF kill active
- 	   3 - Both HW and SW baed RF kill active */
--	struct ipw2100_priv *priv = (struct ipw2100_priv *)d->driver_data;
-+	struct ipw2100_priv *priv = dev_get_drvdata(&d);
- 	int val = ((priv->status & STATUS_RF_KILL_SW) ? 0x1 : 0x0) |
- 	    (rf_kill_active(priv) ? 0x2 : 0x0);
- 	return sprintf(buf, "%i\n", val);
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -1527,7 +1527,7 @@ static DEVICE_ATTR(led, S_IWUSR | S_IRUG
- static ssize_t show_status(struct device *d,
- 			   struct device_attribute *attr, char *buf)
- {
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 	return sprintf(buf, "0x%08x\n", (int)p->status);
- }
- 
-@@ -1536,7 +1536,7 @@ static DEVICE_ATTR(status, S_IRUGO, show
- static ssize_t show_cfg(struct device *d, struct device_attribute *attr,
- 			char *buf)
- {
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 	return sprintf(buf, "0x%08x\n", (int)p->config);
- }
- 
-@@ -1545,7 +1545,7 @@ static DEVICE_ATTR(cfg, S_IRUGO, show_cf
- static ssize_t show_nic_type(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 	return sprintf(buf, "TYPE: %d\n", priv->nic_type);
- }
- 
-@@ -1555,7 +1555,7 @@ static ssize_t show_ucode_version(struct
- 				  struct device_attribute *attr, char *buf)
- {
- 	u32 len = sizeof(u32), tmp = 0;
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 
- 	if (ipw_get_ordinal(p, IPW_ORD_STAT_UCODE_VERSION, &tmp, &len))
- 		return 0;
-@@ -1569,7 +1569,7 @@ static ssize_t show_rtc(struct device *d
- 			char *buf)
- {
- 	u32 len = sizeof(u32), tmp = 0;
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 
- 	if (ipw_get_ordinal(p, IPW_ORD_STAT_RTC, &tmp, &len))
- 		return 0;
-@@ -1586,14 +1586,15 @@ static DEVICE_ATTR(rtc, S_IWUSR | S_IRUG
- static ssize_t show_eeprom_delay(struct device *d,
- 				 struct device_attribute *attr, char *buf)
- {
--	int n = ((struct ipw_priv *)d->driver_data)->eeprom_delay;
-+	struct ipw_priv *p = dev_get_drvdata(d);
-+	int n = p->eeprom_delay;
- 	return sprintf(buf, "%i\n", n);
- }
- static ssize_t store_eeprom_delay(struct device *d,
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
- {
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 	sscanf(buf, "%i", &p->eeprom_delay);
- 	return strnlen(buf, count);
- }
-@@ -1605,7 +1606,7 @@ static ssize_t show_command_event_reg(st
- 				      struct device_attribute *attr, char *buf)
- {
- 	u32 reg = 0;
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 
- 	reg = ipw_read_reg32(p, IPW_INTERNAL_CMD_EVENT);
- 	return sprintf(buf, "0x%08x\n", reg);
-@@ -1615,7 +1616,7 @@ static ssize_t store_command_event_reg(s
- 				       const char *buf, size_t count)
- {
- 	u32 reg;
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 
- 	sscanf(buf, "%x", &reg);
- 	ipw_write_reg32(p, IPW_INTERNAL_CMD_EVENT, reg);
-@@ -1629,7 +1630,7 @@ static ssize_t show_mem_gpio_reg(struct 
- 				 struct device_attribute *attr, char *buf)
- {
- 	u32 reg = 0;
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 
- 	reg = ipw_read_reg32(p, 0x301100);
- 	return sprintf(buf, "0x%08x\n", reg);
-@@ -1639,7 +1640,7 @@ static ssize_t store_mem_gpio_reg(struct
- 				  const char *buf, size_t count)
- {
- 	u32 reg;
--	struct ipw_priv *p = d->driver_data;
-+	struct ipw_priv *p = dev_get_drvdata(d);
- 
- 	sscanf(buf, "%x", &reg);
- 	ipw_write_reg32(p, 0x301100, reg);
-@@ -1653,7 +1654,7 @@ static ssize_t show_indirect_dword(struc
- 				   struct device_attribute *attr, char *buf)
- {
- 	u32 reg = 0;
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	if (priv->status & STATUS_INDIRECT_DWORD)
- 		reg = ipw_read_reg32(priv, priv->indirect_dword);
-@@ -1666,7 +1667,7 @@ static ssize_t store_indirect_dword(stru
- 				    struct device_attribute *attr,
- 				    const char *buf, size_t count)
- {
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	sscanf(buf, "%x", &priv->indirect_dword);
- 	priv->status |= STATUS_INDIRECT_DWORD;
-@@ -1680,7 +1681,7 @@ static ssize_t show_indirect_byte(struct
- 				  struct device_attribute *attr, char *buf)
- {
- 	u8 reg = 0;
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	if (priv->status & STATUS_INDIRECT_BYTE)
- 		reg = ipw_read_reg8(priv, priv->indirect_byte);
-@@ -1693,7 +1694,7 @@ static ssize_t store_indirect_byte(struc
- 				   struct device_attribute *attr,
- 				   const char *buf, size_t count)
- {
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	sscanf(buf, "%x", &priv->indirect_byte);
- 	priv->status |= STATUS_INDIRECT_BYTE;
-@@ -1707,7 +1708,7 @@ static ssize_t show_direct_dword(struct 
- 				 struct device_attribute *attr, char *buf)
- {
- 	u32 reg = 0;
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	if (priv->status & STATUS_DIRECT_DWORD)
- 		reg = ipw_read32(priv, priv->direct_dword);
-@@ -1720,7 +1721,7 @@ static ssize_t store_direct_dword(struct
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
- {
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	sscanf(buf, "%x", &priv->direct_dword);
- 	priv->status |= STATUS_DIRECT_DWORD;
-@@ -1747,7 +1748,7 @@ static ssize_t show_rf_kill(struct devic
- 	   1 - SW based RF kill active (sysfs)
- 	   2 - HW based RF kill active
- 	   3 - Both HW and SW baed RF kill active */
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 	int val = ((priv->status & STATUS_RF_KILL_SW) ? 0x1 : 0x0) |
- 	    (rf_kill_active(priv) ? 0x2 : 0x0);
- 	return sprintf(buf, "%i\n", val);
-@@ -1791,7 +1792,7 @@ static int ipw_radio_kill_sw(struct ipw_
- static ssize_t store_rf_kill(struct device *d, struct device_attribute *attr,
- 			     const char *buf, size_t count)
- {
--	struct ipw_priv *priv = d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 
- 	ipw_radio_kill_sw(priv, buf[0] == '1');
- 
-@@ -1803,7 +1804,7 @@ static DEVICE_ATTR(rf_kill, S_IWUSR | S_
- static ssize_t show_speed_scan(struct device *d, struct device_attribute *attr,
- 			       char *buf)
- {
--	struct ipw_priv *priv = (struct ipw_priv *)d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 	int pos = 0, len = 0;
- 	if (priv->config & CFG_SPEED_SCAN) {
- 		while (priv->speed_scan[pos] != 0)
-@@ -1818,7 +1819,7 @@ static ssize_t show_speed_scan(struct de
- static ssize_t store_speed_scan(struct device *d, struct device_attribute *attr,
- 				const char *buf, size_t count)
- {
--	struct ipw_priv *priv = (struct ipw_priv *)d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 	int channel, pos = 0;
- 	const char *p = buf;
- 
-@@ -1857,14 +1858,14 @@ static DEVICE_ATTR(speed_scan, S_IWUSR |
- static ssize_t show_net_stats(struct device *d, struct device_attribute *attr,
- 			      char *buf)
- {
--	struct ipw_priv *priv = (struct ipw_priv *)d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 	return sprintf(buf, "%c\n", (priv->config & CFG_NET_STATS) ? '1' : '0');
- }
- 
- static ssize_t store_net_stats(struct device *d, struct device_attribute *attr,
- 			       const char *buf, size_t count)
- {
--	struct ipw_priv *priv = (struct ipw_priv *)d->driver_data;
-+	struct ipw_priv *priv = dev_get_drvdata(d);
- 	if (buf[0] == '1')
- 		priv->config |= CFG_NET_STATS;
- 	else
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4366,7 +4366,7 @@ static int iwl3945_mac_beacon_update(str
- static ssize_t show_debug_level(struct device *d,
- 				struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	return sprintf(buf, "0x%08X\n", priv->debug_level);
- }
-@@ -4374,7 +4374,7 @@ static ssize_t store_debug_level(struct 
- 				struct device_attribute *attr,
- 				 const char *buf, size_t count)
- {
--	struct iwl_priv *priv = d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	unsigned long val;
- 	int ret;
- 
-@@ -4395,7 +4395,7 @@ static DEVICE_ATTR(debug_level, S_IWUSR 
- static ssize_t show_temperature(struct device *d,
- 				struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
-@@ -4408,7 +4408,7 @@ static DEVICE_ATTR(temperature, S_IRUGO,
- static ssize_t show_tx_power(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	return sprintf(buf, "%d\n", priv->tx_power_user_lmt);
- }
- 
-@@ -4416,7 +4416,7 @@ static ssize_t store_tx_power(struct dev
- 			      struct device_attribute *attr,
- 			      const char *buf, size_t count)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	char *p = (char *)buf;
- 	u32 val;
- 
-@@ -4434,7 +4434,7 @@ static DEVICE_ATTR(tx_power, S_IWUSR | S
- static ssize_t show_flags(struct device *d,
- 			  struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	return sprintf(buf, "0x%04X\n", priv->active_rxon.flags);
- }
-@@ -4443,7 +4443,7 @@ static ssize_t store_flags(struct device
- 			   struct device_attribute *attr,
- 			   const char *buf, size_t count)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	u32 flags = simple_strtoul(buf, NULL, 0);
- 
- 	mutex_lock(&priv->mutex);
-@@ -4468,7 +4468,7 @@ static DEVICE_ATTR(flags, S_IWUSR | S_IR
- static ssize_t show_filter_flags(struct device *d,
- 				 struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	return sprintf(buf, "0x%04X\n",
- 		le32_to_cpu(priv->active_rxon.filter_flags));
-@@ -4478,7 +4478,7 @@ static ssize_t store_filter_flags(struct
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	u32 filter_flags = simple_strtoul(buf, NULL, 0);
- 
- 	mutex_lock(&priv->mutex);
-@@ -4763,7 +4763,7 @@ static DEVICE_ATTR(antenna, S_IWUSR | S_
- static ssize_t show_status(struct device *d,
- 			   struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
- 	return sprintf(buf, "0x%08x\n", (int)priv->status);
-@@ -4775,10 +4775,11 @@ static ssize_t dump_error_log(struct dev
- 			      struct device_attribute *attr,
- 			      const char *buf, size_t count)
- {
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	char *p = (char *)buf;
- 
- 	if (p[0] == '1')
--		iwl3945_dump_nic_error_log((struct iwl_priv *)d->driver_data);
-+		iwl3945_dump_nic_error_log(priv);
- 
- 	return strnlen(buf, count);
- }
-@@ -4789,10 +4790,11 @@ static ssize_t dump_event_log(struct dev
- 			      struct device_attribute *attr,
- 			      const char *buf, size_t count)
- {
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	char *p = (char *)buf;
- 
- 	if (p[0] == '1')
--		iwl3945_dump_nic_event_log((struct iwl_priv *)d->driver_data);
-+		iwl3945_dump_nic_event_log(priv);
- 
- 	return strnlen(buf, count);
- }
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2895,7 +2895,7 @@ static int iwl_mac_beacon_update(struct 
- static ssize_t show_debug_level(struct device *d,
- 				struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	return sprintf(buf, "0x%08X\n", priv->debug_level);
- }
-@@ -2903,7 +2903,7 @@ static ssize_t store_debug_level(struct 
- 				struct device_attribute *attr,
- 				 const char *buf, size_t count)
- {
--	struct iwl_priv *priv = d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	unsigned long val;
- 	int ret;
- 
-@@ -2926,7 +2926,7 @@ static DEVICE_ATTR(debug_level, S_IWUSR 
- static ssize_t show_version(struct device *d,
- 				struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	struct iwl_alive_resp *palive = &priv->card_alive;
- 	ssize_t pos = 0;
- 	u16 eeprom_ver;
-@@ -2957,7 +2957,7 @@ static DEVICE_ATTR(version, S_IWUSR | S_
- static ssize_t show_temperature(struct device *d,
- 				struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
-@@ -2970,7 +2970,7 @@ static DEVICE_ATTR(temperature, S_IRUGO,
- static ssize_t show_tx_power(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	if (!iwl_is_ready_rf(priv))
- 		return sprintf(buf, "off\n");
-@@ -2982,7 +2982,7 @@ static ssize_t store_tx_power(struct dev
- 			      struct device_attribute *attr,
- 			      const char *buf, size_t count)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	unsigned long val;
- 	int ret;
- 
-@@ -3000,7 +3000,7 @@ static DEVICE_ATTR(tx_power, S_IWUSR | S
- static ssize_t show_flags(struct device *d,
- 			  struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	return sprintf(buf, "0x%04X\n", priv->active_rxon.flags);
- }
-@@ -3009,7 +3009,7 @@ static ssize_t store_flags(struct device
- 			   struct device_attribute *attr,
- 			   const char *buf, size_t count)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	unsigned long val;
- 	u32 flags;
- 	int ret = strict_strtoul(buf, 0, &val);
-@@ -3038,7 +3038,7 @@ static DEVICE_ATTR(flags, S_IWUSR | S_IR
- static ssize_t show_filter_flags(struct device *d,
- 				 struct device_attribute *attr, char *buf)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 
- 	return sprintf(buf, "0x%04X\n",
- 		le32_to_cpu(priv->active_rxon.filter_flags));
-@@ -3048,7 +3048,7 @@ static ssize_t store_filter_flags(struct
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
-+	struct iwl_priv *priv = dev_get_drvdata(d);
- 	unsigned long val;
- 	u32 filter_flags;
- 	int ret = strict_strtoul(buf, 0, &val);
+ /* decide the right power level according to association status
+  * and battery status
+-- 
+1.5.6.3
+
