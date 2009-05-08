@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:56707 "EHLO smtps.tip.net.au"
+Received: from mga09.intel.com ([134.134.136.24]:20126 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752099AbZEAHLj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 03:11:39 -0400
-Date: Fri, 1 May 2009 17:11:34 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Greg KH <greg@kroah.com>
-Cc: linux-next@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: linux-next: driver-core tree build warning
-Message-Id: <20090501171134.f8fa430a.sfr@canb.auug.org.au>
-In-Reply-To: <20090501061118.GA19234@kroah.com>
-References: <20090501152144.500e619a.sfr@canb.auug.org.au>
-	<20090501054727.GB19020@kroah.com>
-	<20090501061118.GA19234@kroah.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC"
+	id S1757774AbZEHUi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2009 16:38:26 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/11 v2.6.30 and w-t] iwlwifi: fix device id registration for 6000 series 2x2 devices
+Date: Fri,  8 May 2009 13:44:46 -0700
+Message-Id: <1241815486-13510-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1241815486-13510-11-git-send-email-reinette.chatre@intel.com>
+References: <1241815486-13510-1-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-2-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-3-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-4-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-5-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-6-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-7-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-8-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-9-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-10-git-send-email-reinette.chatre@intel.com>
+ <1241815486-13510-11-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-Hi Greg,
+Add device ids for 2x2 devices. Also fix antenna usage because these devices use
+antennas A and B, not B and C.
 
-On Thu, 30 Apr 2009 23:11:18 -0700 Greg KH <greg@kroah.com> wrote:
->
-> On Thu, Apr 30, 2009 at 10:47:27PM -0700, Greg KH wrote:
-> > Ah crap, my bad.  I'll go fix this up, it passed my build tests, I
-> > wonder why this isn't an error, I missed the warning.
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 ++
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-I assume it is actually valid C (just not good C :-)).
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index ee271d7..7236382 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -102,8 +102,8 @@ struct iwl_cfg iwl6000_2agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_BC,
+-	.valid_rx_ant = ANT_BC,
++	.valid_tx_ant = ANT_AB,
++	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = false,
+ };
+ 
+@@ -118,8 +118,8 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_BC,
+-	.valid_rx_ant = ANT_BC,
++	.valid_tx_ant = ANT_AB,
++	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = false,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3ebf6cf..596977d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2944,7 +2944,9 @@ static struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x0085, 0x1112, iwl6000_2ag_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1122, iwl6000_2ag_cfg)},
+ 	{IWL_PCI_DEVICE(0x422B, PCI_ANY_ID, iwl6000_3agn_cfg)},
++	{IWL_PCI_DEVICE(0x422C, PCI_ANY_ID, iwl6000_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x4238, PCI_ANY_ID, iwl6000_3agn_cfg)},
++	{IWL_PCI_DEVICE(0x4239, PCI_ANY_ID, iwl6000_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, PCI_ANY_ID, iwl6000_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0085, PCI_ANY_ID, iwl6000_3agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0086, PCI_ANY_ID, iwl6050_3agn_cfg)},
+-- 
+1.5.6.3
 
-> I've sent an updated version of the patch that fixes this to John and
-> the wireless mailing list and updated my tree as well.
-
-Thanks.
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkn6oKYACgkQjjKRsyhoI8wKNQCfUHPGuqXD1opzCdrWiGZcweJd
-sq0AnjM2yrZmKsX4LjfyEWx4TjB1O8xG
-=5gJR
------END PGP SIGNATURE-----
-
---Signature=_Fri__1_May_2009_17_11_34_+1000_JE8j+fNDRYVdbdiC--
