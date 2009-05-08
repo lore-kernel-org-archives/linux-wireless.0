@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37805 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752827AbZEZIA3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47846 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522AbZEHIxa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 04:00:29 -0400
-Date: Tue, 26 May 2009 09:57:01 +0200
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Galen P Zink <galen@zinkconsulting.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ralink Status
-Message-ID: <20090526075700.GB3321@tuxdriver.com>
-References: <C7F37A4E-95C1-4E89-9FE4-340F73900683@zinkconsulting.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <C7F37A4E-95C1-4E89-9FE4-340F73900683@zinkconsulting.com>
+	Fri, 8 May 2009 04:53:30 -0400
+Subject: [PATCH] iwlwifi: make iwl_set_rate static
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 08 May 2009 10:53:24 +0200
+Message-Id: <1241772804.1567.29.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2009 at 04:27:52PM -0700, Galen P Zink wrote:
-> Ralink has released open source drivers for their 2800-series cards. I  
-> presume they are GPL, given how closely they're tied to the kernel. Is  
-> there any reasons these aren't coming into the linux tree?
+It's not needed elsewhere.
 
-You must be new... :-)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-Those drivers are not properly integrated with existing kernel
-infrastructure.  The rt2x00 team is working on support for that
-hardware, using those drivers as a reference where appropriate.
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 10:52:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 10:52:24.000000000 +0200
+@@ -363,8 +363,6 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_fl
+ 
+ u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv);
+ 
+-void iwl_set_rate(struct iwl_priv *priv);
+-
+ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx);
+ 
+ static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 10:52:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 10:52:24.000000000 +0200
+@@ -1124,7 +1124,7 @@ void iwl_connection_init_rx_config(struc
+ }
+ EXPORT_SYMBOL(iwl_connection_init_rx_config);
+ 
+-void iwl_set_rate(struct iwl_priv *priv)
++static void iwl_set_rate(struct iwl_priv *priv)
+ {
+ 	const struct ieee80211_supported_band *hw = NULL;
+ 	struct ieee80211_rate *rate;
 
-Hth!
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
