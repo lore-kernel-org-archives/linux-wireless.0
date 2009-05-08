@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:38673 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbZECInj convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46908 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752567AbZEHJTA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2009 04:43:39 -0400
-Received: by bwz7 with SMTP id 7so3054293bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 03 May 2009 01:43:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1239136768.7475.62.camel@johannes.local>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <1239136768.7475.62.camel@johannes.local>
-Date: Sun, 3 May 2009 11:43:38 +0300
-Message-ID: <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
+	Fri, 8 May 2009 05:19:00 -0400
 Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Kalle Valo <kalle.valo@iki.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20090403182724.GA7364@tuxdriver.com> (sfid-20090403_203108_005030_BC3865B6)
+References: <20090403182724.GA7364@tuxdriver.com>
+	 (sfid-20090403_203108_005030_BC3865B6)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-67ZG61t67jFlcYuSuV4h"
+Date: Fri, 08 May 2009 11:18:58 +0200
+Message-Id: <1241774338.1567.36.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 7, 2009 at 11:39 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi,
 
-Hello,
+--=-67ZG61t67jFlcYuSuV4h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> Also, please consider making some sort of prepared presentation.
->> Especially welcome would be topics that are accessible to those
->> outside of the core wireless developer group, such as current
->> projects on enhancing IBSS support, extended power savings, or any
->> other user-visible topic. =A0I'll be happy to take such proposals in
->> private email or you can post them as part of this thread.
->
-> Since I've just booked my train (will arrive 1:30pm or so on the 25th=
-,
-> leave Sunday [28th] late afternoon), here are some things I could
-> possibly talk about:
->
-> =A0* status of moving to nl80211/cfg80211 -- overview over new cfg802=
-11
-> =A0 operations, maybe with Jouni?
-> =A0* power saving if Kalle can't make it
 
-I can now confirm that I'm joining the summit as well \o/
+> So, here I open the floor for discussion of agenda items for our
+> wireless meeting/hackfest.  What do we think is important to discuss
+> face-to-face this year?  What isn't getting done?  What is getting
+> done wrong?  What do we need that we didn't realize last year?
 
-I will arrive to Berlin on Thursday before noon and will leave on
-Sunday evening.
+I've tried to capture the discussion from here on the wiki:
 
-Kalle
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+http://wireless.kernel.org/en/developers/Summits/Berlin-2009
+
+Feel free to edit and add suggestions, or put yourself into "confirmed
+attendees" (do we want that? it seemed we should say who will be there)
+or put yourself into the section with confirmed talks :)
+
+johannes
+
+--=-67ZG61t67jFlcYuSuV4h
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKA/j2AAoJEODzc/N7+QmagUkP/2b0hyHZWANxiRAIT2MX1YjL
+2ENvrUXkJLpZfKXZKdgCtADDSMuCw5SSeho+4KEhGOfJaoI6ukJpjtW2mm3vV1WE
+SkXv3V2qzn8MrRSJFpk4U7PesjrqrXYz1blLmdlyNjPXYJiaO7ONQS/9UrNw125o
+kMJCTtInmVENxRqnb55Jy/YzlbXr8bte2uxczrrHSMIGUgTFttXjvZPgWy5LXcMk
+kLR33q9oimW9b+xErghGULa72PT1ITGOXKw9nqC/y4KSavP9bROZIpv+lstWCHtD
+dG/bEE5TwBOlydu9k0zcqY7NZk4fbLQ6nWqzFoQhkqqkw8NgQQI1EuSqHdmF+hku
+RNHnhb7Em3fJq/ZVBaE1nsAKaKwLT/V4pAXxRDePx7UmMAIe63OIsdSRJYzjvLC+
+8gVaiRHr6n3vlO0JoaQpD6swo4npCpPNrXHPiHA5KWG9HiKhnicwC88bPMUpj6nB
+ABnKt/bSOMWdKVqCo7D/ZLZ3UecrujlK3NdLISAMhuaxfjs/0IYNnRx+zDF59DEO
+DaL3K6Xh/ubcQLGzCM7eg7WYnQPBbymU/Zeu/GyU+Ae/qudwGAqpr8uocvchCgdT
+H7Thmif2il8z1PukCwqSAWCFOMvtkLzj3i+ty9/f+71BtaVG6ubv0IC7cZoWppFu
+vgBBne7+L9s5Vozd7zmB
+=93Eg
+-----END PGP SIGNATURE-----
+
+--=-67ZG61t67jFlcYuSuV4h--
+
