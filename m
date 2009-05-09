@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:38031 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760505AbZEMXM3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 19:12:29 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so605797wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 16:12:31 -0700 (PDT)
+Received: from kroah.org ([198.145.64.141]:51450 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753270AbZEITdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 May 2009 15:33:49 -0400
+Date: Sat, 9 May 2009 12:29:59 -0700
+From: Greg KH <greg@kroah.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Eric Valette <eric.valette@free.fr>,
+	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-usb@vger.kernel.org, Hin-Tak Leung <hintak.leung@gmail.com>
+Subject: Re: DMA debug trace pointing to rtl8187
+Message-ID: <20090509192959.GA1842@kroah.com>
+References: <49FDB9F8.3080400@free.fr> <20090506133131F.fujita.tomonori@lab.ntt.co.jp> <4A012FC8.3020304@free.fr> <20090506064513.GA7460@kroah.com> <4A05BD77.9020003@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1242256104.3241.4.camel@maxim-laptop>
-References: <1241499867.4816.18.camel@maxim-laptop> <1241984076.6051.18.camel@maxim-laptop>
-	<43e72e890905101236h2cd24edewae808da384ae48dd@mail.gmail.com>
-	<1242140728.5626.3.camel@maxim-laptop> <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
-	<1242149671.5210.2.camel@maxim-laptop> <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
-	<1242166051.26484.7.camel@maxim-laptop> <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
-	<1242256104.3241.4.camel@maxim-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 13 May 2009 16:12:11 -0700
-Message-ID: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
-Subject: Re: [BUG] Crda oopses the system
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A05BD77.9020003@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 4:08 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> On Wed, 2009-05-13 at 14:28 -0700, Luis R. Rodriguez wrote:
+On Sat, May 09, 2009 at 12:29:27PM -0500, Larry Finger wrote:
+> I think there is a second problem that John's fix does not treat. Although the
+> buffer is removed from the stack, there is no assurance that the buffer obtained
+> with kmalloc() is reachable by DMA. This case will be triggered if the USB
+> adapter does 32-bit DMA and the system has more than 4 GB RAM.
 
->> Anyway please try the patches I posted and I'll finish reviewing this
->> in the meantime.
-> I don't see anything yet.
+Memory returned by kmalloc will always be able to be DMAable.  If not,
+we have lots of problems :)
 
-wget this and git am it, it has all the patches:
+thanks,
 
-http://bombadil.infradead.org/~mcgrof/patches/wl/race-fixes-2009-05-13.patch
-
-  Luis
+greg k-h
