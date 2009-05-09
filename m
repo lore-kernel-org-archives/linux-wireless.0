@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2f.orange.fr ([80.12.242.150]:41336 "EHLO smtp2f.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921AbZEITWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 15:22:39 -0400
-Message-ID: <4A05D7FE.50807@free.fr>
-Date: Sat, 09 May 2009 21:22:38 +0200
-From: Eric Valette <eric.valette@free.fr>
-Reply-To: eric.valette@free.fr
+Received: from rv-out-0506.google.com ([209.85.198.231]:25134 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755657AbZEIBYK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2009 21:24:10 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so1394673rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 18:24:12 -0700 (PDT)
 MIME-Version: 1.0
-To: eric.valette@free.fr
-CC: Larry Finger <Larry.Finger@lwfinger.net>, Greg KH <greg@kroah.com>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-usb@vger.kernel.org, Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: Re: DMA debug trace pointing to rtl8187
-References: <49FDB9F8.3080400@free.fr> <20090506133131F.fujita.tomonori@lab.ntt.co.jp> <4A012FC8.3020304@free.fr> <20090506064513.GA7460@kroah.com> <4A05BD77.9020003@lwfinger.net> <4A05C18B.2070703@free.fr>
-In-Reply-To: <4A05C18B.2070703@free.fr>
+In-Reply-To: <1241831891.4903.80.camel@localhost.localdomain>
+References: <1241677107.2918.4.camel@localhost.localdomain>
+	<1241696104.27208.2.camel@johannes.local> <1241704437.4903.15.camel@localhost.localdomain>
+	<1241705979.27208.31.camel@johannes.local> <1241827331.4903.75.camel@localhost.localdomain>
+	<43e72e890905081813r58888509je62856008cc62d22@mail.gmail.com>
+	<1241831891.4903.80.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 8 May 2009 18:23:52 -0700
+Message-ID: <43e72e890905081823w2087e84aq3294ae1461e75b38@mail.gmail.com>
+Subject: Re: Warning when terminating wpa_supplicant (wext driver)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eric Valette wrote:
-> Larry Finger wrote:
-> 
->> I just saw John's version 2 that looks more like what I was thinking about. I
->> will be testing soon.
-> 
-> Should find time to compile, test and browse the WEB a little using WiFi
-> at 9PM (France = UTC +2 right now).
+On Fri, May 8, 2009 at 6:18 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Johannes,
+>
+>> >> > > Copying Wey-Yi, but I think she's aware of this? It's definitely a
+>> >> > > driver issue. I _suspect_, but am not sure, that the driver kills the
+>> >> > > aggregation session when we disassoc or something and we only tell it
+>> >> > > about the STA removal after that, when it already killed the STA. Thus
+>> >> > > it would be a consequence of iwlwifi not implementing a proper
+>> >> > > sta_notify() callback.
+>> >> >
+>> >> > I don't see it with nl80211 driver, but that might be pure luck.
+>> >>
+>> >> Hmm, ok, that points to something else maybe... Now I wish I had my
+>> >> ftrace-mac80211 patch ready. Well, the patch is almost ready but we
+>> >> can't use ftrace in modules yet...
+>> >>
+>> >> Maybe there's some timing issue. I still think it's iwlwifi getting
+>> >> confused about what mac80211 is telling it as described, but it seems
+>> >> it's a little more subtle than what I said.
+>> >
+>> > something similar now happened during normal operation:
+>>
+>> Just curious, have you applied johill's latest idle fix patch? I've
+>> been running iperf overnight with it and my woes are gone. I tested RX
+>> though, I'm leaving TX running now but haven't yet seen any warn.
+>
+> this is still running wireless-testing.git from yesterday with the debug
+> addBA patch from Johannes.
 
-Well is 9:20 PM and the new patch has been tested on 2.6.30-rc5. This
-mail will be sent using my wlan0 interface.
+Ok yeah wl from yesterday didn't have johill's patch applied yet.
 
-Would like to say thanks to all of you who helped analysing and fixing it.
+>From the looks of it the intel hardware doesn't want to stop the
+aggregation session which is API-breakage -- which is why you get the
+WARN_ON. This is happening when you are disassociating. I have a
+feeling johill's other patch will fix your issue but regardless I
+believe this just highlights more we should flush our queues (both RX
+and TX) before scanning.
 
-Whish you all a nice sunday.
-
--- eric
-
+  Luis
