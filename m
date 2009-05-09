@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:42512 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbZELT6V (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:10645 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751245AbZEIOVl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 15:58:21 -0400
-Received: by ewy24 with SMTP id 24so267564ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 12:58:21 -0700 (PDT)
-Date: Tue, 12 May 2009 21:58:17 +0200
-From: "Christoph .J Thompson" <cjsthompson@gmail.com>
-To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt73usb Access point status
-Message-Id: <20090512215817.bd1c6895.cjsthompson@gmail.com>
-In-Reply-To: <wf4ovqrb1v.fsf@calligramme.charmers>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-	<efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
-	<wfk54zu7t6.fsf@calligramme.charmers>
-	<efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
-	<20090511035515.83c21b0c.cjsthompson@gmail.com>
-	<wf4ovqrb1v.fsf@calligramme.charmers>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 9 May 2009 10:21:41 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so994019fkq.5
+        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2009 07:21:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200905090918.05803.hrogge@googlemail.com>
+References: <20090403182724.GA7364@tuxdriver.com>
+	 <20090504121221.GA31147@tuxdriver.com>
+	 <200905081101.22038.helmut.schaa@gmail.com>
+	 <200905090918.05803.hrogge@googlemail.com>
+Date: Sat, 9 May 2009 17:21:40 +0300
+Message-ID: <40f31dec0905090721p7a7f0f42sae14b3654ffd3d34@mail.gmail.com>
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Henning Rogge <hrogge@googlemail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 12 May 2009 09:16:12 +0100
-Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk> wrote:
-> Is there any prospec of persuading Ralink either to release
-> a mended version of the firmware or to free the old version?
+2009/5/9 Henning Rogge <hrogge@googlemail.com>:
+> On Freitag 08 Mai 2009 11:01:21 Helmut Schaa wrote:
+>> Am Montag, 4. Mai 2009 schrieb John W. Linville:
+>> > > I will arrive to Berlin on Thursday before noon and will leave o=
+n
+>> > > Sunday evening.
+>> >
+>> > Excellent news! =C2=A0Anyone else?
+>>
+>> I plan to be there as well.
+> Just got my flight to Berlin... will be there from Thursday to Sunday=
+=2E
+>
+> Henning Rogge
+>
 
-I think Ivo van Doorn said he didn't want to bother RaLink with that. I was
-thinking about writing to them about it but that's difficult because I don't
-really understand the technical specifics of the issue. But it would be
-really cool to have at least one USB WiFi adapter working for AP purposes.
+On FUDcon wiki i could only find infos about Holiday Inn (which is
+expensive), do you know any other hotels nearby ?
 
-> I think my solution to that would involve HSS tools, but
-> your point is a good one.
 
-I've thought about that, but with the ALIX it's impractical.
-
--- 
-Christoph .J Thompson <cjsthompson@gmail.com>
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
