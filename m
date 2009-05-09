@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63659 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751220AbZENRfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 13:35:46 -0400
-Subject: Re: [ipw3945-devel] iwlwifi 5150 uCode available
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
-References: <1242321566.32358.19.camel@rc-desk>
-	 <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 May 2009 10:42:20 -0700
-Message-Id: <1242322940.32358.31.camel@rc-desk>
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53415 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751431AbZEIIIx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 May 2009 04:08:53 -0400
+Date: Sat, 9 May 2009 11:08:38 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
+	reorder buffer
+Message-ID: <20090509080838.GA1206@jm.kir.nu>
+References: <20090505173512.349795688@atheros.com> <20090505173550.273830766@atheros.com> <1241709323.4903.25.camel@localhost.localdomain> <1241833703.4903.83.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1241833703.4903.83.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, May 08, 2009 at 06:48:23PM -0700, Marcel Holtmann wrote:
 
-On Thu, 2009-05-14 at 10:22 -0700, Rafał Miłecki wrote:
-> 2009/5/14 reinette chatre <reinette.chatre@intel.com>:
-> > uCode for Intel Wireless WiFi Link 5150AGN is now available for download
-> > from http://intellinuxwireless.org/?n=Downloads
-> 
-> Changelog is top secret as usually? ;)
+> > I can confirm that this used to be a regular situation between my X200
+> > and a D-Link access point.
 
-Nope ... this is the very first release of this uCode for this
-particular hardware. A changelog does not make sense in this case.
+Which D-Link model is that AP? I think I should try to get one of those
+added to me test bed.. ;-)
 
+> so I finally got the debug output for you. Took only over a day :)
 
-> Should this fix
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946 (wrong
-> command queue)?
+Thanks! Would you happen to have timing information available for these
+(e.g., from klogd)? It looks like the AP is sending out an ADDBA Request
+to update some parameters, but we currently ignore that request.
+However, at least in this particular case, our RX reorder bug head_seq
+matches with the ssn from the ADDBA Request, so I'm not sure whether
+ignoring the ADDBA contents is really causing harm here (anyway, we
+should really process these updates, too).
 
+The timeouts on RX reorder frames look similar to what I have seen in my
+tests and the workaround was indeed trying to address that type of
+issue, so it is nice to hear that it helped in this case, too.
 
-This bug is against 5100/5300 hardware, so this uCode is not what you
-are looking for. We are working on getting uCode for 5100/5300 hardware
-(that includes a fix for this bug) out the door.
-
-Reinette
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
