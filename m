@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50956 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbZEDIAp (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:40945 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040AbZEIOgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 04:00:45 -0400
-Subject: Re: [PATCH] add basic support for parsing country information
- element
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241423935.2899.7.camel@localhost.localdomain>
-References: <1241413787-3185-1-git-send-email-marcel@holtmann.org>
-	 <1241423772.8683.8.camel@johannes.local>
-	 <1241423935.2899.7.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9QOEyIKmC8AfwXRsGtSV"
-Date: Mon, 04 May 2009 10:00:42 +0200
-Message-Id: <1241424042.8683.10.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 9 May 2009 10:36:16 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so641822eyd.37
+        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2009 07:36:16 -0700 (PDT)
+From: Henning Rogge <hrogge@googlemail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+Date: Sat, 9 May 2009 16:36:08 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <20090403182724.GA7364@tuxdriver.com> <200905090918.05803.hrogge@googlemail.com> <40f31dec0905090721p7a7f0f42sae14b3654ffd3d34@mail.gmail.com>
+In-Reply-To: <40f31dec0905090721p7a7f0f42sae14b3654ffd3d34@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart11092304.CFLCr9jNNe";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200905091636.13538.hrogge@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-9QOEyIKmC8AfwXRsGtSV
-Content-Type: text/plain
+--nextPart11092304.CFLCr9jNNe
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+Am Samstag 09 Mai 2009 16:21:40 schrieb Nick Kossifidis:
+> On FUDcon wiki i could only find infos about Holiday Inn (which is
+> expensive), do you know any other hotels nearby ?
+Sorry no... I got a place to sleep at someone of Freifunk Berlin.
+
+Maybe this page could help to find some more hotels (don't know the page=20
+itself, just googled for a German hotel search engine) ?
+
+http://www.hotel.de/Search.aspx?hs_validate=3D2&hs_locationnr=3D31212&gclid=
+=3DCOzmwJe6r5oCFRaA3godiRewcQ&cpn=3D42&oc=3Dde-
+DE
+
+Henning
 
 
-> > IIRC the third characters there is a space if it's in- and outdoor, it
-> > might make sense to parse it instead of just printing it?
->=20
-> that explains why I have seen USI here and couldn't make sense of it and
-> just declared that AP broken :)
-
-Heh, no, I think only "I", "O" and " " are valid there as the third
-character :)
-
-johannes
-
---=-9QOEyIKmC8AfwXRsGtSV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--nextPart11092304.CFLCr9jNNe
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJJ/qCoAAoJEKVg1VMiehFYGGIP/2PfdsBldd3A5cFAa9NH5mtY
-gDGuMjU27Qm+iTXP616KB0dwOAiBUHRBbf1iv0EyY27Br4bc0bZC9yCRcneoeddv
-pvqJEx6C+yqPhKQ6/+bK3uX99qezvwWdR4ycVWq/nDPN2MGlNTEzCv9OoK9yVB50
-eF1tpG+rAHEU7w7KvWBLRtSqJpcM2U4IuEG/LmNTmAD7rTACHdRbySzZZ9HF1/mt
-Brz3jlT56HAnRBF2cLdODNrvhdxKqew3GOtwBhsZ2OegLU3YtHIUApFn+tFbNKlV
-wzIH14V4degcxSvyOuEJFcY68roOi3GiCEk61AYDTEiQnK7+q9K+yM0V7OqYYEF5
-0FfQ+88geyw0B7g/C88/KH4zj1dBO4h92ACHHmWimvXottvUT3SIlCxB0j4t7xIU
-V/IJP5nkMF8pbAoiILlpaVvQU4XpAEB0zCcLjJjXeVQluhJchlzWkBzVkKB8Hdk7
-rjrq9HRLdWPtmLojrN3ZzN9wWh9a220svZiGskA8yFTH5yq7KRncjavJUanmbv6Z
-J4qzkPMphkIrJsvY7GaBdC0A678/u+7vxG6Cs8KG6A7Hro3atQeketMjpDNOtV6G
-UB3smj7KPWB5/Ze09qs5Zg0AYh6xQPGLETB1QzdVb0TuONICzW2FyH557BXctEYZ
-dam2/mkJluwyIUzg2ula
-=p1AT
+iEYEABECAAYFAkoFlN0ACgkQcenvcwAcHWfkzgCgj0RrSadZqlQyBt1IwKtEj0fC
+ELwAn2ip9wvKQppiMCh5v/rnNEVstH1M
+=77Ou
 -----END PGP SIGNATURE-----
 
---=-9QOEyIKmC8AfwXRsGtSV--
-
+--nextPart11092304.CFLCr9jNNe--
