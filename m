@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48505 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758492AbZEDSGq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 14:06:46 -0400
-Subject: Re: [PATCH] add support for showing power constraint IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241460224.8683.87.camel@johannes.local>
-References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
-	 <1241453408.8683.53.camel@johannes.local>
-	 <1241454909.2903.17.camel@localhost.localdomain>
-	 <1241455125.8683.60.camel@johannes.local>
-	 <1241455848.2903.18.camel@localhost.localdomain>
-	 <1241456088.8683.62.camel@johannes.local>
-	 <1241456863.2903.29.camel@localhost.localdomain>
-	 <1241458558.8683.84.camel@johannes.local>
-	 <1241459295.2903.40.camel@localhost.localdomain>
-	 <1241460224.8683.87.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DeZJc9INyR2GqNKDIlDo"
-Date: Mon, 04 May 2009 20:06:16 +0200
-Message-Id: <1241460376.8683.88.camel@johannes.local>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:34581 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752621AbZEIOBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 May 2009 10:01:25 -0400
+Date: Sat, 9 May 2009 06:57:31 -0700
+From: Greg KH <greg@kroah.com>
+To: Eric Valette <eric.valette@free.fr>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
+	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [RFT] rtl8187: use DMA-aware buffers with usb_control_msg
+Message-ID: <20090509135731.GD17349@kroah.com>
+References: <20090506064513.GA7460@kroah.com> <1241632963-25601-1-git-send-email-linville@tuxdriver.com> <3ace41890905081620h10d0250eq1ede9cd73021dc5b@mail.gmail.com> <4A054F18.7020501@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A054F18.7020501@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, May 09, 2009 at 11:38:32AM +0200, Eric Valette wrote:
+> The patch fix the DMA warning and the driver seems to work (just
+> associated it) but I must say that the allocation failure handling path
+> and the fact that we use now kmalloc for allocating a few bytes in such
+> a routine makes me worry about possible negative performance impact
+> unless theses routines are used only in a slow configuration path (did
+> no took time to red the code due to many other problems).
 
---=-DeZJc9INyR2GqNKDIlDo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+usb_control messages are slow and should not be on the "fast path" of
+any data being sent through the device.  Any overhead of the
+kmalloc/kfree is totally eaten up by the actual transmission turn around
+time of the message itself, so you don't have to worry about the
+performance impact.
 
-On Mon, 2009-05-04 at 20:03 +0200, Johannes Berg wrote:
-> On Mon, 2009-05-04 at 10:48 -0700, Marcel Holtmann wrote:
->=20
-> > > Both are HT.
-> >=20
-> > do we have the specs somewhere then I might can give it a try. Also WMM
-> > needs some improvements.
->=20
-> The IEs are defined in structs in include/linux/ieee80211.h.
+thanks for testing.
 
-Oh and iw already has some code (in info.c or phy.c?) since the data we
-transfer for HT capabilities is the HT caps IE.
+> BTW if someone know who I should send this attached patch for DRM git, I
+> would gladly forward it.
 
-johannes
+To the drm maintainer?
 
---=-DeZJc9INyR2GqNKDIlDo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+thanks,
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ/y6VAAoJEKVg1VMiehFYUMsP/Rkft3Zm7xPib6CXeyz7tBi5
-jBfCEvewoYGMqeRWn+QfLT0rhduraI+vY1bGjZrYjCAb5s/geDbMP3+OFMMN7/Oa
-JK+PwuRhwY6w3Z9zGGUcrm0zTJvspAdfbMVMmszkO0rENEMX6F6uEb6Bzr8tBsKI
-IaBeFUSEL2R2lIX7FWRYUhNNEbMXfhBv4ChI2gb15ckIyf6IHsbwmps6y1vpV/qk
-qssUbjP+OpD8lWwL+WDsqQUf0b2RdbLrAC9eYHRh2/pZviv/tZp8PJJXF5xVnywI
-umVwNZgzNxxKF35N5aH4oknDaR3mba3AeKkAtu3/LMVXksbJZQjXQWzYfdtCOfzj
-48dvTzBo0TvPNBhPWHiM97QRywmeHivktYYDyj7qazEusDdfoVgC97awZRcbGLWy
-VHloLsW3TFOGjiJPj588OYop1Iktk8JxGEILq5YcWfKMWEcdH0Y1//CEbXusmkRh
-CCvMrjKCZ/gZFmzM9xkW9STzKs8xv4Bvs7Amp/VOi1qews0nRhywWCZl9oF1BhzH
-xE3R9o9SG+CaFmqLio39IUbLtYncYATkXCzhBKMyQlgl2kmxe32QNDgxsI5TP6jp
-kClPoh98Mi6g9Cf/QCtaLyHlczvsOVucXqesklWPBUg8WQnwiaVEoV3YmYy9K6Zx
-83uWXkwfvLGZJdyB05ev
-=Un1p
------END PGP SIGNATURE-----
-
---=-DeZJc9INyR2GqNKDIlDo--
-
+greg k-h
