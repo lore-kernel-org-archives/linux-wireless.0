@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:50759 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbZE2VPK (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.226]:27952 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbZEIBOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 17:15:10 -0400
-Message-ID: <4A20505D.40908@lwfinger.net>
-Date: Fri, 29 May 2009 16:15:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 8 May 2009 21:14:04 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so1392184rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 18:14:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Matthieu CASTET <castet.matthieu@free.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 vs b43legacy
-References: <loom.20090529T190620-42@post.gmane.org>
-In-Reply-To: <loom.20090529T190620-42@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1241827331.4903.75.camel@localhost.localdomain>
+References: <1241677107.2918.4.camel@localhost.localdomain>
+	<1241696104.27208.2.camel@johannes.local> <1241704437.4903.15.camel@localhost.localdomain>
+	<1241705979.27208.31.camel@johannes.local> <1241827331.4903.75.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 8 May 2009 18:13:45 -0700
+Message-ID: <43e72e890905081813r58888509je62856008cc62d22@mail.gmail.com>
+Subject: Re: Warning when terminating wpa_supplicant (wext driver)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthieu CASTET wrote:
+On Fri, May 8, 2009 at 5:02 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Johannes,
 >
-> what's the difference between b43 and b43legacy ?
-> 
->>From a first point a view, it seems b43 is for core >= 5 and b43legacy for the
-> other.
-> There is also firmware difference : b43 need v4 and b43legacy need v3.
+>> > > Copying Wey-Yi, but I think she's aware of this? It's definitely a
+>> > > driver issue. I _suspect_, but am not sure, that the driver kills the
+>> > > aggregation session when we disassoc or something and we only tell it
+>> > > about the STA removal after that, when it already killed the STA. Thus
+>> > > it would be a consequence of iwlwifi not implementing a proper
+>> > > sta_notify() callback.
+>> >
+>> > I don't see it with nl80211 driver, but that might be pure luck.
+>>
+>> Hmm, ok, that points to something else maybe... Now I wish I had my
+>> ftrace-mac80211 patch ready. Well, the patch is almost ready but we
+>> can't use ftrace in modules yet...
+>>
+>> Maybe there's some timing issue. I still think it's iwlwifi getting
+>> confused about what mac80211 is telling it as described, but it seems
+>> it's a little more subtle than what I said.
+>
+> something similar now happened during normal operation:
 
-The firmware difference is the primary one.
+Just curious, have you applied johill's latest idle fix patch? I've
+been running iperf overnight with it and my woes are gone. I tested RX
+though, I'm leaving TX running now but haven't yet seen any warn.
 
-> But v4 firmware seems to support core 4 (pcm4 & ucode4) and b43 code got some
-> support for old chips (<5).
-
-The Broadcom V4 drivers do have core 4 firmware embedded in them and it is
-extracted by b43-fwcutter; however, b43 will _NOT_ work with core 4 chips. The
-firmware loader will only find firmware for core 5 and later. On the other hand,
-core 5 devices have been tested with b43legacy. I have a local patch that I use
-to switch my 14e4:4312 device so that it uses b43legacy. This allows me to test
-any changes.
-
-> Is the split was made because nobody know how to use firmware v4 with core 4 or
-> because core 4 it so different from newer core.
-> In the latter case why code for older chip (<5) is not removed from the driver ?
-
->From what I have heard, the older chips do not have the on-board memory to run
-V4 firmware. Certainly, any chips that have core 2 cannot handle V4 firmware.
-
-I suspect that any residual code for older chips left in b43 was missed. If you
-want to prepare patches to remove such code, please do.
-
-Larry
+  Luis
