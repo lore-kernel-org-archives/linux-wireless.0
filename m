@@ -1,53 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37289 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754380AbZETRPP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58673 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbZEJLVc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 13:15:15 -0400
-Date: Wed, 20 May 2009 13:06:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211: fix managed mode BSSID handling
-Message-ID: <20090520170610.GB7604@tuxdriver.com>
-References: <1242721949.17164.1.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1242721949.17164.1.camel@johannes.local>
+	Sun, 10 May 2009 07:21:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC] mac80211: fix idle trigger upon resume
+Date: Sun, 10 May 2009 07:21:32 -0400
+Message-Id: <1241954492-1494-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2009 at 10:32:29AM +0200, Johannes Berg wrote:
-> John,
-> 
-> You asked whether the fix-up was correct, but was there also a problem
-> applying that to wireless-testing? It seems to be missing a hunk (below)
-> in commit
-> 
-> commit 4eca27a55d34bc3256fb367842ab225948fa155b
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Thu May 14 13:10:14 2009 +0200
-> 
->     mac80211: fix managed mode BSSID handling
-> 
-> ---
->  net/mac80211/main.c |   16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
-> 
-> --- wireless-testing.orig/net/mac80211/main.c	2009-05-18 19:48:04.000000000 +0200
-> +++ wireless-testing/net/mac80211/main.c	2009-05-19 10:30:50.000000000 +0200
-> @@ -219,18 +219,26 @@ void ieee80211_bss_info_change_notify(st
->  				      u32 changed)
->  {
->  	struct ieee80211_local *local = sdata->local;
-> +	static const u8 zero[ETH_ALEN] = { 0 };
+When we suspend we stop the queues, then upon resume
+the new idle checks will immediately pick up we're
+idle and ask call our driver's config callback. At
+this point its pointless to to call this callback
+as we haven't yet come back from suspend. We avoid
+then making assumptions about being idle until we know
+we've come back from suspend. We do this by checking
+the reason stop on all our queues.
 
-Looks like a busted rebase from pending-fixes to master -- that hunk
-went to a function that doesn't exist on master.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |    5 +++++
+ net/mac80211/util.c        |   39 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+), 0 deletions(-)
 
-Thanks for the vigilence!  I'll get a fix-up for this...
-
-John
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 03e0d22..b8f3013 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1099,6 +1099,8 @@ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+ 				    enum queue_stop_reason reason);
+ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
+ 				    enum queue_stop_reason reason);
++bool ieee80211_any_queues_stopped_by_reason(struct ieee80211_hw *hw,
++					    enum queue_stop_reason reason);
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 8c9f1c7..f8eefad 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -931,6 +931,11 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int count = 0;
+ 
++	/* allow resume to finish before we make any assumptions */
++	if (ieee80211_any_queues_stopped_by_reason(&local->hw,
++				IEEE80211_QUEUE_STOP_REASON_SUSPEND))
++		return 0;
++
+ 	if (local->hw_scanning || local->sw_scanning)
+ 		return ieee80211_idle_off(local, "scanning");
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 97b613a..3f82d51 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -447,6 +447,45 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
+ }
+ EXPORT_SYMBOL(ieee80211_queue_stopped);
+ 
++static bool __ieee80211_queues_stopped_by_reason(struct ieee80211_hw *hw,
++						 int queue,
++						 enum queue_stop_reason reason)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	if (WARN_ON(queue >= hw->queues))
++		return false;
++
++	if (!local->queue_stop_reasons[queue])
++		return false;
++
++	if (test_bit(reason, &local->queue_stop_reasons[queue]))
++		return true;
++
++	return false;
++}
++
++bool ieee80211_any_queues_stopped_by_reason(struct ieee80211_hw *hw,
++					    enum queue_stop_reason reason)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	unsigned long flags;
++	unsigned int i;
++	bool queue_match = false;
++
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
++	for (i = 0; i < hw->queues; i++) {
++		if (__ieee80211_queues_stopped_by_reason(hw, i, reason))
++			queue_match = true;
++	}
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++	return queue_match;
++}
++EXPORT_SYMBOL(ieee80211_any_queues_stopped_by_reason);
++
++
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason)
+ {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.2.446.gfbdc0
+
