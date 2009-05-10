@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60391 "EHLO
+Received: from senator.holtmann.net ([87.106.208.187]:47372 "EHLO
 	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757846AbZEDPzP (ORCPT
+	with ESMTP id S1753308AbZEJAJV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 11:55:15 -0400
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+	Sat, 9 May 2009 20:09:21 -0400
+Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
+ reorder buffer
 From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
+To: Jouni Malinen <j@w1.fi>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20090504121221.GA31147@tuxdriver.com>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <1239136768.7475.62.camel@johannes.local>
-	 <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
-	 <20090504121221.GA31147@tuxdriver.com>
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090509080838.GA1206@jm.kir.nu>
+References: <20090505173512.349795688@atheros.com>
+	 <20090505173550.273830766@atheros.com>
+	 <1241709323.4903.25.camel@localhost.localdomain>
+	 <1241833703.4903.83.camel@localhost.localdomain>
+	 <20090509080838.GA1206@jm.kir.nu>
 Content-Type: text/plain
-Date: Mon, 04 May 2009 08:55:03 -0700
-Message-Id: <1241452503.2903.4.camel@localhost.localdomain>
+Date: Sat, 09 May 2009 17:08:58 -0700
+Message-Id: <1241914138.2783.4.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi Jouni,
 
-> > >> Also, please consider making some sort of prepared presentation.
-> > >> Especially welcome would be topics that are accessible to those
-> > >> outside of the core wireless developer group, such as current
-> > >> projects on enhancing IBSS support, extended power savings, or any
-> > >> other user-visible topic.  I'll be happy to take such proposals in
-> > >> private email or you can post them as part of this thread.
-> > >
-> > > Since I've just booked my train (will arrive 1:30pm or so on the 25th,
-> > > leave Sunday [28th] late afternoon), here are some things I could
-> > > possibly talk about:
-> > >
-> > >  * status of moving to nl80211/cfg80211 -- overview over new cfg80211
-> > >   operations, maybe with Jouni?
-> > >  * power saving if Kalle can't make it
-> > 
-> > I can now confirm that I'm joining the summit as well \o/
-> > 
-> > I will arrive to Berlin on Thursday before noon and will leave on
-> > Sunday evening.
-> > 
-> > Kalle
+> > so I finally got the debug output for you. Took only over a day :)
 > 
-> Excellent news!  Anyone else?
+> Thanks! Would you happen to have timing information available for these
+> (e.g., from klogd)? It looks like the AP is sending out an ADDBA Request
+> to update some parameters, but we currently ignore that request.
+> However, at least in this particular case, our RX reorder bug head_seq
+> matches with the ssn from the ADDBA Request, so I'm not sure whether
+> ignoring the ADDBA contents is really causing harm here (anyway, we
+> should really process these updates, too).
+> 
+> The timeouts on RX reorder frames look similar to what I have seen in my
+> tests and the workaround was indeed trying to address that type of
+> issue, so it is nice to hear that it helped in this case, too.
 
-I should make it, too. Still planning the whole trip.
+so I enabled timing information for dmesg and got another report. It is
+not exactly the same and I don't know how and why it happened.
+
+[  249.579036] phy0: AddBA: ssn=50, dialog_token=1 tid=0 timeout=0ba_policy=1
+[  249.579046] addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
+[  249.579052] addba: 00 1c f0 62 88 5b 30 8f 03 00 01 02 10 00 00 20 
+[  249.579057] addba: 03 
+[  249.579073] Rx A-MPDU request on tid 0 result 0
+[  250.572022] phy0: AddBA: ssn=178, dialog_token=2 tid=0 timeout=0ba_policy=1
+[  250.572032] addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
+[  250.572038] addba: 00 1c f0 62 88 5b e0 8f 03 00 02 02 10 00 00 20 
+[  250.572042] addba: 0b 
+[  250.572048] phy0: RX reorder buf: head_seq=178 ssn=50 buf_size=64 stored_mpdu_num=0 timeout=0 index=0; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+[  250.572108] unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
+[  266.263651] Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
+[  266.263659] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
+[  266.263726] activated addBA response timer on tid 0
+[  266.265534] wrong addBA response token, tid 0
+[  267.263467] addBA response timer expired on tid 0
+[  267.263516] Stopping Tx BA session for 00:1c:f0:xx:xx:xx tid 0
+[  326.083081] Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
+[  326.083097] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
+[  326.083197] activated addBA response timer on tid 0
+[  326.088517] wrong addBA response token, tid 0
+[  327.080206] addBA response timer expired on tid 0
+[  327.080262] Stopping Tx BA session for 00:1c:f0:xx:xx:xx tid 0
+
+This kernel is running latest wireless-testing.git with debug patch and
+the disassoc change (for testing) from Johannes.
 
 Regards
 
