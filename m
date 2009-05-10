@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39722 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754972AbZERQYr (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:53689 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752669AbZEJVHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 12:24:47 -0400
-Subject: Re: iwlagn broken in next-20090514 and next-20090515
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Nico -telmich- Schottelius <nico-linux-next@schottelius.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+	Sun, 10 May 2009 17:07:31 -0400
+Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
+ reorder buffer
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1242662635.32358.523.camel@rc-desk>
-References: <20090515153733.4384db9f.sfr@canb.auug.org.au>
-	 <20090515102621.GA5735@ikn.schottelius.org>
-	 <20090518171505.d30d2f64.sfr@canb.auug.org.au>
-	 <1242662635.32358.523.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mpAqau/H5D0XCUUjMzFm"
-Date: Mon, 18 May 2009 18:24:27 +0200
-Message-Id: <1242663867.27425.1.camel@johannes.local>
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090510202938.GA24197@jm.kir.nu>
+References: <20090505173512.349795688@atheros.com>
+	 <20090505173550.273830766@atheros.com>
+	 <1241709323.4903.25.camel@localhost.localdomain>
+	 <1241833703.4903.83.camel@localhost.localdomain>
+	 <20090509080838.GA1206@jm.kir.nu>
+	 <1241888753.4903.97.camel@localhost.localdomain>
+	 <20090510202938.GA24197@jm.kir.nu>
+Content-Type: text/plain
+Date: Sun, 10 May 2009 14:07:05 -0700
+Message-Id: <1241989625.3384.0.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Jouni,
 
---=-mpAqau/H5D0XCUUjMzFm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > from the WPS information element:
+> > 
+> > 	 * Version: 1.0
+> > 	 * Manufacturer: D-Link Systems
+> > 	 * Model: DIR-615
+> > 	 * Device name: Wireless N Router
+> > 	 * Config methods: Label
+> > 
+> > I bought it over a year ago in Canada. It is actually my second of these
+> > since I fried the first one :)
+> 
+> Thanks! I do actually have a DIR-615. However, it may be completely
+> different WLAN chipset depending on the hardware revision (I love the
+> vendors who do this..). If you have a chance, could you please take a
+> look at which hardware revision your AP is? It is likely in the label on
+> the AP (something like "H/W Ver.: D1  F/W Ver.: 4.00).
 
-On Mon, 2009-05-18 at 09:03 -0700, reinette chatre wrote:
+it is Hardware Version: B2 and Firmware Version: 2.23.
 
-> > > Also wpa_supplicant is not happy:
-> > >=20
-> > > + wpa_supplicant -B -Dwext -iwlan0 -c /home/user/nico/ethz/wlan/wpa_s=
-upplicant.conf
-> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
-> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
-> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
-> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
-> > >=20
->=20
-> There were some changes recently to this ioctl, but I am not familiar
-> with details. Johannes will know.
+Regards
 
-Yeah, I'm not sure -- this happens when clearing keys. I'll look into
-it, we probably need to accept removing a key that doesn't exist.
+Marcel
 
-johannes
-
---=-mpAqau/H5D0XCUUjMzFm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKEYu4AAoJEODzc/N7+QmahigQALS7Q1Nq1UDZbfhvDXGU+Swo
-TvooX7SRRfQrP5TNiKN6tmAQjjv1SOvKbi5qGvFBnzadOVdQ788AjN+VeNug4aeP
-Qn+x/9ZiLK8nQoSAoaSBAp/ypMdjBxEIjS/nNoT4Atkt4B92hs0uuMnlSLch6JJe
-eHu412JA4yg5zUbmbHzww9PcPB1voUtW4CT+wAWXiRwhdCRWL4wIO+Onx4whm1cu
-TFz2PhIirej8QJNR3GiKln5Z/TrFB0ZGfgE83crPvrOFCsvG4fobIBb5zxuYcpcw
-zP7Zn895gDYR5wKacQ6u8qs6BVSTLyJXju2aJfGMpc7oQ806ZKYgLNuo3Yo3gPc2
-jPgXfl36ZWXVNSQwnUF/FYXcodJuSW4FoP9SIqwHZOsR6vOVNh/wlS3zD0jARBTp
-3LGs4zJbEznzLyFSK7g8XmMLyqRJuWqETPfFYEplIGFyqC5BobjnPd2bq+zhrEz/
-sh3kP0inEgygQueJNl4qWAFmxSvSO7ZJ5dog6/6foM4BkOrZSu6Bi+RB7+tKN/hc
-dUqj1yUXlxxTZjrD1yr6OI5IfdFw8XEtTtrV7F3HR/aGLLyP5s2HJdgqdpNrT/Uw
-kNdaLWmrQM5TJzqHJRCU2hWqQZ4YEICSyqHQ2eWh3e8CfRPmeoaXz+wXuAjKEglf
-PGvsv9xQpm4iF77eVY6L
-=wP09
------END PGP SIGNATURE-----
-
---=-mpAqau/H5D0XCUUjMzFm--
 
