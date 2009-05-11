@@ -1,40 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4096 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319AbZEVMf6 (ORCPT
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:46811 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754726AbZEKIiS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 08:35:58 -0400
-Date: Fri, 22 May 2009 08:35:12 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Tobias Doerffel <tobias.doerffel@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH 1/3] ath5k: add support for radio LED
-Message-ID: <20090522123512.GB24949@hash.localnet>
-References: <1242850139-25438-1-git-send-email-jirislaby@gmail.com> <200905202216.43996.tobias.doerffel@gmail.com> <20090520202124.M71221@bobcopeland.com> <200905202233.56608.tobias.doerffel@gmail.com>
+	Mon, 11 May 2009 04:38:18 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200905202233.56608.tobias.doerffel@gmail.com>
+In-Reply-To: <4A07C905.8010805@gmail.com>
+References: <c6b1100b0905101239n564e4379v5460c281260950bc@mail.gmail.com>
+	 <4A074682.6010403@gmail.com>
+	 <c6b1100b0905101529tfafe11p3ddcbf4b604ddd29@mail.gmail.com>
+	 <4A07C905.8010805@gmail.com>
+Date: Mon, 11 May 2009 08:38:17 +0000
+Message-ID: <c6b1100b0905110138r804136aqce6111b17cabc5fb@mail.gmail.com>
+Subject: Re: Oops in wireless from today's git
+From: Chris Clayton <chris2553@googlemail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2009 at 10:33:54PM +0200, Tobias Doerffel wrote:
-> Am Mittwoch, 20. Mai 2009 22:29:42 schrieb Bob Copeland:
-> > On Wed, 20 May 2009 22:16:42 +0200, Tobias Doerffel wrote
-> >
-> > > If there's interest, I'll  prepare a new patch which represents the
-> > > current state.
-> >
-> > I'm definitely interested in seeing rfkill gpio support getting in,
-> > it's overdue.  So I say repost it and we can fasttrack that.
+2009/5/11 Jiri Slaby <jirislaby@gmail.com>:
+> On 05/11/2009 12:29 AM, Chris Clayton wrote:
+>> 2009/5/10 Jiri Slaby <jirislaby@gmail.com>:
+>>> On 05/10/2009 09:39 PM, Chris Clayton wrote:
+>>>> I've just done a git pull and built, installed and booted the kern=
+el.
+>>>> Unfortunately I got the oops below.
+>>> What's your HEAD? Looks like the issue solved by
+>>> 0cc113d866fa87c1455cbaff8d1f7ac054090bd5.
+>>>
+>>
+>> Sorry, I'm a real novice git user, but if by HEAD you mean the lates=
+t
+>> commit, its a4d7749be5de4a7261bcbe3c7d96c748792ec455. The file
+>> .git/FETCH_HEAD contains:
+>>
+>> a4d7749be5de4a7261bcbe3c7d96c748792ec455 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0branch
+>> 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/l=
+inux-2.6
+>
+> Ah, I though you're on wireless-testing git. Could you try to apply t=
+his
+> patch?
+> http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-testing=
+=2Egit;a=3Dcommitdiff_plain;h=3D0cc113d866fa87c1455cbaff8d1f7ac054090bd=
+5
+>
 
-By the way, it's a good idea to work against Johannes Berg's new
-patchset for rfkill which should simplify a lot of the details in
-the driver.  Patches are at:
+Thanks Jiri. That patch applies (with offsets) and prevents the oops.
+I think the patch that caused this oops was sent to stable, so  I
+guess this needs pushing to Linus quite quickly so that it can go to
+stable too.
 
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
+Tested-by: Chris Clayton <chris2553@googlemail.com>
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Thanks again.
 
+--=20
+No, Sir; there is nothing which has yet been contrived by man, by which
+so much happiness is produced as by a good tavern or inn - Doctor Samue=
+l
+Johnson
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
