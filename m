@@ -1,36 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:55564 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105AbZETF3f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 01:29:35 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so77143wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 22:29:37 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 20 May 2009 13:21:41 +0800
-Message-ID: <a8e1da0905192221y449e9820x63d46a6dcbfc1dfc@mail.gmail.com>
-Subject: b43 lp-phy status
-From: Dave Young <hidave.darkstar@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.redhat.com ([66.187.237.31]:58078 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759858AbZEKWjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2009 18:39:19 -0400
+Subject: Re: [PATCH] cfg80211: implement wext key handling
+From: Dan Williams <dcbw@redhat.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Samuel Ortiz <sameo@linux.intel.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <3ace41890905111516m2d5f9f70k83edbdef1ca6e2b8@mail.gmail.com>
+References: <1242042898.18637.0.camel@johannes.local>
+	 <1242049846.28322.12.camel@localhost.localdomain>
+	 <1242050962.29777.12.camel@johannes.local>
+	 <3ace41890905111516m2d5f9f70k83edbdef1ca6e2b8@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 11 May 2009 18:40:08 -0400
+Message-Id: <1242081608.24094.14.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, michael
+On Mon, 2009-05-11 at 23:16 +0100, Hin-Tak Leung wrote:
+> On Mon, May 11, 2009 at 3:09 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2009-05-11 at 09:50 -0400, Dan Williams wrote:
+> >
+> >> I modified the meaning of RESTRICTED/OPEN a few years ago to control the
+> >> WEP auth mode, for a few reasons...  First, some fullmac drivers already
+> >> used it to mean WEP auth mode.  Second, there was no other mechanism to
+> >> control WEP auth mode at the time, and there were a lot of Shared Key
+> >> installations around.  Third, WE-18/WPA was nowhere near being landed,
+> >> and it was only supported by one driver (hostap), and it was the only
+> >> thing that would plausibly support WEP auth mode via SIWAUTH.  Fourth,
+> >> only hostap and maybe airo really implemented the refuse-non-encoded
+> >> anyway.
+> >
+> > But didn't update the header file ;)
+> >
+> >> TBH, SK is nice because it tells you that the WEP key is wrong
+> >> *immediately*, and the only reason NM doesn't use SK by default (and
+> >> then fall back to OS) like the original Mac Airport drivers did is that
+> >> WEXT simply cannot return reliable association error information.
+> >
+> > Hah. Well, we could have that now, but I suspect SK is no longer common
+> > enough to put a lot of work into it.
+> >
+> >> But in the end, we still need a mechanism with WEXT to be able to set SK
+> >> auth when associating.
+> >
+> > We still have that, with WE18, in IW_AUTH_80211_AUTH_ALG. And mac80211
+> > never actually supported _setting_ the WEP auth mechanism with
+> > RESTRICTED/OPEN, only _getting_ that information.
+> >
+> > johannes
+> >
+> >
+> 
+> Argh, is this the reason why compat-wireless(wireless-testing?) today
+> doesn't quite work any more?
+> NetworkManager no longer wants to work, with this message in syslog:
+> 
+> localhost NetworkManager: <WARN>  nm_device_wifi_disable_encryption():
+> error setting key for device wlan2: Invalid argument
 
-What's the status of b43 for lp-phy? Is is possible to use it with
-basic functionality now?
+That specific call shouldn't cause a hard error.  It's just advisory.
+And really, I could just remove that call in NM entirely, since
+wpa_supplicant does clear keys in the MLME disconnect method now.
 
-I have such wireless dev in my dell 5400 laptop.
+Dan
 
-Now I just use the broadcom hybrid driver which can not pass building
-in latest kernel by default. I make some change to it's wl_linux.c to
-make it compiled. Although the wl.ko works, it has some nasty bug
-which will be triggered after modprobe the module several times.
-
-Could you tell what I can do for the b43 lpy? ie. some testing?
-
--- 
-Regards
-dave
