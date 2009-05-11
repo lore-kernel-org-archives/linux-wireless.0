@@ -1,66 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757121AbZEDPd1 (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:43524 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756558AbZEKWQ4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 11:33:27 -0400
-Subject: Re: IEEE80211 Acknowledgement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Alexandre Becholey <alexandre@shockfish.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200905041729.13805.IvDoorn@gmail.com>
-References: <49FF06BB.2090106@shockfish.com>
-	 <200905041729.13805.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lFn9Uqrf+H/g+03Kp4sD"
-Date: Mon, 04 May 2009 17:32:54 +0200
-Message-Id: <1241451174.8683.48.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 11 May 2009 18:16:56 -0400
+Received: by fxm2 with SMTP id 2so2988984fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2009 15:16:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242050962.29777.12.camel@johannes.local>
+References: <1242042898.18637.0.camel@johannes.local>
+	 <1242049846.28322.12.camel@localhost.localdomain>
+	 <1242050962.29777.12.camel@johannes.local>
+Date: Mon, 11 May 2009 23:16:55 +0100
+Message-ID: <3ace41890905111516m2d5f9f70k83edbdef1ca6e2b8@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: implement wext key handling
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	Samuel Ortiz <sameo@linux.intel.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, May 11, 2009 at 3:09 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2009-05-11 at 09:50 -0400, Dan Williams wrote:
+>
+>> I modified the meaning of RESTRICTED/OPEN a few years ago to control=
+ the
+>> WEP auth mode, for a few reasons... =A0First, some fullmac drivers a=
+lready
+>> used it to mean WEP auth mode. =A0Second, there was no other mechani=
+sm to
+>> control WEP auth mode at the time, and there were a lot of Shared Ke=
+y
+>> installations around. =A0Third, WE-18/WPA was nowhere near being lan=
+ded,
+>> and it was only supported by one driver (hostap), and it was the onl=
+y
+>> thing that would plausibly support WEP auth mode via SIWAUTH. =A0Fou=
+rth,
+>> only hostap and maybe airo really implemented the refuse-non-encoded
+>> anyway.
+>
+> But didn't update the header file ;)
+>
+>> TBH, SK is nice because it tells you that the WEP key is wrong
+>> *immediately*, and the only reason NM doesn't use SK by default (and
+>> then fall back to OS) like the original Mac Airport drivers did is t=
+hat
+>> WEXT simply cannot return reliable association error information.
+>
+> Hah. Well, we could have that now, but I suspect SK is no longer comm=
+on
+> enough to put a lot of work into it.
+>
+>> But in the end, we still need a mechanism with WEXT to be able to se=
+t SK
+>> auth when associating.
+>
+> We still have that, with WE18, in IW_AUTH_80211_AUTH_ALG. And mac8021=
+1
+> never actually supported _setting_ the WEP auth mechanism with
+> RESTRICTED/OPEN, only _getting_ that information.
+>
+> johannes
+>
+>
 
---=-lFn9Uqrf+H/g+03Kp4sD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Argh, is this the reason why compat-wireless(wireless-testing?) today
+doesn't quite work any more?
+NetworkManager no longer wants to work, with this message in syslog:
 
-On Mon, 2009-05-04 at 17:29 +0200, Ivo van Doorn wrote:
-> Hi,
->=20
-> Just as side information for other readers:
->=20
-> Alexandre is looking into the problem of rt2500usb/rt73usb and
-> possibly other USB drivers, that they cannot report the ACK status
-> of frames to mac80211 which is problematic for hostapd.
+localhost NetworkManager: <WARN>  nm_device_wifi_disable_encryption():
+error setting key for device wlan2: Invalid argument
 
-I realise that this probably doesn't help and is tangential to the
-question being asked, but I do not think processing ACK frames in
-software is possible for this, since the software does not know which
-frame was transmitted, due to four queues being used, and retries etc.
+and trying to do it by hand give this error:
 
-johannes
+#iwconfig wlan2 key restrict <key>
+Error for wireless request "Set Encode" (8B2A) :
+    SET failed on device wlan2 ; Invalid argument.
 
---=-lFn9Uqrf+H/g+03Kp4sD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ/wqjAAoJEKVg1VMiehFYKz8P/0wPfnwGJEtHM/Cx6LVeqtFw
-ReFkmrMiBX9RxWJh4LqleqzpQ/0Pi2xbnjvJsc53TBjpbMXeK2Qf+IAnPPbqshSD
-XkTwIFap/UaSEZDVwHMfSz+P8YLJHhG2+sJajyQVyol6vUu+Y7MTaPW5mvVzlVUu
-zIy2HOI54BA61hfCZ0mf/40vNTlWnueasQ9Nxaxwh96ksb6wcaEyrLFf8U7k9Kzu
-bHnPSOpy9i8UkUAhgVooBv1gS+M9VjOHtrZ6W46l9LGyeSrIdHkuCDthEusSqdIM
-f1lvLcICVBDIyMgCFeRszPJdKIDWezQb1FVL0J1/vOaSuvdRh2mVbBS4SJTtkX2y
-lfoaBlVS1dPFtFbjf7KLYHeMvvxdy/kRUng//lztfEqiGb7JXj/CP0oFHGt3SqVm
-zkfUV89T8ix5PFPIePMcOYKKwFV3p1EhmErkCSdyYxXhLoY7dtAmrIe3AkYlJIfr
-4nEQeIjRKZi39v5YfycC9YKk+hdiqrLuC9cxRvEXiuCdOIjidvSYtZ1akzi5xILE
-p2shWOaBtvww+l7qSiChEUZBd3X7XZ8sbkkNqpdL6Dey3FlKhbzPfs1LimDIoUUg
-D4otTA32C/4JwzZCWhCg6VDOeahjpUKNdGEIaGw22Gm006b4LEb8rv0bJYAziZvZ
-YSUrx/+RG2d4cU+7C8ys
-=SzdX
------END PGP SIGNATURE-----
-
---=-lFn9Uqrf+H/g+03Kp4sD--
-
+This is v2.6.30-rc5-23297-gbf2c6a3 ; the last time I had a working
+compat-wireless was only a few days (<5) ago.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
