@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:36770 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753879AbZE3U73 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:28608 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758714AbZEKSfM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 16:59:29 -0400
-Received: by fxm12 with SMTP id 12so5033075fxm.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 13:59:30 -0700 (PDT)
-Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
- wireless on my system
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1243716540.13863.32.camel@johannes.local>
-References: <1243716437.26585.4.camel@maxim-laptop>
-	 <1243716540.13863.32.camel@johannes.local>
+	Mon, 11 May 2009 14:35:12 -0400
+Subject: [Announce] Intel and Nokia announce open source telephony project
+ (oFono)
+From: Aki Niemi <aki.niemi@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Marcel Holtmann <marcel@holtmann.org>
 Content-Type: text/plain
-Date: Sat, 30 May 2009 23:59:25 +0300
-Message-Id: <1243717165.5312.3.camel@maxim-laptop>
+Date: Mon, 11 May 2009 21:34:59 +0300
+Message-Id: <1242066899.22268.9.camel@little.research.nokia.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-05-30 at 22:49 +0200, Johannes Berg wrote:
-> On Sat, 2009-05-30 at 23:47 +0300, Maxim Levitsky wrote:
-> > I use nl80211 wpa_suppicant driver.
-> > With this commit (have just bisected) I can't connect to same AP twice,
-> > and usually only a module reload, or somtimes restart of supplicant
-> > help.
-> > Actually usually I can't connect again after first successful connection
-> > at all.
-> 
-> Grab Luis's fix.
-> 
-> johannes
+Intel and Nokia are pleased to jointly announce the oFono project
+(http://ofono.org), an open source project for developing an open source
+telephony solution.
 
-I might sound lazy, but I have searched by mailbox and I haven't see a
-mail from Luis R. Rodriguez, after the point we discussed the oops I
-have been getting on my system due to BUG_ON in crda code (which still
-isn't fixed)
+oFono.org is a place to bring developers together around designing an
+infrastructure for building mobile telephony (GSM/UMTS) applications.
+oFono.org is licensed under GPLv2, and it includes a high-level D-Bus
+API for use by telephony applications of any license.  oFono.org also
+includes a low-level plug-in API for integrating with Open Source as
+well as third party telephony stacks, cellular modems and storage
+back-ends.  The plug-in API functionality is modeled on public
+standards, in particular 3GPP TS 27.007 "AT command set for User
+Equipment (UE)."
 
+Source code is available on http://ofono.org/downloads and a high-level
+architecture diagram is available on http://ofono.org/documentation.  To
+join the mailing list, go to http://lists.ofono.org/listinfo/ofono.
 
-What fix? to what module? kernel drivers, supplicant?
+Nokia and Intel will jointly maintain the oFono project.  We'd like to
+invite all developers to join the oFono.org effort and community.
 
-
-Best regards,
-	Maxim Levitsky
+Marcel Holtmann <holtmann@linux.intel.com>, Intel Open Source Technology
+Center
+Aki Niemi <aki.niemi@nokia.com>, Nokia Devices R&D, Maemo Software
 
