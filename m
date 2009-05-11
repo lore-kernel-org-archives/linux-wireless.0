@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:11279 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbZEKGnf (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41232 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756919AbZEKJZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 02:43:35 -0400
-Message-ID: <4A07C905.8010805@gmail.com>
-Date: Mon, 11 May 2009 08:43:17 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Oops in wireless from today's git
-References: <c6b1100b0905101239n564e4379v5460c281260950bc@mail.gmail.com>	 <4A074682.6010403@gmail.com> <c6b1100b0905101529tfafe11p3ddcbf4b604ddd29@mail.gmail.com>
-In-Reply-To: <c6b1100b0905101529tfafe11p3ddcbf4b604ddd29@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 May 2009 05:25:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 2/5] adm8211: remove uneeded code during suspend/resume
+Date: Mon, 11 May 2009 05:25:01 -0400
+Message-Id: <1242033904-25694-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
+References: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2009 12:29 AM, Chris Clayton wrote:
-> 2009/5/10 Jiri Slaby <jirislaby@gmail.com>:
->> On 05/10/2009 09:39 PM, Chris Clayton wrote:
->>> I've just done a git pull and built, installed and booted the kernel.
->>> Unfortunately I got the oops below.
->> What's your HEAD? Looks like the issue solved by
->> 0cc113d866fa87c1455cbaff8d1f7ac054090bd5.
->>
-> 
-> Sorry, I'm a real novice git user, but if by HEAD you mean the latest
-> commit, its a4d7749be5de4a7261bcbe3c7d96c748792ec455. The file
-> .git/FETCH_HEAD contains:
-> 
-> a4d7749be5de4a7261bcbe3c7d96c748792ec455                branch
-> 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6
+mac80211 drivers do not need to stop the software queues
+or call their own stop() callback upon suspend as we do it
+for drivers. Equally drivers don't have to call their own
+start() or start the queues as mac80211 will do it for us.
 
-Ah, I though you're on wireless-testing git. Could you try to apply this
-patch?
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff_plain;h=0cc113d866fa87c1455cbaff8d1f7ac054090bd5
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/adm8211.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 2b9e379..316df03 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1964,12 +1964,6 @@ static void __devexit adm8211_remove(struct pci_dev *pdev)
+ static int adm8211_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct ieee80211_hw *dev = pci_get_drvdata(pdev);
+-	struct adm8211_priv *priv = dev->priv;
+-
+-	if (priv->mode != NL80211_IFTYPE_UNSPECIFIED) {
+-		ieee80211_stop_queues(dev);
+-		adm8211_stop(dev);
+-	}
+ 
+ 	pci_save_state(pdev);
+ 	pci_set_power_state(pdev, pci_choose_state(pdev, state));
+@@ -1984,11 +1978,6 @@ static int adm8211_resume(struct pci_dev *pdev)
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	pci_restore_state(pdev);
+ 
+-	if (priv->mode != NL80211_IFTYPE_UNSPECIFIED) {
+-		adm8211_start(dev);
+-		ieee80211_wake_queues(dev);
+-	}
+-
+ 	return 0;
+ }
+ #endif /* CONFIG_PM */
+-- 
+1.6.0.6
+
