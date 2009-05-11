@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:19955 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754351AbZEQXCo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39982 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752649AbZEKN6o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 19:02:44 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so920593eyd.37
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 16:02:46 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@web.de>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [PATCH 2/5] p54spi: cosmetic fixes: use even byte count in SPI write; drop unused interrupt status read
-Date: Mon, 18 May 2009 03:02:32 +0400
-Message-Id: <1242601355-3178-3-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <1242601355-3178-2-git-send-email-jcmvbkbc@gmail.com>
-References: <0001-p54spi-fix-incorrect-access-sequence-to-DMA_WRITE_C.patch>
- <1242601355-3178-1-git-send-email-jcmvbkbc@gmail.com>
- <1242601355-3178-2-git-send-email-jcmvbkbc@gmail.com>
+	Mon, 11 May 2009 09:58:44 -0400
+Subject: Re: [RFC/RFT] cfg80211: implement wext key handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <1242050250.28322.16.camel@localhost.localdomain>
+References: <1241892978.31262.20.camel@johannes.local>
+	 <1242050250.28322.16.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+HK2dlV7dvwosQznwizr"
+Date: Mon, 11 May 2009 15:58:42 +0200
+Message-Id: <1242050322.29777.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When SPI write of odd length is requested, p54spi_write splits it
-into two parts: one for all data, except the last byte, and one
-for last byte and padding byte. Unfortunately, the length of
-first part is not amended. It works because all meaningful bytes
-have proper value and the last byte of odd length SPI write
-transaction is ignored.
 
-p54spi_work has dummy HOST_INTERRUPTS register read at the end.
-Drop it, as its result is not used and it has no side effects.
+--=-+HK2dlV7dvwosQznwizr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- drivers/net/wireless/p54/p54spi.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+On Mon, 2009-05-11 at 09:57 -0400, Dan Williams wrote:
+> On Sat, 2009-05-09 at 20:16 +0200, Johannes Berg wrote:
+> > Move key handling wireless extension ioctls from mac80211 to cfg80211
+> > so that all drivers that implement the cfg80211 operations get wext
+> > compatibility.
+> >=20
+> > Note that this drops the SIOCGIWENCODE ioctl. This means that iwconfig
+> > will no longer report "Security mode:open" or "Security mode:restricted=
+"
+> > for mac80211. However, what we displayed there (the authentication algo
+> > used) was actually wrong -- linux/wireless.h states that this setting i=
+s
+> > meant to differentiate between "Refuse non-encoded packets" and "Accept
+> > non-encoded packets". Dropping SIOCGIWENCODE also means that you can no
+> > longer display the key currently in use. We believe this is a misfeatur=
+e
+> > in wireless extensions and unneeded; cfg80211 currently provides no way
+> > to implement it.
+>=20
+> Does this mean inability to display current WEP key index, or just the
+> key that the card is supposedly using?  Seeing the index may be
+> important, but the ability to pull the actual key out of the card was
+> not consistently implemented across WEXT drivers.
 
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index ff92bc3..3991977 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -82,7 +82,7 @@ static void p54spi_spi_write(struct p54s_priv *priv, u8 address,
- 	spi_message_add_tail(&t[0], &m);
- 
- 	t[1].tx_buf = buf;
--	t[1].len = len;
-+	t[1].len = len & ~1;
- 	spi_message_add_tail(&t[1], &m);
- 
- 	if (len % 2) {
-@@ -527,11 +527,6 @@ static void p54spi_work(struct work_struct *work)
- 	}
- 
- 	ret = p54spi_wq_tx(priv);
--	if (ret < 0)
--		goto out;
--
--	ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
--
- out:
- 	mutex_unlock(&priv->mutex);
- }
--- 
-1.6.0.6
+I actually added that back, seems people want to be able to pull the key
+out... I'll address your other email separately.
+
+johannes
+
+--=-+HK2dlV7dvwosQznwizr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKCC8OAAoJEODzc/N7+QmaA90QAIuxDiRW9/4m0jbatsjn+CMn
+7MrcW6+UTBDFZfN3HEF4ZRK5doMoT7sKHvHMG2jN44BkHZmVO0EiCaDGcevM0tyS
+Uw89YvjSTAa7y/qHrUPxclux3z29GxjqrTfavAYlrSgv2x7RJaCS7WKa+ypUdWOD
+0lFSqzwTOAHMk4hy9i8pFm2sZz6e5zkt6N1WTG8q3rTQ6Fgmrg+85M7+Z76MFShN
+tIywV9s2yA4bFYE/e668YiHkKFLaOjaop4zjHM1KQpvPS2SY94ofpMxZTDzu9pH4
+qr7xD7AbOmc3f2JuIs2mlYnzcAXDzTLHdbs18SdHvpw6Su8w4M0LoVzWeOE8oI9J
+e0YJTyS9KMsavHi7eaebOY7uf9uZkkcs1qu8KA4o7w1ftyWFVNAtXdqBbjRGgLdy
+w3vmA1O0xAaHEUzBVdqL8RRNgmHCEFFdFN6gFaJ+AV334n/OLG0lsdNqM5wQZldA
+gu1DxB23awtg0yaz2AIH4lA4bqBCC9pcXWuZRRnvuvrIbW0g7ZTlYOcir8t8+KR0
+OZUrLm0dowDqGZ5L7/ypnPACIydx0j8rLKGLnsiB62yL5kpGvjEeWKX4izmiNWfS
+VQPBHv5cQNq0kWP6pynhX/WtSuSWKH/sgTa/9a3qcKr/BnLp34vJjP5rE37ai9Mr
+nQw2EJQwI4ou3UpxEclv
+=MyEN
+-----END PGP SIGNATURE-----
+
+--=-+HK2dlV7dvwosQznwizr--
 
