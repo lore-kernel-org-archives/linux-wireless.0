@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:37395 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754816AbZEDWfU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 18:35:20 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so1092431eyd.37
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 15:35:19 -0700 (PDT)
-Date: Tue, 5 May 2009 00:49:52 +0200
-From: Tulio Magno Quites Machado Filho <tuliom@quites.com.br>
-To: Alf <alf@mypals.org>, Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k in 2.6.29.1 won't associate with AP
-Message-ID: <20090504224952.GB9342@joutaro.lan>
-References: <200905021218.23747.alf@mypals.org> <1241298894.13562.28.camel@johannes.local> <200905021553.55173.alf@mypals.org>
-MIME-Version: 1.0
+Received: from main.gmane.org ([80.91.229.2]:56724 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752997AbZEKUfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2009 16:35:02 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1M3cDH-0001dD-Gr
+	for linux-wireless@vger.kernel.org; Mon, 11 May 2009 20:35:03 +0000
+Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2009 20:35:03 +0000
+Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2009 20:35:03 +0000
+To: linux-wireless@vger.kernel.org
+From: Matthieu CASTET <castet.matthieu@free.fr>
+Subject: B43 no beacon ?
+Date: Mon, 11 May 2009 20:31:33 +0000 (UTC)
+Message-ID: <loom.20090511T202208-851@post.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200905021553.55173.alf@mypals.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On May 02 09 15:53, Alf wrote:
-> Also, this is what lspci reports:
-> 00:07.0 Ethernet controller: Atheros Communications Inc. AR2413 802.11bg NIC 
-> (rev 01)
->         Subsystem: D-Link System Inc D-Link AirPlus G DWL-G510 Wireless PCI 
-> Adapter(rev.B)
->         Flags: bus master, medium devsel, latency 96, IRQ 18
->         Memory at e0120000 (32-bit, non-prefetchable) [size=64K]
->         Capabilities: [44] Power Management version 2
-> 
-> Does anyone know if this card is supported?  Anybody know why this card 
-> works sometimes but most of the time it can't associate with the AP?
+Hi,
 
-I think so (http://wireless.kernel.org/en/users/Drivers/ath5k#supportedchips).
+I have trying to use openwrt head on a router with a 4306 (core rev 5).
+It use the compat-wireless-2009-05-08 as wireless driver and 4.150.10.5 firmware
 
-Have you tried Johannes sugestion?
+I have no problem to associate and transmit data with one wifi card, but with
+another I got missed beacon errors.
 
--- 
-Tulio Magno
+After putting a wifi card in monitor mode, I saw that the 4306 never send beacon
+frame.
+
+Do you have any idea why the 4306 AP never generate beacon frame ?
+
+Thanks
+
+Matthieu
 
