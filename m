@@ -1,61 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:54066 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754956AbZEaPcZ convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41235 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756966AbZEKJZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 11:32:25 -0400
-Received: by bwz22 with SMTP id 22so7023443bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 08:32:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910905310720w227aa533td3ca82d96d615cb5@mail.gmail.com>
-References: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
-	 <69e28c910905310720w227aa533td3ca82d96d615cb5@mail.gmail.com>
-Date: Sun, 31 May 2009 16:32:26 +0100
-Message-ID: <3ace41890905310832u7adb0c7ao4fedb14c8bcd538a@mail.gmail.com>
-Subject: Re: compat-wireless won't associate on 2nd load
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 May 2009 05:25:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 3/5] mac80211: fix idle trigger upon resume
+Date: Mon, 11 May 2009 05:25:02 -0400
+Message-Id: <1242033904-25694-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
+References: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/31 Gábor Stefanik <netrolller.3d@gmail.com>:
-> I've been experiencing something similar in vmware, though I thought
-> it was vmware's fault. (I have an 8187L.) In my case, detaching and
-> re-attaching the device to the VM was sufficient to reset it.
->
+When we suspend we stop the queues, then upon resume
+the new idle checks will immediately pick up we're
+idle and ask call our driver's config callback. At
+this point its pointless to to call this callback
+as we haven't yet come back from suspend. We avoid
+then making assumptions about being idle until we know
+we've come back from suspend. We do this by checking
+the reason stop on all our queues.
 
-How long have you had this problem? Mine is integrated internally to
-the laptop (although logically being on "usb") so physically detaching
-the device is not possible. I sync up with compat-wireless every few
-days and my problem seem to start about a week ago (during John's
-travel? and lack of much commit-activity between 23th and 27th).
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |    5 +++++
+ net/mac80211/util.c        |   39 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+), 0 deletions(-)
 
-I just suspend'ed/resume'd with compat-wireless alright (that unloads
-rtl8187, and also obviously does a lot of other things) so some
-sequence of unload/reload works, just not manually modprobe -r/-v a
-2nd time after make install +make unload +modprobe.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 03e0d22..b8f3013 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1099,6 +1099,8 @@ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+ 				    enum queue_stop_reason reason);
+ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
+ 				    enum queue_stop_reason reason);
++bool ieee80211_any_queues_stopped_by_reason(struct ieee80211_hw *hw,
++					    enum queue_stop_reason reason);
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 8c9f1c7..f8eefad 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -931,6 +931,11 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int count = 0;
+ 
++	/* allow resume to finish before we make any assumptions */
++	if (ieee80211_any_queues_stopped_by_reason(&local->hw,
++				IEEE80211_QUEUE_STOP_REASON_SUSPEND))
++		return 0;
++
+ 	if (local->hw_scanning || local->sw_scanning)
+ 		return ieee80211_idle_off(local, "scanning");
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 97b613a..3f82d51 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -447,6 +447,45 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
+ }
+ EXPORT_SYMBOL(ieee80211_queue_stopped);
+ 
++static bool __ieee80211_queues_stopped_by_reason(struct ieee80211_hw *hw,
++						 int queue,
++						 enum queue_stop_reason reason)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	if (WARN_ON(queue >= hw->queues))
++		return false;
++
++	if (!local->queue_stop_reasons[queue])
++		return false;
++
++	if (test_bit(reason, &local->queue_stop_reasons[queue]))
++		return true;
++
++	return false;
++}
++
++bool ieee80211_any_queues_stopped_by_reason(struct ieee80211_hw *hw,
++					    enum queue_stop_reason reason)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	unsigned long flags;
++	unsigned int i;
++	bool queue_match = false;
++
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
++	for (i = 0; i < hw->queues; i++) {
++		if (__ieee80211_queues_stopped_by_reason(hw, i, reason))
++			queue_match = true;
++	}
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++	return queue_match;
++}
++EXPORT_SYMBOL(ieee80211_any_queues_stopped_by_reason);
++
++
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason)
+ {
+-- 
+1.6.0.6
 
-The only thing that changed recently enough is this - but the date is
-still too old; unless it is the old git thing where the date is on the
-local/private repository and only pushed to wireless-testing recently
-- I have no idea how to check when a commit first appears in wireless
-testing, vs what the date says?:
-
-commit 16cf1f65c90cc47f6c21ca22b4accfa9749b4977
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Thu Apr 23 16:13:26 2009 +0200
-
-    mac80211: unify config_interface and bss_info_changed
-
-    The config_interface method is a little strange, it contains the
-    BSSID and beacon updates, while bss_info_changed contains most
-    other BSS information for each interface. This patch removes
-    config_interface and rolls all the information it previously
-    passed to drivers into bss_info_changed.
-
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
