@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:56724 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752997AbZEKUfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 16:35:02 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1M3cDH-0001dD-Gr
-	for linux-wireless@vger.kernel.org; Mon, 11 May 2009 20:35:03 +0000
-Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2009 20:35:03 +0000
-Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2009 20:35:03 +0000
-To: linux-wireless@vger.kernel.org
-From: Matthieu CASTET <castet.matthieu@free.fr>
-Subject: B43 no beacon ?
-Date: Mon, 11 May 2009 20:31:33 +0000 (UTC)
-Message-ID: <loom.20090511T202208-851@post.gmane.org>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38471 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbZEKNqJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2009 09:46:09 -0400
+Date: Mon, 11 May 2009 08:48:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: feldmaus <feldmann_markus@gmx.de>
+Cc: linux-wireless@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: hints an infos to start debuging on hp-wmi
+Message-ID: <20090511124855.GA2721@tuxdriver.com>
+References: <gu4g0g$s1e$1@ger.gmane.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <gu4g0g$s1e$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sat, May 09, 2009 at 07:55:13PM +0200, feldmaus wrote:
 
-I have trying to use openwrt head on a router with a 4306 (core rev 5).
-It use the compat-wireless-2009-05-08 as wireless driver and 4.150.10.5 firmware
+> i had many trouble with the wlan card of my girl friends HP zv5265ea
+> Laptop. It is a BCM4303 Wlan Card. The Problem i think is the
+> hp-wmi driver, so i want to debug it.
 
-I have no problem to associate and transmit data with one wifi card, but with
-another I got missed beacon errors.
+Is the problem related to RF-Kill?  If not, then hp-wmi is probably
+not the best place to start...
 
-After putting a wifi card in monitor mode, I saw that the 4306 never send beacon
-frame.
+> It would be nice if someody gives me a start point how to ?
+> I currently using the 2.6.29-rc7 kernel sources.
+> Which sources or header files do i have to modify ?
 
-Do you have any idea why the 4306 AP never generate beacon frame ?
+./drivers/platform/x86/hp-wmi.c
 
-Thanks
+> Are there any developers documentation for the hp-wmi ?
 
-Matthieu
+No idea...
 
+Good luck!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
