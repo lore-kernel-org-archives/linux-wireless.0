@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44045 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528AbZEISGy (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54934 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753249AbZEKS6t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 14:06:54 -0400
-Subject: [PATCH] cfg80211: constify key mac address in ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 09 May 2009 20:06:47 +0200
-Message-Id: <1241892407.31262.9.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 11 May 2009 14:58:49 -0400
+Message-Id: <20090511185842.074874801@atheros.com>
+References: <20090511185754.653711567@atheros.com>
+Date: Mon, 11 May 2009 21:57:55 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 1/4] nl80211: Validate MFP flag type when parsing STA flags
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The address pointed to by mac_addr can be marked as const.
+NL80211_STA_FLAG_MFP was forgotten from sta_flags_policy. The previous
+version added the flag due to the loop used in parse_station_flags,
+but the proper behavior would be to allow nla_parse_nested() to go
+through the policy for all flags.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- include/net/cfg80211.h |    6 +++---
- net/mac80211/cfg.c     |    6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ net/wireless/nl80211.c |    1 +
+ 1 file changed, 1 insertion(+)
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-05-09 19:59:45.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-05-09 19:59:48.000000000 +0200
-@@ -858,13 +858,13 @@ struct cfg80211_ops {
- 				       struct vif_params *params);
+--- uml.orig/net/wireless/nl80211.c	2009-05-11 21:39:23.000000000 +0300
++++ uml/net/wireless/nl80211.c	2009-05-11 21:39:23.000000000 +0300
+@@ -1331,6 +1331,7 @@ static const struct nla_policy sta_flags
+ 	[NL80211_STA_FLAG_AUTHORIZED] = { .type = NLA_FLAG },
+ 	[NL80211_STA_FLAG_SHORT_PREAMBLE] = { .type = NLA_FLAG },
+ 	[NL80211_STA_FLAG_WME] = { .type = NLA_FLAG },
++	[NL80211_STA_FLAG_MFP] = { .type = NLA_FLAG },
+ };
  
- 	int	(*add_key)(struct wiphy *wiphy, struct net_device *netdev,
--			   u8 key_index, u8 *mac_addr,
-+			   u8 key_index, const u8 *mac_addr,
- 			   struct key_params *params);
- 	int	(*get_key)(struct wiphy *wiphy, struct net_device *netdev,
--			   u8 key_index, u8 *mac_addr, void *cookie,
-+			   u8 key_index, const u8 *mac_addr, void *cookie,
- 			   void (*callback)(void *cookie, struct key_params*));
- 	int	(*del_key)(struct wiphy *wiphy, struct net_device *netdev,
--			   u8 key_index, u8 *mac_addr);
-+			   u8 key_index, const u8 *mac_addr);
- 	int	(*set_default_key)(struct wiphy *wiphy,
- 				   struct net_device *netdev,
- 				   u8 key_index);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-05-09 19:59:45.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-05-09 19:59:48.000000000 +0200
-@@ -112,7 +112,7 @@ static int ieee80211_change_iface(struct
- }
- 
- static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
--			     u8 key_idx, u8 *mac_addr,
-+			     u8 key_idx, const u8 *mac_addr,
- 			     struct key_params *params)
- {
- 	struct ieee80211_sub_if_data *sdata;
-@@ -166,7 +166,7 @@ static int ieee80211_add_key(struct wiph
- }
- 
- static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
--			     u8 key_idx, u8 *mac_addr)
-+			     u8 key_idx, const u8 *mac_addr)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
-@@ -208,7 +208,7 @@ static int ieee80211_del_key(struct wiph
- }
- 
- static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
--			     u8 key_idx, u8 *mac_addr, void *cookie,
-+			     u8 key_idx, const u8 *mac_addr, void *cookie,
- 			     void (*callback)(void *cookie,
- 					      struct key_params *params))
- {
+ static int parse_station_flags(struct nlattr *nla, u32 *staflags)
 
+-- 
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
