@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44413 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753617AbZERUGt (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:14928 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753826AbZEKHlL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 16:06:49 -0400
-Subject: Re: [PATCH] cfg80211: allow wext to remove keys that don't exist
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Samuel Ortiz <samuel@sortiz.org>
-In-Reply-To: <1242677076.30019.5.camel@mj>
-References: <1242669396.29049.2.camel@johannes.local>
-	 <1242677076.30019.5.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GAtKRteC8Esg8X6nH0r1"
-Date: Mon, 18 May 2009 22:06:40 +0200
-Message-Id: <1242677200.29049.13.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 11 May 2009 03:41:11 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so2322379wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2009 00:41:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090511001749.efx510zpk404owww-cebfxv@webmail.spamcop.net>
+References: <20090203173228.GB9713@tesla> <20090214230618.203560@gmx.net>
+	<43e72e890902141718v544f5caejb71f53bdadbf8a8f@mail.gmail.com>
+	<20090216205115.21860@gmx.net> <43e72e890902161342j23b68a4eoabddb047fb9d9084@mail.gmail.com>
+	<20090508211237.316290@gmx.net> <1241818845.6240.4.camel@mj>
+	<43e72e890905081453h2d660e6dl38b714467c8f24cb@mail.gmail.com>
+	<43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
+	<20090511001749.efx510zpk404owww-cebfxv@webmail.spamcop.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 11 May 2009 00:40:52 -0700
+Message-ID: <43e72e890905110040o6a87d963mf0d5a5a08b22fbfd@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath comes
+To: Pavel Roskin <proski@gnu.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Alexander Bartha <alex.xy.privat@gmx.at>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, May 10, 2009 at 9:17 PM, Pavel Roskin <proski@gnu.org> wrote:
+> Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+>
+>> I can reproduce, and I tried without the idle patches but I still se=
+e
+>> the issue. I see this issue only after suspend. Did you suspend and
+>> get this as well? I see this using AR5416. If you are seeing this on
+>> suspend can you try with the patch I posted to linux-wireless to see
+>> if it helps a little?
+>
+> I saw this on AR9280 without any suspends. =C2=A0The card doesn't sup=
+port the
+> 802.11a range, so it's not a direct equivalent of the problem I bisec=
+ted
+> with ath5k (invalid rates when scanning and transmitting).
 
---=-GAtKRteC8Esg8X6nH0r1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for the heads up Pavel. So can you guys test with this option
+set as follows:
 
-On Mon, 2009-05-18 at 16:04 -0400, Pavel Roskin wrote:
-> On Mon, 2009-05-18 at 19:56 +0200, Johannes Berg wrote:
-> > Some applications using wireless extensions expect to be able to
-> > remove a key that doesn't exist. One example is wpa_supplicant
-> > which doesn't actually change behaviour when running into an
-> > error while trying to do that, but it prints an error message
-> > which users interpret as wpa_supplicant having problems.
->=20
-> It sounds like you are working around a userspace problem in the kernel.
+CONFIG_MAC80211_DEFAULT_PS_VALUE=3D0
 
-More a "user problem" rather than "userspace problem"...
+If using compat-wireless just stuff it into config.mk.
 
-> > The safe thing to do is not change the behaviour of wireless
-> > extensions any more, so when the driver reports -ENOENT let
-> > the wext bridge code return success to userspace. To guarantee
-> > this, also document that drivers should return -ENOENT when the
-> > key doesn't exist.
->=20
-> You patch is changing the behavior or wireless extensions.  It would be
-> much more reasonable for wpa_supplicant not to remove non-existent keys
-> or (if it's unsafe or non-practical for some reason) not to report
-> -ENOENT to the user.
+This fixes my issues and points towards PS code. This could be how we
+handle PS in ath9k (more likely) or mac80211. For now please disable
+this if using ath9k until we figure out what causes this.
 
-Umm, no... my previous patch changed the behaviour and this restores it.
-
-johannes
-
---=-GAtKRteC8Esg8X6nH0r1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKEb/MAAoJEODzc/N7+Qmaq6MP/0OcpQl1vm5q9Vcu5ufudh+1
-xjVwZbgn8mTXy2aKK9nKTVHh+WpCQO08HL9Lk2zANc8QLgPmwWoejrO8kpYuv2nK
-vljzZM+1y7Slc/f1ocBPrShWuxMLGmdZctpCxZZoEltokgYnNNQWbCk9iYGqiAWd
-aBQxeX5dKshq45V8YbUAqX+DeIsy1W19cgJvv72ojrk4g3lX1hcsyYnl7PQvXnNr
-1e+uR2EVl+S6w+Lb2f58dPOjucR4Cl6EvPSADZQw4TcC9XRaGE1svKDAgKCZ73Iu
-SCP07R3rkFEm9EqL5Lcmy5NA2n5g1/OgfIGDrcfgRq71xC3hSToBsaR4KKWuUsX3
-0r31qmTBOtWqK0PnJA0lN2KwIuimgeZwPdEaQ1x9pJ2ajaFj27hFfmyQNoeR8Bzj
-HQ5zkYSrw3qj8UllPApWEw23kcG3UW9nsVfFJHgbEqOY2T2wsqA77e8eMuZOhl2Z
-2H6iIL9S8RzqDGRcgdd9N2z6XzH5ullGH2FonhEBlrfPSBq4eY6+OKAhWgEFXhWT
-lQobMnp6u4bwWQFD086nmtH2Qb7G3csZlybYejm0+RnyzWASX/KrNyj2Vh1xQRRZ
-HBBa+XqgbYLkistwQOA5dgGG7ucfT9UXifPEVv8+3Dtw05htC4/S4WVPdA/iXPsf
-JXuDiIpdYq1ZBGNhbVQr
-=ibpd
------END PGP SIGNATURE-----
-
---=-GAtKRteC8Esg8X6nH0r1--
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
