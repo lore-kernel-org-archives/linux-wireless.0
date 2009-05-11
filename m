@@ -1,147 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56624 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760000AbZE1Bsq (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49958 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbZEKMnR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 21:48:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org
-Cc: jal2@gmx.de, Peter.Grabienski@Atheros.com,
-	Stephen.Chen@Atheros.com, Michael.Fortin@Atheros.com,
-	Johnny.Cheng@Atheros.com, Yuan-Gu.Wei@atheros.com,
-	otus-devel@lists.madwifi-project.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 1/2] ar9170: add initial support for 1-stage firmware
-Date: Wed, 27 May 2009 21:48:45 -0400
-Message-Id: <1243475326-28867-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com>
-References: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 11 May 2009 08:43:17 -0400
+Subject: [PATCH v2] cfg80211: disallow interfering with stations on non-AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242045283.18637.1.camel@johannes.local>
+References: <1242045283.18637.1.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 11 May 2009 14:43:13 +0200
+Message-Id: <1242045793.26810.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You can get the stage 1 firmware from here:
+On non-AP interfaces userspace has no business interfering with
+the station management, this can confuse mac80211 (and other
+drivers probably wouldn't support it anyway). Allow adding and
+removing stations only on AP interfaces.
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/ar9170.fw
-
-Its license:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/LICENSE
-
-It seems with some devices this works, with some others
-I see only scan working. We shall not push this firmware
-into the linux-firmware tree until these issues have been
-resolved.
-
-Cc: Peter Grabienski <Peter.Grabienski@Atheros.com>
-Cc: Stephen Chen <Stephen.Chen@Atheros.com>
-Cc: Michael Fortin <Michael.Fortin@Atheros.com>
-Cc: Johnny Cheng <Johnny.Cheng@Atheros.com>
-Cc: Yuan-Gu Wei <Yuan-Gu.Wei@atheros.com>
-Cc: Joerg Albert <jal2@gmx.de>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ar9170/phy.c |   13 ++++++++++---
- drivers/net/wireless/ath/ar9170/usb.c |   22 +++++++++++++++++-----
- 2 files changed, 27 insertions(+), 8 deletions(-)
+Oops.
 
-diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
-index 6ce2075..0675dc8 100644
---- a/drivers/net/wireless/ath/ar9170/phy.c
-+++ b/drivers/net/wireless/ath/ar9170/phy.c
-@@ -39,6 +39,7 @@
- #include <linux/bitrev.h>
- #include "ar9170.h"
- #include "cmd.h"
-+#include "usb.h"
+ net/wireless/nl80211.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-05-11 14:30:25.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-05-11 14:42:05.000000000 +0200
+@@ -1726,6 +1726,12 @@ static int nl80211_new_station(struct sk
+ 	if (err)
+ 		goto out_rtnl;
  
- static int ar9170_init_power_cal(struct ar9170 *ar)
- {
-@@ -996,6 +997,10 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
- 	int idx, i, n;
- 	u8 ackpower, ackchains, f;
- 	u8 pwr_freqs[AR5416_MAX_NUM_TGT_PWRS];
-+	struct ar9170_usb *aru;
-+
-+	/* All ar9170 devices are USB */
-+	aru = container_of(ar, struct ar9170_usb, common);
- 
- 	if (freq < 3000)
- 		f = freq - 2300;
-@@ -1102,9 +1107,11 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
- 	else
- 		ackpower = ar->power_5G_leg[0] & 0x3f;
- 
--	ar9170_regwrite(0x1c3694, ackpower << 20 | ackchains << 26);
--	ar9170_regwrite(0x1c3bb4, ackpower << 5 | ackchains << 11 |
--				  ackpower << 21 | ackchains << 27);
-+	if (aru->init_values)  {
-+		ar9170_regwrite(0x1c3694, ackpower << 20 | ackchains << 26);
-+		ar9170_regwrite(0x1c3bb4, ackpower << 5 | ackchains << 11 |
-+					  ackpower << 21 | ackchains << 27);
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
++		err = -EINVAL;
++		goto out;
 +	}
- 
- 	ar9170_regwrite_finish();
- 	return ar9170_regwrite_result();
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index d7c13c0..3c97c09 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -51,6 +51,7 @@ MODULE_AUTHOR("Johannes Berg <johannes@sipsolutions.net>");
- MODULE_AUTHOR("Christian Lamparter <chunkeey@web.de>");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Atheros AR9170 802.11n USB wireless");
-+MODULE_FIRMWARE("ar9170.fw");
- MODULE_FIRMWARE("ar9170-1.fw");
- MODULE_FIRMWARE("ar9170-2.fw");
- 
-@@ -504,17 +505,23 @@ static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
- {
- 	int err = 0;
- 
--	err = request_firmware(&aru->init_values, "ar9170-1.fw",
-+	err = request_firmware(&aru->firmware, "ar9170.fw",
- 			       &aru->udev->dev);
--	if (err) {
--		dev_err(&aru->udev->dev, "file with init values not found.\n");
--		return err;
-+	if (!err) {
-+		aru->init_values = NULL;
-+		return 0;
- 	}
- 
-+	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
-+		"not found, trying old firmware...\n");
 +
-+	err = request_firmware(&aru->init_values, "ar9170-1.fw",
-+			       &aru->udev->dev);
-+
- 	err = request_firmware(&aru->firmware, "ar9170-2.fw", &aru->udev->dev);
- 	if (err) {
- 		release_firmware(aru->init_values);
--		dev_err(&aru->udev->dev, "firmware file not found.\n");
-+		dev_err(&aru->udev->dev, "file with init values not found.\n");
- 		return err;
- 	}
+ 	err = get_vlan(info->attrs[NL80211_ATTR_STA_VLAN], drv, &params.vlan);
+ 	if (err)
+ 		goto out;
+@@ -1769,6 +1775,12 @@ static int nl80211_del_station(struct sk
+ 	if (err)
+ 		goto out_rtnl;
  
-@@ -548,6 +555,9 @@ static int ar9170_usb_upload_firmware(struct ar9170_usb *aru)
- {
- 	int err;
- 
-+	if (!aru->init_values)
-+		goto upload_fw_start;
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
++		err = -EINVAL;
++		goto out;
++	}
 +
- 	/* First, upload initial values to device RAM */
- 	err = ar9170_usb_upload(aru, aru->init_values->data,
- 				aru->init_values->size, 0x102800, false);
-@@ -557,6 +567,8 @@ static int ar9170_usb_upload_firmware(struct ar9170_usb *aru)
- 		return err;
- 	}
- 
-+upload_fw_start:
-+
- 	/* Then, upload the firmware itself and start it */
- 	return ar9170_usb_upload(aru, aru->firmware->data, aru->firmware->size,
- 				0x200000, true);
--- 
-1.6.0.6
+ 	if (!drv->ops->del_station) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+
 
