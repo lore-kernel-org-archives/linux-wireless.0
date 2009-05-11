@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55552 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754216AbZEUDEc (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:7842 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631AbZEKBzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 23:04:32 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 2/3] rfkill: fix input event handling in rfkill conversion
-Date: Thu, 21 May 2009 00:04:18 -0300
-Message-Id: <1242875059-9627-3-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
-References: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
+	Sun, 10 May 2009 21:55:17 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so819771eyd.37
+        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2009 18:55:17 -0700 (PDT)
+Date: Mon, 11 May 2009 03:55:15 +0200
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt73usb Access point status
+Message-Id: <20090511035515.83c21b0c.cjsthompson@gmail.com>
+In-Reply-To: <efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
+References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
+	<efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
+	<wfk54zu7t6.fsf@calligramme.charmers>
+	<efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using break/continue inside a for() which is itself inside a do {} while,
-is asking for trouble...
+On Sat, 2 May 2009 11:34:31 +0100
+Luis Correia <luis.f.correia@gmail.com> wrote:
+> No, the bug is not in hostapd.
+> 
+> As Johannes says, the bug is in the driver.
+> Apparently, the driver is unable to get the ACK from the hardware and
+> thus unable to report that ACK back to hostapd.
+> 
+> So the hostapd hack works, as long as there are enough room for
+> retransmit supposely lost frames.
+> 
+> I can't explain this well enough in English, sorry.
 
-Instead of replacing the bogus "break" with "continue", use something far
-more readable, instead.
+Apparently there is no bug in neither hostapd nor the driver. From what I understood the hardware is incapable of doing it or the firmware needs to be fixed.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
----
- net/rfkill/input.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+> To be completely honest with you in this whole AP issue, here's what I
+> used to say to my friends: "if you need an AP working flawlessly under
+> Linux, got with the Atheros b/g hardware".
+> But that was in the madwifi days, I haven't tested it with the current
+> mac80211 based driver.
 
-diff --git a/net/rfkill/input.c b/net/rfkill/input.c
-index f708d74..a7295ad 100644
---- a/net/rfkill/input.c
-+++ b/net/rfkill/input.c
-@@ -123,14 +123,14 @@ static void rfkill_op_handler(struct work_struct *work)
- 			continue;
- 
- 		for (i = 0; i < NUM_RFKILL_TYPES; i++) {
--			if (!__test_and_clear_bit(i, rfkill_sw_pending))
--				break;
--			c = __test_and_clear_bit(i, rfkill_sw_state);
--			spin_unlock_irq(&rfkill_op_lock);
-+			if (__test_and_clear_bit(i, rfkill_sw_pending)) {
-+				c = __test_and_clear_bit(i, rfkill_sw_state);
-+				spin_unlock_irq(&rfkill_op_lock);
- 
--			__rfkill_handle_normal_op(i, c);
-+				__rfkill_handle_normal_op(i, c);
- 
--			spin_lock_irq(&rfkill_op_lock);
-+				spin_lock_irq(&rfkill_op_lock);
-+			}
- 		}
- 	} while (rfkill_op_pending);
- 	spin_unlock_irq(&rfkill_op_lock);
+But if he can't use anything else than a USB dongle than Atheros is useless. In my case I can't use anything else than a USB dongle on my AP because there's only one case you can use for this embedded board (ALIX 2d3) and it doesn't have a hole for an external antenna as it's the model with 3 ethernet ports.
+
 -- 
-1.6.3.1
-
+Christoph .J Thompson <cjsthompson@gmail.com>
