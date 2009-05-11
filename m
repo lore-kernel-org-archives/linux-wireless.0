@@ -1,75 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45701 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097AbZEMWXL (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:40367 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755304AbZELADu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 18:23:11 -0400
-Subject: Re: [RFC v2 3/5] cfg80211: add WoW support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090513181458.GB19693@tesla>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
-	 <1242206461-30793-4-git-send-email-lrodriguez@atheros.com>
-	 <1242208515.29288.0.camel@johannes.local>  <20090513181458.GB19693@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZtDLY6HR2UMMHt1eJoma"
-Date: Thu, 14 May 2009 00:22:42 +0200
-Message-Id: <1242253362.10076.7.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 11 May 2009 20:03:50 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] ar9170: introduce functions for MAC programming
+Date: Tue, 12 May 2009 01:08:47 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200905120108.47748.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch introduces 3 new function which are used to update
+the MAC state, whenever needed... e.g: after a band switch.
 
---=-ZtDLY6HR2UMMHt1eJoma
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-05-13 at 11:14 -0700, Luis R. Rodriguez wrote:
-
-> > > +enum nl80211_wow_triggers {
-> > > +	NL80211_WOW_TRIGGER_MAGIC_PACKET	=3D 1 << 0,
-> > > +	NL80211_WOW_TRIGGER_BMISS		=3D 1 << 1,
-> > > +	NL80211_WOW_TRIGGER_LINK_CHANGE		=3D 1 << 2,
-> > > +	NL80211_WOW_TRIGGER_PATTERN		=3D 1 << 3,
-> > > +};
-> >=20
-> > Seems like you need to have a way to set the pattern and magic packet?
->=20
-> Yeah TDB -- the code for that is a bit complex and I don't understand how
-> things are being broken down yet. We could just not have the cabability
-> present until that's properly figured out.
-
-Yeah I think that would be preferable, maybe even not define the bits
-until we figure out what else we need. It might not actually make sense
-to use bits here, for example if you need a magic packet to wake up it
-might make sense to have just a magic packet netlink attribute that, if
-userspace passes it, defines that magic packet with that packet should
-be used, instead of requiring that the user sets both the bit and gives
-the packet. etc.
-
-johannes
-
---=-ZtDLY6HR2UMMHt1eJoma
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKC0gvAAoJEODzc/N7+QmaoW8P/RHupwLsL+fJCoG7NdYXlGpQ
-f8ybWTiRaTsoyXl8Rww7jzAL2WIgJRx6YeFu1QHaVN3MOZ5GL6bLC4qxDJCPXsEi
-zT2sJW7296celEr1lAty/2YOFWJniD6ICR0hzh0v2jzYuVMHilB7/d+H2ye+KSr1
-5XU9MZK4Cqc2a3hGuai1YzGQP5v2dm+Wv/0/CnJaX7L6N81lVx0tV0a+G0jL4UOB
-up3/UYfTXu5HlkLFlBHEw2bGlw/z9PUHhe2KuCiBDiVTDaZ5H9c/Bb2+FVVSZFzJ
-zSIhs5QvaF/bxZa8aEZ2tZCxgrj76LxBkZcSGXAt3bsKPBDEHkwNtLy8R8NDssXU
-nSyoXChrioHzXHT02+oypRV3UkwuGVihBvLsx4nUqIgryDaosYm/uR4+4HZXHDCG
-h825Ik7oNHcRnIeuB76QYBCadovFFoQIZnYdObYWkbnJpxGIdQjIcs2tSrPCreFP
-IpOEzxz+TJMYAFIG6DcX8hd5v+b+MS+VIae1LoTOsatolU6Pmj6N/RTmXv++r7FB
-h3YnIxhfillsmLPGpQtI9J1Mfah3KMhiTaesyrgPq01tW7bm4kOmL21lUn+QNUl/
-Yj5DRGurK2g74kgllFmHaizeGIAm0nmCYDJN3fbuTAV2+QvXrLJPIYL2KsPemW3f
-euSxWr3pHah7APUTN/6z
-=cnsv
------END PGP SIGNATURE-----
-
---=-ZtDLY6HR2UMMHt1eJoma--
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 17bd3ea..77dc647 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -215,6 +215,9 @@ int ar9170_update_multicast(struct ar9170 *ar);
+ int ar9170_update_frame_filter(struct ar9170 *ar);
+ int ar9170_set_operating_mode(struct ar9170 *ar);
+ int ar9170_set_beacon_timers(struct ar9170 *ar);
++int ar9170_set_dyn_sifs_ack(struct ar9170 *ar);
++int ar9170_set_slot_time(struct ar9170 *ar);
++int ar9170_set_basic_rates(struct ar9170 *ar);
+ int ar9170_set_hwretry_limit(struct ar9170 *ar, u32 max_retry);
+ int ar9170_update_beacon(struct ar9170 *ar);
+ void ar9170_new_beacon(struct work_struct *work);
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 706262f..d9f1f46 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -38,6 +38,55 @@
+ #include "ar9170.h"
+ #include "cmd.h"
+ 
++int ar9170_set_dyn_sifs_ack(struct ar9170 *ar)
++{
++	u32 val;
++
++	if (conf_is_ht40(&ar->hw->conf))
++		val = 0x010a;
++	else {
++		if (ar->hw->conf.channel->band == IEEE80211_BAND_2GHZ)
++			val = 0x105;
++		else
++			val = 0x104;
++	}
++
++	return ar9170_write_reg(ar, AR9170_MAC_REG_DYNAMIC_SIFS_ACK, val);
++}
++
++int ar9170_set_slot_time(struct ar9170 *ar)
++{
++	u32 slottime = 20;
++
++	if (!ar->vif)
++		return 0;
++
++	if ((ar->hw->conf.channel->band == IEEE80211_BAND_5GHZ) ||
++	    ar->vif->bss_conf.use_short_slot)
++		slottime = 9;
++
++	return ar9170_write_reg(ar, AR9170_MAC_REG_SLOT_TIME, slottime << 10);
++}
++
++int ar9170_set_basic_rates(struct ar9170 *ar)
++{
++	u8 cck, ofdm;
++
++	if (!ar->vif)
++		return 0;
++
++	ofdm = ar->vif->bss_conf.basic_rates >> 4;
++
++	/* FIXME: is still necessary? */
++	if (ar->hw->conf.channel->band == IEEE80211_BAND_5GHZ)
++		cck = 0;
++	else
++		cck = ar->vif->bss_conf.basic_rates & 0xf;
++
++	return ar9170_write_reg(ar, AR9170_MAC_REG_BASIC_RATE,
++				ofdm << 8 | cck);
++}
++
+ int ar9170_set_qos(struct ar9170 *ar)
+ {
+ 	ar9170_regwrite_begin(ar);
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 4ef1d2f..df83883 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1344,15 +1344,21 @@ static int ar9170_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++
++		/* adjust slot time for 5 GHz */
++		err = ar9170_set_slot_time(ar);
++		if (err)
++			goto out;
++
++		err = ar9170_set_dyn_sifs_ack(ar);
++		if (err)
++			goto out;
++
+ 		err = ar9170_set_channel(ar, hw->conf.channel,
+ 				AR9170_RFI_NONE,
+ 				nl80211_to_ar9170(hw->conf.channel_type));
+ 		if (err)
+ 			goto out;
+-		/* adjust slot time for 5 GHz */
+-		if (hw->conf.channel->band == IEEE80211_BAND_5GHZ)
+-			err = ar9170_write_reg(ar, AR9170_MAC_REG_SLOT_TIME,
+-					       9 << 10);
+ 	}
+ 
+ out:
+@@ -1464,15 +1470,19 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		memcpy(ar->bssid, bss_conf->bssid, ETH_ALEN);
+ 		err = ar9170_set_operating_mode(ar);
++		if (err)
++			goto out;
+ 	}
+ 
+ 	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
+ 		err = ar9170_update_beacon(ar);
+-		if (!err)
+-			ar9170_set_beacon_timers(ar);
+-	}
++		if (err)
++			goto out;
+ 
+-	ar9170_regwrite_begin(ar);
++		err = ar9170_set_beacon_timers(ar);
++		if (err)
++			goto out;
++	}
+ 
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		ar->state = bss_conf->assoc ? AR9170_ASSOCIATED : ar->state;
+@@ -1483,8 +1493,11 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ #endif /* CONFIG_AR9170_LEDS */
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BEACON_INT)
++	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		err = ar9170_set_beacon_timers(ar);
++		if (err)
++			goto out;
++	}
+ 
+ 	if (changed & BSS_CHANGED_HT) {
+ 		/* TODO */
+@@ -1492,31 +1505,18 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+-		u32 slottime = 20;
+-
+-		if (bss_conf->use_short_slot)
+-			slottime = 9;
+-
+-		ar9170_regwrite(AR9170_MAC_REG_SLOT_TIME, slottime << 10);
++		err = ar9170_set_slot_time(ar);
++		if (err)
++			goto out;
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BASIC_RATES) {
+-		u32 cck, ofdm;
+-
+-		if (hw->conf.channel->band == IEEE80211_BAND_5GHZ) {
+-			ofdm = bss_conf->basic_rates;
+-			cck = 0;
+-		} else {
+-			/* four cck rates */
+-			cck = bss_conf->basic_rates & 0xf;
+-			ofdm = bss_conf->basic_rates >> 4;
+-		}
+-		ar9170_regwrite(AR9170_MAC_REG_BASIC_RATE,
+-				ofdm << 8 | cck);
++		err = ar9170_set_basic_rates(ar);
++		if (err)
++			goto out;
+ 	}
+ 
+-	ar9170_regwrite_finish();
+-	err = ar9170_regwrite_result();
++out:
+ 	mutex_unlock(&ar->mutex);
+ }
+ 
