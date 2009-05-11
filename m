@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eta-ori.net ([91.121.142.51]:47399 "EHLO orion.eta-ori.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751400AbZE1QuY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 12:50:24 -0400
-Received: from [10.0.0.10] (p4FEDFC70.dip.t-dialin.net [79.237.252.112])
-	by orion.eta-ori.net (Postfix) with ESMTPSA id DE17C48C8A0
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 18:50:21 +0200 (CEST)
-Message-ID: <4A1EC184.7040406@impulze.org>
-Date: Thu, 28 May 2009 18:53:24 +0200
-From: Daniel Mierswa <impulze@impulze.org>
-MIME-Version: 1.0
+Received: from fmmailgate03.web.de ([217.72.192.234]:35103 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754245AbZELADt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2009 20:03:49 -0400
+From: Christian Lamparter <chunkeey@web.de>
 To: linux-wireless@vger.kernel.org
-Subject: Re: ath5k: works only occasionaly
-References: <4A1EAEA7.4070208@impulze.org> <1243528150.20853.7.camel@mj>
-In-Reply-To: <1243528150.20853.7.camel@mj>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH 2/6] ar9170: update hardware definitions
+Date: Tue, 12 May 2009 01:08:27 +0200
+MIME-Version: 1.0
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200905120108.27730.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28.05.2009 18:29, Pavel Roskin wrote:
-> The current kernel version is more important than the one you tried
-> initially.  Also, the chip revision from the kernel log may be useful.
-Tried several stable releases from 2.6.24 to 2.6.29, current one is
-2.6.30-rc6 tag from wireless-testing.git
+This patch only contains a few uncritical updates for the
+hardware definition header.
 
-> The reason for disconnect should be printed before that line.
-I will log and save, once I'm at university again.
-
-> It must be from the driver, not from wpa_supplicant.
-Figured as much, otherwise it'd be very surprising if wpa_supplicant was
-broken over a decade without anyone but me noticing. :)
-
-> Using -Dwext or -Dnl80211 should have no effect on disconnects.
-good to know, one thing less.
-
-> If you can, try connecting to an access point with known good signal to
-> see if the problem is caused by low signal.
-Problem is that I don't have any "known working" APs in public. :-/
-
--- 
-Mierswa, Daniel
-
-If you still don't like it, that's ok: that's why I'm boss. I simply
-know better than you do.
-               --- Linus Torvalds, comp.os.linux.advocacy, 1996/07/22
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
+index 3293e0f..3c8004f 100644
+--- a/drivers/net/wireless/ath/ar9170/hw.h
++++ b/drivers/net/wireless/ath/ar9170/hw.h
+@@ -207,7 +207,8 @@ enum ar9170_cmd {
+ #define AR9170_MAC_REG_AC1_AC0_TXOP		(AR9170_MAC_REG_BASE + 0xB44)
+ #define AR9170_MAC_REG_AC3_AC2_TXOP		(AR9170_MAC_REG_BASE + 0xB48)
+ 
+-#define AR9170_MAC_REG_AMPDU_SET		(AR9170_MAC_REG_BASE + 0xba0)
++#define AR9170_MAC_REG_AMPDU_FACTOR		(AR9170_MAC_REG_BASE + 0xB9C)
++#define AR9170_MAC_REG_AMPDU_DENSITY		(AR9170_MAC_REG_BASE + 0xBA0)
+ 
+ #define AR9170_MAC_REG_ACK_TABLE		(AR9170_MAC_REG_BASE + 0xC00)
+ #define AR9170_MAC_REG_AMPDU_RX_THRESH		(AR9170_MAC_REG_BASE + 0xC50)
+@@ -376,7 +377,6 @@ static inline u8 ar9170_get_decrypt_type(struct ar9170_rx_macstatus *t)
+ #define AR9170_RX_ERROR_FATAL			0x80
+ 
+ struct ar9170_cmd_tx_status {
+-	__le16 unkn;
+ 	u8 dst[ETH_ALEN];
+ 	__le32 rate;
+ 	__le16 status;
+@@ -394,6 +394,7 @@ struct ar9170_cmd_ba_failed_count {
+ struct ar9170_cmd_response {
+ 	u8 flag;
+ 	u8 type;
++	__le16 padding;
+ 
+ 	union {
+ 		struct ar9170_cmd_tx_status		tx_status;
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 72c7b5d..706262f 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -84,7 +84,7 @@ static int ar9170_set_ampdu_density(struct ar9170 *ar, u8 mpdudensity)
+ 	val = 0x140a00 | (mpdudensity ? (mpdudensity + 1) : 0);
+ 
+ 	ar9170_regwrite_begin(ar);
+-	ar9170_regwrite(AR9170_MAC_REG_AMPDU_SET, val);
++	ar9170_regwrite(AR9170_MAC_REG_AMPDU_DENSITY, val);
+ 	ar9170_regwrite_finish();
+ 
+ 	return ar9170_regwrite_result();
