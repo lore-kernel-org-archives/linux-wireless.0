@@ -1,29 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47238
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753303AbZE2V7G (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41229 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756730AbZEKJZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 17:59:06 -0400
-Date: Fri, 29 May 2009 14:59:06 -0700 (PDT)
-Message-Id: <20090529.145906.206169265.davem@davemloft.net>
-To: hintak.leung@gmail.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/10]: rtl8187: Remove pointless check in
- rtl8187_rx_cb().
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <3ace41890905290841h427f8a27v8772cb34503247c2@mail.gmail.com>
-References: <20090529.014011.244789664.davem@davemloft.net>
-	<20090529101834.GC3506@tuxdriver.com>
-	<3ace41890905290841h427f8a27v8772cb34503247c2@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 11 May 2009 05:25:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 1/5] ath9k: do not stop the queues in driver stop
+Date: Mon, 11 May 2009 05:25:00 -0400
+Message-Id: <1242033904-25694-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
+References: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-Date: Fri, 29 May 2009 16:41:20 +0100
+mac80211 will have disabled the queues for us when
+needed.
 
-> I'll give this a try when I rebuild the rtl8187 module on my box.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Thank you.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index bbbfdcd..4fe0f8a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2132,8 +2132,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	ieee80211_stop_queues(hw);
+-
+ 	if (ath9k_wiphy_started(sc)) {
+ 		mutex_unlock(&sc->mutex);
+ 		return; /* another wiphy still in use */
+-- 
+1.6.0.6
+
