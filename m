@@ -1,75 +1,762 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33821 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754725AbZEPMVO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 08:21:14 -0400
-Subject: Re: [RFC 2/3] cfg80211: mark wiphy->privid as pointer to const
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-In-Reply-To: <1242476577-26320-3-git-send-email-kilroyd@googlemail.com>
-References: <1242476577-26320-1-git-send-email-kilroyd@googlemail.com>
-	 <1242476577-26320-3-git-send-email-kilroyd@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Lv3KZP1tgr0cspsVqsyI"
-Date: Sat, 16 May 2009 14:20:39 +0200
-Message-Id: <1242476439.10005.37.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:51103 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755514AbZEKN4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2009 09:56:32 -0400
+Subject: Re: [RFC/RFT] cfg80211: implement wext key handling
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <1241892978.31262.20.camel@johannes.local>
+References: <1241892978.31262.20.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 11 May 2009 09:57:30 -0400
+Message-Id: <1242050250.28322.16.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2009-05-09 at 20:16 +0200, Johannes Berg wrote:
+> Move key handling wireless extension ioctls from mac80211 to cfg80211
+> so that all drivers that implement the cfg80211 operations get wext
+> compatibility.
+> 
+> Note that this drops the SIOCGIWENCODE ioctl. This means that iwconfig
+> will no longer report "Security mode:open" or "Security mode:restricted"
+> for mac80211. However, what we displayed there (the authentication algo
+> used) was actually wrong -- linux/wireless.h states that this setting is
+> meant to differentiate between "Refuse non-encoded packets" and "Accept
+> non-encoded packets". Dropping SIOCGIWENCODE also means that you can no
+> longer display the key currently in use. We believe this is a misfeature
+> in wireless extensions and unneeded; cfg80211 currently provides no way
+> to implement it.
 
---=-Lv3KZP1tgr0cspsVqsyI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Does this mean inability to display current WEP key index, or just the
+key that the card is supposedly using?  Seeing the index may be
+important, but the ability to pull the actual key out of the card was
+not consistently implemented across WEXT drivers.
 
-On Sat, 2009-05-16 at 13:22 +0100, David Kilroy wrote:
-> This allows drivers to use a const pointer as the privid without a cast.
+Dan
 
-Same here.
-
-> Signed-off by: David Kilroy <kilroyd@gmail.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
->  include/net/cfg80211.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 7702715..0639962 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -994,7 +994,7 @@ struct wiphy {
->  	 * know whether it points to a wiphy your driver has registered
->  	 * or not. Assign this to something global to your driver to
->  	 * help determine whether you own this wiphy or not. */
-> -	void *privid;
-> +	const void *privid;
-> =20
->  	struct ieee80211_supported_band *bands[IEEE80211_NUM_BANDS];
-> =20
-
---=-Lv3KZP1tgr0cspsVqsyI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKDq+UAAoJEODzc/N7+QmaN60P/1Zpu8lbsf2NC2bvjUtGaIL9
-kucxasKxtThzHRNG4Z3hTB7giCF9B1kyZgiR50N3kFhv6cKVUvwlw4DtEGzHxaQb
-WCkAAU6qHBmIYwl3Yt1ZlpRbMNWBwhpbwKLSDWuMb9oB0z7uxUefmQERYdD2NFY8
-oZnLSBm98idpR4ebl9K2dyCWO0Wokee/LJ3FGpgAsMYIn2V0Yw01wdawz6q1T3Ug
-vffaZ6ardzfB9CiHSpFYJBjOVyaf3GjqHS7xYJJ3anTCjKESKsPfuDpHFn3HeHQc
-iPPYGQT3QsBfY1rEt3UucPp1TnR43tO50BdSmQuTwBG/6/3qcYnNy/YkLU2KuLVs
-Jvp+plsc84bfG+q1rOOISKZ25uwIMItSunUa9O8qlTyoA5KKkqo7J46hiddxtj/3
-i1KMTTrlbLLRYOqutOa711zG/YNPwZdfPFKwN6MdrqXhoakUxzdqQtUdTGCEkeL4
-NnFYBKg7a+nW56fK34/jLtf/t/HIMY/ZZi9Vg17k8z2dFMkOhcUtW2+jZZB7fdFJ
-DR91AOVs3CK+UORbibnfeUkM48QSjmNnhZMV6dU+hFnO1fIlmqypBenAcibhDRfu
-TBGQTWBQTrY7oY95YoBJ5bVmH4MXH7qk1nUWatrUpYsBa6F96qfgOCgkHR7nbykG
-+1XidBtvARLjfC+Phu5r
-=U2/N
------END PGP SIGNATURE-----
-
---=-Lv3KZP1tgr0cspsVqsyI--
+>  include/net/cfg80211.h     |    7 +
+>  net/mac80211/wext.c        |  279 ---------------------------------------------
+>  net/wireless/core.c        |    4 
+>  net/wireless/core.h        |    4 
+>  net/wireless/nl80211.c     |   55 ++------
+>  net/wireless/util.c        |   45 +++++++
+>  net/wireless/wext-compat.c |  196 +++++++++++++++++++++++++++++++
+>  7 files changed, 277 insertions(+), 313 deletions(-)
+> 
+> --- wireless-testing.orig/include/net/cfg80211.h	2009-05-09 20:03:37.000000000 +0200
+> +++ wireless-testing/include/net/cfg80211.h	2009-05-09 20:04:55.000000000 +0200
+> @@ -1148,6 +1148,7 @@ struct wireless_dev {
+>  	struct {
+>  		struct cfg80211_ibss_params ibss;
+>  		u8 bssid[ETH_ALEN];
+> +		s8 default_key, default_mgmt_key;
+>  	} wext;
+>  #endif
+>  };
+> @@ -1398,6 +1399,12 @@ int cfg80211_wext_siwretry(struct net_de
+>  int cfg80211_wext_giwretry(struct net_device *dev,
+>  			   struct iw_request_info *info,
+>  			   struct iw_param *retry, char *extra);
+> +int cfg80211_wext_siwencodeext(struct net_device *dev,
+> +			       struct iw_request_info *info,
+> +			       struct iw_point *erq, char *extra);
+> +int cfg80211_wext_siwencode(struct net_device *dev,
+> +			    struct iw_request_info *info,
+> +			    struct iw_point *erq, char *keybuf);
+>  
+>  /*
+>   * callbacks for asynchronous cfg80211 methods, notification
+> --- wireless-testing.orig/net/mac80211/wext.c	2009-05-09 20:02:34.000000000 +0200
+> +++ wireless-testing/net/mac80211/wext.c	2009-05-09 20:04:37.000000000 +0200
+> @@ -27,100 +27,6 @@
+>  #include "aes_ccm.h"
+>  
+> 
+> -static int ieee80211_set_encryption(struct ieee80211_sub_if_data *sdata, u8 *sta_addr,
+> -				    int idx, int alg, int remove,
+> -				    int set_tx_key, const u8 *_key,
+> -				    size_t key_len)
+> -{
+> -	struct ieee80211_local *local = sdata->local;
+> -	struct sta_info *sta;
+> -	struct ieee80211_key *key;
+> -	int err;
+> -
+> -	if (alg == ALG_AES_CMAC) {
+> -		if (idx < NUM_DEFAULT_KEYS ||
+> -		    idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS) {
+> -			printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d "
+> -			       "(BIP)\n", sdata->dev->name, idx);
+> -			return -EINVAL;
+> -		}
+> -	} else if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
+> -		printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
+> -		       sdata->dev->name, idx);
+> -		return -EINVAL;
+> -	}
+> -
+> -	if (remove) {
+> -		rcu_read_lock();
+> -
+> -		err = 0;
+> -
+> -		if (is_broadcast_ether_addr(sta_addr)) {
+> -			key = sdata->keys[idx];
+> -		} else {
+> -			sta = sta_info_get(local, sta_addr);
+> -			if (!sta) {
+> -				err = -ENOENT;
+> -				goto out_unlock;
+> -			}
+> -			key = sta->key;
+> -		}
+> -
+> -		ieee80211_key_free(key);
+> -	} else {
+> -		key = ieee80211_key_alloc(alg, idx, key_len, _key);
+> -		if (!key)
+> -			return -ENOMEM;
+> -
+> -		sta = NULL;
+> -		err = 0;
+> -
+> -		rcu_read_lock();
+> -
+> -		if (!is_broadcast_ether_addr(sta_addr)) {
+> -			set_tx_key = 0;
+> -			/*
+> -			 * According to the standard, the key index of a
+> -			 * pairwise key must be zero. However, some AP are
+> -			 * broken when it comes to WEP key indices, so we
+> -			 * work around this.
+> -			 */
+> -			if (idx != 0 && alg != ALG_WEP) {
+> -				ieee80211_key_free(key);
+> -				err = -EINVAL;
+> -				goto out_unlock;
+> -			}
+> -
+> -			sta = sta_info_get(local, sta_addr);
+> -			if (!sta) {
+> -				ieee80211_key_free(key);
+> -				err = -ENOENT;
+> -				goto out_unlock;
+> -			}
+> -		}
+> -
+> -		if (alg == ALG_WEP &&
+> -			key_len != LEN_WEP40 && key_len != LEN_WEP104) {
+> -			ieee80211_key_free(key);
+> -			err = -EINVAL;
+> -			goto out_unlock;
+> -		}
+> -
+> -		ieee80211_key_link(key, sdata, sta);
+> -
+> -		if (set_tx_key || (!sta && !sdata->default_key && key))
+> -			ieee80211_set_default_key(sdata, idx);
+> -		if (alg == ALG_AES_CMAC &&
+> -		    (set_tx_key || (!sta && !sdata->default_mgmt_key && key)))
+> -			ieee80211_set_default_mgmt_key(sdata, idx);
+> -	}
+> -
+> - out_unlock:
+> -	rcu_read_unlock();
+> -
+> -	return err;
+> -}
+> -
+>  static int ieee80211_ioctl_siwgenie(struct net_device *dev,
+>  				    struct iw_request_info *info,
+>  				    struct iw_point *data, char *extra)
+> @@ -472,109 +378,6 @@ static int ieee80211_ioctl_giwtxpower(st
+>  	return 0;
+>  }
+>  
+> -static int ieee80211_ioctl_siwencode(struct net_device *dev,
+> -				     struct iw_request_info *info,
+> -				     struct iw_point *erq, char *keybuf)
+> -{
+> -	struct ieee80211_sub_if_data *sdata;
+> -	int idx, i, alg = ALG_WEP;
+> -	u8 bcaddr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+> -	int remove = 0, ret;
+> -
+> -	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> -
+> -	idx = erq->flags & IW_ENCODE_INDEX;
+> -	if (idx == 0) {
+> -		if (sdata->default_key)
+> -			for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+> -				if (sdata->default_key == sdata->keys[i]) {
+> -					idx = i;
+> -					break;
+> -				}
+> -			}
+> -	} else if (idx < 1 || idx > 4)
+> -		return -EINVAL;
+> -	else
+> -		idx--;
+> -
+> -	if (erq->flags & IW_ENCODE_DISABLED)
+> -		remove = 1;
+> -	else if (erq->length == 0) {
+> -		/* No key data - just set the default TX key index */
+> -		ieee80211_set_default_key(sdata, idx);
+> -		return 0;
+> -	}
+> -
+> -	ret = ieee80211_set_encryption(
+> -		sdata, bcaddr,
+> -		idx, alg, remove,
+> -		!sdata->default_key,
+> -		keybuf, erq->length);
+> -
+> -	if (!ret && sdata->vif.type == NL80211_IFTYPE_STATION) {
+> -		if (remove)
+> -			sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
+> -		else
+> -			sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
+> -	}
+> -
+> -	return ret;
+> -}
+> -
+> -
+> -static int ieee80211_ioctl_giwencode(struct net_device *dev,
+> -				     struct iw_request_info *info,
+> -				     struct iw_point *erq, char *key)
+> -{
+> -	struct ieee80211_sub_if_data *sdata;
+> -	int idx, i;
+> -
+> -	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> -
+> -	idx = erq->flags & IW_ENCODE_INDEX;
+> -	if (idx < 1 || idx > 4) {
+> -		idx = -1;
+> -		if (!sdata->default_key)
+> -			idx = 0;
+> -		else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+> -			if (sdata->default_key == sdata->keys[i]) {
+> -				idx = i;
+> -				break;
+> -			}
+> -		}
+> -		if (idx < 0)
+> -			return -EINVAL;
+> -	} else
+> -		idx--;
+> -
+> -	erq->flags = idx + 1;
+> -
+> -	if (!sdata->keys[idx]) {
+> -		erq->length = 0;
+> -		erq->flags |= IW_ENCODE_DISABLED;
+> -		return 0;
+> -	}
+> -
+> -	memcpy(key, sdata->keys[idx]->conf.key,
+> -	       min_t(int, erq->length, sdata->keys[idx]->conf.keylen));
+> -	erq->length = sdata->keys[idx]->conf.keylen;
+> -	erq->flags |= IW_ENCODE_ENABLED;
+> -
+> -	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+> -		switch (sdata->u.mgd.auth_alg) {
+> -		case WLAN_AUTH_OPEN:
+> -		case WLAN_AUTH_LEAP:
+> -			erq->flags |= IW_ENCODE_OPEN;
+> -			break;
+> -		case WLAN_AUTH_SHARED_KEY:
+> -			erq->flags |= IW_ENCODE_RESTRICTED;
+> -			break;
+> -		}
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  static int ieee80211_ioctl_siwpower(struct net_device *dev,
+>  				    struct iw_request_info *info,
+>  				    struct iw_param *wrq,
+> @@ -809,82 +612,6 @@ static int ieee80211_ioctl_giwauth(struc
+>  }
+>  
+> 
+> -static int ieee80211_ioctl_siwencodeext(struct net_device *dev,
+> -					struct iw_request_info *info,
+> -					struct iw_point *erq, char *extra)
+> -{
+> -	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> -	struct iw_encode_ext *ext = (struct iw_encode_ext *) extra;
+> -	int uninitialized_var(alg), idx, i, remove = 0;
+> -
+> -	switch (ext->alg) {
+> -	case IW_ENCODE_ALG_NONE:
+> -		remove = 1;
+> -		break;
+> -	case IW_ENCODE_ALG_WEP:
+> -		alg = ALG_WEP;
+> -		break;
+> -	case IW_ENCODE_ALG_TKIP:
+> -		alg = ALG_TKIP;
+> -		break;
+> -	case IW_ENCODE_ALG_CCMP:
+> -		alg = ALG_CCMP;
+> -		break;
+> -	case IW_ENCODE_ALG_AES_CMAC:
+> -		alg = ALG_AES_CMAC;
+> -		break;
+> -	default:
+> -		return -EOPNOTSUPP;
+> -	}
+> -
+> -	if (erq->flags & IW_ENCODE_DISABLED)
+> -		remove = 1;
+> -
+> -	idx = erq->flags & IW_ENCODE_INDEX;
+> -	if (alg == ALG_AES_CMAC) {
+> -		if (idx < NUM_DEFAULT_KEYS + 1 ||
+> -		    idx > NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS) {
+> -			idx = -1;
+> -			if (!sdata->default_mgmt_key)
+> -				idx = 0;
+> -			else for (i = NUM_DEFAULT_KEYS;
+> -				  i < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS;
+> -				  i++) {
+> -				if (sdata->default_mgmt_key == sdata->keys[i])
+> -				{
+> -					idx = i;
+> -					break;
+> -				}
+> -			}
+> -			if (idx < 0)
+> -				return -EINVAL;
+> -		} else
+> -			idx--;
+> -	} else {
+> -		if (idx < 1 || idx > 4) {
+> -			idx = -1;
+> -			if (!sdata->default_key)
+> -				idx = 0;
+> -			else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+> -				if (sdata->default_key == sdata->keys[i]) {
+> -					idx = i;
+> -					break;
+> -				}
+> -			}
+> -			if (idx < 0)
+> -				return -EINVAL;
+> -		} else
+> -			idx--;
+> -	}
+> -
+> -	return ieee80211_set_encryption(sdata, ext->addr.sa_data, idx, alg,
+> -					remove,
+> -					ext->ext_flags &
+> -					IW_ENCODE_EXT_SET_TX_KEY,
+> -					ext->key, ext->key_len);
+> -}
+> -
+> -
+>  /* Structures to export the Wireless Handlers */
+>  
+>  static const iw_handler ieee80211_handler[] =
+> @@ -931,8 +658,8 @@ static const iw_handler ieee80211_handle
+>  	(iw_handler) ieee80211_ioctl_giwtxpower,	/* SIOCGIWTXPOW */
+>  	(iw_handler) cfg80211_wext_siwretry,		/* SIOCSIWRETRY */
+>  	(iw_handler) cfg80211_wext_giwretry,		/* SIOCGIWRETRY */
+> -	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
+> -	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
+> +	(iw_handler) cfg80211_wext_siwencode,		/* SIOCSIWENCODE */
+> +	(iw_handler) NULL,				/* SIOCGIWENCODE */
+>  	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
+>  	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
+>  	(iw_handler) NULL,				/* -- hole -- */
+> @@ -941,7 +668,7 @@ static const iw_handler ieee80211_handle
+>  	(iw_handler) NULL,				/* SIOCGIWGENIE */
+>  	(iw_handler) ieee80211_ioctl_siwauth,		/* SIOCSIWAUTH */
+>  	(iw_handler) ieee80211_ioctl_giwauth,		/* SIOCGIWAUTH */
+> -	(iw_handler) ieee80211_ioctl_siwencodeext,	/* SIOCSIWENCODEEXT */
+> +	(iw_handler) cfg80211_wext_siwencodeext,	/* SIOCSIWENCODEEXT */
+>  	(iw_handler) NULL,				/* SIOCGIWENCODEEXT */
+>  	(iw_handler) NULL,				/* SIOCSIWPMKSA */
+>  	(iw_handler) NULL,				/* -- hole -- */
+> --- wireless-testing.orig/net/wireless/core.h	2009-05-09 20:02:34.000000000 +0200
+> +++ wireless-testing/net/wireless/core.h	2009-05-09 20:04:37.000000000 +0200
+> @@ -151,4 +151,8 @@ void cfg80211_clear_ibss(struct net_devi
+>  int cfg80211_leave_ibss(struct cfg80211_registered_device *rdev,
+>  			struct net_device *dev, bool nowext);
+>  
+> +/* internal helpers */
+> +int cfg80211_validate_key_settings(struct key_params *params, int key_idx,
+> +				   const u8 *mac_addr);
+> +
+>  #endif /* __NET_WIRELESS_CORE_H */
+> --- wireless-testing.orig/net/wireless/nl80211.c	2009-05-09 20:02:34.000000000 +0200
+> +++ wireless-testing/net/wireless/nl80211.c	2009-05-09 20:04:37.000000000 +0200
+> @@ -1072,6 +1072,14 @@ static int nl80211_set_key(struct sk_buf
+>  	}
+>  
+>  	err = func(&drv->wiphy, dev, key_idx);
+> +#ifdef CONFIG_WIRELESS_EXT
+> +	if (!err) {
+> +		if (func == drv->ops->set_default_key)
+> +			dev->ieee80211_ptr->wext.default_key = key_idx;
+> +		else
+> +			dev->ieee80211_ptr->wext.default_mgmt_key = key_idx;
+> +	}
+> +#endif
+>  
+>   out:
+>  	cfg80211_put_dev(drv);
+> @@ -1110,45 +1118,9 @@ static int nl80211_new_key(struct sk_buf
+>  	if (info->attrs[NL80211_ATTR_MAC])
+>  		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+>  
+> -	if (key_idx > 5)
+> +	if (cfg80211_validate_key_settings(&params, key_idx, mac_addr))
+>  		return -EINVAL;
+>  
+> -	/*
+> -	 * Disallow pairwise keys with non-zero index unless it's WEP
+> -	 * (because current deployments use pairwise WEP keys with
+> -	 * non-zero indizes but 802.11i clearly specifies to use zero)
+> -	 */
+> -	if (mac_addr && key_idx &&
+> -	    params.cipher != WLAN_CIPHER_SUITE_WEP40 &&
+> -	    params.cipher != WLAN_CIPHER_SUITE_WEP104)
+> -		return -EINVAL;
+> -
+> -	/* TODO: add definitions for the lengths to linux/ieee80211.h */
+> -	switch (params.cipher) {
+> -	case WLAN_CIPHER_SUITE_WEP40:
+> -		if (params.key_len != 5)
+> -			return -EINVAL;
+> -		break;
+> -	case WLAN_CIPHER_SUITE_TKIP:
+> -		if (params.key_len != 32)
+> -			return -EINVAL;
+> -		break;
+> -	case WLAN_CIPHER_SUITE_CCMP:
+> -		if (params.key_len != 16)
+> -			return -EINVAL;
+> -		break;
+> -	case WLAN_CIPHER_SUITE_WEP104:
+> -		if (params.key_len != 13)
+> -			return -EINVAL;
+> -		break;
+> -	case WLAN_CIPHER_SUITE_AES_CMAC:
+> -		if (params.key_len != 16)
+> -			return -EINVAL;
+> -		break;
+> -	default:
+> -		return -EINVAL;
+> -	}
+> -
+>  	rtnl_lock();
+>  
+>  	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+> @@ -1209,6 +1181,15 @@ static int nl80211_del_key(struct sk_buf
+>  
+>  	err = drv->ops->del_key(&drv->wiphy, dev, key_idx, mac_addr);
+>  
+> +#ifdef CONFIG_WIRELESS_EXT
+> +	if (!err) {
+> +		if (key_idx == dev->ieee80211_ptr->wext.default_key)
+> +			dev->ieee80211_ptr->wext.default_key = -1;
+> +		else if (key_idx == dev->ieee80211_ptr->wext.default_mgmt_key)
+> +			dev->ieee80211_ptr->wext.default_mgmt_key = -1;
+> +	}
+> +#endif
+> +
+>   out:
+>  	cfg80211_put_dev(drv);
+>  	dev_put(dev);
+> --- wireless-testing.orig/net/wireless/util.c	2009-05-09 20:02:34.000000000 +0200
+> +++ wireless-testing/net/wireless/util.c	2009-05-09 20:04:37.000000000 +0200
+> @@ -138,3 +138,48 @@ void ieee80211_set_bitrate_flags(struct 
+>  		if (wiphy->bands[band])
+>  			set_mandatory_flags_band(wiphy->bands[band], band);
+>  }
+> +
+> +int cfg80211_validate_key_settings(struct key_params *params, int key_idx,
+> +				   const u8 *mac_addr)
+> +{
+> +	if (key_idx > 5)
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * Disallow pairwise keys with non-zero index unless it's WEP
+> +	 * (because current deployments use pairwise WEP keys with
+> +	 * non-zero indizes but 802.11i clearly specifies to use zero)
+> +	 */
+> +	if (mac_addr && key_idx &&
+> +	    params->cipher != WLAN_CIPHER_SUITE_WEP40 &&
+> +	    params->cipher != WLAN_CIPHER_SUITE_WEP104)
+> +		return -EINVAL;
+> +
+> +	/* TODO: add definitions for the lengths to linux/ieee80211.h */
+> +	switch (params->cipher) {
+> +	case WLAN_CIPHER_SUITE_WEP40:
+> +		if (params->key_len != 5)
+> +			return -EINVAL;
+> +		break;
+> +	case WLAN_CIPHER_SUITE_TKIP:
+> +		if (params->key_len != 32)
+> +			return -EINVAL;
+> +		break;
+> +	case WLAN_CIPHER_SUITE_CCMP:
+> +		if (params->key_len != 16)
+> +			return -EINVAL;
+> +		break;
+> +	case WLAN_CIPHER_SUITE_WEP104:
+> +		if (params->key_len != 13)
+> +			return -EINVAL;
+> +		break;
+> +	case WLAN_CIPHER_SUITE_AES_CMAC:
+> +		if (params->key_len != 16)
+> +			return -EINVAL;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+> +	return 0;
+> +}
+> --- wireless-testing.orig/net/wireless/wext-compat.c	2009-05-09 20:02:34.000000000 +0200
+> +++ wireless-testing/net/wireless/wext-compat.c	2009-05-09 20:04:37.000000000 +0200
+> @@ -11,6 +11,7 @@
+>  #include <linux/wireless.h>
+>  #include <linux/nl80211.h>
+>  #include <linux/if_arp.h>
+> +#include <linux/etherdevice.h>
+>  #include <net/iw_handler.h>
+>  #include <net/cfg80211.h>
+>  #include "core.h"
+> @@ -477,3 +478,198 @@ int cfg80211_wext_giwretry(struct net_de
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(cfg80211_wext_giwretry);
+> +
+> +static int cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+> +				   struct net_device *dev, const u8 *addr,
+> +				   bool remove, bool tx_key, int idx,
+> +				   struct key_params *params)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	int err;
+> +
+> +	if (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC) {
+> +		if (!rdev->ops->set_default_mgmt_key)
+> +			return -EOPNOTSUPP;
+> +
+> +		if (idx < 4 || idx > 5)
+> +			return -EINVAL;
+> +	} else if (idx < 0 || idx > 3)
+> +		return -EINVAL;
+> +
+> +	if (remove) {
+> +		err = rdev->ops->del_key(&rdev->wiphy, dev, idx, addr);
+> +		if (!err) {
+> +			if (idx == wdev->wext.default_key)
+> +				wdev->wext.default_key = -1;
+> +			else if (idx == wdev->wext.default_mgmt_key)
+> +				wdev->wext.default_mgmt_key = -1;
+> +		}
+> +		return err;
+> +	} else {
+> +		if (addr)
+> +			tx_key = false;
+> +
+> +		if (cfg80211_validate_key_settings(params, idx, addr))
+> +			return -EINVAL;
+> +
+> +		err = rdev->ops->add_key(&rdev->wiphy, dev, idx, addr, params);
+> +		if (err)
+> +			return err;
+> +
+> +		if (tx_key || (!addr && wdev->wext.default_key == -1)) {
+> +			err = rdev->ops->set_default_key(&rdev->wiphy,
+> +							 dev, idx);
+> +			if (!err)
+> +				wdev->wext.default_key = idx;
+> +			return err;
+> +		}
+> +
+> +		if (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC &&
+> +		    (tx_key || (!addr && wdev->wext.default_mgmt_key == -1))) {
+> +			err = rdev->ops->set_default_mgmt_key(&rdev->wiphy,
+> +							      dev, idx);
+> +			if (!err)
+> +				wdev->wext.default_mgmt_key = idx;
+> +			return err;
+> +		}
+> +
+> +		return 0;
+> +	}
+> +}
+> +
+> +int cfg80211_wext_siwencode(struct net_device *dev,
+> +			    struct iw_request_info *info,
+> +			    struct iw_point *erq, char *keybuf)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+> +	int idx, err;
+> +	bool remove = false;
+> +	struct key_params params;
+> +
+> +	/* no use -- only MFP (set_default_mgmt_key) is optional */
+> +	if (!rdev->ops->del_key ||
+> +	    !rdev->ops->add_key ||
+> +	    !rdev->ops->set_default_key)
+> +		return -EOPNOTSUPP;
+> +
+> +	idx = erq->flags & IW_ENCODE_INDEX;
+> +	if (idx == 0) {
+> +		idx = wdev->wext.default_key;
+> +		if (idx < 0)
+> +			return -EINVAL;
+> +	} else if (idx < 1 || idx > 4)
+> +		return -EINVAL;
+> +	else
+> +		idx--;
+> +
+> +	if (erq->flags & IW_ENCODE_DISABLED)
+> +		remove = true;
+> +	else if (erq->length == 0) {
+> +		/* No key data - just set the default TX key index */
+> +		err = rdev->ops->set_default_key(&rdev->wiphy, dev, idx);
+> +		if (!err)
+> +			wdev->wext.default_key = idx;
+> +		return err;
+> +	}
+> +
+> +	memset(&params, 0, sizeof(params));
+> +	params.key = keybuf;
+> +	params.key_len = erq->length;
+> +	if (erq->length == 5)
+> +		params.cipher = WLAN_CIPHER_SUITE_WEP40;
+> +	else if (erq->length == 13)
+> +		params.cipher = WLAN_CIPHER_SUITE_WEP104;
+> +	else
+> +		return -EINVAL;
+> +
+> +	return cfg80211_set_encryption(rdev, dev, NULL, remove,
+> +				       wdev->wext.default_key == -1,
+> +				       idx, &params);
+> +}
+> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwencode);
+> +
+> +int cfg80211_wext_siwencodeext(struct net_device *dev,
+> +			       struct iw_request_info *info,
+> +			       struct iw_point *erq, char *extra)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+> +	struct iw_encode_ext *ext = (struct iw_encode_ext *) extra;
+> +	const u8 *addr;
+> +	int idx;
+> +	bool remove = false;
+> +	struct key_params params;
+> +	u32 cipher;
+> +
+> +	/* no use -- only MFP (set_default_mgmt_key) is optional */
+> +	if (!rdev->ops->del_key ||
+> +	    !rdev->ops->add_key ||
+> +	    !rdev->ops->set_default_key)
+> +		return -EOPNOTSUPP;
+> +
+> +	switch (ext->alg) {
+> +	case IW_ENCODE_ALG_NONE:
+> +		remove = true;
+> +		cipher = 0;
+> +		break;
+> +	case IW_ENCODE_ALG_WEP:
+> +		if (erq->length == 5)
+> +			cipher = WLAN_CIPHER_SUITE_WEP40;
+> +		else if (erq->length == 13)
+> +			cipher = WLAN_CIPHER_SUITE_WEP104;
+> +		else
+> +			return -EINVAL;
+> +		break;
+> +	case IW_ENCODE_ALG_TKIP:
+> +		cipher = WLAN_CIPHER_SUITE_TKIP;
+> +		break;
+> +	case IW_ENCODE_ALG_CCMP:
+> +		cipher = WLAN_CIPHER_SUITE_CCMP;
+> +		break;
+> +	case IW_ENCODE_ALG_AES_CMAC:
+> +		cipher = WLAN_CIPHER_SUITE_AES_CMAC;
+> +		break;
+> +	default:
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> +	if (erq->flags & IW_ENCODE_DISABLED)
+> +		remove = true;
+> +
+> +	idx = erq->flags & IW_ENCODE_INDEX;
+> +	if (cipher == WLAN_CIPHER_SUITE_AES_CMAC) {
+> +		if (idx < 4 || idx > 5) {
+> +			/*
+> +			 * XXX: Only wpa_supplicant ever used this
+> +			 *	can we still change the ABI a little
+> +			 *	so we do not need to keep track of
+> +			 *	the default key?
+> +			 */
+> +			return -EINVAL;
+> +		} else
+> +			idx--;
+> +	} else {
+> +		if (idx < 1 || idx > 4) {
+> +			idx = wdev->wext.default_key;
+> +			if (idx < 0)
+> +				return -EINVAL;
+> +		} else
+> +			idx--;
+> +	}
+> +
+> +	addr = ext->addr.sa_data;
+> +	if (is_broadcast_ether_addr(addr))
+> +		addr = NULL;
+> +
+> +	memset(&params, 0, sizeof(params));
+> +	params.key = ext->key;
+> +	params.key_len = ext->key_len;
+> +	params.cipher = cipher;
+> +
+> +	return cfg80211_set_encryption(
+> +			rdev, dev, addr, remove,
+> +			ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY,
+> +			idx, &params);
+> +}
+> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwencodeext);
+> --- wireless-testing.orig/net/wireless/core.c	2009-05-09 20:03:24.000000000 +0200
+> +++ wireless-testing/net/wireless/core.c	2009-05-09 20:04:37.000000000 +0200
+> @@ -457,6 +457,10 @@ static int cfg80211_netdev_notifier_call
+>  				"symlink to netdev!\n");
+>  		}
+>  		dev->ieee80211_ptr->netdev = dev;
+> +#ifdef CONFIG_WIRELESS_EXT
+> +		dev->ieee80211_ptr->wext.default_key = -1;
+> +		dev->ieee80211_ptr->wext.default_mgmt_key = -1;
+> +#endif
+>  		mutex_unlock(&rdev->devlist_mtx);
+>  		break;
+>  	case NETDEV_GOING_DOWN:
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
