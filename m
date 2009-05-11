@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:47567 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbZERR27 (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:36312 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755696AbZEKVxb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 13:28:59 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so1052510eyd.37
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 10:29:00 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@web.de>, flamingice@sourmilk.net,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] p54spi: drop test for FW_STATE_RESET in p54spi_work
-Date: Mon, 18 May 2009 21:28:55 +0400
-Message-Id: <1242667735-24471-1-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <4A11756F.5000206@gmail.com>
-References: <4A11756F.5000206@gmail.com>
+	Mon, 11 May 2009 17:53:31 -0400
+Message-ID: <4A089E49.7080403@gmail.com>
+Date: Mon, 11 May 2009 23:53:13 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Justin Mattock <justinmattock@gmail.com>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
+References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
+In-Reply-To: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop test for FW_STATE_RESET in p54spi_work as fw_state
-is never assigned this value.
+Adding some CCs.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- drivers/net/wireless/p54/p54spi.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index fe90f88..bd75f10 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -511,8 +511,7 @@ static void p54spi_work(struct work_struct *work)
- 
- 	mutex_lock(&priv->mutex);
- 
--	if (priv->fw_state == FW_STATE_OFF &&
--	    priv->fw_state == FW_STATE_RESET)
-+	if (priv->fw_state == FW_STATE_OFF)
- 		goto out;
- 
- 	ints = p54spi_read32(priv, SPI_ADRS_HOST_INTERRUPTS);
--- 
-1.6.0.6
+On 05/11/2009 07:02 PM, Justin Mattock wrote:
+> I've been trying to diagnose an issue
+> with 2.6.30-rc4. At first thinking it
+> was not the kernel, but the network manager
+> (in my case I use wicd).
+> with 2.6.29-rc8 the system starts up,
+> connects no problem.
+> but as soon as I load 2.6.30-rc4
+> I get limited connection to none.
+> in dmesg I see:
+> 
+> [   36.337419] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 1
+> [   36.530106] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 2
+> [   36.730100] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 3
+> [   36.930101] wlan0: direct probe to AP 00:1e:2a:00:67:f0 timed out
+> [   44.421728] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 1
+> [   44.620080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 2
+> [   44.820080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 3
+> [   45.020076] wlan0: direct probe to AP 00:1e:2a:00:67:f0 timed out
+> 
+> The type of encryption used is just
+> a standard WEP key(no WPA).
+> 
+> has this been resolved already?
+> 
+> Also I'm noticing(but not that big of a deal)
+> if I set in sysctl.conf:
+> 
+> net.ipv4.conf.all.arp_ignore=8
+> net.ipv4.conf.wlan0.arp_ignore=8
+> net.ipv4.conf.wmaster0.arp_ignore=8
+> net.ipv4.conf.lo.arp_ignore=8
+> net.ipv4.conf.all.arp_announce=2
+> net.ipv4.conf.wlan0.arp_announce=2
+> net.ipv4.conf.wmaster0.arp_announce=2
+> net.ipv4.conf.lo.arp_announce=2
+> 
+> watching a movie on hulu, about 15/20 minuets
+> into enjoyment, hulu craps out(starts re-buffering)
+> then re initializes after about 30 secs later.
+> but if I comment those out(set back to default)
+> hulu will run fine.
+> 
 
