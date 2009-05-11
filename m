@@ -1,87 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45714 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56661 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753344AbZEMW1g (ORCPT
+	with ESMTP id S1751778AbZEKOJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 18:27:36 -0400
-Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending
- on the stop callback
+	Mon, 11 May 2009 10:09:32 -0400
+Subject: Re: [PATCH] cfg80211: implement wext key handling
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <bcopeland@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
-	 <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
-	 <1242208388.14227.46.camel@johannes.local>
-	 <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
-	 <b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7R363jYp49Di5FMTFK8h"
-Date: Thu, 14 May 2009 00:27:06 +0200
-Message-Id: <1242253626.10076.9.camel@johannes.local>
+To: Dan Williams <dcbw@redhat.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Samuel Ortiz <sameo@linux.intel.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242049846.28322.12.camel@localhost.localdomain>
+References: <1242042898.18637.0.camel@johannes.local>
+	 <1242049846.28322.12.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1Wg3ZtwM4c2J05TzYGiK"
+Date: Mon, 11 May 2009 16:09:22 +0200
+Message-Id: <1242050962.29777.12.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-7R363jYp49Di5FMTFK8h
+--=-1Wg3ZtwM4c2J05TzYGiK
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-05-13 at 14:00 -0400, Bob Copeland wrote:
-> On Wed, May 13, 2009 at 1:20 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Wed, May 13, 2009 at 2:53 AM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> >> On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
-> >>> We inform the drivers so they can take appropriate actions during
-> >>> suspend for WoW support.
-> >>
-> >>> -static void ar9170_op_stop(struct ieee80211_hw *hw)
-> >>> +static void ar9170_op_stop(struct ieee80211_hw *hw, bool suspend)
->=20
-> Just curious, why can't the bus suspend method just turn the radio back o=
-n?
-> You have to set up the wow parameters later anyway.
->=20
-> I think it'd be cleaner if the stack knew about WoW somehow rather than
-> doing stuff behind its back in the driver.  Then suspend/resume could do
-> the right thing (e.g. ops->wow_enable() instead of stop) if the driver wa=
-s
-> WoW-capable.
+On Mon, 2009-05-11 at 09:50 -0400, Dan Williams wrote:
 
-That's a good point. Somehow I thought this was intimately tied to
-suspend. And I think for cfg80211 that makes sense, since cfg80211
-doesn't do much for suspend. But for mac80211 you're right in that it
-would make sense to
- * keep the radio on
- * not call stop
- * maybe not remove all the sta info structs
- * and whatever else may be necessary -- that might even depend on the
-   wow mode
+> I modified the meaning of RESTRICTED/OPEN a few years ago to control the
+> WEP auth mode, for a few reasons...  First, some fullmac drivers already
+> used it to mean WEP auth mode.  Second, there was no other mechanism to
+> control WEP auth mode at the time, and there were a lot of Shared Key
+> installations around.  Third, WE-18/WPA was nowhere near being landed,
+> and it was only supported by one driver (hostap), and it was the only
+> thing that would plausibly support WEP auth mode via SIWAUTH.  Fourth,
+> only hostap and maybe airo really implemented the refuse-non-encoded
+> anyway.
+
+But didn't update the header file ;)
+
+> TBH, SK is nice because it tells you that the WEP key is wrong
+> *immediately*, and the only reason NM doesn't use SK by default (and
+> then fall back to OS) like the original Mac Airport drivers did is that
+> WEXT simply cannot return reliable association error information.
+
+Hah. Well, we could have that now, but I suspect SK is no longer common
+enough to put a lot of work into it.
+
+> But in the end, we still need a mechanism with WEXT to be able to set SK
+> auth when associating.
+
+We still have that, with WE18, in IW_AUTH_80211_AUTH_ALG. And mac80211
+never actually supported _setting_ the WEP auth mechanism with
+RESTRICTED/OPEN, only _getting_ that information.
 
 johannes
 
---=-7R363jYp49Di5FMTFK8h
+
+--=-1Wg3ZtwM4c2J05TzYGiK
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKC0k2AAoJEODzc/N7+Qmaa2oP/1GZLC3uVzENVmd2eL2kFUy8
-HS8vc5u8nfgxw4/Ht8UqchO/t3bw0MQgkFPb1qu6lDB4bIdzvVBQzo/w/fRUywuo
-bWhRu02qJYXExwwxuZksX0rmTkEPTkROtedhxyfrISJ+48L5Q2SaEIxSB2SwqP/B
-Fz3Stlx0QCcJFt4uliyarx/ZNlTfXckjfpFpNrJY+pyFfmWbS4Qf/4K10F61+Wdp
-96TLp2tYYTEA/G9jVEhKofm6jG3PRZb4pn7/7kvsiZdKG+NtuncLGb6BYPGxUBgo
-GpaF5/WXjeBS1LRvP3WdEIlRHuDRIpERo5cl8IFXG6DzI1NEKTg3sjvEZvTdtGBR
-olO7WrR0nmuUItHWR5rcXrAcTTOsBRfCJTewv25UYbRYJnXQqRSkRFijjQwPi1xe
-nN51KuUzHA/O6HfoLAkKXpS7O23uCfQ3OTyczPiyJbgpCr1knWWWfKbk5dCxPNMV
-dFRydayZtvSmz7xfTGfllF0/heLLGRgzqvhv0jH483Z5WSfrHP4an++Xks35JL7E
-0IrDB6JDiISB+Y4ro5c9XjPq9kgcZ8Rtx7EVVldfXxNbrDGN446o0TaBfmGretHo
-N+WQozYqFE3OSULL2REclzE3TibUtNsULYcL42WfVC9n9M1KNnBTuSuVoAmzjClU
-XWe2ZzPJakXOSzQMjg1v
-=Uw5M
+iQIcBAABAgAGBQJKCDGOAAoJEODzc/N7+QmaBywQAMfF/rLFrQqzafoY3mkKakhn
+4nVSQ2beABb/xv/Ys6iIBlHbZW9bss5Mz5NHT1dc3FmvPcQz6VwagqilPrUX6fwd
+nqJA/puB3MFkWZUVtQtHakK6vReG1bc+sB/aO03ARKMlHgn6YQs+8TID+xMWOJ6j
+WCRcgfW6/WLm5K8PLqpQ0gWpT+1yWYo89qjUvwrTkI8ICGxQz7Q6KmC6xZDhC7qA
+IntGiIrML5gGSb/buzOGropHW/Q/YS59EwbiUx721vP6aEnEAPnz1s09b/bctl8e
+jTiNlAq+HNwYt0eUcn9VBXmtm25iuZX0NTmn5RP1zzI3CRgWfw5gSdqM9bNWC04G
+dtCuzPOYBaMAvGB/vTjER5KkSRe+DarfyhoIQuEqp2M+VoAVkbIPTu/pTMZJwlpV
+xokIPzkXiD0MM1FDsqkBsYzXWf/P9pqiRgvQUMh8QAV0GD6UOEflpwz4TvPEayox
+ZqvQR9VoeB1JbOjnPFYeq+QTLTzgqB3vVBvqN3/D3V/kfMOq78rgA5XFuYAaXkSd
+defIk9x6MbRjRxK3F5Vdr2YCMVwAOG7FOazBud0iGqaRmdVBEDwhJxdcdMzuklCv
+q4dhPC79vdfmSZ2oDG+v/cDs3+zO055GfHNiRF0QZcex5ErTyYFm6mFWEFJACgCf
+VFuamm2I6wi+O5Qn8fcW
+=9i53
 -----END PGP SIGNATURE-----
 
---=-7R363jYp49Di5FMTFK8h--
+--=-1Wg3ZtwM4c2J05TzYGiK--
 
