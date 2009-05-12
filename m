@@ -1,112 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caiajhbdccac.dreamhost.com ([208.97.132.202]:39547 "EHLO
-	spunkymail-a5.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753320AbZEVLZN (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:52665 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbZELUyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 07:25:13 -0400
-Message-ID: <4A168B8A.4070609@hiramoto.org>
-Date: Fri, 22 May 2009 13:24:58 +0200
-From: Karl Hiramoto <karl@hiramoto.org>
-MIME-Version: 1.0
-To: hostap@lists.shmoo.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: hostapd not sending beacons, and no traffic. 
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 12 May 2009 16:54:09 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so110597fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 13:54:09 -0700 (PDT)
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1241421545.6866.2.camel@johannes.local>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+	 <1241374060.13562.37.camel@johannes.local>
+	 <1241387163.10486.6.camel@maxim-laptop>
+	 <1241421545.6866.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 12 May 2009 23:54:03 +0300
+Message-Id: <1242161643.26484.2.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2009-05-04 at 09:19 +0200, Johannes Berg wrote:
+> On Mon, 2009-05-04 at 00:46 +0300, Maxim Levitsky wrote:
+> > Yes, sure
+> > For record I use iwlwifi.git commit
+> > 5a94b6d38100b7056a5a347e5c51359d924d305d
+> 
+> Ok.
+> 
+> > Logs attached.
+> > This bug can be reliably reproduced, happens every 5~10 times when I
+> > turn rfkill on/off, but today again this happened after resume from
+> > disk.
+> 
+> Ah, rfkill. Hmm, unfortunately I don't have a system with rfkill. I
+> looked at ieee80211_scan_work but can't see how it would abort the
+> scan... Could you put some debugging into that function? Especially
+> printing out the state when it enters, whether it calls
 
 Hi,
 
-Using hostapd from git.   I have the same thing happening with both 
-wirelees-testing and linux-2.6.30-rc6
+I can't seem to reproduce that ether.
+Maybe this got fixed (I have seen few suspicios commits in
+wireless-testing... althought I think this is a wishfull thinking)
+
+Anyway, I I have put printks in ieee80211_scan_work.
 
 
-Scenario 1:   
-eth0 bridged to wlan0_0.    all traffic works with no problems.   Ping 
-and Lots of traffic between interfaces works fine.
+Best regards,
+	Maxim Levitsky
 
-
-Scenario 2:   
-eth0 bridged to wlan0_0 in one subnet.   Then en eth1 I have another 
-subnet, i route between subnets.  I can ping between subnets to for a 
-while.  I can not copy a large file,  iperf also fails.   At some point 
-hostapd stops sending beacons and ther is no traffic.  It seems to 
-respond to probe requests.
-
-STA 00:90:4b:69:0f:55 sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:0e:35:f0:76:42 sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:0e:35:f0:76:42 sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-Checking STA 00:1c:bf:51:63:34 inactivity:
-  Station has been active
-Checking STA 00:1c:bf:51:63:34 inactivity:
-  Polling STA with data frame
-Checking STA 00:1c:bf:51:63:34 inactivity:
-Sending disassociation info to STA 00:1c:bf:51:63:34
-nl_set_encr: ifindex=6 alg=0 addr=0x5c298 key_idx=0 set_tx=1 seq_len=0 
-key_len=0
-   addr=00:1c:bf:51:63:34
-Sending deauthentication info to STA 00:1c:bf:51:63:34
-nl_set_encr: ifindex=6 alg=0 addr=0x5c298 key_idx=0 set_tx=1 seq_len=0 
-key_len=0
-   addr=00:1c:bf:51:63:34
-nl80211: Set beacon (beacon_set=1)
-WPA: group state machine entering state SETKEYS (VLAN-ID 0)
-GMK - hexdump(len=32): [REMOVED]
-GTK - hexdump(len=32): [REMOVED]
-wpa_group_setkeys: GKeyDoneStations=0
-WPA: group state machine entering state SETKEYSDONE (VLAN-ID 0)
-nl_set_encr: ifindex=6 alg=2 addr=(nil) key_idx=2 set_tx=1 seq_len=0 
-key_len=32
-
-
-
-Senario 3:   
-Same as senario 2 but NAT instead of route.
-eth0 bridged to wlan0_0 in one subnet.   Then en eth1 I have another 
-subnet, I NAT/ MASQUERADE  between subnets.  I can ping between subnets 
-to for a while.  I can not copy a large file,  iperf also fails.   At 
-some point hostapd stops sending beacons and there is no traffic.  It 
-seems to respond to probe requests.
-
-
-
-Hostapd configuration:
-
-interface=wlan0_0
-bridge=br0
-driver=nl80211
-logger_syslog=-1
-logger_syslog_level=2
-logger_stdout=0
-logger_stdout_level=2
-dump_file=/tmp/hostapd/hostapd.0.dump
-ssid=karl
-channel=1
-hw_mode=g
-auth_algs=1
-macaddr_acl=0
-accept_mac_file=/tmp/hostapd/hostapd.wlan0_0.accept
-deny_mac_file=/tmp/hostapd/hostapd.wlan0_0.deny
-ignore_broadcast_ssid=0
-wpa=3
-wpa_passphrase=hiramoto
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP CCMP
-ieee8021x=0
-eap_server=0
-
-
-
-Any ideas on where the problem could be?
-
-Thanks.
---
-Karl.
