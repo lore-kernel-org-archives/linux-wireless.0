@@ -1,285 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:11165 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763403AbZE3Rhn (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:35797 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400AbZELTIX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 13:37:43 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so243532eye.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:45 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC v2 12/23] orinoco: initialise independently of netdev
-Date: Sat, 30 May 2009 18:36:46 +0100
-Message-Id: <1243705017-8784-13-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
-References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+	Tue, 12 May 2009 15:08:23 -0400
+Received: by mail-fx0-f158.google.com with SMTP id 2so173396fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 12:08:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
+References: <1242125077.4331.0.camel@johannes.local>
+	 <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
+Date: Tue, 12 May 2009 20:08:24 +0100
+Message-ID: <3ace41890905121208s2029db39p730b2e174cd4b1e6@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialise the orinoco driver before registerring with netdev, which
-will help when we get to cfg80211...
+On Tue, May 12, 2009 at 8:05 PM, Hin-Tak Leung <hintak.leung@gmail.com>=
+ wrote:
+> On Tue, May 12, 2009 at 11:44 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> There are a few small bugs/oversights in the key handling
+>> code I wrote:
+>> =A0* SIOCSIWENCODE should default to setting key 0 if no
+>> =A0 default key is set already and no index is given,
+>> =A0* key removal should not require key material,
+>> =A0* SIOCSIWENCODEEXT should default to changing the default
+>> =A0 management key if no index is given.
+>>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> ---
+>> =A0net/wireless/wext-compat.c | =A0 14 +++++---------
+>> =A01 file changed, 5 insertions(+), 9 deletions(-)
+>>
+>> --- wireless-testing.orig/net/wireless/wext-compat.c =A0 =A02009-05-=
+12 12:38:41.000000000 +0200
+>> +++ wireless-testing/net/wireless/wext-compat.c 2009-05-12 12:38:59.=
+000000000 +0200
+>> @@ -557,7 +557,7 @@ int cfg80211_wext_siwencode(struct net_d
+>> =A0 =A0 =A0 =A0if (idx =3D=3D 0) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx =3D wdev->wext.default_key;
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 0)
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D 0;
+>> =A0 =A0 =A0 =A0} else if (idx < 1 || idx > 4)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+>> =A0 =A0 =A0 =A0else
+>> @@ -580,7 +580,7 @@ int cfg80211_wext_siwencode(struct net_d
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_W=
+EP40;
+>> =A0 =A0 =A0 =A0else if (erq->length =3D=3D 13)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_W=
+EP104;
+>> - =A0 =A0 =A0 else
+>> + =A0 =A0 =A0 else if (!remove)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+>>
+>> =A0 =A0 =A0 =A0return cfg80211_set_encryption(rdev, dev, NULL, remov=
+e,
+>> @@ -640,13 +640,9 @@ int cfg80211_wext_siwencodeext(struct ne
+>> =A0 =A0 =A0 =A0idx =3D erq->flags & IW_ENCODE_INDEX;
+>> =A0 =A0 =A0 =A0if (cipher =3D=3D WLAN_CIPHER_SUITE_AES_CMAC) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 4 || idx > 5) {
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* XXX: Only wpa_sup=
+plicant ever used this
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0can we=
+ still change the ABI a little
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0so we =
+do not need to keep track of
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0the de=
+fault key?
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D wdev->wext.def=
+ault_mgmt_key;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (idx < 0)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return=
+ -EINVAL;
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx--;
+>> =A0 =A0 =A0 =A0} else {
+>>
+>>
+>>
+>
+> I tried this, NM/wpa_suplicany still doesn't work, but if I shut thos=
+e
+> down and do it the old fashioned iwconfig way, I can get
+> connectivity... =A0the last chunk looks a bit funny - '(idx < 4 || id=
+x >
+> 5)' is just '(idx !=3D 4)' so why it isn't written simplier as such?
+> also the idx < 0 maybe <1 ?
+>
+> Stiill needs some work...
+>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/airport.c        |    6 +++
- drivers/net/wireless/orinoco/main.c           |   44 +++++++++++-------------
- drivers/net/wireless/orinoco/orinoco.h        |    1 +
- drivers/net/wireless/orinoco/orinoco_cs.c     |    6 +++
- drivers/net/wireless/orinoco/orinoco_nortel.c |    6 +++
- drivers/net/wireless/orinoco/orinoco_pci.c    |    6 +++
- drivers/net/wireless/orinoco/orinoco_plx.c    |    6 +++
- drivers/net/wireless/orinoco/orinoco_tmd.c    |    6 +++
- drivers/net/wireless/orinoco/spectrum_cs.c    |    6 +++
- 9 files changed, 63 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/airport.c b/drivers/net/wireless/orinoco/airport.c
-index 6559aee..9f90337 100644
---- a/drivers/net/wireless/orinoco/airport.c
-+++ b/drivers/net/wireless/orinoco/airport.c
-@@ -234,6 +234,12 @@ airport_attach(struct macio_dev *mdev, const struct of_device_id *match)
- 	}
- 	card->irq_requested = 1;
- 
-+	/* Initialise the main driver */
-+	if (orinoco_init(priv) != 0) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto failed;
-+	}
-+
- 	/* Tell the stack we exist */
- 	if (register_netdev(dev) != 0) {
- 		printk(KERN_ERR PFX "register_netdev() failed\n");
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index 4fa8264..ff869a2 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -80,6 +80,7 @@
- #include <linux/kernel.h>
- #include <linux/init.h>
- #include <linux/delay.h>
-+#include <linux/device.h>
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
- #include <linux/ethtool.h>
-@@ -2073,9 +2074,9 @@ static void orinoco_unregister_pm_notifier(struct orinoco_private *priv)
- /* Initialization                                                   */
- /********************************************************************/
- 
--static int orinoco_init(struct net_device *dev)
-+int orinoco_init(struct orinoco_private *priv)
- {
--	struct orinoco_private *priv = netdev_priv(dev);
-+	struct device *dev = priv->dev;
- 	hermes_t *hw = &priv->hw;
- 	int err = 0;
- 
-@@ -2086,15 +2087,14 @@ static int orinoco_init(struct net_device *dev)
- 	/* Initialize the firmware */
- 	err = hermes_init(hw);
- 	if (err != 0) {
--		printk(KERN_ERR "%s: failed to initialize firmware (err = %d)\n",
--		       dev->name, err);
-+		dev_err(dev, "Failed to initialize firmware (err = %d)\n",
-+			err);
- 		goto out;
- 	}
- 
- 	err = determine_fw_capabilities(priv);
- 	if (err != 0) {
--		printk(KERN_ERR "%s: Incompatible firmware, aborting\n",
--		       dev->name);
-+		dev_err(dev, "Incompatible firmware, aborting\n");
- 		goto out;
- 	}
- 
-@@ -2110,27 +2110,23 @@ static int orinoco_init(struct net_device *dev)
- 		/* Check firmware version again */
- 		err = determine_fw_capabilities(priv);
- 		if (err != 0) {
--			printk(KERN_ERR "%s: Incompatible firmware, aborting\n",
--			       dev->name);
-+			dev_err(dev, "Incompatible firmware, aborting\n");
- 			goto out;
- 		}
- 	}
- 
- 	if (priv->has_port3)
--		printk(KERN_DEBUG "%s: Ad-hoc demo mode supported\n",
--		       dev->name);
-+		dev_info(dev, "Ad-hoc demo mode supported\n");
- 	if (priv->has_ibss)
--		printk(KERN_DEBUG "%s: IEEE standard IBSS ad-hoc mode supported\n",
--		       dev->name);
--	if (priv->has_wep) {
--		printk(KERN_DEBUG "%s: WEP supported, %s-bit key\n", dev->name,
--		       priv->has_big_wep ? "104" : "40");
--	}
-+		dev_info(dev, "IEEE standard IBSS ad-hoc mode supported\n");
-+	if (priv->has_wep)
-+		dev_info(dev, "WEP supported, %s-bit key\n",
-+			 priv->has_big_wep ? "104" : "40");
- 	if (priv->has_wpa) {
--		printk(KERN_DEBUG "%s: WPA-PSK supported\n", dev->name);
-+		dev_info(dev, "WPA-PSK supported\n");
- 		if (orinoco_mic_init(priv)) {
--			printk(KERN_ERR "%s: Failed to setup MIC crypto "
--			       "algorithm. Disabling WPA support\n", dev->name);
-+			dev_err(dev, "Failed to setup MIC crypto algorithm. "
-+				"Disabling WPA support\n");
- 			priv->has_wpa = 0;
- 		}
- 	}
-@@ -2141,14 +2137,14 @@ static int orinoco_init(struct net_device *dev)
- 		goto out;
- 	orinoco_bss_data_init(priv);
- 
--	err = orinoco_hw_read_card_settings(priv, dev->dev_addr);
-+	/* Netdev has not initialised, but we have allocated the buffer. */
-+	err = orinoco_hw_read_card_settings(priv, priv->ndev->dev_addr);
- 	if (err)
- 		goto out;
- 
- 	err = orinoco_hw_allocate_fid(priv);
- 	if (err) {
--		printk(KERN_ERR "%s: failed to allocate NIC buffer!\n",
--		       dev->name);
-+		dev_err(dev, "Failed to allocate NIC buffer!\n");
- 		goto out;
- 	}
- 
-@@ -2174,14 +2170,14 @@ static int orinoco_init(struct net_device *dev)
- 	priv->hw_unavailable--;
- 	spin_unlock_irq(&priv->lock);
- 
--	printk(KERN_DEBUG "%s: ready\n", dev->name);
-+	dev_dbg(dev, "Ready\n");
- 
-  out:
- 	return err;
- }
-+EXPORT_SYMBOL(orinoco_init);
- 
- static const struct net_device_ops orinoco_netdev_ops = {
--	.ndo_init		= orinoco_init,
- 	.ndo_open		= orinoco_open,
- 	.ndo_stop		= orinoco_stop,
- 	.ndo_start_xmit		= orinoco_xmit,
-diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
-index b93e86c..2e9d33f 100644
---- a/drivers/net/wireless/orinoco/orinoco.h
-+++ b/drivers/net/wireless/orinoco/orinoco.h
-@@ -187,6 +187,7 @@ extern struct orinoco_private *alloc_orinocodev(
- 	int (*hard_reset)(struct orinoco_private *),
- 	int (*stop_fw)(struct orinoco_private *, int));
- extern void free_orinocodev(struct orinoco_private *priv);
-+extern int orinoco_init(struct orinoco_private *priv);
- extern int __orinoco_up(struct orinoco_private *priv);
- extern int __orinoco_down(struct orinoco_private *priv);
- extern int orinoco_reinit_firmware(struct orinoco_private *priv);
-diff --git a/drivers/net/wireless/orinoco/orinoco_cs.c b/drivers/net/wireless/orinoco/orinoco_cs.c
-index fa8fe5b..20abf02 100644
---- a/drivers/net/wireless/orinoco/orinoco_cs.c
-+++ b/drivers/net/wireless/orinoco/orinoco_cs.c
-@@ -297,6 +297,12 @@ orinoco_cs_config(struct pcmcia_device *link)
- 	dev->irq = link->irq.AssignedIRQ;
- 	card->node.major = card->node.minor = 0;
- 
-+	/* Initialise the main driver */
-+	if (orinoco_init(priv) != 0) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto failed;
-+	}
-+
- 	SET_NETDEV_DEV(dev, &handle_to_dev(link));
- 	/* Tell the stack we exist */
- 	if (register_netdev(dev) != 0) {
-diff --git a/drivers/net/wireless/orinoco/orinoco_nortel.c b/drivers/net/wireless/orinoco/orinoco_nortel.c
-index 4efd5a0..45cef81 100644
---- a/drivers/net/wireless/orinoco/orinoco_nortel.c
-+++ b/drivers/net/wireless/orinoco/orinoco_nortel.c
-@@ -217,6 +217,12 @@ static int orinoco_nortel_init_one(struct pci_dev *pdev,
- 		goto fail;
- 	}
- 
-+	err = orinoco_init(priv);
-+	if (err) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto fail;
-+	}
-+
- 	err = register_netdev(dev);
- 	if (err) {
- 		printk(KERN_ERR PFX "Cannot register network device\n");
-diff --git a/drivers/net/wireless/orinoco/orinoco_pci.c b/drivers/net/wireless/orinoco/orinoco_pci.c
-index 12b9c6a..d0eb4ae 100644
---- a/drivers/net/wireless/orinoco/orinoco_pci.c
-+++ b/drivers/net/wireless/orinoco/orinoco_pci.c
-@@ -167,6 +167,12 @@ static int orinoco_pci_init_one(struct pci_dev *pdev,
- 		goto fail;
- 	}
- 
-+	err = orinoco_init(priv);
-+	if (err) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto fail;
-+	}
-+
- 	err = register_netdev(dev);
- 	if (err) {
- 		printk(KERN_ERR PFX "Cannot register network device\n");
-diff --git a/drivers/net/wireless/orinoco/orinoco_plx.c b/drivers/net/wireless/orinoco/orinoco_plx.c
-index 77d5668..8f225d0 100644
---- a/drivers/net/wireless/orinoco/orinoco_plx.c
-+++ b/drivers/net/wireless/orinoco/orinoco_plx.c
-@@ -256,6 +256,12 @@ static int orinoco_plx_init_one(struct pci_dev *pdev,
- 		goto fail;
- 	}
- 
-+	err = orinoco_init(priv);
-+	if (err) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto fail;
-+	}
-+
- 	err = register_netdev(dev);
- 	if (err) {
- 		printk(KERN_ERR PFX "Cannot register network device\n");
-diff --git a/drivers/net/wireless/orinoco/orinoco_tmd.c b/drivers/net/wireless/orinoco/orinoco_tmd.c
-index 5f24c03..3c04fae 100644
---- a/drivers/net/wireless/orinoco/orinoco_tmd.c
-+++ b/drivers/net/wireless/orinoco/orinoco_tmd.c
-@@ -153,6 +153,12 @@ static int orinoco_tmd_init_one(struct pci_dev *pdev,
- 		goto fail;
- 	}
- 
-+	err = orinoco_init(priv);
-+	if (err) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto fail;
-+	}
-+
- 	err = register_netdev(dev);
- 	if (err) {
- 		printk(KERN_ERR PFX "Cannot register network device\n");
-diff --git a/drivers/net/wireless/orinoco/spectrum_cs.c b/drivers/net/wireless/orinoco/spectrum_cs.c
-index ce909e4..43e1aed 100644
---- a/drivers/net/wireless/orinoco/spectrum_cs.c
-+++ b/drivers/net/wireless/orinoco/spectrum_cs.c
-@@ -368,6 +368,12 @@ spectrum_cs_config(struct pcmcia_device *link)
- 	if (spectrum_cs_hard_reset(priv) != 0)
- 		goto failed;
- 
-+	/* Initialise the main driver */
-+	if (orinoco_init(priv) != 0) {
-+		printk(KERN_ERR PFX "orinoco_init() failed\n");
-+		goto failed;
-+	}
-+
- 	SET_NETDEV_DEV(dev, &handle_to_dev(link));
- 	/* Tell the stack we exist */
- 	if (register_netdev(dev) != 0) {
--- 
-1.6.0.6
-
+BTW, nm fails to connect with
+ <WARN>  nm_device_wifi_disable_encryption(): error setting key for
+device wlan2: No such file or directory
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
