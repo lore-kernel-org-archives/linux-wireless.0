@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42965 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971AbZESLpP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 07:45:15 -0400
-Date: Tue, 19 May 2009 07:45:14 -0400 (EDT)
-From: Steven Rostedt <rostedt@goodmis.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: Nick Kossifidis <mickflemm@gmail.com>, jirislaby@gmail.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: prevent infinite loop
-In-Reply-To: <43e72e890905182339u68c4d4f5v3a2f25e9e3547e60@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.0905190743070.1767@gandalf.stny.rr.com>
-References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com>  <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>  <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com>
- <43e72e890905182339u68c4d4f5v3a2f25e9e3547e60@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from blaine.gmane.org ([80.91.229.8]:57630 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754127AbZEMANn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 20:13:43 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1M41pM-0000N8-Hy
+	for linux-wireless@vger.kernel.org; Wed, 13 May 2009 01:56:04 +0200
+Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Evgeni Golov <sargentd@die-welt.net>,
+	Jiri Slaby
+	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Justin Mattock
+	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Linux Kernel Mailing List
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
+In-Reply-To: <1242169748.14227.15.camel@johannes.local>
+References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
+	 <4A089E49.7080403@gmail.com> <20090512103905.0D68E1FD10@chi.die-welt.net>
+	 <dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
+	 <20090512174636.8EBDA1FD10@chi.die-welt.net>
+	 <dd18b0c30905121304k6df44362v76e8e7ae6da3b76f@mail.gmail.com>
+	 <43e72e890905121601y59de3d3fh9eca4637883c37fa@mail.gmail.com>
+	 <1242169748.14227.15.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 12 May 2009 16:36:36 -0700
+Message-Id: <1242171396.2159.7.camel@unix>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Mon, 18 May 2009, Luis R. Rodriguez wrote:
 
-> On Mon, May 18, 2009 at 11:32 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > 2009/5/19 Steven Rostedt <rostedt@goodmis.org>:
-> >>
-> >> On Tue, 19 May 2009, Nick Kossifidis wrote:
-> >>>
-> >>> This is already fixed on wireless-testing ;-)
-> >>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
-> >>
-> >> Thanks, but this does only half. Although I did not hit this in my laptop,
-> >> it can be an issue. If step[0] == step[1] you have the same problem.
-> >>
-> >
-> > Having the same power value for 2 different steps is something we can
-> > expect (although docs say that we expect the line to be monotonically
-> > increasing but anyway), having the same step twice is way out of spec,
-> > there is no way we can have the same step twice on EEPROM, only if we
-> > have a corrupted EEPROM (we need to add some sanity checks indeed here
-> > -> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/eeprom.c;h=c56b494d417acd40d445d922f2861b53cc2315df;hb=HEAD#l910
-> > to handle such a case but first we need to have a "default" eeprom
-> > dataset to fallback when we get such errors).
+On Wed, 2009-05-13 at 01:09 +0200, Johannes Berg wrote:
+> On Tue, 2009-05-12 at 16:01 -0700, Luis R. Rodriguez wrote:
 > 
-> Don't bother with busted EEPROMs, if its busted its busted. Chances
-> are the complexity we'd need to add to deal with such devices is
-> simply not worth it.
+> > > O.K. after trial and error reverting this:
+> > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=47afbaf5af9454a7a1a64591e20cbfcc27ca67a8;hp=853da11b94e674445e93660f47a5f0aeeea09623
+> > >
+> > > brings life back to the macbook with 2.6.30-rc4
+> > > (not sure about the iphone anomaly though, I'll keep
+> > > an eye on that)
+> > 
+> > Odd.. are you changing TX power through wext? Because that 47afbaf5
+> > should only make a difference when using manual tx power setting.
+> 
+> Except it introduced a bug which got fixed in -rc5.
+> 
+> johannes
 
-My concern is that a busted EEPROM should not lock up the kernel, when we 
-can avoid it. Put in a nasty WARN_ON if the steps are equal, and exit the 
-routine. But don't let it go into an infinite loop and have the user 
-wondering why their system just locked up.
+No,
+I try to leave the setting as is.(TX power)
 
--- Steve
+If this is fixed with the latest, then I'll just
+go ahead and pull when I get a chance(rather than have
+the reverted stuff).
+
+aside from that it interesting, my other machine
+(imac) runs fine with ndiswrapper, and wl.
+
+In any case I'll send a post if there's any issues.
+(right now watching some hulu recommend session 9 good
+flick)
+
+Justin P. Mattock
+
 
