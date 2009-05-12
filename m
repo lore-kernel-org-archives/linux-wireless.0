@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:34048 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbZEaMrP (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:43662 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395AbZELW6A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 08:47:15 -0400
-Received: by fxm12 with SMTP id 12so5259152fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 05:47:15 -0700 (PDT)
-Subject: Re: [BUG] Crda oopses the system
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090531062217.GB23972@bombadil.infradead.org>
-References: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
-	 <1242256950.3241.13.camel@maxim-laptop>
-	 <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
-	 <1242258469.3241.19.camel@maxim-laptop>
-	 <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
-	 <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
-	 <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop>
-	 <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com>
-	 <1242986902.5544.8.camel@maxim-laptop>
-	 <20090531062217.GB23972@bombadil.infradead.org>
-Content-Type: text/plain
-Date: Sun, 31 May 2009 15:47:11 +0300
-Message-Id: <1243774031.5741.5.camel@maxim-laptop>
-Mime-Version: 1.0
+	Tue, 12 May 2009 18:58:00 -0400
+Received: by ewy24 with SMTP id 24so385918ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 15:58:00 -0700 (PDT)
+Message-Id: <64642731-8767-4063-9479-E6F2E5222EB6@freebsd.org>
+From: Rui Paulo <rpaulo@freebsd.org>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-1--278614985"
+Mime-Version: 1.0 (Apple Message framework v935.3)
+Subject: Interop testing of 802.11s
+Date: Tue, 12 May 2009 23:57:53 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-05-31 at 02:22 -0400, Luis R. Rodriguez wrote:
-> On Fri, May 22, 2009 at 01:08:22PM +0300, Maxim Levitsky wrote:
-> > I am talking about 
-> > 
-> > BUG_ON(!country_ie_regdomain);
-> > in net/wireless/reg.c
-> 
-> Please try this patch and leave a window open with this running:
-> 
-> iw event
-> 
-> Please be sure to grab iw from git, not sure if the reg events
-> have all gone into an official release yet. What I'm looking for
-> is whether or not a previous 11d setting was already processed
-> or if the !country_ie_regdomain condition happens from the first
-> 11d processing.
-> 
->   Luis
-> 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index f87ac1d..1b60dfc 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -2171,7 +2171,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
->  	 * the country IE rd with what CRDA believes that country should have
->  	 */
->  
-> -	BUG_ON(!country_ie_regdomain);
-> +	if (WARN_ON(!country_ie_regdomain)) {
-> +		kfree(rd);
-> +		rd = NULL;
-> +		return -EINVAL;
-> +	}
->  	BUG_ON(rd == country_ie_regdomain);
->  
->  	/*
-> @@ -2268,6 +2272,8 @@ int regulatory_init(void)
->  	if (IS_ERR(reg_pdev))
->  		return PTR_ERR(reg_pdev);
->  
-> +	country_ie_regdomain = NULL;
-> +
->  	spin_lock_init(&reg_requests_lock);
->  	spin_lock_init(&reg_pending_beacons_lock);
->  
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-1--278614985
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+
+Hi,
+I'm developing the 11s stack for FreeBSD and I'm looking for folks  
+interested in doing interop testing. I've already noticed some things  
+that don't cope with the latest draft that I would like to discuss in  
+further detail.
+
+Regards,
+--
+Rui Paulo
 
 
-I'll test this today.
-I have iw from git.
+--Apple-Mail-1--278614985
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
 
-Best regards,
-	Maxim Levitsky
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (Darwin)
 
+iEYEARECAAYFAkoJ/vEACgkQfD8M/ASTygKOnACfaMkNajV3ReW5EIAl230ugn8+
+t2gAoKIAQoUE/D6dQufcd7FF0NWN0R40
+=vqb4
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-1--278614985--
