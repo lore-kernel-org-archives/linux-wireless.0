@@ -1,38 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:43798 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757357AbZE0WEE (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:58364 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752232AbZELXOp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 18:04:04 -0400
-Message-ID: <4A1DB8D3.3010506@lwfinger.net>
-Date: Wed, 27 May 2009 17:04:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Barkle <barkle@gmx.net>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RTL 8185
-References: <4A199FED.7000609@gmx.net>	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>	 <4A1B00E7.5070801@gmx.net>	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>	 <4A1B2186.3070107@gmx.net>	 <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>	 <4A1C1766.3030004@gmx.net> <4A1C74C1.7060600@gmx.net>	 <3ace41890905261651l1cd3742bu5ac1af6f631798f3@mail.gmail.com>	 <4A1CD905.4090406@gmx.net> <3ace41890905270121r4d724c73h2187b7a89931f46e@mail.gmail.com> <4A1D95F8.7050003@gmx.net> <4A1D9FC8.407@lwfinger.net> <4A1DAADC.1080105@gmx.net>
-In-Reply-To: <4A1DAADC.1080105@gmx.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 May 2009 19:14:45 -0400
+Received: by ewy24 with SMTP id 24so394895ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 16:14:45 -0700 (PDT)
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242169934.14227.16.camel@johannes.local>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+	 <1241374060.13562.37.camel@johannes.local>
+	 <1241387163.10486.6.camel@maxim-laptop>
+	 <1241421545.6866.2.camel@johannes.local>
+	 <1242161643.26484.2.camel@maxim-laptop>
+	 <1242169824.5146.31.camel@maxim-laptop>
+	 <1242169934.14227.16.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 13 May 2009 02:14:40 +0300
+Message-Id: <1242170080.5146.32.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Barkle wrote:
+On Wed, 2009-05-13 at 01:12 +0200, Johannes Berg wrote:
+> On Wed, 2009-05-13 at 02:10 +0300, Maxim Levitsky wrote:
 > 
-> feta:~# iwconfig --version
-> iwconfig  Wireless-Tools version 30
->          Compatible with Wireless Extension v11 to v22.
+> > > May 13 01:44:33 maxim-laptop kernel: [ 1093.991176] iwl3945 0000:06:00.0: Radio Frequency Kill Switch is On:
+> > ^^^^^^^^^^ Kernel notices the rfkill state
+> > > May 13 01:44:33 maxim-laptop kernel: [ 1093.991179] Kill switch must be turned off for wireless networking to work.
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789455]  ieee80211_ioctl_siwessid: called
+> > ^^^^^^^^^^ Evil NM notices Rfkill too, and sends bogus bssid to driver
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789462] ieee80211_sta_req_auth: called
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789498] iwl3945 0000:06:00.0: Error sending REPLY_LEDS_CMD: enqueue_hcmd failed: -5
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789530] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789536] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870202] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870210] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870223] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870227] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870234] wlan0: direct probe to AP 00:0e:2e:a4:12:3e try 1
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.960876] cfg80211: scan requested
+> > ^^^^^^^^^^^ This results in a scan
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.960884] __ieee80211_start_scan: scan requested
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1096.042972] wlan0: deauthenticating by local choice (reason=3)
+> > ^^^^^^^^^^^ And deauth....
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1096.331307] ieee80211_ioctl_siwap: called
+> > ^^^^^^^^^^^ And NM sets ESSID on top of that....
+> > > May 13 01:44:35 maxim-laptop kernel: [ 1096.331310] ieee80211_sta_req_auth: called
+> > > 
+> > 
+> > Now I press rfkill again, but scan is hung
 > 
-> Kernel    Currently compiled with Wireless Extension v22.
-> 
-> wlan0     Recommend Wireless Extension v21 or later,
->          Currently compiled with Wireless Extension v22.
-> 
-> feta:~# ifconfig --version
-> net-tools 1.60
-> ifconfig 1.42 (2001-04-13)
+> So it's a bug in iwlwifi, it neither rejects nor executes a scan when in
+> rfkill.
+But I use disable_hw_scan=1 !
 
-Good - you have recent versions.
+Iwlwifi shouldn't be called in this case (am I mistaken?)
 
-Larry
+Best regards,
+	Maxim Levitsky
+
+
+> 
+> johannes
+
