@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61659 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752775AbZEFUeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 16:34:16 -0400
-Subject: Re: [BUG] Crda oopses the system
-From: Pavel Roskin <proski@gnu.org>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1241606838.18657.1.camel@maxim-laptop>
-References: <1241499867.4816.18.camel@maxim-laptop>
-	 <43e72e890905051146n48bdad57s9db40a6e016cb81b@mail.gmail.com>
-	 <1241606838.18657.1.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Wed, 06 May 2009 16:34:16 -0400
-Message-Id: <1241642056.3289.6.camel@mj>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33610 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752147AbZELRy7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 13:54:59 -0400
+Subject: Re: [RFT v9] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Keaney <keaneyw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A09B130.9000106@gmail.com>
+References: <1242030669.6930.10.camel@johannes.local>
+	 <4A09B130.9000106@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7tn/xLuSMRXLpbXIcxbY"
+Date: Tue, 12 May 2009 19:52:44 +0200
+Message-Id: <1242150764.11924.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
 
-(Dropping the Intel list; I not subscribed to it and I don't think it's
-Intel specific)
+--=-7tn/xLuSMRXLpbXIcxbY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-05-06 at 13:47 +0300, Maxim Levitsky wrote:
-> On Tue, 2009-05-05 at 11:46 -0700, Luis R. Rodriguez wrote:
-> > On Mon, May 4, 2009 at 10:04 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> > > Here what I see:
-> > >
-> > >
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109054] Process crda (pid: 29344, threadinfo ffff88007deaa000, task ffff880067369600)
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109058] Stack:
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109061]  0000000000000034 ffff88003fb8a640 0000000000000000 ffff8800634f5c20
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109069]  ffff88007deaba28 ffffffffa00eb3d0 000004f87deab9c8 ffff88003fb8a640
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109077]  0000000000000000 ffff8800634f5c24 ffff8800634f5c2c ffff8800634f5c34
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109086] Call Trace:
-> > >> May  4 16:35:14 maxim-laptop kernel: [16939.109091]  [<ffffffffa00eb3d0>] nl80211_set_reg+0x100/0x2b0 [cfg80211]
+On Tue, 2009-05-12 at 13:26 -0400, Will Keaney wrote:
 
-It would be great if you run:
-gdb /lib/modules/`uname -r`/kernel/net/wireless/cfg80211.ko
+> >  * rfkill-input pointlessly is a separate module
+> >  =20
+> Please leave rfkill-input available as a module, at least until the bug
+> I reported in my previous e-mail 'Soft Lockup With rfkill_input and
+> thinkpad_acpi' is resolved.  Otherwise it will render Thinkpads, and
+> possibly other systems, unusable with rfkill enabled.
 
-And then inside gdb:
-l *nl80211_set_reg+0x100
+I certainly will not, but I will help you solve the problem _after_ this
+patch. For sure not before this patch.
 
-And then send us the output.
+johannes
 
--- 
-Regards,
-Pavel Roskin
+--=-7tn/xLuSMRXLpbXIcxbY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKCbdmAAoJEODzc/N7+Qmas50P/ArLpkYQMUw5/01Z04mqmyVZ
+X4MtIssGCEVmshCHRaDr2OAZRzOS0bNDQ6Dq0uEE9GgQlR5C/ngNHlMQU5QVxfSK
+3s7Z9K+/8I/1aYZ5+TPB57IKnHA9+sqiywrb0d8U6zMmcJo4FbIu2N5bkAPi6f9d
+Bh5rzoC9reUHtd6uBNkpDlipqLS8j4YUYlMI6nZiifHZ7m8gAn1cCf7kk1hHns67
++YbFaDp8ZJPRtTLbH6Qvj1N966fTWErNPw0nh43Sl3/ibraPqLOtqNYt6ZkfAvmf
+HT+HVSQskOby/gMDRk9rTEhXCCSfTiovugQ/RUxVDtjHXmiLsofTRi+l7yXX5zQP
+nsDqLXF/l1kLnE92mQM0vSUPukMpUQwjyVgEDa5uA/+Z8a8I2fxEhRsetfeb7b5+
+x4pCww5EVyPYI2C9lv+mIbUKmQ71do8dQiVWEpL/QdOFlOgaNzCkCFvVLN+ZVq2l
+PnlEs168CzVgjqgQFInFKrLGdGvXGKMW5YUB8XPhQPyq1D356SqIKSqCSGTs2/8C
+D3nVh4vVq40mFl3o4WuoAgd7QZSgAeRu+NOdK6PvzZzl259hNHWRRkq8yxVbGV+K
+mEYHsKkeK6Ie4zK0nosAanGxO+1gPlSfQ0CWJvv6EiV9fzhPAvbvMqyVF11zBMWq
+DQYR0EYQq7Yl9mbgXSaj
+=lTqk
+-----END PGP SIGNATURE-----
+
+--=-7tn/xLuSMRXLpbXIcxbY--
+
