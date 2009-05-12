@@ -1,381 +1,440 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44417 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757575AbZEWABQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 20:01:16 -0400
-Subject: [PATCH 1/5] libertas: simplify and clean up association/start/join
- setup
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Fri, 22 May 2009 20:01:21 -0400
-Message-Id: <1243036881.2495.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36751 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbZELPBL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 11:01:11 -0400
+Date: Tue, 12 May 2009 10:54:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-05-12
+Message-ID: <20090512145423.GA3773@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of the parameters for association/join/start commands aren't
-used (like the FH and CF IEs for IBSS, and the FH IE for BSS), so
-get rid of their unions to reduce indirection.  Also clean up
-structure names for kernel style.
+Dave,
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Another round of fixes intended for 2.6.30.  In particular, "mac80211:
+avoid NULL ptr deref when finding max_rates in PID and minstrel" fixes a
+bug that is a by-product of a fix that has already gone to Linus...oops!
+As for the others, the iwlwifi patch adds PCI IDs and corrects antenna
+configurations for a couple of devices, the rtl8187 corrects a problem
+some people were hitting relating to using non-DMA buffers for USB
+messages, the airo fix corrects an possible buffer overflow, and the
+ath5k fix documents the oops it is correcting.
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index a0e440c..d4d1d80 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -219,11 +219,10 @@ static int lbs_adhoc_join(struct lbs_private *priv,
- 	memcpy(&cmd.bss.bssid, &bss->bssid, ETH_ALEN);
- 	memcpy(&cmd.bss.ssid, &bss->ssid, bss->ssid_len);
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+P.S.  I probably should have gotten this out sooner, but due to a burp
+at my mailserver I was a bit unaware... :-(
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit e1cc1c578055d20d36e084e324001fb5e0355a71:
+  David S. Miller (1):
+        Merge branch 'net-fixes' of git://git.kernel.org/.../chris/linux-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Bob Copeland (1):
+      ath5k: update channel in sw state after stopping RX and TX
+
+Jay Sternberg (1):
+      iwlwifi: fix device id registration for 6000 series 2x2 devices
+
+John W. Linville (3):
+      airo: airo_get_encode{,ext} potential buffer overflow
+      mac80211: avoid NULL ptr deref when finding max_rates in PID and minstrel
+      rtl8187: use DMA-aware buffers with usb_control_msg
+
+ drivers/net/wireless/airo.c                    |   10 +++-
+ drivers/net/wireless/ath5k/base.c              |   22 +++++----
+ drivers/net/wireless/iwlwifi/iwl-6000.c        |    8 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |    2 +
+ drivers/net/wireless/rtl818x/rtl8187.h         |   57 ++++++++++++++++++------
+ drivers/net/wireless/rtl818x/rtl8187_dev.c     |   13 +++++-
+ drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |    8 +++-
+ net/mac80211/rc80211_minstrel.c                |    2 +-
+ net/mac80211/rc80211_pid_algo.c                |    2 +-
+ 9 files changed, 91 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index c36d3a3..d734757 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -6501,7 +6501,10 @@ static int airo_get_encode(struct net_device *dev,
  
--	memcpy(&cmd.bss.phyparamset, &bss->phyparamset,
--	       sizeof(union ieeetypes_phyparamset));
-+	memcpy(&cmd.bss.ds, &bss->phy.ds, sizeof(struct ieee_ie_ds_param_set));
+ 	/* Copy the key to the user buffer */
+ 	dwrq->length = get_wep_key(local, index, &buf[0], sizeof(buf));
+-	memcpy(extra, buf, dwrq->length);
++	if (dwrq->length != -1)
++		memcpy(extra, buf, dwrq->length);
++	else
++		dwrq->length = 0;
  
--	memcpy(&cmd.bss.ssparamset, &bss->ssparamset,
--	       sizeof(union IEEEtypes_ssparamset));
-+	memcpy(&cmd.bss.ibss, &bss->ss.ibss,
-+	       sizeof(struct ieee_ie_ibss_param_set));
+ 	return 0;
+ }
+@@ -6659,7 +6662,10 @@ static int airo_get_encodeext(struct net_device *dev,
+ 	
+ 	/* Copy the key to the user buffer */
+ 	ext->key_len = get_wep_key(local, idx, &buf[0], sizeof(buf));
+-	memcpy(extra, buf, ext->key_len);
++	if (ext->key_len != -1)
++		memcpy(extra, buf, ext->key_len);
++	else
++		ext->key_len = 0;
  
- 	cmd.bss.capability = cpu_to_le16(bss->capability & CAPINFO_MASK);
- 	lbs_deb_join("ADHOC_J_CMD: tmpcap=%4X CAPINFO_MASK=%4X\n",
-@@ -260,7 +259,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
- 	 */
- 	lbs_set_basic_rate_flags(cmd.bss.rates, ratesize);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index a08bc8a..32df27a 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -214,7 +214,7 @@ static struct pci_driver ath5k_pci_driver = {
+  * Prototypes - MAC 802.11 stack related functions
+  */
+ static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+-static int ath5k_reset(struct ath5k_softc *sc, bool stop, bool change_channel);
++static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
+ static int ath5k_reset_wake(struct ath5k_softc *sc);
+ static int ath5k_start(struct ieee80211_hw *hw);
+ static void ath5k_stop(struct ieee80211_hw *hw);
+@@ -1038,16 +1038,13 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 	if (chan->center_freq != sc->curchan->center_freq ||
+ 		chan->hw_value != sc->curchan->hw_value) {
  
--	cmd.bss.ssparamset.ibssparamset.atimwindow = cpu_to_le16(bss->atimwindow);
-+	cmd.bss.ibss.atimwindow = bss->atimwindow;
- 
- 	if (assoc_req->secinfo.wep_enabled) {
- 		u16 tmp = le16_to_cpu(cmd.bss.capability);
-@@ -343,14 +342,14 @@ static int lbs_adhoc_start(struct lbs_private *priv,
- 	WARN_ON(!assoc_req->channel);
- 
- 	/* set Physical parameter set */
--	cmd.phyparamset.dsparamset.elementid = WLAN_EID_DS_PARAMS;
--	cmd.phyparamset.dsparamset.len = 1;
--	cmd.phyparamset.dsparamset.currentchan = assoc_req->channel;
-+	cmd.ds.elementid = WLAN_EID_DS_PARAMS;
-+	cmd.ds.len = 1;
-+	cmd.ds.channel = assoc_req->channel;
- 
- 	/* set IBSS parameter set */
--	cmd.ssparamset.ibssparamset.elementid = WLAN_EID_IBSS_PARAMS;
--	cmd.ssparamset.ibssparamset.len = 2;
--	cmd.ssparamset.ibssparamset.atimwindow = 0;
-+	cmd.ibss.elementid = WLAN_EID_IBSS_PARAMS;
-+	cmd.ibss.len = 2;
-+	cmd.ibss.atimwindow = cpu_to_le16(0);
- 
- 	/* set capability info */
- 	tmpcap = WLAN_CAPABILITY_IBSS;
-@@ -1560,8 +1559,8 @@ int lbs_cmd_80211_associate(struct lbs_private *priv,
- 	u8 *pos;
- 	u16 tmpcap, tmplen;
- 	struct mrvlietypes_ssidparamset *ssid;
--	struct mrvlietypes_phyparamset *phy;
--	struct mrvlietypes_ssparamset *ss;
-+	struct mrvlietypes_dsparamset *ds;
-+	struct mrvlietypes_cfparamset *cf;
- 	struct mrvlietypes_ratesparamset *rates;
- 	struct mrvlietypes_rsnparamset *rsn;
- 
-@@ -1594,20 +1593,18 @@ int lbs_cmd_80211_associate(struct lbs_private *priv,
- 	memcpy(ssid->ssid, bss->ssid, tmplen);
- 	pos += sizeof(ssid->header) + tmplen;
- 
--	phy = (struct mrvlietypes_phyparamset *) pos;
--	phy->header.type = cpu_to_le16(TLV_TYPE_PHY_DS);
--	tmplen = sizeof(phy->fh_ds.dsparamset);
--	phy->header.len = cpu_to_le16(tmplen);
--	memcpy(&phy->fh_ds.dsparamset,
--	       &bss->phyparamset.dsparamset.currentchan,
--	       tmplen);
--	pos += sizeof(phy->header) + tmplen;
+-		sc->curchan = chan;
+-		sc->curband = &sc->sbands[chan->band];
 -
--	ss = (struct mrvlietypes_ssparamset *) pos;
--	ss->header.type = cpu_to_le16(TLV_TYPE_CF);
--	tmplen = sizeof(ss->cf_ibss.cfparamset);
--	ss->header.len = cpu_to_le16(tmplen);
--	pos += sizeof(ss->header) + tmplen;
-+	ds = (struct mrvlietypes_dsparamset *) pos;
-+	ds->header.type = cpu_to_le16(TLV_TYPE_PHY_DS);
-+	ds->header.len = cpu_to_le16(1);
-+	ds->channel = bss->phy.ds.channel;
-+	pos += sizeof(ds->header) + 1;
+ 		/*
+ 		 * To switch channels clear any pending DMA operations;
+ 		 * wait long enough for the RX fifo to drain, reset the
+ 		 * hardware at the new frequency, and then re-enable
+ 		 * the relevant bits of the h/w.
+ 		 */
+-		return ath5k_reset(sc, true, true);
++		return ath5k_reset(sc, chan);
+ 	}
+ 
+ 	return 0;
+@@ -2314,7 +2311,7 @@ ath5k_init(struct ath5k_softc *sc)
+ 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+ 		AR5K_INT_FATAL | AR5K_INT_GLOBAL;
+-	ret = ath5k_reset(sc, false, false);
++	ret = ath5k_reset(sc, NULL);
+ 	if (ret)
+ 		goto done;
+ 
+@@ -2599,18 +2596,25 @@ drop_packet:
+ 	return NETDEV_TX_OK;
+ }
+ 
++/*
++ * Reset the hardware.  If chan is not NULL, then also pause rx/tx
++ * and change to the given channel.
++ */
+ static int
+-ath5k_reset(struct ath5k_softc *sc, bool stop, bool change_channel)
++ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	int ret;
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
+ 
+-	if (stop) {
++	if (chan) {
+ 		ath5k_hw_set_imr(ah, 0);
+ 		ath5k_txq_cleanup(sc);
+ 		ath5k_rx_stop(sc);
 +
-+	cf = (struct mrvlietypes_cfparamset *) pos;
-+	cf->header.type = cpu_to_le16(TLV_TYPE_CF);
-+	tmplen = sizeof(*cf) - sizeof (cf->header);
-+	cf->header.len = cpu_to_le16(tmplen);
-+	/* IE payload should be zeroed, firmware fills it in for us */
-+	pos += sizeof(*cf);
++		sc->curchan = chan;
++		sc->curband = &sc->sbands[chan->band];
+ 	}
+ 	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+ 	if (ret) {
+@@ -2648,7 +2652,7 @@ ath5k_reset_wake(struct ath5k_softc *sc)
+ {
+ 	int ret;
  
- 	rates = (struct mrvlietypes_ratesparamset *) pos;
- 	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
-@@ -1643,7 +1640,7 @@ int lbs_cmd_80211_associate(struct lbs_private *priv,
+-	ret = ath5k_reset(sc, true, true);
++	ret = ath5k_reset(sc, sc->curchan);
+ 	if (!ret)
+ 		ieee80211_wake_queues(sc->hw);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index edfa5e1..bd438d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -101,8 +101,8 @@ struct iwl_cfg iwl6000_2agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_BC,
+-	.valid_rx_ant = ANT_BC,
++	.valid_tx_ant = ANT_AB,
++	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = false,
+ };
+ 
+@@ -117,8 +117,8 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
+-	.valid_tx_ant = ANT_BC,
+-	.valid_rx_ant = ANT_BC,
++	.valid_tx_ant = ANT_AB,
++	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = false,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 1ef4192..3bb28db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3636,7 +3636,9 @@ static struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x0085, 0x1112, iwl6000_2ag_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1122, iwl6000_2ag_cfg)},
+ 	{IWL_PCI_DEVICE(0x422B, PCI_ANY_ID, iwl6000_3agn_cfg)},
++	{IWL_PCI_DEVICE(0x422C, PCI_ANY_ID, iwl6000_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x4238, PCI_ANY_ID, iwl6000_3agn_cfg)},
++	{IWL_PCI_DEVICE(0x4239, PCI_ANY_ID, iwl6000_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, PCI_ANY_ID, iwl6000_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0085, PCI_ANY_ID, iwl6000_3agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0086, PCI_ANY_ID, iwl6050_3agn_cfg)},
+diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
+index 9718f61..edeff82 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187.h
++++ b/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -120,6 +120,12 @@ struct rtl8187_priv {
+ 		__le64 buf;
+ 		struct sk_buff_head queue;
+ 	} b_tx_status; /* This queue is used by both -b and non-b devices */
++	struct mutex io_mutex;
++	union {
++		u8 bits8;
++		__le16 bits16;
++		__le32 bits32;
++	} *io_dmabuf;
+ };
+ 
+ void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+@@ -129,10 +135,14 @@ static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
+ {
+ 	u8 val;
+ 
++	mutex_lock(&priv->io_mutex);
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, idx & 0x03, &val,
+-			sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03,
++			&priv->io_dmabuf->bits8, sizeof(val), HZ / 2);
++
++	val = priv->io_dmabuf->bits8;
++	mutex_unlock(&priv->io_mutex);
+ 
+ 	return val;
+ }
+@@ -147,10 +157,14 @@ static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
+ {
+ 	__le16 val;
+ 
++	mutex_lock(&priv->io_mutex);
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, idx & 0x03, &val,
+-			sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03,
++			&priv->io_dmabuf->bits16, sizeof(val), HZ / 2);
++
++	val = priv->io_dmabuf->bits16;
++	mutex_unlock(&priv->io_mutex);
+ 
+ 	return le16_to_cpu(val);
+ }
+@@ -165,10 +179,14 @@ static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
+ {
+ 	__le32 val;
+ 
++	mutex_lock(&priv->io_mutex);
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, idx & 0x03, &val,
+-			sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03,
++			&priv->io_dmabuf->bits32, sizeof(val), HZ / 2);
++
++	val = priv->io_dmabuf->bits32;
++	mutex_unlock(&priv->io_mutex);
+ 
+ 	return le32_to_cpu(val);
+ }
+@@ -181,10 +199,15 @@ static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
+ static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
+ 					u8 *addr, u8 val, u8 idx)
+ {
++	mutex_lock(&priv->io_mutex);
++
++	priv->io_dmabuf->bits8 = val;
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, idx & 0x03, &val,
+-			sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03,
++			&priv->io_dmabuf->bits8, sizeof(val), HZ / 2);
++
++	mutex_unlock(&priv->io_mutex);
+ }
+ 
+ static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
+@@ -195,12 +218,15 @@ static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
+ static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
+ 					 __le16 *addr, u16 val, u8 idx)
+ {
+-	__le16 buf = cpu_to_le16(val);
++	mutex_lock(&priv->io_mutex);
+ 
++	priv->io_dmabuf->bits16 = cpu_to_le16(val);
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
+-			HZ / 2);
++			(unsigned long)addr, idx & 0x03,
++			&priv->io_dmabuf->bits16, sizeof(val), HZ / 2);
++
++	mutex_unlock(&priv->io_mutex);
+ }
+ 
+ static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
+@@ -212,12 +238,15 @@ static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
+ static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
+ 					 __le32 *addr, u32 val, u8 idx)
+ {
+-	__le32 buf = cpu_to_le32(val);
++	mutex_lock(&priv->io_mutex);
+ 
++	priv->io_dmabuf->bits32 = cpu_to_le32(val);
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
+-			HZ / 2);
++			(unsigned long)addr, idx & 0x03,
++			&priv->io_dmabuf->bits32, sizeof(val), HZ / 2);
++
++	mutex_unlock(&priv->io_mutex);
+ }
+ 
+ static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index fd81884..bac6cfb 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1329,6 +1329,14 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	priv = dev->priv;
+ 	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+ 
++	/* allocate "DMA aware" buffer for register accesses */
++	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
++	if (!priv->io_dmabuf) {
++		err = -ENOMEM;
++		goto err_free_dev;
++	}
++	mutex_init(&priv->io_mutex);
++
+ 	SET_IEEE80211_DEV(dev, &intf->dev);
+ 	usb_set_intfdata(intf, dev);
+ 	priv->udev = udev;
+@@ -1495,7 +1503,7 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+ 		printk(KERN_ERR "rtl8187: Cannot register device\n");
+-		goto err_free_dev;
++		goto err_free_dmabuf;
+ 	}
+ 	mutex_init(&priv->conf_mutex);
+ 	skb_queue_head_init(&priv->b_tx_status.queue);
+@@ -1506,6 +1514,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 
+ 	return 0;
+ 
++ err_free_dmabuf:
++	kfree(priv->io_dmabuf);
+  err_free_dev:
+ 	ieee80211_free_hw(dev);
+ 	usb_set_intfdata(intf, NULL);
+@@ -1526,6 +1536,7 @@ static void __devexit rtl8187_disconnect(struct usb_interface *intf)
+ 	priv = dev->priv;
+ 	usb_reset_device(priv->udev);
+ 	usb_put_dev(interface_to_usbdev(intf));
++	kfree(priv->io_dmabuf);
+ 	ieee80211_free_hw(dev);
+ }
+ 
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+index 78df281..a098193 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+@@ -88,9 +88,15 @@ static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, __le16 data)
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
+ 	udelay(10);
+ 
++	mutex_lock(&priv->io_mutex);
++
++	priv->io_dmabuf->bits16 = data;
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			addr, 0x8225, &data, sizeof(data), HZ / 2);
++			addr, 0x8225, &priv->io_dmabuf->bits16, sizeof(data),
++			HZ / 2);
++
++	mutex_unlock(&priv->io_mutex);
+ 
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
+ 	udelay(10);
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 70df3dc..d9233ec 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -477,7 +477,7 @@ minstrel_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+ 		sband = hw->wiphy->bands[i];
+-		if (sband->n_bitrates > max_rates)
++		if (sband && sband->n_bitrates > max_rates)
+ 			max_rates = sband->n_bitrates;
  	}
  
- 	/* update curbssparams */
--	priv->curbssparams.channel = bss->phyparamset.dsparamset.currentchan;
-+	priv->curbssparams.channel = bss->phy.ds.channel;
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index 01d59a8..8bef9a1 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -378,7 +378,7 @@ static void *rate_control_pid_alloc(struct ieee80211_hw *hw,
  
- 	if (lbs_parse_dnld_countryinfo_11d(priv, bss)) {
- 		ret = -1;
-@@ -1669,7 +1666,7 @@ int lbs_ret_80211_associate(struct lbs_private *priv,
- {
- 	int ret = 0;
- 	union iwreq_data wrqu;
--	struct ieeetypes_assocrsp *passocrsp;
-+	struct ieee_assoc_response *passocrsp;
- 	struct bss_descriptor *bss;
- 	u16 status_code;
- 
-@@ -1682,7 +1679,7 @@ int lbs_ret_80211_associate(struct lbs_private *priv,
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+ 		sband = hw->wiphy->bands[i];
+-		if (sband->n_bitrates > max_rates)
++		if (sband && sband->n_bitrates > max_rates)
+ 			max_rates = sband->n_bitrates;
  	}
- 	bss = &priv->in_progress_assoc_req->bss;
  
--	passocrsp = (struct ieeetypes_assocrsp *) &resp->params;
-+	passocrsp = (struct ieee_assoc_response *) &resp->params;
- 
- 	/*
- 	 * Older FW versions map the IEEE 802.11 Status Code in the association
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index cbaafa6..a1443e5 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -338,7 +338,7 @@ struct bss_descriptor {
- 	u32 rssi;
- 	u32 channel;
- 	u16 beaconperiod;
--	u32 atimwindow;
-+	__le16 atimwindow;
- 
- 	/* IW_MODE_AUTO, IW_MODE_ADHOC, IW_MODE_INFRA */
- 	u8 mode;
-@@ -348,8 +348,8 @@ struct bss_descriptor {
- 
- 	unsigned long last_scanned;
- 
--	union ieeetypes_phyparamset phyparamset;
--	union IEEEtypes_ssparamset ssparamset;
-+	union ieee_phy_param_set phy;
-+	union ieee_ss_param_set ss;
- 
- 	struct ieeetypes_countryinfofullset countryinfo;
- 
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index 391c54a..463ff97 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -278,7 +278,7 @@ struct cmd_ds_802_11_associate {
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_associate_rsp {
--	struct ieeetypes_assocrsp assocRsp;
-+	struct ieee_assoc_response response;
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_set_wep {
-@@ -535,9 +535,11 @@ struct cmd_ds_802_11_ad_hoc_start {
- 	u8 bsstype;
- 	__le16 beaconperiod;
- 	u8 dtimperiod;   /* Reserved on v9 and later */
--	union IEEEtypes_ssparamset ssparamset;
--	union ieeetypes_phyparamset phyparamset;
--	__le16 probedelay;
-+	struct ieee_ie_ibss_param_set ibss;
-+	u8 reserved1[4];
-+	struct ieee_ie_ds_param_set ds;
-+	u8 reserved2[4];
-+	__le16 probedelay;  /* Reserved on v9 and later */
- 	__le16 capability;
- 	u8 rates[MAX_RATES];
- 	u8 tlv_memory_size_pad[100];
-@@ -558,8 +560,10 @@ struct adhoc_bssdesc {
- 	u8 dtimperiod;
- 	__le64 timestamp;
- 	__le64 localtime;
--	union ieeetypes_phyparamset phyparamset;
--	union IEEEtypes_ssparamset ssparamset;
-+	struct ieee_ie_ds_param_set ds;
-+	u8 reserved1[4];
-+	struct ieee_ie_ibss_param_set ibss;
-+	u8 reserved2[4];
- 	__le16 capability;
- 	u8 rates[MAX_RATES];
- 
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index 8124db3..38b0560 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -513,10 +513,10 @@ void lbs_scan_worker(struct work_struct *work)
- static int lbs_process_bss(struct bss_descriptor *bss,
- 			   uint8_t **pbeaconinfo, int *bytesleft)
- {
--	struct ieeetypes_fhparamset *pFH;
--	struct ieeetypes_dsparamset *pDS;
--	struct ieeetypes_cfparamset *pCF;
--	struct ieeetypes_ibssparamset *pibss;
-+	struct ieee_ie_fh_param_set *fh;
-+	struct ieee_ie_ds_param_set *ds;
-+	struct ieee_ie_cf_param_set *cf;
-+	struct ieee_ie_ibss_param_set *ibss;
- 	DECLARE_SSID_BUF(ssid);
- 	struct ieeetypes_countryinfoset *pcountryinfo;
- 	uint8_t *pos, *end, *p;
-@@ -616,32 +616,28 @@ static int lbs_process_bss(struct bss_descriptor *bss,
- 			break;
- 
- 		case WLAN_EID_FH_PARAMS:
--			pFH = (struct ieeetypes_fhparamset *) pos;
--			memmove(&bss->phyparamset.fhparamset, pFH,
--				sizeof(struct ieeetypes_fhparamset));
-+			fh = (struct ieee_ie_fh_param_set *) pos;
-+			memcpy(&bss->phy.fh, fh, sizeof(*fh));
- 			lbs_deb_scan("got FH IE\n");
- 			break;
- 
- 		case WLAN_EID_DS_PARAMS:
--			pDS = (struct ieeetypes_dsparamset *) pos;
--			bss->channel = pDS->currentchan;
--			memcpy(&bss->phyparamset.dsparamset, pDS,
--			       sizeof(struct ieeetypes_dsparamset));
-+			ds = (struct ieee_ie_ds_param_set *) pos;
-+			bss->channel = ds->channel;
-+			memcpy(&bss->phy.ds, ds, sizeof(*ds));
- 			lbs_deb_scan("got DS IE, channel %d\n", bss->channel);
- 			break;
- 
- 		case WLAN_EID_CF_PARAMS:
--			pCF = (struct ieeetypes_cfparamset *) pos;
--			memcpy(&bss->ssparamset.cfparamset, pCF,
--			       sizeof(struct ieeetypes_cfparamset));
-+			cf = (struct ieee_ie_cf_param_set *) pos;
-+			memcpy(&bss->ss.cf, cf, sizeof(*cf));
- 			lbs_deb_scan("got CF IE\n");
- 			break;
- 
- 		case WLAN_EID_IBSS_PARAMS:
--			pibss = (struct ieeetypes_ibssparamset *) pos;
--			bss->atimwindow = le16_to_cpu(pibss->atimwindow);
--			memmove(&bss->ssparamset.ibssparamset, pibss,
--				sizeof(struct ieeetypes_ibssparamset));
-+			ibss = (struct ieee_ie_ibss_param_set *) pos;
-+			bss->atimwindow = ibss->atimwindow;
-+			memcpy(&bss->ss.ibss, ibss, sizeof(*ibss));
- 			lbs_deb_scan("got IBSS IE\n");
- 			break;
- 
-diff --git a/drivers/net/wireless/libertas/types.h b/drivers/net/wireless/libertas/types.h
-index de03b9c..b8d2ce9 100644
---- a/drivers/net/wireless/libertas/types.h
-+++ b/drivers/net/wireless/libertas/types.h
-@@ -8,7 +8,7 @@
- #include <asm/byteorder.h>
- #include <linux/wireless.h>
- 
--struct ieeetypes_cfparamset {
-+struct ieee_ie_cf_param_set {
- 	u8 elementid;
- 	u8 len;
- 	u8 cfpcnt;
-@@ -18,18 +18,18 @@ struct ieeetypes_cfparamset {
- } __attribute__ ((packed));
- 
- 
--struct ieeetypes_ibssparamset {
-+struct ieee_ie_ibss_param_set {
- 	u8 elementid;
- 	u8 len;
- 	__le16 atimwindow;
- } __attribute__ ((packed));
- 
--union IEEEtypes_ssparamset {
--	struct ieeetypes_cfparamset cfparamset;
--	struct ieeetypes_ibssparamset ibssparamset;
-+union ieee_ss_param_set {
-+	struct ieee_ie_cf_param_set cf;
-+	struct ieee_ie_ibss_param_set ibss;
- } __attribute__ ((packed));
- 
--struct ieeetypes_fhparamset {
-+struct ieee_ie_fh_param_set {
- 	u8 elementid;
- 	u8 len;
- 	__le16 dwelltime;
-@@ -38,18 +38,18 @@ struct ieeetypes_fhparamset {
- 	u8 hopindex;
- } __attribute__ ((packed));
- 
--struct ieeetypes_dsparamset {
-+struct ieee_ie_ds_param_set {
- 	u8 elementid;
- 	u8 len;
--	u8 currentchan;
-+	u8 channel;
- } __attribute__ ((packed));
- 
--union ieeetypes_phyparamset {
--	struct ieeetypes_fhparamset fhparamset;
--	struct ieeetypes_dsparamset dsparamset;
-+union ieee_phy_param_set {
-+	struct ieee_ie_fh_param_set fh;
-+	struct ieee_ie_ds_param_set ds;
- } __attribute__ ((packed));
- 
--struct ieeetypes_assocrsp {
-+struct ieee_assoc_response {
- 	__le16 capability;
- 	__le16 statuscode;
- 	__le16 aid;
-@@ -149,42 +149,17 @@ struct mrvlietypes_chanlistparamset {
- 	struct chanscanparamset chanscanparam[1];
- } __attribute__ ((packed));
- 
--struct cfparamset {
-+struct mrvlietypes_cfparamset {
-+	struct mrvlietypesheader header;
- 	u8 cfpcnt;
- 	u8 cfpperiod;
- 	__le16 cfpmaxduration;
- 	__le16 cfpdurationremaining;
- } __attribute__ ((packed));
- 
--struct ibssparamset {
--	__le16 atimwindow;
--} __attribute__ ((packed));
--
--struct mrvlietypes_ssparamset {
--	struct mrvlietypesheader header;
--	union {
--		struct cfparamset cfparamset[1];
--		struct ibssparamset ibssparamset[1];
--	} cf_ibss;
--} __attribute__ ((packed));
--
--struct fhparamset {
--	__le16 dwelltime;
--	u8 hopset;
--	u8 hoppattern;
--	u8 hopindex;
--} __attribute__ ((packed));
--
--struct dsparamset {
--	u8 currentchan;
--} __attribute__ ((packed));
--
--struct mrvlietypes_phyparamset {
-+struct mrvlietypes_dsparamset {
- 	struct mrvlietypesheader header;
--	union {
--		struct fhparamset fhparamset[1];
--		struct dsparamset dsparamset[1];
--	} fh_ds;
-+	u8 channel;
- } __attribute__ ((packed));
- 
- struct mrvlietypes_rsnparamset {
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
