@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:48914 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509AbZENAhp convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752656AbZELGjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 20:37:45 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so583347rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 17:37:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
-References: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
-	<69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 13 May 2009 17:37:25 -0700
-Message-ID: <43e72e890905131737l757b2e9cm166f67932677c5ac@mail.gmail.com>
-Subject: Re: WoW for ath5k
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 12 May 2009 02:39:53 -0400
+Subject: Re: [PATCH 6/6] ar9170: stop data queues on channel switch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200905120109.09906.chunkeey@web.de>
+References: <200905120109.09906.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sa8Al2Utzzqnol5FdKI3"
+Date: Tue, 12 May 2009 08:39:49 +0200
+Message-Id: <1242110389.3873.53.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/13 G=C3=A1bor Stefanik <netrolller.3d@gmail.com>:
-> On Thu, May 14, 2009 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com>=
- wrote:
->> BTW legacy-hal has this stuff :) Just grep for ATH_WOW
->>
->> =C2=A0Luis
->
-> Wow! :-)
 
-Oh and as for testing... we should see the card send null data frames
-every now and then. That's when we know it went into its WoW mode.
+--=-sa8Al2Utzzqnol5FdKI3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, 2009-05-12 at 01:09 +0200, Christian Lamparter wrote:
+
+> +		if ((ar->tx_stats[i].len < ar->tx_stats[i].limit) &&
+> +		    (ieee80211_queue_stopped(ar->hw, i)))
+> +			ieee80211_wake_queue(ar->hw, i);
+
+There's no reason to test _stopped first, and doing so is racy.
+
+>  	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+> +		err =3D ar9170_stop_and_flush_queues(ar);
+> +		if (err)
+> +			goto out;
+
+Why don't you do that in the pre-scan method?
+
+johannes
+
+--=-sa8Al2Utzzqnol5FdKI3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKCRmxAAoJEODzc/N7+QmadXUP/jHEZXMwoj9PC/X6dAyUmRC+
+FtJYTJZcFqaKsaBJbq3AaDfZr4UB75EfHpmevdCd4V9P8KcuqPyF2aimI+Tlpd/J
+T751Shk1+YaoxRMyy1ipyPMAEPocKk8J+8szgjeoesEU0kVi9PxqrjJIjkeDXbV4
+IYEtuyXg1ffU5FmBXgwTta7N9ylUlB9zTdbfwb7YFouct8G2LaXYQO08Iu0IiBEo
+BC8KRBIOqDR9ZSDTcrROAuyrv+CoSWc0w/68LGsmkZOHbjuE4E1En19qZfIawuPt
+b83IEUjhWrH53zpho6/KND1cDpftmsIpcjgtU1KrCgmo+0UlWX3OjdbtYvRVb6ig
+NZgEOuHjdJfcEcT2sHofM7o2tRjuvBWUJ9fR3T90Wu70G/3AZY58EIQUPgHckn0X
+rm+lK2p6CQob81ggYRWKU5mUIyg9TlL9Y1i6g64FM8B+bfjdQQyJG1Va8X9pXsKc
+gbj1AmWGFUZj+Fx+Khoirw+ot1fRddb9/WyzWtGa6A5RDCbi++HFSb/KnfGIUWem
+9/Y78LRSw3GBvTm30/vzSVYRlYUYR5V2+ajpVftGIUBwJj+keicuDleCDHCsK/NI
+yffVuvZ4mt8SttNwCgFRplk2C5rBAHy4+W1xHW8Q8Aul2zRnOnQ7Km10RZMpOFVG
+8jhxfZQyyj0sa4fmtMk+
+=XuWa
+-----END PGP SIGNATURE-----
+
+--=-sa8Al2Utzzqnol5FdKI3--
+
