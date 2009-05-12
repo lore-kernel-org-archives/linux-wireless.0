@@ -1,64 +1,414 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:58697 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752559AbZENSBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 14:01:04 -0400
-Subject: Re: [ipw3945-devel] iwlwifi 5150 uCode available
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
-References: <1242321566.32358.19.camel@rc-desk>
-	 <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
-	 <1242322940.32358.31.camel@rc-desk>
-	 <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 May 2009 11:07:37 -0700
-Message-Id: <1242324457.32358.43.camel@rc-desk>
-Mime-Version: 1.0
+Received: from fmmailgate03.web.de ([217.72.192.234]:53597 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbZELO7H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 10:59:07 -0400
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/6 v2] ar9170usb: introduce tx urb queue
+Cc: "John W. Linville" <linville@tuxdriver.com>
+From: Christian Lamparter <chunkeey@web.de>
+Date: Tue, 12 May 2009 16:59:05 +0200
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200905121659.05977.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-05-14 at 10:43 -0700, Rafał Miłecki wrote:
-> W dniu 14 maja 2009 19:42 użytkownik reinette chatre
-> <reinette.chatre@intel.com> napisał:
-> > Hi,
-> >
-> > On Thu, 2009-05-14 at 10:22 -0700, Rafał Miłecki wrote:
-> >> 2009/5/14 reinette chatre <reinette.chatre@intel.com>:
-> >> > uCode for Intel Wireless WiFi Link 5150AGN is now available for download
-> >> > from http://intellinuxwireless.org/?n=Downloads
-> >>
-> >> Changelog is top secret as usually? ;)
-> >
-> > Nope ... this is the very first release of this uCode for this
-> > particular hardware. A changelog does not make sense in this case.
-> >
-> >
-> >> Should this fix
-> >> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946 (wrong
-> >> command queue)?
-> >
-> >
-> > This bug is against 5100/5300 hardware, so this uCode is not what you
-> > are looking for. We are working on getting uCode for 5100/5300 hardware
-> > (that includes a fix for this bug) out the door.
-> >
-> > Reinette
-> 
-> Ah, I gone wrong with that numbers understanding. Maybe putting
-> supported hardware in ucode's README would be a good idea? :)
+This patch is a back-port of some tx-aggregation code.
 
-good idea ...
+In the past, we didn't limit the amount of active tx_urb.
+However, ar9170 only has a limited buffer reserved for
+pending data frames.
 
-> Currently visiting http://intellinuxwireless.org/?n=Downloads doesn't
-> provide much help about choosing right firmware for 5100/5300(/5200?).
-> Or at last some short info on download page?
-
-I just changed it ... will this work?
-
-Reinette
-
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+Changes v2 -> v1:
+	- removed leaky auto reset. It will be enabled again,
+	  once the tx-aggregation code is ready for action. 
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 77dc647..cd3d1ed 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -121,6 +121,8 @@ struct ar9170 {
+ 	int (*exec_cmd)(struct ar9170 *, enum ar9170_cmd, u32 ,
+ 			void *, u32 , void *);
+ 	void (*callback_cmd)(struct ar9170 *, u32 , void *);
++	void (*reset)(struct ar9170 *);
++	int (*flush)(struct ar9170 *);
+ 
+ 	/* interface mode settings */
+ 	struct ieee80211_vif *vif;
+@@ -206,6 +208,7 @@ void ar9170_rx(struct ar9170 *ar, struct sk_buff *skb);
+ void ar9170_unregister(struct ar9170 *ar);
+ void ar9170_handle_tx_status(struct ar9170 *ar, struct sk_buff *skb,
+ 			     bool update_statistics, u16 tx_status);
++void ar9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len);
+ 
+ /* MAC */
+ int ar9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index df83883..a66aa7d 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -374,8 +374,8 @@ static void ar9170_tx_status_janitor(struct work_struct *work)
+ 	mutex_unlock(&ar->mutex);
+ }
+ 
+-static void ar9170_handle_command_response(struct ar9170 *ar,
+-					   void *buf, u32 len)
++void ar9170_handle_command_response(struct ar9170 *ar,
++				    void *buf, u32 len)
+ {
+ 	struct ar9170_cmd_response *cmd = (void *) buf;
+ 
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index d7c13c0..75b20fc 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -87,19 +87,63 @@ static struct usb_device_id ar9170_usb_ids[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, ar9170_usb_ids);
+ 
++static void ar9170_usb_send_urb(struct ar9170_usb *aru)
++{
++	struct urb *urb;
++	unsigned long flags;
++
++	spin_lock_irqsave(&aru->tx_urb_lock, flags);
++	if (aru->tx_submitted_urbs >= AR9170_NUM_TX_URBS) {
++		spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
++		return ;
++	}
++	aru->tx_submitted_urbs++;
++	spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
++
++	urb = usb_get_from_anchor(&aru->tx_pending);
++	if (!urb)
++		return ;
++
++	aru->tx_pending_urbs--;
++
++	usb_anchor_urb(urb, &aru->tx_submitted);
++
++	if (usb_submit_urb(urb, GFP_ATOMIC)) {
++		spin_lock_irqsave(&aru->tx_urb_lock, flags);
++		aru->tx_submitted_urbs--;
++		spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
++		usb_unanchor_urb(urb);
++	}
++
++	usb_free_urb(urb);
++}
++
+ static void ar9170_usb_tx_urb_complete_free(struct urb *urb)
+ {
+ 	struct sk_buff *skb = urb->context;
+ 	struct ar9170_usb *aru = (struct ar9170_usb *)
+ 	      usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+ 
+-	if (!aru) {
++	if (unlikely(!aru)) {
+ 		dev_kfree_skb_irq(skb);
+ 		return ;
+ 	}
+ 
+-	ar9170_handle_tx_status(&aru->common, skb, false,
+-				AR9170_TX_STATUS_COMPLETE);
++	aru->tx_submitted_urbs--;
++
++	if (!usb_anchor_empty(&aru->tx_pending))
++		ar9170_usb_send_urb(aru);
++}
++
++static void ar9170_usb_tx_urb_complete_cnt(struct urb *urb)
++{
++	struct ar9170_usb *aru = (struct ar9170_usb *)
++	      usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
++
++	aru->tx_submitted_urbs--;
++
++	if (!usb_anchor_empty(&aru->tx_pending))
++		ar9170_usb_send_urb(aru);
+ }
+ 
+ static void ar9170_usb_tx_urb_complete(struct urb *urb)
+@@ -126,8 +170,9 @@ static void ar9170_usb_irq_completed(struct urb *urb)
+ 		goto resubmit;
+ 	}
+ 
+-	print_hex_dump_bytes("ar9170 irq: ", DUMP_PREFIX_OFFSET,
+-			     urb->transfer_buffer, urb->actual_length);
++	ar9170_handle_command_response(&aru->common,
++				       urb->transfer_buffer,
++				       urb->actual_length);
+ 
+ resubmit:
+ 	usb_anchor_urb(urb, &aru->rx_submitted);
+@@ -136,7 +181,7 @@ resubmit:
+ 		goto free;
+ 	}
+ 
+-	return;
++	return ;
+ 
+ free:
+ 	usb_buffer_free(aru->udev, 64, urb->transfer_buffer, urb->transfer_dma);
+@@ -179,14 +224,13 @@ resubmit:
+ 	err = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (err) {
+ 		usb_unanchor_urb(urb);
+-		dev_kfree_skb_irq(skb);
++		goto free;
+ 	}
+ 
+ 	return ;
+ 
+ free:
+ 	dev_kfree_skb_irq(skb);
+-	return;
+ }
+ 
+ static int ar9170_usb_prep_rx_urb(struct ar9170_usb *aru,
+@@ -282,21 +326,39 @@ err_out:
+ 	return err;
+ }
+ 
+-static void ar9170_usb_cancel_urbs(struct ar9170_usb *aru)
++static int ar9170_usb_flush(struct ar9170 *ar)
+ {
+-	int ret;
++	struct ar9170_usb *aru = (void *) ar;
++	int ret, err = 0;
+ 
+-	aru->common.state = AR9170_UNKNOWN_STATE;
++	ret = usb_wait_anchor_empty_timeout(&aru->tx_pending,
++					    msecs_to_jiffies(800));
++	if (ret == 0)
++		err = -EBUSY;
+ 
+-	usb_unlink_anchored_urbs(&aru->tx_submitted);
++	usb_scuttle_anchored_urbs(&aru->tx_pending);
+ 
+-	/* give the LED OFF command and the deauth frame a chance to air. */
++	/* lets wait a while until the tx - queues are dried out */
+ 	ret = usb_wait_anchor_empty_timeout(&aru->tx_submitted,
+ 					    msecs_to_jiffies(800));
+ 	if (ret == 0)
+-		dev_err(&aru->udev->dev, "kill pending tx urbs.\n");
+-	usb_poison_anchored_urbs(&aru->tx_submitted);
++		err = -ETIMEDOUT;
++
++	usb_kill_anchored_urbs(&aru->tx_submitted);
++	return err;
++}
++
++static void ar9170_usb_cancel_urbs(struct ar9170_usb *aru)
++{
++	int err;
++
++	aru->common.state = AR9170_UNKNOWN_STATE;
+ 
++	err = ar9170_usb_flush(&aru->common);
++	if (err)
++		dev_err(&aru->udev->dev, "stuck tx urbs!\n");
++
++	usb_poison_anchored_urbs(&aru->tx_submitted);
+ 	usb_poison_anchored_urbs(&aru->rx_submitted);
+ }
+ 
+@@ -337,7 +399,7 @@ static int ar9170_usb_exec_cmd(struct ar9170 *ar, enum ar9170_cmd cmd,
+ 
+ 	usb_anchor_urb(urb, &aru->tx_submitted);
+ 	err = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (err) {
++	if (unlikely(err)) {
+ 		usb_unanchor_urb(urb);
+ 		usb_free_urb(urb);
+ 		goto err_unbuf;
+@@ -385,7 +447,6 @@ static int ar9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb,
+ {
+ 	struct ar9170_usb *aru = (struct ar9170_usb *) ar;
+ 	struct urb *urb;
+-	int err;
+ 
+ 	if (unlikely(!IS_STARTED(ar))) {
+ 		/* Seriously, what were you drink... err... thinking!? */
+@@ -399,17 +460,18 @@ static int ar9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb,
+ 	usb_fill_bulk_urb(urb, aru->udev,
+ 			  usb_sndbulkpipe(aru->udev, AR9170_EP_TX),
+ 			  skb->data, skb->len + extra_len, (txstatus_needed ?
+-			  ar9170_usb_tx_urb_complete :
++			  ar9170_usb_tx_urb_complete_cnt :
+ 			  ar9170_usb_tx_urb_complete_free), skb);
+ 	urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+-	usb_anchor_urb(urb, &aru->tx_submitted);
+-	err = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (unlikely(err))
+-		usb_unanchor_urb(urb);
++	usb_anchor_urb(urb, &aru->tx_pending);
++	aru->tx_pending_urbs++;
+ 
+ 	usb_free_urb(urb);
+-	return err;
++
++	ar9170_usb_send_urb(aru);
++
++	return 0;
+ }
+ 
+ static void ar9170_usb_callback_cmd(struct ar9170 *ar, u32 len , void *buffer)
+@@ -592,10 +654,8 @@ static void ar9170_usb_stop(struct ar9170 *ar)
+ 	if (IS_ACCEPTING_CMD(ar))
+ 		aru->common.state = AR9170_STOPPED;
+ 
+-	/* lets wait a while until the tx - queues are dried out */
+-	ret = usb_wait_anchor_empty_timeout(&aru->tx_submitted,
+-					    msecs_to_jiffies(1000));
+-	if (ret == 0)
++	ret = ar9170_usb_flush(ar);
++	if (ret)
+ 		dev_err(&aru->udev->dev, "kill pending tx urbs.\n");
+ 
+ 	usb_poison_anchored_urbs(&aru->tx_submitted);
+@@ -656,6 +716,43 @@ err_out:
+ 	return err;
+ }
+ 
++static void ar9170_usb_reset_work(struct work_struct *work)
++{
++	struct ar9170_usb *aru = container_of(work, struct ar9170_usb,
++					      reset_work);
++	int err;
++
++	ar9170_usb_cancel_urbs(aru);
++
++	/* let it cool down */
++	msleep(200);
++
++	usb_unpoison_anchored_urbs(&aru->rx_submitted);
++	usb_unpoison_anchored_urbs(&aru->tx_submitted);
++
++	err = ar9170_usb_init_device(aru);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_usb_open(&aru->common);
++	if (err)
++		goto err_unrx;
++
++	ieee80211_restart_hw(aru->common.hw);
++	return ;
++
++err_unrx:
++	dev_err(&aru->udev->dev, "reinitialization failed (%d)!\n", err);
++	ar9170_usb_cancel_urbs(aru);
++}
++
++static void ar9170_usb_schedule_reset(struct ar9170 *ar)
++{
++	struct ar9170_usb *aru = (void *) ar;
++
++	queue_work(ar->hw->workqueue, &aru->reset_work);
++}
++
+ static int ar9170_usb_probe(struct usb_interface *intf,
+ 			const struct usb_device_id *id)
+ {
+@@ -678,12 +775,20 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 
+ 	usb_set_intfdata(intf, aru);
+ 	SET_IEEE80211_DEV(ar->hw, &udev->dev);
++	INIT_WORK(&aru->reset_work, ar9170_usb_reset_work);
+ 
+ 	init_usb_anchor(&aru->rx_submitted);
++	init_usb_anchor(&aru->tx_pending);
+ 	init_usb_anchor(&aru->tx_submitted);
+ 	init_completion(&aru->cmd_wait);
++	spin_lock_init(&aru->tx_urb_lock);
++
++	aru->tx_pending_urbs = 0;
++	aru->tx_submitted_urbs = 0;
+ 
+ 	aru->common.stop = ar9170_usb_stop;
++	aru->common.flush = ar9170_usb_flush;
++	aru->common.reset = ar9170_usb_schedule_reset;
+ 	aru->common.open = ar9170_usb_open;
+ 	aru->common.tx = ar9170_usb_tx;
+ 	aru->common.exec_cmd = ar9170_usb_exec_cmd;
+@@ -691,7 +796,7 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 
+ #ifdef CONFIG_PM
+ 	udev->reset_resume = 1;
+-#endif
++#endif /* CONFIG_PM */
+ 	err = ar9170_usb_reset(aru);
+ 	if (err)
+ 		goto err_freehw;
+@@ -738,6 +843,8 @@ static void ar9170_usb_disconnect(struct usb_interface *intf)
+ 	if (!aru)
+ 		return;
+ 
++	cancel_work_sync(&aru->reset_work);
++
+ 	aru->common.state = AR9170_IDLE;
+ 	ar9170_unregister(&aru->common);
+ 	ar9170_usb_cancel_urbs(aru);
+@@ -759,6 +866,7 @@ static int ar9170_suspend(struct usb_interface *intf,
+ 	if (!aru)
+ 		return -ENODEV;
+ 
++	cancel_work_sync(&aru->reset_work);
+ 	aru->common.state = AR9170_IDLE;
+ 	ar9170_usb_cancel_urbs(aru);
+ 
+@@ -776,11 +884,6 @@ static int ar9170_resume(struct usb_interface *intf)
+ 	usb_unpoison_anchored_urbs(&aru->rx_submitted);
+ 	usb_unpoison_anchored_urbs(&aru->tx_submitted);
+ 
+-	/*
+-	 * FIXME: firmware upload will fail on resume.
+-	 * but this is better than a hang!
+-	 */
+-
+ 	err = ar9170_usb_init_device(aru);
+ 	if (err)
+ 		goto err_unrx;
+diff --git a/drivers/net/wireless/ath/ar9170/usb.h b/drivers/net/wireless/ath/ar9170/usb.h
+index ac42586..d75e6ee 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.h
++++ b/drivers/net/wireless/ath/ar9170/usb.h
+@@ -51,6 +51,7 @@
+ #include "ar9170.h"
+ 
+ #define AR9170_NUM_RX_URBS			16
++#define AR9170_NUM_TX_URBS			8
+ 
+ struct firmware;
+ 
+@@ -60,15 +61,21 @@ struct ar9170_usb {
+ 	struct usb_interface *intf;
+ 
+ 	struct usb_anchor rx_submitted;
++	struct usb_anchor tx_pending;
+ 	struct usb_anchor tx_submitted;
+ 
+-	spinlock_t cmdlock;
++	spinlock_t tx_urb_lock;
++	unsigned int tx_submitted_urbs;
++	unsigned int tx_pending_urbs;
++
+ 	struct completion cmd_wait;
+ 	int readlen;
+ 	u8 *readbuf;
+ 
+ 	const struct firmware *init_values;
+ 	const struct firmware *firmware;
++
++	struct work_struct reset_work;
+ };
+ 
+ #endif /* __USB_H */
