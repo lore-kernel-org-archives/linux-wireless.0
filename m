@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33001 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753534AbZEEIfZ (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:48385 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757339AbZELQ4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 04:35:25 -0400
-Date: Tue, 5 May 2009 11:35:16 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Marcel Holtmann <marcel@holtmann.org>
+	Tue, 12 May 2009 12:56:03 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [PATCH 6/6] ar9170: stop data queues on channel switch
+Date: Tue, 12 May 2009 18:56:02 +0200
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] add support for parsing WPA and RSN/WPA2 information
-	elements
-Message-ID: <20090505083516.GA30908@jm.kir.nu>
-References: <1241412381-2778-1-git-send-email-marcel@holtmann.org> <20090504080658.GA3141@jm.kir.nu> <1241427204.2899.11.camel@localhost.localdomain>
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200905120109.09906.chunkeey@web.de> <1242142227.4331.7.camel@johannes.local> <20090512154116.M40327@bobcopeland.com>
+In-Reply-To: <20090512154116.M40327@bobcopeland.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1241427204.2899.11.camel@localhost.localdomain>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200905121856.02714.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 04, 2009 at 01:53:24AM -0700, Marcel Holtmann wrote:
+On Tuesday 12 May 2009 17:56:10 Bob Copeland wrote:
+> On Tue, 12 May 2009 17:30:27 +0200, Johannes Berg wrote
+> > On Tue, 2009-05-12 at 11:29 -0400, Bob Copeland wrote:
+> > > Will pre-scan be called once per scan or once for every channel switch?
+> > > If the former, I think it's not the right place to flush.
+> > 
+> > The former.
+> 
+> Hmm, nevermind, it should work.  I was thinking of queued tx status 
+> work not being on the right channel, but I guess we don't do that for probe
+> requests.
+Ermm? wait... what do we do when the userspace does channel switch & scans?
+I think, some aircrack tools actually do this. Will they also call pre_scan?
 
-> we can add them later. I just wanna have basic support for parsing the
-> WPA IE. However can you point me to download links for the specs. I get
-> easily lost in the amount of WiFi/802.11 specs.
+> And for ar9170 RX is processed synchronously as far as I can tell.
+most of the time yes... unless we have to _reconstruct_ a stream, because
+the hw/fw clipped a few byte from a frame.
 
-IEEE 802.11r-2008 is available through the GetIEEE 802 Program
-(http://standards.ieee.org/getieee802/802.11.html), but IEEE 802.11w
-drafts are not yet publicly available (i.e., only for IEEE 802.11 WG
-members at this point). Anyway, as far as the RSN IE assigned values are
-concerned, you can get the latest information from the IEEE 802.11 ANA
-database:
-https://mentor.ieee.org/802.11/dcn/09/11-09-0031-04-0000-ana-database-assigned-number-authority.xls
-
-(the 7.3.2.25.* tabs are for RSN IE)
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards,
+	Chr
