@@ -1,132 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:35091 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980AbZEFGH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 02:07:57 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 23:07:58 -0700
-Date: Wed, 6 May 2009 11:36:55 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-Subject: Re: oops during stress test - today's wl
-Message-ID: <20090506060646.GF18158@vasanth-laptop>
-References: <43e72e890905042005vb96f57aid70c476e38685dfe@mail.gmail.com> <1241509306.25337.4.camel@johannes.local> <43e72e890905051227n11b128bap4d250e66294a29ce@mail.gmail.com> <43e72e890905051829k5df86692m34209f871e384127@mail.gmail.com>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:53828 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbZELTFv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 15:05:51 -0400
+Received: by bwz22 with SMTP id 22so167455bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 12:05:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <43e72e890905051829k5df86692m34209f871e384127@mail.gmail.com>
+In-Reply-To: <1242125077.4331.0.camel@johannes.local>
+References: <1242125077.4331.0.camel@johannes.local>
+Date: Tue, 12 May 2009 20:05:51 +0100
+Message-ID: <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 06, 2009 at 06:59:02AM +0530, Luis R. Rodriguez wrote:
-> On Tue, May 5, 2009 at 12:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Tue, May 5, 2009 at 12:41 AM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> >> On Mon, 2009-05-04 at 20:05 -0700, Luis R. Rodriguez wrote:
-> >>> mcgrof@pogo ~/wireless-testing (git::master)$ git-describe
-> >>> v2.6.30-rc4-22720-gb2382a4
-> >>>
-> >>> While running iperf, after about 1 hour.
-> >>>
-> >>> http://bombadil.infradead.org/~mcgrof/oops-img/09-05/oops-01-v2.6.30-rc4-22720-gb2382a4.jpg
-> >>>
-> >>> Image probably doesn't help much.. but its what I got.. I'd look more
-> >>> but its getting late here, so I'm out. I'll use netconsole tomorrow.
-> >>
-> >> Yeah, doesn't really help... I would suspect the driver to be honest,
-> >> since the scan code is trying to TX a frame and it's already in
-> >> ieee80211_tx() (and probably in __ieee80211_tx which gets inlined).
-> >
-> > Right on --
-> >
-> > [57158.757990] wlan1: no probe response from AP 00:03:7f:0c:c2:5d -
-> > disassociating
-> > [57559.563565] cfg80211: Found new beacon on frequency: 5200 MHz (Ch 40) on phy2
-> > [57559.669684] cfg80211: Found new beacon on frequency: 5220 MHz (Ch 44) on phy2
-> > [57563.415178] cfg80211: Found new beacon on frequency: 5745 MHz (Ch
-> > 149) on phy2
-> > [57563.478395] cfg80211: Found new beacon on frequency: 5765 MHz (Ch
-> > 153) on phy2
-> > [57563.737684] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
-> > [57563.754972] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
-> > [57563.763958] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
-> > [57563.765895] wlan1: authenticated
-> > [57563.765930] wlan1: associate with AP 00:03:7f:0c:c2:5d
-> > [57563.779535] wlan1: RX ReassocResp from 00:03:7f:0c:c2:5d
-> > (capab=0x421 status=0 aid=1)
-> > [57563.779595] wlan1: associated
-> > [57633.747150] wlan1: deauthenticating by local choice (reason=3)
-> > [57634.224023] wlan1: deauthenticating by local choice (reason=3)
-> > [57654.246527] ADDRCONF(NETDEV_UP): wlan1: link is not ready
-> > [57659.942571] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
-> > [57659.945696] wlan1: authenticated
-> > [57659.945735] wlan1: associate with AP 00:03:7f:0c:c2:5d
-> > [57659.951992] wlan1: RX AssocResp from 00:03:7f:0c:c2:5d (capab=0x421
-> > status=0 aid=1)
-> > [57659.952054] wlan1: associated
-> > [57659.962379] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
-> > [57670.356717] wlan1: no IPv6 routers present
-> > [58264.676456] wlan1: deauthenticated (Reason: 2)
-> > [58265.671832] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 1
-> > [58265.671832] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 1
-> > [58265.881845] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 2
-> > [58265.881845] wlan1: direct probe to AP 00:03:7f:0c:c2:5d try 2
-> > [58265.887928] wlan1 direct probe responded
-> > [58265.887966] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
-> > [58265.887928] wlan1 direct probe responded
-> > [58265.887966] wlan1: authenticate with AP 00:03:7f:0c:c2:5d
-> > [58265.890837] wlan1: authenticated
-> > [58265.890871] wlan1: associate with AP 00:03:7f:0c:c2:5d
-> > [58265.890837] wlan1: authenticated
-> > [58265.890871] wlan1: associate with AP 00:03:7f:0c:c2:5d
-> > [58265.898987] wlan1: RX ReassocResp from 00:03:7f:0c:c2:5d
-> > (capab=0x421 status=0 aid=1)
-> > [58265.899041] wlan1: associated
-> > [58265.898987] wlan1: RX ReassocResp from 00:03:7f:0c:c2:5d
-> > (capab=0x421 status=0 aid=1)
-> > [58265.899041] wlan1: associated
-> > [58266.391122] ------------[ cut here ]------------
-> > [58266.391166] kernel BUG at drivers/net/wireless/ath/ath9k/rc.c:746!
-> > [58266.391202] invalid opcode: 0000 [#1] PREEMPT SMP
-> > [58266.391253] last sysfs file:
-> > /sys/devices/system/cpu/cpu3/cache/index2/shared_cpu_map
-> > [58266.391303] CPU 3
-> > [58266.391333] Modules linked in: netconsole ath9k configfs ipv6
-> > cpufreq_ondemand powernow_k8[58266.391122] ------------[ cut here
-> > ]------------
-> >  freq_table binfmt_misc loop dm_multipath scsi_dh arc4 ecb mac80211
-> > rfkill af_packet led_class ath sr_mod cfg80211 e1000 evdev shpchp
-> > cdrom evbug[58266.391166] kernel BUG at
-> > drivers/net/wireless/ath/ath9k/rc.c:746!
-> 
-> This is this assert:
-> 
->         ASSERT((rate_table->info[rate].valid &&
->                 (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
->                (rate_table->info[rate].valid_single_stream &&
->                 !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
-> 
+On Tue, May 12, 2009 at 11:44 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> There are a few small bugs/oversights in the key handling
+> code I wrote:
+> =A0* SIOCSIWENCODE should default to setting key 0 if no
+> =A0 default key is set already and no index is given,
+> =A0* key removal should not require key material,
+> =A0* SIOCSIWENCODEEXT should default to changing the default
+> =A0 management key if no index is given.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> =A0net/wireless/wext-compat.c | =A0 14 +++++---------
+> =A01 file changed, 5 insertions(+), 9 deletions(-)
+>
+> --- wireless-testing.orig/net/wireless/wext-compat.c =A0 =A02009-05-1=
+2 12:38:41.000000000 +0200
+> +++ wireless-testing/net/wireless/wext-compat.c 2009-05-12 12:38:59.0=
+00000000 +0200
+> @@ -557,7 +557,7 @@ int cfg80211_wext_siwencode(struct net_d
+> =A0 =A0 =A0 =A0if (idx =3D=3D 0) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx =3D wdev->wext.default_key;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 0)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D 0;
+> =A0 =A0 =A0 =A0} else if (idx < 1 || idx > 4)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+> =A0 =A0 =A0 =A0else
+> @@ -580,7 +580,7 @@ int cfg80211_wext_siwencode(struct net_d
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_WE=
+P40;
+> =A0 =A0 =A0 =A0else if (erq->length =3D=3D 13)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_WE=
+P104;
+> - =A0 =A0 =A0 else
+> + =A0 =A0 =A0 else if (!remove)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+>
+> =A0 =A0 =A0 =A0return cfg80211_set_encryption(rdev, dev, NULL, remove=
+,
+> @@ -640,13 +640,9 @@ int cfg80211_wext_siwencodeext(struct ne
+> =A0 =A0 =A0 =A0idx =3D erq->flags & IW_ENCODE_INDEX;
+> =A0 =A0 =A0 =A0if (cipher =3D=3D WLAN_CIPHER_SUITE_AES_CMAC) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 4 || idx > 5) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* XXX: Only wpa_supp=
+licant ever used this
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0can we =
+still change the ABI a little
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0so we d=
+o not need to keep track of
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0the def=
+ault key?
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D wdev->wext.defa=
+ult_mgmt_key;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (idx < 0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return =
+-EINVAL;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx--;
+> =A0 =A0 =A0 =A0} else {
+>
+>
+>
 
-This is odd. Hitting this assert means that we have selected a wrong
-rate index wrt the type of stream. There may be a bug in rc init
-which gets exposed after assoc/reassoc and disassoc.
+I tried this, NM/wpa_suplicany still doesn't work, but if I shut those
+down and do it the old fashioned iwconfig way, I can get
+connectivity...  the last chunk looks a bit funny - '(idx < 4 || idx >
+5)' is just '(idx !=3D 4)' so why it isn't written simplier as such?
+also the idx < 0 maybe <1 ?
 
-> What's this WLAN_RC_DS_FLAG? I see we set it if our hardware supports
-> ATH9K_CAP_DS, the current tx_chainmask is not 1 (which in turn we get
-> from the EEPROM), and.. if sta->ht_cap.mcs.rx_mask[1]..
-
-WLAN_RC_DS_FLAG means the rate control is going to be initialized
-with dual stream rates.
-
-> 
-> I see rate private structure
-> for the sta gets updated during get rate but there is no locking for
-> this but I also don't see dire consequences for this yet.
-
-This is protected by rcu_read_lock()?
-
-
-Vasanth
+Stiill needs some work...
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
