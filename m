@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:7842 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752631AbZEKBzR (ORCPT
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:48044 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445AbZELUpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2009 21:55:17 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so819771eyd.37
-        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2009 18:55:17 -0700 (PDT)
-Date: Mon, 11 May 2009 03:55:15 +0200
-From: "Christoph .J Thompson" <cjsthompson@gmail.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt73usb Access point status
-Message-Id: <20090511035515.83c21b0c.cjsthompson@gmail.com>
-In-Reply-To: <efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-	<efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
-	<wfk54zu7t6.fsf@calligramme.charmers>
-	<efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 12 May 2009 16:45:05 -0400
+Received: by gxk10 with SMTP id 10so416388gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 13:45:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242160485-7395-1-git-send-email-hauke@hauke-m.de>
+References: <1241727955-2228-1-git-send-email-hauke@hauke-m.de>
+	 <1242160485-7395-1-git-send-email-hauke@hauke-m.de>
+Date: Tue, 12 May 2009 16:45:04 -0400
+Message-ID: <b6c5339f0905121345u2797d2e9la616294b7a9c8082@mail.gmail.com>
+Subject: Re: [PATCH v2] compat-2.6: update compat.diff
+From: Bob Copeland <me@bobcopeland.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2 May 2009 11:34:31 +0100
-Luis Correia <luis.f.correia@gmail.com> wrote:
-> No, the bug is not in hostapd.
-> 
-> As Johannes says, the bug is in the driver.
-> Apparently, the driver is unable to get the ACK from the hardware and
-> thus unable to report that ACK back to hostapd.
-> 
-> So the hostapd hack works, as long as there are enough room for
-> retransmit supposely lost frames.
-> 
-> I can't explain this well enough in English, sorry.
+On Tue, May 12, 2009 at 4:34 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This will fix the make clean problem reported by Brett D. Ussher.
+>
+> wl12xx will be removed from Makefile. I do not think wl12xx needs to be integrated,
+> because it is not rely widely used.
+> If needed it will not be very hard to integrate it.
 
-Apparently there is no bug in neither hostapd nor the driver. From what I understood the hardware is incapable of doing it or the firmware needs to be fixed.
-
-> To be completely honest with you in this whole AP issue, here's what I
-> used to say to my friends: "if you need an AP working flawlessly under
-> Linux, got with the Atheros b/g hardware".
-> But that was in the madwifi days, I haven't tested it with the current
-> mac80211 based driver.
-
-But if he can't use anything else than a USB dongle than Atheros is useless. In my case I can't use anything else than a USB dongle on my AP because there's only one case you can use for this embedded board (ALIX 2d3) and it doesn't have a hole for an external antenna as it's the model with 3 ethernet ports.
+FWIW, I would like to have wl12xx in compat-wireless.  However, that
+is a personal itch to scratch, and I have it sort of working on my own
+machine, so you can take this patch now and I can submit a patch later
+to properly integrate it with compat-wireless.
 
 -- 
-Christoph .J Thompson <cjsthompson@gmail.com>
+Bob Copeland %% www.bobcopeland.com
