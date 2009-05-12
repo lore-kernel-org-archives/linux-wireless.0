@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40743 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932181AbZEBUHg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2009 16:07:36 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: [PATCH] add option to dump unknown IEs with scan command
-Date: Sat,  2 May 2009 13:07:24 -0700
-Message-Id: <1241294844-27746-1-git-send-email-marcel@holtmann.org>
+Received: from blaine.gmane.org ([80.91.229.8]:55537 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750939AbZELXqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 19:46:44 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1M41LT-0001Zp-18
+	for linux-wireless@vger.kernel.org; Wed, 13 May 2009 01:25:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <dd18b0c30905121304k6df44362v76e8e7ae6da3b76f@mail.gmail.com>
+References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
+	<4A089E49.7080403@gmail.com> <20090512103905.0D68E1FD10@chi.die-welt.net>
+	<dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
+	<20090512174636.8EBDA1FD10@chi.die-welt.net> <dd18b0c30905121304k6df44362v76e8e7ae6da3b76f@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 12 May 2009 16:01:07 -0700
+Message-ID: <43e72e890905121601y59de3d3fh9eca4637883c37fa@mail.gmail.com>
+Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
+To: Justin Mattock <justinmattock@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Evgeni Golov <sargentd@die-welt.net>,
+	Jiri Slaby
+	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Justin Mattock
+	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Linux Kernel Mailing List
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- scan.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/scan.c b/scan.c
-index 48f803a..91e94ed 100644
---- a/scan.c
-+++ b/scan.c
-@@ -340,12 +340,13 @@ static int handle_scan_combined(struct nl80211_state *state,
- 		NULL,
- 		"scan",
- 		"dump",
-+		NULL,
- 	};
- 	static const __u32 cmds[] = {
- 		NL80211_CMD_NEW_SCAN_RESULTS,
- 		NL80211_CMD_SCAN_ABORTED,
- 	};
--	int err;
-+	int dump_argc, err;
- 
- 	trig_argv[0] = argv[0];
- 	err = handle_cmd(state, II_NETDEV, ARRAY_SIZE(trig_argv), trig_argv);
-@@ -382,7 +383,13 @@ static int handle_scan_combined(struct nl80211_state *state,
- 		return 0;
- 	}
- 
-+	if (argc == 3 && !strcmp(argv[2], "-u")) {
-+		dump_argc = 4;
-+		dump_argv[3] = "-u";
-+	} else
-+		dump_argc = 3;
-+
- 	dump_argv[0] = argv[0];
--	return handle_cmd(state, II_NETDEV, ARRAY_SIZE(dump_argv), dump_argv);
-+	return handle_cmd(state, II_NETDEV, dump_argc, dump_argv);
- }
--TOPLEVEL(scan, NULL, 0, 0, CIB_NETDEV, handle_scan_combined);
-+TOPLEVEL(scan, "[-u]", 0, 0, CIB_NETDEV, handle_scan_combined);
--- 
-1.6.0.6
+
+On Tue, May 12, 2009 at 1:04 PM, Justin Mattock <justinmattock@gmail.com> wrote:
+>
+>
+> On Tue, May 12, 2009 at 10:46 AM, Evgeni Golov <sargentd@die-welt.net> wrote:
+>> On Tue, 12 May 2009 07:28:04 -0700 Justin Mattock wrote:
+>>
+>>> > Same here with 2.6.30-rc4, b43 and either Cisco (MAC-Addr starts with
+>>> > 00:40:96) or HP ProCurve (??? - they do WiFi? - MAC-Addr starts with
+>>> > 00:1F:FE) APs. No encryption, quite noisy environment (University).
+>>> >
+>>> > No problem with ipw2200 (actually 2915) in the same hardware (Thinkpad
+>>> > X31). Neither with the b43 and a standard Linksys WRT54GL (in the same!
+>>> > noisy university-env).
+>>> >
+>>> > Regards
+>>> > Evgeni
+>>> >
+>>> >
+>>>
+>>> are you able to connect?
+>>> (or is the connection connecting but really
+>>> poor quality?)
+>>> over here 2.6.29-rc8 connects like
+>>> theirs no tomorrow, as soon as
+>>> I throw in 2.6.30-rc4 it just dead(although
+>>> on some accounts I did get some kind of
+>>> reaction, but not much, just what I see in dmesg).
+>>
+>> 2.6.29: fairly stable, even if not as good as with an intel card.
+>> 2.6.30-rc4: tons of timeouts, may connect 1 in 100 tries, connection
+>> will drop after some (short) time.
+>>
+>> --
+>> Bruce Schneier Fact Number 79:
+>> Bruce Schneier once decrypted a box of AlphaBits.
+>>
+>
+> O.K. after trial and error reverting this:
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=47afbaf5af9454a7a1a64591e20cbfcc27ca67a8;hp=853da11b94e674445e93660f47a5f0aeeea09623
+>
+> brings life back to the macbook with 2.6.30-rc4
+> (not sure about the iphone anomaly though, I'll keep
+> an eye on that)
+
+Odd.. are you changing TX power through wext? Because that 47afbaf5
+should only make a difference when using manual tx power setting.
+
+  Luis
 
