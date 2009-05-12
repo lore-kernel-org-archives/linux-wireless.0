@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:58078 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759858AbZEKWjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 18:39:19 -0400
-Subject: Re: [PATCH] cfg80211: implement wext key handling
-From: Dan Williams <dcbw@redhat.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Samuel Ortiz <sameo@linux.intel.com>, Jouni Malinen <j@w1.fi>,
+Received: from wf-out-1314.google.com ([209.85.200.175]:8733 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbZELWAt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 18:00:49 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so195582wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 15:00:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242149671.5210.2.camel@maxim-laptop>
+References: <1241499867.4816.18.camel@maxim-laptop> <1241606838.18657.1.camel@maxim-laptop>
+	<1241642056.3289.6.camel@mj> <1241958023.6051.14.camel@maxim-laptop>
+	<43e72e890905101133w2314250s7b95a8c100e83cce@mail.gmail.com>
+	<1241984076.6051.18.camel@maxim-laptop> <43e72e890905101236h2cd24edewae808da384ae48dd@mail.gmail.com>
+	<1242140728.5626.3.camel@maxim-laptop> <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
+	<1242149671.5210.2.camel@maxim-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 12 May 2009 15:00:29 -0700
+Message-ID: <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+Subject: Re: [BUG] Crda oopses the system
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <3ace41890905111516m2d5f9f70k83edbdef1ca6e2b8@mail.gmail.com>
-References: <1242042898.18637.0.camel@johannes.local>
-	 <1242049846.28322.12.camel@localhost.localdomain>
-	 <1242050962.29777.12.camel@johannes.local>
-	 <3ace41890905111516m2d5f9f70k83edbdef1ca6e2b8@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 11 May 2009 18:40:08 -0400
-Message-Id: <1242081608.24094.14.camel@localhost.localdomain>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-05-11 at 23:16 +0100, Hin-Tak Leung wrote:
-> On Mon, May 11, 2009 at 3:09 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2009-05-11 at 09:50 -0400, Dan Williams wrote:
-> >
-> >> I modified the meaning of RESTRICTED/OPEN a few years ago to control the
-> >> WEP auth mode, for a few reasons...  First, some fullmac drivers already
-> >> used it to mean WEP auth mode.  Second, there was no other mechanism to
-> >> control WEP auth mode at the time, and there were a lot of Shared Key
-> >> installations around.  Third, WE-18/WPA was nowhere near being landed,
-> >> and it was only supported by one driver (hostap), and it was the only
-> >> thing that would plausibly support WEP auth mode via SIWAUTH.  Fourth,
-> >> only hostap and maybe airo really implemented the refuse-non-encoded
-> >> anyway.
-> >
-> > But didn't update the header file ;)
-> >
-> >> TBH, SK is nice because it tells you that the WEP key is wrong
-> >> *immediately*, and the only reason NM doesn't use SK by default (and
-> >> then fall back to OS) like the original Mac Airport drivers did is that
-> >> WEXT simply cannot return reliable association error information.
-> >
-> > Hah. Well, we could have that now, but I suspect SK is no longer common
-> > enough to put a lot of work into it.
-> >
-> >> But in the end, we still need a mechanism with WEXT to be able to set SK
-> >> auth when associating.
-> >
-> > We still have that, with WE18, in IW_AUTH_80211_AUTH_ALG. And mac80211
-> > never actually supported _setting_ the WEP auth mechanism with
-> > RESTRICTED/OPEN, only _getting_ that information.
-> >
-> > johannes
-> >
-> >
-> 
-> Argh, is this the reason why compat-wireless(wireless-testing?) today
-> doesn't quite work any more?
-> NetworkManager no longer wants to work, with this message in syslog:
-> 
-> localhost NetworkManager: <WARN>  nm_device_wifi_disable_encryption():
-> error setting key for device wlan2: Invalid argument
+On Tue, May 12, 2009 at 10:34 AM, Maxim Levitsky
+<maximlevitsky@gmail.com> wrote:
+> On Tue, 2009-05-12 at 10:24 -0700, Luis R. Rodriguez wrote:
+>> On Tue, May 12, 2009 at 8:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+>> > On Sun, 2009-05-10 at 12:36 -0700, Luis R. Rodriguez wrote:
+>> >> On Sun, May 10, 2009 at 12:34 PM, Maxim Levitsky
+>> >> <maximlevitsky@gmail.com> wrote:
+>> >> > On Sun, 2009-05-10 at 11:33 -0700, Luis R. Rodriguez wrote:
+>> >> >> On Sun, May 10, 2009 at 5:20 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+>> >> >> > On Wed, 2009-05-06 at 16:34 -0400, Pavel Roskin wrote:
+>> >> >> >> gdb /lib/modules/`uname -r`/kernel/net/wireless/cfg80211.ko
+>> >> >> >
+>> >> >> > I have recompiled the kernel with debugging info.
+>> >> >> >
+>> >> >> > This is new backtrace:
+>> >
+>> > Ok, here is what I found:
+>> >
+>> > The real BUG_ON that fires up is at
+>> >
+>> > wireless/reg.c: __set_regdom: BUG_ON(!country_ie_regdomain)
+>> >
+>> > Confirmed by replacing it with printk.
+>> >
+>> >
+>> > I attach a beacon sample that triggers this:
+>>
+>> Thanks for that. Was this from wireless-testing? If so as of what SHA1
+>> sum? Can you provide steps to reproduce? What AP? What card?
+> wireless-testing, b2382a4aeff07a481ccf860e4f716b48b52e3781
 
-That specific call shouldn't cause a hard error.  It's just advisory.
-And really, I could just remove that call in NM entirely, since
-wpa_supplicant does clear keys in the MLME disconnect method now.
+That HEAD is buggy, its missing a fix for the minstrel/pid fix.
+Although since you are running iwl3945 it explains why you haven't
+seen that oops.
 
-Dan
+Will look into this -- thanks. How easy can you reproduce BTW? Does it
+happen immediately upon assoc? Does it happen with other APs at the
+university?
 
+  Luis
