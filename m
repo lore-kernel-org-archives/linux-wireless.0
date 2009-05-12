@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f115.google.com ([209.85.222.115]:44570 "EHLO
-	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbZEONOW (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:44094 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbZELNgH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 09:14:22 -0400
-Received: by pzk13 with SMTP id 13so1054268pzk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2009 06:14:23 -0700 (PDT)
+	Tue, 12 May 2009 09:36:07 -0400
+Received: by bwz22 with SMTP id 22so3275762bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 06:36:05 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 15 May 2009 06:14:23 -0700
-Message-ID: <cbd616c00905150614sa13ba93y88a1297b10a69d8@mail.gmail.com>
-Subject: Any clean-up work?
-From: Yousef Alhashemi <yousef.alhashemi@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200905052142.38780.alf@mypals.org>
+References: <200905021218.23747.alf@mypals.org>
+	 <20090504224952.GB9342@joutaro.lan>
+	 <b6c5339f0905042236o7ab21feai5aef015510428d02@mail.gmail.com>
+	 <200905052142.38780.alf@mypals.org>
+Date: Tue, 12 May 2009 16:36:04 +0300
+Message-ID: <40f31dec0905120636i592e29e3n29b88c763fd9739e@mail.gmail.com>
+Subject: Re: ath5k in 2.6.29.1 won't associate with AP
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Alf <alf@mypals.org>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Tulio Magno Quites Machado Filho <tuliom@quites.com.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+2009/5/6 Alf <alf@mypals.org>:
+>
+> I tried it a few days ago and it still didn't work. =C2=A0Even the la=
+test
+> snapshot from madwifi didn't work. =C2=A0They only thing that has wor=
+ked is
+> ndiswrapper.
 
-I understand I should be posting this elsewhere, and I know I'll
-probably get shot for asking this here, but I'm trying to get involved
-with kernel development, and I'm interested in networking (not
-necessarily wireless). I've tried other places (including
-kernelnewbies) before coming here.
+Hmm, do you use a driver from your vendor (the inf files etc from CD)
+or a generic one from the net ?
 
-I have done some _very_ basic kernel development, like modifying a
-CPU/IO scheduler, creating a RAM disk, creating new system calls,
-..etc. I am now trying to do some "real" kernel development. The
-problem is, everywhere I ask I get pointed to books like Robert Love's
-Linux Kernel Development, which I already read. That, or I get to
-pointed to lists like http://www.linuxfoundation.org/en/Net:TODO or
-http://www.linuxdriverproject.org/twiki/bin/view/Main/DriversNeeded,
-both of which include projects which are basically impossible for me
-to do (because they require way too much background knowledge about
-the particular problem/protocol/device and also require great
-knowledge of the kernel internals).
+It's possible that your vendor uses hardcoded settings on the driver
+instead of EEPROM settings so tx power wont work as expected and
+that's why you can't connect on the AP. Both ath5k and MadWiFi try to
+use EEPROM settings, they don't use any hardcoded settings (not even
+default values in case of a corrupted EEPROM -we should fix that in
+the future).
 
-Now I understand that networking (or the networking subsystem) is
-fairly complicated, but I was wondering if the there is any clean up
-work that I can help with (that will hopefully get me familiarized
-with the kernel in general, and the networking stuff in particular).
-I'm also wondering if anyone here would be willing to give me a little
-bit of hand-holding with the more advanced stuff (if help is needed in
-a particular area but that area is too difficult for a starter like me
-to undertake).
-
-I'm fairly proficient in C and I understand basic OS principles (CPU
-scheduling, virtual memory, filesystems, ..etc). I also have general
-knowledge of networking (protocols and layering, packet/frame
-transmission, error detection, TCP/IP, and all the other stuff that
-are typical of an introductory networking class).
-
-Thanks,
-Yousef
-
-P.S. The kernel projects list on kernelnewbies.org hasn't changed
-forever. All projects are either taken or already merged.
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
