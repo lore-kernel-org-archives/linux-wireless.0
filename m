@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:4651 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbZESGjY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 02:39:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com>
-References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com>
-	<40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
-	<alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 18 May 2009 23:39:04 -0700
-Message-ID: <43e72e890905182339u68c4d4f5v3a2f25e9e3547e60@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: prevent infinite loop
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>, jirislaby@gmail.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from blaine.gmane.org ([80.91.229.8]:58996 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751498AbZELUIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 16:08:23 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1M3x4X-0004GE-ND
+	for linux-wireless@vger.kernel.org; Tue, 12 May 2009 20:51:25 +0200
+Date: Tue, 12 May 2009 19:46:31 +0200
+From: Evgeni Golov <sargentd@die-welt.net>
+To: Justin Mattock <justinmattock@gmail.com>
+Cc: Jiri Slaby
+	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Justin Mattock
+	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Linux Kernel Mailing List
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
+Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
+In-Reply-To: <dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
+References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
+	<4A089E49.7080403@gmail.com>
+	<20090512103905.0D68E1FD10@chi.die-welt.net>
+	<dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk"
+Message-Id: <20090512174636.8EBDA1FD10@chi.die-welt.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 18, 2009 at 11:32 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2009/5/19 Steven Rostedt <rostedt@goodmis.org>:
->>
->> On Tue, 19 May 2009, Nick Kossifidis wrote:
->>>
->>> This is already fixed on wireless-testing ;-)
->>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
->>
->> Thanks, but this does only half. Although I did not hit this in my laptop,
->> it can be an issue. If step[0] == step[1] you have the same problem.
->>
->
-> Having the same power value for 2 different steps is something we can
-> expect (although docs say that we expect the line to be monotonically
-> increasing but anyway), having the same step twice is way out of spec,
-> there is no way we can have the same step twice on EEPROM, only if we
-> have a corrupted EEPROM (we need to add some sanity checks indeed here
-> -> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/eeprom.c;h=c56b494d417acd40d445d922f2861b53cc2315df;hb=HEAD#l910
-> to handle such a case but first we need to have a "default" eeprom
-> dataset to fallback when we get such errors).
 
-Don't bother with busted EEPROMs, if its busted its busted. Chances
-are the complexity we'd need to add to deal with such devices is
-simply not worth it.
 
-  Luis
+--Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 12 May 2009 07:28:04 -0700 Justin Mattock wrote:
+
+> > Same here with 2.6.30-rc4, b43 and either Cisco (MAC-Addr starts with
+> > 00:40:96) or HP ProCurve (??? - they do WiFi? - MAC-Addr starts with
+> > 00:1F:FE) APs. No encryption, quite noisy environment (University).
+> >
+> > No problem with ipw2200 (actually 2915) in the same hardware (Thinkpad
+> > X31). Neither with the b43 and a standard Linksys WRT54GL (in the same!
+> > noisy university-env).
+> >
+> > Regards
+> > Evgeni
+> >
+> >
+>=20
+> are you able to connect?
+> (or is the connection connecting but really
+> poor quality?)
+> over here 2.6.29-rc8 connects like
+> theirs no tomorrow, as soon as
+> I throw in 2.6.30-rc4 it just dead(although
+> on some accounts I did get some kind of
+> reaction, but not much, just what I see in dmesg).
+
+2.6.29: fairly stable, even if not as good as with an intel card.
+2.6.30-rc4: tons of timeouts, may connect 1 in 100 tries, connection
+will drop after some (short) time.
+
+--=20
+Bruce Schneier Fact Number 79:
+Bruce Schneier once decrypted a box of AlphaBits.
+
+--Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkoJtfcACgkQJKAUGKwVtQxZawCfcxexHk55eXn/JNxOemhyyX13
+f18AnAm14ZXwmzLDRIP8CfQQpRCbbYbc
+=AglB
+-----END PGP SIGNATURE-----
+
+--Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk--
+
