@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:37601 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754005AbZEEOuk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46032 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139AbZELWMO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 10:50:40 -0400
-Received: by bwz22 with SMTP id 22so1318272bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 07:50:39 -0700 (PDT)
-Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
-References: <1241213459.7082.54.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-	 <1241463816.4816.1.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
-Content-Type: text/plain
-Date: Tue, 05 May 2009 17:50:33 +0300
-Message-Id: <1241535034.4816.20.camel@maxim-laptop>
-Mime-Version: 1.0
+	Tue, 12 May 2009 18:12:14 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1M40Cr-0008LD-Ru
+	for linux-wireless@vger.kernel.org; Wed, 13 May 2009 00:12:13 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v0.9.14
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1M40Cr-0008LD-Ru@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Wed, 13 May 2009 00:12:13 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-05-04 at 12:27 -0700, Cahill, Ben M wrote:
-> 
-> >-----Original Message-----
-> >From: Maxim Levitsky [mailto:maximlevitsky@gmail.com] 
-> >Sent: Monday, May 04, 2009 3:04 PM
-> >To: Cahill, Ben M
-> >Cc: iwlwifi maling list; linux-wireless
-> >Subject: RE: [ipw3945-devel] IWL3945 always reports noise 
-> >levels of -127
-> >
-> >On Mon, 2009-05-04 at 11:53 -0700, Cahill, Ben M wrote:
-> >> When one of our devices cannot figure out what the actual 
-> >noise level is, it reports -127.
-> >> 
-> >> Newer devices are better at old devices at figuring noise 
-> >level.  IIRC, 3945 cannot figure noise for CCK signals, and 
-> >may not be possible with OFDM as well.
-> >
-> >Why then it did work on older kernel ?
-> >(and noise levels seemed to be correct)
-> 
-> Hmmm, good point, and I don't know the answer!  :-(
-> 
 
-And I do know it now (this is what I suspected...)
-This is firmware issue.
+A new release of iw (v0.9.14) is available at:
 
-I forced the driver to use older firmware iwlwifi-3945-1.ucode,
-and noise levels are back.
+http://wireless.kernel.org/download/iw/iw-0.9.14.tar.bz2
 
+SHA1 sum: e1fb8830a689dc567e05c5d83f1761d1d0cc404b
 
-Regards,
-	Maxim Levitsky
+Here is the short log of the changes included in this 
+release:
 
+Johannes Berg -  v0.9.14
+Johannes Berg -  finish docs
+Johannes Berg -  more interface help
+Johannes Berg -  help for 'set name'
+Johannes Berg -  add note to set channel/freq
+Johannes Berg -  print version in help output
+Johannes Berg -  document scan commands
+Johannes Berg -  add help for ibss commands
+Johannes Berg -  add help for info/list/phy commands
+Johannes Berg -  add ability to document commands, document event/help
+Johannes Berg -  use C99 initialiser for cmd struct
+Johannes Berg -  if command fails, print help for this command
+Johannes Berg -  split out event handling code
+Johannes Berg -  split out per-command help
+Johannes Berg -  allow printing timing on events (-t)
+Johannes Berg -  print status
+Johannes Berg -  print nicer auth/assoc/deauth/disassoc events
+Johannes Berg -  make event printing more regular
+Johannes Berg -  print extended capabilities
+Johannes Berg -  print rsn capabilities field
+Johannes Berg -  add AKM suites for 11r/11w
+Johannes Berg -  use decimal like the standard for suites below OUI
+Johannes Berg -  print "00-0f-ac:7" instead of "Unknown (00-0f-ac:7)" to make it shorter
+Johannes Berg -  print invalid tail on WPA/RSN IE if present
+Marcel Holtmann -  add length checks for WPA/RSN cipher and authentication suites
+Marcel Holtmann -  add support for showing power constraint IE
+Johannes Berg -  rearrange some tests to be clearer
+Johannes Berg -  add ability to scan certain SSIDs/frequencies
+Johannes Berg -  validate IE length better in places
+Johannes Berg -  add Country in/outdoor environ + invalid environ
+Johannes Berg -  print WPS version as major.minor
+Johannes Berg -  print unknown cipher/auth suites with more info
+Johannes Berg -  s/WPA2/RSN/
+Marcel Holtmann -  add support for parsing WPA and RSN/WPA2 information elements
+Marcel Holtmann -  add basic support for parsing WMM information element
+Marcel Holtmann -  add human readable decoding for capability information field
+Marcel Holtmann -  add support for showing extended capabilities IE
+Marcel Holtmann -  add basic support for parsing country information element
+Marcel Holtmann -  add support for parsing ERP information element
+Marcel Holtmann -  add option to dump unknown IEs with scan command
+Johannes Berg -  WPS scan: print out AP locked attribute
+Johannes Berg -  parse some WPS data
+Johannes Berg -  print unknown IEs in nicer form
+Johannes Berg -  don't try parsing too short vendor IEs
+Johannes Berg -  add scan warnings
