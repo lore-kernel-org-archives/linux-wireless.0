@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:49069 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109AbZEaJNW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37239 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754177AbZELGTA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 05:13:22 -0400
-Received: by bwz22 with SMTP id 22so6914976bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 02:13:22 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: alan-jenkins@tuffmail.co.uk
-In-Reply-To: <1243524688.10632.0.camel@johannes.local>
-References: <1243524688.10632.0.camel@johannes.local>
-Date: Sun, 31 May 2009 10:13:22 +0100
-Message-ID: <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 May 2009 02:19:00 -0400
+Subject: [PATCH]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Tue, 12 May 2009 08:18:49 +0200
+Message-Id: <1242109130.3873.49.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/28/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> The new code added by this patch will make rfkill create
-> a misc character device /dev/rfkill that userspace can use
-> to control rfkill soft blocks and get status of devices as
-> well as events when the status changes.
->
-> Using it is very simple -- when you open it you can read
-> a number of times to get the initial state, and every
-> further read blocks (you can poll) on getting the next
-> event from the kernel. The same structure you read is
-> also used when writing to it to change the soft block of
-> a given device, all devices of a given type, or all
-> devices.
->
-> This also makes CONFIG_RFKILL_INPUT selectable again in
-> order to be able to test without it present since its
-> functionality can now be replaced by userspace entirely
-> and distros and users may not want the input part of
-> rfkill interfering with their userspace code. We will
-> also write a userspace daemon to handle all that and
-> consequently add the input code to the feature removal
-> schedule.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Subject: wext: remove seq_start/stop sparse annotations
 
-If I read correctly, userspace can write to the global states, but
-can't read them?  I think it's awkward to implement rfkill-input in
-userspace without being able to read the global states.  The daemon
-would have to save the states in a file, in case it is restarted.
+Even though they are true, they cause sparse to complain
+because it doesn't see the __acquires(dev_base_lock) on
+dev_seq_start() because it is only added to the function
+in net/core/dev.c, not the header file. To keep track of
+the nesting correctly we should probably annotate those
+functions publically, but for now let's just remove the
+annotation I added to wext.
 
-Thanks
-Alan
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I guess I should have actually run sparse... This could be part of the
+wext locking fix "wext: fix get_wireless_stats locking" instead of being
+standalone, if you're so inclined.
+
+ net/wireless/wext.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+--- wireless-testing.orig/net/wireless/wext.c	2009-05-12 08:12:23.000000000 +0200
++++ wireless-testing/net/wireless/wext.c	2009-05-12 08:13:16.000000000 +0200
+@@ -650,14 +650,12 @@ static int wireless_seq_show(struct seq_
+ }
+ 
+ static void *wireless_dev_seq_start(struct seq_file *seq, loff_t *pos)
+-	__acquires(dev_base_lock)
+ {
+ 	rtnl_lock();
+ 	return dev_seq_start(seq, pos);
+ }
+ 
+ static void wireless_dev_seq_stop(struct seq_file *seq, void *v)
+-	__releases(dev_base_lock)
+ {
+ 	dev_seq_stop(seq, v);
+ 	rtnl_unlock();
+
+
