@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:36402 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755473AbZEHJiQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbZELR6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 05:38:16 -0400
-Date: Fri, 8 May 2009 12:38:07 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Add request for dropping unencrypted frames
-Message-ID: <20090508093807.GC21362@jm.kir.nu>
-References: <20090506173832.GC2960@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090506173832.GC2960@jm.kir.nu>
+	Tue, 12 May 2009 13:58:42 -0400
+Subject: [PATCH] mac80211: respond to beacon loss report only once
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain
+Date: Tue, 12 May 2009 19:58:12 +0200
+Message-Id: <1242151092.11924.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 06, 2009 at 08:38:32PM +0300, Jouni Malinen wrote:
-> In order for mac80211 to be able to drop unencrypted frames correctly,
-> we must let it know when this has to be done. In theory, some of the
-> cases (e.g., unicast frames) would be trivial to handle based on the
-> configured key, but we do not do that currently (rx->key selection is
-> skipped for unprotected frames) and it would be less trivial for
-> broadcast frames (key index not available for unprotected frames). The
-> safest option seems to be to introduce an association request
-> attribute into nl80211 to set drop_unencrypted variable that is used
-> with WEXT.
+The driver might keep reporting beacon loss until we
+disassociate -- catch that and don't respond to any
+subsequent events until the probe is either successful
+or we disassociate.
 
-Please drop this. We will try to survive with key setup -based
-implementation and by adding proper IEEE 802.1X PAE also for station
-mode when using nl80211.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-05-12 19:55:05.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-05-12 19:56:32.000000000 +0200
+@@ -1182,6 +1182,17 @@ void ieee80211_beacon_loss_work(struct w
+ 			     u.mgd.beacon_loss_work);
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
++	/*
++	 * The driver has already reported this event and we have
++	 * already sent a probe request. Maybe the AP died and the
++	 * driver keeps reporting until we disassociate... We have
++	 * to ignore that because otherwise we would continually
++	 * reset the timer and never check whether we received a
++	 * probe response!
++	 */
++	if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL)
++		return;
++
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 	if (net_ratelimit()) {
+ 		printk(KERN_DEBUG "%s: driver reports beacon loss from AP %pM "
+
+
