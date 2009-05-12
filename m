@@ -1,88 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:57492 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761416AbZEFVzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 17:55:10 -0400
-Message-Id: <20090506214803.386675010@mini.kroah.org>
-Date: Wed, 06 May 2009 14:46:26 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	Alina Friedrichsen <x-alina@gmx.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [patch 58/58] ath9k: Fix FIF_BCN_PRBRESP_PROMISC handling
-References: <20090506214528.660389067@mini.kroah.org>
-In-Reply-To: <20090506215017.GA21981@kroah.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37602 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057AbZELT2T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 15:28:19 -0400
+Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <3ace41890905121208s2029db39p730b2e174cd4b1e6@mail.gmail.com>
+References: <1242125077.4331.0.camel@johannes.local>
+	 <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
+	 <3ace41890905121208s2029db39p730b2e174cd4b1e6@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-t5x94sosqewzpmkYaO6h"
+Date: Tue, 12 May 2009 21:27:49 +0200
+Message-Id: <1242156469.14227.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.29-stable review patch.  If anyone has any objections, please let us know.
 
-------------------
+--=-t5x94sosqewzpmkYaO6h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-From: Luis R. Rodriguez <lrodriguez@Atheros.com>
+On Tue, 2009-05-12 at 20:08 +0100, Hin-Tak Leung wrote:
 
-This is a port of commit
-91ed19f5f66a7fe544f0ec385e981f43491d1d5a
-for 2.6.29.
+> BTW, nm fails to connect with
+>  <WARN>  nm_device_wifi_disable_encryption(): error setting key for
+> device wlan2: No such file or directory
 
-Without this after scanning your device will set
-the association ID to something bogus and what is
-being reported is multicast/broadcast frame are not
-being received. For details see this bug report:
+As Dan said, you can ignore this message. However, I'm certainly no
+longer getting it. Are you sure you rebooted into the correct kernel and
+loaded the correct cfg80211 module?
 
-https://bugzilla.redhat.com/show_bug.cgi?id=498502
+I have now tested WPA-PSK and WEP with wpa_supplicant and WEP with
+manual configuration and it all works.
 
->From the original commit:
+johannes
 
-So that a new created IBSS network
-doesn't break on the first scan.
+--=-t5x94sosqewzpmkYaO6h
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-It seems to Sujith and me that this
-stupid code unnecessary, too.
+-----BEGIN PGP SIGNATURE-----
 
-So remove it...
+iQIcBAABAgAGBQJKCc2wAAoJEODzc/N7+QmaK80P/jLpklPnYpfBt1y8SOih2vAD
+2VBIOEEgDrb0jm2+ZKPw+QY2EIL+TIg0DXldpNWJ52OAWB3jIkcoaIyKv51V4taD
+uk1OvjRfYM6eZWIQLmry/AiFL6xD6GILlVih7WmZSerwPyntoLYwjy4cuKFuQ7B1
+Mcas1nVqUEksMlwm2N3e2bfNOg5pCWP/OhJk+a2RdUybEplHhqGjV8/HOYmuW14L
+7GSHgMJtjL9LvdgOHa/vU7TW42JueVldx/Q+EEoA9n5urFw1SZg0bh6XD8yBN38S
+KiPi7tx50aXfBG+jl/hLhM/XGD6WuVdSJhxm6CMGphONq2o3oaGxmwM6pULVX+xw
++cy2IrUe+8K7m9LHmrfknMAJRgzikcqDKJLzFufGif4o2O0ozUBvbcZGi0/ddIvo
+7/lumaKgIQqVPcClncnlz4g71NoFMda9uE2NeiQxkDBNsS/RvbvW4G+ZOHuhvakZ
+nNywpdpcEBVDMcjg2czpt97xBEbraGylc0s2UnP4H0eroPRu61pRaFB5isrhGhyn
+S2KvS8oB7d51kpX4vd2bxW8ojJlJ1ijc9+xWqMi1PmPtgdJ3Dr1bT4hsSh/LzBXl
+A7A32Id07+0hrSJrcBzNyEuh7+3G2C36393HT9Z11e9+MjHqiE8/6hA+gmlJ5Ri8
+uLIcq5bn9Jlh25fYALkf
+=9Ook
+-----END PGP SIGNATURE-----
 
-Reported-by: David Woodhouse <dwmw2@infradead.org>
-Tested-by: David Woodhouse <dwmw2@infradead.org>
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Jouni Malinen <Jouni.Malinen@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/net/wireless/ath9k/main.c |    5 -----
- 1 file changed, 5 deletions(-)
-
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2300,11 +2300,6 @@ static void ath9k_configure_filter(struc
- 	rfilt = ath_calcrxfilter(sc);
- 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
- 
--	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
--		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
--			ath9k_hw_write_associd(sc->sc_ah, ath_bcast_mac, 0);
--	}
--
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Set HW RX filter: 0x%x\n", sc->rx.rxfilter);
- }
- 
-
+--=-t5x94sosqewzpmkYaO6h--
 
