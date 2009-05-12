@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:58996 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498AbZELUIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 16:08:23 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1M3x4X-0004GE-ND
-	for linux-wireless@vger.kernel.org; Tue, 12 May 2009 20:51:25 +0200
-Date: Tue, 12 May 2009 19:46:31 +0200
-From: Evgeni Golov <sargentd@die-welt.net>
-To: Justin Mattock <justinmattock@gmail.com>
-Cc: Jiri Slaby
-	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Justin Mattock
-	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Linux Kernel Mailing List
-	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
-	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
-Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
-In-Reply-To: <dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
-References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-	<4A089E49.7080403@gmail.com>
-	<20090512103905.0D68E1FD10@chi.die-welt.net>
-	<dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbZELXUm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 19:20:42 -0400
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242170080.5146.32.camel@maxim-laptop>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+	 <1241374060.13562.37.camel@johannes.local>
+	 <1241387163.10486.6.camel@maxim-laptop>
+	 <1241421545.6866.2.camel@johannes.local>
+	 <1242161643.26484.2.camel@maxim-laptop>
+	 <1242169824.5146.31.camel@maxim-laptop>
+	 <1242169934.14227.16.camel@johannes.local>
+	 <1242170080.5146.32.camel@maxim-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/UuSIco/gnX7WLoq7yxa"
+Date: Wed, 13 May 2009 01:20:03 +0200
+Message-Id: <1242170403.14227.18.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk"
-Message-Id: <20090512174636.8EBDA1FD10@chi.die-welt.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-
---Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
+--=-/UuSIco/gnX7WLoq7yxa
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 12 May 2009 07:28:04 -0700 Justin Mattock wrote:
+On Wed, 2009-05-13 at 02:14 +0300, Maxim Levitsky wrote:
 
-> > Same here with 2.6.30-rc4, b43 and either Cisco (MAC-Addr starts with
-> > 00:40:96) or HP ProCurve (??? - they do WiFi? - MAC-Addr starts with
-> > 00:1F:FE) APs. No encryption, quite noisy environment (University).
-> >
-> > No problem with ipw2200 (actually 2915) in the same hardware (Thinkpad
-> > X31). Neither with the b43 and a standard Linksys WRT54GL (in the same!
-> > noisy university-env).
-> >
-> > Regards
-> > Evgeni
-> >
-> >
->=20
-> are you able to connect?
-> (or is the connection connecting but really
-> poor quality?)
-> over here 2.6.29-rc8 connects like
-> theirs no tomorrow, as soon as
-> I throw in 2.6.30-rc4 it just dead(although
-> on some accounts I did get some kind of
-> reaction, but not much, just what I see in dmesg).
+> > So it's a bug in iwlwifi, it neither rejects nor executes a scan when i=
+n
+> > rfkill.
+> But I use disable_hw_scan=3D1 !
 
-2.6.29: fairly stable, even if not as good as with an intel card.
-2.6.30-rc4: tons of timeouts, may connect 1 in 100 tries, connection
-will drop after some (short) time.
+Load the driver with debug=3D1 and see what it shows then. I don't think
+there's a way for mac80211 to get stuck.
 
---=20
-Bruce Schneier Fact Number 79:
-Bruce Schneier once decrypted a box of AlphaBits.
+Also you could stick some printks into
+net/mac80211/scan.c:ieee80211_scan_work() at strategic places and see...
+but if they never happen you haven't turned off hw scan.
 
---Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk
-Content-Type: application/pgp-signature
+johannes
+
+--=-/UuSIco/gnX7WLoq7yxa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkoJtfcACgkQJKAUGKwVtQxZawCfcxexHk55eXn/JNxOemhyyX13
-f18AnAm14ZXwmzLDRIP8CfQQpRCbbYbc
-=AglB
+iQIcBAABAgAGBQJKCgQcAAoJEODzc/N7+Qmabv0P/jyPPlArsLCUqVSgCEH/o28J
++cmGliNRJjGdTCzg2DIA6WjUJUzFtXwccA+oVPvAygp5dzRYJjUdV28U2HS4PVOG
+zq2J1nvyYShT68NWNnCbxcKKBse2f8m5GlKKMSVpyWvBBB2njW5BJ/e6Y2rLFPqv
+vSgNU1Uj9ucbu3vqlHf5+oPtUfng19OOh4lqoTtg5EirjcTe8Ht8FzcxzplX1kEX
+c4f5WwSSKTRO98fNlRMaaOrfbL96rMjUr7q1sGKrl+b5ks/WsDF1XVizjdC+Nlzq
+r0X7VbmM9XMS/4cw6c6EHOtGUpFaJjLJo1shr8Tof7bO4OLdlpYCrhgo8QG4wVC4
+EsMembKQlzIzevs2dQbJ+FuBrkhSEay5+dReNukkCmxWILUk8l2dfdo6gKGQNDDV
+mjGUv1yoKuudoyImbPvodlALpYg/oqAEgTpnXiHp0GZ5g+GV3A0XKF06iCxpa2xS
+0lWaKFfp+nVz9QFe8YtNmMSKfm5qYqQ4mPfU90Mq/NyuAxS+5eXlszI9ddRx86Ze
+9B84Tzb09CKVfoyQxNH3dMJfW7cSoJsBuIjdqWPc2tZwfc5EMh7dj/T+4+bf00LH
+Y8xwUW3GR/ku4/f/bI+t4msaOpo7NdVk3PmCAEEr+JheXRsegeKExwTaFxmDcN5R
+flt5GKB8b1UXXGGKbNXh
+=XPrm
 -----END PGP SIGNATURE-----
 
---Signature=_Tue__12_May_2009_19_46_31_+0200_uGTH6y+TQGxqsURk--
+--=-/UuSIco/gnX7WLoq7yxa--
 
