@@ -1,120 +1,410 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53309 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753112AbZEFRij (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:44027 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbZELXAY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 13:38:39 -0400
-Date: Wed, 6 May 2009 20:38:32 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Add request for dropping unencrypted frames
-Message-ID: <20090506173832.GC2960@jm.kir.nu>
+	Tue, 12 May 2009 19:00:24 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/6 v3] ar9170usb: introduce tx urb queue
+Date: Wed, 13 May 2009 01:00:24 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+References: <200905121659.05977.chunkeey@web.de>
+In-Reply-To: <200905121659.05977.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200905130100.24937.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order for mac80211 to be able to drop unencrypted frames correctly,
-we must let it know when this has to be done. In theory, some of the
-cases (e.g., unicast frames) would be trivial to handle based on the
-configured key, but we do not do that currently (rx->key selection is
-skipped for unprotected frames) and it would be less trivial for
-broadcast frames (key index not available for unprotected frames). The
-safest option seems to be to introduce an association request
-attribute into nl80211 to set drop_unencrypted variable that is used
-with WEXT.
+This patch is a back-port of some tx-aggregation code.
 
-This patch (with a matching update to wpa_supplicant) fixes an issue
-where attackers could inject unencrypted frames to a network that was
-supposed to be protected when using mac80211 with nl80211/cfg80211.
-This is a critical issue for station mode, but can also affect AP mode
-when MFP is used. The earlier plan for adding support for setting
-authorized flag for station mode would reduce the effect of the
-attack, but would not completely remove it. As far as AP mode is
-concerned, a new BSS command attribute would likely be needed to cover
-the MFP case, but that can be added in a separate patch once the more
-critical client side issue is resolved.
+In the past, we didn't limit the amount of active tx_urb.
+However, ar9170 only has a limited buffer reserved for
+pending data frames.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- include/linux/nl80211.h |    5 +++++
- include/net/cfg80211.h  |    3 +++
- net/mac80211/cfg.c      |    1 +
- net/wireless/nl80211.c  |    3 +++
- 4 files changed, 12 insertions(+)
+Changes
+v3-> v2:
+	- run diff against a clean tree... sorry!
 
---- uml.orig/include/linux/nl80211.h	2009-05-06 20:25:00.000000000 +0300
-+++ uml/include/linux/nl80211.h	2009-05-06 20:25:03.000000000 +0300
-@@ -498,6 +498,10 @@ enum nl80211_commands {
-  *	(IEEE 802.11w) is used for the association; this attribute can be used
-  *	with %NL80211_CMD_ASSOCIATE request
-  *
-+ * @NL80211_ATTR_DROP_UNENCRYPTED: a flag indicating that unencrypted data and
-+ *	robust management frames (if MFP/IEEE 802.11w is used) are to be
-+ *	dropped; this attribute can be used with %NL80211_CMD_ASSOCIATE request
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -601,6 +605,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_TIMED_OUT,
+ v2 -> v1:
+	- removed leaky auto reset. It will be enabled again,
+	  once the tx-aggregation code is ready for action. 
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 77dc647..cd3d1ed 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -121,6 +121,8 @@ struct ar9170 {
+ 	int (*exec_cmd)(struct ar9170 *, enum ar9170_cmd, u32 ,
+ 			void *, u32 , void *);
+ 	void (*callback_cmd)(struct ar9170 *, u32 , void *);
++	void (*reset)(struct ar9170 *);
++	int (*flush)(struct ar9170 *);
  
- 	NL80211_ATTR_USE_MFP,
-+	NL80211_ATTR_DROP_UNENCRYPTED,
+ 	/* interface mode settings */
+ 	struct ieee80211_vif *vif;
+@@ -206,6 +208,7 @@ void ar9170_rx(struct ar9170 *ar, struct sk_buff *skb);
+ void ar9170_unregister(struct ar9170 *ar);
+ void ar9170_handle_tx_status(struct ar9170 *ar, struct sk_buff *skb,
+ 			     bool update_statistics, u16 tx_status);
++void ar9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len);
  
- 	/* add attributes here, update the policy in nl80211.c */
+ /* MAC */
+ int ar9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index df83883..a66aa7d 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -374,8 +374,8 @@ static void ar9170_tx_status_janitor(struct work_struct *work)
+ 	mutex_unlock(&ar->mutex);
+ }
  
---- uml.orig/include/net/cfg80211.h	2009-05-06 20:25:00.000000000 +0300
-+++ uml/include/net/cfg80211.h	2009-05-06 20:25:03.000000000 +0300
-@@ -673,6 +673,8 @@ struct cfg80211_auth_request {
-  * @ie: Extra IEs to add to (Re)Association Request frame or %NULL
-  * @ie_len: Length of ie buffer in octets
-  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
-+ * @drop_unencrypted: Drop unencrypted data and robust management frames (if
-+ *	MFP/IEEE 802.11w is used)
-  */
- struct cfg80211_assoc_request {
- 	struct ieee80211_channel *chan;
-@@ -682,6 +684,7 @@ struct cfg80211_assoc_request {
- 	const u8 *ie;
- 	size_t ie_len;
- 	bool use_mfp;
-+	bool drop_unencrypted;
+-static void ar9170_handle_command_response(struct ar9170 *ar,
+-					   void *buf, u32 len)
++void ar9170_handle_command_response(struct ar9170 *ar,
++				    void *buf, u32 len)
+ {
+ 	struct ar9170_cmd_response *cmd = (void *) buf;
+ 
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index d7c13c0..09e9f28 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -87,6 +87,37 @@ static struct usb_device_id ar9170_usb_ids[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, ar9170_usb_ids);
+ 
++static void ar9170_usb_send_urb(struct ar9170_usb *aru)
++{
++	struct urb *urb;
++	unsigned long flags;
++
++	spin_lock_irqsave(&aru->tx_urb_lock, flags);
++	if (aru->tx_submitted_urbs >= AR9170_NUM_TX_URBS) {
++		spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
++		return ;
++	}
++	aru->tx_submitted_urbs++;
++	spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
++
++	urb = usb_get_from_anchor(&aru->tx_pending);
++	if (!urb)
++		return ;
++
++	aru->tx_pending_urbs--;
++
++	usb_anchor_urb(urb, &aru->tx_submitted);
++
++	if (usb_submit_urb(urb, GFP_ATOMIC)) {
++		spin_lock_irqsave(&aru->tx_urb_lock, flags);
++		aru->tx_submitted_urbs--;
++		spin_unlock_irqrestore(&aru->tx_urb_lock, flags);
++		usb_unanchor_urb(urb);
++	}
++
++	usb_free_urb(urb);
++}
++
+ static void ar9170_usb_tx_urb_complete_free(struct urb *urb)
+ {
+ 	struct sk_buff *skb = urb->context;
+@@ -98,10 +129,26 @@ static void ar9170_usb_tx_urb_complete_free(struct urb *urb)
+ 		return ;
+ 	}
+ 
++	aru->tx_submitted_urbs--;
++
++	if (!usb_anchor_empty(&aru->tx_pending))
++		ar9170_usb_send_urb(aru);
++
+ 	ar9170_handle_tx_status(&aru->common, skb, false,
+ 				AR9170_TX_STATUS_COMPLETE);
+ }
+ 
++static void ar9170_usb_tx_urb_complete_cnt(struct urb *urb)
++{
++	struct ar9170_usb *aru = (struct ar9170_usb *)
++	      usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
++
++	aru->tx_submitted_urbs--;
++
++	if (!usb_anchor_empty(&aru->tx_pending))
++		ar9170_usb_send_urb(aru);
++}
++
+ static void ar9170_usb_tx_urb_complete(struct urb *urb)
+ {
+ }
+@@ -126,8 +173,9 @@ static void ar9170_usb_irq_completed(struct urb *urb)
+ 		goto resubmit;
+ 	}
+ 
+-	print_hex_dump_bytes("ar9170 irq: ", DUMP_PREFIX_OFFSET,
+-			     urb->transfer_buffer, urb->actual_length);
++	ar9170_handle_command_response(&aru->common,
++				       urb->transfer_buffer,
++				       urb->actual_length);
+ 
+ resubmit:
+ 	usb_anchor_urb(urb, &aru->rx_submitted);
+@@ -179,14 +227,13 @@ resubmit:
+ 	err = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (err) {
+ 		usb_unanchor_urb(urb);
+-		dev_kfree_skb_irq(skb);
++		goto free;
+ 	}
+ 
+ 	return ;
+ 
+ free:
+ 	dev_kfree_skb_irq(skb);
+-	return;
+ }
+ 
+ static int ar9170_usb_prep_rx_urb(struct ar9170_usb *aru,
+@@ -282,21 +329,39 @@ err_out:
+ 	return err;
+ }
+ 
+-static void ar9170_usb_cancel_urbs(struct ar9170_usb *aru)
++static int ar9170_usb_flush(struct ar9170 *ar)
+ {
+-	int ret;
++	struct ar9170_usb *aru = (void *) ar;
++	int ret, err = 0;
+ 
+-	aru->common.state = AR9170_UNKNOWN_STATE;
++	ret = usb_wait_anchor_empty_timeout(&aru->tx_pending,
++					    msecs_to_jiffies(500));
++	if (ret == 0)
++		err = -EBUSY;
+ 
+-	usb_unlink_anchored_urbs(&aru->tx_submitted);
++	usb_scuttle_anchored_urbs(&aru->tx_pending);
+ 
+-	/* give the LED OFF command and the deauth frame a chance to air. */
++	/* lets wait a while until the tx - queues are dried out */
+ 	ret = usb_wait_anchor_empty_timeout(&aru->tx_submitted,
+ 					    msecs_to_jiffies(100));
+ 	if (ret == 0)
+-		dev_err(&aru->udev->dev, "kill pending tx urbs.\n");
+-	usb_poison_anchored_urbs(&aru->tx_submitted);
++		err = -ETIMEDOUT;
++
++	usb_kill_anchored_urbs(&aru->tx_submitted);
++	return err;
++}
++
++static void ar9170_usb_cancel_urbs(struct ar9170_usb *aru)
++{
++	int err;
++
++	aru->common.state = AR9170_UNKNOWN_STATE;
+ 
++	err = ar9170_usb_flush(&aru->common);
++	if (err)
++		dev_err(&aru->udev->dev, "stuck tx urbs!\n");
++
++	usb_poison_anchored_urbs(&aru->tx_submitted);
+ 	usb_poison_anchored_urbs(&aru->rx_submitted);
+ }
+ 
+@@ -337,7 +402,7 @@ static int ar9170_usb_exec_cmd(struct ar9170 *ar, enum ar9170_cmd cmd,
+ 
+ 	usb_anchor_urb(urb, &aru->tx_submitted);
+ 	err = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (err) {
++	if (unlikely(err)) {
+ 		usb_unanchor_urb(urb);
+ 		usb_free_urb(urb);
+ 		goto err_unbuf;
+@@ -385,7 +450,6 @@ static int ar9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb,
+ {
+ 	struct ar9170_usb *aru = (struct ar9170_usb *) ar;
+ 	struct urb *urb;
+-	int err;
+ 
+ 	if (unlikely(!IS_STARTED(ar))) {
+ 		/* Seriously, what were you drink... err... thinking!? */
+@@ -399,17 +463,18 @@ static int ar9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb,
+ 	usb_fill_bulk_urb(urb, aru->udev,
+ 			  usb_sndbulkpipe(aru->udev, AR9170_EP_TX),
+ 			  skb->data, skb->len + extra_len, (txstatus_needed ?
+-			  ar9170_usb_tx_urb_complete :
++			  ar9170_usb_tx_urb_complete_cnt :
+ 			  ar9170_usb_tx_urb_complete_free), skb);
+ 	urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+-	usb_anchor_urb(urb, &aru->tx_submitted);
+-	err = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (unlikely(err))
+-		usb_unanchor_urb(urb);
++	usb_anchor_urb(urb, &aru->tx_pending);
++	aru->tx_pending_urbs++;
+ 
+ 	usb_free_urb(urb);
+-	return err;
++
++	ar9170_usb_send_urb(aru);
++
++	return 0;
+ }
+ 
+ static void ar9170_usb_callback_cmd(struct ar9170 *ar, u32 len , void *buffer)
+@@ -592,10 +657,8 @@ static void ar9170_usb_stop(struct ar9170 *ar)
+ 	if (IS_ACCEPTING_CMD(ar))
+ 		aru->common.state = AR9170_STOPPED;
+ 
+-	/* lets wait a while until the tx - queues are dried out */
+-	ret = usb_wait_anchor_empty_timeout(&aru->tx_submitted,
+-					    msecs_to_jiffies(1000));
+-	if (ret == 0)
++	ret = ar9170_usb_flush(ar);
++	if (ret)
+ 		dev_err(&aru->udev->dev, "kill pending tx urbs.\n");
+ 
+ 	usb_poison_anchored_urbs(&aru->tx_submitted);
+@@ -656,6 +719,43 @@ err_out:
+ 	return err;
+ }
+ 
++static void ar9170_usb_reset_work(struct work_struct *work)
++{
++	struct ar9170_usb *aru = container_of(work, struct ar9170_usb,
++					      reset_work);
++	int err;
++
++	ar9170_usb_cancel_urbs(aru);
++
++	/* let it cool down */
++	msleep(200);
++
++	usb_unpoison_anchored_urbs(&aru->rx_submitted);
++	usb_unpoison_anchored_urbs(&aru->tx_submitted);
++
++	err = ar9170_usb_init_device(aru);
++	if (err)
++		goto err_unrx;
++
++	err = ar9170_usb_open(&aru->common);
++	if (err)
++		goto err_unrx;
++
++	ieee80211_restart_hw(aru->common.hw);
++	return ;
++
++err_unrx:
++	dev_err(&aru->udev->dev, "reinitialization failed (%d)!\n", err);
++	ar9170_usb_cancel_urbs(aru);
++}
++
++static void ar9170_usb_schedule_reset(struct ar9170 *ar)
++{
++	struct ar9170_usb *aru = (void *) ar;
++
++	queue_work(ar->hw->workqueue, &aru->reset_work);
++}
++
+ static int ar9170_usb_probe(struct usb_interface *intf,
+ 			const struct usb_device_id *id)
+ {
+@@ -678,12 +778,20 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 
+ 	usb_set_intfdata(intf, aru);
+ 	SET_IEEE80211_DEV(ar->hw, &udev->dev);
++	INIT_WORK(&aru->reset_work, ar9170_usb_reset_work);
+ 
+ 	init_usb_anchor(&aru->rx_submitted);
++	init_usb_anchor(&aru->tx_pending);
+ 	init_usb_anchor(&aru->tx_submitted);
+ 	init_completion(&aru->cmd_wait);
++	spin_lock_init(&aru->tx_urb_lock);
++
++	aru->tx_pending_urbs = 0;
++	aru->tx_submitted_urbs = 0;
+ 
+ 	aru->common.stop = ar9170_usb_stop;
++	aru->common.flush = ar9170_usb_flush;
++	aru->common.reset = ar9170_usb_schedule_reset;
+ 	aru->common.open = ar9170_usb_open;
+ 	aru->common.tx = ar9170_usb_tx;
+ 	aru->common.exec_cmd = ar9170_usb_exec_cmd;
+@@ -691,7 +799,7 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 
+ #ifdef CONFIG_PM
+ 	udev->reset_resume = 1;
+-#endif
++#endif /* CONFIG_PM */
+ 	err = ar9170_usb_reset(aru);
+ 	if (err)
+ 		goto err_freehw;
+@@ -738,6 +846,8 @@ static void ar9170_usb_disconnect(struct usb_interface *intf)
+ 	if (!aru)
+ 		return;
+ 
++	cancel_work_sync(&aru->reset_work);
++
+ 	aru->common.state = AR9170_IDLE;
+ 	ar9170_unregister(&aru->common);
+ 	ar9170_usb_cancel_urbs(aru);
+@@ -759,6 +869,7 @@ static int ar9170_suspend(struct usb_interface *intf,
+ 	if (!aru)
+ 		return -ENODEV;
+ 
++	cancel_work_sync(&aru->reset_work);
+ 	aru->common.state = AR9170_IDLE;
+ 	ar9170_usb_cancel_urbs(aru);
+ 
+@@ -776,11 +887,6 @@ static int ar9170_resume(struct usb_interface *intf)
+ 	usb_unpoison_anchored_urbs(&aru->rx_submitted);
+ 	usb_unpoison_anchored_urbs(&aru->tx_submitted);
+ 
+-	/*
+-	 * FIXME: firmware upload will fail on resume.
+-	 * but this is better than a hang!
+-	 */
+-
+ 	err = ar9170_usb_init_device(aru);
+ 	if (err)
+ 		goto err_unrx;
+diff --git a/drivers/net/wireless/ath/ar9170/usb.h b/drivers/net/wireless/ath/ar9170/usb.h
+index ac42586..d75e6ee 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.h
++++ b/drivers/net/wireless/ath/ar9170/usb.h
+@@ -51,6 +51,7 @@
+ #include "ar9170.h"
+ 
+ #define AR9170_NUM_RX_URBS			16
++#define AR9170_NUM_TX_URBS			8
+ 
+ struct firmware;
+ 
+@@ -60,15 +61,21 @@ struct ar9170_usb {
+ 	struct usb_interface *intf;
+ 
+ 	struct usb_anchor rx_submitted;
++	struct usb_anchor tx_pending;
+ 	struct usb_anchor tx_submitted;
+ 
+-	spinlock_t cmdlock;
++	spinlock_t tx_urb_lock;
++	unsigned int tx_submitted_urbs;
++	unsigned int tx_pending_urbs;
++
+ 	struct completion cmd_wait;
+ 	int readlen;
+ 	u8 *readbuf;
+ 
+ 	const struct firmware *init_values;
+ 	const struct firmware *firmware;
++
++	struct work_struct reset_work;
  };
  
- /**
---- uml.orig/net/mac80211/cfg.c	2009-05-06 20:25:00.000000000 +0300
-+++ uml/net/mac80211/cfg.c	2009-05-06 20:25:03.000000000 +0300
-@@ -1260,6 +1260,7 @@ static int ieee80211_assoc(struct wiphy 
- 		sdata->u.mgd.mfp = IEEE80211_MFP_DISABLED;
- 		sdata->u.mgd.flags &= ~IEEE80211_STA_MFP_ENABLED;
- 	}
-+	sdata->drop_unencrypted = req->drop_unencrypted;
- 
- 	sdata->u.mgd.flags |= IEEE80211_STA_EXT_SME;
- 	sdata->u.mgd.state = IEEE80211_STA_MLME_ASSOCIATE;
---- uml.orig/net/wireless/nl80211.c	2009-05-06 20:25:00.000000000 +0300
-+++ uml/net/wireless/nl80211.c	2009-05-06 20:25:03.000000000 +0300
-@@ -123,6 +123,7 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_FREQ_FIXED] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TIMED_OUT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_USE_MFP] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_DROP_UNENCRYPTED] = { .type = NLA_FLAG },
- };
- 
- /* IE validation */
-@@ -3014,6 +3015,8 @@ static int nl80211_associate(struct sk_b
- 	}
- 
- 	req.use_mfp = info->attrs[NL80211_ATTR_USE_MFP] != NULL;
-+	req.drop_unencrypted = info->attrs[NL80211_ATTR_DROP_UNENCRYPTED] !=
-+		NULL;
- 
- 	err = drv->ops->assoc(&drv->wiphy, dev, &req);
- 
+ #endif /* __USB_H */
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
