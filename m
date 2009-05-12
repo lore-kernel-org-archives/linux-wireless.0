@@ -1,36 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40073 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175AbZEONpJ (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:56865 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755083AbZELOJB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 09:45:09 -0400
-Date: Fri, 15 May 2009 09:33:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Automatic reassociate with AP
-Message-ID: <20090515133359.GB2773@tuxdriver.com>
-References: <alpine.LSU.2.00.0905151306240.4165@fbirervta.pbzchgretzou.qr>
+	Tue, 12 May 2009 10:09:01 -0400
+Received: by fxm2 with SMTP id 2so3349367fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 07:09:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LSU.2.00.0905151306240.4165@fbirervta.pbzchgretzou.qr>
+In-Reply-To: <1242030669.6930.10.camel@johannes.local>
+References: <1242030669.6930.10.camel@johannes.local>
+Date: Tue, 12 May 2009 15:09:00 +0100
+Message-ID: <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+Subject: Re: [RFT v9] rfkill: rewrite
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 15, 2009 at 01:10:28PM +0200, Jan Engelhardt wrote:
+On 5/11/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+> This patch completely rewrites the rfkill core to address
+> the following deficiencies:
 
-> when the AP flakes out, or I just appen to be out of range, the kernel 
-> drops the AP association, as dmesg shows:
-> 
-> wlan0: No ProbeResp from current AP 00:0b:0e:4f:cf:80 - assume out of 
-> range
-> 
-> Manually rerunning `iwconfig wlan0 essid FooNet channel 11` 
-> reassociates, but I wonder whether the kernel could not do that itself, 
-> given that it knows the previous settings like ESSID.
+Btw, git-apply nitpicks on your whitespace
 
-Patches welcome... :-)
+    rfkill-rewrite.patch:4335: space before tab in indent.
+            mutex_unlock(&rfkill_global_mutex);
+    warning: 1 line adds whitespace errors.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
+Somehow, it triggers an OOPS
+
+Function: req_reg_info_regd
+Process: modprobe
+
+Call trace:
+wiphy_apply_custom_regulatory
+ath5k_regd_init
+ath5k_reg_notifier
+ath5k_pci_probe
+...
+
+Photo: <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#5334936857267342674>
+
+The kernel then hangs later on in the boot process.  It responds to
+SysRq, but does not echo normal keypresses.  SysRq+P shows that the
+kernel is in the idle task.  I left it for three minutes, but I didn't
+get any trace from the hung task detector or soft lockup detector.
+
+At first I thought it must be a problem with wireless-testing.
+However, it went away when I eventually tried un-applying the rfkill
+rewrite patch.
+
+Thanks
+Alan
