@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:60503 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576AbZELLIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 07:08:54 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1M3paY-0004nG-GO
-	for linux-wireless@vger.kernel.org; Tue, 12 May 2009 12:51:58 +0200
-Date: Tue, 12 May 2009 12:39:03 +0200
-From: Evgeni Golov <sargentd@die-welt.net>
-To: Jiri Slaby
-	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>
-Cc: Justin Mattock
-	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Linux Kernel Mailing List
-	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
-	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
-Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
-In-Reply-To: <4A089E49.7080403@gmail.com>
-References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-	<4A089E49.7080403@gmail.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:36767 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773AbZELWHi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 18:07:38 -0400
+Received: by fxm2 with SMTP id 2so267386fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 15:07:38 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <1241606838.18657.1.camel@maxim-laptop>  <1241642056.3289.6.camel@mj>
+	 <1241958023.6051.14.camel@maxim-laptop>
+	 <43e72e890905101133w2314250s7b95a8c100e83cce@mail.gmail.com>
+	 <1241984076.6051.18.camel@maxim-laptop>
+	 <43e72e890905101236h2cd24edewae808da384ae48dd@mail.gmail.com>
+	 <1242140728.5626.3.camel@maxim-laptop>
+	 <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
+	 <1242149671.5210.2.camel@maxim-laptop>
+	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 13 May 2009 01:07:31 +0300
+Message-Id: <1242166051.26484.7.camel@maxim-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <20090512103905.0D68E1FD10@chi.die-welt.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-05-12 at 15:00 -0700, Luis R. Rodriguez wrote:
+> On Tue, May 12, 2009 at 10:34 AM, Maxim Levitsky
+> <maximlevitsky@gmail.com> wrote:
+> > On Tue, 2009-05-12 at 10:24 -0700, Luis R. Rodriguez wrote:
+> >> On Tue, May 12, 2009 at 8:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> >> > On Sun, 2009-05-10 at 12:36 -0700, Luis R. Rodriguez wrote:
+> >> >> On Sun, May 10, 2009 at 12:34 PM, Maxim Levitsky
+> >> >> <maximlevitsky@gmail.com> wrote:
+> >> >> > On Sun, 2009-05-10 at 11:33 -0700, Luis R. Rodriguez wrote:
+> >> >> >> On Sun, May 10, 2009 at 5:20 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> >> >> >> > On Wed, 2009-05-06 at 16:34 -0400, Pavel Roskin wrote:
+> >> >> >> >> gdb /lib/modules/`uname -r`/kernel/net/wireless/cfg80211.ko
+> >> >> >> >
+> >> >> >> > I have recompiled the kernel with debugging info.
+> >> >> >> >
+> >> >> >> > This is new backtrace:
+> >> >
+> >> > Ok, here is what I found:
+> >> >
+> >> > The real BUG_ON that fires up is at
+> >> >
+> >> > wireless/reg.c: __set_regdom: BUG_ON(!country_ie_regdomain)
+> >> >
+> >> > Confirmed by replacing it with printk.
+> >> >
+> >> >
+> >> > I attach a beacon sample that triggers this:
+> >>
+> >> Thanks for that. Was this from wireless-testing? If so as of what SHA1
+> >> sum? Can you provide steps to reproduce? What AP? What card?
+> > wireless-testing, b2382a4aeff07a481ccf860e4f716b48b52e3781
+> 
+> That HEAD is buggy, its missing a fix for the minstrel/pid fix.
+> Although since you are running iwl3945 it explains why you haven't
+> seen that oops.
+> 
+> Will look into this -- thanks. How easy can you reproduce BTW? Does it
+> happen immediately upon assoc? Does it happen with other APs at the
+> university?
+Happens always when I try to associate.
+In fact, after a boot, this oops is in dmesg, and whole system
+semi-frozen. (can't get root, etc probably due to locks held)
 
 
-On Mon, 11 May 2009 23:53:13 +0200 Jiri Slaby wrote:
+Other APs, I don't see many other APs there, (you mean other essids,
+right?)
 
-> > in dmesg I see:
-> > 
-> > [   36.337419] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 1
-> > [   36.530106] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 2
-> > [   36.730100] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 3
-> > [   36.930101] wlan0: direct probe to AP 00:1e:2a:00:67:f0 timed out
-> > [   44.421728] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 1
-> > [   44.620080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 2
-> > [   44.820080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try 3
-> > [   45.020076] wlan0: direct probe to AP 00:1e:2a:00:67:f0 timed out
-> > 
-> > The type of encryption used is just
-> > a standard WEP key(no WPA).
+Most of them are encrypted anyway.
 
-Same here with 2.6.30-rc4, b43 and either Cisco (MAC-Addr starts with
-00:40:96) or HP ProCurve (??? - they do WiFi? - MAC-Addr starts with
-00:1F:FE) APs. No encryption, quite noisy environment (University).
 
-No problem with ipw2200 (actually 2915) in the same hardware (Thinkpad
-X31). Neither with the b43 and a standard Linksys WRT54GL (in the same!
-noisy university-env).
+I have just compiled HEAD of wireless-testing, I see how well it will
+work tomorrow.
 
-Regards
-Evgeni
+
+Thanks in advance,
+	Maxim Levitsky
+> 
+>   Luis
 
