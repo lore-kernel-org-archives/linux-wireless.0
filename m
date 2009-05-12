@@ -1,79 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35038 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422AbZEHHmq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 03:42:46 -0400
-Subject: [PATCH] cfg80211: fix wext iw_freq parsing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 09:42:33 +0200
-Message-Id: <1241768553.1567.22.camel@johannes.local>
-Mime-Version: 1.0
+Received: from blaine.gmane.org ([80.91.229.8]:37078 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755128AbZELW1j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2009 18:27:39 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1M3zTL-0000Fh-1t
+	for linux-wireless@vger.kernel.org; Tue, 12 May 2009 23:25:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <20090512174636.8EBDA1FD10@chi.die-welt.net>
+References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
+	 <4A089E49.7080403@gmail.com>
+	 <20090512103905.0D68E1FD10@chi.die-welt.net>
+	 <dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
+	 <20090512174636.8EBDA1FD10@chi.die-welt.net>
+Date: Tue, 12 May 2009 13:04:28 -0700
+Message-ID: <dd18b0c30905121304k6df44362v76e8e7ae6da3b76f@mail.gmail.com>
+Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
+From: Justin Mattock <justinmattock@gmail.com>
+To: Evgeni Golov <sargentd@die-welt.net>
+Cc: Jiri Slaby
+	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Justin Mattock
+	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Linux Kernel Mailing List
+	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function to parse a struct iw_freq has a stupid bug,
-it returns NULL when the channel cannot be found at all,
-but NULL is supposed to mean "auto". Fix this by checking
-the return value of ieee80211_get_channel() and returning
-ERR_PTR(-EINVAL) if it returned NULL (channel not found).
 
-This fixes an issue where you could say (in IBSS mode)
-	iwconfig wlan0 channel 21
-and it would use channel 1 instead because that's the
-first available channel with IBSS allowed (which is what
-the "auto" setting uses).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext-compat.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+On Tue, May 12, 2009 at 10:46 AM, Evgeni Golov <sargentd@die-welt.net> wrote:
+> On Tue, 12 May 2009 07:28:04 -0700 Justin Mattock wrote:
+>
+>> > Same here with 2.6.30-rc4, b43 and either Cisco (MAC-Addr starts with
+>> > 00:40:96) or HP ProCurve (??? - they do WiFi? - MAC-Addr starts with
+>> > 00:1F:FE) APs. No encryption, quite noisy environment (University).
+>> >
+>> > No problem with ipw2200 (actually 2915) in the same hardware (Thinkpad
+>> > X31). Neither with the b43 and a standard Linksys WRT54GL (in the same!
+>> > noisy university-env).
+>> >
+>> > Regards
+>> > Evgeni
+>> >
+>> >
+>>
+>> are you able to connect?
+>> (or is the connection connecting but really
+>> poor quality?)
+>> over here 2.6.29-rc8 connects like
+>> theirs no tomorrow, as soon as
+>> I throw in 2.6.30-rc4 it just dead(although
+>> on some accounts I did get some kind of
+>> reaction, but not much, just what I see in dmesg).
+>
+> 2.6.29: fairly stable, even if not as good as with an intel card.
+> 2.6.30-rc4: tons of timeouts, may connect 1 in 100 tries, connection
+> will drop after some (short) time.
+>
+> --
+> Bruce Schneier Fact Number 79:
+> Bruce Schneier once decrypted a box of AlphaBits.
+>
 
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-05-08 09:13:39.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-05-08 09:36:54.000000000 +0200
-@@ -296,22 +296,34 @@ EXPORT_SYMBOL_GPL(cfg80211_wext_siwmlme)
- struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
- 					     struct iw_freq *freq)
- {
-+	struct ieee80211_channel *chan;
-+	int f;
-+
-+	/*
-+	 * Parse frequency - return NULL for auto and
-+	 * -EINVAL for impossible things.
-+	 */
- 	if (freq->e == 0) {
- 		if (freq->m < 0)
- 			return NULL;
--		else
--			return ieee80211_get_channel(wiphy,
--				ieee80211_channel_to_frequency(freq->m));
-+		f = ieee80211_channel_to_frequency(freq->m);
- 	} else {
- 		int i, div = 1000000;
- 		for (i = 0; i < freq->e; i++)
- 			div /= 10;
--		if (div > 0)
--			return ieee80211_get_channel(wiphy, freq->m / div);
--		else
-+		if (div <= 0)
- 			return ERR_PTR(-EINVAL);
-+		f = freq->m / div;
- 	}
- 
-+	/*
-+	 * Look up channel struct and return -EINVAL when
-+	 * it cannot be found.
-+	 */
-+	chan = ieee80211_get_channel(wiphy, f);
-+	if (!chan)
-+		return ERR_PTR(-EINVAL);
-+	return chan;
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_freq);
- 
+O.K. after trial and error reverting this:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=47afbaf5af9454a7a1a64591e20cbfcc27ca67a8;hp=853da11b94e674445e93660f47a5f0aeeea09623
 
+brings life back to the macbook with 2.6.30-rc4
+(not sure about the iphone anomaly though, I'll keep
+an eye on that)
+
+-- 
+Justin P. Mattock
 
