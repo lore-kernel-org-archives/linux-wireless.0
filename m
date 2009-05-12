@@ -1,78 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47372 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753308AbZEJAJV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49219 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbZELQpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 20:09:21 -0400
-Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
- reorder buffer
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090509080838.GA1206@jm.kir.nu>
-References: <20090505173512.349795688@atheros.com>
-	 <20090505173550.273830766@atheros.com>
-	 <1241709323.4903.25.camel@localhost.localdomain>
-	 <1241833703.4903.83.camel@localhost.localdomain>
-	 <20090509080838.GA1206@jm.kir.nu>
-Content-Type: text/plain
-Date: Sat, 09 May 2009 17:08:58 -0700
-Message-Id: <1241914138.2783.4.camel@localhost.localdomain>
+	Tue, 12 May 2009 12:45:43 -0400
+Subject: Re: [PATCH 6/6] ar9170: stop data queues on channel switch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200905121715.39702.chunkeey@web.de>
+References: <200905120109.09906.chunkeey@web.de>
+	 <1242110389.3873.53.camel@johannes.local>
+	 <200905121715.39702.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-pba6NrYf/t9UkLrnvrmd"
+Date: Tue, 12 May 2009 18:45:11 +0200
+Message-Id: <1242146711.5797.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
 
-> > so I finally got the debug output for you. Took only over a day :)
-> 
-> Thanks! Would you happen to have timing information available for these
-> (e.g., from klogd)? It looks like the AP is sending out an ADDBA Request
-> to update some parameters, but we currently ignore that request.
-> However, at least in this particular case, our RX reorder bug head_seq
-> matches with the ssn from the ADDBA Request, so I'm not sure whether
-> ignoring the ADDBA contents is really causing harm here (anyway, we
-> should really process these updates, too).
-> 
-> The timeouts on RX reorder frames look similar to what I have seen in my
-> tests and the workaround was indeed trying to address that type of
-> issue, so it is nice to hear that it helped in this case, too.
+--=-pba6NrYf/t9UkLrnvrmd
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-so I enabled timing information for dmesg and got another report. It is
-not exactly the same and I don't know how and why it happened.
+On Tue, 2009-05-12 at 17:15 +0200, Christian Lamparter wrote:
+> On Tuesday 12 May 2009 08:39:49 Johannes Berg wrote:
+> > On Tue, 2009-05-12 at 01:09 +0200, Christian Lamparter wrote:
+> >=20
+> > > +		if ((ar->tx_stats[i].len < ar->tx_stats[i].limit) &&
+> > > +		    (ieee80211_queue_stopped(ar->hw, i)))
+> > > +			ieee80211_wake_queue(ar->hw, i);
+> >=20
+> > There's no reason to test _stopped first, and doing so is racy.
+> uhh, agreed _stopped is not necessary, but where's the race condition?
 
-[  249.579036] phy0: AddBA: ssn=50, dialog_token=1 tid=0 timeout=0ba_policy=1
-[  249.579046] addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-[  249.579052] addba: 00 1c f0 62 88 5b 30 8f 03 00 01 02 10 00 00 20 
-[  249.579057] addba: 03 
-[  249.579073] Rx A-MPDU request on tid 0 result 0
-[  250.572022] phy0: AddBA: ssn=178, dialog_token=2 tid=0 timeout=0ba_policy=1
-[  250.572032] addba: d0 00 40 01 00 16 eb 05 46 5c 00 1c f0 62 88 5b 
-[  250.572038] addba: 00 1c f0 62 88 5b e0 8f 03 00 02 02 10 00 00 20 
-[  250.572042] addba: 0b 
-[  250.572048] phy0: RX reorder buf: head_seq=178 ssn=50 buf_size=64 stored_mpdu_num=0 timeout=0 index=0; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-[  250.572108] unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
-[  266.263651] Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-[  266.263659] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-[  266.263726] activated addBA response timer on tid 0
-[  266.265534] wrong addBA response token, tid 0
-[  267.263467] addBA response timer expired on tid 0
-[  267.263516] Stopping Tx BA session for 00:1c:f0:xx:xx:xx tid 0
-[  326.083081] Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-[  326.083097] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-[  326.083197] activated addBA response timer on tid 0
-[  326.088517] wrong addBA response token, tid 0
-[  327.080206] addBA response timer expired on tid 0
-[  327.080262] Stopping Tx BA session for 00:1c:f0:xx:xx:xx tid 0
+Well if _stopped returns false but you were just about to stop you're
+now racing against whoever is stopping.
 
-This kernel is running latest wireless-testing.git with debug patch and
-the disassoc change (for testing) from Johannes.
+johannes
 
-Regards
+--=-pba6NrYf/t9UkLrnvrmd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Marcel
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJKCaeTAAoJEODzc/N7+QmaMoEP/2UcXHvFRcfRUDpQGX9uDHQw
+F+HhA08eqJAIziu2U7QOZYfSRnP7S3wFQWuhv+1WQSysGCR/6dJiXEIPakmMM/39
+ZQwgQdBGzT0laADJg8UOSn6Y2mFz1lBMuwY1ehO40+RFc05flTHY9SGsvg4jEyqm
+KQKWJbhjunfPxUTGN5TkWtX34NGADmDcjkBx/KGdX1LifYYgOtHZdzoJzvUyodhU
+CjcC7XqZzfxSawCweOiD8clo9LFJghJeoqpUaR2rJrtZ4pscFhdqc5RLo6JzYXrh
+lhiZxgjkvOXf/v76uH9tJcJdnHq21XtYyxy9vbCrnUXebKex8AQDJ1Rm6gBjYXjv
+yPbQ5mydvD9++afOPy/OUzJn9dAXPvThrzhtdObewVgbRoNNX89icsBJw4Te8E3E
+8153lg2n7U6bts+v8XPUIzJZ9b+YtVAJIwRGaNZDg6wvWya5KijQi+1eNW+MWEWr
+GOG8txaMq5XM7h9blwgcARP/4f91kg5RcRkAwgxIY0PTrDNOjR/HyW3qMOd4ELmU
+30ODuDDFrfuNecGvDe+nYeAsZfMhS3jjKSQQJhlUqWCudDO3yAIHvyEGBY8v/U7E
+HEHGwb+PevtKssNQuReJuEA0Y+SvDe/PQjcaFdT8LAYdUK6BZ/la2I4pTzJXNe1/
+4HCKD//v6rZSVmSgs+QR
+=yWAj
+-----END PGP SIGNATURE-----
+
+--=-pba6NrYf/t9UkLrnvrmd--
 
