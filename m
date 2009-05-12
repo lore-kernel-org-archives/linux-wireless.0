@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41877 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbZEDItB (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53661 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752866AbZELKpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 04:49:01 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: [PATCH 1/6] add support for parsing ERP information element
-Date: Mon,  4 May 2009 01:48:42 -0700
-Message-Id: <1241426927-14902-1-git-send-email-marcel@holtmann.org>
+	Tue, 12 May 2009 06:45:10 -0400
+Subject: [PATCH] cfg80211: fix a couple of bugs with key ioctls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>
+Content-Type: text/plain
+Date: Tue, 12 May 2009 12:44:37 +0200
+Message-Id: <1242125077.4331.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- scan.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+There are a few small bugs/oversights in the key handling
+code I wrote:
+ * SIOCSIWENCODE should default to setting key 0 if no
+   default key is set already and no index is given,
+ * key removal should not require key material,
+ * SIOCSIWENCODEEXT should default to changing the default
+   management key if no index is given.
 
-diff --git a/scan.c b/scan.c
-index 91e94ed..d4a4832 100644
---- a/scan.c
-+++ b/scan.c
-@@ -80,11 +80,27 @@ static void print_ign(unsigned char type, unsigned char len, unsigned char *data
- 	/* ignore for now, not too useful */
- }
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/wext-compat.c |   14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
+
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-05-12 12:38:41.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-05-12 12:38:59.000000000 +0200
+@@ -557,7 +557,7 @@ int cfg80211_wext_siwencode(struct net_d
+ 	if (idx == 0) {
+ 		idx = wdev->wext.default_key;
+ 		if (idx < 0)
+-			return -EINVAL;
++			idx = 0;
+ 	} else if (idx < 1 || idx > 4)
+ 		return -EINVAL;
+ 	else
+@@ -580,7 +580,7 @@ int cfg80211_wext_siwencode(struct net_d
+ 		params.cipher = WLAN_CIPHER_SUITE_WEP40;
+ 	else if (erq->length == 13)
+ 		params.cipher = WLAN_CIPHER_SUITE_WEP104;
+-	else
++	else if (!remove)
+ 		return -EINVAL;
  
-+static void print_erp(unsigned char type, unsigned char len, unsigned char *data)
-+{
-+	if (data[0] == 0x00)
-+		return;
-+
-+	printf("\tERP:");
-+	if (data[0] & 0x01)
-+		printf(" NonERP_Present");
-+	if (data[0] & 0x02)
-+		printf(" Use_Protection");
-+	if (data[0] & 0x04)
-+		printf(" Barker_Preamble_Mode");
-+	printf("\n");
-+}
-+
- static const printfn ieprinters[] = {
- 	[0] = print_ssid,
- 	[1] = print_supprates,
- 	[3] = print_ds,
- 	[5] = print_ign,
-+	[42] = print_erp,
- 	[50] = print_supprates,
- };
- 
--- 
-1.6.0.6
+ 	return cfg80211_set_encryption(rdev, dev, NULL, remove,
+@@ -640,13 +640,9 @@ int cfg80211_wext_siwencodeext(struct ne
+ 	idx = erq->flags & IW_ENCODE_INDEX;
+ 	if (cipher == WLAN_CIPHER_SUITE_AES_CMAC) {
+ 		if (idx < 4 || idx > 5) {
+-			/*
+-			 * XXX: Only wpa_supplicant ever used this
+-			 *	can we still change the ABI a little
+-			 *	so we do not need to keep track of
+-			 *	the default key?
+-			 */
+-			return -EINVAL;
++			idx = wdev->wext.default_mgmt_key;
++			if (idx < 0)
++				return -EINVAL;
+ 		} else
+ 			idx--;
+ 	} else {
+
 
