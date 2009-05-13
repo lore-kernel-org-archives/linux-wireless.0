@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:42520 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451AbZEYTvV (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:40872 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756241AbZEMOjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2009 15:51:21 -0400
-From: Christian Lamparter <chunkeey@web.de>
-Date: Mon, 25 May 2009 21:51:19 +0200
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/4 v2] ar9170: fix LED power state handling
+	Wed, 13 May 2009 10:39:19 -0400
+Date: Wed, 13 May 2009 17:38:59 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Rui Paulo <rpaulo@freebsd.org>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: Interop testing of 802.11s
+Message-ID: <20090513143859.GA28358@jm.kir.nu>
+References: <64642731-8767-4063-9479-E6F2E5222EB6@freebsd.org> <1242221616.11182.4.camel@localhost.localdomain> <E9323507-2720-4F87-A666-6CB61C084F9B@freebsd.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200905252151.19880.chunkeey@web.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E9323507-2720-4F87-A666-6CB61C084F9B@freebsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a minor visual bug in the led code, which
-left the LED in the wrong power state when it was toggled
-in a _unexpected_ way (e.g: enabling the LED twice).
+On Wed, May 13, 2009 at 03:06:18PM +0100, Rui Paulo wrote:
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
-index 1247dcb..396b240 100644
---- a/drivers/net/wireless/ath/ar9170/ar9170.h
-+++ b/drivers/net/wireless/ath/ar9170/ar9170.h
-@@ -91,6 +91,7 @@ struct ar9170_led {
- 	struct led_classdev l;
- 	char name[32];
- 	unsigned int toggled;
-+	bool last_state;
- 	bool registered;
- };
- 
-diff --git a/drivers/net/wireless/ath/ar9170/led.c b/drivers/net/wireless/ath/ar9170/led.c
-index 341cead..3c8a572 100644
---- a/drivers/net/wireless/ath/ar9170/led.c
-+++ b/drivers/net/wireless/ath/ar9170/led.c
-@@ -101,9 +101,12 @@ static void ar9170_led_brightness_set(struct led_classdev *led,
- 	struct ar9170_led *arl = container_of(led, struct ar9170_led, l);
- 	struct ar9170 *ar = arl->ar;
- 
--	arl->toggled++;
-+	if (arl->last_state != !!brightness) {
-+		arl->toggled++;
-+		arl->last_state = !!brightness;
-+	}
- 
--	if (likely(IS_ACCEPTING_CMD(ar) && brightness))
-+	if (likely(IS_ACCEPTING_CMD(ar) && arl->toggled))
- 		queue_delayed_work(ar->hw->workqueue, &ar->led_work, HZ/10);
- }
- 
+> I believe more recent drafts have changed some small things, namely OUIs 
+> and IEs.
+
+Now that IEEE 802.11s/D3.0 actually passed the 75% threshold in the IEEE
+802.11 working group ballot, it would be nice to get the implementation
+in Linux updated to match with the latest draft. I did review most of
+the draft, but have not yet checked how close the current Linux
+implementation is to this. I'm not sure when I would have enough time to
+work on this, so I would not mind if there were other people showing up
+with interest to work on this.. ;-)
+
+Being able to run interoperability tests with two independent
+implementations would obviously be quite useful both from the view point
+of getting better implementations and also to be able to figure out if
+there are still unclear areas in the draft that would need to be cleared
+up before the amendment to the standard gets published.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
