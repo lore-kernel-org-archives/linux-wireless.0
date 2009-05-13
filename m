@@ -1,94 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763392AbZE3Rhq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 13:37:46 -0400
-Received: by mail-ew0-f176.google.com with SMTP id 24so6938274ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:48 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC v2 13/23] orinoco: Change set_tkip to use orinoco_private instead of hermes_t
-Date: Sat, 30 May 2009 18:36:47 +0100
-Message-Id: <1243705017-8784-14-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
-References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:47314 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753256AbZEMQ2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2009 12:28:53 -0400
+Date: Wed, 13 May 2009 18:28:46 +0200
+From: Pierre Ossman <pierre@ossman.eu>
+To: Luis Galdos <luis.galdos@digi.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Pierre Ossman <drzeus@drzeus.cx>
+Subject: Re: [LIBERTAS-SDIO]  Support for single transfer blocks?
+Message-ID: <20090513182846.044fc461@mjolnir.ossman.eu>
+In-Reply-To: <1242223408.11182.34.camel@localhost.localdomain>
+References: <4A08392F.70108@digi.com>
+	<20090512231150.bc0c65c6.akpm@linux-foundation.org>
+	<1242223408.11182.34.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-7307-1242232130-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hw.h does not include hermes.h, and none of the other functions
-requires types from that file. Also hermes_t is a (discouraged) typedef
-so we can't add a forward declaration. Therefore change this function to
-use orinoco_private.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/hw.c   |    5 +++--
- drivers/net/wireless/orinoco/hw.h   |    4 ++--
- drivers/net/wireless/orinoco/wext.c |    3 +--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+--=_freyr.ossman.eu-7307-1242232130-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-index 4a26d68..eaa89d3 100644
---- a/drivers/net/wireless/orinoco/hw.c
-+++ b/drivers/net/wireless/orinoco/hw.c
-@@ -677,8 +677,8 @@ int __orinoco_hw_setup_enc(struct orinoco_private *priv)
-  * rsc must be 8 bytes
-  * tsc must be 8 bytes or NULL
-  */
--int __orinoco_hw_set_tkip_key(hermes_t *hw, int key_idx, int set_tx,
--			      u8 *key, u8 *rsc, u8 *tsc)
-+int __orinoco_hw_set_tkip_key(struct orinoco_private *priv, int key_idx,
-+			      int set_tx, u8 *key, u8 *rsc, u8 *tsc)
- {
- 	struct {
- 		__le16 idx;
-@@ -688,6 +688,7 @@ int __orinoco_hw_set_tkip_key(hermes_t *hw, int key_idx, int set_tx,
- 		u8 rx_mic[MIC_KEYLEN];
- 		u8 tsc[IW_ENCODE_SEQ_MAX_SIZE];
- 	} __attribute__ ((packed)) buf;
-+	hermes_t *hw = &priv->hw;
- 	int ret;
- 	int err;
- 	int k;
-diff --git a/drivers/net/wireless/orinoco/hw.h b/drivers/net/wireless/orinoco/hw.h
-index 89277de..84c108c 100644
---- a/drivers/net/wireless/orinoco/hw.h
-+++ b/drivers/net/wireless/orinoco/hw.h
-@@ -35,8 +35,8 @@ int orinoco_hw_get_act_bitrate(struct orinoco_private *priv, int *bitrate);
- int __orinoco_hw_set_wap(struct orinoco_private *priv);
- int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv);
- int __orinoco_hw_setup_enc(struct orinoco_private *priv);
--int __orinoco_hw_set_tkip_key(hermes_t *hw, int key_idx, int set_tx,
--			      u8 *key, u8 *rsc, u8 *tsc);
-+int __orinoco_hw_set_tkip_key(struct orinoco_private *priv, int key_idx,
-+			      int set_tx, u8 *key, u8 *rsc, u8 *tsc);
- int orinoco_clear_tkip_key(struct orinoco_private *priv, int key_idx);
- int __orinoco_hw_set_multicast_list(struct orinoco_private *priv,
- 				    struct dev_addr_list *mc_list,
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index 3f08142..74fdfce 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -1079,7 +1079,6 @@ static int orinoco_ioctl_set_encodeext(struct net_device *dev,
- 
- 		case IW_ENCODE_ALG_TKIP:
- 		{
--			hermes_t *hw = &priv->hw;
- 			u8 *tkip_iv = NULL;
- 
- 			if (!priv->has_wpa ||
-@@ -1094,7 +1093,7 @@ static int orinoco_ioctl_set_encodeext(struct net_device *dev,
- 			if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID)
- 				tkip_iv = &ext->rx_seq[0];
- 
--			err = __orinoco_hw_set_tkip_key(hw, idx,
-+			err = __orinoco_hw_set_tkip_key(priv, idx,
- 				 ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY,
- 				 (u8 *) &priv->tkip_key[idx],
- 				 tkip_iv, NULL);
--- 
-1.6.0.6
+> > On Mon, 11 May 2009 16:41:51 +0200 Luis Galdos <luis.galdos@digi.com> w=
+rote:
+> > >=20
+> > > * The transfer of Ethernet-frames works only if the "complete" frame =
+is smaller than the=20
+> > > block size of the SDIO-host. By larger packages, the SD8686 doesn't g=
+enerate the expected=20
+> > > IRQ (cause it expected a multiple transfer) and the driver detects a =
+timeout.
+> > >=20
 
+Unfortunately, the libertas chip cannot support your host as it
+requires everything to be done in a single transaction. So I'm afraid
+you'll have to look at another host controller or another wifi chip.
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.ossman.eu-7307-1242232130-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkoK9UIACgkQ7b8eESbyJLg9zACggIzHgig74u0ITvYVna8Z7pIw
+mBIAoPGhYAkxdhJT1IchqcX7g3CNO6MP
+=/U4z
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-7307-1242232130-0001-2--
