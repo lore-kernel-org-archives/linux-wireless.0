@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:44373 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbZEURha convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:49788 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759848AbZEMSvp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 13:37:30 -0400
-Received: by gxk10 with SMTP id 10so2226934gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 10:37:31 -0700 (PDT)
+	Wed, 13 May 2009 14:51:45 -0400
+Received: by pzk13 with SMTP id 13so343764pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 11:51:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <60ce8d250905201700v13fe1394l6a9704bb02be3807@mail.gmail.com>
-References: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
-	 <20090519175336.GF2691@tuxdriver.com>
-	 <60ce8d250905200748p5984df0bl1984f0d3bdaf79b5@mail.gmail.com>
-	 <1242854588.7048.13.camel@localhost.localdomain>
-	 <60ce8d250905201700v13fe1394l6a9704bb02be3807@mail.gmail.com>
-Date: Thu, 21 May 2009 10:37:31 -0700
-Message-ID: <45e8e6c40905211037n2e5b8ea9ka85517e127444f2d@mail.gmail.com>
-Subject: Re: Throughput is not changed when setting to a much higher bit rate
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Dongas <dongas86@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <20090513182524.GF2680@tuxdriver.com>
+References: <20090513151439.GA28476@hash.localnet>
+	 <20090513182524.GF2680@tuxdriver.com>
+Date: Wed, 13 May 2009 14:51:46 -0400
+Message-ID: <b6c5339f0905131151u5dd10673pbe3cbf0fe0fed1a9@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: fix exp off-by-one when computing
+	OFDM delta slope
+From: Bob Copeland <me@bobcopeland.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, forrest@hifulltech.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2009 at 5:00 PM, Dongas <dongas86@gmail.com> wrote:
-> 2009/5/21 Dan Williams <dcbw@redhat.com>:
->> On Wed, 2009-05-20 at 22:48 +0800, Dongas wrote:
->>> 2009/5/20 John W. Linville <linville@tuxdriver.com>:
->>> > On Wed, May 20, 2009 at 01:48:32AM +0800, Dongas wrote:
->>> >
->>> >> Why the bandwidth is not changed when bit rate is changed to 11Mb/s?
->>> >> Any thing wrong?
->>> >
->>> > More errors at higher bit rate, resulting in more retries?  Just a
->>> > thought...
->>> >
->>> Is there a quick way to verify this possible reason? I'm using Libertas driver.
->>>
->>> BTW, my sdio host driver is using polling mode to handle SDIO IRQ.
->>> Could this be the cause of such poor performance?
->>
->> Definitely.  With libertas, the largest class of issues by *far* that
->> we've seen are controller related.  I seem to recall that I've pulled
->> about 6Mbps through the card using a normal Ricoh controller from a
->> Fujitsu laptop.  I can recheck that.
+On Wed, May 13, 2009 at 2:25 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> That's fine. =A0But what about this last bit?
+>
+> =A0 =A0 =A0 =A0http://bugzilla.kernel.org/show_bug.cgi?id=3D13077#c6
+>
+> Is that not needed?
 
-For what it's worth, we've seen higher throughput: 20Mbps UDP and
-14.7Mbps TCP using SDIO on a ThinkPad with the Ricoh controller.
+I think it is needed, but I checked back through 2.6.27 and it has the
+same (probably buggy) code, so I think that's less urgent.  Also it
+conflicts with the race condition fixes I sent earlier so it is better
+in a separate patch.
 
-  -Andrey
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
