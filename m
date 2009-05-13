@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.highlandsun.com ([70.87.222.79]:39340 "EHLO
-	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490AbZEPAOt (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:46852 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752334AbZEMAuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 20:14:49 -0400
-Message-ID: <4A0E0579.70507@highlandsun.com>
-Date: Fri, 15 May 2009 17:14:49 -0700
-From: Howard Chu <hyc@highlandsun.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org
-Subject: Re: orinoco_cs and WPA-EAP?
-References: <4A065AFD.8000604@highlandsun.com>	 <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>	 <4A0DC4A9.8050505@highlandsun.com>  <4A0DD39D.6070001@gmail.com> <1242429170.10933.30.camel@localhost.localdomain>
-In-Reply-To: <1242429170.10933.30.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 12 May 2009 20:50:39 -0400
+Received: by ewy24 with SMTP id 24so434442ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 17:50:38 -0700 (PDT)
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242170403.14227.18.camel@johannes.local>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+	 <1241374060.13562.37.camel@johannes.local>
+	 <1241387163.10486.6.camel@maxim-laptop>
+	 <1241421545.6866.2.camel@johannes.local>
+	 <1242161643.26484.2.camel@maxim-laptop>
+	 <1242169824.5146.31.camel@maxim-laptop>
+	 <1242169934.14227.16.camel@johannes.local>
+	 <1242170080.5146.32.camel@maxim-laptop>
+	 <1242170403.14227.18.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 13 May 2009 03:50:33 +0300
+Message-Id: <1242175833.5154.2.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Fri, 2009-05-15 at 21:42 +0100, Dave wrote:
->> That message is printed in response to a firmware interrupt. It
->> indicates "an unsolicited Frame Structure cannot be generated... because
->> there is not enough Frame Structure buffer space available".
->>
->> I suspect that the beacons/probe responses/scan results are either too
->> large/too frequent for the card to handle, or the firmware can't
->> decipher them.
->>
->> Before enabling wpa_supplicant, can you try scan for your AP (as root):
->>
->> iwlist ethX scan essid YYYYY
+On Wed, 2009-05-13 at 01:20 +0200, Johannes Berg wrote:
+> On Wed, 2009-05-13 at 02:14 +0300, Maxim Levitsky wrote:
+> 
+> > > So it's a bug in iwlwifi, it neither rejects nor executes a scan when in
+> > > rfkill.
+> > But I use disable_hw_scan=1 !
+> 
+> Load the driver with debug=1 and see what it shows then. I don't think
+> there's a way for mac80211 to get stuck.
+> 
+> Also you could stick some printks into
+> net/mac80211/scan.c:ieee80211_scan_work() at strategic places and see...
+> but if they never happen you haven't turned off hw scan.
+You know, you are right, it turns out that hw scan was active (due to
+all the experimentation, I forgot to turn it off...) and it is obvious
+that iwlwifi has rfkill related bugs there, I handle that later.
 
-That works fine. In fact, just "iwlist scan" returns the same result - only 
-the info for my AP is returned. (There are at least 6 APs visible from an 
-another laptop sitting nearby.)
+But without hw scan, something is still there, I sooneer or later will
+understand.
 
->> I'm interested in what it returns, and whether dmesg reports 'Ext scan
->> results too large' or something similar.
+Best regards, and sorry
+	Maxim Levitsky
 
-No, it just continues with the stream of "frame lost" messages:
 
-eth2: Information frame lost. (10 times, followed by 1
-__ratelimit: 2 callbacks suppressed  (then 10 more frame lost messages, and so on)
 
-The number in "callbacks suppressed" varies pretty widely, from 2 to 32.
 
-> Yeah a lot of APs will stuff a ton of info into the IEs these days,
-> including WPS, WPA, 11d, blah blah.  It's not out of the question that
-> the firmware writers didn't anticipate or handle large numbers of IEs in
-> the beacons.  That said, what firmware version is he using?  Maybe
-
-Using 9.48, I so far haven't found 9.52 for download anywhere.
-
-> Apple's firmware fixes that or something?  Would be interesting if the
-> reporter could boot up an old iBook with an Airport card and see if that
-> works.
-
--- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
