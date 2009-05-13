@@ -1,48 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caiajhbdccac.dreamhost.com ([208.97.132.202]:46752 "EHLO
-	spunkymail-a2.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756990AbZEMVIr (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:59129 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754010AbZEMXI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 17:08:47 -0400
-From: Karl Hiramoto <karl@hiramoto.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Karl Hiramoto <karl@hiramoto.org>
-Subject: [PATCH] iw/Makefile use pkg-config if passed from environmental var. Makes cross compiling easier.
-Date: Wed, 13 May 2009 23:08:35 +0200
-Message-Id: <1242248915-20372-1-git-send-email-karl@hiramoto.org>
+	Wed, 13 May 2009 19:08:29 -0400
+Received: by bwz22 with SMTP id 22so963097bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 16:08:29 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <1241958023.6051.14.camel@maxim-laptop>
+	 <43e72e890905101133w2314250s7b95a8c100e83cce@mail.gmail.com>
+	 <1241984076.6051.18.camel@maxim-laptop>
+	 <43e72e890905101236h2cd24edewae808da384ae48dd@mail.gmail.com>
+	 <1242140728.5626.3.camel@maxim-laptop>
+	 <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
+	 <1242149671.5210.2.camel@maxim-laptop>
+	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+	 <1242166051.26484.7.camel@maxim-laptop>
+	 <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 14 May 2009 02:08:24 +0300
+Message-Id: <1242256104.3241.4.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cross-compiling with buildroot, this patch allows iw to be compiled using the buildroot pkg-config, and removes the requirement of pkg-config being installed on the host machine.  You can pass the full path the the pkg-config binary as PKG_CONFIG variable.
+On Wed, 2009-05-13 at 14:28 -0700, Luis R. Rodriguez wrote:
+> On Tue, May 12, 2009 at 3:07 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> > On Tue, 2009-05-12 at 15:00 -0700, Luis R. Rodriguez wrote:
+> >> On Tue, May 12, 2009 at 10:34 AM, Maxim Levitsky
+> >> <maximlevitsky@gmail.com> wrote:
+> >> > On Tue, 2009-05-12 at 10:24 -0700, Luis R. Rodriguez wrote:
+> >> >> On Tue, May 12, 2009 at 8:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> >> >> > On Sun, 2009-05-10 at 12:36 -0700, Luis R. Rodriguez wrote:
+> >> >> >> On Sun, May 10, 2009 at 12:34 PM, Maxim Levitsky
+> >> >> >> <maximlevitsky@gmail.com> wrote:
+> >> >> >> > On Sun, 2009-05-10 at 11:33 -0700, Luis R. Rodriguez wrote:
+> >> >> >> >> On Sun, May 10, 2009 at 5:20 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> >> >> >> >> > On Wed, 2009-05-06 at 16:34 -0400, Pavel Roskin wrote:
+> >> >> >> >> >> gdb /lib/modules/`uname -r`/kernel/net/wireless/cfg80211.ko
+> >> >> >> >> >
+> >> >> >> >> > I have recompiled the kernel with debugging info.
+> >> >> >> >> >
+> >> >> >> >> > This is new backtrace:
+> >> >> >
+> >> >> > Ok, here is what I found:
+> >> >> >
+> >> >> > The real BUG_ON that fires up is at
+> >> >> >
+> >> >> > wireless/reg.c: __set_regdom: BUG_ON(!country_ie_regdomain)
+> >> >> >
+> >> >> > Confirmed by replacing it with printk.
+> >> >> >
+> >> >> >
+> >> >> > I attach a beacon sample that triggers this:
+> >> >>
+> >> >> Thanks for that. Was this from wireless-testing? If so as of what SHA1
+> >> >> sum? Can you provide steps to reproduce? What AP? What card?
+> >> > wireless-testing, b2382a4aeff07a481ccf860e4f716b48b52e3781
+> >>
+> >> That HEAD is buggy, its missing a fix for the minstrel/pid fix.
+> >> Although since you are running iwl3945 it explains why you haven't
+> >> seen that oops.
+> >>
+> >> Will look into this -- thanks. How easy can you reproduce BTW? Does it
+> >> happen immediately upon assoc? Does it happen with other APs at the
+> >> university?
+> > Happens always when I try to associate.
+> 
+> Great so it will be easy to confirm a fix. Can you please try the 4
+> patches I just posted? I haven't finished reviewing your case but so
+> far from the pcap review (which was really helpful) I don't see
+> anything funky from the beacon except that the FCS is bad. But that
+> shouldn't matter.
+This is a fault of iwlwifi monitor mode. it always reports 0 there.
 
-Signed-off-by: Karl Hiramoto <karl@hiramoto.org>
----
- Makefile |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> Anyway please try the patches I posted and I'll finish reviewing this
+> in the meantime.
+I don't see anything yet.
 
-diff --git a/Makefile b/Makefile
-index 6d232c5..56a11e6 100644
---- a/Makefile
-+++ b/Makefile
-@@ -5,6 +5,7 @@ MAKEFLAGS += --no-print-directory
- PREFIX ?= /usr
- BINDIR ?= $(PREFIX)/bin
- MANDIR ?= $(PREFIX)/share/man
-+PKG_CONFIG ?= pkg-config
- 
- MKDIR ?= mkdir -p
- INSTALL ?= install
-@@ -16,8 +17,8 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
- OBJS = iw.o genl.o event.o info.o phy.o interface.o ibss.o station.o util.o mesh.o mpath.o scan.o reg.o version.o reason.o status.o
- ALL = iw
- 
--NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
--NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
-+NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
-+NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
- 
- ifeq ($(NL1FOUND),Y)
- NLLIBNAME = libnl-1
--- 
-1.6.0.6
+> 
+> > Other APs, I don't see many other APs there, (you mean other essids,
+> > right?)
+> 
+> I meant other APs at the University on the same network.
+This happens with all (I obviously couldn't test them all...) AP here.
+(more correctly to say there were no ap that didn't trigger that bug)
+I now converted that BUG_ON to printk, so I can  now use crda, and still
+see if this bug exists.
+
+
+> 
+> > Most of them are encrypted anyway.
+> 
+> OK this should not matter.
+> 
+>   Luis
+
+
+Thanks a lot.
+	Best regards,
+		Maxim Levitsky
+
+
 
