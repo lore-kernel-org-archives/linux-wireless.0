@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:11373 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbZEDSax (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754055AbZEMWJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 14:30:53 -0400
-Received: by yx-out-2324.google.com with SMTP id 3so2318094yxj.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 11:30:53 -0700 (PDT)
-Message-ID: <49FF3453.7020802@gmail.com>
-Date: Mon, 04 May 2009 14:30:43 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: report operating frequency rather than current
-References: <1241452330.8683.49.camel@johannes.local>	 <49FF2AE5.6040104@gmail.com> <1241460130.8683.85.camel@johannes.local>	 <49FF2FE8.8010004@gmail.com> <1241460944.8683.92.camel@johannes.local>
-In-Reply-To: <1241460944.8683.92.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 13 May 2009 18:09:30 -0400
+Subject: Re: [PATCH 4/4] cfg80211: fix race between core hint and driver's
+ custom apply
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+In-Reply-To: <1242248682-22051-5-git-send-email-lrodriguez@atheros.com>
+References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com>
+	 <1242248682-22051-5-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-drtdkudUjAYAq/+dw7WD"
+Date: Thu, 14 May 2009 00:08:59 +0200
+Message-Id: <1242252539.10076.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2009-05-04 at 14:11 -0400, Richard Farina wrote:
->
->   
->> Yes, and at what point does it seem like a good idea to hide the channel 
->> the wifi card is on?  If I set channel 11 and it is scanning instead of 
->> locked on channel 11 then I should see the current channel the hardware 
->> is on.  This seems like an aweful idea to me, granted, it may help a few 
->> people that don't understand how scanning works, but hiding the truth is 
->> never a good idea. NACK.
->>     
->
-> It's not really about hiding the truth. Besides, many many devices are
-> _already_ "hiding the truth" (to use your words) because they do
-> scanning in firmware and you never know what channel they're on (e.g.
-> all Intel wireless hardware).
->
-> I think it's completely pointless for us to reply to the question "what
-> channel am I on" with the answer "currently the receiver is tuned to
-> 132", when we can say "you're associated to a network on channel 11".
->
->   
-And if the card claims to be associated but ends up stuck on another 
-channel?  I can't see a good reason for this at all but if no one agrees 
-with me then it is well without your power to simply overrule me.
 
-I think it is an awful idea, and intel being broken isn't an excuse to 
-break everything else.  If the card isn't on the right channel because 
-of some random failure this patch ensures there is no way to 
-troubleshoot.  If you want to display current channel that is the 
-hardware channel, if you want to display "Channel the AP I'm associated 
-to is on" then call it something other than "Current Channel"
+--=-drtdkudUjAYAq/+dw7WD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-My 0.02.
+On Wed, 2009-05-13 at 17:04 -0400, Luis R. Rodriguez wrote:
 
-Thanks,
-Rick Farina
+>  	queue_regulatory_request(request);
+> =20
+> +	/*
+> +	 * This ensures last_request is populated once modules
+> +	 * come swinging in and calling regulatory hints and
+> +	 * wiphy_apply_custom_regulatory().
+> +	 */
+> +	flush_scheduled_work();
+> +
 
-> After all, we don't unset the SSID/BSSID when scanning either, even
-> though we're currently not talking to the AP.
->
-> johannes
->   
+Umm, this is a little stupid, first you queue it and then you flush the
+workqueue... Why not call the function that runs off the workqueue
+directly?
+
+johannes
+
+--=-drtdkudUjAYAq/+dw7WD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKC0TzAAoJEODzc/N7+QmalmQP/0CL3hFaF3JBD6U5Jh5wtKAc
+mdi0m2HTBfvC1cPhC0h2zJQ9OLMAUmqL4ffppPYXWK7EuhL8xjXaixCtqXoQb0Oj
+sp7s/PI4zRkHLsEXXNzg4LvU4RAppIefog4VbwaMPGIVh/jK435mjhCvpvjHVqz5
+qc64B+E1lrTIQlEQxTGuB9ZqB+57LIoJYDPASnWUHyUROygI9yHguLXk9ONs1PBc
+x+C9J7HFqKcA5NpUD0K77nN16ZCa70lZl/+P/eAScDjaby12JWhb5y0oTjRl2E5j
+Obtu1QqzarKSCpGm7KzItGmOrb4nRo/x8RxGaA6OOMZJMngumc5vrrVTlpJtyHnn
+5gy0YKDfPoViAZxdO2rQymwaDlEc2WCCW7/VLvuf7oSZEqOP75ds85s9EkJHOs0G
+IJEcXq3q0T/MaMUGzVBmoL9eVE8dw4DJTrEEghH1zynjkIckPBhrHkq4to9GnpCD
+8n5LjzqugAEj+tlr0CaEMo/0IFxaiWYSBHNQGOwh/c+Dgk5ugvlFLZ8SFDWezg7w
+wcydCDqEwIKkJFJhrVbcRwScL5Gnjr7fLQS9EqZIq/nAtpXgnPGS0PFkxerVZs6P
+lFnWamrh62ctLVAWIpa0VIp7ZlSzK9FSyq3wVGoRbdlrT0aS7dnbZ7OreKGHHgV7
+YgIGWX4bwg+4+5eWmqWk
+=gsIG
+-----END PGP SIGNATURE-----
+
+--=-drtdkudUjAYAq/+dw7WD--
 
