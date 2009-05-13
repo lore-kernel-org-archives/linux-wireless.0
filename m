@@ -1,61 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:61333 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbZEaNvJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34092 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759221AbZEMKu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 09:51:09 -0400
-Received: by bwz22 with SMTP id 22so6992727bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 06:51:10 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: alan-jenkins@tuffmail.co.uk
-In-Reply-To: <1243524688.10632.0.camel@johannes.local>
-References: <1243524688.10632.0.camel@johannes.local>
-Date: Sun, 31 May 2009 14:51:09 +0100
-Message-ID: <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 13 May 2009 06:50:28 -0400
+Subject: Re: [RFT v9] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+References: <1242030669.6930.10.camel@johannes.local>
+	 <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zue64EGGvH4Lx7wYLnQH"
+Date: Wed, 13 May 2009 12:49:56 +0200
+Message-Id: <1242211796.29288.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/28/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> The new code added by this patch will make rfkill create
-> a misc character device /dev/rfkill that userspace can use
-> to control rfkill soft blocks and get status of devices as
-> well as events when the status changes.
->
-> Using it is very simple -- when you open it you can read
-> a number of times to get the initial state, and every
-> further read blocks (you can poll) on getting the next
-> event from the kernel. The same structure you read is
-> also used when writing to it to change the soft block of
-> a given device, all devices of a given type, or all
-> devices.
->
-> This also makes CONFIG_RFKILL_INPUT selectable again in
-> order to be able to test without it present since its
-> functionality can now be replaced by userspace entirely
-> and distros and users may not want the input part of
-> rfkill interfering with their userspace code. We will
-> also write a userspace daemon to handle all that and
-> consequently add the input code to the feature removal
-> schedule.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-How should userspace test CONFIG_RFKILL_INPUT to determine whether
-it's safe to start the daemon?  With the old core, debian-eeepc
-scripts check if the module rfkill-input exists (which should work
-even if it's built in).  If it exists, the scripts don't perform any
-rfkill actions.  (Yeah, according to the doc this is not allowed
-because the scripts don't use "claim", but you can see how it's
-useful).
+--=-zue64EGGvH4Lx7wYLnQH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The new rfkill-input isn't a module, so I'm not sure how your daemon
-would test for it.
+On Tue, 2009-05-12 at 15:09 +0100, Alan Jenkins wrote:
 
-Thanks
-Alan
+> I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
+> Somehow, it triggers an OOPS
+>=20
+> Function: req_reg_info_regd
+> Process: modprobe
+>=20
+> Call trace:
+> wiphy_apply_custom_regulatory
+> ath5k_regd_init
+> ath5k_reg_notifier
+> ath5k_pci_probe
+> ...
+>=20
+> Photo: <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#533493685=
+7267342674>
+>=20
+> The kernel then hangs later on in the boot process.  It responds to
+> SysRq, but does not echo normal keypresses.  SysRq+P shows that the
+> kernel is in the idle task.  I left it for three minutes, but I didn't
+> get any trace from the hung task detector or soft lockup detector.
+>=20
+> At first I thought it must be a problem with wireless-testing.
+> However, it went away when I eventually tried un-applying the rfkill
+> rewrite patch.
+
+Confusing, but I think the stacktrace is just bogus. Can you recompile
+your kernel with CONFIG_FRAME_POINTER please?
+
+johannes
+
+--=-zue64EGGvH4Lx7wYLnQH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKCqXMAAoJEODzc/N7+Qmar0IP/RVU12XrTb9godggpXMAxBBo
+borPkX0VCn4e2W4U51bjlPlVNS6BhXY3DdHOjpDcC8bRmm+FJxaJEgr483CNZckT
+PnPk96QgdCwv0YdM8LAGQt4xOQvfslbKHFQaORmZ/EpQ5Io6E80vCODoHGJFQ1PP
+lKAmL3EJcKUwPySi7kn8f6HlV4wX5P+twB8k7UwkROdwY2hhmnrz0B78aEi+m6lr
+Y29nSrT7j4g64Ta1Qwe8DDQQ39M0KZdNLNnjMkSzozpLpmq9rVPUfMQD7kTfGrIz
+arEhlvAXLSBzC4lu548Jm27RMIz0HvDBkR/xUH9TuP0EYMrTAGMIOzBoEuRRBi2b
+0SGsaWHR7xD1QYKuOxYEPJ1t1Jh93nylxi54GiBRm8VXreWL+0SSzyMdJbv8dahp
+tEqchu3YtQWq2E+Qt3XAe36gJqX3t3XLiPdvqjngJv4ko71qCzn3P4F/nr2wMyE1
+Lch5e/7SvaLj1D+qy0dbFyUeKt15fqkU06goxn6wBqqHnq2j/dAuLvXULyb+odoj
+XmNnE/A8Mp1q3y6TDetCqlNs8keUT3QEt3ALVBXzZCnyd3cdRUuafNbRo5U8HttZ
+DvNXhD7oMKi32EGPq20yOHAzImBK7tYehQUjbERONbtMy59+Tbpcsn0bKwhUzicZ
+SYADytacJ3/1tj0jP/CJ
+=loKa
+-----END PGP SIGNATURE-----
+
+--=-zue64EGGvH4Lx7wYLnQH--
+
