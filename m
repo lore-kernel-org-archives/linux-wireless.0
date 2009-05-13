@@ -1,169 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54561 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754625AbZEERf5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46407 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761931AbZEMXOS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 13:35:57 -0400
-Message-Id: <20090505173550.273830766@atheros.com>
-References: <20090505173512.349795688@atheros.com>
-Date: Tue, 05 May 2009 20:35:14 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 2/3] mac80211: Add a timeout for frames in the RX reorder buffer
+	Wed, 13 May 2009 19:14:18 -0400
+Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending
+ on the stop callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Bob Copeland <bcopeland@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890905131608y4e6400c9x31e37459d7ec4b51@mail.gmail.com>
+References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+	 <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
+	 <1242208388.14227.46.camel@johannes.local>
+	 <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
+	 <b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
+	 <1242253626.10076.9.camel@johannes.local>
+	 <43e72e890905131608y4e6400c9x31e37459d7ec4b51@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cGi2oQSMprFt1inHeEZz"
+Date: Thu, 14 May 2009 01:13:46 +0200
+Message-Id: <1242256426.10076.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows skbs to be released from the RX reorder buffer in
-case they have been there for an unexpectedly long time without us
-having received the missing frames before them. Previously, these
-frames were only released when the reorder window moved and that could
-take very long time unless new frames were received constantly (e.g.,
-TCP connections could be killed more or less indefinitely).
 
-This situation should not happen very frequently, but it looks like
-there are some scenarious that trigger it for some reason. As such,
-this should be considered mostly a workaround to speed up recovery
-from unexpected siutation that could result in connections hanging for
-long periods of time.
+--=-cGi2oQSMprFt1inHeEZz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The changes here will only check for timeout situation when adding new
-RX frames to the reorder buffer. It does not handle all possible
-cases, but seems to help for most cases that could result from common
-network usage (e.g., TCP retrying at least couple of times). For more
-completely coverage, a timer could be used to periodically check
-whether there are any frames remaining in the reorder buffer if no new
-frames are received.
+On Wed, 2009-05-13 at 16:08 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> > That's a good point. Somehow I thought this was intimately tied to
+> > suspend. And I think for cfg80211 that makes sense, since cfg80211
+> > doesn't do much for suspend. But for mac80211 you're right in that it
+> > would make sense to
+> >  * keep the radio on
+>=20
+> This is implicit by not calling stop, right?
 
----
- net/mac80211/agg-rx.c   |    8 +++++++-
- net/mac80211/rx.c       |   47 ++++++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/sta_info.h |    2 ++
- 3 files changed, 55 insertions(+), 2 deletions(-)
+Yeah, I think so.
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2009-04-29 17:10:10.000000000 +0300
-+++ wireless-testing/net/mac80211/agg-rx.c	2009-05-05 20:21:33.000000000 +0300
-@@ -68,6 +68,7 @@ void __ieee80211_stop_rx_ba_session(stru
- 	spin_lock_bh(&sta->lock);
- 	/* free resources */
- 	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
-+	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_time);
- 
- 	if (!sta->ampdu_mlme.tid_rx[tid]->shutdown) {
- 		kfree(sta->ampdu_mlme.tid_rx[tid]);
-@@ -268,13 +269,18 @@ void ieee80211_process_addba_request(str
- 	/* prepare reordering buffer */
- 	tid_agg_rx->reorder_buf =
- 		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
--	if (!tid_agg_rx->reorder_buf) {
-+	tid_agg_rx->reorder_time =
-+		kcalloc(buf_size, sizeof(unsigned long), GFP_ATOMIC);
-+	if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		if (net_ratelimit())
- 			printk(KERN_ERR "can not allocate reordering buffer "
- 			       "to tid %d\n", tid);
- #endif
-+		kfree(tid_agg_rx->reorder_buf);
-+		kfree(tid_agg_rx->reorder_time);
- 		kfree(sta->ampdu_mlme.tid_rx[tid]);
-+		sta->ampdu_mlme.tid_rx[tid] = NULL;
- 		goto end;
- 	}
- 
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-04-21 15:34:55.000000000 +0300
-+++ wireless-testing/net/mac80211/sta_info.h	2009-05-05 20:21:33.000000000 +0300
-@@ -88,6 +88,7 @@ struct tid_ampdu_tx {
-  * struct tid_ampdu_rx - TID aggregation information (Rx).
-  *
-  * @reorder_buf: buffer to reorder incoming aggregated MPDUs
-+ * @reorder_time: jiffies when skb was added
-  * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
-  * @head_seq_num: head sequence number in reordering buffer.
-  * @stored_mpdu_num: number of MPDUs in reordering buffer
-@@ -99,6 +100,7 @@ struct tid_ampdu_tx {
-  */
- struct tid_ampdu_rx {
- 	struct sk_buff **reorder_buf;
-+	unsigned long *reorder_time;
- 	struct timer_list session_timer;
- 	u16 head_seq_num;
- 	u16 stored_mpdu_num;
---- wireless-testing.orig/net/mac80211/rx.c	2009-05-05 20:21:24.000000000 +0300
-+++ wireless-testing/net/mac80211/rx.c	2009-05-05 20:26:31.000000000 +0300
-@@ -2313,6 +2313,15 @@ no_frame:
- 
- 
- /*
-+ * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
-+ * the skb was added to the buffer longer than this time ago, the earlier
-+ * frames that have not yet been received are assumed to be lost and the skb
-+ * can be released for processing. This may also release other skb's from the
-+ * reorder buffer if there are no additional gaps between the frames.
-+ */
-+#define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
-+
-+/*
-  * As it function blongs to Rx path it must be called with
-  * the proper rcu_read_lock protection for its flow.
-  */
-@@ -2377,13 +2386,49 @@ static u8 ieee80211_sta_manage_reorder_b
- 
- 	/* put the frame in the reordering buffer */
- 	tid_agg_rx->reorder_buf[index] = skb;
-+	tid_agg_rx->reorder_time[index] = jiffies;
- 	memcpy(tid_agg_rx->reorder_buf[index]->cb, rxstatus,
- 	       sizeof(*rxstatus));
- 	tid_agg_rx->stored_mpdu_num++;
- 	/* release the buffer until next missing frame */
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
- 						% tid_agg_rx->buf_size;
--	while (tid_agg_rx->reorder_buf[index]) {
-+	if (!tid_agg_rx->reorder_buf[index] &&
-+	    tid_agg_rx->stored_mpdu_num > 1) {
-+		/*
-+		 * No buffers ready to be released, but check whether any
-+		 * frames in the reorder buffer have timed out.
-+		 */
-+		int j;
-+		int skipped = 1;
-+		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
-+		     j = (j + 1) % tid_agg_rx->buf_size) {
-+			if (tid_agg_rx->reorder_buf[j] == NULL) {
-+				skipped++;
-+				continue;
-+			}
-+			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
-+					HZ / 10))
-+				break;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+			if (net_ratelimit())
-+				printk(KERN_DEBUG "%s: release an RX reorder "
-+				       "frame due to timeout on earlier "
-+				       "frames\n",
-+				       wiphy_name(hw->wiphy));
-+#endif
-+			ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
-+
-+			/*
-+			 * Increment the head seq# also for the skipped slots.
-+			 */
-+			tid_agg_rx->head_seq_num =
-+				(tid_agg_rx->head_seq_num + skipped) &
-+				SEQ_MASK;
-+			skipped = 0;
-+		}
-+	} else while (tid_agg_rx->reorder_buf[index]) {
- 		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
- 		index =	seq_sub(tid_agg_rx->head_seq_num,
- 			tid_agg_rx->ssn) % tid_agg_rx->buf_size;
+> >  * not call stop
+>=20
+> This makes sense for ath9k so far -- I was just exiting out.
 
--- 
+Ok.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> >  * maybe not remove all the sta info structs
+>=20
+> Which ones? In my tests I'm just not removing any.
+
+I'm talking about sta_notify() not code :)
+
+> >  * and whatever else may be necessary -- that might even depend on the
+> >   wow mode
+>=20
+> So lets start with a basic goal -- magic packet. If you think about it
+> though if you disassociate you won't get this magic packet=20
+
+Actually I think you still can or something, it's very strange. Does
+anyone have a WoW documentation/spec?
+
+> so I guess
+> that's also why we have link-change trigger (or called disassoc
+> trigger on some other hardware?).
+
+That could make some sense, though do you want to wake up, reassociate
+(if possible) and go to sleep again? That would take some
+synchronisation across layers...
+
+>  Anyway out of these link change and
+> magic packet seem like a reasonable goal to get working first. For
+> that besides the above I'm not sure what else is required.
+>=20
+> I'm building this stuff now on a box with a card that is supposed to
+> have WoW working so I'll know for sure if we are missing something
+> soon.
+
+Cool.
+
+Anyway I think Bob is right, we may not need to have anything added to
+->stop() and instead do some wow config, or something. Too tired to
+think about it I think.
+
+johannes
+
+--=-cGi2oQSMprFt1inHeEZz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKC1QmAAoJEODzc/N7+QmanM8QAI5G/yNZun3mZfrgN33zI9Ky
+aFr/4s6y6QtfqPaWidHp8EUYe4B2ldsGRSO+lQ4h/YT2OC+FcHwdLiGLiD74T88+
+W0mEv0MHyIP7M9CfaDof65MogqEZKsPWv0MsXjkclfJJ6Sr9JXZoIg2pA2xHnz58
+ldszYoaStm9moO5z6PLdG7uXktawHg5etk0CJQW3zWUaWqeHB/tQCg41Ti6+gcxi
+AhiCLH1oWnP6UT779NXEKsvRny5ms7MhMWr4H0KpwIBeEua7PaxZIXfiecP2MMI0
+rf3IyBjtKUgEzU7u1v9DLKpqnZD7Qm3oKhcG1RpNE/EdTpbv3ZSe5UpbzdJ3IMeo
+LztLhgHlL/ro53Zp5mIhyzSh49iLR+FqAMLCu8vmUkceHHI9wKu6wVJFNAM1nBJP
+H8DcjhqeLAIrz1/sx2Kl9ZBhbfqXytTw4kgczTIImdf8p9NLogG5RBKhQZ6LIV5j
+laHzkRikHewaeuySe6FVITrhYZG7Bk5bOwWejHxKBWVB9cRqOdfRxIiyoc+FVD3F
+gqTpkbRsglKfGFne/ybFMPfbfxafd3oigAVWjCop6n8ImTKoLMDvoCYw/CEvE+g2
+dYSG2bHgcHc5MV77XBS+MdH7qW4G8mEMVJykUNpOnhyXB/3VSKUGSBnwKC/6Myrc
+o2mlNlrVZ8DmSqsb+iPx
+=BzD+
+-----END PGP SIGNATURE-----
+
+--=-cGi2oQSMprFt1inHeEZz--
+
