@@ -1,68 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59079 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:40792 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755435AbZEXRZZ (ORCPT
+	with ESMTP id S1751148AbZEMJFQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2009 13:25:25 -0400
-Subject: Re: [PATCH 5/5] libertas: fix WPA adhoc network creation
+	Wed, 13 May 2009 05:05:16 -0400
+Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1243171190.24236.1.camel@localhost.localdomain>
-References: <1243037398.2495.14.camel@localhost.localdomain>
-	 <1243067061.4606.43.camel@johannes.local>
-	 <1243171190.24236.1.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/FizHKJ2rXl9lAkBG2Xk"
-Date: Sun, 24 May 2009 19:24:46 +0200
-Message-Id: <1243185886.29222.5.camel@johannes.local>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <3ace41890905122056v2070d1actdc17f45cc1a3a693@mail.gmail.com>
+References: <1242125077.4331.0.camel@johannes.local>
+	 <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
+	 <3ace41890905121208s2029db39p730b2e174cd4b1e6@mail.gmail.com>
+	 <1242156469.14227.7.camel@johannes.local>
+	 <3ace41890905121259jeb504d7v78fe8f062fca7d21@mail.gmail.com>
+	 <3ace41890905121400g471d14bfn3f60fba77e097079@mail.gmail.com>
+	 <3ace41890905122056v2070d1actdc17f45cc1a3a693@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 13 May 2009 11:04:42 +0200
+Message-Id: <1242205482.14227.44.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi!
 
---=-/FizHKJ2rXl9lAkBG2Xk
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for the extensive debugging!
 
-On Sun, 2009-05-24 at 09:19 -0400, Dan Williams wrote:
-> On Sat, 2009-05-23 at 10:24 +0200, Johannes Berg wrote:
-> > On Fri, 2009-05-22 at 20:09 -0400, Dan Williams wrote:
-> > > Oddly enough, the firmware's JOIN/START commands don't appear to have
-> > > any facility for setting custom IEs, thus the started adhoc network
-> > > doesn't advertise its WPA capability in the beacon.  Whee!
-> >=20
-> > We don't even properly support WPA IBSS in mac80211...
->=20
-> Hmm, I support creating WPA-PSK adhoc networks in the NM UI (worked last
-> summer when I added the code), can you give a 10 second summary of
-> what's missing here?
+On Wed, 2009-05-13 at 04:56 +0100, Hin-Tak Leung wrote:
+> Hiya, I stuck in a few printk(KERN_DEBUG __LINE__) around the new
+> -EINVAL's and tried to see why setting things by iwconfig manually
+> works, but NM/wpa_supplicant does not,  and here is what I found.
+> Around line 600 of net/wireless/wext-compat.c (this is the hackish mod
+> version):
+> ------------------------------------------
+> int cfg80211_wext_siwencodeext(struct net_device *dev,
+> 	                       struct iw_request_info *info,
+>                                struct iw_point *erq, char *extra)
+> 
+>         switch (ext->alg) {
+> 
+>         case IW_ENCODE_ALG_WEP:
+>                 if (erq->length == 5)
+>                         cipher = WLAN_CIPHER_SUITE_WEP40;
+>                 else if (erq->length == 13)
+> 			cipher = WLAN_CIPHER_SUITE_WEP104;
+>                 else {
+>                   printk(KERN_DEBUG "line %d %d\n", __LINE__, erq->length);
+>                         cipher = WLAN_CIPHER_SUITE_WEP104;
+>                         /* return -EINVAL; */
+>                  }
+>                 break;
+>         }
 
-Hm, well, Jouni says it doesn't play well with XP or Vista and we don't
-have per-station group keys we'd need in theory.
+Ok, so iwencodeext is used, presumably by wpa_supplicant because NM
+never uses that ioctl, at least not as far as I can tell.
+
+> ------------------------------------------------
+> For some unknown reason, when run with NM/wpa_supplicant with the same
+> authentication credentials to the same AP, erq->length is 53 instead
+> of 13. 
+
+That's strange. Do you know which wpa_supplicant version and NM you are
+using? Is it always 53, or could it be random?
+
+> If I just modify it as above instead of returning EINVAL, then
+> I get to authenticate, etc. in the old mac80211 ioctls, the decision
+> of cipher is postponed a lot later, after playing with the default key
+> a bit?
+> 
+> Anyway, I think 53 is either 40+13 or 13 *4 +1, so is it a case of
+> wpa_supplicant putting more stuff at the end or an offset somewhere?
+
+No, that's sizeof(struct iw_encode_ext) and now I'm confused as to why
+this actually worked for me. Ok, I see now I think, can you try this
+patch?
 
 johannes
 
---=-/FizHKJ2rXl9lAkBG2Xk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-05-13 11:03:12.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-05-13 11:03:35.000000000 +0200
+@@ -614,9 +614,9 @@ int cfg80211_wext_siwencodeext(struct ne
+ 		cipher = 0;
+ 		break;
+ 	case IW_ENCODE_ALG_WEP:
+-		if (erq->length == 5)
++		if (ext->key_len == 5)
+ 			cipher = WLAN_CIPHER_SUITE_WEP40;
+-		else if (erq->length == 13)
++		else if (ext->key_len == 13)
+ 			cipher = WLAN_CIPHER_SUITE_WEP104;
+ 		else
+ 			return -EINVAL;
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKGYLbAAoJEODzc/N7+QmaV7UQANQnKwxvUubcmT/lwV4PFbHt
-namtQqmUe1DcesbIbpMvbMlm/YGnhRhdSBuX/W3+vyaXxXRiv3bm86MfR8ASn+JA
-cNDAvEV53WYQ9coc6yZ9igIKQ8AOdYZBmCxg7oirfuQLAqmT6GS6CR8lTWJpdwjL
-nicTyeI7/05t1Ascj3OhBeXfG+jFMr9XLXybXo4Tksg0Z1uJj7ksc3PM7BRoZcrt
-W/vVmch9f9m/fkLA1pRF51F5gufz5AfJ75rPlvUNSG9MZZd5GpsSj4xTS/9EqNRF
-GPStKjCvotWVTuupaiAN1JDS4Pkc1s9JYombuHP+Grn2kgkyC1p78fHAeHbLIgM0
-6yZlk+NyVDh74V08W89plwbIV6tA330wRkEUncEYbUXe2i05JNuIwgC6HAVKAiB7
-dIlwroYcFKBEFoXtzBvvL5EM6xGmb8mo/ECu5PBaydry6J8R/5NploP9Orf89E5Z
-RJlPYseBj9gmoGkbpFu5HOPQwfNhNfc361tYtCLfvUBQ0cPNswYgA3greVYY3uYL
-krmjuJNhOqG7Mt3CcugQLNXEVaVy8NZkL4HZ5PRQRx7zI3ohtST/tcgox17Ff0IF
-uf+ZlfOOqvNmDrlr8vfP6k3T6tU+6iEL2MP/K3RsQZtTmxQqPJ4GTetA+GfNR3FS
-YkByRlLoLcQJWJGW+QTD
-=K/F2
------END PGP SIGNATURE-----
-
---=-/FizHKJ2rXl9lAkBG2Xk--
 
