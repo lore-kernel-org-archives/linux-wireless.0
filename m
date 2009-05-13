@@ -1,82 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33593 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756436AbZEOIi4 (ORCPT
+Received: from mail-px0-f191.google.com ([209.85.216.191]:39924 "EHLO
+	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756922AbZEMXQ0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 04:38:56 -0400
-Subject: Re: [PATCH] mac80211: fix some unforgotten items on suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1242375725.5799.39.camel@johannes.local>
-References: <1242362919-9788-1-git-send-email-lrodriguez@atheros.com>
-	 <1242375725.5799.39.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jq3I2uqoXOVYmxPohMZm"
-Date: Fri, 15 May 2009 10:38:27 +0200
-Message-Id: <1242376707.5799.45.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 13 May 2009 19:16:26 -0400
+Received: by pxi29 with SMTP id 29so395960pxi.33
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 16:16:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242253626.10076.9.camel@johannes.local>
+References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+	<1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
+	<1242208388.14227.46.camel@johannes.local> <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
+	<b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
+	<1242253626.10076.9.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 13 May 2009 16:08:59 -0700
+Message-ID: <43e72e890905131608y4e6400c9x31e37459d7ec4b51@mail.gmail.com>
+Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending on
+	the stop callback
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <bcopeland@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 13, 2009 at 3:27 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-05-13 at 14:00 -0400, Bob Copeland wrote:
+>> On Wed, May 13, 2009 at 1:20 PM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>> > On Wed, May 13, 2009 at 2:53 AM, Johannes Berg
+>> > <johannes@sipsolutions.net> wrote:
+>> >> On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
+>> >>> We inform the drivers so they can take appropriate actions durin=
+g
+>> >>> suspend for WoW support.
+>> >>
+>> >>> -static void ar9170_op_stop(struct ieee80211_hw *hw)
+>> >>> +static void ar9170_op_stop(struct ieee80211_hw *hw, bool suspen=
+d)
+>>
+>> Just curious, why can't the bus suspend method just turn the radio b=
+ack on?
+>> You have to set up the wow parameters later anyway.
+>>
+>> I think it'd be cleaner if the stack knew about WoW somehow rather t=
+han
+>> doing stuff behind its back in the driver. =C2=A0Then suspend/resume=
+ could do
+>> the right thing (e.g. ops->wow_enable() instead of stop) if the driv=
+er was
+>> WoW-capable.
+>
+> That's a good point. Somehow I thought this was intimately tied to
+> suspend. And I think for cfg80211 that makes sense, since cfg80211
+> doesn't do much for suspend. But for mac80211 you're right in that it
+> would make sense to
+> =C2=A0* keep the radio on
 
---=-jq3I2uqoXOVYmxPohMZm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is implicit by not calling stop, right?
 
-On Fri, 2009-05-15 at 10:22 +0200, Johannes Berg wrote:
+> =C2=A0* not call stop
 
-> > +++ b/net/mac80211/pm.c
-> > @@ -18,6 +18,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
-> > =20
-> >  	flush_workqueue(local->hw.workqueue);
-> > =20
-> > +	/* Don't stuff our workqueue during suspend->resume cycle */
-> > +	del_timer_sync(&local->dynamic_ps_timer);
-> > +	cancel_work_sync(&local->dynamic_ps_enable_work);
-> > +
->=20
-> ack, but you forgot to add a comment why dynamic_ps_disable_work doesn't
-> need to be handled (actually it does need to handled with the current
-> code but shouldn't be necessary... up for a challenge? -- why? and how
-> to fix that better than handling it here?)
->=20
-> If you ever suspend in AP mode there's also an issue with each station's
-> cleanup timer, and for mesh each station's plink timer.
+This makes sense for ath9k so far -- I was just exiting out.
 
-Hmm, actually, this isn't safe. We might still be receiving frames at
-this point, which would start the timer again.
+> =C2=A0* maybe not remove all the sta info structs
 
-> I don't think that helps, like I said the timers are still set up, you
-> need to actually queue the work now. However that kinda sucks for small
-> suspend times. Not really sure what to do.
+Which ones? In my tests I'm just not removing any.
 
-Instead of doing the setup_timer dance you were doing, we should simply
-do add_timer /iff/ del_timer_sync() returned 1, because that means we
-actually cancelled the timer.
+> =C2=A0* and whatever else may be necessary -- that might even depend =
+on the
+> =C2=A0 wow mode
 
-johannes
+So lets start with a basic goal -- magic packet. If you think about it
+though if you disassociate you won't get this magic packet so I guess
+that's also why we have link-change trigger (or called disassoc
+trigger on some other hardware?). Anyway out of these link change and
+magic packet seem like a reasonable goal to get working first. For
+that besides the above I'm not sure what else is required.
 
+I'm building this stuff now on a box with a card that is supposed to
+have WoW working so I'll know for sure if we are missing something
+soon.
 
---=-jq3I2uqoXOVYmxPohMZm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKDSn/AAoJEODzc/N7+QmaSm4QAJ5lPFCIKWJhrIE+zZA4/B3d
-hRNifrED1Qju7KXewjnqzMM3RbEUpppjcOdRGlTwlktz1C5EVwdYvF4jOOF+KSXh
-Ih4rWze1oL5Zny6imdKzesk2P9YcrK2EftS0qtqeTP9FKvimPhUqacTio4fhQiSy
-UXlCHdGy7pbAUxHCWDcX2RinfbrsHbhepKaRnxsqiaS21WNSRv8WMVbrpOjLtMfC
-RRMQqF0D9ic/e78nySos6BkbgBtrzRCRuRQZ6iQa8fNHlP2M/GgjxNpzd4Tu0vcn
-EbTnAzBduDJHdO/Wgv+r/zOf4xTcCk64c93GBlwy1lnZUYEBIB5SYNU2ds6rWTFr
-erRHwRRDYRuWqrt9VJIK+V+QNnG15OBp3h/rHYGaMK5LXUlKWzN1JoziPkMJQWMO
-XX6C65CvBpz/hO9dqYhMZE8brjUOY/Nw93ifGdEe06RwjRkLUGY+f2cP9M8fwM/8
-gOY2LRDinzLT9PeobH84JEUaHhmjKYkEnbbTRNgugTVCGyWerFRrzdzFf7DcwPd4
-Ibl6AQYXaiWyPCDdJXCroqTkPmT9/3mxM1FSEYQmtDCTQ7RMiUB53XazPxzqcVYM
-Jy/GsM4G3tVL5kZwLDFEKnGByQbbpMXFZFSYd26ecZfepVQDyk391cDsVfmymws7
-f+XiQbvuDJggIOYcYmZI
-=4sql
------END PGP SIGNATURE-----
-
---=-jq3I2uqoXOVYmxPohMZm--
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
