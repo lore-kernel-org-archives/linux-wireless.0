@@ -1,75 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47604 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047AbZENVPQ (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:58524 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbZEMN1S convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 17:15:16 -0400
-Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	Wed, 13 May 2009 09:27:18 -0400
+Received: by fxm2 with SMTP id 2so647439fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 06:27:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242209433.29288.6.camel@johannes.local>
+References: <1242125077.4331.0.camel@johannes.local>
+	 <1242209433.29288.6.camel@johannes.local>
+Date: Wed, 13 May 2009 14:27:18 +0100
+Message-ID: <3ace41890905130627s4fc2846em6ca4cbb6feb49f5b@mail.gmail.com>
+Subject: Re: [PATCH v2] cfg80211: fix a couple of bugs with key ioctls
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1242335658.32358.112.camel@rc-desk>
-References: <1241179203.8086.3.camel@maxim-laptop>
-	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
-	 <1241227946.5192.3.camel@maxim-laptop>
-	 <1241374060.13562.37.camel@johannes.local>
-	 <1241387163.10486.6.camel@maxim-laptop>
-	 <1241421545.6866.2.camel@johannes.local>
-	 <1242161643.26484.2.camel@maxim-laptop>
-	 <1242169824.5146.31.camel@maxim-laptop>
-	 <1242169934.14227.16.camel@johannes.local>
-	 <1242335658.32358.112.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sat1QGO+ccWh/mQxtBa7"
-Date: Thu, 14 May 2009 23:14:44 +0200
-Message-Id: <1242335684.5799.14.camel@johannes.local>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 13, 2009 at 11:10 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> There are a few small bugs/oversights in the key handling
+> code I wrote:
+> =A0* SIOCSIWENCODE should default to setting key 0 if no
+> =A0 default key is set already and no index is given,
+> =A0* key removal should not require key material,
+> =A0* SIOCSIWENCODEEXT should default to changing the default
+> =A0 management key if no index is given.
+> =A0* SIOCSIWENCODEEXT needs to use ext->key_len rather than
+> =A0 erq->length to verify the key length
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-sat1QGO+ccWh/mQxtBa7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>  ... I think I
+truly earned it this time :-). This works, and I also tried the
+iwconfig way and that is still working. I was using an earlier
+wpa_supplicant 0.6.8-1, but switched to 0.6.8-3 (
+http://koji.fedoraproject.org/koji/buildinfo?buildID=3D101920 )
+yesterday seeing as Dan has put some new stuff in.
 
-On Thu, 2009-05-14 at 14:14 -0700, reinette chatre wrote:
+The other question -, the number was always 53.
 
-> I am not convinced. When mac80211 requests a scan from the driver
-> checking if rfkill is enabled is the first thing it does and it will
-> return an error in this case. See iwl_mac_hw_scan().
->=20
-> Maxim, please ensure your driver is compiled with debug support
-> (CONFIG_IWLWIFI_DEBUG) and load the driver with debug=3D0x2. We should se=
-e
-> debug messages that will guide us here.
+Thanks for fixing this.
 
-debug=3D0x803 would be more useful I think. Or maybe 0x802.
+Hin-Tak
 
-I wish I had the ftrace thing for mac80211 ready already... oh well.
-
-johannes
-
---=-sat1QGO+ccWh/mQxtBa7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKDInAAAoJEODzc/N7+QmaaPsP/2HLoVxCsTdt92B+DI3ORlJ/
-RoGUrP9qiPrboCeZlB7+Pr2L9igX2T7WcnxTVWxh7QzeCpKlbqZJzcWJNwm2KfeM
-8MUIeVr6AFV8FFjf4j6REbNiAkWNDqwXMTXd3gFxlpdYumv1vE+PCR7YEie50bb7
-fErm+WhmGM3SkRyK4eNUp2isayQj8AiGJsYAwe/CvjkH0LUm8YSBNrxKrWXzcPWZ
-GGsOaAu1RpPcMohHZpSiC/iRkxb+EktKxgp6iwNqoZSGgtfdJS52ezHa6QxQUqOm
-SqSZPyrh1bDQ4sHDzxtvA8B6T25AIY2mml65JHwhfc9SmqY6DhgWnlzhOVkiEZLw
-+zLccYrxalFry4u9B9OeifWDE9hbF9kIn4fjIYo+wgCnxvm9E1gqBYNk/UZ+uTgJ
-5tUdMxf6O4IgC/0Kc/BPZyBTRCLNnQE3S+TvFD0HVppxcVmMAytnrNjbB2N+sRAD
-Q7y+JrjAJSM4+7VrAfzEX2Yt69NIVAuV11gWUL9YNDiVQNPTP524/dcKyNsSc7eP
-e8oo6IORTn76L2/njFGy8HAV7RYrsK47Lb4zgm4C6HJBZdJ5XpjYU1WXfnaW+L9R
-9mluaFv+7u/tPacmmSIwlWC56NE2hHEBfDONYQzPGMNB3x4mQ9FBNKHbP41JNLDh
-P6YSuC76qriWlVYY2/92
-=C9Oy
------END PGP SIGNATURE-----
-
---=-sat1QGO+ccWh/mQxtBa7--
-
+> ---
+> =A0net/wireless/wext-compat.c | =A0 18 +++++++-----------
+> =A01 file changed, 7 insertions(+), 11 deletions(-)
+>
+> --- wireless-testing.orig/net/wireless/wext-compat.c =A0 =A02009-05-1=
+2 12:38:41.000000000 +0200
+> +++ wireless-testing/net/wireless/wext-compat.c 2009-05-13 12:09:13.0=
+00000000 +0200
+> @@ -557,7 +557,7 @@ int cfg80211_wext_siwencode(struct net_d
+> =A0 =A0 =A0 =A0if (idx =3D=3D 0) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx =3D wdev->wext.default_key;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 0)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D 0;
+> =A0 =A0 =A0 =A0} else if (idx < 1 || idx > 4)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+> =A0 =A0 =A0 =A0else
+> @@ -580,7 +580,7 @@ int cfg80211_wext_siwencode(struct net_d
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_WE=
+P40;
+> =A0 =A0 =A0 =A0else if (erq->length =3D=3D 13)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_WE=
+P104;
+> - =A0 =A0 =A0 else
+> + =A0 =A0 =A0 else if (!remove)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+>
+> =A0 =A0 =A0 =A0return cfg80211_set_encryption(rdev, dev, NULL, remove=
+,
+> @@ -614,9 +614,9 @@ int cfg80211_wext_siwencodeext(struct ne
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cipher =3D 0;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0case IW_ENCODE_ALG_WEP:
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (erq->length =3D=3D 5)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ext->key_len =3D=3D 5)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cipher =3D WLAN_CIPHER=
+_SUITE_WEP40;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 else if (erq->length =3D=3D 13)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 else if (ext->key_len =3D=3D 13)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cipher =3D WLAN_CIPHER=
+_SUITE_WEP104;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0else
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+> @@ -640,13 +640,9 @@ int cfg80211_wext_siwencodeext(struct ne
+> =A0 =A0 =A0 =A0idx =3D erq->flags & IW_ENCODE_INDEX;
+> =A0 =A0 =A0 =A0if (cipher =3D=3D WLAN_CIPHER_SUITE_AES_CMAC) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 4 || idx > 5) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* XXX: Only wpa_supp=
+licant ever used this
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0can we =
+still change the ABI a little
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0so we d=
+o not need to keep track of
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0the def=
+ault key?
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D wdev->wext.defa=
+ult_mgmt_key;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (idx < 0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return =
+-EINVAL;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx--;
+> =A0 =A0 =A0 =A0} else {
+>
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
