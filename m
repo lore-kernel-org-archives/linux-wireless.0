@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57233 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752200AbZEQMru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 08:47:50 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, stecklum@tls-tautenburg.de,
-	me@bobcopeland.com, breusshe@hotmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] compat-2.6: update compat.diff
-Date: Sun, 17 May 2009 14:47:40 +0200
-Message-Id: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:51314 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923AbZEMVJi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2009 17:09:38 -0400
+Received: by gxk10 with SMTP id 10so1692523gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 14:09:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090513181329.GA19693@tesla>
+References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+	 <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
+	 <1242208388.14227.46.camel@johannes.local>
+	 <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
+	 <b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
+	 <20090513181329.GA19693@tesla>
+Date: Wed, 13 May 2009 17:09:32 -0400
+Message-ID: <b6c5339f0905131409y18ea0c6fp438db6fe34d3c0c4@mail.gmail.com>
+Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending on
+	the stop callback
+From: Bob Copeland <bcopeland@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel versions > 2.9.28 linux/etherdevice.h includes asm/unaligned.h.
-This is needed by net/mac80211/key.c.
+On Wed, May 13, 2009 at 2:13 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> Agreed, however ath9k is the only card I know how WoW works so far.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat.diff |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+Understood.
 
-diff --git a/compat/compat.diff b/compat/compat.diff
-index 725aadf..3ee9e86 100644
---- a/compat/compat.diff
-+++ b/compat/compat.diff
-@@ -542,6 +542,18 @@
-  	if (ieee80211_vif_is_mesh(&sdata->vif) &&
-  	    params && params->mesh_id_len)
-  		ieee80211_sdata_set_mesh_id(sdata,
-+--- a/net/mac80211/key.c
-++++ b/net/mac80211/key.c
-+@@ -21,6 +21,9 @@
-+ #include "aes_ccm.h"
-+ #include "aes_cmac.h"
-+ 
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
-++#include <asm/unaligned.h>
-++#endif
-+ 
-+ /**
-+  * DOC: Key handling basics
- --- a/net/mac80211/main.c	2009-04-28 15:34:50.000000000 -0700
- +++ b/net/mac80211/main.c	2009-04-28 15:35:06.000000000 -0700
- @@ -469,6 +469,7 @@
+> Thoughts?
+
+None really, it just seemed adding flags to stop() is a less-than-ideal
+interface.  Hmm, maybe there is inspiration to be had from plain old
+ethernet drivers...
+
+<looks quickly>
+
+The one example I looked at, amd8111e, used set_wol/get_wol callbacks
+from ethtool to set the option, then did something special in its bus
+suspend method for the magic. *shrug*
+
 -- 
-1.6.2.1
-
+Bob Copeland %% www.bobcopeland.com
