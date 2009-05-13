@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:62267 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352AbZERVVW (ORCPT
+Received: from caiajhbdccac.dreamhost.com ([208.97.132.202]:46752 "EHLO
+	spunkymail-a2.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756990AbZEMVIr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 17:21:22 -0400
-Received: by ewy24 with SMTP id 24so4425975ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 14:21:23 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH 5/5] p54spi: use firmware/DMA bug workaround that work under hight load in p54spi_rx
-Date: Tue, 19 May 2009 01:21:13 +0400
-Cc: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@web.de>
-References: <1242601355-3178-1-git-send-email-jcmvbkbc@gmail.com> <1242601355-3178-6-git-send-email-jcmvbkbc@gmail.com> <87tz3i9ram.fsf@litku.valot.fi>
-In-Reply-To: <87tz3i9ram.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200905190121.14103.jcmvbkbc@gmail.com>
+	Wed, 13 May 2009 17:08:47 -0400
+From: Karl Hiramoto <karl@hiramoto.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Karl Hiramoto <karl@hiramoto.org>
+Subject: [PATCH] iw/Makefile use pkg-config if passed from environmental var. Makes cross compiling easier.
+Date: Wed, 13 May 2009 23:08:35 +0200
+Message-Id: <1242248915-20372-1-git-send-email-karl@hiramoto.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Max Filippov <jcmvbkbc@gmail.com> writes:
-> > Under high load first data word, read after available data size
-> > is sometimes lost in p54spi_rx. It seems to depend on frequency
-> > of interrupts and latency of data read request relatively to
-> > 'data available' interrupt. The worst consequence of this bug
-> > is loss of packet transmission acknowledgement, which in turn
-> > causes overflow of tx queues and permanent link loss.
-> >
-> > Read data size and first data word in one SPI transaction.
-> > No packets from LMAC should have length less than 1 word,
-> > so this shouldn't interfere with the next read transaction.
->
-> There is a bug in omap2_mcspi which corrupts some DMA transfers, I don't
-> know if the bug you see is this one or something else. I'll send the
-> patch to linux-omap sometime later this week.
+When cross-compiling with buildroot, this patch allows iw to be compiled using the buildroot pkg-config, and removes the requirement of pkg-config being installed on the host machine.  You can pass the full path the the pkg-config binary as PKG_CONFIG variable.
 
-I guess it will be easy to check whether your patch changes something in 
-original p54spi behavior. I'll test this.
+Signed-off-by: Karl Hiramoto <karl@hiramoto.org>
+---
+ Makefile |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Thanks.
--- Max
+diff --git a/Makefile b/Makefile
+index 6d232c5..56a11e6 100644
+--- a/Makefile
++++ b/Makefile
+@@ -5,6 +5,7 @@ MAKEFLAGS += --no-print-directory
+ PREFIX ?= /usr
+ BINDIR ?= $(PREFIX)/bin
+ MANDIR ?= $(PREFIX)/share/man
++PKG_CONFIG ?= pkg-config
+ 
+ MKDIR ?= mkdir -p
+ INSTALL ?= install
+@@ -16,8 +17,8 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
+ OBJS = iw.o genl.o event.o info.o phy.o interface.o ibss.o station.o util.o mesh.o mpath.o scan.o reg.o version.o reason.o status.o
+ ALL = iw
+ 
+-NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+-NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
++NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
++NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
+ 
+ ifeq ($(NL1FOUND),Y)
+ NLLIBNAME = libnl-1
+-- 
+1.6.0.6
 
