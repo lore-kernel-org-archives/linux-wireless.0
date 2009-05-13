@@ -1,39 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:53826 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752345AbZEES4w (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60178 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756357AbZEMJVA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 14:56:52 -0400
-Received: by fxm2 with SMTP id 2so4895784fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 11:56:52 -0700 (PDT)
-Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B3569A467@orsmsx502.amr.corp.intel.com>
-References: <1241213459.7082.54.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-	 <1241463816.4816.1.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
-	 <1241535034.4816.20.camel@maxim-laptop>
-	 <1241540190.4816.25.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A467@orsmsx502.amr.corp.intel.com>
-Content-Type: text/plain
-Date: Tue, 05 May 2009 21:56:47 +0300
-Message-Id: <1241549807.29173.1.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 13 May 2009 05:21:00 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC v2 1/5] mac80211: fix idle trigger upon resume
+Date: Wed, 13 May 2009 05:20:57 -0400
+Message-Id: <1242206461-30793-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-05 at 11:45 -0700, Cahill, Ben M wrote:
-> Excellent information.  Thank you.
-> 
-> We just issued new 3945 uCode within the past week or two ... Is that also showing the problem (noise_diff = 0)?
-> 
-Yes, I have just installed it to be sure.
-Exactly same looking output.
+When we suspend we stop the queues, then upon resume
+the new idle checks will immediately pick up we're
+idle and call our driver's config callback. At
+this point its pointless to to call this callback
+as we haven't yet come back from suspend. We avoid
+then making assumptions about being idle until we know
+we've come back from suspend.
 
-Best regards,
-	Maxim Levitsky
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |    4 ++++
+ net/mac80211/pm.c          |    2 ++
+ 3 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index fec3ded..43f3d07 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -609,6 +609,7 @@ struct ieee80211_local {
+ 	unsigned int filter_flags; /* FIF_* */
+ 	struct iw_statistics wstats;
+ 	bool tim_in_locked_section; /* see ieee80211_beacon_get() */
++	bool suspended; /* true if we finished suspend work for it */
+ 	int tx_headroom; /* required headroom for hardware/radiotap */
+ 
+ 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
+@@ -1047,6 +1048,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw);
+ 
+ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
+ {
++	hw_to_local(hw)->suspended = false;
+ 	return ieee80211_reconfig(hw_to_local(hw));
+ }
+ #else
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 8c9f1c7..5e091a7 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -931,6 +931,10 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int count = 0;
+ 
++	/* allow resume to finish before we make any assumptions */
++	if (local->suspended)
++		return 0;
++
+ 	if (local->hw_scanning || local->sw_scanning)
+ 		return ieee80211_idle_off(local, "scanning");
+ 
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 9d3d89a..8883d05 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -65,6 +65,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 	/* flush again, in case driver queued work */
+ 	flush_workqueue(local->hw.workqueue);
+ 
++	local->suspended = true;
++
+ 	/* stop hardware */
+ 	if (local->open_count) {
+ 		ieee80211_led_radio(local, false);
+-- 
+1.6.0.6
 
