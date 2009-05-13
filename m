@@ -1,93 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760573AbZE3RhA (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:34048 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761414AbZEMVpY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 13:37:00 -0400
-Received: by ewy24 with SMTP id 24so6938274ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:01 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC v2 00/23] orinoco: initiate conversion to cfg80211
-Date: Sat, 30 May 2009 18:36:34 +0100
-Message-Id: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 13 May 2009 17:45:24 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so589625wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 14:45:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+References: <1242030669.6930.10.camel@johannes.local> <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 13 May 2009 14:45:05 -0700
+Message-ID: <43e72e890905131445s5583481bgb556a925247368db@mail.gmail.com>
+Subject: Re: [RFT v9] rfkill: rewrite
+To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Easwar Krishnan <Easwar.Krishnan@atheros.com>,
+	Nataraj Sadasivam <Nataraj.Sadasivam@atheros.com>,
+	Kathir Ganapthy <Kathir.Ganapthy@atheros.com>,
+	Ponmudi Ramachandran <Ponmudi.Ramachandran@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've completely refactorred since the last RFC, and switched to the
-cfg80211 handlers for scanning, mode changing and giwrange.
+On Tue, May 12, 2009 at 7:09 AM, Alan Jenkins
+<sourcejedi.lkml@googlemail.com> wrote:
+> On 5/11/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> This patch completely rewrites the rfkill core to address
+>> the following deficiencies:
+>
+> Btw, git-apply nitpicks on your whitespace
+>
+> =C2=A0 =C2=A0rfkill-rewrite.patch:4335: space before tab in indent.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_unlock(&rfkill_global_=
+mutex);
+> =C2=A0 =C2=A0warning: 1 line adds whitespace errors.
+>
+>
+> I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
+> Somehow, it triggers an OOPS
+>
+> Function: req_reg_info_regd
+> Process: modprobe
+>
+> Call trace:
+> wiphy_apply_custom_regulatory
+> ath5k_regd_init
+> ath5k_reg_notifier
+> ath5k_pci_probe
+> ...
+>
+> Photo: <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#53349=
+36857267342674>
+>
+> The kernel then hangs later on in the boot process. =C2=A0It responds=
+ to
+> SysRq, but does not echo normal keypresses. =C2=A0SysRq+P shows that =
+the
+> kernel is in the idle task. =C2=A0I left it for three minutes, but I =
+didn't
+> get any trace from the hung task detector or soft lockup detector.
+>
+> At first I thought it must be a problem with wireless-testing.
+> However, it went away when I eventually tried un-applying the rfkill
+> rewrite patch.
 
-Patches 1-5 modify cfg80211, mostly so it can advertise (the more
-restrictive) orinoco capabilities correctly.
+I think my new 4 patches should address this and it'd be great to hear
+your tests as you can reproduce easily. We are able to see something
+like this but only after 3 hours of testing. Since it seems you might
+be able to reproduce quickly it would help.
 
-Patches 6-13 refactor the orinoco internal interfaces and initialisation
-to make the switch to cfg80211 easier. The main thrust is to avoid using
-net_device in the device drivers allowing us to register the net_device
-later.
-
-Patch 14 starts the cfg80211 conversion, before patches 15-19 cleanup
-the fallout from the conversion.
-
-Patches 20 though 23 convert a few of the WE handler to cfg80211
-handlers.
-
-The refactorring affects all the card and firmware types, but I'm only
-able to test orinoco_cs with Agere firmware.
----
-David Kilroy (23):
-  cfg80211: add wrapper function to get wiphy from priv pointer
-  cfg80211: Advertise ciphers via WE according to driver capability
-  cfg80211: allow drivers that can't scan for specific ssids
-  cfg80211: set WE encoding size based on available ciphers
-  cfg80211: infer WPA and WPA2 support from TKIP and CCMP
-  orinoco: Move firmware capability determination into hw.c
-  orinoco: Move card reading code into hw.c
-  orinoco: Move FID allocation to hw.c
-  orinoco: use dev_err in early initialisation routines
-  orinoco: firmware helpers should use dev_err and friends
-  orinoco: Replace net_device with orinoco_private in driver interfaces
-  orinoco: initialise independently of netdev
-  orinoco: Change set_tkip to use orinoco_private instead of hermes_t
-  orinoco: initiate cfg80211 conversion
-  orinoco: make firmware download less verbose
-  orinoco: move netdev interface creation to main driver
-  airport: store irq in card private structure
-  orinoco: Handle suspend/restore in core driver
-  orinoco: provide generic commit function
-  orinoco: convert mode setting to cfg80211
-  orinoco: convert scanning to cfg80211
-  orinoco: convert giwrange to cfg80211
-  orinoco: remove WE nickname support
-
- drivers/net/wireless/orinoco/Kconfig          |    1 +
- drivers/net/wireless/orinoco/Makefile         |    2 +-
- drivers/net/wireless/orinoco/airport.c        |   98 +--
- drivers/net/wireless/orinoco/cfg.c            |  169 ++++
- drivers/net/wireless/orinoco/cfg.h            |   15 +
- drivers/net/wireless/orinoco/fw.c             |   41 +-
- drivers/net/wireless/orinoco/hermes.h         |    2 +-
- drivers/net/wireless/orinoco/hermes_dld.c     |   50 +-
- drivers/net/wireless/orinoco/hw.c             |  668 +++++++++++++++-
- drivers/net/wireless/orinoco/hw.h             |   11 +-
- drivers/net/wireless/orinoco/main.c           | 1131 +++++++++----------------
- drivers/net/wireless/orinoco/main.h           |    3 +-
- drivers/net/wireless/orinoco/orinoco.h        |   49 +-
- drivers/net/wireless/orinoco/orinoco_cs.c     |   96 +--
- drivers/net/wireless/orinoco/orinoco_nortel.c |   38 +-
- drivers/net/wireless/orinoco/orinoco_pci.c    |   38 +-
- drivers/net/wireless/orinoco/orinoco_pci.h    |   57 +--
- drivers/net/wireless/orinoco/orinoco_plx.c    |   38 +-
- drivers/net/wireless/orinoco/orinoco_tmd.c    |   38 +-
- drivers/net/wireless/orinoco/scan.c           |  265 +++----
- drivers/net/wireless/orinoco/scan.h           |   21 +-
- drivers/net/wireless/orinoco/spectrum_cs.c    |   96 +--
- drivers/net/wireless/orinoco/wext.c           |  878 ++------------------
- include/net/cfg80211.h                        |   11 +
- net/wireless/core.c                           |    3 -
- net/wireless/wext-compat.c                    |   24 +-
- 26 files changed, 1725 insertions(+), 2118 deletions(-)
- create mode 100644 drivers/net/wireless/orinoco/cfg.c
- create mode 100644 drivers/net/wireless/orinoco/cfg.h
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
