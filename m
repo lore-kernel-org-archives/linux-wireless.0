@@ -1,124 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1010.centrum.cz ([90.183.38.140]:60166 "EHLO
-	mail1010.centrum.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863AbZERS1U (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:61848 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694AbZEMXWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 14:27:20 -0400
-Received: by mail1010.centrum.cz id S1074314255AbZERSHY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 20:07:24 +0200
-Date: Mon, 18 May 2009 20:07:24 +0200
-From: <trencan@centrum.cz>
-To: <mcgrof@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>, <ic.felix@gmail.com>
-MIME-Version: 1.0
-Message-ID: <200905182007.16782@centrum.cz>
-References: <4A0FEC03.9090803@centrum.cz> <43e72e890905171426xf9f483dh9d2477cebd4eab47@mail.gmail.com>
-In-Reply-To: <43e72e890905171426xf9f483dh9d2477cebd4eab47@mail.gmail.com>
-Subject: Re: rt2x00 - wireless compat - can not load compiled rt61pci
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 13 May 2009 19:22:36 -0400
+Received: by fxm2 with SMTP id 2so974715fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 16:22:35 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <1241984076.6051.18.camel@maxim-laptop>
+	 <43e72e890905101236h2cd24edewae808da384ae48dd@mail.gmail.com>
+	 <1242140728.5626.3.camel@maxim-laptop>
+	 <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
+	 <1242149671.5210.2.camel@maxim-laptop>
+	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+	 <1242166051.26484.7.camel@maxim-laptop>
+	 <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
+	 <1242256104.3241.4.camel@maxim-laptop>
+	 <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 14 May 2009 02:22:30 +0300
+Message-Id: <1242256950.3241.13.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 2009-05-13 at 16:12 -0700, Luis R. Rodriguez wrote:
+> On Wed, May 13, 2009 at 4:08 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> > On Wed, 2009-05-13 at 14:28 -0700, Luis R. Rodriguez wrote:
+> 
+> >> Anyway please try the patches I posted and I'll finish reviewing this
+> >> in the meantime.
+> > I don't see anything yet.
+> 
+> wget this and git am it, it has all the patches:
+> 
+> http://bombadil.infradead.org/~mcgrof/patches/wl/race-fixes-2009-05-13.patch
+> 
+>   Luis
 
-I used "search updates" in depmod.d and it works, perfect.
 
-Thanks.
+Thanks a lot.
+I will test this as soon as be at university again. (next sunday).
 
-______________________________________________________________
-> Od: mcgrof@gmail.com
-> Komu: trencan <trencan@centrum.cz>
-> CC: linux-wireless@vger.kernel.org, Felix Bitterli <ic.felix@gmail.com>
-> Datum: 17.05.2009 23:27
-> Předmět: Re: rt2x00 - wireless compat - can not load compiled rt61pci
->
->On Sun, May 17, 2009 at 3:50 AM, trencan <trencan@centrum.cz> wrote:
->> Hello,
->>
->> I use latest Mandriva distribution 2009.1 with kernel 2.6.29.1-desktop-4mnb.
->> I have rt2561 wifi card in my PC. I would like to switch my wifi card to AP
->> or Ad-hoc mode. My distribution's rt61pci module doesn't support these
->> modes. So I have downloaded compat-wireless-2.6.30-rc4.tar.bz2
->> <http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30/compat-wireless-2.6.30-rc4.tar.bz2>.
->>
->> I ran:
->> make
->> make install
->> make unload
->>
->> Everything fine. But then "modprobe rt61pci" loaded my distribution's
->> rt61pci module and not the compiled one. Distribution's one is in folder:
->>
->> [root@trencancan compat-wireless-2.6.30-rc4]# ls -la
->> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
->> -rw-r--r-- 1 root root 11279 2009-04-21 01:13
->> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
->>
->> Compiled one is in folder:
->> [root@trencancan compat-wireless-2.6.30-rc4]# ls -la
->> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
->> -rw-r--r-- 1 root root 123843 2009-05-16 23:21
->> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
->>
->>
->> But after I type "modprobe rt61pci", then:
->> [root@trencancan compat-wireless-2.6.30-rc4]# modinfo rt61pci
->> filename:
->> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
->> license:        GPL
->> firmware:       rt2661.bin
->> firmware:       rt2561s.bin
->> firmware:       rt2561.bin
->> description:    Ralink RT61 PCI & PCMCIA Wireless LAN driver.
->> version:        2.2.3
->> author:         http://rt2x00.serialmonkey.com
->> srcversion:     E8C0D3A4B7F36984638CEDF
->> alias:          pci:v00001814d00000401sv*sd*bc*sc*i*
->> alias:          pci:v00001814d00000302sv*sd*bc*sc*i*
->> alias:          pci:v00001814d00000301sv*sd*bc*sc*i*
->> depends:        rt2x00lib,rt2x00pci,eeprom_93cx6,crc-itu-t
->> vermagic:       2.6.29.1-desktop-4mnb SMP mod_unload modversions 686
->> parm:           nohwcrypt:Disable hardware encryption. (bool)
->>
->>
->> So you can see that Distribution's module (in kernel folder) was loaded. I
->> think root cause of problem is that run of command: "depmod -ae" finds first
->> rt61pci in kernel's folder and then next instance in updates folder is not
->> considered. If I look at output of depmod command:
->>
->> [root@trencancan compat-wireless-2.6.30-rc4]# grep -i rt61pci
->> /lib/modules/2.6.29.1-desktop-4mnb/modules.dep
->> kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz: kernel/lib/crc-itu-t.ko.gz
->> kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko.gz
->> kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko.gz
->> kernel/net/rfkill/rfkill.ko.gz kernel/drivers/leds/led-class.ko.gz
->> kernel/net/mac80211/mac80211.ko.gz kernel/net/wireless/cfg80211.ko.gz
->> kernel/drivers/misc/eeprom/eeprom_93cx6.ko.gz
->>
->> So you may see that rt61pci in
->> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/
->> folder is not considered.
->>
->> Please, how can I workaround this? Or what do I wrong? One solution can be
->> to install all compat-wireless modules into kernel folder instead of updates
->> folder. But then distribution's ones will be overwritten and un-installation
->> will be impossible.
->
->Mandriva may not look for updates/ dir by default. For Ubuntu I still
->see this respected.
->
->For example on ubuntu I see:
->
->mcgrof@tesla $ cat /etc/depmod.d/ubuntu.conf
->search updates ubuntu built-in
->
->Can you check your /etc/depmod.d/ directory or /etc/depmod.conf file?
->
->  Luis
->--
->To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks again,
+	Maxim Levitsky
 
