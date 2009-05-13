@@ -1,79 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:37078 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755128AbZELW1j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 18:27:39 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1M3zTL-0000Fh-1t
-	for linux-wireless@vger.kernel.org; Tue, 12 May 2009 23:25:11 +0200
-MIME-Version: 1.0
-In-Reply-To: <20090512174636.8EBDA1FD10@chi.die-welt.net>
-References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-	 <4A089E49.7080403@gmail.com>
-	 <20090512103905.0D68E1FD10@chi.die-welt.net>
-	 <dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
-	 <20090512174636.8EBDA1FD10@chi.die-welt.net>
-Date: Tue, 12 May 2009 13:04:28 -0700
-Message-ID: <dd18b0c30905121304k6df44362v76e8e7ae6da3b76f@mail.gmail.com>
-Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
-From: Justin Mattock <justinmattock@gmail.com>
-To: Evgeni Golov <sargentd@die-welt.net>
-Cc: Jiri Slaby
-	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Justin Mattock
-	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Linux Kernel Mailing List
-	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
-	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:45701 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbZEMWXL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2009 18:23:11 -0400
+Subject: Re: [RFC v2 3/5] cfg80211: add WoW support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090513181458.GB19693@tesla>
+References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+	 <1242206461-30793-4-git-send-email-lrodriguez@atheros.com>
+	 <1242208515.29288.0.camel@johannes.local>  <20090513181458.GB19693@tesla>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZtDLY6HR2UMMHt1eJoma"
+Date: Thu, 14 May 2009 00:22:42 +0200
+Message-Id: <1242253362.10076.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--=-ZtDLY6HR2UMMHt1eJoma
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 12, 2009 at 10:46 AM, Evgeni Golov <sargentd@die-welt.net> wrote:
-> On Tue, 12 May 2009 07:28:04 -0700 Justin Mattock wrote:
->
->> > Same here with 2.6.30-rc4, b43 and either Cisco (MAC-Addr starts with
->> > 00:40:96) or HP ProCurve (??? - they do WiFi? - MAC-Addr starts with
->> > 00:1F:FE) APs. No encryption, quite noisy environment (University).
->> >
->> > No problem with ipw2200 (actually 2915) in the same hardware (Thinkpad
->> > X31). Neither with the b43 and a standard Linksys WRT54GL (in the same!
->> > noisy university-env).
->> >
->> > Regards
->> > Evgeni
->> >
->> >
->>
->> are you able to connect?
->> (or is the connection connecting but really
->> poor quality?)
->> over here 2.6.29-rc8 connects like
->> theirs no tomorrow, as soon as
->> I throw in 2.6.30-rc4 it just dead(although
->> on some accounts I did get some kind of
->> reaction, but not much, just what I see in dmesg).
->
-> 2.6.29: fairly stable, even if not as good as with an intel card.
-> 2.6.30-rc4: tons of timeouts, may connect 1 in 100 tries, connection
-> will drop after some (short) time.
->
-> --
-> Bruce Schneier Fact Number 79:
-> Bruce Schneier once decrypted a box of AlphaBits.
->
+On Wed, 2009-05-13 at 11:14 -0700, Luis R. Rodriguez wrote:
 
-O.K. after trial and error reverting this:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=47afbaf5af9454a7a1a64591e20cbfcc27ca67a8;hp=853da11b94e674445e93660f47a5f0aeeea09623
+> > > +enum nl80211_wow_triggers {
+> > > +	NL80211_WOW_TRIGGER_MAGIC_PACKET	=3D 1 << 0,
+> > > +	NL80211_WOW_TRIGGER_BMISS		=3D 1 << 1,
+> > > +	NL80211_WOW_TRIGGER_LINK_CHANGE		=3D 1 << 2,
+> > > +	NL80211_WOW_TRIGGER_PATTERN		=3D 1 << 3,
+> > > +};
+> >=20
+> > Seems like you need to have a way to set the pattern and magic packet?
+>=20
+> Yeah TDB -- the code for that is a bit complex and I don't understand how
+> things are being broken down yet. We could just not have the cabability
+> present until that's properly figured out.
 
-brings life back to the macbook with 2.6.30-rc4
-(not sure about the iphone anomaly though, I'll keep
-an eye on that)
+Yeah I think that would be preferable, maybe even not define the bits
+until we figure out what else we need. It might not actually make sense
+to use bits here, for example if you need a magic packet to wake up it
+might make sense to have just a magic packet netlink attribute that, if
+userspace passes it, defines that magic packet with that packet should
+be used, instead of requiring that the user sets both the bit and gives
+the packet. etc.
 
--- 
-Justin P. Mattock
+johannes
+
+--=-ZtDLY6HR2UMMHt1eJoma
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKC0gvAAoJEODzc/N7+QmaoW8P/RHupwLsL+fJCoG7NdYXlGpQ
+f8ybWTiRaTsoyXl8Rww7jzAL2WIgJRx6YeFu1QHaVN3MOZ5GL6bLC4qxDJCPXsEi
+zT2sJW7296celEr1lAty/2YOFWJniD6ICR0hzh0v2jzYuVMHilB7/d+H2ye+KSr1
+5XU9MZK4Cqc2a3hGuai1YzGQP5v2dm+Wv/0/CnJaX7L6N81lVx0tV0a+G0jL4UOB
+up3/UYfTXu5HlkLFlBHEw2bGlw/z9PUHhe2KuCiBDiVTDaZ5H9c/Bb2+FVVSZFzJ
+zSIhs5QvaF/bxZa8aEZ2tZCxgrj76LxBkZcSGXAt3bsKPBDEHkwNtLy8R8NDssXU
+nSyoXChrioHzXHT02+oypRV3UkwuGVihBvLsx4nUqIgryDaosYm/uR4+4HZXHDCG
+h825Ik7oNHcRnIeuB76QYBCadovFFoQIZnYdObYWkbnJpxGIdQjIcs2tSrPCreFP
+IpOEzxz+TJMYAFIG6DcX8hd5v+b+MS+VIae1LoTOsatolU6Pmj6N/RTmXv++r7FB
+h3YnIxhfillsmLPGpQtI9J1Mfah3KMhiTaesyrgPq01tW7bm4kOmL21lUn+QNUl/
+Yj5DRGurK2g74kgllFmHaizeGIAm0nmCYDJN3fbuTAV2+QvXrLJPIYL2KsPemW3f
+euSxWr3pHah7APUTN/6z
+=cnsv
+-----END PGP SIGNATURE-----
+
+--=-ZtDLY6HR2UMMHt1eJoma--
 
