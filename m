@@ -1,80 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45951 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754324AbZEPMtA (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3676 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756444AbZEMPP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 08:49:00 -0400
-Subject: Re: Scan while TX/RX'ing a lot of data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
-In-Reply-To: <1242429353.10933.32.camel@localhost.localdomain>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	 <1242327298.4227.25.camel@localhost.localdomain>
-	 <200905151011.50915.hs4233@mail.mn-solutions.de>
-	 <1242429353.10933.32.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4gE8BHHyK0EvDQXQjISm"
-Date: Sat, 16 May 2009 14:48:57 +0200
-Message-Id: <1242478137.10005.63.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 13 May 2009 11:15:59 -0400
+Date: Wed, 13 May 2009 11:14:39 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, forrest@hifulltech.com
+Cc: ath5k-devel@lists.ath5k.org, mickflemm@gmail.com,
+	jirislaby@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: fix exp off-by-one when computing OFDM delta slope
+Message-ID: <20090513151439.GA28476@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-4gE8BHHyK0EvDQXQjISm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+From: Forrest Zhang <forrest@hifulltech.com>
 
-On Fri, 2009-05-15 at 19:15 -0400, Dan Williams wrote:
+Commit e8f055f0c3ba226ca599c14c2e5fe829f6f57cbb subtly changed the
+code that computes floating point values for the PHY3_TIMING register
+such that the exponent is off by a decimal point, which can cause
+problems with OFDM channel operation.
 
-> Well, what does "background scan" mean?  mac80211 will obviously accept
-> beacons from APs on the same channel and happily add them to the scan
-> list.
+get_bitmask_order() actually returns the highest bit set plus one,
+whereas the previous code wanted the highest bit set.  Instead, use
+ilog2 which is what this code is really calculating.  Also check
+coef_scaled to handle the (invalid) case where we need log2(0).
 
-Only if powersave/beacon filtering isn't enabled. Actually, mac80211
-does beacon filtering itself now, so I don't think this happens any more
-(I did that on purpose so people don't really rely on the former
-behaviour)
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-> But a background scan would imply that the card itself is taking
-> over the decision about when to jump around and scan, basically the same
-> thing NM is doing, right?  When would the card/stack decided to
-> background scan, and what channels would it background scan on?  If it
-> doesn't do more or less all passive channels, then it wouldn't be that
-> useful for figuring out the site survey data.
+John, this plus 706d64453cce7179e05924c24d87777584a1275c fixes a 
+regression for 2.6.30 5ghz operation (bugzilla 13077).  Any chance
+they can both make it in?  I can send a backport of this patch if
+you like (usual path change).
 
-I would think that mac80211, while asked to scan when associated, could
-simply do something like calculating how long it can go off-channel
-under the current QoS requirements, and then go off-channel for that,
-wait for the next on-channel beacon and some traffic, scan the next
-channel(s) again etc.
+ drivers/net/wireless/ath/ath5k/reset.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 386bc8b..bd1940e 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -26,7 +26,7 @@
+ \*****************************/
+ 
+ #include <linux/pci.h> 		/* To determine if a card is pci-e */
+-#include <linux/bitops.h>	/* For get_bitmask_order */
++#include <linux/log2.h>
+ #include "ath5k.h"
+ #include "reg.h"
+ #include "base.h"
+@@ -69,10 +69,10 @@ static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
+ 
+ 	/* Get exponent
+ 	 * ALGO: coef_exp = 14 - highest set bit position */
+-	coef_exp = get_bitmask_order(coef_scaled);
++	coef_exp = ilog2(coef_scaled);
+ 
+ 	/* Doesn't make sense if it's zero*/
+-	if (!coef_exp)
++	if (!coef_scaled || !coef_exp)
+ 		return -EINVAL;
+ 
+ 	/* Note: we've shifted coef_scaled by 24 */
+-- 
+1.6.0.6
 
---=-4gE8BHHyK0EvDQXQjISm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIbBAABAgAGBQJKDrY0AAoJEODzc/N7+Qma2mYP93OFNvbAVf1h7l9kXUO/rcUu
-Z24TmNANtMxBYeHdL1h/KmM+bR/MRfpb9WhDrgVeE8gtbwvSCwen74RaDXpq/Udu
-62uCJPQrciPEsXQJxlCNkhQxOEO/TCoOjwtacjwoOWPvM55G8zw6xQ6DkxMuGOOk
-EhBFI49vP2lyEc/3sfy5wVvJdoqK4ZfylXy7cCdGn9oBUZxFniVt7oTk5mY0hidQ
-jWGbQ59K0X8FcTpVFgfdhZLZ+478qJfSvX+PGtS2yK8DtyJjtLSzOBSn2QjEsJy0
-V4cCV+32XfsbR98Q28T+8ZK7bIODs95yicpoJywP3rNQWtT0PwXoXOsNYtbix6sF
-okHGstJVv7/UhhAhHi3a6I/AA/MBeph+m8rdRm5Zu+pZDIEgRKDEUKB5Y6ChrJSA
-c09nHwL3fTVSTllar+OcL5qwUdXemGI3w58OXC5hBK56YQn2VM631G7jXeZb50Ys
-QTejXbxZVMmE89uoDz9KzzoAUt1tGU6UcEhES2d9uVAXr30BhLomyVqI56SJCvw9
-IuGmpv+6QRbUZ5F7jPT4Fxrpz3X4BZqpXaxKRajnzbJrj+9PeERUaRgVf5epyxaq
-Fos1Y3UZted9ti3xvaD0rJ/1fUFhRL0k6koe0VehSqc7IS4H980Ar5mKjjPCbL3c
-bxYp0jkz8A8YZX/Wemc=
-=62VE
------END PGP SIGNATURE-----
-
---=-4gE8BHHyK0EvDQXQjISm--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
