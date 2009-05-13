@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26911 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752136AbZERUCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 16:02:18 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 13:02:20 -0700
-Date: Mon, 18 May 2009 13:02:23 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:51813 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760269AbZEMVEo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2009 17:04:44 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH 3/4] cfg80211: fix in nl80211_set_reg()
-Message-ID: <20090518200223.GL20637@tesla>
-References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com> <1242248682-22051-4-git-send-email-lrodriguez@atheros.com> <20090518184641.GI2814@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090518184641.GI2814@tuxdriver.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/4] cfg80211: cleanup return calls on nl80211_set_reg()
+Date: Wed, 13 May 2009 17:04:40 -0400
+Message-Id: <1242248682-22051-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com>
+References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 18, 2009 at 11:46:41AM -0700, John W. Linville wrote:
-> On Wed, May 13, 2009 at 05:04:41PM -0400, Luis R. Rodriguez wrote:
-> > There is a race on access to last_request and its alpha2
-> > through reg_is_valid_request() and us possibly processing
-> > first another regulatory request on another CPU. We avoid
-> > this improbably race by locking with the cfg80211_mutex as
-> > we should have done in the first place. While at it add
-> > the assert on locking on reg_is_valid_request().
-> >
-> > Cc: stable@kernel.org
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> 
-> What is the effect of this race?
+This has no functional change, but it will make the race
+fix easier to spot in my next patch.
 
-The race is theoretical and I cannot confirm if it happens but
-if it does I suspect we can allow / deny regutatory requests
-when the race occurs when in fact we shouldn't.
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |   19 +++++++++++++------
+ 1 files changed, 13 insertions(+), 6 deletions(-)
 
-> What justifies this for 2.6.30
-> and/or stable?  It is getting late in the cycle for 2.6.30...
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 88cb4ab..bb2c37a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2545,15 +2545,19 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
+-	if (!reg_is_valid_request(alpha2))
+-		return -EINVAL;
++	if (!reg_is_valid_request(alpha2)) {
++		r = -EINVAL;
++		goto bad_reg;
++	}
+ 
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+ 		(num_rules * sizeof(struct ieee80211_reg_rule));
+ 
+ 	rd = kzalloc(size_of_regd, GFP_KERNEL);
+-	if (!rd)
+-		return -ENOMEM;
++	if (!rd) {
++		r = -ENOMEM;
++		goto bad_reg;
++	}
+ 
+ 	rd->n_reg_rules = num_rules;
+ 	rd->alpha2[0] = alpha2[0];
+@@ -2570,8 +2574,10 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ 		rule_idx++;
+ 
+-		if (rule_idx > NL80211_MAX_SUPP_REG_RULES)
++		if (rule_idx > NL80211_MAX_SUPP_REG_RULES) {
++			r = -EINVAL;
+ 			goto bad_reg;
++		}
+ 	}
+ 
+ 	BUG_ON(rule_idx != num_rules);
+@@ -2579,11 +2585,12 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	mutex_lock(&cfg80211_mutex);
+ 	r = set_regdom(rd);
+ 	mutex_unlock(&cfg80211_mutex);
++
+ 	return r;
+ 
+  bad_reg:
+ 	kfree(rd);
+-	return -EINVAL;
++	return r;
+ }
+ 
+ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+-- 
+1.6.0.6
 
-We could potentially be allowing two duplicate regulatory
-requests to be processed when two requests are being processed
-on different CPUs, I believe this is hard to trigger, you would
-need the global workqueue to be hit pretty hard, but if the race
-is hit I would expect two regulatory requests for the same
-alpha2 to be tried to be processed. In order to trigger though
-you'd need crda to send two regulutory responses instead of one
-or someone in userspace hammering crda for the same alpha2.
-Just checked and if the race happens we'd drop it anyway with
-a WARN_ON() later in __set_regdom():
-
-        if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
-                return -EINVAL;
-
-I suppose its safe to say that's all the consequences I can think of,
-unless I'm overlooking something.
-
-  Luis
