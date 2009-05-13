@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:43392 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759787AbZE0OAW (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60177 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756344AbZEMJVA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 10:00:22 -0400
-Date: Wed, 27 May 2009 11:00:21 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Will Keaney <keaneyw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v11] rfkill: rewrite
-Message-ID: <20090527140020.GA14440@khazad-dum.debian.net>
-References: <1242942720.4212.19.camel@johannes.local> <1243068246.4606.45.camel@johannes.local> <4A1BDE51.7020009@gmail.com> <20090526131533.GA3932@tuxdriver.com> <20090527025516.GC22235@khazad-dum.debian.net> <1243405682.26933.0.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243405682.26933.0.camel@johannes.local>
+	Wed, 13 May 2009 05:21:00 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC v2 0/5] WoW suport
+Date: Wed, 13 May 2009 05:20:56 -0400
+Message-Id: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 27 May 2009, Johannes Berg wrote:
-> On Tue, 2009-05-26 at 23:55 -0300, Henrique de Moraes Holschuh wrote:
-> > As long as the missing userspace control functionality (the lack of which is
-> > a _serious_ regression for platform drivers) is added before 2.6.31 ships, I
-> > have no complains.
-> > 
-> > Userspace must be able to change the (soft) state using sysfs.  This is
-> > not an optional part of rfkill :-)
-> 
-> I'm sorry, but you're wrong. Before I removed it, almost all drivers
-> disabled that functionality. We do want to add it back, but certainly
-> not with the mostly braindead interface it used to have.
+Here's take II, this time with some cfg80211 and minimal mac80211 integration.
+I'm not too sure on the parts needed on mac80211 yet so could use some help there.
 
-Well, thinkpad-acpi has users of that functionality, and not just that, it
-is in the middle of a two year effort to deprecate the thinkpad-acpi
-specific driver attributes and switch to just rfkill.   This effort will be
-destroyed if a kernel releases without support to writes to the "state"
-attribute.
+Unfortunately it doesn't work yet :( but then again I haven't yet tested this
+on another device. I'll do so eventually.
 
-I need that userspace interface (writes to the state attribute) in place and
-working.  It _is_ a big regression for thinkpad-acpi to have it return
--EOPNOTSUPP.
+Luis R. Rodriguez (5):
+  mac80211: fix idle trigger upon resume
+  mac80211: inform devices when we are suspending on the stop callback
+  cfg80211: add WoW support
+  mac80211: add WoW support
+  ath9k: Add Wake-on-Wireless-LAN support
 
-Also, regardless of the "claim" attribute (and the related
-user_claim_unsupported nonsense), the old core would allow the user to
-change the soft state using sysfs, so I really don't understand what you
-mean when you say "almost all drivers disabled that functionality", you
-can't disable writes to the "state" attribute in the old core from what I
-can see.  Please correct me if I am wrong on this.
+ drivers/net/wireless/adm8211.c              |    2 +-
+ drivers/net/wireless/at76c50x-usb.c         |    2 +-
+ drivers/net/wireless/ath/ar9170/main.c      |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c       |    4 +-
+ drivers/net/wireless/ath/ath9k/Makefile     |    1 +
+ drivers/net/wireless/ath/ath9k/ath9k.h      |   17 +
+ drivers/net/wireless/ath/ath9k/debug.c      |    1 -
+ drivers/net/wireless/ath/ath9k/debug.h      |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c         |   22 ++
+ drivers/net/wireless/ath/ath9k/hw.h         |   21 +
+ drivers/net/wireless/ath/ath9k/initvals.h   |   31 ++
+ drivers/net/wireless/ath/ath9k/main.c       |   23 ++-
+ drivers/net/wireless/ath/ath9k/pci.c        |  105 +++++
+ drivers/net/wireless/ath/ath9k/reg.h        |  154 ++++++++
+ drivers/net/wireless/ath/ath9k/wow.c        |  543 +++++++++++++++++++++++++++
+ drivers/net/wireless/b43/main.c             |    2 +-
+ drivers/net/wireless/b43legacy/main.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ drivers/net/wireless/libertas_tf/main.c     |    2 +-
+ drivers/net/wireless/mac80211_hwsim.c       |    2 +-
+ drivers/net/wireless/mwl8k.c                |    2 +-
+ drivers/net/wireless/p54/p54common.c        |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00.h        |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |    2 +-
+ drivers/net/wireless/rtl818x/rtl8180_dev.c  |    2 +-
+ drivers/net/wireless/rtl818x/rtl8187_dev.c  |    2 +-
+ drivers/net/wireless/wl12xx/main.c          |    2 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c      |    2 +-
+ include/linux/nl80211.h                     |   37 ++
+ include/net/cfg80211.h                      |   28 ++
+ include/net/mac80211.h                      |   15 +-
+ net/mac80211/cfg.c                          |   11 +
+ net/mac80211/driver-ops.h                   |    2 +-
+ net/mac80211/ieee80211_i.h                  |    2 +
+ net/mac80211/iface.c                        |    4 +
+ net/mac80211/pm.c                           |    8 +
+ net/mac80211/util.c                         |    8 +
+ net/wireless/nl80211.c                      |  121 ++++++
+ 39 files changed, 1166 insertions(+), 27 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
