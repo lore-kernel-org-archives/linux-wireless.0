@@ -1,61 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.infomaniak.ch ([84.16.68.89]:53257 "EHLO
-	smtp1.infomaniak.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112AbZEHJHv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40707 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754586AbZEMWVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 05:07:51 -0400
-Message-ID: <4A03F67B.1000101@shockfish.com>
-Date: Fri, 08 May 2009 11:08:11 +0200
-From: Alexandre Becholey <alexandre@shockfish.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [rt73usb] Master Mode almost done; problem with ARP
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 13 May 2009 18:21:37 -0400
+Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending
+ on the stop callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
+References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
+	 <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
+	 <1242208388.14227.46.camel@johannes.local>
+	 <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vnQQOGCU1Ms+BF7UOO1B"
+Date: Thu, 14 May 2009 00:21:08 +0200
+Message-Id: <1242253268.10076.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-As the subject says, the master mode for rt73usb is almost fixed. Here 
-is my setup:
-- An access point running hostapd with an ethernet interface (eth0) and 
-a wireless interface (wlan0, the wifi usb dongle) which are bridge 
-together (br0)
-- a computer directly (or through a switch with other computer) 
-connected to the AP's eth0
-- two computers associated to wlan0
-(they all are on Linux)
+--=-vnQQOGCU1Ms+BF7UOO1B
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Here is what I can do:
-- Stations can associate with the wifi usb dongle
-- Stations can ping, ssh,... the AP
-- Stations can ping, ssh,... any other stations
-- Stations can ping, ssh,... any computers on the LAN
-- AP can ping any computers on the LAN
-- Computers on the LAN can ping the AP
+On Wed, 2009-05-13 at 10:20 -0700, Luis R. Rodriguez wrote:
 
-And what I can't do:
-- Computers on the LAN can't ping the stations (Destination Host 
-Unreachable)
-- AP can't ping the stations
+> > The way you have it, a driver needs to
+> >  * keep track of the wow config
+> >  * check whether a stop is due to suspend
+> >  * apply wow config during stop
+> >
+> > If you passed the wow config in some struct to _stop() [and NULL if not
+> > for wow] then the driver would only need to
+> >
+> >  * check if for wow and apply config during stop
+>=20
+> Reason for not passing it is its accessible through the wiphy. All we
+> really need from mac80211 is if it changed (some devices may need
+> this, and will be more useful for the user pattern handling) and if we
+> are stopping due to suspend.
+>=20
+> What advantage do we have if we stuff a wow struct instead of having
+> the driver read the wiphy wow info?
 
-I ran wireshark on a computer on the LAN, on the AP (here I used tcpdump 
-on all interfaces because I don't have the possibility to have X) and on 
-a stations. I would say that's a problem with ARP packets.
-When I try to ping a station from the AP or a LAN computer, ARP requests 
-arrive to the AP (I see them on eth0, wlan0 and br0), but they don't 
-arrive to the stations (I can't see any ARP packets in the air and I use 
-a different wireless interface to monitor than the one that is 
-associated with the AP).
-When with that station I ping the AP (or the lan computer, it doesn't 
-matter), the first ping (from AP or lan) works until I stop the ping 
-started on the station.
+None on that, but I think it would be a lot simpler for the driver to
+check "was I passed wow info" instead of checking "is this for suspend,
+if yes, check if there is wow info". In the former case
+cfg80211/mac80211 would simply not pass any wow info if wow wasn't
+enabled.
 
-I was wondering if the fix I did (the one we were discussing the 5th 
-March) on the rt73 driver may be the cause of that problem.
+johannes
 
-Best regards,
+--=-vnQQOGCU1Ms+BF7UOO1B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Alexandre Becholey
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKC0fQAAoJEODzc/N7+QmaqqAP/2gJ33MAl+21D1Fp5Sm/Nld4
+PY64SloMtsjI1MUmWonFHbAiXdUm8TT0kFQCIIJuKpPT0q2o/1Hs+cMeNPinWIgQ
+QWPSYhQTCINVVX0urCPJJUst7Ed+xexV5uu+2VkoYWA2Zmnulg4SnJIlt8S64zbD
+iAHp32bAONsT1PQfoFme6dvQ7wrCLDaXtysKPzC6Y8ZSYOgbiQwl4xf6aNLdcvuU
++I00LzwdPMhzIw75TgwU5MgmKCNbfQfN9RAdEqUZ8WycmI/WnfeXXWAKi7D9JiUj
+m+1nUCeJnlx21e5v1CypIP5tu024hCrGpCsqjzUMecQfVUJjlIayiVbYgi3uouim
+sgzhS/lf5+wLA5IR8ltUbtMjCTHQmRgsySiBqQt2GIvneq7NZp865Vqw0MnR0Zbd
+GBWOJDqCRW8p9JP2xpM1T5rALlEL88xE2v8FvrKJjnMxpzjt5srP1ziz0i6ftPLJ
+MXwsnpP9CgDQir2BbMOFNwNgkd4nCs2+RuKat6RNyUVQQVj2ZWYtsxiyqDPZpoln
+bFx3MN/TvSZMyON5vl6Ok+lRrQIxw2ZLHh+QXIziot6YuQ7N/4+Xy14V57ezIHie
+tScWPwl+OuHNIR9xm4alTBX17Y8f4jX+Cuc8n+8XLZb4/0Eum77FhwTlgZMS2XIO
+gB8/ZSrnbXs8O9e6vAYC
+=+H3i
+-----END PGP SIGNATURE-----
+
+--=-vnQQOGCU1Ms+BF7UOO1B--
 
