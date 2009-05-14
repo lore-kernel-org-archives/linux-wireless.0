@@ -1,125 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caiajhbdcaid.dreamhost.com ([208.97.132.83]:54311 "EHLO
-	spunkymail-a9.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757530AbZEOKgW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54431 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752665AbZENUxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 06:36:22 -0400
-From: Karl Hiramoto <karl@hiramoto.org>
-To: j@w1.fi
-Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
-	Karl Hiramoto <karl@hiramoto.org>
-Subject: [PATCH] hostapd: nl80211 retry creating a interface if it fails the first time.
-Date: Fri, 15 May 2009 12:36:08 +0200
-Message-Id: <1242383768-21030-1-git-send-email-karl@hiramoto.org>
+	Thu, 14 May 2009 16:53:54 -0400
+Subject: Re: Scan while TX/RX'ing a lot of data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com
+In-Reply-To: <1242334231.4227.126.camel@localhost.localdomain>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+	 <1242327298.4227.25.camel@localhost.localdomain>
+	 <1242327995.5799.4.camel@johannes.local>
+	 <1242334231.4227.126.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-l3EsS5D3dNSY2TEEugEm"
+Date: Thu, 14 May 2009 22:53:22 +0200
+Message-Id: <1242334402.5799.12.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If hostapd segfaults, or is killed with -9, or the interface already exists, when the interface is created, it will fail.
 
-A normal case with hostapd runing:
+--=-l3EsS5D3dNSY2TEEugEm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-2: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether 00:01:02:03:04:05 brd ff:ff:ff:ff:ff:ff
-3: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 100
-    link/ether 8a:cb:b3:76:b0:5d brd ff:ff:ff:ff:ff:ff
-4: eth2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop qlen 100
-    link/ether d6:07:19:ee:b5:8d brd ff:ff:ff:ff:ff:ff
-5: wmaster0: <UP,LOWER_UP> mtu 0 qdisc pfifo_fast qlen 1000
-    link/ieee802.11 00:0e:8e:15:6e:0b brd 00:00:00:00:00:00
-7: wlan0_0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether 00:13:01:01:08:0a brd ff:ff:ff:ff:ff:ff
-9: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue
-    link/ether 00:13:01:01:08:0a brd ff:ff:ff:ff:ff:ff
-11: br1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue
-    link/ether 00:01:02:03:04:05 brd ff:ff:ff:ff:ff:ff
-14: mon.wlan0_0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/[803] 00:0e:8e:15:6e:0b brd ff:ff:ff:ff:ff:ff
-15: wlan0_1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether 00:13:01:01:08:0b brd ff:ff:ff:ff:ff:ff
+On Thu, 2009-05-14 at 16:50 -0400, Dan Williams wrote:
 
-Then rudely kill hostapd.
+> If there was a reliable mechanism to figure out whether there was a
+> certain QoS level of traffic flowing through the card, this would be
+> easier to do automatically.  AFAIK all the APIs these days are
+> socket-based, and that doesn't help us get from app -> interface without
+> a lot of intermediate steps.  How does mac80211 figure out what to put
+> into each of the 4 buckets for wifi QoS / WMM?
 
-Mon interface still exists, as well as second ap created by hostapd
+Well, it depends what you need to do. You can use
+setsockopt(SO_PRIORITY) or like ping -Q use DSCP
 
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-2: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether 00:01:02:03:04:05 brd ff:ff:ff:ff:ff:ff
-3: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 100
-    link/ether 8a:cb:b3:76:b0:5d brd ff:ff:ff:ff:ff:ff
-4: eth2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop qlen 100
-    link/ether d6:07:19:ee:b5:8d brd ff:ff:ff:ff:ff:ff
-5: wmaster0: <UP,LOWER_UP> mtu 0 qdisc pfifo_fast qlen 1000
-    link/ieee802.11 00:0e:8e:15:6e:0b brd 00:00:00:00:00:00
-7: wlan0_0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether 00:13:01:01:08:0a brd ff:ff:ff:ff:ff:ff
-9: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue
-    link/ether 00:13:01:01:08:0a brd ff:ff:ff:ff:ff:ff
-11: br1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue
-    link/ether 00:01:02:03:04:05 brd ff:ff:ff:ff:ff:ff
-14: mon.wlan0_0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/[803] 00:0e:8e:15:6e:0b brd ff:ff:ff:ff:ff:ff
-15: wlan0_1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether 00:13:01:01:08:0b brd ff:ff:ff:ff:ff:ff
+johannes
 
-Hostapd will fail on startup.
+--=-l3EsS5D3dNSY2TEEugEm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Configuration file: /tmp/hostapd/hostapd.conf
-Failed to create interface mon.wlan0_0.
-Using interface wlan0_0 with hwaddr 00:13:01:01:08:0a and ssid 'IG_0405_LAN'
-Failed to set beacon head/tail or DTIM period
-Failed to create interface wlan0_1.
+-----BEGIN PGP SIGNATURE-----
 
-This patch solves this issue.
+iQIcBAABAgAGBQJKDIS9AAoJEODzc/N7+Qma1RoQAMZuP2+9R0QkDp24h0pFrXZK
+4Q2/feE1/p1k6NiZp8uWk+a54DTzFsku+KJj9nNNCzwpnvMbrPGWjH1sqA6fZDl3
+yEEcJlJRZ22V6GxgBS9wXX7CW8/5lmgjM3dKYKl2twu9DtCLYpF5OPjhQlgjKumh
+M6hCn+JSgM2Wm3/OW/5fbOTWF3mkDaBvSHYiI0FXfxRpfHneZ5Y40fk2IALsmriK
+AGW0SikmeZ4A4pKW/112K7Dn99Xj9LIxmGKoRIiD9lR3wV3DzmjS7yDmHVNERv03
+rQN3+jCl+MLoaPQ7k3BXr7i2WwBR7+uBRKcaWIU/MVkcPh+hGkjK3Fow0ZbEOgmz
+/mfFkgzc2wg4y/URdiyh3LfNOkaUCJXyTiyQosvA9TL5oOZ5CRnibG6BEOOWEXzX
+tujwNKqEzroseQ41wYeGUMepqQZdRgDQN2Xh6onNiHdanuw/vNAdgWLra95KX1iY
+MKq4g9xeB9oiwIHBMD56ZYrkFstgcgQ789ErgnWueBpNND+q0+T//XPPAbWJsleE
+DIT1A3TpnYQhcmb8owDNVM5BKZcBVF3VH1U+zx94VE72igXkJAnedFWE0du0ijpe
+16hZtW9E9NXLPW4zMXW4OGGuvJ+yq5f4iIxu9yTwco9Y4P70x13euA5RUZl7VFjR
+IeuMGqFQ8MEM0sXpyY1K
+=7cL/
+-----END PGP SIGNATURE-----
 
-Signed-off-by: Karl Hiramoto <karl@hiramoto.org>
----
- src/drivers/driver_nl80211.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
-
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index 79c7889..6e5f48e 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -2468,7 +2468,7 @@ static void nl80211_remove_iface(struct wpa_driver_nl80211_data *drv,
- }
- 
- 
--static int nl80211_create_iface(struct wpa_driver_nl80211_data *drv,
-+static int nl80211_create_iface_once(struct wpa_driver_nl80211_data *drv,
- 				const char *ifname, enum nl80211_iftype iftype,
- 				const u8 *addr)
- {
-@@ -2529,6 +2529,27 @@ static int nl80211_create_iface(struct wpa_driver_nl80211_data *drv,
- 
- 	return ifidx;
- }
-+static int nl80211_create_iface(struct wpa_driver_nl80211_data *drv,
-+				const char *ifname, enum nl80211_iftype iftype,
-+				const u8 *addr)
-+{
-+	int ret;
-+
-+	ret = nl80211_create_iface_once(drv, ifname, iftype, addr);
-+
-+	/*if error occured and iterface already exists */
-+	if (ret < 0 && if_nametoindex(ifname)) {
-+		wpa_printf(MSG_INFO, "Retrying to create %s.", ifname);
-+
-+		/*remove iface that was already there. */
-+		nl80211_remove_iface(drv, if_nametoindex(ifname));
-+
-+		/* retry to create iface*/
-+		ret = nl80211_create_iface_once(drv, ifname, iftype, addr);
-+	}
-+
-+	return ret;
-+}
- 
- #endif /* CONFIG_AP || HOSTAPD */
- 
--- 
-1.6.0.6
+--=-l3EsS5D3dNSY2TEEugEm--
 
