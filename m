@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:46012 "EHLO smtps.tip.net.au"
+Received: from mga14.intel.com ([143.182.124.37]:58697 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751070AbZEAFVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 01:21:49 -0400
-Date: Fri, 1 May 2009 15:21:44 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Greg KH <greg@kroah.com>
-Cc: linux-next@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: linux-next: driver-core tree build warning
-Message-Id: <20090501152144.500e619a.sfr@canb.auug.org.au>
+	id S1752559AbZENSBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2009 14:01:04 -0400
+Subject: Re: [ipw3945-devel] iwlwifi 5150 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
+References: <1242321566.32358.19.camel@rc-desk>
+	 <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
+	 <1242322940.32358.31.camel@rc-desk>
+	 <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 May 2009 11:07:37 -0700
+Message-Id: <1242324457.32358.43.camel@rc-desk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2009-05-14 at 10:43 -0700, Rafał Miłecki wrote:
+> W dniu 14 maja 2009 19:42 użytkownik reinette chatre
+> <reinette.chatre@intel.com> napisał:
+> > Hi,
+> >
+> > On Thu, 2009-05-14 at 10:22 -0700, Rafał Miłecki wrote:
+> >> 2009/5/14 reinette chatre <reinette.chatre@intel.com>:
+> >> > uCode for Intel Wireless WiFi Link 5150AGN is now available for download
+> >> > from http://intellinuxwireless.org/?n=Downloads
+> >>
+> >> Changelog is top secret as usually? ;)
+> >
+> > Nope ... this is the very first release of this uCode for this
+> > particular hardware. A changelog does not make sense in this case.
+> >
+> >
+> >> Should this fix
+> >> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946 (wrong
+> >> command queue)?
+> >
+> >
+> > This bug is against 5100/5300 hardware, so this uCode is not what you
+> > are looking for. We are working on getting uCode for 5100/5300 hardware
+> > (that includes a fix for this bug) out the door.
+> >
+> > Reinette
+> 
+> Ah, I gone wrong with that numbers understanding. Maybe putting
+> supported hardware in ucode's README would be a good idea? :)
 
-Hi Greg,
+good idea ...
 
-Today's linux-next build (x86_64 allmodconfig) produced these warnings:
+> Currently visiting http://intellinuxwireless.org/?n=Downloads doesn't
+> provide much help about choosing right firmware for 5100/5300(/5200?).
+> Or at last some short info on download page?
 
-drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_cfg':
-drivers/net/wireless/ipw2x00/ipw2100.c:3491: warning: passing argument 1 of=
- 'dev_get_drvdata' from incompatible pointer type
-include/linux/device.h:457: note: expected 'const struct device *' but argu=
-ment is of type 'struct device **'
-drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_status':
-drivers/net/wireless/ipw2x00/ipw2100.c:3500: warning: passing argument 1 of=
- 'dev_get_drvdata' from incompatible pointer type
-include/linux/device.h:457: note: expected 'const struct device *' but argu=
-ment is of type 'struct device **'
-drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_capability':
-drivers/net/wireless/ipw2x00/ipw2100.c:3509: warning: passing argument 1 of=
- 'dev_get_drvdata' from incompatible pointer type
-include/linux/device.h:457: note: expected 'const struct device *' but argu=
-ment is of type 'struct device **'
-drivers/net/wireless/ipw2x00/ipw2100.c: In function 'show_rf_kill':
-drivers/net/wireless/ipw2x00/ipw2100.c:4227: warning: passing argument 1 of=
- 'dev_get_drvdata' from incompatible pointer type
-include/linux/device.h:457: note: expected 'const struct device *' but argu=
-ment is of type 'struct device **'
+I just changed it ... will this work?
 
-Introduced by commit 73119f5e60e3b16577e99e2f035039bed0d2dcca ("Wireless:
-remove driver_data direct access of struct device").
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+Reinette
 
---Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkn6hugACgkQjjKRsyhoI8yLuQCgmlYPYwARXT6GDx6Y/KRTtN2O
-WdkAn198M+rgYZ4PwVce8elkD2aLt8Zw
-=1NqE
------END PGP SIGNATURE-----
-
---Signature=_Fri__1_May_2009_15_21_44_+1000_euLN=A._odtSICqo--
