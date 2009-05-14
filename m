@@ -1,47 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:43147 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762737AbZE0Msh (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55420 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752484AbZENSas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 08:48:37 -0400
-From: Jeff Hansen <x@jeffhansen.com>
+	Thu, 14 May 2009 14:30:48 -0400
+Message-Id: <20090514183044.626021480@atheros.com>
+References: <20090514182845.684003914@atheros.com>
+Date: Thu, 14 May 2009 21:28:48 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	Jeff Hansen <x@jeffhansen.com>
-Date: Wed, 27 May 2009 12:48:27 +0000
-Message-Id: <1243428510-14931-1-git-send-email-x@jeffhansen.com>
-Subject: [PATCH 1/4] ath9k: Reset SC_OP_TSF_RESET flag after stuck beacon
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 3/4] ath9k: Fix PS mode operation to receive buffered broadcast/multicast frames
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a TrendNet 652-BRP running OpenWRT + ath9k very well.  The only
-problem is that the beacon gets stuck maybe once a day.  After
-Vasanthakumar Thiagarajan's "ath9k: cleanup beacon parameters
-configuration" patch, ath9k would nearly re-configure the beacons after it
-detected the stuck beacon, and did a reset.  But it would fail the
-SC_OP_TSF_RESET check in ath_beacon_config_ap.  This patch gets the beacon
-fully reconfigured after the reset.
+The previous implementation was moving back to NETWORK SLEEP state
+immediately after receiving a Beacon frame. This means that we are
+unlikely to receive all the buffered broadcast/multicast frames that
+would be sent after DTIM Beacon frames. Fix this by parsing the Beacon
+frame and remaining awake, if needed, to receive the buffered
+broadcast/multicast frames. The last buffered frame will trigger the
+move back into NETWORK SLEEP state.
 
-Signed-off-by: Jeff Hansen <x@jeffhansen.com>
+If the last broadcast/multicast frame is not received properly (or if
+the AP fails to send it), the next Beacon frame will work as a backup
+trigger for returning into NETWORK SLEEP.
+
+A new debug type, PS (debug=0x800 module parameter), is added to make
+it easier to debug potential power save issues in the
+future. Currently, this is only used for the Beacon frame and buffered
+broadcast/multicast receiving.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- drivers/net/wireless/ath/ath9k/beacon.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 
+ drivers/net/wireless/ath/ath9k/debug.h |    1 
+ drivers/net/wireless/ath/ath9k/recv.c  |  119 +++++++++++++++++++++++++++++++--
+ 3 files changed, 114 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index a21b213..0c67ed2 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -411,6 +411,7 @@ void ath_beacon_tasklet(unsigned long data)
- 		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
- 			DPRINTF(sc, ATH_DBG_BEACON,
- 				"beacon is officially stuck\n");
-+			sc->sc_flags |= SC_OP_TSF_RESET;
- 			ath_reset(sc, false);
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/ath9k.h	2009-05-14 21:04:12.000000000 +0300
++++ wireless-testing/drivers/net/wireless/ath/ath9k/ath9k.h	2009-05-14 21:12:24.000000000 +0300
+@@ -519,6 +519,7 @@ struct ath_rfkill {
+ #define SC_OP_LED_ON            BIT(13)
+ #define SC_OP_SCANNING          BIT(14)
+ #define SC_OP_TSF_RESET         BIT(15)
++#define SC_OP_WAIT_FOR_CAB      BIT(16)
+ 
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:12:22.000000000 +0300
++++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:12:24.000000000 +0300
+@@ -473,6 +473,112 @@ void ath_flushrecv(struct ath_softc *sc)
+ 	spin_unlock_bh(&sc->rx.rxflushlock);
+ }
+ 
++static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
++{
++	/* Check whether the Beacon frame has DTIM indicating buffered bc/mc */
++	struct ieee80211_mgmt *mgmt;
++	u8 *pos, *end, id, elen;
++	struct ieee80211_tim_ie *tim;
++
++	mgmt = (struct ieee80211_mgmt *)skb->data;
++	pos = mgmt->u.beacon.variable;
++	end = skb->data + skb->len;
++
++	while (pos + 2 < end) {
++		id = *pos++;
++		elen = *pos++;
++		if (pos + elen > end)
++			break;
++
++		if (id == WLAN_EID_TIM) {
++			if (elen < sizeof(*tim))
++				break;
++			tim = (struct ieee80211_tim_ie *) pos;
++			if (tim->dtim_count != 0)
++				break;
++			return tim->bitmap_ctrl & 0x01;
++		}
++
++		pos += elen;
++	}
++
++	return false;
++}
++
++static void ath_rx_ps_back_to_sleep(struct ath_softc *sc)
++{
++	sc->sc_flags &= ~(SC_OP_WAIT_FOR_BEACON | SC_OP_WAIT_FOR_CAB);
++	if (sc->hw->conf.flags & IEEE80211_CONF_PS)
++		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
++}
++
++static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
++{
++	struct ieee80211_mgmt *mgmt;
++
++	if (skb->len < 24 + 8 + 2 + 2)
++		return;
++
++	mgmt = (struct ieee80211_mgmt *)skb->data;
++	if (memcmp(sc->curbssid, mgmt->bssid, ETH_ALEN) != 0)
++		return; /* not from our current AP */
++
++	if (!(sc->hw->conf.flags & IEEE80211_CONF_PS)) {
++		/* We are not in PS mode anymore; remain awake */
++		DPRINTF(sc, ATH_DBG_PS, "Not in PS mode anymore, remain "
++			"awake\n");
++		sc->sc_flags &= ~(SC_OP_WAIT_FOR_BEACON | SC_OP_WAIT_FOR_CAB);
++		return;
++	}
++
++	if (ath_beacon_dtim_pending_cab(skb)) {
++		/*
++		 * Remain awake waiting for buffered broadcast/multicast
++		 * frames.
++		 */
++		DPRINTF(sc, ATH_DBG_PS, "Received DTIM beacon indicating "
++			"buffered broadcast/multicast frame(s)\n");
++		sc->sc_flags |= SC_OP_WAIT_FOR_CAB;
++		return;
++	}
++
++	if (sc->sc_flags & SC_OP_WAIT_FOR_CAB) {
++		/*
++		 * This can happen if a broadcast frame is dropped or the AP
++		 * fails to send a frame indicating that all CAB frames have
++		 * been delivered.
++		 */
++		DPRINTF(sc, ATH_DBG_PS, "PS wait for CAB frames timed out\n");
++	}
++
++	/* No more broadcast/multicast frames to be received at this point. */
++	ath_rx_ps_back_to_sleep(sc);
++}
++
++static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++
++	/* Process Beacon and CAB receive in PS state */
++	if (ieee80211_is_beacon(hdr->frame_control))
++		ath_rx_ps_beacon(sc, skb);
++	else if ((sc->sc_flags & SC_OP_WAIT_FOR_CAB) &&
++		 (ieee80211_is_data(hdr->frame_control) ||
++		  ieee80211_is_action(hdr->frame_control)) &&
++		 is_multicast_ether_addr(hdr->addr1) &&
++		 !ieee80211_has_moredata(hdr->frame_control)) {
++		DPRINTF(sc, ATH_DBG_PS, "All PS CAB frames received, back to "
++			"sleep\n");
++		/*
++		 * No more broadcast/multicast frames to be received at this
++		 * point.
++		 */
++		ath_rx_ps_back_to_sleep(sc);
++	}
++}
++
+ static void ath_rx_send_to_mac80211(struct ath_softc *sc, struct sk_buff *skb,
+ 				    struct ieee80211_rx_status *rx_status)
+ {
+@@ -667,8 +773,6 @@ int ath_rx_tasklet(struct ath_softc *sc,
+ 			rx_status.flag &= ~RX_FLAG_DECRYPTED;
  		}
  
--- 
-1.6.0.4
+-		ath_rx_send_to_mac80211(sc, skb, &rx_status);
+-
+ 		/* We will now give hardware our shiny new allocated skb */
+ 		bf->bf_mpdu = requeue_skb;
+ 		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
+@@ -680,6 +784,7 @@ int ath_rx_tasklet(struct ath_softc *sc,
+ 			bf->bf_mpdu = NULL;
+ 			DPRINTF(sc, ATH_DBG_FATAL,
+ 				"dma_mapping_error() on RX\n");
++			ath_rx_send_to_mac80211(sc, skb, &rx_status);
+ 			break;
+ 		}
+ 		bf->bf_dmacontext = bf->bf_buf_addr;
+@@ -695,11 +800,11 @@ int ath_rx_tasklet(struct ath_softc *sc,
+ 			sc->rx.rxotherant = 0;
+ 		}
+ 
+-		if (ieee80211_is_beacon(fc) &&
+-				(sc->sc_flags & SC_OP_WAIT_FOR_BEACON)) {
+-			sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
+-			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
+-		}
++		if (unlikely(sc->sc_flags & SC_OP_WAIT_FOR_BEACON))
++			ath_rx_ps(sc, skb);
++
++		ath_rx_send_to_mac80211(sc, skb, &rx_status);
++
+ requeue:
+ 		list_move_tail(&bf->list, &sc->rx.rxbuf);
+ 		ath_rx_buf_link(sc, bf);
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/debug.h	2009-05-14 21:04:11.000000000 +0300
++++ wireless-testing/drivers/net/wireless/ath/ath9k/debug.h	2009-05-14 21:12:24.000000000 +0300
+@@ -29,6 +29,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_BEACON		= 0x00000100,
+ 	ATH_DBG_CONFIG		= 0x00000200,
+ 	ATH_DBG_FATAL		= 0x00000400,
++	ATH_DBG_PS		= 0x00000800,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
 
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
