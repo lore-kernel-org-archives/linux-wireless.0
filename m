@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45744 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754887AbZEMJxk (ORCPT
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:49621 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768AbZENSGJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 05:53:40 -0400
-Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending
- on the stop callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
-	 <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wD126mYjPn/IIZvlKCI/"
-Date: Wed, 13 May 2009 11:53:08 +0200
-Message-Id: <1242208388.14227.46.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 14 May 2009 14:06:09 -0400
+Received: by pzk13 with SMTP id 13so715546pzk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 11:06:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890905131537m3d8026k4e430d2593e3f64e@mail.gmail.com>
+References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com>
+	<1242248682-22051-5-git-send-email-lrodriguez@atheros.com>
+	<1242252539.10076.2.camel@johannes.local> <43e72e890905131529s5e8d6421pde9b80a92f807160@mail.gmail.com>
+	<1242254121.10076.11.camel@johannes.local> <43e72e890905131537m3d8026k4e430d2593e3f64e@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 14 May 2009 11:05:48 -0700
+Message-ID: <43e72e890905141105m1a7b2fadhb99fd02cf3037704@mail.gmail.com>
+Subject: Re: [PATCH 4/4] cfg80211: fix race between core hint and driver's
+	custom apply
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 13, 2009 at 3:37 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, May 13, 2009 at 3:35 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Wed, 2009-05-13 at 15:29 -0700, Luis R. Rodriguez wrote:
+>>
+>>> >>       queue_regulatory_request(request);
+>>> >>
+>>> >> +     /*
+>>> >> +      * This ensures last_request is populated once modules
+>>> >> +      * come swinging in and calling regulatory hints and
+>>> >> +      * wiphy_apply_custom_regulatory().
+>>> >> +      */
+>>> >> +     flush_scheduled_work();
+>>> >> +
+>>> >
+>>> > Umm, this is a little stupid, first you queue it and then you flush the
+>>> > workqueue... Why not call the function that runs off the workqueue
+>>> > directly?
+>>>
+>>> That was the original approach -- but then we went on a bagwagon on
+>>> getting all these regulatory hints through the workqueue. I can
+>>> address for for wireless-testing but not sure what path we prefer for
+>>> stable. The above one liner seems small enough and would be nice to
+>>> get confirmation from a user on stable.
+>>
+>> Yeah definitely the way to go for stable, and we can als put it into
+>> wireless-testing. But I think ultimately we should just refactor what is
+>> necessary and just call the function that would otherwise run off the
+>> workqueue. Can do that after this patch though.
+>
+> OK -- will work on that next.
 
---=-wD126mYjPn/IIZvlKCI/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+BTW please feel free to add:
 
-On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
-> We inform the drivers so they can take appropriate actions during
-> suspend for WoW support.
+Tested-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 
-> -static void ar9170_op_stop(struct ieee80211_hw *hw)
-> +static void ar9170_op_stop(struct ieee80211_hw *hw, bool suspend)
-
-Why just a 'suspend' bool? Why not pass the WoW information in here,
-instead of adding a new config and stuff for it? WoW information is only
-relevant during suspend.
-
-The way you have it, a driver needs to
- * keep track of the wow config
- * check whether a stop is due to suspend
- * apply wow config during stop
-
-If you passed the wow config in some struct to _stop() [and NULL if not
-for wow] then the driver would only need to
-
- * check if for wow and apply config during stop
-
-johannes
-
---=-wD126mYjPn/IIZvlKCI/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCph/AAoJEODzc/N7+QmarP8P/2gKsQSPrEtiHWy38znePVL4
-hHILcGayVYnesnRtHq4FHRPNKGK/iPD44b/hP4F1ENbeVG/y/JZmCTqRE13aaeS3
-BXCYaZjgCDFl/zovxzdsYMAqEpuZqf3JJ4hsHxhTnALkk/d97KD3mjzNABsShh6A
-MBcIc4UpXYwJ25+QcnH4ylnwOrIbpTTq0NgRoe8t0oZez66+gDjFQrVxJJZB4AZW
-lvCTvKXpCY26/QKtbHUD/GtLuBKs4nhROk3xvFvTVPhzTNNZnqXHWdh7Au5+Pv9d
-IoTgwFET2hyqXwmY/hK59W9tSTI+EW6kssR+bgX70oLDt7+8c7NlQbwZUgWKSmo6
-wxSfGaMOE6vka+q4u2LUyXdtPjomux8LanFwRMB8q+2schfU+++WpMF0xiJsDQv5
-J1wmB/z6M/jrgUugFmcCHojuBuu+14CjtggTw+HSPRrElTp7TlUYpZjqXOlbW2v6
-KQQir2LSyCCMrhqMAWtnCNw/CVJXZME7mTEAZySs1ZDp8soRkwjKVwurCr2geXVQ
-/KDTxNoQFUWXITGHkW3WPoGKQLkr4Av0rIS60I/lDOzuvtzvka+j8myXdb87KKdI
-C7BenIcuCxg/A0d7ClE+kSD48WRV5GExdjMsNol8futy60qh7LxQM+5Z+sc+0buv
-pXCEQIOp2pSfN7Y86GYL
-=db2q
------END PGP SIGNATURE-----
-
---=-wD126mYjPn/IIZvlKCI/--
-
+  Luis
