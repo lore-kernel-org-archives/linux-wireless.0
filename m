@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:46211 "EHLO
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:61474 "EHLO
 	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753743AbZEUSXg convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1762384AbZENAcP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 14:23:36 -0400
-Received: by bwz22 with SMTP id 22so1181790bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 11:23:37 -0700 (PDT)
+	Wed, 13 May 2009 20:32:15 -0400
+Received: by bwz22 with SMTP id 22so987600bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 17:32:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1242928642.4212.16.camel@johannes.local>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
-	<1242922222.4212.15.camel@johannes.local> <69e28c910905211054s3cc1e25bq364cddeab97ea04c@mail.gmail.com>
-	<1242928642.4212.16.camel@johannes.local>
+In-Reply-To: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
+References: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
 From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 21 May 2009 20:23:17 +0200
-Message-ID: <69e28c910905211123s1cb14f8dw25c2d1d1b3f199cc@mail.gmail.com>
-Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
+Date: Thu, 14 May 2009 02:31:55 +0200
+Message-ID: <69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
+Subject: Re: WoW for ath5k
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/21 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2009-05-21 at 19:54 +0200, Gábor Stefanik wrote:
->> On Thu, May 21, 2009 at 6:10 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> >
->> >> Intel would like to announce the Linux driver for the Wifi part of the
->> >> wireless multicomm 3200 product, which will be availabe in early 2010. This
->> >> is a fullmac device.
->> >
->> > I realise the device is not available yet, but I hope the firmware will
->> > be available soon anyway :)
->> >
->> > johannes
->>
->> Well, it's fullmac, so I expect the firmware to be in the HW's EEPROM,
->> and not in /lib/firmware.
+On Thu, May 14, 2009 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> w=
+rote:
+> BTW legacy-hal has this stuff :) Just grep for ATH_WOW
 >
-> Why bother reading the driver if you can speculate....
+> =A0Luis
 
-Sorry, didn't notice the driver was actually out.
+Wow! :-)
 
->
-> johannes
->
-
-
-
--- 
+--=20
 Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
