@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:56768 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760661AbZEHJgI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 05:36:08 -0400
-Date: Fri, 8 May 2009 12:36:03 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: MFP - Drop unprotected Action frames prior key
-	setup
-Message-ID: <20090508093603.GB21362@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx2.redhat.com ([66.187.237.31]:46547 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751225AbZENSyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2009 14:54:09 -0400
+Subject: Re: Scan while TX/RX'ing a lot of data
+From: Dan Williams <dcbw@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com
+In-Reply-To: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 14 May 2009 14:54:58 -0400
+Message-Id: <1242327298.4227.25.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When management frame protection (IEEE 802.11w) is used, unprotected
-Robust Action frames are not allowed prior to key configuration.
-However, unprotected Deauthentication and Disassociation frames are
-allowed at that point, but not after key configuration.
+On Thu, 2009-05-14 at 10:52 -0700, Luis R. Rodriguez wrote:
+> I'm told Network Manager scans every 60 seconds. When TX'ing or RX'ing
+> a lot of data you will see a big dip in throughput and sometimes it
+> may cause issues with some connections. Jouni pointed out a possible
+> nice option here: split the scans per channel through time. Now with
+> nl80211 this is possible but right now Network Manager uses wext
+> through wpa_supplicant in many distributions and this won't change for
+> a bit (maybe by the next major distribution releases?). Since we're
+> stuck with wext for the current distribution releases I'd like to hear
+> feedback on a possible nice solution. Should we simply cancel scan?
 
-Make ieee80211_drop_unencrypted() handle the special cases for MFP by
-separating the basic Data frame case from Management frame processing
-and handle the Management frames only if MFP has been negotiated. In
-addition, do not use sdata->drop_unencrypted for Management frames
-since the decision on whether to accept the frame depends on the key
-being configured.
+Libertas splits scans up into 3 parts with a short return to the
+operating channel between each part.  There's nothing that requires
+cfg80211 for that to work...
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Something I've tossed around for a while is counting traffic on the
+device and if its over a certain bitrate for a period of time, postpone
+the scan for a while.  But after a certain amount of time, there's going
+to be a scan no matter what.
 
----
- net/mac80211/rx.c |   28 +++++++++++++++++++---------
- 1 file changed, 19 insertions(+), 9 deletions(-)
+The problem here is that at any time an application (say, wifi location
+app) could ask for the list of access points.  If you don't scan
+periodically, all APs other than your associated AP (and others on the
+same channel) will gradually drop off because their beacons are
+received.  Hard to wifi position or get area statistics if there's only
+one AP in the list.
 
---- uml.orig/net/mac80211/rx.c	2009-05-08 11:55:20.000000000 +0300
-+++ uml/net/mac80211/rx.c	2009-05-08 12:30:46.000000000 +0300
-@@ -1221,17 +1221,27 @@ ieee80211_drop_unencrypted(struct ieee80
- 	/* Drop unencrypted frames if key is set. */
- 	if (unlikely(!ieee80211_has_protected(fc) &&
- 		     !ieee80211_is_nullfunc(fc) &&
--		     (!ieee80211_is_mgmt(fc) ||
--		      (ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
--		       rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP))) &&
--		     (rx->key || rx->sdata->drop_unencrypted)))
--		return -EACCES;
--	/* BIP does not use Protected field, so need to check MMIE */
--	if (unlikely(rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP) &&
--		     ieee80211_is_multicast_robust_mgmt_frame(rx->skb) &&
--		     ieee80211_get_mmie_keyidx(rx->skb) < 0 &&
-+		     ieee80211_is_data(fc) &&
- 		     (rx->key || rx->sdata->drop_unencrypted)))
- 		return -EACCES;
-+	if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
-+		if (unlikely(ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
-+			     rx->key))
-+			return -EACCES;
-+		/* BIP does not use Protected field, so need to check MMIE */
-+		if (unlikely(ieee80211_is_multicast_robust_mgmt_frame(rx->skb)
-+			     && ieee80211_get_mmie_keyidx(rx->skb) < 0 &&
-+			     rx->key))
-+			return -EACCES;
-+		/*
-+		 * When using MFP, Action frames are not allowed prior to
-+		 * having configured keys.
-+		 */
-+		if (unlikely(ieee80211_is_action(fc) && !rx->key &&
-+			     ieee80211_is_robust_mgmt_frame(
-+				     (struct ieee80211_hdr *) rx->skb->data)))
-+			return -EACCES;
-+	}
- 
- 	return 0;
- }
+Secondarily, scanning is a tradeoff between better roaming latency and
+continuous high throughput.  If you don't scan, you have no idea what's
+around, and when you move and the current AP becomes marginal, you
+*have* to take the hit no matter what, so you can scan and find a new AP
+to associate with.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+I would have though that the periodic scanning would be more of an
+annoyance when doing VOIP or SSH other latency sensitive tasks, but when
+just downloading a file, a few second drop in transfer rate gets lost in
+the bucket in the grand scheme of things.
+
+Dan
+
+
