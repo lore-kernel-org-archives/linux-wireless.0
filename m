@@ -1,135 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57243 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752318AbZEQMrv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 08:47:51 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, stecklum@tls-tautenburg.de,
-	me@bobcopeland.com, breusshe@hotmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/4] compat-2.6: Add WL12XX driver.
-Date: Sun, 17 May 2009 14:47:41 +0200
-Message-Id: <1242564463-9120-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
-References: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:47604 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbZENVPQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2009 17:15:16 -0400
+Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242335658.32358.112.camel@rc-desk>
+References: <1241179203.8086.3.camel@maxim-laptop>
+	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
+	 <1241227946.5192.3.camel@maxim-laptop>
+	 <1241374060.13562.37.camel@johannes.local>
+	 <1241387163.10486.6.camel@maxim-laptop>
+	 <1241421545.6866.2.camel@johannes.local>
+	 <1242161643.26484.2.camel@maxim-laptop>
+	 <1242169824.5146.31.camel@maxim-laptop>
+	 <1242169934.14227.16.camel@johannes.local>
+	 <1242335658.32358.112.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sat1QGO+ccWh/mQxtBa7"
+Date: Thu, 14 May 2009 23:14:44 +0200
+Message-Id: <1242335684.5799.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat.diff      |   30 ++++++++++++++++++++++++------
- config.mk               |    6 ++++++
- scripts/admin-update.sh |   10 ++++++++++
- 3 files changed, 40 insertions(+), 6 deletions(-)
 
-diff --git a/compat/compat.diff b/compat/compat.diff
-index 3ee9e86..1c05577 100644
---- a/compat/compat.diff
-+++ b/compat/compat.diff
-@@ -181,12 +181,6 @@
-  obj-$(CONFIG_LIBERTAS)		+= libertas/
-  
-  obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
--@@ -58,5 +32,3 @@ obj-$(CONFIG_P54_COMMON)	+= p54/
-- obj-$(CONFIG_ATH_COMMON)	+= ath/
-- 
-- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
---
---obj-$(CONFIG_WL12XX)	+= wl12xx/
- --- a/drivers/net/wireless/b43/pcmcia.c
- +++ b/drivers/net/wireless/b43/pcmcia.c
- @@ -87,7 +87,11 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
-@@ -464,6 +458,30 @@
-  
-  	tmp = RNDIS_PACKET_TYPE_DIRECTED | RNDIS_PACKET_TYPE_BROADCAST;
-  	retval = rndis_set_oid(usbdev, OID_GEN_CURRENT_PACKET_FILTER, &tmp,
-+--- a/drivers/net/wireless/wl12xx/main.c
-++++ b/drivers/net/wireless/wl12xx/main.c
-+@@ -26,6 +26,9 @@
-+ #include <linux/firmware.h>
-+ #include <linux/delay.h>
-+ #include <linux/irq.h>
-++#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,28))
-++#include <linux/device.h>
-++#endif
-+ #include <linux/spi/spi.h>
-+ #include <linux/crc32.h>
-+ #include <linux/etherdevice.h>
-+--- a/drivers/net/wireless/wl12xx/spi.c
-++++ b/drivers/net/wireless/wl12xx/spi.c
-+@@ -23,6 +23,9 @@
-+ 
-+ #include <linux/module.h>
-+ #include <linux/crc7.h>
-++#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,28))
-++#include <linux/device.h>
-++#endif
-+ #include <linux/spi/spi.h>
-+ 
-+ #include "wl12xx.h"
- --- a/include/net/cfg80211.h
- +++ b/include/net/cfg80211.h
- @@ -23,6 +23,7 @@
-diff --git a/config.mk b/config.mk
-index a3296d3..f94b37b 100644
---- a/config.mk
-+++ b/config.mk
-@@ -280,6 +280,12 @@ endif
- 
- endif # end of USB driver list
- 
-+ifneq ($(CONFIG_SPI_MASTER),)
-+
-+CONFIG_WL12XX=m
-+
-+endif # end of SPI driver list
-+
- # Common rt2x00 requirements
- ifeq ($(NEED_RT2X00),y)
- CONFIG_RT2X00=m
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 574d4e3..1616844 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -24,6 +24,8 @@ INCLUDE_LINUX="$INCLUDE_LINUX ath9k_platform.h"
- # For rndis_wext
- INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
- 
-+INCLUDE_LINUX_SPI="wl12xx.h"
-+
- # The good new yummy stuff
- INCLUDE_NET="cfg80211.h ieee80211_radiotap.h iw_handler.h"
- INCLUDE_NET="$INCLUDE_NET mac80211.h wext.h lib80211.h regulatory.h"
-@@ -61,6 +63,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/p54"
- DRIVERS="$DRIVERS drivers/net/wireless/rtl818x"
- DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
- DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
-+DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
- 
- # Drivers that belong the the wireless directory
- DRIVER_FILES="adm8211.c  adm8211.h"
-@@ -71,6 +74,7 @@ DRIVER_FILES="$DRIVER_FILES mwl8k.c"
- 
- mkdir -p include/linux/ include/net/ include/linux/usb \
- 	include/linux/unaligned \
-+	include/linux/spi \
- 	net/mac80211/ net/wireless/ \
- 	drivers/ssb/ \
- 	drivers/net/usb/ \
-@@ -98,6 +102,12 @@ for i in $INCLUDE_LINUX_USB; do
- 	cp $GIT_TREE/$DIR/$i $DIR/
- done
- 
-+DIR="include/linux/spi"
-+for i in $INCLUDE_LINUX_SPI; do
-+	echo "Copying $GIT_TREE/$DIR/$i"
-+	cp $GIT_TREE/$DIR/$i $DIR/
-+done
-+
- # net/wireless and net/mac80211
- for i in $NET_DIRS; do
- 	echo "Copying $GIT_TREE/net/$i/*.[ch]"
--- 
-1.6.2.1
+--=-sat1QGO+ccWh/mQxtBa7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2009-05-14 at 14:14 -0700, reinette chatre wrote:
+
+> I am not convinced. When mac80211 requests a scan from the driver
+> checking if rfkill is enabled is the first thing it does and it will
+> return an error in this case. See iwl_mac_hw_scan().
+>=20
+> Maxim, please ensure your driver is compiled with debug support
+> (CONFIG_IWLWIFI_DEBUG) and load the driver with debug=3D0x2. We should se=
+e
+> debug messages that will guide us here.
+
+debug=3D0x803 would be more useful I think. Or maybe 0x802.
+
+I wish I had the ftrace thing for mac80211 ready already... oh well.
+
+johannes
+
+--=-sat1QGO+ccWh/mQxtBa7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKDInAAAoJEODzc/N7+QmaaPsP/2HLoVxCsTdt92B+DI3ORlJ/
+RoGUrP9qiPrboCeZlB7+Pr2L9igX2T7WcnxTVWxh7QzeCpKlbqZJzcWJNwm2KfeM
+8MUIeVr6AFV8FFjf4j6REbNiAkWNDqwXMTXd3gFxlpdYumv1vE+PCR7YEie50bb7
+fErm+WhmGM3SkRyK4eNUp2isayQj8AiGJsYAwe/CvjkH0LUm8YSBNrxKrWXzcPWZ
+GGsOaAu1RpPcMohHZpSiC/iRkxb+EktKxgp6iwNqoZSGgtfdJS52ezHa6QxQUqOm
+SqSZPyrh1bDQ4sHDzxtvA8B6T25AIY2mml65JHwhfc9SmqY6DhgWnlzhOVkiEZLw
++zLccYrxalFry4u9B9OeifWDE9hbF9kIn4fjIYo+wgCnxvm9E1gqBYNk/UZ+uTgJ
+5tUdMxf6O4IgC/0Kc/BPZyBTRCLNnQE3S+TvFD0HVppxcVmMAytnrNjbB2N+sRAD
+Q7y+JrjAJSM4+7VrAfzEX2Yt69NIVAuV11gWUL9YNDiVQNPTP524/dcKyNsSc7eP
+e8oo6IORTn76L2/njFGy8HAV7RYrsK47Lb4zgm4C6HJBZdJ5XpjYU1WXfnaW+L9R
+9mluaFv+7u/tPacmmSIwlWC56NE2hHEBfDONYQzPGMNB3x4mQ9FBNKHbP41JNLDh
+P6YSuC76qriWlVYY2/92
+=C9Oy
+-----END PGP SIGNATURE-----
+
+--=-sat1QGO+ccWh/mQxtBa7--
 
