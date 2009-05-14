@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52036
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753736AbZEZGED (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55409 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751177AbZENSaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 02:04:03 -0400
-Date: Mon, 25 May 2009 23:04:02 -0700 (PDT)
-Message-Id: <20090525.230402.250194609.davem@davemloft.net>
-To: holtmann@linux.intel.com
-Cc: yi.zhu@intel.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, samuel.ortiz@intel.com,
-	kay.sievers@vrfy.org
-Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1243312991.21383.3.camel@localhost.localdomain>
-References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
-	<1243307448-17441-2-git-send-email-yi.zhu@intel.com>
-	<1243312991.21383.3.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 14 May 2009 14:30:35 -0400
+Message-Id: <20090514182845.684003914@atheros.com>
+Date: Thu, 14 May 2009 21:28:45 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/4] ath9k: Power save mode fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marcel Holtmann <holtmann@linux.intel.com>
-Date: Tue, 26 May 2009 06:43:11 +0200
+This series addresses couple of issues in power save mode operations in
+ath9k. The driver will now try to receive all buffered broadcast and
+multicast frames after DTIM beacons. In addition, the transitions
+between power save states are optimized in a way which should reduce
+both CPU use and the amount of time spent in awake state. This change
+seems to also improve the stability of the connection when using power
+save mode.
 
-> Hi guys,
-> 
->> Firmware names can not be longer than 30 characters, and
->> iwmc3200wifi-lmac-calib-sdio.bin is too long.
->> Renaming it to iwmc3200wifi-calib-sdio.bin.
-> 
-> hold on with this one. This limit should _NOT_ exist. Is this an issue
-> in the driver model?
+There are still some remaining issues in the timeout=0 power save case
+("iwconfig wlan0 power on"), but the patches here seem to make the
+default mode (timeout=500, "iwconfig wlan0 power timeout 500ms") behave
+much more nicely.
 
-linux/firmware.h:FIRMWARE_NAME_MAX == 30
-drivers/base/firmware_class.c:struct firmware_priv{ char fw_id[FIRMWARE_NAME_MAX]; ... };
+-- 
+Jouni Malinen                                            PGP id EFC895FA
