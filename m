@@ -1,97 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:42163 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753064AbZENV1A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 17:27:00 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so866275rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 14:27:01 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:45796 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755994AbZENR2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2009 13:28:13 -0400
+From: elektra <onelektra@gmx.net>
+To: " linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: ath5k from compat-wireless-2009-05-14 fails to perform IBSS merge
+Date: Thu, 14 May 2009 19:28:11 +0200
 MIME-Version: 1.0
-In-Reply-To: <1242334636.4227.134.camel@localhost.localdomain>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	<1242327298.4227.25.camel@localhost.localdomain> <43e72e890905141207m3c27588ex13190b2ed6010e30@mail.gmail.com>
-	<1242334636.4227.134.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 May 2009 14:26:41 -0700
-Message-ID: <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
-Subject: Re: Scan while TX/RX'ing a lot of data
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200905141928.11794.onelektra@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 1:57 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2009-05-14 at 12:07 -0700, Luis R. Rodriguez wrote:
->> On Thu, May 14, 2009 at 11:54 AM, Dan Williams <dcbw@redhat.com> wrote:
+Hi!
 
->> > Secondarily, scanning is a tradeoff between better roaming latency and
->> > continuous high throughput.  If you don't scan, you have no idea what's
->> > around, and when you move and the current AP becomes marginal, you
->> > *have* to take the hit no matter what, so you can scan and find a new AP
->> > to associate with.
->>
->> True however I'm inclined to believe that generally when you are
->> sending or receiving a lot of data you are stationary so roaming might
->> not be that urgent. For 802.11p (vehicle stuff) I suppose this may be
->> a bit different but I have yet to see this take off.
->
-> I'll believe 11p when I see it somewhere :)  But anyway, yeah, there are
-> tricks we can play here, and I'm happy to entertain methods of making
-> the scanning hit less annoying.  I'm simply opposed to a checkbox in the
-> UI for "never scan while connected" because that's a pure cop-out: we
-> should be making things intelligent, not taking the half-assed approach
-> like people (nobody here of course) have been whining about for a long
-> time.  Scanning isn't something the user should have to care about or
-> turn on or off; it's something that NetworkManager (in concert with
-> usage information from the stack) should be able to handle
-> automatically.
+Call trace made with vanilla 2.6.29.3 and compat-wireless-2009-05-14 on EEEPC 
+901. 
 
-Agreed.
+Cheers,
+elektra
 
-> Maybe if there was a way to figure out how full mac80211's QoS buckets
-> were, that would help?  Or get a frame counts from each of the 4 QoS
-> buckets individually?  That would allow NM to make more intelligent
-> decisions about stuff.  Maybe a more detailed nl80211 stats interface
-> would do the trick here.
+WiFi NIC: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express 
+Adapter (rev 01)
+        Subsystem: Atheros Communications Inc. AR5006EX 802.11abg NIC 
+(2.4/5.0GHz, PCI Express)
+        Flags: bus master, fast devsel, latency 0, IRQ 19
+        Memory at f7ff0000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- 
+Queue=0/0 Enable-
+        Capabilities: [60] Express Legacy Endpoint, MSI 00
+        Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [140] Virtual Channel <?>
 
-Would help for debugging too anyway, since QOS uses the new device
-queues maybe that might already be available?
 
->> > I would have though that the periodic scanning would be more of an
->> > annoyance when doing VOIP or SSH other latency sensitive tasks, but when
->> > just downloading a file, a few second drop in transfer rate gets lost in
->> > the bucket in the grand scheme of things.
->>
->> Good point, how about we use pm_qos for disabling scan when we are
->> sending a lot of data (whatever we define this to mean)? Then
->> applications can just write to this pm_qos stuff and you won't see
->> this.
->>
->> I forget when pm_qos was introduced though.
->
-> Yeah, something like that, although it's sometimes hard to go from app
-> -> interface;
 
-Yeah at least pm_qos is not device specific IIRC.
+May 14 18:35:46 901 kernel: ------------[ cut here ]------------
+May 14 18:35:46 901 kernel: WARNING: 
+at /usr/src/compat-wireless-2009-05-14/drivers/net/wireless/ath/ath5k/base.c:2165 
+ath5k_beacon_update_timers+0x30b/0x360 [ath5k]()
+May 14 18:35:46 901 kernel: Hardware name: 901
+May 14 18:35:46 901 kernel: Modules linked in: acpi_cpufreq snd_seq_dummy 
+snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss 
+snd_mixer_oss ipv6 ppdev lp parport_pc parport btusb bluetooth fuse 
+usb_storage snd_hda_codec_realtek snd_hda_intel ath5k snd_hda_codec mac80211 
+snd_hwdep led_class snd_pcm ath psmouse snd_timer i2c_i801 uhci_hcd video 
+thermal i2c_core snd rtc_cmos serio_raw sg evdev cfg80211 intel_agp rtc_core 
+output soundcore ehci_hcd eeepc_laptop ac atl1e rtc_lib processor battery 
+agpgart snd_page_alloc thermal_sys hwmon rfkill button
 
-> if you have a wired interface connected at the same time,
-> but the thing you're sucking down data from is on the wifi interface,
-> we'd need some way to figure that out.
-
-Point taken.
-
-> Hence the idea about exposing
-> the packet counts of the WMM queues or something like that.
-
-I think this is a good idea, although it wouldn't solve anything for
-people stuck on old userspace (my oldest target is distributions
-releases circa 2.6.27). Not sure what is best for that case. The
-kernel could be informed of the lack of userspace regulating this and
-then take some reasonable action. What the reasonable action and the
-terms for that remain unclear to me.
-
-  Luis
+May 14 18:35:46 901 kernel: Pid: 2083, comm: phy0 Not tainted 2.6.29.3-smp #1
+May 14 18:35:46 901 kernel: Call Trace:
+May 14 18:35:46 901 kernel:  [<c012c716>] warn_slowpath+0x86/0xa0
+May 14 18:35:46 901 kernel:  [<f85baa2b>] 
+ath5k_beacon_update_timers+0x30b/0x360 [ath5k]
+May 14 18:35:46 901 kernel:  [<c0143208>] ? down_trylock+0x28/0x40
+May 14 18:35:46 901 kernel:  [<c012cc9d>] ? try_acquire_console_sem+0xd/0x50
+May 14 18:35:46 901 kernel:  [<f85baaa9>] ath5k_reset_tsf+0x29/0x30 [ath5k]
+May 14 18:35:46 901 kernel:  [<f85385c1>] __ieee80211_sta_join_ibss+0x31/0x3e0 
+[mac80211]
+May 14 18:35:46 901 kernel:  [<c02981de>] ? extract_entropy+0x4e/0x90
+May 14 18:35:46 901 kernel:  [<c040f54d>] ? _spin_unlock_bh+0xd/0x10
+May 14 18:35:46 901 kernel:  [<c012d49b>] ? printk+0x1b/0x20
+May 14 18:35:46 901 kernel:  [<f8538cc1>] ieee80211_sta_find_ibss+0x351/0x430 
+[mac80211]
+May 14 18:35:46 901 kernel:  [<c038a757>] ? skb_release_data+0x57/0x80
+May 14 18:35:46 901 kernel:  [<f85392e0>] ? ieee80211_ibss_work+0x0/0x490 
+[mac80211]
+May 14 18:35:46 901 kernel:  [<f8539700>] ieee80211_ibss_work+0x420/0x490 
+[mac80211]
+May 14 18:35:46 901 kernel:  [<c0120ca1>] ? __dequeue_entity+0x21/0x40
+May 14 18:35:46 901 kernel:  [<c0120d70>] ? set_next_entity+0xb0/0xd0
+May 14 18:35:46 901 kernel:  [<c040d8e8>] ? schedule+0x418/0xa20
+May 14 18:35:46 901 kernel:  [<f85392e0>] ? ieee80211_ibss_work+0x0/0x490 
+[mac80211]
+May 14 18:35:46 901 kernel:  [<c013bced>] run_workqueue+0xad/0x140
+May 14 18:35:46 901 kernel:  [<c013c698>] worker_thread+0x88/0xe0
+May 14 18:35:46 901 kernel:  [<c013f560>] ? autoremove_wake_function+0x0/0x40
+May 14 18:35:46 901 kernel:  [<c013c610>] ? worker_thread+0x0/0xe0
+May 14 18:35:46 901 kernel:  [<c013f262>] kthread+0x42/0x70
+May 14 18:35:46 901 kernel:  [<c013f220>] ? kthread+0x0/0x70
+May 14 18:35:46 901 kernel:  [<c0103a5b>] kernel_thread_helper+0x7/0x1c
+May 14 18:35:46 901 kernel: ---[ end trace 98b1d2d4a196ef83 ]---
+May 14 18:35:46 901 kernel: ath5k phy0: bf=f63e9680 bf_skb=(null)
