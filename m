@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45485 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059AbZERTAM (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:54070 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbZENRe5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 15:00:12 -0400
-Date: Mon, 18 May 2009 14:47:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [PATCH 4/4] cfg80211: fix race between core hint and driver's
-	custom apply
-Message-ID: <20090518184718.GJ2814@tuxdriver.com>
-References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com> <1242248682-22051-5-git-send-email-lrodriguez@atheros.com>
+	Thu, 14 May 2009 13:34:57 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so680651fkq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:34:57 -0700 (PDT)
+Message-ID: <4A0C5643.7070400@gmail.com>
+Date: Thu, 14 May 2009 17:34:59 +0000
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1242248682-22051-5-git-send-email-lrodriguez@atheros.com>
+To: linville@tuxdriver.com, dsd@gentoo.org, kune@deine-taler.de
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] zd1211rw: Replace ZD_CS_MULTICAST with ZD_CS_NO_ACK
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 05:04:42PM -0400, Luis R. Rodriguez wrote:
-> Its possible for cfg80211 to have scheduled the work and for
-> the global workqueue to not have kicked in prior to a cfg80211
-> driver's regulatory hint or wiphy_apply_custom_regulatory().
-> 
-> Although this is very unlikely its possible and should fix
-> this race. When this race would happen you are expected to have
-> hit a null pointer dereference panic.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+According to my tests, all that ZD_CS_MULTICAST does is to
+disable retrying/waiting for an ACK. Reflect this by renaming
+the bit to ZD_CS_NO_ACK and setting it based on
+IEEE80211_TX_CTL_NO_ACK, instead of is_multicast_ether_addr.
 
-(Same questions as for 3/4...)
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+v2: No word-wrap.
 
-What is the effect of this race?  What justifies this for 2.6.30
-and/or stable?  It is getting late in the cycle for 2.6.30...
+ drivers/net/wireless/zd1211rw/zd_mac.c |    6 +++---
+ drivers/net/wireless/zd1211rw/zd_mac.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 85c27ac..d1ec99f 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -430,9 +430,9 @@ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
+ 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+ 		cs->control |= ZD_CS_NEED_RANDOM_BACKOFF;
+ 
+-	/* Multicast */
+-	if (is_multicast_ether_addr(header->addr1))
+-		cs->control |= ZD_CS_MULTICAST;
++	/* No ACK expected (multicast, etc.) */
++	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
++		cs->control |= ZD_CS_NO_ACK;
+ 
+ 	/* PS-POLL */
+ 	if (ieee80211_is_pspoll(header->frame_control))
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
+index 4c05d3e..7c27591 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+@@ -87,7 +87,7 @@ struct zd_ctrlset {
+ 
+ /* zd_ctrlset control field */
+ #define ZD_CS_NEED_RANDOM_BACKOFF	0x01
+-#define ZD_CS_MULTICAST			0x02
++#define ZD_CS_NO_ACK			0x02
+ 
+ #define ZD_CS_FRAME_TYPE_MASK		0x0c
+ #define ZD_CS_DATA_FRAME		0x00
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.6.3
+
