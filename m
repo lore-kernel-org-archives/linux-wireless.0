@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43247 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751203AbZENSPt (ORCPT
+Received: from mail-px0-f123.google.com ([209.85.216.123]:61975 "EHLO
+	mail-px0-f123.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258AbZENRwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 14:15:49 -0400
-Date: Thu, 14 May 2009 21:15:36 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Cancel pending probereq poll on beacon RX
-Message-ID: <20090514181536.GA9111@jm.kir.nu>
+	Thu, 14 May 2009 13:52:30 -0400
+Received: by pxi29 with SMTP id 29so690857pxi.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:52:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 May 2009 10:52:12 -0700
+Message-ID: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+Subject: Scan while TX/RX'ing a lot of data
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Dan Williams <dcbw@redhat.com>, Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While the probe request poll is expected to work, it looks like it
-does not always result in getting a response. The exact reason for
-this is unclear, but anyway, if we do receive a Beacon frame from our
-AP, there is no need to disconnect based on the probereq poll. This
-seems to help keep the connection bit more stable in cases where
-beacon loss is occurring semi-frequently.
+I'm told Network Manager scans every 60 seconds. When TX'ing or RX'ing
+a lot of data you will see a big dip in throughput and sometimes it
+may cause issues with some connections. Jouni pointed out a possible
+nice option here: split the scans per channel through time. Now with
+nl80211 this is possible but right now Network Manager uses wext
+through wpa_supplicant in many distributions and this won't change for
+a bit (maybe by the next major distribution releases?). Since we're
+stuck with wext for the current distribution releases I'd like to hear
+feedback on a possible nice solution. Should we simply cancel scan?
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
----
- net/mac80211/mlme.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- wireless-testing.orig/net/mac80211/mlme.c	2009-05-14 21:12:52.000000000 +0300
-+++ wireless-testing/net/mac80211/mlme.c	2009-05-14 21:13:08.000000000 +0300
-@@ -1820,6 +1820,16 @@ static void ieee80211_rx_mgmt_beacon(str
- 	    memcmp(ifmgd->bssid, mgmt->bssid, ETH_ALEN) != 0)
- 		return;
- 
-+	if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL) {
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+		if (net_ratelimit()) {
-+			printk(KERN_DEBUG "%s: cancelling probereq poll due "
-+			       "to a received beacon\n", sdata->dev->name);
-+		}
-+#endif
-+		ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
-+	}
-+
- 	ncrc = crc32_be(0, (void *)&mgmt->u.beacon.beacon_int, 4);
- 	ncrc = ieee802_11_parse_elems_crc(mgmt->u.beacon.variable,
- 					  len - baselen, &elems,
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
