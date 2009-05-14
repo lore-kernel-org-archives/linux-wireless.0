@@ -1,42 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42133 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755593AbZEZNd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 09:33:28 -0400
-Subject: Re: [PATCH v11] rfkill: rewrite
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Will Keaney <keaneyw@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090526131533.GA3932@tuxdriver.com>
-References: <1242942720.4212.19.camel@johannes.local>
-	 <1243068246.4606.45.camel@johannes.local> <4A1BDE51.7020009@gmail.com>
-	 <20090526131533.GA3932@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 26 May 2009 09:32:43 -0400
-Message-Id: <1243344763.2575.3.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:44158 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785AbZENEe5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2009 00:34:57 -0400
+Received: by pzk13 with SMTP id 13so454671pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 21:34:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+References: <1242030669.6930.10.camel@johannes.local> <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 13 May 2009 21:34:38 -0700
+Message-ID: <43e72e890905132134v1f3f32f8p8dc73a09834100b4@mail.gmail.com>
+Subject: Re: [RFT v9] rfkill: rewrite
+To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Gaurav.Jauhar@atheros.com,
+	Vivek Natarajan <vivek.natarajan@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-26 at 15:15 +0200, John W. Linville wrote:
-> On Tue, May 26, 2009 at 08:19:29AM -0400, Will Keaney wrote:
-> > Johannes Berg wrote:
-> > > This patch completely rewrites the rfkill core to address
-> > > the following deficiencies:
-> > >   
-> > I applied this to a fresh pull of wireless-testing this morning, and
-> > haven't had any problems from it.  It looks like the soft lockup I
-> > reported earlier has been fixed.
-> 
-> Cool, thanks for the report.
-> 
-> I'm leaning towards merging this in time for the 2.6.31 merge
-> window...who wants to complain? :-)
+On Tue, May 12, 2009 at 7:09 AM, Alan Jenkins
+<sourcejedi.lkml@googlemail.com> wrote:
+> On 5/11/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> This patch completely rewrites the rfkill core to address
+>> the following deficiencies:
+>
+> Btw, git-apply nitpicks on your whitespace
+>
+> =C2=A0 =C2=A0rfkill-rewrite.patch:4335: space before tab in indent.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_unlock(&rfkill_global_=
+mutex);
+> =C2=A0 =C2=A0warning: 1 line adds whitespace errors.
+>
+>
+> I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
+> Somehow, it triggers an OOPS
+>
+> Function: req_reg_info_regd
+> Process: modprobe
+>
+> Call trace:
+> wiphy_apply_custom_regulatory
+> ath5k_regd_init
+> ath5k_reg_notifier
+> ath5k_pci_probe
+> ...
+>
+> Photo: <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#53349=
+36857267342674>
 
-Merge it!
+BTW can explain how to reproduce. Did you just use wireless-testing
+and johanne's rfkill rewrite and use ath5k and can easily reproduce?
+Do you have an ath9k card?
 
-Dan
+  Luis
 
-
+> The kernel then hangs later on in the boot process. =C2=A0It responds=
+ to
+> SysRq, but does not echo normal keypresses. =C2=A0SysRq+P shows that =
+the
+> kernel is in the idle task. =C2=A0I left it for three minutes, but I =
+didn't
+> get any trace from the hung task detector or soft lockup detector.
+>
+> At first I thought it must be a problem with wireless-testing.
+> However, it went away when I eventually tried un-applying the rfkill
+> rewrite patch.
+>
+> Thanks
+> Alan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
