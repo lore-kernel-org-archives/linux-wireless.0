@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27048 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636AbZERUEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 16:04:04 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 13:04:06 -0700
-Date: Mon, 18 May 2009 13:04:09 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH 4/4] cfg80211: fix race between core hint and driver's
-	custom apply
-Message-ID: <20090518200409.GM20637@tesla>
-References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com> <1242248682-22051-5-git-send-email-lrodriguez@atheros.com> <20090518184718.GJ2814@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090518184718.GJ2814@tuxdriver.com>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:60166 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760286AbZENArZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2009 20:47:25 -0400
+Received: by fxm2 with SMTP id 2so999186fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 17:47:25 -0700 (PDT)
+Subject: Re: [ath5k-devel] WoW for ath5k
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
+References: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
+	 <69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 14 May 2009 03:47:21 +0300
+Message-Id: <1242262041.3241.30.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 18, 2009 at 11:47:18AM -0700, John W. Linville wrote:
-> On Wed, May 13, 2009 at 05:04:42PM -0400, Luis R. Rodriguez wrote:
-> > Its possible for cfg80211 to have scheduled the work and for
-> > the global workqueue to not have kicked in prior to a cfg80211
-> > driver's regulatory hint or wiphy_apply_custom_regulatory().
+On Thu, 2009-05-14 at 02:31 +0200, G=C3=A1bor Stefanik wrote:
+> On Thu, May 14, 2009 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com>=
+ wrote:
+> > BTW legacy-hal has this stuff :) Just grep for ATH_WOW
 > >
-> > Although this is very unlikely its possible and should fix
-> > this race. When this race would happen you are expected to have
-> > hit a null pointer dereference panic.
-> >
-> > Cc: stable@kernel.org
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> 
-> (Same questions as for 3/4...)
-> 
-> What is the effect of this race?  What justifies this for 2.6.30
-> and/or stable?  It is getting late in the cycle for 2.6.30...
+> >  Luis
+>=20
+> Wow! :-)
+>=20
 
-It fixes an oops when your global workqueue is hammered during load
-of ath9k, ath5k, or ar9170. I finally got confirmation from our team
-it does fix the oops. Alan Jenkins also reported it fixed his oops.
-He was getting an oops by adding the new RFKILL patches by johannes which
-does add stuff ontop of the global workqueue.
+Isn't Wow support platform dependent (BIOS...)
+I think that only S3, and only if bios doesn't turn (put in D3cold) the
+wireless device, it could work.
 
-  Luis
-> 
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
+Btw, as I understand, WoW implies that somebody sends a packet with som=
+e
+predefined pattern, and that wakes the system, right?
+
+Regards,
+	Maxim Levitsky
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
