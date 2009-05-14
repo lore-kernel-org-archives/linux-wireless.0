@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:61516 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756563AbZEAN0p (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43247 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751203AbZENSPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 09:26:45 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so60078fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 06:26:44 -0700 (PDT)
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: chunkeey@web.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Fixes compile error with CONFIG_PM=n
-References: <1241176356-27531-1-git-send-email-hauke@hauke-m.de>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 01 May 2009 16:26:42 +0300
-In-Reply-To: <1241176356-27531-1-git-send-email-hauke@hauke-m.de> (Hauke Mehrtens's message of "Fri\,  1 May 2009 13\:12\:36 +0200")
-Message-ID: <87my9x9cod.fsf@litku.valot.fi>
+	Thu, 14 May 2009 14:15:49 -0400
+Date: Thu, 14 May 2009 21:15:36 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Cancel pending probereq poll on beacon RX
+Message-ID: <20090514181536.GA9111@jm.kir.nu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke Mehrtens <hauke@hauke-m.de> writes:
+While the probe request poll is expected to work, it looks like it
+does not always result in getting a response. The exact reason for
+this is unclear, but anyway, if we do receive a Beacon frame from our
+AP, there is no need to disconnect based on the probereq poll. This
+seems to help keep the connection bit more stable in cases where
+beacon loss is occurring semi-frequently.
 
-> /drivers/net/wireless/p54/p54usb.c: In function 'p54u_probe':
-> /drivers/net/wireless/p54/p54usb.c:923: error: 'struct usb_device' has no member named 'reset_resume'
->
-> In the struct usb_device the reset_resume attribute is only available when CONFIG_PM is defined.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-About the commit log, the title should contain the component, something
-like this:
+---
+ net/mac80211/mlme.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-p54: fix reset_resume compile error with CONFIG_PM=n
-
-Also please line wrap the commit log, 72 chars is a good width.
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-05-14 21:12:52.000000000 +0300
++++ wireless-testing/net/mac80211/mlme.c	2009-05-14 21:13:08.000000000 +0300
+@@ -1820,6 +1820,16 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	    memcmp(ifmgd->bssid, mgmt->bssid, ETH_ALEN) != 0)
+ 		return;
+ 
++	if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL) {
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++		if (net_ratelimit()) {
++			printk(KERN_DEBUG "%s: cancelling probereq poll due "
++			       "to a received beacon\n", sdata->dev->name);
++		}
++#endif
++		ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
++	}
++
+ 	ncrc = crc32_be(0, (void *)&mgmt->u.beacon.beacon_int, 4);
+ 	ncrc = ieee802_11_parse_elems_crc(mgmt->u.beacon.variable,
+ 					  len - baselen, &elems,
 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
