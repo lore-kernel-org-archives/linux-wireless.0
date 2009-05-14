@@ -1,109 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41708 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753207AbZEVPGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 11:06:02 -0400
-Subject: Re: [PATCH 2/4] rndis_wlan: explain bits used in key setup code.
-From: Dan Williams <dcbw@redhat.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090522144020.8134.76073.stgit@fate.lan>
-References: <20090522144012.8134.27669.stgit@fate.lan>
-	 <20090522144020.8134.76073.stgit@fate.lan>
-Content-Type: text/plain
-Date: Fri, 22 May 2009 11:05:55 -0400
-Message-Id: <1243004755.2461.10.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.170]:64622 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885AbZENAyH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2009 20:54:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so623438wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 17:54:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242262041.3241.30.camel@maxim-laptop>
+References: <43e72e890905131718k739eef2eu35f76d4bf5b03dae@mail.gmail.com>
+	<69e28c910905131731t5f708339y3fc87b9035591115@mail.gmail.com>
+	<1242262041.3241.30.camel@maxim-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 13 May 2009 17:53:46 -0700
+Message-ID: <43e72e890905131753v540411b6n32c0dd68a24453f3@mail.gmail.com>
+Subject: Re: [ath5k-devel] WoW for ath5k
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-05-22 at 17:40 +0300, Jussi Kivilinna wrote:
-> Driver uses some unnamed bits to control encryption setup. Move these to
-> enumerations with proper names explaining their meaning.
-> 
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> ---
-> 
->  drivers/net/wireless/rndis_wlan.c |   23 ++++++++++++++++++-----
->  1 files changed, 18 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-> index f9b0a35..8609d28 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -196,6 +196,18 @@ enum ndis_80211_priv_filter {
->  	ndis_80211_priv_8021x_wep
->  };
->  
-> +enum ndis_80211_addkey_bits {
-> +	ndis_80211_addkey_8021x_auth = cpu_to_le32(1 << 28),
-> +	ndis_80211_addkey_set_init_recv_seq = cpu_to_le32(1 << 29),
-> +	ndis_80211_addkey_pairwise_key = cpu_to_le32(1 << 30),
-> +	ndis_80211_addkey_transmit_key = cpu_to_le32(1 << 31),
-> +};
+2009/5/13 Maxim Levitsky <maximlevitsky@gmail.com>:
+> On Thu, 2009-05-14 at 02:31 +0200, G=C3=A1bor Stefanik wrote:
+>> On Thu, May 14, 2009 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com=
+> wrote:
+>> > BTW legacy-hal has this stuff :) Just grep for ATH_WOW
+>> >
+>> > =C2=A0Luis
+>>
+>> Wow! :-)
+>>
+>
+> Isn't Wow support platform dependent (BIOS...)
 
-Enums and defines are usually capitalized in Linux, ie
-NDIS_80211_ADDKEY_8021X_AUTH, so that they can be separated from
-non-constant stuff and from function names.  Makes the code more
-readable.  Any chance you'd mind doing that in this patch since you're
-touching these bits?
+Yes -- and device specific: not all vendors add the link to enable this=
+=2E
 
-Dan
+> I think that only S3, and only if bios doesn't turn (put in D3cold) t=
+he
+> wireless device, it could work.
 
-> +enum ndis_80211_addwep_bits {
-> +	ndis_80211_addwep_perclient_key = cpu_to_le32(1 << 30),
-> +	ndis_80211_addwep_transmit_key = cpu_to_le32(1 << 31),
-> +};
-> +
->  struct ndis_80211_ssid {
->  	__le32 length;
->  	u8 essid[NDIS_802_11_LENGTH_SSID];
-> @@ -998,7 +1010,7 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
->  	memcpy(&ndis_key.material, key, key_len);
->  
->  	if (index == priv->encr_tx_key_index) {
-> -		ndis_key.index |= cpu_to_le32(1 << 31);
-> +		ndis_key.index |= ndis_80211_addwep_transmit_key;
->  		ret = set_encr_mode(usbdev, IW_AUTH_CIPHER_WEP104,
->  						IW_AUTH_CIPHER_NONE);
->  		if (ret)
-> @@ -1044,7 +1056,8 @@ static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
->  		if (bssid) {
->  			/* pairwise key */
->  			if (memcmp(bssid, ffff_bssid, ETH_ALEN) != 0)
-> -				remove_key.index |= cpu_to_le32(1 << 30);
-> +				remove_key.index |=
-> +					ndis_80211_addkey_pairwise_key;
->  			memcpy(remove_key.bssid, bssid,
->  					sizeof(remove_key.bssid));
->  		} else
-> @@ -1626,7 +1639,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
->  
->  	if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID) {
->  		memcpy(ndis_key.rsc, ext->rx_seq, 6);
-> -		ndis_key.index |= cpu_to_le32(1 << 29);
-> +		ndis_key.index |= ndis_80211_addkey_set_init_recv_seq;
->  	}
->  
->  	addr = ext->addr.sa_data;
-> @@ -1638,12 +1651,12 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
->  			get_bssid(usbdev, ndis_key.bssid);
->  	} else {
->  		/* pairwise key */
-> -		ndis_key.index |= cpu_to_le32(1 << 30);
-> +		ndis_key.index |= ndis_80211_addkey_pairwise_key;
->  		memcpy(ndis_key.bssid, addr, ETH_ALEN);
->  	}
->  
->  	if (ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY)
-> -		ndis_key.index |= cpu_to_le32(1 << 31);
-> +		ndis_key.index |= ndis_80211_addkey_transmit_key;
->  
->  	if (ext->alg == IW_ENCODE_ALG_TKIP && ext->key_len == 32) {
->  		/* wpa_supplicant gives us the Michael MIC RX/TX keys in
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In addition to that you also need a link from the wireless device to
+the motherboard to turn it on. Not sure of the details here, still
+gathering that but a good public read is on wikipedia:
 
+http://en.wikipedia.org/wiki/Wake-on-LAN
+
+> Btw, as I understand, WoW implies that somebody sends a packet with s=
+ome
+> predefined pattern, and that wakes the system, right?
+
+=46or wireless and at least for Atheros we borrow WOL's magic packet,
+Link change, beacon miss and user pattern -- which could be something
+like an ARP request so that if someone pings it it'll come up for
+example.
+
+ Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
