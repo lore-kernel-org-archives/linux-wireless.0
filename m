@@ -1,66 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48256 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbZD3XAI (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:38381 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752748AbZENVS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 19:00:08 -0400
-Subject: Re: [PATCH] mac80211: fix PS vs. scan race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090430223025.GF9323@tuxdriver.com>
-References: <1240434171.30082.21.camel@johannes.local>
-	 <1241126864.12388.0.camel@johannes.local>
-	 <20090430223025.GF9323@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ilDBV1SPOfGTuGooCFQY"
-Date: Fri, 01 May 2009 00:59:30 +0200
-Message-Id: <1241132370.29245.0.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 14 May 2009 17:18:56 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by toronto053.server4you.de (Postfix) with ESMTP id CCFBD1F8020
+	for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 23:21:32 +0200 (CEST)
+Received: from toronto053.server4you.de ([127.0.0.1])
+	by localhost (toronto053.server4you.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id WmOImrUsrMvb for <linux-wireless@vger.kernel.org>;
+	Thu, 14 May 2009 23:21:30 +0200 (CEST)
+Received: from localhost (e181117089.adsl.alicedsl.de [85.181.117.89])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by toronto053.server4you.de (Postfix) with ESMTP id 32E751F8017
+	for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 22:49:27 +0200 (CEST)
+Date: Thu, 14 May 2009 22:48:38 +0200
+From: Daniel Wagner <wagi@monom.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: Group radios
+Message-ID: <20090514204838.GB3225@newton.monom.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ilDBV1SPOfGTuGooCFQY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Each bit in /debug/ieee80211/phy*/hwsim/group represents one
+group. By default all radios belong to the same group "1".
+A radio can belong to several groups.
 
-On Thu, 2009-04-30 at 18:30 -0400, John W. Linville wrote:
+Signed-off-by: Daniel Wagner <wagi@monom.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c |   30 +++++++++++++++++++++++++++++-
+ 1 files changed, 29 insertions(+), 1 deletions(-)
 
-> Looks like this one (on wireless-testing#master)?
->=20
-> commit da6cbb045d04706157d3117153b275ed9126bd1d
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Wed Apr 22 23:02:51 2009 +0200
->=20
->     mac80211: fix PS vs. scan race
-
-Sorry, looks like I never learn... The patch still applied (probably
-with some fuzz) so I figured it wasn't in.
-
-johannes
-
---=-ilDBV1SPOfGTuGooCFQY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ+i1OAAoJEKVg1VMiehFYWfEP/j5WP/Q5Zj+REl2Cu9NFMa6+
-9OZQIts2m+ZS556LFiJQhesyz4RCuzkwNdu73AfV3VlvcTgv1cjXeYb8XOOGoDXE
-xo7Xqf3/+K4rG4SWZSRJlXI5sd3h3IQk0d+jkf6oFyiwEZv6KafiR7SYNY3PBsJ/
-UwLqq6/pJQRPzZ5N2FwJijKxAQo6AdrA6PqN9HVG7iVsV/chFfMOW+8mhn83+wl/
-rBFeTJwVmS9SgsjZdabukNOTedLP/8+EEEUsR+lwTwnyv265lqfhUvStWpUtlqeh
-ecfMNoK6CuWXte97Ax2TvwAqxLYRUQQ1jkBlJsJxzx18IZE+aZmwrnMJpQppZs15
-eEww/bOQLR1Fsfg3WI8rmxz9vj9JE+6dwov4O0REH8jshMccnTidcUuJ6wwx8gio
-SOZMorfeQsxAcV9MehUcoVvablDPCD3hZEKfz4LHYvfW3G8PBEYz6l7+9QDFKIdr
-JkzIj6384YODb/sZnAds3H4HuzTLXqjlICZhPSUdPqdm9Az4I78tTndh+f3K5CcG
-kL0JbZ7j+kcQMi9fU+aRGSc/3a6LgJggenuFRHA67rNMC3Irfvp8xrtkjXehTC12
-Qt+SfVU22xkgmx/kq8UjfLs3Hxpol8+hNr2TgDWE+aqEnpq/vNyc3K+yRo+Ts1ZJ
-IREcFG9JmYZORqDW0BbQ
-=aOJF
------END PGP SIGNATURE-----
-
---=-ilDBV1SPOfGTuGooCFQY--
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 61a4ad7..58fd29e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -291,6 +291,9 @@ struct mac80211_hwsim_data {
+ 	bool ps_poll_pending;
+ 	struct dentry *debugfs;
+ 	struct dentry *debugfs_ps;
++
++	u64 group;
++	struct dentry *debugfs_group;
+ };
+ 
+ 
+@@ -412,7 +415,8 @@ static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 
+ 		if (!data2->started || !data2->radio_enabled ||
+ 		    !hwsim_ps_rx_ok(data2, skb) ||
+-		    data->channel->center_freq != data2->channel->center_freq)
++		    data->channel->center_freq != data2->channel->center_freq ||
++		    !(data->group & data2->group))
+ 			continue;
+ 
+ 		nskb = skb_copy(skb, GFP_ATOMIC);
+@@ -720,6 +724,7 @@ static void mac80211_hwsim_free(void)
+ 	spin_unlock_bh(&hwsim_radio_lock);
+ 
+ 	list_for_each_entry(data, &tmplist, list) {
++		debugfs_remove(data->debugfs_group);
+ 		debugfs_remove(data->debugfs_ps);
+ 		debugfs_remove(data->debugfs);
+ 		ieee80211_unregister_hw(data->hw);
+@@ -872,6 +877,24 @@ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_ps, hwsim_fops_ps_read, hwsim_fops_ps_write,
+ 			"%llu\n");
+ 
+ 
++static int hwsim_fops_group_read(void *dat, u64 *val)
++{
++	struct mac80211_hwsim_data *data = dat;
++	*val = data->group;
++	return 0;
++}
++
++static int hwsim_fops_group_write(void *dat, u64 val)
++{
++	struct mac80211_hwsim_data *data = dat;
++	data->group = val;
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
++			hwsim_fops_group_read, hwsim_fops_group_write,
++			"%llx\n");
++
+ static int __init init_mac80211_hwsim(void)
+ {
+ 	int i, err = 0;
+@@ -976,6 +999,8 @@ static int __init init_mac80211_hwsim(void)
+ 
+ 			hw->wiphy->bands[band] = sband;
+ 		}
++		/* By default all radios are belonging to the first group */
++		data->group = 1;
+ 
+ 		/* Work to be done prior to ieee80211_register_hw() */
+ 		switch (regtest) {
+@@ -1100,6 +1125,9 @@ static int __init init_mac80211_hwsim(void)
+ 		data->debugfs_ps = debugfs_create_file("ps", 0666,
+ 						       data->debugfs, data,
+ 						       &hwsim_fops_ps);
++		data->debugfs_group = debugfs_create_file("group", 0666,
++							data->debugfs, data,
++							&hwsim_fops_group);
+ 
+ 		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
+ 			    (unsigned long) hw);
+-- 
+1.6.2.4
 
