@@ -1,67 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.highlandsun.com ([70.87.222.79]:57189 "EHLO
-	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753376AbZEOTiR (ORCPT
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:64884 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbZENTHy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 15:38:17 -0400
-Message-ID: <4A0DC4A9.8050505@highlandsun.com>
-Date: Fri, 15 May 2009 12:38:17 -0700
-From: Howard Chu <hyc@highlandsun.com>
+	Thu, 14 May 2009 15:07:54 -0400
+Received: by pzk13 with SMTP id 13so736814pzk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 12:07:55 -0700 (PDT)
 MIME-Version: 1.0
-To: Dave <kilroyd@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: orinoco_cs and WPA-EAP?
-References: <4A065AFD.8000604@highlandsun.com> <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>
-In-Reply-To: <4A0DB0A5.9010301@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1242327298.4227.25.camel@localhost.localdomain>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+	<1242327298.4227.25.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 May 2009 12:07:35 -0700
+Message-ID: <43e72e890905141207m3c27588ex13190b2ed6010e30@mail.gmail.com>
+Subject: Re: Scan while TX/RX'ing a lot of data
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave wrote:
-> Howard Chu wrote:
->> Sigh, nothing's ever easy. After abandoning the CTX714 I mentioned in an
->> earlier email, I find that the Thinkpad T42 I got from eBay came with some
->> kind of Orinoco 802.11B mini-PCI card installed. Ubuntu Jaunty's 2.6.28 kernel
->> loads up the orinoco_cs driver for this card. It appears that this driver only
->> supports WPA-PSK, and I use WPA-EAP on my home wlan. Has anyone done any work
->> on supporting WPA-EAP for this card?
+On Thu, May 14, 2009 at 11:54 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Thu, 2009-05-14 at 10:52 -0700, Luis R. Rodriguez wrote:
+>> I'm told Network Manager scans every 60 seconds. When TX'ing or RX'ing
+>> a lot of data you will see a big dip in throughput and sometimes it
+>> may cause issues with some connections. Jouni pointed out a possible
+>> nice option here: split the scans per channel through time. Now with
+>> nl80211 this is possible but right now Network Manager uses wext
+>> through wpa_supplicant in many distributions and this won't change for
+>> a bit (maybe by the next major distribution releases?). Since we're
+>> stuck with wext for the current distribution releases I'd like to hear
+>> feedback on a possible nice solution. Should we simply cancel scan?
 >
-> Michael Stokes, who is primarily responsible for debugging my initial
-> WPA efforts, reported getting WPA-EAP working with a Toshiba Wireless
-> WLAN v01.01 shortly after we got WPA-PSK working. However I haven't had
->   independent confirmation of this.
->
-> The driver has evolved since then, so it's possible that we've broken
-> something.
->
-> Note that the card only supports TKIP, so it won't work if the AP
-> doesn't offer it. At that time there seemed to be an issue with
-> wpa_supplicant attempting to use CCMP when offered by the AP, despite it
-> also offering TKIP - the workaround being to explicitly specify TKIP in
-> wpa_supplicant.conf.
+> Libertas
 
-Thanks, that may have been the issue I was facing at first. My AP was 
-configured for CCMP. I've now set it to TKIP and seem to be getting further. 
-But now when I start wpa_supplicant I see a stream of "Information frame lost" 
-messages in dmesg that pretty much never end (interspersed once in a while 
-with ratelimit messages). I wonder if this laptop's mini-PCI slot is hosed or 
-something. Also, one of the 2 antenna cable's connector came off, and I've 
-tried to crimp the cable back into the connector but it may not be making full 
-contact. The joys of buying used hardware...
+libertas_tf (the mac80211 driver) ? Or the fullmac one?
 
-> Regards,
->
-> Dave.
->
-> PS. My contact with Michael has only been in private mail, so I've bcc'd
-> him (rather than cc'ing in case he want to keep his email off public
-> lists) in the hope that he can supply you with the necessary hints to
-> get it working.
->
+> splits scans up into 3 parts with a short return to the
+> operating channel between each part.  There's nothing that requires
+> cfg80211 for that to work...
 
+We can do tricks in drivers but I'd like to see this handled in mac80211.
 
--- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+> Something I've tossed around for a while is counting traffic on the
+> device and if its over a certain bitrate for a period of time, postpone
+> the scan for a while.  But after a certain amount of time, there's going
+> to be a scan no matter what.
+
+Sure, makes sense. I take it the effort to make this more intelligent
+is part of the the roaming intelligence we need to enhance.
+
+> The problem here is that at any time an application (say, wifi location
+> app) could ask for the list of access points.  If you don't scan
+> periodically, all APs other than your associated AP (and others on the
+> same channel) will gradually drop off because their beacons are
+> received.  Hard to wifi position or get area statistics if there's only
+> one AP in the list.
+
+Makes sense.
+
+> Secondarily, scanning is a tradeoff between better roaming latency and
+> continuous high throughput.  If you don't scan, you have no idea what's
+> around, and when you move and the current AP becomes marginal, you
+> *have* to take the hit no matter what, so you can scan and find a new AP
+> to associate with.
+
+True however I'm inclined to believe that generally when you are
+sending or receiving a lot of data you are stationary so roaming might
+not be that urgent. For 802.11p (vehicle stuff) I suppose this may be
+a bit different but I have yet to see this take off.
+
+> I would have though that the periodic scanning would be more of an
+> annoyance when doing VOIP or SSH other latency sensitive tasks, but when
+> just downloading a file, a few second drop in transfer rate gets lost in
+> the bucket in the grand scheme of things.
+
+Good point, how about we use pm_qos for disabling scan when we are
+sending a lot of data (whatever we define this to mean)? Then
+applications can just write to this pm_qos stuff and you won't see
+this.
+
+I forget when pm_qos was introduced though.
+
+  Luis
