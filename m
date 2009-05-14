@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49958 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbZEKMnR (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:44686 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863AbZENWRr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 08:43:17 -0400
-Subject: [PATCH v2] cfg80211: disallow interfering with stations on non-AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1242045283.18637.1.camel@johannes.local>
-References: <1242045283.18637.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 11 May 2009 14:43:13 +0200
-Message-Id: <1242045793.26810.0.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 14 May 2009 18:17:47 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so947531wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 15:17:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+	<1242327298.4227.25.camel@localhost.localdomain> <43e72e890905141207m3c27588ex13190b2ed6010e30@mail.gmail.com>
+	<1242334636.4227.134.camel@localhost.localdomain> <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 May 2009 15:17:28 -0700
+Message-ID: <43e72e890905141517m4f7f6d27i5e89044dfd058e3a@mail.gmail.com>
+Subject: Re: Scan while TX/RX'ing a lot of data
+To: Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On non-AP interfaces userspace has no business interfering with
-the station management, this can confuse mac80211 (and other
-drivers probably wouldn't support it anyway). Allow adding and
-removing stations only on AP interfaces.
+On Thu, May 14, 2009 at 2:26 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, May 14, 2009 at 1:57 PM, Dan Williams <dcbw@redhat.com> wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Oops.
+>> Maybe if there was a way to figure out how full mac80211's QoS buckets
+>> were, that would help?  Or get a frame counts from each of the 4 QoS
+>> buckets individually?  That would allow NM to make more intelligent
+>> decisions about stuff.  Maybe a more detailed nl80211 stats interface
+>> would do the trick here.
+>
+> Would help for debugging too anyway, since QOS uses the new device
+> queues maybe that might already be available?
 
- net/wireless/nl80211.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+I should note the netdevice queues we use are _in_ mac80211 and do not
+actually represent each _device_ hardware queue. We use them for
+queuing frames for master interface to then send to the driver. Still
+-- it seems this may be helpful. This would help with TX, we would
+need something else for RX.
 
---- wireless-testing.orig/net/wireless/nl80211.c	2009-05-11 14:30:25.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-05-11 14:42:05.000000000 +0200
-@@ -1726,6 +1726,12 @@ static int nl80211_new_station(struct sk
- 	if (err)
- 		goto out_rtnl;
- 
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	err = get_vlan(info->attrs[NL80211_ATTR_STA_VLAN], drv, &params.vlan);
- 	if (err)
- 		goto out;
-@@ -1769,6 +1775,12 @@ static int nl80211_del_station(struct sk
- 	if (err)
- 		goto out_rtnl;
- 
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	if (!drv->ops->del_station) {
- 		err = -EOPNOTSUPP;
- 		goto out;
-
-
+  Luis
