@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:38535 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752614AbZELP3I convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:58925 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164AbZENTJn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 11:29:08 -0400
-Received: by gxk10 with SMTP id 10so75449gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 08:29:08 -0700 (PDT)
+	Thu, 14 May 2009 15:09:43 -0400
+Received: by bwz22 with SMTP id 22so1489351bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 12:09:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1242110389.3873.53.camel@johannes.local>
-References: <200905120109.09906.chunkeey@web.de>
-	 <1242110389.3873.53.camel@johannes.local>
-Date: Tue, 12 May 2009 11:29:08 -0400
-Message-ID: <b6c5339f0905120829l4e78f71ep73e28d0e9118ed2e@mail.gmail.com>
-Subject: Re: [PATCH 6/6] ar9170: stop data queues on channel switch
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4A0C5929.1040805@gmail.com>
+References: <4A0C5929.1040805@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 14 May 2009 21:09:23 +0200
+Message-ID: <69e28c910905141209r2e047ffex8cab34cbe51630cc@mail.gmail.com>
+Subject: Re: [PATCH] zd1211rw: Replace ZD_CS_MULTICAST with ZD_CS_NO_ACK
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2009 at 2:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> =A0 =A0 =A0 if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 err =3D ar9170_stop_and_flush_queues(ar);
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (err)
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+On Thu, May 14, 2009 at 7:47 PM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> Gábor Stefanik wrote:
 >
-> Why don't you do that in the pre-scan method?
+>> Nah, ignore this, it got wordwrapped. (I thought Thunderbird allows
+>> disabling word-wrap... :-( )
+>
+> see : http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob_plain;f=Documentation/email-clients.txt
+> or linux-2.6/Documentation/email-clients.txt
+>
+> regards,
+> --
+> Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
+>
 
-Will pre-scan be called once per scan or once for every channel switch?
-If the former, I think it's not the right place to flush.
+I ended up solving it using the Toggle Word Wrap extension.
 
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
