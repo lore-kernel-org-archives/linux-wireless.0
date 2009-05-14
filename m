@@ -1,124 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55425 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752484AbZENSaw (ORCPT
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:39047 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbZENRrH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 14:30:52 -0400
-Message-Id: <20090514183048.562864690@atheros.com>
-References: <20090514182845.684003914@atheros.com>
-Date: Thu, 14 May 2009 21:28:49 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 4/4] ath9k: Move PS wakeup/restore calls from isr to tasklet
+	Thu, 14 May 2009 13:47:07 -0400
+Received: by bwz22 with SMTP id 22so1445667bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:47:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
+References: <1242321566.32358.19.camel@rc-desk> <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
+	<1242322940.32358.31.camel@rc-desk> <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 14 May 2009 19:46:47 +0200
+Message-ID: <69e28c910905141046q1e0248b1qb00ad3b9335ed31e@mail.gmail.com>
+Subject: Re: [ipw3945-devel] iwlwifi 5150 uCode available
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+2009/5/14 Rafa³ Mi³ecki <zajec5@gmail.com>:
+> W dniu 14 maja 2009 19:42 u¿ytkownik reinette chatre
+> <reinette.chatre@intel.com> napisa³:
+>> Hi,
+>>
+>> On Thu, 2009-05-14 at 10:22 -0700, Rafa³ Mi³ecki wrote:
+>>> 2009/5/14 reinette chatre <reinette.chatre@intel.com>:
+>>> > uCode for Intel Wireless WiFi Link 5150AGN is now available for download
+>>> > from http://intellinuxwireless.org/?n=Downloads
+>>>
+>>> Changelog is top secret as usually? ;)
+>>
+>> Nope ... this is the very first release of this uCode for this
+>> particular hardware. A changelog does not make sense in this case.
+>>
+>>
+>>> Should this fix
+>>> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946 (wrong
+>>> command queue)?
+>>
+>>
+>> This bug is against 5100/5300 hardware, so this uCode is not what you
+>> are looking for. We are working on getting uCode for 5100/5300 hardware
+>> (that includes a fix for this bug) out the door.
+>>
+>> Reinette
+>
+> Ah, I gone wrong with that numbers understanding. Maybe putting
+> supported hardware in ucode's README would be a good idea? :)
+> Currently visiting http://intellinuxwireless.org/?n=Downloads doesn't
+> provide much help about choosing right firmware for 5100/5300(/5200?).
+> Or at last some short info on download page?
+>
+> --
+> Rafa³ Mi³ecki
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-We do not need to do this in ath_isr() and it looks like the modified
-version ends up being more stable as far as being able receive beacon
-frames is concerned. Furthermore, this reduces need to move between
-AWAKE and NETWORK SLEEP states when processing some unrelated
-interrupts.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
----
- drivers/net/wireless/ath/ath9k/main.c |   23 +++++++++--------------
- drivers/net/wireless/ath/ath9k/recv.c |    2 --
- 2 files changed, 9 insertions(+), 16 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2009-05-14 21:04:10.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2009-05-14 21:13:14.000000000 +0300
-@@ -455,8 +455,11 @@ static void ath9k_tasklet(unsigned long 
- 	struct ath_softc *sc = (struct ath_softc *)data;
- 	u32 status = sc->intrstatus;
- 
-+	ath9k_ps_wakeup(sc);
-+
- 	if (status & ATH9K_INT_FATAL) {
- 		ath_reset(sc, false);
-+		ath9k_ps_restore(sc);
- 		return;
- 	}
- 
-@@ -471,6 +474,7 @@ static void ath9k_tasklet(unsigned long 
- 
- 	/* re-enable hardware interrupt */
- 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
-+	ath9k_ps_restore(sc);
- }
- 
- irqreturn_t ath_isr(int irq, void *dev)
-@@ -498,14 +502,11 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return IRQ_NONE;
- 
--	ath9k_ps_wakeup(sc);
- 
- 	/* shared irq, not for us */
- 
--	if (!ath9k_hw_intrpend(ah)) {
--		ath9k_ps_restore(sc);
-+	if (!ath9k_hw_intrpend(ah))
- 		return IRQ_NONE;
--	}
- 
- 	/*
- 	 * Figure out the reason(s) for the interrupt.  Note
-@@ -520,10 +521,8 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	 * If there are no status bits set, then this interrupt was not
- 	 * for me (should have been caught above).
- 	 */
--	if (!status) {
--		ath9k_ps_restore(sc);
-+	if (!status)
- 		return IRQ_NONE;
--	}
- 
- 	/* Cache the status */
- 	sc->intrstatus = status;
-@@ -560,20 +559,16 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		ath9k_hw_set_interrupts(ah, sc->imask);
- 	}
- 
--	if (status & ATH9K_INT_TIM_TIMER) {
--		if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
-+	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
-+		if (status & ATH9K_INT_TIM_TIMER) {
- 			/* Clear RxAbort bit so that we can
- 			 * receive frames */
--			ath9k_hw_setpower(ah, ATH9K_PM_AWAKE);
--			ath9k_hw_setrxabort(ah, 0);
--			sched = true;
-+			ath9k_hw_setrxabort(sc->sc_ah, 0);
- 			sc->sc_flags |= SC_OP_WAIT_FOR_BEACON;
- 		}
--	}
- 
- chip_reset:
- 
--	ath9k_ps_restore(sc);
- 	ath_debug_stat_interrupt(sc, status);
- 
- 	if (sched) {
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:12:24.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:13:14.000000000 +0300
-@@ -508,8 +508,6 @@ static bool ath_beacon_dtim_pending_cab(
- static void ath_rx_ps_back_to_sleep(struct ath_softc *sc)
- {
- 	sc->sc_flags &= ~(SC_OP_WAIT_FOR_BEACON | SC_OP_WAIT_FOR_CAB);
--	if (sc->hw->conf.flags & IEEE80211_CONF_PS)
--		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
- }
- 
- static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
+Perhaps if this is also for 5350, then instead of naming the FW files
+"5000" and "5150", they should be "5x00" and "5x50".
 
 -- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
