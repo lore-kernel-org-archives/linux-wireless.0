@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43899 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757469AbZEHRPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 13:15:00 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 10:15:01 -0700
-Date: Fri, 8 May 2009 10:15:14 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from toronto053.server4you.de ([62.75.220.53]:38380 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbZENVS4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2009 17:18:56 -0400
+Date: Thu, 14 May 2009 22:50:20 +0200
+From: Daniel Wagner <wagi@monom.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jason Daly <jason2@primarykey.ca>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [ath9k-devel] New kernel recommendations for ath9k
-Message-ID: <20090508171514.GA8123@tesla>
-References: <43e72e890905070104u59eebcceu18718a733e388cc9@mail.gmail.com> <4A02B1CA.3060708@hiramoto.org> <43e72e890905071020v26857c52p3abea96be04ef1d9@mail.gmail.com> <6818156.7441241761835737.JavaMail.james@prod3.pk.lan> <1241773324.1567.33.camel@johannes.local>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] Simulate medium behavior
+Message-ID: <20090514205020.GC3225@newton.monom.org>
+References: <20090422092159.GA24586@toronto053.server4you.de> <1240393088.21756.3.camel@johannes.local> <20090422113556.GB24586@toronto053.server4you.de> <20090507184007.GA6684@newton.monom.org> <1241722972.7590.34.camel@johannes.local> <20090514184547.GA3225@newton.monom.org> <1242328369.5799.9.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1241773324.1567.33.camel@johannes.local>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1242328369.5799.9.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 08, 2009 at 02:02:04AM -0700, Johannes Berg wrote:
-> On Sat, 2009-05-09 at 01:50 -0400, Jason Daly wrote:
-> > Thanks for the kernel info.
-> >
-> > How do you configure hostapd to work in N mode with ath9k?  Currently
-> > the hw_mode parameter found in hostapd.conf does not accept anything
-> > greater than g.
+On Thu, May 14, 2009 at 09:12:49PM +0200, Johannes Berg wrote:
+> On Thu, 2009-05-14 at 20:45 +0200, Daniel Wagner wrote:
 > 
-> N isn't "greater than" G. N is more features than G. Just set the N
-> options in the config file. You may need a git hostapd, I don't know for
-> sure.
+> Looks good to me, couple of comments below.
 > 
-> Also, please set your clock and timezone correctly _before_ you say
-> "thank you"!. You have posted on
->         Sat, 09 May 2009 01:50:12 -0400 (07:50 CEST)
+> > +static int hwsim_fops_group_read(void *dat, u64 *val)
+> > +{
+> > +	struct mac80211_hwsim_data *data = dat;
+> > +	*val = data->group;
+> > +	return 0;
+> > +}
+> > +
+> > +static int hwsim_fops_group_write(void *dat, u64 val)
+> > +{
+> > +	struct mac80211_hwsim_data *data = dat;
+> > +	data->group = val;
+> > +	return 0;
+> > +}
+> > +
+> > +DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
+> > +			hwsim_fops_group_read, hwsim_fops_group_write,
+> > +			"%llu\n");
 > 
-> which is clearly impossible.
-> 
-Also check out:
+> I think %llx would work better for this? At least I can do bitops better
+> in hex :)
 
-http://wireless.kernel.org/en/users/Documentation/hostapd
+Yeah, I have to improve my copy&paste-foo :)
 
-  Luis
+> 
+> >  		data->debugfs_ps = debugfs_create_file("ps", 0666,
+> >  						       data->debugfs, data,
+> >  						       &hwsim_fops_ps);
+> > +		data->debugfs_group = debugfs_create_file("group", 0666,
+> > +							data->debugfs, data,
+> > +							&hwsim_fops_group);
+> 
+> Good thing this is a test module only... debugfs files with user access
+> permissions are a security risk. (a user can open the file and leave the
+> fd open, if root then rmmods future reads/writes to the fd by the user
+> crash the kernel)
+
+There isn't much we can do about that, right? 
+
+> Anyway looks good, please submit properly with [PATCH] etc :)
+
+Done. 
+
+Thanks for reviewing!
+
+cheers,
+daniel
