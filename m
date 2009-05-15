@@ -1,104 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47912 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756102AbZEHUiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 16:38:21 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/11] iwlwifi: fix PS disable status race
-Date: Fri,  8 May 2009 13:44:37 -0700
-Message-Id: <1241815486-13510-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1241815486-13510-2-git-send-email-reinette.chatre@intel.com>
-References: <1241815486-13510-1-git-send-email-reinette.chatre@intel.com>
- <1241815486-13510-2-git-send-email-reinette.chatre@intel.com>
+Received: from mail.highlandsun.com ([70.87.222.79]:57189 "EHLO
+	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbZEOTiR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 15:38:17 -0400
+Message-ID: <4A0DC4A9.8050505@highlandsun.com>
+Date: Fri, 15 May 2009 12:38:17 -0700
+From: Howard Chu <hyc@highlandsun.com>
+MIME-Version: 1.0
+To: Dave <kilroyd@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs and WPA-EAP?
+References: <4A065AFD.8000604@highlandsun.com> <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>
+In-Reply-To: <4A0DB0A5.9010301@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Dave wrote:
+> Howard Chu wrote:
+>> Sigh, nothing's ever easy. After abandoning the CTX714 I mentioned in an
+>> earlier email, I find that the Thinkpad T42 I got from eBay came with some
+>> kind of Orinoco 802.11B mini-PCI card installed. Ubuntu Jaunty's 2.6.28 kernel
+>> loads up the orinoco_cs driver for this card. It appears that this driver only
+>> supports WPA-PSK, and I use WPA-EAP on my home wlan. Has anyone done any work
+>> on supporting WPA-EAP for this card?
+>
+> Michael Stokes, who is primarily responsible for debugging my initial
+> WPA efforts, reported getting WPA-EAP working with a Toshiba Wireless
+> WLAN v01.01 shortly after we got WPA-PSK working. However I haven't had
+>   independent confirmation of this.
+>
+> The driver has evolved since then, so it's possible that we've broken
+> something.
+>
+> Note that the card only supports TKIP, so it won't work if the AP
+> doesn't offer it. At that time there seemed to be an issue with
+> wpa_supplicant attempting to use CCMP when offered by the AP, despite it
+> also offering TKIP - the workaround being to explicitly specify TKIP in
+> wpa_supplicant.conf.
 
-iwlwifi internally needs to keep track of whether PS
-is enabled in the firmware or not. To do this, it keeps
-a bit in the status flags, called STATUS_POWER_PMI.
+Thanks, that may have been the issue I was facing at first. My AP was 
+configured for CCMP. I've now set it to TKIP and seem to be getting further. 
+But now when I start wpa_supplicant I see a stream of "Information frame lost" 
+messages in dmesg that pretty much never end (interspersed once in a while 
+with ratelimit messages). I wonder if this laptop's mini-PCI slot is hosed or 
+something. Also, one of the 2 antenna cable's connector came off, and I've 
+tried to crimp the cable back into the connector but it may not be making full 
+contact. The joys of buying used hardware...
 
-The code to set this bit looks as follows:
+> Regards,
+>
+> Dave.
+>
+> PS. My contact with Michael has only been in private mail, so I've bcc'd
+> him (rather than cc'ing in case he want to keep his email off public
+> lists) in the hope that he can supply you with the necessary hints to
+> get it working.
+>
 
-static int iwl_set_power(struct iwl_priv *priv, void *cmd)
-{
-	return iwl_send_cmd_pdu_async(priv, POWER_TABLE_CMD,
-				      sizeof(struct iwl_powertable_cmd),
-				      cmd, NULL);
-}
 
-int iwl_power_update_mode(...)
-{
-	[...]
-	if (final_mode != IWL_POWER_MODE_CAM)
-		set_bit(STATUS_POWER_PMI, &priv->status);
-
-	iwl_update_power_cmd(priv, &cmd, final_mode);
-	cmd.keep_alive_beacons = 0;
-
-	if (final_mode == IWL_POWER_INDEX_5)
-		cmd.flags |= IWL_POWER_FAST_PD;
-
-	ret = iwl_set_power(priv, &cmd);
-
-	if (final_mode == IWL_POWER_MODE_CAM)
-		clear_bit(STATUS_POWER_PMI, &priv->status);
-	else
-		set_bit(STATUS_POWER_PMI, &priv->status);
-
-	if (priv->cfg->ops->lib->update_chain_flags && update_chains)
-		priv->cfg->ops->lib->update_chain_flags(priv);
-	[...]
-}
-
-Now, this bit really needs to track what the _firmware_
-thinks, not what the driver thinks. Therefore, there is
-a race condition here -- the driver sets the bit before
-it knows that the async command sent to the card in the
-iwl_set_power function has been processed. As a result,
-the call to update_chain_flags() may think that the card
-has been woken up (PMI bit cleared) while in reality it
-hasn't processed the async POWER_TABLE_CMD yet.
-
-This leads to bugs -- any commands the update_chain_flags
-function sends can get stuck and subsequent commands also
-fail.
-
-The fix is almost trivial: since there's no reason to send
-an async command here (in fact, there almost never should
-be since many mac80211 callbacks can sleep) just make the
-function wait for the card to process the command and then
-return and clear the PMI bit.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-power.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 47c8945..c913069 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -106,9 +106,8 @@ static struct iwl_power_vec_entry range_2[IWL_POWER_MAX] = {
- /* set card power command */
- static int iwl_set_power(struct iwl_priv *priv, void *cmd)
- {
--	return iwl_send_cmd_pdu_async(priv, POWER_TABLE_CMD,
--				      sizeof(struct iwl_powertable_cmd),
--				      cmd, NULL);
-+	return iwl_send_cmd_pdu(priv, POWER_TABLE_CMD,
-+				sizeof(struct iwl_powertable_cmd), cmd);
- }
- /* decide the right power level according to association status
-  * and battery status
 -- 
-1.5.6.3
-
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
