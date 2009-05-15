@@ -1,75 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f177.google.com ([209.85.222.177]:65411 "EHLO
-	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754348AbZEVAga convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 20:36:30 -0400
-Received: by pzk7 with SMTP id 7so973116pzk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 17:36:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242951611.5206.9.camel@maxim-laptop>
-References: <1241499867.4816.18.camel@maxim-laptop> <1242256104.3241.4.camel@maxim-laptop>
-	<43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
-	<1242256950.3241.13.camel@maxim-laptop> <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
-	<1242258469.3241.19.camel@maxim-laptop> <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
-	<b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
-	<1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 21 May 2009 17:36:12 -0700
-Message-ID: <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com>
-Subject: Re: [BUG] Crda oopses the system
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>, Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:30798 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754667AbZEOXHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 19:07:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/3] iwlwifi: do not cancel delayed work inside spin_lock_irqsave
+Date: Fri, 15 May 2009 16:13:45 -0700
+Message-Id: <1242429226-8313-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1242429226-8313-3-git-send-email-reinette.chatre@intel.com>
+References: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
+ <1242429226-8313-2-git-send-email-reinette.chatre@intel.com>
+ <1242429226-8313-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2009 at 5:20 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> On Tue, 2009-05-19 at 17:17 +0300, Maxim Levitsky wrote:
->> On Thu, 2009-05-14 at 10:20 -0400, Bob Copeland wrote:
->> > On Wed, May 13, 2009 at 8:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> > >>
->> > >> I wish I had time to set up, an ath5k in AP mode. There are rumors that
->> > >> it works more or less now, then I could use the same beacon frame to
->> > >> test.
->> > >
->> > > It does and if it doesn't its a bug.
->> >
->> > Just FYI, it's known to have problems if the STA uses power saving --
->> > ath5k never updates the beacon.  I have a patch that should work in the
->> > relevant bugzilla but I haven't been back to retest it (at first I
->> > thought it was causing hangs, but later realized the hangs were due to
->> > other bugs in w-t).
->> >
->>
->
-> I was just able to reproduce that bug on latest wireless-testing that I
-> belive contains the patches you sent for me to test.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Latest wireless-testing *does* have those patches.
+Calling cancel_delayed_work() from inside
+spin_lock_irqsave, introduces a potential deadlock.
 
-> I reproduced it against ath5k running in AP mode at home.
->
-> I finally made the ath5k send beacons (although not much works besides
-> this).
->
->
-> Note that I noticed that this bug
+As explained by Johannes Berg <johannes@sipsolutions.net>
 
-You can get an oops when trying to associate to your ath5k AP? And its
-easily reproducible? What driver to you use as the STA? Can you
-provide a trace?
+A - lock
+T - timer
 
-> happens once at boot, if I set NM to
-> use system settings,
+phase                   CPU 1           CPU 2
+---------------------------------------------
 
-What does this mean?
+some place that calls
+cancel_timer_sync()
+(which is the | code)
+                                        lock-irq(A)
+|                                       "lock-irq"(T)
+|                                       "unlock"(T)
+|                                       wait(T)
+                                        unlock(A)
 
-> when I try to connect again it doesn't happen. Its
-> a race condition after all.
+timer softirq
+                        "lock"(T)
+                        run(T)
+                        "unlock"(T)
 
-Is the oops not crashing your box? How are you able to try again? What
-does trying again mean?
+irq handler
+          lock(A)
+          unlock(A)
 
-  Luis
+Now all that again, interleaved, leading to deadlock:
+
+                                        lock-irq(A)
+                        "lock"(T)
+                         run(T)
+IRQ during or maybe
+before run(T) -->        lock(A)
+                                        "lock-irq"(T)
+                                        wait(T)
+
+We fix this by moving the call to cancel_delayed_work() into workqueue.
+There are cases where the work may not actually be queued or running
+at the time we are trying to cancel it, but cancel_delayed_work() is
+able to deal with this.
+
+Also cleanup iwl_set_mode related to this call. This function
+(iwl_set_mode) is only called when bringing interface up and there will
+thus not be any scanning done. No need to try to cancel scanning.
+
+Fixes http://bugzilla.kernel.org/show_bug.cgi?id=13224, which was also
+reported at http://marc.info/?l=linux-wireless&m=124081921903223&w=2 .
+
+Tested-by: Miles Lane <miles.lane@gmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 ++++---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
+ 3 files changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5393fb3..967343a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2437,13 +2437,6 @@ int iwl_set_mode(struct iwl_priv *priv, int mode)
+ 	if (!iwl_is_ready_rf(priv))
+ 		return -EAGAIN;
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-	if (iwl_scan_cancel_timeout(priv, 100)) {
+-		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+-		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+-		return -EAGAIN;
+-	}
+-
+ 	iwlcore_commit_rxon(priv);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 8029206..41358cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -227,9 +227,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 	/* The HW is no longer scanning */
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 
+-	/* The scan completion notification came in, so kill that timer... */
+-	cancel_delayed_work(&priv->scan_check);
+-
+ 	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
+ 		       (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ)) ?
+ 						"2.4" : "5.2",
+@@ -591,6 +588,8 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	cancel_delayed_work(&priv->scan_check);
++
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_WARN(priv, "request scan called when driver not ready.\n");
+ 		goto done;
+@@ -816,6 +815,8 @@ void iwl_bg_scan_completed(struct work_struct *work)
+ 
+ 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+ 
++	cancel_delayed_work(&priv->scan_check);
++
+ 	priv->scan_request = NULL;
+ 	ieee80211_scan_completed(priv->hw, false);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 5d52f22..ded7fea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2995,6 +2995,8 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	cancel_delayed_work(&priv->scan_check);
++
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_WARN(priv, "request scan called when driver not ready.\n");
+ 		goto done;
+-- 
+1.5.6.3
+
