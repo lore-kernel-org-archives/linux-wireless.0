@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:50178 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754347AbZE3UI4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 16:08:56 -0400
-Received: by ewy24 with SMTP id 24so6992428ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 13:08:57 -0700 (PDT)
-Message-ID: <4A219250.2050606@gmail.com>
-Date: Sat, 30 May 2009 21:08:48 +0100
-From: Dave <kilroyd@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:15532 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757314AbZEONen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 09:34:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 15 May 2009 06:34:45 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Print hw reset failure status as signed int
+Date: Fri, 15 May 2009 18:59:20 +0530
+Message-ID: <1242394162-9812-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Subject: Re: [RFC v2 04/23] cfg80211: set WE encoding size based on available
- ciphers
-References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>	 <1243705017-8784-5-git-send-email-kilroyd@googlemail.com> <1243713468.3523.32.camel@localhost.localdomain>
-In-Reply-To: <1243713468.3523.32.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel Holtmann wrote:
->>  			range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
->>  		else if (suite == WLAN_CIPHER_SUITE_CCMP)
->>  			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
->> +		else if (suite == WLAN_CIPHER_SUITE_WEP40)
->> +			range->encoding_size[range->num_encoding_sizes++] =
->> +				WLAN_KEY_LEN_WEP40;
->> +		else if (suite == WLAN_CIPHER_SUITE_WEP104)
->> +			range->encoding_size[range->num_encoding_sizes++] =
->> +				WLAN_KEY_LEN_WEP104;
-> 
-> especially since you are now extending this list, please use a switch
-> statement. The code becomes hard to read.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   10 +++++-----
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Sure, I'll change this to a switch.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index df9b7c1..c161b75 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -280,7 +280,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (r) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to reset channel (%u Mhz) "
+-			"reset status %u\n",
++			"reset status %d\n",
+ 			channel->center_freq, r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
+ 		return r;
+@@ -1090,7 +1090,7 @@ void ath_radio_enable(struct ath_softc *sc)
+ 	if (r) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to reset channel %u (%uMhz) ",
+-			"reset status %u\n",
++			"reset status %d\n",
+ 			channel->center_freq, r);
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+@@ -1142,7 +1142,7 @@ void ath_radio_disable(struct ath_softc *sc)
+ 	if (r) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to reset channel %u (%uMhz) "
+-			"reset status %u\n",
++			"reset status %d\n",
+ 			channel->center_freq, r);
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+@@ -1705,7 +1705,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
+ 	if (r)
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+-			"Unable to reset hardware; reset status %u\n", r);
++			"Unable to reset hardware; reset status %d\n", r);
+ 	spin_unlock_bh(&sc->sc_resetlock);
+ 
+ 	if (ath_startrecv(sc) != 0)
+@@ -1997,7 +1997,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	r = ath9k_hw_reset(sc->sc_ah, init_channel, false);
+ 	if (r) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+-			"Unable to reset hardware; reset status %u "
++			"Unable to reset hardware; reset status %d "
+ 			"(freq %u MHz)\n", r,
+ 			curchan->center_freq);
+ 		spin_unlock_bh(&sc->sc_resetlock);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 41c4282..3f2bd79 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1070,7 +1070,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, true);
+ 		if (r)
+ 			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to reset hardware; reset status %u\n",
++				"Unable to reset hardware; reset status %d\n",
+ 				r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
+ 	}
+-- 
+1.5.5.1
 
-Thanks!
-
-
-Dave.
