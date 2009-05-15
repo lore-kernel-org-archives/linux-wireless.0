@@ -1,100 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:25916 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751067AbZETC0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 22:26:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/4] libertas: define macros for SDIO model numbers
-Date: Tue, 19 May 2009 19:48:18 -0700
-Message-Id: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:43093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757039AbZEOIXk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 04:23:40 -0400
+Subject: Re: [RFT v9] rfkill: rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Dan Williams <dcbw@redhat.com>, Will Keaney <keaneyw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090515012710.GC21718@khazad-dum.debian.net>
+References: <1242030669.6930.10.camel@johannes.local>
+	 <4A09B130.9000106@gmail.com>
+	 <1242151180.3203.19.camel@localhost.localdomain>
+	 <1242151479.11924.4.camel@johannes.local>
+	 <20090513214004.GE26299@khazad-dum.debian.net>
+	 <1242253192.10076.3.camel@johannes.local>
+	 <20090515012710.GC21718@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sss0PAFvQfSkqwCiYmGY"
+Date: Fri, 15 May 2009 10:23:08 +0200
+Message-Id: <1242375788.5799.40.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-replace direct usages of SDIO model numbers with defined macros.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/libertas/if_sdio.c |   18 +++++++++---------
- drivers/net/wireless/libertas/if_sdio.h |    4 ++++
- 2 files changed, 13 insertions(+), 9 deletions(-)
+--=-sss0PAFvQfSkqwCiYmGY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 55864c1..69d7fd3 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -66,19 +66,19 @@ struct if_sdio_model {
- static struct if_sdio_model if_sdio_models[] = {
- 	{
- 		/* 8385 */
--		.model = 0x04,
-+		.model = IF_SDIO_MODEL_8385,
- 		.helper = "sd8385_helper.bin",
- 		.firmware = "sd8385.bin",
- 	},
- 	{
- 		/* 8686 */
--		.model = 0x0B,
-+		.model = IF_SDIO_MODEL_8686,
- 		.helper = "sd8686_helper.bin",
- 		.firmware = "sd8686.bin",
- 	},
- 	{
- 		/* 8688 */
--		.model = 0x10,
-+		.model = IF_SDIO_MODEL_8688,
- 		.helper = "sd8688_helper.bin",
- 		.firmware = "sd8688.bin",
- 	},
-@@ -118,7 +118,7 @@ static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
- 	int ret, reg;
- 	u16 scratch;
- 
--	if (card->model == 0x04)
-+	if (card->model == IF_SDIO_MODEL_8385)
- 		reg = IF_SDIO_SCRATCH_OLD;
- 	else
- 		reg = IF_SDIO_SCRATCH;
-@@ -216,7 +216,7 @@ static int if_sdio_handle_event(struct if_sdio_card *card,
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
--	if (card->model == 0x04) {
-+	if (card->model == IF_SDIO_MODEL_8385) {
- 		event = sdio_readb(card->func, IF_SDIO_EVENT, &ret);
- 		if (ret)
- 			goto out;
-@@ -829,10 +829,10 @@ static int if_sdio_probe(struct sdio_func *func,
- 		if (sscanf(func->card->info[i],
- 				"ID: %x", &model) == 1)
- 			break;
--               if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
--                       model = 4;
--                       break;
--               }
-+		if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
-+			model = IF_SDIO_MODEL_8385;
-+			break;
-+		}
- 	}
- 
- 	if (i == func->card->num_info) {
-diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
-index 37ada2c..cea343f 100644
---- a/drivers/net/wireless/libertas/if_sdio.h
-+++ b/drivers/net/wireless/libertas/if_sdio.h
-@@ -12,6 +12,10 @@
- #ifndef _LBS_IF_SDIO_H
- #define _LBS_IF_SDIO_H
- 
-+#define IF_SDIO_MODEL_8385	0x04
-+#define IF_SDIO_MODEL_8686	0x0b
-+#define IF_SDIO_MODEL_8688	0x10
-+
- #define IF_SDIO_IOPORT		0x00
- 
- #define IF_SDIO_H_INT_MASK	0x04
--- 
-1.5.3.6
+On Thu, 2009-05-14 at 22:27 -0300, Henrique de Moraes Holschuh wrote:
+> On Thu, 14 May 2009, Johannes Berg wrote:
+> > > As for the issue Dan reported, I have _no_ _idea_ of what it might be
+> > > causing it, and a bissect would help wonders.  It will have to be fix=
+ed
+> > > anyway (even if it is also fixed by the rfkill rewrite) if it is hosi=
+ng
+> > > 2.6.30 :-(
+> >=20
+> > Dan? Now I'm confused? You mean Will's issue? Does thinkpad do LED
+>=20
+> Probably.
+>=20
+> > stuff? That's the only thing we changed recently in the current rfkill
+>=20
+> Yes, thinkpad does LED stuff... but not on the rfkill path I think.
+> Although one could certainly use a rfkill trigger on one of the thinkpad
+> leds, and that would tie the two together...
+
+Exactly. But for some reason I fail to comprehend rfkill had LED
+triggers but never actually used them until Larry very recently added
+that.
+
+johannes
+
+--=-sss0PAFvQfSkqwCiYmGY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKDSZnAAoJEODzc/N7+QmaDBMP/1TeQlyDTiHH+E0WFezJM1+x
+qOSTjy/nGfsM3ZclzrtCRU2g4PIIbcYD7/l0oxf1osgVyIc7H5aQ5Jsoky+bWC50
+VEd0hZUl+RND+BAEgAxynvsXnfZg9HjXqBqeTki60j//L3smW1XzkbnyvHS1EmmN
+hq/KYpJYHJGXSXkNF/k0MNT2GHTqkVmMityBFkNQPRGz6kpXIbt+f3wJSMhdBBS+
+Vhb+SkROyYFx/ZWEpX22zAyCO/9apgQj32iiQRry2AiuXCKu5rlyciBuVj80unCu
+AWB+5Wd3eEhp3oqX5W1S9B8D+I18KCxaL+HDGn5xn+XgTuLSEkO9g/M/WexqUsax
+slAo9WEFNZ8s31H8sO8Gul4N4e4eTSytEupKSULoXvlOBGxy4ufhKXIYwtdb76Ty
+x92YoQsHnpvKwyEw50s3DCfgmRXz1w6M/vCgVNBU4m6Vy4nv0FH6fbT/QftcumMh
+w6LrWB/jRdBDVzJ8rHjxhwIcBfiXa8fPL78+l/GFv3vmPLKToo/zENo7kh9GXc0T
+QuJbhhNgt3jZqJOeYxnVeOd/rC9/kOr40gpRFle5nBeBldS8xPRmdCd4hdabMQBL
+4+WBfX8hLe9bbdAnlHwz+9SC88xrFoViSwihQfLlPXtlJ7Iz/VDMQ+Ml/7icVmn0
+cnAluZG0f6LWBcYdnyH7
+=QFtq
+-----END PGP SIGNATURE-----
+
+--=-sss0PAFvQfSkqwCiYmGY--
 
