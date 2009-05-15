@@ -1,41 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:62070 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768AbZESWnP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 18:43:15 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so26293wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 15:43:17 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:15535 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753332AbZEONep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 09:34:45 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 15 May 2009 06:34:47 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Remove unused parameters which are passed to ath_beacon_config_X()
+Date: Fri, 15 May 2009 18:59:21 +0530
+Message-ID: <1242394162-9812-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1242394162-9812-1-git-send-email-vasanth@atheros.com>
+References: <1242394162-9812-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <b6c5339f0905191533v30683b9cueb929f44f2f8725@mail.gmail.com>
-References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
-	<b6c5339f0905191533v30683b9cueb929f44f2f8725@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 19 May 2009 15:42:56 -0700
-Message-ID: <43e72e890905191542k7e65200en8b6f9453ead1a21a@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k: fix custom regulatory call position
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2009 at 3:33 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Tue, May 19, 2009 at 5:49 PM, Luis R. Rodriguez > ---
-> a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -1412,8 +1412,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
->>        for (i = 0; i < sc->keymax; i++)
->>                ath9k_hw_keyreset(ah, (u16) i);
->>
->> -       error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
->> -                             ath9k_reg_notifier);
->>        if (error)
->>                goto bad;
->
-> Is the "if (error)" check still valid?
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
 
-Sure, although we'll never hit it, we should just make ath_regd_init() void.
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 3a7154b..af5edb8 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -507,8 +507,7 @@ void ath_beacon_tasklet(unsigned long data)
+  * slot. Slots that are not occupied will generate nothing.
+  */
+ static void ath_beacon_config_ap(struct ath_softc *sc,
+-				 struct ath_beacon_config *conf,
+-				 struct ath_vif *avp)
++				 struct ath_beacon_config *conf)
+ {
+ 	u32 nexttbtt, intval;
+ 
+@@ -553,8 +552,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
+  * we've associated with.
+  */
+ static void ath_beacon_config_sta(struct ath_softc *sc,
+-				  struct ath_beacon_config *conf,
+-				  struct ath_vif *avp)
++				  struct ath_beacon_config *conf)
+ {
+ 	struct ath9k_beacon_state bs;
+ 	int dtimperiod, dtimcount, sleepduration;
+@@ -654,7 +652,6 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 
+ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 				    struct ath_beacon_config *conf,
+-				    struct ath_vif *avp,
+ 				    struct ieee80211_vif *vif)
+ {
+ 	u64 tsf;
+@@ -720,14 +717,14 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 
+ 		switch(avp->av_opmode) {
+ 		case NL80211_IFTYPE_AP:
+-			ath_beacon_config_ap(sc, &conf, avp);
++			ath_beacon_config_ap(sc, &conf);
+ 			break;
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_MESH_POINT:
+-			ath_beacon_config_adhoc(sc, &conf, avp, vif);
++			ath_beacon_config_adhoc(sc, &conf, vif);
+ 			break;
+ 		case NL80211_IFTYPE_STATION:
+-			ath_beacon_config_sta(sc, &conf, avp);
++			ath_beacon_config_sta(sc, &conf);
+ 			break;
+ 		default:
+ 			DPRINTF(sc, ATH_DBG_CONFIG,
+-- 
+1.5.5.1
 
-  Luis
