@@ -1,83 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50434 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759046AbZE0FMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 01:12:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 22:12:57 -0700
-Subject: Re: [PATCH 4/4] mac80211: Fix typos in "set default QoS values
- according to spec"
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: Jeff Hansen <x@jeffhansen.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	<linux-wireless@vger.kernel.org>
-In-Reply-To: <1243400715-13561-4-git-send-email-x@jeffhansen.com>
-References: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
-	 <1243400715-13561-4-git-send-email-x@jeffhansen.com>
-Content-Type: text/plain
-Date: Wed, 27 May 2009 08:12:52 +0300
-Message-ID: <1243401172.30310.4.camel@jm-desktop>
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:58692 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676AbZEOIBj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 04:01:39 -0400
+Subject: Re: [RFC 3/5] mac80211: fix idle trigger upon resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890905141918v5c8aa7b9n2ab42bfabd90ca54@mail.gmail.com>
+References: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
+	 <1242033904-25694-4-git-send-email-lrodriguez@atheros.com>
+	 <1242036115.3284.15.camel@johannes.local>
+	 <43e72e890905111134u61f1600fie1950b6e12681e13@mail.gmail.com>
+	 <1242068010.3873.46.camel@johannes.local> <20090511190922.GD18696@tesla>
+	 <20090515003202.GA17816@tesla>
+	 <43e72e890905141833g214753d9lbdb00bd70ee28dfe@mail.gmail.com>
+	 <43e72e890905141918v5c8aa7b9n2ab42bfabd90ca54@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-L+hmclx9qa2Ac4EdP9/1"
+Date: Fri, 15 May 2009 10:01:10 +0200
+Message-Id: <1242374470.5799.18.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-26 at 22:05 -0700, Jeff Hansen wrote:
-> Some of the acwmin and acwmax values were backwards in the original patch,
-> which cut TX performance (on my device at least) down from ~25-30Mbps to
-> 2Mbps.  Performance is back up after this commit.
 
-Thanks for reporting these and verifying that this fixes the issue.
-However, not all of these are typos.. In addition,
-linux-wireless@vger.kernel.org should be cc'ed.
+--=-L+hmclx9qa2Ac4EdP9/1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+On Thu, 2009-05-14 at 19:18 -0700, Luis R. Rodriguez wrote:
 
-> @@ -657,20 +657,20 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
-> 
->                 switch (queue) {
->                 case 3: /* AC_BK */
-> -                       qparam.cw_max = aCWmin;
-> -                       qparam.cw_min = aCWmax;
-> +                       qparam.cw_max = aCWmax;
-> +                       qparam.cw_min = aCWmin;
->                         qparam.txop = 0;
->                         qparam.aifs = 7;
->                         break;
->                 default: /* never happens but let's not leave undefined */
->                 case 2: /* AC_BE */
-> -                       qparam.cw_max = aCWmin;
-> -                       qparam.cw_min = aCWmax;
-> +                       qparam.cw_max = aCWmax;
-> +                       qparam.cw_min = aCWmin;
->                         qparam.txop = 0;
->                         qparam.aifs = 3;
->                         break;
+> >> So I've added the WARN_ON() here as we agreed to investigate on irc. T=
+urns out
+> >> we hit it several times as expected. We hit it while going to suspend
+> >> once, and then on resume 3 times.
 
-These are correct fixes.
+> Nevermind -- the last trace does show its called from disassoc -- and
+> we I don't think we should disassoc until we've come back from
+> suspend.
 
->                 case 1: /* AC_VI */
-> -                       qparam.cw_max = aCWmin;
-> +                       qparam.cw_max = aCWmax;
->                         qparam.cw_min = (aCWmin + 1) / 2 - 1;
->                         if (use_11b)
->                                 qparam.txop = 6016/32;
-> @@ -679,7 +679,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
->                         qparam.aifs = 2;
->                         break;
->                 case 0: /* AC_VO */
-> -                       qparam.cw_max = (aCWmin + 1) / 2 - 1;
-> +                       qparam.cw_max = (aCWmax + 1) / 2 - 1;
->                         qparam.cw_min = (aCWmin + 1) / 4 - 1;
->                         if (use_11b)
->                                 qparam.txop = 3264/32;
+Yeah that bit is odd -- but like I said I think it's just the fact that
+we don't cancel any of our timers or sync our work.
 
-These were actually already correct (yes, it may look like a typo, but
-it is not, both of VI and VO are indeed using aCWmin in calculation for
-both min and max values) and should not be changed.
+johannes
 
-- Jouni
+--=-L+hmclx9qa2Ac4EdP9/1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKDSE+AAoJEODzc/N7+QmaKSEP/08rTQNPlAB5q+pfhlCflPwq
+YXVF0pppYCveRaH+3umPfL2Lv5IDaPNFtRBN2cX2iSYywaFqaqQu01g8eZ12fVHT
+21GD6EYPYv3tfNRzzxHn/Y2QdvT9HwtnFPUyhisSuo3Wk8d5WG0FvTPNFbNJ30qn
+GYG73mHBONOmb7bNXoOGmB3a+Y+9LsgX53aPbpQc6bKHQIr0vBKYk5EOyHaFckfZ
+O9dBIY5O4VJQKLzYnYHf7NGP6kMENu3ZWMdoysiJOIPpuSoZtfyh58KFX6fkWlvs
+reFkLWm+c5dUOXQpWmgu4rEjLBZQyTBUC7Q4Wc6gEvimxLsm4joFuO5XHvw1R/qE
+7KfcortuiEzrLpgq+y/gCX25k1WD3Ip+jqFLcC8/jWPCZ+sA5AydWote9sFPbbQR
+Rz8Mw7/XeI2eNDIR9yBvnxtfXeAf0V6VXdfhXcAxUPv72jGpCkSP1LyIXMBWcdbJ
+4kBvFwURjH2XeRSYsM+VzMhvdw8o7tRrMNsGajXrwAP81nTzf0HvkPKS26/0ojBt
+nte8RUZqxaT49jmx/zoPgVxrrOCA4XQu6vKjN/7YVD/6boTITdyFqIxYbhYRnxiK
+3ZnYOawE2WrGxyIj9uZio0983mUtkl4v4lBmpbQR+ZynVnkXdFbKUsi2GBc7xhQR
+G18tkTBL9ZoszcKPFjHN
+=cANB
+-----END PGP SIGNATURE-----
+
+--=-L+hmclx9qa2Ac4EdP9/1--
 
