@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:58925 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbZENTJn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 15:09:43 -0400
-Received: by bwz22 with SMTP id 22so1489351bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 12:09:43 -0700 (PDT)
+Received: from ogre.sisk.pl ([217.79.144.158]:40242 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755475AbZEOVti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 17:49:38 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Regression since 2.6.30-rc1 - Page allocation failures
+Date: Fri, 15 May 2009 23:49:47 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <49F8C03D.6040909@lwfinger.net> <1241040451.5067.0.camel@johannes.local> <49F8E145.1050708@lwfinger.net>
+In-Reply-To: <49F8E145.1050708@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4A0C5929.1040805@gmail.com>
-References: <4A0C5929.1040805@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 14 May 2009 21:09:23 +0200
-Message-ID: <69e28c910905141209r2e047ffex8cab34cbe51630cc@mail.gmail.com>
-Subject: Re: [PATCH] zd1211rw: Replace ZD_CS_MULTICAST with ZD_CS_NO_ACK
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200905152349.47940.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 7:47 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> Gábor Stefanik wrote:
->
->> Nah, ignore this, it got wordwrapped. (I thought Thunderbird allows
->> disabling word-wrap... :-( )
->
-> see : http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob_plain;f=Documentation/email-clients.txt
-> or linux-2.6/Documentation/email-clients.txt
->
-> regards,
-> --
-> Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
->
+On Thursday 30 April 2009, Larry Finger wrote:
+> Johannes Berg wrote:
+> > On Wed, 2009-04-29 at 23:09 +0200, Johannes Berg wrote:
+> > 
+> >> 	"%d, %d, need %d, %d", skb->data_len, skb->len, head_need, tail_need
+> > 
+> > actually, I think I want
+> > 
+> > 	skb_tail_pointer(skb) - skb->head
+> > 
+> > instead of skb->data_len.
+> 
+> I get the "failed to reallocate TX buffer" message. Not all are related to the
+> page allocation failure. I am also getting "b43-phy0 debug: DMA RX:
+> setup_rx_descbuffer() failed" messages.
+> 
+> So far, the numbers printed by the revised printk are:
+> 
+> kernel: phy0: failed to reallocate TX buffer 0, 404, need 0, 0
+> kernel: protocol 0008 is buggy, dev eth1
+> 
+> kernel: phy0: failed to reallocate TX buffer 0, 1728, need 0, 18
+> 
+> Device eth1 is the b43 wireless device.
 
-I ended up solving it using the Toggle Word Wrap extension.
+Can you please tell me what the status of this bug is?
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Rafael
