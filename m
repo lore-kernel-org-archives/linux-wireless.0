@@ -1,66 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:38786 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757475AbZEDRAS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 13:00:18 -0400
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Samuel Ortiz <samuel@sortiz.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
+Received: from ogre.sisk.pl ([217.79.144.158]:40239 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753311AbZEOVtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 17:49:33 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: Re: [PATCH] [RFC] EEE PC hangs when booting off battery
+Date: Fri, 15 May 2009 23:48:55 +0200
+Cc: John Linville <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20090504121221.GA31147@tuxdriver.com>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <1239136768.7475.62.camel@johannes.local>
-	 <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
-	 <20090504121221.GA31147@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 04 May 2009 19:02:24 +0200
-Message-Id: <1241456544.7236.0.camel@sortiz-mobl>
-Mime-Version: 1.0
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arjan van de Ven <arjan@infradead.org>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>
+References: <49E065CF.6040408@tuffmail.co.uk> <49F6DA14.7030608@tuffmail.co.uk> <49F83699.3000307@tuffmail.co.uk>
+In-Reply-To: <49F83699.3000307@tuffmail.co.uk>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200905152348.56449.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-On Mon, 2009-05-04 at 08:12 -0400, John W. Linville wrote:
-> On Sun, May 03, 2009 at 11:43:38AM +0300, Kalle Valo wrote:
-> > On Tue, Apr 7, 2009 at 11:39 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > > Hi,
-> > 
-> > Hello,
-> > 
-> > >> Also, please consider making some sort of prepared presentation.
-> > >> Especially welcome would be topics that are accessible to those
-> > >> outside of the core wireless developer group, such as current
-> > >> projects on enhancing IBSS support, extended power savings, or any
-> > >> other user-visible topic.  I'll be happy to take such proposals in
-> > >> private email or you can post them as part of this thread.
-> > >
-> > > Since I've just booked my train (will arrive 1:30pm or so on the 25th,
-> > > leave Sunday [28th] late afternoon), here are some things I could
-> > > possibly talk about:
-> > >
-> > >  * status of moving to nl80211/cfg80211 -- overview over new cfg80211
-> > >   operations, maybe with Jouni?
-> > >  * power saving if Kalle can't make it
-> > 
-> > I can now confirm that I'm joining the summit as well \o/
-> > 
-> > I will arrive to Berlin on Thursday before noon and will leave on
-> > Sunday evening.
-> > 
-> > Kalle
+On Wednesday 29 April 2009, Alan Jenkins wrote:
+> Alan Jenkins wrote:
+> > Johannes Berg wrote:
+> >   
+> >> That doesn't seem relevant, this just does some initialisation. However,
+> >> you definitely missed adding a call to wep_free().
+> >>   
+> >>     
+> >
+> > Hah, I should have realized something was wrong when I noticed I was
+> > removing more lines that I added. 
+> >
+> > The crypto init does cause the module load:
+> >
+> > wait_for_completion
+> > call_usermodehelper_exec
+> > __request_module
+> > crypto_larval_lookup
+> > ? extract_entropy
+> > crypto_alg_mod_lookup
+> > crypto_alloc_base
+> > ieee80211_wep_init
+> > ieee80211_register_hw
+> >   
 > 
-> Excellent news!  Anyone else?
-I will most likely be there as well.
+> Here's a corrected patch complete with changelog.  If there are no other
+> problems with it, can you please  apply this for 2.6.30 to keep my EeePC
+> regression-free?
+> 
+> Thanks
+> Alan
+> 
+> ------>
+> From c5e9dc036247e70956d1a28e8850c3810385dda0 Mon Sep 17 00:00:00 2001
+> From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> Date: Wed, 29 Apr 2009 11:41:24 +0100
+> Subject: [PATCH] mac80211: fix modprobe deadlock by not calling wep_init under rtnl_lock
+> 
+>  - ieee80211_wep_init(), which is called with rtnl_lock held, blocks in
+>    request_module() [waiting for modprobe to load a crypto module].
+> 
+>  - modprobe blocks in a call to flush_workqueue(), when it closes a TTY
+>    [presumably when it exits].
+> 
+>  - The workqueue item linkwatch_event() blocks on rtnl_lock.
+> 
+> There's no reason for wep_init() to be called with rtnl_lock held, so
+> just move it outside the critical section.
 
-Cheers,
-Samuel.
+Has it been merged already or is it queued up for merging?
+
+Rafael
 
 
-> John
+> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> ---
+>  net/mac80211/main.c |   19 +++++++++----------
+>  1 files changed, 9 insertions(+), 10 deletions(-)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index fbcbed6..00968c2 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -909,6 +909,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>  	if (result < 0)
+>  		goto fail_sta_info;
+>  
+> +	result = ieee80211_wep_init(local);
+> +	if (result < 0) {
+> +		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
+> +		       wiphy_name(local->hw.wiphy), result);
+> +		goto fail_wep;
+> +	}
+> +
+>  	rtnl_lock();
+>  	result = dev_alloc_name(local->mdev, local->mdev->name);
+>  	if (result < 0)
+> @@ -930,14 +937,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>  		goto fail_rate;
+>  	}
+>  
+> -	result = ieee80211_wep_init(local);
+> -
+> -	if (result < 0) {
+> -		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
+> -		       wiphy_name(local->hw.wiphy), result);
+> -		goto fail_wep;
+> -	}
+> -
+>  	/* add one default STA interface if supported */
+>  	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
+>  		result = ieee80211_if_add(local, "wlan%d", NULL,
+> @@ -967,13 +966,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>  
+>  	return 0;
+>  
+> -fail_wep:
+> -	rate_control_deinitialize(local);
+>  fail_rate:
+>  	unregister_netdevice(local->mdev);
+>  	local->mdev = NULL;
+>  fail_dev:
+>  	rtnl_unlock();
+> +	ieee80211_wep_free(local);
+> +fail_wep:
+>  	sta_info_stop(local);
+>  fail_sta_info:
+>  	debugfs_hw_del(local);
 
+
+-- 
+Everyone knows that debugging is twice as hard as writing a program
+in the first place.  So if you're as clever as you can be when you write it,
+how will you ever debug it? --- Brian Kernighan
