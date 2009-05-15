@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35558 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751655AbZEVNMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 09:12:52 -0400
-Message-ID: <4A16A4D1.4070009@gmx.de>
-Date: Fri, 22 May 2009 15:12:49 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>, David.Quan@atheros.com,
-	Tony Yang <Tony.Yang@atheros.com>
-Subject: Re: ath/regd.c: regdomain 0x8000 fails to retrieve a regulatory
- domain pair
-References: <4A0802B0.9070206@gmx.de> <20090511190602.GC18696@tesla> 	<618D4DE9D5223A45A46C48063FD640451098774889@TAEXMB-01.global.atheros.com> 	<20090521171619.GB28691@tesla> <4A15E219.7040908@gmx.de> <20090521235742.GA7684@tesla> <43e72e890905211711p5dc29b52n778dd384915a2f1@mail.gmail.com>
-In-Reply-To: <43e72e890905211711p5dc29b52n778dd384915a2f1@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from senator.holtmann.net ([87.106.208.187]:56971 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753811AbZEOVZU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 17:25:20 -0400
+Subject: Re: [PATCH 1/2] mac80211: minstrel, fix memory corruption
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@openwrt.org>, davem@davemloft.net
+In-Reply-To: <alpine.LFD.2.01.0905151147520.3343@localhost.localdomain>
+References: <1241453096-8517-1-git-send-email-jirislaby@gmail.com>
+	 <20090515182131.GA6439@fancy-poultry.org>
+	 <20090515183319.GF2773@tuxdriver.com>
+	 <alpine.LFD.2.01.0905151147520.3343@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 15 May 2009 14:25:10 -0700
+Message-Id: <1242422710.3446.24.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2009 02:11 AM, Luis R. Rodriguez wrote:
+Hi Linus,
 
-> BTW is this a dual band (2.4 GHz and 5 GHz) device or a single band (2.4 GHz) ?
+> > Unfortunately, I think Dave might have limited availability right now...
+> 
+> Yeah, I think he's on some Alaskan cruise.
+> 
+> Should I just pull directly from you this time?
 
-It's a dual band device - Netgear WNDA3100, FCC id PY307300073,
-S/N 1TN1824802859.
+I would have a similar pull request pending for Bluetooth fixes:
+
+	http://marc.info/?l=linux-netdev&m=124209765506433
+
+Regards
+
+Marcel
+
+
