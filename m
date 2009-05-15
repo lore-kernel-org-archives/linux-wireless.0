@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59076 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754809AbZEXRZT (ORCPT
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:44570 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbZEONOW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2009 13:25:19 -0400
-Subject: [PATCH] cfg80211: use key size constants
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 24 May 2009 16:57:19 +0200
-Message-Id: <1243177039.29222.3.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 15 May 2009 09:14:22 -0400
+Received: by pzk13 with SMTP id 13so1054268pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2009 06:14:23 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 15 May 2009 06:14:23 -0700
+Message-ID: <cbd616c00905150614sa13ba93y88a1297b10a69d8@mail.gmail.com>
+Subject: Any clean-up work?
+From: Yousef Alhashemi <yousef.alhashemi@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of hardcoding the key length for validation, use the
-constants Zhu Yi recently added and add one for AES_CMAC too.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/ieee80211.h |    1 +
- net/wireless/util.c       |   11 +++++------
- 2 files changed, 6 insertions(+), 6 deletions(-)
+I understand I should be posting this elsewhere, and I know I'll
+probably get shot for asking this here, but I'm trying to get involved
+with kernel development, and I'm interested in networking (not
+necessarily wireless). I've tried other places (including
+kernelnewbies) before coming here.
 
---- wireless-testing.orig/include/linux/ieee80211.h	2009-05-24 16:53:50.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-05-24 16:54:02.000000000 +0200
-@@ -1092,6 +1092,7 @@ enum ieee80211_key_len {
- 	WLAN_KEY_LEN_WEP104 = 13,
- 	WLAN_KEY_LEN_CCMP = 16,
- 	WLAN_KEY_LEN_TKIP = 32,
-+	WLAN_KEY_LEN_AES_CMAC = 16,
- };
- 
- /*
---- wireless-testing.orig/net/wireless/util.c	2009-05-24 16:52:57.000000000 +0200
-+++ wireless-testing/net/wireless/util.c	2009-05-24 16:53:34.000000000 +0200
-@@ -157,26 +157,25 @@ int cfg80211_validate_key_settings(struc
- 	    params->cipher != WLAN_CIPHER_SUITE_WEP104)
- 		return -EINVAL;
- 
--	/* TODO: add definitions for the lengths to linux/ieee80211.h */
- 	switch (params->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
--		if (params->key_len != 5)
-+		if (params->key_len != WLAN_KEY_LEN_WEP40)
- 			return -EINVAL;
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
--		if (params->key_len != 32)
-+		if (params->key_len != WLAN_KEY_LEN_TKIP)
- 			return -EINVAL;
- 		break;
- 	case WLAN_CIPHER_SUITE_CCMP:
--		if (params->key_len != 16)
-+		if (params->key_len != WLAN_KEY_LEN_CCMP)
- 			return -EINVAL;
- 		break;
- 	case WLAN_CIPHER_SUITE_WEP104:
--		if (params->key_len != 13)
-+		if (params->key_len != WLAN_KEY_LEN_WEP104)
- 			return -EINVAL;
- 		break;
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
--		if (params->key_len != 16)
-+		if (params->key_len != WLAN_KEY_LEN_AES_CMAC)
- 			return -EINVAL;
- 		break;
- 	default:
+I have done some _very_ basic kernel development, like modifying a
+CPU/IO scheduler, creating a RAM disk, creating new system calls,
+..etc. I am now trying to do some "real" kernel development. The
+problem is, everywhere I ask I get pointed to books like Robert Love's
+Linux Kernel Development, which I already read. That, or I get to
+pointed to lists like http://www.linuxfoundation.org/en/Net:TODO or
+http://www.linuxdriverproject.org/twiki/bin/view/Main/DriversNeeded,
+both of which include projects which are basically impossible for me
+to do (because they require way too much background knowledge about
+the particular problem/protocol/device and also require great
+knowledge of the kernel internals).
 
+Now I understand that networking (or the networking subsystem) is
+fairly complicated, but I was wondering if the there is any clean up
+work that I can help with (that will hopefully get me familiarized
+with the kernel in general, and the networking stuff in particular).
+I'm also wondering if anyone here would be willing to give me a little
+bit of hand-holding with the more advanced stuff (if help is needed in
+a particular area but that area is too difficult for a starter like me
+to undertake).
 
+I'm fairly proficient in C and I understand basic OS principles (CPU
+scheduling, virtual memory, filesystems, ..etc). I also have general
+knowledge of networking (protocols and layering, packet/frame
+transmission, error detection, TCP/IP, and all the other stuff that
+are typical of an introductory networking class).
+
+Thanks,
+Yousef
+
+P.S. The kernel projects list on kernelnewbies.org hasn't changed
+forever. All projects are either taken or already merged.
