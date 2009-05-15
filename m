@@ -1,94 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43165 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754145AbZEZSIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 14:08:46 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 11:08:48 -0700
-Date: Tue, 26 May 2009 11:08:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Rob van Rijen <Rijen2004@hotmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>, <vasanth@atheros.com>
-Subject: Re: [ath9k-devel] EEE PC with AR9280 using N mode with WPA2
-Message-ID: <20090526180853.GE9370@tesla>
-References: <BAY118-W504A562EAA1897CAA2E309B35D0@phx.gbl> <20090518160053.GD20637@tesla> <BLU0-SMTP51AE280656D73570BC12FEB3570@phx.gbl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <BLU0-SMTP51AE280656D73570BC12FEB3570@phx.gbl>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756436AbZEOIi4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 04:38:56 -0400
+Subject: Re: [PATCH] mac80211: fix some unforgotten items on suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1242375725.5799.39.camel@johannes.local>
+References: <1242362919-9788-1-git-send-email-lrodriguez@atheros.com>
+	 <1242375725.5799.39.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jq3I2uqoXOVYmxPohMZm"
+Date: Fri, 15 May 2009 10:38:27 +0200
+Message-Id: <1242376707.5799.45.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 23, 2009 at 03:34:52PM -0700, Rob van Rijen wrote:
-> Hi Luis
-> 
-> I managed to get the output you asked for.
-> 
-> System  EEE PC 1000H with AR9280
-> Linux           OpenSuse 11.1, using KNetworkmanager / KDE4
-> Kernel  2.6.30-rc6-git3-25-default
-> Ath9k   compat-wireless-2009-05-23
-> 
-> The system freeze occurs within a few seconds after I connect to a WPA2
-> wireless N router (Linksys WAG160N).
-> With versions < compat-wireless-2009-05-17 I never could connect
-> (disassociating by local choice (reason=3))
-> 
-> Regards
-> Rob
-> 
-> ============================================================================
-> =========
-> [  132.542465] console [netcon0] enabled
-> [  132.542527] netconsole: network logging started
-> [  357.092325] wlan0: authenticate with AP 00:21:29:79:c0:84
-> [  357.109905] wlan0: authenticated
-> [  357.109962] wlan0: associate with AP 00:21:29:79:c0:84
-> [  357.114820] wlan0: RX AssocResp from 00:21:29:79:c0:84 (capab=0x431
-> status=0 aid=1)
-> [  357.114893] wlan0: associated
-> [  358.311927] padlock: VIA PadLock not detected.
-> [  412.422746] ------------[ cut here ]------------
-> [  412.422809] kernel BUG at
-> /home/robvr/Downloads/compat-wireless-2009-05-23/drivers/net/wireless/ath/at
-> h9k/rc.c:747!
 
-Thanks, yes, I have seen this as well, please try this patch, it splits out
-the ASSERT into 3 pieces and also downgrades it to a WARN_ON.
+--=-jq3I2uqoXOVYmxPohMZm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index ba06e78..a372e35 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -741,10 +741,27 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
- 	if (rate > (ath_rc_priv->rate_table_size - 1))
- 		rate = ath_rc_priv->rate_table_size - 1;
- 
--	ASSERT((rate_table->info[rate].valid &&
--		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
--	       (rate_table->info[rate].valid_single_stream &&
-+	/*
-+	 * Getting any of these warnings would indicate an incorrect assumption
-+	 * is currently being made with our rate control code. It would
-+	 * indicate, most likely, that the incorrect rate table is being used.
-+	 */
-+
-+	/* We shouldn't be passing up invalid rates */
-+	WARN_ON(!rate_table->info[rate].valid &&
-+		!rate_table->info[rate].valid_single_stream);
-+	/*
-+	 * We warn if the rate is deemed to be valid and yet
-+	 * not suitable for dual stream.
-+	 */
-+	WARN_ON((rate_table->info[rate].valid &&
- 		!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
-+	/*
-+	 * We also warn if the rate has been marked valid for single
-+	 * stream but also dual stream...
-+	 */
-+	WARN_ON((rate_table->info[rate].valid_single_stream &&
-+		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
- 
- 	return rate;
- }
+On Fri, 2009-05-15 at 10:22 +0200, Johannes Berg wrote:
+
+> > +++ b/net/mac80211/pm.c
+> > @@ -18,6 +18,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+> > =20
+> >  	flush_workqueue(local->hw.workqueue);
+> > =20
+> > +	/* Don't stuff our workqueue during suspend->resume cycle */
+> > +	del_timer_sync(&local->dynamic_ps_timer);
+> > +	cancel_work_sync(&local->dynamic_ps_enable_work);
+> > +
+>=20
+> ack, but you forgot to add a comment why dynamic_ps_disable_work doesn't
+> need to be handled (actually it does need to handled with the current
+> code but shouldn't be necessary... up for a challenge? -- why? and how
+> to fix that better than handling it here?)
+>=20
+> If you ever suspend in AP mode there's also an issue with each station's
+> cleanup timer, and for mesh each station's plink timer.
+
+Hmm, actually, this isn't safe. We might still be receiving frames at
+this point, which would start the timer again.
+
+> I don't think that helps, like I said the timers are still set up, you
+> need to actually queue the work now. However that kinda sucks for small
+> suspend times. Not really sure what to do.
+
+Instead of doing the setup_timer dance you were doing, we should simply
+do add_timer /iff/ del_timer_sync() returned 1, because that means we
+actually cancelled the timer.
+
+johannes
+
+
+--=-jq3I2uqoXOVYmxPohMZm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKDSn/AAoJEODzc/N7+QmaSm4QAJ5lPFCIKWJhrIE+zZA4/B3d
+hRNifrED1Qju7KXewjnqzMM3RbEUpppjcOdRGlTwlktz1C5EVwdYvF4jOOF+KSXh
+Ih4rWze1oL5Zny6imdKzesk2P9YcrK2EftS0qtqeTP9FKvimPhUqacTio4fhQiSy
+UXlCHdGy7pbAUxHCWDcX2RinfbrsHbhepKaRnxsqiaS21WNSRv8WMVbrpOjLtMfC
+RRMQqF0D9ic/e78nySos6BkbgBtrzRCRuRQZ6iQa8fNHlP2M/GgjxNpzd4Tu0vcn
+EbTnAzBduDJHdO/Wgv+r/zOf4xTcCk64c93GBlwy1lnZUYEBIB5SYNU2ds6rWTFr
+erRHwRRDYRuWqrt9VJIK+V+QNnG15OBp3h/rHYGaMK5LXUlKWzN1JoziPkMJQWMO
+XX6C65CvBpz/hO9dqYhMZE8brjUOY/Nw93ifGdEe06RwjRkLUGY+f2cP9M8fwM/8
+gOY2LRDinzLT9PeobH84JEUaHhmjKYkEnbbTRNgugTVCGyWerFRrzdzFf7DcwPd4
+Ibl6AQYXaiWyPCDdJXCroqTkPmT9/3mxM1FSEYQmtDCTQ7RMiUB53XazPxzqcVYM
+Jy/GsM4G3tVL5kZwLDFEKnGByQbbpMXFZFSYd26ecZfepVQDyk391cDsVfmymws7
+f+XiQbvuDJggIOYcYmZI
+=4sql
+-----END PGP SIGNATURE-----
+
+--=-jq3I2uqoXOVYmxPohMZm--
+
