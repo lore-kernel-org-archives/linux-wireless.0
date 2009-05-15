@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:58364 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232AbZELXOp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 19:14:45 -0400
-Received: by ewy24 with SMTP id 24so394895ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 16:14:45 -0700 (PDT)
-Subject: Re: [BUG] scans can still hang with -EBUSY on iwl3945
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1242169934.14227.16.camel@johannes.local>
-References: <1241179203.8086.3.camel@maxim-laptop>
-	 <1241193513.10498.97.camel@rc-desk> <1241208792.7082.47.camel@maxim-laptop>
-	 <1241227946.5192.3.camel@maxim-laptop>
-	 <1241374060.13562.37.camel@johannes.local>
-	 <1241387163.10486.6.camel@maxim-laptop>
-	 <1241421545.6866.2.camel@johannes.local>
-	 <1242161643.26484.2.camel@maxim-laptop>
-	 <1242169824.5146.31.camel@maxim-laptop>
-	 <1242169934.14227.16.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:50943 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754808AbZEOXMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 19:12:06 -0400
+Subject: Re: orinoco_cs and WPA-EAP?
+From: Dan Williams <dcbw@redhat.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: Howard Chu <hyc@highlandsun.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <4A0DD39D.6070001@gmail.com>
+References: <4A065AFD.8000604@highlandsun.com>
+	 <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>
+	 <4A0DC4A9.8050505@highlandsun.com>  <4A0DD39D.6070001@gmail.com>
 Content-Type: text/plain
-Date: Wed, 13 May 2009 02:14:40 +0300
-Message-Id: <1242170080.5146.32.camel@maxim-laptop>
+Date: Fri, 15 May 2009 19:12:50 -0400
+Message-Id: <1242429170.10933.30.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-05-13 at 01:12 +0200, Johannes Berg wrote:
-> On Wed, 2009-05-13 at 02:10 +0300, Maxim Levitsky wrote:
-> 
-> > > May 13 01:44:33 maxim-laptop kernel: [ 1093.991176] iwl3945 0000:06:00.0: Radio Frequency Kill Switch is On:
-> > ^^^^^^^^^^ Kernel notices the rfkill state
-> > > May 13 01:44:33 maxim-laptop kernel: [ 1093.991179] Kill switch must be turned off for wireless networking to work.
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789455]  ieee80211_ioctl_siwessid: called
-> > ^^^^^^^^^^ Evil NM notices Rfkill too, and sends bogus bssid to driver
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789462] ieee80211_sta_req_auth: called
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789498] iwl3945 0000:06:00.0: Error sending REPLY_LEDS_CMD: enqueue_hcmd failed: -5
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789530] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.789536] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870202] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870210] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870223] iwl3945 0000:06:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -5
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870227] iwl3945 0000:06:00.0: Error clearing ASSOC_MSK on current configuration (-5).
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.870234] wlan0: direct probe to AP 00:0e:2e:a4:12:3e try 1
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.960876] cfg80211: scan requested
-> > ^^^^^^^^^^^ This results in a scan
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1095.960884] __ieee80211_start_scan: scan requested
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1096.042972] wlan0: deauthenticating by local choice (reason=3)
-> > ^^^^^^^^^^^ And deauth....
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1096.331307] ieee80211_ioctl_siwap: called
-> > ^^^^^^^^^^^ And NM sets ESSID on top of that....
-> > > May 13 01:44:35 maxim-laptop kernel: [ 1096.331310] ieee80211_sta_req_auth: called
-> > > 
+On Fri, 2009-05-15 at 21:42 +0100, Dave wrote:
+> Howard Chu wrote:
+> > Dave wrote:
+> >> Howard Chu wrote:
+> >>> Sigh, nothing's ever easy. After abandoning the CTX714 I mentioned in an
+> >>> earlier email, I find that the Thinkpad T42 I got from eBay came with some
+> >>> kind of Orinoco 802.11B mini-PCI card installed. Ubuntu Jaunty's 2.6.28 kernel
+> >>> loads up the orinoco_cs driver for this card. It appears that this driver only
+> >>> supports WPA-PSK, and I use WPA-EAP on my home wlan. Has anyone done any work
+> >>> on supporting WPA-EAP for this card?
+> >>
+> >> Note that the card only supports TKIP, so it won't work if the AP
+> >> doesn't offer it.
 > > 
-> > Now I press rfkill again, but scan is hung
+> > Thanks, that may have been the issue I was facing at first. My AP was 
+> > configured for CCMP. I've now set it to TKIP and seem to be getting further. 
+> > But now when I start wpa_supplicant I see a stream of "Information frame lost" 
+> > messages in dmesg that pretty much never end (interspersed once in a while 
+> > with ratelimit messages). I wonder if this laptop's mini-PCI slot is hosed or 
+> > something.
 > 
-> So it's a bug in iwlwifi, it neither rejects nor executes a scan when in
-> rfkill.
-But I use disable_hw_scan=1 !
-
-Iwlwifi shouldn't be called in this case (am I mistaken?)
-
-Best regards,
-	Maxim Levitsky
-
-
+> That message is printed in response to a firmware interrupt. It
+> indicates "an unsolicited Frame Structure cannot be generated... because
+> there is not enough Frame Structure buffer space available".
 > 
-> johannes
+> I suspect that the beacons/probe responses/scan results are either too
+> large/too frequent for the card to handle, or the firmware can't
+> decipher them.
+> 
+> Before enabling wpa_supplicant, can you try scan for your AP (as root):
+> 
+> iwlist ethX scan essid YYYYY
+> 
+> I'm interested in what it returns, and whether dmesg reports 'Ext scan
+> results too large' or something similar.
+
+Yeah a lot of APs will stuff a ton of info into the IEs these days,
+including WPS, WPA, 11d, blah blah.  It's not out of the question that
+the firmware writers didn't anticipate or handle large numbers of IEs in
+the beacons.  That said, what firmware version is he using?  Maybe
+Apple's firmware fixes that or something?  Would be interesting if the
+reporter could boot up an old iBook with an Airport card and see if that
+works.
+
+Dan
+
 
