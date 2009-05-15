@@ -1,107 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27647 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754899AbZEUUhy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 16:37:54 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
+Received: from bombadil.infradead.org ([18.85.46.34]:50356 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757724AbZEOEsm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 00:48:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/3] iwlwifi: add Greenfield support for 11n
-Date: Thu, 21 May 2009 13:44:22 -0700
-Message-Id: <1242938663-7937-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1242938663-7937-2-git-send-email-reinette.chatre@intel.com>
-References: <1242938663-7937-1-git-send-email-reinette.chatre@intel.com>
- <1242938663-7937-2-git-send-email-reinette.chatre@intel.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] mac80211: fix some unforgotten items on suspend
+Date: Fri, 15 May 2009 00:48:39 -0400
+Message-Id: <1242362919-9788-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+We forgot to clear items which stuffed things into the our
+station's workqueues. In particular we forgot to deal with
+the dynamic_ps_timer, ifmgd->timer, ifmgd->chswitch_timer.
 
-Add "Greenfield" support for all devices except 4965 and
-3945. "Greenfield" is part of 11n features to improve HT performance.
+While at it we go ahead and add a warning in ieee80211_sta_work()
+if its run while the suspend->resume cycle is in effect. This
+should not happen and if it does it would indicate there is
+a bug lurking in either mac80211 or mac80211 drivers.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+With this now wpa_supplicant doesn't blink when I go to suspend
+and resume where as before there where issues with any of the items
+in the workqueue running during the suspend->resume cycle. This
+caused a lot of incorrect assumptions and would at times bring
+back the device in incoherent, but mostly recoverable, states.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   34 +++++++++++++++++------------
- 1 files changed, 20 insertions(+), 14 deletions(-)
+ net/mac80211/ieee80211_i.h |    9 +++++++++
+ net/mac80211/mlme.c        |   28 ++++++++++++++++++++++++----
+ net/mac80211/pm.c          |   19 +++++++++++++++++++
+ net/mac80211/util.c        |   11 ++++++++++-
+ 4 files changed, 62 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 4c88e87..a1b0ff5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -652,19 +652,19 @@ static int rs_toggle_antenna(u32 valid_ant, u32 *rate_n_flags,
- 	return 1;
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9d15147..3e60f46 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -609,6 +609,13 @@ struct ieee80211_local {
+ 	unsigned int filter_flags; /* FIF_* */
+ 	struct iw_statistics wstats;
+ 	bool tim_in_locked_section; /* see ieee80211_beacon_get() */
++	/*
++	 * suspended is true if we finished all the suspend _and_ we have
++	 * not yet come up from resume. This is to be used by mac80211
++	 * to ensure driver sanity during suspend and mac80211's own
++	 * sanity. It can eventually be used for WoW as well.
++	 */
++	bool suspended;
+ 	int tx_headroom; /* required headroom for hardware/radiotap */
  
--/* FIXME:RS: in 4965 we don't use greenfield at all */
--/* FIXME:RS: don't use greenfield for now in TX */
--#if 0
--static inline u8 rs_use_green(struct iwl_priv *priv, struct ieee80211_conf *conf)
-+/* in 4965 we don't use greenfield at all */
-+static inline u8 rs_use_green(struct iwl_priv *priv,
-+			      struct ieee80211_conf *conf)
+ 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
+@@ -994,6 +1001,7 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ u32 __ieee80211_recalc_idle(struct ieee80211_local *local);
+ void ieee80211_recalc_idle(struct ieee80211_local *local);
++void ieee80211_sta_setup_sdata_timers(struct ieee80211_sub_if_data *sdata);
+ 
+ /* tx handling */
+ void ieee80211_clear_tx_pending(struct ieee80211_local *local);
+@@ -1052,6 +1060,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw);
+ 
+ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
  {
--	return (conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) &&
--		priv->current_ht_config.is_green_field &&
--		!priv->current_ht_config.non_GF_STA_present;
--}
--#endif
--static inline u8 rs_use_green(struct iwl_priv *priv, struct ieee80211_conf *conf)
--{
--	return 0;
-+	u8 is_green;
++	hw_to_local(hw)->suspended = false;
+ 	return ieee80211_reconfig(hw_to_local(hw));
+ }
+ #else
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ae03068..d891967 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2129,6 +2129,17 @@ static void ieee80211_sta_work(struct work_struct *work)
+ 
+ 	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
+ 		return;
 +
-+	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_4965)
-+		is_green = 0;
-+	else
-+		is_green = (conf_is_ht(conf) &&
-+			   priv->current_ht_config.is_green_field &&
-+			   !priv->current_ht_config.non_GF_STA_present);
-+	return is_green;
++	/*
++	 * Nothing should have been stuffed into the workqueue during
++	 * the suspend->resume cycle. If this WARN is seen then there
++	 * is a bug with either the driver suspend or something in
++	 * mac80211 stuffing into the workqueue which we haven't yet
++	 * cleared during mac80211's suspend cycle.
++	 */
++	if (WARN_ON(local->suspended))
++		return;
++
+ 	ifmgd = &sdata->u.mgd;
+ 
+ 	while ((skb = skb_dequeue(&ifmgd->skb_queue)))
+@@ -2196,6 +2207,18 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ 	}
  }
  
- /**
-@@ -2061,6 +2061,10 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
- 		active_tbl = 1 - lq_sta->active_tbl;
++void ieee80211_sta_setup_sdata_timers(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd;
++
++	ifmgd = &sdata->u.mgd;
++
++	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
++		    (unsigned long) sdata);
++	setup_timer(&ifmgd->chswitch_timer, ieee80211_chswitch_timer,
++		    (unsigned long) sdata);
++}
++
+ /* interface setup */
+ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+@@ -2206,10 +2229,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
+ 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
+ 	INIT_WORK(&ifmgd->beacon_loss_work, ieee80211_beacon_loss_work);
+-	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
+-		    (unsigned long) sdata);
+-	setup_timer(&ifmgd->chswitch_timer, ieee80211_chswitch_timer,
+-		    (unsigned long) sdata);
++	ieee80211_sta_setup_sdata_timers(sdata);
+ 	skb_queue_head_init(&ifmgd->skb_queue);
  
- 	tbl = &(lq_sta->lq_info[active_tbl]);
-+	if (is_legacy(tbl->lq_type))
-+		lq_sta->is_green = 0;
-+	else
-+		lq_sta->is_green = rs_use_green(priv, conf);
- 	is_green = lq_sta->is_green;
+ 	ifmgd->capab = WLAN_CAPABILITY_ESS;
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 9d3d89a..20fc091 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -18,6 +18,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
  
- 	/* current tx rate */
-@@ -2896,7 +2900,8 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
- 		   ((is_mimo2(tbl->lq_type)) ? "MIMO2" : "MIMO3"));
- 		   desc += sprintf(buff+desc, " %s",
- 		   (tbl->is_fat) ? "40MHz" : "20MHz");
--		desc += sprintf(buff+desc, " %s\n", (tbl->is_SGI) ? "SGI" : "");
-+		   desc += sprintf(buff+desc, " %s %s\n", (tbl->is_SGI) ? "SGI" : "",
-+		   (lq_sta->is_green) ? "GF enabled" : "");
+ 	flush_workqueue(local->hw.workqueue);
+ 
++	/* Don't stuff our workqueue during suspend->resume cycle */
++	del_timer_sync(&local->dynamic_ps_timer);
++	cancel_work_sync(&local->dynamic_ps_enable_work);
++
+ 	/* disable keys */
+ 	list_for_each_entry(sdata, &local->interfaces, list)
+ 		ieee80211_disable_keys(sdata);
+@@ -52,6 +56,18 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 
+ 	/* remove all interfaces */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
++		/*
++		 * This prevents us from stuffing our workqueue during
++		 * during the suspend->resume cycle.
++		 */
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			struct ieee80211_if_managed *ifmgd;
++			ifmgd = &sdata->u.mgd;
++
++			del_timer_sync(&ifmgd->timer);
++			del_timer_sync(&ifmgd->chswitch_timer);
++		}
++
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 		    netif_running(sdata->dev)) {
+@@ -60,11 +76,14 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 			conf.mac_addr = sdata->dev->dev_addr;
+ 			drv_remove_interface(local, &conf);
+ 		}
++
  	}
- 	desc += sprintf(buff+desc, "last tx rate=0x%X\n",
- 		lq_sta->last_rate_n_flags);
-@@ -2959,13 +2964,14 @@ static ssize_t rs_sta_dbgfs_stats_table_read(struct file *file,
- 		return -ENOMEM;
  
- 	for (i = 0; i < LQ_SIZE; i++) {
--		desc += sprintf(buff+desc, "%s type=%d SGI=%d FAT=%d DUP=%d\n"
-+		desc += sprintf(buff+desc, "%s type=%d SGI=%d FAT=%d DUP=%d GF=%d\n"
- 				"rate=0x%X\n",
- 				lq_sta->active_tbl == i ? "*" : "x",
- 				lq_sta->lq_info[i].lq_type,
- 				lq_sta->lq_info[i].is_SGI,
- 				lq_sta->lq_info[i].is_fat,
- 				lq_sta->lq_info[i].is_dup,
-+				lq_sta->is_green,
- 				lq_sta->lq_info[i].current_rate);
- 		for (j = 0; j < IWL_RATE_COUNT; j++) {
- 			desc += sprintf(buff+desc,
+ 	/* flush again, in case driver queued work */
+ 	flush_workqueue(local->hw.workqueue);
+ 
++	local->suspended = true;
++
+ 	/* stop hardware */
+ 	if (local->open_count) {
+ 		ieee80211_led_radio(local, false);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0689a8f..8d3d6c8 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1121,12 +1121,21 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	/* add back keys */
+-	list_for_each_entry(sdata, &local->interfaces, list)
++	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (netif_running(sdata->dev))
+ 			ieee80211_enable_keys(sdata);
++		if (local->suspended &&
++		    sdata->vif.type == NL80211_IFTYPE_STATION)
++			ieee80211_sta_setup_sdata_timers(sdata);
++	}
+ 
+ 	ieee80211_wake_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
++	if (local->suspended) {
++		setup_timer(&local->dynamic_ps_timer,
++			    ieee80211_dynamic_ps_timer, (unsigned long) local);
++	}
++
+ 	return 0;
+ }
 -- 
-1.5.6.3
+1.6.0.6
 
