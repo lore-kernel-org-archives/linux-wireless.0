@@ -1,130 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38557 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54442 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751284AbZELUGM (ORCPT
+	with ESMTP id S1751045AbZEOL00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 16:06:12 -0400
-Subject: [PATCH] mac80211: make noack test available
+	Fri, 15 May 2009 07:26:26 -0400
+Subject: Re: ar9170 deadlock report
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@web.de>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 12 May 2009 22:05:40 +0200
-Message-Id: <1242158740.14227.12.camel@johannes.local>
+In-Reply-To: <200905151318.06411.chunkeey@web.de>
+References: <1242384642.5799.48.camel@johannes.local>
+	 <200905151318.06411.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wMwDB3ByWriTYeuaEJXE"
+Date: Fri, 15 May 2009 13:25:59 +0200
+Message-Id: <1242386759.5799.50.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's this internal wifi_wme_noack_test variable that
-we use to set the QoS control if set. For one, it is
-unlikely that it is set. Secondly, if set it needs to
-influence the IEEE80211_TX_CTL_NO_ACK TX control flag,
-and finally we should also be able to set it at all, so
-make it available in debugfs.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/debugfs.c     |   38 ++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/tx.c          |    5 ++++-
- net/mac80211/wme.c         |    2 +-
- 4 files changed, 44 insertions(+), 2 deletions(-)
+--=-wMwDB3ByWriTYeuaEJXE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/mac80211/tx.c	2009-05-12 21:44:01.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-05-12 22:03:26.000000000 +0200
-@@ -1087,7 +1087,10 @@ __ieee80211_tx_prepare(struct ieee80211_
- 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 	} else {
- 		tx->flags |= IEEE80211_TX_UNICAST;
--		info->flags &= ~IEEE80211_TX_CTL_NO_ACK;
-+		if (unlikely(local->wifi_wme_noack_test))
-+			info->flags |= IEEE80211_TX_CTL_NO_ACK;
-+		else
-+			info->flags &= ~IEEE80211_TX_CTL_NO_ACK;
- 	}
- 
- 	if (tx->flags & IEEE80211_TX_FRAGMENTED) {
---- wireless-testing.orig/net/mac80211/debugfs.c	2009-05-12 21:45:00.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs.c	2009-05-12 21:48:24.000000000 +0200
-@@ -135,6 +135,42 @@ static const struct file_operations rese
- 	.open = mac80211_open_file_generic,
- };
- 
-+static ssize_t noack_read(struct file *file, char __user *user_buf,
-+			  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_local *local = file->private_data;
-+	int res;
-+	char buf[10];
-+
-+	res = scnprintf(buf, sizeof(buf), "%d\n", local->wifi_wme_noack_test);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
-+}
-+
-+static ssize_t noack_write(struct file *file,
-+			   const char __user *user_buf,
-+			   size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_local *local = file->private_data;
-+	char buf[10];
-+	size_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+	buf[len] = '\0';
-+
-+	local->wifi_wme_noack_test = !!simple_strtoul(buf, NULL, 0);
-+
-+	return count;
-+}
-+
-+static const struct file_operations noack_ops = {
-+	.read = noack_read,
-+	.write = noack_write,
-+	.open = mac80211_open_file_generic
-+};
-+
- /* statistics stuff */
- 
- #define DEBUGFS_STATS_FILE(name, buflen, fmt, value...)			\
-@@ -275,6 +311,7 @@ void debugfs_hw_add(struct ieee80211_loc
- 	DEBUGFS_ADD(wep_iv);
- 	DEBUGFS_ADD(tsf);
- 	DEBUGFS_ADD_MODE(reset, 0200);
-+	DEBUGFS_ADD(noack);
- 
- 	statsd = debugfs_create_dir("statistics", phyd);
- 	local->debugfs.statistics = statsd;
-@@ -330,6 +367,7 @@ void debugfs_hw_del(struct ieee80211_loc
- 	DEBUGFS_DEL(wep_iv);
- 	DEBUGFS_DEL(tsf);
- 	DEBUGFS_DEL(reset);
-+	DEBUGFS_DEL(noack);
- 
- 	DEBUGFS_STATS_DEL(transmitted_fragment_count);
- 	DEBUGFS_STATS_DEL(multicast_transmitted_frame_count);
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-05-12 21:48:30.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-05-12 21:48:37.000000000 +0200
-@@ -766,6 +766,7 @@ struct ieee80211_local {
- 		struct dentry *wep_iv;
- 		struct dentry *tsf;
- 		struct dentry *reset;
-+		struct dentry *noack;
- 		struct dentry *statistics;
- 		struct local_debugfsdentries_statsdentries {
- 			struct dentry *transmitted_fragment_count;
---- wireless-testing.orig/net/mac80211/wme.c	2009-05-12 21:43:32.000000000 +0200
-+++ wireless-testing/net/mac80211/wme.c	2009-05-12 22:03:37.000000000 +0200
-@@ -133,7 +133,7 @@ u16 ieee80211_select_queue(struct net_de
- 		u8 *p = ieee80211_get_qos_ctl(hdr);
- 		u8 ack_policy = 0;
- 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
--		if (local->wifi_wme_noack_test)
-+		if (unlikely(local->wifi_wme_noack_test))
- 			ack_policy |= QOS_CONTROL_ACK_POLICY_NOACK <<
- 					QOS_CONTROL_ACK_POLICY_SHIFT;
- 		/* qos header is 2 bytes, second reserved */
+On Fri, 2009-05-15 at 13:18 +0200, Christian Lamparter wrote:
 
+> > Don't cancel a work under a lock that it needs!
+> >=20
+> > johannes
+> >=20
+> do you have the module this time?
+
+Yes, why? The bug is trivial:
+
+        mutex_lock(&ar->mutex);
+        cancel_delayed_work_sync(&ar->tx_status_janitor);
+        cancel_work_sync(&ar->filter_config_work);
+        cancel_work_sync(&ar->beacon_work);
+
+vs.
+
+static void ar9170_tx_status_janitor(struct work_struct *work)
+{
+	...
+        mutex_lock(&ar->mutex);
+
+
+johannes
+
+--=-wMwDB3ByWriTYeuaEJXE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKDVFDAAoJEODzc/N7+Qma+A8P/21LUIkJA+uQ1MonMQFyOFBZ
+2KURxq8igAJqNozwe9qMkewcX8CCrEJWke5tKqyWLpG/vVm9kqO6y43iBStOvb/l
+mgWzJM4epltLInUeiXaUtnOPbNbjPDzZEeeQ2LltfEhyU4avZP0ZoyveDAyK+vhg
+1/KgZKhgHdQpfukYTQ/clRx073gj5NLoQ5buroA/S/iQhDYr5TEIk+Cs1jR4M9D9
+2o1ShwzNNyxBLlCMzHWnHclsf7ygtseUQ2sdBcaSCV1EgAXP/TCtR/wTJxgmb9qj
+UmUAsWvZFRGoPohs+LQn99Zi0VKPZ6ZFIlm4KZoyW3XsxUjMsPfA2alLxEZAEmca
+ktWQ4e/NQ3nfjUFiCt5KeC+OcqUqlHfO9TbmWvAQ8f1qk3TEgy4/7yK3HF7Knrkk
+HOqjpSwslI6kpN9wIwvAOgk0P5+C7igqTeZZpuV2T/Xd2x/XBmuOlqzYTmHNmONl
+a5mhAz8mr2rc46jHc8zk0QFoS7uWgXp4P/d8Ip4s3k1FJmEgrlfy+YLLCCNf1Ra6
+qJshMNz7TcAjAeKMcjgb6fGHW5hn/5xzUDokE/HL7QP/YEfAuS6aJ539HoNB6/a6
+XLnnlbV47HQNZjZ7IbG3JauPTfnehpwdL42gA7eA8YfzQXig/19PaDFjZ0QjAzrz
+bzHoH81/vYv5eV2VsaJC
+=iqKP
+-----END PGP SIGNATURE-----
+
+--=-wMwDB3ByWriTYeuaEJXE--
 
