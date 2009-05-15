@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59893 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048AbZESW1L (ORCPT
+Received: from fmailhost04.isp.att.net ([204.127.217.104]:62644 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753518AbZEOUj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 18:27:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 1/3] ath9k: fix custom regulatory call position
-Date: Tue, 19 May 2009 18:27:11 -0400
-Message-Id: <1242772031-9966-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 15 May 2009 16:39:58 -0400
+Message-ID: <4A0DD306.30705@lwfinger.net>
+Date: Fri, 15 May 2009 15:39:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH 2/2 V2] b43legacy: Fix locking problem
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_regd_init() needs to be called with the wiphy already
-properly set with the bands. Without this the custom regulatory
-settings were not taking effect, and the device would get
-the default channel settings from ath9k_[25]ghz_chantable.
+Commit abb1d2bca0fc429c136747a64e675dd4d8906f36 introduced a locking
+problem in b43legacy that caused the system to freeze upon booting.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Larry Finger@lwfinger.net
 ---
 
-uses a tab
+John,
 
- drivers/net/wireless/ath/ath9k/main.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+This is 2.6.31 material. I hope that you do not have trouble with
+this patch. While on the road, my normal method is not available.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c161b75..7fab2d4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1412,8 +1412,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	for (i = 0; i < sc->keymax; i++)
- 		ath9k_hw_keyreset(ah, (u16) i);
- 
--	error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
--			      ath9k_reg_notifier);
- 	if (error)
- 		goto bad;
- 
-@@ -1626,14 +1624,19 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 	if (error != 0)
- 		return error;
- 
--	reg = &sc->sc_ah->regulatory;
+This is resent as V2 to eliminate some patch offsets that resulted
+from the changes in V2 of patch 1.
+
+Larry
+---
+
+ main.c |   25 ++++---------------------
+ 1 file changed, 4 insertions(+), 21 deletions(-)
+
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c
+@@ -2767,29 +2767,18 @@ static void b43legacy_op_bss_info_change
+ {
+ 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
+ 	struct b43legacy_wldev *dev;
+-	struct b43legacy_phy *phy;
+ 	unsigned long flags;
+
+ 	mutex_lock(&wl->mutex);
+-	B43legacy_WARN_ON(wl->vif != vif);
+
+ 	dev = wl->current_dev;
+-	phy = &dev->phy;
 -
- 	/* get mac address from hardware and set in mac80211 */
- 
- 	SET_IEEE80211_PERM_ADDR(hw, sc->sc_ah->macaddr);
- 
- 	ath_set_hw_capab(sc, hw);
- 
-+	error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
-+			      ath9k_reg_notifier);
-+	if (error)
-+		return error;
-+
-+	reg = &sc->sc_ah->regulatory;
-+
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
- 		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
- 		if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes))
--- 
-1.6.0.6
+-	/* Disable IRQs while reconfiguring the device.
+-	 * This makes it possible to drop the spinlock throughout
+-	 * the reconfiguration process. */
+-	spin_lock_irqsave(&wl->irq_lock, flags);
+-	if (b43legacy_status(dev) < B43legacy_STAT_STARTED) {
+-		spin_unlock_irqrestore(&wl->irq_lock, flags);
++	if (!dev || b43legacy_status(dev) < B43legacy_STAT_STARTED)
+ 		goto out_unlock_mutex;
+-	}
+-	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
+
+-	if (changed & BSS_CHANGED_BSSID) {
+-		spin_unlock_irqrestore(&wl->irq_lock, flags);
+-		b43legacy_synchronize_irq(dev);
++	B43legacy_WARN_ON(wl->vif != vif);
+
++	if (changed & BSS_CHANGED_BSSID) {
++		spin_lock_irqsave(&wl->irq_lock, flags);
+ 		if (conf->bssid)
+ 			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
+ 		else
+@@ -2827,12 +2816,6 @@ static void b43legacy_op_bss_info_change
+ 	}
+
+ 	b43legacy_mac_enable(dev);
+-
+-	spin_lock_irqsave(&wl->irq_lock, flags);
+-	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, dev->irq_mask);
+-	/* XXX: why? */
+-	mmiowb();
+-	spin_unlock_irqrestore(&wl->irq_lock, flags);
+  out_unlock_mutex:
+ 	mutex_unlock(&wl->mutex);
+ }
+
+
 
