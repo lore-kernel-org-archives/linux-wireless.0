@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3650 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258AbZEVMGv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 08:06:51 -0400
-Date: Fri, 22 May 2009 08:06:08 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090522120608.GA24949@hash.localnet>
-References: <20090312061047.GA13401@silver.sucs.org> <20090313095213.GA14250@silver.sucs.org> <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org> <20090329151401.GA26510@hash.localnet> <20090331083041.GA19657@sucs.org> <20090513214416.GA4492@sucs.org> <20090515040904.GA32357@hash.localnet> <20090518100540.GB21150@sucs.org> <20090522093930.GA15375@sucs.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090522093930.GA15375@sucs.org>
+Received: from mga01.intel.com ([192.55.52.88]:50173 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754534AbZEOXHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 19:07:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/3] iwlwifi: drop iwl3945_tid_data
+Date: Fri, 15 May 2009 16:13:44 -0700
+Message-Id: <1242429226-8313-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1242429226-8313-2-git-send-email-reinette.chatre@intel.com>
+References: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
+ <1242429226-8313-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 22, 2009 at 10:39:31AM +0100, Sitsofe Wheeler wrote:
-> The poison message has not reappeared but this morning there was a
-> sudden break in the connection. Only toggling the wifi via rfkill
-> brought things back to life. dmesg below:
-> 
-> [   71.445152] wlan0: associated
-> [ 5771.345217] ath5k phy0: noise floor calibration timeout (2412MHz)
-> [ 5774.632085] wlan0: no probe response from AP 00:01:38:d6:0b:4f - disassociating
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Card got into a bad state here somehow, 
+This patch is one of the incremental steps for unifying iwl_station_entry
+for all HWs, i.e. removing of iwl3945_station_entry
+This patch drops iwl3945_tid_data and use iwl_tid_data instead.
 
-> [ 5774.869703] ath5k phy0: failed to wakeup the MAC Chip
-> [ 5774.869717] ath5k phy0: can't reset hardware (-5)
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
--EIO, a really bad state (we're doing a lot of resets, not sure
-offhand why -- maybe just the calibration timer since it doesn't
-look like the channel is changing as would happen in a scan).  
-
-When we see this either card isn't getting any power (e.g. due
-to rfkill, but I think that happened later here) or card just
-isn't responding.  Seems we should give up after a while rather
-than spamming the log forever.
-
-> [ 5834.122061] ath5k 0000:01:00.0: PCI INT A disabled
-
-I take it this is when you hit rfkill, which also did an rmmod and
-probably disconnected it from the bus?
-
-> [ 5836.901310] pci 0000:01:00.0: reg 10 64bit mmio: [0x000000-0x00ffff]
-
-and here's where you turned it back on...
-
-> Another weird thing that I've noticed with 2.6.30 kernels (although it
-> might be happening with older ones) is that periodically (maybe once a
-> day) the packet loss between the computer and the access point will
-> become very high and will stay that way until the computer is rebooted.
-> I do not know if toggling via rfkill will also solve that problem.
-
-It sounds like a similar case.  There's a patch on the way (I don't
-think has hit 2.6.30 yet) that fixes a regression that can affect
-calibration in 802.11g mode.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 427489a..b6b8327 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -499,14 +499,10 @@ struct iwl_qos_info {
+ #define STA_PS_STATUS_WAKE             0
+ #define STA_PS_STATUS_SLEEP            1
+ 
+-struct iwl3945_tid_data {
+-	u16 seq_number;
+-};
+-
+ 
+ struct iwl3945_station_entry {
+ 	struct iwl3945_addsta_cmd sta;
+-	struct iwl3945_tid_data tid[MAX_TID_COUNT];
++	struct iwl_tid_data tid[MAX_TID_COUNT];
+ 	u8 used;
+ 	u8 ps_status;
+ 	struct iwl_hw_key keyinfo;
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
