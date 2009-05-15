@@ -1,99 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:55935 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbZEEHZq (ORCPT
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:45500 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754104AbZEOBd1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 03:25:46 -0400
-Received: by ewy24 with SMTP id 24so4682633ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 00:25:45 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Simplify rt2x00_check_rev
-Date: Tue, 5 May 2009 09:25:42 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+	Thu, 14 May 2009 21:33:27 -0400
+Received: by pzk13 with SMTP id 13so834854pzk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 18:33:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200905050925.42406.IvDoorn@gmail.com>
+In-Reply-To: <20090515003202.GA17816@tesla>
+References: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
+	<1242033904-25694-4-git-send-email-lrodriguez@atheros.com>
+	<1242036115.3284.15.camel@johannes.local> <43e72e890905111134u61f1600fie1950b6e12681e13@mail.gmail.com>
+	<1242068010.3873.46.camel@johannes.local> <20090511190922.GD18696@tesla>
+	<20090515003202.GA17816@tesla>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 14 May 2009 18:33:08 -0700
+Message-ID: <43e72e890905141833g214753d9lbdb00bd70ee28dfe@mail.gmail.com>
+Subject: Re: [RFC 3/5] mac80211: fix idle trigger upon resume
+To: Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00_check_rev() was too specific for rt2500usb and rt73usb,
-by adding the mask argument (instead of hardcoding it into the
-function itself) we can use the function in rt2800usb as well.
+On Thu, May 14, 2009 at 5:32 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, May 11, 2009 at 12:09:22PM -0700, Luis Rodriguez wrote:
+>> On Mon, May 11, 2009 at 11:53:30AM -0700, Johannes Berg wrote:
+>> > On Mon, 2009-05-11 at 11:34 -0700, Luis R. Rodriguez wrote:
+>> >
+>> > > > Also, __ieee80211_queues_stopped_by_reason is misnamed since it checks
+>> > > > only a single queue. I also think that we can do this much better by
+>> > > > keeping track of the suspend state in a new variable rather than looking
+>> > > > at all the queues; even just checking queue 0 would be sufficient, but I
+>> > > > think a new variable is warranted.
+>> > >
+>> > > A global variable for going to suspend? Hm, do we have a system wide
+>> > > thing for this instead?
+>> >
+>> > No, and even then we couldn't use it I think since you can have
+>> > per-device suspend. I was just thinking of a local->variable.
+>>
+>> OK thanks will add this.
+>
+> So I've added the WARN_ON() here as we agreed to investigate on irc. Turns out
+> we hit it several times as expected. We hit it while going to suspend
+> once, and then on resume 3 times.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
- drivers/net/wireless/rt2x00/rt2800usb.c |    7 ++++---
- drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
- drivers/net/wireless/rt2x00/rt73usb.c   |    3 ++-
- 4 files changed, 10 insertions(+), 9 deletions(-)
+The trace doesn't help much except for acknowledging the issue I was
+pointing out. The workqueue is run because we flush it, twice, during
+suspend. The idle recalc is run because we call it within
+ieee80211_sta_work(). If we want we can move the check for
+local->suspended to ieee80211_sta_work() but then we'd have to set
+local->suspended early on during suspend before the first flush and
+that doesn't seem right. So I think the patch as I have it is fine
+unless I'm missing something.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 9e630e7..8efb2d7 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1559,7 +1559,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2500usb_register_read(rt2x00dev, MAC_CSR0, &reg);
- 	rt2x00_set_chip(rt2x00dev, RT2570, value, reg);
- 
--	if (!rt2x00_check_rev(&rt2x00dev->chip, 0)) {
-+	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0)) {
- 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
- 		return -ENODEV;
- 	}
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 7cb3653..8dd1489 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -2348,9 +2348,10 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * The check for rt2860 is not a typo, some rt2870 hardware
- 	 * identifies itself as rt2860 in the CSR register.
- 	 */
--	if ((rt2x00_get_field32(reg, MAC_CSR0_ASIC_VER) != 0x2860) &&
--	    (rt2x00_get_field32(reg, MAC_CSR0_ASIC_VER) != 0x2870) &&
--	    (rt2x00_get_field32(reg, MAC_CSR0_ASIC_VER) != 0x3070)) {
-+	if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x286) &&
-+	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x287) &&
-+	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x288) &&
-+	    !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x3070)) {
- 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
- 		return -ENODEV;
- 	}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 998dc93..6999ebd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -921,11 +921,10 @@ static inline u32 rt2x00_rev(const struct rt2x00_chip *chipset)
- 	return chipset->rev;
- }
- 
--static inline u16 rt2x00_check_rev(const struct rt2x00_chip *chipset,
--				   const u32 rev)
-+static inline bool rt2x00_check_rev(const struct rt2x00_chip *chipset,
-+				    const u32 mask, const u32 rev)
- {
--	return (((chipset->rev & 0xffff0) == rev) &&
--		!!(chipset->rev & 0x0000f));
-+	return ((chipset->rev & mask) == rev);
- }
- 
- /**
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 853b2b2..4f94a61 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1846,7 +1846,8 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
- 	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
- 
--	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x25730)) {
-+	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0x25730) ||
-+	    !rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
- 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
- 		return -ENODEV;
- 	}
--- 
-1.6.2.3
-
+  Luis
