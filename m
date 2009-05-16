@@ -1,65 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35412 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33818 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754174AbZEBVUv (ORCPT
+	with ESMTP id S1753840AbZEPMUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2009 17:20:51 -0400
-Subject: Re: [PATCH] add version.h to .gitignore
+	Sat, 16 May 2009 08:20:31 -0400
+Subject: Re: [RFC 1/3] cfg80211: mark ops as pointer to const
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241299096.4412.20.camel@localhost.localdomain>
-References: <1241294826-27585-1-git-send-email-marcel@holtmann.org>
-	 <1241298417.13562.26.camel@johannes.local>
-	 <1241299096.4412.20.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5MJEQSZdTJL2dUyrbfRn"
-Date: Sat, 02 May 2009 23:20:49 +0200
-Message-Id: <1241299249.13562.30.camel@johannes.local>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+In-Reply-To: <1242476577-26320-2-git-send-email-kilroyd@googlemail.com>
+References: <1242476577-26320-1-git-send-email-kilroyd@googlemail.com>
+	 <1242476577-26320-2-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-P9Oj5+tN3xDU4xwsUVc9"
+Date: Sat, 16 May 2009 14:20:26 +0200
+Message-Id: <1242476426.10005.36.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-5MJEQSZdTJL2dUyrbfRn
+--=-P9Oj5+tN3xDU4xwsUVc9
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-05-02 at 14:18 -0700, Marcel Holtmann wrote:
+On Sat, 2009-05-16 at 13:22 +0100, David Kilroy wrote:
+> This allows drivers to mark their cfg80211_ops tables const.
 
-> > > +version.h
-> >=20
-> > Nah, just rm version.h, it won't be rebuilt :)
+Seems fine to me. Somehow I forgot to mark lots of things const in
+cfg80211...
+
+> Signed-off by: David Kilroy <kilroyd@googlemail.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  include/net/cfg80211.h |    2 +-
+>  net/wireless/core.c    |    2 +-
+>  net/wireless/core.h    |    2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
 >=20
-> my bad. That file was dangling around and I never bothered to check if
-> it still gets created :(
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 9e17a83..7702715 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1070,7 +1070,7 @@ static inline const char *wiphy_name(struct wiphy *=
+wiphy)
+>   * The returned pointer must be assigned to each netdev's
+>   * ieee80211_ptr for proper operation.
+>   */
+> -struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv);
+> +struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)=
+;
+> =20
+>  /**
+>   * wiphy_register - register a wiphy with cfg80211
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 47c20eb..98bfd4d 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -228,7 +228,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_de=
+vice *rdev,
+> =20
+>  /* exported functions */
+> =20
+> -struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+> +struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+>  {
+>  	static int wiphy_counter;
+> =20
+> diff --git a/net/wireless/core.h b/net/wireless/core.h
+> index f14b6c5..725c22e 100644
+> --- a/net/wireless/core.h
+> +++ b/net/wireless/core.h
+> @@ -15,7 +15,7 @@
+>  #include "reg.h"
+> =20
+>  struct cfg80211_registered_device {
+> -	struct cfg80211_ops *ops;
+> +	const struct cfg80211_ops *ops;
+>  	struct list_head list;
+>  	/* we hold this mutex during any call so that
+>  	 * we cannot do multiple calls at once, and also
 
-Yeah, no worries, I checked the version scheme to something nicer a
-while ago. I guess at the same time I also made "make clean" not remove
-it, so you would still have it around even then...
-
-johannes
-
---=-5MJEQSZdTJL2dUyrbfRn
+--=-P9Oj5+tN3xDU4xwsUVc9
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ/LkuAAoJEKVg1VMiehFYymgP/2PSlJf9IjNLdugI5c7/EWKm
-uaqfQRkIXFI1/H80XMIdqgtxPzkZZvAvSIlJHPQNEeDE4/rSYlVL5HV7Pcrauyti
-p3FY1JkrIDzc6znM4MnNXpGDSRYIYmGCOg49AoIyj6Tut/AHRadu2m9DO7zz6X43
-6YVpPsoiM8AZaH6HNwLqwjdf/Tthd0kUSUhxpOcPslTKij8WfpNkPN8eav41E3BZ
-DsHxiOsxwxKV9leNK1usb3cE5L2fYY2dCV9yLoALU+8cdT+jEcQZIBCY4jiYpaPn
-XpNsQ50im3Ng/gjjgz8+Z+Age4SPsVehAPWmHuDiS+3yQ7grZD7M8gmd++mG5rYp
-aRLL6fAGr7ERvtYSaQDyx0+Q22+24pQCQC0rHIiDrW0QwPua4teTcdlCnDVpH/2A
-4e7V0bKWTTpTTACKFJNYHuNNfce/qhVSkF7Ehnl/zZnXa1d0gubZ1BH18M95ivYR
-rN9YgGBpR8X0HUpH1Ji4oSIKCO7BmNYAv7kG4qvGtV0zdQVyC7kvche1Z+LBMXh1
-zUPUcX0ssw+sHjYPDCB/T4jEwd/1DdRMisT6Hs5acDm+enm0nVFpTBg/JynWZeA4
-/HnoMigURcuxb1hyFPS2vYV0lN395FYAFdhlumRXNrZh1rd0B4cc7n2xgw+/MO40
-iLoUAZpkRxmJSyhM/aOG
-=lNZ3
+iQIcBAABAgAGBQJKDq+EAAoJEODzc/N7+QmaYSYP/jZDeU2j05ZDhATihRKPLHV2
+k5lQCvvrzOkbtZny+OkbHInJhJFVNoaurWGbbExHx8tyCYh22TlZSvrC5r7Zcrfu
+F2Pd6nYz6d2S+amSHsyhEGUNOhn3zz484wUtPgfwYJPwmZV+GWCpAAL/8GqqZJ9b
+oCKu2+JhdpaFmwdwUJ5AyXgSlG2CF6pRAdz+RaQv5mfDaRjRDsgpJQW5XXBFsaNh
+m4DVBIgrcedcdE46/+g0NeMWEerRmfPjtPo0HZa8FHybbdKMW2OO+fBHqMYb9+Wb
+ypcw7HxzZ/aiiS/6+fV8BmQFYFZf6UFjfg5q/wdAEo/rHfP+pDkOHxNO9/qcW+2W
+12frfkijYwW2q+HESsgGNWu4qoQBqEvnRzSeC/WPWPt0Dcx1Kfm1vot0Ji2iS1NF
+BCwsRpDLBhIUbRu2TbOmP6kxDC6QCnVSH7LEXIsBP1DRjm8EzvuQj5hGKqpKk2FB
+5IGl4EI9bTIt/SOHEMzRq+jwMhAG7btVpgXtEKFWyaJec/wLm+7DR5efXGqA/epX
+eLL9bkOTkRmwYQTNgPVYEKAVkzj9vU62C1p4/DXwTC0ZtrMev7JPkt4PecusuT1p
+b/vrCnDGNsZAKTLdOiC/JaeTMoDPvIr5svAzS09wrCPyaAQu+MvwlRNkR3tx8o8n
+5nIFM86ka6D/rdyi3Blt
+=WYD6
 -----END PGP SIGNATURE-----
 
---=-5MJEQSZdTJL2dUyrbfRn--
+--=-P9Oj5+tN3xDU4xwsUVc9--
 
