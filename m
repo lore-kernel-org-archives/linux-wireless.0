@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([204.127.217.101]:54053 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbZEOUj2 (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:34423 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbZEPWAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 16:39:28 -0400
-Message-ID: <4A0DD2E4.3090802@lwfinger.net>
-Date: Fri, 15 May 2009 15:39:00 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH 1/2] b43legacy: Remove unnecessary MMIO in interrupt hotpath
-References: <4A0CA755.8000802@lwfinger.net> <200905150154.40819.mb@bu3sch.de>
-In-Reply-To: <200905150154.40819.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 16 May 2009 18:00:49 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so3263140ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 15:00:50 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH 2/2] cfg80211: mark wiphy->privid as pointer to const
+Date: Sat, 16 May 2009 23:13:47 +0100
+Message-Id: <1242512027-15682-3-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1242512027-15682-1-git-send-email-kilroyd@googlemail.com>
+References: <1242512027-15682-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> 
-> This is not correct. Ring1 is used for transmission.
-> With this patch applied, you won't receive error notification interrupts
-> for the TX ring anymore.
-> And ring3 is used for transmission status reporting on old devices.
-> This patch breaks it for these devices.
+This allows drivers to use a const pointer as the privid without a cast.
 
-Thanks for the comments. I had thought that you had signed off on Stefano's
-original posting of this patch, which was sent to me for testing. I obviously
-misunderstood.
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-V2 will not touch any of this part of the code. If there are DMA reason codes
-that do not need to be used, they can be eliminated in a future patch.
-
-Larry
-
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7702715..0639962 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -994,7 +994,7 @@ struct wiphy {
+ 	 * know whether it points to a wiphy your driver has registered
+ 	 * or not. Assign this to something global to your driver to
+ 	 * help determine whether you own this wiphy or not. */
+-	void *privid;
++	const void *privid;
+ 
+ 	struct ieee80211_supported_band *bands[IEEE80211_NUM_BANDS];
+ 
+-- 
+1.6.0.6
 
