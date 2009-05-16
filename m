@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57913 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754940AbZE0TVD (ORCPT
+Received: from mail.highlandsun.com ([70.87.222.79]:39340 "EHLO
+	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753490AbZEPAOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 15:21:03 -0400
-Date: Wed, 27 May 2009 16:21:00 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Will Keaney <keaneyw@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: [PATCH v11] rfkill: rewrite
-Message-ID: <20090527192100.GD14440@khazad-dum.debian.net>
-References: <1242942720.4212.19.camel@johannes.local> <1243068246.4606.45.camel@johannes.local> <4A1BDE51.7020009@gmail.com> <20090526131533.GA3932@tuxdriver.com> <20090527025516.GC22235@khazad-dum.debian.net> <1243405682.26933.0.camel@johannes.local> <20090527140020.GA14440@khazad-dum.debian.net> <1243434258.4170.6.camel@johannes.local>
+	Fri, 15 May 2009 20:14:49 -0400
+Message-ID: <4A0E0579.70507@highlandsun.com>
+Date: Fri, 15 May 2009 17:14:49 -0700
+From: Howard Chu <hyc@highlandsun.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243434258.4170.6.camel@johannes.local>
+To: Dan Williams <dcbw@redhat.com>
+CC: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs and WPA-EAP?
+References: <4A065AFD.8000604@highlandsun.com>	 <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>	 <4A0DC4A9.8050505@highlandsun.com>  <4A0DD39D.6070001@gmail.com> <1242429170.10933.30.camel@localhost.localdomain>
+In-Reply-To: <1242429170.10933.30.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 27 May 2009, Johannes Berg wrote:
-> On Wed, 2009-05-27 at 11:00 -0300, Henrique de Moraes Holschuh wrote:
-> > I need that userspace interface (writes to the state attribute) in place and
-> > working.  It _is_ a big regression for thinkpad-acpi to have it return
-> > -EOPNOTSUPP.
-> 
-> You're free to implement a sane API -- I don't think the current API is
-> feasible because we need to be able to set the soft state regardless of
-> the hard state, query each state separately, and ideally poll the
+Dan Williams wrote:
+> On Fri, 2009-05-15 at 21:42 +0100, Dave wrote:
+>> That message is printed in response to a firmware interrupt. It
+>> indicates "an unsolicited Frame Structure cannot be generated... because
+>> there is not enough Frame Structure buffer space available".
+>>
+>> I suspect that the beacons/probe responses/scan results are either too
+>> large/too frequent for the card to handle, or the firmware can't
+>> decipher them.
+>>
+>> Before enabling wpa_supplicant, can you try scan for your AP (as root):
+>>
+>> iwlist ethX scan essid YYYYY
 
-Well, the "state" attribute doesn't get in the way for that.  Only
-expectations that it would REMAIN on a given soft state do, and that's
-implied nowhere in the "state" attribute ABI.  Those assurances were never
-made, and even "claim" wouldn't be able to pull them off.
+That works fine. In fact, just "iwlist scan" returns the same result - only 
+the info for my AP is returned. (There are at least 6 APs visible from an 
+another laptop sitting nearby.)
 
-And you can simply error out if the request to change radio state fails
-because of EPO or hard-blocking, nobody said it has to always work.
+>> I'm interested in what it returns, and whether dmesg reports 'Ext scan
+>> results too large' or something similar.
 
-So can we get that?   I don't want to touch the "claim" stuff, I too think
-it is not a good way of doing things, and it is not really used by anyone.
+No, it just continues with the stream of "frame lost" messages:
 
-Writes to "state" would still merge well with the new core way of doing
-things: you return -EPERM if in EPO mode, otherwise you try to change the
-radio state to the requested state, and error out if you can't.  It is that
-simple.  You can return -EACCESS if the state change failed due to
-hard-block for bonus points, but that certainly isn't required.
+eth2: Information frame lost. (10 times, followed by 1
+__ratelimit: 2 callbacks suppressed  (then 10 more frame lost messages, and so on)
 
-> I was suggesting earlier today to John that it might make sense to
-> create a character device for each rfkill instance so that you can
->  * read soft/hard state from it
->  * while the device is open for write, that's the equivalent of
->    user_claim
->  * you can poll() the fd for the device instead of having to listen to
->    the stupid uevents
+The number in "callbacks suppressed" varies pretty widely, from 2 to 32.
 
-Hmm, you CAN poll() sysfs, you know?  The API is atrocious, but it is there.
-Thinkpad-ACPI implements this on some of its driver-specific attributes.
+> Yeah a lot of APs will stuff a ton of info into the IEs these days,
+> including WPS, WPA, 11d, blah blah.  It's not out of the question that
+> the firmware writers didn't anticipate or handle large numbers of IEs in
+> the beacons.  That said, what firmware version is he using?  Maybe
 
-We could add poll() support for "state", actually.  The crap about this is
-that userspace needs an out-of-band way to be able to know if poll() is
-there for a given sysfs attribute, as it doesn't get an error if the support
-is not there and just waits for events that will never arrive (who makes up
-these half-baked PoS interfaces?)
+Using 9.48, I so far haven't found 9.52 for download anywhere.
 
-That said, I don't have anything against the char device.  Just don't remove
-the simple "state" attribute if you end up switching to, say, netlink or
-IOCTL.
-
-And truth to be told, you will need a deprecation period if you want to move
-away from "state".  It is in-use ABI, so it is covered by the stable ABI
-policy.
-
-> Without user_claim userspace can have no expectation of actually having
-> control over the state attribute. If your userspace tools do not always
-> user_claim before I believe they are broken.
-
-Nevertheless, it works and people use it.  They don't care if a hotkey will
-change the state (in fact, they probably WANT it to).  It is used as "turn
-off this crap now" and "turn it back on now".  Not "keep it off" and "keep
-it on".  Since very little stuff touches it, it ends up being predictable,
-and thus, useful.
-
-So can I please have writes to "state" back?  Unlike the other stuff that
-never worked quite right (like "claim" -- btw it DID work right with
-thinkpad-acpi and rfkill-input :-) ), it is in active use.
+> Apple's firmware fixes that or something?  Would be interesting if the
+> reporter could boot up an old iBook with an Airport card and see if that
+> works.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
