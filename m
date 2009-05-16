@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3498 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753943AbZEUPhR (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:35633 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754749AbZEPJcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 11:37:17 -0400
-Date: Thu, 21 May 2009 11:36:56 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [WIP PATCH] sdio support for wl12xx
-Message-ID: <20090521153656.GA19782@hash.localnet>
-References: <20090518180957.GD2580@hash.localnet> <20090519040239.GA12911@hash.localnet> <877i0begt7.fsf@litku.valot.fi> <b6c5339f0905201223n4c8c4811h25a397e69a642c2a@mail.gmail.com> <87d4a2wli2.fsf@litku.valot.fi> <878wkqwl74.fsf@litku.valot.fi>
+	Sat, 16 May 2009 05:32:23 -0400
+Received: by ewy24 with SMTP id 24so3000064ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 02:32:24 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: rt73usb Access point status
+Date: Sat, 16 May 2009 11:32:21 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Alexandre Becholey <alexandre@shockfish.com>
+References: <557754.25367.qm@web51403.mail.re2.yahoo.com> <20090512215817.bd1c6895.cjsthompson@gmail.com> <wf4ovlo25e.fsf@calligramme.charmers>
+In-Reply-To: <wf4ovlo25e.fsf@calligramme.charmers>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <878wkqwl74.fsf@litku.valot.fi>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200905161132.21437.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2009 at 06:05:19PM +0300, Kalle Valo wrote:
-> Kalle Valo <kalle.valo@iki.fi> writes:
-> > Not good. Can you somehow check if Google stores the NVS file to the
-> > chip or somewhere else?
+On Saturday 16 May 2009, Jon Fairbairn wrote:
+> "Christoph .J Thompson" <cjsthompson@gmail.com> writes:
 > 
-> I'm guessing that the struct below is used for providing the NVS file
-> from user space. Not sure, though.
+> > On Tue, 12 May 2009 09:16:12 +0100
+> > Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk> wrote:
+> >> Is there any prospec of persuading Ralink either to release
+> >> a mended version of the firmware or to free the old version?
+> >
+> > I think Ivo van Doorn said he didn't want to bother RaLink with that. I was
+> > thinking about writing to them about it but that's difficult because I don't
+> > really understand the technical specifics of the issue.
+> 
+> Me neither; in particular, does it work as an AP in Windows?
+> If so, how does it get round the bug in the driver?
 
-Ah, indeed it does... initscript has:
-service wlan_loader /system/bin/wlan_loader \
-    -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration \
-    -i /system/etc/wifi/tiwlan.ini
+Simply by indicating that every single frame passed to the driver has
+been send out succesfully and thus completely ignoring the real status.
 
-wlan_loader source is in CUDK dir.
+I am awaiting a patch from Alexandre which will add that same behavior
+to rt2x00.
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Ivo
