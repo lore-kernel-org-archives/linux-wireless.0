@@ -1,141 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25549 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757358AbZEVRzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 13:55:22 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/10] iwlwifi: check for valid band for channel info
-Date: Fri, 22 May 2009 11:01:55 -0700
-Message-Id: <1243015315-13848-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1243015315-13848-10-git-send-email-reinette.chatre@intel.com>
-References: <1243015315-13848-1-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-2-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-4-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-5-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-6-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-7-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-8-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-9-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-10-git-send-email-reinette.chatre@intel.com>
+Received: from mail-pz0-f115.google.com ([209.85.222.115]:53291 "EHLO
+	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760336AbZEPW0A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 May 2009 18:26:00 -0400
+Received: by pzk13 with SMTP id 13so1531973pzk.33
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 15:26:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890905161507r664cafd2i8815f400a5158b04@mail.gmail.com>
+References: <1242397016.5799.102.camel@johannes.local> <43e72e890905161507r664cafd2i8815f400a5158b04@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 16 May 2009 15:25:41 -0700
+Message-ID: <43e72e890905161525n79c64fb4p16b901e7f8422cc7@mail.gmail.com>
+Subject: Re: some wireless suspend thoughts
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Sat, May 16, 2009 at 3:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, May 15, 2009 at 7:16 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>>  * kick pci driver suspend/resume out of ath9k and keep the device in
+>>   low power while unused
+>
+> This is nice.
+>
+>>  * make mac80211 send nullfunc for suspend/resume
+>>  * make cfg80211 always call suspend/resume
+>>
+>> This is quite hackish. It works for me, but my AP disassocs me anyway
+>> because it probes every 5 seconds and if you don't respond ... however,
+>> due to the nullfunc at resume time we notice very very quickly since it
+>> sends a deauth as a response to that.
+>>
+>> The ->shutdown hook in cfg80211 is a little odd.
+>>
+>> To implement WoW on top of this, we need to refactor the cfg80211 hooks
+>> and probably actually pass the information to ->stop after all, I think?
+>> I can't think of a good way to do this.
+>
+> Well that's for sure with this patch. Let me take a crack at it.
 
-when display channel info in debugfs, always check for valid band
-before access the pointer and display information
+I noticed you nuked pci_save_state() and pci_restore_state(), that
+saves PCI config space so seems required, so we'll have to still
+inform drv_stop of the suspend case -- and not sure that is worth it.
+What we save here is more control in mac80211 / cfg80211 but the
+things we need to added makes me wonder if its worth it in this case.
 
-for 1000 NIC, it only support "bgn" mode, so there is no 5.2GHz channels
-available to display.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   79 ++++++++++++++-------------
- 1 files changed, 41 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 03006c6..af70229 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -380,50 +380,53 @@ static ssize_t iwl_dbgfs_channels_read(struct file *file, char __user *user_buf,
- 	}
- 
- 	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_2GHZ);
--	channels = supp_band->channels;
-+	if (supp_band) {
-+		channels = supp_band->channels;
- 
--	pos += scnprintf(buf + pos, bufsz - pos,
--			"Displaying %d channels in 2.4GHz band 802.11bg):\n",
--			 supp_band->n_channels);
--
--	for (i = 0; i < supp_band->n_channels; i++)
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				"%d: %ddBm: BSS%s%s, %s.\n",
--				ieee80211_frequency_to_channel(
--				channels[i].center_freq),
--				channels[i].max_power,
--				channels[i].flags & IEEE80211_CHAN_RADAR ?
--				" (IEEE 802.11h required)" : "",
--				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
--				|| (channels[i].flags &
--				IEEE80211_CHAN_RADAR)) ? "" :
--				", IBSS",
--				channels[i].flags &
--				IEEE80211_CHAN_PASSIVE_SCAN ?
--				"passive only" : "active/passive");
-+				"Displaying %d channels in 2.4GHz band 802.11bg):\n",
-+				supp_band->n_channels);
- 
-+		for (i = 0; i < supp_band->n_channels; i++)
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"%d: %ddBm: BSS%s%s, %s.\n",
-+					ieee80211_frequency_to_channel(
-+					channels[i].center_freq),
-+					channels[i].max_power,
-+					channels[i].flags & IEEE80211_CHAN_RADAR ?
-+					" (IEEE 802.11h required)" : "",
-+					((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
-+					|| (channels[i].flags &
-+					IEEE80211_CHAN_RADAR)) ? "" :
-+					", IBSS",
-+					channels[i].flags &
-+					IEEE80211_CHAN_PASSIVE_SCAN ?
-+					"passive only" : "active/passive");
-+	}
- 	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_5GHZ);
--	channels = supp_band->channels;
-+	if (supp_band) {
-+		channels = supp_band->channels;
- 
--	pos += scnprintf(buf + pos, bufsz - pos,
--			"Displaying %d channels in 5.2GHz band (802.11a)\n",
--			supp_band->n_channels);
--
--	for (i = 0; i < supp_band->n_channels; i++)
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				"%d: %ddBm: BSS%s%s, %s.\n",
--				ieee80211_frequency_to_channel(
--				channels[i].center_freq),
--				channels[i].max_power,
--				channels[i].flags & IEEE80211_CHAN_RADAR ?
--				" (IEEE 802.11h required)" : "",
--				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
--				|| (channels[i].flags &
--				IEEE80211_CHAN_RADAR)) ? "" :
--				", IBSS",
--				channels[i].flags &
--				IEEE80211_CHAN_PASSIVE_SCAN ?
--				"passive only" : "active/passive");
-+				"Displaying %d channels in 5.2GHz band (802.11a)\n",
-+				supp_band->n_channels);
-+
-+		for (i = 0; i < supp_band->n_channels; i++)
-+			pos += scnprintf(buf + pos, bufsz - pos,
-+					"%d: %ddBm: BSS%s%s, %s.\n",
-+					ieee80211_frequency_to_channel(
-+					channels[i].center_freq),
-+					channels[i].max_power,
-+					channels[i].flags & IEEE80211_CHAN_RADAR ?
-+					" (IEEE 802.11h required)" : "",
-+					((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
-+					|| (channels[i].flags &
-+					IEEE80211_CHAN_RADAR)) ? "" :
-+					", IBSS",
-+					channels[i].flags &
-+					IEEE80211_CHAN_PASSIVE_SCAN ?
-+					"passive only" : "active/passive");
-+	}
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- 	kfree(buf);
- 	return ret;
--- 
-1.5.6.3
-
+  Luis
