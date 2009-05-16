@@ -1,89 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f191.google.com ([209.85.216.191]:53854 "EHLO
-	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754374AbZEPWIE convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:34423 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109AbZEPWAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 18:08:04 -0400
-Received: by pxi29 with SMTP id 29so1495009pxi.33
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 15:08:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242397016.5799.102.camel@johannes.local>
-References: <1242397016.5799.102.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 16 May 2009 15:07:43 -0700
-Message-ID: <43e72e890905161507r664cafd2i8815f400a5158b04@mail.gmail.com>
-Subject: Re: some wireless suspend thoughts
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 16 May 2009 18:00:45 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so3263140ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 15:00:46 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 1/2] cfg80211: mark ops as pointer to const
+Date: Sat, 16 May 2009 23:13:46 +0100
+Message-Id: <1242512027-15682-2-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1242512027-15682-1-git-send-email-kilroyd@googlemail.com>
+References: <1242512027-15682-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 15, 2009 at 7:16 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->  * kick pci driver suspend/resume out of ath9k and keep the device in
->   low power while unused
+This allows drivers to mark their cfg80211_ops tables const.
 
-This is nice.
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |    2 +-
+ net/wireless/core.c    |    2 +-
+ net/wireless/core.h    |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
->  * make mac80211 send nullfunc for suspend/resume
->  * make cfg80211 always call suspend/resume
->
-> This is quite hackish. It works for me, but my AP disassocs me anyway
-> because it probes every 5 seconds and if you don't respond ... however,
-> due to the nullfunc at resume time we notice very very quickly since it
-> sends a deauth as a response to that.
->
-> The ->shutdown hook in cfg80211 is a little odd.
->
-> To implement WoW on top of this, we need to refactor the cfg80211 hooks
-> and probably actually pass the information to ->stop after all, I think?
-> I can't think of a good way to do this.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9e17a83..7702715 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1070,7 +1070,7 @@ static inline const char *wiphy_name(struct wiphy *wiphy)
+  * The returned pointer must be assigned to each netdev's
+  * ieee80211_ptr for proper operation.
+  */
+-struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv);
++struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv);
+ 
+ /**
+  * wiphy_register - register a wiphy with cfg80211
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 47c20eb..98bfd4d 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -228,7 +228,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 
+ /* exported functions */
+ 
+-struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
++struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ {
+ 	static int wiphy_counter;
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index f14b6c5..725c22e 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -15,7 +15,7 @@
+ #include "reg.h"
+ 
+ struct cfg80211_registered_device {
+-	struct cfg80211_ops *ops;
++	const struct cfg80211_ops *ops;
+ 	struct list_head list;
+ 	/* we hold this mutex during any call so that
+ 	 * we cannot do multiple calls at once, and also
+-- 
+1.6.0.6
 
-Well that's for sure with this patch. Let me take a crack at it.
-
-> --- wireless-testing.orig/net/mac80211/pm.c     2009-05-15 15:17:08.851827827 +0200
-> +++ wireless-testing/net/mac80211/pm.c  2009-05-15 15:17:09.891708511 +0200
-> @@ -16,6 +16,17 @@ int __ieee80211_suspend(struct ieee80211
->
->        ieee80211_scan_cancel(local);
->
-> +       local->ps_before_suspend = !!(local->hw.conf.flags & IEEE80211_CONF_PS);
-> +       local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-
-Why clear it? Wasn't the goal to go to PS mode during suspend? Also if
-we're already in PS mode no point in calling hw_config.
-
-I take it we don't want to go to PS mode when we don't have WoW
-enabled then, because as you noted you're going to disassoc pretty
-quickly otherwise, unless your AP has long idle detection times. PS
-mode requires you to be able to be up at least every DTIM it would
-seem better to just disassoc unless wow is enabled.
-
-
-> --- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c 2009-05-15 15:44:19.261837573 +0200
-> +++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c      2009-05-15 15:47:15.051830998 +0200
-> @@ -1901,6 +1901,10 @@ static int ath9k_start(struct ieee80211_
->        DPRINTF(sc, ATH_DBG_CONFIG, "Starting driver with "
->                "initial channel: %d MHz\n", curchan->center_freq);
->
-> +       r = sc->bus_ops->start(sc);
-> +       if (r)
-> +               return r;
-> +
->        mutex_lock(&sc->mutex);
->
->        if (ath9k_wiphy_started(sc)) {
-> @@ -2105,6 +2109,8 @@ static void ath9k_stop(struct ieee80211_
->
->        mutex_unlock(&sc->mutex);
->
-> +       sc->bus_ops->stop(sc);
-> +
->        DPRINTF(sc, ATH_DBG_CONFIG, "Driver halt\n");
->  }
-
-We need to consider ahb as well but that's a quick fix.
-
-  Luis
