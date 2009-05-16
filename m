@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54442 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:45951 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbZEOL00 (ORCPT
+	with ESMTP id S1754324AbZEPMtA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 07:26:26 -0400
-Subject: Re: ar9170 deadlock report
+	Sat, 16 May 2009 08:49:00 -0400
+Subject: Re: Scan while TX/RX'ing a lot of data
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200905151318.06411.chunkeey@web.de>
-References: <1242384642.5799.48.camel@johannes.local>
-	 <200905151318.06411.chunkeey@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wMwDB3ByWriTYeuaEJXE"
-Date: Fri, 15 May 2009 13:25:59 +0200
-Message-Id: <1242386759.5799.50.camel@johannes.local>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com
+In-Reply-To: <1242429353.10933.32.camel@localhost.localdomain>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+	 <1242327298.4227.25.camel@localhost.localdomain>
+	 <200905151011.50915.hs4233@mail.mn-solutions.de>
+	 <1242429353.10933.32.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4gE8BHHyK0EvDQXQjISm"
+Date: Sat, 16 May 2009 14:48:57 +0200
+Message-Id: <1242478137.10005.63.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-wMwDB3ByWriTYeuaEJXE
+--=-4gE8BHHyK0EvDQXQjISm
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-05-15 at 13:18 +0200, Christian Lamparter wrote:
+On Fri, 2009-05-15 at 19:15 -0400, Dan Williams wrote:
 
-> > Don't cancel a work under a lock that it needs!
-> >=20
-> > johannes
-> >=20
-> do you have the module this time?
+> Well, what does "background scan" mean?  mac80211 will obviously accept
+> beacons from APs on the same channel and happily add them to the scan
+> list.
 
-Yes, why? The bug is trivial:
+Only if powersave/beacon filtering isn't enabled. Actually, mac80211
+does beacon filtering itself now, so I don't think this happens any more
+(I did that on purpose so people don't really rely on the former
+behaviour)
 
-        mutex_lock(&ar->mutex);
-        cancel_delayed_work_sync(&ar->tx_status_janitor);
-        cancel_work_sync(&ar->filter_config_work);
-        cancel_work_sync(&ar->beacon_work);
+> But a background scan would imply that the card itself is taking
+> over the decision about when to jump around and scan, basically the same
+> thing NM is doing, right?  When would the card/stack decided to
+> background scan, and what channels would it background scan on?  If it
+> doesn't do more or less all passive channels, then it wouldn't be that
+> useful for figuring out the site survey data.
 
-vs.
-
-static void ar9170_tx_status_janitor(struct work_struct *work)
-{
-	...
-        mutex_lock(&ar->mutex);
-
+I would think that mac80211, while asked to scan when associated, could
+simply do something like calculating how long it can go off-channel
+under the current QoS requirements, and then go off-channel for that,
+wait for the next on-channel beacon and some traffic, scan the next
+channel(s) again etc.
 
 johannes
 
---=-wMwDB3ByWriTYeuaEJXE
+--=-4gE8BHHyK0EvDQXQjISm
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKDVFDAAoJEODzc/N7+Qma+A8P/21LUIkJA+uQ1MonMQFyOFBZ
-2KURxq8igAJqNozwe9qMkewcX8CCrEJWke5tKqyWLpG/vVm9kqO6y43iBStOvb/l
-mgWzJM4epltLInUeiXaUtnOPbNbjPDzZEeeQ2LltfEhyU4avZP0ZoyveDAyK+vhg
-1/KgZKhgHdQpfukYTQ/clRx073gj5NLoQ5buroA/S/iQhDYr5TEIk+Cs1jR4M9D9
-2o1ShwzNNyxBLlCMzHWnHclsf7ygtseUQ2sdBcaSCV1EgAXP/TCtR/wTJxgmb9qj
-UmUAsWvZFRGoPohs+LQn99Zi0VKPZ6ZFIlm4KZoyW3XsxUjMsPfA2alLxEZAEmca
-ktWQ4e/NQ3nfjUFiCt5KeC+OcqUqlHfO9TbmWvAQ8f1qk3TEgy4/7yK3HF7Knrkk
-HOqjpSwslI6kpN9wIwvAOgk0P5+C7igqTeZZpuV2T/Xd2x/XBmuOlqzYTmHNmONl
-a5mhAz8mr2rc46jHc8zk0QFoS7uWgXp4P/d8Ip4s3k1FJmEgrlfy+YLLCCNf1Ra6
-qJshMNz7TcAjAeKMcjgb6fGHW5hn/5xzUDokE/HL7QP/YEfAuS6aJ539HoNB6/a6
-XLnnlbV47HQNZjZ7IbG3JauPTfnehpwdL42gA7eA8YfzQXig/19PaDFjZ0QjAzrz
-bzHoH81/vYv5eV2VsaJC
-=iqKP
+iQIbBAABAgAGBQJKDrY0AAoJEODzc/N7+Qma2mYP93OFNvbAVf1h7l9kXUO/rcUu
+Z24TmNANtMxBYeHdL1h/KmM+bR/MRfpb9WhDrgVeE8gtbwvSCwen74RaDXpq/Udu
+62uCJPQrciPEsXQJxlCNkhQxOEO/TCoOjwtacjwoOWPvM55G8zw6xQ6DkxMuGOOk
+EhBFI49vP2lyEc/3sfy5wVvJdoqK4ZfylXy7cCdGn9oBUZxFniVt7oTk5mY0hidQ
+jWGbQ59K0X8FcTpVFgfdhZLZ+478qJfSvX+PGtS2yK8DtyJjtLSzOBSn2QjEsJy0
+V4cCV+32XfsbR98Q28T+8ZK7bIODs95yicpoJywP3rNQWtT0PwXoXOsNYtbix6sF
+okHGstJVv7/UhhAhHi3a6I/AA/MBeph+m8rdRm5Zu+pZDIEgRKDEUKB5Y6ChrJSA
+c09nHwL3fTVSTllar+OcL5qwUdXemGI3w58OXC5hBK56YQn2VM631G7jXeZb50Ys
+QTejXbxZVMmE89uoDz9KzzoAUt1tGU6UcEhES2d9uVAXr30BhLomyVqI56SJCvw9
+IuGmpv+6QRbUZ5F7jPT4Fxrpz3X4BZqpXaxKRajnzbJrj+9PeERUaRgVf5epyxaq
+Fos1Y3UZted9ti3xvaD0rJ/1fUFhRL0k6koe0VehSqc7IS4H980Ar5mKjjPCbL3c
+bxYp0jkz8A8YZX/Wemc=
+=62VE
 -----END PGP SIGNATURE-----
 
---=-wMwDB3ByWriTYeuaEJXE--
+--=-4gE8BHHyK0EvDQXQjISm--
 
