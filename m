@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:35103 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754245AbZELADt (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:47372 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754660AbZEPMJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 20:03:49 -0400
-From: Christian Lamparter <chunkeey@web.de>
+	Sat, 16 May 2009 08:09:53 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so3051294ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 05:09:54 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6] ar9170: update hardware definitions
-Date: Tue, 12 May 2009 01:08:27 +0200
-MIME-Version: 1.0
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200905120108.27730.chunkeey@web.de>
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC 1/3] cfg80211: mark ops as pointer to const
+Date: Sat, 16 May 2009 13:22:55 +0100
+Message-Id: <1242476577-26320-2-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1242476577-26320-1-git-send-email-kilroyd@googlemail.com>
+References: <1242476577-26320-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch only contains a few uncritical updates for the
-hardware definition header.
+This allows drivers to mark their cfg80211_ops tables const.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off by: David Kilroy <kilroyd@googlemail.com>
 ---
-diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
-index 3293e0f..3c8004f 100644
---- a/drivers/net/wireless/ath/ar9170/hw.h
-+++ b/drivers/net/wireless/ath/ar9170/hw.h
-@@ -207,7 +207,8 @@ enum ar9170_cmd {
- #define AR9170_MAC_REG_AC1_AC0_TXOP		(AR9170_MAC_REG_BASE + 0xB44)
- #define AR9170_MAC_REG_AC3_AC2_TXOP		(AR9170_MAC_REG_BASE + 0xB48)
+ include/net/cfg80211.h |    2 +-
+ net/wireless/core.c    |    2 +-
+ net/wireless/core.h    |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9e17a83..7702715 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1070,7 +1070,7 @@ static inline const char *wiphy_name(struct wiphy *wiphy)
+  * The returned pointer must be assigned to each netdev's
+  * ieee80211_ptr for proper operation.
+  */
+-struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv);
++struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv);
  
--#define AR9170_MAC_REG_AMPDU_SET		(AR9170_MAC_REG_BASE + 0xba0)
-+#define AR9170_MAC_REG_AMPDU_FACTOR		(AR9170_MAC_REG_BASE + 0xB9C)
-+#define AR9170_MAC_REG_AMPDU_DENSITY		(AR9170_MAC_REG_BASE + 0xBA0)
+ /**
+  * wiphy_register - register a wiphy with cfg80211
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 47c20eb..98bfd4d 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -228,7 +228,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
  
- #define AR9170_MAC_REG_ACK_TABLE		(AR9170_MAC_REG_BASE + 0xC00)
- #define AR9170_MAC_REG_AMPDU_RX_THRESH		(AR9170_MAC_REG_BASE + 0xC50)
-@@ -376,7 +377,6 @@ static inline u8 ar9170_get_decrypt_type(struct ar9170_rx_macstatus *t)
- #define AR9170_RX_ERROR_FATAL			0x80
+ /* exported functions */
  
- struct ar9170_cmd_tx_status {
--	__le16 unkn;
- 	u8 dst[ETH_ALEN];
- 	__le32 rate;
- 	__le16 status;
-@@ -394,6 +394,7 @@ struct ar9170_cmd_ba_failed_count {
- struct ar9170_cmd_response {
- 	u8 flag;
- 	u8 type;
-+	__le16 padding;
+-struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
++struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ {
+ 	static int wiphy_counter;
  
- 	union {
- 		struct ar9170_cmd_tx_status		tx_status;
-diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
-index 72c7b5d..706262f 100644
---- a/drivers/net/wireless/ath/ar9170/mac.c
-+++ b/drivers/net/wireless/ath/ar9170/mac.c
-@@ -84,7 +84,7 @@ static int ar9170_set_ampdu_density(struct ar9170 *ar, u8 mpdudensity)
- 	val = 0x140a00 | (mpdudensity ? (mpdudensity + 1) : 0);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index f14b6c5..725c22e 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -15,7 +15,7 @@
+ #include "reg.h"
  
- 	ar9170_regwrite_begin(ar);
--	ar9170_regwrite(AR9170_MAC_REG_AMPDU_SET, val);
-+	ar9170_regwrite(AR9170_MAC_REG_AMPDU_DENSITY, val);
- 	ar9170_regwrite_finish();
- 
- 	return ar9170_regwrite_result();
+ struct cfg80211_registered_device {
+-	struct cfg80211_ops *ops;
++	const struct cfg80211_ops *ops;
+ 	struct list_head list;
+ 	/* we hold this mutex during any call so that
+ 	 * we cannot do multiple calls at once, and also
+-- 
+1.6.0.6
+
