@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40740 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090AbZEUWCa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 18:02:30 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1M7GLO-0006gk-M8
-	for linux-wireless@vger.kernel.org; Fri, 22 May 2009 00:02:30 +0200
-Message-Id: <20090521220104.755267733@sipsolutions.net>
-References: <20090521215940.344214804@sipsolutions.net>
-Date: Thu, 21 May 2009 23:59:41 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFT 1/4] net: introduce pre-up netdev notifier
+Received: from mx2.redhat.com ([66.187.237.31]:38678 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753601AbZEPBeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2009 21:34:09 -0400
+Subject: Re: orinoco_cs and WPA-EAP?
+From: Dan Williams <dcbw@redhat.com>
+To: Howard Chu <hyc@highlandsun.com>
+Cc: Dave <kilroyd@googlemail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <4A0E0579.70507@highlandsun.com>
+References: <4A065AFD.8000604@highlandsun.com>
+	 <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>
+	 <4A0DC4A9.8050505@highlandsun.com>  <4A0DD39D.6070001@gmail.com>
+	 <1242429170.10933.30.camel@localhost.localdomain>
+	 <4A0E0579.70507@highlandsun.com>
+Content-Type: text/plain
+Date: Fri, 15 May 2009 21:35:03 -0400
+Message-Id: <1242437703.10933.55.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NETDEV_UP is called after the device is set UP, but sometimes
-it is useful to be able to veto the device UP. Introduce a
-new NETDEV_PRE_UP notifier that can be used for exactly this.
-The first use case will be cfg80211 denying interfaces to be
-set UP if the device is known to be rfkill'ed.
+On Fri, 2009-05-15 at 17:14 -0700, Howard Chu wrote:
+> Dan Williams wrote:
+> > On Fri, 2009-05-15 at 21:42 +0100, Dave wrote:
+> >> That message is printed in response to a firmware interrupt. It
+> >> indicates "an unsolicited Frame Structure cannot be generated... because
+> >> there is not enough Frame Structure buffer space available".
+> >>
+> >> I suspect that the beacons/probe responses/scan results are either too
+> >> large/too frequent for the card to handle, or the firmware can't
+> >> decipher them.
+> >>
+> >> Before enabling wpa_supplicant, can you try scan for your AP (as root):
+> >>
+> >> iwlist ethX scan essid YYYYY
+> 
+> That works fine. In fact, just "iwlist scan" returns the same result - only 
+> the info for my AP is returned. (There are at least 6 APs visible from an 
+> another laptop sitting nearby.)
+> 
+> >> I'm interested in what it returns, and whether dmesg reports 'Ext scan
+> >> results too large' or something similar.
+> 
+> No, it just continues with the stream of "frame lost" messages:
+> 
+> eth2: Information frame lost. (10 times, followed by 1
+> __ratelimit: 2 callbacks suppressed  (then 10 more frame lost messages, and so on)
+> 
+> The number in "callbacks suppressed" varies pretty widely, from 2 to 32.
+> 
+> > Yeah a lot of APs will stuff a ton of info into the IEs these days,
+> > including WPS, WPA, 11d, blah blah.  It's not out of the question that
+> > the firmware writers didn't anticipate or handle large numbers of IEs in
+> > the beacons.  That said, what firmware version is he using?  Maybe
+> 
+> Using 9.48, I so far haven't found 9.52 for download anywhere.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-John, please take this patch via your tree, I asked Dave and
-he's cool with that.
+9.52 AFAIK is only available from Apple Airport drivers if you cut it
+out of the .kext on a PPC Mac.
 
- include/linux/notifier.h |    1 +
- net/core/dev.c           |    7 ++++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+Dan
 
---- wireless-testing.orig/include/linux/notifier.h	2009-05-21 21:17:29.000000000 +0200
-+++ wireless-testing/include/linux/notifier.h	2009-05-21 21:17:44.000000000 +0200
-@@ -198,6 +198,7 @@ static inline int notifier_to_errno(int 
- #define NETDEV_CHANGENAME	0x000A
- #define NETDEV_FEAT_CHANGE	0x000B
- #define NETDEV_BONDING_FAILOVER 0x000C
-+#define NETDEV_PRE_UP		0x000D
- 
- #define SYS_DOWN	0x0001	/* Notify of system down */
- #define SYS_RESTART	SYS_DOWN
---- wireless-testing.orig/net/core/dev.c	2009-05-21 21:17:48.000000000 +0200
-+++ wireless-testing/net/core/dev.c	2009-05-21 21:18:51.000000000 +0200
-@@ -1047,7 +1047,7 @@ void dev_load(struct net *net, const cha
- int dev_open(struct net_device *dev)
- {
- 	const struct net_device_ops *ops = dev->netdev_ops;
--	int ret = 0;
-+	int ret;
- 
- 	ASSERT_RTNL();
- 
-@@ -1064,6 +1064,11 @@ int dev_open(struct net_device *dev)
- 	if (!netif_device_present(dev))
- 		return -ENODEV;
- 
-+	ret = call_netdevice_notifiers(NETDEV_PRE_UP, dev);
-+	ret = notifier_to_errno(ret);
-+	if (ret)
-+		return ret;
-+
- 	/*
- 	 *	Call device private open method
- 	 */
-
--- 
 
