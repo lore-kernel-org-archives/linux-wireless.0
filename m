@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54934 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753249AbZEKS6t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 14:58:49 -0400
-Message-Id: <20090511185842.074874801@atheros.com>
-References: <20090511185754.653711567@atheros.com>
-Date: Mon, 11 May 2009 21:57:55 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 1/4] nl80211: Validate MFP flag type when parsing STA flags
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57233 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752200AbZEQMru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 08:47:50 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, stecklum@tls-tautenburg.de,
+	me@bobcopeland.com, breusshe@hotmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/4] compat-2.6: update compat.diff
+Date: Sun, 17 May 2009 14:47:40 +0200
+Message-Id: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NL80211_STA_FLAG_MFP was forgotten from sta_flags_policy. The previous
-version added the flag due to the loop used in parse_station_flags,
-but the proper behavior would be to allow nla_parse_nested() to go
-through the policy for all flags.
+In kernel versions > 2.9.28 linux/etherdevice.h includes asm/unaligned.h.
+This is needed by net/mac80211/key.c.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/wireless/nl80211.c |    1 +
- 1 file changed, 1 insertion(+)
+ compat/compat.diff |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
---- uml.orig/net/wireless/nl80211.c	2009-05-11 21:39:23.000000000 +0300
-+++ uml/net/wireless/nl80211.c	2009-05-11 21:39:23.000000000 +0300
-@@ -1331,6 +1331,7 @@ static const struct nla_policy sta_flags
- 	[NL80211_STA_FLAG_AUTHORIZED] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_SHORT_PREAMBLE] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_WME] = { .type = NLA_FLAG },
-+	[NL80211_STA_FLAG_MFP] = { .type = NLA_FLAG },
- };
- 
- static int parse_station_flags(struct nlattr *nla, u32 *staflags)
-
+diff --git a/compat/compat.diff b/compat/compat.diff
+index 725aadf..3ee9e86 100644
+--- a/compat/compat.diff
++++ b/compat/compat.diff
+@@ -542,6 +542,18 @@
+  	if (ieee80211_vif_is_mesh(&sdata->vif) &&
+  	    params && params->mesh_id_len)
+  		ieee80211_sdata_set_mesh_id(sdata,
++--- a/net/mac80211/key.c
+++++ b/net/mac80211/key.c
++@@ -21,6 +21,9 @@
++ #include "aes_ccm.h"
++ #include "aes_cmac.h"
++ 
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+++#include <asm/unaligned.h>
+++#endif
++ 
++ /**
++  * DOC: Key handling basics
+ --- a/net/mac80211/main.c	2009-04-28 15:34:50.000000000 -0700
+ +++ b/net/mac80211/main.c	2009-04-28 15:35:06.000000000 -0700
+ @@ -469,6 +469,7 @@
 -- 
+1.6.2.1
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
