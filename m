@@ -1,64 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:36154 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754379AbZEaOVC convert rfc822-to-8bit (ORCPT
+Received: from viefep25-int.chello.at ([62.179.121.45]:57807 "EHLO
+	viefep25-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbZEQLI7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 10:21:02 -0400
-Received: by bwz22 with SMTP id 22so7002130bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 07:21:03 -0700 (PDT)
+	Sun, 17 May 2009 07:08:59 -0400
+Received: from edge04.upc.biz ([192.168.13.239]) by viefep15-int.chello.at
+          (InterMail vM.7.09.01.00 201-2219-108-20080618) with ESMTP
+          id <20090517105102.SMFU28817.viefep15-int.chello.at@edge04.upc.biz>
+          for <linux-wireless@vger.kernel.org>;
+          Sun, 17 May 2009 12:51:02 +0200
+Message-ID: <4A0FEC03.9090803@centrum.cz>
+Date: Sun, 17 May 2009 12:50:43 +0200
+From: trencan <trencan@centrum.cz>
 MIME-Version: 1.0
-In-Reply-To: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
-References: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 31 May 2009 16:20:43 +0200
-Message-ID: <69e28c910905310720w227aa533td3ca82d96d615cb5@mail.gmail.com>
-Subject: Re: compat-wireless won't associate on 2nd load
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: rt2x00 - wireless compat - can not load compiled rt61pci
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been experiencing something similar in vmware, though I thought
-it was vmware's fault. (I have an 8187L.) In my case, detaching and
-re-attaching the device to the VM was sufficient to reset it.
+Hello,
 
-On Sun, May 31, 2009 at 6:56 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> I have been having some curious problem with rtl8187 for about a week
-> - having problem associating with 'direct probe to AP <mac-addrr>
-> timed out' after a reboot, and/or switching between compat-wireless
-> modules. I thought it is a temporary problem with
-> wireless-testing/compat-wireless but obviously nobody else has seen
-> anything like mine from the mailing-list traffic. So I tried
-> bisecting, etc and the results are inconsistent. Then I came to a
-> vaguely working solution - it seems that I cannot modprobe
-> compat-wireless twice - i.e. I can associate with compat-wireless
-> after make install, make unload, modprobe; but modprobe -r then
-> modprobe -v again I can't associate . I thought about restarting
-> network manager, wpa_supplicant, etc without success, but the surest
-> way to re-gain connectivity is simply to blow away /lib/modules/`uname
-> -r`/updates, depmod -a and load the as-shipped modules. (and then I
-> can make install compat-wireless and use it, and the cycle repeats if
-> I unload compat-wireless and try to install a different
-> compat-wireless snapshot, etc).
->
-> This is really curious, as it seems that I cannot unload
-> compat-wireless and reload it (or a later snapshot) without going
-> through as-shipped-by-distro modules ( 2.6.29.4-167.fc11.x86_64) in
-> the middle. How is that possible? One possibility is that as-shipped
-> module does a reset of hardware on unload or wireless-testing put the
-> hardware in a bad state on unload; but I know of no change of that
-> sort. Anybody else having problems associating after modprobe -r
-> /modprobe  -v with recent compat-wireless/wireless-testing?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I use latest Mandriva distribution 2009.1 with kernel 
+2.6.29.1-desktop-4mnb. I have rt2561 wifi card in my PC. I would like to 
+switch my wifi card to AP or Ad-hoc mode. My distribution's rt61pci 
+module doesn't support these modes. So I have downloaded 
+compat-wireless-2.6.30-rc4.tar.bz2 
+<http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30/compat-wireless-2.6.30-rc4.tar.bz2>.
+
+I ran:
+make
+make install
+make unload
+
+Everything fine. But then "modprobe rt61pci" loaded my distribution's 
+rt61pci module and not the compiled one. Distribution's one is in folder:
+
+[root@trencancan compat-wireless-2.6.30-rc4]# ls -la 
+/lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+-rw-r--r-- 1 root root 11279 2009-04-21 01:13 
+/lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+
+Compiled one is in folder:
+[root@trencancan compat-wireless-2.6.30-rc4]# ls -la 
+/lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+-rw-r--r-- 1 root root 123843 2009-05-16 23:21 
+/lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
 
 
+But after I type "modprobe rt61pci", then:
+[root@trencancan compat-wireless-2.6.30-rc4]# modinfo rt61pci
+filename:       
+/lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+license:        GPL
+firmware:       rt2661.bin
+firmware:       rt2561s.bin
+firmware:       rt2561.bin
+description:    Ralink RT61 PCI & PCMCIA Wireless LAN driver.
+version:        2.2.3
+author:         http://rt2x00.serialmonkey.com
+srcversion:     E8C0D3A4B7F36984638CEDF
+alias:          pci:v00001814d00000401sv*sd*bc*sc*i*
+alias:          pci:v00001814d00000302sv*sd*bc*sc*i*
+alias:          pci:v00001814d00000301sv*sd*bc*sc*i*
+depends:        rt2x00lib,rt2x00pci,eeprom_93cx6,crc-itu-t
+vermagic:       2.6.29.1-desktop-4mnb SMP mod_unload modversions 686
+parm:           nohwcrypt:Disable hardware encryption. (bool)
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+So you can see that Distribution's module (in kernel folder) was loaded. 
+I think root cause of problem is that run of command: "depmod -ae" finds 
+first rt61pci in kernel's folder and then next instance in updates 
+folder is not considered. If I look at output of depmod command:
+
+[root@trencancan compat-wireless-2.6.30-rc4]# grep -i rt61pci 
+/lib/modules/2.6.29.1-desktop-4mnb/modules.dep
+kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz: 
+kernel/lib/crc-itu-t.ko.gz 
+kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko.gz 
+kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko.gz 
+kernel/net/rfkill/rfkill.ko.gz kernel/drivers/leds/led-class.ko.gz 
+kernel/net/mac80211/mac80211.ko.gz kernel/net/wireless/cfg80211.ko.gz 
+kernel/drivers/misc/eeprom/eeprom_93cx6.ko.gz
+
+So you may see that rt61pci in 
+/lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/ 
+folder is not considered.
+
+Please, how can I workaround this? Or what do I wrong? One solution can 
+be to install all compat-wireless modules into kernel folder instead of 
+updates folder. But then distribution's ones will be overwritten and 
+un-installation will be impossible.
+
+Thanks.
+
+Michal
