@@ -1,162 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51132 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbZERSaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 14:30:12 -0400
-Date: Mon, 18 May 2009 14:29:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2009-05-18
-Message-ID: <20090518182943.GH2814@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57259 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752437AbZEQMry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 08:47:54 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, stecklum@tls-tautenburg.de,
+	me@bobcopeland.com, breusshe@hotmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/4] compat-2.6: Add libertas_spi module.
+Date: Sun, 17 May 2009 14:47:42 +0200
+Message-Id: <1242564463-9120-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
+References: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Clean up libertas stuff in config.mk
 
-Here is another dump of updates for 2.6.31...mostly the usual suspects,
-some fixes for bugs in earlier patches (but not in 2.6.30), etc.
-FWIW, most of this group is mac80211 and nl80211 infrastructure.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
+ config.mk               |   35 +++++++++++++++++++++++------------
+ scripts/admin-update.sh |    2 +-
+ 2 files changed, 24 insertions(+), 13 deletions(-)
 
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
-
----
-
-The following changes since commit ed9b58bc443a1210b5be1ded6421b17e015bf985:
-  Richard Genoud (1):
-        Remove duplicate slow protocol define in bond_3ad.h
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Abhijeet Kolekar (1):
-      iwl3945: read rev id in nic config
-
-Geert Uytterhoeven (1):
-      wireless: WL12XX should depend on GENERIC_HARDIRQS
-
-Ivo van Doorn (1):
-      rt2x00: Fix chipset detection for rt73usb
-
-Johannes Berg (23):
-      mac80211: fix scan channel race
-      mac80211: set default QoS values according to spec
-      cfg80211: fix wext iw_freq parsing
-      iwlwifi: make iwl_set_rate static
-      mac80211: improve scan timing
-      mac80211: move HT operation mode BSS info
-      mac80211: properly track HT operation_mode
-      mac80211: remove ieee80211_ht_bss_info
-      iwlwifi: do proper hw restart
-      iwlwifi: fix PS disable status race
-      iwlwifi: clean up PS code
-      cfg80211: constify key mac address in ops
-      cfg80211: put wext data into substructure
-      cfg80211: disallow interfering with stations on non-AP
-      wext: fix get_wireless_stats locking
-      cfg80211: implement wext key handling
-      nl80211: improve station flags handling
-      wext: remove seq_start/stop sparse annotations
-      mac80211: respond to beacon loss report only once
-      mac80211: split out and decrease probe wait time
-      mac80211: don't connect to IBSS network with different privacy
-      mac80211: IBSS supported rate fixes
-      mac80211: make noack test available
-
-Jouni Malinen (7):
-      nl80211 : Add support for configuring MFP
-      mac80211: Drop unencrypted frames based on key setup
-      mac80211: MFP - Drop unprotected Action frames prior key setup
-      mac80211: Robust Action frame categories for MFP
-      nl80211: Validate MFP flag type when parsing STA flags
-      nl80211: Add IEEE 802.1X PAE control for station mode
-      nl80211: Add RSC configuration for new keys
-
-Mohamed Abbas (1):
-      iwlagn: improve rate scale table search
-
-Reinette Chatre (1):
-      iwlwifi: more descriptive unsupported hardware message
-
-Vasanthakumar Thiagarajan (2):
-      ath9k: Remove bogus break after return
-      ath9k: Cleanup ineffective return values
-
-Wey-Yi Guy (4):
-      iwlwifi: use #define instead of hard coded value
-      iwlagn: show current rate scale data in debugfs
-      iwlwifi: show qos AC parameters
-      iwlwifi: default WMM AC parameters
-
- drivers/net/wireless/ath/ath9k/eeprom.c     |   51 ++----
- drivers/net/wireless/ath/ath9k/eeprom.h     |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c         |   59 ++----
- drivers/net/wireless/ath/ath9k/hw.h         |    2 +-
- drivers/net/wireless/ath/ath9k/phy.c        |    7 +-
- drivers/net/wireless/ath/ath9k/phy.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   12 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   89 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    2 +
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   89 ++++-----
- drivers/net/wireless/iwlwifi/iwl-calib.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |   62 +++----
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 -
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 -
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.c    |  233 +++-------------------
- drivers/net/wireless/iwlwifi/iwl-power.h    |   39 +---
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   14 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 ++----
- drivers/net/wireless/mac80211_hwsim.c       |    2 +-
- drivers/net/wireless/mwl8k.c                |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c       |    2 +-
- drivers/net/wireless/wl12xx/Kconfig         |    2 +-
- include/linux/ieee80211.h                   |    8 +-
- include/linux/nl80211.h                     |   51 +++++-
- include/net/cfg80211.h                      |   57 +++---
- include/net/mac80211.h                      |   28 +---
- net/mac80211/cfg.c                          |   50 ++++--
- net/mac80211/debugfs.c                      |   38 ++++
- net/mac80211/ibss.c                         |   77 +++++---
- net/mac80211/ieee80211_i.h                  |    9 +-
- net/mac80211/iface.c                        |    3 +-
- net/mac80211/key.c                          |   21 ++-
- net/mac80211/key.h                          |    3 +-
- net/mac80211/main.c                         |   14 +-
- net/mac80211/mlme.c                         |   41 +++-
- net/mac80211/rx.c                           |   58 ++++--
- net/mac80211/scan.c                         |   32 +++-
- net/mac80211/tx.c                           |    5 +-
- net/mac80211/util.c                         |   60 +++++--
- net/mac80211/wext.c                         |  282 +--------------------------
- net/mac80211/wme.c                          |    2 +-
- net/wireless/core.c                         |   10 +-
- net/wireless/core.h                         |    6 +-
- net/wireless/ibss.c                         |   60 +++---
- net/wireless/nl80211.c                      |  128 ++++++++-----
- net/wireless/util.c                         |   45 +++++
- net/wireless/wext-compat.c                  |  286 ++++++++++++++++++++++++++-
- net/wireless/wext.c                         |   20 ++-
- 49 files changed, 1116 insertions(+), 1013 deletions(-)
-
-Omnibus patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-05-18.patch.bz2
-
+diff --git a/config.mk b/config.mk
+index f94b37b..0a2cbb3 100644
+--- a/config.mk
++++ b/config.mk
+@@ -235,6 +235,14 @@ CONFIG_MWL8K=m
+ endif
+ ## end of PCI
+ 
++ifneq ($(CONFIG_PCMCIA),)
++
++CONFIG_LIBERTAS_CS=m
++NEED_LIBERTAS=y
++
++endif
++## end of PCMCIA
++
+ # This is required for some cards
+ CONFIG_EEPROM_93CX6=m
+ 
+@@ -278,14 +286,27 @@ CONFIG_RT73USB=m
+ NEED_RT2X00_FIRMWARE=y
+ endif
+ 
++CONFIG_LIBERTAS_THINFIRM_USB=m
++CONFIG_LIBERTAS_USB=m
++NEED_LIBERTAS=y
++
+ endif # end of USB driver list
+ 
+ ifneq ($(CONFIG_SPI_MASTER),)
+ 
+ CONFIG_WL12XX=m
++CONFIG_LIBERTAS_SPI=m
++NEED_LIBERTAS=y
+ 
+ endif # end of SPI driver list
+ 
++ifneq ($(CONFIG_MMC),)
++
++CONFIG_LIBERTAS_SDIO=m
++NEED_LIBERTAS=y
++
++endif # end of SDIO driver list
++
+ # Common rt2x00 requirements
+ ifeq ($(NEED_RT2X00),y)
+ CONFIG_RT2X00=m
+@@ -317,19 +338,9 @@ CONFIG_SSB=m
+ CONFIG_SSB_SPROM=y
+ # CONFIG_SSB_DEBUG=y
+ 
+-ifneq ($(CONFIG_USB),)
+-ifneq ($(CONFIG_LIBERTAS_THINFIRM_USB),m)
+-CONFIG_LIBERTAS_USB=m
+-NEED_LIBERTAS=y
+-endif
+-endif
+-ifneq ($(CONFIG_PCMCIA),)
+-CONFIG_LIBERTAS_CS=m
+-NEED_LIBERTAS=y
+-endif
+ ifeq ($(NEED_LIBERTAS),y)
++CONFIG_LIBERTAS_THINFIRM=m
+ CONFIG_LIBERTAS=m
+-# Libertas uses the old stack but not fully, it will soon 
+-# be cleaned.
++# CONFIG_LIBERTAS_DEBUG=y
+ endif
+ 
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 1616844..ae42894 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -24,7 +24,7 @@ INCLUDE_LINUX="$INCLUDE_LINUX ath9k_platform.h"
+ # For rndis_wext
+ INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
+ 
+-INCLUDE_LINUX_SPI="wl12xx.h"
++INCLUDE_LINUX_SPI="wl12xx.h libertas_spi.h"
+ 
+ # The good new yummy stuff
+ INCLUDE_NET="cfg80211.h ieee80211_radiotap.h iw_handler.h"
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.1
+
