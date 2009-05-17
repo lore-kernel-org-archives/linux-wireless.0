@@ -1,49 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:47033 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbZEKBkT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2009 21:40:19 -0400
-Received: by ewy24 with SMTP id 24so3132055ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2009 18:40:18 -0700 (PDT)
-Date: Mon, 11 May 2009 03:40:16 +0200
-From: "Christoph .J Thompson" <cjsthompson@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Correia <luis.f.correia@gmail.com>,
-	Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt73usb Access point status
-Message-Id: <20090511034016.17f0deb0.cjsthompson@gmail.com>
-In-Reply-To: <1241085910.27613.16.camel@johannes.local>
-References: <wfbpqkvlm0.fsf@calligramme.charmers>
-	<wfzldytr8l.fsf@calligramme.charmers>
-	<efe7343f0904300251q4650d17nb062cc28b011580d@mail.gmail.com>
-	<efe7343f0904300258u7d29ff3cu9ca8ea3b3038ebab@mail.gmail.com>
-	<1241085910.27613.16.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57266 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752380AbZEQMrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 08:47:55 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, stecklum@tls-tautenburg.de,
+	me@bobcopeland.com, breusshe@hotmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/4] compat-2.6: Fixed module_disable function with old module-init-tools.
+Date: Sun, 17 May 2009 14:47:43 +0200
+Message-Id: <1242564463-9120-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
+References: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 30 Apr 2009 12:05:10 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > The solution they have found is not optimal, b ut works in their scenario.
-> > 
-> > You will need to modify hostapd, according to this blog post:
-> > http://eznemegy.blog.hu/2008/12/14/using_rt2x00_wireless_driver_with_hostapd
->
-> Based on that information, I have removed the "Yes (under development)"
-> note from the driver page since it doesn't really support it... In fact,
-> I'm surprised it works even with that hack since hostapd usually polls
-> the station with nullfunc frames and waits for an ack.
-> 
-> johannes
-> 
+The behavior of modprobe -l chanched. Old versions are returning
+the full path and new versions only return the relative path
+to the modules directory of the kernel.
 
-Another success story with this hack:
+Corrected some typos iwl-enable.
 
-I've been using the very same USB dongle Jon is speaking about with a patched hostapd on my AP for over 2 months and so far I didn't have any problems whatsoever with it. WPA2 works fine too. I'm using stock Linux 2.6.29.2 and hostapd 0.6.9 patched. The client machine is never far away from the AP (so that limits possible problems) and it's also running stock Linux 2.6.29.2. The client's wireless card is an ath5k.
+Thanks Brett D. Ussher for your help.
 
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/iwl-enable |    4 ++--
+ scripts/modlib.sh  |    5 ++---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/scripts/iwl-enable b/scripts/iwl-enable
+index 1236deb..765195b 100755
+--- a/scripts/iwl-enable
++++ b/scripts/iwl-enable
+@@ -17,7 +17,7 @@ IWL_NEW="iwlagn"
+ IWL_OLD="iwl4965"
+ 
+ # Appended to module file at the end when we want to ignore one
+-USAGE="Usage: $0 [ $IWL | $IWL_OLD ]"
++USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD ]"
+ 
+ function enable_iwlagn {
+ 	module_disable $IWL_OLD
+@@ -36,7 +36,7 @@ elif [ $# -ne 1 ]; then
+ fi
+ 
+ MODULE=$1
+-if [ "$MODULE" == "iwl4954" ]; then
++if [ "$MODULE" == "iwl4965" ]; then
+ 	module_disable $IWL_NEW
+ 	module_enable $IWL_OLD
+ elif [ "$MODULE" == "iwlagn" ]; then
+diff --git a/scripts/modlib.sh b/scripts/modlib.sh
+index 5140949..91e53f1 100755
+--- a/scripts/modlib.sh
++++ b/scripts/modlib.sh
+@@ -28,7 +28,7 @@ function module_disable {
+ 	ALL_MODULES=`find /lib/modules/$VER/ -name $MODULE_KO`
+ 	COUNT=1
+ 	CHECK=`modprobe -l $MODULE`
+-	while  [ ! -z $CHECK ]; do
++	for i in $ALL_MODULES; do
+ 		if [[ $MODULE_COUNT -gt 1 ]]; then
+ 			if [[ $COUNT -eq 1 ]]; then
+ 				echo -en "$MODULE_COUNT $MODULE modules found "
+@@ -38,7 +38,7 @@ function module_disable {
+ 		else
+ 			echo -en "Disabling $MODULE ..."
+ 		fi
+-		mv -f /lib/modules/$VER/$CHECK /lib/modules/$VER/${CHECK}${IGNORE_SUFFIX}
++		mv -f $i ${i}${IGNORE_SUFFIX}
+ 		depmod -ae
+ 		CHECK_AGAIN=`modprobe -l $MODULE`
+ 		if [ "$CHECK" != "$CHECK_AGAIN" ]; then
+@@ -49,7 +49,6 @@ function module_disable {
+ 			echo "$CHECK"
+ 		fi
+ 		let COUNT=$COUNT+1
+-		CHECK=$CHECK_AGAIN
+ 	done
+ }
+ 
 -- 
-Christoph .J Thompson <cjsthompson@gmail.com>
+1.6.2.1
+
