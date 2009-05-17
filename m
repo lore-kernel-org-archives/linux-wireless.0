@@ -1,62 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbZELRy7 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:27586 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752609AbZEQV1M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 13:54:59 -0400
-Subject: Re: [RFT v9] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Keaney <keaneyw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A09B130.9000106@gmail.com>
-References: <1242030669.6930.10.camel@johannes.local>
-	 <4A09B130.9000106@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7tn/xLuSMRXLpbXIcxbY"
-Date: Tue, 12 May 2009 19:52:44 +0200
-Message-Id: <1242150764.11924.0.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 17 May 2009 17:27:12 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so1477226rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 14:27:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A0FEC03.9090803@centrum.cz>
+References: <4A0FEC03.9090803@centrum.cz>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 17 May 2009 14:26:53 -0700
+Message-ID: <43e72e890905171426xf9f483dh9d2477cebd4eab47@mail.gmail.com>
+Subject: Re: rt2x00 - wireless compat - can not load compiled rt61pci
+To: trencan <trencan@centrum.cz>
+Cc: linux-wireless@vger.kernel.org, Felix Bitterli <ic.felix@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, May 17, 2009 at 3:50 AM, trencan <trencan@centrum.cz> wrote:
+> Hello,
+>
+> I use latest Mandriva distribution 2009.1 with kernel 2.6.29.1-desktop-4mnb.
+> I have rt2561 wifi card in my PC. I would like to switch my wifi card to AP
+> or Ad-hoc mode. My distribution's rt61pci module doesn't support these
+> modes. So I have downloaded compat-wireless-2.6.30-rc4.tar.bz2
+> <http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30/compat-wireless-2.6.30-rc4.tar.bz2>.
+>
+> I ran:
+> make
+> make install
+> make unload
+>
+> Everything fine. But then "modprobe rt61pci" loaded my distribution's
+> rt61pci module and not the compiled one. Distribution's one is in folder:
+>
+> [root@trencancan compat-wireless-2.6.30-rc4]# ls -la
+> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+> -rw-r--r-- 1 root root 11279 2009-04-21 01:13
+> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>
+> Compiled one is in folder:
+> [root@trencancan compat-wireless-2.6.30-rc4]# ls -la
+> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+> -rw-r--r-- 1 root root 123843 2009-05-16 23:21
+> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>
+>
+> But after I type "modprobe rt61pci", then:
+> [root@trencancan compat-wireless-2.6.30-rc4]# modinfo rt61pci
+> filename:
+> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+> license:        GPL
+> firmware:       rt2661.bin
+> firmware:       rt2561s.bin
+> firmware:       rt2561.bin
+> description:    Ralink RT61 PCI & PCMCIA Wireless LAN driver.
+> version:        2.2.3
+> author:         http://rt2x00.serialmonkey.com
+> srcversion:     E8C0D3A4B7F36984638CEDF
+> alias:          pci:v00001814d00000401sv*sd*bc*sc*i*
+> alias:          pci:v00001814d00000302sv*sd*bc*sc*i*
+> alias:          pci:v00001814d00000301sv*sd*bc*sc*i*
+> depends:        rt2x00lib,rt2x00pci,eeprom_93cx6,crc-itu-t
+> vermagic:       2.6.29.1-desktop-4mnb SMP mod_unload modversions 686
+> parm:           nohwcrypt:Disable hardware encryption. (bool)
+>
+>
+> So you can see that Distribution's module (in kernel folder) was loaded. I
+> think root cause of problem is that run of command: "depmod -ae" finds first
+> rt61pci in kernel's folder and then next instance in updates folder is not
+> considered. If I look at output of depmod command:
+>
+> [root@trencancan compat-wireless-2.6.30-rc4]# grep -i rt61pci
+> /lib/modules/2.6.29.1-desktop-4mnb/modules.dep
+> kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz: kernel/lib/crc-itu-t.ko.gz
+> kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko.gz
+> kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko.gz
+> kernel/net/rfkill/rfkill.ko.gz kernel/drivers/leds/led-class.ko.gz
+> kernel/net/mac80211/mac80211.ko.gz kernel/net/wireless/cfg80211.ko.gz
+> kernel/drivers/misc/eeprom/eeprom_93cx6.ko.gz
+>
+> So you may see that rt61pci in
+> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/
+> folder is not considered.
+>
+> Please, how can I workaround this? Or what do I wrong? One solution can be
+> to install all compat-wireless modules into kernel folder instead of updates
+> folder. But then distribution's ones will be overwritten and un-installation
+> will be impossible.
 
---=-7tn/xLuSMRXLpbXIcxbY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Mandriva may not look for updates/ dir by default. For Ubuntu I still
+see this respected.
 
-On Tue, 2009-05-12 at 13:26 -0400, Will Keaney wrote:
+For example on ubuntu I see:
 
-> >  * rfkill-input pointlessly is a separate module
-> >  =20
-> Please leave rfkill-input available as a module, at least until the bug
-> I reported in my previous e-mail 'Soft Lockup With rfkill_input and
-> thinkpad_acpi' is resolved.  Otherwise it will render Thinkpads, and
-> possibly other systems, unusable with rfkill enabled.
+mcgrof@tesla $ cat /etc/depmod.d/ubuntu.conf
+search updates ubuntu built-in
 
-I certainly will not, but I will help you solve the problem _after_ this
-patch. For sure not before this patch.
+Can you check your /etc/depmod.d/ directory or /etc/depmod.conf file?
 
-johannes
-
---=-7tn/xLuSMRXLpbXIcxbY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCbdmAAoJEODzc/N7+Qmas50P/ArLpkYQMUw5/01Z04mqmyVZ
-X4MtIssGCEVmshCHRaDr2OAZRzOS0bNDQ6Dq0uEE9GgQlR5C/ngNHlMQU5QVxfSK
-3s7Z9K+/8I/1aYZ5+TPB57IKnHA9+sqiywrb0d8U6zMmcJo4FbIu2N5bkAPi6f9d
-Bh5rzoC9reUHtd6uBNkpDlipqLS8j4YUYlMI6nZiifHZ7m8gAn1cCf7kk1hHns67
-+YbFaDp8ZJPRtTLbH6Qvj1N966fTWErNPw0nh43Sl3/ibraPqLOtqNYt6ZkfAvmf
-HT+HVSQskOby/gMDRk9rTEhXCCSfTiovugQ/RUxVDtjHXmiLsofTRi+l7yXX5zQP
-nsDqLXF/l1kLnE92mQM0vSUPukMpUQwjyVgEDa5uA/+Z8a8I2fxEhRsetfeb7b5+
-x4pCww5EVyPYI2C9lv+mIbUKmQ71do8dQiVWEpL/QdOFlOgaNzCkCFvVLN+ZVq2l
-PnlEs168CzVgjqgQFInFKrLGdGvXGKMW5YUB8XPhQPyq1D356SqIKSqCSGTs2/8C
-D3nVh4vVq40mFl3o4WuoAgd7QZSgAeRu+NOdK6PvzZzl259hNHWRRkq8yxVbGV+K
-mEYHsKkeK6Ie4zK0nosAanGxO+1gPlSfQ0CWJvv6EiV9fzhPAvbvMqyVF11zBMWq
-DQYR0EYQq7Yl9mbgXSaj
-=lTqk
------END PGP SIGNATURE-----
-
---=-7tn/xLuSMRXLpbXIcxbY--
-
+  Luis
