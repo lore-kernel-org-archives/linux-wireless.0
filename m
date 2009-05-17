@@ -1,92 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:41752 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645AbZEAJmg (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:35735 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755277AbZEQXCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 05:42:36 -0400
-Received: by bwz7 with SMTP id 7so2237266bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 02:42:35 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 1 May 2009 10:42:35 +0100
-Message-ID: <9b2b86520905010242q443eb19bnc9e2c86a23605c2d@mail.gmail.com>
-Subject: Re: rfkill rewrite
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 17 May 2009 19:02:54 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so3710589ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 16:02:55 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Subject: [PATCH 5/5] p54spi: use firmware/DMA bug workaround that work under hight load in p54spi_rx
+Date: Mon, 18 May 2009 03:02:35 +0400
+Message-Id: <1242601355-3178-6-git-send-email-jcmvbkbc@gmail.com>
+In-Reply-To: <1242601355-3178-5-git-send-email-jcmvbkbc@gmail.com>
+References: <0001-p54spi-fix-incorrect-access-sequence-to-DMA_WRITE_C.patch>
+ <1242601355-3178-1-git-send-email-jcmvbkbc@gmail.com>
+ <1242601355-3178-2-git-send-email-jcmvbkbc@gmail.com>
+ <1242601355-3178-3-git-send-email-jcmvbkbc@gmail.com>
+ <1242601355-3178-4-git-send-email-jcmvbkbc@gmail.com>
+ <1242601355-3178-5-git-send-email-jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/18/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sat, 2009-04-18 at 10:43 +0100, Alan Jenkins wrote:
->
->> >> When I looked at the code earlier, I saw no obvious replacement for
->> >> rfkill_set_default().  So I tried disabling the wireless and rebooting
->> >> to see what happened.  It didn't like that :-).
->> >>
->> >
->> > Ok that wasn't too hard -- try this on top if you get a chance:
->> >
->>
->> Great, that fixes the crash.
->>
->>
->> 1) I think we need to add a resume method to eeepc-laptop.
->>
->> Without this, funny things happen when I hibernate, disable wireless in
->> the BIOS, and resume:
->>
->>     ath5k phy0: failed to wake up the MAC chip
->>
->> It's an really stupid thing to do, but it can happen.  It's bad from a
->> UI point of view.  E.g. in network-manager, you can see a "wlan0"
->> device, but it doesn't work.
->>
->> The EEE rfkill is unusual in that it hotplugs the PCI device, making
->> eeepc-laptop something like a custom pci hotplug driver.  With your
->> rewrite, eeepc-laptop doesn't notice the state change on resume.
->> Previously, the rfkill-core would restore the pre-hibernation state,
->> which would sort everything out.  I don't think anything else does this,
->> so we can just add a resume method to eeepc-laptop.  The resume method
->> would re-check the state and do the PCI hotplug dance if necessary.
->>
->> If you agree, I can do the patch for this and send it to you.
->
-> Sounds good to me, yeah.
->
-> I could make the rfkill core do that at resume, but I'm not really sure
-> it's what we want -- there are too many cases imho:
->  * hard rfkill might have changed
->  * soft rfkill might still be ok in hw
->  * soft rfkill might need reconfiguring
-> etc. I think generally it's saner to let the driver sort it out -- it
-> can always ask for the current state by using set_hw_state() or so.
+Under high load first data word, read after available data size
+is sometimes lost in p54spi_rx. It seems to depend on frequency
+of interrupts and latency of data read request relatively to
+'data available' interrupt. The worst consequence of this bug
+is loss of packet transmission acknowledgement, which in turn
+causes overflow of tx queues and permanent link loss.
 
-I just realized or remembered something non-obvious.  This means _all_
-rfkill drivers need a resume handler.  They don't at the moment, so
-this would need to be fixed and documented.  In which case, it's
-probably simpler for the core to do it.
+Read data size and first data word in one SPI transaction.
+No packets from LMAC should have length less than 1 word,
+so this shouldn't interfere with the next read transaction.
 
-You need this to handle hibernation.  If the rfkill state persists
-across hibernation (which mine does, even in S5), you can always cause
-the state to change, by pressing the wireless toggle key _while the
-hibernation image is being written to disk_.  At that stage, all
-devices are active, so that s2disk can interact with the user and
-write the image wherever it chooses.  The kernel will not "remember"
-the state change on resume, since it happened after the kernel image
-was snapshotted.
+Also call p54spi_sleep if p54spi_wake succeeded.
 
-If the rfkill state does _not_ persist over hibernation, then clearly
-the state can change on resume and you will again need a resume
-handler,
+Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+---
+ drivers/net/wireless/p54/p54spi.c |   28 ++++++++++++++++++++--------
+ 1 files changed, 20 insertions(+), 8 deletions(-)
 
-On my EeePC, this is just more dramatic because it can de-power a PCI
-device without notifying the driver.  But the new rfkill design will
-require all devices to have a resume method, because there is no
-get_state() callback.  Otherwise, reading  of
-/sys/class/rfkill/rfkill*/state after resume from hibernation may
-return an incorrect result.  I don't think we should allow that to
-happen.
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 9e0c1a2..fe90f88 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -357,32 +357,44 @@ static int p54spi_rx(struct p54s_priv *priv)
+ {
+ 	struct sk_buff *skb;
+ 	u16 len;
++	u16 rx_head[2];
++#define READAHEAD_SZ (sizeof(rx_head)-sizeof(u16))
+ 
+ 	if (p54spi_wakeup(priv) < 0)
+ 		return -EBUSY;
+ 
+-	/* dummy read to flush SPI DMA controller bug */
+-	p54spi_read16(priv, SPI_ADRS_GEN_PURP_1);
+-
+-	len = p54spi_read16(priv, SPI_ADRS_DMA_DATA);
++	/* Read data size and first data word in one SPI transaction
++	 * This is workaround for firmware/DMA bug,
++	 * when first data word gets lost under high load.
++	 */
++	p54spi_spi_read(priv, SPI_ADRS_DMA_DATA, rx_head, sizeof(rx_head));
++	len = rx_head[0];
+ 
+ 	if (len == 0) {
+-		dev_err(&priv->spi->dev, "rx request of zero bytes");
++		p54spi_sleep(priv);
++		dev_err(&priv->spi->dev, "rx request of zero bytes\n");
+ 		return 0;
+ 	}
+ 
+-
+ 	/* Firmware may insert up to 4 padding bytes after the lmac header,
+ 	 * but it does not amend the size of SPI data transfer.
+ 	 * Such packets has correct data size in header, thus referencing
+ 	 * past the end of allocated skb. Reserve extra 4 bytes for this case */
+ 	skb = dev_alloc_skb(len + 4);
+ 	if (!skb) {
++		p54spi_sleep(priv);
+ 		dev_err(&priv->spi->dev, "could not alloc skb");
+-		return 0;
++		return -ENOMEM;
+ 	}
+ 
+-	p54spi_spi_read(priv, SPI_ADRS_DMA_DATA, skb_put(skb, len), len);
++	if (len <= READAHEAD_SZ) {
++		memcpy(skb_put(skb, len), rx_head + 1, len);
++	} else {
++		memcpy(skb_put(skb, READAHEAD_SZ), rx_head + 1, READAHEAD_SZ);
++		p54spi_spi_read(priv, SPI_ADRS_DMA_DATA,
++				skb_put(skb, len - READAHEAD_SZ),
++				len - READAHEAD_SZ);
++	}
+ 	p54spi_sleep(priv);
+ 	/* Put additional bytes to compensate for the possible
+ 	 * alignment-caused truncation */
+-- 
+1.6.0.6
 
-Regards
-Alan
