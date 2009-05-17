@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53065 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752886AbZELR6m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 13:58:42 -0400
-Subject: [PATCH] mac80211: respond to beacon loss report only once
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain
-Date: Tue, 12 May 2009 19:58:12 +0200
-Message-Id: <1242151092.11924.2.camel@johannes.local>
+Received: from main.gmane.org ([80.91.229.2]:41874 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751704AbZEQIrV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 04:47:21 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1M5c1d-0006G3-4N
+	for linux-wireless@vger.kernel.org; Sun, 17 May 2009 08:47:17 +0000
+Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 08:47:17 +0000
+Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 08:47:17 +0000
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: rt73usb Access point status
+Date: Sun, 17 May 2009 09:47:04 +0100
+Message-ID: <wfzldcm7zr.fsf@calligramme.charmers>
+References: <557754.25367.qm@web51403.mail.re2.yahoo.com> <20090512215817.bd1c6895.cjsthompson@gmail.com> <wf4ovlo25e.fsf@calligramme.charmers> <200905161132.21437.IvDoorn@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver might keep reporting beacon loss until we
-disassociate -- catch that and don't respond to any
-subsequent events until the probe is either successful
-or we disassociate.
+Ivo van Doorn <ivdoorn@gmail.com> writes:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+> On Saturday 16 May 2009, Jon Fairbairn wrote:
+>> does it work as an AP in Windows?
+>> If so, how does it get round the bug in the driver?
+>
+> Simply by indicating that every single frame passed to the driver has
+> been send out succesfully and thus completely ignoring the real status.
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-05-12 19:55:05.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-05-12 19:56:32.000000000 +0200
-@@ -1182,6 +1182,17 @@ void ieee80211_beacon_loss_work(struct w
- 			     u.mgd.beacon_loss_work);
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
-+	/*
-+	 * The driver has already reported this event and we have
-+	 * already sent a probe request. Maybe the AP died and the
-+	 * driver keeps reporting until we disassociate... We have
-+	 * to ignore that because otherwise we would continually
-+	 * reset the timer and never check whether we received a
-+	 * probe response!
-+	 */
-+	if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL)
-+		return;
-+
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 	if (net_ratelimit()) {
- 		printk(KERN_DEBUG "%s: driver reports beacon loss from AP %pM "
+Ugh. But Microsoft make the de-facto standards after all :-(
+-- for a view that's illuminating, if depressing and
+annoying to those of us who think there's a point to
+compatibility, watch the talk Butler Lampson gave for Roger
+Needham's 50+5 presentation
+<http://research.microsoft.com/en-us/um/cambridge/events/needhambook/videos/1032/head.wmv>
+(list of talks is at
+<http://research.microsoft.com/en-us/um/cambridge/events/needhambook/videos/default.htm>)
+
+> I am awaiting a patch from Alexandre which will add that same behavior
+> to rt2x00.
+
+That would be great, thanks!
+
+-- 
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
 
 
