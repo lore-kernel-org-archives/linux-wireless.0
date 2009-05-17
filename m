@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f115.google.com ([209.85.222.115]:53291 "EHLO
-	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760336AbZEPW0A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 18:26:00 -0400
-Received: by pzk13 with SMTP id 13so1531973pzk.33
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2009 15:26:01 -0700 (PDT)
+Received: from mgw1.diku.dk ([130.225.96.91]:59778 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317AbZEQJ2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 05:28:54 -0400
+Date: Sun, 17 May 2009 11:28:42 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 1/3] drivers/net: use dev_get_drvdata
+Message-ID: <Pine.LNX.4.64.0905171128140.20440@pc-004.diku.dk>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890905161507r664cafd2i8815f400a5158b04@mail.gmail.com>
-References: <1242397016.5799.102.camel@johannes.local> <43e72e890905161507r664cafd2i8815f400a5158b04@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 16 May 2009 15:25:41 -0700
-Message-ID: <43e72e890905161525n79c64fb4p16b901e7f8422cc7@mail.gmail.com>
-Subject: Re: some wireless suspend thoughts
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 16, 2009 at 3:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, May 15, 2009 at 7:16 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->>  * kick pci driver suspend/resume out of ath9k and keep the device in
->>   low power while unused
->
-> This is nice.
->
->>  * make mac80211 send nullfunc for suspend/resume
->>  * make cfg80211 always call suspend/resume
->>
->> This is quite hackish. It works for me, but my AP disassocs me anyway
->> because it probes every 5 seconds and if you don't respond ... however,
->> due to the nullfunc at resume time we notice very very quickly since it
->> sends a deauth as a response to that.
->>
->> The ->shutdown hook in cfg80211 is a little odd.
->>
->> To implement WoW on top of this, we need to refactor the cfg80211 hooks
->> and probably actually pass the information to ->stop after all, I think?
->> I can't think of a good way to do this.
->
-> Well that's for sure with this patch. Let me take a crack at it.
+From: Julia Lawall <julia@diku.dk>
 
-I noticed you nuked pci_save_state() and pci_restore_state(), that
-saves PCI config space so seems required, so we'll have to still
-inform drv_stop of the suspend case -- and not sure that is worth it.
-What we save here is more control in mac80211 / cfg80211 but the
-things we need to added makes me wonder if its worth it in this case.
+Eliminate direct accesses to the driver_data field.
+cf 82ab13b26f15f49be45f15ccc96bfa0b81dfd015
 
-  Luis
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@@
+struct device *dev;
+expression E;
+type T;
+@@
+
+- dev->driver_data = (T)E
++ dev_set_drvdata(dev, E)
+
+@@
+struct device *dev;
+type T;
+@@
+
+- (T)dev->driver_data
++ dev_get_drvdata(dev)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2478,7 +2478,7 @@ static DEVICE_ATTR(power_level, S_IWUSR 
+ static ssize_t show_qos(struct device *d,
+ 				struct device_attribute *attr, char *buf)
+ {
+-	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
++	struct iwl_priv *priv = dev_get_drvdata(d);
+ 	char *p = buf;
+ 	int   q;
+ 
