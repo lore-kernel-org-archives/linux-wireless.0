@@ -1,113 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7428 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751600AbZESPmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 11:42:05 -0400
-Subject: Re: 2.6.29.3: iwlwifi WARNING
-From: reinette chatre <reinette.chatre@intel.com>
-To: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A12CC81.7010009@nets.rwth-aachen.de>
-References: <4A0D0E36.3010304@nets.rwth-aachen.de>
-	 <1242664454.32358.527.camel@rc-desk> <4A12CC81.7010009@nets.rwth-aachen.de>
-Content-Type: text/plain
-Date: Tue, 19 May 2009 08:48:44 -0700
-Message-Id: <1242748124.32358.714.camel@rc-desk>
-Mime-Version: 1.0
+Received: from kso.tls-tautenburg.de ([194.94.209.8]:42180 "EHLO
+	kso.tls-tautenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbZEQLvl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 07:51:41 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by kso.tls-tautenburg.de (Postfix) with ESMTP id DB0272F2
+	for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 13:26:45 +0200 (CEST)
+Received: from kso.tls-tautenburg.de ([127.0.0.1])
+ by localhost (kso [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 11825-10 for <linux-wireless@vger.kernel.org>;
+ Sun, 17 May 2009 13:26:31 +0200 (CEST)
+Received: from [192.168.178.37] (unknown [89.246.169.41])
+	by kso.tls-tautenburg.de (Postfix) with ESMTP id 5B89E317
+	for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 13:26:22 +0200 (CEST)
+Message-ID: <4A0FF4E9.50703@tls-tautenburg.de>
+Date: Sun, 17 May 2009 13:28:41 +0200
+From: Bringfried Stecklum <stecklum@tls-tautenburg.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: compile error compat-wireless-2009-03-29
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arnd,
+When trying to compile the latest compat-wireless package on an Ubuntu 8.10 
+64bit system running linux kernel 2.6.27-12 I get the following error
 
-On Tue, 2009-05-19 at 08:13 -0700, Arnd Hannemann wrote:
-> Hi Reinette,
-> 
-> reinette chatre schrieb:
-> > Hi Arnd,
-> > 
-> > On Thu, 2009-05-14 at 23:39 -0700, Arnd Hannemann wrote:
-> >> Hi,
-> >>
-> >> I'm using ubuntu jaunty with 2.6.29.3 mainline build:
-> >> http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.29.3/
-> >>
-> >> And from time to time get this:
-> >>
-> >> [98439.060208] ------------[ cut here ]------------
-> >> [98439.060217] WARNING: at
-> >> /home/kernel-ppa/mainline/build/drivers/net/wireless/iwlwifi/iwl-sta.c:728
-> >> iwl_set_tkip_dynamic_key_info+0xc0/0xd0 [iwlcore]()
-> >> [98439.060224] Hardware name: 20552PG
-> >> [98439.060228] no space for new kewModules linked in: nls_iso8859_1
-> >> nls_cp437 vfat fat usb_storage binfmt_misc i915 drm i2c_algo_bit ppdev
-> >> bnep ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4
-> >> xt_state nf_conntrack ipt_
-> >> REJECT xt_tcpudp iptable_filter ip_tables x_tables bridge stp kvm_intel
-> >> kvm sbp2 lp parport snd_hda_codec_conexant joydev snd_hda_intel
-> >> snd_hda_codec snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy
-> >> snd_seq_oss snd_seq_midi snd_rawmidi sn
-> >> d_seq_midi_event arc4 ecb snd_seq snd_timer snd_seq_device iwlagn
-> >> iwlcore snd mac80211 soundcore thinkpad_acpi pcmcia sdhci_pci sdhci
-> >> psmouse iTCO_wdt video intel_agp agpgart snd_page_alloc pcspkr nvram
-> >> yenta_socket rsrc_nonstatic pcmcia
-> >> _core ricoh_mmc led_class iTCO_vendor_support serio_raw btusb output
-> >> cfg80211 sha256_generic aes_i586 aes_generic cbc ohci1394 ieee1394
-> >> e1000e dm_crypt
-> >> [98439.060372] Pid: 10, comm: events/0 Not tainted
-> >> 2.6.29-02062903-generic #02062903
-> >> [98439.060377] Call Trace:
-> >> [98439.060394]  [<c013a636>] warn_slowpath+0x86/0xa0
-> >> [98439.060409]  [<c04f7938>] ? _spin_lock+0x8/0x10
-> >> [98439.060418]  [<c01e967c>] ? inotify_d_instantiate+0x3c/0x50
-> >> [98439.060427]  [<c028879c>] ? security_d_instantiate+0x1c/0x20
-> >> [98439.060436]  [<c01cebf8>] ? d_instantiate+0x38/0x40
-> >> [98439.060444]  [<c01cf3c7>] ? dput+0x67/0xd0
-> >> [98439.060453]  [<c01220f8>] ? default_spin_lock_flags+0x8/0x10
-> >> [98439.060460]  [<c04f78e2>] ? _spin_lock_irqsave+0x32/0x50
-> >> [98439.060489]  [<f80ea900>] iwl_set_tkip_dynamic_key_info+0xc0/0xd0
-> >> [iwlcore]
-> >> [98439.060523]  [<f80eac5f>] iwl_set_dynamic_key+0x5f/0x80 [iwlcore]
-> >> [98439.060546]  [<f81a5793>] iwl_mac_set_key+0xf3/0x120 [iwlagn]
-> >> [98439.060565]  [<f81a56a0>] ? iwl_mac_set_key+0x0/0x120 [iwlagn]
-> >> [98439.060606]  [<f8097fd3>] ieee80211_key_enable_hw_accel+0x53/0xc0
-> >> [mac80211]
-> >> [98439.060622]  [<c027a9fc>] ? debugfs_remove+0x4c/0x60
-> >> [98439.060665]  [<f8098168>] __ieee80211_key_todo+0xe8/0x130 [mac80211]
-> >> [98439.060674]  [<c04f6044>] ? schedule+0x2f4/0x570
-> >> [98439.060681]  [<c04f69eb>] ? mutex_lock+0xb/0x20
-> >> [98439.060727]  [<f80982cd>] ieee80211_key_todo+0xd/0x20 [mac80211]
-> >> [98439.060767]  [<f8098368>] key_todo+0x8/0x10 [mac80211]
-> >> [98439.060775]  [<c014b344>] run_workqueue+0xd4/0x170
-> >> [98439.060815]  [<f8098360>] ? key_todo+0x0/0x10 [mac80211]
-> >> [98439.060824]  [<c014bd28>] worker_thread+0x88/0xe0
-> >> [98439.060832]  [<c014ede0>] ? autoremove_wake_function+0x0/0x40
-> >> [98439.060840]  [<c014bca0>] ? worker_thread+0x0/0xe0
-> >> [98439.060846]  [<c014ea72>] kthread+0x42/0x70
-> >> [98439.060852]  [<c014ea30>] ? kthread+0x0/0x70
-> >> [98439.060860]  [<c0103da7>] kernel_thread_helper+0x7/0x10
-> >> [98439.060865] ---[ end trace 3b8aa73681896774 ]---
-> >> [102020.364126] iwlagn: Removing wrong key 1 0x410b
-> >> [102020.364274] ------------[ cut here ]------------
-> >>
-> >> and then this very same message spams my dmesg.
-> >> Computer is a Lenovo T500 with Core2Duo.
-> >>
-> > 
-> > 
-> > Could you please try this patch? It can be found in 2.6.30 and applies
-> > with some fuzz to 2.6.29. If it works for you then we can look into
-> > backporting it to 2.6.29.
-> 
-> I'm running on 2.6.30-rc6 for one day now, which I believe contains the mentioned
-> patch and I could not trigger the warning yet.
-> Not sure if this is enough evidence that the mentioned patch solved my issue ;-)
-> However, something probably did.
+stecklum@extragalactix:~/System/src/compat-wireless-2009-05-17$ make
+...
+  CC [M]  /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/tx.o
+  CC [M]  /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.o
+/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.c: In 
+function ‘ieee80211_key_alloc’:
+/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.c:326: 
+error: implicit declaration of function ‘get_unaligned_le32’
+/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.c:328: 
+error: implicit declaration of function ‘get_unaligned_le16’
+make[3]: *** 
+[/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.o] Error 1
+make[2]: *** [/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211] 
+Error 2
+make[1]: *** [_module_/home/stecklum/System/src/compat-wireless-2009-05-17] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
+make: *** [modules] Error 2
 
-Yes - 2.6.30-rc6 contains that patch. I'll look into getting it into
-2.6.29 stable.
+Regards,
 
-Thank you very much for the testing.
-
-Reinette
-
+	Bringfried
 
