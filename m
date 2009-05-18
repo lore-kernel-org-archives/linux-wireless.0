@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:17199 "EHLO c60.cesmail.net"
+Received: from c60.cesmail.net ([216.154.195.49]:2243 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754181AbZEFV35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 17:29:57 -0400
-Subject: Re: [ath5k-devel] ath5k: scanning while transmitting causes oops
- on 802.11a capable card
+	id S1751382AbZERUEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 16:04:38 -0400
+Subject: Re: [PATCH] cfg80211: allow wext to remove keys that don't exist
 From: Pavel Roskin <proski@gnu.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <1241641605.4029.10.camel@johannes.local>
-References: <1241626486.30590.13.camel@mj>
-	 <b6c5339f0905060936u37f3994cx97cc2344224777a5@mail.gmail.com>
-	 <20090506172513.GB30070@tuxdriver.com>  <1241640751.3289.2.camel@mj>
-	 <1241641605.4029.10.camel@johannes.local>
+Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Samuel Ortiz <samuel@sortiz.org>
+In-Reply-To: <1242669396.29049.2.camel@johannes.local>
+References: <1242669396.29049.2.camel@johannes.local>
 Content-Type: text/plain
-Date: Wed, 06 May 2009 17:29:55 -0400
-Message-Id: <1241645395.3293.3.camel@mj>
+Date: Mon, 18 May 2009 16:04:36 -0400
+Message-Id: <1242677076.30019.5.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-05-06 at 22:26 +0200, Johannes Berg wrote:
+On Mon, 2009-05-18 at 19:56 +0200, Johannes Berg wrote:
+> Some applications using wireless extensions expect to be able to
+> remove a key that doesn't exist. One example is wpa_supplicant
+> which doesn't actually change behaviour when running into an
+> error while trying to do that, but it prints an error message
+> which users interpret as wpa_supplicant having problems.
 
-> Huh? That's confusing. Also, you say you get a BUG but point out a
-> WARN_ON_ONCE, was that an oversight or does something crash there?
+It sounds like you are working around a userspace problem in the kernel.
 
-Sorry, I meant WARN_ON_ONCE.
+> The safe thing to do is not change the behaviour of wireless
+> extensions any more, so when the driver reports -ENOENT let
+> the wext bridge code return success to userspace. To guarantee
+> this, also document that drivers should return -ENOENT when the
+> key doesn't exist.
 
-> OTOH, I can see one thing happening -- it would access scan_channel.
-> Patch should fix that, does it help?
-
-Yes, that does the trick!  Several scans with iw and iwlist while flood
-pinging the AP don't cause any kernel messages.  Thank you!
+You patch is changing the behavior or wireless extensions.  It would be
+much more reasonable for wpa_supplicant not to remove non-existent keys
+or (if it's unsafe or non-practical for some reason) not to report
+-ENOENT to the user.
 
 -- 
 Regards,
