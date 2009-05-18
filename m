@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:35831 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753874AbZE2PlV (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:28609 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050AbZERSWj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 11:41:21 -0400
+	Mon, 18 May 2009 14:22:39 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so957657rvb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 11:22:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090529101834.GC3506@tuxdriver.com>
-References: <20090529.014011.244789664.davem@davemloft.net>
-	 <20090529101834.GC3506@tuxdriver.com>
-Date: Fri, 29 May 2009 16:41:20 +0100
-Message-ID: <3ace41890905290841h427f8a27v8772cb34503247c2@mail.gmail.com>
-Subject: Re: [PATCH 4/10]: rtl8187: Remove pointless check in rtl8187_rx_cb().
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 18 May 2009 11:22:17 -0700
+Message-ID: <43e72e890905181122w38f83785p2134a5142a9f0905@mail.gmail.com>
+Subject: Plan of attack for enhancements for scan while associated
+To: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com, Gaurav.Jauhar@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 29, 2009 at 11:18 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Fri, May 29, 2009 at 01:40:11AM -0700, David Miller wrote:
->>
->> First of all, it exposes the SKB list implementation.
->>
->> Second of all it's not needed.  If we get called here, we
->> successfully enqueued the URB with the linked SKB and
->> such a completion only gets called one time on such an
->> SKB.
->>
->> Signed-off-by: David S. Miller <davem@davemloft.net>
->
-> ACK
+Helmut, Senthil has indicated interest in working on this, Johannes
+had pointed out you might have some initial work on this already? Can
+you post your patch, it might help?
 
-ACK.
+Just so we're clear this would be an enhancement for wext/nl80211
+regular scan -- when we're associated we'd do scans by going to a new
+channel and then coming back to our operating channel to able to
+receive frames. We'd do this for each channel we can scan on until
+we're done with all of them.
 
-I'll give this a try when I rebuild the rtl8187 module on my box.
+We could possibly allow for a debugfs parameters to allow users to
+tune this to say scan over x channels before going to the operating
+channel, as well as change the time between moving to a new channel.
+This would probably help mostly with tuning this while debugging or
+figuring out ideal default values.
 
-Hin-Tak
+New userspace can simply make use of nl80211 scan on an individual
+freq request and figure things out on its own.
+
+  Luis
