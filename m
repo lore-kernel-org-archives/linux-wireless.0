@@ -1,88 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2b.orange.fr ([80.12.242.146]:35730 "EHLO smtp2b.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024AbZEIJig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 05:38:36 -0400
-Message-ID: <4A054F18.7020501@free.fr>
-Date: Sat, 09 May 2009 11:38:32 +0200
-From: Eric Valette <eric.valette@free.fr>
-Reply-To: eric.valette@free.fr
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [RFT] rtl8187: use DMA-aware buffers with usb_control_msg
-References: <20090506064513.GA7460@kroah.com>	 <1241632963-25601-1-git-send-email-linville@tuxdriver.com> <3ace41890905081620h10d0250eq1ede9cd73021dc5b@mail.gmail.com>
-In-Reply-To: <3ace41890905081620h10d0250eq1ede9cd73021dc5b@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------080308060506020708080203"
+Received: from xc.sipsolutions.net ([83.246.72.84]:36523 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbZERT0I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 15:26:08 -0400
+Subject: Re: some wireless suspend thoughts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+In-Reply-To: <87pre69qyx.fsf@litku.valot.fi>
+References: <1242397016.5799.102.camel@johannes.local>
+	 <87pre69qyx.fsf@litku.valot.fi>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uQfHg6H1DXq954MG1XiA"
+Date: Mon, 18 May 2009 21:26:04 +0200
+Message-Id: <1242674764.29049.12.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080308060506020708080203
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-Hin-Tak Leung wrote:
-> On Wed, May 6, 2009 at 7:02 PM, John W. Linville <linville@tuxdriver.com> wrote:
->> This definitely needs to fail more gracefully in the event of a
->> kmalloc failure...
->>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+--=-uQfHg6H1DXq954MG1XiA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-OK guys. Thanks for your support and sorry for the delay: I add to
-struggle with drm git to compile with 2.6.30-rc4-git3 (due to various
-non yet integraed things my automated rebuild procedure does git fetch
-for drm, xf86-video-nouveau, ...) , leading to no X server which for me
-is more annoying than a trace in a USB wireless driver that I seldom use
-only to test some new wireless feature (two GE port onboard).
+On Mon, 2009-05-18 at 22:00 +0300, Kalle Valo wrote:
 
-The patch fix the DMA warning and the driver seems to work (just
-associated it) but I must say that the allocation failure handling path
-and the fact that we use now kmalloc for allocating a few bytes in such
-a routine makes me worry about possible negative performance impact
-unless theses routines are used only in a slow configuration path (did
-no took time to red the code due to many other problems).
+> To me trying to maintain association during suspend sounds wrong. What
+> do we gain from that?=20
+>=20
+> In my opinion it's better to disassociate during suspend and let user
+> space reassociate during resume. That way no need to do any special
+> hacks and functionality is the same with all APs.
+>=20
+> I'm sure I'm missing a lot here, but this is my first impression.
 
-BTW if someone know who I should send this attached patch for DRM git, I
-would gladly forward it.
+It seems it could be possible to just suspend for very little time, in
+which case you might care. Also, this actually helped for the case where
+we don't manage to maintain association because then we send a nullfunc
+frame and get a deauth very very quickly at resume.
 
--- eric
+johannes
 
+--=-uQfHg6H1DXq954MG1XiA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
---------------080308060506020708080203
-Content-Type: text/plain;
- name="patch-drm"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="patch-drm"
+iQIcBAABAgAGBQJKEbZHAAoJEODzc/N7+QmaFQ4P/0CSNJarrJbSZUpXvjLI0uUC
+cpbpbDo7+4cmfCKQrCPENHoz+0g1TNeEi2bPirm+Xf197zY78HxMKqffE7qP0xWW
+PYGG/i4Q18iHmgpyZIyBdbTvgasxajGZdfRYASOna8B6k73PfxPt23VizcxT4r5d
+PV8gkrNEuSoO4K2l7AQJu1OuBwiQv5vLNP+CTg8JaVaAEEh+q76I9wedBV8W/By/
++mnoKq9fNp6ApUwI+aQxy+TjWGN+r/nt+73Hub6lI8kuyuE3WtN0uHhlFuMfnCja
+pelxaGYsbm4iKUDN8K4kMS31NYeLdtyLQDi9SCF7jG2WCIbkrpn5U61A/BhqEZ8g
+jUkRz+On4T0TxRTkzgiIIanyUeM4nn2H3CLJmBfU0Bk/RGfIGt3W1Y687pDzkjKC
+LrS6OUPYo75/iLcKMDTQAOyaS3RVCbp+FWKZwWzyeT9PSGJitR1trJndsbonCb16
+UXnxL1OFtCpJJN/u203bYt1dUEt3E6SCoQT166BTdo9rT5BIsqRnKvIktYiL1uTh
+4fTsJ44Bq6iZULHpvGJlT7qUtaiBMUGe6c4FDGspsVpkfZ2N/QcBgT92hQyOD7T5
+7gaR0IHqRpTUm+UR1IRlMTz2x/Yv/FpjRM1cvGEvU4RJLAmkCCnC+gf9EnecjJr3
+zADD4D3WdENHaov+Enjh
+=tcIr
+-----END PGP SIGNATURE-----
 
-ZGlmZiAtLWdpdCBhL2xpbnV4LWNvcmUvZHJtX29zX2xpbnV4LmggYi9saW51eC1jb3JlL2Ry
-bV9vc19saW51eC5oCmluZGV4IGY1ODI5NmIuLmI0NzQyMGUgMTAwNjQ0Ci0tLSBhL2xpbnV4
-LWNvcmUvZHJtX29zX2xpbnV4LmgKKysrIGIvbGludXgtY29yZS9kcm1fb3NfbGludXguaApA
-QCAtMzIsMTEgKzMyLDYgQEAKIC8qKiBJUlEgaGFuZGxlciBhcmd1bWVudHMgYW5kIHJldHVy
-biB0eXBlIGFuZCB2YWx1ZXMgKi8KICNkZWZpbmUgRFJNX0lSUV9BUkdTCQlpbnQgaXJxLCB2
-b2lkICphcmcKIC8qKiBiYWNrd2FyZHMgY29tcGF0aWJpbGl0eSB3aXRoIG9sZCBpcnEgcmV0
-dXJuIHZhbHVlcyAqLwotI2lmbmRlZiBJUlFfSEFORExFRAotdHlwZWRlZiB2b2lkIGlycXJl
-dHVybl90OwotI2RlZmluZSBJUlFfSEFORExFRAkJLyogbm90aGluZyAqLwotI2RlZmluZSBJ
-UlFfTk9ORQkJLyogbm90aGluZyAqLwotI2VuZGlmCiAKIC8qKiBBR1AgdHlwZXMgKi8KICNp
-ZiBfX09TX0hBU19BR1AKZGlmZiAtLWdpdCBhL2xpbnV4LWNvcmUvZHJtX3N5c2ZzLmMgYi9s
-aW51eC1jb3JlL2RybV9zeXNmcy5jCmluZGV4IDZkZTkzNjcuLjYzN2Y1YzIgMTAwNjQ0Ci0t
-LSBhL2xpbnV4LWNvcmUvZHJtX3N5c2ZzLmMKKysrIGIvbGludXgtY29yZS9kcm1fc3lzZnMu
-YwpAQCAtMTYyLDE0ICsxNjIsMTQgQEAgaW50IGRybV9zeXNmc19kZXZpY2VfYWRkKHN0cnVj
-dCBkcm1fbWlub3IgKm1pbm9yKQogCWludCBlcnI7CiAJaW50IGksIGo7CiAJY2hhciAqbWlu
-b3Jfc3RyOwotCisJCiAJbWlub3ItPmtkZXYucGFyZW50ID0gJm1pbm9yLT5kZXYtPnBkZXYt
-PmRldjsKIAltaW5vci0+a2Rldi5jbGFzcyA9IGRybV9jbGFzczsKIAltaW5vci0+a2Rldi5y
-ZWxlYXNlID0gZHJtX3N5c2ZzX2RldmljZV9yZWxlYXNlOwogCW1pbm9yLT5rZGV2LmRldnQg
-PSBtaW5vci0+ZGV2aWNlOwotCW1pbm9yX3N0ciA9ICJjYXJkJWQiOwotCQotCXNucHJpbnRm
-KG1pbm9yLT5rZGV2LmJ1c19pZCwgQlVTX0lEX1NJWkUsIG1pbm9yX3N0ciwgbWlub3ItPmlu
-ZGV4KTsKKyAgICAgICAgbWlub3Jfc3RyID0gImNhcmQlZCI7CisKKwlkZXZfc2V0X25hbWUo
-Jm1pbm9yLT5rZGV2LCBtaW5vcl9zdHIsIG1pbm9yLT5pbmRleCk7CiAKIAllcnIgPSBkZXZp
-Y2VfcmVnaXN0ZXIoJm1pbm9yLT5rZGV2KTsKIAlpZiAoZXJyKSB7Cg==
---------------080308060506020708080203--
+--=-uQfHg6H1DXq954MG1XiA--
 
