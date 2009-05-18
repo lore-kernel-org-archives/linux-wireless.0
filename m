@@ -1,90 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:28657 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856AbZESRsb convert rfc822-to-8bit (ORCPT
+Received: from mail1010.centrum.cz ([90.183.38.140]:60166 "EHLO
+	mail1010.centrum.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbZERS1U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 13:48:31 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so2481852ywb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 10:48:32 -0700 (PDT)
+	Mon, 18 May 2009 14:27:20 -0400
+Received: by mail1010.centrum.cz id S1074314255AbZERSHY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 20:07:24 +0200
+Date: Mon, 18 May 2009 20:07:24 +0200
+From: <trencan@centrum.cz>
+To: <mcgrof@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>, <ic.felix@gmail.com>
 MIME-Version: 1.0
-Date: Wed, 20 May 2009 01:48:32 +0800
-Message-ID: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
-Subject: Throughput is not changed when setting to a much higher bit rate
-From: Dongas <dongas86@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Message-ID: <200905182007.16782@centrum.cz>
+References: <4A0FEC03.9090803@centrum.cz> <43e72e890905171426xf9f483dh9d2477cebd4eab47@mail.gmail.com>
+In-Reply-To: <43e72e890905171426xf9f483dh9d2477cebd4eab47@mail.gmail.com>
+Subject: Re: rt2x00 - wireless compat - can not load compiled rt61pci
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi ALL,
+Hello,
 
-I'm doing the performance profiling of our WiFi module with iperf.
-The module is based on Marvell 8686 chipset with Libertas driver.
+I used "search updates" in depmod.d and it works, perfect.
 
-A strange issue i encounterred is that even i changed to a higher bit
-rate ,the result of iperf seems that the bandwidth/troughput is still
-not changed.
+Thanks.
 
-Details are as follows:
-1. First test with default Bit Rate -1Mb/s
-# iwconfig
-eth1      IEEE 802.11b/g  ESSID:"dlink"
-          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:24:01:25:18:8A
-          Bit Rate:1 Mb/s   Tx-Power=13 dBm
-          Retry limit:8   RTS thr=2347 B   Fragment thr=2346 B
-          Encryption key:off
-          Power Management:off
-          Link Quality=100/100  Signal level=-22 dBm  Noise level=-93 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:125310
-          Tx excessive retries:1120  Invalid misc:2988   Missed beacon:0
-#
+______________________________________________________________
+> Od: mcgrof@gmail.com
+> Komu: trencan <trencan@centrum.cz>
+> CC: linux-wireless@vger.kernel.org, Felix Bitterli <ic.felix@gmail.com>
+> Datum: 17.05.2009 23:27
+> Předmět: Re: rt2x00 - wireless compat - can not load compiled rt61pci
+>
+>On Sun, May 17, 2009 at 3:50 AM, trencan <trencan@centrum.cz> wrote:
+>> Hello,
+>>
+>> I use latest Mandriva distribution 2009.1 with kernel 2.6.29.1-desktop-4mnb.
+>> I have rt2561 wifi card in my PC. I would like to switch my wifi card to AP
+>> or Ad-hoc mode. My distribution's rt61pci module doesn't support these
+>> modes. So I have downloaded compat-wireless-2.6.30-rc4.tar.bz2
+>> <http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30/compat-wireless-2.6.30-rc4.tar.bz2>.
+>>
+>> I ran:
+>> make
+>> make install
+>> make unload
+>>
+>> Everything fine. But then "modprobe rt61pci" loaded my distribution's
+>> rt61pci module and not the compiled one. Distribution's one is in folder:
+>>
+>> [root@trencancan compat-wireless-2.6.30-rc4]# ls -la
+>> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>> -rw-r--r-- 1 root root 11279 2009-04-21 01:13
+>> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>>
+>> Compiled one is in folder:
+>> [root@trencancan compat-wireless-2.6.30-rc4]# ls -la
+>> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>> -rw-r--r-- 1 root root 123843 2009-05-16 23:21
+>> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>>
+>>
+>> But after I type "modprobe rt61pci", then:
+>> [root@trencancan compat-wireless-2.6.30-rc4]# modinfo rt61pci
+>> filename:
+>> /lib/modules/2.6.29.1-desktop-4mnb/kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz
+>> license:        GPL
+>> firmware:       rt2661.bin
+>> firmware:       rt2561s.bin
+>> firmware:       rt2561.bin
+>> description:    Ralink RT61 PCI & PCMCIA Wireless LAN driver.
+>> version:        2.2.3
+>> author:         http://rt2x00.serialmonkey.com
+>> srcversion:     E8C0D3A4B7F36984638CEDF
+>> alias:          pci:v00001814d00000401sv*sd*bc*sc*i*
+>> alias:          pci:v00001814d00000302sv*sd*bc*sc*i*
+>> alias:          pci:v00001814d00000301sv*sd*bc*sc*i*
+>> depends:        rt2x00lib,rt2x00pci,eeprom_93cx6,crc-itu-t
+>> vermagic:       2.6.29.1-desktop-4mnb SMP mod_unload modversions 686
+>> parm:           nohwcrypt:Disable hardware encryption. (bool)
+>>
+>>
+>> So you can see that Distribution's module (in kernel folder) was loaded. I
+>> think root cause of problem is that run of command: "depmod -ae" finds first
+>> rt61pci in kernel's folder and then next instance in updates folder is not
+>> considered. If I look at output of depmod command:
+>>
+>> [root@trencancan compat-wireless-2.6.30-rc4]# grep -i rt61pci
+>> /lib/modules/2.6.29.1-desktop-4mnb/modules.dep
+>> kernel/drivers/net/wireless/rt2x00/rt61pci.ko.gz: kernel/lib/crc-itu-t.ko.gz
+>> kernel/drivers/net/wireless/rt2x00/rt2x00pci.ko.gz
+>> kernel/drivers/net/wireless/rt2x00/rt2x00lib.ko.gz
+>> kernel/net/rfkill/rfkill.ko.gz kernel/drivers/leds/led-class.ko.gz
+>> kernel/net/mac80211/mac80211.ko.gz kernel/net/wireless/cfg80211.ko.gz
+>> kernel/drivers/misc/eeprom/eeprom_93cx6.ko.gz
+>>
+>> So you may see that rt61pci in
+>> /lib/modules/2.6.29.1-desktop-4mnb/updates/drivers/net/wireless/rt2x00/
+>> folder is not considered.
+>>
+>> Please, how can I workaround this? Or what do I wrong? One solution can be
+>> to install all compat-wireless modules into kernel folder instead of updates
+>> folder. But then distribution's ones will be overwritten and un-installation
+>> will be impossible.
+>
+>Mandriva may not look for updates/ dir by default. For Ubuntu I still
+>see this respected.
+>
+>For example on ubuntu I see:
+>
+>mcgrof@tesla $ cat /etc/depmod.d/ubuntu.conf
+>search updates ubuntu built-in
+>
+>Can you check your /etc/depmod.d/ directory or /etc/depmod.conf file?
+>
+>  Luis
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-# iperf -c 172.31.42.51 -i 5 -t 60
-------------------------------------------------------------
-Client connecting to 172.31.42.51, TCP port 5001
-TCP window size: 16.0 KByte (default)
-------------------------------------------------------------
-[  3] local 172.31.42.218 port 33228 connected with 172.31.42.51 port 5001
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 5.0 sec    792 KBytes  1.30 Mbits/sec
-[ ID] Interval       Transfer     Bandwidth
-[  3]  5.0-10.0 sec    680 KBytes  1.11 Mbits/sec
-��
-
-The bandwidth tested out with iperf is around 1.1Mb/s.
-
-2.  Change to a higner Bit Rate (11Mb/s) and re-test
-# iwconfig eth1 rate 11M fixed
-# iwconfig
-eth1      IEEE 802.11b/g  ESSID:"dlink"
-          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:24:01:25:18:8A
-          Bit Rate=11 Mb/s   Tx-Power=13 dBm
-          Retry limit:8   RTS thr=2347 B   Fragment thr=2346 B
-          Encryption key:off
-          Power Management:off
-          Link Quality=100/100  Signal level=-22 dBm  Noise level=-94 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:125610
-          Tx excessive retries:1120  Invalid misc:2988   Missed beacon:0
-
-# iperf -c 172.31.42.51 -i 5 -t 60
-------------------------------------------------------------
-Client connecting to 172.31.42.51, TCP port 5001
-TCP window size: 16.0 KByte (default)
-------------------------------------------------------------
-[  3] local 172.31.42.218 port 33229 connected with 172.31.42.51 port 5001
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 5.0 sec    776 KBytes  1.27 Mbits/sec
-[ ID] Interval       Transfer     Bandwidth
-[  3]  5.0-10.0 sec    720 KBytes  1.18 Mbits/sec
-[ ID] Interval       Transfer     Bandwidth
-[  3] 10.0-15.0 sec    680 KBytes  1.11 Mbits/sec
-
-The bandwidth tested out with iperf is still around 1.1Mb/s.
-
-Why the bandwidth is not changed when bit rate is changed to 11Mb/s?
-Any thing wrong?
-
-Thanks
-
-Regards
-Dongas
