@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57255 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756795AbZE1T27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 15:28:59 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 12:29:02 -0700
-Date: Thu, 28 May 2009 12:29:07 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jal2@gmx.de" <jal2@gmx.de>,
-	Peter Grabienski <Peter.Grabienski@Atheros.com>,
-	Stephen Chen <Stephen.Chen@Atheros.com>,
-	Michael Fortin <Michael.Fortin@Atheros.com>,
-	Johnny Cheng <Johnny.Cheng@Atheros.com>,
-	Yuan-Gu Wei <Yuan-Gu.Wei@Atheros.com>,
-	"otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>
-Subject: Re: [RFT 2/2] ar9170: add AVM FRITZ devices
-Message-ID: <20090528192907.GE20870@tesla>
-References: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com> <1243475326-28867-3-git-send-email-lrodriguez@atheros.com> <1243495071.16631.4.camel@localhost.localdomain> <1243524158.19748.2.camel@mj>
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:64895 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbZERSK4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 14:10:56 -0400
+Received: by fxm2 with SMTP id 2so3401797fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 11:10:56 -0700 (PDT)
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: Davide Pesavento <davidepesa@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"alexander.bartha\@drz-wien.at" <alexander.bartha@drz-wien.at>,
+	Alexander Bartha <alex.xy.privat@gmx.at>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath comes
+References: <43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
+	<OF24E7AF48.E39EC671-ONC12575B4.00236C72-C12575B4.0024C49C@drz-wien.at>
+	<43e72e890905112355t53537ca9w2797cfc8694302@mail.gmail.com>
+	<1242112310.3873.55.camel@johannes.local>
+	<43e72e890905120014w13ca9317r8ec8fa270f2bbb1e@mail.gmail.com>
+	<2da21fe50905120135h1cb8746foae4b3b4b37b3cb24@mail.gmail.com>
+	<1242326667.14069.20.camel@jm-desktop>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 18 May 2009 21:10:54 +0300
+In-Reply-To: <1242326667.14069.20.camel@jm-desktop> (Jouni Malinen's message of "Thu\, 14 May 2009 21\:44\:27 +0300")
+Message-ID: <878wkub7td.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1243524158.19748.2.camel@mj>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 28, 2009 at 08:22:38AM -0700, Pavel Roskin wrote:
-> On Thu, 2009-05-28 at 09:17 +0200, Marcel Holtmann wrote:
-> 
-> > can't you make this part of use_device_id table? Syncing up with product
-> > ids in two places is not a good idea.
+Jouni Malinen <jouni.malinen@atheros.com> writes:
 
-I take it you mean usb_device_id, and sure driver_info.
+> On Tue, 2009-05-12 at 01:35 -0700, Davide Pesavento wrote:
+>> I've already reported ath9k's issues with PS multiple times [1] [2]
+>> [3], but the driver hasn't been fixed yet. You can find a verbose
+>> debugging output at [4], I hope that helps in fixing the problem (I
+>> can provide even more info if needed and I'm willing to test patches).
+>
+> I submitted a set of patches to resolve some of the PS issues in ath9k.
+> I would expect these to hit wireless-testing.git eventually, but if you
+> are willing to test the changes before that, you can find the patches
+> from http://w1.fi/p/ps/
+>
+> One thing to note here is that there are still some issues with the
+> timeout=0 case (use of PS-Poll to fetch buffered frames) which is
+> enabled with "iwconfig wlan0 power on", so at this point, I would
+> recommend running the test either with the default wireless-testing.git
+> PS mode setting or by enabling power saving with "iwconfig wlan0 power
+> timeout 500ms" which should result in the same configuration.
 
-> It would be even better to use an internal chip ID, an equivalent to the
-> SREV register in ath5k and ath9k, if it exists in ar9170.
+Most probably that's because mac80211 does not disable power save mode
+when sending PS-Poll frames. So stlc45xx does not require disable of PSM
+but then again ath9k requires it, we need to solve this somehow.
 
-Not sure if such things exists.
+I have been thinking about separating power save mode and firmware
+wakeup/sleep modes from each other in mac80211 API. To me it looks like
+ath9k does more like firmware wakeup/sleep when power save mode is
+changing. But this is just a wild idea, I have no idea if it's practical
+or not.
 
-  Luis
+-- 
+Kalle Valo
