@@ -1,74 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:60163 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbZETNnG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 09:43:06 -0400
-Received: by bwz22 with SMTP id 22so414959bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 06:43:06 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Scan while TX/RX'ing a lot of data
-Date: Wed, 20 May 2009 15:43:11 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>,
-	Jouni Malinen <j@w1.fi>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com> <200905201341.47185.helmut.schaa@gmail.com> <1242819888.19216.6.camel@johannes.local>
-In-Reply-To: <1242819888.19216.6.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200905201543.12717.helmut.schaa@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:15768 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750731AbZERBpk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2009 21:45:40 -0400
+Subject: Re: [PATCH 1/3] drivers/net: use dev_get_drvdata
+From: Zhu Yi <yi.zhu@intel.com>
+To: Julia Lawall <julia@diku.dk>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0905171128140.20440@pc-004.diku.dk>
+References: <Pine.LNX.4.64.0905171128140.20440@pc-004.diku.dk>
+Content-Type: text/plain
+Date: Mon, 18 May 2009 09:38:16 +0800
+Message-Id: <1242610696.24825.462.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 20. Mai 2009 schrieb Johannes Berg:
-> On Wed, 2009-05-20 at 13:41 +0200, Helmut Schaa wrote:
-> > Am Dienstag, 19. Mai 2009 schrieb Johannes Berg:
-> > > On Mon, 2009-05-18 at 15:43 +0200, Helmut Schaa wrote:
-> > 
-> > > > One solution would be to force all drivers to report the tx status. Another
-> > > > one would be to just wait until the device's queue is empty. At that point
-> > > > we know that all pending data frames were sent out and additionally the
-> > > > nullfunc frame was also sent out, so we can safely switch to the next
-> > > > to-be-scanned channel.
-> > > 
-> > > Some drivers now flush queues at channel switch time, but there's no way
-> > > to guarantee that the software queues are actually empty and the
-> > > nullfunc frame isn't queued up behind other traffic. Also, waiting for
-> > > any driver to report a status will lead to problems because the driver
-> > > might just have dropped the frame for various reasons like being out of
-> > > memory.
-> > 
-> > Hmm, the problem is basically (from a mac80211 perspective) that the
-> > mdev tx queue could still contain data frames when the nullfunc frame
-> > gets queued, right? And we do not assure that these frames are sent
-> > out before the channel switch.
-> > 
-> > Hence, would it be possible to:
-> > 1) Stop all sub_if tx queues (afterwards no new data frames should
-> >    appear in the mdev tx queue)
-> > 2) Queue the nullfunc frame
-> > 3) Flush the mdev's tx queue
-> > 4) Switch the channel
-> > ?
+On Sun, 2009-05-17 at 17:28 +0800, Julia Lawall wrote:
 > 
-> I don't think that is sufficient,
+> From: Julia Lawall <julia@diku.dk>
+> 
+> Eliminate direct accesses to the driver_data field.
+> cf 82ab13b26f15f49be45f15ccc96bfa0b81dfd015
+> 
+> The semantic patch that makes this change is as follows:
+> (http://www.emn.fr/x-info/coccinelle/)
+> 
+> // <smpl>
+> @@
+> struct device *dev;
+> expression E;
+> type T;
+> @@
+> 
+> - dev->driver_data = (T)E
+> + dev_set_drvdata(dev, E)
+> 
+> @@
+> struct device *dev;
+> type T;
+> @@
+> 
+> - (T)dev->driver_data
+> + dev_get_drvdata(dev)
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
 
-Maybe not sufficient, but it's at least an improvement.
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-> unless the driver also flushes the 
-> hardware queue at channel switch time.
+Thanks,
+-yi
 
-Yes, but that would be the drivers responsibility and could be
-fixed in a second step.
-
-> Which we may want to make explicit with a new callback or so?
-
-And make it mandatory?
-
-Helmut
