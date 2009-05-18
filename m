@@ -1,87 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f115.google.com ([209.85.222.115]:44158 "EHLO
-	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbZENEe5 convert rfc822-to-8bit (ORCPT
+Received: from pool-71-115-160-52.gdrpmi.dsl-w.verizon.net ([71.115.160.52]:34142
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657AbZERAOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 00:34:57 -0400
-Received: by pzk13 with SMTP id 13so454671pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 21:34:58 -0700 (PDT)
+	Sun, 17 May 2009 20:14:17 -0400
+Message-ID: <4A10A5C0.7090107@erley.org>
+Date: Sun, 17 May 2009 20:03:12 -0400
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
-References: <1242030669.6930.10.camel@johannes.local> <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 13 May 2009 21:34:38 -0700
-Message-ID: <43e72e890905132134v1f3f32f8p8dc73a09834100b4@mail.gmail.com>
-Subject: Re: [RFT v9] rfkill: rewrite
-To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Gaurav.Jauhar@atheros.com,
-	Vivek Natarajan <vivek.natarajan@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Bringfried Stecklum <stecklum@tls-tautenburg.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: compile error compat-wireless
+References: <4A0FF4FE.1030304@tls-tautenburg.de> <3ace41890905171600i3308f799n2a643e61fd954d4f@mail.gmail.com>
+In-Reply-To: <3ace41890905171600i3308f799n2a643e61fd954d4f@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2009 at 7:09 AM, Alan Jenkins
-<sourcejedi.lkml@googlemail.com> wrote:
-> On 5/11/09, Johannes Berg <johannes@sipsolutions.net> wrote:
->> This patch completely rewrites the rfkill core to address
->> the following deficiencies:
->
-> Btw, git-apply nitpicks on your whitespace
->
-> =C2=A0 =C2=A0rfkill-rewrite.patch:4335: space before tab in indent.
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_unlock(&rfkill_global_=
-mutex);
-> =C2=A0 =C2=A0warning: 1 line adds whitespace errors.
->
->
-> I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
-> Somehow, it triggers an OOPS
->
-> Function: req_reg_info_regd
-> Process: modprobe
->
-> Call trace:
-> wiphy_apply_custom_regulatory
-> ath5k_regd_init
-> ath5k_reg_notifier
-> ath5k_pci_probe
-> ...
->
-> Photo: <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#53349=
-36857267342674>
+Hin-Tak Leung wrote:
+> On Sun, May 17, 2009 at 12:29 PM, Bringfried Stecklum
+> <stecklum@tls-tautenburg.de> wrote:
+>> When trying to compile the latest compat-wireless package on an Ubuntu 8.10
+>> 64bit system running linux kernel 2.6.27-12 I get the following error
+>>
+>> stecklum@extragalactix:~/System/src/compat-wireless-2009-05-17$ make
+>> ...
+> 
+> You have missed some important info here. - most likely you don't have
+> the kernel header package installed.
+> 
+>>  CC [M]
+>>  /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/tx.o
+>>  CC [M]
+>>  /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.o
+>> /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.c: In
+>> function ‘ieee80211_key_alloc’:
+>> /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.c:326:
+>> error: implicit declaration of function ‘get_unaligned_le32’
+>> /home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.c:328:
+>> error: implicit declaration of function ‘get_unaligned_le16’
+>> make[3]: ***
+>> [/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211/key.o]
+>> Error 1
+>> make[2]: ***
+>> [/home/stecklum/System/src/compat-wireless-2009-05-17/net/mac80211] Error 2
+>> make[1]: *** [_module_/home/stecklum/System/src/compat-wireless-2009-05-17]
+>> Error 2
+>> make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
+>> make: *** [modules] Error 2
+>>
+>> Regards,
+>>
+>>        Bringfried
+> 
+> 
+> Those two are defined in
+> <kernel_source>/include/linux/unaligned/le_byteshift.h since about
+> 2.6.26, I just checked.
+> 
+> make sure  /lib/modules/<kernel_ver>/source/ points to some kernel
+> source tree (you probably need to install some package called
+> kernel-dev or linux-dev).
+> 
 
-BTW can explain how to reproduce. Did you just use wireless-testing
-and johanne's rfkill rewrite and use ath5k and can easily reproduce?
-Do you have an ath9k card?
 
-  Luis
+I got this as well, fixed it by adding #include <asm/unaligned.h> to key.c
 
-> The kernel then hangs later on in the boot process. =C2=A0It responds=
- to
-> SysRq, but does not echo normal keypresses. =C2=A0SysRq+P shows that =
-the
-> kernel is in the idle task. =C2=A0I left it for three minutes, but I =
-didn't
-> get any trace from the hung task detector or soft lockup detector.
->
-> At first I thought it must be a problem with wireless-testing.
-> However, it went away when I eventually tried un-applying the rfkill
-> rewrite patch.
->
-> Thanks
-> Alan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have been running compat-wireless for months, so it's not a missing package
+thing, I suspect it's an outdated headers thing.  My system has 2.6.27 headers
+right now.
+
+Pat Erley
