@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:53567 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbZELVAv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 17:00:51 -0400
-Received: by bwz22 with SMTP id 22so230519bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 14:00:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890905121259jeb504d7v78fe8f062fca7d21@mail.gmail.com>
-References: <1242125077.4331.0.camel@johannes.local>
-	 <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
-	 <3ace41890905121208s2029db39p730b2e174cd4b1e6@mail.gmail.com>
-	 <1242156469.14227.7.camel@johannes.local>
-	 <3ace41890905121259jeb504d7v78fe8f062fca7d21@mail.gmail.com>
-Date: Tue, 12 May 2009 22:00:49 +0100
-Message-ID: <3ace41890905121400g471d14bfn3f60fba77e097079@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:38807 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753967AbZERP5V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 11:57:21 -0400
+Subject: Re: iwlagn broken in next-20090514 and next-20090515
+From: reinette chatre <reinette.chatre@intel.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Nico -telmich- Schottelius <nico-linux-next@schottelius.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	johannes@sipsolutions.net
+In-Reply-To: <20090518171505.d30d2f64.sfr@canb.auug.org.au>
+References: <20090515153733.4384db9f.sfr@canb.auug.org.au>
+	 <20090515102621.GA5735@ikn.schottelius.org>
+	 <20090518171505.d30d2f64.sfr@canb.auug.org.au>
+Content-Type: text/plain
+Date: Mon, 18 May 2009 09:03:55 -0700
+Message-Id: <1242662635.32358.523.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 5/12/09, Johannes Berg <johannes@sipsolutions.net> wrote:
->> I have now tested WPA-PSK and WEP with wpa_supplicant and WEP with
->> manual configuration and it all works.
+On Mon, 2009-05-18 at 00:15 -0700, Stephen Rothwell wrote:
+> Add cc's
+> 
+> On Fri, 15 May 2009 12:26:21 +0200 Nico -telmich- Schottelius <nico-linux-next@schottelius.org> wrote:
+> >
+> > Kernel is not authenticating it against the AP anymore with
+> > messages like:
+> > 
+> > [16907.701634] wlan0: associate with AP 00:03:52:4e:f3:d1
+> > [16907.703669] wlan0: RX AssocResp from 00:03:52:4e:f3:d1 (capab=0x421 status=0 aid=5)
+> > [16907.703672] wlan0: associated
+> > [16907.729958] wlan0: disassociating by local choice (reason=3)
 
-Tried again and it still won't work with NM/wpa_supplicant. FWIW, the
-manual way I do it is this:
+This is usually printed when your user application (wpa_supplicant,
+network manager, etc.) goes down or disassociates.
 
-ifconfig wlan2 up
-iwconfig wlan2 ESSID <apname>
-iwconfig wlan2 key restrict <key>
-iwconfig wlan2 AP <apip>
-dhclient wlan2
+> > [16907.852112] wlan0: direct probe to AP 00:03:52:1b:f8:31 try 1
+> > [16908.052086] wlan0: direct probe to AP 00:03:52:1b:f8:31 try 2
+> > [16908.055331] wlan0 direct probe responded
+> > [16908.055335] wlan0: authenticate with AP 00:03:52:1b:f8:31
+> > [16908.256065] wlan0: authenticate with AP 00:03:52:1b:f8:31
+> > [16908.453689] wlan0: authenticate with AP 00:03:52:1b:f8:31
+> > [16908.656037] wlan0: authentication with AP 00:03:52:1b:f8:31 timed out
 
-killing dhclient then runs '/etc/rc.d/init.d/NetworkManager start'
-usually switches back to nm-managed connection. (most of the same info
-is stored in keyring, so nm-applet re-appears and starts spinning and
-some seconds later I get the signal bars).
+Don't know what is going on here. Could your AP be out of reach or not
+responding?
+
+> > 
+> > Also wpa_supplicant is not happy:
+> > 
+> > + wpa_supplicant -B -Dwext -iwlan0 -c /home/user/nico/ethz/wlan/wpa_supplicant.conf
+> > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > 
+
+There were some changes recently to this ioctl, but I am not familiar
+with details. Johannes will know.
+
+Reinette
+
