@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:37679 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158AbZEDItE (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39814 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752399AbZERPfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 04:49:04 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: [PATCH 4/6] add human readable decoding for capability information field
-Date: Mon,  4 May 2009 01:48:45 -0700
-Message-Id: <1241426927-14902-4-git-send-email-marcel@holtmann.org>
-In-Reply-To: <1241426927-14902-3-git-send-email-marcel@holtmann.org>
-References: <1241426927-14902-1-git-send-email-marcel@holtmann.org>
- <1241426927-14902-2-git-send-email-marcel@holtmann.org>
- <1241426927-14902-3-git-send-email-marcel@holtmann.org>
+	Mon, 18 May 2009 11:35:25 -0400
+Date: Mon, 18 May 2009 08:32:18 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Ingo Molnar <mingo@elte.hu>
+cc: Oleg Nesterov <oleg@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Jonathan Corbet <corbet@lwn.net>, Martin Bammer <mrb74@gmx.at>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.30-rc6: Reported regressions from 2.6.29
+In-Reply-To: <20090518151102.GA6241@elte.hu>
+Message-ID: <alpine.LFD.2.01.0905180819130.3301@localhost.localdomain>
+References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera> <20090517073327.GC1583@elte.hu> <20090518145725.GB18607@redhat.com> <20090518151102.GA6241@elte.hu>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- scan.c |   44 +++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 41 insertions(+), 3 deletions(-)
 
-diff --git a/scan.c b/scan.c
-index 0cd3aa8..8cd1f90 100644
---- a/scan.c
-+++ b/scan.c
-@@ -13,6 +13,20 @@
- #include "nl80211.h"
- #include "iw.h"
- 
-+#define WLAN_CAPABILITY_ESS		(1<<0)
-+#define WLAN_CAPABILITY_IBSS		(1<<1)
-+#define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
-+#define WLAN_CAPABILITY_CF_POLL_REQUEST	(1<<3)
-+#define WLAN_CAPABILITY_PRIVACY		(1<<4)
-+#define WLAN_CAPABILITY_SHORT_PREAMBLE	(1<<5)
-+#define WLAN_CAPABILITY_PBCC		(1<<6)
-+#define WLAN_CAPABILITY_CHANNEL_AGILITY	(1<<7)
-+#define WLAN_CAPABILITY_SPECTRUM_MGMT	(1<<8)
-+#define WLAN_CAPABILITY_QOS		(1<<9)
-+#define WLAN_CAPABILITY_SHORT_SLOT_TIME	(1<<10)
-+#define WLAN_CAPABILITY_APSD		(1<<11)
-+#define WLAN_CAPABILITY_DSSS_OFDM	(1<<13)
-+
- struct scan_params {
- 	bool unknown;
- };
-@@ -333,9 +347,33 @@ static int print_bss_handler(struct nl_msg *msg, void *arg)
- 	if (bss[NL80211_BSS_BEACON_INTERVAL])
- 		printf("\tbeacon interval: %d\n",
- 			nla_get_u16(bss[NL80211_BSS_BEACON_INTERVAL]));
--	if (bss[NL80211_BSS_CAPABILITY])
--		printf("\tcapability: 0x%.4x\n",
--			nla_get_u16(bss[NL80211_BSS_CAPABILITY]));
-+	if (bss[NL80211_BSS_CAPABILITY]) {
-+		__u16 capa = nla_get_u16(bss[NL80211_BSS_CAPABILITY]);
-+		printf("\tcapability:");
-+		if (capa & WLAN_CAPABILITY_ESS)
-+			printf(" ESS");
-+		if (capa & WLAN_CAPABILITY_IBSS)
-+			printf(" IBSS");
-+		if (capa & WLAN_CAPABILITY_PRIVACY)
-+			printf(" Privacy");
-+		if (capa & WLAN_CAPABILITY_SHORT_PREAMBLE)
-+			printf(" ShortPreamble");
-+		if (capa & WLAN_CAPABILITY_PBCC)
-+			printf(" PBCC");
-+		if (capa & WLAN_CAPABILITY_CHANNEL_AGILITY)
-+			printf(" ChannelAgility");
-+		if (capa & WLAN_CAPABILITY_SPECTRUM_MGMT)
-+			printf(" SpectrumMgmt");
-+		if (capa & WLAN_CAPABILITY_QOS)
-+			printf(" QoS");
-+		if (capa & WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+			printf(" ShortSlotTime");
-+		if (capa & WLAN_CAPABILITY_APSD)
-+			printf(" APSD");
-+		if (capa & WLAN_CAPABILITY_DSSS_OFDM)
-+			printf(" DSSS-OFDM");
-+		printf(" (0x%.4x)\n", capa);
-+	}
- 	if (bss[NL80211_BSS_SIGNAL_MBM]) {
- 		int s = nla_get_u32(bss[NL80211_BSS_SIGNAL_MBM]);
- 		printf("\tsignal: %d.%.2d dBm\n", s/100, s%100);
--- 
-1.6.0.6
 
+On Mon, 18 May 2009, Ingo Molnar wrote:
+> 
+> Btw., why did the patch (and the revert) make any difference to the 
+> test? Timing differences look improbable.
+
+It's the change from
+
+	!signal_group_exit(signal)
+
+to
+
+	!sig_kernel_only(signr)
+
+and quite frankly, I still don't see the point.
+
+The comment seems to be wrong too:
+
+    If SIGSTOP/SIGKILL originate from a descendant of container-init they are
+    never queued (i.e dropped in sig_ignored() in an earler patch).
+    
+    If SIGSTOP/SIGKILL originate from parent namespace, the signal is queued
+    and container-init processes the signal.
+
+since the bug was that the SIGSTOP (from within the same container) was 
+_not_ ignored like the comment says.
+
+			Linus
