@@ -1,26 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51162 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751013AbZE3I7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 04:59:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Matthieu CASTET <castet.matthieu@free.fr>
-Subject: Re: b43 vs b43legacy
-Date: Sat, 30 May 2009 10:58:11 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <loom.20090529T190620-42@post.gmane.org>
-In-Reply-To: <loom.20090529T190620-42@post.gmane.org>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:42021 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433AbZERGb4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 02:31:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200905301058.12079.mb@bu3sch.de>
+In-Reply-To: <20090516163610.8a012268.akpm@linux-foundation.org>
+References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera>
+	 <385Pu-agh7M.A.SU.iYzDKB@chimera>
+	 <20090516163610.8a012268.akpm@linux-foundation.org>
+Date: Mon, 18 May 2009 09:31:47 +0300
+Message-ID: <84144f020905172331x6032394fn172f02e36298192d@mail.gmail.com>
+Subject: Re: [Bug #13319] Page allocation failures with b43 and p54usb
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, adrian@newgolddream.dyndns.info
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 29 May 2009 21:19:23 Matthieu CASTET wrote:
-> In the latter case why code for older chip (<5) is not removed from the driver ?
+Hi Andrew,
 
-Nobody cares to do so.
+On Sat, 16 May 2009 21:20:45 +0200 (CEST) "Rafael J. Wysocki"
+<rjw@sisk.pl> wrote:
+>> This message has been generated automatically as a part of a report
+>> of recent regressions.
+>>
+>> The following bug entry is on the current list of known regressions
+>> from 2.6.29.  Please verify if it still should be listed and let me know
+>> (either way).
+>>
+>>
+>> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=13319
+>> Subject               : Page allocation failures with b43 and p54usb
+>> Submitter     : Larry Finger <Larry.Finger@lwfinger.net>
+>> Date          : 2009-04-29 21:01 (18 days old)
+>> References    : http://marc.info/?l=linux-kernel&m=124103897101088&w=4
+>> Handled-By    : Johannes Berg <johannes@sipsolutions.net>
 
--- 
-Greetings, Michael.
+On Sun, May 17, 2009 at 2:36 AM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> Well..  order-1 GFP_ATOMIC allocations are unreliable.  The networking
+> code should hanlde the situation and recover.  I assume that is
+> happening in this case?
+>
+> Perhaps we did something in that code after 2.6.29 which increased the
+> frequency of the order-1 allocation attempts?  Maybe earlier kernels
+> used order-0 all the time?  Those are much more reliable.
+
+I wonder if this is related:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13069
+
+Both point to post 2.6.29... Hmm.
