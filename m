@@ -1,129 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35698 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753182AbZEMODM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 10:03:12 -0400
-Subject: Re: [LIBERTAS-SDIO]  Support for single transfer blocks?
-From: Dan Williams <dcbw@redhat.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Luis Galdos <luis.galdos@digi.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Pierre Ossman <drzeus@drzeus.cx>
-In-Reply-To: <20090512231150.bc0c65c6.akpm@linux-foundation.org>
-References: <4A08392F.70108@digi.com>
-	 <20090512231150.bc0c65c6.akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Wed, 13 May 2009 10:03:28 -0400
-Message-Id: <1242223408.11182.34.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59704 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbZERUPN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 16:15:13 -0400
+Date: Mon, 18 May 2009 16:03:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 2/2 V2] b43legacy: Fix locking problem
+Message-ID: <20090518200354.GK2814@tuxdriver.com>
+References: <4A0DD306.30705@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A0DD306.30705@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-12 at 23:11 -0700, Andrew Morton wrote:
-> Let's Cc the wireless development list.
-
-And lets CC the MMC subsystem maintainer and original author of
-libertas_sdio too, so we can get an informed opinion :)
-
-What firmware version are you using?  What SDIO controller is this?  Has
-this controller been validated by Marvell for use with the 8686? (not
-that that is required or anything, just curious).
-
-All the information I have (up to firmware V10) references a block size
-of 32 bytes.  The main firmware is transferred in 32-byte blocks using
-CMD 53, with a maximum number of 16 blocks transferred in a single CMD
-53 write depending on how much data the helper firmware can accept in
-single write.  The available vendor drivers also use a 32-byte block
-size.
-
-Data transfers are specified to use a block size of 320 bytes.
-
-Dan
-
-> On Mon, 11 May 2009 16:41:51 +0200 Luis Galdos <luis.galdos@digi.com> wrote:
+On Fri, May 15, 2009 at 03:39:34PM -0500, Larry Finger wrote:
+> Commit abb1d2bca0fc429c136747a64e675dd4d8906f36 introduced a locking
+> problem in b43legacy that caused the system to freeze upon booting.
 > 
-> > Hi all,
-> > 
-> > I have one question concerning to the Libertas-driver: Does this driver works with 
-> > SDIO-hosts that only support single transfer blocks? I ask cause I have seen two problems 
-> > with a SDIO-port that doesn't support multiple blocks:
-> > 
-> > * The firmware installation successes only with a modification of the block size (see 
-> > below patch)
-> > 
-> > * The transfer of Ethernet-frames works only if the "complete" frame is smaller than the 
-> > block size of the SDIO-host. By larger packages, the SD8686 doesn't generate the expected 
-> > IRQ (cause it expected a multiple transfer) and the driver detects a timeout.
-> > 
-> > Do you know something about this? Thanks in advance,
-> > 
-> > 
-> > PS: Sorry for the possible wrong format of this email (my first one)
-> > 
-> > 
-> > diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> > index b54e2ea..f88a4da 100644
-> > --- a/drivers/net/wireless/libertas/if_sdio.c
-> > +++ b/drivers/net/wireless/libertas/if_sdio.c
-> > @@ -33,6 +33,7 @@
-> >   #include <linux/mmc/card.h>
-> >   #include <linux/mmc/sdio_func.h>
-> >   #include <linux/mmc/sdio_ids.h>
-> > +#include <linux/mmc/host.h>
-> > 
-> >   #include "host.h"
-> >   #include "decl.h"
-> > @@ -507,6 +508,8 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
-> >          u32 chunk_size;
-> >          const u8 *firmware;
-> >          size_t size, req_size;
-> > +       struct mmc_host *host;
-> > +       int max_blksize = 0;
-> > 
-> >          lbs_deb_enter(LBS_DEB_SDIO);
-> > 
-> > @@ -524,7 +527,19 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
-> > 
-> >          sdio_claim_host(card->func);
-> > 
-> > -       ret = sdio_set_block_size(card->func, 32);
-> > +       /*
-> > +        * If the host doesn't support multi-blocks, then use the the maximal block
-> > +        * size for the transfers. Otherwise the firmware installation will fail.
-> > +        */
-> > +       host = card->func->card->host;
-> > +       if (host->max_blk_count == 1) {
-> > +               lbs_pr_info("Setting block size to %u\n", host->max_blk_size);
-> > +               max_blksize = card->func->max_blksize;
-> > +               card->func->max_blksize = host->max_blk_size;
-> > +               ret = sdio_set_block_size(card->func, host->max_blk_size);
-> > +       } else
-> > +               ret = sdio_set_block_size(card->func, 32);
-> > +
-> >          if (ret)
-> >                  goto release;
-> > 
-> > @@ -593,6 +608,10 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
-> > 
-> >          ret = 0;
-> > 
-> > +        /* Restore the original block size if it was changed before */
-> > +        if (max_blksize)
-> > +                card->func->max_blksize = max_blksize;
-> > +
-> >          lbs_deb_sdio("waiting for firmware to boot...\n");
-> > 
-> >          /* wait for the firmware to boot */
-> > 
-> > 
-> > -- 
-> > Luis Galdos
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Signed-off-by: Larry Finger@lwfinger.net
+> ---
+> 
+> John,
+> 
+> This is 2.6.31 material. I hope that you do not have trouble with
+> this patch. While on the road, my normal method is not available.
+> 
+> This is resent as V2 to eliminate some patch offsets that resulted
+> from the changes in V2 of patch 1.
+> 
+> Larry
 
+This conflicted w/ a patch from Johannes, and I couldn't easily
+figure-out how to resolve them.  Since his claimed to fix something
+else along with this problem, I just applied his.
+
+Also, please don't refer to commit IDs directly, especially ones
+that aren't already in linux-2.6.  Instead, please refer to the
+patch subject.  If the commit is already in linux-2.6, then a short
+reference to the commit ID is acceptable.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
