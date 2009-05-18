@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45745 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35767 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764179AbZD3WqE (ORCPT
+	with ESMTP id S1750978AbZERMpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2009 18:46:04 -0400
-Date: Thu, 30 Apr 2009 18:30:26 -0400
+	Mon, 18 May 2009 08:45:16 -0400
+Date: Mon, 18 May 2009 08:38:59 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix PS vs. scan race
-Message-ID: <20090430223025.GF9323@tuxdriver.com>
-References: <1240434171.30082.21.camel@johannes.local> <1241126864.12388.0.camel@johannes.local>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: Scan while TX/RX'ing a lot of data
+Message-ID: <20090518123858.GA2814@tuxdriver.com>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com> <1242327298.4227.25.camel@localhost.localdomain> <43e72e890905141207m3c27588ex13190b2ed6010e30@mail.gmail.com> <1242334636.4227.134.camel@localhost.localdomain> <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com> <43e72e890905152312m2077cc1dqd743cf7f625e9a49@mail.gmail.com> <1242478657.10005.72.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1241126864.12388.0.camel@johannes.local>
+In-Reply-To: <1242478657.10005.72.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 30, 2009 at 11:27:44PM +0200, Johannes Berg wrote:
-> On Wed, 2009-04-22 at 23:02 +0200, Johannes Berg wrote:
-> > When somebody changes the PS parameters while scanning
-> > is in progress, we enable PS -- during the scan. This
-> > is clearly not desirable, and we can just abort enabling
-> > PS when scanning since when the scan finishes it will
-> > be taken care of.
-> 
-> John, did this fall through the cracks? I see you included a patch from
-> today but not this :)
+On Sat, May 16, 2009 at 02:57:37PM +0200, Johannes Berg wrote:
 
-Looks like this one (on wireless-testing#master)?
+> Anyway, bottom line is that I don't think we should change the APIs in
+> any way, we should instead make the scan smarter by spreading it out if
+> we're active. This even applies to scanning while in an IBSS -- stop
+> beaconing, then go scan etc.
 
-commit da6cbb045d04706157d3117153b275ed9126bd1d
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Wed Apr 22 23:02:51 2009 +0200
-
-    mac80211: fix PS vs. scan race
-    
-    When somebody changes the PS parameters while scanning
-    is in progress, we enable PS -- during the scan. This
-    is clearly not desirable, and we can just abort enabling
-    PS when scanning since when the scan finishes it will
-    be taken care of.
-    
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Reviewed-by: Kalle Valo <kalle.valo@iki.fi>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+ACK
 
 -- 
 John W. Linville		Someday the world will need a hero, and you
