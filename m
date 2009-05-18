@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:12498 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756881AbZETW2O convert rfc822-to-8bit (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:47452 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755086AbZERWpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 18:28:14 -0400
-Received: by yx-out-2324.google.com with SMTP id 3so454395yxj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 15:28:14 -0700 (PDT)
+	Mon, 18 May 2009 18:45:22 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1980421wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 15:45:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1242857890.7048.22.camel@localhost.localdomain>
-References: <4a134cbd.1ebc720a.4cee.ffffc1c3@mx.google.com>
-	 <1242857890.7048.22.camel@localhost.localdomain>
-Date: Wed, 20 May 2009 15:28:14 -0700
-Message-ID: <45e8e6c40905201528v7d6c2cddld21c4cf4906f3a60@mail.gmail.com>
-Subject: Re: libertas: fix GSPI card event handling
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200905182007.16782@centrum.cz>
+References: <4A0FEC03.9090803@centrum.cz> <43e72e890905171426xf9f483dh9d2477cebd4eab47@mail.gmail.com>
+	<200905182007.16782@centrum.cz>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 18 May 2009 15:45:04 -0700
+Message-ID: <43e72e890905181545y1454ec11t48e52281bc12949a@mail.gmail.com>
+Subject: Re: rt2x00 - wireless compat - can not load compiled rt61pci
+To: trencan@centrum.cz
+Cc: linux-wireless@vger.kernel.org, ic.felix@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2009 at 3:18 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Tue, 2009-05-19 at 17:20 -0700, andrey@cozybit.com wrote:
->> The GPSI interface driver does not re-enable the Card Event Interrupt, which
->> causes problems after a card event (for example: link-loss) comes in.  This
->> can lead, for example, to the card failing to re-associate.  This patch
->> ensures that we re-enable the Card Event Interrupt when we handle card events.
->>
->> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+On Mon, May 18, 2009 at 11:07 AM,  <trencan@centrum.cz> wrote:
+> Hello,
 >
-> Where does that bit ever get disabled?  Is that done by the firmware
-> after it sends the interrupt?  I don't think I quite understand what's
-> going on here...
+> I used "search updates" in depmod.d and it works, perfect.
 
-That's correct.  The firmware and host communicate by setting or
-clearing bits and forcing an interrupt.  The event mechanism is,
-basically:
-1) firmware sets that bit and triggers an IRQ
-2) host handles the IRQ (noticing that it's an Event and reading the
-Event Cause)
-3) host clears the bit
-4) host triggers an interrupt (on the card) so that the card notices
-the change (ie: that the bit was cleared)
+You want to also add the "built-in" anyway delete that file and try
+todays' compat-wireless, I added a quick script to check for this and
+it adds a file for you if it doesn't detect updates/ as a preference.
 
-Steps 3 an 4 were missing in if_spi.c, which caused problems if, for
-example, you associate to an AP and then cut the AP's power.  In this
-case the card will never re-associate subsequently because the Card
-Event bit never gets cleared.
+So
 
->> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
->> index dccd01f..5fa55fe 100644
->> --- a/drivers/net/wireless/libertas/if_spi.c
->> +++ b/drivers/net/wireless/libertas/if_spi.c
->> @@ -814,6 +814,13 @@ static void if_spi_e2h(struct if_spi_card *card)
->>       if (err)
->>               goto out;
->>
->> +     /* re-enable the card event interrupt */
->> +     spu_write_u16(card, IF_SPI_HOST_INT_STATUS_REG,
->> +                     ~IF_SPI_HICU_CARD_EVENT);
->> +
->> +     /* generate a card interrupt */
->> +     spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
->> +
->>       spin_lock_irqsave(&priv->driver_lock, flags);
->>       lbs_queue_event(priv, cause & 0xff);
->>       spin_unlock_irqrestore(&priv->driver_lock, flags);
->>
->>
->
->
+rm -rf updates/
+sudo depmod -ae
 
+modprobe -l mac80211
+to check that you are seeing the old mac80211, then install the new
+stuff and ensure it does it all automatically for you now.
 
+v2.6.30-rc6-23952-g30cf869
+wireless-testing latest tag:
+master-2009-05-18
+This is compat-release:
+master-2009-05-18-1-gf28a634
 
--- 
-Andrey Yurovsky
-cozybit Inc.
+  Luis
