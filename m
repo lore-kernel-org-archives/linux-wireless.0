@@ -1,146 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43877 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:39038 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752412AbZETW02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 18:26:28 -0400
-Subject: Re: [PATCH 2/4] libertas: get SD8688 rx length with one CMD52
+	id S1755519AbZERPff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 11:35:35 -0400
+Subject: Re: Scan while TX/RX'ing a lot of data
 From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1242787701-10685-2-git-send-email-bzhao@marvell.com>
-References: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
-	 <1242787701-10685-2-git-send-email-bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Aeolus.Yang@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Gaurav.Jauhar@atheros.com
+In-Reply-To: <1242478137.10005.63.camel@johannes.local>
+References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
+	 <1242327298.4227.25.camel@localhost.localdomain>
+	 <200905151011.50915.hs4233@mail.mn-solutions.de>
+	 <1242429353.10933.32.camel@localhost.localdomain>
+	 <1242478137.10005.63.camel@johannes.local>
 Content-Type: text/plain
-Date: Wed, 20 May 2009 18:26:23 -0400
-Message-Id: <1242858383.7048.27.camel@localhost.localdomain>
+Date: Mon, 18 May 2009 11:35:24 -0400
+Message-Id: <1242660924.6530.1.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-19 at 19:48 -0700, Bing Zhao wrote:
-> Usually, the 16-bit rx length is read from scratch pad registers
-> with two CMD52 transactions:
-> SD8385: 	IF_SDIO_SCRATCH_OLD (0x80fe/0x80ff)
-> SD8686/SD8688:	IF_SDIO_SCRATCH     (0x34/0x35)
+On Sat, 2009-05-16 at 14:48 +0200, Johannes Berg wrote:
+> On Fri, 2009-05-15 at 19:15 -0400, Dan Williams wrote:
 > 
-> Alternatively, SD8688 firmware offers an enhanced method for driver
-> to read an 8-bit rx length (in units) with a single CMD52:
-> IF_SDIO_RX_UNIT 0x43 is read one time after firmware is ready.
-> IF_SDIO_RX_LEN  0x42 is read every time when rx interrupt is received.
+> > Well, what does "background scan" mean?  mac80211 will obviously accept
+> > beacons from APs on the same channel and happily add them to the scan
+> > list.
 > 
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> Only if powersave/beacon filtering isn't enabled. Actually, mac80211
+> does beacon filtering itself now, so I don't think this happens any more
+> (I did that on purpose so people don't really rely on the former
+> behaviour)
+> 
+> > But a background scan would imply that the card itself is taking
+> > over the decision about when to jump around and scan, basically the same
+> > thing NM is doing, right?  When would the card/stack decided to
+> > background scan, and what channels would it background scan on?  If it
+> > doesn't do more or less all passive channels, then it wouldn't be that
+> > useful for figuring out the site survey data.
+> 
+> I would think that mac80211, while asked to scan when associated, could
+> simply do something like calculating how long it can go off-channel
+> under the current QoS requirements, and then go off-channel for that,
+> wait for the next on-channel beacon and some traffic, scan the next
+> channel(s) again etc.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Yeah, that sounds like it would work.
 
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   57 +++++++++++++++++++++++++++++-
->  drivers/net/wireless/libertas/if_sdio.h |    3 ++
->  2 files changed, 58 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 69d7fd3..e998c12 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -107,6 +107,8 @@ struct if_sdio_card {
->  
->  	struct workqueue_struct	*workqueue;
->  	struct work_struct	packet_worker;
-> +
-> +	u8			rx_unit;
->  };
->  
->  /********************************************************************/
-> @@ -136,6 +138,46 @@ static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
->  	return scratch;
->  }
->  
-> +static u8 if_sdio_read_rx_unit(struct if_sdio_card *card)
-> +{
-> +	int ret;
-> +	u8 rx_unit;
-> +
-> +	rx_unit = sdio_readb(card->func, IF_SDIO_RX_UNIT, &ret);
-> +
-> +	if (ret)
-> +		rx_unit = 0;
-> +
-> +	return rx_unit;
-> +}
-> +
-> +static u16 if_sdio_read_rx_len(struct if_sdio_card *card, int *err)
-> +{
-> +	int ret;
-> +	u16 rx_len;
-> +
-> +	switch (card->model) {
-> +	case IF_SDIO_MODEL_8385:
-> +	case IF_SDIO_MODEL_8686:
-> +		rx_len = if_sdio_read_scratch(card, &ret);
-> +		break;
-> +	case IF_SDIO_MODEL_8688:
-> +	default: /* for newer chipsets */
-> +		rx_len = sdio_readb(card->func, IF_SDIO_RX_LEN, &ret);
-> +		if (!ret)
-> +			rx_len <<= card->rx_unit;
-> +		else
-> +			rx_len = 0xffff;	/* invalid length */
-> +
-> +		break;
-> +	}
-> +
-> +	if (err)
-> +		*err = ret;
-> +
-> +	return rx_len;
-> +}
-> +
->  static int if_sdio_handle_cmd(struct if_sdio_card *card,
->  		u8 *buffer, unsigned size)
->  {
-> @@ -254,7 +296,7 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
->  
->  	lbs_deb_enter(LBS_DEB_SDIO);
->  
-> -	size = if_sdio_read_scratch(card, &ret);
-> +	size = if_sdio_read_rx_len(card, &ret);
->  	if (ret)
->  		goto out;
->  
-> @@ -923,10 +965,21 @@ static int if_sdio_probe(struct sdio_func *func,
->  
->  	priv->fw_ready = 1;
->  
-> +	sdio_claim_host(func);
-> +
-> +	/*
-> +	 * Get rx_unit if the chip is SD8688 or newer.
-> +	 * SD8385 & SD8686 do not have rx_unit.
-> +	 */
-> +	if ((card->model != IF_SDIO_MODEL_8385)
-> +			&& (card->model != IF_SDIO_MODEL_8686))
-> +		card->rx_unit = if_sdio_read_rx_unit(card);
-> +	else
-> +		card->rx_unit = 0;
-> +
->  	/*
->  	 * Enable interrupts now that everything is set up
->  	 */
-> -	sdio_claim_host(func);
->  	sdio_writeb(func, 0x0f, IF_SDIO_H_INT_MASK, &ret);
->  	sdio_release_host(func);
->  	if (ret)
-> diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
-> index cea343f..d3a4fbe 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.h
-> +++ b/drivers/net/wireless/libertas/if_sdio.h
-> @@ -44,6 +44,9 @@
->  #define IF_SDIO_SCRATCH_OLD	0x80fe
->  #define   IF_SDIO_FIRMWARE_OK	0xfedc
->  
-> +#define IF_SDIO_RX_LEN		0x42
-> +#define IF_SDIO_RX_UNIT		0x43
-> +
->  #define IF_SDIO_EVENT           0x80fc
->  
->  #define IF_SDIO_BLOCK_SIZE	256
+Dan
 
