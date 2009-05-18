@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45216 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbZE3Ewt (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:58268 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbZERCab convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 00:52:49 -0400
-Date: Sat, 30 May 2009 06:48:53 +0200
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-05-29
-Message-ID: <20090530044852.GB3371@tuxdriver.com>
-References: <20090529132858.GA3520@tuxdriver.com> <20090529.151651.59612837.davem@davemloft.net>
+	Sun, 17 May 2009 22:30:31 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1765508wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 19:30:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090529.151651.59612837.davem@davemloft.net>
+In-Reply-To: <3ace41890905171809t6ad0e654jc07b6dd2d4cf6564@mail.gmail.com>
+References: <4A0FF4FE.1030304@tls-tautenburg.de> <3ace41890905171600i3308f799n2a643e61fd954d4f@mail.gmail.com>
+	<4A10A5C0.7090107@erley.org> <3ace41890905171809t6ad0e654jc07b6dd2d4cf6564@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 17 May 2009 19:30:13 -0700
+Message-ID: <43e72e890905171930r15eaf1d7qc98dea401705b55c@mail.gmail.com>
+Subject: Re: compile error compat-wireless
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Pat Erley <pat-lkml@erley.org>,
+	Bringfried Stecklum <stecklum@tls-tautenburg.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 29, 2009 at 03:16:51PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Fri, 29 May 2009 15:28:59 +0200
-> 
-> > Here are a couple of fixes that would be nice to have for 2.6.30 --
-> > nothing very controversial.  Each has a bugzilla.kernel.org entry listed
-> > in the changelog.
-> > 
-> > Please let me know if there are problems!
-> 
-> I know you're away and not at %100 but please do always CC:
-> netdev for your pull requests so that the attached patch gets
-> reviewed by networking folks and more importantly logged at:
-> 
-> 	http://patchwork.ozlabs.org/project/netdev/list/
-> 
-> so that I can track it properly.
+On Sun, May 17, 2009 at 6:09 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Mon, May 18, 2009 at 1:03 AM, Pat Erley <pat-lkml@erley.org> wrote:
+>
+>> I got this as well, fixed it by adding #include <asm/unaligned.h> to key.c
+>>
+>> I have been running compat-wireless for months, so it's not a missing package
+>> thing, I suspect it's an outdated headers thing.  My system has 2.6.27 headers
+>> right now.
+>>
+>> Pat Erley
+>>
+>
+> Hmm, sorry about that. On my system (2.6.29.3-142.fc11.x86_64) no
+> change is needed to building compat-wireless.
+> Maybe it is partly with old kernel heades.
 
-Ooops!  Sorry...yes, not at 100%... :-)
+Hauke Mehrtens has fixed this, I applied his patches and pushed a new
+tarball out.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+FWIW just also pushed out a stable tarball (based on 2.6.30-rc6).
+
+  Luis
