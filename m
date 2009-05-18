@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53861 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:39722 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436AbZEDSKs (ORCPT
+	with ESMTP id S1754972AbZERQYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 14:10:48 -0400
-Subject: Re: [PATCH] add support for showing power constraint IE
+	Mon, 18 May 2009 12:24:47 -0400
+Subject: Re: iwlagn broken in next-20090514 and next-20090515
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241457795.2903.32.camel@localhost.localdomain>
-References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
-	 <1241453408.8683.53.camel@johannes.local>
-	 <1241454909.2903.17.camel@localhost.localdomain>
-	 <1241455125.8683.60.camel@johannes.local>
-	 <1241455848.2903.18.camel@localhost.localdomain>
-	 <1241456088.8683.62.camel@johannes.local>
-	 <1241457795.2903.32.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9u2aQ0DIDpash7LMeJWh"
-Date: Mon, 04 May 2009 20:10:18 +0200
-Message-Id: <1241460618.8683.89.camel@johannes.local>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Nico -telmich- Schottelius <nico-linux-next@schottelius.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242662635.32358.523.camel@rc-desk>
+References: <20090515153733.4384db9f.sfr@canb.auug.org.au>
+	 <20090515102621.GA5735@ikn.schottelius.org>
+	 <20090518171505.d30d2f64.sfr@canb.auug.org.au>
+	 <1242662635.32358.523.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mpAqau/H5D0XCUUjMzFm"
+Date: Mon, 18 May 2009 18:24:27 +0200
+Message-Id: <1242663867.27425.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9u2aQ0DIDpash7LMeJWh
+--=-mpAqau/H5D0XCUUjMzFm
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-05-04 at 10:23 -0700, Marcel Holtmann wrote:
+On Mon, 2009-05-18 at 09:03 -0700, reinette chatre wrote:
 
-> one other thing that comes to my mind is to have a convenient "iw scan"
-> alias to just trigger scanning all all interfaces. The "dev wlan0" thing
-> is driving my crazy. And most people just have one card only anyway.
+> > > Also wpa_supplicant is not happy:
+> > >=20
+> > > + wpa_supplicant -B -Dwext -iwlan0 -c /home/user/nico/ethz/wlan/wpa_s=
+upplicant.conf
+> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > >=20
+>=20
+> There were some changes recently to this ioctl, but I am not familiar
+> with details. Johannes will know.
 
-That would be hell to coordinate with all the waiting and stuff...
-
-> Do we really need the "dev" versus "phy" details here. I guess they are
-> needed in case someone renames "wlan0" to "phy0" by accident, but
-> personally I prefer that the "dev" one is optional and it falls back to
-> just use the interface name.
-
-Personally, I'd rather have bash completion ;) And it's not so simple I
-think.
+Yeah, I'm not sure -- this happens when clearing keys. I'll look into
+it, we probably need to accept removing a key that doesn't exist.
 
 johannes
 
---=-9u2aQ0DIDpash7LMeJWh
+--=-mpAqau/H5D0XCUUjMzFm
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJ/y+IAAoJEKVg1VMiehFYh0wQAIe+XiMwqwW8yNfniZg9cxQA
-a7Aoq3m22OwR9fOLjFAJ8vekQjNV4yLzGLSv2PR362cfYBNg69mzvKn4faIJbBS6
-kn3Rlu11H4RzWr2yxZcOEKZtk7xR4jyZ1zdgomXb41KvQKYdzhyNojsFy0jyZwkC
-WttHXtcsAHHeWcE1DlSJOKeK1BEb5i7xBPOWnbbo7semtriLBNsrl1CTLpsvFzJ4
-QMp38mUJ+3I9Az4+IBOzpI3crrMlT98TxuoGkeJD24hAikHMmTGxM7TiBH0xX2UX
-oJcPGzCfRgIUf0/F113f+n3mphD0BUcYcmmXvLJ1idd6bT1+MBslZBz/xK8mnvHm
-t9RcK9eYqTpYYN7wgcDAjv9LqB2lpKXXPAXWSN4uq0mcRgKxV6B6vS+ysl3CB3RD
-NtJcbF2fCOQG6XAlBfuyTi7EOM2pdX93aOLNhOHjyDSFoB0gjThQRShJ+G6/7Ypd
-a7W40ddi81cCvapbcZxxlow8QfvGUHbS8opU9dr7+03xF77LR3aUjBLQ2ehpNM9w
-keYSXnaHm5o75IH3PBS5+ce9YGgW0lqNF3HwxkVsah9j7QGsOoyEBXVftT/Sasno
-SLMFvGJPNxTIK59qHcLOkiUOht9IhG9vYZ5MrAnLzsCLw5m8Xi4oVdnM2lGN4Kkd
-HgSNqaZx5isNj6UYFDY0
-=nxFF
+iQIcBAABAgAGBQJKEYu4AAoJEODzc/N7+QmahigQALS7Q1Nq1UDZbfhvDXGU+Swo
+TvooX7SRRfQrP5TNiKN6tmAQjjv1SOvKbi5qGvFBnzadOVdQ788AjN+VeNug4aeP
+Qn+x/9ZiLK8nQoSAoaSBAp/ypMdjBxEIjS/nNoT4Atkt4B92hs0uuMnlSLch6JJe
+eHu412JA4yg5zUbmbHzww9PcPB1voUtW4CT+wAWXiRwhdCRWL4wIO+Onx4whm1cu
+TFz2PhIirej8QJNR3GiKln5Z/TrFB0ZGfgE83crPvrOFCsvG4fobIBb5zxuYcpcw
+zP7Zn895gDYR5wKacQ6u8qs6BVSTLyJXju2aJfGMpc7oQ806ZKYgLNuo3Yo3gPc2
+jPgXfl36ZWXVNSQwnUF/FYXcodJuSW4FoP9SIqwHZOsR6vOVNh/wlS3zD0jARBTp
+3LGs4zJbEznzLyFSK7g8XmMLyqRJuWqETPfFYEplIGFyqC5BobjnPd2bq+zhrEz/
+sh3kP0inEgygQueJNl4qWAFmxSvSO7ZJ5dog6/6foM4BkOrZSu6Bi+RB7+tKN/hc
+dUqj1yUXlxxTZjrD1yr6OI5IfdFw8XEtTtrV7F3HR/aGLLyP5s2HJdgqdpNrT/Uw
+kNdaLWmrQM5TJzqHJRCU2hWqQZ4YEICSyqHQ2eWh3e8CfRPmeoaXz+wXuAjKEglf
+PGvsv9xQpm4iF77eVY6L
+=wP09
 -----END PGP SIGNATURE-----
 
---=-9u2aQ0DIDpash7LMeJWh--
+--=-mpAqau/H5D0XCUUjMzFm--
 
