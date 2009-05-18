@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:37423 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002AbZEAMHG (ORCPT
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:40929 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbZEROtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 08:07:06 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1349345ywb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 05:07:06 -0700 (PDT)
+	Mon, 18 May 2009 10:49:21 -0400
+Received: by ewy24 with SMTP id 24so4116873ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 07:49:21 -0700 (PDT)
+Message-ID: <4A11756F.5000206@gmail.com>
+Date: Mon, 18 May 2009 16:49:19 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1241036667.12942.0.camel@maxim-laptop>
-References: <1240761579.10972.11.camel@maxim-laptop>
-	 <1241036667.12942.0.camel@maxim-laptop>
-Date: Fri, 1 May 2009 08:07:06 -0400
-Message-ID: <b6c5339f0905010507x75b14181t7263eb1717cd278e@mail.gmail.com>
-Subject: Re: PHY hangs on AR2425 (AR5007EG)
-From: Bob Copeland <bcopeland@gmail.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: flamingice@sourmilk.net
+CC: linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] wireless/p54: fw_state can't be both OFF and RESET
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 29, 2009 at 4:24 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
->> The issue is that if I load its TX unit up to it's maximum throughput,
->> it stalls each and every few seconds, and only way to
->
-> Are you aware of that bug?
+fw_state can't be both OFF and RESET
 
-Yeah, thanks, haven't lost the report but haven't
-had a chance to investigate so far.
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+This was not tested in any way, so please review.
 
-By load TX up, do you mean you are sending large
-files, using ping, iperf, or.. ?
-
--- 
-Bob Copeland %% www.bobcopeland.com
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index d1fe577..c327659 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -516,7 +516,7 @@ static void p54spi_work(struct work_struct *work)
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+-	if (priv->fw_state == FW_STATE_OFF &&
++	if (priv->fw_state == FW_STATE_OFF ||
+ 	    priv->fw_state == FW_STATE_RESET)
+ 		goto out;
+ 
