@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:65485 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753958AbZEUCzF (ORCPT
+Received: from mail-ew0-f224.google.com ([209.85.219.224]:42299 "EHLO
+	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbZEROpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 22:55:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so269847wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 19:55:07 -0700 (PDT)
+	Mon, 18 May 2009 10:45:14 -0400
+Received: by ewy24 with SMTP id 24so4113509ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 07:45:15 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Alexandre Becholey <alexandre@shockfish.com>
+Subject: Re: [PATCH]rt73usb: fix for master mode.
+Date: Mon, 18 May 2009 16:45:12 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <1242651336-12621-1-git-send-email-alexandre.becholey@epfl.ch> <200905181531.37484.IvDoorn@gmail.com> <4A1173D1.5010704@shockfish.com>
+In-Reply-To: <4A1173D1.5010704@shockfish.com>
 MIME-Version: 1.0
-In-Reply-To: <1242872340-27417-3-git-send-email-yi.zhu@intel.com>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
-	<1242872340-27417-2-git-send-email-yi.zhu@intel.com> <1242872340-27417-3-git-send-email-yi.zhu@intel.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 20 May 2009 19:54:47 -0700
-Message-ID: <43e72e890905201954x7a5bc41etf0305b793cbc032e@mail.gmail.com>
-Subject: Re: [PATCH 2/2] iwmc3200wifi: Add new Intel Wireless Multicomm 802.11
-	driver
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200905181645.12891.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBNYXkgMjAsIDIwMDkgYXQgNzoxOSBQTSwgWmh1IFlpIDx5aS56aHVAaW50ZWwuY29t
-PiB3cm90ZToKPiArc3RhdGljIHN0cnVjdCBpZWVlODAyMTFfY2hhbm5lbCBpd21fMmdoel9jaGFu
-bmVsc1tdID0gewo+ICsgwqAgwqAgwqAgQ0hBTjJHKDEsIDI0MTIsIDApLAo+ICsgwqAgwqAgwqAg
-Q0hBTjJHKDIsIDI0MTcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDMsIDI0MjIsIDApLAo+ICsg
-wqAgwqAgwqAgQ0hBTjJHKDQsIDI0MjcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDUsIDI0MzIs
-IDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDYsIDI0MzcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJH
-KDcsIDI0NDIsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDgsIDI0NDcsIDApLAo+ICsgwqAgwqAg
-wqAgQ0hBTjJHKDksIDI0NTIsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDEwLCAyNDU3LCAwKSwK
-PiArIMKgIMKgIMKgIENIQU4yRygxMSwgMjQ2MiwgMCksCj4gKyDCoCDCoCDCoCBDSEFOMkcoMTIs
-IDI0NjcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDEzLCAyNDcyLCAwKSwKPiArIMKgIMKgIMKg
-IENIQU4yRygxNCwgMjQ4NCwgMCksCj4gK307Cj4gKwo+ICtzdGF0aWMgc3RydWN0IGllZWU4MDIx
-MV9jaGFubmVsIGl3bV81Z2h6X2FfY2hhbm5lbHNbXSA9IHsKPiArIMKgIMKgIMKgIENIQU41Rygz
-NCwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDM2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygz
-OCwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDQwLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg0
-MiwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDQ0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg0
-NiwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDQ4LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg1
-MiwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDU2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg2
-MCwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDY0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-MDAsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTA0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-MDgsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTEyLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-MTYsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTIwLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-MjQsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTI4LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-MzIsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTM2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-NDAsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTQ5LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-NTMsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTU3LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-NjEsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTY1LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-ODQsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTg4LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
-OTIsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTk2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygy
-MDAsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMjA0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygy
-MDgsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMjEyLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygy
-MTYsIDApLAo+ICt9Owo+ICsKCkNIQU4yRygpIGFuZCBDSEFONUcoKSBjb3VsZCB1c2UgdGhlIHNl
-Y29uZCBhcmd1bWVudCByZW1vdmVkLCBpdHMgYWx3YXlzIDAuCgpCVFcgZG9lcyAnaXcgbGlzdCcg
-Z2l2ZSB5b3Ugc29tZXRoaW5nIGJhY2sgd2l0aCBhbGwgdGhlc2UgY2hhbm5lbHM/CgogIEx1aXMK
+> > Also have you considered the following things:
+> > 	RTS frames success/failure reporting?
+> > 	tx_success/tx_failure statistics counters (used in link_tuner as well)
+> >
+> > Thanks,
+> >
+> > Ivo
+> >   
+> Ok I'll do it, but how should I treat the status unknown for the 
+> statistics? as a success?
+
+yeah, since it will be reported as success to mac80211 as well,
+it only makes sense to handle it in the statistics as such as well.
+
+Ivo
