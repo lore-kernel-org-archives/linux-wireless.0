@@ -1,26 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:60422 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755222AbZEOSkP (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:58353 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796AbZERPns (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 14:40:15 -0400
-Message-ID: <4A0DB70F.5000209@gmail.com>
-Date: Fri, 15 May 2009 20:40:15 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Mon, 18 May 2009 11:43:48 -0400
+Received: by fxm2 with SMTP id 2so3320692fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 08:43:48 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: split out and decrease probe wait time
+References: <1242151393.11924.3.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 18 May 2009 18:43:46 +0300
+In-Reply-To: <1242151393.11924.3.camel@johannes.local> (Johannes Berg's message of "Tue\, 12 May 2009 20\:03\:13 +0200")
+Message-ID: <87pre6beml.fsf@litku.valot.fi>
 MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org
-CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 1/2] mac80211: minstrel, fix memory corruption
-References: <1241453096-8517-1-git-send-email-jirislaby@gmail.com> <20090515182131.GA6439@fancy-poultry.org>
-In-Reply-To: <20090515182131.GA6439@fancy-poultry.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/2009 08:21 PM, Heinz Diehl wrote:
-> This patchset crashes my WLAN. Reverting it does fix this:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Could you try this fix
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff_plain;h=b3f25c62aa41e0c372536c0f3975b39f21217b57;hp=30e2341dd2c82780eddd785eb54695115c6aea8d
-?
+> The time we wait for a probe response after probing an AP due to
+> beacon loss is currently the same as the monitoring interval, 2s.
+> This is far too long, APs should respond to probes within a
+> fraction of that time. To be able to adjust both values, add a
+> new constant IEEE80211_PROBE_WAIT, use it for checking the probe
+> response, and adjust it down to 200ms instead of 2 seconds.
+
+Looks good to me.
+
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+
+-- 
+Kalle Valo
