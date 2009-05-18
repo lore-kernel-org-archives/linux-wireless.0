@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:47759 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbZEVKP0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 06:15:26 -0400
-Received: by fxm2 with SMTP id 2so1557097fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2009 03:15:26 -0700 (PDT)
-To: "ffileppo" <ffileppo@libero.it>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211: TDMA approach feasible?
-References: <KK1J00$BAC7E4518757B17D1805E790669D6D1D@libero.it>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 22 May 2009 13:15:24 +0300
-In-Reply-To: <KK1J00$BAC7E4518757B17D1805E790669D6D1D@libero.it> (ffileppo@libero.it's message of "Fri\, 22 May 2009 12\:12\:00 +0200")
-Message-ID: <87skixv3yb.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx2.redhat.com ([66.187.237.31]:52941 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751274AbZERRvI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 13:51:08 -0400
+Subject: Re: iwlagn broken in next-20090514 and next-20090515
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Nico -telmich- Schottelius <nico-linux-next@schottelius.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242663867.27425.1.camel@johannes.local>
+References: <20090515153733.4384db9f.sfr@canb.auug.org.au>
+	 <20090515102621.GA5735@ikn.schottelius.org>
+	 <20090518171505.d30d2f64.sfr@canb.auug.org.au>
+	 <1242662635.32358.523.camel@rc-desk>
+	 <1242663867.27425.1.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 18 May 2009 13:50:29 -0400
+Message-Id: <1242669029.3845.0.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"ffileppo" <ffileppo@libero.it> writes:
+On Mon, 2009-05-18 at 18:24 +0200, Johannes Berg wrote:
+> On Mon, 2009-05-18 at 09:03 -0700, reinette chatre wrote:
+> 
+> > > > Also wpa_supplicant is not happy:
+> > > > 
+> > > > + wpa_supplicant -B -Dwext -iwlan0 -c /home/user/nico/ethz/wlan/wpa_supplicant.conf
+> > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > 
+> > 
+> > There were some changes recently to this ioctl, but I am not familiar
+> > with details. Johannes will know.
+> 
+> Yeah, I'm not sure -- this happens when clearing keys. I'll look into
+> it, we probably need to accept removing a key that doesn't exist.
 
->  
->> > I was wondering if with mac80211 is now possible (and what effort
->> > is needed) to implement a TDMA approach. In particular I would
->> > like to: override 802.11 MPDU frame format, eliminate RTS/CTS
->> > exchange, eliminate automatic ACK and retransmission, eliminate
->> > virtual carrier sense (NAV), control PHY clear channel assessment
->> > and control transmission backoff.
->>  Most of this is usually implemented in firmware, so you need access
->> to firmware sources.
->
-> If these features are implemented in firmware, it should be possible
-> to modify them if using for example Ath5k (which is a completely FOSS
-> Linux driver) Right? Could you give me any directions?
+Why bother (if that's actually the root cause)?  Maybe the supplicant
+should be fixed.  Other drivers return ENOENT in this case, so mac80211
+certainly isn't out-of-common-spec here now.
 
-Sorry, I'm not familiar with ath5k.
+Dan
 
--- 
-Kalle Valo
+
