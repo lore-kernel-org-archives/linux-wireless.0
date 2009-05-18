@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:58268 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbZERCab convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39578 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbZERNPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 22:30:31 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1765508wfd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 19:30:33 -0700 (PDT)
+	Mon, 18 May 2009 09:15:15 -0400
+Date: Mon, 18 May 2009 09:11:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ken Lewis <kennylewis@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-net@vger.kernel.org,
+	linux-wireless@vger.kernel.org, davem@davemloft.net,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Regression: 2.6.30-rc5 and rt2x00 / rt2500pci
+Message-ID: <20090518131145.GB2814@tuxdriver.com>
+References: <5a44caba0905150740n3bf90e05i17a74e82f35edcf4@mail.gmail.com> <20090515144628.GE2773@tuxdriver.com> <5a44caba0905170838l2876df90q200f9a8b6411f7ce@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <3ace41890905171809t6ad0e654jc07b6dd2d4cf6564@mail.gmail.com>
-References: <4A0FF4FE.1030304@tls-tautenburg.de> <3ace41890905171600i3308f799n2a643e61fd954d4f@mail.gmail.com>
-	<4A10A5C0.7090107@erley.org> <3ace41890905171809t6ad0e654jc07b6dd2d4cf6564@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 17 May 2009 19:30:13 -0700
-Message-ID: <43e72e890905171930r15eaf1d7qc98dea401705b55c@mail.gmail.com>
-Subject: Re: compile error compat-wireless
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Pat Erley <pat-lkml@erley.org>,
-	Bringfried Stecklum <stecklum@tls-tautenburg.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <5a44caba0905170838l2876df90q200f9a8b6411f7ce@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 17, 2009 at 6:09 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Mon, May 18, 2009 at 1:03 AM, Pat Erley <pat-lkml@erley.org> wrote:
->
->> I got this as well, fixed it by adding #include <asm/unaligned.h> to key.c
->>
->> I have been running compat-wireless for months, so it's not a missing package
->> thing, I suspect it's an outdated headers thing. Â My system has 2.6.27 headers
->> right now.
->>
->> Pat Erley
->>
->
-> Hmm, sorry about that. On my system (2.6.29.3-142.fc11.x86_64) no
-> change is needed to building compat-wireless.
-> Maybe it is partly with old kernel heades.
+On Sun, May 17, 2009 at 04:38:58PM +0100, Ken Lewis wrote:
+> 2009/5/15 John W. Linville <linville@tuxdriver.com>:
+> > On Fri, May 15, 2009 at 03:40:44PM +0100, Ken Lewis wrote:
+> >> I've been looking for a bug in Linux-Next that makes my rt2500pci
+> >> wireless card unusable. ...
+> >
+> > Please apply this patch:
+> >
+> >        http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/0002-mac80211-avoid-NULL-ptr-deref-when-finding-max_rate.patch
+> >
+> > A pull request was sent to Dave M. a couple of days ago.  I imagine
+> > that it will make its way to Linus shortly.
+> 
+> Thank you, John. The patch makes 2.6.30-rc5 work for me -- no more bug
+> dump and the wireless card works fine.
+> 
+> I'm about to try and see if it *also* makes rt2x00 work when applied
+> against the linux-next tree (and next-20090515 in particular).
 
-Hauke Mehrtens has fixed this, I applied his patches and pushed a new
-tarball out.
+I'm guessing it didn't help with this part, since -next should have
+already had the patch...?
 
-FWIW just also pushed out a stable tarball (based on 2.6.30-rc6).
-
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
