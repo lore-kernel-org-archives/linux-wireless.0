@@ -1,76 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto053.server4you.de ([62.75.220.53]:56307 "EHLO
-	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbZEGUqT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2009 16:46:19 -0400
-Date: Thu, 7 May 2009 22:47:47 +0200
-From: Daniel Wagner <wagi@monom.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Simulate medium behavior
-Message-ID: <20090507204747.GB6684@newton.monom.org>
-References: <20090422092159.GA24586@toronto053.server4you.de> <1240393088.21756.3.camel@johannes.local> <20090422113556.GB24586@toronto053.server4you.de> <20090507184007.GA6684@newton.monom.org> <1241722972.7590.34.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:36504 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422AbZERPwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 11:52:24 -0400
+Date: Mon, 18 May 2009 17:45:50 +0200
+From: Oleg Nesterov <oleg@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ingo Molnar <mingo@elte.hu>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Jonathan Corbet <corbet@lwn.net>, Martin Bammer <mrb74@gmx.at>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.30-rc6: Reported regressions from 2.6.29
+Message-ID: <20090518154550.GB22133@redhat.com>
+References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera> <20090517073327.GC1583@elte.hu> <20090518145725.GB18607@redhat.com> <20090518151102.GA6241@elte.hu> <alpine.LFD.2.01.0905180819130.3301@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1241722972.7590.34.camel@johannes.local>
+In-Reply-To: <alpine.LFD.2.01.0905180819130.3301@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes
+On 05/18, Linus Torvalds wrote:
+>
+> On Mon, 18 May 2009, Ingo Molnar wrote:
+> >
+> > Btw., why did the patch (and the revert) make any difference to the
+> > test? Timing differences look improbable.
+>
+> It's the change from
+>
+> 	!signal_group_exit(signal)
+>
+> to
+>
+> 	!sig_kernel_only(signr)
+>
+> and quite frankly, I still don't see the point.
 
-On Thu, May 07, 2009 at 09:02:52PM +0200, Johannes Berg wrote:
-> Hi Daniel,
-> 
-> > > > http://thread.gmane.org/gmane.linux.kernel.wireless.general/25001
-> > > 
-> > > No, I haven't. Yep, my solution is really too simple.  I like the
-> > > virtual air grouping. I'll implement it.
-> > 
-> > After a bit studying how to use configfs (and getting a bit lost)
-> > I found netconsole.c which uses configfs. So this version is a copy&past
-> > thing. Of course, this needs more work. 
-> > 
-> > Is this what do did have in mind?
-> 
-> Very cool. We had a patch at some point to add configfs support to hwsim
-> but it seems it got lost :(
-> 
-> But I don't think your configfs support is optimal since you need to
-> create those dirs for phy0 and put the name in etc. even when phy0
-> already exists. 
+Previously,
 
-Yes, that was also what I thought. If I understood it correctly that is
-exactly the main difference between configfs and debugfs. In configfs 
-the userspace has the owner ship of the 'objects' (mkdir, rmdir) whereas
-in debugfs the kernel controls the lifetime of the 'objects'.
+	!signal_group_exit(signal)
 
-> I'm sorry to have wasted your time with the configfs
-> suggestion, but I think with how hwsim _currently_ behaves, without
-> configfs support for creating new radios etc., putting this into debugfs
-> would be nicer, since debugfs already has a dir for this from
-> cfg80211/mac80211...
+meant: we do not know what should we do, let's ignore this signal.
+Unless the multithreaded init does exec, in this case we should
+respect SIGKILL.
 
-No problem. I was able to learn something :) Ok, I'll cook up the next 
-version. 
+With the recent changes, sig_kernel_only() means: we already checked
+we should handle SIGKILL/SIGSTOP when this signal was queued.
 
-> > +config MAC80211_HWSIM_VGROUP
-> > +	bool "enable virtual air grouping"
-> > +	depends on MAC80211_HWSIM
-> > +	default y
-> > +	help
-> > +	  This option enables virtual air grouping.
-> > +
-> > +	  If unsure, say N.
-> 
-> I also wouldn't make it configurable, just make it default to group == 1
-> so that it behaves as it was.
+> The comment seems to be wrong too:
+>
+>     If SIGSTOP/SIGKILL originate from a descendant of container-init they are
+>     never queued (i.e dropped in sig_ignored() in an earler patch).
+>
+>     If SIGSTOP/SIGKILL originate from parent namespace, the signal is queued
+>     and container-init processes the signal.
+>
+> since the bug was that the SIGSTOP (from within the same container) was
+> _not_ ignored like the comment says.
 
-Good point.
+Yes, the changelog could be better because it ignores ptrace issues. But
+this was discussed,
 
-Thanks for your comments!
+>From http://marc.info/?t=123222433100001
 
-cheers, 
-daniel
+	Yes we should handle SIGSTOP fine if it sent from the parent namespace.
 
+	Also. Currently it is possible to ptrace the global init, but even
+	ptracer can't stop it (but ptrace_stop() works). With these patches
+	ptracer can stop init.
+
+	I forgot to mention this behaviour change, imho this side-effect
+	is good.
+
+So, at least this change is not "by accident".
+
+Oleg.
 
