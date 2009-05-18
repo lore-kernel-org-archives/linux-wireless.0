@@ -1,68 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1250 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755489AbZEHRl3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 13:41:29 -0400
-Subject: Re: [PATCH v2] iwlwifi: make iwl_set_rate static
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1241803902.4495.28.camel@johannes.local>
-References: <1241772804.1567.29.camel@johannes.local>
-	 <1241803902.4495.28.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 10:47:50 -0700
-Message-Id: <1241804870.6198.471.camel@rc-desk>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39946 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbZERSKi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2009 14:10:38 -0400
+Subject: Re: iwlagn broken in next-20090514 and next-20090515
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Nico -telmich- Schottelius <nico-linux-next@schottelius.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242669029.3845.0.camel@localhost.localdomain>
+References: <20090515153733.4384db9f.sfr@canb.auug.org.au>
+	 <20090515102621.GA5735@ikn.schottelius.org>
+	 <20090518171505.d30d2f64.sfr@canb.auug.org.au>
+	 <1242662635.32358.523.camel@rc-desk>
+	 <1242663867.27425.1.camel@johannes.local>
+	 <1242669029.3845.0.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i8SXLxaQQ7sxr8I7S6Ul"
+Date: Mon, 18 May 2009 20:10:11 +0200
+Message-Id: <1242670211.29049.10.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-05-08 at 10:31 -0700, Johannes Berg wrote:
-> It's not needed outside iwl-core.c
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
->  drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
->  2 files changed, 1 insertion(+), 4 deletions(-)
-> 
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 10:53:34.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h	2009-05-08 19:30:16.000000000 +0200
-> @@ -363,8 +363,6 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_fl
->  
->  u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv);
->  
-> -void iwl_set_rate(struct iwl_priv *priv);
-> -
->  u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx);
->  
->  static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 13:48:01.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-05-08 19:30:21.000000000 +0200
-> @@ -1124,7 +1124,7 @@ void iwl_connection_init_rx_config(struc
->  }
->  EXPORT_SYMBOL(iwl_connection_init_rx_config);
->  
-> -void iwl_set_rate(struct iwl_priv *priv)
-> +static void iwl_set_rate(struct iwl_priv *priv)
->  {
->  	const struct ieee80211_supported_band *hw = NULL;
->  	struct ieee80211_rate *rate;
-> @@ -1170,7 +1170,6 @@ void iwl_set_rate(struct iwl_priv *priv)
->  		priv->staging_rxon.ofdm_basic_rates =
->  		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
->  }
-> -EXPORT_SYMBOL(iwl_set_rate);
->  
->  void iwl_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  {
-> 
-> 
 
-Thank you
+--=-i8SXLxaQQ7sxr8I7S6Ul
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+On Mon, 2009-05-18 at 13:50 -0400, Dan Williams wrote:
 
-Reinette
+> > > > > Also wpa_supplicant is not happy:
+> > > > >=20
+> > > > > + wpa_supplicant -B -Dwext -iwlan0 -c /home/user/nico/ethz/wlan/w=
+pa_supplicant.conf
+> > > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > > ioctl[SIOCSIWENCODEEXT]: No such file or directory
+> > > > >=20
+> > >=20
+> > > There were some changes recently to this ioctl, but I am not familiar
+> > > with details. Johannes will know.
+> >=20
+> > Yeah, I'm not sure -- this happens when clearing keys. I'll look into
+> > it, we probably need to accept removing a key that doesn't exist.
+>=20
+> Why bother (if that's actually the root cause)?  Maybe the supplicant
+> should be fixed.  Other drivers return ENOENT in this case, so mac80211
+> certainly isn't out-of-common-spec here now.
+
+I just looked at the code in wpa_supplicant, it doesn't care a bit, just
+prints the error. Problem is users attribute any other breakage to the
+error it prints since our behaviour changed...
+
+johannes
+
+--=-i8SXLxaQQ7sxr8I7S6Ul
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKEaR/AAoJEODzc/N7+QmaFDwQALPZYNroPlpvJ9vwiq7d93cf
+lz9rwq3n6mHdpKyWcCE2zRadwgVd73hy/A3n3KaNtCawwOqXZ8TJmG/wnjtkXf1b
+19JNzgY4k8Ue4P9p6gFc04tRCY+3QdlLIQO4QZd2KaIuQxtAxpG+nl/zW4mVnYId
+8a5eLFkvCWxS9ZnlV1zUrjRvfSwbhYDTW8zwqFvLLgReR/WL9x5wENBk01LWstd2
+R7+Kv65dHbe5S7Rfmy4qlhrJ/ZcabNkcgfdMl/GUKE633+lcqPN/rpttCvtOqcbu
+H2oCGISHBUT0rCB6j1BVFIrzHdQbHpI8Y8UpDVyvwp/9etjcXLQGTNWj/16Yshkt
+U/FAu/O5hqiYFA+saLThl5ZktKzTMP77bCqgqc2RUJ8Jz24WMmCpd2SI5Jbi54iz
+Bez7meawFOnIUyg2Ob9VmuQXQ703Fuve9Ui/O8LDMqpXwDThu/Ry7oXuy5zIP7au
+lgSDLM5MDtGETlnCC3aSkD8SEaZ1KpC1BCEWUa2bPyuigD7N77yvZv9hQlZRaM3k
+4J7noCoSCcG7U+Y3KCs4+wrnwNDhKMnqCNJoDA64l3jkK9HEJBz5fhMU8A1kSKHB
+AmnJXK9X0lDk5D84FYDLCsgfj/g5OGoyeGGhMn5ERPBo6tWzRbTAcG5+RjEWHqDg
+s/sb39Kai8+pbIxE1Nuy
+=Trbe
+-----END PGP SIGNATURE-----
+
+--=-i8SXLxaQQ7sxr8I7S6Ul--
 
