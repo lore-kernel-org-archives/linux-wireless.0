@@ -1,116 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:46899 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753359AbZEPGM2 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46750 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368AbZERTaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2009 02:12:28 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1412105wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2009 23:12:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	<1242327298.4227.25.camel@localhost.localdomain> <43e72e890905141207m3c27588ex13190b2ed6010e30@mail.gmail.com>
-	<1242334636.4227.134.camel@localhost.localdomain> <43e72e890905141426k479e6707xb4f3d07d7420e7ea@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 15 May 2009 23:12:10 -0700
-Message-ID: <43e72e890905152312m2077cc1dqd743cf7f625e9a49@mail.gmail.com>
-Subject: Re: Scan while TX/RX'ing a lot of data
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 18 May 2009 15:30:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: do not cancel delayed work inside spin_lock_irqsave
+Date: Mon, 18 May 2009 15:22:00 -0400
+Message-Id: <1242674520-26331-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1242429226-8313-5-git-send-email-reinette.chatre@intel.com>
+References: <1242429226-8313-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 2:26 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, May 14, 2009 at 1:57 PM, Dan Williams <dcbw@redhat.com> wrote:
->> On Thu, 2009-05-14 at 12:07 -0700, Luis R. Rodriguez wrote:
->>> On Thu, May 14, 2009 at 11:54 AM, Dan Williams <dcbw@redhat.com> wrote:
->
->>> > Secondarily, scanning is a tradeoff between better roaming latency and
->>> > continuous high throughput.  If you don't scan, you have no idea what's
->>> > around, and when you move and the current AP becomes marginal, you
->>> > *have* to take the hit no matter what, so you can scan and find a new AP
->>> > to associate with.
->>>
->>> True however I'm inclined to believe that generally when you are
->>> sending or receiving a lot of data you are stationary so roaming might
->>> not be that urgent. For 802.11p (vehicle stuff) I suppose this may be
->>> a bit different but I have yet to see this take off.
->>
->> I'll believe 11p when I see it somewhere :)  But anyway, yeah, there are
->> tricks we can play here, and I'm happy to entertain methods of making
->> the scanning hit less annoying.  I'm simply opposed to a checkbox in the
->> UI for "never scan while connected" because that's a pure cop-out: we
->> should be making things intelligent, not taking the half-assed approach
->> like people (nobody here of course) have been whining about for a long
->> time.  Scanning isn't something the user should have to care about or
->> turn on or off; it's something that NetworkManager (in concert with
->> usage information from the stack) should be able to handle
->> automatically.
->
-> Agreed.
->
->> Maybe if there was a way to figure out how full mac80211's QoS buckets
->> were, that would help?  Or get a frame counts from each of the 4 QoS
->> buckets individually?  That would allow NM to make more intelligent
->> decisions about stuff.  Maybe a more detailed nl80211 stats interface
->> would do the trick here.
->
-> Would help for debugging too anyway, since QOS uses the new device
-> queues maybe that might already be available?
->
->>> > I would have though that the periodic scanning would be more of an
->>> > annoyance when doing VOIP or SSH other latency sensitive tasks, but when
->>> > just downloading a file, a few second drop in transfer rate gets lost in
->>> > the bucket in the grand scheme of things.
->>>
->>> Good point, how about we use pm_qos for disabling scan when we are
->>> sending a lot of data (whatever we define this to mean)? Then
->>> applications can just write to this pm_qos stuff and you won't see
->>> this.
->>>
->>> I forget when pm_qos was introduced though.
->>
->> Yeah, something like that, although it's sometimes hard to go from app
->> -> interface;
->
-> Yeah at least pm_qos is not device specific IIRC.
->
->> if you have a wired interface connected at the same time,
->> but the thing you're sucking down data from is on the wifi interface,
->> we'd need some way to figure that out.
->
-> Point taken.
->
->> Hence the idea about exposing
->> the packet counts of the WMM queues or something like that.
->
-> I think this is a good idea, although it wouldn't solve anything for
-> people stuck on old userspace (my oldest target is distributions
-> releases circa 2.6.27). Not sure what is best for that case. The
-> kernel could be informed of the lack of userspace regulating this and
-> then take some reasonable action. What the reasonable action and the
-> terms for that remain unclear to me.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-OK so what if we just let let old wext scan be just a dump of the
-current bss list provided we do selective scanning once per channel
-throughout a period of time.
+Calling cancel_delayed_work() from inside
+spin_lock_irqsave, introduces a potential deadlock.
 
-For new userspace can obviously do whatever we like but since we'd
-implement the above we could just let this automatic scanning can be
-tweaked for roaming purpose with exposed knobs. That is -- make the
-code so that it can be tweaked to act like a regular good old scan or
-take breaks throughout.
+As explained by Johannes Berg <johannes@sipsolutions.net>
 
-If you're already associated it makes little sense to be scanning all
-over. If you're not associated it makes sense to do the good old scan
-we're used to. Of course this would just be fof mac80211 and cfg80211
-drivers, old wext will obviously still behave the same for old
-hardware.
+A - lock
+T - timer
 
-Meh?
+phase                   CPU 1           CPU 2
+---------------------------------------------
 
-  Luis
+some place that calls
+cancel_timer_sync()
+(which is the | code)
+                                        lock-irq(A)
+|                                       "lock-irq"(T)
+|                                       "unlock"(T)
+|                                       wait(T)
+                                        unlock(A)
+
+timer softirq
+                        "lock"(T)
+                        run(T)
+                        "unlock"(T)
+
+irq handler
+          lock(A)
+          unlock(A)
+
+Now all that again, interleaved, leading to deadlock:
+
+                                        lock-irq(A)
+                        "lock"(T)
+                         run(T)
+IRQ during or maybe
+before run(T) -->        lock(A)
+                                        "lock-irq"(T)
+                                        wait(T)
+
+We fix this by moving the call to cancel_delayed_work() into workqueue.
+There are cases where the work may not actually be queued or running
+at the time we are trying to cancel it, but cancel_delayed_work() is
+able to deal with this.
+
+Also cleanup iwl_set_mode related to this call. This function
+(iwl_set_mode) is only called when bringing interface up and there will
+thus not be any scanning done. No need to try to cancel scanning.
+
+Fixes http://bugzilla.kernel.org/show_bug.cgi?id=13224, which was also
+reported at http://marc.info/?l=linux-wireless&m=124081921903223&w=2 .
+
+Tested-by: Miles Lane <miles.lane@gmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Did not apply to 2.6.30-rc6 as posted -- please verify my fix-up!
+
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 ++++---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ++-------
+ 3 files changed, 6 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3bb28db..f46ba24 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -669,13 +669,6 @@ static int iwl_set_mode(struct iwl_priv *priv, int mode)
+ 	if (!iwl_is_ready_rf(priv))
+ 		return -EAGAIN;
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-	if (iwl_scan_cancel_timeout(priv, 100)) {
+-		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+-		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+-		return -EAGAIN;
+-	}
+-
+ 	iwl_commit_rxon(priv);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index e7c65c4..6330b91 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -227,9 +227,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 	/* The HW is no longer scanning */
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 
+-	/* The scan completion notification came in, so kill that timer... */
+-	cancel_delayed_work(&priv->scan_check);
+-
+ 	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
+ 		       (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ)) ?
+ 						"2.4" : "5.2",
+@@ -712,6 +709,8 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	cancel_delayed_work(&priv->scan_check);
++
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_WARN(priv, "request scan called when driver not ready.\n");
+ 		goto done;
+@@ -925,6 +924,8 @@ void iwl_bg_scan_completed(struct work_struct *work)
+ 
+ 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+ 
++	cancel_delayed_work(&priv->scan_check);
++
+ 	ieee80211_scan_completed(priv->hw, false);
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 4cce661..ff4d0e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -782,13 +782,6 @@ static int iwl3945_set_mode(struct iwl_priv *priv, int mode)
+ 	if (!iwl_is_ready_rf(priv))
+ 		return -EAGAIN;
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-	if (iwl_scan_cancel_timeout(priv, 100)) {
+-		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+-		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+-		return -EAGAIN;
+-	}
+-
+ 	iwl3945_commit_rxon(priv);
+ 
+ 	return 0;
+@@ -3298,6 +3291,8 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	cancel_delayed_work(&priv->scan_check);
++
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_WARN(priv, "request scan called when driver not ready.\n");
+ 		goto done;
+-- 
+1.6.0.6
+
