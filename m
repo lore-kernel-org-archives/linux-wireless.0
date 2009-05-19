@@ -1,67 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3622 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067AbZETDif (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:45131 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753650AbZESORa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 23:38:35 -0400
-Date: Tue, 19 May 2009 23:37:31 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Steven Rostedt <rostedt@goodmis.org>, linville@tuxdriver.com
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, jirislaby@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] ath5k: avoid and warn on potential infinite loop
-Message-ID: <20090520033731.GA16640@hash.localnet>
-References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com> <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com> <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com> <20090519114240.GA13934@hash.localnet> <alpine.DEB.2.00.0905190751200.1767@gandalf.stny.rr.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.0905190751200.1767@gandalf.stny.rr.com>
+	Tue, 19 May 2009 10:17:30 -0400
+Received: by fxm2 with SMTP id 2so3903049fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 07:17:30 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+	 <1242166051.26484.7.camel@maxim-laptop>
+	 <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
+	 <1242256104.3241.4.camel@maxim-laptop>
+	 <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+	 <1242256950.3241.13.camel@maxim-laptop>
+	 <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
+	 <1242258469.3241.19.camel@maxim-laptop>
+	 <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
+	 <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 19 May 2009 17:17:27 +0300
+Message-Id: <1242742647.23110.10.camel@ibm172>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we are trying to interpolate a curve with slope == 0, the return
-value will always be the y-coordinate.  In this code we are looping
-until we reach a minimum y-coordinate on a line, which in the 0-slope
-case can never happen, thus the loop never terminates.
+On Thu, 2009-05-14 at 10:20 -0400, Bob Copeland wrote:
+> On Wed, May 13, 2009 at 8:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >>
+> >> I wish I had time to set up, an ath5k in AP mode. There are rumors that
+> >> it works more or less now, then I could use the same beacon frame to
+> >> test.
+> >
+> > It does and if it doesn't its a bug.
+> 
+> Just FYI, it's known to have problems if the STA uses power saving --
+> ath5k never updates the beacon.  I have a patch that should work in the
+> relevant bugzilla but I haven't been back to retest it (at first I
+> thought it was causing hangs, but later realized the hangs were due to
+> other bugs in w-t).
+> 
 
-The PCDAC steps come from the EEPROM and should never be equal, but
-we should gracefully handle that case, so warn and bail out.
 
-Reported-by: Steven Rostedt <rostedt@goodmis.org>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
+Just to say the truth, I haven't took my laptop with me, thus I still
+haven't tested this. I just happened that I has to do such.
 
-This ok?  (based on top of the wireless-testing tree -- the patch
-that's already there can go for 2.6.30.  This is in addition to that
-patch, this handles the other, unlikely, corner case.)
 
-Having looked at the code, I don't see why we need to loop at all,
-couldn't we just invert the slope and solve directly for y=0?
-Certainly recomputing the slope in a loop could be optimized.
-Anyway, that's another patch for another day.
+I ether make my ath5k send same beacon at home, or bring it here for
+next week.
 
- drivers/net/wireless/ath/ath5k/phy.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index d0d1c35..a876ca8 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1897,6 +1897,9 @@ ath5k_get_linear_pcdac_min(const u8 *stepL, const u8 *stepR,
- 	s16 min_pwrL, min_pwrR;
- 	s16 pwr_i;
- 
-+	if (WARN_ON(stepL[0] == stepL[1] || stepR[0] == stepR[1]))
-+		return 0;
-+
- 	if (pwrL[0] == pwrL[1])
- 		min_pwrL = pwrL[0];
- 	else {
--- 
-1.6.0.6
+Anyway I think it won't hurt to merge these patches anyway.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+
+Best regards, and really sorry,
+	Maxim Levitsky
 
