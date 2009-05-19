@@ -1,75 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33606 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbZELRyQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 13:54:16 -0400
-Subject: Re: [PATCH 6/6] ar9170: stop data queues on channel switch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200905121856.02714.chunkeey@web.de>
-References: <200905120109.09906.chunkeey@web.de>
-	 <1242142227.4331.7.camel@johannes.local>
-	 <20090512154116.M40327@bobcopeland.com>
-	 <200905121856.02714.chunkeey@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mZEgdc45HIy+W3n1iM86"
-Date: Tue, 12 May 2009 19:51:30 +0200
-Message-Id: <1242150690.8403.37.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:37446 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753484AbZESQim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 12:38:42 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 09:38:44 -0700
+Date: Tue, 19 May 2009 09:38:47 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Steven Rostedt <rostedt@goodmis.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"jirislaby@gmail.com" <jirislaby@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: prevent infinite loop
+Message-ID: <20090519163847.GA7428@tesla>
+References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com> <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com> <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com> <43e72e890905182339u68c4d4f5v3a2f25e9e3547e60@mail.gmail.com> <alpine.DEB.2.00.0905190743070.1767@gandalf.stny.rr.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <alpine.DEB.2.00.0905190743070.1767@gandalf.stny.rr.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 19, 2009 at 04:45:14AM -0700, Steven Rostedt wrote:
+> 
+> On Mon, 18 May 2009, Luis R. Rodriguez wrote:
+> 
+> > On Mon, May 18, 2009 at 11:32 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > > 2009/5/19 Steven Rostedt <rostedt@goodmis.org>:
+> > >>
+> > >> On Tue, 19 May 2009, Nick Kossifidis wrote:
+> > >>>
+> > >>> This is already fixed on wireless-testing ;-)
+> > >>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
+> > >>
+> > >> Thanks, but this does only half. Although I did not hit this in my laptop,
+> > >> it can be an issue. If step[0] == step[1] you have the same problem.
+> > >>
+> > >
+> > > Having the same power value for 2 different steps is something we can
+> > > expect (although docs say that we expect the line to be monotonically
+> > > increasing but anyway), having the same step twice is way out of spec,
+> > > there is no way we can have the same step twice on EEPROM, only if we
+> > > have a corrupted EEPROM (we need to add some sanity checks indeed here
+> > > -> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/eeprom.c;h=c56b494d417acd40d445d922f2861b53cc2315df;hb=HEAD#l910
+> > > to handle such a case but first we need to have a "default" eeprom
+> > > dataset to fallback when we get such errors).
+> >
+> > Don't bother with busted EEPROMs, if its busted its busted. Chances
+> > are the complexity we'd need to add to deal with such devices is
+> > simply not worth it.
+> 
+> My concern is that a busted EEPROM should not lock up the kernel, when we
+> can avoid it.
 
---=-mZEgdc45HIy+W3n1iM86
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sure, which is why there is a checksum which can be checked first.
+IIRC we don't bail out if that fails in ath5k.
 
-On Tue, 2009-05-12 at 18:56 +0200, Christian Lamparter wrote:
-> On Tuesday 12 May 2009 17:56:10 Bob Copeland wrote:
-> > On Tue, 12 May 2009 17:30:27 +0200, Johannes Berg wrote
-> > > On Tue, 2009-05-12 at 11:29 -0400, Bob Copeland wrote:
-> > > > Will pre-scan be called once per scan or once for every channel swi=
-tch?
-> > > > If the former, I think it's not the right place to flush.
-> > >=20
-> > > The former.
-> >=20
-> > Hmm, nevermind, it should work.  I was thinking of queued tx status=20
-> > work not being on the right channel, but I guess we don't do that for p=
-robe
-> > requests.
-> Ermm? wait... what do we do when the userspace does channel switch & scan=
-s?
-> I think, some aircrack tools actually do this. Will they also call pre_sc=
-an?
+> Put in a nasty WARN_ON if the steps are equal, and exit the
+> routine. But don't let it go into an infinite loop and have the user
+> wondering why their system just locked up.
 
-No, of course not, but there's no expectation that TX is somehow
-synchronised with channel changes.
+Sure, my point was more for not implemention a default EEPROM
+as that would bring more complexity to the driver.
 
-johannes
-
---=-mZEgdc45HIy+W3n1iM86
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCbceAAoJEODzc/N7+QmalycP/1MXfJpH6j2u5ZVQjsaEOzOp
-vSyjvzFo+voju96ubZf2frjsGITNLpZ2nCCQuoagFn0lHSvqcoS8hq0t5UniqXN6
-biToLq7IEOYSdL6sXLr6f/Hj0Nt11nJmL093z+XRGQlcyj/o8U/InIYLhGPLoytI
-9Sm8MEjeNSzS54YaUVoZ0N3j+pwGAjSMkfCmEELHSVY2EPxRz7E1u45685ydTqtt
-VGEv9cved4bqvXtrHFcBV4hP2g1jjCKaJFajFUFBSQ0PW5U41QmbpI2S7BWzF5TD
-cpDOtkpSLUTgrKCK7KimQXS6LgKGtapNnhtSJKKiyfgOAARjFJ7MgltzJ8UWAp/K
-lgNA+9Kfl4lgj2PRwS6kYQd1+jsOra1TlfQuI9rKwKxPuHlsepbuc1iKe1PWEmxt
-7s0RzxHhL3BaOyQ5M4eCo3oxsbD3TN3iejy0gnSY7E/vvxsRJ/i6oOZdMAOmgaw1
-sEMIqwse16OqL7S+ZAiyogKWG1fPE3SbSZW7vSZiGzM8aHXcjthaQ2HSbqpBwBev
-u1o2VrSidQTqw9AHyvOCz5mE0F0mWhOIEUy/9Mv6+OsIB7Vtu5f+HpuTGhFho1Tv
-3UVhadaIPNAz/iCpRoMIB5P6G1ZcugCbP9Kuew7gmdMKMt+xubz9RUIAQCUW8oQ4
-MR6sy2lbaEYfDzOusH3f
-=m/dT
------END PGP SIGNATURE-----
-
---=-mZEgdc45HIy+W3n1iM86--
+  Luis
 
