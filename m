@@ -1,83 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49723 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752810AbZEULxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 07:53:41 -0400
-From: "Zhu, Yi" <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ortiz, Samuel" <samuel.ortiz@intel.com>
-Date: Thu, 21 May 2009 19:53:17 +0800
-Subject: RE: [PATCH 1/2] wireless: move some utility functions from mac80211
- to cfg80211
-Message-ID: <AFAB8585072C7E48BC5C6F9C87F9B79703BA34C2EA@pdsmsx502.ccr.corp.intel.com>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
-	 <1242872340-27417-2-git-send-email-yi.zhu@intel.com>
- <1242898342.5471.12.camel@johannes.local>
-In-Reply-To: <1242898342.5471.12.camel@johannes.local>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59988 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751190AbZESOCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 10:02:34 -0400
+Message-Id: <20090519140228.888935865@atheros.com>
+References: <20090519140137.708996030@atheros.com>
+Date: Tue, 19 May 2009 17:01:41 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 4/7] ath9k: Wake up for RX filter changes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhhbmtzIEpvaGFubmVzLiBXaWxsIHNlbmQgb3V0IFYyIHNob3J0bHkuDQoNCi15aQ0KDQo+IC0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
-b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KPiBTZW50OiAyMDA5xOo11MIyMcjVIDE3OjMyDQo+
-IFRvOiBaaHUsIFlpDQo+IENjOiBsaW52aWxsZUB0dXhkcml2ZXIuY29tOyBsaW51eC13aXJlbGVz
-c0B2Z2VyLmtlcm5lbC5vcmc7IE9ydGl6LCBTYW11ZWwNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAx
-LzJdIHdpcmVsZXNzOiBtb3ZlIHNvbWUgdXRpbGl0eSBmdW5jdGlvbnMgZnJvbSBtYWM4MDIxMQ0K
-PiB0byBjZmc4MDIxMQ0KPiANCj4gT24gVGh1LCAyMDA5LTA1LTIxIGF0IDEwOjE4ICswODAwLCBa
-aHUgWWkgd3JvdGU6DQo+IA0KPiA+IC0tLSBhL2luY2x1ZGUvbmV0L2NmZzgwMjExLmgNCj4gPiAr
-KysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5oDQo+ID4gQEAgLTc1Miw2ICs3NTIsMzIgQEAgZW51
-bSB3aXBoeV9wYXJhbXNfZmxhZ3Mgew0KPiA+ICB9Ow0KPiA+DQo+ID4gIC8qKg0KPiA+ICsgKiBl
-bnVtIGllZWU4MDIxMV9rZXlfYWxnIC0ga2V5IGFsZ29yaXRobQ0KPiA+ICsgKiBAQUxHX1dFUDog
-V0VQNDAgb3IgV0VQMTA0DQo+ID4gKyAqIEBBTEdfVEtJUDogVEtJUA0KPiA+ICsgKiBAQUxHX0ND
-TVA6IENDTVAgKEFFUykNCj4gPiArICogQEFMR19BRVNfQ01BQzogQUVTLTEyOC1DTUFDDQo+ID4g
-KyAqLw0KPiA+ICtlbnVtIGllZWU4MDIxMV9rZXlfYWxnIHsNCj4gPiArCUFMR19XRVAsDQo+ID4g
-KwlBTEdfVEtJUCwNCj4gPiArCUFMR19DQ01QLA0KPiA+ICsJQUxHX0FFU19DTUFDLA0KPiA+ICt9
-Ow0KPiA+ICsNCj4gPiArLyoqDQo+ID4gKyAqIGVudW0gaWVlZTgwMjExX2tleV9sZW4gLSBrZXkg
-bGVuZ3RoDQo+ID4gKyAqIEBMRU5fV0VQNDA6IFdFUCA1LWJ5dGUgbG9uZyBrZXkNCj4gPiArICog
-QExFTl9XRVAxMDQ6IFdFUCAxMy1ieXRlIGxvbmcga2V5DQo+ID4gKyAqLw0KPiA+ICtlbnVtIGll
-ZWU4MDIxMV9rZXlfbGVuIHsNCj4gPiArCUxFTl9XRVA0MCA9IDUsDQo+ID4gKwlMRU5fV0VQMTA0
-ID0gMTMsDQo+ID4gKwlMRU5fQ0NNUCA9IDE2LA0KPiA+ICsJTEVOX1RLSVAgPSAzMiwNCj4gPiAr
-fTsNCj4gDQo+IFRoaXMgZG9lc24ndCBzZWVtIGFwcHJvcHJpYXRlLiBBTEdfKiBpcyBwdXJlbHkg
-bWFjODAyMTEgaW50ZXJuYWxzLCBhbmQNCj4gc2hvdWxkbid0IGJlIGluIGNmZzgwMjExJ3MgQVBJ
-IHNpbmNlIGNmZzgwMjExIHVzZXMgdTMyIHZhbHVlcyBhcyBjaXBoZXINCj4gc3VpdGUgc3BlY2lm
-aWVycy4gV2h5IGRvIHlvdSBuZWVkIHRoZXNlPw0KPiANCj4gQW5kIGlmIHlvdSB3YW50IHRvIG1v
-dmUgdGhlIGtleSBsZW5ndGhzIHRoZXkgcHJvYmFibHkgc2hvdWxkIGJlIGluDQo+IGllZWU4MDIx
-MS5oLCBoYXZlIGEgcHJvcGVyIHByZWZpeCBhbmQgYWxzbyBiZSB1c2VkIHdpdGhpbiBjZmc4MDIx
-MQ0KPiBpdHNlbGYuLi4NCj4gDQo+ID4gKy8qIERlZmF1bHQgbWFwcGluZyBpbiBjbGFzc2lmaWVy
-IHRvIHdvcmsgd2l0aCBkZWZhdWx0IHF1ZXVlIHNldHVwLiAqLw0KPiA+ICtjb25zdCBpbnQgaWVl
-ZTgwMl8xZF90b19hY1s4XSA9IHsgMiwgMywgMywgMiwgMSwgMSwgMCwgMCB9Ow0KPiA+ICtFWFBP
-UlRfU1lNQk9MKGllZWU4MDJfMWRfdG9fYWMpOw0KPiANCj4gVGhhdCBzZWVtcyBhIGxpdHRsZSBv
-ZGQsIHVubGVzcyB3ZSB3YW50IHRvIHNwZWNpZnkgaG93IHRoZSBkZWZhdWx0IHF1ZXVlDQo+IHNl
-dHVwIHNob3VsZCBiZSAuLi4gd2hpY2ggc2VlbXMgdG8gbWFrZSBubyBzZW5zZS4gSXQgcHJvYmFi
-bHkgd2lsbCBiZQ0KPiBsaWtlIHRoaXMgbW9zdCBvZiB0aGUgdGltZSwgYnV0IHN0aWxsLCBzaG91
-bGQgdGhpcyByZWFsbHkgYmUgbWFuZGF0ZWQgYnkNCj4gY2ZnODAyMTE/IFRoZXJlIHNlZW1zIHRv
-IGJlIG5vIHJlYXNvbiB0byBkbyB0aGF0LiBJJ2QgcmF0aGVyIGtlZXAgdGhpcw0KPiBpbiBldmVy
-eSBkcml2ZXIgc2luY2UgdGhlIGRyaXZlcnMgbWF5IGRpZmZlciwgYW5kIGNoYW5naW5nIHRoaXMg
-Zm9yDQo+IG1hYzgwMjExIGlzIHVubGlrZWx5Lg0KPiANCj4gPiAraW50IGllZWU4MDIxMV9kYXRh
-X3RvXzgwMjMoc3RydWN0IHNrX2J1ZmYgKnNrYiwgc3RydWN0IG5ldF9kZXZpY2UgKmRldiwNCj4g
-PiArICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIG5sODAyMTFfaWZ0eXBlIGlmdHlwZSkN
-Cj4gDQo+IFNob3VsZCBwcm9iYWJseSBwYXNzIGluIGRldi0+ZGV2X2FkZHIgaW5zdGVhZCBvZiBk
-ZXYgZm9yIHRoaXMgYW5kIHRoZQ0KPiBvdGhlciBkaXJlY3Rpb24/IE9UT0gsIEkgc3VwcG9zZSBp
-dCBvbmx5IG1ha2VzIHNlbnNlIHRvIGJlIHVzZWQgZm9yIGENCj4gbmV0ZGV2Lg0KPiANCj4gDQo+
-ID4NCj4gPiArdTE2IGNmZzgwMjExX2NsYXNzaWZ5ODAyMTEoc3RydWN0IHNrX2J1ZmYgKnNrYikN
-Cj4gPiArew0KPiA+ICsgICAgICAgc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkciA9IChzdHJ1Y3Qg
-aWVlZTgwMjExX2hkciAqKSBza2ItPmRhdGE7DQo+ID4gKw0KPiA+ICsgICAgICAgaWYgKCFpZWVl
-ODAyMTFfaXNfZGF0YShoZHItPmZyYW1lX2NvbnRyb2wpKSB7DQo+ID4gKyAgICAgICAgICAgICAg
-IC8qIG1hbmFnZW1lbnQgZnJhbWVzIGdvIG9uIEFDX1ZPIHF1ZXVlLCBidXQgYXJlIHNlbnQNCj4g
-PiArICAgICAgICAgICAgICAgICogd2l0aG91dCBRb1MgY29udHJvbCBmaWVsZHMgKi8NCj4gPiAr
-ICAgICAgICAgICAgICAgcmV0dXJuIDA7DQo+ID4gKyAgICAgICB9DQo+ID4gKw0KPiA+ICsgICAg
-ICAgaWYgKGllZWU4MDIxMV9pc19kYXRhX3FvcyhoZHItPmZyYW1lX2NvbnRyb2wpKQ0KPiA+ICsg
-ICAgICAgICAgICAgICBza2ItPnByaW9yaXR5ID0gY2ZnODAyMTFfY2xhc3NpZnk4MDIxZChza2Ip
-Ow0KPiA+ICsgICAgICAgZWxzZQ0KPiA+ICsgICAgICAgICAgICAgICBza2ItPnByaW9yaXR5ID0g
-MDsNCj4gPiArDQo+ID4gKyAgICAgICByZXR1cm4gaWVlZTgwMl8xZF90b19hY1tza2ItPnByaW9y
-aXR5XTsNCj4gPiArfQ0KPiA+ICtFWFBPUlRfU1lNQk9MKGNmZzgwMjExX2NsYXNzaWZ5ODAyMTEp
-Ow0KPiANCj4gSWYgeW91IHBhc3MgaW4gc3VpdGFibGUgaW5mb3JtYXRpb24gZm9yIHRoZSBBQ00g
-ZG93bmdyYWRlLCBpdCBzZWVtcyB5b3UNCj4gY2FuIG1vdmUgb3ZlciB0aGF0IGNvZGUgdG9vIGFu
-ZCByZW1vdmUgb25lIGV4cG9ydC4gSWYgeW91ciBkZXZpY2UNCj4gc3VwcG9ydHMgQUNNIHlvdSBj
-YW4gYWx3YXlzIHBhc3MgaW4gMCBmb3IgdGhlIEFDTSBiaXRmaWVsZCwgSSB0aGluaz8gSXQNCj4g
-c2VlbXMgYSBsaXR0bGUgd2VpcmQgdG8gaGF2ZSB0aGlzIGZ1bmN0aW9uIGFuZCB0aGVuIHdyaXRl
-IGl0IGluIGEgd2F5DQo+IG1hYzgwMjExIGNhbid0IHVzZSBpdC4NCj4gDQo+IGpvaGFubmVzDQo=
+We must make sure the chip is awake when changing the RX filter
+parameters. This could have caused problems, e.g., when changing the
+interface to promiscuous mode while in sleep mode.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2009-05-19 16:32:33.000000000 +0300
++++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2009-05-19 16:32:35.000000000 +0300
+@@ -2428,8 +2428,10 @@ static void ath9k_configure_filter(struc
+ 	*total_flags &= SUPPORTED_FILTERS;
+ 
+ 	sc->rx.rxfilter = *total_flags;
++	ath9k_ps_wakeup(sc);
+ 	rfilt = ath_calcrxfilter(sc);
+ 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
++	ath9k_ps_restore(sc);
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "Set HW RX filter: 0x%x\n", sc->rx.rxfilter);
+ }
+
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
