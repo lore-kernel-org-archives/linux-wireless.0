@@ -1,101 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:53828 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbZELTFv convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41892 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693AbZESUKS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 15:05:51 -0400
-Received: by bwz22 with SMTP id 22so167455bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 12:05:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242125077.4331.0.camel@johannes.local>
-References: <1242125077.4331.0.camel@johannes.local>
-Date: Tue, 12 May 2009 20:05:51 +0100
-Message-ID: <3ace41890905121205v76d6b61cg94d0bbe55c04da7e@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix a couple of bugs with key ioctls
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 May 2009 16:10:18 -0400
+Subject: Re: [PATCH] mac80211: don't try to do anything on unchanged genIE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <1242760372.4797.70.camel@johannes.local>
+References: <1242760372.4797.70.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/c8kVfktm6rNG9Qe4put"
+Date: Tue, 19 May 2009 22:09:43 +0200
+Message-Id: <1242763783.31350.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2009 at 11:44 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> There are a few small bugs/oversights in the key handling
-> code I wrote:
-> =A0* SIOCSIWENCODE should default to setting key 0 if no
-> =A0 default key is set already and no index is given,
-> =A0* key removal should not require key material,
-> =A0* SIOCSIWENCODEEXT should default to changing the default
-> =A0 management key if no index is given.
->
+
+--=-/c8kVfktm6rNG9Qe4put
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-05-19 at 21:12 +0200, Johannes Berg wrote:
+> When the genIE hasn't changed there's no reason to kick
+> the state machine since it won't be able to do anything
+> new -- doing this decreases the useless work we do for
+> reassociating because if we do kick the state machine
+> it will try to find a usable BSS but there might not be
+> one because wpa_supplicant will only change the BSSID
+> a little later.
+>=20
+> In a sense this is a workaround for userspace behaviour,
+> but on the other hand userspace cannot really keep track
+> of what the kernel currently has for genIE since any
+> process could have changed that while wpa_supplicant
+> wasn't looking.
+>=20
 > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
-> =A0net/wireless/wext-compat.c | =A0 14 +++++---------
-> =A01 file changed, 5 insertions(+), 9 deletions(-)
->
-> --- wireless-testing.orig/net/wireless/wext-compat.c =A0 =A02009-05-1=
-2 12:38:41.000000000 +0200
-> +++ wireless-testing/net/wireless/wext-compat.c 2009-05-12 12:38:59.0=
-00000000 +0200
-> @@ -557,7 +557,7 @@ int cfg80211_wext_siwencode(struct net_d
-> =A0 =A0 =A0 =A0if (idx =3D=3D 0) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx =3D wdev->wext.default_key;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 0)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D 0;
-> =A0 =A0 =A0 =A0} else if (idx < 1 || idx > 4)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
-> =A0 =A0 =A0 =A0else
-> @@ -580,7 +580,7 @@ int cfg80211_wext_siwencode(struct net_d
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_WE=
-P40;
-> =A0 =A0 =A0 =A0else if (erq->length =3D=3D 13)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0params.cipher =3D WLAN_CIPHER_SUITE_WE=
-P104;
-> - =A0 =A0 =A0 else
-> + =A0 =A0 =A0 else if (!remove)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
->
-> =A0 =A0 =A0 =A0return cfg80211_set_encryption(rdev, dev, NULL, remove=
-,
-> @@ -640,13 +640,9 @@ int cfg80211_wext_siwencodeext(struct ne
-> =A0 =A0 =A0 =A0idx =3D erq->flags & IW_ENCODE_INDEX;
-> =A0 =A0 =A0 =A0if (cipher =3D=3D WLAN_CIPHER_SUITE_AES_CMAC) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (idx < 4 || idx > 5) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* XXX: Only wpa_supp=
-licant ever used this
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0can we =
-still change the ABI a little
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0so we d=
-o not need to keep track of
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* =A0 =A0 =A0the def=
-ault key?
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 idx =3D wdev->wext.defa=
-ult_mgmt_key;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (idx < 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return =
--EINVAL;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0idx--;
-> =A0 =A0 =A0 =A0} else {
->
->
->
+>  net/mac80211/mlme.c |    4 ++++
+>  net/mac80211/wext.c |    5 +++--
+>  2 files changed, 7 insertions(+), 2 deletions(-)
+>=20
+> --- wireless-testing.orig/net/mac80211/mlme.c	2009-05-19 21:01:09.9239128=
+95 +0200
+> +++ wireless-testing/net/mac80211/mlme.c	2009-05-19 21:01:37.662665272 +0=
+200
+> @@ -2496,6 +2496,10 @@ int ieee80211_sta_set_extra_ie(struct ie
+>  {
+>  	struct ieee80211_if_managed *ifmgd =3D &sdata->u.mgd;
+> =20
+> +	if (len =3D=3D ifmgd->extra_ie_len &&
+> +	    !memcmp(ifmgd->extra_ie, ie, len))
+> +		return -EALREADY;
+> +
 
-I tried this, NM/wpa_suplicany still doesn't work, but if I shut those
-down and do it the old fashioned iwconfig way, I can get
-connectivity...  the last chunk looks a bit funny - '(idx < 4 || idx >
-5)' is just '(idx !=3D 4)' so why it isn't written simplier as such?
-also the idx < 0 maybe <1 ?
+Oops, this is buggy when extra_ie is NULL.
 
-Stiill needs some work...
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+
+--=-/c8kVfktm6rNG9Qe4put
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKExIDAAoJEODzc/N7+QmaurIQANOjLoQjdFo7tF3lW4TwHXSx
+pWdg2ZaGyVKiL7IOg7sDybbEtqqvkvqCxLZSbFCFmcM0/Wj3G907pAtWLrRT/kI4
+qOcvwSDnJqQdE+QsHJJIgpiDJb8utQPmRV+R5jLwnHOIZ95zsUuoDPG3caMPLubF
+OGUomqbD/ICdl7WDIGWdatoG0NQqXF3JvnG+d0qjWlQsYiVozBq1tHI25QDiIksO
+ZNa/0osyyaqRoWL3NO2g6E4O/h70en0FIwqM0QnAdqNLXIyXWGecvo9NLX+DNxqi
+MXyiEGF5wu2rHd7FD6iUV1XaT99M9Ajyy/aRaFiNSxzDdQB9YRPLKmpy/yYNqvYq
+9hqg5fR5V6hLFUjtUoG+NYwIWKni85NFDNXADvNq/QiftofUmrAsDP/xGyzJsSbI
+nP4ojWB3M8H4QAyZY7X+7Sr+lG0NqNY6Y1yoofBzSbEkUkJb++7g//6hJcIHH1zJ
+v6/xvbHi7sD1VHaXsLOv9qC2pvp9fgP4miztinKbBQ8z9b8IhpzwebVleTBdU+QG
+sKE3nyCAA04qU0C9PkGv/OzLneYwyTSphhyVOBh92Tgj/94/TapgXPnDy1wnIHBX
+01y1lhNwWHJKsTXMY8iQ+MAdB0E4Ty8FtoSSXAOxCDxDAltwrZcKa9LvJZJ962m4
+krtS8kl0xHi91vnWIwwd
+=3zhX
+-----END PGP SIGNATURE-----
+
+--=-/c8kVfktm6rNG9Qe4put--
+
