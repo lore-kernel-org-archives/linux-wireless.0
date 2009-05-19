@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:48568 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbZEQQdX convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39262 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754809AbZESJsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 12:33:23 -0400
-Received: by bwz22 with SMTP id 22so2801046bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 09:33:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <wfvdnzn6lv.fsf@calligramme.charmers>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com> <20090512215817.bd1c6895.cjsthompson@gmail.com>
-	<wf4ovlo25e.fsf@calligramme.charmers> <200905161132.21437.IvDoorn@gmail.com>
-	<wfzldcm7zr.fsf@calligramme.charmers> <20090517145110.87b68ff2.cjsthompson@gmail.com>
-	<wfvdnzn6lv.fsf@calligramme.charmers>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 17 May 2009 18:33:03 +0200
-Message-ID: <69e28c910905170933t58b769a9k8a635e2a68f063b6@mail.gmail.com>
-Subject: Re: rt73usb Access point status
-To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 May 2009 05:48:22 -0400
+Subject: Re: Plan of attack for enhancements for scan while associated
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Aeolus.Yang@atheros.com, Gaurav.Jauhar@atheros.com
+In-Reply-To: <43e72e890905181122w38f83785p2134a5142a9f0905@mail.gmail.com>
+References: <43e72e890905181122w38f83785p2134a5142a9f0905@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YhPiGA279/1C5piADX1y"
+Date: Tue, 19 May 2009 11:48:13 +0200
+Message-Id: <1242726493.17164.28.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 17, 2009 at 4:31 PM, Jon Fairbairn
-<jon.fairbairn@cl.cam.ac.uk> wrote:
-> "Christoph .J Thompson" <cjsthompson@gmail.com> writes:
->
->> On Sun, 17 May 2009 09:47:04 +0100
->> Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk> wrote:
->>> the talk Butler Lampson gave for Roger
->>> Needham's 50+5 presentation
->>> <http://research.microsoft.com/en-us/um/cambridge/events/needhambook/videos/1032/head.wmv>
->>
->> Haven't used Windows seriously in over a decade,
->
-> I never have, except to look at web pages to check that
-> they're compatible with the bugs in internet exploiter.
->
->> but as far as WiFi drivers I think there is no standards.
->
-> That -- more's the pity -- is partly the point of Lampson's
-> talk. Rather than have standards his claim is that if it
-> works on Windows it works, by definition, and that that's a
-> good thing. I don't agree with him about that last, but I
-> suspect mine is a minority view.
->
->> Windows drivers are just like the vendor drivers for
->> Linux: everyone is doing their own thing.
->
-> It would be nicer if they didn't do it that way, but what
-> would make them change? It's great that a few take notice of
-> Linux these days, but it'll be a long wait before many of
-> them develop on Linux and let the Windows community write
-> their own drivers.
 
-On a slightly related note, is it even possible to have a GPLed driver
-on Windows? Or are the NDIS development headers under a license
-precluding any GPLed drivers? (I'm asking because I'm planning to
-write a custom Broadcom driver for Windows that I want to open-source,
-and being able to use GPLed code from b43 would be of great help.)
+--=-YhPiGA279/1C5piADX1y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->
-> --
-> Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Mon, 2009-05-18 at 11:22 -0700, Luis R. Rodriguez wrote:
 
+> We could possibly allow for a debugfs parameters to allow users to
+> tune this to say scan over x channels before going to the operating
+> channel, as well as change the time between moving to a new channel.
+> This would probably help mostly with tuning this while debugging or
+> figuring out ideal default values.
 
+No, why? We can calculate things based on pm_qos, the only problem comes
+in if pm_qos essentially says "no latency allowed" in which case we need
+to do things as quickly as we can.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> New userspace can simply make use of nl80211 scan on an individual
+> freq request and figure things out on its own.
+
+Umm, no, it can't.
+
+johannes
+
+--=-YhPiGA279/1C5piADX1y
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKEoBVAAoJEODzc/N7+QmaWd8P/iLdZetbsnuU3OAp0dPDZIGD
+JhNXG6iff/gcSXhzLd6rUi5LCNfSCoTpTk0X5t+KXywXGeFRoqJHBjz6LYYn2FU3
+9uzLzw6tftqFTieGU/z2NckaDR1o/m1uZ/TGqjfAGZAtOgQdbVzgCKroCq+srFeT
+RJPTugoHIrLE+dX/b7VLEWgVi9IHXtY6GqtibKNQ11FMVEr7nmzcsknqizbQg0uc
+BLCre+d9Ig+E/DZmdPwE5a2K09cmXXRrDim8r7bHVSECxEZ4EzpuQuW19P2+TIJR
+Il55RVgZD7NbDE3ZSB2kYUL9FIyORmN/Flaws23fIfha+QZS5dwixfsLwT3I3HDZ
++lF6HDPnBXGbCdMuf1Sv0dl9K4bTjJ1vHRoCsbigdMpNxr6samKO57K0cwiv2fzv
+ieUJD2mGf7taijpqVOBlEFTTFzUr4TdQlRRpOXf0bBpNa8h3B9d+sYhJFbuE5VC7
+N6aFK47/Yr3Sjg+idr5XoYnvOkRnOsoA2zLPz+Ddlw0j+SPcEFvSZ+cx7tStxuDK
+hshx+clQpcDH53i2CpqqliiJTleR27F0obP5058LvIidq3qruZFItNCBsu44c1QC
+ei61JUeUTX1bZoj3moLT1DwMxD0GRXpAYxGeSskjSMeUg+hQ1juQg2xBBOzlR/SY
+ioSFttZE8lOZwQdHP+Hs
+=E9EI
+-----END PGP SIGNATURE-----
+
+--=-YhPiGA279/1C5piADX1y--
+
