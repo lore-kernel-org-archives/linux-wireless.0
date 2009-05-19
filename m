@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3081 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753779AbZESMfP (ORCPT
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:50481 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361AbZESWdS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 08:35:15 -0400
-Date: Tue, 19 May 2009 08:34:22 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, jirislaby@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ath5k: prevent infinite loop
-Message-ID: <20090519123422.GE2580@hash.localnet>
-References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com> <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com> <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com> <20090519114240.GA13934@hash.localnet> <alpine.DEB.2.00.0905190751200.1767@gandalf.stny.rr.com>
+	Tue, 19 May 2009 18:33:18 -0400
+Received: by gxk10 with SMTP id 10so170239gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 15:33:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.0905190751200.1767@gandalf.stny.rr.com>
+In-Reply-To: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
+References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
+Date: Tue, 19 May 2009 18:33:19 -0400
+Message-ID: <b6c5339f0905191533v30683b9cueb929f44f2f8725@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k: fix custom regulatory call position
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2009 at 07:54:23AM -0400, Steven Rostedt wrote:
-> > Do these patches need to go to 2.6.30?
-> 
-> Considering that it locked up my box, I would think that it should. Well, 
-> at least the change that checks for the infinite loop.
+On Tue, May 19, 2009 at 5:49 PM, Luis R. Rodriguez > ---
+a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1412,8 +1412,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+>        for (i = 0; i < sc->keymax; i++)
+>                ath9k_hw_keyreset(ah, (u16) i);
+>
+> -       error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
+> -                             ath9k_reg_notifier);
+>        if (error)
+>                goto bad;
 
-Yeah, I just wasn't sure if you were using that or -next (which should be
-fixed, I guess.)  I mistakenly thought Nick posted commit ishs but they
-were blobs, the actual commit was:
-
-e5f1d7f3c192c8ebeb492427bab84611ed5568eb "ath5k: fix interpolation with
-equal power levels" in wireless-testing.
-
-Those loops really want a helper function...
-
-Hmm, not too familiar with this particular code but getting back -32768
-in the degenerate case seems wrong so I'd be inclined towards a hybrid
-version of the two that also sanity checks the steps (corrupt eeproms
-are bad, but one rather likely corruption is a big block of ones or 
-zeroes).
+Is the "if (error)" check still valid?
 
 -- 
 Bob Copeland %% www.bobcopeland.com
-
