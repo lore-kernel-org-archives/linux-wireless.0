@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:59283 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171AbZERPxO convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753788AbZEST0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:53:14 -0400
-Received: by gxk10 with SMTP id 10so6403869gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 08:53:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200905141928.11794.onelektra@gmx.net>
-References: <200905141928.11794.onelektra@gmx.net>
-Date: Mon, 18 May 2009 11:53:15 -0400
-Message-ID: <b6c5339f0905180853l695c0fa1o6560077d73988291@mail.gmail.com>
-Subject: Re: ath5k from compat-wireless-2009-05-14 fails to perform IBSS merge
-From: Bob Copeland <me@bobcopeland.com>
-To: elektra <onelektra@gmx.net>
+	Tue, 19 May 2009 15:26:38 -0400
+Subject: [PATCH] mac80211: fix probe response wait timing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
+Date: Tue, 19 May 2009 21:26:07 +0200
+Message-Id: <1242761167.4797.79.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 1:28 PM, elektra <onelektra@gmx.net> wrote:
-> Hi!
+In "mac80211: split out and decrease probe wait time" I tried
+to reduce the time waiting for a probe response, but failed to
+take into account the case where we are detecting beacon loss
+in software -- in that case we still wait the monitoring time
+rather than the probe wait time. Fix this by refactoring the
+mod_timer() calls in ieee80211_associated().
 
-Thanks for the report -- I can replicate this here.  Usually IBSS
-merge happens on second or third try.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-> May 14 18:35:46 901 kernel:  [<f85baa2b>]
-> ath5k_beacon_update_timers+0x30b/0x360 [ath5k]
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-05-19 21:06:36.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-05-19 21:06:57.000000000 +0200
+@@ -1389,8 +1389,8 @@ static void ieee80211_associated(struct 
+ 		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
+ 		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
+ 					 ifmgd->ssid_len, NULL, 0);
++		mod_timer(&ifmgd->timer, jiffies + IEEE80211_PROBE_WAIT);
+ 		goto unlock;
+-
+ 	}
+ 
+ 	if (time_after(jiffies, sta->last_rx + IEEE80211_PROBE_IDLE_TIME)) {
+@@ -1399,15 +1399,16 @@ static void ieee80211_associated(struct 
+ 					 ifmgd->ssid_len, NULL, 0);
+ 	}
+ 
++	if (!disassoc)
++		mod_timer(&ifmgd->timer,
++			  jiffies + IEEE80211_MONITORING_INTERVAL);
++
+  unlock:
+ 	rcu_read_unlock();
+ 
+ 	if (disassoc)
+ 		ieee80211_set_disassoc(sdata, true, true,
+ 					WLAN_REASON_PREV_AUTH_NOT_VALID);
+-	else
+-		mod_timer(&ifmgd->timer, jiffies +
+-				      IEEE80211_MONITORING_INTERVAL);
+ }
+ 
+ 
 
-This must be WARN_ON(!intval), for some reason beacon interval
-is zero in this path.
 
--- 
-Bob Copeland %% www.bobcopeland.com
