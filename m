@@ -1,153 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45736 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391AbZEILJJ (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:61193 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140AbZESGcl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 07:09:09 -0400
-Subject: Re: Warning when terminating wpa_supplicant (wext driver)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <1241827331.4903.75.camel@localhost.localdomain>
-References: <1241677107.2918.4.camel@localhost.localdomain>
-	 <1241696104.27208.2.camel@johannes.local>
-	 <1241704437.4903.15.camel@localhost.localdomain>
-	 <1241705979.27208.31.camel@johannes.local>
-	 <1241827331.4903.75.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-pl8vNaszl1NOPR4hqj6q"
-Date: Sat, 09 May 2009 13:09:07 +0200
-Message-Id: <1241867347.31262.8.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 19 May 2009 02:32:41 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com>
+References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com>
+	 <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
+	 <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com>
+Date: Tue, 19 May 2009 09:32:42 +0300
+Message-ID: <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: prevent infinite loop
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, jirislaby@gmail.com,
+	lrodriguez@atheros.com, me@bobcopeland.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/5/19 Steven Rostedt <rostedt@goodmis.org>:
+>
+> On Tue, 19 May 2009, Nick Kossifidis wrote:
+>>
+>> This is already fixed on wireless-testing ;-)
+>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
+>
+> Thanks, but this does only half. Although I did not hit this in my laptop,
+> it can be an issue. If step[0] == step[1] you have the same problem.
+>
 
---=-pl8vNaszl1NOPR4hqj6q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-05-08 at 17:02 -0700, Marcel Holtmann wrote:
-
-> phy0: AddBA: ssn=3D277, dialog_token=3D1 tid=3D0 timeout=3D0ba_policy=3D1
-
-> Rx A-MPDU request on tid 0 result 0
-> wlan0: CTS protection enabled (BSSID=3D00:1c:f0:xx:xx:xx)
-> wlan0: CTS protection disabled (BSSID=3D00:1c:f0:xx:xx:xx)
-> wlan0: no probe response from AP 00:1c:f0:xx:xx:xx - disassociating
-
-At this point we tell the driver we're no longer associated. I think the
-driver takes that as a reason to remove the station struct it keeps
-track of in the driver. However,
-
-> Tx BA session stop requested for 00:1c:f0:xx:xx:xx tid 0
-
-now we stop the TX BA session
-
-> iwlagn 0000:03:00.0: Invalid station for AGG tid 0
-
-and iwlwifi no longer finds the station for it, returns an error
-
-> ------------[ cut here ]------------
-> WARNING: at net/mac80211/agg-tx.c:142 ___ieee80211_stop_tx_ba_session+0x6=
-b/0x7e [mac80211]()
-
-which causes the warning
-
-> Rx BA session stop requested for 00:1c:f0:xx:xx:xx tid 0
-> iwlagn 0000:03:00.0: Invalid station for AGG tid 0
-> HW problem - can not stop rx aggregation for tid 0
-
-same here -- but it's not a WARN_ON (though it probably should be!)
-
-> phy0: device now idle
-> phy0: Removed STA 00:1c:f0:xx:xx:xx
-
-_Now_ mac80211 starts removing the station info.
-
-> mac80211-phy0: failed to remove key (0, 00:1c:f0:xx:xx:xx) from hardware =
-(-22)
-
-before it asks the driver to remove the station with sta_notify, it
-removes the key for the station. But even that fails, since iwlwifi
-knows nothing about the station.
-
-> phy0: Destroyed STA 00:1c:f0:xx:xx:xx
-
-Now mac80211 has gotten rid of the sta struct completely.
+Having the same power value for 2 different steps is something we can
+expect (although docs say that we expect the line to be monotonically
+increasing but anyway), having the same step twice is way out of spec,
+there is no way we can have the same step twice on EEPROM, only if we
+have a corrupted EEPROM (we need to add some sanity checks indeed here
+-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/eeprom.c;h=c56b494d417acd40d445d922f2861b53cc2315df;hb=HEAD#l910
+to handle such a case but first we need to have a "default" eeprom
+dataset to fallback when we get such errors).
 
 
-I really really think the problem is that iwlwifi insists on keeping
-track of station information with the wrong callback. It should be using
-the sta_notify() callback, but it uses the bss_info_changed() callback,
-which leads to ordering issues because we first tell the driver that we
-disassociated, and _then_ remove all the information about the STA.
 
-Now, I guess it's debatable whether or not we should tell the driver
-that we disassociated _before_ we remove the station for the AP. But if
-we reorder, other drivers might get confused because, well, we first
-remove the AP STA and then tell them we disassociated -- but what from?
-
-Therefore, I think disassociating first and then removing the station
-information is correct.
-
-However, to test my theory, you could apply the below patch. I suspect
-it will no longer happen with this patch and iwlwifi.
-
-Ultimately though I think iwlwifi just needs to be fixed wrt. station
-handling. A whole lot of complex lookup code will go away because
-mac80211 passes station structs wherever needed, which will improve
-performance and reduce code size significantly.
-
-johannes
-
---- wireless-testing.orig/net/mac80211/mlme.c	2009-05-09 13:06:54.000000000=
- +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-05-09 13:07:59.000000000 +020=
-0
-@@ -1062,9 +1062,6 @@ static void ieee80211_set_disassoc(struc
- 		config_changed |=3D IEEE80211_CONF_CHANGE_PS;
- 	}
-=20
--	ieee80211_hw_config(local, config_changed);
--	ieee80211_bss_info_change_notify(sdata, changed);
--
- 	rcu_read_lock();
-=20
- 	sta =3D sta_info_get(local, ifmgd->bssid);
-@@ -1078,6 +1075,9 @@ static void ieee80211_set_disassoc(struc
- 	rcu_read_unlock();
-=20
- 	sta_info_destroy(sta);
-+
-+	ieee80211_hw_config(local, config_changed);
-+	ieee80211_bss_info_change_notify(sdata, changed);
- }
-=20
- static int ieee80211_sta_wep_configured(struct ieee80211_sub_if_data *sdat=
-a)
-
-
---=-pl8vNaszl1NOPR4hqj6q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKBWRPAAoJEODzc/N7+Qmagp4P/jDoACFC5XKpqFrVuyfJhD6z
-pBsJ+F2RgSnP3tR0CICUqMs7N23k9NGbYb2Ym2eLlRiCGuqQFQj6/EstkLAY2Ebu
-S2/y7FOrBZXv1AMAOZsNqdai+ZWvVagHubTboBvzOEO7/Co9fqDtui15nAn/qMCm
-+7tQdlP+evYuSdLW2CNuFQQTVF0/YFlH6D9xuETADMueEAf/cAQcboNgbLJ95f+8
-baAynw6mC7TU/B5NKtL9Hi3KVQo1dwmyylBSlIqIIWomkoTDc0sJuVqDD+FdTvfh
-A48PJJX70NZLotw7BsPiF5fUowSxvFoqTE2xxCgwjvfY7H+Ow38Xq1vKt7mP6Jiu
-v0c5HhQVW1kyQj2GAkxFqSATQK6LL4AZPnHD75L7iOgRqdkpkWwmT53rYXWr980u
-g57V9RN5/qhh0Jdh9u8cH3Q+ZfOrZmBT/S8QR0fmQelKxCLgdLCGl+fiGc0JHcql
-AOWmLkDlmf66hVCrjm+la8zktJtlQdnz64j3df5YGiREfWdVtcjoW6+sTf6STa12
-X+USTSkUt8rwJaQwANWHdbx0NgSJDBrYrKxOMk4wVsZES4tKU1wegdkzzyWltpXW
-MWaViDBkJSUaDUd9kUduBo3v2rvojmnlXVBswy/9mSGwTFC4Jf/yBUpjY6o9ruVM
-iiEOPIEE99NkaKzNc1V6
-=f1hO
------END PGP SIGNATURE-----
-
---=-pl8vNaszl1NOPR4hqj6q--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
