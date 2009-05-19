@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:34581 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752621AbZEIOBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 10:01:25 -0400
-Date: Sat, 9 May 2009 06:57:31 -0700
-From: Greg KH <greg@kroah.com>
-To: Eric Valette <eric.valette@free.fr>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [RFT] rtl8187: use DMA-aware buffers with usb_control_msg
-Message-ID: <20090509135731.GD17349@kroah.com>
-References: <20090506064513.GA7460@kroah.com> <1241632963-25601-1-git-send-email-linville@tuxdriver.com> <3ace41890905081620h10d0250eq1ede9cd73021dc5b@mail.gmail.com> <4A054F18.7020501@free.fr>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49772 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbZESSAM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 14:00:12 -0400
+Date: Tue, 19 May 2009 13:53:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dongas <dongas86@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Throughput is not changed when setting to a much higher bit
+	rate
+Message-ID: <20090519175336.GF2691@tuxdriver.com>
+References: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A054F18.7020501@free.fr>
+In-Reply-To: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 09, 2009 at 11:38:32AM +0200, Eric Valette wrote:
-> The patch fix the DMA warning and the driver seems to work (just
-> associated it) but I must say that the allocation failure handling path
-> and the fact that we use now kmalloc for allocating a few bytes in such
-> a routine makes me worry about possible negative performance impact
-> unless theses routines are used only in a slow configuration path (did
-> no took time to red the code due to many other problems).
+On Wed, May 20, 2009 at 01:48:32AM +0800, Dongas wrote:
 
-usb_control messages are slow and should not be on the "fast path" of
-any data being sent through the device.  Any overhead of the
-kmalloc/kfree is totally eaten up by the actual transmission turn around
-time of the message itself, so you don't have to worry about the
-performance impact.
+> Why the bandwidth is not changed when bit rate is changed to 11Mb/s?
+> Any thing wrong?
 
-thanks for testing.
+More errors at higher bit rate, resulting in more retries?  Just a
+thought...
 
-> BTW if someone know who I should send this attached patch for DRM git, I
-> would gladly forward it.
-
-To the drm maintainer?
-
-thanks,
-
-greg k-h
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
