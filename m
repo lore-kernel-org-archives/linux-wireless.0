@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:42072 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbZEAMAI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 08:00:08 -0400
-Received: by bwz7 with SMTP id 7so2281145bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 05:00:07 -0700 (PDT)
-Subject: [BUG] scans can still hang with -EBUSY on iwl3945
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 01 May 2009 15:00:03 +0300
-Message-Id: <1241179203.8086.3.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:42233 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361AbZESVt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 17:49:56 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH v2.6.30 and w-t] iwlwifi: update 5000 ucode support to version 2 of API
+Date: Tue, 19 May 2009 14:56:36 -0700
+Message-Id: <1242770196-31072-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't know if this is new regression, or just exposed race condition,
-but currently using rfkill, and/or s2disk sometimes leaves the card in
-state in which it can't scan.
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-Tested with and without hardware scanning.
+enable iwl driver to support 5000 ucode having version 2 of API
 
-It just returns -EBUSY till I reload the driver.
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+This ucode indicates an API change. The backward compatibility support
+can already be found in 2.6.30 and wireless-testing in commit
+964c32bdc88b3d15dce34bb9ed0903e78e95fd57 "iwlwifi: correct API command
+overlap"
 
-I use iwlwifi.git, iwl3945
+Announcement of ucode availability to follow shortly.
 
-Best regards,
-	Maxim Levitsky 
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e61b67d..3681315 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -46,7 +46,7 @@
+ #include "iwl-6000-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL5000_UCODE_API_MAX 1
++#define IWL5000_UCODE_API_MAX 2
+ #define IWL5150_UCODE_API_MAX 2
+ 
+ /* Lowest firmware API version supported */
+-- 
+1.5.6.3
 
