@@ -1,80 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:14185 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754292AbZEGRVI convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58671 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048AbZESVuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2009 13:21:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <4A02B1CA.3060708@hiramoto.org>
-References: <43e72e890905070104u59eebcceu18718a733e388cc9@mail.gmail.com>
-	<4A02B1CA.3060708@hiramoto.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 7 May 2009 10:20:48 -0700
-Message-ID: <43e72e890905071020v26857c52p3abea96be04ef1d9@mail.gmail.com>
-Subject: Re: [ath9k-devel] New kernel recommendations for ath9k
-To: Karl Hiramoto <karl@hiramoto.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 19 May 2009 17:50:00 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 3/3] cfg80211: warn when wiphy_apply_custom_regulatory() does nothing
+Date: Tue, 19 May 2009 17:49:47 -0400
+Message-Id: <1242769787-29467-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
+References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 7, 2009 at 3:02 AM, Karl Hiramoto <karl@hiramoto.org> wrote=
-:
-> Luis R. Rodriguez wrote:
->>
->> For those not subscribed to the ath9k wiki on wireless.kernel.org [1=
-]
->> (which we recommend you do if you're a user) here's a quick note to
->> let you know our latest kernel recommendations for using ath9k:
->>
->> =C2=A0* =C2=A0>=3D 2.6.27.22
->> =C2=A0* =C2=A0>=3D 2.6.28.10
->> =C2=A0* =C2=A02.6.29
->>
->> If you want 802.11n support or AP support you'll want at least 2.6.2=
-9.
->> If you happen to have one of our new 1x1 AR9285 devices (all AR9285
->> devices are 1x1) then you'll need at least 2.6.29. If you want to
->> start using ath9k on APs with AHB you will need at least 2.6.30 (sti=
-ll
->> in RC series).
->>
->> As usual if you happen to be stuck on older kernels for one reason o=
-r
->> another you can always use compat-wireless [2] and if that happens t=
-o
->> be a little too bleeding edge we have now compat-wireless releases f=
-or
->> stable kernel releases, starting as of the 2.6.30-rc series [3].
->>
->> =C2=A0Luis
->>
->> [1] http://wireless.kernel.org/en/users/Drivers/ath9k
->> [2] http://wireless.kernel.org/en/users/Download
->> [3] http://wireless.kernel.org/en/users/Download/stable
->>
->
-> Thanks for the update. =C2=A0If i want to use multiple AP's with Ath9=
-k it it
-> still best to use wireless-testing? =C2=A0Is multiple AP support in 2=
-=2E6.30-rc
-> series net-next or wireless-next?
+Device drivers using wiphy_apply_custom_regulatory() want some
+regulatory settings applied to their wiphy, if no bands were
+configured on the wiphy then something went wrong.
 
-Yeah wireless-testing is best for that. I should also mention that if
-you want to use AP mode you want to be at least on 2.6.29 (your own
-kernel, not the compat-wireless one) if you care about Power Save
-buffering on the AP as otherwise even if you use a compat-wireless
-with code from > 2.6.29 those frames will be dropped. IIRC its due to
-the way we use skb->cb for this and there not being a clean way to
-backport this (so we just drop them).
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 48db569..0eac285 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1342,13 +1342,22 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 				   const struct ieee80211_regdomain *regd)
+ {
+ 	enum ieee80211_band band;
++	unsigned int bands_set = 0;
+ 
+ 	mutex_lock(&cfg80211_mutex);
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+-		if (wiphy->bands[band])
+-			handle_band_custom(wiphy, band, regd);
++		if (!wiphy->bands[band])
++			continue;
++		handle_band_custom(wiphy, band, regd);
++		bands_set++;
+ 	}
+ 	mutex_unlock(&cfg80211_mutex);
++
++	/*
++	 * no point in calling this if it won't have any effect
++	 * on your device's supportd bands.
++	 */
++	WARN_ON(!bands_set);
+ }
+ EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
+ 
+-- 
+1.6.0.6
+
