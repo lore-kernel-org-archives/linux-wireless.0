@@ -1,86 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1240 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbZEOEKM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 00:10:12 -0400
-Date: Fri, 15 May 2009 00:09:04 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090515040904.GA32357@hash.localnet>
-References: <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com> <20090310004344.GA23466@hash.localnet> <20090312061047.GA13401@silver.sucs.org> <20090313095213.GA14250@silver.sucs.org> <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org> <20090329151401.GA26510@hash.localnet> <20090331083041.GA19657@sucs.org> <20090513214416.GA4492@sucs.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090513214416.GA4492@sucs.org>
+Received: from mga11.intel.com ([192.55.52.93]:7428 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751600AbZESPmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 11:42:05 -0400
+Subject: Re: 2.6.29.3: iwlwifi WARNING
+From: reinette chatre <reinette.chatre@intel.com>
+To: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A12CC81.7010009@nets.rwth-aachen.de>
+References: <4A0D0E36.3010304@nets.rwth-aachen.de>
+	 <1242664454.32358.527.camel@rc-desk> <4A12CC81.7010009@nets.rwth-aachen.de>
+Content-Type: text/plain
+Date: Tue, 19 May 2009 08:48:44 -0700
+Message-Id: <1242748124.32358.714.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 10:44:17PM +0100, Sitsofe Wheeler wrote:
-> Could you repost the patches you wanted me to test with against the
-> latest kernel?
+Hi Arnd,
 
-This is too ugly to live, but I'd like to know if you can reproduce
-with this patch.  If it still happens, then I guess it's back to
-debugging patches.  I'd love to be able to replicate this here :(
+On Tue, 2009-05-19 at 08:13 -0700, Arnd Hannemann wrote:
+> Hi Reinette,
+> 
+> reinette chatre schrieb:
+> > Hi Arnd,
+> > 
+> > On Thu, 2009-05-14 at 23:39 -0700, Arnd Hannemann wrote:
+> >> Hi,
+> >>
+> >> I'm using ubuntu jaunty with 2.6.29.3 mainline build:
+> >> http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.29.3/
+> >>
+> >> And from time to time get this:
+> >>
+> >> [98439.060208] ------------[ cut here ]------------
+> >> [98439.060217] WARNING: at
+> >> /home/kernel-ppa/mainline/build/drivers/net/wireless/iwlwifi/iwl-sta.c:728
+> >> iwl_set_tkip_dynamic_key_info+0xc0/0xd0 [iwlcore]()
+> >> [98439.060224] Hardware name: 20552PG
+> >> [98439.060228] no space for new kewModules linked in: nls_iso8859_1
+> >> nls_cp437 vfat fat usb_storage binfmt_misc i915 drm i2c_algo_bit ppdev
+> >> bnep ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4
+> >> xt_state nf_conntrack ipt_
+> >> REJECT xt_tcpudp iptable_filter ip_tables x_tables bridge stp kvm_intel
+> >> kvm sbp2 lp parport snd_hda_codec_conexant joydev snd_hda_intel
+> >> snd_hda_codec snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy
+> >> snd_seq_oss snd_seq_midi snd_rawmidi sn
+> >> d_seq_midi_event arc4 ecb snd_seq snd_timer snd_seq_device iwlagn
+> >> iwlcore snd mac80211 soundcore thinkpad_acpi pcmcia sdhci_pci sdhci
+> >> psmouse iTCO_wdt video intel_agp agpgart snd_page_alloc pcspkr nvram
+> >> yenta_socket rsrc_nonstatic pcmcia
+> >> _core ricoh_mmc led_class iTCO_vendor_support serio_raw btusb output
+> >> cfg80211 sha256_generic aes_i586 aes_generic cbc ohci1394 ieee1394
+> >> e1000e dm_crypt
+> >> [98439.060372] Pid: 10, comm: events/0 Not tainted
+> >> 2.6.29-02062903-generic #02062903
+> >> [98439.060377] Call Trace:
+> >> [98439.060394]  [<c013a636>] warn_slowpath+0x86/0xa0
+> >> [98439.060409]  [<c04f7938>] ? _spin_lock+0x8/0x10
+> >> [98439.060418]  [<c01e967c>] ? inotify_d_instantiate+0x3c/0x50
+> >> [98439.060427]  [<c028879c>] ? security_d_instantiate+0x1c/0x20
+> >> [98439.060436]  [<c01cebf8>] ? d_instantiate+0x38/0x40
+> >> [98439.060444]  [<c01cf3c7>] ? dput+0x67/0xd0
+> >> [98439.060453]  [<c01220f8>] ? default_spin_lock_flags+0x8/0x10
+> >> [98439.060460]  [<c04f78e2>] ? _spin_lock_irqsave+0x32/0x50
+> >> [98439.060489]  [<f80ea900>] iwl_set_tkip_dynamic_key_info+0xc0/0xd0
+> >> [iwlcore]
+> >> [98439.060523]  [<f80eac5f>] iwl_set_dynamic_key+0x5f/0x80 [iwlcore]
+> >> [98439.060546]  [<f81a5793>] iwl_mac_set_key+0xf3/0x120 [iwlagn]
+> >> [98439.060565]  [<f81a56a0>] ? iwl_mac_set_key+0x0/0x120 [iwlagn]
+> >> [98439.060606]  [<f8097fd3>] ieee80211_key_enable_hw_accel+0x53/0xc0
+> >> [mac80211]
+> >> [98439.060622]  [<c027a9fc>] ? debugfs_remove+0x4c/0x60
+> >> [98439.060665]  [<f8098168>] __ieee80211_key_todo+0xe8/0x130 [mac80211]
+> >> [98439.060674]  [<c04f6044>] ? schedule+0x2f4/0x570
+> >> [98439.060681]  [<c04f69eb>] ? mutex_lock+0xb/0x20
+> >> [98439.060727]  [<f80982cd>] ieee80211_key_todo+0xd/0x20 [mac80211]
+> >> [98439.060767]  [<f8098368>] key_todo+0x8/0x10 [mac80211]
+> >> [98439.060775]  [<c014b344>] run_workqueue+0xd4/0x170
+> >> [98439.060815]  [<f8098360>] ? key_todo+0x0/0x10 [mac80211]
+> >> [98439.060824]  [<c014bd28>] worker_thread+0x88/0xe0
+> >> [98439.060832]  [<c014ede0>] ? autoremove_wake_function+0x0/0x40
+> >> [98439.060840]  [<c014bca0>] ? worker_thread+0x0/0xe0
+> >> [98439.060846]  [<c014ea72>] kthread+0x42/0x70
+> >> [98439.060852]  [<c014ea30>] ? kthread+0x0/0x70
+> >> [98439.060860]  [<c0103da7>] kernel_thread_helper+0x7/0x10
+> >> [98439.060865] ---[ end trace 3b8aa73681896774 ]---
+> >> [102020.364126] iwlagn: Removing wrong key 1 0x410b
+> >> [102020.364274] ------------[ cut here ]------------
+> >>
+> >> and then this very same message spams my dmesg.
+> >> Computer is a Lenovo T500 with Core2Duo.
+> >>
+> > 
+> > 
+> > Could you please try this patch? It can be found in 2.6.30 and applies
+> > with some fuzz to 2.6.29. If it works for you then we can look into
+> > backporting it to 2.6.29.
+> 
+> I'm running on 2.6.30-rc6 for one day now, which I believe contains the mentioned
+> patch and I could not trigger the warning yet.
+> Not sure if this is enough evidence that the mentioned patch solved my issue ;-)
+> However, something probably did.
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index a08bc8a..e01da34 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1143,6 +1143,13 @@ struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
- }
- 
- static int
-+ath5k_rxbuf_requeue(struct ath5k_softc *sc, struct ath5k_buf *bf)
-+{
-+	list_move_tail(&bf->list, &sc->rxbuf);
-+	return ath5k_rxbuf_setup(sc, bf);
-+}
-+
-+static int
- ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
- {
- 	struct ath5k_hw *ah = sc->ah;
-@@ -1751,7 +1758,7 @@ ath5k_tasklet_rx(unsigned long data)
- 		goto unlock;
- 	}
- 	bf_last = list_entry(sc->rxbuf.prev, struct ath5k_buf, list);
--	do {
-+	for (;;) {
- 		rxs.flag = 0;
- 
- 		bf = list_first_entry(&sc->rxbuf, struct ath5k_buf, list);
-@@ -1904,13 +1911,18 @@ accept:
- 		if (sc->opmode == NL80211_IFTYPE_ADHOC)
- 			ath5k_check_ibss_tsf(sc, skb, &rxs);
- 
--		__ieee80211_rx(sc->hw, skb, &rxs);
--
- 		bf->skb = next_skb;
- 		bf->skbaddr = next_skb_addr;
-+		if (ath5k_rxbuf_requeue(sc, bf))
-+			break;
-+
-+		__ieee80211_rx(sc->hw, skb, &rxs);
-+		continue;
- next:
--		list_move_tail(&bf->list, &sc->rxbuf);
--	} while (ath5k_rxbuf_setup(sc, bf) == 0);
-+		if (ath5k_rxbuf_requeue(sc, bf))
-+			break;
-+	}
-+
- unlock:
- 	spin_unlock(&sc->rxbuflock);
- }
+Yes - 2.6.30-rc6 contains that patch. I'll look into getting it into
+2.6.29 stable.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Thank you very much for the testing.
+
+Reinette
+
 
