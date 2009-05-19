@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpfb2-g21.free.fr ([212.27.42.10]:41090 "EHLO
-	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbZEXVnY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57316 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbZESRpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2009 17:43:24 -0400
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4])
-	by smtpfb2-g21.free.fr (Postfix) with ESMTP id 3BE22D1ADF1
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2009 23:43:21 +0200 (CEST)
-Message-ID: <4A19BF2A.3030101@free.fr>
-Date: Sun, 24 May 2009 23:42:02 +0200
-From: matthieu castet <castet.matthieu@free.fr>
+	Tue, 19 May 2009 13:45:11 -0400
+Date: Tue, 19 May 2009 13:33:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ipw2100: Oops, Data bus error
+Message-ID: <20090519173309.GC2691@tuxdriver.com>
+References: <4A12E0F3.2040209@wpkg.org>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 : under high load, ack are lost
-References: <loom.20090517T085823-487@post.gmane.org> <loom.20090520T203218-265@post.gmane.org> <loom.20090520T210546-24@post.gmane.org> <200905211747.43882.mb@bu3sch.de>
-In-Reply-To: <200905211747.43882.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A12E0F3.2040209@wpkg.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 20 May 2009 23:09:47 matthieu castet wrote:
->> I see also some period were the AP seem to drop all packet.
->> I am wondering if it can be due to slow recalibration.
->> Do you now how much take calibration were mac is down ?
-> 
-> I think you should try without QoS.
-> Try specifying the qos=0 module parameter to b43.
-> If that does not work, additionally apply the following patch.
-> I think there are some problems with QoS and I think somebody reported some bugs
-> some time ago. I think they are still not addressed.
-Thank you for your help.
+On Tue, May 19, 2009 at 06:40:19PM +0200, Tomasz Chmielewski wrote:
+> I'm not sure if it's interesting or not.
+>
+> On ASUS WL-500gP (MIPS platform, with OpenWRT patches), running 2.6.29.3 
+> kernel, I'm getting an Oops (see below) when I remove the ipw2100 module 
+> and modprobe it again.
+> Let me know if I should decode the Oops etc., or if has perhaps something to do with the board
+> not fully supported by the upstream kernel, and just leave it.
 
-First I used a ipw2200 for monitoring traffic, but it seems it doesn't 
-not capture all packets. That what explain the strange pattern I saw 
-before (missing ack or 2 following ack).
+Please decode the oops... :-)
 
-The qos disable doesn't seem to help much. There still some period where 
-the AP seem blind.
-
-Disabling pwork doesn't help, but some stuff is still done with 
-b43_phy_txpower_check on tx path.
-
-
-I will try to investigate more. A quick workaround is to increase the 
-number of retry on my station.
-
-
-yes.
-
-Matthieu
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
