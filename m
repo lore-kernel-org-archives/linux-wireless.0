@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60664 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33748 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754860AbZEDQHs (ORCPT
+	with ESMTP id S1753350AbZESTNZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 12:07:48 -0400
-Subject: Re: [PATCH 2/2] mac80211: pid, fix memory corruption
+	Tue, 19 May 2009 15:13:25 -0400
+Subject: [PATCH] mac80211: don't try to do anything on unchanged genIE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1241453096-8517-2-git-send-email-jirislaby@gmail.com>
-References: <1241453096-8517-1-git-send-email-jirislaby@gmail.com>
-	 <1241453096-8517-2-git-send-email-jirislaby@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Pj2+d931gA64YYIw1mXp"
-Date: Mon, 04 May 2009 18:07:17 +0200
-Message-Id: <1241453238.8683.52.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Tue, 19 May 2009 21:12:52 +0200
+Message-Id: <1242760372.4797.70.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the genIE hasn't changed there's no reason to kick
+the state machine since it won't be able to do anything
+new -- doing this decreases the useless work we do for
+reassociating because if we do kick the state machine
+it will try to find a usable BSS but there might not be
+one because wpa_supplicant will only change the BSSID
+a little later.
 
---=-Pj2+d931gA64YYIw1mXp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+In a sense this is a workaround for userspace behaviour,
+but on the other hand userspace cannot really keep track
+of what the kernel currently has for genIE since any
+process could have changed that while wpa_supplicant
+wasn't looking.
 
-On Mon, 2009-05-04 at 18:04 +0200, Jiri Slaby wrote:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    4 ++++
+ net/mac80211/wext.c |    5 +++--
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-> +	for (i =3D 0; i < IEEE80211_NUM_BANDS; i++) {
-> +		sband =3D hw->wiphy->bands[i];
-> +		if (sband->n_bitrates > max_rates)
-> +			max_rates =3D sband->n_bitrates;
-> +	}
-> +
->  	/* We can safely assume that sband won't change unless we get
->  	 * reinitialized. */
-> -	rinfo =3D kmalloc(sizeof(*rinfo) * sband->n_bitrates, GFP_ATOMIC);
-> +	rinfo =3D kmalloc(sizeof(*rinfo) * max_rates, GFP_ATOMIC);
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-05-19 21:01:09.923912895 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-05-19 21:01:37.662665272 +0200
+@@ -2496,6 +2496,10 @@ int ieee80211_sta_set_extra_ie(struct ie
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
++	if (len == ifmgd->extra_ie_len &&
++	    !memcmp(ifmgd->extra_ie, ie, len))
++		return -EALREADY;
++
+ 	kfree(ifmgd->extra_ie);
+ 	if (len == 0) {
+ 		ifmgd->extra_ie = NULL;
+--- wireless-testing.orig/net/mac80211/wext.c	2009-05-19 21:01:22.739788309 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-05-19 21:01:37.665663772 +0200
+@@ -37,12 +37,13 @@ static int ieee80211_ioctl_siwgenie(stru
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		int ret = ieee80211_sta_set_extra_ie(sdata, extra, data->length);
+-		if (ret)
++		if (ret && ret != -EALREADY)
+ 			return ret;
+ 		sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_BSSID_SEL;
+ 		sdata->u.mgd.flags &= ~IEEE80211_STA_EXT_SME;
+ 		sdata->u.mgd.flags &= ~IEEE80211_STA_CONTROL_PORT;
+-		ieee80211_sta_req_auth(sdata);
++		if (ret != -EALREADY)
++			ieee80211_sta_req_auth(sdata);
+ 		return 0;
+ 	}
+ 
 
-I suppose you should remove the comment...
-
-johannes
-
---=-Pj2+d931gA64YYIw1mXp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ/xKzAAoJEKVg1VMiehFYsIAP/AshTex9OcRJ160LwDYGGRQ9
-0nXeI7+dJmuG+mVJ1rjOaX/K1gk/BP9eZxnao6N5HKKYDSn2FJU5STt4LbAdF78R
-Nusk8BuTJin2vrfAu8dDf5iIwpMXalyuNt4iY4C7SMjvD+KO3JlSTUfQHPBU9w3R
-QhgmmsyWevESQl7hTdakSj5jVFzoiVp/vHsZ1IteaxL//VabQnx4hA8R/uExFTRH
-j1NEQX5J4eR9uvGnEjfe4hWU4VAgb7VKpIOe+R08UuoQG4n2QlHg9e08/n6zYsQh
-Z58ysCLpPjhn2qvhHJH3MUSXTkxhDIOiPNiQt4rsQmWLPCW+QGv2Yc5yGynw24nd
-VvRp59cnZnhiq8bIcPW1j4w4YS2AhRUSuqqMy481OGRDmCLUcws8hE6cwffh+TnR
-RMvagoIxuSdrvmOz6n0cslgzrFkDXsgmL1hXtJ5Y0CEINIaagSZHV2CIh6d7jmpk
-a0Er0ndWQXNJKH3gJfjtVqc6bBvydlPP+JmwYNKwvkq7e3kM9VzZlt3HX6mayQ4p
-XZbpQ7sQ3dmfbuVgRtSfQ9bOY0Ty1tvxRWMLxT4Xkk4D7m2jAEumVctCShi38qnX
-15mJq0L4PLDcnI3jVVBCaIAMY0T2AGokO9UTI3nx9Hxg8K6rZ2iexvhkwNGWEIHP
-rDoAwVs/9fuJFpBegavJ
-=ffNT
------END PGP SIGNATURE-----
-
---=-Pj2+d931gA64YYIw1mXp--
 
