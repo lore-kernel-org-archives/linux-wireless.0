@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757828AbZEHLNb (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38033 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753366AbZESOCj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 07:13:31 -0400
-Subject: [PATCH] mac80211: don't wait for channel switch that has happened
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 13:13:27 +0200
-Message-Id: <1241781207.4495.5.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 19 May 2009 10:02:39 -0400
+Message-Id: <20090519140232.813904147@atheros.com>
+References: <20090519140137.708996030@atheros.com>
+Date: Tue, 19 May 2009 17:01:42 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 5/7] ath9k: Set PM field in frame control when in PS mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The call to ieee80211_hw_config() is supposed to apply changes
-synchronously, so once it returns the parameters are applied to
-the hardware. Thus, there really is no need to delay the probing
-by the channel switch time again since the channel switch has
-already happened once we get to this code.
+mac80211 does not set PM field for normal data frames, so we need to
+update that based on the current PS mode when using PS-Poll
+(timeout=0) power save mode.
 
-This cuts scanning time from over 7 seconds to about 4 on ar9170,
-which is due to the number of channels scanned and ar9170's switch
-time being advertised as 135ms (my test now indicates it is about
-77ms with the current driver, but the difference might also be due
-to using a different machine with different USB controllers).
+This allows the AP to remain in sync with our PS state. However, there
+is still a potential race condition between PS state changes when
+multiple TX queues are used and nullfunc and PS-Poll frames use
+different queue. That corner case may need to be handled separately by
+changing which queue is used either in ath9k or mac80211.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- net/mac80211/scan.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
---- wireless-testing.orig/net/mac80211/scan.c	2009-05-08 12:45:38.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2009-05-08 12:59:53.000000000 +0200
-@@ -559,8 +559,7 @@ void ieee80211_scan_work(struct work_str
- 		if (skip)
- 			break;
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2009-05-19 16:32:35.000000000 +0300
++++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2009-05-19 16:32:37.000000000 +0300
+@@ -2088,6 +2088,21 @@ static int ath9k_tx(struct ieee80211_hw 
+ 		goto exit;
+ 	}
  
--		next_delay = IEEE80211_PROBE_DELAY +
--			     usecs_to_jiffies(local->hw.channel_change_time);
-+		next_delay = IEEE80211_PROBE_DELAY;
- 		local->scan_state = SCAN_SEND_PROBE;
- 		break;
- 	case SCAN_SEND_PROBE:
++	if (sc->hw->conf.flags & IEEE80211_CONF_PS) {
++		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++		/*
++		 * mac80211 does not set PM field for normal data frames, so we
++		 * need to update that based on the current PS mode.
++		 */
++		if (ieee80211_is_data(hdr->frame_control) &&
++		    !ieee80211_is_nullfunc(hdr->frame_control) &&
++		    !ieee80211_has_pm(hdr->frame_control)) {
++			DPRINTF(sc, ATH_DBG_PS, "Add PM=1 for a TX frame "
++				"while in PS mode\n");
++			hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
++		}
++	}
++
+ 	if (unlikely(sc->sc_ah->power_mode != ATH9K_PM_AWAKE)) {
+ 		/*
+ 		 * We are using PS-Poll and mac80211 can request TX while in
 
+-- 
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
