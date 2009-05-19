@@ -1,96 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51974 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738AbZETLp2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 07:45:28 -0400
-Subject: Re: Scan while TX/RX'ing a lot of data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <200905201341.47185.helmut.schaa@gmail.com>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	 <200905181543.15266.helmut.schaa@gmail.com>
-	 <1242724000.17164.10.camel@johannes.local>
-	 <200905201341.47185.helmut.schaa@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-pO4Vq64KpYke9ehWL9dE"
-Date: Wed, 20 May 2009 13:44:48 +0200
-Message-Id: <1242819888.19216.6.camel@johannes.local>
+Received: from mga09.intel.com ([134.134.136.24]:50980 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753768AbZESWBB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 18:01:01 -0400
+Subject: iwlwifi 5000 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain
+Date: Tue, 19 May 2009 15:07:41 -0700
+Message-Id: <1242770861.32358.839.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-pO4Vq64KpYke9ehWL9dE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Version 8.24.2.12 of uCode for Intel Wireless WiFi Link 5100AGN,
+5300AGN, and 5350AGN  is now available for download from
+http://intellinuxwireless.org/?n=Downloads
 
-On Wed, 2009-05-20 at 13:41 +0200, Helmut Schaa wrote:
-> Am Dienstag, 19. Mai 2009 schrieb Johannes Berg:
-> > On Mon, 2009-05-18 at 15:43 +0200, Helmut Schaa wrote:
->=20
-> > > One solution would be to force all drivers to report the tx status. A=
-nother
-> > > one would be to just wait until the device's queue is empty. At that =
-point
-> > > we know that all pending data frames were sent out and additionally t=
-he
-> > > nullfunc frame was also sent out, so we can safely switch to the next
-> > > to-be-scanned channel.
-> >=20
-> > Some drivers now flush queues at channel switch time, but there's no wa=
-y
-> > to guarantee that the software queues are actually empty and the
-> > nullfunc frame isn't queued up behind other traffic. Also, waiting for
-> > any driver to report a status will lead to problems because the driver
-> > might just have dropped the frame for various reasons like being out of
-> > memory.
->=20
-> Hmm, the problem is basically (from a mac80211 perspective) that the
-> mdev tx queue could still contain data frames when the nullfunc frame
-> gets queued, right? And we do not assure that these frames are sent
-> out before the channel switch.
->=20
-> Hence, would it be possible to:
-> 1) Stop all sub_if tx queues (afterwards no new data frames should
->    appear in the mdev tx queue)
-> 2) Queue the nullfunc frame
-> 3) Flush the mdev's tx queue
-> 4) Switch the channel
-> ?
+To use this firmware your driver will need to know about the API change.
+This patch has just been sent upstream [1].
 
-I don't think that is sufficient, unless the driver also flushes the
-hardware queue at channel switch time. Which we may want to make
-explicit with a new callback or so?
+This ucode includes the fix for the "wrong command queue" problem that
+is tracked in [2].
 
-johannes
+Changes:
+     1. Move TXPOWER_DBM from 0x98 to 0x95 
+     2. Add Baseband Filter calibration 
+     3. Improve other built-in radio calibrations, fix execution order 
+     4. Fix "wrong queue" bug due to occasional command serial number
+        management 
+     5. More reliable scans (including full active dwell time after
+        auto-switch from passive to active scan) 
+     6. More reliable NULL packet Tx (scan-related) 
+     7. More robust RF-kill support 
+     8. Tune up some hardware timings 
+     9. MAC access wakeup fix 
+    10. Better TSF calculation 
+    11. Minor improvements to debugging 
+    12. Sync with bug fixes from factory
 
---=-pO4Vq64KpYke9ehWL9dE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Reinette
 
------BEGIN PGP SIGNATURE-----
+[1] http://marc.info/?l=linux-wireless&m=124276980711614&w=2
+[2] http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946
 
-iQIcBAABAgAGBQJKE+0kAAoJEODzc/N7+Qma4DkQAKErAanuI7f5BlrdmUcWKAOm
-VHJCplUCM1NOEW3N9t+x7Vf0YFZvQ9gVOtTkH7U6I7twducrQVbLYl+IZ/5exTaD
-cBwYmwChVkn9E++eYw/29SqEdvrN5drELY6rfEprtnqFiA6KrSk95OG18wA1T9qe
-6MPy7IOR9b9+sQqKILmY2TnefAh4MHOtXOTAEwmeAPYaqwwlhhLLjnuBZEI7H1Vr
-J7vWG6otPZLTH0nGboBK7bz7i3W0vpdG5P1TN0mmlsmFlavvUxnYRoAqOEYGcMQR
-yot/xF+uzXg7y6jmOXatVycpmOHABDTAb7i02sckUS7J+tzE1Zyn4wXvM6/cSyDn
-IdQHIqtW+BLy9r2O38arfj7Uh8pSQP0IRtKPrMUOM/PoND63mUohmAn5H514NdL/
-mztDzixh2IzLSTZ6CEeQRHcyEDLSVyPZsmWc3F6n1BWQoN4fSNzU/YbqJoWoqqcp
-edKEevl9lczL2DA1DVsRssAzv7VzcdnHxAROcUWj2QdoXkUM3BxWMMI1yGp6SwDA
-K1ac9AMNf65nVNgh+qk15SLlLjT0cMFQAGm/E6xrV5m2xJbTyf5idKahciqX5ZBQ
-Ag1/B6kKSV7dXbzFi1cEm6/rH/ITJwQGO2mRWLWru1/5gc1nUjCjYO8g2W3kxExl
-juSv9yXQ5cl0vxqAqdpY
-=P30f
------END PGP SIGNATURE-----
 
---=-pO4Vq64KpYke9ehWL9dE--
 
