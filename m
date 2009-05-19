@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38050 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490AbZEOPAL (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43915 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506AbZESAnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 11:00:11 -0400
-Date: Fri, 15 May 2009 10:46:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ken Lewis <kennylewis@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-net@vger.kernel.org,
-	linux-wireless@vger.kernel.org, davem@davemloft.net
-Subject: Re: Regression: 2.6.30-rc5 and rt2x00 / rt2500pci
-Message-ID: <20090515144628.GE2773@tuxdriver.com>
-References: <5a44caba0905150740n3bf90e05i17a74e82f35edcf4@mail.gmail.com>
+	Mon, 18 May 2009 20:43:24 -0400
+Date: Mon, 18 May 2009 20:43:24 -0400 (EDT)
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+cc: LKML <linux-kernel@vger.kernel.org>, jirislaby@gmail.com,
+	lrodriguez@atheros.com, me@bobcopeland.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] ath5k: prevent infinite loop
+In-Reply-To: <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
+Message-ID: <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com>
+References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com> <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5a44caba0905150740n3bf90e05i17a74e82f35edcf4@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 15, 2009 at 03:40:44PM +0100, Ken Lewis wrote:
-> I've been looking for a bug in Linux-Next that makes my rt2500pci
-> wireless card unusable.  When testing 2.6.30-rc5, I saw the following
-> bug while trying to associate with a WPA-PSK encrypted access point.
-> It's a regression over 2.6.30-rc4 and I'm trying to git-bisect my way
-> to the source of the problem.  I think that a problem in the same area
-> is stopping my card from associating when using a kernel from
-> linux-next also.
 
-Please apply this patch:
+On Tue, 19 May 2009, Nick Kossifidis wrote:
+> 
+> This is already fixed on wireless-testing ;-)
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/0002-mac80211-avoid-NULL-ptr-deref-when-finding-max_rate.patch
+Thanks, but this does only half. Although I did not hit this in my laptop, 
+it can be an issue. If step[0] == step[1] you have the same problem.
 
-A pull request was sent to Dave M. a couple of days ago.  I imagine
-that it will make its way to Linus shortly.
+-- Steve
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
