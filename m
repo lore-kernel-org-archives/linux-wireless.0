@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:45197 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbZERTAJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59893 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048AbZESW1L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 15:00:09 -0400
-Received: by bwz22 with SMTP id 22so3392759bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 12:00:09 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: some wireless suspend thoughts
-References: <1242397016.5799.102.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 18 May 2009 22:00:06 +0300
-In-Reply-To: <1242397016.5799.102.camel@johannes.local> (Johannes Berg's message of "Fri\, 15 May 2009 16\:16\:56 +0200")
-Message-ID: <87pre69qyx.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 19 May 2009 18:27:11 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 1/3] ath9k: fix custom regulatory call position
+Date: Tue, 19 May 2009 18:27:11 -0400
+Message-Id: <1242772031-9966-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+ath_regd_init() needs to be called with the wiphy already
+properly set with the bands. Without this the custom regulatory
+settings were not taking effect, and the device would get
+the default channel settings from ath9k_[25]ghz_chantable.
 
->  * kick pci driver suspend/resume out of ath9k and keep the device in
->    low power while unused
->  * make mac80211 send nullfunc for suspend/resume
->  * make cfg80211 always call suspend/resume
->
-> This is quite hackish. It works for me, but my AP disassocs me anyway
-> because it probes every 5 seconds and if you don't respond ... however,
-> due to the nullfunc at resume time we notice very very quickly since it
-> sends a deauth as a response to that.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-To me trying to maintain association during suspend sounds wrong. What
-do we gain from that? 
+uses a tab
 
-In my opinion it's better to disassociate during suspend and let user
-space reassociate during resume. That way no need to do any special
-hacks and functionality is the same with all APs.
+ drivers/net/wireless/ath/ath9k/main.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-I'm sure I'm missing a lot here, but this is my first impression.
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c161b75..7fab2d4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1412,8 +1412,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+ 	for (i = 0; i < sc->keymax; i++)
+ 		ath9k_hw_keyreset(ah, (u16) i);
+ 
+-	error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
+-			      ath9k_reg_notifier);
+ 	if (error)
+ 		goto bad;
+ 
+@@ -1626,14 +1624,19 @@ int ath_attach(u16 devid, struct ath_softc *sc)
+ 	if (error != 0)
+ 		return error;
+ 
+-	reg = &sc->sc_ah->regulatory;
+-
+ 	/* get mac address from hardware and set in mac80211 */
+ 
+ 	SET_IEEE80211_PERM_ADDR(hw, sc->sc_ah->macaddr);
+ 
+ 	ath_set_hw_capab(sc, hw);
+ 
++	error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
++			      ath9k_reg_notifier);
++	if (error)
++		return error;
++
++	reg = &sc->sc_ah->regulatory;
++
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+ 		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+ 		if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes))
 -- 
-Kalle Valo
+1.6.0.6
+
