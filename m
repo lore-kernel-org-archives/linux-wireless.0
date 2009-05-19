@@ -1,82 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53010 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518AbZESNXZ (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3081 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753779AbZESMfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 09:23:25 -0400
-Subject: rfkill vs. interface up
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Dan Williams <dcbw@redhat.com>, netdev <netdev@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DcT14V4cUFljtJ6g06FB"
-Date: Tue, 19 May 2009 14:32:11 +0200
-Message-Id: <1242736331.4797.22.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 19 May 2009 08:35:15 -0400
+Date: Tue, 19 May 2009 08:34:22 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, jirislaby@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] ath5k: prevent infinite loop
+Message-ID: <20090519123422.GE2580@hash.localnet>
+References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com> <40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com> <alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com> <20090519114240.GA13934@hash.localnet> <alpine.DEB.2.00.0905190751200.1767@gandalf.stny.rr.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.0905190751200.1767@gandalf.stny.rr.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 19, 2009 at 07:54:23AM -0400, Steven Rostedt wrote:
+> > Do these patches need to go to 2.6.30?
+> 
+> Considering that it locked up my box, I would think that it should. Well, 
+> at least the change that checks for the infinite loop.
 
---=-DcT14V4cUFljtJ6g06FB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, I just wasn't sure if you were using that or -next (which should be
+fixed, I guess.)  I mistakenly thought Nick posted commit ishs but they
+were blobs, the actual commit was:
 
-Hi,
+e5f1d7f3c192c8ebeb492427bab84611ed5568eb "ath5k: fix interpolation with
+equal power levels" in wireless-testing.
 
-More thoughts on rfkill ...
+Those loops really want a helper function...
 
-So we were thinking it would be sensible to just force interfaces down
-on rfkill, which is of course possible, and then reject attempts to set
-the interface UP while killed.
+Hmm, not too familiar with this particular code but getting back -32768
+in the degenerate case seems wrong so I'd be inclined towards a hybrid
+version of the two that also sanity checks the steps (corrupt eeproms
+are bad, but one rather likely corruption is a big block of ones or 
+zeroes).
 
-There's just one problem with that -- when you un-rfkill, does the
-kernel set interfaces UP again?
-
-If not -- how would we possibly handle 'iwconfig .. txpower off'? We're
-mostly handling it like rfkill now afaict, but 'iwconfig .. txpower on'
-wouldn't be able to do anything properly.
-
-If yes -- how do we know which interfaces to set UP? However we turn it,
-userspace can then not disable an interface regardless of rfkill state,
-which gets really confusing.
-
-Therefore, I don't think we can simply set interfaces down on rfkill
-with the current scheme.
-
-On the other hand, the interfaces really are dysfunctional in rfkill and
-we really need more integration.
-
-
-I'm happy to give up on 'iwconfig wlan0 txpower on/off' entirely, simply
-refuse supporting it (return -EINVAL if txpower.disabled) and then use
-the first scheme where rfkill forces the interface down but userspace is
-responsible for enabling it again. This is asymmetric, but I don't see
-what else to do.
-
-Thoughts?
-
-johannes
-
-
---=-DcT14V4cUFljtJ6g06FB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKEqbHAAoJEODzc/N7+QmaW34QAMSMsHgafIsRF4ighIgVkmID
-Xk3YrnQe+yNbYTktqIi3zAIxDuE9pdXhZ5o4WSkjfS+eyxpLi4zbCH4ra8i1L4ZI
-cPhyubJEEef/VP7y1msyj1FZPoV2M7apgrfVl5uH9/yc7lfstujIshSZx9iIDYJd
-zAebXPqSY5G3C4xQbwFD5TJc4RUEsk7ILxOfW8Qe/E0hZ8jH1JD5rp+nc2gsUxEW
-XoE/IiU7+L5UfP3SdHOUSmV/sWl2b3R4IIwVhzSbTCZVbvtE0twZ0bVNpyWmIRw4
-6HWcJll6uUuTUHdJbPK3YFKbSI3w7lYUGbBnXTpTmhKAQjJxPva5lyd0xuNC7aE/
-8fEeucvX4v6/105YaIYIkCsBTeujPz4BF+CzGgUO250K30Fm/fg7122hdGCdNu4b
-+/T8R74D3rFN6lPEjt8+QkGCG7fSNnktNIamwNmQhxVpTsLIhjEdqqAfE+Bt5sDv
-qJyt0A70VHVfATxC/TDTt9aZ8lmqKwGN63PT6ozzvEH5P0XaodOoUNjWrq4nwzOQ
-gKhCWakfjJ3tKfbbJv+w+xrkrkiNtKMw9q1nb76e+Scw4yMgmIlu7dZ27AWhN+Em
-yMy0Y1LVYwkkPKjefrKINkS7FLHcjkLKN6kNMP4eXNrznzBESDZ5JPIX65LEPVke
-hNUfjFmh+PIsDUBpy5S7
-=VkvC
------END PGP SIGNATURE-----
-
---=-DcT14V4cUFljtJ6g06FB--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
