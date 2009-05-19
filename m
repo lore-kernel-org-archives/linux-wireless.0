@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:27952 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbZEIBOE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58114 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751910AbZESWpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 21:14:04 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so1392184rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2009 18:14:05 -0700 (PDT)
+	Tue, 19 May 2009 18:45:16 -0400
+Date: Tue, 19 May 2009 18:35:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Subject: Re: [PATCH v2.6.30 and w-t] iwlwifi: update 5000 ucode support to
+	version 2 of API
+Message-ID: <20090519223535.GA4635@tuxdriver.com>
+References: <1242770196-31072-1-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1241827331.4903.75.camel@localhost.localdomain>
-References: <1241677107.2918.4.camel@localhost.localdomain>
-	<1241696104.27208.2.camel@johannes.local> <1241704437.4903.15.camel@localhost.localdomain>
-	<1241705979.27208.31.camel@johannes.local> <1241827331.4903.75.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 8 May 2009 18:13:45 -0700
-Message-ID: <43e72e890905081813r58888509je62856008cc62d22@mail.gmail.com>
-Subject: Re: Warning when terminating wpa_supplicant (wext driver)
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1242770196-31072-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 8, 2009 at 5:02 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Johannes,
->
->> > > Copying Wey-Yi, but I think she's aware of this? It's definitely a
->> > > driver issue. I _suspect_, but am not sure, that the driver kills the
->> > > aggregation session when we disassoc or something and we only tell it
->> > > about the STA removal after that, when it already killed the STA. Thus
->> > > it would be a consequence of iwlwifi not implementing a proper
->> > > sta_notify() callback.
->> >
->> > I don't see it with nl80211 driver, but that might be pure luck.
->>
->> Hmm, ok, that points to something else maybe... Now I wish I had my
->> ftrace-mac80211 patch ready. Well, the patch is almost ready but we
->> can't use ftrace in modules yet...
->>
->> Maybe there's some timing issue. I still think it's iwlwifi getting
->> confused about what mac80211 is telling it as described, but it seems
->> it's a little more subtle than what I said.
->
-> something similar now happened during normal operation:
+On Tue, May 19, 2009 at 02:56:36PM -0700, Reinette Chatre wrote:
+> From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+> 
+> enable iwl driver to support 5000 ucode having version 2 of API
+> 
+> Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+> This ucode indicates an API change. The backward compatibility support
+> can already be found in 2.6.30 and wireless-testing in commit
+> 964c32bdc88b3d15dce34bb9ed0903e78e95fd57 "iwlwifi: correct API command
+> overlap"
+> 
+> Announcement of ucode availability to follow shortly.
 
-Just curious, have you applied johill's latest idle fix patch? I've
-been running iperf overnight with it and my woes are gone. I tested RX
-though, I'm leaving TX running now but haven't yet seen any warn.
+Does this fix a bug?  What about it merits inclusion for 2.6.30?
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
