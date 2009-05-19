@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750804AbZEQJ2v (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38038 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753237AbZESOCn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 05:28:51 -0400
-Subject: Re: [PATCH] mac80211: cancel/restart all timers across
- suspend/resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890905161416n5295e5eamd4cf41fa1129260d@mail.gmail.com>
-References: <1242391067.5799.53.camel@johannes.local>
-	 <43e72e890905161416n5295e5eamd4cf41fa1129260d@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OYVigLUNlaACFCw3WLaL"
-Date: Sun, 17 May 2009 11:28:46 +0200
-Message-Id: <1242552527.10005.75.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 19 May 2009 10:02:43 -0400
+Message-Id: <20090519140236.866613677@atheros.com>
+References: <20090519140137.708996030@atheros.com>
+Date: Tue, 19 May 2009 17:01:43 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 6/7] mac80211: PS processing for every Beacon with our AID in TIM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If the AP includes our AID in the TIM IE, we need to process the
+Beacon frame as far as PS is concerned (send PS-Poll or nullfunc data
+with PM=0). The previous code skipped this in cases where the CRC
+value did not change and it would not change if the AP continues
+including our AID in the TIM..
 
---=-OYVigLUNlaACFCw3WLaL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is no need to count the crc32 value for directed_tim with this
+change, so we can remove that part. In order not to change the order
+of operations (i.e., update WMM parameters prior to sending PS-Poll),
+the CRC match is checked twice as only after the PS processing step,
+the rest of the function is skipped if nothing changed in the Beacon.
 
-On Sat, 2009-05-16 at 14:16 -0700, Luis R. Rodriguez wrote:
-> On Fri, May 15, 2009 at 5:37 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->=20
-> > --- wireless-testing.orig/net/mac80211/mlme.c   2009-05-15 12:43:11.000=
-000000 +0200
-> > +++ wireless-testing/net/mac80211/mlme.c        2009-05-15 12:43:11.000=
-000000 +0200
-> > @@ -37,6 +37,9 @@
-> >  #define IEEE80211_PROBE_IDLE_TIME (60 * HZ)
-> >  #define IEEE80211_RETRY_AUTH_INTERVAL (1 * HZ)
-> >
-> > +#define TMR_RUNNING_TIMER      1
-> > +#define TMR_RUNNING_CHANSW     1
->=20
-> Typo?
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Damn, yes, thanks for catching that, will repost.
+---
+ net/mac80211/mlme.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-johannes
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-05-19 16:32:25.000000000 +0300
++++ wireless-testing/net/mac80211/mlme.c	2009-05-19 16:32:39.000000000 +0300
+@@ -1958,16 +1958,13 @@ static void ieee80211_rx_mgmt_beacon(str
+ 		directed_tim = ieee80211_check_tim(elems.tim, elems.tim_len,
+ 						   ifmgd->aid);
+ 
+-	ncrc = crc32_be(ncrc, (void *)&directed_tim, sizeof(directed_tim));
++	if (ncrc != ifmgd->beacon_crc) {
++		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems,
++				      true);
+ 
+-	if (ncrc == ifmgd->beacon_crc)
+-		return;
+-	ifmgd->beacon_crc = ncrc;
+-
+-	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
+-
+-	ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
+-				 elems.wmm_param_len);
++		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
++					 elems.wmm_param_len);
++	}
+ 
+ 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
+ 		if (directed_tim) {
+@@ -1992,6 +1989,10 @@ static void ieee80211_rx_mgmt_beacon(str
+ 		}
+ 	}
+ 
++	if (ncrc == ifmgd->beacon_crc)
++		return;
++	ifmgd->beacon_crc = ncrc;
++
+ 	if (elems.erp_info && elems.erp_info_len >= 1) {
+ 		erp_valid = true;
+ 		erp_value = elems.erp_info[0];
 
---=-OYVigLUNlaACFCw3WLaL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+-- 
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKD9jJAAoJEODzc/N7+QmazrsP/A6Wy+eRDt07cesattdCP9VN
-eFvyxRVzrITM/ggUKpFzThXtdo+hih1gouDycKfVrM+szesDf8n3ye5yNFwfKP2i
-bnapuO/chWchE+RAgE/382q5WRGTfTw75uB7b1mHyesebygG+09dmahDwyTR81fr
-ciAVWPL3p9I2ZSQNYJg4oUhjdio7Lm1GzZcRvvqBlVDYOSLpigcLcwJCki6XG6UB
-X8EySvEIakkKqsIL4RgwxXyHQCDsZMr06VaiNd8955zR+2VyNEfvdF83tTHOa0DP
-Q6qGaDjoPU2q5NoeMfAT591t1alksMBA4augC6tNxDovmuy939CfGBGsF4Sr345m
-7fJ+7qcQdPdxsWyWvhZ/YgYlbVQXJqWqCJQflywTnuKg1Jobaa0qWGcWJoA21+XV
-zVmS+3BRa+FUgtrfXQDf1TG/YCX79FJ8muBtA8u+/fMeivOIm+w7iMCibx2cxjt7
-RBTa2G7DUkZRM77jUF1HmNo0i8bSBLTF+vgoTSdlMIg/Ixv80T9IPj3G01W206IG
-44yKLkNDizWFxQtBpKipBInBpEUZFerrJx4rBLXgM/DKZk8GFJ3dvsQ/10jB7I5N
-W+ecJVtGCYKf8Zh17BxIAj7a5vI8eabkfH99RVqDB5f9S4dR8RJgs/PHQqCFIUTH
-W6/lEBNEQHwLNdfpRcAo
-=c1bM
------END PGP SIGNATURE-----
-
---=-OYVigLUNlaACFCw3WLaL--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
