@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:65189 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751558AbZEYGPg convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57957 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882AbZESWGX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2009 02:15:36 -0400
-Received: by fxm12 with SMTP id 12so1091609fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 24 May 2009 23:15:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A199FED.7000609@gmx.net>
-References: <4A199FED.7000609@gmx.net>
-Date: Mon, 25 May 2009 07:15:37 +0100
-Message-ID: <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>
-Subject: Re: RTL 8185
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Barkle <barkle@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 May 2009 18:06:23 -0400
+Subject: Re: [PATCH 1/3] ath9k: fix custom regulatory call position
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
+References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oCoyE9QH8zUeiqyaJM5m"
+Date: Wed, 20 May 2009 00:05:52 +0200
+Message-Id: <1242770752.31350.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 24, 2009 at 8:28 PM, Barkle <barkle@gmx.net> wrote:
-> Hi,
->
-> I have a pci-card with a RTL8185 chip.
-> [01:07.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8185 IEEE
-> 802.11a/b/g Wireless LAN Controller (rev 20)]
->
-> Base on a Debian Lenny with
-> kernel 2.6.30-rc5
-> wpasupplicant v0.6.9
-> wireless_tools 30
->
-> I can change some parameter on the card with iwconfig, for example the
-> channel, but every time I try to get the card to work, the kernel freeze.
->
-> Now I´m not sure, if this mailinglist is the right one, because it may be a
-> problem of the hardware, the kernel or some userland tools.
->
-> If you need any additional information, please ask me an I try to answer
-> asap.
 
-Yes, this is the right list - a few things:
-1) dmesg should show a few line of info, including a line like this:
+--=-oCoyE9QH8zUeiqyaJM5m
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-wlan0: hwaddr XX:XX:XX:XX;XX:XX <chip_name> + <rf_type>
+On Tue, 2009-05-19 at 17:49 -0400, Luis R. Rodriguez wrote:
 
-we need at least that line, and anything else that's relevant in dmesg.
+>  	ath_set_hw_capab(sc, hw);
+> =20
+> +        error =3D ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
+> +			      ath9k_reg_notifier);
+> +	if (error)
 
-2) what do you mean by 'kernel freeze'? e.g. if you do it without X,
-do you get a pile of
-cryptic messages before lock up (if that's the case)? If there is, try
-to take a picture of it with a digital camera;
-if you computer is still operational, please cut-and-paste that to the reply.
+that looks like a whitespace problem
 
-Also, describe what exactly did you try to do, step by step.
+johannes
 
-3) have you tried compat-wireless? compat-wireless is ahead of
-2.6.30-rcX and occasionally have fixes to bugs which creeps into the
-rc's...
+--=-oCoyE9QH8zUeiqyaJM5m
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKEy08AAoJEODzc/N7+QmaBMYP/35cI2qMNHu0Yj2Ebdafcd2q
+UVp3/DVzmL+I5bcXU7xo/Om3CoqDDlAA/PTJWxhG1RR8dJNm1Bd//tp2tMbPHc3/
+/s4ANxQRpQ5xZZ/QsZ4yLeUUqFPEyZHuYzVb89fn2pWkQ8kDaamKeX22jFUvfpJd
+/LZyevymEMHPFMUtQzE8XOB7rCRjtXFl0gmyl0/7yYTjnT5dzYWsskxSsPbiXG7q
+SOzObGjo4eTzBVlsynWaeQ8S/ET7Gt5tltANQZ7FuJXQarM0RX+7VAAQmrxuWf/b
+Jh+WrzvQHPT6M0KnL2ALQPdckkuQdn34Wkaz5sGS64OlMUZyF3PEa2B19wHz/GL6
+WRPHyqjyXusEdV3yMlAR86x7XCFcRgRK2aNtMnTk/0Axb+TERJK+QSRlnQ9kFVho
+Yk2nRStIF6chdx34fPJRTmjUmGtG+b0Wc55J4H3KtXJkKJm5c13xoUzHyfyJC1Hf
+6cB70TedunZEKDN38RbuUBo6Kaqyt5skDXKDXWhyZPUaOmgZKDKY35ot91iK51al
+tbgfltDUkMpt2kRYT45zicKF5d8Bc1b9A4xDcU2pqGIWVtbTTlFnVCYk5V2lelOS
+4VlZtkTQI3sty0R18W2LmaFFzGV9a+X8aP6HBb2ABjw/nAkJye3giGC9qLMKWJTg
+j56gOOTqnUGnxT/xb7d4
+=mkPR
+-----END PGP SIGNATURE-----
+
+--=-oCoyE9QH8zUeiqyaJM5m--
+
