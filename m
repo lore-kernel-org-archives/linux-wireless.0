@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:64131 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753606AbZEHSJT (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:45050 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbZESCvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 14:09:19 -0400
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-Date: Fri, 8 May 2009 20:09:18 +0200
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <20090403182724.GA7364@tuxdriver.com> <da94abde0905080956g3c6f49f3ta38412d886cfb2ec@mail.gmail.com> <1241802874.4495.25.camel@johannes.local>
-In-Reply-To: <1241802874.4495.25.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200905082009.18697.helmut.schaa@gmail.com>
+	Mon, 18 May 2009 22:51:04 -0400
+Received: from [192.168.1.101] (S0106001cf062885c.vc.shawcable.net [24.82.155.236])
+	by mail.holtmann.org (Postfix) with ESMTP id E92D08B547
+	for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 04:51:07 +0200 (CEST)
+Subject: DHCP broken when using A-band only
+From: Marcel Holtmann <marcel@holtmann.org>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Mon, 18 May 2009 19:50:51 -0700
+Message-Id: <1242701451.3147.2.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 8. Mai 2009 schrieb Johannes Berg:
-> 
-> > > Feel free to edit and add suggestions
-> > 
-> > What about proper roaming support? I think it will be the thing we are
-> > lacking after power save is finished. There was talk about having GSoC
-> > project, what happened to it?
-> 
-> That project was not accepted - and we even got three.
-> 
-> > I'm interested about roaming, but I don't how much time if any I can
-> > find for implementing it. But I could make a summary of all
-> > discussions we have had here during the last year and maybe try to
-> > start some discussion at the summit. What others think?
-> 
-> Sounds useful. Helmut will have input too I guess, and he'll be there.
+Hi Johannes,
 
-Yep, a roaming discussion would be great.
+so I am running the latest wireless-testing.git tree based on 2.6.30-rc6
+and when connecting to my A-band only configured AP, I don't get any
+packets through. Even DHCP fails. The only thing I see in dmesg is
 
-Helmut
+[ 3221.246392] wlan0: dropped frame to 00:1f:f3:xx:xx:xx (unauthorized port)
+
+The wireless-testing.git tree based on 2.6.30-rc5 was working fine with
+that access point. I was actually happily using the A-band since it is
+less busy here. Any ideas why this might broke?
+
+Regards
+
+Marcel
+
+
