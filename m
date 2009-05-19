@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:52310 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755264AbZEUOKl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35201 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbZESIjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 10:10:41 -0400
-Received: by bwz22 with SMTP id 22so1036814bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 07:10:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242914188.4212.7.camel@johannes.local>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
-	<1242872340-27417-2-git-send-email-yi.zhu@intel.com> <f6ca9fed0905210012t2b494db5w3169ef2e8db2b04b@mail.gmail.com>
-	<1242889781.24825.611.camel@debian> <1242897719.5471.1.camel@johannes.local>
-	<20090521133839.GA2744@tuxdriver.com> <1242914188.4212.7.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 21 May 2009 16:10:22 +0200
-Message-ID: <69e28c910905210710h722a09a1g5b68dad9cf684f5f@mail.gmail.com>
-Subject: Re: [PATCH 1/2] wireless: move some utility functions from mac80211
-	to cfg80211
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>, drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ortiz, Samuel" <samuel.ortiz@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 May 2009 04:39:36 -0400
+Subject: [PATCH] mac80211: fix kernel-doc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 19 May 2009 10:39:34 +0200
+Message-Id: <1242722374.17164.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2009 at 3:56 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-05-21 at 09:38 -0400, John W. Linville wrote:
->> On Thu, May 21, 2009 at 11:21:59AM +0200, Johannes Berg wrote:
->> > On Thu, 2009-05-21 at 15:09 +0800, Zhu Yi wrote:
->> >
->> > > > Isn't lib80211 a better place for those ?
->> > > > Its purpose is sharing code between fullmac and softmac drivers.
->> > >
->> > > These functions are moved from mac80211 which currently doesn't link
->> > > with lib80211. Johannes might have more to comment.
->> >
->> > Yeah, lib80211's stated purpose is to share code, but on the other hand
->> > code that mac80211 and fullmac drivers may need seems better suited in
->> > cfg80211 since lib80211 also ships a large code bit of crypto routines
->> > etc. that are just useless for this and mac80211.
->>
->> The crypto stuff is mostly in separate modules.
->>
->> I would rather see these in lib80211, but I'll work that out myself.
->
-> Heh. And I asked them to put it here... Then again, lib80211_crypt_*
-> only exists for hostap and ipw2x00, so maybe we should separate that out
-> into a separate lib80211_crypt module? That would leave lib80211 only
-> with print_ssid, of course...
+Moving information from config_interface to bss_info_changed
+removed struct ieee80211_if_conf which the documentation still
+refers to, additionally there's one kernel-doc description too
+much and one other missing, fix all this.
 
-crypt80211, anyone? (Print_ssid is clearly not enough to consider
-maintaining an extra module.)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ Documentation/DocBook/mac80211.tmpl |    1 -
+ include/net/mac80211.h              |    1 -
+ net/mac80211/sta_info.h             |    1 +
+ 3 files changed, 1 insertion(+), 2 deletions(-)
 
->
-> Basically I still think having lib80211 is pretty much pointless since
-> all future fullmac drivers and mac80211 all need to use cfg80211.
->
-> johannes
->
->
+--- wireless-testing.orig/include/net/mac80211.h	2009-05-19 10:25:25.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-05-19 10:35:11.000000000 +0200
+@@ -173,7 +173,6 @@ enum ieee80211_bss_change {
+  * @timestamp: beacon timestamp
+  * @beacon_int: beacon interval
+  * @assoc_capability: capabilities taken from assoc resp
+- * @ht: BSS's HT configuration
+  * @basic_rates: bitmap of basic rates, each bit stands for an
+  *	index into the rate table configured by the driver in
+  *	the current band.
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-05-19 10:27:04.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2009-05-19 10:35:11.000000000 +0200
+@@ -216,6 +216,7 @@ struct sta_ampdu_mlme {
+  * @plink_state: peer link state
+  * @plink_timeout: timeout of peer link
+  * @plink_timer: peer link watch timer
++ * @plink_timer_was_running: used by suspend/resume to restore timers
+  * @debugfs: debug filesystem info
+  * @sta: station information we share with the driver
+  */
+--- wireless-testing.orig/Documentation/DocBook/mac80211.tmpl	2009-05-19 10:37:35.000000000 +0200
++++ wireless-testing/Documentation/DocBook/mac80211.tmpl	2009-05-19 10:37:41.000000000 +0200
+@@ -145,7 +145,6 @@ usage should require reading the full do
+         interface in STA mode at first!
+       </para>
+ !Finclude/net/mac80211.h ieee80211_if_init_conf
+-!Finclude/net/mac80211.h ieee80211_if_conf
+     </chapter>
+ 
+     <chapter id="rx-tx">
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
