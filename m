@@ -1,595 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57060 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182AbZE1PcA (ORCPT
+Received: from mx03.syneticon.net ([78.111.66.105]:33323 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383AbZESQkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 11:32:00 -0400
-Subject: [PATCH] rfkill: create useful userspace interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 28 May 2009 17:31:27 +0200
-Message-Id: <1243524688.10632.0.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 19 May 2009 12:40:23 -0400
+Received: from localhost (filter1.syneticon.net [192.168.113.83])
+	by mx03.syneticon.net (Postfix) with ESMTP id AE97F35E22
+	for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 18:40:22 +0200 (CEST)
+Received: from mx03.syneticon.net ([192.168.113.84])
+	by localhost (mx03.syneticon.net [192.168.113.83]) (amavisd-new, port 10025)
+	with ESMTP id FBfiOlOTnCy9 for <linux-wireless@vger.kernel.org>;
+	Tue, 19 May 2009 18:40:20 +0200 (CEST)
+Received: from [192.168.10.145] (koln-4db489cf.pool.einsundeins.de [77.180.137.207])
+	by mx03.syneticon.net (Postfix) with ESMTPSA
+	for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 18:40:20 +0200 (CEST)
+Message-ID: <4A12E0F3.2040209@wpkg.org>
+Date: Tue, 19 May 2009 18:40:19 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: ipw2100: Oops, Data bus error
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new code added by this patch will make rfkill create
-a misc character device /dev/rfkill that userspace can use
-to control rfkill soft blocks and get status of devices as
-well as events when the status changes.
+I'm not sure if it's interesting or not.
 
-Using it is very simple -- when you open it you can read
-a number of times to get the initial state, and every
-further read blocks (you can poll) on getting the next
-event from the kernel. The same structure you read is
-also used when writing to it to change the soft block of
-a given device, all devices of a given type, or all
-devices.
+On ASUS WL-500gP (MIPS platform, with OpenWRT patches), running 2.6.29.3 kernel, I'm getting 
+an Oops (see below) when I remove the ipw2100 module and modprobe it again.
+Let me know if I should decode the Oops etc., or if has perhaps something to do with the board
+not fully supported by the upstream kernel, and just leave it.
 
-This also makes CONFIG_RFKILL_INPUT selectable again in
-order to be able to test without it present since its
-functionality can now be replaced by userspace entirely
-and distros and users may not want the input part of
-rfkill interfering with their userspace code. We will
-also write a userspace daemon to handle all that and
-consequently add the input code to the feature removal
-schedule.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- Documentation/feature-removal-schedule.txt |    7 
- include/linux/rfkill.h                     |   79 ++++++--
- net/rfkill/Kconfig                         |    4 
- net/rfkill/core.c                          |  265 ++++++++++++++++++++++++++++-
- 4 files changed, 324 insertions(+), 31 deletions(-)
+Output from lspci:
 
---- wireless-testing.orig/include/linux/rfkill.h	2009-05-28 16:56:30.000000000 +0200
-+++ wireless-testing/include/linux/rfkill.h	2009-05-28 16:57:14.000000000 +0200
-@@ -22,34 +22,17 @@
-  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#include <linux/types.h>
- 
- /* define userspace visible states */
- #define RFKILL_STATE_SOFT_BLOCKED	0
- #define RFKILL_STATE_UNBLOCKED		1
- #define RFKILL_STATE_HARD_BLOCKED	2
- 
--/* and that's all userspace gets */
--#ifdef __KERNEL__
--/* don't allow anyone to use these in the kernel */
--enum rfkill_user_states {
--	RFKILL_USER_STATE_SOFT_BLOCKED	= RFKILL_STATE_SOFT_BLOCKED,
--	RFKILL_USER_STATE_UNBLOCKED	= RFKILL_STATE_UNBLOCKED,
--	RFKILL_USER_STATE_HARD_BLOCKED	= RFKILL_STATE_HARD_BLOCKED,
--};
--#undef RFKILL_STATE_SOFT_BLOCKED
--#undef RFKILL_STATE_UNBLOCKED
--#undef RFKILL_STATE_HARD_BLOCKED
--
--#include <linux/types.h>
--#include <linux/kernel.h>
--#include <linux/list.h>
--#include <linux/mutex.h>
--#include <linux/device.h>
--#include <linux/leds.h>
--
- /**
-  * enum rfkill_type - type of rfkill switch.
-  *
-+ * @RFKILL_TYPE_ALL: toggles all switches (userspace only)
-  * @RFKILL_TYPE_WLAN: switch is on a 802.11 wireless network device.
-  * @RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
-  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-@@ -58,6 +41,7 @@ enum rfkill_user_states {
-  * @NUM_RFKILL_TYPES: number of defined rfkill types
-  */
- enum rfkill_type {
-+	RFKILL_TYPE_ALL = 0,
- 	RFKILL_TYPE_WLAN,
- 	RFKILL_TYPE_BLUETOOTH,
- 	RFKILL_TYPE_UWB,
-@@ -66,6 +50,57 @@ enum rfkill_type {
- 	NUM_RFKILL_TYPES,
- };
- 
-+/**
-+ * enum rfkill_operation - operation types
-+ * @RFKILL_OP_ADD: a device was added
-+ * @RFKILL_OP_DEL: a device was removed
-+ * @RFKILL_OP_CHANGE: a device's state changed -- userspace changes one device
-+ * @RFKILL_OP_CHANGE_ALL: userspace changes all devices (of a type, or all)
-+ */
-+enum rfkill_operation {
-+	RFKILL_OP_ADD = 0,
-+	RFKILL_OP_DEL,
-+	RFKILL_OP_CHANGE,
-+	RFKILL_OP_CHANGE_ALL,
-+};
-+
-+/**
-+ * struct rfkill_event - events for userspace on /dev/rfkill
-+ * @idx: index of dev rfkill
-+ * @type: type of the rfkill struct
-+ * @op: operation code
-+ * @hard: hard state (0/1)
-+ * @soft: soft state (0/1)
-+ *
-+ * Structure used for userspace communication on /dev/rfkill,
-+ * used for events from the kernel and control to the kernel.
-+ */
-+struct rfkill_event {
-+	__u32 idx;
-+	__u32 type;
-+	__u8  op;
-+	__u8  soft, hard;
-+} __packed;
-+
-+/* and that's all userspace gets */
-+#ifdef __KERNEL__
-+/* don't allow anyone to use these in the kernel */
-+enum rfkill_user_states {
-+	RFKILL_USER_STATE_SOFT_BLOCKED	= RFKILL_STATE_SOFT_BLOCKED,
-+	RFKILL_USER_STATE_UNBLOCKED	= RFKILL_STATE_UNBLOCKED,
-+	RFKILL_USER_STATE_HARD_BLOCKED	= RFKILL_STATE_HARD_BLOCKED,
-+};
-+#undef RFKILL_STATE_SOFT_BLOCKED
-+#undef RFKILL_STATE_UNBLOCKED
-+#undef RFKILL_STATE_HARD_BLOCKED
-+
-+#include <linux/types.h>
-+#include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/mutex.h>
-+#include <linux/device.h>
-+#include <linux/leds.h>
-+
- /* this is opaque */
- struct rfkill;
- 
-@@ -84,11 +119,7 @@ struct rfkill;
-  *	the rfkill core query your driver before setting a requested
-  *	block.
-  * @set_block: turn the transmitter on (blocked == false) or off
-- *	(blocked == true) -- this is called only while the transmitter
-- *	is not hard-blocked, but note that the core's view of whether
-- *	the transmitter is hard-blocked might differ from your driver's
-- *	view due to race conditions, so it is possible that it is still
-- *	called at the same time as you are calling rfkill_set_hw_state().
-+ *	(blocked == true) -- ignore and return 0 when hard blocked.
-  *	This callback must be assigned.
-  */
- struct rfkill_ops {
---- wireless-testing.orig/net/rfkill/core.c	2009-05-28 16:56:30.000000000 +0200
-+++ wireless-testing/net/rfkill/core.c	2009-05-28 17:18:43.000000000 +0200
-@@ -28,6 +28,10 @@
- #include <linux/mutex.h>
- #include <linux/rfkill.h>
- #include <linux/spinlock.h>
-+#include <linux/miscdevice.h>
-+#include <linux/wait.h>
-+#include <linux/poll.h>
-+#include <linux/fs.h>
- 
- #include "rfkill.h"
- 
-@@ -49,6 +53,8 @@ struct rfkill {
- 
- 	unsigned long		state;
- 
-+	u32			idx;
-+
- 	bool			registered;
- 	bool			suspended;
- 
-@@ -69,6 +75,17 @@ struct rfkill {
- };
- #define to_rfkill(d)	container_of(d, struct rfkill, dev)
- 
-+struct rfkill_int_event {
-+	struct list_head	list;
-+	struct rfkill_event	ev;
-+};
-+
-+struct rfkill_data {
-+	struct list_head	list;
-+	struct list_head	events;
-+	struct mutex		mtx;
-+	wait_queue_head_t	read_wait;
-+};
- 
- 
- MODULE_AUTHOR("Ivo van Doorn <IvDoorn@gmail.com>");
-@@ -90,6 +107,7 @@ MODULE_LICENSE("GPL");
-  */
- static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
- static DEFINE_MUTEX(rfkill_global_mutex);
-+static LIST_HEAD(rfkill_fds);	/* list of open fds of /dev/rfkill */
- 
- static unsigned int rfkill_default_state = 1;
- module_param_named(default_state, rfkill_default_state, uint, 0444);
-@@ -171,12 +189,48 @@ static inline void rfkill_led_trigger_un
- }
- #endif /* CONFIG_RFKILL_LEDS */
- 
--static void rfkill_uevent(struct rfkill *rfkill)
-+static void rfkill_fill_event(struct rfkill_event *ev, struct rfkill *rfkill,
-+			      enum rfkill_operation op)
-+{
-+	unsigned long flags;
-+
-+	ev->idx = rfkill->idx;
-+	ev->type = rfkill->type;
-+	ev->op = op;
-+
-+	spin_lock_irqsave(&rfkill->lock, flags);
-+	ev->hard = !!(rfkill->state & RFKILL_BLOCK_HW);
-+	ev->soft = !!(rfkill->state & (RFKILL_BLOCK_SW |
-+					RFKILL_BLOCK_SW_PREV));
-+	spin_unlock_irqrestore(&rfkill->lock, flags);
-+}
-+
-+static void rfkill_send_events(struct rfkill *rfkill, enum rfkill_operation op)
-+{
-+	struct rfkill_data *data;
-+	struct rfkill_int_event *ev;
-+
-+	list_for_each_entry(data, &rfkill_fds, list) {
-+		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-+		if (!ev)
-+			continue;
-+		rfkill_fill_event(&ev->ev, rfkill, op);
-+		mutex_lock(&data->mtx);
-+		list_add_tail(&ev->list, &data->events);
-+		mutex_unlock(&data->mtx);
-+		wake_up_interruptible(&data->read_wait);
-+	}
-+}
-+
-+static void rfkill_event(struct rfkill *rfkill)
- {
- 	if (!rfkill->registered || rfkill->suspended)
- 		return;
- 
- 	kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
-+
-+	/* also send event to /dev/rfkill */
-+	rfkill_send_events(rfkill, RFKILL_OP_CHANGE);
- }
- 
- static bool __rfkill_set_hw_state(struct rfkill *rfkill,
-@@ -260,9 +314,10 @@ static void rfkill_set_block(struct rfki
- 	spin_unlock_irqrestore(&rfkill->lock, flags);
- 
- 	rfkill_led_trigger_event(rfkill);
--	rfkill_uevent(rfkill);
-+	rfkill_event(rfkill);
- }
- 
-+#ifdef CONFIG_RFKILL_INPUT
- /**
-  * __rfkill_switch_all - Toggle state of all switches of given type
-  * @type: type of interfaces to be affected
-@@ -331,6 +386,7 @@ void rfkill_epo(void)
- 		rfkill_global_states[i].def = rfkill_global_states[i].cur;
- 		rfkill_global_states[i].cur = true;
- 	}
-+ out:
- 	mutex_unlock(&rfkill_global_mutex);
- }
- 
-@@ -391,6 +447,7 @@ bool rfkill_get_global_sw_state(const en
- {
- 	return rfkill_global_states[type].cur;
- }
-+#endif
- 
- void rfkill_set_global_sw_state(const enum rfkill_type type, bool blocked)
- {
-@@ -537,6 +594,15 @@ static ssize_t rfkill_type_show(struct d
- 	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
- }
- 
-+static ssize_t rfkill_idx_show(struct device *dev,
-+			       struct device_attribute *attr,
-+			       char *buf)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
-+
-+	return sprintf(buf, "%d\n", rfkill->idx);
-+}
-+
- static u8 user_state_from_blocked(unsigned long state)
- {
- 	if (state & RFKILL_BLOCK_HW)
-@@ -594,6 +660,7 @@ static ssize_t rfkill_claim_store(struct
- static struct device_attribute rfkill_dev_attrs[] = {
- 	__ATTR(name, S_IRUGO, rfkill_name_show, NULL),
- 	__ATTR(type, S_IRUGO, rfkill_type_show, NULL),
-+	__ATTR(index, S_IRUGO, rfkill_idx_show, NULL),
- 	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
- 	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
- 	__ATTR_NULL
-@@ -708,7 +775,7 @@ struct rfkill * __must_check rfkill_allo
- 	if (WARN_ON(!name))
- 		return NULL;
- 
--	if (WARN_ON(type >= NUM_RFKILL_TYPES))
-+	if (WARN_ON(type == RFKILL_TYPE_ALL || type >= NUM_RFKILL_TYPES))
- 		return NULL;
- 
- 	rfkill = kzalloc(sizeof(*rfkill), GFP_KERNEL);
-@@ -754,7 +821,9 @@ static void rfkill_uevent_work(struct wo
- 
- 	rfkill = container_of(work, struct rfkill, uevent_work);
- 
--	rfkill_uevent(rfkill);
-+	mutex_lock(&rfkill_global_mutex);
-+	rfkill_event(rfkill);
-+	mutex_unlock(&rfkill_global_mutex);
- }
- 
- static void rfkill_sync_work(struct work_struct *work)
-@@ -785,6 +854,7 @@ int __must_check rfkill_register(struct 
- 		goto unlock;
- 	}
- 
-+	rfkill->idx = rfkill_no;
- 	dev_set_name(dev, "rfkill%lu", rfkill_no);
- 	rfkill_no++;
- 
-@@ -819,6 +889,7 @@ int __must_check rfkill_register(struct 
- 
- 	INIT_WORK(&rfkill->sync_work, rfkill_sync_work);
- 	schedule_work(&rfkill->sync_work);
-+	rfkill_send_events(rfkill, RFKILL_OP_ADD);
- 
- 	mutex_unlock(&rfkill_global_mutex);
- 	return 0;
-@@ -848,6 +919,7 @@ void rfkill_unregister(struct rfkill *rf
- 	device_del(&rfkill->dev);
- 
- 	mutex_lock(&rfkill_global_mutex);
-+	rfkill_send_events(rfkill, RFKILL_OP_DEL);
- 	list_del_init(&rfkill->node);
- 	mutex_unlock(&rfkill_global_mutex);
- 
-@@ -875,6 +947,179 @@ bool rfkill_blocked(struct rfkill *rfkil
- }
- EXPORT_SYMBOL(rfkill_blocked);
- 
-+static int rfkill_fop_open(struct inode *inode, struct file *file)
-+{
-+	struct rfkill_data *data;
-+	struct rfkill *rfkill;
-+	struct rfkill_int_event *ev, *tmp;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&data->events);
-+	mutex_init(&data->mtx);
-+	init_waitqueue_head(&data->read_wait);
-+
-+	mutex_lock(&rfkill_global_mutex);
-+	mutex_lock(&data->mtx);
-+	/*
-+	 * start getting events from elsewhere but hold mtx to get
-+	 * startup events added first
-+	 */
-+	list_add(&data->list, &rfkill_fds);
-+
-+	list_for_each_entry(rfkill, &rfkill_list, node) {
-+		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-+		if (!ev)
-+			goto free;
-+		rfkill_fill_event(&ev->ev, rfkill, RFKILL_OP_ADD);
-+		list_add_tail(&ev->list, &data->events);
-+	}
-+	mutex_unlock(&data->mtx);
-+	mutex_unlock(&rfkill_global_mutex);
-+
-+	file->private_data = data;
-+
-+	return nonseekable_open(inode, file);
-+
-+ free:
-+	mutex_unlock(&data->mtx);
-+	mutex_unlock(&rfkill_global_mutex);
-+	mutex_destroy(&data->mtx);
-+	list_for_each_entry_safe(ev, tmp, &data->events, list)
-+		kfree(ev);
-+	kfree(data);
-+	return -ENOMEM;
-+}
-+
-+static unsigned int rfkill_fop_poll(struct file *file, poll_table *wait)
-+{
-+	struct rfkill_data *data = file->private_data;
-+	unsigned int res = POLLOUT | POLLWRNORM;
-+
-+	poll_wait(file, &data->read_wait, wait);
-+
-+	mutex_lock(&data->mtx);
-+	if (!list_empty(&data->events))
-+		res = POLLIN | POLLRDNORM;
-+	mutex_unlock(&data->mtx);
-+
-+	return res;
-+}
-+
-+static bool rfkill_readable(struct rfkill_data *data)
-+{
-+	bool r;
-+
-+	mutex_lock(&data->mtx);
-+	r = !list_empty(&data->events);
-+	mutex_unlock(&data->mtx);
-+
-+	return r;
-+}
-+
-+static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
-+			       size_t count, loff_t *pos)
-+{
-+	struct rfkill_data *data = file->private_data;
-+	struct rfkill_int_event *ev;
-+	unsigned long sz;
-+	int ret;
-+
-+	mutex_lock(&data->mtx);
-+
-+	while (list_empty(&data->events)) {
-+		if (file->f_flags & O_NONBLOCK) {
-+			ret = -EAGAIN;
-+			goto out;
-+		}
-+		mutex_unlock(&data->mtx);
-+		ret = wait_event_interruptible(data->read_wait,
-+					       rfkill_readable(data));
-+		mutex_lock(&data->mtx);
-+
-+		if (ret)
-+			goto out;
-+	}
-+
-+	ev = list_first_entry(&data->events, struct rfkill_int_event,
-+				list);
-+
-+	sz = min_t(unsigned long, sizeof(ev->ev), count);
-+	ret = sz;
-+	if (copy_to_user(buf, &ev->ev, sz))
-+		ret = -EFAULT;
-+
-+	list_del(&ev->list);
-+	kfree(ev);
-+ out:
-+	mutex_unlock(&data->mtx);
-+	return ret;
-+}
-+
-+static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
-+				size_t count, loff_t *pos)
-+{
-+	struct rfkill *rfkill;
-+	struct rfkill_event ev;
-+
-+	/* we don't need the 'hard' variable but accept it */
-+	if (count < sizeof(ev) - 1)
-+		return -EINVAL;
-+
-+	if (copy_from_user(&ev, buf, sizeof(ev) - 1))
-+		return -EFAULT;
-+
-+	if (ev.op != RFKILL_OP_CHANGE && ev.op != RFKILL_OP_CHANGE_ALL)
-+		return -EINVAL;
-+
-+	mutex_lock(&rfkill_global_mutex);
-+	list_for_each_entry(rfkill, &rfkill_list, node) {
-+		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
-+			continue;
-+
-+		if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
-+			continue;
-+
-+		rfkill_set_block(rfkill, ev.soft);
-+	}
-+	mutex_unlock(&rfkill_global_mutex);
-+
-+	return count;
-+}
-+
-+static int rfkill_fop_release(struct inode *inode, struct file *file)
-+{
-+	struct rfkill_data *data = file->private_data;
-+	struct rfkill_int_event *ev, *tmp;
-+
-+	mutex_lock(&rfkill_global_mutex);
-+	list_del(&data->list);
-+	mutex_unlock(&rfkill_global_mutex);
-+
-+	mutex_destroy(&data->mtx);
-+	list_for_each_entry_safe(ev, tmp, &data->events, list)
-+		kfree(ev);
-+
-+	kfree(data);
-+
-+	return 0;
-+}
-+
-+static const struct file_operations rfkill_fops = {
-+	.open		= rfkill_fop_open,
-+	.read		= rfkill_fop_read,
-+	.write		= rfkill_fop_write,
-+	.poll		= rfkill_fop_poll,
-+	.release	= rfkill_fop_release,
-+};
-+
-+static struct miscdevice rfkill_miscdev = {
-+	.name	= "rfkill",
-+	.fops	= &rfkill_fops,
-+	.minor	= MISC_DYNAMIC_MINOR,
-+};
- 
- static int __init rfkill_init(void)
- {
-@@ -888,10 +1133,19 @@ static int __init rfkill_init(void)
- 	if (error)
- 		goto out;
- 
-+	error = misc_register(&rfkill_miscdev);
-+	if (error) {
-+		class_unregister(&rfkill_class);
-+		goto out;
-+	}
-+
- #ifdef CONFIG_RFKILL_INPUT
- 	error = rfkill_handler_init();
--	if (error)
-+	if (error) {
-+		misc_deregister(&rfkill_miscdev);
- 		class_unregister(&rfkill_class);
-+		goto out;
-+	}
- #endif
- 
-  out:
-@@ -904,6 +1158,7 @@ static void __exit rfkill_exit(void)
- #ifdef CONFIG_RFKILL_INPUT
- 	rfkill_handler_exit();
- #endif
-+	misc_deregister(&rfkill_miscdev);
- 	class_unregister(&rfkill_class);
- }
- module_exit(rfkill_exit);
---- wireless-testing.orig/net/rfkill/Kconfig	2009-05-28 16:56:30.000000000 +0200
-+++ wireless-testing/net/rfkill/Kconfig	2009-05-28 17:14:39.000000000 +0200
-@@ -18,7 +18,7 @@ config RFKILL_LEDS
- 	default y
- 
- config RFKILL_INPUT
--	bool
-+	bool "RF switch input support"
- 	depends on RFKILL
- 	depends on INPUT = y || RFKILL = INPUT
--	default y
-+	default y if !EMBEDDED
---- wireless-testing.orig/Documentation/feature-removal-schedule.txt	2009-05-28 17:11:56.000000000 +0200
-+++ wireless-testing/Documentation/feature-removal-schedule.txt	2009-05-28 17:12:58.000000000 +0200
-@@ -437,3 +437,10 @@ Why:	Superseded by tdfxfb. I2C/DDC suppo
- 	driver but this caused driver conflicts.
- Who:	Jean Delvare <khali@linux-fr.org>
- 	Krzysztof Helt <krzysztof.h1@wp.pl>
-+
-+---------------------------
-+
-+What:	CONFIG_RFKILL_INPUT
-+When:	2.6.33
-+Why:	Should be implemented in userspace, policy daemon.
-+Who:	Johannes Berg <johannes@sipsolutions.net>
+00:02.0 Network controller: Intel Corporation PRO/Wireless LAN 2100 3B Mini PCI Adapter (rev 04)
+        Subsystem: Intel Corporation Samsung X10/P30 integrated WLAN
+        Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 6
+        Region 0: Memory at 40001000 (32-bit, non-prefetchable) [size=4K]
+        Capabilities: [dc] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+        Kernel modules: ipw2100
 
+
+
+# modprobe ipw2100
+[42949450.360000] lib80211: common routines for IEEE802.11 drivers
+[42949450.440000] ieee80211: 802.11 data/management/control stack, git-1.1.13
+[42949450.440000] ieee80211: Copyright (C) 2004-2005 Intel Corporation <jketreno@linux.intel.com>
+[42949450.550000] ipw2100: Intel(R) PRO/Wireless 2100 Network Driver, git-1.2.2
+[42949450.560000] ipw2100: Copyright(c) 2003-2006 Intel Corporation
+[42949450.580000] PCI: Enabling device 0000:00:02.0 (0000 -> 0002)
+[42949450.590000] PCI: Fixing up device 0000:00:02.0
+[42949450.590000] ipw2100Device not found via register read.
+
+mangoo:~# rmmod ipw2100
+
+mangoo:~# modprobe ipw2100
+[42949611.580000] ipw2100: Intel(R) PRO/Wireless 2100 Network Driver, git-1.2.2
+[42949611.590000] ipw2100: Copyright(c) 2003-2006 Intel Corporation
+[42949611.610000] PCI: Fixing up device 0000:00:02.0
+[42949611.610000] Data bus error, epc == c02b8d54, ra == c02b8d48
+[42949611.610000] Oops[#1]:
+[42949611.610000] Cpu 0
+[42949611.610000] $ 0   : 00000000 1000d800 c02c8000 00000000
+[42949611.610000] $ 4   : c02c0000 00000000 00000001 000000dc
+[42949611.610000] $ 8   : 00000000 00000000 00000002 80340000
+[42949611.610000] $12   : 80330000 00000030 00000008 00000000
+[42949611.610000] $16   : 800372e8 81d4db28 00000000 c02bc374
+[42949611.610000] $20   : 81d4d000 81ccb400 c02c8000 004fe008
+[42949611.610000] $24   : 028f5beb 80180eb4
+[42949611.610000] $28   : 80c36000 80c37cd8 7fa2db88 c02b8d48
+[42949611.610000] Hi    : 00000083
+[42949611.610000] Lo    : e42b2000
+[42949611.610000] epc   : c02b8d54 0xc02b8d54
+[42949611.610000]     Not tainted
+[42949611.610000] ra    : c02b8d48 0xc02b8d48
+[42949611.610000] Status: 1000d803    KERNEL EXL IE
+[42949611.610000] Cause : 0080001c
+[42949611.610000] PrId  : 00029006 (Broadcom BCM3302)
+[42949611.610000] Modules linked in: ipw2100(+) sch_sfq cls_fw sch_htb xt_MARK ipt_ULOG xt_recent xt_state xt_tcpudp iptable_filter iptable_mangle iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables x_tables fuse ohci_hcd libipw lib80211 uhci_hcd [last unloaded: ipw2100]
+[42949611.610000] Process modprobe (pid: 1153, threadinfo=80c36000, task=81330088, tls=2aad96f0)
+[42949611.610000] Stack : 00000001 00000000 00000400 81ea1fb0 00000000 00000000 00000000 00000000
+[42949611.610000]         00000000 00000000 00000000 00000000 00000000 00000080 4a12df14 2f222ee2
+[42949611.610000]         c02c09e0 81ccb400 00000000 c02c0a10 c02c4000 00000000 00000000 80166874
+[42949611.610000]         81ccb458 c02c0a10 c02c4000 801850d8 c02c09e0 81ccb400 c02c0d5c 00000000
+[42949611.610000]         81ccb458 81ccb458 c02c0a10 80185304 81c34a08 8014d614 000031f1 1000d800
+[42949611.610000]         ...
+[42949611.610000] Call Trace:[<c02c4000>] 0xc02c4000
+[42949611.610000] [<80166874>] 0x80166874
+[42949611.610000] [<c02c4000>] 0xc02c4000
+[42949611.610000] [<801850d8>] 0x801850d8
+[42949611.610000] [<80185304>] 0x80185304
+[42949611.610000] [<8014d614>] 0x8014d614
+[42949611.610000] [<8018549c>] 0x8018549c
+[42949611.610000] [<8018213c>] 0x8018213c
+[42949611.610000] [<8014d398>] 0x8014d398
+[42949611.610000] [<8018542c>] 0x8018542c
+[42949611.610000] [<80184540>] 0x80184540
+[42949611.610000] [<c02c4000>] 0xc02c4000
+[42949611.610000] [<8014dba4>] 0x8014dba4
+[42949611.610000] [<80184bd0>] 0x80184bd0
+[42949611.610000] [<80184ba8>] 0x80184ba8
+[42949611.610000] [<c02c4000>] 0xc02c4000
+[42949611.610000] [<80185730>] 0x80185730
+[42949611.610000] [<c02c4000>] 0xc02c4000
+[42949611.610000] [<80166b30>] 0x80166b30
+[42949611.610000] [<80081c38>] 0x80081c38
+[42949611.610000] [<c02c4068>] 0xc02c4068
+[42949611.610000] [<8017e7f4>] 0x8017e7f4
+[42949611.610000] [<8000c664>] 0x8000c664
+[42949611.610000] [<8007d528>] 0x8007d528
+[42949611.610000] [<8007d4ec>] 0x8007d4ec
+[42949611.610000] [<8004a1a4>] 0x8004a1a4
+[42949611.610000] [<80059288>] 0x80059288
+[42949611.610000] [<80059238>] 0x80059238
+[42949611.610000] [<800031d0>] 0x800031d0
+[42949611.610000] [<800031d0>] 0x800031d0
+[42949611.610000]
+[42949611.610000]
+[42949611.610000] Code: 8e820024  10400300  3c04c02c <8c430090> 3c02d555  344255d5  146202fc  3c028003  26a20058
+Segmentation fault
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
 
