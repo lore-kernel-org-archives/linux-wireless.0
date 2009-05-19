@@ -1,251 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:33279 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751670AbZE1DIz (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:4651 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140AbZESGjY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 23:08:55 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
-In-Reply-To: <1243336988-20109-2-git-send-email-dbaryshkov@gmail.com>
-References: <20090526112157.GA19976@doriath.ww600.siemens.net>
-	 <1243336988-20109-1-git-send-email-dbaryshkov@gmail.com>
-	 <1243336988-20109-2-git-send-email-dbaryshkov@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/+NZtUfkEskQNNEHqOgC"
-Date: Thu, 28 May 2009 04:08:51 +0100
-Message-Id: <1243480131.16597.174.camel@deadeye>
-Mime-Version: 1.0
-Subject: Re: [PATCH 2/5] net: add IEEE 802.15.4 partial implementation
+	Tue, 19 May 2009 02:39:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com>
+References: <alpine.DEB.2.00.0905182011270.7956@gandalf.stny.rr.com>
+	<40f31dec0905181734t6a3db7f4peb2d57c3aebe075b@mail.gmail.com>
+	<alpine.DEB.2.00.0905182041470.7956@gandalf.stny.rr.com> <40f31dec0905182332v49aff368oe485efaa56fbc11a@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 18 May 2009 23:39:04 -0700
+Message-ID: <43e72e890905182339u68c4d4f5v3a2f25e9e3547e60@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: prevent infinite loop
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>, jirislaby@gmail.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, May 18, 2009 at 11:32 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2009/5/19 Steven Rostedt <rostedt@goodmis.org>:
+>>
+>> On Tue, 19 May 2009, Nick Kossifidis wrote:
+>>>
+>>> This is already fixed on wireless-testing ;-)
+>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/phy.c;h=d0d1c350025aebba1fe4e17a44550536a59951ba;hb=HEAD
+>>
+>> Thanks, but this does only half. Although I did not hit this in my laptop,
+>> it can be an issue. If step[0] == step[1] you have the same problem.
+>>
+>
+> Having the same power value for 2 different steps is something we can
+> expect (although docs say that we expect the line to be monotonically
+> increasing but anyway), having the same step twice is way out of spec,
+> there is no way we can have the same step twice on EEPROM, only if we
+> have a corrupted EEPROM (we need to add some sanity checks indeed here
+> -> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/eeprom.c;h=c56b494d417acd40d445d922f2861b53cc2315df;hb=HEAD#l910
+> to handle such a case but first we need to have a "default" eeprom
+> dataset to fallback when we get such errors).
 
---=-/+NZtUfkEskQNNEHqOgC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Don't bother with busted EEPROMs, if its busted its busted. Chances
+are the complexity we'd need to add to deal with such devices is
+simply not worth it.
 
-On Tue, 2009-05-26 at 15:23 +0400, Dmitry Eremin-Solenikov wrote:
-[...]
-> diff --git a/include/net/ieee802154/af_ieee802154.h b/include/net/ieee802=
-154/af_ieee802154.h
-> new file mode 100644
-> index 0000000..6eb7f51
-> --- /dev/null
-> +++ b/include/net/ieee802154/af_ieee802154.h
-[...]
-> +#ifdef __KERNEL__
-> +#include <linux/skbuff.h>
-> +#include <linux/netdevice.h>
-
-The struct declarations would be sufficient.
-
-> +extern struct proto ieee802154_raw_prot;
-> +extern struct proto ieee802154_dgram_prot;
-> +void ieee802154_raw_deliver(struct net_device *dev, struct sk_buff *skb)=
-;
-> +int ieee802154_dgram_deliver(struct net_device *dev, struct sk_buff *skb=
-);
-> +#endif
-> +
-> +#endif
-> diff --git a/include/net/ieee802154/beacon.h b/include/net/ieee802154/bea=
-con.h
-> new file mode 100644
-> index 0000000..baca263
-> --- /dev/null
-> +++ b/include/net/ieee802154/beacon.h
-[...]
-> +/* Per spec; optimizations are needed */
-> +struct ieee802154_pandsc {
-> +	struct list_head	list;
-> +	struct ieee802154_addr	addr; /* Contains panid */
-> +	int			channel;
-> +	u16			sf;
-> +	bool			gts_permit;
-> +	u8			lqi;
-> +	u32			timestamp; /* FIXME */
-
-When and how does this need to be fixed, if at all?
-
-> +	bool			security;
-> +	u8			mac_sec;
-> +	bool			sec_fail;
-> +};
-[...]
-> --- /dev/null
-> +++ b/include/net/ieee802154/const.h
-[...]
-> +/* Time related constants, in microseconds.
-> + *
-> + * The 1SYM_TIME values are shown how much time is needed to transmit on=
-e
-> + * symbol across media.
-> + * The callculation is following:
-> + * For a 2450 MHZ radio freq rate is 62,5 ksym/sec. A byte (8 bit) trans=
-fered
-> + * by low 4 bits in first symbol, high 4 bits in next symbol. So, to tra=
-nsmit
-> + * 1 byte in 2450Mhz freq 2 symbols are needed. Therefore we have 31,25 =
-kbyte/sec
-> + * rate. 1 symbol transfered in 16*10^(-6) sec, or 16 microseconds.
-> + * For a 868Mhz and 915Mhz, 1 symbol is equal to 1 byte. So, we have 20k=
-byte/sec
-> + * and 40 kbyte/sec respectively. And 5*10^(-5) sec and 2,5*10(-5) sec,
-> + * or 50 and 25 microseconds respectively for 868Mhz and 915Mhz freq.
-> + */
-
-This is so verbose as to be unhelpful.  Since the following constants
-only refer to symbol time, it should be sufficient to refer to the
-specified symbol rates.
-
-> +#define IEEE802154_2450MHZ_1SYM_TIME	16
-> +#define IEEE802154_868MHZ_1SYM_TIME	50
-> +#define IEEE802154_915MHZ_1SYM_TIME	25
-> +
-> +/***********************************************************************=
-*******/
-> +/* MAC constants */
-> +/***********************************************************************=
-*******/
-> +/** The number of symbols forming a superframe slot when the superframe =
-order
-> + * is equal to 0.
-> + */
-
-Don't use two asterisks at the start of a comment unless it's in
-kernel-doc format.
-
-[...]
-> +/**
-> + * \brief PHY return codes description
-> + *
-> + * The return values of PHY operations
-> + */
-
-...and definitely don't use Doxygen format.
-
-[...]
-> +/* #define ZB_ED_EDGE	0x7f */
-
-Define it or delete it.
-
-> +/* I've got 0xBE on idle channel; let threshold be a little higher */
-> +#define ZB_ED_EDGE	0xc8
-> +/* In an ideal world this should be 1 */
-> +#define IEEE802154_SLOW_SERIAL_FIXUP	75
-
-Yes but what are these *for*?
-
-> +#endif /* IEEE802154_CONST_H */
-> diff --git a/include/net/ieee802154/crc.h b/include/net/ieee802154/crc.h
-> new file mode 100644
-> index 0000000..5b37218
-> --- /dev/null
-> +++ b/include/net/ieee802154/crc.h
-> @@ -0,0 +1,38 @@
-> +/*
-> + * based on crc-itu-t.c.
-> + * Basically it's CRC-ITU-T but with inverted bit numbering
-
-This can probably be handled by crc_itu_t_bitreversed():
-
-http://svn.debian.org/wsvn/kernel/dists/trunk/linux-2.6/debian/patches/feat=
-ures/all/lib-crcitut-bit-reversed.patch
-
-(That patch hasn't gone anywhere yet as Greg K-H is dragging his heels
-over actually fixing his crap, but feel free to resubmit it as part of
-your own patch series.)
-
-[...]
-> --- /dev/null
-> +++ b/include/net/ieee802154/nl.h
-[...]
-> +/* commands */
-> +/* REQ should be responded with CONF
-> + * and INDIC with RESP
-> + */
-> +enum {
-> +	__IEEE802154_COMMAND_INVALID,
-> +
-> +	IEEE802154_ASSOCIATE_REQ,
-> +	IEEE802154_ASSOCIATE_CONF,
-> +	IEEE802154_DISASSOCIATE_REQ,
-> +	IEEE802154_DISASSOCIATE_CONF,
-> +	IEEE802154_GET_REQ,
-> +	IEEE802154_GET_CONF,
-> +/* 	IEEE802154_GTS_REQ, */
-> +/* 	IEEE802154_GTS_CONF, */
-
-Why are some of these commented out?  Since they're apparently exposed
-to user-space you can't insert them later.
-
-[...]
-> --- /dev/null
-> +++ b/net/ieee802154/beacon.c
-[...]
-> +	/* TODO GTS */
-> +	gts =3D 0;
-> +
-> +	if (flags & IEEE802154_BEACON_FLAG_GTSPERMIT)
-> +		gts |=3D IEEE802154_BEACON_GTS_PERMIT;
-> +	memcpy(skb_put(skb, sizeof(gts)), &gts, sizeof(gts));
-> +
-> +	/* FIXME pending address */
-> +	addr16_cnt =3D 0;
-> +	addr64_cnt =3D 0;
-> +#if 0
-> +	/* need more thinking about this */
-> +	list_for_each_entry(l, al->list, list) {
-> +		struct ieee802154_addr *s =3D container_of(l, struct list_head, list);
-> +		if (s->addr_type =3D=3D IEEE802154_ADDR_LONG)
-> +			addr16_cnt++;
-> +
-> +		if (s->addr_type =3D=3D IEEE802154_ADDR_SHORT)
-> +			addr64_cnt++;
-> +	}
-> +#endif
-
-This all looks very unfinished - as do several other sections with
-FIXME, #if 0, commented-out code...
-
-[...]
-> +#define IEEE802154_FETCH_U64(skb, var)			\
-> +	do {						\
-> +		if (skb->len < IEEE802154_ADDR_LEN)	\
-
-I see what you did there...
-
-> +			goto exit_error;		\
-> +		fetch_skb_u64(skb, &var);		\
-> +	} while (0)
-[...]
-> --- /dev/null
-> +++ b/net/ieee802154/netlink.c
-> @@ -0,0 +1,637 @@
-> +/*
-> + * Netlink intefcace for IEEE 802.15.4 stack
-[...]
-
-Speling misstake.
-
-Ben.
-
---=20
-Ben Hutchings
-Teamwork is essential - it allows you to blame someone else.
-
---=-/+NZtUfkEskQNNEHqOgC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iD8DBQBKHgA/79ZNCRIGYgcRAmddAJ9bquDSE9oW5b//ALlp6ky6CdaX/ACfTII2
-00S5Z3jB2oqs862iiJPQDhs=
-=dFWp
------END PGP SIGNATURE-----
-
---=-/+NZtUfkEskQNNEHqOgC--
+  Luis
