@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f123.google.com ([209.85.216.123]:61975 "EHLO
-	mail-px0-f123.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258AbZENRwa (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:55564 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbZETF3f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 13:52:30 -0400
-Received: by pxi29 with SMTP id 29so690857pxi.33
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:52:32 -0700 (PDT)
+	Wed, 20 May 2009 01:29:35 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so77143wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 22:29:37 -0700 (PDT)
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 May 2009 10:52:12 -0700
-Message-ID: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-Subject: Scan while TX/RX'ing a lot of data
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Dan Williams <dcbw@redhat.com>, Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
+Date: Wed, 20 May 2009 13:21:41 +0800
+Message-ID: <a8e1da0905192221y449e9820x63d46a6dcbfc1dfc@mail.gmail.com>
+Subject: b43 lp-phy status
+From: Dave Young <hidave.darkstar@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm told Network Manager scans every 60 seconds. When TX'ing or RX'ing
-a lot of data you will see a big dip in throughput and sometimes it
-may cause issues with some connections. Jouni pointed out a possible
-nice option here: split the scans per channel through time. Now with
-nl80211 this is possible but right now Network Manager uses wext
-through wpa_supplicant in many distributions and this won't change for
-a bit (maybe by the next major distribution releases?). Since we're
-stuck with wext for the current distribution releases I'd like to hear
-feedback on a possible nice solution. Should we simply cancel scan?
+Hi, michael
 
-  Luis
+What's the status of b43 for lp-phy? Is is possible to use it with
+basic functionality now?
+
+I have such wireless dev in my dell 5400 laptop.
+
+Now I just use the broadcom hybrid driver which can not pass building
+in latest kernel by default. I make some change to it's wl_linux.c to
+make it compiled. Although the wl.ko works, it has some nasty bug
+which will be triggered after modprobe the module several times.
+
+Could you tell what I can do for the b43 lpy? ie. some testing?
+
+-- 
+Regards
+dave
