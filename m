@@ -1,47 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f163.google.com ([209.85.218.163]:56580 "EHLO
-	mail-bw0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757644AbZEBO3o (ORCPT
+Received: from host2.marvell.com ([65.219.4.2]:44220 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754044AbZETXv3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2009 10:29:44 -0400
-Received: by bwz7 with SMTP id 7so2755231bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2009 07:29:43 -0700 (PDT)
+	Wed, 20 May 2009 19:51:29 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 20 May 2009 16:50:37 -0700
+Subject: RE: [PATCH 4/4] libertas: read SD8688 firmware status from new
+ register
+Message-ID: <477F20668A386D41ADCC57781B1F704301E8616CA2@SC-VEXCH1.marvell.com>
+References: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
+	 <1242787701-10685-4-git-send-email-bzhao@marvell.com>
+ <1242859576.7048.41.camel@localhost.localdomain>
+In-Reply-To: <1242859576.7048.41.camel@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <1241217890-11650-1-git-send-email-lrodriguez@atheros.com>
-References: <1241217890-11650-1-git-send-email-lrodriguez@atheros.com>
-Date: Sat, 2 May 2009 15:29:43 +0100
-Message-ID: <9b2b86520905020729v331a9581q5d7916b5d36c02fb@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix race condition with wiphy_apply_custom_regulatory()
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/1/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> We forgot to lock using the cfg80211_mutex in
-> wiphy_apply_custom_regulatory(). Without the lock
-> there is possible race between processing a reply from CRDA
-> and a driver calling wiphy_apply_custom_regulatory(). During
-> the processing of the reply from CRDA we free last_request and
-> wiphy_apply_custom_regulatory() eventually accesses an
-> element from last_request in the through freq_reg_info_regd().
->
-> This is very difficult to reproduce (I haven't), it takes us
-> 3 hours and you need to be banging hard, but the race is obvious
-> by looking at the code.
->
-> This should only affect those who use this caller, which currently
-> is ath5k, ath9k, and ar9170.
->
-> EIP: 0060:[<f8ebec50>] EFLAGS: 00210282 CPU: 1
-> EIP is at freq_reg_info_regd+0x24/0x121 [cfg80211]
+Hi Dan,
 
-This looks like the same bug I reported seeing on bootup (100% of the
-time).  I'll test wireless-testing again for V9 of the rfkill rewrite,
-so at that point I'll try to confirm that this patch fixes my problem.
+> -----Original Message-----
+> From: Dan Williams [mailto:dcbw@redhat.com]
+> Sent: Wednesday, May 20, 2009 3:46 PM
+> To: Bing Zhao
+> Cc: libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH 4/4] libertas: read SD8688 firmware status from new register
+> 
+> On Tue, 2009-05-19 at 19:48 -0700, Bing Zhao wrote:
+> > The scratch pad register is used to store firmware status after
+> > firmware is downloaded and initialized. After firmware status is
+> > verified OK, the same register is used to store RX packet length.
+> > Hence the firmware status code is no longer valid afterwards.
+> >
+> > SD8688 firmware introduces a new register for firmware status
+> > which will never be overwritten.
+> 
+> This could become confusing :)  read_rx_len() already has a switch
+> statement, but since read_rx_len() can also call into read_scratch() for
+> the 8385 and 8686, that *also* has a switch selector.  I can't think of
+> a great way to break it up though without copying a chunk of code around
+> or making useless wrapper functions.
+> 
 
-Thanks!
-Alan
+Do you think this change makes things better?
+
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 18132d4..a7e3fc1 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -100,6 +100,7 @@ struct if_sdio_card {
+ 
+ 	int			model;
+ 	unsigned long		ioport;
++	unsigned int		scratch_reg;
+ 
+ 	const char		*helper;
+ 	const char		*firmware;
+@@ -127,25 +128,13 @@ struct if_sdio_card {
+  */
+ static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
+ {
+-	int ret, reg;
++	int ret;
+ 	u16 scratch;
+ 
+-	switch (card->model) {
+-	case IF_SDIO_MODEL_8385:
+-		reg = IF_SDIO_SCRATCH_OLD;
+-		break;
+-	case IF_SDIO_MODEL_8686:
+-		reg = IF_SDIO_SCRATCH;
+-		break;
+-	case IF_SDIO_MODEL_8688:
+-	default: /* for newer chipsets */
+-		reg = IF_SDIO_FW_STATUS;
+-		break;
+-	}
+-
+-	scratch = sdio_readb(card->func, reg, &ret);
++	scratch = sdio_readb(card->func, card->scratch_reg, &ret);
+ 	if (!ret)
+-		scratch |= sdio_readb(card->func, reg + 1, &ret) << 8;
++		scratch |= sdio_readb(card->func, card->scratch_reg + 1,
++					&ret) << 8;
+ 
+ 	if (err)
+ 		*err = ret;
+@@ -909,6 +898,20 @@ static int if_sdio_probe(struct sdio_func *func,
+ 
+ 	card->func = func;
+ 	card->model = model;
++
++	switch (card->model) {
++	case IF_SDIO_MODEL_8385:
++		card->scratch_reg = IF_SDIO_SCRATCH_OLD;
++		break;
++	case IF_SDIO_MODEL_8686:
++		card->scratch_reg = IF_SDIO_SCRATCH;
++		break;
++	case IF_SDIO_MODEL_8688:
++	default: /* for newer chipsets */
++		card->scratch_reg = IF_SDIO_FW_STATUS;
++		break;
++	}
++
+ 	spin_lock_init(&card->lock);
+ 	card->workqueue = create_workqueue("libertas_sdio");
+ 	INIT_WORK(&card->packet_worker, if_sdio_host_to_card_worker);
+
+
+
+Thanks,
+
+Bing
+
+
+> Acked-by: Dan Williams <dcbw@redhat.com>
+> 
+> Dan
+> 
+> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > ---
+> >  drivers/net/wireless/libertas/if_sdio.c |   20 ++++++++++++++++++--
+> >  drivers/net/wireless/libertas/if_sdio.h |    1 +
+> >  2 files changed, 19 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> > index 478d766..18132d4 100644
+> > --- a/drivers/net/wireless/libertas/if_sdio.c
+> > +++ b/drivers/net/wireless/libertas/if_sdio.c
+> > @@ -119,15 +119,29 @@ struct if_sdio_card {
+> >  /* I/O                                                              */
+> >  /********************************************************************/
+> >
+> > +/*
+> > + *  For SD8385/SD8686, this function reads firmware status after
+> > + *  the image is downloaded, or reads RX packet length when
+> > + *  interrupt (with IF_SDIO_H_INT_UPLD bit set) is received.
+> > + *  For SD8688, this function reads firmware status only.
+> > + */
+> >  static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
+> >  {
+> >  	int ret, reg;
+> >  	u16 scratch;
+> >
+> > -	if (card->model == IF_SDIO_MODEL_8385)
+> > +	switch (card->model) {
+> > +	case IF_SDIO_MODEL_8385:
+> >  		reg = IF_SDIO_SCRATCH_OLD;
+> > -	else
+> > +		break;
+> > +	case IF_SDIO_MODEL_8686:
+> >  		reg = IF_SDIO_SCRATCH;
+> > +		break;
+> > +	case IF_SDIO_MODEL_8688:
+> > +	default: /* for newer chipsets */
+> > +		reg = IF_SDIO_FW_STATUS;
+> > +		break;
+> > +	}
+> >
+> >  	scratch = sdio_readb(card->func, reg, &ret);
+> >  	if (!ret)
+> > @@ -706,6 +720,8 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
+> >  	if (ret)
+> >  		goto out;
+> >
+> > +	lbs_deb_sdio("firmware status = %#x\n", scratch);
+> > +
+> >  	if (scratch == IF_SDIO_FIRMWARE_OK) {
+> >  		lbs_deb_sdio("firmware already loaded\n");
+> >  		goto success;
+> > diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
+> > index d3a4fbe..60c9b2f 100644
+> > --- a/drivers/net/wireless/libertas/if_sdio.h
+> > +++ b/drivers/net/wireless/libertas/if_sdio.h
+> > @@ -42,6 +42,7 @@
+> >
+> >  #define IF_SDIO_SCRATCH		0x34
+> >  #define IF_SDIO_SCRATCH_OLD	0x80fe
+> > +#define IF_SDIO_FW_STATUS	0x40
+> >  #define   IF_SDIO_FIRMWARE_OK	0xfedc
+> >
+> >  #define IF_SDIO_RX_LEN		0x42
+
