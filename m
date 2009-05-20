@@ -1,81 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58178 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251AbZEMWAy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 18:00:54 -0400
-Subject: [PATCH v2] wext: verify buffer size for SIOCSIWENCODEEXT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1242209070.29288.5.camel@johannes.local>
-References: <1242209070.29288.5.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 14 May 2009 00:00:24 +0200
-Message-Id: <1242252024.10076.1.camel@johannes.local>
-Mime-Version: 1.0
+Received: from host2.marvell.com ([65.219.4.2]:25916 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751067AbZETC0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 22:26:11 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/4] libertas: define macros for SDIO model numbers
+Date: Tue, 19 May 2009 19:48:18 -0700
+Message-Id: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Another design flaw in wireless extensions (is anybody
-surprised?) in the way it handles the iw_encode_ext
-structure: The structure is part of the 'extra' memory
-but contains the key length explicitly, instead of it
-just being the length of the extra buffer - size of
-the struct and using the explicit key length only for
-the get operation (which only writes it).
+replace direct usages of SDIO model numbers with defined macros.
 
-Therefore, we have this layout:
-
-extra: +-------------------------+
-       | struct iw_encode_ext  { |
-       |     ...                 |
-       |     u16 key_len;        |
-       |     u8 key[0];          |
-       | };                      |
-       +-------------------------+
-       | key material            |
-       +-------------------------+
-
-Now, all drivers I checked use ext->key_len without
-checking that both key_len and the struct fit into the
-extra buffer that has been copied from userspace. This
-leads to a buffer overrun while reading that buffer,
-depending on the driver it may be possible to specify
-arbitrary key_len or it may need to be a proper length
-for the key algorithm specified.
-
-Thankfully, this is only exploitable by root, but root
-can actually cause a segfault or use kernel memory as
-a key (which you can even get back with siocgiwencode
-or siocgiwencodeext from the key buffer).
-
-Fix this by verifying that key_len fits into the buffer
-along with struct iw_encode_ext.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-Forgot a cast, not sure why that didn't show up in my other compile
-test?!
+ drivers/net/wireless/libertas/if_sdio.c |   18 +++++++++---------
+ drivers/net/wireless/libertas/if_sdio.h |    4 ++++
+ 2 files changed, 13 insertions(+), 9 deletions(-)
 
- net/wireless/wext.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
---- wireless-testing.orig/net/wireless/wext.c	2009-05-13 23:56:22.000000000 +0200
-+++ wireless-testing/net/wireless/wext.c	2009-05-13 23:56:32.000000000 +0200
-@@ -798,6 +798,13 @@ static int ioctl_standard_iw_point(struc
- 			err = -EFAULT;
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 55864c1..69d7fd3 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -66,19 +66,19 @@ struct if_sdio_model {
+ static struct if_sdio_model if_sdio_models[] = {
+ 	{
+ 		/* 8385 */
+-		.model = 0x04,
++		.model = IF_SDIO_MODEL_8385,
+ 		.helper = "sd8385_helper.bin",
+ 		.firmware = "sd8385.bin",
+ 	},
+ 	{
+ 		/* 8686 */
+-		.model = 0x0B,
++		.model = IF_SDIO_MODEL_8686,
+ 		.helper = "sd8686_helper.bin",
+ 		.firmware = "sd8686.bin",
+ 	},
+ 	{
+ 		/* 8688 */
+-		.model = 0x10,
++		.model = IF_SDIO_MODEL_8688,
+ 		.helper = "sd8688_helper.bin",
+ 		.firmware = "sd8688.bin",
+ 	},
+@@ -118,7 +118,7 @@ static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
+ 	int ret, reg;
+ 	u16 scratch;
+ 
+-	if (card->model == 0x04)
++	if (card->model == IF_SDIO_MODEL_8385)
+ 		reg = IF_SDIO_SCRATCH_OLD;
+ 	else
+ 		reg = IF_SDIO_SCRATCH;
+@@ -216,7 +216,7 @@ static int if_sdio_handle_event(struct if_sdio_card *card,
+ 
+ 	lbs_deb_enter(LBS_DEB_SDIO);
+ 
+-	if (card->model == 0x04) {
++	if (card->model == IF_SDIO_MODEL_8385) {
+ 		event = sdio_readb(card->func, IF_SDIO_EVENT, &ret);
+ 		if (ret)
  			goto out;
- 		}
-+
-+		if (cmd == SIOCSIWENCODEEXT) {
-+			struct iw_encode_ext *ee = (void *) extra;
-+
-+			if (iwp->length < sizeof(*ee) + ee->key_len)
-+				return -EFAULT;
+@@ -829,10 +829,10 @@ static int if_sdio_probe(struct sdio_func *func,
+ 		if (sscanf(func->card->info[i],
+ 				"ID: %x", &model) == 1)
+ 			break;
+-               if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
+-                       model = 4;
+-                       break;
+-               }
++		if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
++			model = IF_SDIO_MODEL_8385;
++			break;
 +		}
  	}
  
- 	err = handler(dev, info, (union iwreq_data *) iwp, extra);
-
+ 	if (i == func->card->num_info) {
+diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
+index 37ada2c..cea343f 100644
+--- a/drivers/net/wireless/libertas/if_sdio.h
++++ b/drivers/net/wireless/libertas/if_sdio.h
+@@ -12,6 +12,10 @@
+ #ifndef _LBS_IF_SDIO_H
+ #define _LBS_IF_SDIO_H
+ 
++#define IF_SDIO_MODEL_8385	0x04
++#define IF_SDIO_MODEL_8686	0x0b
++#define IF_SDIO_MODEL_8688	0x10
++
+ #define IF_SDIO_IOPORT		0x00
+ 
+ #define IF_SDIO_H_INT_MASK	0x04
+-- 
+1.5.3.6
 
