@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:39414 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbZEZKfh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 06:35:37 -0400
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: alejandro.riveira@gmail.com
-Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
-Date: Tue, 26 May 2009 12:35:36 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-References: <1243247687.5322.8.camel@varda> <200905261058.01039.IvDoorn@gmail.com> <1243333072.4888.2.camel@varda>
-In-Reply-To: <1243333072.4888.2.camel@varda>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200905261235.36658.IvDoorn@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:45897 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750946AbZETUhY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 16:37:24 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1M6sXT-0000CH-Kd
+	for linux-wireless@vger.kernel.org; Wed, 20 May 2009 20:37:23 +0000
+Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 20:37:23 +0000
+Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 20:37:23 +0000
+To: linux-wireless@vger.kernel.org
+From: matthieu castet <castet.matthieu@free.fr>
+Subject: Re: b43 : under high load, ack are lost
+Date: Wed, 20 May 2009 20:37:11 +0000 (UTC)
+Message-ID: <loom.20090520T203218-265@post.gmane.org>
+References: <loom.20090517T085823-487@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 26 May 2009, Alejandro Riveira Fernández wrote:
-> El mar, 26-05-2009 a las 10:58 +0200, Ivo van Doorn escribió:
-> > On Monday 25 May 2009, Alejandro Riveira Fernández wrote:
+Matthieu CASTET <castet.matthieu@...> writes:
+
 > 
-> > > Would the output of this script[2] for 2.6.29.4 with and without the
-> > > revert help you ?
-> > 
-> > Yes please try it. but for 2.6.29 you probably need attached script instead.
-> > I am not sure if it would produce something useful, because I think Johannes
-> > assertion is right. With his patch the correct bitmask is send to the driver
-> > and the driver actually needs _that_ bitmask without any editing
-> > (rather then the incorrect one which was send before that patch).
+> Hi,
 > 
-> What causes the regression then?
+> I use a 4306 (core rev 5) with compat-wireless-2009-05-08 as wireless driver
+> and
+> 4.150.10.5 firmware.
+> My station is an airo card in wpa-psk mode (802.11b).
+> 
+> After resolving my beacon problem [1], when I download at max speed my 
+> station
+> disconnect from AP because "LostSync-MaxRetry".
+> After looking in my station statistic it seems the retry (RetryLong) are due 
+> to
+> noack received from the AP.
+I take a monitor trace of the trafic and I see weird stuff from the b43 AP, 
+there is lot of case of :
+- client send data to AP
+- AP send data to client
+- ack from client
+- AP send data to client
+- ack from client
+- AP send data to client
+- ack from client
+- ack from AP (for 1 packet)
 
-No idea. Apparently the invalid bitmask is accepted by the device under
-certain conditions. Which would be very odd.... But since dozens
-of people reported this problem for 2.6.27 as well, it probably depends
-heavily on the actual chipset revision or configuration.
 
-> Anyway For the script to work what config options do I need? debugfs?
-> Anything else ?
+Sometimes it is :
+- client send data to AP
+- AP send data to client
+- ack from client
+- AP send data to client
+- ack from client
+- AP send data to client
+- ack from client
+- client resend data to AP
+- ack from AP
+- client send data to AP
+- ack from AP
+- ack from AP (for 1 packet)
 
-CONFIG_DEBUGFS
-CONFIG_MAC80211_DEBUGFS
-CONFIG_RT2X00_LIB_DEBUGFS
 
-And thats it, make sure debugfs is mounted and just run the script.
-The script will detect mount location and rt2x00 interface.
+It seems like ack are queued somewhere with low priority.
 
-Ivo
