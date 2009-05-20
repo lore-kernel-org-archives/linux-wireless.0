@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38328 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758695AbZEETbI (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57768 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756724AbZETS4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 15:31:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Karol Szuster <qflon@o2.pl>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: avoid NULL ptr deref when finding max_rates in PID and minstrel
-Date: Tue,  5 May 2009 15:18:26 -0400
-Message-Id: <1241551106-16938-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <4A0088EE.7010804@o2.pl>
-References: <4A0088EE.7010804@o2.pl>
+	Wed, 20 May 2009 14:56:43 -0400
+Date: Wed, 20 May 2009 21:56:39 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Optimize TBTT/DTIM calculation for timers
+Message-ID: <20090520185639.GA25436@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"There is another problem with this piece of code. The sband will be NULL
-after second iteration on single band device and cause null pointer
-dereference. Everything is working with dual band card. Sorry, but i
-don't know how to explain this clearly in English. I have looked on the
-second patch for pid algorithm and found similar bug."
+The previous version used a simple loop to go through all Beacon
+frames when determining the next TBTT and DTIM count. This is not too
+bad for the case where the setup happens before timesync (i.e., very
+small TSF), but this can become very heavy operation if a short Beacon
+interval is used and the current TSF is large.
 
-Reported-by: Karol Szuster <qflon@o2.pl>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+In preparation for a patch to update timer setup based on Beacon
+timestamp, optimize this routine to take fixed time regardless of the
+actual TSF value.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- net/mac80211/rc80211_minstrel.c |    2 +-
- net/mac80211/rc80211_pid_algo.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/beacon.c |   28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 70df3dc..d9233ec 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -477,7 +477,7 @@ minstrel_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/beacon.c	2009-05-20 21:19:31.000000000 +0300
++++ wireless-testing/drivers/net/wireless/ath/ath9k/beacon.c	2009-05-20 21:26:10.000000000 +0300
+@@ -559,6 +559,7 @@ static void ath_beacon_config_sta(struct
+ 	int cfpperiod, cfpcount;
+ 	u32 nexttbtt = 0, intval, tsftu;
+ 	u64 tsf;
++	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
  
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
- 		sband = hw->wiphy->bands[i];
--		if (sband->n_bitrates > max_rates)
-+		if (sband && sband->n_bitrates > max_rates)
- 			max_rates = sband->n_bitrates;
- 	}
+ 	memset(&bs, 0, sizeof(bs));
+ 	intval = conf->beacon_interval & ATH9K_BEACON_PERIOD;
+@@ -586,14 +587,27 @@ static void ath_beacon_config_sta(struct
+ 	 */
+ 	tsf = ath9k_hw_gettsf64(sc->sc_ah);
+ 	tsftu = TSF_TO_TU(tsf>>32, tsf) + FUDGE;
+-	do {
++
++	num_beacons = tsftu / intval + 1;
++	offset = tsftu % intval;
++	nexttbtt = tsftu - offset;
++	if (offset)
+ 		nexttbtt += intval;
+-		if (--dtimcount < 0) {
+-			dtimcount = dtimperiod - 1;
+-			if (--cfpcount < 0)
+-				cfpcount = cfpperiod - 1;
+-		}
+-	} while (nexttbtt < tsftu);
++
++	/* DTIM Beacon every dtimperiod Beacon */
++	dtim_dec_count = num_beacons % dtimperiod;
++	/* CFP every cfpperiod DTIM Beacon */
++	cfp_dec_count = (num_beacons / dtimperiod) % cfpperiod;
++	if (dtim_dec_count)
++		cfp_dec_count++;
++
++	dtimcount -= dtim_dec_count;
++	if (dtimcount < 0)
++		dtimcount += dtimperiod;
++
++	cfpcount -= cfp_dec_count;
++	if (cfpcount < 0)
++		cfpcount += cfpperiod;
  
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index 01d59a8..8bef9a1 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -378,7 +378,7 @@ static void *rate_control_pid_alloc(struct ieee80211_hw *hw,
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
- 		sband = hw->wiphy->bands[i];
--		if (sband->n_bitrates > max_rates)
-+		if (sband && sband->n_bitrates > max_rates)
- 			max_rates = sband->n_bitrates;
- 	}
- 
+ 	bs.bs_intval = intval;
+ 	bs.bs_nexttbtt = nexttbtt;
+
 -- 
-1.6.0.6
-
+Jouni Malinen                                            PGP id EFC895FA
