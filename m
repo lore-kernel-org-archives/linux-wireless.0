@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:21663 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879AbZEMRUz convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f158.google.com ([209.85.220.158]:62389 "EHLO
+	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754339AbZETTFL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 13:20:55 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so489036rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 10:20:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242208388.14227.46.camel@johannes.local>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
-	<1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
-	<1242208388.14227.46.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 13 May 2009 10:20:36 -0700
-Message-ID: <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
-Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending on
-	the stop callback
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 20 May 2009 15:05:11 -0400
+Received: by fxm2 with SMTP id 2so614476fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 12:05:11 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [WIP PATCH] sdio support for wl12xx
+References: <20090518180957.GD2580@hash.localnet>
+	<20090519040239.GA12911@hash.localnet>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 20 May 2009 22:05:08 +0300
+In-Reply-To: <20090519040239.GA12911@hash.localnet> (Bob Copeland's message of "Tue\, 19 May 2009 00\:02\:39 -0400")
+Message-ID: <877i0begt7.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 2:53 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
->> We inform the drivers so they can take appropriate actions during
->> suspend for WoW support.
->
->> -static void ar9170_op_stop(struct ieee80211_hw *hw)
->> +static void ar9170_op_stop(struct ieee80211_hw *hw, bool suspend)
->
-> Why just a 'suspend' bool? Why not pass the WoW information in here,
-> instead of adding a new config and stuff for it? WoW information is o=
-nly
-> relevant during suspend.
->
-> The way you have it, a driver needs to
-> =C2=A0* keep track of the wow config
-> =C2=A0* check whether a stop is due to suspend
-> =C2=A0* apply wow config during stop
->
-> If you passed the wow config in some struct to _stop() [and NULL if n=
-ot
-> for wow] then the driver would only need to
->
-> =C2=A0* check if for wow and apply config during stop
+Bob Copeland <me@bobcopeland.com> writes:
 
-Reason for not passing it is its accessible through the wiphy. All we
-really need from mac80211 is if it changed (some devices may need
-this, and will be more useful for the user pattern handling) and if we
-are stopping due to suspend.
+> On Mon, May 18, 2009 at 02:09:57PM -0400, Bob Copeland wrote:
+>> yet for applying.  However, it does load (with the proper setup code)
+>> on my Android dev phone, chip probe works, and probably the rest too,
+>> though I didn't get that far.  
+>
+> So much for hubris!
 
-What advantage do we have if we stuff a wow struct instead of having
-the driver read the wiphy wow info?
+Don't feel down about this, this is always difficult and you are making
+good progress already.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> iwconfig shows:
+>
+> wlan0     IEEE 802.11bg  ESSID:""  
+>           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated   
+>           Encryption key:off
+>           Power Management:off
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+> So at least mac80211 is up and running.
+
+Very nice. I assume you can read the chip id and that's good, it means
+that SDIO bus is working correctly.
+
+> I'm missing the NVS tables so 'ifconfig wlan0 up' bails on fw load.
+
+Current wl12xx code assumes that user space provides the NVS file. I'm
+guessing that Android has NVS file stored in chip's EEPROM. Check the
+!pWhalBus->pEEPROMBuf code path from TI's driver how to implement it.
+Should be relatively easy:
+
+http://android.git.kernel.org/?p=platform/system/wlan/ti.git;a=blob;f=sta_dk_4_0_4_32/common/src/BusAccess/Shm_Common/shmFwCtrl.c;h=946eb5ab3e82e44087c8387063369318ecfbaa34;hb=HEAD#l286
+
+Please let me know if you have any questions. I try to get hold of
+pandora, it has wl1251 using SDIO, so that I could help you with
+testing.
+
+http://www.openpandora.org/
+
+-- 
+Kalle Valo
