@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:51058 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbZEGNL5 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4997 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754887AbZETAxv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2009 09:11:57 -0400
-Received: by gxk10 with SMTP id 10so1395812gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2009 06:11:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A029F31.6090405@bitnet.be>
-References: <4A029F31.6090405@bitnet.be>
-Date: Thu, 7 May 2009 09:11:54 -0400
-Message-ID: <b6c5339f0905070611m399aaaa1vbbe19567bd3bbf21@mail.gmail.com>
-Subject: Re: ath5k antenna control patch
+	Tue, 19 May 2009 20:53:51 -0400
+Date: Tue, 19 May 2009 20:51:01 -0400
 From: Bob Copeland <me@bobcopeland.com>
-To: Hans Maes <Hans@bitnet.be>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] ath9k: fix custom regulatory call position
+Message-ID: <20090520005101.GA16051@hash.localnet>
+References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com> <b6c5339f0905191533v30683b9cueb929f44f2f8725@mail.gmail.com> <43e72e890905191542k7e65200en8b6f9453ead1a21a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890905191542k7e65200en8b6f9453ead1a21a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 7, 2009 at 4:43 AM, Hans Maes <Hans@bitnet.be> wrote:
-> Hello,
->
-> Could somebody tell me if there is any reason why the patch implementing the
-> ath5k antenna control doesn't seem to be committed yet ?
+On Tue, May 19, 2009 at 03:42:56PM -0700, Luis R. Rodriguez wrote:
+> >> @@ -1412,8 +1412,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+> >>        for (i = 0; i < sc->keymax; i++)
+> >>                ath9k_hw_keyreset(ah, (u16) i);
+> >>
+> >> -       error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
+> >> -                             ath9k_reg_notifier);
+> >>        if (error)
+> >>                goto bad;
+> >
+> > Is the "if (error)" check still valid?
+> 
+> Sure, although we'll never hit it, we should just make ath_regd_init() void
 
-It has been -- commit 854cb14db8... in wireless-testing.
+I should rephrase that as a statement :)  You moved the ath_regd_init
+but forgot to remove the "if (error) goto bad" part.
 
 -- 
 Bob Copeland %% www.bobcopeland.com
+
