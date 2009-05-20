@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:38975 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705AbZEEFgG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 01:36:06 -0400
-Received: by gxk10 with SMTP id 10so8795514gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 22:36:06 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:17106 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754913AbZETBZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2009 21:25:00 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 18:25:02 -0700
+Date: Tue, 19 May 2009 18:25:04 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath9k: fix custom regulatory call position
+Message-ID: <20090520012504.GC7639@tesla>
+References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com> <b6c5339f0905191533v30683b9cueb929f44f2f8725@mail.gmail.com> <43e72e890905191542k7e65200en8b6f9453ead1a21a@mail.gmail.com> <20090520005101.GA16051@hash.localnet>
 MIME-Version: 1.0
-In-Reply-To: <20090504224952.GB9342@joutaro.lan>
-References: <200905021218.23747.alf@mypals.org>
-	 <1241298894.13562.28.camel@johannes.local>
-	 <200905021553.55173.alf@mypals.org>
-	 <20090504224952.GB9342@joutaro.lan>
-Date: Tue, 5 May 2009 01:36:06 -0400
-Message-ID: <b6c5339f0905042236o7ab21feai5aef015510428d02@mail.gmail.com>
-Subject: Re: ath5k in 2.6.29.1 won't associate with AP
-From: Bob Copeland <me@bobcopeland.com>
-To: Alf <alf@mypals.org>
-Cc: Tulio Magno Quites Machado Filho <tuliom@quites.com.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090520005101.GA16051@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 4, 2009 at 6:49 PM, Tulio Magno Quites Machado Filho
-<tuliom@quites.com.br> wrote:
-> On May 02 09 15:53, Alf wrote:
->> Does anyone know if this card is supported? =A0Anybody know why this=
- card
->> works sometimes but most of the time it can't associate with the AP?
->
-> I think so (http://wireless.kernel.org/en/users/Drivers/ath5k#support=
-edchips).
+On Tue, May 19, 2009 at 05:51:01PM -0700, Bob Copeland wrote:
+> On Tue, May 19, 2009 at 03:42:56PM -0700, Luis R. Rodriguez wrote:
+> > >> @@ -1412,8 +1412,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+> > >>        for (i = 0; i < sc->keymax; i++)
+> > >>                ath9k_hw_keyreset(ah, (u16) i);
+> > >>
+> > >> -       error = ath_regd_init(&sc->sc_ah->regulatory, sc->hw->wiphy,
+> > >> -                             ath9k_reg_notifier);
+> > >>        if (error)
+> > >>                goto bad;
+> > >
+> > > Is the "if (error)" check still valid?
+> >
+> > Sure, although we'll never hit it, we should just make ath_regd_init() void
+> 
+> I should rephrase that as a statement :)  You moved the ath_regd_init
+> but forgot to remove the "if (error) goto bad" part.
 
-Yes, 2413 should work -- also can you try latest
-wireless-testing tree?  It has a boatload of updates for
-ath5k.  If something there works then we can perhaps narrow
-it down a bit.
+Heh... thanks, will resend.
 
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
