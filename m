@@ -1,87 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41892 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752693AbZESUKS (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:12498 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756881AbZETW2O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 16:10:18 -0400
-Subject: Re: [PATCH] mac80211: don't try to do anything on unchanged genIE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1242760372.4797.70.camel@johannes.local>
-References: <1242760372.4797.70.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/c8kVfktm6rNG9Qe4put"
-Date: Tue, 19 May 2009 22:09:43 +0200
-Message-Id: <1242763783.31350.0.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 20 May 2009 18:28:14 -0400
+Received: by yx-out-2324.google.com with SMTP id 3so454395yxj.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 15:28:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242857890.7048.22.camel@localhost.localdomain>
+References: <4a134cbd.1ebc720a.4cee.ffffc1c3@mx.google.com>
+	 <1242857890.7048.22.camel@localhost.localdomain>
+Date: Wed, 20 May 2009 15:28:14 -0700
+Message-ID: <45e8e6c40905201528v7d6c2cddld21c4cf4906f3a60@mail.gmail.com>
+Subject: Re: libertas: fix GSPI card event handling
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 20, 2009 at 3:18 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2009-05-19 at 17:20 -0700, andrey@cozybit.com wrote:
+>> The GPSI interface driver does not re-enable the Card Event Interrupt, which
+>> causes problems after a card event (for example: link-loss) comes in.  This
+>> can lead, for example, to the card failing to re-associate.  This patch
+>> ensures that we re-enable the Card Event Interrupt when we handle card events.
+>>
+>> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+>
+> Where does that bit ever get disabled?  Is that done by the firmware
+> after it sends the interrupt?  I don't think I quite understand what's
+> going on here...
 
---=-/c8kVfktm6rNG9Qe4put
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's correct.  The firmware and host communicate by setting or
+clearing bits and forcing an interrupt.  The event mechanism is,
+basically:
+1) firmware sets that bit and triggers an IRQ
+2) host handles the IRQ (noticing that it's an Event and reading the
+Event Cause)
+3) host clears the bit
+4) host triggers an interrupt (on the card) so that the card notices
+the change (ie: that the bit was cleared)
 
-On Tue, 2009-05-19 at 21:12 +0200, Johannes Berg wrote:
-> When the genIE hasn't changed there's no reason to kick
-> the state machine since it won't be able to do anything
-> new -- doing this decreases the useless work we do for
-> reassociating because if we do kick the state machine
-> it will try to find a usable BSS but there might not be
-> one because wpa_supplicant will only change the BSSID
-> a little later.
->=20
-> In a sense this is a workaround for userspace behaviour,
-> but on the other hand userspace cannot really keep track
-> of what the kernel currently has for genIE since any
-> process could have changed that while wpa_supplicant
-> wasn't looking.
->=20
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/mlme.c |    4 ++++
->  net/mac80211/wext.c |    5 +++--
->  2 files changed, 7 insertions(+), 2 deletions(-)
->=20
-> --- wireless-testing.orig/net/mac80211/mlme.c	2009-05-19 21:01:09.9239128=
-95 +0200
-> +++ wireless-testing/net/mac80211/mlme.c	2009-05-19 21:01:37.662665272 +0=
-200
-> @@ -2496,6 +2496,10 @@ int ieee80211_sta_set_extra_ie(struct ie
->  {
->  	struct ieee80211_if_managed *ifmgd =3D &sdata->u.mgd;
-> =20
-> +	if (len =3D=3D ifmgd->extra_ie_len &&
-> +	    !memcmp(ifmgd->extra_ie, ie, len))
-> +		return -EALREADY;
-> +
+Steps 3 an 4 were missing in if_spi.c, which caused problems if, for
+example, you associate to an AP and then cut the AP's power.  In this
+case the card will never re-associate subsequently because the Card
+Event bit never gets cleared.
 
-Oops, this is buggy when extra_ie is NULL.
-
-johannes
+>> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+>> index dccd01f..5fa55fe 100644
+>> --- a/drivers/net/wireless/libertas/if_spi.c
+>> +++ b/drivers/net/wireless/libertas/if_spi.c
+>> @@ -814,6 +814,13 @@ static void if_spi_e2h(struct if_spi_card *card)
+>>       if (err)
+>>               goto out;
+>>
+>> +     /* re-enable the card event interrupt */
+>> +     spu_write_u16(card, IF_SPI_HOST_INT_STATUS_REG,
+>> +                     ~IF_SPI_HICU_CARD_EVENT);
+>> +
+>> +     /* generate a card interrupt */
+>> +     spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
+>> +
+>>       spin_lock_irqsave(&priv->driver_lock, flags);
+>>       lbs_queue_event(priv, cause & 0xff);
+>>       spin_unlock_irqrestore(&priv->driver_lock, flags);
+>>
+>>
+>
+>
 
 
---=-/c8kVfktm6rNG9Qe4put
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKExIDAAoJEODzc/N7+QmaurIQANOjLoQjdFo7tF3lW4TwHXSx
-pWdg2ZaGyVKiL7IOg7sDybbEtqqvkvqCxLZSbFCFmcM0/Wj3G907pAtWLrRT/kI4
-qOcvwSDnJqQdE+QsHJJIgpiDJb8utQPmRV+R5jLwnHOIZ95zsUuoDPG3caMPLubF
-OGUomqbD/ICdl7WDIGWdatoG0NQqXF3JvnG+d0qjWlQsYiVozBq1tHI25QDiIksO
-ZNa/0osyyaqRoWL3NO2g6E4O/h70en0FIwqM0QnAdqNLXIyXWGecvo9NLX+DNxqi
-MXyiEGF5wu2rHd7FD6iUV1XaT99M9Ajyy/aRaFiNSxzDdQB9YRPLKmpy/yYNqvYq
-9hqg5fR5V6hLFUjtUoG+NYwIWKni85NFDNXADvNq/QiftofUmrAsDP/xGyzJsSbI
-nP4ojWB3M8H4QAyZY7X+7Sr+lG0NqNY6Y1yoofBzSbEkUkJb++7g//6hJcIHH1zJ
-v6/xvbHi7sD1VHaXsLOv9qC2pvp9fgP4miztinKbBQ8z9b8IhpzwebVleTBdU+QG
-sKE3nyCAA04qU0C9PkGv/OzLneYwyTSphhyVOBh92Tgj/94/TapgXPnDy1wnIHBX
-01y1lhNwWHJKsTXMY8iQ+MAdB0E4Ty8FtoSSXAOxCDxDAltwrZcKa9LvJZJ962m4
-krtS8kl0xHi91vnWIwwd
-=3zhX
------END PGP SIGNATURE-----
-
---=-/c8kVfktm6rNG9Qe4put--
-
+-- 
+Andrey Yurovsky
+cozybit Inc.
