@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:58582 "EHLO ciao.gmane.org"
+Received: from mx2.redhat.com ([66.187.237.31]:37522 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750709AbZEQOby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 10:31:54 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1M5hP7-0002zA-0d
-	for linux-wireless@vger.kernel.org; Sun, 17 May 2009 14:31:53 +0000
-Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 14:31:53 +0000
-Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2009 14:31:53 +0000
-To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: rt73usb Access point status
-Date: Sun, 17 May 2009 15:31:40 +0100
-Message-ID: <wfvdnzn6lv.fsf@calligramme.charmers>
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com> <20090512215817.bd1c6895.cjsthompson@gmail.com> <wf4ovlo25e.fsf@calligramme.charmers> <200905161132.21437.IvDoorn@gmail.com> <wfzldcm7zr.fsf@calligramme.charmers> <20090517145110.87b68ff2.cjsthompson@gmail.com>
+	id S1753579AbZETWaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 18:30:03 -0400
+Subject: Re: libertas: fix GSPI card event handling
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <45e8e6c40905201528v7d6c2cddld21c4cf4906f3a60@mail.gmail.com>
+References: <4a134cbd.1ebc720a.4cee.ffffc1c3@mx.google.com>
+	 <1242857890.7048.22.camel@localhost.localdomain>
+	 <45e8e6c40905201528v7d6c2cddld21c4cf4906f3a60@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 20 May 2009 18:29:56 -0400
+Message-Id: <1242858596.7048.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Christoph .J Thompson" <cjsthompson@gmail.com> writes:
+On Wed, 2009-05-20 at 15:28 -0700, Andrey Yurovsky wrote:
+> On Wed, May 20, 2009 at 3:18 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > On Tue, 2009-05-19 at 17:20 -0700, andrey@cozybit.com wrote:
+> >> The GPSI interface driver does not re-enable the Card Event Interrupt, which
+> >> causes problems after a card event (for example: link-loss) comes in.  This
+> >> can lead, for example, to the card failing to re-associate.  This patch
+> >> ensures that we re-enable the Card Event Interrupt when we handle card events.
+> >>
+> >> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> >
+> > Where does that bit ever get disabled?  Is that done by the firmware
+> > after it sends the interrupt?  I don't think I quite understand what's
+> > going on here...
+> 
+> That's correct.  The firmware and host communicate by setting or
+> clearing bits and forcing an interrupt.  The event mechanism is,
+> basically:
+> 1) firmware sets that bit and triggers an IRQ
+> 2) host handles the IRQ (noticing that it's an Event and reading the
+> Event Cause)
+> 3) host clears the bit
+> 4) host triggers an interrupt (on the card) so that the card notices
+> the change (ie: that the bit was cleared)
 
-> On Sun, 17 May 2009 09:47:04 +0100
-> Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk> wrote:
->> the talk Butler Lampson gave for Roger
->> Needham's 50+5 presentation
->> <http://research.microsoft.com/en-us/um/cambridge/events/needhambook/videos/1032/head.wmv>
->
-> Haven't used Windows seriously in over a decade,
+Ah, step 4 was what I wasn't yet thinking of.  Sounds fine.
 
-I never have, except to look at web pages to check that
-they're compatible with the bugs in internet exploiter.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-> but as far as WiFi drivers I think there is no standards.
-
-That -- more's the pity -- is partly the point of Lampson's
-talk. Rather than have standards his claim is that if it
-works on Windows it works, by definition, and that that's a
-good thing. I don't agree with him about that last, but I
-suspect mine is a minority view.
-
-> Windows drivers are just like the vendor drivers for
-> Linux: everyone is doing their own thing.
-
-It would be nicer if they didn't do it that way, but what
-would make them change? It's great that a few take notice of
-Linux these days, but it'll be a long wait before many of
-them develop on Linux and let the Windows community write
-their own drivers.
-
--- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
-
+> Steps 3 an 4 were missing in if_spi.c, which caused problems if, for
+> example, you associate to an AP and then cut the AP's power.  In this
+> case the card will never re-associate subsequently because the Card
+> Event bit never gets cleared.
+> 
+> >> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> >> index dccd01f..5fa55fe 100644
+> >> --- a/drivers/net/wireless/libertas/if_spi.c
+> >> +++ b/drivers/net/wireless/libertas/if_spi.c
+> >> @@ -814,6 +814,13 @@ static void if_spi_e2h(struct if_spi_card *card)
+> >>       if (err)
+> >>               goto out;
+> >>
+> >> +     /* re-enable the card event interrupt */
+> >> +     spu_write_u16(card, IF_SPI_HOST_INT_STATUS_REG,
+> >> +                     ~IF_SPI_HICU_CARD_EVENT);
+> >> +
+> >> +     /* generate a card interrupt */
+> >> +     spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
+> >> +
+> >>       spin_lock_irqsave(&priv->driver_lock, flags);
+> >>       lbs_queue_event(priv, cause & 0xff);
+> >>       spin_unlock_irqrestore(&priv->driver_lock, flags);
+> >>
+> >>
+> >
+> >
+> 
+> 
+> 
 
