@@ -1,75 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39422 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759944AbZEMOi7 (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:43015 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752695AbZETUJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 10:38:59 -0400
-Subject: Re: [RFT v9] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <9b2b86520905130736j6cde99cak6fad414531b0168c@mail.gmail.com>
-References: <1242030669.6930.10.camel@johannes.local>
-	 <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
-	 <1242211796.29288.7.camel@johannes.local>
-	 <9b2b86520905130736j6cde99cak6fad414531b0168c@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tW+q113J5ex3qtBwKjVH"
-Date: Wed, 13 May 2009 16:38:27 +0200
-Message-Id: <1242225507.9913.0.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 20 May 2009 16:09:43 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: mickflemm@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH 2/3] ath5k: led, cleanup and prepare macros
+Date: Wed, 20 May 2009 22:08:58 +0200
+Message-Id: <1242850139-25438-2-git-send-email-jirislaby@gmail.com>
+In-Reply-To: <1242850139-25438-1-git-send-email-jirislaby@gmail.com>
+References: <1242850139-25438-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jiri Slaby <jirislaby@gmail.com>
 
---=-tW+q113J5ex3qtBwKjVH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We need to use driver_data for more than pin and polaroty data.
+Remove driver_data designator from ATH_LED definition and write
+it explicitly.
 
-On Wed, 2009-05-13 at 15:36 +0100, Alan Jenkins wrote:
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/led.c |   33 +++++++++++++++++++++------------
+ 1 files changed, 21 insertions(+), 12 deletions(-)
 
-> >> <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#5334936857267=
-342674>
-> >>
-> >> The kernel then hangs later on in the boot process.  It responds to
-> >> SysRq, but does not echo normal keypresses.  SysRq+P shows that the
-> >> kernel is in the idle task.  I left it for three minutes, but I didn't
-> >> get any trace from the hung task detector or soft lockup detector.
-> >>
-> >> At first I thought it must be a problem with wireless-testing.
-> >> However, it went away when I eventually tried un-applying the rfkill
-> >> rewrite patch.
-> >
-> > Confusing, but I think the stacktrace is just bogus. Can you recompile
-> > your kernel with CONFIG_FRAME_POINTER please?
->=20
-> Nope, cos it's already enabled :-).
-
-Damn, I had hoped to get relevant information. I really don't see how
-rfkill could cause a problem in regulatory code, let's ask Luis.
-
-johannes
-
---=-tW+q113J5ex3qtBwKjVH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCttgAAoJEODzc/N7+QmaWnYQAKfMjd0ribTMX2o/8a49+Cfq
-0LVRDgaFOhGJEyBhVpdBOmkree7NzYNbfis1PioY7lhrwDMq9OCj6uxHTkqLFtt6
-cct2+ymTSVDgu1B1u1x//MAPtGe2q7RZcFqh2DZGbKk3pNQ1O0H2f5AewSxl0ZIE
-f1blvgriQBBbXyoD9HJVl+UFeminI+ra0ixFNrMF16Kt+8fh6aHlDDpzLyu3ZhCy
-IkihN7P2FvSUHpNYCAR26X/70LyGz0jRnwcUaIGrX+2ubVQZPr1NOe3ueLscQvbM
-IM5vtBa5pF5KQ/4kluQDnSl7KbKPwV2SCnmFy/B7DZVxLeLPd+bnnLiklAB4LprA
-cTsyMnaYu1MrMlHrnmvVmPeEUK3kAJmN6EcXSzpNXpc5UtODgfZ7uAlOAgP1+JnG
-josKoFHEozKILy3rx/veU/1KK2RaVF/XLZuskx5DaiY19Co+aPVev+SXMH0gzsPc
-7ZK2mjG9xogl7N2zsMsGmWTAFyQ/xT288bpFVp5smPcvMQ2evg3si7ri7t1giJaf
-xJNlzcnA04G6h1ZzwSt5ejbhM39UfWrszguvq3iFp/GSPrA27/C0ltl5QtdF48TN
-vCbqaNGUGEfmxWo0X2MQz/1z1YZofyk/AzV5NizMu6W5khyWdJOsFtKFogZH/7KY
-wDMBqYPRfixcrs1/XBqK
-=HvHz
------END PGP SIGNATURE-----
-
---=-tW+q113J5ex3qtBwKjVH--
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index 762e40d..0374b1f 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -47,30 +47,39 @@
+ 	.vendor = PCI_ANY_ID, .device = PCI_ANY_ID, \
+ 	.subvendor = (subv), .subdevice = (subd)
+ 
+-#define ATH_LED(pin,polarity) .driver_data = (((pin) << 8) | (polarity))
+-#define ATH_PIN(data) ((data) >> 8)
+-#define ATH_POLARITY(data) ((data) & 0xff)
++#define ATH_LED(pin, polarity)	(((pin) << 8) | (polarity))
++#define ATH_PIN(data)		(((data) >> 8) & 0xffff)
++#define ATH_POLARITY(data)	((data) & 0xff)
+ 
+ /* Devices we match on for LED config info (typically laptops) */
+ static const struct pci_device_id ath5k_led_devices[] = {
+ 	/* AR5211 */
+-	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211), ATH_LED(0, 0) },
++	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211),
++			.driver_data = ATH_LED(0, 0) },
+ 	/* HP Compaq nc6xx, nc4000, nx6000 */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_COMPAQ, PCI_ANY_ID), ATH_LED(1, 1) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_COMPAQ, PCI_ANY_ID),
++			.driver_data = ATH_LED(1, 1) },
+ 	/* Acer Aspire One A150 (maximlevitsky@gmail.com) */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, 0xe008), ATH_LED(3, 0) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, 0xe008),
++			.driver_data = ATH_LED(3, 0) },
+ 	/* Acer Ferrari 5000 (russ.dill@gmail.com) */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422), ATH_LED(1, 1) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0422),
++			.driver_data = ATH_LED(1, 1) },
+ 	/* E-machines E510 (tuliom@gmail.com) */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428), ATH_LED(3, 0) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, 0x0428),
++			.driver_data = ATH_LED(3, 0) },
+ 	/* Acer Extensa 5620z (nekoreeve@gmail.com) */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105), ATH_LED(3, 0) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_QMI, 0x0105),
++			.driver_data = ATH_LED(3, 0) },
+ 	/* Fukato Datacask Jupiter 1014a (mrb74@gmx.at) */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_AZWAVE, 0x1026), ATH_LED(3, 0) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_AZWAVE, 0x1026),
++			.driver_data = ATH_LED(3, 0) },
+ 	/* IBM ThinkPad AR5BXB6 (legovini@spiro.fisica.unipd.it) */
+-	{ ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a), ATH_LED(1, 0) },
++	{ ATH_SDEVICE(PCI_VENDOR_ID_IBM, 0x058a),
++			.driver_data = ATH_LED(1, 0) },
+ 	/* IBM-specific AR5212 (all others) */
+-	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
++	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM),
++			.driver_data = ATH_LED(0, 0) },
+ 	{ }
+ };
+ 
+-- 
+1.6.3
 
