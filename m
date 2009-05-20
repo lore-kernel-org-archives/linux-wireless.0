@@ -1,68 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44243 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006AbZEUQF1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 12:05:27 -0400
-Subject: Re: rfkill vs. interface up
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <1242920389.14369.16.camel@localhost.localdomain>
-References: <1242736331.4797.22.camel@johannes.local>
-	 <1242920389.14369.16.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-u9OoILAc7PMWrkYrCTQ0"
-Date: Thu, 21 May 2009 18:05:24 +0200
-Message-Id: <1242921924.4212.11.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:43877 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752412AbZETW02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 18:26:28 -0400
+Subject: Re: [PATCH 2/4] libertas: get SD8688 rx length with one CMD52
+From: Dan Williams <dcbw@redhat.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1242787701-10685-2-git-send-email-bzhao@marvell.com>
+References: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
+	 <1242787701-10685-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain
+Date: Wed, 20 May 2009 18:26:23 -0400
+Message-Id: <1242858383.7048.27.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-05-19 at 19:48 -0700, Bing Zhao wrote:
+> Usually, the 16-bit rx length is read from scratch pad registers
+> with two CMD52 transactions:
+> SD8385: 	IF_SDIO_SCRATCH_OLD (0x80fe/0x80ff)
+> SD8686/SD8688:	IF_SDIO_SCRATCH     (0x34/0x35)
+> 
+> Alternatively, SD8688 firmware offers an enhanced method for driver
+> to read an 8-bit rx length (in units) with a single CMD52:
+> IF_SDIO_RX_UNIT 0x43 is read one time after firmware is ready.
+> IF_SDIO_RX_LEN  0x42 is read every time when rx interrupt is received.
+> 
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
 
---=-u9OoILAc7PMWrkYrCTQ0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-On Thu, 2009-05-21 at 11:39 -0400, Dan Williams wrote:
-
-> That proposal sounds fine to me from a userspace perspective.  Sane
-> implementations don't assume the interface is IFF_UP when they configure
-> the device anyway (since it's not necessarily up at boot time or after
-> hibernate for example), and since you need a reconfigure after rfkill,
-> this seems reasonable.
->=20
-> You wouldn't have to give up on txpower either, you could simply map
-> 'txpower off' to SW-rfkill, and 'txpower on' to un-SW-rfkill, where of
-> course the interface would be !IFF_UP after 'txpower on' just like
-> flipping the killswitch would.
-
-Yeah, good point, that sounds better than having to give up on it -- the
-key though is that we can't recover IFF_UP state when that happens; if
-that's ok this should be fairly simple.
-
-johannes
-
---=-u9OoILAc7PMWrkYrCTQ0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKFXvBAAoJEODzc/N7+QmaCF8QAKAdwms2cuWt09HUtkvSKYXb
-DBXcc+6f08O7yCIekWDQ8D6c3Vla1YsUZjS0+80GBKSjvhTwYfJhQp0yubzjypic
-sOlF79MxUMMsqsd0LLgxl4lgBEabiJUaX87LSlSv5a08A4n9Bnt/TuNyvBO83GSG
-sigaan9f772b+LGeZ+6pjIbVwuUGsp+72/CNBtpLrmxX7bo7JGjfiAsPNLL0VVjC
-EUQ2hgS6o66Nksrsc6TXNhL6e3uzJVqakSfls3Ats51dyPi+6zgPJHeAS+fJaUTs
-qVRaCawQA9fiMQIYQ4kU+RWddNzfdTgu+0mONJX3BEg9Op0j8sPf0K7VwbSfWaS/
-1AXzUzsoFIovQ0iPRwTaQMplF/NFb8J2Gy4mXuRzAhQBEHV49+T8jtYj2BZdGJe6
-YXUT1c+0hdJW4Du3HrQrcmmsLtutM9+YXLxelnKORCpSi2LntCdx3qyOTGqf57GD
-Wq0APH2PrEQdkbsAe/OLBxvwm03yJTGhKIWBmxD8r+j0p9h6ds47JW7va/g4KUf5
-PXEbLI4iuLXGkYHYn92qcajTXmSdTtOGHEp0r1N6THi9o/joFMdHYC0ShdPKRJvj
-GlDLEtb+c4Tb9XO1A3qtZcZRniloyXDpJ7EkrrDOgb2eHBrUXLmMM9wdryTpWVPO
-rLKMwYweuDScXpAE3dEU
-=IMK9
------END PGP SIGNATURE-----
-
---=-u9OoILAc7PMWrkYrCTQ0--
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |   57 +++++++++++++++++++++++++++++-
+>  drivers/net/wireless/libertas/if_sdio.h |    3 ++
+>  2 files changed, 58 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 69d7fd3..e998c12 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -107,6 +107,8 @@ struct if_sdio_card {
+>  
+>  	struct workqueue_struct	*workqueue;
+>  	struct work_struct	packet_worker;
+> +
+> +	u8			rx_unit;
+>  };
+>  
+>  /********************************************************************/
+> @@ -136,6 +138,46 @@ static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
+>  	return scratch;
+>  }
+>  
+> +static u8 if_sdio_read_rx_unit(struct if_sdio_card *card)
+> +{
+> +	int ret;
+> +	u8 rx_unit;
+> +
+> +	rx_unit = sdio_readb(card->func, IF_SDIO_RX_UNIT, &ret);
+> +
+> +	if (ret)
+> +		rx_unit = 0;
+> +
+> +	return rx_unit;
+> +}
+> +
+> +static u16 if_sdio_read_rx_len(struct if_sdio_card *card, int *err)
+> +{
+> +	int ret;
+> +	u16 rx_len;
+> +
+> +	switch (card->model) {
+> +	case IF_SDIO_MODEL_8385:
+> +	case IF_SDIO_MODEL_8686:
+> +		rx_len = if_sdio_read_scratch(card, &ret);
+> +		break;
+> +	case IF_SDIO_MODEL_8688:
+> +	default: /* for newer chipsets */
+> +		rx_len = sdio_readb(card->func, IF_SDIO_RX_LEN, &ret);
+> +		if (!ret)
+> +			rx_len <<= card->rx_unit;
+> +		else
+> +			rx_len = 0xffff;	/* invalid length */
+> +
+> +		break;
+> +	}
+> +
+> +	if (err)
+> +		*err = ret;
+> +
+> +	return rx_len;
+> +}
+> +
+>  static int if_sdio_handle_cmd(struct if_sdio_card *card,
+>  		u8 *buffer, unsigned size)
+>  {
+> @@ -254,7 +296,7 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
+>  
+>  	lbs_deb_enter(LBS_DEB_SDIO);
+>  
+> -	size = if_sdio_read_scratch(card, &ret);
+> +	size = if_sdio_read_rx_len(card, &ret);
+>  	if (ret)
+>  		goto out;
+>  
+> @@ -923,10 +965,21 @@ static int if_sdio_probe(struct sdio_func *func,
+>  
+>  	priv->fw_ready = 1;
+>  
+> +	sdio_claim_host(func);
+> +
+> +	/*
+> +	 * Get rx_unit if the chip is SD8688 or newer.
+> +	 * SD8385 & SD8686 do not have rx_unit.
+> +	 */
+> +	if ((card->model != IF_SDIO_MODEL_8385)
+> +			&& (card->model != IF_SDIO_MODEL_8686))
+> +		card->rx_unit = if_sdio_read_rx_unit(card);
+> +	else
+> +		card->rx_unit = 0;
+> +
+>  	/*
+>  	 * Enable interrupts now that everything is set up
+>  	 */
+> -	sdio_claim_host(func);
+>  	sdio_writeb(func, 0x0f, IF_SDIO_H_INT_MASK, &ret);
+>  	sdio_release_host(func);
+>  	if (ret)
+> diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
+> index cea343f..d3a4fbe 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.h
+> +++ b/drivers/net/wireless/libertas/if_sdio.h
+> @@ -44,6 +44,9 @@
+>  #define IF_SDIO_SCRATCH_OLD	0x80fe
+>  #define   IF_SDIO_FIRMWARE_OK	0xfedc
+>  
+> +#define IF_SDIO_RX_LEN		0x42
+> +#define IF_SDIO_RX_UNIT		0x43
+> +
+>  #define IF_SDIO_EVENT           0x80fc
+>  
+>  #define IF_SDIO_BLOCK_SIZE	256
 
