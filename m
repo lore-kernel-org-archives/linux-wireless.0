@@ -1,38 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:46234 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753203AbZEZR06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 13:26:58 -0400
-Subject: Re: iwl3945 losing association after resume from suspend
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200905262051.42896.arvidjaar@mail.ru>
-References: <200905262051.42896.arvidjaar@mail.ru>
-Content-Type: text/plain
-Date: Tue, 26 May 2009 13:26:27 -0400
-Message-Id: <1243358787.8063.15.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60929 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035AbZETPDd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 11:03:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eugene Teo <eugeneteo@kernel.sg>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] airo: fix airo_get_encode{,ext} buffer overflow like I mean it...
+Date: Wed, 20 May 2009 11:02:43 -0400
+Message-Id: <1242831763-15478-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-26 at 20:51 +0400, Andrey Borzenkov wrote:
-> I am running 2.6.29.3. After resume from STR (assuming that long enough 
-> time has passed) connectivity is lost. There is no messages in log. Just 
-> running "wpa_cli reassociate" "fixes" it.
-> 
-> Is there any way driver can declare existing connection as "stale" and 
-> tell wpa_supplicant to reassociate?
+"airo: airo_get_encode{,ext} potential buffer overflow" was actually a
+no-op, due to an unrecognized type overflow in an assignment.  Oddly,
+gcc only seems to tell me about it when using -Wextra...grrr...
 
-Send a disassociate event on resume if a few seconds have passed.  But
-in reality, this is usually done in userspace via pm-utils
-suspend/resume scripts or some other mechanism based on the kernel's
-uevents.  It's not something that kernel drivers report back to
-userspace, because that suspend/resume event is handled by the kernel in
-a non-driver-specific fashion.  You could use pm-utils scripts to
-trigger the reassociation if you like, which is where most of the
-userspace suspend/resume handling stuff lives these days.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/airo.c |   23 ++++++++++++++---------
+ 1 files changed, 14 insertions(+), 9 deletions(-)
 
-Dan
-
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index d734757..9eabf4d 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -6467,6 +6467,7 @@ static int airo_get_encode(struct net_device *dev,
+ {
+ 	struct airo_info *local = dev->ml_priv;
+ 	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
++	int wep_key_len;
+ 	u8 buf[16];
+ 
+ 	if (!local->wep_capable)
+@@ -6500,11 +6501,13 @@ static int airo_get_encode(struct net_device *dev,
+ 	dwrq->flags |= index + 1;
+ 
+ 	/* Copy the key to the user buffer */
+-	dwrq->length = get_wep_key(local, index, &buf[0], sizeof(buf));
+-	if (dwrq->length != -1)
+-		memcpy(extra, buf, dwrq->length);
+-	else
++	wep_key_len = get_wep_key(local, index, &buf[0], sizeof(buf));
++	if (wep_key_len < 0) {
+ 		dwrq->length = 0;
++	} else {
++		dwrq->length = wep_key_len;
++		memcpy(extra, buf, dwrq->length);
++	}
+ 
+ 	return 0;
+ }
+@@ -6617,7 +6620,7 @@ static int airo_get_encodeext(struct net_device *dev,
+ 	struct airo_info *local = dev->ml_priv;
+ 	struct iw_point *encoding = &wrqu->encoding;
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+-	int idx, max_key_len;
++	int idx, max_key_len, wep_key_len;
+ 	u8 buf[16];
+ 
+ 	if (!local->wep_capable)
+@@ -6661,11 +6664,13 @@ static int airo_get_encodeext(struct net_device *dev,
+ 	memset(extra, 0, 16);
+ 	
+ 	/* Copy the key to the user buffer */
+-	ext->key_len = get_wep_key(local, idx, &buf[0], sizeof(buf));
+-	if (ext->key_len != -1)
+-		memcpy(extra, buf, ext->key_len);
+-	else
++	wep_key_len = get_wep_key(local, idx, &buf[0], sizeof(buf));
++	if (wep_key_len < 0) {
+ 		ext->key_len = 0;
++	} else {
++		ext->key_len = wep_key_len;
++		memcpy(extra, buf, ext->key_len);
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.6.0.6
 
