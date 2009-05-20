@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:40142 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458AbZEaE4q (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:5584 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755110AbZETTXE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 00:56:46 -0400
-Received: by bwz22 with SMTP id 22so6862334bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 21:56:47 -0700 (PDT)
+	Wed, 20 May 2009 15:23:04 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so395660ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 12:23:04 -0700 (PDT)
 MIME-Version: 1.0
-Date: Sun, 31 May 2009 05:56:46 +0100
-Message-ID: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
-Subject: compat-wireless won't associate on 2nd load
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <877i0begt7.fsf@litku.valot.fi>
+References: <20090518180957.GD2580@hash.localnet>
+	 <20090519040239.GA12911@hash.localnet> <877i0begt7.fsf@litku.valot.fi>
+Date: Wed, 20 May 2009 15:23:04 -0400
+Message-ID: <b6c5339f0905201223n4c8c4811h25a397e69a642c2a@mail.gmail.com>
+Subject: Re: [WIP PATCH] sdio support for wl12xx
+From: Bob Copeland <me@bobcopeland.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have been having some curious problem with rtl8187 for about a week
-- having problem associating with 'direct probe to AP <mac-addrr>
-timed out' after a reboot, and/or switching between compat-wireless
-modules. I thought it is a temporary problem with
-wireless-testing/compat-wireless but obviously nobody else has seen
-anything like mine from the mailing-list traffic. So I tried
-bisecting, etc and the results are inconsistent. Then I came to a
-vaguely working solution - it seems that I cannot modprobe
-compat-wireless twice - i.e. I can associate with compat-wireless
-after make install, make unload, modprobe; but modprobe -r then
-modprobe -v again I can't associate . I thought about restarting
-network manager, wpa_supplicant, etc without success, but the surest
-way to re-gain connectivity is simply to blow away /lib/modules/`uname
--r`/updates, depmod -a and load the as-shipped modules. (and then I
-can make install compat-wireless and use it, and the cycle repeats if
-I unload compat-wireless and try to install a different
-compat-wireless snapshot, etc).
+On Wed, May 20, 2009 at 3:05 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Bob Copeland <me@bobcopeland.com> writes:
+>> So much for hubris!
+>
+> Don't feel down about this, this is always difficult and you are making
+> good progress already.
 
-This is really curious, as it seems that I cannot unload
-compat-wireless and reload it (or a later snapshot) without going
-through as-shipped-by-distro modules ( 2.6.29.4-167.fc11.x86_64) in
-the middle. How is that possible? One possibility is that as-shipped
-module does a reset of hardware on unload or wireless-testing put the
-hardware in a bad state on unload; but I know of no change of that
-sort. Anybody else having problems associating after modprobe -r
-/modprobe  -v with recent compat-wireless/wireless-testing?
+Heh, just a joke :)
+
+> Current wl12xx code assumes that user space provides the NVS file. I'm
+> guessing that Android has NVS file stored in chip's EEPROM. Check the
+> !pWhalBus->pEEPROMBuf code path from TI's driver how to implement it.
+
+If you don't mind, check my work -- the shmFwCtrl.c code seems to do
+the equivalent of:
+
+   // initiate eeprom transfer
+   wl12xx_reg_write32(wl, ACX_REG_EE_START, ACX_REG_EEPROM_START_BIT); // ***
+   msleep(40);
+   msleep(40);
+
+   // sets spad4 to 0, I guess this is some kind of address register?
+   wl12xx_reg_write32(wl, ACX_EEPROMLESS_IND_REG, 0);
+
+   // everything from here on out is the same - read spad2 and 3 then boot.
+
+*** NB: I redefined ACX_REG_EEPROM_START_BIT to BIT(0) -- BIT(1) looked
+wrong unless that define is meant for something else.
+
+The state machine is kind of hard to read, but it seems like there should
+be more to it.  Did I miss anything as far as you can tell?  I get all
+zeros from spad2 and spad3 so it's not working with just the above...
+
+> Please let me know if you have any questions. I try to get hold of
+> pandora, it has wl1251 using SDIO, so that I could help you with
+> testing.
+>
+> http://www.openpandora.org/
+
+I'll take one too :)
+
+-- 
+Bob Copeland %% www.bobcopeland.com
