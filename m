@@ -1,48 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:54940 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612AbZESRPT (ORCPT
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:59386 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892AbZEUXxT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 13:15:19 -0400
-Received: by bwz22 with SMTP id 22so3962862bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2009 10:15:19 -0700 (PDT)
+	Thu, 21 May 2009 19:53:19 -0400
+Received: by gxk10 with SMTP id 10so2587538gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 16:53:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <45e8e6c40905181614i20c330b8sc982b0acc565708a@mail.gmail.com>
-References: <E1M5voF-0003wt-00.counter-strike-bk-ru@f144.mail.ru>
-	<45e8e6c40905181614i20c330b8sc982b0acc565708a@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 19 May 2009 19:14:59 +0200
-Message-ID: <69e28c910905191014o5ac0f99ard03f3750ec6a4f0c@mail.gmail.com>
-Subject: Re:
-To: Andrey Yurovsky <yurovsky@gmail.com>
-Cc: Wladimir Hirnij <counter-strike@bk.ru>,
+In-Reply-To: <200905212349.n4LNnxQH029607@ms.infomax.com.tw>
+References: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
+	 <45e8e6c40905211611q256a71f1pb08e2014f7ed0775@mail.gmail.com>
+	 <200905212349.n4LNnxQH029607@ms.infomax.com.tw>
+Date: Thu, 21 May 2009 16:53:20 -0700
+Message-ID: <45e8e6c40905211653mf2b2c4do4bd371d64fb475fd@mail.gmail.com>
+Subject: Re: Throughput is not changed when setting to a much higher bit rate
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: "benson.dong" <benson.dong@infomax.com.tw>
+Cc: Dan Williams <dcbw@redhat.com>, Dongas <dongas86@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Decoded version:
+On Thu, May 21, 2009 at 4:49 PM, benson.dong <benson.dong@infomax.com.tw> wrote:
+> <20090519175336.GF2691@tuxdriver.com>
+> <60ce8d250905200748p5984df0bl1984f0d3bdaf79b5@mail.gmail.com>
+> <1242854588.7048.13.camel@localhost.localdomain>
+> <60ce8d250905201700v13fe1394l6a9704bb02be3807@mail.gmail.com>
+> <1242945500.6444.24.camel@localhost.localdomain> <45e8e6c40905211611q256a71f1pb08e2014f7ed0775@mail.gmail.com>
+> Message-ID: <a12bc4a4a4cdf5f2ec75810d8e113d92@infomax.com.tw>
+> X-Sender: benson.dong@infomax.com.tw
+> Received: from 34.141.227.121.broad.sz.js.dynamic.163data.com.cn
+>        [121.227.141.34] with HTTP/1.1 (POST); Fri, 22 May 2009 07:49:59
+>        +0800
+> User-Agent: INFOMAX Webmail/0.1
+> Content-Type: text/plain; charset="UTF-8"
+> Content-Transfer-Encoding: 8bit
+>
+> On Thu, 21 May 2009 16:11:17 -0700, Andrey Yurovsky <andrey@cozybit.com>
+> wrote:
+>> On Thu, May 21, 2009 at 3:38 PM, Dan Williams <dcbw@redhat.com> wrote:
+>>> On Thu, 2009-05-21 at 08:00 +0800, Dongas wrote:
+>>>> 2009/5/21 Dan Williams <dcbw@redhat.com>:
+>>>> > On Wed, 2009-05-20 at 22:48 +0800, Dongas wrote:
+>>>> >> 2009/5/20 John W. Linville <linville@tuxdriver.com>:
+>>>> >> > On Wed, May 20, 2009 at 01:48:32AM +0800, Dongas wrote:
+>>>> >> >
+>>>> >> >> Why the bandwidth is not changed when bit rate is changed to
+>> 11Mb/s?
+>>>> >> >> Any thing wrong?
+>>>> >> >
+>>>> >> > More errors at higher bit rate, resulting in more retries?  Just
+>> a
+>>>> >> > thought...
+>>>> >> >
+>>>> >> Is there a quick way to verify this possible reason? I'm using
+>> Libertas driver.
+>>>> >>
+>>>> >> BTW, my sdio host driver is using polling mode to handle SDIO IRQ.
+>>>> >> Could this be the cause of such poor performance?
+>>>> >
+>>>> > Definitely.  With libertas, the largest class of issues by *far*
+>> that
+>>>> > we've seen are controller related.  I seem to recall that I've
+>> pulled
+>>>> > about 6Mbps through the card using a normal Ricoh controller from a
+>>>> > Fujitsu laptop.  I can recheck that.
+>>>>
+>>>> AFAIK, most old laptop ,including my x61, doesn't support SDIO in HW.
+>>>> So did Ricoh controller you tested use polling mode to handle SDIO IRQ?
+>>>> Which clock of controller and which bit rate did you test?
+>>>
+>>> Actually, most of the older machines *can* do SDIO, those made from
+>>> about 2006 - 2009.  These days a lot of the SD "controllers" are
+>>> actually USB-based mass-storage converters and cannot do SDIO, they are
+>>> essentially 10-in-1 cardreaders.
+>>>
+>>> What is the 'lspci' output for your Thinkpad?  If the controller isn't
+>>> in 'lspci' but is in 'lsusb', then it's quite unlikely to work because
+>>> of the above reason, I think.
+>>
+>> Right, you need a real SDIO (vs. SD storage) controller on the PCI
+>> bus.  However I can confirm that the ThinkPad X61 (and T61) controller
+>> does full SDIO and you can plug Libertas SDIO cards into it.  The
+>> older X-series ThinkPads (I tried the X40 and X41) work great too.
+>
+> Great, since the os running on x61 is windows vista, i just run linux in
+> vmware.
+> So do you know whether the windows driver for x61 supports full SDIO
+> well(including SDIO interrupt in HW)?
 
-The rtl8187se is not supported by the mainline driver.  There's a
-driver for it in staging though, and there's a vendor driver hosted
-here:
-http://code.google.com/p/msi-wind-linux/
-...I would try to build and load that driver for now.
+Oh.  Well, you need to run Linux right on the hardware (ie: not in
+VMWare or any visualization software) for SDIO to work.  I don't know
+anything about Windows.  I can confirm, from personal experience, that
+the X61's SDIO works fine for Libertas in Linux.
 
-  -Andrey
-
-2009/5/19 Andrey Yurovsky <yurovsky@gmail.com>:
-> MjAwOS81LzE3IFdsYWRpbWlyIEhpcm5paiA8Y291bnRlci1zdHJpa2VAYmsucnU+Ogo+IPrE0sHX
-> 09TX1crUxS4KPiD0wcvB0SDQ0s/CzMXNwSBzbGFja3dhcmUgMTIuMiCa0cTSzyAyLjYuMjcgzsUg
-> zc/H1SDV09TBzs/XydTYIMTSwcrXxdLBIM7BIHdpZmkgcnRsODE4N3NlLgo+IO/exc7YINDSz9vV
-> INDPzc/e2CDF08zJINzUzyDXz9rNz9bOzy4KPiDl08zJINzUzyDXz9rNz9bOzyDUzyDQz9bBzNXK
-> 09TBINDPxNLPws7PIM/QydvJ1MUgy8HLINzUzyDExczB1Ngg09nMy8HNySDOwSDE0sHK18XSwSDJ
-> IMTP0M/MzsnU0sXM2M7ZxSDQwcvF1NkgKMkgy8HLIMnIINXT1MHOz9fJ1NgpLgo+IGFwdC1nZXQg
-> zsXU1SgKPiDT1M/J1CBzbGFwdC1nZXQgzsXazsHAIMvByyDJzSDQz8zY2s/XwdTY09EuCj4g+sHS
-> wc7FxSDT0MHTycLPLgoKVGhlIHJ0bDgxODdzZSBpcyBub3Qgc3VwcG9ydGVkIGJ5IHRoZSBtYWlu
-> bGluZSBkcml2ZXIuICBUaGVyZSdzIGEKZHJpdmVyIGZvciBpdCBpbiBzdGFnaW5nIHRob3VnaCwg
-> YW5kIHRoZXJlJ3MgYSB2ZW5kb3IgZHJpdmVyIGhvc3RlZApoZXJlOgpodHRwOi8vY29kZS5nb29n
-> bGUuY29tL3AvbXNpLXdpbmQtbGludXgvCi4uLkkgd291bGQgdHJ5IHRvIGJ1aWxkIGFuZCBsb2Fk
-> IHRoYXQgZHJpdmVyIGZvciBub3cuCgogIC1BbmRyZXkK
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>>>> >> (However I just can't believe the performance is so poor ,only
+>> around
+>>>> >> 1.1Mbps, with polling mode of SDIO IRQ)
+>>>> >
+>>>> > What specific kernel version are you using?  There have been some
+>>>> > latency fixes in recent kernels, but would be good to know just to
+>> make
+>>>> > sure.
+>>>>
+>>>> I'm using kenrel 2.6.25.
+>>>>
+>>>> Thanks
+>>>>
+>>>> Regards
+>>>> Dongas
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
