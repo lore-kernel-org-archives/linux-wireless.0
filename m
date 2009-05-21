@@ -1,68 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:47314 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753256AbZEMQ2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 12:28:53 -0400
-Date: Wed, 13 May 2009 18:28:46 +0200
-From: Pierre Ossman <pierre@ossman.eu>
-To: Luis Galdos <luis.galdos@digi.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Pierre Ossman <drzeus@drzeus.cx>
-Subject: Re: [LIBERTAS-SDIO]  Support for single transfer blocks?
-Message-ID: <20090513182846.044fc461@mjolnir.ossman.eu>
-In-Reply-To: <1242223408.11182.34.camel@localhost.localdomain>
-References: <4A08392F.70108@digi.com>
-	<20090512231150.bc0c65c6.akpm@linux-foundation.org>
-	<1242223408.11182.34.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-7307-1242232130-0001-2"
+Received: from mga14.intel.com ([143.182.124.37]:49723 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752810AbZEULxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 07:53:41 -0400
+From: "Zhu, Yi" <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ortiz, Samuel" <samuel.ortiz@intel.com>
+Date: Thu, 21 May 2009 19:53:17 +0800
+Subject: RE: [PATCH 1/2] wireless: move some utility functions from mac80211
+ to cfg80211
+Message-ID: <AFAB8585072C7E48BC5C6F9C87F9B79703BA34C2EA@pdsmsx502.ccr.corp.intel.com>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	 <1242872340-27417-2-git-send-email-yi.zhu@intel.com>
+ <1242898342.5471.12.camel@johannes.local>
+In-Reply-To: <1242898342.5471.12.camel@johannes.local>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
-
---=_freyr.ossman.eu-7307-1242232130-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-> > On Mon, 11 May 2009 16:41:51 +0200 Luis Galdos <luis.galdos@digi.com> w=
-rote:
-> > >=20
-> > > * The transfer of Ethernet-frames works only if the "complete" frame =
-is smaller than the=20
-> > > block size of the SDIO-host. By larger packages, the SD8686 doesn't g=
-enerate the expected=20
-> > > IRQ (cause it expected a multiple transfer) and the driver detects a =
-timeout.
-> > >=20
-
-Unfortunately, the libertas chip cannot support your host as it
-requires everything to be done in a single transaction. So I'm afraid
-you'll have to look at another host controller or another wifi chip.
-
-Rgds
---=20
-     -- Pierre Ossman
-
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
-
---=_freyr.ossman.eu-7307-1242232130-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkoK9UIACgkQ7b8eESbyJLg9zACggIzHgig74u0ITvYVna8Z7pIw
-mBIAoPGhYAkxdhJT1IchqcX7g3CNO6MP
-=/U4z
------END PGP SIGNATURE-----
-
---=_freyr.ossman.eu-7307-1242232130-0001-2--
+VGhhbmtzIEpvaGFubmVzLiBXaWxsIHNlbmQgb3V0IFYyIHNob3J0bHkuDQoNCi15aQ0KDQo+IC0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KPiBTZW50OiAyMDA5xOo11MIyMcjVIDE3OjMyDQo+
+IFRvOiBaaHUsIFlpDQo+IENjOiBsaW52aWxsZUB0dXhkcml2ZXIuY29tOyBsaW51eC13aXJlbGVz
+c0B2Z2VyLmtlcm5lbC5vcmc7IE9ydGl6LCBTYW11ZWwNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAx
+LzJdIHdpcmVsZXNzOiBtb3ZlIHNvbWUgdXRpbGl0eSBmdW5jdGlvbnMgZnJvbSBtYWM4MDIxMQ0K
+PiB0byBjZmc4MDIxMQ0KPiANCj4gT24gVGh1LCAyMDA5LTA1LTIxIGF0IDEwOjE4ICswODAwLCBa
+aHUgWWkgd3JvdGU6DQo+IA0KPiA+IC0tLSBhL2luY2x1ZGUvbmV0L2NmZzgwMjExLmgNCj4gPiAr
+KysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5oDQo+ID4gQEAgLTc1Miw2ICs3NTIsMzIgQEAgZW51
+bSB3aXBoeV9wYXJhbXNfZmxhZ3Mgew0KPiA+ICB9Ow0KPiA+DQo+ID4gIC8qKg0KPiA+ICsgKiBl
+bnVtIGllZWU4MDIxMV9rZXlfYWxnIC0ga2V5IGFsZ29yaXRobQ0KPiA+ICsgKiBAQUxHX1dFUDog
+V0VQNDAgb3IgV0VQMTA0DQo+ID4gKyAqIEBBTEdfVEtJUDogVEtJUA0KPiA+ICsgKiBAQUxHX0ND
+TVA6IENDTVAgKEFFUykNCj4gPiArICogQEFMR19BRVNfQ01BQzogQUVTLTEyOC1DTUFDDQo+ID4g
+KyAqLw0KPiA+ICtlbnVtIGllZWU4MDIxMV9rZXlfYWxnIHsNCj4gPiArCUFMR19XRVAsDQo+ID4g
+KwlBTEdfVEtJUCwNCj4gPiArCUFMR19DQ01QLA0KPiA+ICsJQUxHX0FFU19DTUFDLA0KPiA+ICt9
+Ow0KPiA+ICsNCj4gPiArLyoqDQo+ID4gKyAqIGVudW0gaWVlZTgwMjExX2tleV9sZW4gLSBrZXkg
+bGVuZ3RoDQo+ID4gKyAqIEBMRU5fV0VQNDA6IFdFUCA1LWJ5dGUgbG9uZyBrZXkNCj4gPiArICog
+QExFTl9XRVAxMDQ6IFdFUCAxMy1ieXRlIGxvbmcga2V5DQo+ID4gKyAqLw0KPiA+ICtlbnVtIGll
+ZWU4MDIxMV9rZXlfbGVuIHsNCj4gPiArCUxFTl9XRVA0MCA9IDUsDQo+ID4gKwlMRU5fV0VQMTA0
+ID0gMTMsDQo+ID4gKwlMRU5fQ0NNUCA9IDE2LA0KPiA+ICsJTEVOX1RLSVAgPSAzMiwNCj4gPiAr
+fTsNCj4gDQo+IFRoaXMgZG9lc24ndCBzZWVtIGFwcHJvcHJpYXRlLiBBTEdfKiBpcyBwdXJlbHkg
+bWFjODAyMTEgaW50ZXJuYWxzLCBhbmQNCj4gc2hvdWxkbid0IGJlIGluIGNmZzgwMjExJ3MgQVBJ
+IHNpbmNlIGNmZzgwMjExIHVzZXMgdTMyIHZhbHVlcyBhcyBjaXBoZXINCj4gc3VpdGUgc3BlY2lm
+aWVycy4gV2h5IGRvIHlvdSBuZWVkIHRoZXNlPw0KPiANCj4gQW5kIGlmIHlvdSB3YW50IHRvIG1v
+dmUgdGhlIGtleSBsZW5ndGhzIHRoZXkgcHJvYmFibHkgc2hvdWxkIGJlIGluDQo+IGllZWU4MDIx
+MS5oLCBoYXZlIGEgcHJvcGVyIHByZWZpeCBhbmQgYWxzbyBiZSB1c2VkIHdpdGhpbiBjZmc4MDIx
+MQ0KPiBpdHNlbGYuLi4NCj4gDQo+ID4gKy8qIERlZmF1bHQgbWFwcGluZyBpbiBjbGFzc2lmaWVy
+IHRvIHdvcmsgd2l0aCBkZWZhdWx0IHF1ZXVlIHNldHVwLiAqLw0KPiA+ICtjb25zdCBpbnQgaWVl
+ZTgwMl8xZF90b19hY1s4XSA9IHsgMiwgMywgMywgMiwgMSwgMSwgMCwgMCB9Ow0KPiA+ICtFWFBP
+UlRfU1lNQk9MKGllZWU4MDJfMWRfdG9fYWMpOw0KPiANCj4gVGhhdCBzZWVtcyBhIGxpdHRsZSBv
+ZGQsIHVubGVzcyB3ZSB3YW50IHRvIHNwZWNpZnkgaG93IHRoZSBkZWZhdWx0IHF1ZXVlDQo+IHNl
+dHVwIHNob3VsZCBiZSAuLi4gd2hpY2ggc2VlbXMgdG8gbWFrZSBubyBzZW5zZS4gSXQgcHJvYmFi
+bHkgd2lsbCBiZQ0KPiBsaWtlIHRoaXMgbW9zdCBvZiB0aGUgdGltZSwgYnV0IHN0aWxsLCBzaG91
+bGQgdGhpcyByZWFsbHkgYmUgbWFuZGF0ZWQgYnkNCj4gY2ZnODAyMTE/IFRoZXJlIHNlZW1zIHRv
+IGJlIG5vIHJlYXNvbiB0byBkbyB0aGF0LiBJJ2QgcmF0aGVyIGtlZXAgdGhpcw0KPiBpbiBldmVy
+eSBkcml2ZXIgc2luY2UgdGhlIGRyaXZlcnMgbWF5IGRpZmZlciwgYW5kIGNoYW5naW5nIHRoaXMg
+Zm9yDQo+IG1hYzgwMjExIGlzIHVubGlrZWx5Lg0KPiANCj4gPiAraW50IGllZWU4MDIxMV9kYXRh
+X3RvXzgwMjMoc3RydWN0IHNrX2J1ZmYgKnNrYiwgc3RydWN0IG5ldF9kZXZpY2UgKmRldiwNCj4g
+PiArICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIG5sODAyMTFfaWZ0eXBlIGlmdHlwZSkN
+Cj4gDQo+IFNob3VsZCBwcm9iYWJseSBwYXNzIGluIGRldi0+ZGV2X2FkZHIgaW5zdGVhZCBvZiBk
+ZXYgZm9yIHRoaXMgYW5kIHRoZQ0KPiBvdGhlciBkaXJlY3Rpb24/IE9UT0gsIEkgc3VwcG9zZSBp
+dCBvbmx5IG1ha2VzIHNlbnNlIHRvIGJlIHVzZWQgZm9yIGENCj4gbmV0ZGV2Lg0KPiANCj4gDQo+
+ID4NCj4gPiArdTE2IGNmZzgwMjExX2NsYXNzaWZ5ODAyMTEoc3RydWN0IHNrX2J1ZmYgKnNrYikN
+Cj4gPiArew0KPiA+ICsgICAgICAgc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkciA9IChzdHJ1Y3Qg
+aWVlZTgwMjExX2hkciAqKSBza2ItPmRhdGE7DQo+ID4gKw0KPiA+ICsgICAgICAgaWYgKCFpZWVl
+ODAyMTFfaXNfZGF0YShoZHItPmZyYW1lX2NvbnRyb2wpKSB7DQo+ID4gKyAgICAgICAgICAgICAg
+IC8qIG1hbmFnZW1lbnQgZnJhbWVzIGdvIG9uIEFDX1ZPIHF1ZXVlLCBidXQgYXJlIHNlbnQNCj4g
+PiArICAgICAgICAgICAgICAgICogd2l0aG91dCBRb1MgY29udHJvbCBmaWVsZHMgKi8NCj4gPiAr
+ICAgICAgICAgICAgICAgcmV0dXJuIDA7DQo+ID4gKyAgICAgICB9DQo+ID4gKw0KPiA+ICsgICAg
+ICAgaWYgKGllZWU4MDIxMV9pc19kYXRhX3FvcyhoZHItPmZyYW1lX2NvbnRyb2wpKQ0KPiA+ICsg
+ICAgICAgICAgICAgICBza2ItPnByaW9yaXR5ID0gY2ZnODAyMTFfY2xhc3NpZnk4MDIxZChza2Ip
+Ow0KPiA+ICsgICAgICAgZWxzZQ0KPiA+ICsgICAgICAgICAgICAgICBza2ItPnByaW9yaXR5ID0g
+MDsNCj4gPiArDQo+ID4gKyAgICAgICByZXR1cm4gaWVlZTgwMl8xZF90b19hY1tza2ItPnByaW9y
+aXR5XTsNCj4gPiArfQ0KPiA+ICtFWFBPUlRfU1lNQk9MKGNmZzgwMjExX2NsYXNzaWZ5ODAyMTEp
+Ow0KPiANCj4gSWYgeW91IHBhc3MgaW4gc3VpdGFibGUgaW5mb3JtYXRpb24gZm9yIHRoZSBBQ00g
+ZG93bmdyYWRlLCBpdCBzZWVtcyB5b3UNCj4gY2FuIG1vdmUgb3ZlciB0aGF0IGNvZGUgdG9vIGFu
+ZCByZW1vdmUgb25lIGV4cG9ydC4gSWYgeW91ciBkZXZpY2UNCj4gc3VwcG9ydHMgQUNNIHlvdSBj
+YW4gYWx3YXlzIHBhc3MgaW4gMCBmb3IgdGhlIEFDTSBiaXRmaWVsZCwgSSB0aGluaz8gSXQNCj4g
+c2VlbXMgYSBsaXR0bGUgd2VpcmQgdG8gaGF2ZSB0aGlzIGZ1bmN0aW9uIGFuZCB0aGVuIHdyaXRl
+IGl0IGluIGEgd2F5DQo+IG1hYzgwMjExIGNhbid0IHVzZSBpdC4NCj4gDQo+IGpvaGFubmVzDQo=
