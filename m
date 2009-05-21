@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp20.orange.fr ([80.12.242.27]:31148 "EHLO smtp20.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667AbZEIRqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2009 13:46:53 -0400
-Message-ID: <4A05C18B.2070703@free.fr>
-Date: Sat, 09 May 2009 19:46:51 +0200
-From: Eric Valette <eric.valette@free.fr>
-Reply-To: eric.valette@free.fr
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Greg KH <greg@kroah.com>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-usb@vger.kernel.org, Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: Re: DMA debug trace pointing to rtl8187
-References: <49FDB9F8.3080400@free.fr> <20090506133131F.fujita.tomonori@lab.ntt.co.jp> <4A012FC8.3020304@free.fr> <20090506064513.GA7460@kroah.com> <4A05BD77.9020003@lwfinger.net>
-In-Reply-To: <4A05BD77.9020003@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55552 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754216AbZEUDEc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 23:04:32 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 2/3] rfkill: fix input event handling in rfkill conversion
+Date: Thu, 21 May 2009 00:04:18 -0300
+Message-Id: <1242875059-9627-3-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
+References: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
+Using break/continue inside a for() which is itself inside a do {} while,
+is asking for trouble...
 
-> I just saw John's version 2 that looks more like what I was thinking about. I
-> will be testing soon.
+Instead of replacing the bogus "break" with "continue", use something far
+more readable, instead.
 
-Should find time to compile, test and browse the WEB a little using WiFi
-at 9PM (France = UTC +2 right now).
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+---
+ net/rfkill/input.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-I'll report ASAP.
-
---eric
+diff --git a/net/rfkill/input.c b/net/rfkill/input.c
+index f708d74..a7295ad 100644
+--- a/net/rfkill/input.c
++++ b/net/rfkill/input.c
+@@ -123,14 +123,14 @@ static void rfkill_op_handler(struct work_struct *work)
+ 			continue;
+ 
+ 		for (i = 0; i < NUM_RFKILL_TYPES; i++) {
+-			if (!__test_and_clear_bit(i, rfkill_sw_pending))
+-				break;
+-			c = __test_and_clear_bit(i, rfkill_sw_state);
+-			spin_unlock_irq(&rfkill_op_lock);
++			if (__test_and_clear_bit(i, rfkill_sw_pending)) {
++				c = __test_and_clear_bit(i, rfkill_sw_state);
++				spin_unlock_irq(&rfkill_op_lock);
+ 
+-			__rfkill_handle_normal_op(i, c);
++				__rfkill_handle_normal_op(i, c);
+ 
+-			spin_lock_irq(&rfkill_op_lock);
++				spin_lock_irq(&rfkill_op_lock);
++			}
+ 		}
+ 	} while (rfkill_op_pending);
+ 	spin_unlock_irq(&rfkill_op_lock);
+-- 
+1.6.3.1
 
