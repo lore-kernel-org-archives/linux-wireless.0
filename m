@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:40408 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646AbZELHOi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 03:14:38 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so2745676wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 00:14:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242112310.3873.55.camel@johannes.local>
-References: <43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
-	<OF24E7AF48.E39EC671-ONC12575B4.00236C72-C12575B4.0024C49C@drz-wien.at>
-	<43e72e890905112355t53537ca9w2797cfc8694302@mail.gmail.com>
-	<1242112310.3873.55.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 12 May 2009 00:14:19 -0700
-Message-ID: <43e72e890905120014w13ca9317r8ec8fa270f2bbb1e@mail.gmail.com>
-Subject: Re: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath
-	comes
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: alexander.bartha@drz-wien.at,
-	Alexander Bartha <alex.xy.privat@gmx.at>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Pavel Roskin <proski@gnu.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:13756 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751879AbZEUC0d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 22:26:33 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [Announce] Intel Wireless Multicomm 3200 WiFi driver
+Date: Thu, 21 May 2009 10:18:58 +0800
+Message-Id: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2009 at 12:11 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-05-11 at 23:55 -0700, Luis R. Rodriguez wrote:
->
->> I've tested this and its not the "ath" module which introduces an
->> issue its a patch which enables PS by default. You can disable that by
->> recompiling with:
->>
->> CONFIG_MAC80211_DEFAULT_PS_VALUE=0
->>
->> If using compat-wireless just stuff it into config.mk.
->
-> I object to that assertion, or at least this way of putting it.
->
-> If powersave by default causes issues then it's not my patch that's
-> causing the problem, it's the fact that ath9k can't properly deal with
-> powersave in this case. Had the user enabled powersave manually they
-> would have run into the same issue. As such, I think ath9k should
-> probably simply stop claiming it can support PS.
+Hi,
 
-Heh yes, what I meant was ath9k's PS support has some issues which
-still need to be resolved (at least as I've tested it).
+Intel would like to announce the Linux driver for the Wifi part of the
+wireless multicomm 3200 product, which will be availabe in early 2010. This
+is a fullmac device. So we are creating a new iwmc3200wifi driver instead
+of extending the haredware support in the current (softmac based) iwlwifi
+driver. These two drivers should be independent. The iwmc3200wifi driver
+currently supports IEEE 802.11a/b/g (draft N is still working in progress)
+in managed and ad-hoc modes.
 
-  Luis
+As a fullmac device, iwmc3200wifi receives 802.11 frames from an upper
+MAC firmware (UMAC) running on the target. Those frames are validated
+by Rx tickets, converted to 802.3 frames, and then sent upstream (see rx.c).
+On the transmit path, the driver synchronizes the flow control with the
+UMAC through a set of tx credits (see tx.c). This device currently runs
+on an SDIO bus, and we tried to clearly separate the bus related operations
+from the rest of the code through an if_ops structure definition (see sdio.c).
+
+Finally, this driver exposes itself as a wiphy device. We're trying to
+comply and follow the cfg80211 API as much as we can, although this part of
+the code is very likely to grow as this API evolves (see cfg80211.c). WEXT
+API is also supported for backward compatibility (see wext.c).
+
+[PATCH 1/2] wireless: move some utility functions from mac80211 to cfg80211
+[PATCH 2/2] iwmc3200wifi: Add new Intel Wireless Multicomm 802.11 driver
+
+Patches are also available from:
+http://www.intellinuxwireless.org/iwlwifi/patches/iwmc3200wifi/
+
+Thanks,
+-yi
