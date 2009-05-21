@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56384 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754387AbZEGPPn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60158 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754265AbZEUT5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2009 11:15:43 -0400
-Subject: Re: [PATCH 2/3] mac80211: Add a timeout for frames in the RX
- reorder buffer
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090505173550.273830766@atheros.com>
-References: <20090505173512.349795688@atheros.com>
-	 <20090505173550.273830766@atheros.com>
-Content-Type: text/plain
-Date: Thu, 07 May 2009 08:15:23 -0700
-Message-Id: <1241709323.4903.25.camel@localhost.localdomain>
+	Thu, 21 May 2009 15:57:04 -0400
+Subject: Re: rfkill v9: fixes and thinkpad-acpi conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
+References: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KPPjEbWuzrmUiAlAunbP"
+Date: Thu, 21 May 2009 21:57:02 +0200
+Message-Id: <1242935822.4212.17.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
 
-> This patch allows skbs to be released from the RX reorder buffer in
-> case they have been there for an unexpectedly long time without us
-> having received the missing frames before them. Previously, these
-> frames were only released when the reorder window moved and that could
-> take very long time unless new frames were received constantly (e.g.,
-> TCP connections could be killed more or less indefinitely).
-> 
-> This situation should not happen very frequently, but it looks like
-> there are some scenarious that trigger it for some reason. As such,
-> this should be considered mostly a workaround to speed up recovery
-> from unexpected siutation that could result in connections hanging for
-> long periods of time.
+--=-KPPjEbWuzrmUiAlAunbP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I can confirm that this used to be a regular situation between my X200
-and a D-Link access point. I was originally thinking this was a driver
-issue, but your patch makes it possible to use wireless-testing tree
-again. I am not kidding here, before your patch it was impossible to use
-it at all. For me it was a real frequent situation. It is still present,
-but now it handles it more gracefully:
+On Thu, 2009-05-21 at 00:04 -0300, Henrique de Moraes Holschuh wrote:
 
-Open BA session requested for 00:1c:f0:xx:xx:xx tid 0
-iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1c:f0:xx:xx:xx tid = 0
-activated addBA response timer on tid 0
-switched off addBA timer for tid 0 
-Aggregation is on for tid 0 
-Rx A-MPDU request on tid 0 result 0
-unexpected AddBA Req from 00:1c:f0:xx:xx:xx on tid 0
-phy0: release an RX reorder frame due to timeout on earlier frames
-phy0: release an RX reorder frame due to timeout on earlier frames
+> The core might have some bugs left, too.  It seems to ignore set_sw_state
+> changes, I can't see it reflected on rfkill/state, and it is _not_ becaus=
+e
+> it is trying to set it back to whatever it wanted properly (or I'd get
+> calls to the set_block hook).  Maybe it is something in my thinkpad-acpi
+> conversion, though.
 
-My VPN connection doesn't always like it, but that could also be a total
-different issue with the provider.
+Yeah, I just found a bug with the PREV bit handling. Fixed in the
+version that's on my homepage now.
 
-Regards
+johannes
 
-Marcel
+--=-KPPjEbWuzrmUiAlAunbP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKFbIJAAoJEODzc/N7+Qma2H4P/0ZUHxcW5i0w1XvSzYZdMUuT
+RKCxTfr2424U3Wz7aAftK8qNTt/kGWA6pmaRXS7prXOyfr1pu/sZFvMHh+lLG/2P
+TpPMbYpw+/RveOc04AyB+y+Eto8Ws1P/XehglAKvlqrDXFGVUsCmn1Uh9foaCx7n
+Tefjhl+aR5GOrK8bQVn2YJFPHrMT/cU3lNqa/8GgsdGRN/CDAOgDmtNCotKTGjhp
+GTvorrDtFGSlvrgri+EvwdftqUw4G07gkuNuAcjXmv3PlGeTW9frYsUKuLMy26+F
+5YuzFofBUYpUSedgvv67byQtYj3uFRB0jlZkgiAOPg2r/p/AB/ILbwv5F4puPYlf
+d4DuK14aVaSXtITNuApXjpOSzmMMbbuHOwUJBDC7Q6BAJVcUo75oE6aUScu+bjsP
+LHAoNJl6S9Mj4QrLm70THgU/eAQVBwz435M+aFg8YETHDuHdT/6DARTBu6CU4s7a
+j47zyyBJnkehRUeOjnO+UUHhcTcaAtQ6fgM6tPk/MrfQ3To3gvlXeCtCiOxkuT4l
+QFMWeH8l9AyNCm8XBWYHizfjWewubc/h7HNKZBJIE+FKVnTteoRDFGGDZqK4wqha
+Hz9mHj05DLnLu5Im1UrGO/r5bsnPl055DUy6TF8YC6dAZmvJTONn4HGjoSEKWbOR
+QN1zCcc96N2LEmLgtyR3
+=20Gq
+-----END PGP SIGNATURE-----
+
+--=-KPPjEbWuzrmUiAlAunbP--
 
