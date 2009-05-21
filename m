@@ -1,30 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50173 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754272AbZEOXHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 19:07:11 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/3] iwlwifi driver updates 05/15/2009
-Date: Fri, 15 May 2009 16:13:42 -0700
-Message-Id: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:65485 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753958AbZEUCzF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 22:55:05 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so269847wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 19:55:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242872340-27417-3-git-send-email-yi.zhu@intel.com>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	<1242872340-27417-2-git-send-email-yi.zhu@intel.com> <1242872340-27417-3-git-send-email-yi.zhu@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 20 May 2009 19:54:47 -0700
+Message-ID: <43e72e890905201954x7a5bc41etf0305b793cbc032e@mail.gmail.com>
+Subject: Re: [PATCH 2/2] iwmc3200wifi: Add new Intel Wireless Multicomm 802.11
+	driver
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel.ortiz@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include two cleanup patches in preparation for more 3945 porting
-and a fix to kernel.org bug 13224. For this
-bugfix we also include a patch that applies to 2.6.30.
-
-[PATCH 1/3] iwlwifi: drop struct iwl3945_hw_key
-[PATCH 2/3] iwlwifi: drop iwl3945_tid_data
-[PATCH 3/3] iwlwifi: do not cancel delayed work inside spin_lock_irqsave
-[PATCH v2.6.30] iwlwifi: do not cancel delayed work inside spin_lock_irqsave
-
-
-Thank you
-
-Reinette
-
+T24gV2VkLCBNYXkgMjAsIDIwMDkgYXQgNzoxOSBQTSwgWmh1IFlpIDx5aS56aHVAaW50ZWwuY29t
+PiB3cm90ZToKPiArc3RhdGljIHN0cnVjdCBpZWVlODAyMTFfY2hhbm5lbCBpd21fMmdoel9jaGFu
+bmVsc1tdID0gewo+ICsgwqAgwqAgwqAgQ0hBTjJHKDEsIDI0MTIsIDApLAo+ICsgwqAgwqAgwqAg
+Q0hBTjJHKDIsIDI0MTcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDMsIDI0MjIsIDApLAo+ICsg
+wqAgwqAgwqAgQ0hBTjJHKDQsIDI0MjcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDUsIDI0MzIs
+IDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDYsIDI0MzcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJH
+KDcsIDI0NDIsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDgsIDI0NDcsIDApLAo+ICsgwqAgwqAg
+wqAgQ0hBTjJHKDksIDI0NTIsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDEwLCAyNDU3LCAwKSwK
+PiArIMKgIMKgIMKgIENIQU4yRygxMSwgMjQ2MiwgMCksCj4gKyDCoCDCoCDCoCBDSEFOMkcoMTIs
+IDI0NjcsIDApLAo+ICsgwqAgwqAgwqAgQ0hBTjJHKDEzLCAyNDcyLCAwKSwKPiArIMKgIMKgIMKg
+IENIQU4yRygxNCwgMjQ4NCwgMCksCj4gK307Cj4gKwo+ICtzdGF0aWMgc3RydWN0IGllZWU4MDIx
+MV9jaGFubmVsIGl3bV81Z2h6X2FfY2hhbm5lbHNbXSA9IHsKPiArIMKgIMKgIMKgIENIQU41Rygz
+NCwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDM2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygz
+OCwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDQwLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg0
+MiwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDQ0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg0
+NiwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDQ4LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg1
+MiwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDU2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Ryg2
+MCwgMCksIMKgIMKgIMKgIMKgIMKgQ0hBTjVHKDY0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+MDAsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTA0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+MDgsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTEyLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+MTYsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTIwLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+MjQsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTI4LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+MzIsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTM2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+NDAsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTQ5LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+NTMsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTU3LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+NjEsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTY1LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+ODQsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTg4LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygx
+OTIsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMTk2LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygy
+MDAsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMjA0LCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygy
+MDgsIDApLCDCoCDCoCDCoCDCoCBDSEFONUcoMjEyLCAwKSwKPiArIMKgIMKgIMKgIENIQU41Rygy
+MTYsIDApLAo+ICt9Owo+ICsKCkNIQU4yRygpIGFuZCBDSEFONUcoKSBjb3VsZCB1c2UgdGhlIHNl
+Y29uZCBhcmd1bWVudCByZW1vdmVkLCBpdHMgYWx3YXlzIDAuCgpCVFcgZG9lcyAnaXcgbGlzdCcg
+Z2l2ZSB5b3Ugc29tZXRoaW5nIGJhY2sgd2l0aCBhbGwgdGhlc2UgY2hhbm5lbHM/CgogIEx1aXMK
