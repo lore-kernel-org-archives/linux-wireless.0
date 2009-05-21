@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caiajhbdcbef.dreamhost.com ([208.97.132.145]:55470 "EHLO
-	spunkymail-a4.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757007AbZEVPiK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 11:38:10 -0400
-Message-ID: <4A16C6DC.7070502@hiramoto.org>
-Date: Fri, 22 May 2009 17:38:04 +0200
-From: Karl Hiramoto <karl@hiramoto.org>
-MIME-Version: 1.0
-To: hostap@lists.shmoo.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [ath9k-devel] hostapd not sending beacons, and no traffic.
-References: <4A168B8A.4070609@hiramoto.org> <4A16AD12.2020200@hiramoto.org>
-In-Reply-To: <4A16AD12.2020200@hiramoto.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx2.redhat.com ([66.187.237.31]:33667 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754470AbZEUQcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 12:32:10 -0400
+Subject: Re: rfkill vs. interface up
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1242921924.4212.11.camel@johannes.local>
+References: <1242736331.4797.22.camel@johannes.local>
+	 <1242920389.14369.16.camel@localhost.localdomain>
+	 <1242921924.4212.11.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 21 May 2009 12:32:07 -0400
+Message-Id: <1242923527.14369.29.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Karl Hiramoto wrote:
-> more info on this enabling debug in ath9k
->
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT                                
-> ath9k: receive FIFO overrun interrupt                            
-> ath9k: 0xf0010071 => 0x10000                                     
-> ath9k: disable IER                                               
-> ath9k: new IMR 0x10000                                           
-> ath9k: 0x10000 => 0xf0010071
-> ath9k: new IMR 0x918104b4
-> ath9k: enable IER
-> ath9k: AR_IMR 0x918104b4 IER 0x1
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-> ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
->
->   
-Some more info.   If i rate limit the interface, this bug never occurs.
-tc qdisc add dev wlan0_0 root handle 1: cbq avpkt 1000 bandwidth 20mbit
+On Thu, 2009-05-21 at 18:05 +0200, Johannes Berg wrote:
+> On Thu, 2009-05-21 at 11:39 -0400, Dan Williams wrote:
+> 
+> > That proposal sounds fine to me from a userspace perspective.  Sane
+> > implementations don't assume the interface is IFF_UP when they configure
+> > the device anyway (since it's not necessarily up at boot time or after
+> > hibernate for example), and since you need a reconfigure after rfkill,
+> > this seems reasonable.
+> > 
+> > You wouldn't have to give up on txpower either, you could simply map
+> > 'txpower off' to SW-rfkill, and 'txpower on' to un-SW-rfkill, where of
+> > course the interface would be !IFF_UP after 'txpower on' just like
+> > flipping the killswitch would.
+> 
+> Yeah, good point, that sounds better than having to give up on it -- the
+> key though is that we can't recover IFF_UP state when that happens; if
+> that's ok this should be fairly simple.
 
+I don't think recovering IFF_UP needs to be done by the kernel.  rfkill
+already hoses the card state anyway, requiring a full setup by
+userspace, which usually includes ensuring the device is up (which, for
+example, both NM and wpa_supplicant have done since the beginning of
+time).
 
-If i restart hostapd, the interface comes back OK..  Or anything that 
-calls ath_reset() will make it come back.
+Dan
 
-
-Reproducing this downloading a http large file, without QOS it's always 
-reproduceable.   Usually It occurs before 2MB is downloaded.
-
-This is on a 266 mhz IXP425.  So maybee some kind of race happening here..
-
---
-Karl
