@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53358 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752918AbZEETsp (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:45742 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754497AbZEUDEd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 15:48:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] mac80211: Fix sparse warning for ssid_len on ieee80211_sta_config_auth()
-Date: Tue,  5 May 2009 15:48:39 -0400
-Message-Id: <1241552919-27568-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 20 May 2009 23:04:33 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: rfkill v9: fixes and thinkpad-acpi conversion
+Date: Thu, 21 May 2009 00:04:16 -0300
+Message-Id: <1242875059-9627-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/mac80211/mlme.c:2079:28: warning: symbol 'ssid_len' shadows an earlier one
-net/mac80211/mlme.c:2022:12: originally declared here
+John,
 
-ssid_len is already being declared and checked above so there is
-no need for it again.
+Here are two patches for the rfkill core rewrite, plus the thinkpad-acpi
+conversion.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+Just fold them into your latest rfkill rewrite patch.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5509c5a..75c4872 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2076,10 +2076,6 @@ static int ieee80211_sta_config_auth(struct ieee80211_sub_if_data *sdata)
- 		return 0;
- 	} else {
- 		if (ifmgd->assoc_scan_tries < IEEE80211_ASSOC_SCANS_MAX_TRIES) {
--			u8 ssid_len = 0;
--
--			if (!(ifmgd->flags & IEEE80211_STA_AUTO_SSID_SEL))
--				ssid_len = ifmgd->ssid_len;
- 
- 			ifmgd->assoc_scan_tries++;
- 
+HOWEVER, the thing doesn't work right.  Now, I am pretty sure I might have
+done something wrong somewhere in the thinkpad-acpi conversion (for
+example: the UWB switch never registers with its hw-block state right, but
+all others do), and I would appreciate if you could look it over and tell
+me what I am doing that upsets the core.
+
+The core might have some bugs left, too.  It seems to ignore set_sw_state
+changes, I can't see it reflected on rfkill/state, and it is _not_ because
+it is trying to set it back to whatever it wanted properly (or I'd get
+calls to the set_block hook).  Maybe it is something in my thinkpad-acpi
+conversion, though.
+
+Anyway, the core needs proper coverage testing of its full functionality
+before it can be merged in mainline.  Just like you found that the old core
+never worked right for LEDs, the new rewrite was not processing any KEY_*
+input events, which is a quite important functionality...
+
+Regardless of that, the rewrite is likely good enough for wireless-testing,
+now.  At least it will compile cleanly now that thinkpad-acpi is converted.
+But PLEASE don't let it go to mainline before:
+
+1. It is gets good coverage testing, and
+
+2. Write support to let userspace change the switch status is implemented.
+It is a show-stopper for platform drivers.
+
 -- 
-1.6.2.2.446.gfbdc0
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
