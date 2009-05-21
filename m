@@ -1,103 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44372 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754037AbZETWqW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 18:46:22 -0400
-Subject: Re: [PATCH 4/4] libertas: read SD8688 firmware status from new
- register
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1242787701-10685-4-git-send-email-bzhao@marvell.com>
-References: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
-	 <1242787701-10685-4-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain
-Date: Wed, 20 May 2009 18:46:16 -0400
-Message-Id: <1242859576.7048.41.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44243 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006AbZEUQF1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 12:05:27 -0400
+Subject: Re: rfkill vs. interface up
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1242920389.14369.16.camel@localhost.localdomain>
+References: <1242736331.4797.22.camel@johannes.local>
+	 <1242920389.14369.16.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-u9OoILAc7PMWrkYrCTQ0"
+Date: Thu, 21 May 2009 18:05:24 +0200
+Message-Id: <1242921924.4212.11.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-19 at 19:48 -0700, Bing Zhao wrote:
-> The scratch pad register is used to store firmware status after
-> firmware is downloaded and initialized. After firmware status is
-> verified OK, the same register is used to store RX packet length.
-> Hence the firmware status code is no longer valid afterwards.
-> 
-> SD8688 firmware introduces a new register for firmware status
-> which will never be overwritten.
 
-This could become confusing :)  read_rx_len() already has a switch
-statement, but since read_rx_len() can also call into read_scratch() for
-the 8385 and 8686, that *also* has a switch selector.  I can't think of
-a great way to break it up though without copying a chunk of code around
-or making useless wrapper functions.
+--=-u9OoILAc7PMWrkYrCTQ0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+On Thu, 2009-05-21 at 11:39 -0400, Dan Williams wrote:
 
-Dan
+> That proposal sounds fine to me from a userspace perspective.  Sane
+> implementations don't assume the interface is IFF_UP when they configure
+> the device anyway (since it's not necessarily up at boot time or after
+> hibernate for example), and since you need a reconfigure after rfkill,
+> this seems reasonable.
+>=20
+> You wouldn't have to give up on txpower either, you could simply map
+> 'txpower off' to SW-rfkill, and 'txpower on' to un-SW-rfkill, where of
+> course the interface would be !IFF_UP after 'txpower on' just like
+> flipping the killswitch would.
 
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   20 ++++++++++++++++++--
->  drivers/net/wireless/libertas/if_sdio.h |    1 +
->  2 files changed, 19 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 478d766..18132d4 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -119,15 +119,29 @@ struct if_sdio_card {
->  /* I/O                                                              */
->  /********************************************************************/
->  
-> +/*
-> + *  For SD8385/SD8686, this function reads firmware status after
-> + *  the image is downloaded, or reads RX packet length when
-> + *  interrupt (with IF_SDIO_H_INT_UPLD bit set) is received.
-> + *  For SD8688, this function reads firmware status only.
-> + */
->  static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
->  {
->  	int ret, reg;
->  	u16 scratch;
->  
-> -	if (card->model == IF_SDIO_MODEL_8385)
-> +	switch (card->model) {
-> +	case IF_SDIO_MODEL_8385:
->  		reg = IF_SDIO_SCRATCH_OLD;
-> -	else
-> +		break;
-> +	case IF_SDIO_MODEL_8686:
->  		reg = IF_SDIO_SCRATCH;
-> +		break;
-> +	case IF_SDIO_MODEL_8688:
-> +	default: /* for newer chipsets */
-> +		reg = IF_SDIO_FW_STATUS;
-> +		break;
-> +	}
->  
->  	scratch = sdio_readb(card->func, reg, &ret);
->  	if (!ret)
-> @@ -706,6 +720,8 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
->  	if (ret)
->  		goto out;
->  
-> +	lbs_deb_sdio("firmware status = %#x\n", scratch);
-> +
->  	if (scratch == IF_SDIO_FIRMWARE_OK) {
->  		lbs_deb_sdio("firmware already loaded\n");
->  		goto success;
-> diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
-> index d3a4fbe..60c9b2f 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.h
-> +++ b/drivers/net/wireless/libertas/if_sdio.h
-> @@ -42,6 +42,7 @@
->  
->  #define IF_SDIO_SCRATCH		0x34
->  #define IF_SDIO_SCRATCH_OLD	0x80fe
-> +#define IF_SDIO_FW_STATUS	0x40
->  #define   IF_SDIO_FIRMWARE_OK	0xfedc
->  
->  #define IF_SDIO_RX_LEN		0x42
+Yeah, good point, that sounds better than having to give up on it -- the
+key though is that we can't recover IFF_UP state when that happens; if
+that's ok this should be fairly simple.
+
+johannes
+
+--=-u9OoILAc7PMWrkYrCTQ0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKFXvBAAoJEODzc/N7+QmaCF8QAKAdwms2cuWt09HUtkvSKYXb
+DBXcc+6f08O7yCIekWDQ8D6c3Vla1YsUZjS0+80GBKSjvhTwYfJhQp0yubzjypic
+sOlF79MxUMMsqsd0LLgxl4lgBEabiJUaX87LSlSv5a08A4n9Bnt/TuNyvBO83GSG
+sigaan9f772b+LGeZ+6pjIbVwuUGsp+72/CNBtpLrmxX7bo7JGjfiAsPNLL0VVjC
+EUQ2hgS6o66Nksrsc6TXNhL6e3uzJVqakSfls3Ats51dyPi+6zgPJHeAS+fJaUTs
+qVRaCawQA9fiMQIYQ4kU+RWddNzfdTgu+0mONJX3BEg9Op0j8sPf0K7VwbSfWaS/
+1AXzUzsoFIovQ0iPRwTaQMplF/NFb8J2Gy4mXuRzAhQBEHV49+T8jtYj2BZdGJe6
+YXUT1c+0hdJW4Du3HrQrcmmsLtutM9+YXLxelnKORCpSi2LntCdx3qyOTGqf57GD
+Wq0APH2PrEQdkbsAe/OLBxvwm03yJTGhKIWBmxD8r+j0p9h6ds47JW7va/g4KUf5
+PXEbLI4iuLXGkYHYn92qcajTXmSdTtOGHEp0r1N6THi9o/joFMdHYC0ShdPKRJvj
+GlDLEtb+c4Tb9XO1A3qtZcZRniloyXDpJ7EkrrDOgb2eHBrUXLmMM9wdryTpWVPO
+rLKMwYweuDScXpAE3dEU
+=IMK9
+-----END PGP SIGNATURE-----
+
+--=-u9OoILAc7PMWrkYrCTQ0--
 
