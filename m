@@ -1,55 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:39038 "EHLO mx2.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:27647 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755519AbZERPff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:35:35 -0400
-Subject: Re: Scan while TX/RX'ing a lot of data
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com
-In-Reply-To: <1242478137.10005.63.camel@johannes.local>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com>
-	 <1242327298.4227.25.camel@localhost.localdomain>
-	 <200905151011.50915.hs4233@mail.mn-solutions.de>
-	 <1242429353.10933.32.camel@localhost.localdomain>
-	 <1242478137.10005.63.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 18 May 2009 11:35:24 -0400
-Message-Id: <1242660924.6530.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1754899AbZEUUhy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 16:37:54 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/3] iwlwifi: add Greenfield support for 11n
+Date: Thu, 21 May 2009 13:44:22 -0700
+Message-Id: <1242938663-7937-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1242938663-7937-2-git-send-email-reinette.chatre@intel.com>
+References: <1242938663-7937-1-git-send-email-reinette.chatre@intel.com>
+ <1242938663-7937-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-05-16 at 14:48 +0200, Johannes Berg wrote:
-> On Fri, 2009-05-15 at 19:15 -0400, Dan Williams wrote:
-> 
-> > Well, what does "background scan" mean?  mac80211 will obviously accept
-> > beacons from APs on the same channel and happily add them to the scan
-> > list.
-> 
-> Only if powersave/beacon filtering isn't enabled. Actually, mac80211
-> does beacon filtering itself now, so I don't think this happens any more
-> (I did that on purpose so people don't really rely on the former
-> behaviour)
-> 
-> > But a background scan would imply that the card itself is taking
-> > over the decision about when to jump around and scan, basically the same
-> > thing NM is doing, right?  When would the card/stack decided to
-> > background scan, and what channels would it background scan on?  If it
-> > doesn't do more or less all passive channels, then it wouldn't be that
-> > useful for figuring out the site survey data.
-> 
-> I would think that mac80211, while asked to scan when associated, could
-> simply do something like calculating how long it can go off-channel
-> under the current QoS requirements, and then go off-channel for that,
-> wait for the next on-channel beacon and some traffic, scan the next
-> channel(s) again etc.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Yeah, that sounds like it would work.
+Add "Greenfield" support for all devices except 4965 and
+3945. "Greenfield" is part of 11n features to improve HT performance.
 
-Dan
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   34 +++++++++++++++++------------
+ 1 files changed, 20 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 4c88e87..a1b0ff5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -652,19 +652,19 @@ static int rs_toggle_antenna(u32 valid_ant, u32 *rate_n_flags,
+ 	return 1;
+ }
+ 
+-/* FIXME:RS: in 4965 we don't use greenfield at all */
+-/* FIXME:RS: don't use greenfield for now in TX */
+-#if 0
+-static inline u8 rs_use_green(struct iwl_priv *priv, struct ieee80211_conf *conf)
++/* in 4965 we don't use greenfield at all */
++static inline u8 rs_use_green(struct iwl_priv *priv,
++			      struct ieee80211_conf *conf)
+ {
+-	return (conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) &&
+-		priv->current_ht_config.is_green_field &&
+-		!priv->current_ht_config.non_GF_STA_present;
+-}
+-#endif
+-static inline u8 rs_use_green(struct iwl_priv *priv, struct ieee80211_conf *conf)
+-{
+-	return 0;
++	u8 is_green;
++
++	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_4965)
++		is_green = 0;
++	else
++		is_green = (conf_is_ht(conf) &&
++			   priv->current_ht_config.is_green_field &&
++			   !priv->current_ht_config.non_GF_STA_present);
++	return is_green;
+ }
+ 
+ /**
+@@ -2061,6 +2061,10 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 		active_tbl = 1 - lq_sta->active_tbl;
+ 
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
++	if (is_legacy(tbl->lq_type))
++		lq_sta->is_green = 0;
++	else
++		lq_sta->is_green = rs_use_green(priv, conf);
+ 	is_green = lq_sta->is_green;
+ 
+ 	/* current tx rate */
+@@ -2896,7 +2900,8 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 		   ((is_mimo2(tbl->lq_type)) ? "MIMO2" : "MIMO3"));
+ 		   desc += sprintf(buff+desc, " %s",
+ 		   (tbl->is_fat) ? "40MHz" : "20MHz");
+-		desc += sprintf(buff+desc, " %s\n", (tbl->is_SGI) ? "SGI" : "");
++		   desc += sprintf(buff+desc, " %s %s\n", (tbl->is_SGI) ? "SGI" : "",
++		   (lq_sta->is_green) ? "GF enabled" : "");
+ 	}
+ 	desc += sprintf(buff+desc, "last tx rate=0x%X\n",
+ 		lq_sta->last_rate_n_flags);
+@@ -2959,13 +2964,14 @@ static ssize_t rs_sta_dbgfs_stats_table_read(struct file *file,
+ 		return -ENOMEM;
+ 
+ 	for (i = 0; i < LQ_SIZE; i++) {
+-		desc += sprintf(buff+desc, "%s type=%d SGI=%d FAT=%d DUP=%d\n"
++		desc += sprintf(buff+desc, "%s type=%d SGI=%d FAT=%d DUP=%d GF=%d\n"
+ 				"rate=0x%X\n",
+ 				lq_sta->active_tbl == i ? "*" : "x",
+ 				lq_sta->lq_info[i].lq_type,
+ 				lq_sta->lq_info[i].is_SGI,
+ 				lq_sta->lq_info[i].is_fat,
+ 				lq_sta->lq_info[i].is_dup,
++				lq_sta->is_green,
+ 				lq_sta->lq_info[i].current_rate);
+ 		for (j = 0; j < IWL_RATE_COUNT; j++) {
+ 			desc += sprintf(buff+desc,
+-- 
+1.5.6.3
 
