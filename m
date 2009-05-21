@@ -1,67 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45146 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33752 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbZEESuY (ORCPT
+	with ESMTP id S1752989AbZEUN4a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 14:50:24 -0400
-Subject: Re: [PATCH] mac80211: report operating frequency rather than
- current
+	Thu, 21 May 2009 09:56:30 -0400
+Subject: Re: [PATCH 1/2] wireless: move some utility functions from
+ mac80211 to cfg80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A008649.1000007@gmail.com>
-References: <1241452330.8683.49.camel@johannes.local>
-	 <49FF2AE5.6040104@gmail.com> <1241460130.8683.85.camel@johannes.local>
-	 <49FF2FE8.8010004@gmail.com> <20090504181357.GA19022@tuxdriver.com>
-	 <87eiv49k6o.fsf@litku.valot.fi>  <4A008649.1000007@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-O9KfaQi1b0uPOQMfQYBX"
-Date: Tue, 05 May 2009 20:49:49 +0200
-Message-Id: <1241549389.4969.0.camel@johannes.local>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, drago01 <drago01@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ortiz, Samuel" <samuel.ortiz@intel.com>
+In-Reply-To: <20090521133839.GA2744@tuxdriver.com>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	 <1242872340-27417-2-git-send-email-yi.zhu@intel.com>
+	 <f6ca9fed0905210012t2b494db5w3169ef2e8db2b04b@mail.gmail.com>
+	 <1242889781.24825.611.camel@debian>
+	 <1242897719.5471.1.camel@johannes.local>
+	 <20090521133839.GA2744@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BFVPT+sBM6jVJRc6YhAb"
+Date: Thu, 21 May 2009 15:56:28 +0200
+Message-Id: <1242914188.4212.7.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-O9KfaQi1b0uPOQMfQYBX
+--=-BFVPT+sBM6jVJRc6YhAb
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-05-05 at 14:32 -0400, Richard Farina wrote:
+On Thu, 2009-05-21 at 09:38 -0400, John W. Linville wrote:
+> On Thu, May 21, 2009 at 11:21:59AM +0200, Johannes Berg wrote:
+> > On Thu, 2009-05-21 at 15:09 +0800, Zhu Yi wrote:
+> >=20
+> > > > Isn't lib80211 a better place for those ?
+> > > > Its purpose is sharing code between fullmac and softmac drivers.
+> > >=20
+> > > These functions are moved from mac80211 which currently doesn't link
+> > > with lib80211. Johannes might have more to comment.
+> >=20
+> > Yeah, lib80211's stated purpose is to share code, but on the other hand
+> > code that mac80211 and fullmac drivers may need seems better suited in
+> > cfg80211 since lib80211 also ships a large code bit of crypto routines
+> > etc. that are just useless for this and mac80211.
+>=20
+> The crypto stuff is mostly in separate modules.
+>=20
+> I would rather see these in lib80211, but I'll work that out myself.
 
-> To be honest, I would be perfectly happy with this patch if something=20
-> like a scanning "flag" were to be show in the output if that is what is=20
-> happening.  I don't so much need to see the current channel (when in sta=20
-> mode at least) as I need to know that the card is scanning if it is not=20
-> currently on the channel the AP is on.  I'd be very happy to simply see=20
-> it say "scanning" next to the channel or some such when this occurs.
+Heh. And I asked them to put it here... Then again, lib80211_crypt_*
+only exists for hostap and ipw2x00, so maybe we should separate that out
+into a separate lib80211_crypt module? That would leave lib80211 only
+with print_ssid, of course...
 
-Except that's totally not possible with wext.
+Basically I still think having lib80211 is pretty much pointless since
+all future fullmac drivers and mac80211 all need to use cfg80211.
 
 johannes
 
---=-O9KfaQi1b0uPOQMfQYBX
+
+--=-BFVPT+sBM6jVJRc6YhAb
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJKAIpJAAoJEKVg1VMiehFYljYP/jrSFYl4eDXVDxdsGB++oZjx
-KZ4kBqIBGabVzQhYuifLf2vKVnuvqDzR372y75k3ELrKru/NqgTc71TOC25U8KJq
-nZhQFomeSrPEIeOj/yphj1PX2NcqnCSIW2zrjkX0NVPlED5lfYqzXXwqaQYgpVL0
-En0H5479+oOz1QR1xQgJYhGg+VWYDq9+CgKH2pA9xRaNic5kaPSkQ8N8HuTeCptf
-Wgjj1q9WSy5ps3lw/kGfDAfCVrNb+n2JcAwxkDN3+fbHDWvRov8wJ/eiKG+hIMMG
-ok6PqzR+QAZGH5FK/erYmJAXzWuSkAkMiDP58KZv4jqze6bEMnncZecZhNrbcNL1
-1Qh86d1e+zBHxROilZ1gEKuG4ztLZiIXJnP0QC40LK7B9XR+qvCZ6eJUeJlnwvlr
-DolVDGk6rHLCRQ+GlPSAQnEWbIwZ4OXqvOyRTPaMY1LDyCiBhUAvjZCAy2cYjPSy
-bP0ddhARnrr/9Dh+26yynwpUCU3ZGvqr8pOvEngpP6JoVR94D1I/ZxRYTSRGXyH6
-LZOUfwBj5k0WxirxLrY9VDpA+WHfos2yKVlOWv2lHWJxhYhs8J/caMAawHTKpcCh
-e85AIhc12wl1KopL+ZYvLaDjl+7za1Xzxr5Acrswzcgktpbwb6MD2Dq/S85NVSkR
-vqGbG3HWwd3NZ88Nm4/q
-=6lwA
+iQIcBAABAgAGBQJKFV2IAAoJEODzc/N7+Qma8+wP/RqrfsXkMDGtJh5xSpYJTWTm
+vHb/+WfCgPbtrtxcLA1/t/chP0WiaQlAQ1TKqhlWPs6MiBHqBvtsVH9/jxSJZrMS
+6uz7jk0IXNCUR7MWzWyWivc8ymEek2t4bDreOnQy5Q984QyswLGfo2Y6Hx4aBNIr
+6cFyJlPS7jauB+fwUupIaoyaPNBPvaKgYfp+FMdhuSNgGvMfIALd+/H7ZS8PhKLZ
+EgUpPPFdPvcp0xFCn6fu0zMVSwQUu/CGlfW8qim4laBfgkHk5DDGoS4/pQme+n3T
+sEB0iAnE99Dp7PmUka948OV/IPOzVOdqRL010HYhiNhFDIfzM/mpESEebS+fuSU4
+9TlxUAYT6qGd9j4z8Bv3d4jgDWdkX7T9Lsdnuv6lMA3Dryjvx9l9TKLq5QZeAlpt
+A8K+MZEY1gLo7Uwquzn9e8ZuJOSVXaKqyyKS24MvxDXRwZxk5H66DalsBe71xGaA
+qqsKDudyvqUaABZFponzTqDozjDO/3vnwrsnXclNuyCNIhET2izUvdZIibkV2yQ7
+WnpC9ti+31keNJ0T78Jugj3IFBOgSk78qcFXZ7AhoAkGDMdT5ncCMoTENnPjqkzG
+FGLS7etnQVxRZ1XMwSeGi8Tl+ZSZMaZPQ7u+KpEzipAqCGOHBuKP9GumzKKITvi/
++RgTkg1ECzbH1FJ0Jwbk
+=bjB3
 -----END PGP SIGNATURE-----
 
---=-O9KfaQi1b0uPOQMfQYBX--
+--=-BFVPT+sBM6jVJRc6YhAb--
 
