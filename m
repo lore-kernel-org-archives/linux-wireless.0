@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37520 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:52904 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713AbZEXNTB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2009 09:19:01 -0400
-Subject: Re: [PATCH 2/4] rndis_wlan: explain bits used in key setup code.
+	id S1755273AbZEUWiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 18:38:21 -0400
+Subject: Re: Throughput is not changed when setting to a much higher bit
+ rate
 From: Dan Williams <dcbw@redhat.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090523095659.148960arcvdbb20w@hayate.sektori.org>
-References: <20090522144012.8134.27669.stgit@fate.lan>
-	 <20090522144020.8134.76073.stgit@fate.lan>
-	 <1243004755.2461.10.camel@localhost.localdomain>
-	 <20090523095659.148960arcvdbb20w@hayate.sektori.org>
+To: Dongas <dongas86@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <60ce8d250905201700v13fe1394l6a9704bb02be3807@mail.gmail.com>
+References: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
+	 <20090519175336.GF2691@tuxdriver.com>
+	 <60ce8d250905200748p5984df0bl1984f0d3bdaf79b5@mail.gmail.com>
+	 <1242854588.7048.13.camel@localhost.localdomain>
+	 <60ce8d250905201700v13fe1394l6a9704bb02be3807@mail.gmail.com>
 Content-Type: text/plain
-Date: Sun, 24 May 2009 09:18:57 -0400
-Message-Id: <1243171137.24236.0.camel@localhost.localdomain>
+Date: Thu, 21 May 2009 18:38:20 -0400
+Message-Id: <1242945500.6444.24.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-05-23 at 09:56 +0300, Jussi Kivilinna wrote:
-> Quoting "Dan Williams" <dcbw@redhat.com>:
-> 
-> > On Fri, 2009-05-22 at 17:40 +0300, Jussi Kivilinna wrote:
-> >> Driver uses some unnamed bits to control encryption setup. Move these to
-> >> enumerations with proper names explaining their meaning.
+On Thu, 2009-05-21 at 08:00 +0800, Dongas wrote:
+> 2009/5/21 Dan Williams <dcbw@redhat.com>:
+> > On Wed, 2009-05-20 at 22:48 +0800, Dongas wrote:
+> >> 2009/5/20 John W. Linville <linville@tuxdriver.com>:
+> >> > On Wed, May 20, 2009 at 01:48:32AM +0800, Dongas wrote:
+> >> >
+> >> >> Why the bandwidth is not changed when bit rate is changed to 11Mb/s?
+> >> >> Any thing wrong?
+> >> >
+> >> > More errors at higher bit rate, resulting in more retries?  Just a
+> >> > thought...
+> >> >
+> >> Is there a quick way to verify this possible reason? I'm using Libertas driver.
 > >>
-> >> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> >> ---
-> >>
-> >>  drivers/net/wireless/rndis_wlan.c |   23 ++++++++++++++++++-----
-> >>  1 files changed, 18 insertions(+), 5 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> >> b/drivers/net/wireless/rndis_wlan.c
-> >> index f9b0a35..8609d28 100644
-> >> --- a/drivers/net/wireless/rndis_wlan.c
-> >> +++ b/drivers/net/wireless/rndis_wlan.c
-> >> @@ -196,6 +196,18 @@ enum ndis_80211_priv_filter {
-> >>  	ndis_80211_priv_8021x_wep
-> >>  };
-> >>
-> >> +enum ndis_80211_addkey_bits {
-> >> +	ndis_80211_addkey_8021x_auth = cpu_to_le32(1 << 28),
-> >> +	ndis_80211_addkey_set_init_recv_seq = cpu_to_le32(1 << 29),
-> >> +	ndis_80211_addkey_pairwise_key = cpu_to_le32(1 << 30),
-> >> +	ndis_80211_addkey_transmit_key = cpu_to_le32(1 << 31),
-> >> +};
+> >> BTW, my sdio host driver is using polling mode to handle SDIO IRQ.
+> >> Could this be the cause of such poor performance?
 > >
-> > Enums and defines are usually capitalized in Linux, ie
-> > NDIS_80211_ADDKEY_8021X_AUTH, so that they can be separated from
-> > non-constant stuff and from function names.  Makes the code more
-> > readable.  Any chance you'd mind doing that in this patch since you're
-> > touching these bits?
-> >
-> > Dan
+> > Definitely.  With libertas, the largest class of issues by *far* that
+> > we've seen are controller related.  I seem to recall that I've pulled
+> > about 6Mbps through the card using a normal Ricoh controller from a
+> > Fujitsu laptop.  I can recheck that.
 > 
-> All the ndis_80211_* enums in rndis_wlan.c are lower case now, so I'd  
-> keep it consistent here and change all the enums upper case in  
-> separate patch.
+> AFAIK, most old laptop ,including my x61, doesn't support SDIO in HW.
+> So did Ricoh controller you tested use polling mode to handle SDIO IRQ?
+> Which clock of controller and which bit rate did you test?
 
-Ok, sounds fine.
+Actually, most of the older machines *can* do SDIO, those made from
+about 2006 - 2009.  These days a lot of the SD "controllers" are
+actually USB-based mass-storage converters and cannot do SDIO, they are
+essentially 10-in-1 cardreaders.
+
+What is the 'lspci' output for your Thinkpad?  If the controller isn't
+in 'lspci' but is in 'lsusb', then it's quite unlikely to work because
+of the above reason, I think.
 
 Dan
 
+> >> (However I just can't believe the performance is so poor ,only around
+> >> 1.1Mbps, with polling mode of SDIO IRQ)
+> >
+> > What specific kernel version are you using?  There have been some
+> > latency fixes in recent kernels, but would be good to know just to make
+> > sure.
+> 
+> I'm using kenrel 2.6.25.
+> 
+> Thanks
+> 
+> Regards
+> Dongas
 
