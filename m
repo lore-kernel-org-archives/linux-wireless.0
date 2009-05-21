@@ -1,91 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15532 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:35963 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757314AbZEONen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 09:34:43 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 15 May 2009 06:34:45 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Print hw reset failure status as signed int
-Date: Fri, 15 May 2009 18:59:20 +0530
-Message-ID: <1242394162-9812-1-git-send-email-vasanth@atheros.com>
+	id S1751629AbZEUKRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 06:17:33 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: matthieu castet <castet.matthieu@free.fr>
+Subject: Re: b43 : under high load, ack are lost
+Date: Thu, 21 May 2009 12:16:52 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <loom.20090517T085823-487@post.gmane.org> <loom.20090520T210546-24@post.gmane.org> <200905202334.40841.mb@bu3sch.de>
+In-Reply-To: <200905202334.40841.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200905211216.53012.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+On Wednesday 20 May 2009 23:34:40 Michael Buesch wrote:
+> On Wednesday 20 May 2009 23:09:47 matthieu castet wrote:
+> > I see also some period were the AP seem to drop all packet.
+> > I am wondering if it can be due to slow recalibration.
+> > Do you now how much take calibration were mac is down ?
+> 
+> Something like 30/40/50 milliseconds. I don't know. Somewhere in that range.
+> 
+> But I think it doesn't drop packets due to recal. I think it's simply
+> because the b43 PHY code is completely broken.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index df9b7c1..c161b75 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -280,7 +280,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to reset channel (%u Mhz) "
--			"reset status %u\n",
-+			"reset status %d\n",
- 			channel->center_freq, r);
- 		spin_unlock_bh(&sc->sc_resetlock);
- 		return r;
-@@ -1090,7 +1090,7 @@ void ath_radio_enable(struct ath_softc *sc)
- 	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to reset channel %u (%uMhz) ",
--			"reset status %u\n",
-+			"reset status %d\n",
- 			channel->center_freq, r);
- 	}
- 	spin_unlock_bh(&sc->sc_resetlock);
-@@ -1142,7 +1142,7 @@ void ath_radio_disable(struct ath_softc *sc)
- 	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to reset channel %u (%uMhz) "
--			"reset status %u\n",
-+			"reset status %d\n",
- 			channel->center_freq, r);
- 	}
- 	spin_unlock_bh(&sc->sc_resetlock);
-@@ -1705,7 +1705,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
- 	if (r)
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"Unable to reset hardware; reset status %u\n", r);
-+			"Unable to reset hardware; reset status %d\n", r);
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
- 	if (ath_startrecv(sc) != 0)
-@@ -1997,7 +1997,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	r = ath9k_hw_reset(sc->sc_ah, init_channel, false);
- 	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"Unable to reset hardware; reset status %u "
-+			"Unable to reset hardware; reset status %d "
- 			"(freq %u MHz)\n", r,
- 			curchan->center_freq);
- 		spin_unlock_bh(&sc->sc_resetlock);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 41c4282..3f2bd79 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1070,7 +1070,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, true);
- 		if (r)
- 			DPRINTF(sc, ATH_DBG_FATAL,
--				"Unable to reset hardware; reset status %u\n",
-+				"Unable to reset hardware; reset status %d\n",
- 				r);
- 		spin_unlock_bh(&sc->sc_resetlock);
- 	}
+Btw, you can easily test this with 
+echo -n 1 > /debug/b43/phy0/debug_pwork_stop
+This completely stops periodic recalibration.
+
 -- 
-1.5.5.1
-
+Greetings, Michael.
