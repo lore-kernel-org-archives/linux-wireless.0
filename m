@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50173 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754497AbZEOXHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 19:07:11 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37619
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756730AbZEUAeJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2009 20:34:09 -0400
+Date: Wed, 20 May 2009 17:34:08 -0700 (PDT)
+Message-Id: <20090520.173408.126761158.davem@davemloft.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/3] iwlwifi: drop struct iwl3945_hw_key
-Date: Fri, 15 May 2009 16:13:43 -0700
-Message-Id: <1242429226-8313-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
-References: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-05-20
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090520193446.GA27441@tuxdriver.com>
+References: <20090520193446.GA27441@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 20 May 2009 15:34:47 -0400
 
-This patch replaces struct iwl3945_hw_key by struct iwl_hw_key.
-It's not used directly with any host command therefore removal is trivial
+> Another volley of fixes intended for 2.6.30 -- I know the velocity
+> is a bit high for this part of the cycle, but these are mostly small
+> and well-tested.
+> 
+> The one from me is a "brown paper bag" fix.  My earlier attempt to fix
+> the potential buffer overflow in airo was actually a no-op due to an
+> (unknown to me) type overflow... :-(
+> 
+> The ath5k fixes from Forrest Zhang and Pavel Roskin together fix some
+> regressions with 5GHz operation.  The one from Fabio Rossi avoids an
+> infinite loop reported by Stephen Rostedt.
+> 
+> The wext fix addresses a possible buffer overflow.  The cfg80211 fix
+> addresses a user-reported oops.  The one from Roel avoids and index
+> past the end of an array.
+> 
+> One of iwlwifi patches avoids a deadlock.  The other iwlwifi patch
+> simply enables the use of the firmware image they just released.
+> That one is worth taking for 2.6.30 because the new firmware fixes
+> a couple of bugs that show-up as kernel bug reports.
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    7 +------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++---
- 2 files changed, 3 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 3049ba2..427489a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -503,18 +503,13 @@ struct iwl3945_tid_data {
- 	u16 seq_number;
- };
- 
--struct iwl3945_hw_key {
--	enum ieee80211_key_alg alg;
--	int keylen;
--	u8 key[32];
--};
- 
- struct iwl3945_station_entry {
- 	struct iwl3945_addsta_cmd sta;
- 	struct iwl3945_tid_data tid[MAX_TID_COUNT];
- 	u8 used;
- 	u8 ps_status;
--	struct iwl3945_hw_key keyinfo;
-+	struct iwl_hw_key keyinfo;
- };
- 
- struct iwl_station_entry {
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index c32ec80..5d52f22 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -340,7 +340,7 @@ static int iwl3945_clear_sta_key_info(struct iwl_priv *priv, u8 sta_id)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
--	memset(&priv->stations_39[sta_id].keyinfo, 0, sizeof(struct iwl3945_hw_key));
-+	memset(&priv->stations_39[sta_id].keyinfo, 0, sizeof(struct iwl_hw_key));
- 	memset(&priv->stations_39[sta_id].sta.key, 0,
- 		sizeof(struct iwl4965_keyinfo));
- 	priv->stations_39[sta_id].sta.key.key_flags = STA_KEY_FLG_NO_ENC;
-@@ -578,8 +578,7 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
- 				      int sta_id)
- {
- 	struct iwl3945_tx_cmd *tx = (struct iwl3945_tx_cmd *)cmd->cmd.payload;
--	struct iwl3945_hw_key *keyinfo =
--	    &priv->stations_39[sta_id].keyinfo;
-+	struct iwl_hw_key *keyinfo = &priv->stations_39[sta_id].keyinfo;
- 
- 	switch (keyinfo->alg) {
- 	case ALG_CCMP:
--- 
-1.5.6.3
-
+Pulled, thanks John!
