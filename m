@@ -1,134 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54556 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753821AbZEERfx (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:47061 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368AbZEUO6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 13:35:53 -0400
-Message-Id: <20090505173546.293873806@atheros.com>
-References: <20090505173512.349795688@atheros.com>
-Date: Tue, 05 May 2009 20:35:13 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 1/3] mac80211: Use a shared function to release frames from RX reorder buf
+	Thu, 21 May 2009 10:58:47 -0400
+Received: by bwz22 with SMTP id 22so1066409bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 07:58:48 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [WIP PATCH] sdio support for wl12xx
+References: <20090518180957.GD2580@hash.localnet>
+	<20090519040239.GA12911@hash.localnet> <877i0begt7.fsf@litku.valot.fi>
+	<b6c5339f0905201223n4c8c4811h25a397e69a642c2a@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 21 May 2009 17:58:45 +0300
+In-Reply-To: <b6c5339f0905201223n4c8c4811h25a397e69a642c2a@mail.gmail.com> (Bob Copeland's message of "Wed\, 20 May 2009 15\:23\:04 -0400")
+Message-ID: <87d4a2wli2.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to duplicate the same code in two places (and that would be
-three after the followup patch).
+Bob Copeland <me@bobcopeland.com> writes:
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> On Wed, May 20, 2009 at 3:05 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>> Bob Copeland <me@bobcopeland.com> writes:
+>>> So much for hubris!
+>>
+>> Don't feel down about this, this is always difficult and you are making
+>> good progress already.
+>
+> Heh, just a joke :)
 
----
- net/mac80211/rx.c |   70 +++++++++++++++++++++++-------------------------------
- 1 file changed, 31 insertions(+), 39 deletions(-)
+Good :)
 
---- wireless-testing.orig/net/mac80211/rx.c	2009-04-29 17:10:10.000000000 +0300
-+++ wireless-testing/net/mac80211/rx.c	2009-05-05 20:26:33.000000000 +0300
-@@ -2284,6 +2284,34 @@ static inline u16 seq_sub(u16 sq1, u16 s
- }
- 
- 
-+static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
-+					    struct tid_ampdu_rx *tid_agg_rx,
-+					    int index)
-+{
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rate *rate;
-+	struct ieee80211_rx_status status;
-+
-+	if (!tid_agg_rx->reorder_buf[index])
-+		goto no_frame;
-+
-+	/* release the reordered frames to stack */
-+	memcpy(&status, tid_agg_rx->reorder_buf[index]->cb, sizeof(status));
-+	sband = hw->wiphy->bands[status.band];
-+	if (status.flag & RX_FLAG_HT)
-+		rate = sband->bitrates; /* TODO: HT rates */
-+	else
-+		rate = &sband->bitrates[status.rate_idx];
-+	__ieee80211_rx_handle_packet(hw, tid_agg_rx->reorder_buf[index],
-+				     &status, rate);
-+	tid_agg_rx->stored_mpdu_num--;
-+	tid_agg_rx->reorder_buf[index] = NULL;
-+
-+no_frame:
-+	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-+}
-+
-+
- /*
-  * As it function blongs to Rx path it must be called with
-  * the proper rcu_read_lock protection for its flow.
-@@ -2295,12 +2323,8 @@ static u8 ieee80211_sta_manage_reorder_b
- 					   u16 mpdu_seq_num,
- 					   int bar_req)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_rx_status status;
- 	u16 head_seq_num, buf_size;
- 	int index;
--	struct ieee80211_supported_band *sband;
--	struct ieee80211_rate *rate;
- 
- 	buf_size = tid_agg_rx->buf_size;
- 	head_seq_num = tid_agg_rx->head_seq_num;
-@@ -2325,28 +2349,8 @@ static u8 ieee80211_sta_manage_reorder_b
- 			index = seq_sub(tid_agg_rx->head_seq_num,
- 				tid_agg_rx->ssn)
- 				% tid_agg_rx->buf_size;
--
--			if (tid_agg_rx->reorder_buf[index]) {
--				/* release the reordered frames to stack */
--				memcpy(&status,
--					tid_agg_rx->reorder_buf[index]->cb,
--					sizeof(status));
--				sband = local->hw.wiphy->bands[status.band];
--				if (status.flag & RX_FLAG_HT) {
--					/* TODO: HT rates */
--					rate = sband->bitrates;
--				} else {
--					rate = &sband->bitrates
--						[status.rate_idx];
--				}
--				__ieee80211_rx_handle_packet(hw,
--					tid_agg_rx->reorder_buf[index],
--					&status, rate);
--				tid_agg_rx->stored_mpdu_num--;
--				tid_agg_rx->reorder_buf[index] = NULL;
--			}
--			tid_agg_rx->head_seq_num =
--				seq_inc(tid_agg_rx->head_seq_num);
-+			ieee80211_release_reorder_frame(hw, tid_agg_rx,
-+							index);
- 		}
- 		if (bar_req)
- 			return 1;
-@@ -2380,19 +2384,7 @@ static u8 ieee80211_sta_manage_reorder_b
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
- 						% tid_agg_rx->buf_size;
- 	while (tid_agg_rx->reorder_buf[index]) {
--		/* release the reordered frame back to stack */
--		memcpy(&status, tid_agg_rx->reorder_buf[index]->cb,
--			sizeof(status));
--		sband = local->hw.wiphy->bands[status.band];
--		if (status.flag & RX_FLAG_HT)
--			rate = sband->bitrates; /* TODO: HT rates */
--		else
--			rate = &sband->bitrates[status.rate_idx];
--		__ieee80211_rx_handle_packet(hw, tid_agg_rx->reorder_buf[index],
--					     &status, rate);
--		tid_agg_rx->stored_mpdu_num--;
--		tid_agg_rx->reorder_buf[index] = NULL;
--		tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-+		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
- 		index =	seq_sub(tid_agg_rx->head_seq_num,
- 			tid_agg_rx->ssn) % tid_agg_rx->buf_size;
- 	}
+>> Current wl12xx code assumes that user space provides the NVS file. I'm
+>> guessing that Android has NVS file stored in chip's EEPROM. Check the
+>> !pWhalBus->pEEPROMBuf code path from TI's driver how to implement it.
+>
+> If you don't mind, check my work
+
+Definitely not, feel free to ask me.
+
+> -- the shmFwCtrl.c code seems to do the equivalent of:
+>
+>    // initiate eeprom transfer
+>    wl12xx_reg_write32(wl, ACX_REG_EE_START, ACX_REG_EEPROM_START_BIT); // ***
+>    msleep(40);
+>    msleep(40);
+>
+>    // sets spad4 to 0, I guess this is some kind of address register?
+>    wl12xx_reg_write32(wl, ACX_EEPROMLESS_IND_REG, 0);
+>
+>    // everything from here on out is the same - read spad2 and 3 then boot.
+
+To me the code looks same. Only difference I found was that the TI
+driver had only one msleep(40), but that won't make any difference.
+
+> *** NB: I redefined ACX_REG_EEPROM_START_BIT to BIT(0) -- BIT(1) looked
+> wrong unless that define is meant for something else.
+
+I think BIT(1) is wrong, most probably I introduced the bug.
+
+> The state machine is kind of hard to read, but it seems like there
+> should be more to it. Did I miss anything as far as you can tell?
+
+My understanding is that nothing else is needed, but I can be wrong.
+
+> I get all zeros from spad2 and spad3 so it's not working with just the
+> above...
+
+Not good. Can you somehow check if Google stores the NVS file to the
+chip or somewhere else?
 
 -- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
