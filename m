@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:40755 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126AbZEFHrb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 03:47:31 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: remove redundant AR9285 checks
-Date: Wed,  6 May 2009 09:47:30 +0200
-Message-Id: <1241596050-9924-1-git-send-email-juhosg@openwrt.org>
+Received: from rere.qmqm.pl ([89.167.52.164]:48071 "EHLO rere.qmqm.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756551AbZEUUeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 16:34:06 -0400
+From: =?UTF-8?Q?Micha=C5=82=20Miros=C5=82aw=20?=
+	<mirq-linux@rere.qmqm.pl>
+To: netdev@vger.kernel.org
+Message-ID: <6-1000-10527-1242938044-3360@rere.qmqm.pl>
+In-Reply-To: <1-1000-10527-1242938044-3360@rere.qmqm.pl>
+Subject: [PATCH 6/6 2.6.30-rc6] wireless: Use genl_register_family_with_ops()
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 21 May 2009 22:34:06 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR_SREV_9285_1[12]_OR_LATER macros already contains the
-AR_SREV_9285 check.
+Use genl_register_family_with_ops() instead of a copy.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/calib.c |    6 +++---
- drivers/net/wireless/ath/ath9k/hw.c    |    3 +--
- 2 files changed, 4 insertions(+), 5 deletions(-)
+Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index a197041..a32d7e7 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -863,7 +863,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	}
+diff -urN linux-orig-mqbr/net/wireless/nl80211.c linux-mqbr/net/wireless/nl80211.c
+--- linux-orig-mqbr/net/wireless/nl80211.c	2009-03-24 00:12:14.000000000 +0100
++++ linux-mqbr/net/wireless/nl80211.c	2009-05-21 17:51:34.000000000 +0200
+@@ -3395,18 +3395,13 @@
  
- 	if (longcal) {
--		if (AR_SREV_9285(ah) && AR_SREV_9285_11_OR_LATER(ah))
-+		if (AR_SREV_9285_11_OR_LATER(ah))
- 			ath9k_hw_9285_pa_cal(ah);
- 
- 		if (OLC_FOR_AR9280_20_LATER)
-@@ -917,7 +917,7 @@ static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ int nl80211_init(void)
  {
--	if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
-+	if (AR_SREV_9285_12_OR_LATER(ah)) {
- 		if (!ar9285_clc(ah, chan))
- 			return false;
- 	} else {
-@@ -947,7 +947,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	}
+-	int err, i;
++	int err;
  
- 	/* Do PA Calibration */
--	if (AR_SREV_9285(ah) && AR_SREV_9285_11_OR_LATER(ah))
-+	if (AR_SREV_9285_11_OR_LATER(ah))
- 		ath9k_hw_9285_pa_cal(ah);
+-	err = genl_register_family(&nl80211_fam);
++	err = genl_register_family_with_ops(&nl80211_fam,
++		nl80211_ops, ARRAY_SIZE(nl80211_ops));
+ 	if (err)
+ 		return err;
  
- 	/* Do NF Calibration after DC offset and other calibrations */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 02f4015..599f63a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1345,8 +1345,7 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
- 	if (AR_SREV_9280(ah))
- 		REG_WRITE_ARRAY(&ah->iniModesRxGain, modesIndex, regWrites);
- 
--	if (AR_SREV_9280(ah) || (AR_SREV_9285(ah) &&
--	    AR_SREV_9285_12_OR_LATER(ah)))
-+	if (AR_SREV_9280(ah) || AR_SREV_9285_12_OR_LATER(ah))
- 		REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
- 
- 	for (i = 0; i < ah->iniCommon.ia_rows; i++) {
--- 
-1.5.3.2
-
+-	for (i = 0; i < ARRAY_SIZE(nl80211_ops); i++) {
+-		err = genl_register_ops(&nl80211_fam, &nl80211_ops[i]);
+-		if (err)
+-			goto err_out;
+-	}
+-
+ 	err = genl_register_mc_group(&nl80211_fam, &nl80211_config_mcgrp);
+ 	if (err)
+ 		goto err_out;
