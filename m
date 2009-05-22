@@ -1,56 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jessica.hrz.tu-chemnitz.de ([134.109.132.47]:54702 "EHLO
-	jessica.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750946AbZETUd5 (ORCPT
+Received: from mail-px0-f103.google.com ([209.85.216.103]:57780 "EHLO
+	mail-px0-f103.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228AbZEVALX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 16:33:57 -0400
-From: Tobias Doerffel <tobias.doerffel@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [PATCH 1/3] ath5k: add support for radio LED
-Date: Wed, 20 May 2009 22:33:54 +0200
-Cc: Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-References: <1242850139-25438-1-git-send-email-jirislaby@gmail.com> <200905202216.43996.tobias.doerffel@gmail.com> <20090520202124.M71221@bobcopeland.com>
-In-Reply-To: <20090520202124.M71221@bobcopeland.com>
+	Thu, 21 May 2009 20:11:23 -0400
+Received: by pxi1 with SMTP id 1so994175pxi.33
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 17:11:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3042557.ePcK33gbVB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200905202233.56608.tobias.doerffel@gmail.com>
+In-Reply-To: <20090521235742.GA7684@tesla>
+References: <4A0802B0.9070206@gmx.de> <20090511190602.GC18696@tesla>
+	<618D4DE9D5223A45A46C48063FD640451098774889@TAEXMB-01.global.atheros.com>
+	<20090521171619.GB28691@tesla> <4A15E219.7040908@gmx.de> <20090521235742.GA7684@tesla>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 21 May 2009 17:11:04 -0700
+Message-ID: <43e72e890905211711p5dc29b52n778dd384915a2f1@mail.gmail.com>
+Subject: Re: ath/regd.c: regdomain 0x8000 fails to retrieve a regulatory
+	domain pair
+To: Joerg Albert <jal2@gmx.de>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>, David.Quan@atheros.com,
+	Tony Yang <Tony.Yang@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3042557.ePcK33gbVB
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-
-Am Mittwoch, 20. Mai 2009 22:29:42 schrieb Bob Copeland:
-> On Wed, 20 May 2009 22:16:42 +0200, Tobias Doerffel wrote
+On Thu, May 21, 2009 at 4:57 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, May 21, 2009 at 04:22:01PM -0700, Joerg Albert wrote:
+>> On 05/21/2009 07:16 PM, Luis R. Rodriguez wrote:
+>>
+>> > Joerg, can you please try this patch, its just informative and I would
+>> > like to see the output. A regulatory domain in the EEPROM set to 0x8000
+>> > should be cought, as you indicated, in this code:
+>> >
+>> >         if (reg->country_code == CTRY_DEFAULT &&
+>> >             regdmn == CTRY_DEFAULT)
+>> >                 reg->country_code = CTRY_UNITED_STATES;
+>> >
+>> > The debug prints should help.
+>>  > ...
+>> With the patch I get:
+>>
+>> usb 1-5: firmware: requesting ar9170-2.fw
+>> ath: EEPROM indicates we should expect a country code
+>> ath: No regulatory domain pair found, cannot continue
+>> ar9170usb: probe of 1-5:1.0 failed with error -22
+>>
+>> IMHO the in the above if-statement regdmn == 0x8000 (as read from
+>> the EEPROM by ath_regd_get_eepromRD), but CTRY_DEFAULT is defined as
+>> zero, so reg->country_code isn't set.
+>> Shouldn't we say "regdmn == (CTRY_DEFAULT|COUNTRY_ERD_FLAG)",because
+>> without the ERD flag set we cannot compare a regdomain with a
+>> country code?
 >
-> > If there's interest, I'll  prepare a new patch which represents the
-> > current state.
+> I agree, regdmn is set from calling ath_regd_get_eepromRD() which
+> returns:
 >
-> I'm definitely interested in seeing rfkill gpio support getting in,
-> it's overdue.  So I say repost it and we can fasttrack that.
-Should be rebased against wireless-testing branch (with the changed directo=
-ry=20
-structure), right?
+>        reg->current_rd & ~WORLDWIDE_ROAMING_FLAG
+>
+> This is:
+>
+>        reg->current_rd & ~0x4000
+>
+> And _not_
+>
+>        reg->current_rd & ~COUNTRY_ERD_FLAG
+>
+> which would be:
+>
+>        reg->current_rd & ~0x8000
+>
+> This _does_ explain why you end up where you do, and we don't
+> let the driver continue. However, it does seem that 0x8000 is in fact
+> not a valid regulatory domain code which should be used. Problem
+> with using CTRY_UNITED_STATES or 0x64 (or another custom atheros
+> world regulatory domain) for this case is non properly calibrated
+> data may be used, specifically for the CTL indexes. We'll check on
+> this internally, regardless we need a solution for you.
 
-Toby
+BTW is this a dual band (2.4 GHz and 5 GHz) device or a single band (2.4 GHz) ?
 
---nextPart3042557.ePcK33gbVB
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkoUaTQACgkQHsjdpw2OaafD6ACg2lX1MQ2RfqsQoMMdyUS+Z5q3
-HYoAoNun+2WiaoFozF4Zmp/LXE33tOOc
-=ENYu
------END PGP SIGNATURE-----
-
---nextPart3042557.ePcK33gbVB--
+  Luis
