@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59074 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756088AbZEXRZS (ORCPT
+Received: from mail-pz0-f177.google.com ([209.85.222.177]:65411 "EHLO
+	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348AbZEVAga convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2009 13:25:18 -0400
-Subject: Re: [RFT 3/4] cfg80211: add rfkill support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1243171957.24236.13.camel@localhost.localdomain>
-References: <20090521215940.344214804@sipsolutions.net>
-	 <20090521220105.198751775@sipsolutions.net>
-	 <1243171957.24236.13.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-X12ADzBRbaorzvuPfdSy"
-Date: Sun, 24 May 2009 19:24:11 +0200
-Message-Id: <1243185851.29222.4.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 21 May 2009 20:36:30 -0400
+Received: by pzk7 with SMTP id 7so973116pzk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 17:36:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1242951611.5206.9.camel@maxim-laptop>
+References: <1241499867.4816.18.camel@maxim-laptop> <1242256104.3241.4.camel@maxim-laptop>
+	<43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+	<1242256950.3241.13.camel@maxim-laptop> <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
+	<1242258469.3241.19.camel@maxim-laptop> <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
+	<b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+	<1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 21 May 2009 17:36:12 -0700
+Message-ID: <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com>
+Subject: Re: [BUG] Crda oopses the system
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 21, 2009 at 5:20 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> On Tue, 2009-05-19 at 17:17 +0300, Maxim Levitsky wrote:
+>> On Thu, 2009-05-14 at 10:20 -0400, Bob Copeland wrote:
+>> > On Wed, May 13, 2009 at 8:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> > >>
+>> > >> I wish I had time to set up, an ath5k in AP mode. There are rumors that
+>> > >> it works more or less now, then I could use the same beacon frame to
+>> > >> test.
+>> > >
+>> > > It does and if it doesn't its a bug.
+>> >
+>> > Just FYI, it's known to have problems if the STA uses power saving --
+>> > ath5k never updates the beacon.  I have a patch that should work in the
+>> > relevant bugzilla but I haven't been back to retest it (at first I
+>> > thought it was causing hangs, but later realized the hangs were due to
+>> > other bugs in w-t).
+>> >
+>>
+>
+> I was just able to reproduce that bug on latest wireless-testing that I
+> belive contains the patches you sent for me to test.
 
---=-X12ADzBRbaorzvuPfdSy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Latest wireless-testing *does* have those patches.
 
-On Sun, 2009-05-24 at 09:32 -0400, Dan Williams wrote:
-> On Thu, 2009-05-21 at 23:59 +0200, Johannes Berg wrote:
-> > plain text document attachment (015-cfg80211-rfkill.patch)
-> > To be easier on drivers and users, have cfg80211 register an
-> > rfkill structure that drivers can access. When soft-killed,
-> > simply take down all interfaces; when hard-killed the driver
-> > needs to notify us and we will take down the interfaces
-> > after the fact. While rfkilled, interfaces cannot be set UP.
->=20
-> Any chance we could get something other than EINVAL returned from the
-> PRE_UP notifier when the device is rfkilled?  It's useful to get some
-> indication of *why* the device can't be brought up.  For example, if the
-> device requires firmware but that firmware isn't present, the driver
-> will usually return ENOENT because that's what request_firmware()
-> returns when it can't find what it needs.  Thus userspace can do
-> something intelligent with the error.
->=20
-> So maybe EL2HLT could be (ab)used here?  I guess technically it's an L1
-> halt since the PHY is powered down, but whatever.  The only other stuff
-> that seems to use this are the USB 'gadget' drivers.  Either that, or
-> lets make an EL1OFF or ERFKILL maybe.
+> I reproduced it against ath5k running in AP mode at home.
+>
+> I finally made the ath5k send beacons (although not much works besides
+> this).
+>
+>
+> Note that I noticed that this bug
 
-Sure, we can do whatever we want, I just quickly put EINVAL in.
+You can get an oops when trying to associate to your ath5k AP? And its
+easily reproducible? What driver to you use as the STA? Can you
+provide a trace?
 
-johannes
+> happens once at boot, if I set NM to
+> use system settings,
 
---=-X12ADzBRbaorzvuPfdSy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+What does this mean?
 
------BEGIN PGP SIGNATURE-----
+> when I try to connect again it doesn't happen. Its
+> a race condition after all.
 
-iQIcBAABAgAGBQJKGYK0AAoJEODzc/N7+QmaFacQAI4j7F6hW2y7lI1JbFA2D+NE
-iFUM5xH8a2f0Vfg59BrRkW+78RYZloiBZUPuQmjBq1gN3dPTpEhnmd32/9FiYbWR
-duHF5vOD5aH1LkLeBWQjiqGO3UrI9TfojBQlS3PP58n+Ne7dM4rjPr+q4IK44Ye0
-iwKDIeRkRY5cIBE1b/jtDipYNGn9xTijWfgRXxkVe/iSSm+4jUPvNtRc65YvmhpR
-cY7TAV4AX/rptB9XkWiHUAp6qfDZDo7/+mc5TPHgL5wMgveCXiWlY7aB+EzpbJba
-m0ECo9FREbpyawlq3RGDW373yBaoKUoLAOx0tOAGPZ15oU/YtiXFsENeVr6TKjqP
-dfLjNgRmuc0NE83j1lJrDSBoWG58EJ/9Y9LiClftX9oS4jIf7C65TsCNpHZ/TZrR
-NoktAf0VkWgjr2yMGQWlOmOYcbn1lTei/MuwL2lST76w7fkNwNnZyVWYhSz2aO8B
-GM0cUEEnx5PZJLSNdCH4hXzCHGNSBCHsGtL4qTGq+/WthR5gSxWkKwsPZr8MqVSY
-LsJzLXVnypOp6RC0R2JD6o4EVMDEHn64AWbn/mc+CZ0z3wwEMyDKkq7pVBVdVeoB
-Rs80ILKSj9pGDLd7zkiiPhFORESccHY8Fb6o8PtiX8MDhtMlFFB6v19fPOOAHyat
-4ryjIKQfqW7D7vopp17z
-=63sB
------END PGP SIGNATURE-----
+Is the oops not crashing your box? How are you able to try again? What
+does trying again mean?
 
---=-X12ADzBRbaorzvuPfdSy--
-
+  Luis
