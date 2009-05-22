@@ -1,38 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:35426 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbZESCQS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 22:16:18 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so1734925rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 19:16:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090519014352.19524.10495.stgit@mj.roinet.com>
-References: <20090519014352.19524.10495.stgit@mj.roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 18 May 2009 19:16:00 -0700
-Message-ID: <43e72e890905181916g4dad9415k308776ad86da60fb@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix compile error with CONFIG_CFG80211_DEBUGFS
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.redhat.com ([66.187.237.31]:33041 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757542AbZEVX42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 19:56:28 -0400
+Subject: Re: [PATCH] net/libertas: make SPI interface big endian aware
+From: Dan Williams <dcbw@redhat.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-wireless@vger.kernel.org, andrey@cozybit.com,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <20090522191940.GA3570@www.tglx.de>
+References: <20090522191940.GA3570@www.tglx.de>
+Content-Type: text/plain
+Date: Fri, 22 May 2009 19:56:17 -0400
+Message-Id: <1243036577.2495.0.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 18, 2009 at 6:43 PM, Pavel Roskin <proski@gnu.org> wrote:
-> If CONFIG_CFG80211_DEBUGFS is enabled and CONFIG_MAC80211_DEBUGFS is
-> not, compilation fails in net/wireless/debugfs.c:
->
-> net/wireless/debugfs.c: In function 'cfg80211_debugfs_drv_add':
-> net/wireless/debugfs.c:117: error: 'struct cfg80211_registered_device'
-> has no member named 'debugfs'
->
-> The debugfs filed is needed if and only if CONFIG_CFG80211_DEBUGFS is
-> enabled, so use that instead of CONFIG_MAC80211_DEBUGFS.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+On Fri, 2009-05-22 at 21:19 +0200, Sebastian Andrzej Siewior wrote:
+> The comment (which I remove) says that the translation is done SPI routines.
+> IMHO this can't work because the SPI driver does not know whether the incomming
+> bytes are part of the registers/bytes which need to be flipped or part of
+> packet data which has to remain untouched.
+> While adding le helpers I also removed spu_write_u32() which has no users.
+> 
+> Tested-by: Andrey Yurovsky <andrey@cozybit.com>
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-Sorry for the trouble and thanks...
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-  Luis
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |   34 +++++++++++++++----------------
+>  1 files changed, 16 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 07311e7..8cf5d65 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -119,9 +119,6 @@ static struct chip_ident chip_id_to_device_name[] = {
+>   * First we have to put a SPU register name on the bus. Then we can
+>   * either read from or write to that register.
+>   *
+> - * For 16-bit transactions, byte order on the bus is big-endian.
+> - * We don't have to worry about that here, though.
+> - * The translation takes place in the SPI routines.
+>   */
+>  
+>  static void spu_transaction_init(struct if_spi_card *card)
+> @@ -147,7 +144,7 @@ static void spu_transaction_finish(struct if_spi_card *card)
+>  static int spu_write(struct if_spi_card *card, u16 reg, const u8 *buf, int len)
+>  {
+>  	int err = 0;
+> -	u16 reg_out = reg | IF_SPI_WRITE_OPERATION_MASK;
+> +	u16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
+>  
+>  	/* You must give an even number of bytes to the SPU, even if it
+>  	 * doesn't care about the last one.  */
+> @@ -169,16 +166,10 @@ out:
+>  
+>  static inline int spu_write_u16(struct if_spi_card *card, u16 reg, u16 val)
+>  {
+> -	return spu_write(card, reg, (u8 *)&val, sizeof(u16));
+> -}
+> +	u16 buff;
+>  
+> -static inline int spu_write_u32(struct if_spi_card *card, u16 reg, u32 val)
+> -{
+> -	/* The lower 16 bits are written first. */
+> -	u16 out[2];
+> -	out[0] = val & 0xffff;
+> -	out[1] = (val & 0xffff0000) >> 16;
+> -	return spu_write(card, reg, (u8 *)&out, sizeof(u32));
+> +	buff = cpu_to_le16(val);
+> +	return spu_write(card, reg, (u8 *)&buff, sizeof(u16));
+>  }
+>  
+>  static inline int spu_reg_is_port_reg(u16 reg)
+> @@ -198,7 +189,7 @@ static int spu_read(struct if_spi_card *card, u16 reg, u8 *buf, int len)
+>  	unsigned int i, delay;
+>  	int err = 0;
+>  	u16 zero = 0;
+> -	u16 reg_out = reg | IF_SPI_READ_OPERATION_MASK;
+> +	u16 reg_out = cpu_to_le16(reg | IF_SPI_READ_OPERATION_MASK);
+>  
+>  	/* You must take an even number of bytes from the SPU, even if you
+>  	 * don't care about the last one.  */
+> @@ -236,18 +227,25 @@ out:
+>  /* Read 16 bits from an SPI register */
+>  static inline int spu_read_u16(struct if_spi_card *card, u16 reg, u16 *val)
+>  {
+> -	return spu_read(card, reg, (u8 *)val, sizeof(u16));
+> +	u16 buf;
+> +	int ret;
+> +
+> +	ret = spu_read(card, reg, (u8 *)&buf, sizeof(buf));
+> +	if (ret == 0)
+> +		*val = le16_to_cpup(&buf);
+> +	return ret;
+>  }
+>  
+>  /* Read 32 bits from an SPI register.
+>   * The low 16 bits are read first. */
+>  static int spu_read_u32(struct if_spi_card *card, u16 reg, u32 *val)
+>  {
+> -	u16 buf[2];
+> +	u32 buf;
+>  	int err;
+> -	err = spu_read(card, reg, (u8 *)buf, sizeof(u32));
+> +
+> +	err = spu_read(card, reg, (u8 *)&buf, sizeof(buf));
+>  	if (!err)
+> -		*val = buf[0] | (buf[1] << 16);
+> +		*val = le32_to_cpup(&buf);
+>  	return err;
+>  }
+>  
+
