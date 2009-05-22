@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hapkido.dreamhost.com ([66.33.216.122]:54829 "EHLO
-	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961AbZEGKEH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2009 06:04:07 -0400
-Message-ID: <4A02B1CA.3060708@hiramoto.org>
-Date: Thu, 07 May 2009 12:02:50 +0200
-From: Karl Hiramoto <karl@hiramoto.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [ath9k-devel] New kernel recommendations for ath9k
-References: <43e72e890905070104u59eebcceu18718a733e388cc9@mail.gmail.com>
-In-Reply-To: <43e72e890905070104u59eebcceu18718a733e388cc9@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:25549 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757401AbZEVRzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 13:55:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/10] iwlwifi: report the rate index as an MCS rate number
+Date: Fri, 22 May 2009 11:01:48 -0700
+Message-Id: <1243015315-13848-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
+References: <1243015315-13848-1-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-2-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> For those not subscribed to the ath9k wiki on wireless.kernel.org [1]
-> (which we recommend you do if you're a user) here's a quick note to
-> let you know our latest kernel recommendations for using ath9k:
->
->   *  >= 2.6.27.22
->   *  >= 2.6.28.10
->   *  2.6.29
->
-> If you want 802.11n support or AP support you'll want at least 2.6.29.
-> If you happen to have one of our new 1x1 AR9285 devices (all AR9285
-> devices are 1x1) then you'll need at least 2.6.29. If you want to
-> start using ath9k on APs with AHB you will need at least 2.6.30 (still
-> in RC series).
->
-> As usual if you happen to be stuck on older kernels for one reason or
-> another you can always use compat-wireless [2] and if that happens to
-> be a little too bleeding edge we have now compat-wireless releases for
-> stable kernel releases, starting as of the 2.6.30-rc series [3].
->
->   Luis
->
-> [1] http://wireless.kernel.org/en/users/Drivers/ath9k
-> [2] http://wireless.kernel.org/en/users/Download
-> [3] http://wireless.kernel.org/en/users/Download/stable
->   
-Thanks for the update.  If i want to use multiple AP's with Ath9k it it 
-still best to use wireless-testing?  Is multiple AP support in 2.6.30-rc 
-series net-next or wireless-next?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Thanks.
---
-Karl
+If transmit in HT rate, report the rate index as an MCS rate number
+instead of an index. so "iw" can display correct BitRate
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   31 +++++++++++++++++++++++++---
+ 1 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 4c88e87..bcdfea7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -270,6 +270,8 @@ const static struct iwl_rate_mcs_info iwl_rate_mcs[IWL_RATE_COUNT] = {
+   {"60", "64QAM 5/6"}
+ };
+ 
++#define MCS_INDEX_PER_STREAM	(8)
++
+ static inline u8 rs_extract_rate(u32 rate_n_flags)
+ {
+ 	return (u8)(rate_n_flags & 0xFF);
+@@ -2514,12 +2516,33 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+ 		}
+ 	}
+ 
+-	if (rate_idx < 0 || rate_idx > IWL_RATE_COUNT)
+-		rate_idx = rate_lowest_index(sband, sta);
+-	else if (sband->band == IEEE80211_BAND_5GHZ)
++	if (lq_sta->last_rate_n_flags & RATE_MCS_HT_MSK) {
+ 		rate_idx -= IWL_FIRST_OFDM_RATE;
+-
++		/* 6M and 9M shared same MCS index */
++		rate_idx = (rate_idx > 0) ? (rate_idx - 1) : 0;
++		if (rs_extract_rate(lq_sta->last_rate_n_flags) >=
++		    IWL_RATE_MIMO3_6M_PLCP)
++			rate_idx = rate_idx + (2 * MCS_INDEX_PER_STREAM);
++		else if (rs_extract_rate(lq_sta->last_rate_n_flags) >=
++			 IWL_RATE_MIMO2_6M_PLCP)
++			rate_idx = rate_idx + MCS_INDEX_PER_STREAM;
++		info->control.rates[0].flags = IEEE80211_TX_RC_MCS;
++		if (lq_sta->last_rate_n_flags & RATE_MCS_SGI_MSK)
++			info->control.rates[0].flags |= IEEE80211_TX_RC_SHORT_GI;
++		if (lq_sta->last_rate_n_flags & RATE_MCS_DUP_MSK)
++			info->control.rates[0].flags |= IEEE80211_TX_RC_DUP_DATA;
++		if (lq_sta->last_rate_n_flags & RATE_MCS_FAT_MSK)
++			info->control.rates[0].flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
++		if (lq_sta->last_rate_n_flags & RATE_MCS_GF_MSK)
++			info->control.rates[0].flags |= IEEE80211_TX_RC_GREEN_FIELD;
++	} else {
++		if (rate_idx < 0 || rate_idx > IWL_RATE_COUNT)
++			rate_idx = rate_lowest_index(sband, sta);
++		else if (sband->band == IEEE80211_BAND_5GHZ)
++			rate_idx -= IWL_FIRST_OFDM_RATE;
++	}
+ 	info->control.rates[0].idx = rate_idx;
++
+ }
+ 
+ static void *rs_alloc_sta(void *priv_rate, struct ieee80211_sta *sta,
+-- 
+1.5.6.3
+
