@@ -1,138 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:40239 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753311AbZEOVtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 17:49:33 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [PATCH] [RFC] EEE PC hangs when booting off battery
-Date: Fri, 15 May 2009 23:48:55 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arjan van de Ven <arjan@infradead.org>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>
-References: <49E065CF.6040408@tuffmail.co.uk> <49F6DA14.7030608@tuffmail.co.uk> <49F83699.3000307@tuffmail.co.uk>
-In-Reply-To: <49F83699.3000307@tuffmail.co.uk>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200905152348.56449.rjw@sisk.pl>
+Received: from mail-bw0-f174.google.com ([209.85.218.174]:38412 "EHLO
+	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754279AbZEVAUQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2009 20:20:16 -0400
+Received: by bwz22 with SMTP id 22so1334298bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2009 17:20:16 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242742647.23110.10.camel@ibm172>
+References: <1241499867.4816.18.camel@maxim-laptop>
+	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+	 <1242166051.26484.7.camel@maxim-laptop>
+	 <43e72e890905131428r568e6f5eyd64566e993c83d8c@mail.gmail.com>
+	 <1242256104.3241.4.camel@maxim-laptop>
+	 <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+	 <1242256950.3241.13.camel@maxim-laptop>
+	 <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
+	 <1242258469.3241.19.camel@maxim-laptop>
+	 <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
+	 <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+	 <1242742647.23110.10.camel@ibm172>
+Content-Type: text/plain
+Date: Fri, 22 May 2009 03:20:11 +0300
+Message-Id: <1242951611.5206.9.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 29 April 2009, Alan Jenkins wrote:
-> Alan Jenkins wrote:
-> > Johannes Berg wrote:
-> >   
-> >> That doesn't seem relevant, this just does some initialisation. However,
-> >> you definitely missed adding a call to wep_free().
-> >>   
-> >>     
-> >
-> > Hah, I should have realized something was wrong when I noticed I was
-> > removing more lines that I added. 
-> >
-> > The crypto init does cause the module load:
-> >
-> > wait_for_completion
-> > call_usermodehelper_exec
-> > __request_module
-> > crypto_larval_lookup
-> > ? extract_entropy
-> > crypto_alg_mod_lookup
-> > crypto_alloc_base
-> > ieee80211_wep_init
-> > ieee80211_register_hw
-> >   
+On Tue, 2009-05-19 at 17:17 +0300, Maxim Levitsky wrote:
+> On Thu, 2009-05-14 at 10:20 -0400, Bob Copeland wrote:
+> > On Wed, May 13, 2009 at 8:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > >>
+> > >> I wish I had time to set up, an ath5k in AP mode. There are rumors that
+> > >> it works more or less now, then I could use the same beacon frame to
+> > >> test.
+> > >
+> > > It does and if it doesn't its a bug.
+> > 
+> > Just FYI, it's known to have problems if the STA uses power saving --
+> > ath5k never updates the beacon.  I have a patch that should work in the
+> > relevant bugzilla but I haven't been back to retest it (at first I
+> > thought it was causing hangs, but later realized the hangs were due to
+> > other bugs in w-t).
+> > 
 > 
-> Here's a corrected patch complete with changelog.  If there are no other
-> problems with it, can you please  apply this for 2.6.30 to keep my EeePC
-> regression-free?
-> 
-> Thanks
-> Alan
-> 
-> ------>
-> From c5e9dc036247e70956d1a28e8850c3810385dda0 Mon Sep 17 00:00:00 2001
-> From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Date: Wed, 29 Apr 2009 11:41:24 +0100
-> Subject: [PATCH] mac80211: fix modprobe deadlock by not calling wep_init under rtnl_lock
-> 
->  - ieee80211_wep_init(), which is called with rtnl_lock held, blocks in
->    request_module() [waiting for modprobe to load a crypto module].
-> 
->  - modprobe blocks in a call to flush_workqueue(), when it closes a TTY
->    [presumably when it exits].
-> 
->  - The workqueue item linkwatch_event() blocks on rtnl_lock.
-> 
-> There's no reason for wep_init() to be called with rtnl_lock held, so
-> just move it outside the critical section.
 
-Has it been merged already or is it queued up for merging?
+I was just able to reproduce that bug on latest wireless-testing that I
+belive contains the patches you sent for me to test.
+I reproduced it against ath5k running in AP mode at home.
 
-Rafael
+I finally made the ath5k send beacons (although not much works besides
+this).
 
 
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> ---
->  net/mac80211/main.c |   19 +++++++++----------
->  1 files changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index fbcbed6..00968c2 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -909,6 +909,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  	if (result < 0)
->  		goto fail_sta_info;
->  
-> +	result = ieee80211_wep_init(local);
-> +	if (result < 0) {
-> +		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
-> +		       wiphy_name(local->hw.wiphy), result);
-> +		goto fail_wep;
-> +	}
-> +
->  	rtnl_lock();
->  	result = dev_alloc_name(local->mdev, local->mdev->name);
->  	if (result < 0)
-> @@ -930,14 +937,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  		goto fail_rate;
->  	}
->  
-> -	result = ieee80211_wep_init(local);
-> -
-> -	if (result < 0) {
-> -		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
-> -		       wiphy_name(local->hw.wiphy), result);
-> -		goto fail_wep;
-> -	}
-> -
->  	/* add one default STA interface if supported */
->  	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
->  		result = ieee80211_if_add(local, "wlan%d", NULL,
-> @@ -967,13 +966,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  
->  	return 0;
->  
-> -fail_wep:
-> -	rate_control_deinitialize(local);
->  fail_rate:
->  	unregister_netdevice(local->mdev);
->  	local->mdev = NULL;
->  fail_dev:
->  	rtnl_unlock();
-> +	ieee80211_wep_free(local);
-> +fail_wep:
->  	sta_info_stop(local);
->  fail_sta_info:
->  	debugfs_hw_del(local);
+Note that I noticed that this bug happens once at boot, if I set NM to
+use system settings, when I try to connect again it doesn't happen. Its
+a race condition after all.
+
+Best regards,
+	Maxim Levitsky
 
 
--- 
-Everyone knows that debugging is twice as hard as writing a program
-in the first place.  So if you're as clever as you can be when you write it,
-how will you ever debug it? --- Brian Kernighan
