@@ -1,63 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:51012 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756230AbZEUAA1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 20:00:27 -0400
-Received: by yx-out-2324.google.com with SMTP id 3so479705yxj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 17:00:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242854588.7048.13.camel@localhost.localdomain>
-References: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
-	 <20090519175336.GF2691@tuxdriver.com>
-	 <60ce8d250905200748p5984df0bl1984f0d3bdaf79b5@mail.gmail.com>
-	 <1242854588.7048.13.camel@localhost.localdomain>
-Date: Thu, 21 May 2009 08:00:28 +0800
-Message-ID: <60ce8d250905201700v13fe1394l6a9704bb02be3807@mail.gmail.com>
-Subject: Re: Throughput is not changed when setting to a much higher bit rate
-From: Dongas <dongas86@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:25549 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757358AbZEVRzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 13:55:22 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/10] iwlwifi: check for valid band for channel info
+Date: Fri, 22 May 2009 11:01:55 -0700
+Message-Id: <1243015315-13848-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1243015315-13848-10-git-send-email-reinette.chatre@intel.com>
+References: <1243015315-13848-1-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-2-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-4-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-5-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-6-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-7-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-8-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-9-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-10-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/21 Dan Williams <dcbw@redhat.com>:
-> On Wed, 2009-05-20 at 22:48 +0800, Dongas wrote:
->> 2009/5/20 John W. Linville <linville@tuxdriver.com>:
->> > On Wed, May 20, 2009 at 01:48:32AM +0800, Dongas wrote:
->> >
->> >> Why the bandwidth is not changed when bit rate is changed to 11Mb/s?
->> >> Any thing wrong?
->> >
->> > More errors at higher bit rate, resulting in more retries?  Just a
->> > thought...
->> >
->> Is there a quick way to verify this possible reason? I'm using Libertas driver.
->>
->> BTW, my sdio host driver is using polling mode to handle SDIO IRQ.
->> Could this be the cause of such poor performance?
->
-> Definitely.  With libertas, the largest class of issues by *far* that
-> we've seen are controller related.  I seem to recall that I've pulled
-> about 6Mbps through the card using a normal Ricoh controller from a
-> Fujitsu laptop.  I can recheck that.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-AFAIK, most old laptop ,including my x61, doesn't support SDIO in HW.
-So did Ricoh controller you tested use polling mode to handle SDIO IRQ?
-Which clock of controller and which bit rate did you test?
+when display channel info in debugfs, always check for valid band
+before access the pointer and display information
 
->> (However I just can't believe the performance is so poor ,only around
->> 1.1Mbps, with polling mode of SDIO IRQ)
->
-> What specific kernel version are you using?  There have been some
-> latency fixes in recent kernels, but would be good to know just to make
-> sure.
+for 1000 NIC, it only support "bgn" mode, so there is no 5.2GHz channels
+available to display.
 
-I'm using kenrel 2.6.25.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   79 ++++++++++++++-------------
+ 1 files changed, 41 insertions(+), 38 deletions(-)
 
-Thanks
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 03006c6..af70229 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -380,50 +380,53 @@ static ssize_t iwl_dbgfs_channels_read(struct file *file, char __user *user_buf,
+ 	}
+ 
+ 	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_2GHZ);
+-	channels = supp_band->channels;
++	if (supp_band) {
++		channels = supp_band->channels;
+ 
+-	pos += scnprintf(buf + pos, bufsz - pos,
+-			"Displaying %d channels in 2.4GHz band 802.11bg):\n",
+-			 supp_band->n_channels);
+-
+-	for (i = 0; i < supp_band->n_channels; i++)
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+-				"%d: %ddBm: BSS%s%s, %s.\n",
+-				ieee80211_frequency_to_channel(
+-				channels[i].center_freq),
+-				channels[i].max_power,
+-				channels[i].flags & IEEE80211_CHAN_RADAR ?
+-				" (IEEE 802.11h required)" : "",
+-				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
+-				|| (channels[i].flags &
+-				IEEE80211_CHAN_RADAR)) ? "" :
+-				", IBSS",
+-				channels[i].flags &
+-				IEEE80211_CHAN_PASSIVE_SCAN ?
+-				"passive only" : "active/passive");
++				"Displaying %d channels in 2.4GHz band 802.11bg):\n",
++				supp_band->n_channels);
+ 
++		for (i = 0; i < supp_band->n_channels; i++)
++			pos += scnprintf(buf + pos, bufsz - pos,
++					"%d: %ddBm: BSS%s%s, %s.\n",
++					ieee80211_frequency_to_channel(
++					channels[i].center_freq),
++					channels[i].max_power,
++					channels[i].flags & IEEE80211_CHAN_RADAR ?
++					" (IEEE 802.11h required)" : "",
++					((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++					|| (channels[i].flags &
++					IEEE80211_CHAN_RADAR)) ? "" :
++					", IBSS",
++					channels[i].flags &
++					IEEE80211_CHAN_PASSIVE_SCAN ?
++					"passive only" : "active/passive");
++	}
+ 	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_5GHZ);
+-	channels = supp_band->channels;
++	if (supp_band) {
++		channels = supp_band->channels;
+ 
+-	pos += scnprintf(buf + pos, bufsz - pos,
+-			"Displaying %d channels in 5.2GHz band (802.11a)\n",
+-			supp_band->n_channels);
+-
+-	for (i = 0; i < supp_band->n_channels; i++)
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+-				"%d: %ddBm: BSS%s%s, %s.\n",
+-				ieee80211_frequency_to_channel(
+-				channels[i].center_freq),
+-				channels[i].max_power,
+-				channels[i].flags & IEEE80211_CHAN_RADAR ?
+-				" (IEEE 802.11h required)" : "",
+-				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
+-				|| (channels[i].flags &
+-				IEEE80211_CHAN_RADAR)) ? "" :
+-				", IBSS",
+-				channels[i].flags &
+-				IEEE80211_CHAN_PASSIVE_SCAN ?
+-				"passive only" : "active/passive");
++				"Displaying %d channels in 5.2GHz band (802.11a)\n",
++				supp_band->n_channels);
++
++		for (i = 0; i < supp_band->n_channels; i++)
++			pos += scnprintf(buf + pos, bufsz - pos,
++					"%d: %ddBm: BSS%s%s, %s.\n",
++					ieee80211_frequency_to_channel(
++					channels[i].center_freq),
++					channels[i].max_power,
++					channels[i].flags & IEEE80211_CHAN_RADAR ?
++					" (IEEE 802.11h required)" : "",
++					((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++					|| (channels[i].flags &
++					IEEE80211_CHAN_RADAR)) ? "" :
++					", IBSS",
++					channels[i].flags &
++					IEEE80211_CHAN_PASSIVE_SCAN ?
++					"passive only" : "active/passive");
++	}
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ 	kfree(buf);
+ 	return ret;
+-- 
+1.5.6.3
 
-Regards
-Dongas
