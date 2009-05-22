@@ -1,115 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54644 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48044 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbZERIxY (ORCPT
+	with ESMTP id S1753051AbZEVPcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 04:53:24 -0400
-Subject: [PATCH] b43/legacy: fix beacon change processing
+	Fri, 22 May 2009 11:32:07 -0400
+Subject: Re: libertas firmware naming confusing
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthieu CASTET <castet.matthieu@free.fr>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <loom.20090511T202208-851@post.gmane.org>
-References: <loom.20090511T202208-851@post.gmane.org>
-Content-Type: text/plain
-Date: Mon, 18 May 2009 10:53:18 +0200
-Message-Id: <1242636798.8425.2.camel@johannes.local>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1243005119.2461.15.camel@localhost.localdomain>
+References: <1242979352.4212.27.camel@johannes.local>
+	 <1243005119.2461.15.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FOXk0BThhnJ2D4sBRlBz"
+Date: Fri, 22 May 2009 17:31:57 +0200
+Message-Id: <1243006317.4606.27.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Process beacon change even if the BSSID doesn't
-change at the same time. Also fix what I think
-is a small locking error in b43legacy, there's
-a spin_unlock_irqrestore that looks out of place.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/b43/main.c       |   24 +++++++++++-------------
- drivers/net/wireless/b43legacy/main.c |   21 +++++++++------------
- 2 files changed, 20 insertions(+), 25 deletions(-)
+--=-FOXk0BThhnJ2D4sBRlBz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-05-18 10:44:35.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-05-18 10:48:00.000000000 +0200
-@@ -3553,27 +3553,25 @@ static void b43_op_bss_info_changed(stru
- 
- 	B43_WARN_ON(wl->vif != vif);
- 
-+	spin_lock_irqsave(&wl->irq_lock, flags);
- 	if (changed & BSS_CHANGED_BSSID) {
--		spin_lock_irqsave(&wl->irq_lock, flags);
- 		if (conf->bssid)
- 			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
- 		else
- 			memset(wl->bssid, 0, ETH_ALEN);
-+	}
- 
--		if (b43_status(dev) >= B43_STAT_INITIALIZED) {
--			if (b43_is_mode(wl, NL80211_IFTYPE_AP) ||
--			    b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT)) {
--				B43_WARN_ON(vif->type != wl->if_type);
--				if (changed & BSS_CHANGED_BEACON)
--					b43_update_templates(wl);
--			} else if (b43_is_mode(wl, NL80211_IFTYPE_ADHOC)) {
--				if (changed & BSS_CHANGED_BEACON)
--					b43_update_templates(wl);
--			}
-+	if (b43_status(dev) >= B43_STAT_INITIALIZED) {
-+		if (changed & BSS_CHANGED_BEACON &&
-+		    (b43_is_mode(wl, NL80211_IFTYPE_AP) ||
-+		     b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT) ||
-+		     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)))
-+			b43_update_templates(wl);
-+
-+		if (changed & BSS_CHANGED_BSSID)
- 			b43_write_mac_bssid_templates(dev);
--		}
--		spin_unlock_irqrestore(&wl->irq_lock, flags);
- 	}
-+	spin_unlock_irqrestore(&wl->irq_lock, flags);
- 
- 	b43_mac_suspend(dev);
- 
---- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c	2009-05-18 10:48:25.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43legacy/main.c	2009-05-18 10:50:04.000000000 +0200
-@@ -2820,27 +2820,24 @@ static void b43legacy_op_bss_info_change
- 	savedirqs = b43legacy_interrupt_disable(dev, B43legacy_IRQ_ALL);
- 
- 	if (changed & BSS_CHANGED_BSSID) {
--		spin_unlock_irqrestore(&wl->irq_lock, flags);
- 		b43legacy_synchronize_irq(dev);
- 
- 		if (conf->bssid)
- 			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
- 		else
- 			memset(wl->bssid, 0, ETH_ALEN);
-+	}
-+
-+	if (b43legacy_status(dev) >= B43legacy_STAT_INITIALIZED) {
-+		if (changed & BSS_CHANGED_BEACON &&
-+		    (b43legacy_is_mode(wl, NL80211_IFTYPE_AP) ||
-+		     b43legacy_is_mode(wl, NL80211_IFTYPE_ADHOC)))
-+			b43legacy_update_templates(wl);
- 
--		if (b43legacy_status(dev) >= B43legacy_STAT_INITIALIZED) {
--			if (b43legacy_is_mode(wl, NL80211_IFTYPE_AP)) {
--				B43legacy_WARN_ON(vif->type != NL80211_IFTYPE_AP);
--				if (changed & BSS_CHANGED_BEACON)
--					b43legacy_update_templates(wl);
--			} else if (b43legacy_is_mode(wl, NL80211_IFTYPE_ADHOC)) {
--				if (changed & BSS_CHANGED_BEACON)
--					b43legacy_update_templates(wl);
--			}
-+		if (changed & BSS_CHANGED_BSSID)
- 			b43legacy_write_mac_bssid_templates(dev);
--		}
--		spin_unlock_irqrestore(&wl->irq_lock, flags);
- 	}
-+	spin_unlock_irqrestore(&wl->irq_lock, flags);
- 
- 	b43legacy_mac_suspend(dev);
- 
+On Fri, 2009-05-22 at 11:11 -0400, Dan Williams wrote:
 
+> >  2) in the USB case change the driver to load libertas/usb8688.bin
+> >     instead of just usb8688.bin and move one of the versions to that
+> >     filename in the linux-firmware tree.
+>=20
+> Yes, this should be done.  I was unsure what the policy of breaking
+> firmware filenames is, however.
+
+You can always try to load the new name, and fall back to the old name.
+
+> > The current situation is very stupid -- users can find the firmware in =
+a
+> > proper repository but it doesn't work out of the box!
+>=20
+> Nope, though these cards aren't usually found by "normal" users anyway.
+
+True.
+
+> However, I'd like to preserve the the distribution of different firmware
+> versions in linux-firmware, so maybe we should simply point the drivers
+> at specific versions and use module parameters to change the firmware
+> version?
+>=20
+> modprobe libertas_sdio fwver=3D8
+>=20
+> would select libertas/86xx_v8_helper.bin for example, but by default we
+> use v9 or something like that.  Would that be acceptable?
+
+Sure. Might make sense to document why you would ever want to use that
+though.
+
+johannes
+
+--=-FOXk0BThhnJ2D4sBRlBz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKFsVpAAoJEODzc/N7+QmaNPAP/1/NnRrPQA59Y6ezMqgRNb1p
+jG7dMb2UBYx3YjZNDcj/oTg2XS6zyj4tZl9iR1E6EVi5+cS4LMYXZofGLMNJnzgb
+orKCnFPBRKJmzKPH0tFtmbHcGGIby1n1VwdkHlKPsuiQfbmtC+6+bRTQzeQNT8ix
+UVvhWWJ2WcCyQxN8ofUaY2XjdMpwwvTKSDJJKvsHS2Ksktgi8TaL8IyLgYTIkcDe
+QBknC9yGjmzpny23RYgb05ztzxzWZbElXcmqSBqEfx1/mEbx2gKqTOOWUvJJSh0V
+Vd4nTTLe2oUl6tchgAki9wr1GL2TmGSm+ON2PvKTAVINCuwOtVZb7/NJDHXOo2H2
+P8tYFo+0mzON0D3IrT8qWn0luj2mCTutFmYGyhOVZUvAkIBYlysX0+Fflh2rL+GL
+BlpSrd56qlpXV9Al/Q9JYxwBZ3iCCulhiBmMnqMF1IOy9enqnuqPTuINF5btiUof
+7XrpHOBfFK/izhty/bFZ/rEJ7rvUQ4jIs2vRa6Gjq9eFzT2cJ6Xh08Mcxjs/7Vp9
+ySaMkLVPFVx94qQLrKW3n2Is16IwdpdcJ9GX3XqAw7VOU1Dc+7b6Bu/KtI85c0qH
+dAchSWUTUOr+ARmLl9AK0ERmJyMHvVxl6bAGWknOYjDxEGgZNIGegzCp4WBf5iqC
+LQzFIknYylEZybnyd6iX
+=xdoe
+-----END PGP SIGNATURE-----
+
+--=-FOXk0BThhnJ2D4sBRlBz--
 
