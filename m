@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:56319 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754142AbZETLll (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 07:41:41 -0400
-Received: by bwz22 with SMTP id 22so347721bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2009 04:41:42 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:42994 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbZEVPMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 11:12:07 -0400
+Subject: Re: libertas firmware naming confusing
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Scan while TX/RX'ing a lot of data
-Date: Wed, 20 May 2009 13:41:46 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Gaurav.Jauhar@atheros.com, David Miller <davem@davemloft.net>,
-	Jouni Malinen <j@w1.fi>
-References: <43e72e890905141052o1f072bc5m4bc5922327617f8b@mail.gmail.com> <200905181543.15266.helmut.schaa@gmail.com> <1242724000.17164.10.camel@johannes.local>
-In-Reply-To: <1242724000.17164.10.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200905201341.47185.helmut.schaa@gmail.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242979352.4212.27.camel@johannes.local>
+References: <1242979352.4212.27.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 22 May 2009 11:11:59 -0400
+Message-Id: <1243005119.2461.15.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 19. Mai 2009 schrieb Johannes Berg:
-> On Mon, 2009-05-18 at 15:43 +0200, Helmut Schaa wrote:
-
-> > One solution would be to force all drivers to report the tx status. Another
-> > one would be to just wait until the device's queue is empty. At that point
-> > we know that all pending data frames were sent out and additionally the
-> > nullfunc frame was also sent out, so we can safely switch to the next
-> > to-be-scanned channel.
+On Fri, 2009-05-22 at 10:02 +0200, Johannes Berg wrote:
+> Hi,
 > 
-> Some drivers now flush queues at channel switch time, but there's no way
-> to guarantee that the software queues are actually empty and the
-> nullfunc frame isn't queued up behind other traffic. Also, waiting for
-> any driver to report a status will lead to problems because the driver
-> might just have dropped the frame for various reasons like being out of
-> memory.
+> I noticed yesterday that you updated the page at
+> http://wireless.kernel.org/en/users/Drivers/libertas to say the
+> following two things about firmware:
 
-Hmm, the problem is basically (from a mac80211 perspective) that the
-mdev tx queue could still contain data frames when the nullfunc frame
-gets queued, right? And we do not assure that these frames are sent
-out before the channel switch.
+I'm the main source of the firmware naming scheme in linux-firmware.
+There is one major reason for this; the drivers support multiple
+firmware versions, and for various reasons we'd like to keep multiple
+firmware versions around and available.  When I added all the libertas
+firmware to linux-firmware, I was not quite sure how to handle this
+case.
 
-Hence, would it be possible to:
-1) Stop all sub_if tx queues (afterwards no new data frames should
-   appear in the mdev tx queue)
-2) Queue the nullfunc frame
-3) Flush the mdev's tx queue
-4) Switch the channel
-?
+> 
+> USB 
+>       * The Linux firmware tree contains libertas/usb8388_v5.bin and
+>         libertas/usb8388_v9.bin. The firmware image must be placed
+>         in /lib/firmware/usb8688.bin. The firmware image can also be
+>         downloaded from OLPC's libertas firmware page. 
+> 
+> GSPI 
+>       * The GSPI firmware is available in the Linux firmware tree. Copy
+>         libertas/gspi8686_v9_helper.bin
+>         to /lib/firmware/libertas/gspi8686_hlp.bin and
+>         libertas/gspi8686_v9.bin
+>         to /lib/firmware/libertas/gspi8686.bin. 
+> 
+> 
+> This runs counter to the entire idea of the linux-firmware tree that the
+> tree is a drop-in for /lib/firmware/ (or wherever you need it on your
+> distribution) -- the tree should always contain the exact filenames as
+> required by the kernel drivers. Maybe this needs to be clarified more.
+> Additionally, if there's a need for different versions of a firmware,
+> then the driver should detect which one is required for the device, if
+> it's for different features it should select a good default and possibly
+> give the option to override it.
+> 
+> In this case, I suspect two things are needed:
+>  1) rename the GSPI firmware files in the linux-firmware tree to match
+>     what the driver loads, and document outside the filename what
+>     version they are;
 
-Helmut
+The problem with that is that then we can't have different firmware
+versions in linux-firmware really.
+
+>  2) in the USB case change the driver to load libertas/usb8688.bin
+>     instead of just usb8688.bin and move one of the versions to that
+>     filename in the linux-firmware tree.
+
+Yes, this should be done.  I was unsure what the policy of breaking
+firmware filenames is, however.
+
+> The current situation is very stupid -- users can find the firmware in a
+> proper repository but it doesn't work out of the box!
+
+Nope, though these cards aren't usually found by "normal" users anyway.
+However, I'd like to preserve the the distribution of different firmware
+versions in linux-firmware, so maybe we should simply point the drivers
+at specific versions and use module parameters to change the firmware
+version?
+
+modprobe libertas_sdio fwver=8
+
+would select libertas/86xx_v8_helper.bin for example, but by default we
+use v9 or something like that.  Would that be acceptable?
+
+Dan
+
