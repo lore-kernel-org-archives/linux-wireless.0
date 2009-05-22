@@ -1,286 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35078 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbZEBEhY (ORCPT
+Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:40603 "EHLO
+	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796AbZEVJjc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2009 00:37:24 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
+	Fri, 22 May 2009 05:39:32 -0400
+Date: Fri, 22 May 2009 10:39:31 +0100
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 5/5] mac80211/cfg80211: move wiphy specific debugfs entries to cfg80211
-Date: Sat,  2 May 2009 00:37:21 -0400
-Message-Id: <1241239041-2367-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1241239041-2367-1-git-send-email-lrodriguez@atheros.com>
-References: <1241239041-2367-1-git-send-email-lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090522093930.GA15375@sucs.org>
+References: <20090310004344.GA23466@hash.localnet> <20090312061047.GA13401@silver.sucs.org> <20090313095213.GA14250@silver.sucs.org> <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org> <20090329151401.GA26510@hash.localnet> <20090331083041.GA19657@sucs.org> <20090513214416.GA4492@sucs.org> <20090515040904.GA32357@hash.localnet> <20090518100540.GB21150@sucs.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090518100540.GB21150@sucs.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves the cfg80211 specific stuff to new cfg80211 debugfs
-entries. Non-mac80211 will also get these entries now. There were
-only 4 which we take:
+On Mon, May 18, 2009 at 11:05:40AM +0100, Sitsofe Wheeler wrote:
+> On Fri, May 15, 2009 at 12:09:04AM -0400, Bob Copeland wrote:
+> > 
+> > This is too ugly to live, but I'd like to know if you can reproduce
+> > with this patch.  If it still happens, then I guess it's back to
 
-rts_threshold
-fragmentation_threshold
-short_retry_limit
-long_retry_limit
+The poison message has not reappeared but this morning there was a
+sudden break in the connection. Only toggling the wifi via rfkill
+brought things back to life. dmesg below:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/debugfs.c     |   16 ----------
- net/mac80211/ieee80211_i.h |    4 --
- net/wireless/Kconfig       |    8 +++++
- net/wireless/Makefile      |    1 +
- net/wireless/core.c        |    5 +++
- net/wireless/core.h        |   11 +++++++
- net/wireless/debugfs.c     |   70 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/debugfs.h     |   14 +++++++++
- 8 files changed, 109 insertions(+), 20 deletions(-)
- create mode 100644 net/wireless/debugfs.c
- create mode 100644 net/wireless/debugfs.h
+[   30.490064] CPA self-test:
+[   30.490262]  4k 4094 large 218 gb 0 x 4312[c0000000-f77fd000] miss 0
+[   30.519860]  4k 189438 large 37 gb 0 x 189475[c0000000-f77fd000] miss 0
+[   30.541985]  4k 189438 large 37 gb 0 x 189475[c0000000-f77fd000] miss 0
+[   30.541991] ok.
+[   71.438535] wlan0: authenticate with AP 00:01:38:d6:0b:4f
+[   71.442153] wlan0: authenticated
+[   71.442162] wlan0: associate with AP 00:01:38:d6:0b:4f
+[   71.445143] wlan0: RX AssocResp from 00:01:38:d6:0b:4f (capab=0x431 status=0 aid=2)
+[   71.445152] wlan0: associated
+[ 5771.345217] ath5k phy0: noise floor calibration timeout (2412MHz)
+[ 5774.632085] wlan0: no probe response from AP 00:01:38:d6:0b:4f - disassociating
+[ 5774.869703] ath5k phy0: failed to wakeup the MAC Chip
+[ 5774.869717] ath5k phy0: can't reset hardware (-5)
+[ 5774.909190] ath5k phy0: failed to wakeup the MAC Chip
+[ 5774.909197] ath5k phy0: can't reset hardware (-5)
+[ 5774.952588] ath5k phy0: failed to wakeup the MAC Chip
+[ 5774.952600] ath5k phy0: can't reset hardware (-5)
+[ 5774.993967] ath5k phy0: failed to wakeup the MAC Chip
+[ 5774.993977] ath5k phy0: can't reset hardware (-5)
+[ 5775.035221] ath5k phy0: failed to wakeup the MAC Chip
+[ 5777.075531] __ratelimit: 13 callbacks suppressed
+[ 5777.075539] ath5k phy0: failed to wakeup the MAC Chip
+[ 5777.075549] ath5k phy0: can't reset hardware (-5)
+[ 5777.163583] ath5k phy0: failed to wakeup the MAC Chip
+[ 5777.163598] ath5k phy0: can't reset hardware (-5)
+[ 5777.232966] ath5k phy0: failed to wakeup the MAC Chip
+[ 5777.232981] ath5k phy0: can't reset hardware (-5)
+[ 5777.311548] ath5k phy0: failed to wakeup the MAC Chip
+[ 5777.311562] ath5k phy0: can't reset hardware (-5)
+[ 5777.373636] ath5k phy0: failed to wakeup the MAC Chip
+[ 5777.373649] ath5k phy0: can't reset hardware (-5)
+[ 5782.348301] __ratelimit: 12 callbacks suppressed
+[ 5782.348312] ath5k phy0: noise floor calibration timeout (2412MHz)
+[ 5782.728535] ath5k phy0: failed to wakeup the MAC Chip
+[ 5782.728551] ath5k phy0: can't reset hardware (-5)
+[ 5782.768293] ath5k phy0: failed to wakeup the MAC Chip
+[ 5782.768303] ath5k phy0: can't reset hardware (-5)
+[ 5782.822578] ath5k phy0: failed to wakeup the MAC Chip
+[ 5782.822593] ath5k phy0: can't reset hardware (-5)
+[ 5782.875552] ath5k phy0: failed to wakeup the MAC Chip
+[ 5782.875566] ath5k phy0: can't reset hardware (-5)
+[ 5782.918854] ath5k phy0: failed to wakeup the MAC Chip
+[ 5788.256463] __ratelimit: 13 callbacks suppressed
+[ 5788.256473] ath5k phy0: failed to wakeup the MAC Chip
+[ 5788.256483] ath5k phy0: can't reset hardware (-5)
+[ 5788.299282] ath5k phy0: failed to wakeup the MAC Chip
+[ 5788.299294] ath5k phy0: can't reset hardware (-5)
+[ 5788.352425] ath5k phy0: failed to wakeup the MAC Chip
+[ 5788.352437] ath5k phy0: can't reset hardware (-5)
+[ 5788.402450] ath5k phy0: failed to wakeup the MAC Chip
+[ 5788.402462] ath5k phy0: can't reset hardware (-5)
+[ 5788.457462] ath5k phy0: failed to wakeup the MAC Chip
+[ 5788.457474] ath5k phy0: can't reset hardware (-5)
+[ 5793.345245] __ratelimit: 12 callbacks suppressed
+[ 5793.345255] ath5k phy0: noise floor calibration timeout (2412MHz)
+[ 5793.881757] ath5k phy0: failed to wakeup the MAC Chip
+[ 5793.881773] ath5k phy0: can't reset hardware (-5)
+[ 5793.924596] ath5k phy0: failed to wakeup the MAC Chip
+[ 5793.924609] ath5k phy0: can't reset hardware (-5)
+[ 5793.979648] ath5k phy0: failed to wakeup the MAC Chip
+[ 5793.979662] ath5k phy0: can't reset hardware (-5)
+[ 5794.037673] ath5k phy0: failed to wakeup the MAC Chip
+[ 5794.037688] ath5k phy0: can't reset hardware (-5)
+[ 5794.089561] ath5k phy0: failed to wakeup the MAC Chip
+[ 5803.075500] __ratelimit: 35 callbacks suppressed
+[ 5803.075509] ath5k phy0: failed to wakeup the MAC Chip
+[ 5803.075518] ath5k phy0: can't reset hardware (-5)
+[ 5803.119747] ath5k phy0: failed to wakeup the MAC Chip
+[ 5803.119761] ath5k phy0: can't reset hardware (-5)
+[ 5803.161294] ath5k phy0: failed to wakeup the MAC Chip
+[ 5803.161305] ath5k phy0: can't reset hardware (-5)
+[ 5803.200990] ath5k phy0: failed to wakeup the MAC Chip
+[ 5803.200999] ath5k phy0: can't reset hardware (-5)
+[ 5803.245784] ath5k phy0: failed to wakeup the MAC Chip
+[ 5803.245796] ath5k phy0: can't reset hardware (-5)
+[ 5808.586487] __ratelimit: 13 callbacks suppressed
+[ 5808.586497] ath5k phy0: failed to wakeup the MAC Chip
+[ 5808.586506] ath5k phy0: can't reset hardware (-5)
+[ 5808.629640] ath5k phy0: failed to wakeup the MAC Chip
+[ 5808.629653] ath5k phy0: can't reset hardware (-5)
+[ 5808.669017] ath5k phy0: failed to wakeup the MAC Chip
+[ 5808.669025] ath5k phy0: can't reset hardware (-5)
+[ 5808.779474] ath5k phy0: failed to wakeup the MAC Chip
+[ 5808.779489] ath5k phy0: can't reset hardware (-5)
+[ 5808.848331] ath5k phy0: failed to wakeup the MAC Chip
+[ 5808.848345] ath5k phy0: can't reset hardware (-5)
+[ 5814.339464] __ratelimit: 12 callbacks suppressed
+[ 5814.339473] ath5k phy0: failed to wakeup the MAC Chip
+[ 5814.339483] ath5k phy0: can't reset hardware (-5)
+[ 5814.381830] ath5k phy0: failed to wakeup the MAC Chip
+[ 5814.381842] ath5k phy0: can't reset hardware (-5)
+[ 5814.425552] ath5k phy0: failed to wakeup the MAC Chip
+[ 5814.425565] ath5k phy0: can't reset hardware (-5)
+[ 5814.465221] ath5k phy0: failed to wakeup the MAC Chip
+[ 5814.465230] ath5k phy0: can't reset hardware (-5)
+[ 5814.508194] ath5k phy0: failed to wakeup the MAC Chip
+[ 5814.508206] ath5k phy0: can't reset hardware (-5)
+[ 5819.851562] __ratelimit: 13 callbacks suppressed
+[ 5819.851571] ath5k phy0: failed to wakeup the MAC Chip
+[ 5819.851581] ath5k phy0: can't reset hardware (-5)
+[ 5819.895810] ath5k phy0: failed to wakeup the MAC Chip
+[ 5819.895823] ath5k phy0: can't reset hardware (-5)
+[ 5819.952022] ath5k phy0: failed to wakeup the MAC Chip
+[ 5819.952035] ath5k phy0: can't reset hardware (-5)
+[ 5819.996475] ath5k phy0: failed to wakeup the MAC Chip
+[ 5819.996489] ath5k phy0: can't reset hardware (-5)
+[ 5820.035965] ath5k phy0: failed to wakeup the MAC Chip
+[ 5820.035974] ath5k phy0: can't reset hardware (-5)
+[ 5825.463631] __ratelimit: 12 callbacks suppressed
+[ 5825.463639] ath5k phy0: failed to wakeup the MAC Chip
+[ 5825.463649] ath5k phy0: can't reset hardware (-5)
+[ 5825.506403] ath5k phy0: failed to wakeup the MAC Chip
+[ 5825.506415] ath5k phy0: can't reset hardware (-5)
+[ 5825.564295] ath5k phy0: failed to wakeup the MAC Chip
+[ 5825.564309] ath5k phy0: can't reset hardware (-5)
+[ 5825.608777] ath5k phy0: failed to wakeup the MAC Chip
+[ 5825.608790] ath5k phy0: can't reset hardware (-5)
+[ 5825.654880] ath5k phy0: failed to wakeup the MAC Chip
+[ 5825.654894] ath5k phy0: can't reset hardware (-5)
+[ 5831.415476] __ratelimit: 13 callbacks suppressed
+[ 5831.415485] ath5k phy0: failed to wakeup the MAC Chip
+[ 5831.415496] ath5k phy0: can't reset hardware (-5)
+[ 5831.458800] ath5k phy0: failed to wakeup the MAC Chip
+[ 5831.458813] ath5k phy0: can't reset hardware (-5)
+[ 5831.501080] ath5k phy0: failed to wakeup the MAC Chip
+[ 5831.501092] ath5k phy0: can't reset hardware (-5)
+[ 5831.604365] ath5k phy0: failed to wakeup the MAC Chip
+[ 5831.604379] ath5k phy0: can't reset hardware (-5)
+[ 5831.647234] ath5k phy0: failed to wakeup the MAC Chip
+[ 5831.647246] ath5k phy0: can't reset hardware (-5)
+[ 5834.122061] ath5k 0000:01:00.0: PCI INT A disabled
+[ 5836.901310] pci 0000:01:00.0: reg 10 64bit mmio: [0x000000-0x00ffff]
+[ 5836.901973] ath5k 0000:01:00.0: enabling device (0000 -> 0002)
+[ 5836.901994] ath5k 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[ 5836.902055] ath5k 0000:01:00.0: setting latency timer to 64
+[ 5836.907782] ath5k 0000:01:00.0: registered as 'phy1'
+[ 5837.054154] phy1: Selected rate control algorithm 'minstrel'
+[ 5837.057517] ath5k phy1: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+[ 5850.472102] wlan0: authenticate with AP 00:01:38:d6:0b:4f
+[ 5850.474140] wlan0: authenticated
+[ 5850.474149] wlan0: associate with AP 00:01:38:d6:0b:4f
+[ 5850.476700] wlan0: RX AssocResp from 00:01:38:d6:0b:4f (capab=0x431 status=0 aid=2)
+[ 5850.476708] wlan0: associated
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index ac79320..e83c029 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -52,14 +52,6 @@ static const struct file_operations name## _ops = {			\
- 
- DEBUGFS_READONLY_FILE(frequency, 20, "%d",
- 		      local->hw.conf.channel->center_freq);
--DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
--		      local->hw.wiphy->rts_threshold);
--DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
--		      local->hw.wiphy->frag_threshold);
--DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
--		      local->hw.wiphy->retry_short);
--DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
--		      local->hw.wiphy->retry_long);
- DEBUGFS_READONLY_FILE(total_ps_buffered, 20, "%d",
- 		      local->total_ps_buffered);
- DEBUGFS_READONLY_FILE(wep_iv, 20, "%#08x",
-@@ -267,10 +259,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
- 
- 	DEBUGFS_ADD(frequency);
--	DEBUGFS_ADD(rts_threshold);
--	DEBUGFS_ADD(fragmentation_threshold);
--	DEBUGFS_ADD(short_retry_limit);
--	DEBUGFS_ADD(long_retry_limit);
- 	DEBUGFS_ADD(total_ps_buffered);
- 	DEBUGFS_ADD(wep_iv);
- 	DEBUGFS_ADD(tsf);
-@@ -322,10 +310,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
- void debugfs_hw_del(struct ieee80211_local *local)
- {
- 	DEBUGFS_DEL(frequency);
--	DEBUGFS_DEL(rts_threshold);
--	DEBUGFS_DEL(fragmentation_threshold);
--	DEBUGFS_DEL(short_retry_limit);
--	DEBUGFS_DEL(long_retry_limit);
- 	DEBUGFS_DEL(total_ps_buffered);
- 	DEBUGFS_DEL(wep_iv);
- 	DEBUGFS_DEL(tsf);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 03e0d22..15e8242 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -752,10 +752,6 @@ struct ieee80211_local {
- 		struct dentry *rcdir;
- 		struct dentry *rcname;
- 		struct dentry *frequency;
--		struct dentry *rts_threshold;
--		struct dentry *fragmentation_threshold;
--		struct dentry *short_retry_limit;
--		struct dentry *long_retry_limit;
- 		struct dentry *total_ps_buffered;
- 		struct dentry *wep_iv;
- 		struct dentry *tsf;
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 3c3bc9e..4500549 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -10,6 +10,14 @@ config CFG80211_REG_DEBUG
- 
- 	  If unsure, say N.
- 
-+config CFG80211_DEBUGFS
-+	bool "cfg80211 DebugFS entries"
-+	depends on CFG80211 && DEBUG_FS
-+	---help---
-+	  You can enable this if you want to debugfs entries for cfg80211.
-+
-+	  If unsure, say N.
-+
- config WIRELESS_OLD_REGULATORY
- 	bool "Old wireless static regulatory definitions"
- 	default n
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index 14ea01c..f78c483 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -6,6 +6,7 @@ obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
- obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
- 
- cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o mlme.o ibss.o
-+cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
- cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
- 
- ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 2006a4e..b07e630 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -17,6 +17,7 @@
- #include "nl80211.h"
- #include "core.h"
- #include "sysfs.h"
-+#include "debugfs.h"
- 
- /* name for sysfs, %d is appended */
- #define PHY_NAME "phy"
-@@ -375,6 +376,8 @@ int wiphy_register(struct wiphy *wiphy)
- 		nl80211_send_reg_change_event(&request);
- 	}
- 
-+	cfg80211_debugfs_drv_add(drv);
-+
- 	res = 0;
- out_unlock:
- 	mutex_unlock(&cfg80211_mutex);
-@@ -405,6 +408,8 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	/* unlock again before freeing */
- 	mutex_unlock(&drv->mtx);
- 
-+	cfg80211_debugfs_drv_del(drv);
-+
- 	/* If this device got a regulatory hint tell core its
- 	 * free to listen now to a new shiny device regulatory hint */
- 	reg_device_remove(wiphy);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3e49d33..5756e80 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -10,6 +10,7 @@
- #include <linux/netdevice.h>
- #include <linux/kref.h>
- #include <linux/rbtree.h>
-+#include <linux/debugfs.h>
- #include <net/genetlink.h>
- #include <net/cfg80211.h>
- #include "reg.h"
-@@ -50,6 +51,16 @@ struct cfg80211_registered_device {
- 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
- 	unsigned long suspend_at;
- 
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	/* Debugfs entries */
-+	struct wiphy_debugfsdentries {
-+		struct dentry *rts_threshold;
-+		struct dentry *fragmentation_threshold;
-+		struct dentry *short_retry_limit;
-+		struct dentry *long_retry_limit;
-+	} debugfs;
-+#endif
-+
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
- 	struct wiphy wiphy __attribute__((__aligned__(NETDEV_ALIGN)));
-diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
-new file mode 100644
-index 0000000..3211e0e
---- /dev/null
-+++ b/net/wireless/debugfs.c
-@@ -0,0 +1,70 @@
-+/*
-+ * cfg80211 debugfs
-+ *
-+ * Copyright 2009	Luis R. Rodriguez <lrodriguez@atheros.com>
-+ * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include "core.h"
-+#include "debugfs.h"
-+
-+static int cfg80211_open_file_generic(struct inode *inode, struct file *file)
-+{
-+	file->private_data = inode->i_private;
-+	return 0;
-+}
-+
-+#define DEBUGFS_READONLY_FILE(name, buflen, fmt, value...)		\
-+static ssize_t name## _read(struct file *file, char __user *userbuf,	\
-+			    size_t count, loff_t *ppos)			\
-+{									\
-+	struct wiphy *wiphy= file->private_data;		\
-+	char buf[buflen];						\
-+	int res;							\
-+									\
-+	res = scnprintf(buf, buflen, fmt "\n", ##value);		\
-+	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
-+}									\
-+									\
-+static const struct file_operations name## _ops = {			\
-+	.read = name## _read,						\
-+	.open = cfg80211_open_file_generic,				\
-+};
-+
-+DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
-+		      wiphy->rts_threshold)
-+DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
-+		      wiphy->frag_threshold);
-+DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
-+		      wiphy->retry_short)
-+DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
-+		      wiphy->retry_long);
-+
-+#define DEBUGFS_ADD(name)						\
-+	drv->debugfs.name = debugfs_create_file(#name, S_IRUGO, phyd,	\
-+						  &drv->wiphy, &name## _ops);
-+#define DEBUGFS_DEL(name)						\
-+	debugfs_remove(drv->debugfs.name);				\
-+	drv->debugfs.name = NULL;
-+
-+void cfg80211_debugfs_drv_add(struct cfg80211_registered_device *drv)
-+{
-+	struct dentry *phyd = drv->wiphy.debugfsdir;
-+
-+	DEBUGFS_ADD(rts_threshold);
-+	DEBUGFS_ADD(fragmentation_threshold);
-+	DEBUGFS_ADD(short_retry_limit);
-+	DEBUGFS_ADD(long_retry_limit);
-+}
-+
-+void cfg80211_debugfs_drv_del(struct cfg80211_registered_device *drv)
-+{
-+	DEBUGFS_DEL(rts_threshold);
-+	DEBUGFS_DEL(fragmentation_threshold);
-+	DEBUGFS_DEL(short_retry_limit);
-+	DEBUGFS_DEL(long_retry_limit);
-+}
-diff --git a/net/wireless/debugfs.h b/net/wireless/debugfs.h
-new file mode 100644
-index 0000000..c226983
---- /dev/null
-+++ b/net/wireless/debugfs.h
-@@ -0,0 +1,14 @@
-+#ifndef __CFG80211_DEBUGFS_H
-+#define __CFG80211_DEBUGFS_H
-+
-+#ifdef CONFIG_CFG80211_DEBUGFS
-+void cfg80211_debugfs_drv_add(struct cfg80211_registered_device *drv);
-+void cfg80211_debugfs_drv_del(struct cfg80211_registered_device *drv);
-+#else
-+static inline
-+void cfg80211_debugfs_drv_add(struct cfg80211_registered_device *drv) {}
-+static inline
-+void cfg80211_debugfs_drv_del(struct cfg80211_registered_device *drv) {}
-+#endif
-+
-+#endif /* __CFG80211_DEBUGFS_H */
+Another weird thing that I've noticed with 2.6.30 kernels (although it
+might be happening with older ones) is that periodically (maybe once a
+day) the packet loss between the computer and the access point will
+become very high and will stay that way until the computer is rebooted.
+I do not know if toggling via rfkill will also solve that problem.
+
 -- 
-1.6.0.6
-
+Sitsofe | http://sucs.org/~sits/
