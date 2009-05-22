@@ -1,104 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f224.google.com ([209.85.219.224]:60075 "EHLO
-	mail-ew0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978AbZEERlZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 13:41:25 -0400
-Received: by ewy24 with SMTP id 24so5195337ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2009 10:41:24 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rt2x00: Simplify rt2x00_check_rev
-Date: Tue, 5 May 2009 19:41:18 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <200905050925.42406.IvDoorn@gmail.com>
-In-Reply-To: <200905050925.42406.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200905051941.18637.IvDoorn@gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:41708 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753207AbZEVPGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 11:06:02 -0400
+Subject: Re: [PATCH 2/4] rndis_wlan: explain bits used in key setup code.
+From: Dan Williams <dcbw@redhat.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090522144020.8134.76073.stgit@fate.lan>
+References: <20090522144012.8134.27669.stgit@fate.lan>
+	 <20090522144020.8134.76073.stgit@fate.lan>
+Content-Type: text/plain
+Date: Fri, 22 May 2009 11:05:55 -0400
+Message-Id: <1243004755.2461.10.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 May 2009, Ivo van Doorn wrote:
-> rt2x00_check_rev() was too specific for rt2500usb and rt73usb,
-> by adding the mask argument (instead of hardcoding it into the
-> function itself) we can use the function in rt2800usb as well.
+On Fri, 2009-05-22 at 17:40 +0300, Jussi Kivilinna wrote:
+> Driver uses some unnamed bits to control encryption setup. Move these to
+> enumerations with proper names explaining their meaning.
 > 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 > ---
-
-Please drop this patch. I'll send the correct version in a few minutes.
-
->  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
->  drivers/net/wireless/rt2x00/rt2800usb.c |    7 ++++---
->  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
->  drivers/net/wireless/rt2x00/rt73usb.c   |    3 ++-
->  4 files changed, 10 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 9e630e7..8efb2d7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1559,7 +1559,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	rt2500usb_register_read(rt2x00dev, MAC_CSR0, &reg);
->  	rt2x00_set_chip(rt2x00dev, RT2570, value, reg);
+>  drivers/net/wireless/rndis_wlan.c |   23 ++++++++++++++++++-----
+>  1 files changed, 18 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+> index f9b0a35..8609d28 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -196,6 +196,18 @@ enum ndis_80211_priv_filter {
+>  	ndis_80211_priv_8021x_wep
+>  };
 >  
-> -	if (!rt2x00_check_rev(&rt2x00dev->chip, 0)) {
-> +	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0)) {
->  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
->  		return -ENODEV;
->  	}
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 7cb3653..8dd1489 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -2348,9 +2348,10 @@ static int rt2800usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	 * The check for rt2860 is not a typo, some rt2870 hardware
->  	 * identifies itself as rt2860 in the CSR register.
->  	 */
-> -	if ((rt2x00_get_field32(reg, MAC_CSR0_ASIC_VER) != 0x2860) &&
-> -	    (rt2x00_get_field32(reg, MAC_CSR0_ASIC_VER) != 0x2870) &&
-> -	    (rt2x00_get_field32(reg, MAC_CSR0_ASIC_VER) != 0x3070)) {
-> +	if (!rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x286) &&
-> +	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x287) &&
-> +	    !rt2x00_check_rev(&rt2x00dev->chip, 0xfff00000, 0x288) &&
-> +	    !rt2x00_check_rev(&rt2x00dev->chip, 0xffff0000, 0x3070)) {
->  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
->  		return -ENODEV;
->  	}
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 998dc93..6999ebd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -921,11 +921,10 @@ static inline u32 rt2x00_rev(const struct rt2x00_chip *chipset)
->  	return chipset->rev;
->  }
->  
-> -static inline u16 rt2x00_check_rev(const struct rt2x00_chip *chipset,
-> -				   const u32 rev)
-> +static inline bool rt2x00_check_rev(const struct rt2x00_chip *chipset,
-> +				    const u32 mask, const u32 rev)
->  {
-> -	return (((chipset->rev & 0xffff0) == rev) &&
-> -		!!(chipset->rev & 0x0000f));
-> +	return ((chipset->rev & mask) == rev);
->  }
->  
->  /**
-> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-> index 853b2b2..4f94a61 100644
-> --- a/drivers/net/wireless/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
-> @@ -1846,7 +1846,8 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
->  	rt2x00_set_chip(rt2x00dev, RT2571, value, reg);
->  
-> -	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x25730)) {
-> +	if (!rt2x00_check_rev(&rt2x00dev->chip, 0x000ffff0, 0x25730) ||
-> +	    !rt2x00_check_rev(&rt2x00dev->chip, 0x0000000f, 0)) {
->  		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
->  		return -ENODEV;
->  	}
+> +enum ndis_80211_addkey_bits {
+> +	ndis_80211_addkey_8021x_auth = cpu_to_le32(1 << 28),
+> +	ndis_80211_addkey_set_init_recv_seq = cpu_to_le32(1 << 29),
+> +	ndis_80211_addkey_pairwise_key = cpu_to_le32(1 << 30),
+> +	ndis_80211_addkey_transmit_key = cpu_to_le32(1 << 31),
+> +};
 
+Enums and defines are usually capitalized in Linux, ie
+NDIS_80211_ADDKEY_8021X_AUTH, so that they can be separated from
+non-constant stuff and from function names.  Makes the code more
+readable.  Any chance you'd mind doing that in this patch since you're
+touching these bits?
+
+Dan
+
+> +enum ndis_80211_addwep_bits {
+> +	ndis_80211_addwep_perclient_key = cpu_to_le32(1 << 30),
+> +	ndis_80211_addwep_transmit_key = cpu_to_le32(1 << 31),
+> +};
+> +
+>  struct ndis_80211_ssid {
+>  	__le32 length;
+>  	u8 essid[NDIS_802_11_LENGTH_SSID];
+> @@ -998,7 +1010,7 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
+>  	memcpy(&ndis_key.material, key, key_len);
+>  
+>  	if (index == priv->encr_tx_key_index) {
+> -		ndis_key.index |= cpu_to_le32(1 << 31);
+> +		ndis_key.index |= ndis_80211_addwep_transmit_key;
+>  		ret = set_encr_mode(usbdev, IW_AUTH_CIPHER_WEP104,
+>  						IW_AUTH_CIPHER_NONE);
+>  		if (ret)
+> @@ -1044,7 +1056,8 @@ static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
+>  		if (bssid) {
+>  			/* pairwise key */
+>  			if (memcmp(bssid, ffff_bssid, ETH_ALEN) != 0)
+> -				remove_key.index |= cpu_to_le32(1 << 30);
+> +				remove_key.index |=
+> +					ndis_80211_addkey_pairwise_key;
+>  			memcpy(remove_key.bssid, bssid,
+>  					sizeof(remove_key.bssid));
+>  		} else
+> @@ -1626,7 +1639,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+>  
+>  	if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID) {
+>  		memcpy(ndis_key.rsc, ext->rx_seq, 6);
+> -		ndis_key.index |= cpu_to_le32(1 << 29);
+> +		ndis_key.index |= ndis_80211_addkey_set_init_recv_seq;
+>  	}
+>  
+>  	addr = ext->addr.sa_data;
+> @@ -1638,12 +1651,12 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+>  			get_bssid(usbdev, ndis_key.bssid);
+>  	} else {
+>  		/* pairwise key */
+> -		ndis_key.index |= cpu_to_le32(1 << 30);
+> +		ndis_key.index |= ndis_80211_addkey_pairwise_key;
+>  		memcpy(ndis_key.bssid, addr, ETH_ALEN);
+>  	}
+>  
+>  	if (ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY)
+> -		ndis_key.index |= cpu_to_le32(1 << 31);
+> +		ndis_key.index |= ndis_80211_addkey_transmit_key;
+>  
+>  	if (ext->alg == IW_ENCODE_ALG_TKIP && ext->key_len == 32) {
+>  		/* wpa_supplicant gives us the Michael MIC RX/TX keys in
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
