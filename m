@@ -1,66 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jessica.hrz.tu-chemnitz.de ([134.109.132.47]:58763 "EHLO
-	jessica.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755785AbZETVAe (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:59491 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754001AbZEVQhr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 17:00:34 -0400
-From: Tobias Doerffel <tobias.doerffel@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/3] ath5k: add support for radio LED
-Date: Wed, 20 May 2009 22:16:42 +0200
-Cc: linville@tuxdriver.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com, me@bobcopeland.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org
-References: <1242850139-25438-1-git-send-email-jirislaby@gmail.com>
-In-Reply-To: <1242850139-25438-1-git-send-email-jirislaby@gmail.com>
+	Fri, 22 May 2009 12:37:47 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1083522ywb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2009 09:37:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1501703.Y9m31oCrUy";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200905202216.43996.tobias.doerffel@gmail.com>
+In-Reply-To: <1242964193.8569.42.camel@localhost.localdomain>
+References: <60ce8d250905191048t46e3848fw3416ecd793dab9d1@mail.gmail.com>
+	 <20090519175336.GF2691@tuxdriver.com>
+	 <60ce8d250905200748p5984df0bl1984f0d3bdaf79b5@mail.gmail.com>
+	 <1242854588.7048.13.camel@localhost.localdomain>
+	 <60ce8d250905211727m71f2d17eice895fa961d82e17@mail.gmail.com>
+	 <1242964193.8569.42.camel@localhost.localdomain>
+Date: Sat, 23 May 2009 00:37:48 +0800
+Message-ID: <60ce8d250905220937n5df48dadt41c4ed7ea459dfa9@mail.gmail.com>
+Subject: Re: Throughput is not changed when setting to a much higher bit rate
+From: Dongas <dongas86@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1501703.Y9m31oCrUy
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-Am Mittwoch, 20. Mai 2009 22:08:57 schrieb Jiri Slaby:
-> From: Tobias Doerffel <tobias.doerffel@gmail.com>
+2009/5/22 Dan Williams <dcbw@redhat.com>:
+> On Fri, 2009-05-22 at 08:27 +0800, Dongas wrote:
+>> 2009/5/21 Dan Williams <dcbw@redhat.com>:
+>> > On Wed, 2009-05-20 at 22:48 +0800, Dongas wrote:
+>> >> 2009/5/20 John W. Linville <linville@tuxdriver.com>:
+>> >> > On Wed, May 20, 2009 at 01:48:32AM +0800, Dongas wrote:
+>> >> >
+>> >> >> Why the bandwidth is not changed when bit rate is changed to 11Mb/s?
+>> >> >> Any thing wrong?
+>> >> >
+>> >> > More errors at higher bit rate, resulting in more retries?  Just a
+>> >> > thought...
+>> >> >
+>> >> Is there a quick way to verify this possible reason? I'm using Libertas driver.
+>> >>
+>> >> BTW, my sdio host driver is using polling mode to handle SDIO IRQ.
+>> >> Could this be the cause of such poor performance?
+>> >
+>> > Definitely.  With libertas, the largest class of issues by *far* that
+>> > we've seen are controller related.  I seem to recall that I've pulled
+>> > about 6Mbps through the card using a normal Ricoh controller from a
+>> > Fujitsu laptop.  I can recheck that.
+>> >
+>>
+>> Thanks for your info,Dan.
+>> For Libertas driver , do you know which reason would be the cause of
+>> the issue i encounterred?
+>> Basically if i set the bit rate of Marvell card to a much higher value
+>> such as 11Mb/s or even 48Mb/s, the HW should be capable of
+>> transferring in hign bit rate.
+>> However , the result from iperf indicates that the real bandwidth is
+>> remain around 1.1Mbps, even no improvement.
+>> It seems Marvell 8686 WiFi module will adjust the bit rate according
+>> to the real situation.
+>> So the bottleneck would be host side , HW or driver, right?
+>> If there a way for me to debug this issue in libertas driver to find
+>> out the root reason?
+>> If the issue is related to our HW, we would like to take some
+>> modifications on it.
 >
-> I found these patches on the web not being merged since Jan. Was
-> there any reason why they shouldn't be accepted?
-Yes - they needed further work. The approach was wrong because the GPIO doe=
-s=20
-not control the LED rather than some internal rfkill mechanism (which itsel=
-f=20
-controls the LED). I therefore reworked things to have general RFKILL suppo=
-rt=20
-in ath5k and proposed the patches. They were reviewed by Bob Copeland and I=
-=20
-addressed most of the issues so far but didn't come up with a new patch yet=
-,=20
-as there're still minor things to be worked out. If there's interest, I'll=
-=20
-prepare a new patch which represents the current state.
+> Tests with my *unshielded* 8686 dev module with 15 other APs in the
+> area, running v9 firmware from the linux-firmware git tree, pulling a
+> 240123904 byte file off a host connected via ethernet to a Netgear
+> WGR614 802.11g router using WPA-PSK:
+>
+> HP EliteBook 2530p  (1.40 MB/s)
+> ------------------------------
+> Core 2 Duo LV 1.86GHz
+> 2.6.29.3-140.fc11.x86_64
+> Ricoh R5C822 (rev 22)
+>
+> Fujitsu Lifebook P7230  (1015 KB/s)
+> ------------------------------
+> Core Duo LV 1.2GHz
+> 2.6.29.2-126.fc11.i586
+> Ricoh R5C822 (rev 17)
+>
+> Fujitsu LifeBook P1510  (1.26 MB/s)
+> ------------------------------
+> Pentium M 1.2GHz
+> 2.6.27.15-170.2.24.fc10.i686
+> Ricoh R5C822 (rev 13)
+>
+>
+> So that's up to 11Mbps (bursting to 12.5 Mbps) on the Ricoh controller,
+> which is a pretty sane, standard SDIO controller on many laptops.
+> Unfortunately, all I have to test with are Ricoh controllers...
 
-Toby
+Thanks for the info you provided , Ricoh controller seems work well
+with Libertas.
 
---nextPart1501703.Y9m31oCrUy
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+I think the throughput should be related to the running bit rate of wifi card,
+from the command "iwlist eth0 rate", i can see the maximum supported
+bit rate of my card is 54Mb/s.However, its default bit rate when
+associating with a AP is alway 1Mb/s which seems a little
+strange.Thus, i'd like to know how does libertas driver select the
+default bit rate for Marvell 8686 card when it associates with a AP?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+> In the past, most of the issues we've had are due to the host controller
+> used, not really the libertas driver or the chip itself.  Yes, there are
+> deficiencies in the driver, but apparently speed isn't one of them when
+> it's used in combination with a Ricoh controller on a laptop.  There
+> were some questions earlier about speed with embedded controllers being
+> correlated to HZ somehow, but I think we took care of that with
+> 9b02f419a7dbd956b2c293e5cb1790b6b687f367 in February.
+>
+I believe the issue may lies on our host side ,either HW or driver and
+i'm going to find it out.
+Since my host driver is using polling mode to handle SDIO IRQ and the
+performance of the adaptive SDIO IRQ polling algorism of Linux SDIO
+Stack is related with HZ and high resolution timer, i'm going to check
+if our GPTimer driver in kernel supports HRTimer well.
 
-iEYEABECAAYFAkoUZSsACgkQHsjdpw2OaacIQwCbB3fCcItVpkfOF2UHj9KJF0LZ
-jR8AoLx4RPtL3JLOb64PHd6J7uevblc2
-=KfUF
------END PGP SIGNATURE-----
+Thanks
 
---nextPart1501703.Y9m31oCrUy--
+Regards
+Dongas
