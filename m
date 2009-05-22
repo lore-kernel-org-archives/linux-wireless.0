@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tdb.com ([216.99.214.4]:54474 "HELO mail.tdb.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750787AbZE3ISo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 04:18:44 -0400
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt73usb Access point status
-References: <557754.25367.qm@web51403.mail.re2.yahoo.com>
-	<efe7343f0904300656g127e83e1ge0b21060d6a69955@mail.gmail.com>
-	<wfk54zu7t6.fsf@calligramme.charmers>
-	<efe7343f0905020334g3df47d87j31a351a878968312@mail.gmail.com>
-	<20090511035515.83c21b0c.cjsthompson@gmail.com>
-From: Russell Senior <seniorr@aracnet.com>
-Date: Sat, 30 May 2009 01:12:03 -0700
-In-Reply-To: <20090511035515.83c21b0c.cjsthompson@gmail.com> (cjsthompson@gmail.com's message of "Mon\, 11 May 2009 03\:55\:15 +0200")
-Message-ID: <86d49rovqk.fsf@coulee.tdb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:25551 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757359AbZEVRzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 13:55:20 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/10] iwlcore: Set rb_timeout to 0x10 for devices with ICT
+Date: Fri, 22 May 2009 11:01:53 -0700
+Message-Id: <1243015315-13848-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1243015315-13848-8-git-send-email-reinette.chatre@intel.com>
+References: <1243015315-13848-1-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-2-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-4-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-5-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-6-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-7-git-send-email-reinette.chatre@intel.com>
+ <1243015315-13848-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>>> "Christoph" == Christoph J Thompson <cjsthompson@gmail.com> writes:
+From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-Christoph> But if he can't use anything else than a USB dongle than
-Christoph> Atheros is useless. In my case I can't use anything else
-Christoph> than a USB dongle on my AP because there's only one case
-Christoph> you can use for this embedded board (ALIX 2d3) and it
-Christoph> doesn't have a hole for an external antenna as it's the
-Christoph> model with 3 ethernet ports.
+ rb value should be 0x10 for devices using ICT.
+ RX interrupt was not performing well with
+ 0 value
 
-I have a case for that board with two holes for external antenna.  
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-  http://www.netgate.com/product_info.php?products_id=573
-
-But even the stock case from pcengines can be modified with a drill.
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index c845089..2b8d40b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -412,7 +412,10 @@ int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+ {
+ 	u32 rb_size;
+ 	const u32 rfdnlog = RX_QUEUE_SIZE_LOG; /* 256 RBDs */
+-	const u32 rb_timeout = 0; /* FIXME: RX_RB_TIMEOUT why this stalls RX */
++	u32 rb_timeout = 0; /* FIXME: RX_RB_TIMEOUT for all devices? */
++
++	if (!priv->cfg->use_isr_legacy)
++		rb_timeout = RX_RB_TIMEOUT;
+ 
+ 	if (priv->cfg->mod_params->amsdu_size_8K)
+ 		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K;
 -- 
-Russell Senior         ``I have nine fingers; you have ten.''
-seniorr@aracnet.com
+1.5.6.3
+
