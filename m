@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23129 "EHLO mga02.intel.com"
+Received: from mx2.redhat.com ([66.187.237.31]:53957 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763113AbZEHXTJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 19:19:09 -0400
-Subject: RE: [ipw3945-devel] IWL3945 always reports noise levels of -127
-From: reinette chatre <reinette.chatre@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Cahill, Ben M" <ben.m.cahill@intel.com>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1241549807.29173.1.camel@maxim-laptop>
-References: <1241213459.7082.54.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A43A@orsmsx502.amr.corp.intel.com>
-	 <1241463816.4816.1.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A442@orsmsx502.amr.corp.intel.com>
-	 <1241535034.4816.20.camel@maxim-laptop>
-	 <1241540190.4816.25.camel@maxim-laptop>
-	 <02B3067C068D0549A8CCFCB17D4D318B3569A467@orsmsx502.amr.corp.intel.com>
-	 <1241549807.29173.1.camel@maxim-laptop>
+	id S1758238AbZEWAJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 20:09:51 -0400
+Subject: [PATCH 5/5] libertas: fix WPA adhoc network creation
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain
-Date: Fri, 08 May 2009 16:25:34 -0700
-Message-Id: <1241825134.6198.630.camel@rc-desk>
+Date: Fri, 22 May 2009 20:09:58 -0400
+Message-Id: <1243037398.2495.14.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim,
+Oddly enough, the firmware's JOIN/START commands don't appear to have
+any facility for setting custom IEs, thus the started adhoc network
+doesn't advertise its WPA capability in the beacon.  Whee!
 
-On Tue, 2009-05-05 at 11:56 -0700, Maxim Levitsky wrote:
-> On Tue, 2009-05-05 at 11:45 -0700, Cahill, Ben M wrote:
-> > Excellent information.  Thank you.
-> > 
-> > We just issued new 3945 uCode within the past week or two ... Is that also showing the problem (noise_diff = 0)?
-> > 
-> Yes, I have just installed it to be sure.
-> Exactly same looking output.
-> 
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-This will take some coordination to resolve. Could you please open a new
-bug at http://www.intellinuxwireless.org/bugzilla/ ? 
-
-Thank you
-
-Reinette
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index cb73720..b9b3741 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -711,11 +711,13 @@ static int lbs_adhoc_start(struct lbs_private *priv,
+ 
+ 	/* set capability info */
+ 	tmpcap = WLAN_CAPABILITY_IBSS;
+-	if (assoc_req->secinfo.wep_enabled) {
+-		lbs_deb_join("ADHOC_START: WEP enabled, setting privacy on\n");
++	if (assoc_req->secinfo.wep_enabled ||
++	    assoc_req->secinfo.WPAenabled ||
++	    assoc_req->secinfo.WPA2enabled) {
++		lbs_deb_join("ADHOC_START: WEP/WPA enabled, privacy on\n");
+ 		tmpcap |= WLAN_CAPABILITY_PRIVACY;
+ 	} else
+-		lbs_deb_join("ADHOC_START: WEP disabled, setting privacy off\n");
++		lbs_deb_join("ADHOC_START: WEP disabled, privacy off\n");
+ 
+ 	cmd.capability = cpu_to_le16(tmpcap);
+ 
 
