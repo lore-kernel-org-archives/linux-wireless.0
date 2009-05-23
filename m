@@ -1,67 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:50943 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754808AbZEOXMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 19:12:06 -0400
-Subject: Re: orinoco_cs and WPA-EAP?
-From: Dan Williams <dcbw@redhat.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: Howard Chu <hyc@highlandsun.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <4A0DD39D.6070001@gmail.com>
-References: <4A065AFD.8000604@highlandsun.com>
-	 <4A0D3A83.4040809@highlandsun.com> <4A0DB0A5.9010301@gmail.com>
-	 <4A0DC4A9.8050505@highlandsun.com>  <4A0DD39D.6070001@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55513 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbZEWJSr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 May 2009 05:18:47 -0400
+Subject: [PATCH v2] mac80211: deprecate conf.beacon_int properly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Bob Copeland <bcopeland@gmail.com>
+In-Reply-To: <1243070012.4606.58.camel@johannes.local>
+References: <1243070012.4606.58.camel@johannes.local>
 Content-Type: text/plain
-Date: Fri, 15 May 2009 19:12:50 -0400
-Message-Id: <1242429170.10933.30.camel@localhost.localdomain>
+Date: Sat, 23 May 2009 11:18:45 +0200
+Message-Id: <1243070325.4606.59.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-05-15 at 21:42 +0100, Dave wrote:
-> Howard Chu wrote:
-> > Dave wrote:
-> >> Howard Chu wrote:
-> >>> Sigh, nothing's ever easy. After abandoning the CTX714 I mentioned in an
-> >>> earlier email, I find that the Thinkpad T42 I got from eBay came with some
-> >>> kind of Orinoco 802.11B mini-PCI card installed. Ubuntu Jaunty's 2.6.28 kernel
-> >>> loads up the orinoco_cs driver for this card. It appears that this driver only
-> >>> supports WPA-PSK, and I use WPA-EAP on my home wlan. Has anyone done any work
-> >>> on supporting WPA-EAP for this card?
-> >>
-> >> Note that the card only supports TKIP, so it won't work if the AP
-> >> doesn't offer it.
-> > 
-> > Thanks, that may have been the issue I was facing at first. My AP was 
-> > configured for CCMP. I've now set it to TKIP and seem to be getting further. 
-> > But now when I start wpa_supplicant I see a stream of "Information frame lost" 
-> > messages in dmesg that pretty much never end (interspersed once in a while 
-> > with ratelimit messages). I wonder if this laptop's mini-PCI slot is hosed or 
-> > something.
-> 
-> That message is printed in response to a firmware interrupt. It
-> indicates "an unsolicited Frame Structure cannot be generated... because
-> there is not enough Frame Structure buffer space available".
-> 
-> I suspect that the beacons/probe responses/scan results are either too
-> large/too frequent for the card to handle, or the firmware can't
-> decipher them.
-> 
-> Before enabling wpa_supplicant, can you try scan for your AP (as root):
-> 
-> iwlist ethX scan essid YYYYY
-> 
-> I'm interested in what it returns, and whether dmesg reports 'Ext scan
-> results too large' or something similar.
+Ivo has updated the driver to no longer use the change flag,
+so we can remove that, but rt2x00 and ath5k still use the
+actual value so let's mark it as deprecated too.
 
-Yeah a lot of APs will stuff a ton of info into the IEs these days,
-including WPS, WPA, 11d, blah blah.  It's not out of the question that
-the firmware writers didn't anticipate or handle large numbers of IEs in
-the beacons.  That said, what firmware version is he using?  Maybe
-Apple's firmware fixes that or something?  Would be interesting if the
-reporter could boot up an old iBook with an Airport card and see if that
-works.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |   14 ++------------
+ net/mac80211/main.c    |   12 ++----------
+ 2 files changed, 4 insertions(+), 22 deletions(-)
 
-Dan
+--- wireless-testing.orig/include/net/mac80211.h	2009-05-23 11:00:21.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-05-23 11:16:18.000000000 +0200
+@@ -530,7 +530,6 @@ enum ieee80211_conf_flags {
+  * enum ieee80211_conf_changed - denotes which configuration changed
+  *
+  * @IEEE80211_CONF_CHANGE_RADIO_ENABLED: the value of radio_enabled changed
+- * @_IEEE80211_CONF_CHANGE_BEACON_INTERVAL: DEPRECATED
+  * @IEEE80211_CONF_CHANGE_LISTEN_INTERVAL: the listen interval changed
+  * @IEEE80211_CONF_CHANGE_RADIOTAP: the radiotap flag changed
+  * @IEEE80211_CONF_CHANGE_PS: the PS flag or dynamic PS timeout changed
+@@ -541,7 +540,6 @@ enum ieee80211_conf_flags {
+  */
+ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_RADIO_ENABLED	= BIT(0),
+-	_IEEE80211_CONF_CHANGE_BEACON_INTERVAL	= BIT(1),
+ 	IEEE80211_CONF_CHANGE_LISTEN_INTERVAL	= BIT(2),
+ 	IEEE80211_CONF_CHANGE_RADIOTAP		= BIT(3),
+ 	IEEE80211_CONF_CHANGE_PS		= BIT(4),
+@@ -551,14 +549,6 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
+ };
+ 
+-static inline __deprecated enum ieee80211_conf_changed
+-__IEEE80211_CONF_CHANGE_BEACON_INTERVAL(void)
+-{
+-	return _IEEE80211_CONF_CHANGE_BEACON_INTERVAL;
+-}
+-#define IEEE80211_CONF_CHANGE_BEACON_INTERVAL \
+-	__IEEE80211_CONF_CHANGE_BEACON_INTERVAL()
+-
+ /**
+  * struct ieee80211_conf - configuration of the device
+  *
+@@ -567,7 +557,7 @@ __IEEE80211_CONF_CHANGE_BEACON_INTERVAL(
+  * @flags: configuration flags defined above
+  *
+  * @radio_enabled: when zero, driver is required to switch off the radio.
+- * @beacon_int: beacon interval (TODO make interface config)
++ * @beacon_int: DEPRECATED, DO NOT USE
+  *
+  * @listen_interval: listen interval in units of beacon interval
+  * @max_sleep_period: the maximum number of beacon intervals to sleep for
+@@ -592,7 +582,7 @@ __IEEE80211_CONF_CHANGE_BEACON_INTERVAL(
+  *    number of transmissions not the number of retries
+  */
+ struct ieee80211_conf {
+-	int beacon_int;
++	int __deprecated beacon_int;
+ 	u32 flags;
+ 	int power_level, dynamic_ps_timeout;
+ 	int max_sleep_period;
+--- wireless-testing.orig/net/mac80211/main.c	2009-05-23 11:06:11.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-05-23 11:16:26.000000000 +0200
+@@ -289,16 +289,8 @@ void ieee80211_bss_info_change_notify(st
+ 	drv_bss_info_changed(local, &sdata->vif,
+ 			     &sdata->vif.bss_conf, changed);
+ 
+-	/*
+-	 * DEPRECATED
+-	 *
+-	 * ~changed is just there to not do this at resume time
+-	 */
+-	if (changed & BSS_CHANGED_BEACON_INT && ~changed) {
+-		local->hw.conf.beacon_int = sdata->vif.bss_conf.beacon_int;
+-		ieee80211_hw_config(local,
+-				    _IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
+-	}
++	/* DEPRECATED */
++	local->hw.conf.beacon_int = sdata->vif.bss_conf.beacon_int;
+ }
+ 
+ u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata)
 
 
