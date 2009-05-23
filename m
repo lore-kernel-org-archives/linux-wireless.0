@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:14258 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbZELU55 (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:33876 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752200AbZEWSa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 16:57:57 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so164225rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 13:57:58 -0700 (PDT)
+	Sat, 23 May 2009 14:30:59 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/4] ar9170: fix LED power state handling
+Date: Sat, 23 May 2009 20:30:59 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1242160485-7395-1-git-send-email-hauke@hauke-m.de>
-References: <1241727955-2228-1-git-send-email-hauke@hauke-m.de>
-	<1242160485-7395-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 12 May 2009 13:57:38 -0700
-Message-ID: <43e72e890905121357pb5e27fbl9da0a5b86d2b0254@mail.gmail.com>
-Subject: Re: [PATCH v2] compat-2.6: update compat.diff
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200905232030.59356.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2009 at 1:34 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This will fix the make clean problem reported by Brett D. Ussher.
->
-> wl12xx will be removed from Makefile. I do not think wl12xx needs to be integrated,
-> because it is not rely widely used.
-> If needed it will not be very hard to integrate it.
+This patch fixes a minor visual bug in the led code, which
+left the LED in the wrong power state when it was toggled
+in a _unexpected_ way (e.g: enabling the LED twice).
 
-Thanks so much and sorry for the delay. Just a heads up -- we may want
-to eventually enable wl12xx once SDIO support kicks in. Android 1.5 is
-on 2.6.27 so it would be a nice treat.
-
-Updated from /home/wireless/wireless-testing, git-describe says:
-v2.6.30-rc5-23297-gbf2c6a3
-wireless-testing latest tag:
-master-2009-05-11
-This is compat-release:
-master-2009-05-11
-
-  Luis
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/led.c b/drivers/net/wireless/ath/ar9170/led.c
+index 341cead..ebb1c3e 100644
+--- a/drivers/net/wireless/ath/ar9170/led.c
++++ b/drivers/net/wireless/ath/ar9170/led.c
+@@ -81,10 +81,10 @@ static void ar9170_update_leds(struct work_struct *work)
+ 			if (tmp < blink_delay)
+ 				blink_delay = tmp;
+ 
+-			if (ar->leds[i].toggled > 1)
+-				ar->leds[i].toggled = 0;
++			if (ar->leds[i].l.brightness == LED_OFF)
++				rerun = true;
+ 
+-			rerun = true;
++			ar->leds[i].toggled = !!ar->leds[i].l.brightness;
+ 		}
+ 
+ 	ar9170_set_leds_state(ar, led_val);
+@@ -103,7 +103,7 @@ static void ar9170_led_brightness_set(struct led_classdev *led,
+ 
+ 	arl->toggled++;
+ 
+-	if (likely(IS_ACCEPTING_CMD(ar) && brightness))
++	if (likely(IS_ACCEPTING_CMD(ar)))
+ 		queue_delayed_work(ar->hw->workqueue, &ar->led_work, HZ/10);
+ }
+ 
