@@ -1,165 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46750 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368AbZERTaP (ORCPT
+Received: from smtp4.dnainternet.fi ([87.94.96.72]:4565 "EHLO
+	smtp4.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbZEWG5F convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 15:30:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: do not cancel delayed work inside spin_lock_irqsave
-Date: Mon, 18 May 2009 15:22:00 -0400
-Message-Id: <1242674520-26331-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1242429226-8313-5-git-send-email-reinette.chatre@intel.com>
-References: <1242429226-8313-5-git-send-email-reinette.chatre@intel.com>
+	Sat, 23 May 2009 02:57:05 -0400
+Message-ID: <20090523095659.148960arcvdbb20w@hayate.sektori.org>
+Date: Sat, 23 May 2009 09:56:59 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Dan Williams" <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/4] rndis_wlan: explain bits used in key setup code.
+References: <20090522144012.8134.27669.stgit@fate.lan>
+	<20090522144020.8134.76073.stgit@fate.lan>
+	<1243004755.2461.10.camel@localhost.localdomain>
+In-Reply-To: <1243004755.2461.10.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Quoting "Dan Williams" <dcbw@redhat.com>:
 
-Calling cancel_delayed_work() from inside
-spin_lock_irqsave, introduces a potential deadlock.
+> On Fri, 2009-05-22 at 17:40 +0300, Jussi Kivilinna wrote:
+>> Driver uses some unnamed bits to control encryption setup. Move these to
+>> enumerations with proper names explaining their meaning.
+>>
+>> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>> ---
+>>
+>>  drivers/net/wireless/rndis_wlan.c |   23 ++++++++++++++++++-----
+>>  1 files changed, 18 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rndis_wlan.c  
+>> b/drivers/net/wireless/rndis_wlan.c
+>> index f9b0a35..8609d28 100644
+>> --- a/drivers/net/wireless/rndis_wlan.c
+>> +++ b/drivers/net/wireless/rndis_wlan.c
+>> @@ -196,6 +196,18 @@ enum ndis_80211_priv_filter {
+>>  	ndis_80211_priv_8021x_wep
+>>  };
+>>
+>> +enum ndis_80211_addkey_bits {
+>> +	ndis_80211_addkey_8021x_auth = cpu_to_le32(1 << 28),
+>> +	ndis_80211_addkey_set_init_recv_seq = cpu_to_le32(1 << 29),
+>> +	ndis_80211_addkey_pairwise_key = cpu_to_le32(1 << 30),
+>> +	ndis_80211_addkey_transmit_key = cpu_to_le32(1 << 31),
+>> +};
+>
+> Enums and defines are usually capitalized in Linux, ie
+> NDIS_80211_ADDKEY_8021X_AUTH, so that they can be separated from
+> non-constant stuff and from function names.  Makes the code more
+> readable.  Any chance you'd mind doing that in this patch since you're
+> touching these bits?
+>
+> Dan
 
-As explained by Johannes Berg <johannes@sipsolutions.net>
+All the ndis_80211_* enums in rndis_wlan.c are lower case now, so I'd  
+keep it consistent here and change all the enums upper case in  
+separate patch.
 
-A - lock
-T - timer
-
-phase                   CPU 1           CPU 2
----------------------------------------------
-
-some place that calls
-cancel_timer_sync()
-(which is the | code)
-                                        lock-irq(A)
-|                                       "lock-irq"(T)
-|                                       "unlock"(T)
-|                                       wait(T)
-                                        unlock(A)
-
-timer softirq
-                        "lock"(T)
-                        run(T)
-                        "unlock"(T)
-
-irq handler
-          lock(A)
-          unlock(A)
-
-Now all that again, interleaved, leading to deadlock:
-
-                                        lock-irq(A)
-                        "lock"(T)
-                         run(T)
-IRQ during or maybe
-before run(T) -->        lock(A)
-                                        "lock-irq"(T)
-                                        wait(T)
-
-We fix this by moving the call to cancel_delayed_work() into workqueue.
-There are cases where the work may not actually be queued or running
-at the time we are trying to cancel it, but cancel_delayed_work() is
-able to deal with this.
-
-Also cleanup iwl_set_mode related to this call. This function
-(iwl_set_mode) is only called when bringing interface up and there will
-thus not be any scanning done. No need to try to cancel scanning.
-
-Fixes http://bugzilla.kernel.org/show_bug.cgi?id=13224, which was also
-reported at http://marc.info/?l=linux-wireless&m=124081921903223&w=2 .
-
-Tested-by: Miles Lane <miles.lane@gmail.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Did not apply to 2.6.30-rc6 as posted -- please verify my fix-up!
-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 -------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ++-------
- 3 files changed, 6 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3bb28db..f46ba24 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -669,13 +669,6 @@ static int iwl_set_mode(struct iwl_priv *priv, int mode)
- 	if (!iwl_is_ready_rf(priv))
- 		return -EAGAIN;
- 
--	cancel_delayed_work(&priv->scan_check);
--	if (iwl_scan_cancel_timeout(priv, 100)) {
--		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
--		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
--		return -EAGAIN;
--	}
--
- 	iwl_commit_rxon(priv);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index e7c65c4..6330b91 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -227,9 +227,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 
--	/* The scan completion notification came in, so kill that timer... */
--	cancel_delayed_work(&priv->scan_check);
--
- 	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
- 		       (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ)) ?
- 						"2.4" : "5.2",
-@@ -712,6 +709,8 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		goto done;
-@@ -925,6 +924,8 @@ void iwl_bg_scan_completed(struct work_struct *work)
- 
- 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	ieee80211_scan_completed(priv->hw, false);
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 4cce661..ff4d0e4 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -782,13 +782,6 @@ static int iwl3945_set_mode(struct iwl_priv *priv, int mode)
- 	if (!iwl_is_ready_rf(priv))
- 		return -EAGAIN;
- 
--	cancel_delayed_work(&priv->scan_check);
--	if (iwl_scan_cancel_timeout(priv, 100)) {
--		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
--		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
--		return -EAGAIN;
--	}
--
- 	iwl3945_commit_rxon(priv);
- 
- 	return 0;
-@@ -3298,6 +3291,8 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		goto done;
--- 
-1.6.0.6
+-Jussi
 
