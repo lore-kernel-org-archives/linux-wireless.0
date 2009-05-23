@@ -1,71 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:39047 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831AbZENRrH convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:53890 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbZEWTL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 13:47:07 -0400
-Received: by bwz22 with SMTP id 22so1445667bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:47:07 -0700 (PDT)
+	Sat, 23 May 2009 15:11:26 -0400
+Received: by ewy24 with SMTP id 24so2408265ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 23 May 2009 12:11:26 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: rt2x00: Remove last usage of beacon_int from ieee80211_config
+Date: Sat, 23 May 2009 21:09:28 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-In-Reply-To: <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
-References: <1242321566.32358.19.camel@rc-desk> <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
-	<1242322940.32358.31.camel@rc-desk> <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 14 May 2009 19:46:47 +0200
-Message-ID: <69e28c910905141046q1e0248b1qb00ad3b9335ed31e@mail.gmail.com>
-Subject: Re: [ipw3945-devel] iwlwifi 5150 uCode available
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200905232109.29202.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/14 Rafa³ Mi³ecki <zajec5@gmail.com>:
-> W dniu 14 maja 2009 19:42 u¿ytkownik reinette chatre
-> <reinette.chatre@intel.com> napisa³:
->> Hi,
->>
->> On Thu, 2009-05-14 at 10:22 -0700, Rafa³ Mi³ecki wrote:
->>> 2009/5/14 reinette chatre <reinette.chatre@intel.com>:
->>> > uCode for Intel Wireless WiFi Link 5150AGN is now available for download
->>> > from http://intellinuxwireless.org/?n=Downloads
->>>
->>> Changelog is top secret as usually? ;)
->>
->> Nope ... this is the very first release of this uCode for this
->> particular hardware. A changelog does not make sense in this case.
->>
->>
->>> Should this fix
->>> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946 (wrong
->>> command queue)?
->>
->>
->> This bug is against 5100/5300 hardware, so this uCode is not what you
->> are looking for. We are working on getting uCode for 5100/5300 hardware
->> (that includes a fix for this bug) out the door.
->>
->> Reinette
->
-> Ah, I gone wrong with that numbers understanding. Maybe putting
-> supported hardware in ucode's README would be a good idea? :)
-> Currently visiting http://intellinuxwireless.org/?n=Downloads doesn't
-> provide much help about choosing right firmware for 5100/5300(/5200?).
-> Or at last some short info on download page?
->
-> --
-> Rafa³ Mi³ecki
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This removes the last usage of beacon_int inside the iee80211_config
+structure from rt2x00. The attempt is a bit hackish, and subject to
+change in the future when the entire rt2x00_dev structure is
+cleaned up and restructured.
 
-Perhaps if this is also for 5350, then instead of naming the FW files
-"5000" and "5150", they should be "5x00" and "5x50".
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00.h       |    5 +++++
+ drivers/net/wireless/rt2x00/rt2x00config.c |    3 +++
+ drivers/net/wireless/rt2x00/rt61pci.c      |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c      |    2 +-
+ 7 files changed, 13 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 0197531..435f945 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -520,7 +520,7 @@ static void rt2400pci_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	if (state == STATE_SLEEP) {
+ 		rt2x00pci_register_read(rt2x00dev, CSR20, &reg);
+ 		rt2x00_set_field32(&reg, CSR20_DELAY_AFTER_TBCN,
+-				   (libconf->conf->beacon_int - 20) * 16);
++				   (rt2x00dev->beacon_int - 20) * 16);
+ 		rt2x00_set_field32(&reg, CSR20_TBCN_BEFORE_WAKEUP,
+ 				   libconf->conf->listen_interval - 1);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index f95cb64..08b30d0 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -569,7 +569,7 @@ static void rt2500pci_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	if (state == STATE_SLEEP) {
+ 		rt2x00pci_register_read(rt2x00dev, CSR20, &reg);
+ 		rt2x00_set_field32(&reg, CSR20_DELAY_AFTER_TBCN,
+-				   (libconf->conf->beacon_int - 20) * 16);
++				   (rt2x00dev->beacon_int - 20) * 16);
+ 		rt2x00_set_field32(&reg, CSR20_TBCN_BEFORE_WAKEUP,
+ 				   libconf->conf->listen_interval - 1);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 69f966f..66daf68 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -647,7 +647,7 @@ static void rt2500usb_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	if (state == STATE_SLEEP) {
+ 		rt2500usb_register_read(rt2x00dev, MAC_CSR18, &reg);
+ 		rt2x00_set_field16(&reg, MAC_CSR18_DELAY_AFTER_BEACON,
+-				   libconf->conf->beacon_int - 20);
++				   rt2x00dev->beacon_int - 20);
+ 		rt2x00_set_field16(&reg, MAC_CSR18_BEACONS_BEFORE_WAKEUP,
+ 				   libconf->conf->listen_interval - 1);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index d1faa4f..509ab90 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -808,6 +808,11 @@ struct rt2x00_dev {
+ 	u8 calibration[2];
+ 
+ 	/*
++	 * Beacon interval.
++	 */
++	u16 beacon_int;
++
++	/*
+ 	 * Low level statistics which will have
+ 	 * to be kept up to date while device is running.
+ 	 */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index c5bbf0b..3e019a1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -108,6 +108,9 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	erp.basic_rates = bss_conf->basic_rates;
+ 	erp.beacon_int = bss_conf->beacon_int;
+ 
++	/* Update global beacon interval time, this is needed for PS support */
++	rt2x00dev->beacon_int = bss_conf->beacon_int;
++
+ 	rt2x00dev->ops->lib->config_erp(rt2x00dev, &erp);
+ }
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index a8bf5c4..49b29ff 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -956,7 +956,7 @@ static void rt61pci_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	if (state == STATE_SLEEP) {
+ 		rt2x00pci_register_read(rt2x00dev, MAC_CSR11, &reg);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_DELAY_AFTER_TBCN,
+-				   libconf->conf->beacon_int - 10);
++				   rt2x00dev->beacon_int - 10);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_TBCN_BEFORE_WAKEUP,
+ 				   libconf->conf->listen_interval - 1);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_WAKEUP_LATENCY, 5);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 211a3d6..c188488 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -852,7 +852,7 @@ static void rt73usb_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	if (state == STATE_SLEEP) {
+ 		rt2x00usb_register_read(rt2x00dev, MAC_CSR11, &reg);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_DELAY_AFTER_TBCN,
+-				   libconf->conf->beacon_int - 10);
++				   rt2x00dev->beacon_int - 10);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_TBCN_BEFORE_WAKEUP,
+ 				   libconf->conf->listen_interval - 1);
+ 		rt2x00_set_field32(&reg, MAC_CSR11_WAKEUP_LATENCY, 5);
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3
+
