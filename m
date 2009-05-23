@@ -1,55 +1,293 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:40473 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816AbZEMOgK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 10:36:10 -0400
-Received: by bwz22 with SMTP id 22so686097bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 07:36:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1242211796.29288.7.camel@johannes.local>
-References: <1242030669.6930.10.camel@johannes.local>
-	 <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
-	 <1242211796.29288.7.camel@johannes.local>
-Date: Wed, 13 May 2009 15:36:09 +0100
-Message-ID: <9b2b86520905130736j6cde99cak6fad414531b0168c@mail.gmail.com>
-Subject: Re: [RFT v9] rfkill: rewrite
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx2.redhat.com ([66.187.237.31]:47713 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757580AbZEWAFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2009 20:05:19 -0400
+Subject: [PATCH 3/5] libertas: convert CMD_802_11_AUTHENTICATE to a direct
+ command
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Fri, 22 May 2009 20:05:25 -0400
+Message-Id: <1243037125.2495.9.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/13/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-05-12 at 15:09 +0100, Alan Jenkins wrote:
->
->> I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
->> Somehow, it triggers an OOPS
->>
->> Function: req_reg_info_regd
->> Process: modprobe
->>
->> Call trace:
->> wiphy_apply_custom_regulatory
->> ath5k_regd_init
->> ath5k_reg_notifier
->> ath5k_pci_probe
->> ...
->>
->> Photo:
->> <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#5334936857267342674>
->>
->> The kernel then hangs later on in the boot process.  It responds to
->> SysRq, but does not echo normal keypresses.  SysRq+P shows that the
->> kernel is in the idle task.  I left it for three minutes, but I didn't
->> get any trace from the hung task detector or soft lockup detector.
->>
->> At first I thought it must be a problem with wireless-testing.
->> However, it went away when I eventually tried un-applying the rfkill
->> rewrite patch.
->
-> Confusing, but I think the stacktrace is just bogus. Can you recompile
-> your kernel with CONFIG_FRAME_POINTER please?
+And fix up setting authentication suite for v9+ firmware too.
 
-Nope, cos it's already enabled :-).
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index 75c67c9..d004170 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -19,8 +19,9 @@ static const u8 bssid_any[ETH_ALEN]  __attribute__ ((aligned (2))) =
+ static const u8 bssid_off[ETH_ALEN]  __attribute__ ((aligned (2))) =
+ 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+ 
+-/* The firmware needs certain bits masked out of the beacon-derviced capability
+- * field when associating/joining to BSSs.
++/* The firmware needs the following bits masked out of the beacon-derived
++ * capability field when associating/joining to a BSS:
++ *  9 (QoS), 11 (APSD), 12 (unused), 14 (unused), 15 (unused)
+  */
+ #define CAPINFO_MASK	(~(0xda00))
+ 
+@@ -102,6 +103,52 @@ static void lbs_set_basic_rate_flags(u8 *rates, size_t len)
+ }
+ 
+ 
++static u8 iw_auth_to_ieee_auth(u8 auth)
++{
++	if (auth == IW_AUTH_ALG_OPEN_SYSTEM)
++		return 0x00;
++	else if (auth == IW_AUTH_ALG_SHARED_KEY)
++		return 0x01;
++	else if (auth == IW_AUTH_ALG_LEAP)
++		return 0x80;
++
++	lbs_deb_join("%s: invalid auth alg 0x%X\n", __func__, auth);
++	return 0;
++}
++
++/**
++ *  @brief This function prepares the authenticate command.  AUTHENTICATE only
++ *  sets the authentication suite for future associations, as the firmware
++ *  handles authentication internally during the ASSOCIATE command.
++ *
++ *  @param priv      A pointer to struct lbs_private structure
++ *  @param bssid     The peer BSSID with which to authenticate
++ *  @param auth      The authentication mode to use (from wireless.h)
++ *
++ *  @return         0 or -1
++ */
++static int lbs_set_authentication(struct lbs_private *priv, u8 bssid[6], u8 auth)
++{
++	struct cmd_ds_802_11_authenticate cmd;
++	int ret = -1;
++	DECLARE_MAC_BUF(mac);
++
++	lbs_deb_enter(LBS_DEB_JOIN);
++
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	memcpy(cmd.bssid, bssid, ETH_ALEN);
++
++	cmd.authtype = iw_auth_to_ieee_auth(auth);
++
++	lbs_deb_join("AUTH_CMD: BSSID %s, auth 0x%x\n",
++		print_mac(mac, bssid), cmd.authtype);
++
++	ret = lbs_cmd_with_response(priv, CMD_802_11_AUTHENTICATE, &cmd);
++
++	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
++	return ret;
++}
++
+ /**
+  *  @brief Associate to a specific BSS discovered in a scan
+  *
+@@ -118,11 +165,15 @@ static int lbs_associate(struct lbs_private *priv,
+ 
+ 	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+-	ret = lbs_prepare_and_send_command(priv, CMD_802_11_AUTHENTICATE,
+-				    0, CMD_OPTION_WAITFORRSP,
+-				    0, assoc_req->bss.bssid);
+-	if (ret)
+-		goto out;
++	/* FW v9 and higher indicate authentication suites as a TLV in the
++	 * association command, not as a separate authentication command.
++	 */
++	if (priv->fwrelease < 0x09000000) {
++		ret = lbs_set_authentication(priv, assoc_req->bss.bssid,
++					     priv->secinfo.auth_mode);
++		if (ret)
++			goto out;
++	}
+ 
+ 	/* Use short preamble only when both the BSS and firmware support it */
+ 	if ((priv->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) &&
+@@ -1466,57 +1517,6 @@ struct assoc_request *lbs_get_association_request(struct lbs_private *priv)
+ 
+ 
+ /**
+- *  @brief This function prepares command of authenticate.
+- *
+- *  @param priv      A pointer to struct lbs_private structure
+- *  @param cmd       A pointer to cmd_ds_command structure
+- *  @param pdata_buf Void cast of pointer to a BSSID to authenticate with
+- *
+- *  @return         0 or -1
+- */
+-int lbs_cmd_80211_authenticate(struct lbs_private *priv,
+-				 struct cmd_ds_command *cmd,
+-				 void *pdata_buf)
+-{
+-	struct cmd_ds_802_11_authenticate *pauthenticate = &cmd->params.auth;
+-	int ret = -1;
+-	u8 *bssid = pdata_buf;
+-
+-	lbs_deb_enter(LBS_DEB_JOIN);
+-
+-	cmd->command = cpu_to_le16(CMD_802_11_AUTHENTICATE);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_authenticate)
+-			+ S_DS_GEN);
+-
+-	/* translate auth mode to 802.11 defined wire value */
+-	switch (priv->secinfo.auth_mode) {
+-	case IW_AUTH_ALG_OPEN_SYSTEM:
+-		pauthenticate->authtype = 0x00;
+-		break;
+-	case IW_AUTH_ALG_SHARED_KEY:
+-		pauthenticate->authtype = 0x01;
+-		break;
+-	case IW_AUTH_ALG_LEAP:
+-		pauthenticate->authtype = 0x80;
+-		break;
+-	default:
+-		lbs_deb_join("AUTH_CMD: invalid auth alg 0x%X\n",
+-			priv->secinfo.auth_mode);
+-		goto out;
+-	}
+-
+-	memcpy(pauthenticate->macaddr, bssid, ETH_ALEN);
+-
+-	lbs_deb_join("AUTH_CMD: BSSID %pM, auth 0x%x\n",
+-		bssid, pauthenticate->authtype);
+-	ret = 0;
+-
+-out:
+-	lbs_deb_leave_args(LBS_DEB_JOIN, "ret %d", ret);
+-	return ret;
+-}
+-
+-/**
+  *  @brief Deauthenticate from a specific BSS
+  *
+  *  @param priv        A pointer to struct lbs_private structure
+@@ -1557,12 +1557,13 @@ int lbs_cmd_80211_associate(struct lbs_private *priv,
+ 	struct assoc_request *assoc_req = pdata_buf;
+ 	struct bss_descriptor *bss = &assoc_req->bss;
+ 	u8 *pos;
+-	u16 tmpcap, tmplen;
++	u16 tmpcap, tmplen, tmpauth;
+ 	struct mrvl_ie_ssid_param_set *ssid;
+ 	struct mrvl_ie_ds_param_set *ds;
+ 	struct mrvl_ie_cf_param_set *cf;
+ 	struct mrvl_ie_rates_param_set *rates;
+ 	struct mrvl_ie_rsn_param_set *rsn;
++	struct mrvl_ie_auth_type *auth;
+ 
+ 	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+@@ -1627,6 +1628,21 @@ int lbs_cmd_80211_associate(struct lbs_private *priv,
+ 	 */
+ 	lbs_set_basic_rate_flags(rates->rates, tmplen);
+ 
++	/* Firmware v9+ indicate authentication suites as a TLV */
++	if (priv->fwrelease >= 0x09000000) {
++		DECLARE_MAC_BUF(mac);
++
++		auth = (struct mrvl_ie_auth_type *) pos;
++		auth->header.type = cpu_to_le16(TLV_TYPE_AUTH_TYPE);
++		auth->header.len = cpu_to_le16(2);
++		tmpauth = iw_auth_to_ieee_auth(priv->secinfo.auth_mode);
++		auth->auth = cpu_to_le16(tmpauth);
++		pos += sizeof(auth->header) + 2;
++
++		lbs_deb_join("AUTH_CMD: BSSID %s, auth 0x%x\n",
++			print_mac(mac, bss->bssid), priv->secinfo.auth_mode);
++	}
++
+ 	if (assoc_req->secinfo.WPAenabled || assoc_req->secinfo.WPA2enabled) {
+ 		rsn = (struct mrvl_ie_rsn_param_set *) pos;
+ 		/* WPA_IE or WPA2_IE */
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index ed079c1..bd740fc 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1220,8 +1220,7 @@ static void lbs_submit_command(struct lbs_private *priv,
+ 	command = le16_to_cpu(cmd->command);
+ 
+ 	/* These commands take longer */
+-	if (command == CMD_802_11_SCAN || command == CMD_802_11_ASSOCIATE ||
+-	    command == CMD_802_11_AUTHENTICATE)
++	if (command == CMD_802_11_SCAN || command == CMD_802_11_ASSOCIATE)
+ 		timeo = 5 * HZ;
+ 
+ 	lbs_deb_cmd("DNLD_CMD: command 0x%04x, seq %d, size %d\n",
+@@ -1420,10 +1419,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 		ret = lbs_cmd_80211_associate(priv, cmdptr, pdata_buf);
+ 		break;
+ 
+-	case CMD_802_11_AUTHENTICATE:
+-		ret = lbs_cmd_80211_authenticate(priv, cmdptr, pdata_buf);
+-		break;
+-
+ 	case CMD_MAC_REG_ACCESS:
+ 	case CMD_BBP_REG_ACCESS:
+ 	case CMD_RF_REG_ACCESS:
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index bcf2a97..a830eca 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -225,7 +225,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
+ 
+ 		break;
+ 
+-	case CMD_RET(CMD_802_11_AUTHENTICATE):
+ 	case CMD_RET(CMD_802_11_BEACON_STOP):
+ 		break;
+ 
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index 463ff97..4c930bd 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -250,7 +250,9 @@ struct cmd_ds_gspi_bus_config {
+ } __attribute__ ((packed));
+ 
+ struct cmd_ds_802_11_authenticate {
+-	u8 macaddr[ETH_ALEN];
++	struct cmd_header hdr;
++
++	u8 bssid[ETH_ALEN];
+ 	u8 authtype;
+ 	u8 reserved[10];
+ } __attribute__ ((packed));
+@@ -770,7 +772,6 @@ struct cmd_ds_command {
+ 	union {
+ 		struct cmd_ds_802_11_ps_mode psmode;
+ 		struct cmd_ds_802_11_associate associate;
+-		struct cmd_ds_802_11_authenticate auth;
+ 		struct cmd_ds_802_11_get_stat gstat;
+ 		struct cmd_ds_802_3_get_stat gstat_8023;
+ 		struct cmd_ds_802_11_rf_antenna rant;
+diff --git a/drivers/net/wireless/libertas/types.h b/drivers/net/wireless/libertas/types.h
+index 1055ecf..4ad3bb6 100644
+--- a/drivers/net/wireless/libertas/types.h
++++ b/drivers/net/wireless/libertas/types.h
+@@ -99,6 +99,7 @@ struct ieee_assoc_response {
+ #define TLV_TYPE_TSFTIMESTAMP	    (PROPRIETARY_TLV_BASE_ID + 19)
+ #define TLV_TYPE_RSSI_HIGH          (PROPRIETARY_TLV_BASE_ID + 22)
+ #define TLV_TYPE_SNR_HIGH           (PROPRIETARY_TLV_BASE_ID + 23)
++#define TLV_TYPE_AUTH_TYPE          (PROPRIETARY_TLV_BASE_ID + 31)
+ #define TLV_TYPE_MESH_ID            (PROPRIETARY_TLV_BASE_ID + 37)
+ #define TLV_TYPE_OLD_MESH_ID        (PROPRIETARY_TLV_BASE_ID + 291)
+ 
+@@ -177,6 +178,12 @@ struct mrvl_ie_tsf_timestamp {
+ 	__le64 tsftable[1];
+ } __attribute__ ((packed));
+ 
++/* v9 and later firmware only */
++struct mrvl_ie_auth_type {
++	struct mrvl_ie_header header;
++	__le16 auth;
++} __attribute__ ((packed));
++
+ /**  Local Power capability */
+ struct mrvl_ie_power_capability {
+ 	struct mrvl_ie_header header;
+
+
