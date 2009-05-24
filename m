@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:61141 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755274AbZERPl3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:41:29 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 08:41:31 -0700
-Date: Mon, 18 May 2009 08:41:34 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stecklum@tls-tautenburg.de" <stecklum@tls-tautenburg.de>,
-	"me@bobcopeland.com" <me@bobcopeland.com>,
-	"breusshe@hotmail.com" <breusshe@hotmail.com>
-Subject: Re: [PATCH 1/4] compat-2.6: update compat.diff
-Message-ID: <20090518154134.GC20637@tesla>
-References: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
+Received: from comar.pardus.org.tr ([193.140.100.220]:42263 "EHLO
+	pardus.org.tr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754581AbZEXWHW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 May 2009 18:07:22 -0400
+Message-ID: <4A19C51D.7020609@pardus.org.tr>
+Date: Mon, 25 May 2009 01:07:25 +0300
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1242564463-9120-1-git-send-email-hauke@hauke-m.de>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.30-rc7: Reported regressions from 2.6.29
+References: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera>
+In-Reply-To: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 17, 2009 at 05:47:40AM -0700, Hauke Mehrtens wrote:
-> In kernel versions > 2.9.28 linux/etherdevice.h includes asm/unaligned.h.
-> This is needed by net/mac80211/key.c.
+Rafael J. Wysocki wrote:
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13326
+> Subject		: [PATCH]Null pointer dereference in rtc-cmos driver
+> Submitter	: Ozan Çağlayan <ozan@pardus.org.tr>
+> Date		: 2009-05-14 16:16 (11 days old)
+> References	: http://marc.info/?l=linux-kernel&m=124231783704696&w=4
+>   
 
-All applied thanks!
+Just to notice that the patch for this is at:
 
-  Luis
+http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/driver-core.current/driver-core-do-not-oops-when-driver_unregister-is-called-for-unregistered-drivers.patch
+
+Can at least be marked as "has a patch".
+
+Thanks,
+Ozan Caglayan
