@@ -1,102 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38810 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbZE1HSL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59068 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752713AbZEXRYO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 03:18:11 -0400
-Subject: Re: [RFT 2/2] ar9170: add AVM FRITZ devices
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, jal2@gmx.de,
-	Peter.Grabienski@Atheros.com, Stephen.Chen@Atheros.com,
-	Michael.Fortin@Atheros.com, Johnny.Cheng@Atheros.com,
-	Yuan-Gu.Wei@atheros.com, otus-devel@lists.madwifi-project.org
-In-Reply-To: <1243475326-28867-3-git-send-email-lrodriguez@atheros.com>
-References: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com>
-	 <1243475326-28867-3-git-send-email-lrodriguez@atheros.com>
+	Sun, 24 May 2009 13:24:14 -0400
+Subject: [PATCH] cfg80211: validate AID of stations being added
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Thu, 28 May 2009 09:17:51 +0200
-Message-Id: <1243495071.16631.4.camel@localhost.localdomain>
+Date: Sun, 24 May 2009 16:42:30 +0200
+Message-Id: <1243176150.29222.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+We have some validation code in mac80211 but said code will
+force an invalid AID to 0 which isn't a valid AID either;
+instead require a valid AID (1-2007) to be passed in from
+userspace in cfg80211 already. Also move the code before
+the race comment since it can only be executed during STA
+addition and thus is not racy.
 
-> This adds:
-> 
-> USB 0x057C:0x8401       AVM FRITZ!WLAN USB Stick N
-> USB 0x057C:0x8402       AVM FRITZ!WLAN USB Stick N 2.4
-> 
-> These devices require the 1-stage firmware, if not present we
-> don't continue.
-> 
-> Cc: Peter Grabienski <Peter.Grabienski@Atheros.com>
-> Cc: Stephen Chen <Stephen.Chen@Atheros.com>
-> Cc: Michael Fortin <Michael.Fortin@Atheros.com>
-> Cc: Johnny Cheng <Johnny.Cheng@Atheros.com>
-> Cc: Yuan-Gu Wei <Yuan-Gu.Wei@atheros.com>
-> Cc: Joerg Albert <jal2@gmx.de>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ar9170/usb.c |   28 ++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ar9170/usb.h |    2 ++
->  2 files changed, 30 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-> index 3c97c09..45b5291 100644
-> --- a/drivers/net/wireless/ath/ar9170/usb.c
-> +++ b/drivers/net/wireless/ath/ar9170/usb.c
-> @@ -82,6 +82,10 @@ static struct usb_device_id ar9170_usb_ids[] = {
->  	{ USB_DEVICE(0x2019, 0x5304) },
->  	/* IO-Data WNGDNUS2 */
->  	{ USB_DEVICE(0x04bb, 0x093f) },
-> +	/* AVM FRITZ!WLAN USB Stick N */
-> +	{ USB_DEVICE(0x057C, 0x8401) },
-> +	/* AVM FRITZ!WLAN USB Stick N 2.4 */
-> +	{ USB_DEVICE(0x057C, 0x8402) },
->  
->  	/* terminate */
->  	{}
-> @@ -512,6 +516,12 @@ static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
->  		return 0;
->  	}
->  
-> +	if (aru->req_one_stage_fw) {
-> +		dev_err(&aru->udev->dev, "ar9170.fw firmware file "
-> +			"not found and is required for this device\n");
-> +		return -EINVAL;
-> +	}
-> +
->  	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
->  		"not found, trying old firmware...\n");
->  
-> @@ -668,6 +678,22 @@ err_out:
->  	return err;
->  }
->  
-> +static bool ar9170_requires_one_stage(const struct usb_device_id *id)
-> +{
-> +	/* AVM FRITZ only */
-> +	if (id->idVendor != 0x057C)
-> +		return false;
-> +
-> +	switch (id->idProduct) {
-> +		case 0x8401: /* AVM FRITZ!WLAN USB Stick N */
-> +		case 0x8402: /* AVM FRITZ!WLAN USB Stick N 2.4 */
-> +			return true;
-> +		default:
-> +			return false;
-> +	}
-> +	return false;
-> +}
-> +
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c     |   13 +++++++------
+ net/wireless/nl80211.c |    4 ++++
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
-can't you make this part of use_device_id table? Syncing up with product
-ids in two places is not a good idea.
-
-Regards
-
-Marcel
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-05-24 16:40:30.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-05-24 16:40:42.000000000 +0200
+@@ -664,18 +664,19 @@ static void sta_apply_parameters(struct 
+ 	spin_unlock_bh(&sta->lock);
+ 
+ 	/*
++	 * cfg80211 validates this (1-2007) and allows setting the AID
++	 * only when creating a new station entry
++	 */
++	if (params->aid)
++		sta->sta.aid = params->aid;
++
++	/*
+ 	 * FIXME: updating the following information is racy when this
+ 	 *	  function is called from ieee80211_change_station().
+ 	 *	  However, all this information should be static so
+ 	 *	  maybe we should just reject attemps to change it.
+ 	 */
+ 
+-	if (params->aid) {
+-		sta->sta.aid = params->aid;
+-		if (sta->sta.aid > IEEE80211_MAX_AID)
+-			sta->sta.aid = 0; /* XXX: should this be an error? */
+-	}
+-
+ 	if (params->listen_interval >= 0)
+ 		sta->listen_interval = params->listen_interval;
+ 
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-05-24 16:40:33.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-05-24 16:40:42.000000000 +0200
+@@ -1738,7 +1738,11 @@ static int nl80211_new_station(struct sk
+ 		nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+ 	params.listen_interval =
+ 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
++
+ 	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++	if (!params.aid || params.aid > IEEE80211_MAX_AID)
++		return -EINVAL;
++
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+ 		params.ht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
 
 
