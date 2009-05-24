@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:54591 "EHLO www.tglx.de"
+Received: from ogre.sisk.pl ([217.79.144.158]:34396 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755468AbZE1JJA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 05:09:00 -0400
-Date: Thu, 28 May 2009 11:07:56 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-cc: linux-wireless@vger.kernel.org,
-	Steven Rostedt <rostedt@goodmis.org>,
-	bugzilla-daemon@bugzilla.kernel.org,
-	bugme-daemon@bugzilla.kernel.org, dandart@googlemail.com
-Subject: Re: [Bugme-new] [Bug 13317] New: No rt2x00 modules in RT kernels.
-In-Reply-To: <20090528000253.c731179c.akpm@linux-foundation.org>
-Message-ID: <alpine.LFD.2.00.0905281103310.3397@localhost.localdomain>
-References: <bug-13317-10286@http.bugzilla.kernel.org/> <20090528000253.c731179c.akpm@linux-foundation.org>
+	id S1752578AbZEXWUp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 May 2009 18:20:45 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>
+Subject: Re: 2.6.30-rc7: Reported regressions from 2.6.29
+Date: Mon, 25 May 2009 00:20:42 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera> <4A19C51D.7020609@pardus.org.tr>
+In-Reply-To: <4A19C51D.7020609@pardus.org.tr>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200905250020.43820.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 28 May 2009, Andrew Morton wrote:
-> > Is there a problem with using rt2x00 kernel modules with realtime kernels?
-> > In the info page it says that they need the symbol "BROKEN" which is probably
-> > to tell us that we can't use it. I can't compile it into kernels with an RT
-> > patch.
-> > Why? What's wrong with this mix of module and tree? Is there any way to make
-> > them happily coexist?
-> > 
+On Monday 25 May 2009, Ozan Çağlayan wrote:
+> Rafael J. Wysocki wrote:
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13326
+> > Subject		: [PATCH]Null pointer dereference in rtc-cmos driver
+> > Submitter	: Ozan Çağlayan <ozan@pardus.org.tr>
+> > Date		: 2009-05-14 16:16 (11 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124231783704696&w=4
+> >   
 > 
-> Good question, but bugzilla isn't a good place to ask it.
+> Just to notice that the patch for this is at:
 > 
-> Presumably there's some bustage in the rt2x00 driver which makes it not
-> work with -rt kernels.
+> http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/driver-core.current/driver-core-do-not-oops-when-driver_unregister-is-called-for-unregistered-drivers.patch
 > 
-> Did the -rt guys tell the wireless guys about this?
+> Can at least be marked as "has a patch".
 
-There was some build failure which got fixed in meantime, but I forgot
-to remove the broken flag.
+Thanks, I added the patch to the bug entry and changed its status.
 
-Will do with the next release.
-
-Thanks,
-
-	tglx
-
+Best,
+Rafael
