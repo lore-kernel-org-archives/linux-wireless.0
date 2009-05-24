@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50589 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59079 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825AbZE2Xjz (ORCPT
+	with ESMTP id S1755435AbZEXRZZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 19:39:55 -0400
-Subject: [PATCH] net: introduce pre-up netdev notifier
+	Sun, 24 May 2009 13:25:25 -0400
+Subject: Re: [PATCH 5/5] libertas: fix WPA adhoc network creation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 30 May 2009 01:39:53 +0200
-Message-Id: <1243640394.13863.7.camel@johannes.local>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1243171190.24236.1.camel@localhost.localdomain>
+References: <1243037398.2495.14.camel@localhost.localdomain>
+	 <1243067061.4606.43.camel@johannes.local>
+	 <1243171190.24236.1.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/FizHKJ2rXl9lAkBG2Xk"
+Date: Sun, 24 May 2009 19:24:46 +0200
+Message-Id: <1243185886.29222.5.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NETDEV_UP is called after the device is set UP, but sometimes
-it is useful to be able to veto the device UP. Introduce a
-new NETDEV_PRE_UP notifier that can be used for exactly this.
-The first use case will be cfg80211 denying interfaces to be
-set UP if the device is known to be rfkill'ed.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-John, please take this patch via your tree, I asked Dave and
-he's cool with that.
+--=-/FizHKJ2rXl9lAkBG2Xk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- include/linux/notifier.h |    1 +
- net/core/dev.c           |    7 ++++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+On Sun, 2009-05-24 at 09:19 -0400, Dan Williams wrote:
+> On Sat, 2009-05-23 at 10:24 +0200, Johannes Berg wrote:
+> > On Fri, 2009-05-22 at 20:09 -0400, Dan Williams wrote:
+> > > Oddly enough, the firmware's JOIN/START commands don't appear to have
+> > > any facility for setting custom IEs, thus the started adhoc network
+> > > doesn't advertise its WPA capability in the beacon.  Whee!
+> >=20
+> > We don't even properly support WPA IBSS in mac80211...
+>=20
+> Hmm, I support creating WPA-PSK adhoc networks in the NM UI (worked last
+> summer when I added the code), can you give a 10 second summary of
+> what's missing here?
 
---- wireless-testing.orig/include/linux/notifier.h	2009-05-29 10:28:02.000000000 +0200
-+++ wireless-testing/include/linux/notifier.h	2009-05-30 01:38:44.000000000 +0200
-@@ -198,6 +198,7 @@ static inline int notifier_to_errno(int 
- #define NETDEV_CHANGENAME	0x000A
- #define NETDEV_FEAT_CHANGE	0x000B
- #define NETDEV_BONDING_FAILOVER 0x000C
-+#define NETDEV_PRE_UP		0x000D
- 
- #define SYS_DOWN	0x0001	/* Notify of system down */
- #define SYS_RESTART	SYS_DOWN
---- wireless-testing.orig/net/core/dev.c	2009-05-29 10:28:02.000000000 +0200
-+++ wireless-testing/net/core/dev.c	2009-05-30 01:38:44.000000000 +0200
-@@ -1047,7 +1047,7 @@ void dev_load(struct net *net, const cha
- int dev_open(struct net_device *dev)
- {
- 	const struct net_device_ops *ops = dev->netdev_ops;
--	int ret = 0;
-+	int ret;
- 
- 	ASSERT_RTNL();
- 
-@@ -1064,6 +1064,11 @@ int dev_open(struct net_device *dev)
- 	if (!netif_device_present(dev))
- 		return -ENODEV;
- 
-+	ret = call_netdevice_notifiers(NETDEV_PRE_UP, dev);
-+	ret = notifier_to_errno(ret);
-+	if (ret)
-+		return ret;
-+
- 	/*
- 	 *	Call device private open method
- 	 */
+Hm, well, Jouni says it doesn't play well with XP or Vista and we don't
+have per-station group keys we'd need in theory.
 
+johannes
+
+--=-/FizHKJ2rXl9lAkBG2Xk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKGYLbAAoJEODzc/N7+QmaV7UQANQnKwxvUubcmT/lwV4PFbHt
+namtQqmUe1DcesbIbpMvbMlm/YGnhRhdSBuX/W3+vyaXxXRiv3bm86MfR8ASn+JA
+cNDAvEV53WYQ9coc6yZ9igIKQ8AOdYZBmCxg7oirfuQLAqmT6GS6CR8lTWJpdwjL
+nicTyeI7/05t1Ascj3OhBeXfG+jFMr9XLXybXo4Tksg0Z1uJj7ksc3PM7BRoZcrt
+W/vVmch9f9m/fkLA1pRF51F5gufz5AfJ75rPlvUNSG9MZZd5GpsSj4xTS/9EqNRF
+GPStKjCvotWVTuupaiAN1JDS4Pkc1s9JYombuHP+Grn2kgkyC1p78fHAeHbLIgM0
+6yZlk+NyVDh74V08W89plwbIV6tA330wRkEUncEYbUXe2i05JNuIwgC6HAVKAiB7
+dIlwroYcFKBEFoXtzBvvL5EM6xGmb8mo/ECu5PBaydry6J8R/5NploP9Orf89E5Z
+RJlPYseBj9gmoGkbpFu5HOPQwfNhNfc361tYtCLfvUBQ0cPNswYgA3greVYY3uYL
+krmjuJNhOqG7Mt3CcugQLNXEVaVy8NZkL4HZ5PRQRx7zI3ohtST/tcgox17Ff0IF
+uf+ZlfOOqvNmDrlr8vfP6k3T6tU+6iEL2MP/K3RsQZtTmxQqPJ4GTetA+GfNR3FS
+YkByRlLoLcQJWJGW+QTD
+=K/F2
+-----END PGP SIGNATURE-----
+
+--=-/FizHKJ2rXl9lAkBG2Xk--
 
