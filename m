@@ -1,29 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55709 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661AbZE2Kad (ORCPT
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:54437 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701AbZEXRzx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 06:30:33 -0400
-Date: Fri, 29 May 2009 12:18:20 +0200
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/10]: p54: Use SKB list handling helpers instead of
-	by-hand code.
-Message-ID: <20090529101819.GB3506@tuxdriver.com>
-References: <20090529.014009.107644427.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090529.014009.107644427.davem@davemloft.net>
+	Sun, 24 May 2009 13:55:53 -0400
+Received: by fxm12 with SMTP id 12so872119fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 24 May 2009 10:55:54 -0700 (PDT)
+Subject: Re: [ath5k-devel] deadlock triggered by buggy hardware (EEE PC) in
+ wireless-testing+rfkill-rewrite v11
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <4A196ABE.4080806@tuffmail.co.uk>
+References: <4A192017.3060508@tuffmail.co.uk>
+	 <4A196ABE.4080806@tuffmail.co.uk>
+Content-Type: text/plain
+Date: Sun, 24 May 2009 20:55:50 +0300
+Message-Id: <1243187750.5450.1.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 29, 2009 at 01:40:09AM -0700, David Miller wrote:
-> 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
+On Sun, 2009-05-24 at 16:41 +0100, Alan Jenkins wrote:
+> ath5k phy5: failed to wakeup the MAC Chip
 
-ACK
+I hate this bug....
+I have it on my aspire one.
+It happens seldom after a resume from ram.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Best regards,
+	Maxim Levitsky
+
