@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41689 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386AbZEDTDY (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49528
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759384AbZEYHi6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 15:03:24 -0400
-Subject: Re: [PATCH] add support for showing power constraint IE
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241458558.8683.84.camel@johannes.local>
-References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
-	 <1241453408.8683.53.camel@johannes.local>
-	 <1241454909.2903.17.camel@localhost.localdomain>
-	 <1241455125.8683.60.camel@johannes.local>
-	 <1241455848.2903.18.camel@localhost.localdomain>
-	 <1241456088.8683.62.camel@johannes.local>
-	 <1241456863.2903.29.camel@localhost.localdomain>
-	 <1241458558.8683.84.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 04 May 2009 12:03:11 -0700
-Message-Id: <1241463791.2903.41.camel@localhost.localdomain>
+	Mon, 25 May 2009 03:38:58 -0400
+Date: Mon, 25 May 2009 00:38:57 -0700 (PDT)
+Message-Id: <20090525.003857.226765449.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-05-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090522183238.GE3559@tuxdriver.com>
+References: <20090522183238.GE3559@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 22 May 2009 14:32:39 -0400
 
-> > However, as I said before, I am quite happy now since the provided
-> > information by iw are now the same as I get with iwlist. Actually iw has
-> > now superior decoding capabilities and is more useful. 
+> Dave,
 > 
-> :)
+> Another huge dump of stuff intended for 2.6.31...it seems like it never
+> stops!  I guess that is mostly good... :-)
 > 
-> > There is still
-> > room for improvement, but I think cutting a new release is not a bad
-> > idea.
-> 
-> I'll wait a bit, maybe somebody feels inspired by this to provide HT
-> parsing.
+> There are a bunch of driver updates, some mac80211 bits that are fixes
+> for things already in -next, some similar regulatory fixes/changes for
+> cfg80211, etc.  Also of note is a new "full MAC" driver for a new
+> not-quite-available device coming soon from Intel.
 
-I am running out of time that I can spent on this. So don't expect me to
-do it any time soon.
+Pulled, thanks John.
 
-Regards
-
-Marcel
-
-
+Enjoy Barcelona :-)
