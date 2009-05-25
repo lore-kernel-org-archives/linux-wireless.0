@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:54662 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750895AbZENFj2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 01:39:28 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1M4Oo2-0004VA-Ob
-	for linux-wireless@vger.kernel.org; Thu, 14 May 2009 02:28:14 +0200
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:64887 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbZEYHIF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 May 2009 03:08:05 -0400
+Received: by fxm12 with SMTP id 12so1113274fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2009 00:08:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1242171396.2159.7.camel@unix>
-References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-	 <4A089E49.7080403@gmail.com>
-	 <20090512103905.0D68E1FD10@chi.die-welt.net>
-	 <dd18b0c30905120728v156d4e1g808a853d23ba0ae6@mail.gmail.com>
-	 <20090512174636.8EBDA1FD10@chi.die-welt.net>
-	 <dd18b0c30905121304k6df44362v76e8e7ae6da3b76f@mail.gmail.com>
-	 <43e72e890905121601y59de3d3fh9eca4637883c37fa@mail.gmail.com>
-	 <1242169748.14227.15.camel@johannes.local>
-	 <1242171396.2159.7.camel@unix>
-Date: Wed, 13 May 2009 13:19:50 -0700
-Message-ID: <dd18b0c30905131319q7cc0042dg9ea5949df073e87@mail.gmail.com>
-Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
-From: Justin Mattock <justinmattock@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Evgeni Golov <sargentd@die-welt.net>,
-	Jiri Slaby
-	<public-jirislaby-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Justin Mattock
-	<public-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Linux Kernel Mailing List
-	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
-	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@hugh.gmane.org,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
+In-Reply-To: <20090407160812.GA5758@tesla>
+References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com>
+	 <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
+	 <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com>
+	 <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com>
+	 <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com>
+	 <20090407160812.GA5758@tesla>
+Date: Mon, 25 May 2009 08:08:05 +0100
+Message-ID: <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Tue, May 12, 2009 at 4:36 PM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> On Wed, 2009-05-13 at 01:09 +0200, Johannes Berg wrote:
->> On Tue, 2009-05-12 at 16:01 -0700, Luis R. Rodriguez wrote:
+On Tue, Apr 7, 2009 at 5:08 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Apr 07, 2009 at 12:49:30AM -0700, Hin-Tak Leung wrote:
+>> On Tue, Apr 7, 2009 at 6:34 AM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
 >>
->> > > O.K. after trial and error reverting this:
->> > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=47afbaf5af9454a7a1a64591e20cbfcc27ca67a8;hp=853da11b94e674445e93660f47a5f0aeeea09623
->> > >
->> > > brings life back to the macbook with 2.6.30-rc4
->> > > (not sure about the iphone anomaly though, I'll keep
->> > > an eye on that)
->> >
->> > Odd.. are you changing TX power through wext? Because that 47afbaf5
->> > should only make a difference when using manual tx power setting.
+>> > Not sure, I wanted to get this out to help those who are interested in
+>> > porting changes over (if any) to zd1211rw. If you find nothing useful
+>> > from it please simply disregard it.
 >>
->> Except it introduced a bug which got fixed in -rc5.
->>
->> johannes
+>> It is vaguely relevant in that (1) there are new and old features
+>> which are not in the rw driver yet - e.g. the AP mode,  and
+>> 3.0 introduces newly antenna diversity, (2) to port changes - either
+>> new-hardware related, or bug-fixes/improvements, they need to be
+>> proven to work-better ... e.g. blindly copying could just copy
+>> mistakes/regressions...
 >
-> No,
-> I try to leave the setting as is.(TX power)
->
-> If this is fixed with the latest, then I'll just
-> go ahead and pull when I get a chance(rather than have
-> the reverted stuff).
->
-> aside from that it interesting, my other machine
-> (imac) runs fine with ndiswrapper, and wl.
->
-> In any case I'll send a post if there's any issues.
-> (right now watching some hulu recommend session 9 good
-> flick)
->
-> Justin P. Mattock
->
->
+> Right, that is the idea.
 
-hey alright, just pulled linus's
-tree, wireless is working
-(I'll run it and see if anything weird happens)
+It has been 6 weeks - I re-visited the code and found a mistake of
+mine, and managed to get it to compile against
+2.6.29.3-159.fc11.x86_64 and 2.6.28.8 vanila 32-bit . It definitely
+does *not* work correctly on x86_64 linux - I get a rather wierd
+problem where register-read of the last 16-bit of the mac address from
+firmware _apparently_ fails, but it is fed to the next register-read
+and the result of the next register-read is received by the
+next-next-read, etc. (i.e. the result of a read is received by the
+next read).  For 32-bit, it seems to work alright, except for one oop
+in AP mode when a client connects so far (out of a few connects).
 
--- 
-Justin P. Mattock
+This is just a head-up that I have a series of diffs to port the
+vendor driver forward to current kernels, if anybody wants to have a
+look, for side-by-side scavenging to the rw driver. (I probably will
+post them to the sourceforge zd1211-dev list after a little look at
+that oops)
 
+BTW, anybody has any idea what else is needed for the rw driver to
+support AP mode?
