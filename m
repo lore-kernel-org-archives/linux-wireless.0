@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58670 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbZESVuA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47412 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbZEYFNv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 17:50:00 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/3] ath9k: set max default eirp to 20 dBm
-Date: Tue, 19 May 2009 17:49:46 -0400
-Message-Id: <1242769787-29467-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
-References: <1242769787-29467-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 25 May 2009 01:13:51 -0400
+Subject: Re: [RFT 5/4] iwm: port to new cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <samuel@sortiz.org>
+In-Reply-To: <1243214537.24825.703.camel@debian>
+References: <20090521215940.344214804@sipsolutions.net>
+	 <1243068775.4606.56.camel@johannes.local>
+	 <1243214537.24825.703.camel@debian>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EHXhWLiqqJxq3gsQHpBu"
+Date: Mon, 25 May 2009 07:13:41 +0200
+Message-Id: <1243228421.29222.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is always discarded anyway but lets just set this to our
-safest lowest.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+--=-EHXhWLiqqJxq3gsQHpBu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7fab2d4..72ead61 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -35,14 +35,14 @@ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- #define CHAN2G(_freq, _idx)  { \
- 	.center_freq = (_freq), \
- 	.hw_value = (_idx), \
--	.max_power = 30, \
-+	.max_power = 20, \
- }
- 
- #define CHAN5G(_freq, _idx) { \
- 	.band = IEEE80211_BAND_5GHZ, \
- 	.center_freq = (_freq), \
- 	.hw_value = (_idx), \
--	.max_power = 30, \
-+	.max_power = 20, \
- }
- 
- /* Some 2 GHz radios are actually tunable on 2312-2732
--- 
-1.6.0.6
+On Mon, 2009-05-25 at 09:22 +0800, Zhu Yi wrote:
+> On Sat, 2009-05-23 at 16:52 +0800, Johannes Berg wrote:
+> > Which means removing all rfkill code since it only does
+> > soft-kill which cfg80211 will now handle in exactly the
+> > same way the driver did.
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> Looks good to me. I think we can remove the "select RFKILL" in Kconfig
+> also.
+
+Indeed, thanks.
+
+johannes
+
+--=-EHXhWLiqqJxq3gsQHpBu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKGikAAAoJEODzc/N7+QmaZxUP/Au8/ZPGzx9ZHFWkD8nYq8y0
+U0cIwb97T6ZkLcbG9LZhCuSAYZ/t/jeembK5cp8IiaeN43DUZEokbZVyeZscUzje
+bRGGLVTeZgkXgIe/3F0afQOu3MFMkhlzq8TlQB5QEY3bCRE8Y1CIMxKEbRq70Ikr
+KUm1JcuMI+3RpTtFq4DV2OvbqxbdUcyqD4JWL5d5BOrVppXcYuL9mb1VZ1pJbfGU
+27RtUr404lwdcdxrHWU9gwZ+6CtrBg1HhzgcVhhYwbJVT0Pddl2EIrr2qVGULnQ2
+s90GGONrx4MsDcRQiO7/eJUF9CltX3tdyBGUTh8gOR7lMJ7fUcf1RJ0nbA8BPrK+
+iZryKUXRnZAwuTPRnsTVAwVbjA/mczJLCHJhdnuashf/YeOL2wAkGgasFl2dMp5M
+HqhOsXy6Ue4XmkQTL5ZwAAUBX53/3mATHboKklm9fuaUMPITr09hYVXTzeWYdwvS
+aX72mqc6eVs4L09tjWr31fSsM10Zvy9KFyAJf4UJm+1fVqMmCs85EALS4UOwA4lr
+5KkVVI4bG3wC7lxhuN6ETuNRAa4m92u5AGnFFIdBvrkOtisZk1Kv3YQBEyS5blXC
+TwZy9Ezs3+jLAM2aVhAk24jHoBRLzlxW+vJXM8HxnQ0txj6tsRecKZLOhC+s10Cz
+WZZdKDv83luKSVAwtvip
+=pFRQ
+-----END PGP SIGNATURE-----
+
+--=-EHXhWLiqqJxq3gsQHpBu--
 
