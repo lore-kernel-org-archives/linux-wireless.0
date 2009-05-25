@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56926
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757350AbZE2IkU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45279 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850AbZEYTfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 04:40:20 -0400
-Date: Fri, 29 May 2009 01:40:20 -0700 (PDT)
-Message-Id: <20090529.014020.135721424.davem@davemloft.net>
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH 7/10]: econet: Use SKB queue and list helpers instead of
- doing it by-hand.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 25 May 2009 15:35:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: avoid leaking mutex in ath5k_config
+Date: Mon, 25 May 2009 21:34:10 +0200
+Message-Id: <1243280050-3755-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/econet/af_econet.c |   18 ++++--------------
- 1 files changed, 4 insertions(+), 14 deletions(-)
+I lost track of the related bug report -- Johannes, do you recall?
 
-diff --git a/net/econet/af_econet.c b/net/econet/af_econet.c
-index 6f479fa..8121bf0 100644
---- a/net/econet/af_econet.c
-+++ b/net/econet/af_econet.c
-@@ -901,15 +901,10 @@ static void aun_tx_ack(unsigned long seq, int result)
- 	struct ec_cb *eb;
+ drivers/net/wireless/ath/ath5k/base.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index fb51937..dd6dc8d 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2779,7 +2779,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
  
- 	spin_lock_irqsave(&aun_queue_lock, flags);
--	skb = skb_peek(&aun_queue);
--	while (skb && skb != (struct sk_buff *)&aun_queue)
--	{
--		struct sk_buff *newskb = skb->next;
-+	skb_queue_walk(&aun_queue, skb) {
- 		eb = (struct ec_cb *)&skb->cb;
- 		if (eb->seq == seq)
- 			goto foundit;
--
--		skb = newskb;
- 	}
- 	spin_unlock_irqrestore(&aun_queue_lock, flags);
- 	printk(KERN_DEBUG "AUN: unknown sequence %ld\n", seq);
-@@ -982,23 +977,18 @@ static void aun_data_available(struct sock *sk, int slen)
+ 	ret = ath5k_chan_set(sc, conf->channel);
+ 	if (ret < 0)
+-		return ret;
++		goto unlock;
  
- static void ab_cleanup(unsigned long h)
- {
--	struct sk_buff *skb;
-+	struct sk_buff *skb, *n;
- 	unsigned long flags;
+ 	if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
+ 	(sc->power_level != conf->power_level)) {
+@@ -2808,8 +2808,9 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ 	 */
+ 	ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
  
- 	spin_lock_irqsave(&aun_queue_lock, flags);
--	skb = skb_peek(&aun_queue);
--	while (skb && skb != (struct sk_buff *)&aun_queue)
--	{
--		struct sk_buff *newskb = skb->next;
-+	skb_queue_walk_safe(&aun_queue, skb, n) {
- 		struct ec_cb *eb = (struct ec_cb *)&skb->cb;
--		if ((jiffies - eb->start) > eb->timeout)
--		{
-+		if ((jiffies - eb->start) > eb->timeout) {
- 			tx_result(skb->sk, eb->cookie,
- 				  ECTYPE_TRANSMIT_NOT_PRESENT);
- 			skb_unlink(skb, &aun_queue);
- 			kfree_skb(skb);
- 		}
--		skb = newskb;
- 	}
- 	spin_unlock_irqrestore(&aun_queue_lock, flags);
++unlock:
+ 	mutex_unlock(&sc->lock);
+-	return 0;
++	return ret;
+ }
  
+ #define SUPPORTED_FIF_FLAGS \
 -- 
-1.6.3
+1.6.0.6
 
