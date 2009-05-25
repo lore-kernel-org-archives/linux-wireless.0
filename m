@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40764 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754330AbZEUQIL (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:15501 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751138AbZEYLXK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 12:08:11 -0400
-Subject: Re: [mac80211 ] Wifi Network slownes bisected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
-	<ariveira@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20090521173839.1f20b95d@varda>
-References: <20090521173839.1f20b95d@varda>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nKeeNjl4BRvdjo5SSGK/"
-Date: Thu, 21 May 2009 18:08:11 +0200
-Message-Id: <1242922091.4212.14.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 25 May 2009 07:23:10 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: alejandro.riveira@gmail.com
+Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
+Date: Mon, 25 May 2009 13:23:07 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+References: <1243247687.5322.8.camel@varda>
+In-Reply-To: <1243247687.5322.8.camel@varda>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200905251323.07845.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 25 May 2009, Alejandro Riveira Fernández wrote:
+> I reported it previously but i'm resending it as a regresion
+> 
+> More info on the bugzilla
+> 
+>  http://bugzilla.kernel.org/show_bug.cgi?id=13362
+> 
+> I bisected it in the estable tree (it regresses too) and the revert
+> helps there but reverting the upstream commit in mainline does not help
+> to fix it completely...
 
---=-nKeeNjl4BRvdjo5SSGK/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Bug 9273 -  rt2500pci: low TCP throughput
+	http://bugzilla.kernel.org/show_bug.cgi?id=9273
 
-On Thu, 2009-05-21 at 17:38 +0200, Alejandro Riveira Fern=C3=A1ndez wrote:
+Bug 443203 -  Fedora rawhide + ralink = slow bit rate
+	https://bugzilla.redhat.com/show_bug.cgi?id=443203
 
->  I noticed that my wifi connection has slowed when stitching
-> from 2.6.29.1 to 2.6.29.4 (it is also slow on 30-rc6)
-> Also 2.6.27 (ubuntu) does not suffer it.
+[Hardy][Intrepid] Low bandwidth with rt2400 / rt2500 drivers
+	https://bugs.launchpad.net/ubuntu/+source/linux/+bug/190515
 
-> $ git bisect good
-> 64e1b00c974ddeae6a60ebb02e1c487371905cea is first bad commit
-> commit 64e1b00c974ddeae6a60ebb02e1c487371905cea
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Fri Apr 24 16:05:16 2009 +0000
->=20
->     mac80211: fix basic rate bitmap calculation
+I can't call this a regression, dozens people have reported the problems
+ranging from kernels 2.6.25 to 2.6.29. Perhaps in your case it worked slightly
+better once, but that was not the case for all other users.
 
-Well ... How much did your connection slow down? It is clear that this
-commit might possibly slow down your connection, but not by a lot. And
-that's only because before we were sending with a higher rate than the
-AP allowed us to... If you need the higher speed then set your AP to
-G-only to make it include more rates in the basic rate set, that'll
-speed up your connection properly.
+Have you tried the "iwconfig wlan0 rate54M" workaround?
 
-That's all discounting driver bugs which may exist, of course.
-
-johannes
-
---=-nKeeNjl4BRvdjo5SSGK/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKFXxnAAoJEODzc/N7+Qma8XMQAIFYa+ZzvbiKdxaicE3tHfIE
-yHGS6PneVC17txFW13opEAzMUHiF6d3ViwDjYYWiXjfVMOIsqiRcx5NQdSHJHWIy
-cum2dlh5awrd4jf60G65EEN6PQGU0XFPETdaly8NZzPj98xjcVkrOxJTkpnPeWAl
-brH18LokWl3U0FuxbXmBUIWXaCLsLovnH1vFaj4fH0+wz317zrLx2dHwp96Mt0WK
-4ru1hRJQ0fQyaqKsvi0yeccNitTfCF/3sooC/GoQeNPozK2Pl028zQzjIsaTTmnl
-qoxr4+mCQ9WxmONEuTIuKKc0WeQzDv/zM61lflN4vMfxnd2QgQYx4Ogj/4Nl7vMU
-jalOCQH9KQf1CzGlwcPMpOsNg5uz7IlXvjgZW1BDUwiUB4ALycMeVXXy2HblDRBm
-sDDgacRf/q+Vy0xsMxMgWgfPXFH9K/vkgeMTtC3Q145PBfYk5HIAyQN9BMY1KuuO
-5ug3j3YY1U0if6Rm/ttbEIREVZaH38FPbCrLTGkD8+eJgDLvF1cN3Brur+1V7BEb
-fK6/7JpS7YTLx6JU9lTAkgkhK43pTBJzv82+bHvqITG2EF+807/csMmZj7904RZ6
-6ysjIUKB7Pcq3jx+DaMKdMsTkGgyHSAfWAULRxhXQ96Eou5n/0rNaPsA5iOQcGgB
-jmrNDKczWIb9gpJ5s0Ri
-=VOWE
------END PGP SIGNATURE-----
-
---=-nKeeNjl4BRvdjo5SSGK/--
-
+Ivo
