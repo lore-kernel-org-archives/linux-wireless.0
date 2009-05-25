@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40374 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754813AbZEHUh7 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:27136 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667AbZEYKev (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 16:37:59 -0400
-Subject: Re: [PATCH] mac80211: fix scan channel race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1241814505.3412.0.camel@mj>
-References: <1241698981.27208.8.camel@johannes.local>
-	 <1241814505.3412.0.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NX2z8USZ98rzVejCFEz9"
-Date: Fri, 08 May 2009 22:37:55 +0200
-Message-Id: <1241815075.23610.3.camel@johannes.local>
+	Mon, 25 May 2009 06:34:51 -0400
+Subject: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
+From: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
+	<alejandro.riveira@gmail.com>
+Reply-To: alejandro.riveira@gmail.com
+To: ivdoorn@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZsenIjfxeLLj8RC0/uE0"
+Date: Mon, 25 May 2009 12:34:47 +0200
+Message-Id: <1243247687.5322.8.camel@varda>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-NX2z8USZ98rzVejCFEz9
+--=-ZsenIjfxeLLj8RC0/uE0
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-05-08 at 16:28 -0400, Pavel Roskin wrote:
-> On Thu, 2009-05-07 at 14:23 +0200, Johannes Berg wrote:
->=20
-> > Pavel, I would appreciate if you could give it a quick test run, I don'=
-t
-> > seem to have a dual-band card with me right now.
->=20
-> It's working fine with ath5k.  Sorry for delay.
+I reported it previously but i'm resending it as a regresion
 
-No worries, thanks for testing!
+More info on the bugzilla
 
-johannes
+ http://bugzilla.kernel.org/show_bug.cgi?id=3D13362
 
---=-NX2z8USZ98rzVejCFEz9
+I bisected it in the estable tree (it regresses too) and the revert
+helps there but reverting the upstream commit in mainline does not help
+to fix it completely...
+
+
+--=20
+Is God willing to prevent evil, but not able? Then he is not omnipotent.
+Is he able, but not willing? Then he is malevolent. Is he both able and
+willing? Then whence cometh evil? Is he neither able nor willing? Then
+why call him God?
+                                                Epicurus
+
+--=-ZsenIjfxeLLj8RC0/uE0
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: Esto es una parte de mensaje firmado digitalmente
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJKBJgcAAoJEODzc/N7+QmaCbIP/jTWpi1ZSDkc6VrMuIWicUII
-+O7JVEBWm9UWKSPhq9PcNkNxVS3qoARmkEQmTucxcXBM/C9q5eJZ1OrZ64Hwsvo1
-LA/IdfmDm84xgfDZAZlEmKw+cj3cEhEO8D//C0W+jAIjozxZWiYGADp1JPMri28o
-I1f74Hvz1/bCsCZL7oJfaJ1MBfkYm39+2Z1jWUHkE52sGUna5zG/+EN1R27KQsS8
-GGm0MSmzXawyhoOcxCAdFtSxPwPGVOh2Vr5Q76OXQlxLHC27PTGH1IWl7n3jOtH/
-qDY93hpXWKDSZNlS1CgV9rxcX9vTyDMKhVWKQnnsK+sDjE3LvOPx7zAOSaEBzp86
-PGnFr569Wyk7iX1XPfD/dIsW7QDxUPIVC0h4jh6sQ64C9FLZ1lnjwHxs4PYZD8B0
-UphjlM2pUN9TrJ+Pg6y9Qx8Ev5UzweGEHrc85YZXOLx0N2t0g7IwOrPC/YWYQbZN
-CNmtvxBbHULFMdb1fyr4KwVLB3MHMSI8Onhhb+kWgCbmeqZCYPWYpgZ/b7wvAmsX
-kPy1+6kyGxve94o5Jt5P2wKwqHTvWtqsZJ7IIQflRN4te2He958tGpebPC4/Utrf
-VEiOvdsKUDiQVgvfdz+x9Yq1MgHKs+MEs/6wzAnKjORZ6JAMPtkIRtD5SQW2JfWI
-+LdTZHpTqTdbKJe/grnp
-=bN72
+iQIcBAABAgAGBQJKGnRAAAoJEDO4iEReSTB2w8kP/0zyghtwNghQ/eKp1kSltS/Q
+Wd2lFelgy6l/aeBxTw9mjMlGe03eo2BKySScxfMcfRQoY4HwWGqe3iFi5hRC5f7v
+2nvRvuNwvaNDH9KHh69/bzkhfe+gAPFeBKBl+RYmHyUMaXOvSo4+yc73e0BND7a2
+buz/nQQYOsYqH9zTZ5atyuexEqmHtU8OGRsf27blNWhtFQcURRguEsHbom7f/edr
+nwfUqfza09CP+Zw0DHnIK7u0P2fMaIQ5cYP0LNdDig85cMfGlaNrO6yL2xspjSSL
+A7w6QC01bpjvqEBIw09ESXZPIThR6Av3HJyK1PzVP9yR8W4MTvn2dA48oskNbtGL
+WDlAMVrz/Q7p83n9fEbN0kJAJAo23WAMfAJBS1Ju9a/OYprM5MthebL7N3ZiAaxH
+v1C8xtv2QtXZBg0J23ubiJ7qppCTj3MtD7ao9zKrOA5HREsbFBeMiGNegq8NHDvF
+Ke/l+HuUKPBjWV4GTIbBGevMJO2Z8vHZE29Pyly0es/rgpFTLGxjA6JKyN6mXMat
+q0RjfA3O7b3QG5HDRsDMQcNJ8NBf13TWUdMC7OdGskSH+LRgyzeGtI/45mlUfqSX
+8tKW7Eob8kkLDtH25xYESyyoVcjpnftJ9Q1d4M+Xl7R0ls5NiKaKunMLud3h4MMj
+AI2yvAWsvBcTfiVXtQP4
+=1MnW
 -----END PGP SIGNATURE-----
 
---=-NX2z8USZ98rzVejCFEz9--
+--=-ZsenIjfxeLLj8RC0/uE0--
 
