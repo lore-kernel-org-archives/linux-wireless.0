@@ -1,29 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:65072 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752676AbZEEDFw (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48093 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754646AbZEZQjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 23:05:52 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so3247728rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 20:05:52 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 4 May 2009 20:05:37 -0700
-Message-ID: <43e72e890905042005vb96f57aid70c476e38685dfe@mail.gmail.com>
-Subject: oops during stress test - today's wl
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 26 May 2009 12:39:10 -0400
+Subject: Re: [RFT 3/4] cfg80211: add rfkill support
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1243171957.24236.13.camel@localhost.localdomain>
+References: <20090521215940.344214804@sipsolutions.net>
+	 <20090521220105.198751775@sipsolutions.net>
+	 <1243171957.24236.13.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 26 May 2009 18:38:53 +0200
+Message-Id: <1243355933.20399.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mcgrof@pogo ~/wireless-testing (git::master)$ git-describe
-v2.6.30-rc4-22720-gb2382a4
+Hi Dan,
 
-While running iperf, after about 1 hour.
+> > plain text document attachment (015-cfg80211-rfkill.patch)
+> > To be easier on drivers and users, have cfg80211 register an
+> > rfkill structure that drivers can access. When soft-killed,
+> > simply take down all interfaces; when hard-killed the driver
+> > needs to notify us and we will take down the interfaces
+> > after the fact. While rfkilled, interfaces cannot be set UP.
+> 
+> Any chance we could get something other than EINVAL returned from the
+> PRE_UP notifier when the device is rfkilled?  It's useful to get some
+> indication of *why* the device can't be brought up.  For example, if the
+> device requires firmware but that firmware isn't present, the driver
+> will usually return ENOENT because that's what request_firmware()
+> returns when it can't find what it needs.  Thus userspace can do
+> something intelligent with the error.
+> 
+> So maybe EL2HLT could be (ab)used here?  I guess technically it's an L1
+> halt since the PHY is powered down, but whatever.  The only other stuff
+> that seems to use this are the USB 'gadget' drivers.  Either that, or
+> lets make an EL1OFF or ERFKILL maybe.
 
-http://bombadil.infradead.org/~mcgrof/oops-img/09-05/oops-01-v2.6.30-rc4-22720-gb2382a4.jpg
+I think that creating ERFKILL is a really good idea. We should do that.
 
-Image probably doesn't help much.. but its what I got.. I'd look more
-but its getting late here, so I'm out. I'll use netconsole tomorrow.
+Regards
 
-  Luis
+Marcel
+
+
