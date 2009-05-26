@@ -1,145 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39022 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753278AbZEZQXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 12:23:08 -0400
-Message-ID: <4A1C1766.3030004@gmx.net>
-Date: Tue, 26 May 2009 18:23:02 +0200
-From: Barkle <barkle@gmx.net>
+Received: from mail.atheros.com ([12.36.123.2]:41793 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753397AbZEZRqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 13:46:33 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 10:46:36 -0700
+Date: Tue, 26 May 2009 10:46:40 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Jeff Hansen <x@jeffhansen.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] WMM settings and AP performance
+Message-ID: <20090526174640.GC9370@tesla>
+References: <Pine.LNX.4.64.0905251926300.11772@ren>
 MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL 8185
-References: <4A199FED.7000609@gmx.net>	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>	 <4A1B00E7.5070801@gmx.net>	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>	 <4A1B2186.3070107@gmx.net> <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>
-In-Reply-To: <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <Pine.LNX.4.64.0905251926300.11772@ren>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung schrieb:
-> I am asking to a 2nd time - try compat-wireless.
+On Mon, May 25, 2009 at 06:52:41PM -0700, Jeff Hansen wrote:
+> Hello,
+> 
+> I found that upgrading from compat-wireless-2009-04-28 to
+> compat-wireless-2009-05-11 caused a huge degradation in performance in AP
+> mode.  Before (with 04-28), I was able to get ~25 Mbps TCP iperf speeds up
+> and down (with a madwifi client), and after upgrading I still get ~30 Mbps
+> UDP download, but only ~2Mbps UDP upload (and TCP speeds about the same -
+> 2Mbps).
+> 
+> After bisecting a bit, I found that the "mac80211: set default QoS values
+> according to spec" caused the performance degradation, so I'm guessing
+> that ath9k is not writing the correct values to the QoS timing registers
+> when it gets the configuration from mac80211.  For now, I'm just reverting
+> this patch in my builds.
 
-When I compile compat-wireless, I get an error
+Hm, thanks for reporting this but did you try to configure changing the
+defaults first? The changes johannes did ensures we follow the IEEE spec
+for defaults. These can be tuned though, for example my hostapd.conf has:
 
-*************************
-feta:/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6# uname -r
-2.6.30-rc6-1
-feta:/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6# make
-make -C /lib/modules/2.6.30-rc6-1/build 
-M=/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6 modules
-make[1]: Entering directory `/usr/src/linux-2.6.30-rc6'
-  CC [M]  
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.o
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c: 
-In function 'ieee80211_led_init':
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:58: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:62: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:63: 
-error: implicit declaration of function 'led_trigger_register'
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:69: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:73: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:80: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:84: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:91: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:95: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c: 
-In function 'ieee80211_led_exit':
-/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.c:106: 
-error: implicit declaration of function 'led_trigger_unregister'
-make[3]: *** 
-[/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211/led.o] 
-Fehler 1
-make[2]: *** 
-[/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6/net/mac80211] 
-Fehler 2
-make[1]: *** 
-[_module_/usr/src/tools/compat-wireless/compat-wireless-2.6.30-rc6] Fehler 2
-make[1]: Leaving directory `/usr/src/linux-2.6.30-rc6'
-make: *** [modules] Fehler 2
-*************************
+wme_enabled=1
+wme_ac_bk_cwmin=4
+wme_ac_bk_cwmax=10
+wme_ac_bk_aifs=7
+wme_ac_bk_txop_limit=0
+wme_ac_bk_acm=0
+wme_ac_be_aifs=3
+wme_ac_be_cwmin=4
+wme_ac_be_cwmax=10
+wme_ac_be_txop_limit=0
+wme_ac_be_acm=0
+wme_ac_vi_aifs=2
+wme_ac_vi_cwmin=3
+wme_ac_vi_cwmax=4
+wme_ac_vi_txop_limit=94
+wme_ac_vi_acm=0
+wme_ac_vo_aifs=2
+wme_ac_vo_cwmin=2
+wme_ac_vo_cwmax=3
+wme_ac_vo_txop_limit=47
+wme_ac_vo_acm=0
 
-Also with the bleeding edge I get the same error
+Through the nl80211 driver this is set when you call NL80211_CMD_SET_WIPHY,
+and pass NL80211_ATTR_WIPHY_TXQ_PARAMS, which I expect hostapd should be doing.
 
-*************************
-feta:/usr/src/tools/compat-wireless/compat-wireless-2009-05-26# uname -r
-2.6.30-rc6-1
-feta:/usr/src/tools/compat-wireless/compat-wireless-2009-05-26# make
-make -C /lib/modules/2.6.30-rc6-1/build 
-M=/usr/src/tools/compat-wireless/compat-wireless-2009-05-26 modules
-make[1]: Entering directory `/usr/src/linux-2.6.30-rc6'
-  CC [M]  
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.o
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c: 
-In function 'ieee80211_led_init':
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:58: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:62: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:63: 
-error: implicit declaration of function 'led_trigger_register'
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:69: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:73: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:80: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:84: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:91: 
-error: invalid application of 'sizeof' to incomplete type 'struct 
-led_trigger'
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:95: 
-error: dereferencing pointer to incomplete type
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c: 
-In function 'ieee80211_led_exit':
-/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.c:106: 
-error: implicit declaration of function 'led_trigger_unregister'
-make[3]: *** 
-[/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211/led.o] 
-Fehler 1
-make[2]: *** 
-[/usr/src/tools/compat-wireless/compat-wireless-2009-05-26/net/mac80211] 
-Fehler 2
-make[1]: *** 
-[_module_/usr/src/tools/compat-wireless/compat-wireless-2009-05-26] Fehler 2
-make[1]: Leaving directory `/usr/src/linux-2.6.30-rc6'
-make: *** [modules] Fehler 2
-*************************
+If you're using wirelesss-extensions driver for hostapd I believe you get
+stuck with the defaults. Anyway in ath9k this is handled by ath9k_conf_tx()
+and we do respect the passed up values.
 
+Can you try with adding:
 
-> Since you have a 32-bit intel CPU, if you don't mind downgrade the
-> kernel back to about 2.6.26 or 2.6.24,
+driver=nl80211
 
-This would be one of my last favorites.
+To your hostapd.conf and also tweek the queue parameters as you see fit?
 
-
-> you might consider switching to the realtek vendor driver. It is a bit ugly but it works well enough
-> with older kernels on 32-bit intel platforms. The code is on realtek's
-> web site.
-> http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=1&PFid=1&Level=6&Conn=5&DownTypeID=3&GetDown=false&Downloads=true
->   
-Hmm, later ... may be.
-
-> You also have the choice of using ndiswrapper, on 32-bit intel platforms.
->   
-
-No this is no optinion, because the windows-driver is not as stable as I 
-want.
-
-
-
+  Luis
