@@ -1,82 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54948 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbZEJLAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2009 07:00:24 -0400
-Subject: [PATCH] wext: fix get_wireless_stats locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 10 May 2009 13:00:17 +0200
-Message-Id: <1241953217.12068.0.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:36612 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751248AbZEZQaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 12:30:06 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 09:30:08 -0700
+Date: Tue, 26 May 2009 09:30:13 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@Atheros.com>
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+Message-ID: <20090526163013.GA7072@tesla>
+References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com> <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com> <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com> <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com> <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com> <20090407160812.GA5758@tesla> <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, get_wireless_stats is racy by _design_. This is
-because it returns a buffer, which needs to be statically
-allocated since it cannot be freed if it was allocated
-dynamically. Also, SIOCGIWSTATS and /proc/net/wireless use
-no common lock, and /proc/net/wireless accesses are not
-synchronised against each other. This is a design flaw in
-get_wireless_stats since the beginning.
+On Mon, May 25, 2009 at 12:08:05AM -0700, Hin-Tak Leung wrote:
+> This is just a head-up that I have a series of diffs to port the
+> vendor driver forward to current kernels, if anybody wants to have a
+> look, for side-by-side scavenging to the rw driver. (I probably will
+> post them to the sourceforge zd1211-dev list after a little look at
+> that oops)
 
-This patch fixes it by wrapping /proc/net/wireless accesses
-with the RTNL so they are protected against each other and
-SIOCGIWSTATS. The more correct method of fixing this would
-be to pass in the buffer instead of returning it and have
-the caller take care of synchronisation of the buffer, but
-even then most drivers probably assume that their callback
-is protected by the RTNL like all other wext callbacks.
+That's great to hear, feel free to post them to linux-wireless as
+RFC/RFTs.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Kudos to Jean for the great wireless extensions design. NOT!
+> BTW, anybody has any idea what else is needed for the rw driver to
+> support AP mode?
 
- net/wireless/wext.c |   24 +++++++++++++++++++-----
- 1 file changed, 19 insertions(+), 5 deletions(-)
+Not me.
 
---- wireless-testing.orig/net/wireless/wext.c	2009-05-10 11:44:34.000000000 +0200
-+++ wireless-testing/net/wireless/wext.c	2009-05-10 12:26:58.000000000 +0200
-@@ -656,18 +656,32 @@ static const struct seq_operations wirel
- 	.show  = wireless_seq_show,
- };
- 
--static int wireless_seq_open(struct inode *inode, struct file *file)
-+static int seq_open_wireless(struct inode *ino, struct file *f)
- {
--	return seq_open_net(inode, file, &wireless_seq_ops,
--			    sizeof(struct seq_net_private));
-+	int err;
-+
-+	rtnl_lock();
-+	err = seq_open_net(ino, f, &wireless_seq_ops,
-+			   sizeof(struct seq_net_private));
-+	if (err)
-+		rtnl_unlock();
-+
-+	return 0;
-+}
-+
-+static int seq_release_wireless(struct inode *ino, struct file *f)
-+{
-+	seq_release_net(ino, f);
-+	rtnl_unlock();
-+	return 0;
- }
- 
- static const struct file_operations wireless_seq_fops = {
- 	.owner	 = THIS_MODULE,
--	.open    = wireless_seq_open,
-+	.open    = seq_open_wireless,
- 	.read    = seq_read,
- 	.llseek  = seq_lseek,
--	.release = seq_release_net,
-+	.release = seq_release_wireless,
- };
- 
- int wext_proc_init(struct net *net)
-
-
+  Luis
