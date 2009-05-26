@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4321 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbZESEC5 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52036
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753736AbZEZGED (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 00:02:57 -0400
-Date: Tue, 19 May 2009 00:02:39 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@iki.fi
-Subject: Re: [WIP PATCH] sdio support for wl12xx
-Message-ID: <20090519040239.GA12911@hash.localnet>
-References: <20090518180957.GD2580@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090518180957.GD2580@hash.localnet>
+	Tue, 26 May 2009 02:04:03 -0400
+Date: Mon, 25 May 2009 23:04:02 -0700 (PDT)
+Message-Id: <20090525.230402.250194609.davem@davemloft.net>
+To: holtmann@linux.intel.com
+Cc: yi.zhu@intel.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, samuel.ortiz@intel.com,
+	kay.sievers@vrfy.org
+Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1243312991.21383.3.camel@localhost.localdomain>
+References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
+	<1243307448-17441-2-git-send-email-yi.zhu@intel.com>
+	<1243312991.21383.3.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 18, 2009 at 02:09:57PM -0400, Bob Copeland wrote:
-> yet for applying.  However, it does load (with the proper setup code)
-> on my Android dev phone, chip probe works, and probably the rest too,
-> though I didn't get that far.  
+From: Marcel Holtmann <holtmann@linux.intel.com>
+Date: Tue, 26 May 2009 06:43:11 +0200
 
-So much for hubris!
+> Hi guys,
+> 
+>> Firmware names can not be longer than 30 characters, and
+>> iwmc3200wifi-lmac-calib-sdio.bin is too long.
+>> Renaming it to iwmc3200wifi-calib-sdio.bin.
+> 
+> hold on with this one. This limit should _NOT_ exist. Is this an issue
+> in the driver model?
 
-> +void wl12xx_sdio_read(struct wl12xx *wl, int addr, void *buf, size_t len)
-> +{
-> +	int ret, i;
-
-sdio_claim_host(wl->func);
-  
-> +	for (i=0; i < 5; i++) {
-> +		if (i < 2)
-> +			ret = read_direct(wl->func, buf, addr, len);
-> +		else
-> +			ret = sdio_memcpy_fromio(wl->func, buf, addr, len);
-> +
-> +		if (!ret)
-> +			break;
-> +	}
-
-sdio_release_host(wl->func);
-
-> +}
-
-And so on with write() (and dropping around wl12xx_init_ieee80211 to avoid
-the recursive lock).  That kills some warnings.
-
-iwconfig shows:
-
-wlan0     IEEE 802.11bg  ESSID:""  
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated   
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-So at least mac80211 is up and running.
-
-I'm missing the NVS tables so 'ifconfig wlan0 up' bails on fw load.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+linux/firmware.h:FIRMWARE_NAME_MAX == 30
+drivers/base/firmware_class.c:struct firmware_priv{ char fw_id[FIRMWARE_NAME_MAX]; ... };
