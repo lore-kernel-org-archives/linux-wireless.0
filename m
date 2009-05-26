@@ -1,216 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55420 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752484AbZENSas (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53194 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757590AbZEZTTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 14:30:48 -0400
-Message-Id: <20090514183044.626021480@atheros.com>
-References: <20090514182845.684003914@atheros.com>
-Date: Thu, 14 May 2009 21:28:48 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 3/4] ath9k: Fix PS mode operation to receive buffered broadcast/multicast frames
+	Tue, 26 May 2009 15:19:38 -0400
+Subject: Re: [PATCH -next] iwmc3200wifi: fix printk format
+From: Samuel Ortiz <samuel@sortiz.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <4A1C4060.5070202@oracle.com>
+References: <4A1C4060.5070202@oracle.com>
+Content-Type: text/plain
+Date: Tue, 26 May 2009 21:21:47 +0200
+Message-Id: <1243365707.2737.0.camel@sortiz-mobl>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous implementation was moving back to NETWORK SLEEP state
-immediately after receiving a Beacon frame. This means that we are
-unlikely to receive all the buffered broadcast/multicast frames that
-would be sent after DTIM Beacon frames. Fix this by parsing the Beacon
-frame and remaining awake, if needed, to receive the buffered
-broadcast/multicast frames. The last buffered frame will trigger the
-move back into NETWORK SLEEP state.
+On Tue, 2009-05-26 at 12:17 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix printk format for size_t variable:
+> 
+> drivers/net/wireless/iwmc3200wifi/fw.c:75: warning: format '%d' expects type 'int', but argument 4 has type 'size_t'
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-If the last broadcast/multicast frame is not received properly (or if
-the AP fails to send it), the next Beacon frame will work as a backup
-trigger for returning into NETWORK SLEEP.
+Thanks Randy.
 
-A new debug type, PS (debug=0x800 module parameter), is added to make
-it easier to debug potential power save issues in the
-future. Currently, this is only used for the Beacon frame and buffered
-broadcast/multicast receiving.
+Cheers,
+Samuel.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> Cc: ilw@linux.intel.com
+> ---
+>  drivers/net/wireless/iwmc3200wifi/fw.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- linux-next-20090526.orig/drivers/net/wireless/iwmc3200wifi/fw.c
+> +++ linux-next-20090526/drivers/net/wireless/iwmc3200wifi/fw.c
+> @@ -72,7 +72,7 @@ static int iwm_fw_op_offset(struct iwm_p
+>  	}
+>  
+>  	if (fw->size < IWM_HDR_LEN) {
+> -		IWM_ERR(iwm, "FW is too small (%d)\n", fw->size);
+> +		IWM_ERR(iwm, "FW is too small (%zu)\n", fw->size);
+>  		return -EINVAL;
+>  	}
+>  
+> 
 
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 
- drivers/net/wireless/ath/ath9k/debug.h |    1 
- drivers/net/wireless/ath/ath9k/recv.c  |  119 +++++++++++++++++++++++++++++++--
- 3 files changed, 114 insertions(+), 7 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/ath9k.h	2009-05-14 21:04:12.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/ath9k.h	2009-05-14 21:12:24.000000000 +0300
-@@ -519,6 +519,7 @@ struct ath_rfkill {
- #define SC_OP_LED_ON            BIT(13)
- #define SC_OP_SCANNING          BIT(14)
- #define SC_OP_TSF_RESET         BIT(15)
-+#define SC_OP_WAIT_FOR_CAB      BIT(16)
- 
- struct ath_bus_ops {
- 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:12:22.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2009-05-14 21:12:24.000000000 +0300
-@@ -473,6 +473,112 @@ void ath_flushrecv(struct ath_softc *sc)
- 	spin_unlock_bh(&sc->rx.rxflushlock);
- }
- 
-+static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
-+{
-+	/* Check whether the Beacon frame has DTIM indicating buffered bc/mc */
-+	struct ieee80211_mgmt *mgmt;
-+	u8 *pos, *end, id, elen;
-+	struct ieee80211_tim_ie *tim;
-+
-+	mgmt = (struct ieee80211_mgmt *)skb->data;
-+	pos = mgmt->u.beacon.variable;
-+	end = skb->data + skb->len;
-+
-+	while (pos + 2 < end) {
-+		id = *pos++;
-+		elen = *pos++;
-+		if (pos + elen > end)
-+			break;
-+
-+		if (id == WLAN_EID_TIM) {
-+			if (elen < sizeof(*tim))
-+				break;
-+			tim = (struct ieee80211_tim_ie *) pos;
-+			if (tim->dtim_count != 0)
-+				break;
-+			return tim->bitmap_ctrl & 0x01;
-+		}
-+
-+		pos += elen;
-+	}
-+
-+	return false;
-+}
-+
-+static void ath_rx_ps_back_to_sleep(struct ath_softc *sc)
-+{
-+	sc->sc_flags &= ~(SC_OP_WAIT_FOR_BEACON | SC_OP_WAIT_FOR_CAB);
-+	if (sc->hw->conf.flags & IEEE80211_CONF_PS)
-+		ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
-+}
-+
-+static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
-+{
-+	struct ieee80211_mgmt *mgmt;
-+
-+	if (skb->len < 24 + 8 + 2 + 2)
-+		return;
-+
-+	mgmt = (struct ieee80211_mgmt *)skb->data;
-+	if (memcmp(sc->curbssid, mgmt->bssid, ETH_ALEN) != 0)
-+		return; /* not from our current AP */
-+
-+	if (!(sc->hw->conf.flags & IEEE80211_CONF_PS)) {
-+		/* We are not in PS mode anymore; remain awake */
-+		DPRINTF(sc, ATH_DBG_PS, "Not in PS mode anymore, remain "
-+			"awake\n");
-+		sc->sc_flags &= ~(SC_OP_WAIT_FOR_BEACON | SC_OP_WAIT_FOR_CAB);
-+		return;
-+	}
-+
-+	if (ath_beacon_dtim_pending_cab(skb)) {
-+		/*
-+		 * Remain awake waiting for buffered broadcast/multicast
-+		 * frames.
-+		 */
-+		DPRINTF(sc, ATH_DBG_PS, "Received DTIM beacon indicating "
-+			"buffered broadcast/multicast frame(s)\n");
-+		sc->sc_flags |= SC_OP_WAIT_FOR_CAB;
-+		return;
-+	}
-+
-+	if (sc->sc_flags & SC_OP_WAIT_FOR_CAB) {
-+		/*
-+		 * This can happen if a broadcast frame is dropped or the AP
-+		 * fails to send a frame indicating that all CAB frames have
-+		 * been delivered.
-+		 */
-+		DPRINTF(sc, ATH_DBG_PS, "PS wait for CAB frames timed out\n");
-+	}
-+
-+	/* No more broadcast/multicast frames to be received at this point. */
-+	ath_rx_ps_back_to_sleep(sc);
-+}
-+
-+static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+
-+	/* Process Beacon and CAB receive in PS state */
-+	if (ieee80211_is_beacon(hdr->frame_control))
-+		ath_rx_ps_beacon(sc, skb);
-+	else if ((sc->sc_flags & SC_OP_WAIT_FOR_CAB) &&
-+		 (ieee80211_is_data(hdr->frame_control) ||
-+		  ieee80211_is_action(hdr->frame_control)) &&
-+		 is_multicast_ether_addr(hdr->addr1) &&
-+		 !ieee80211_has_moredata(hdr->frame_control)) {
-+		DPRINTF(sc, ATH_DBG_PS, "All PS CAB frames received, back to "
-+			"sleep\n");
-+		/*
-+		 * No more broadcast/multicast frames to be received at this
-+		 * point.
-+		 */
-+		ath_rx_ps_back_to_sleep(sc);
-+	}
-+}
-+
- static void ath_rx_send_to_mac80211(struct ath_softc *sc, struct sk_buff *skb,
- 				    struct ieee80211_rx_status *rx_status)
- {
-@@ -667,8 +773,6 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 			rx_status.flag &= ~RX_FLAG_DECRYPTED;
- 		}
- 
--		ath_rx_send_to_mac80211(sc, skb, &rx_status);
--
- 		/* We will now give hardware our shiny new allocated skb */
- 		bf->bf_mpdu = requeue_skb;
- 		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
-@@ -680,6 +784,7 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 			bf->bf_mpdu = NULL;
- 			DPRINTF(sc, ATH_DBG_FATAL,
- 				"dma_mapping_error() on RX\n");
-+			ath_rx_send_to_mac80211(sc, skb, &rx_status);
- 			break;
- 		}
- 		bf->bf_dmacontext = bf->bf_buf_addr;
-@@ -695,11 +800,11 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 			sc->rx.rxotherant = 0;
- 		}
- 
--		if (ieee80211_is_beacon(fc) &&
--				(sc->sc_flags & SC_OP_WAIT_FOR_BEACON)) {
--			sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
--			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
--		}
-+		if (unlikely(sc->sc_flags & SC_OP_WAIT_FOR_BEACON))
-+			ath_rx_ps(sc, skb);
-+
-+		ath_rx_send_to_mac80211(sc, skb, &rx_status);
-+
- requeue:
- 		list_move_tail(&bf->list, &sc->rx.rxbuf);
- 		ath_rx_buf_link(sc, bf);
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/debug.h	2009-05-14 21:04:11.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/debug.h	2009-05-14 21:12:24.000000000 +0300
-@@ -29,6 +29,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_BEACON		= 0x00000100,
- 	ATH_DBG_CONFIG		= 0x00000200,
- 	ATH_DBG_FATAL		= 0x00000400,
-+	ATH_DBG_PS		= 0x00000800,
- 	ATH_DBG_ANY		= 0xffffffff
- };
- 
-
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
