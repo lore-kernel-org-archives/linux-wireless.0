@@ -1,57 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:15990 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831AbZEVNq0 (ORCPT
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:33333 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753626AbZEZMnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 09:46:26 -0400
-Received: by an-out-0708.google.com with SMTP id d40so3600357and.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2009 06:46:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <KK1J00$BAC7E4518757B17D1805E790669D6D1D@libero.it>
-References: <KK1J00$BAC7E4518757B17D1805E790669D6D1D@libero.it>
-Date: Fri, 22 May 2009 16:46:27 +0300
-Message-ID: <40f31dec0905220646r4dd2fb0ag1e683ae95aab810b@mail.gmail.com>
-Subject: Re: mac80211: TDMA approach feasible?
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ffileppo <ffileppo@libero.it>
-Cc: "kalle.valo" <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 26 May 2009 08:43:16 -0400
+Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
+From: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
+	<alejandro.riveira@gmail.com>
+Reply-To: alejandro.riveira@gmail.com
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+In-Reply-To: <200905261235.36658.IvDoorn@gmail.com>
+References: <1243247687.5322.8.camel@varda>
+	 <200905261058.01039.IvDoorn@gmail.com> <1243333072.4888.2.camel@varda>
+	 <200905261235.36658.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/EJ12HYXwbdaS93zvj3V"
+Date: Tue, 26 May 2009 14:43:11 +0200
+Message-Id: <1243341791.7607.4.camel@varda>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/22 ffileppo <ffileppo@libero.it>:
->
->> > I was wondering if with mac80211 is now possible (and what effort is
->> > needed) to implement a TDMA approach. In particular I would like to:
->> > override 802.11 MPDU frame format, eliminate RTS/CTS exchange,
->> > eliminate automatic ACK and retransmission, eliminate virtual carrier
->> > sense (NAV), control PHY clear channel assessment and control
->> > transmission backoff.
->>
->> Most of this is usually implemented in firmware, so you need access to
->> firmware sources.
->>
->
-> Hi,
-> thanks for your answer.
->
-> If these features are implemented in firmware, it should be possible to modify them if using for example Ath5k (which is a completely FOSS Linux driver) Right? Could you give me any directions?
->
-> Talking about the TDMA implementation I was wondering if it is possible to achieve a time granularity of 1?s using commercial-of-the-shelf wifi cards (e.g. atheros ones).
->
-> I would appreciate any ideas or thoughts on this matter.
->
-> Thank you,
->
-> Francesco
->
 
-Check out freebsd they have TDMA support for the ath driver as far as
-i know. It would be cool if we could port it on linux ;-)
+--=-/EJ12HYXwbdaS93zvj3V
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+El mar, 26-05-2009 a las 12:35 +0200, Ivo van Doorn escribi=C3=B3:
+
+> > What causes the regression then?
+>=20
+> No idea. Apparently the invalid bitmask is accepted by the device under
+> certain conditions. Which would be very odd.... But since dozens
+> of people reported this problem for 2.6.27 as well, it probably depends
+> heavily on the actual chipset revision or configuration.
+>=20
+> > Anyway For the script to work what config options do I need? debugfs?
+> > Anything else ?
+>=20
+> CONFIG_DEBUGFS
+> CONFIG_MAC80211_DEBUGFS
+> CONFIG_RT2X00_LIB_DEBUGFS
+>=20
+> And thats it, make sure debugfs is mounted and just run the script.
+> The script will detect mount location and rt2x00 interface.
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+That's what I get[1] with the good kernel but I think the script failed
+because I got a very short output
+
+$ sudo bash rt2x00_regdump.sh | xclip
+
+kernel: 2.6.29.4-00258-ga2c0a36
+driver: rt2500pci
+version: 2.2.3
+compiled: May 26 2009 13:05:03
+dev_flags: 0x00000a2f
+rt chip: 0201
+rf chip: 0003
+revision:00000004
+
+csr length: 93
+eeprom length: 256
+bbp length: 64
+rf length: 5
+
+
+And nothing more...
+
+>=20
+> Ivo
+
+Alejandro
+
+[1] Had to install gawk mawk does not have --posix.=20
+
+--=-/EJ12HYXwbdaS93zvj3V
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Esto es una parte de mensaje firmado digitalmente
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQIcBAABAgAGBQJKG+PaAAoJEDO4iEReSTB2rF4P/2kYIa6k+zRB7VHNFA894EF7
+ml0NC8kQZS6ze2Umjy/FCH9S7d68izmTHMzU5K7A65tPXBhp33uZ0Su7yi+lHOho
+ftU5DTX+1+TiibbTwCcIICgyb0NzRfD4DG/ZIZbK0dd1wf3/xqGYL/VVoY98lGui
+eJl1+q09UWCNAnIYwoLY9D3kudKD0ttW5JVVEippbgQN40iocDPosssMRpu9ODMt
++Q/vN9K3TXmnP82uu4S83A0jSJnlby+QrAnG2YNPxWrC8Pz9ieKJbD1Ah/00BG3l
+FrVbbHtErUfnpWYxIdnB4T0AtkJIpuKZfIgX9I3yYjfO2qqnnwdJTpBKzGsESlFw
+uD2LMVy0pKqrz/Lx437QKO/Y1tsS4sys+9e3Khay0FEafYz31Zj6LMgulCM7xonU
+77TC9TuLaMp37yedBsN6A6mNSe239MGo/k8dgHvNpZxdc7/DiYXGSuEHybnZHYa1
+xJcaA0UMBhGlth6GfemKQ1a2Vf+3xLWjr0Lu3CpyedRzgLItEAwEp7M3Jgel7RN7
+Jr86wvxQXFJYls1WNHEWWRv/5MfRzBRn6XvPZUsn1Fet4DVduHdvN5G6BwdaCnLE
+xvuyyJHeoTGAp1oIofQcKkabAZD3dcDqBWT7+0Pp+3NCpzd/ersfPC9vm/RPliET
+DwtRYas9msE+SKlUjMp8
+=2saU
+-----END PGP SIGNATURE-----
+
+--=-/EJ12HYXwbdaS93zvj3V--
+
