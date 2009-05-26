@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f115.google.com ([209.85.222.115]:49788 "EHLO
-	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759848AbZEMSvp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 14:51:45 -0400
-Received: by pzk13 with SMTP id 13so343764pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 11:51:46 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:18521 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750965AbZEZFXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 01:23:55 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 25 May 2009 22:23:57 -0700
+Date: Tue, 26 May 2009 10:52:46 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Galen P Zink <galen@zinkconsulting.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Ath9k Quality / STBC
+Message-ID: <20090526052246.GG4584@vasanth-laptop>
+References: <CD5942A5-7449-42DC-92B3-1FB8F967005B@zinkconsulting.com>
 MIME-Version: 1.0
-In-Reply-To: <20090513182524.GF2680@tuxdriver.com>
-References: <20090513151439.GA28476@hash.localnet>
-	 <20090513182524.GF2680@tuxdriver.com>
-Date: Wed, 13 May 2009 14:51:46 -0400
-Message-ID: <b6c5339f0905131151u5dd10673pbe3cbf0fe0fed1a9@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: fix exp off-by-one when computing
-	OFDM delta slope
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, forrest@hifulltech.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CD5942A5-7449-42DC-92B3-1FB8F967005B@zinkconsulting.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 2:25 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> That's fine. =A0But what about this last bit?
->
-> =A0 =A0 =A0 =A0http://bugzilla.kernel.org/show_bug.cgi?id=3D13077#c6
->
-> Is that not needed?
+On Tue, May 26, 2009 at 04:48:25AM +0530, Galen P Zink wrote:
+> What's the current status of ath9k in terms of quality?
 
-I think it is needed, but I checked back through 2.6.27 and it has the
-same (probably buggy) code, so I think that's less urgent.  Also it
-conflicts with the race condition fixes I sent earlier so it is better
-in a separate patch.
+good.
 
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> access point? 
+
+Works fine, hostpad needs to be used for AP mode.
+
+>Are all the Atheros 9xxx series chipsets supported?
+
+All 9xxx family chipsets available in market are supported.
+
+> 
+> The only feature I see that's missing is STBC. It seems like STBC is a
+> pretty useful feature with 802.11n MIMO and the three(!) rx capability
+> of many of the Atheros cards. Is there a reason STBC is not
+> implemented?
+
+Yeah, it does not have STBC support. There is no reason for not
+having this feature, we have a plan for this one.
+
+> Has anybody done any comparisons?
+
+No.
+
+Vasanth
+
