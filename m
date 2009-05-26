@@ -1,163 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56918
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757277AbZE2IkK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 04:40:10 -0400
-Date: Fri, 29 May 2009 01:40:09 -0700 (PDT)
-Message-Id: <20090529.014009.107644427.davem@davemloft.net>
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/10]: p54: Use SKB list handling helpers instead of
- by-hand code.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:44023 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755920AbZEZSWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 14:22:49 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 11:22:52 -0700
+Subject: Re: [ath9k-devel] WMM settings and AP performance
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jeff Hansen <x@jeffhansen.com>
+In-Reply-To: <1243361510.2923.10.camel@jm-desktop>
+References: <Pine.LNX.4.64.0905251926300.11772@ren>
+	 <20090526174640.GC9370@tesla>  <1243361510.2923.10.camel@jm-desktop>
+Content-Type: text/plain
+Date: Tue, 26 May 2009 21:22:47 +0300
+Message-ID: <1243362167.2923.17.camel@jm-desktop>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-05-26 at 11:11 -0700, Jouni Malinen wrote:
+> On Tue, 2009-05-26 at 10:46 -0700, Luis Rodriguez wrote:
+> > On Mon, May 25, 2009 at 06:52:41PM -0700, Jeff Hansen wrote:
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/wireless/p54/p54common.c |   46 ++++++++++++++--------------------
- 1 files changed, 19 insertions(+), 27 deletions(-)
+> That 25/30 Mbps to 2 Mbps is quite a huge difference and in order for
+> QoS parameters to cause something like this, they would need to be
+> seriously wrong..
 
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 48d81d9..b618bd1 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -823,30 +823,30 @@ void p54_free_skb(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	struct p54_tx_info *range;
- 	unsigned long flags;
- 
--	if (unlikely(!skb || !dev || !skb_queue_len(&priv->tx_queue)))
-+	if (unlikely(!skb || !dev || skb_queue_empty(&priv->tx_queue)))
- 		return;
- 
--	/*
--	 * don't try to free an already unlinked skb
-+	/* There used to be a check here to see if the SKB was on the
-+	 * TX queue or not.  This can never happen because all SKBs we
-+	 * see here successfully went through p54_assign_address()
-+	 * which means the SKB is on the ->tx_queue.
- 	 */
--	if (unlikely((!skb->next) || (!skb->prev)))
--		return;
- 
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
- 	info = IEEE80211_SKB_CB(skb);
- 	range = (void *)info->rate_driver_data;
--	if (skb->prev != (struct sk_buff *)&priv->tx_queue) {
-+	if (!skb_queue_is_first(&priv->tx_queue, skb)) {
- 		struct ieee80211_tx_info *ni;
- 		struct p54_tx_info *mr;
- 
--		ni = IEEE80211_SKB_CB(skb->prev);
-+		ni = IEEE80211_SKB_CB(skb_queue_prev(&priv->tx_queue, skb));
- 		mr = (struct p54_tx_info *)ni->rate_driver_data;
- 	}
--	if (skb->next != (struct sk_buff *)&priv->tx_queue) {
-+	if (!skb_queue_is_last(&priv->tx_queue, skb)) {
- 		struct ieee80211_tx_info *ni;
- 		struct p54_tx_info *mr;
- 
--		ni = IEEE80211_SKB_CB(skb->next);
-+		ni = IEEE80211_SKB_CB(skb_queue_next(&priv->tx_queue, skb));
- 		mr = (struct p54_tx_info *)ni->rate_driver_data;
- 	}
- 	__skb_unlink(skb, &priv->tx_queue);
-@@ -864,15 +864,13 @@ static struct sk_buff *p54_find_tx_entry(struct ieee80211_hw *dev,
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
--	entry = priv->tx_queue.next;
--	while (entry != (struct sk_buff *)&priv->tx_queue) {
-+	skb_queue_walk(&priv->tx_queue, entry) {
- 		struct p54_hdr *hdr = (struct p54_hdr *) entry->data;
- 
- 		if (hdr->req_id == req_id) {
- 			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 			return entry;
- 		}
--		entry = entry->next;
- 	}
- 	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 	return NULL;
-@@ -890,24 +888,22 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	int count, idx;
- 
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
--	entry = (struct sk_buff *) priv->tx_queue.next;
--	while (entry != (struct sk_buff *)&priv->tx_queue) {
-+	skb_queue_walk(&priv->tx_queue, entry) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
- 		struct p54_hdr *entry_hdr;
- 		struct p54_tx_data *entry_data;
- 		unsigned int pad = 0, frame_len;
- 
- 		range = (void *)info->rate_driver_data;
--		if (range->start_addr != addr) {
--			entry = entry->next;
-+		if (range->start_addr != addr)
- 			continue;
--		}
- 
--		if (entry->next != (struct sk_buff *)&priv->tx_queue) {
-+		if (!skb_queue_is_last(&priv->tx_queue, entry)) {
- 			struct ieee80211_tx_info *ni;
- 			struct p54_tx_info *mr;
- 
--			ni = IEEE80211_SKB_CB(entry->next);
-+			ni = IEEE80211_SKB_CB(skb_queue_next(&priv->tx_queue,
-+							     entry));
- 			mr = (struct p54_tx_info *)ni->rate_driver_data;
- 		}
- 
-@@ -1168,23 +1164,21 @@ static int p54_assign_address(struct ieee80211_hw *dev, struct sk_buff *skb,
- 		}
- 	}
- 
--	entry = priv->tx_queue.next;
--	while (left--) {
-+	skb_queue_walk(&priv->tx_queue, entry) {
- 		u32 hole_size;
- 		info = IEEE80211_SKB_CB(entry);
- 		range = (void *)info->rate_driver_data;
- 		hole_size = range->start_addr - last_addr;
- 		if (!target_skb && hole_size >= len) {
--			target_skb = entry->prev;
-+			target_skb = skb_queue_prev(&priv->tx_queue, entry);
- 			hole_size -= len;
- 			target_addr = last_addr;
- 		}
- 		largest_hole = max(largest_hole, hole_size);
- 		last_addr = range->end_addr;
--		entry = entry->next;
- 	}
- 	if (!target_skb && priv->rx_end - last_addr >= len) {
--		target_skb = priv->tx_queue.prev;
-+		target_skb = skb_peek_tail(&priv->tx_queue);
- 		largest_hole = max(largest_hole, priv->rx_end - last_addr - len);
- 		if (!skb_queue_empty(&priv->tx_queue)) {
- 			info = IEEE80211_SKB_CB(target_skb);
-@@ -2090,7 +2084,6 @@ out:
- static void p54_stop(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
--	struct sk_buff *skb;
- 
- 	mutex_lock(&priv->conf_mutex);
- 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-@@ -2105,8 +2098,7 @@ static void p54_stop(struct ieee80211_hw *dev)
- 		p54_tx_cancel(dev, priv->cached_beacon);
- 
- 	priv->stop(dev);
--	while ((skb = skb_dequeue(&priv->tx_queue)))
--		kfree_skb(skb);
-+	skb_queue_purge(&priv->tx_queue);
- 	priv->cached_beacon = NULL;
- 	priv->tsf_high32 = priv->tsf_low32 = 0;
- 	mutex_unlock(&priv->conf_mutex);
--- 
-1.6.3
+And well, it turns out that the values are indeed seriously wrong.. cw
+min and max values are swapped by
+b4af0b7ffa5f448bd12f81d2539ee2155919d493.
+
+Jeff: if you have a chance, you could try swapping the cw_max = aCWmin
+and cw_min = aCWmax value to actually set cw_max = aCWmax and cw_min =
+aCWmin.. In addition to this, I would actually recommend adding the
+explicit tx_queue_data* parameters into hostapd.conf even if you are not
+using WMM. This should work around the current bug and it will also set
+the parameters in a way which are more suitable for an AP (the defaults
+set in mac80211 are for station mode). In other words, add following
+into hostapd.conf:
+
+tx_queue_data3_aifs=7
+tx_queue_data3_cwmin=15
+tx_queue_data3_cwmax=1023
+tx_queue_data3_burst=0
+
+tx_queue_data2_aifs=3
+tx_queue_data2_cwmin=15
+tx_queue_data2_cwmax=63
+tx_queue_data2_burst=0
+
+tx_queue_data1_aifs=1
+tx_queue_data1_cwmin=7
+tx_queue_data1_cwmax=15
+tx_queue_data1_burst=3.0
+
+tx_queue_data0_aifs=1
+tx_queue_data0_cwmin=3
+tx_queue_data0_cwmax=7
+tx_queue_data0_burst=1.5
+
+- Jouni
+
 
