@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38038 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753237AbZESOCn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 10:02:43 -0400
-Message-Id: <20090519140236.866613677@atheros.com>
-References: <20090519140137.708996030@atheros.com>
-Date: Tue, 19 May 2009 17:01:43 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 6/7] mac80211: PS processing for every Beacon with our AID in TIM
+Received: from mx2.redhat.com ([66.187.237.31]:42133 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755593AbZEZNd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 09:33:28 -0400
+Subject: Re: [PATCH v11] rfkill: rewrite
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Will Keaney <keaneyw@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090526131533.GA3932@tuxdriver.com>
+References: <1242942720.4212.19.camel@johannes.local>
+	 <1243068246.4606.45.camel@johannes.local> <4A1BDE51.7020009@gmail.com>
+	 <20090526131533.GA3932@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 26 May 2009 09:32:43 -0400
+Message-Id: <1243344763.2575.3.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the AP includes our AID in the TIM IE, we need to process the
-Beacon frame as far as PS is concerned (send PS-Poll or nullfunc data
-with PM=0). The previous code skipped this in cases where the CRC
-value did not change and it would not change if the AP continues
-including our AID in the TIM..
+On Tue, 2009-05-26 at 15:15 +0200, John W. Linville wrote:
+> On Tue, May 26, 2009 at 08:19:29AM -0400, Will Keaney wrote:
+> > Johannes Berg wrote:
+> > > This patch completely rewrites the rfkill core to address
+> > > the following deficiencies:
+> > >   
+> > I applied this to a fresh pull of wireless-testing this morning, and
+> > haven't had any problems from it.  It looks like the soft lockup I
+> > reported earlier has been fixed.
+> 
+> Cool, thanks for the report.
+> 
+> I'm leaning towards merging this in time for the 2.6.31 merge
+> window...who wants to complain? :-)
 
-There is no need to count the crc32 value for directed_tim with this
-change, so we can remove that part. In order not to change the order
-of operations (i.e., update WMM parameters prior to sending PS-Poll),
-the CRC match is checked twice as only after the PS processing step,
-the rest of the function is skipped if nothing changed in the Beacon.
+Merge it!
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Dan
 
----
- net/mac80211/mlme.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-05-19 16:32:25.000000000 +0300
-+++ wireless-testing/net/mac80211/mlme.c	2009-05-19 16:32:39.000000000 +0300
-@@ -1958,16 +1958,13 @@ static void ieee80211_rx_mgmt_beacon(str
- 		directed_tim = ieee80211_check_tim(elems.tim, elems.tim_len,
- 						   ifmgd->aid);
- 
--	ncrc = crc32_be(ncrc, (void *)&directed_tim, sizeof(directed_tim));
-+	if (ncrc != ifmgd->beacon_crc) {
-+		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems,
-+				      true);
- 
--	if (ncrc == ifmgd->beacon_crc)
--		return;
--	ifmgd->beacon_crc = ncrc;
--
--	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
--
--	ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
--				 elems.wmm_param_len);
-+		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
-+					 elems.wmm_param_len);
-+	}
- 
- 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
- 		if (directed_tim) {
-@@ -1992,6 +1989,10 @@ static void ieee80211_rx_mgmt_beacon(str
- 		}
- 	}
- 
-+	if (ncrc == ifmgd->beacon_crc)
-+		return;
-+	ifmgd->beacon_crc = ncrc;
-+
- 	if (elems.erp_info && elems.erp_info_len >= 1) {
- 		erp_valid = true;
- 		erp_value = elems.erp_info[0];
-
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
