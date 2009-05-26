@@ -1,77 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59550 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599AbZEHTVM (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37805 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827AbZEZIA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 15:21:12 -0400
-Subject: [PATCH] mac80211: properly track HT operation_mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Content-Type: text/plain
-Date: Fri, 08 May 2009 21:21:06 +0200
-Message-Id: <1241810466.5233.6.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 26 May 2009 04:00:29 -0400
+Date: Tue, 26 May 2009 09:57:01 +0200
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Galen P Zink <galen@zinkconsulting.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Ralink Status
+Message-ID: <20090526075700.GB3321@tuxdriver.com>
+References: <C7F37A4E-95C1-4E89-9FE4-340F73900683@zinkconsulting.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <C7F37A4E-95C1-4E89-9FE4-340F73900683@zinkconsulting.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we disassociate, we set the channel to non-HT which
-obviously invalidates any ht_operation_mode setting. But
-when we then associate with the next AP again, we might
-still have the ht_operation_mode from the previous AP
-cached and fail to configure the hardware with the new
-(but unchanged) operation mode. This patch fixes it by
-separately tracking whether our cache is valid.
+On Mon, May 25, 2009 at 04:27:52PM -0700, Galen P Zink wrote:
+> Ralink has released open source drivers for their 2800-series cards. I  
+> presume they are GPL, given how closely they're tied to the kernel. Is  
+> there any reasons these aren't coming into the linux tree?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Requires the previous patch - "mac80211: move HT operation mode BSS info"
+You must be new... :-)
 
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/mlme.c        |    7 ++++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+Those drivers are not properly integrated with existing kernel
+infrastructure.  The rt2x00 team is working on support for that
+hardware, using those drivers as a reference where appropriate.
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-05-08 21:07:32.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-05-08 21:09:13.000000000 +0200
-@@ -427,6 +427,12 @@ struct ieee80211_sub_if_data {
- 
- 	int drop_unencrypted;
- 
-+	/*
-+	 * keep track of whether the HT opmode (stored in
-+	 * vif.bss_info.ht_operation_mode) is valid.
-+	 */
-+	bool ht_opmode_valid;
-+
- 	/* Fragment table for host-based reassembly */
- 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
- 	unsigned int fragment_next;
---- wireless-testing.orig/net/mac80211/mlme.c	2009-05-08 21:04:20.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-05-08 21:07:53.000000000 +0200
-@@ -155,9 +155,11 @@ static u32 ieee80211_enable_ht(struct ie
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
- 
- 	/* if bss configuration changed store the new one */
--	if (sdata->vif.bss_conf.ht_operation_mode != ht_opmode) {
-+	if (!sdata->ht_opmode_valid ||
-+	    sdata->vif.bss_conf.ht_operation_mode != ht_opmode) {
- 		changed |= BSS_CHANGED_HT;
- 		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
-+		sdata->ht_opmode_valid = true;
- 	}
- 
- 	return changed;
-@@ -1047,6 +1049,9 @@ static void ieee80211_set_disassoc(struc
- 	/* channel(_type) changes are handled by ieee80211_hw_config */
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
- 
-+	/* on the next assoc, re-program HT parameters */
-+	sdata->ht_opmode_valid = false;
-+
- 	local->power_constr_level = 0;
- 
- 	del_timer_sync(&local->dynamic_ps_timer);
+Hth!
 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
