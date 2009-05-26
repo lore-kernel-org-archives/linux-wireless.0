@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48902 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756194AbZEEIDL (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:41676 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbZEZMpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 04:03:11 -0400
-Subject: Re: oops during stress test - today's wl
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890905042005vb96f57aid70c476e38685dfe@mail.gmail.com>
-References: <43e72e890905042005vb96f57aid70c476e38685dfe@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-z1zb59w/4W1UKymD55mm"
-Date: Tue, 05 May 2009 09:41:46 +0200
-Message-Id: <1241509306.25337.4.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 26 May 2009 08:45:49 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: alejandro.riveira@gmail.com
+Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
+Date: Tue, 26 May 2009 14:45:46 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+References: <1243247687.5322.8.camel@varda> <200905261235.36658.IvDoorn@gmail.com> <1243341791.7607.4.camel@varda>
+In-Reply-To: <1243341791.7607.4.camel@varda>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200905261445.46990.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-z1zb59w/4W1UKymD55mm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > What causes the regression then?
+> > 
+> > No idea. Apparently the invalid bitmask is accepted by the device under
+> > certain conditions. Which would be very odd.... But since dozens
+> > of people reported this problem for 2.6.27 as well, it probably depends
+> > heavily on the actual chipset revision or configuration.
+> > 
+> > > Anyway For the script to work what config options do I need? debugfs?
+> > > Anything else ?
+> > 
+> > CONFIG_DEBUGFS
+> > CONFIG_MAC80211_DEBUGFS
+> > CONFIG_RT2X00_LIB_DEBUGFS
+> > 
+> > And thats it, make sure debugfs is mounted and just run the script.
+> > The script will detect mount location and rt2x00 interface.
+> 
+> 
+> That's what I get[1] with the good kernel but I think the script failed
+> because I got a very short output
 
-On Mon, 2009-05-04 at 20:05 -0700, Luis R. Rodriguez wrote:
-> mcgrof@pogo ~/wireless-testing (git::master)$ git-describe
-> v2.6.30-rc4-22720-gb2382a4
->=20
-> While running iperf, after about 1 hour.
->=20
-> http://bombadil.infradead.org/~mcgrof/oops-img/09-05/oops-01-v2.6.30-rc4-=
-22720-gb2382a4.jpg
->=20
-> Image probably doesn't help much.. but its what I got.. I'd look more
-> but its getting late here, so I'm out. I'll use netconsole tomorrow.
+Ok, that means it is the wrong script, try the other one from the download
+location you previously refered to. I changed the API some time ago, and
+am not sure which stable release that change will be in.
 
-Yeah, doesn't really help... I would suspect the driver to be honest,
-since the scan code is trying to TX a frame and it's already in
-ieee80211_tx() (and probably in __ieee80211_tx which gets inlined).
+> [1] Had to install gawk mawk does not have --posix. 
 
-johannes
+Right, that was still something I needed to work on. :)
 
---=-z1zb59w/4W1UKymD55mm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ/+23AAoJEKVg1VMiehFYElEQAJjnjDd2EYZCvyzaJLbLUpxb
-ZzdT4ngLVGZfJ+4iM4wfH5OExbfPEx/ve5mWDAN4k8sA/Vi/jHvZBffyznUtE1Oc
-21m4wXOnPp8+gRlZHFj+xeU3k938kl4nGdwz1c1dvB26EYEXljxQolONXNKXY5Ho
-Nlm6nMV4eN/eZ0COfPMiAt2LALZ6s8uDLsA9H51dMepvD+eU66nAa6wrc7wa4OyG
-LiBx66TOFUUewR0dyxqL9tozCihSxe74dZWgpMWDffutwD49ApJVLx3gMXIypn9S
-hK4tBUF/Jb8fJ92hMsnlManDqBdeRpZRLimlhFq8Jzo18a6UDmd6E+xaeZMODGsi
-OpQjp/SxknSZy93QpgTcf/yiAkirZOFDWvoD6brMihK4nnxdjS6/WsX0zMV5LAec
-grsQNznu4TszUuT6tKwleQMBMeeMloZCH3cOUy0IKdkwU27Kz7yyuPBgni7y9glh
-UYBDSk1EWcUczBqa6WFUDxDlyLe/xfVBWMvzFETfclIaToq1CyEHj3VrypV2uhEP
-yNVFuSApP4r6uOX9WlzkwbqzhhPNOOsOVJMllHw69iuW7jk+wTaSiIeLViVHirg/
-w6H/nYToD4a8HLdgT7BEQqEC3MckaQAOkawK6xfNbVGtP3W6QxP210kat1nF335G
-F58q64tr++MY7winzyTO
-=T+0k
------END PGP SIGNATURE-----
-
---=-z1zb59w/4W1UKymD55mm--
-
+Ivo
