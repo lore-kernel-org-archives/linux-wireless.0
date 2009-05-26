@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:41676 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbZEZMpt (ORCPT
+Received: from mail-px0-f103.google.com ([209.85.216.103]:40582 "EHLO
+	mail-px0-f103.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbZEZUQf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 08:45:49 -0400
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: alejandro.riveira@gmail.com
-Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
-Date: Tue, 26 May 2009 14:45:46 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-References: <1243247687.5322.8.camel@varda> <200905261235.36658.IvDoorn@gmail.com> <1243341791.7607.4.camel@varda>
-In-Reply-To: <1243341791.7607.4.camel@varda>
+	Tue, 26 May 2009 16:16:35 -0400
+Received: by pxi1 with SMTP id 1so3269821pxi.33
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 13:16:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200905261445.46990.IvDoorn@gmail.com>
+In-Reply-To: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera>
+References: <ZPPBiNHr1LC.A.9ZH.K9bGKB@chimera>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 26 May 2009 13:16:17 -0700
+Message-ID: <43e72e890905261316r25f81977h2e3cc857ac73a000@mail.gmail.com>
+Subject: Re: 2.6.30-rc7: Reported regressions from 2.6.29
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Tomas Janousek <tomi@nomi.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, May 24, 2009 at 12:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 
-> > > What causes the regression then?
-> > 
-> > No idea. Apparently the invalid bitmask is accepted by the device under
-> > certain conditions. Which would be very odd.... But since dozens
-> > of people reported this problem for 2.6.27 as well, it probably depends
-> > heavily on the actual chipset revision or configuration.
-> > 
-> > > Anyway For the script to work what config options do I need? debugfs?
-> > > Anything else ?
-> > 
-> > CONFIG_DEBUGFS
-> > CONFIG_MAC80211_DEBUGFS
-> > CONFIG_RT2X00_LIB_DEBUGFS
-> > 
-> > And thats it, make sure debugfs is mounted and just run the script.
-> > The script will detect mount location and rt2x00 interface.
-> 
-> 
-> That's what I get[1] with the good kernel but I think the script failed
-> because I got a very short output
+Should help with reading, we have only 2 left for wireless:
 
-Ok, that means it is the wrong script, try the other one from the download
-location you previously refered to. I changed the API some time ago, and
-am not sure which stable release that change will be in.
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13337
+> Subject         : [post 2.6.29 regression] hang during suspend of b44/b43 modules
+> Submitter       : Tomas Janousek <tomi@nomi.cz>
+> Date            : 2009-05-18 10:59 (7 days old)
 
-> [1] Had to install gawk mawk does not have --posix. 
 
-Right, that was still something I needed to work on. :)
-
-Ivo
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13319
+> Subject         : Page allocation failures with b43 and p54usb
+> Submitter       : Larry Finger <Larry.Finger@lwfinger.net>
+> Date            : 2009-04-29 21:01 (26 days old)
+> References      : http://marc.info/?l=linux-kernel&m=124103897101088&w=4
+> Handled-By      : Johannes Berg <johannes@sipsolutions.net>
