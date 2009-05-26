@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37319 "EHLO mx2.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:24570 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752644AbZEaVTj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 17:19:39 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	alan-jenkins@tuffmail.co.uk,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243796628.6570.37.camel@localhost.localdomain>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
-	 <1243778069.5299.0.camel@johannes.local>
-	 <1243796628.6570.37.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Sun, 31 May 2009 17:19:04 -0400
-Message-Id: <1243804744.4714.23.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1753472AbZEZOBV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 10:01:21 -0400
+Date: Tue, 26 May 2009 16:03:32 +0200
+From: Samuel Ortiz <samuel.ortiz@intel.com>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
+Message-ID: <20090526140327.GB14626@sortiz.org>
+References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com> <1243307448-17441-2-git-send-email-yi.zhu@intel.com> <1243312991.21383.3.camel@localhost.localdomain> <1243317777.3623.19.camel@debian> <1243319583.30938.2.camel@localhost.localdomain> <1243320454.3623.35.camel@debian> <1243327894.30938.9.camel@localhost.localdomain> <20090526110403.GA14626@sortiz.org> <ac3eb2510905260406v43f3fd71i6eceeec2ea6ecbf4@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <ac3eb2510905260406v43f3fd71i6eceeec2ea6ecbf4@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-05-31 at 21:03 +0200, Marcel Holtmann wrote:
-> Hi Johannes,
+On Tue, May 26, 2009 at 04:06:40AM -0700, Kay Sievers wrote:
+> On Tue, May 26, 2009 at 13:04, Samuel Ortiz <samuel.ortiz@intel.com> wrote:
+> > -       strlcpy(fw_priv->fw_id, fw_name, FIRMWARE_NAME_MAX);
+> > +       fw_priv->fw_id = kzalloc(strlen(fw_name) + 1, GFP_KERNEL);
 > 
-> > > How should userspace test CONFIG_RFKILL_INPUT to determine whether
-> > > it's safe to start the daemon?  With the old core, debian-eeepc
-> > > scripts check if the module rfkill-input exists (which should work
-> > > even if it's built in).  If it exists, the scripts don't perform any
-> > > rfkill actions.  (Yeah, according to the doc this is not allowed
-> > > because the scripts don't use "claim", but you can see how it's
-> > > useful).
-> > > 
-> > > The new rfkill-input isn't a module, so I'm not sure how your daemon
-> > > would test for it.
-> > 
-> > Maybe we should add an ioctl that disables rfkill-input if present.
-> 
-> I am against it. Can we just add a module parameter that allows us to
-> disable it. I am against cluttering a new interface with legacy stuff
-> since we are removing rfkill-input and replacing it by rfkilld anyway in
-> a near future (meaning when I am back from vacation).
+> kstrdup()?
+Indeed, thanks.
 
-Module parameter to what?  Module parameters are almost always the wrong
-thing to do.  Or, just don't built rfkill_input it into your kernel
+I'm offloading this thread to lkml, as I dont want to continue polluting the
+linux-wireless one with unrelated matters.
 
-Dan
+Cheers,
+Samuel.
 
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
