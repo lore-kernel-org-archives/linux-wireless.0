@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from brigitte.telenet-ops.be ([195.130.137.66]:49262 "EHLO
-	brigitte.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761371AbZEFUlF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 16:41:05 -0400
-Date: Wed, 6 May 2009 22:35:58 +0200 (CEST)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Kalle Valo <kalle.valo@nokia.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>,
-	linux-next@vger.kernel.org
-Subject: [PATCH next-20090506] wireless: WL12XX should depend on GENERIC_HARDIRQS
-Message-ID: <Pine.LNX.4.64.0905062229370.23257@anakin>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mga11.intel.com ([192.55.52.93]:42940 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752240AbZEZGou (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 02:44:50 -0400
+Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
+From: Zhu Yi <yi.zhu@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ortiz, Samuel" <samuel.ortiz@intel.com>,
+	Kay Sievers <kay.sievers@vrfy.org>
+In-Reply-To: <20090526063602.GA21894@infradead.org>
+References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
+	 <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
+	 <1243312991.21383.3.camel@localhost.localdomain>
+	 <1243317777.3623.19.camel@debian>
+	 <1243319583.30938.2.camel@localhost.localdomain>
+	 <20090526063602.GA21894@infradead.org>
+Content-Type: text/plain
+Date: Tue, 26 May 2009 14:36:58 +0800
+Message-Id: <1243319818.3623.27.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-m68k allmodconfig:
-| drivers/net/wireless/wl12xx/main.c: In function 'wl12xx_probe':
-| drivers/net/wireless/wl12xx/main.c:1273: error: implicit declaration of function 'set_irq_type'
-| make[1]: *** [drivers/net/wireless/wl12xx/main.o] Error 1
+On Tue, 2009-05-26 at 14:36 +0800, Christoph Hellwig wrote:
+> On Tue, May 26, 2009 at 08:33:03AM +0200, Marcel Holtmann wrote:
+> > I think we need to fix this. Especially since all the other name length
+> > limits in the driver model are gone.
+> 
+> Yeah, but at the same time the driver should get a shorter and actually
+> pronouncable name.  Why not just iwl3200 to follow the model set by
+> the other drivers?
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
-http://kisskb.ellerman.id.au/kisskb/buildresult/416697/
+There are totally 3 firmware images required by the iwmc3200wifi driver:
+one used for calibration, one upper mac (UMAC) and a lower mac (LMAC).
+This iwmc3200 is a multicomm device, WiFi is only one of its functions.
+Finally we have to add the "-sdio" suffix to distinguish with other form
+factors (e.g. USB, mini PCIe, etc).
 
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 20a9633..a82c4cd 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -1,6 +1,6 @@
- config WL12XX
- 	tristate "TI wl1251/wl1271 support"
--	depends on MAC80211 && WLAN_80211 && SPI_MASTER && EXPERIMENTAL
-+	depends on MAC80211 && WLAN_80211 && SPI_MASTER && GENERIC_HARDIRQS && EXPERIMENTAL
- 	select FW_LOADER
- 	select CRC7
- 	---help---
+Thanks,
+-yi
 
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
