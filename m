@@ -1,148 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30798 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754667AbZEOXHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 19:07:12 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/3] iwlwifi: do not cancel delayed work inside spin_lock_irqsave
-Date: Fri, 15 May 2009 16:13:45 -0700
-Message-Id: <1242429226-8313-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1242429226-8313-3-git-send-email-reinette.chatre@intel.com>
-References: <1242429226-8313-1-git-send-email-reinette.chatre@intel.com>
- <1242429226-8313-2-git-send-email-reinette.chatre@intel.com>
- <1242429226-8313-3-git-send-email-reinette.chatre@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:48333 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbZEZGli (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 02:41:38 -0400
+Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ortiz, Samuel" <samuel.ortiz@intel.com>,
+	Kay Sievers <kay.sievers@vrfy.org>
+In-Reply-To: <20090526063602.GA21894@infradead.org>
+References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
+	 <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
+	 <1243312991.21383.3.camel@localhost.localdomain>
+	 <1243317777.3623.19.camel@debian>
+	 <1243319583.30938.2.camel@localhost.localdomain>
+	 <20090526063602.GA21894@infradead.org>
+Content-Type: text/plain
+Date: Tue, 26 May 2009 08:41:10 +0200
+Message-Id: <1243320070.30938.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Hi Christoph,
 
-Calling cancel_delayed_work() from inside
-spin_lock_irqsave, introduces a potential deadlock.
+> > I think we need to fix this. Especially since all the other name length
+> > limits in the driver model are gone.
+> 
+> Yeah, but at the same time the driver should get a shorter and actually
+> pronouncable name.  Why not just iwl3200 to follow the model set by
+> the other drivers?
 
-As explained by Johannes Berg <johannes@sipsolutions.net>
+that beast is a multi-comm device with WiFi, WiMAX, Bluetooth and GPS. I
+think you can guess which pieces are coming next.
 
-A - lock
-T - timer
+Regards
 
-phase                   CPU 1           CPU 2
----------------------------------------------
+Marcel
 
-some place that calls
-cancel_timer_sync()
-(which is the | code)
-                                        lock-irq(A)
-|                                       "lock-irq"(T)
-|                                       "unlock"(T)
-|                                       wait(T)
-                                        unlock(A)
-
-timer softirq
-                        "lock"(T)
-                        run(T)
-                        "unlock"(T)
-
-irq handler
-          lock(A)
-          unlock(A)
-
-Now all that again, interleaved, leading to deadlock:
-
-                                        lock-irq(A)
-                        "lock"(T)
-                         run(T)
-IRQ during or maybe
-before run(T) -->        lock(A)
-                                        "lock-irq"(T)
-                                        wait(T)
-
-We fix this by moving the call to cancel_delayed_work() into workqueue.
-There are cases where the work may not actually be queued or running
-at the time we are trying to cancel it, but cancel_delayed_work() is
-able to deal with this.
-
-Also cleanup iwl_set_mode related to this call. This function
-(iwl_set_mode) is only called when bringing interface up and there will
-thus not be any scanning done. No need to try to cancel scanning.
-
-Fixes http://bugzilla.kernel.org/show_bug.cgi?id=13224, which was also
-reported at http://marc.info/?l=linux-wireless&m=124081921903223&w=2 .
-
-Tested-by: Miles Lane <miles.lane@gmail.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c     |    7 -------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
- 3 files changed, 6 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5393fb3..967343a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2437,13 +2437,6 @@ int iwl_set_mode(struct iwl_priv *priv, int mode)
- 	if (!iwl_is_ready_rf(priv))
- 		return -EAGAIN;
- 
--	cancel_delayed_work(&priv->scan_check);
--	if (iwl_scan_cancel_timeout(priv, 100)) {
--		IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
--		IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
--		return -EAGAIN;
--	}
--
- 	iwlcore_commit_rxon(priv);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 8029206..41358cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -227,9 +227,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 
--	/* The scan completion notification came in, so kill that timer... */
--	cancel_delayed_work(&priv->scan_check);
--
- 	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
- 		       (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ)) ?
- 						"2.4" : "5.2",
-@@ -591,6 +588,8 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		goto done;
-@@ -816,6 +815,8 @@ void iwl_bg_scan_completed(struct work_struct *work)
- 
- 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	priv->scan_request = NULL;
- 	ieee80211_scan_completed(priv->hw, false);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 5d52f22..ded7fea 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2995,6 +2995,8 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 
- 	mutex_lock(&priv->mutex);
- 
-+	cancel_delayed_work(&priv->scan_check);
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		goto done;
--- 
-1.5.6.3
 
