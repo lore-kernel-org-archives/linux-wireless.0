@@ -1,81 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57768 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756724AbZETS4n (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:35976 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753001AbZE0ATs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 14:56:43 -0400
-Date: Wed, 20 May 2009 21:56:39 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Optimize TBTT/DTIM calculation for timers
-Message-ID: <20090520185639.GA25436@jm.kir.nu>
+	Tue, 26 May 2009 20:19:48 -0400
+Received: by bwz22 with SMTP id 22so4217051bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 17:19:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1243377395.23825.0.camel@johannes.local>
+References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com>
+	 <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com>
+	 <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com>
+	 <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com>
+	 <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com>
+	 <20090407160812.GA5758@tesla>
+	 <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
+	 <20090526163013.GA7072@tesla>
+	 <69e28c910905261227o7bbf81c8jbc5014792acb3af8@mail.gmail.com>
+	 <1243377395.23825.0.camel@johannes.local>
+Date: Wed, 27 May 2009 01:19:49 +0100
+Message-ID: <3ace41890905261719k3565da39v360adf1e0ff2d270@mail.gmail.com>
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous version used a simple loop to go through all Beacon
-frames when determining the next TBTT and DTIM count. This is not too
-bad for the case where the setup happens before timesync (i.e., very
-small TSF), but this can become very heavy operation if a short Beacon
-interval is used and the current TSF is large.
+2009/5/26 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2009-05-26 at 21:27 +0200, Gábor Stefanik wrote:
+>
+>> AFAIK the developers will never accept any AP mode for zd1211 devices,
+>> as it has no multicast buffering feature in the hardware. (The vendor
+>> driver, as well as the Windows driver implements AP mode with a spec
+>> violation to get around the lack of a multicast buffer.)
+>> CCing Johannes, he was the one who initially said that.
+>
+> Pretty much exactly it.
 
-In preparation for a patch to update timer setup based on Beacon
-timestamp, optimize this routine to take fixed time regardless of the
-actual TSF value.
+I think what I meant is, what else is needed for AP mode from mac80211
+? Or is it 'never'?
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
----
- drivers/net/wireless/ath/ath9k/beacon.c |   28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/beacon.c	2009-05-20 21:19:31.000000000 +0300
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/beacon.c	2009-05-20 21:26:10.000000000 +0300
-@@ -559,6 +559,7 @@ static void ath_beacon_config_sta(struct
- 	int cfpperiod, cfpcount;
- 	u32 nexttbtt = 0, intval, tsftu;
- 	u64 tsf;
-+	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
- 
- 	memset(&bs, 0, sizeof(bs));
- 	intval = conf->beacon_interval & ATH9K_BEACON_PERIOD;
-@@ -586,14 +587,27 @@ static void ath_beacon_config_sta(struct
- 	 */
- 	tsf = ath9k_hw_gettsf64(sc->sc_ah);
- 	tsftu = TSF_TO_TU(tsf>>32, tsf) + FUDGE;
--	do {
-+
-+	num_beacons = tsftu / intval + 1;
-+	offset = tsftu % intval;
-+	nexttbtt = tsftu - offset;
-+	if (offset)
- 		nexttbtt += intval;
--		if (--dtimcount < 0) {
--			dtimcount = dtimperiod - 1;
--			if (--cfpcount < 0)
--				cfpcount = cfpperiod - 1;
--		}
--	} while (nexttbtt < tsftu);
-+
-+	/* DTIM Beacon every dtimperiod Beacon */
-+	dtim_dec_count = num_beacons % dtimperiod;
-+	/* CFP every cfpperiod DTIM Beacon */
-+	cfp_dec_count = (num_beacons / dtimperiod) % cfpperiod;
-+	if (dtim_dec_count)
-+		cfp_dec_count++;
-+
-+	dtimcount -= dtim_dec_count;
-+	if (dtimcount < 0)
-+		dtimcount += dtimperiod;
-+
-+	cfpcount -= cfp_dec_count;
-+	if (cfpcount < 0)
-+		cfpcount += cfpperiod;
- 
- 	bs.bs_intval = intval;
- 	bs.bs_nexttbtt = nexttbtt;
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Hin-Tak
