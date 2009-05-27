@@ -1,44 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51811 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759597AbZEMVEo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46725 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbZE0FsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 17:04:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/4] cfg80211: return immediately if num reg rules > NL80211_MAX_SUPP_REG_RULES
-Date: Wed, 13 May 2009 17:04:39 -0400
-Message-Id: <1242248682-22051-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com>
-References: <1242248682-22051-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 27 May 2009 01:48:10 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1M9Bzn-000146-CQ
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 01:48:11 -0400
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n4R5jBPq007444
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 07:45:11 +0200
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id n4R5jB3H007443
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 07:45:11 +0200
+From: Jeff Hansen <x@jeffhansen.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	ath9k-devel@lists.ath9k.org, Jeff Hansen <x@jeffhansen.com>
+Date: Wed, 27 May 2009 05:05:13 +0000
+Message-Id: <1243400715-13561-2-git-send-email-x@jeffhansen.com>
+In-Reply-To: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
+References: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
+Subject: [PATCH 2/4] ath9k: Combine legacy and 11n rc statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has no functional change except we save a kfree(rd) and
-allows us to clean this code up a bit after this. We do
-avoid an unnecessary kfree(NULL) but calling that was OK too.
+This patch combines the legacy and 11n rcstats into one, using the normal
+rate table indices instead of two separate indices for each mode.  Legacy
+rates also get all of the PER and retry information, now, too.
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Jeff Hansen <x@jeffhansen.com>
 ---
- net/wireless/nl80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |  112 ++++++++++----------------------
+ drivers/net/wireless/ath/ath9k/debug.h |    9 +--
+ 2 files changed, 36 insertions(+), 85 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f88dbbe..88cb4ab 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2542,7 +2542,7 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
- 			rem_reg_rules) {
- 		num_rules++;
- 		if (num_rules > NL80211_MAX_SUPP_REG_RULES)
--			goto bad_reg;
-+			return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 97df20c..d50821c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <asm/unaligned.h>
++#include <linux/vmalloc.h>
+ 
+ #include "ath9k.h"
+ 
+@@ -224,111 +225,66 @@ static const struct file_operations fops_interrupt = {
+ 	.owner = THIS_MODULE
+ };
+ 
+-static void ath_debug_stat_11n_rc(struct ath_softc *sc, struct sk_buff *skb)
+-{
+-	struct ath_tx_info_priv *tx_info_priv = NULL;
+-	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_rate *rates = tx_info->status.rates;
+-	int final_ts_idx, idx;
+-
+-	tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
+-	final_ts_idx = tx_info_priv->tx.ts_rateindex;
+-	idx = sc->cur_rate_table->info[rates[final_ts_idx].idx].dot11rate;
+-
+-	sc->debug.stats.n_rcstats[idx].success++;
+-}
+-
+-static void ath_debug_stat_legacy_rc(struct ath_softc *sc, struct sk_buff *skb)
++void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb)
+ {
+ 	struct ath_tx_info_priv *tx_info_priv = NULL;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *rates = tx_info->status.rates;
+ 	int final_ts_idx, idx;
++	struct ath_rc_stats *stats;
+ 
+ 	tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
+ 	final_ts_idx = tx_info_priv->tx.ts_rateindex;
+ 	idx = rates[final_ts_idx].idx;
+-
+-	sc->debug.stats.legacy_rcstats[idx].success++;
++	stats = &sc->debug.stats.rcstats[idx];
++	stats->success++;
+ }
+ 
+-void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb)
+-{
+-	if (conf_is_ht(&sc->hw->conf))
+-		ath_debug_stat_11n_rc(sc, skb);
+-	else
+-		ath_debug_stat_legacy_rc(sc, skb);
+-}
+-
+-/* FIXME: legacy rates, later on .. */
+ void ath_debug_stat_retries(struct ath_softc *sc, int rix,
+ 			    int xretries, int retries, u8 per)
+ {
+-	if (conf_is_ht(&sc->hw->conf)) {
+-		int idx = sc->cur_rate_table->info[rix].dot11rate;
++	struct ath_rc_stats *stats = &sc->debug.stats.rcstats[rix];
+ 
+-		sc->debug.stats.n_rcstats[idx].xretries += xretries;
+-		sc->debug.stats.n_rcstats[idx].retries += retries;
+-		sc->debug.stats.n_rcstats[idx].per = per;
+-	}
++	stats->xretries += xretries;
++	stats->retries += retries;
++	stats->per = per;
+ }
+ 
+-static ssize_t ath_read_file_stat_11n_rc(struct file *file,
+-					 char __user *user_buf,
+-					 size_t count, loff_t *ppos)
++static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
++				size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+-	char buf[1024];
+-	unsigned int len = 0;
++	char *buf;
++	unsigned int len = 0, max;
+ 	int i = 0;
++	ssize_t retval;
+ 
+-	len += sprintf(buf, "%7s %13s %8s %8s %6s\n\n", "Rate", "Success",
+-		       "Retries", "XRetries", "PER");
+-
+-	for (i = 0; i <= 15; i++) {
+-		len += snprintf(buf + len, sizeof(buf) - len,
+-				"%5s%3d: %8u %8u %8u %8u\n", "MCS", i,
+-				sc->debug.stats.n_rcstats[i].success,
+-				sc->debug.stats.n_rcstats[i].retries,
+-				sc->debug.stats.n_rcstats[i].xretries,
+-				sc->debug.stats.n_rcstats[i].per);
+-	}
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
++	if (sc->cur_rate_table == NULL)
++		return 0;
+ 
+-static ssize_t ath_read_file_stat_legacy_rc(struct file *file,
+-					    char __user *user_buf,
+-					    size_t count, loff_t *ppos)
+-{
+-	struct ath_softc *sc = file->private_data;
+-	char buf[512];
+-	unsigned int len = 0;
+-	int i = 0;
++	max = 80 + sc->cur_rate_table->rate_cnt * 64;
++	buf = vmalloc(max + 1);
++	if (buf == NULL)
++		return 0;
++	buf[max] = 0;
+ 
+-	len += sprintf(buf, "%7s %13s\n\n", "Rate", "Success");
++	len += sprintf(buf, "%5s %15s %8s %9s %3s\n\n", "Rate", "Success",
++		       "Retries", "XRetries", "PER");
+ 
+ 	for (i = 0; i < sc->cur_rate_table->rate_cnt; i++) {
+-		len += snprintf(buf + len, sizeof(buf) - len, "%5u: %12u\n",
+-				sc->cur_rate_table->info[i].ratekbps / 1000,
+-				sc->debug.stats.legacy_rcstats[i].success);
++		u32 ratekbps = sc->cur_rate_table->info[i].ratekbps;
++		struct ath_rc_stats *stats = &sc->debug.stats.rcstats[i];
++
++		len += snprintf(buf + len, max - len,
++			"%3u.%d: %8u %8u %8u %8u\n", ratekbps / 1000,
++			(ratekbps % 1000) / 100, stats->success,
++			stats->retries, stats->xretries,
++			stats->per);
  	}
  
- 	if (!reg_is_valid_request(alpha2))
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+-				size_t count, loff_t *ppos)
+-{
+-	struct ath_softc *sc = file->private_data;
+-
+-	if (sc->cur_rate_table == NULL)
+-		return 0;
+-
+-	if (conf_is_ht(&sc->hw->conf))
+-		return ath_read_file_stat_11n_rc(file, user_buf, count, ppos);
+-	else
+-		return ath_read_file_stat_legacy_rc(file, user_buf, count ,ppos);
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	vfree(buf);
++	return retval;
+ }
+ 
+ static const struct file_operations fops_rcstat = {
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index db845cf..cf9146a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -80,11 +80,7 @@ struct ath_interrupt_stats {
+ 	u32 dtim;
+ };
+ 
+-struct ath_legacy_rc_stats {
+-	u32 success;
+-};
+-
+-struct ath_11n_rc_stats {
++struct ath_rc_stats {
+ 	u32 success;
+ 	u32 retries;
+ 	u32 xretries;
+@@ -93,8 +89,7 @@ struct ath_11n_rc_stats {
+ 
+ struct ath_stats {
+ 	struct ath_interrupt_stats istats;
+-	struct ath_legacy_rc_stats legacy_rcstats[12];	/* max(11a,11b,11g) */
+-	struct ath_11n_rc_stats n_rcstats[16];		/* 0..15 MCS rates */
++	struct ath_rc_stats rcstats[RATE_TABLE_SIZE];
+ };
+ 
+ struct ath9k_debug {
 -- 
-1.6.0.6
+1.6.0.4
+
 
