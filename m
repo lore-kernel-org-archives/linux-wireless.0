@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51462 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752656AbZELGjx (ORCPT
+Received: from fmailhost05.isp.att.net ([207.115.11.55]:43798 "EHLO
+	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757357AbZE0WEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 02:39:53 -0400
-Subject: Re: [PATCH 6/6] ar9170: stop data queues on channel switch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200905120109.09906.chunkeey@web.de>
-References: <200905120109.09906.chunkeey@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sa8Al2Utzzqnol5FdKI3"
-Date: Tue, 12 May 2009 08:39:49 +0200
-Message-Id: <1242110389.3873.53.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 27 May 2009 18:04:04 -0400
+Message-ID: <4A1DB8D3.3010506@lwfinger.net>
+Date: Wed, 27 May 2009 17:04:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Barkle <barkle@gmx.net>
+CC: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: RTL 8185
+References: <4A199FED.7000609@gmx.net>	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>	 <4A1B00E7.5070801@gmx.net>	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>	 <4A1B2186.3070107@gmx.net>	 <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>	 <4A1C1766.3030004@gmx.net> <4A1C74C1.7060600@gmx.net>	 <3ace41890905261651l1cd3742bu5ac1af6f631798f3@mail.gmail.com>	 <4A1CD905.4090406@gmx.net> <3ace41890905270121r4d724c73h2187b7a89931f46e@mail.gmail.com> <4A1D95F8.7050003@gmx.net> <4A1D9FC8.407@lwfinger.net> <4A1DAADC.1080105@gmx.net>
+In-Reply-To: <4A1DAADC.1080105@gmx.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Barkle wrote:
+> 
+> feta:~# iwconfig --version
+> iwconfig  Wireless-Tools version 30
+>          Compatible with Wireless Extension v11 to v22.
+> 
+> Kernel    Currently compiled with Wireless Extension v22.
+> 
+> wlan0     Recommend Wireless Extension v21 or later,
+>          Currently compiled with Wireless Extension v22.
+> 
+> feta:~# ifconfig --version
+> net-tools 1.60
+> ifconfig 1.42 (2001-04-13)
 
---=-sa8Al2Utzzqnol5FdKI3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Good - you have recent versions.
 
-On Tue, 2009-05-12 at 01:09 +0200, Christian Lamparter wrote:
-
-> +		if ((ar->tx_stats[i].len < ar->tx_stats[i].limit) &&
-> +		    (ieee80211_queue_stopped(ar->hw, i)))
-> +			ieee80211_wake_queue(ar->hw, i);
-
-There's no reason to test _stopped first, and doing so is racy.
-
->  	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-> +		err =3D ar9170_stop_and_flush_queues(ar);
-> +		if (err)
-> +			goto out;
-
-Why don't you do that in the pre-scan method?
-
-johannes
-
---=-sa8Al2Utzzqnol5FdKI3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCRmxAAoJEODzc/N7+QmadXUP/jHEZXMwoj9PC/X6dAyUmRC+
-FtJYTJZcFqaKsaBJbq3AaDfZr4UB75EfHpmevdCd4V9P8KcuqPyF2aimI+Tlpd/J
-T751Shk1+YaoxRMyy1ipyPMAEPocKk8J+8szgjeoesEU0kVi9PxqrjJIjkeDXbV4
-IYEtuyXg1ffU5FmBXgwTta7N9ylUlB9zTdbfwb7YFouct8G2LaXYQO08Iu0IiBEo
-BC8KRBIOqDR9ZSDTcrROAuyrv+CoSWc0w/68LGsmkZOHbjuE4E1En19qZfIawuPt
-b83IEUjhWrH53zpho6/KND1cDpftmsIpcjgtU1KrCgmo+0UlWX3OjdbtYvRVb6ig
-NZgEOuHjdJfcEcT2sHofM7o2tRjuvBWUJ9fR3T90Wu70G/3AZY58EIQUPgHckn0X
-rm+lK2p6CQob81ggYRWKU5mUIyg9TlL9Y1i6g64FM8B+bfjdQQyJG1Va8X9pXsKc
-gbj1AmWGFUZj+Fx+Khoirw+ot1fRddb9/WyzWtGa6A5RDCbi++HFSb/KnfGIUWem
-9/Y78LRSw3GBvTm30/vzSVYRlYUYR5V2+ajpVftGIUBwJj+keicuDleCDHCsK/NI
-yffVuvZ4mt8SttNwCgFRplk2C5rBAHy4+W1xHW8Q8Aul2zRnOnQ7Km10RZMpOFVG
-8jhxfZQyyj0sa4fmtMk+
-=XuWa
------END PGP SIGNATURE-----
-
---=-sa8Al2Utzzqnol5FdKI3--
-
+Larry
