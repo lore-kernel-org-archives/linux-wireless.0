@@ -1,74 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59008 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756458AbZELHL5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46724 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152AbZE0FsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 03:11:57 -0400
-Subject: Re: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath
-  comes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: alexander.bartha@drz-wien.at,
-	Alexander Bartha <alex.xy.privat@gmx.at>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Pavel Roskin <proski@gnu.org>
-In-Reply-To: <43e72e890905112355t53537ca9w2797cfc8694302@mail.gmail.com>
-References: <43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
-	 <OF24E7AF48.E39EC671-ONC12575B4.00236C72-C12575B4.0024C49C@drz-wien.at>
-	 <43e72e890905112355t53537ca9w2797cfc8694302@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TmDtzB37Gsfuu/Jv/h6V"
-Date: Tue, 12 May 2009 09:11:50 +0200
-Message-Id: <1242112310.3873.55.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 27 May 2009 01:48:10 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1M9Bzn-000143-8Q
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 01:48:11 -0400
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n4R5jBZb007450
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 07:45:11 +0200
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id n4R5jB3Y007449
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 07:45:11 +0200
+From: Jeff Hansen <x@jeffhansen.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	ath9k-devel@lists.ath9k.org, Jeff Hansen <x@jeffhansen.com>
+Date: Wed, 27 May 2009 05:05:14 +0000
+Message-Id: <1243400715-13561-3-git-send-email-x@jeffhansen.com>
+In-Reply-To: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
+References: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
+Subject: [PATCH 3/4] ath9k: Add "debug" file to debugfs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds the debug file to the ath9k debugfs, which lets you modify
+the debug_mask at runtime, without having to reload the ath9k module.
 
---=-TmDtzB37Gsfuu/Jv/h6V
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jeff Hansen <x@jeffhansen.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   38 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/debug.h |    1 +
+ 2 files changed, 39 insertions(+), 0 deletions(-)
 
-On Mon, 2009-05-11 at 23:55 -0700, Luis R. Rodriguez wrote:
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d50821c..e2ff4a2 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -45,6 +45,38 @@ static int ath9k_debugfs_open(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static ssize_t read_file_debug(struct file *file, char __user *user_buf,
++			     size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	char buf[32];
++	unsigned int len = 0;
++	len += snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.debug_mask);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
++			     size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	unsigned long mask;
++	char buf[32];
++	if (copy_from_user(buf, user_buf, (sizeof(buf) - 1) < count ?
++		(sizeof(buf) - 1) : count))
++		return 0;
++	buf[sizeof(buf)-1] = 0;
++	if (strict_strtoul(buf, 0, &mask) == 0)
++		sc->debug.debug_mask = mask;
++	return count;
++}
++
++static const struct file_operations fops_debug = {
++	.read = read_file_debug,
++	.write = write_file_debug,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE
++};
++
+ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 			     size_t count, loff_t *ppos)
+ {
+@@ -462,6 +494,11 @@ int ath9k_init_debug(struct ath_softc *sc)
+ 	if (!sc->debug.debugfs_phy)
+ 		goto err;
+ 
++	sc->debug.debugfs_debug = debugfs_create_file("debug",
++		S_IRUGO | S_IWUSR, sc->debug.debugfs_phy, sc, &fops_debug);
++	if (!sc->debug.debugfs_debug)
++		goto err;
++
+ 	sc->debug.debugfs_dma = debugfs_create_file("dma", S_IRUGO,
+ 				       sc->debug.debugfs_phy, sc, &fops_dma);
+ 	if (!sc->debug.debugfs_dma)
+@@ -499,6 +536,7 @@ void ath9k_exit_debug(struct ath_softc *sc)
+ 	debugfs_remove(sc->debug.debugfs_rcstat);
+ 	debugfs_remove(sc->debug.debugfs_interrupt);
+ 	debugfs_remove(sc->debug.debugfs_dma);
++	debugfs_remove(sc->debug.debugfs_debug);
+ 	debugfs_remove(sc->debug.debugfs_phy);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index cf9146a..edda15b 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -95,6 +95,7 @@ struct ath_stats {
+ struct ath9k_debug {
+ 	int debug_mask;
+ 	struct dentry *debugfs_phy;
++	struct dentry *debugfs_debug;
+ 	struct dentry *debugfs_dma;
+ 	struct dentry *debugfs_interrupt;
+ 	struct dentry *debugfs_rcstat;
+-- 
+1.6.0.4
 
-> I've tested this and its not the "ath" module which introduces an
-> issue its a patch which enables PS by default. You can disable that by
-> recompiling with:
->=20
-> CONFIG_MAC80211_DEFAULT_PS_VALUE=3D0
->=20
-> If using compat-wireless just stuff it into config.mk.
-
-I object to that assertion, or at least this way of putting it.
-
-If powersave by default causes issues then it's not my patch that's
-causing the problem, it's the fact that ath9k can't properly deal with
-powersave in this case. Had the user enabled powersave manually they
-would have run into the same issue. As such, I think ath9k should
-probably simply stop claiming it can support PS.
-
-johannes
-
---=-TmDtzB37Gsfuu/Jv/h6V
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCSExAAoJEODzc/N7+QmaPJIQAInZZH1FcZVWCijstz0Z/nge
-ENwuSTRYvjvGn/iVV2lNJGB9/ptb9GxAjkHtvxjbASbots97byD749O9ggcxjDPq
-kg3/bl9+h1CrQB4PHdfu5TZXUZL9re31bA5ModvLiFLgUKrqU0qvE5sLdpMpyRCt
-kkfdaTWgmdFWSrR7RyGaKXoI9+lurFc73/ubN1QpCa95oJcKvFVPYP1mJKuxczUx
-5jZKcMEAspe/csY6nOi1la+7bziUXvrVlACBo0LIa8pcL6jvlNBODOrvftMBhfe6
-USnGlyEM4FXNOTHj75Nq/FWxj2d+05z02ng5y5E1GKjo4utQtHdQ8bpa3s5MLSf/
-O9HhhaY+QMA6TotWY8Ffuby0Qu3baGsnzW7f49CCL78WCcVH8kQa3nfj55GYuU9a
-74zRvfg/Dfy43YJjxDjI/N8prNnM4Oz1vffNHuywReRuMNwusB4P2yNaCPqiK8uA
-cfeFdMXCPe1VKQiuz945mumEXhRokUH9ux3+dqvfnL7R+mkss/1iEv6GSwTbqn90
-BH+UZVbmPXm8nYNGnDaVMUDRnGfFRb89Gh5sZ3uNLRe+BNV19xq+YrN0NfXmMlFf
-xz2O3EwSqzm7YGK9GuMX4g8TMLDw406KJljSx6PwN1IUv8PlC0MdHAhQ/YfWPaS/
-arpcJ+49cz9h/GUYLv0j
-=TLNW
------END PGP SIGNATURE-----
-
---=-TmDtzB37Gsfuu/Jv/h6V--
 
