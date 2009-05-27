@@ -1,73 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:37512 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757141AbZELIgH (ORCPT
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:48753 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933531AbZE0URN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 04:36:07 -0400
-Received: by bwz22 with SMTP id 22so3120038bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 01:36:07 -0700 (PDT)
+	Wed, 27 May 2009 16:17:13 -0400
+Message-ID: <4A1D9FC8.407@lwfinger.net>
+Date: Wed, 27 May 2009 15:17:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890905120014w13ca9317r8ec8fa270f2bbb1e@mail.gmail.com>
-References: <43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
-	<OF24E7AF48.E39EC671-ONC12575B4.00236C72-C12575B4.0024C49C@drz-wien.at>
-	<43e72e890905112355t53537ca9w2797cfc8694302@mail.gmail.com>
-	<1242112310.3873.55.camel@johannes.local> <43e72e890905120014w13ca9317r8ec8fa270f2bbb1e@mail.gmail.com>
-From: Davide Pesavento <davidepesa@gmail.com>
-Date: Tue, 12 May 2009 10:35:47 +0200
-Message-ID: <2da21fe50905120135h1cb8746foae4b3b4b37b3cb24@mail.gmail.com>
-Subject: Re: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath
-	comes
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	alexander.bartha@drz-wien.at,
-	Alexander Bartha <alex.xy.privat@gmx.at>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Pavel Roskin <proski@gnu.org>
-Content-Type: text/plain; charset=UTF-8
+To: Barkle <barkle@gmx.net>
+CC: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: RTL 8185
+References: <4A199FED.7000609@gmx.net>	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>	 <4A1B00E7.5070801@gmx.net>	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>	 <4A1B2186.3070107@gmx.net>	 <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>	 <4A1C1766.3030004@gmx.net> <4A1C74C1.7060600@gmx.net>	 <3ace41890905261651l1cd3742bu5ac1af6f631798f3@mail.gmail.com>	 <4A1CD905.4090406@gmx.net> <3ace41890905270121r4d724c73h2187b7a89931f46e@mail.gmail.com> <4A1D95F8.7050003@gmx.net>
+In-Reply-To: <4A1D95F8.7050003@gmx.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Tue, May 12, 2009 at 09:14, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, May 12, 2009 at 12:11 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Mon, 2009-05-11 at 23:55 -0700, Luis R. Rodriguez wrote:
+Barkle wrote:
+> Hin-Tak Leung schrieb:
+>> On Wed, May 27, 2009 at 7:09 AM, Barkle <barkle@gmx.net> wrote:
 >>
->>> I've tested this and its not the "ath" module which introduces an
->>> issue its a patch which enables PS by default. You can disable that by
->>> recompiling with:
->>>
->>> CONFIG_MAC80211_DEFAULT_PS_VALUE=0
->>>
->>> If using compat-wireless just stuff it into config.mk.
+>>  
+>>> After "ifconfig wlan0 up" the system freeze
+>>> It's just every time the interface has to work, it's gonna freeze. It
+>>> doesn't matter if I use wpa_supplicant or ifupdown (which invokes at
+>>> last
+>>> wpa_supplicant, so far as I know, on the debian system)
+>>>     
 >>
->> I object to that assertion, or at least this way of putting it.
->>
->> If powersave by default causes issues then it's not my patch that's
->> causing the problem, it's the fact that ath9k can't properly deal with
->> powersave in this case. Had the user enabled powersave manually they
->> would have run into the same issue. As such, I think ath9k should
->> probably simply stop claiming it can support PS.
->
-> Heh yes, what I meant was ath9k's PS support has some issues which
-> still need to be resolved (at least as I've tested it).
->
+>> Hmm, try to disable any devices on the pci bus which you don't use
+>> with setpci <id> command=0 before anything els
+> 
+> Have a look at lspci
+> 
+> *********************
+> feta:~# lspci
+> 00:00.0 Host bridge: Intel Corporation 82815 815 Chipset Host Bridge and
+> Memory Controller Hub (rev 02)
+> 00:02.0 VGA compatible controller: Intel Corporation 82815 Chipset
+> Graphics Controller (CGC) (rev 02)
+> 00:1e.0 PCI bridge: Intel Corporation 82801AA PCI Bridge (rev 02)
+> 00:1f.0 ISA bridge: Intel Corporation 82801AA ISA Bridge (LPC) (rev 02)
+> 00:1f.1 IDE interface: Intel Corporation 82801AA IDE Controller (rev 02)
+> 00:1f.2 USB Controller: Intel Corporation 82801AA USB Controller (rev 02)
+> 00:1f.3 SMBus: Intel Corporation 82801AA SMBus Controller (rev 02)
+> 01:07.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8185
+> IEEE 802.11a/b/g Wireless LAN Controller (rev 20)
+> 01:09.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado]
+> (rev 74)
+> *********************
+> 
+> Wich device do you mean?
+> 
+> I disabled
+> feta:~# setpci -d 8086:2413 command=0 [the SMBus]
+> feta:~# setpci -d 8086:2412 command=0 [the USB]
+> feta:~# setpci -d 8086:2410 command=0 [the ISA bridge]
+> feta:~# setpci -d 8086:1132 command=0 [the VGA]
+> feta:~# ifconfig wlan0 up
+> 
+> => freeze
 
-I've already reported ath9k's issues with PS multiple times [1] [2]
-[3], but the driver hasn't been fixed yet. You can find a verbose
-debugging output at [4], I hope that helps in fixing the problem (I
-can provide even more info if needed and I'm willing to test patches).
+Please post the output of the following commands:
 
-Anyway, if the issue isn't going to be resolved quickly (e.g. before
-Johannes' "enable PS by default" patch lands in mainline), I think
-it's better to disable PS in ath9k as previously suggested.
+iwconfig --version
+ifconfig --version
 
-Regards,
-Davide
-
-[1] http://marc.info/?l=linux-wireless&m=123816406913599&w=2
-[2] http://marc.info/?l=linux-wireless&m=123999864507104&w=2
-[3] http://marc.info/?l=linux-wireless&m=124025926613089&w=2
-[4] http://marc.info/?l=linux-wireless&m=124026772102023&w=2
