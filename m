@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33844 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43319 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759493AbZEOKvJ (ORCPT
+	with ESMTP id S1755763AbZE0G2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2009 06:51:09 -0400
-Subject: ar9170 deadlock report
+	Wed, 27 May 2009 02:28:11 -0400
+Subject: Re: [PATCH v11] rfkill: rewrite
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jylmLJDRajTJQD02hKsx"
-Date: Fri, 15 May 2009 12:50:42 +0200
-Message-Id: <1242384642.5799.48.camel@johannes.local>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Will Keaney <keaneyw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090527025516.GC22235@khazad-dum.debian.net>
+References: <1242942720.4212.19.camel@johannes.local>
+	 <1243068246.4606.45.camel@johannes.local> <4A1BDE51.7020009@gmail.com>
+	 <20090526131533.GA3932@tuxdriver.com>
+	 <20090527025516.GC22235@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oal3xNPYt8EQuE8jTqWv"
+Date: Wed, 27 May 2009 08:28:02 +0200
+Message-Id: <1243405682.26933.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jylmLJDRajTJQD02hKsx
+--=-oal3xNPYt8EQuE8jTqWv
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-[  328.121951] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-[  328.122169] [ INFO: possible circular locking dependency detected ]
-[  328.122339] 2.6.30-rc5-wl-23310-ge0995c7-dirty #54
-[  328.122468] -------------------------------------------------------
-[  328.122636] pm-hibernate/7289 is trying to acquire lock:
-[  328.122779]  (&(&ar->tx_status_janitor)->work){+.+...}, at: [<c000000000=
-07eb14>] .wait_on_work+0x3c/0x194
-[  328.123058]=20
-[  328.123059] but task is already holding lock:
-[  328.123216]  (&ar->mutex){+.+...}, at: [<d0000000015c29a4>] .ar9170_op_s=
-top+0x60/0x120 [ar9170usb]
-[  328.123482]=20
-[  328.123482] which lock already depends on the new lock.
-[  328.123484]=20
-[  328.123702]=20
-[  328.123703] the existing dependency chain (in reverse order) is:
-[  328.123903]=20
-[  328.123904] -> #1 (&ar->mutex){+.+...}:
-[  328.124066]        [<c00000000009ee40>] .check_prev_add+0x3d4/0x5f8
-[  328.124242]        [<c00000000009f7b0>] .validate_chain+0x74c/0x930
-[  328.128871]        [<c0000000000a01a0>] .__lock_acquire+0x80c/0x8f4
-[  328.133531]        [<c0000000000a03d4>] .lock_acquire+0x14c/0x19c
-[  328.138139]        [<c0000000004cb0f0>] .mutex_lock_nested+0xa8/0x504
-[  328.142769]        [<d0000000015c414c>] .ar9170_tx_status_janitor+0x58/0=
-x114 [ar9170usb]
+On Tue, 2009-05-26 at 23:55 -0300, Henrique de Moraes Holschuh wrote:
 
+> As long as the missing userspace control functionality (the lack of which=
+ is
+> a _serious_ regression for platform drivers) is added before 2.6.31 ships=
+, I
+> have no complains.
+>=20
+> Userspace must be able to change the (soft) state using sysfs.  This is
+> not an optional part of rfkill :-)
 
-[  328.156599] -> #0 (&(&ar->tx_status_janitor)->work){+.+...}:
-[  328.156604]        [<c00000000009eb2c>] .check_prev_add+0xc0/0x5f8
-[  328.156609]        [<c00000000009f7b0>] .validate_chain+0x74c/0x930
-[  328.156614]        [<c0000000000a01a0>] .__lock_acquire+0x80c/0x8f4
-[  328.156618]        [<c0000000000a03d4>] .lock_acquire+0x14c/0x19c
-[  328.156623]        [<c00000000007eb54>] .wait_on_work+0x7c/0x194
-[  328.156627]        [<c00000000007ed50>] .__cancel_work_timer+0xe4/0x164
-[  328.156632]        [<c00000000007ee00>] .cancel_delayed_work_sync+0x30/0=
-x48
-[  328.156636]        [<d0000000015c29b0>] .ar9170_op_stop+0x6c/0x120 [ar91=
-70usb]
-
-Don't cancel a work under a lock that it needs!
+I'm sorry, but you're wrong. Before I removed it, almost all drivers
+disabled that functionality. We do want to add it back, but certainly
+not with the mostly braindead interface it used to have.
 
 johannes
 
---=-jylmLJDRajTJQD02hKsx
+--=-oal3xNPYt8EQuE8jTqWv
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKDUj+AAoJEODzc/N7+Qmanm4QAKixdjCDYoTweL1B9pr8eKVP
-ihmY3xtuugZXNDkYnRpjPdEP8LvNh6CgpM7S3dg0ACu5W9lYhSPnpw22NZzQMIKm
-qgNC4hqvsYHpLd9SIexeU+y+yhvEMzPhh2X63Vyy3jloIjBTf3VWNneZpvOz1wQK
-tbcp6fQbio55zm5CVUDz2pWLnSqQEj8D4J+aCag3uUDPKbj7Q6YsmRJc8eEdx+eH
-MwAeyVKR4TlRcdwUGHkViD1X/ffVZUYC+A0tOuipqHW9PI54foa8iyJxDMXLgG35
-VSGPDXW0UVP0JWzFj4G+FK8Wqptkw7drOdaU+7oQjH0R9ivtC/LSZaHyQ9CpLbHG
-Zs/8f4FnwbN2/p7tm4sFW4Gc2JpytQ2Amicq/6n1TFCCvGurmIM9+APK/RRv1Xyy
-dbbqaf/IWjlYiIJAbBPAfmzfSF8fDMst6HmYuYjHuV90j5NCba1AzsBlpbC57dhj
-g2QuH4ey5Xv5SzAntj2RdrwwTH0qMWYKqZE/RYMwAQmLbcYjiutKEXvRi6qz9F1d
-F7XfQEFHZmXAEJcH+T1kMo5fkJ8+ZVyWO8FpkaQRi9Dr0K4lcNEUDvQV8e95+bme
-+h6LhWgDumcRCTSsB7C6ilRGHHy3xPPVRchGBRuNjMJHjPjj6V0b+UOJAiFaA4A7
-kAffSsCSStumZ8FI4awM
-=aP6t
+iQIcBAABAgAGBQJKHN1vAAoJEODzc/N7+QmaeCkP/iEZsRJrxMZMl0+R4xBEfosO
+u1oFETnXsPmor6Bjm+fR9la0fTbGHq+GE4mFfOexRG3Hdy1jsWbFGDaw/zKxlNXh
+fq6OppTER9ZSXmzBVGNbOkdeNfReCrM3el+LH++PYvx0Lp3VNT9jZRyBCsdpuHSg
+qgj4LoHkMEPYJ5cYVtPKIylJEGDn24gU0KCKrS2bBWBkwWI0t77h8Olz1eCseZ8Q
+6AgruPBnibr+Nm/7CdbtBw8Y/fgDVwLF8Yn8dKbIeKtaE5rtSkZGDEjFOJz0MMaq
+i/C3Ztdx8hMuykAlvahyrcqv06sSLfCBc1jrrmT+ziJxtvDi9sqqcoHK23CGRMqV
+bCVoWgAqx0K/OXKSZPH8dPmrCiqvzN6H+nq+BkhIBwrsSzMHMIPd1B9FHtSCLUh1
+NSSdFsoBkG3PAwG+2fdwRMfGkMM8OQ47Zkr2gwGAD62YzrorEC7X7zSmhKbIuXm2
+oWNDNRmoD9yfusAdW3q24LEt2dM4zla9Gzn3fpkTDfXPFZ3AhPeun4aEKkKp0sE2
+0dcJnp5a0aRNfIX0hagFGlNZiWxnM8TvXvuhpNy2mwVbKabx30wUwKGZPBc/+3kS
+z4EQE6xiBDYjXh/PYg4KI7Z0EQaVHbE3tJkzkScxeuMpEdTuKjH1MVnRMA5ZRj8o
+UdvimJHyBpe+LnLxjCsc
+=tLZa
 -----END PGP SIGNATURE-----
 
---=-jylmLJDRajTJQD02hKsx--
+--=-oal3xNPYt8EQuE8jTqWv--
 
