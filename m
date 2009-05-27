@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms13-1.sony.co.jp ([211.125.136.229]:49134 "EHLO
-	ms13.sony.co.jp" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755991AbZEMASg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41399 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873AbZE0IgC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 20:18:36 -0400
-Message-Id: <200905130012.n4D0CSWP014563@imail.sm.sony.co.jp>
-Date: Wed, 13 May 2009 09:12:46 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: Geoff Levand <geoffrey.levand@am.sony.com>
-Subject: Re: [patch] net/ps3: Update maintainer
-Cc: jgarzik@pobox.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A09F8C2.5040708@am.sony.com>
-References: <49F77C32.8020207@am.sony.com> <4A09F8C2.5040708@am.sony.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+	Wed, 27 May 2009 04:36:02 -0400
+Subject: [PATCH v2 resend] cfg80211: disallow interfering with stations on
+ non-AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1242045793.26810.0.camel@johannes.local>
+References: <1242045283.18637.1.camel@johannes.local>
+	 <1242045793.26810.0.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 27 May 2009 10:35:29 +0200
+Message-Id: <1243413329.26933.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On non-AP interfaces userspace has no business interfering with
+the station management, this can confuse mac80211 (and other
+drivers probably wouldn't support it anyway). Allow adding and
+removing stations only on AP interfaces.
 
-On Tue, 12 May 2009 15:31:30 -0700
-Geoff Levand <geoffrey.levand@am.sony.com> wrote:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/nl80211.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> Subject: net/ps3: Update maintainer
-> 
-> From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> 
-> Update the MAINTAINERS entry for PS3 NETWORK SUPPORT.
-> 
-> CC: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-05-26 10:01:42.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-05-26 10:01:44.000000000 +0200
+@@ -1687,6 +1687,12 @@ static int nl80211_set_station(struct sk
+ 	if (err)
+ 		goto out_rtnl;
+ 
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
++		err = -EINVAL;
++		goto out;
++	}
++
+ 	err = get_vlan(info->attrs[NL80211_ATTR_STA_VLAN], drv, &params.vlan);
+ 	if (err)
+ 		goto out;
+@@ -1811,6 +1817,12 @@ static int nl80211_del_station(struct sk
+ 		goto out;
+ 	}
+ 
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
++		err = -EINVAL;
++		goto out;
++	}
++
+ 	if (!drv->ops->del_station) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
 
-Acked-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-
-> ---
-> 
-> Hi Jeff,
-> 
-> This is another resend of my patch from March 30th.
-> 
-> I would like to get this in for 2.6.30 so bug reports,
-> etc. will get routed to the right person.
-> 
-> Please apply. Thanks.
-> 
->  MAINTAINERS |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -4421,8 +4421,8 @@ S:	Maintained
->  F:	drivers/ata/sata_promise.*
->  
->  PS3 NETWORK SUPPORT
-> -P:	Masakazu Mokuno
-> -M:	mokuno@sm.sony.co.jp
-> +P:	Geoff Levand
-> +M:	geoffrey.levand@am.sony.com
->  L:	netdev@vger.kernel.org
->  L:	cbe-oss-dev@ozlabs.org
->  S:	Supported
-
--- 
-Masakazu Mokuno
 
