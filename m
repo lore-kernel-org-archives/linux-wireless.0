@@ -1,106 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:46018 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:16598 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755487AbZETWUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 18:20:53 -0400
-Subject: Re: [PATCH 1/4] libertas: define macros for SDIO model numbers
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
-References: <1242787701-10685-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain
-Date: Wed, 20 May 2009 18:20:47 -0400
-Message-Id: <1242858047.7048.25.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1753967AbZE0Afx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2009 20:35:53 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 17:35:55 -0700
+Date: Tue, 26 May 2009 17:36:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@Atheros.com>
+Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
+Message-ID: <20090527003600.GL9370@tesla>
+References: <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com> <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com> <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com> <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com> <20090407160812.GA5758@tesla> <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com> <20090526163013.GA7072@tesla> <69e28c910905261227o7bbf81c8jbc5014792acb3af8@mail.gmail.com> <1243377395.23825.0.camel@johannes.local> <3ace41890905261719k3565da39v360adf1e0ff2d270@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <3ace41890905261719k3565da39v360adf1e0ff2d270@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-19 at 19:48 -0700, Bing Zhao wrote:
-> replace direct usages of SDIO model numbers with defined macros.
+On Tue, May 26, 2009 at 05:19:49PM -0700, Hin-Tak Leung wrote:
+> 2009/5/26 Johannes Berg <johannes@sipsolutions.net>:
+> > On Tue, 2009-05-26 at 21:27 +0200, Gábor Stefanik wrote:
+> >
+> >> AFAIK the developers will never accept any AP mode for zd1211 devices,
+> >> as it has no multicast buffering feature in the hardware. (The vendor
+> >> driver, as well as the Windows driver implements AP mode with a spec
+> >> violation to get around the lack of a multicast buffer.)
+> >> CCing Johannes, he was the one who initially said that.
+> >
+> > Pretty much exactly it.
 > 
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> I think what I meant is, what else is needed for AP mode from mac80211
+> ? Or is it 'never'?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Not going to happen.
 
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   18 +++++++++---------
->  drivers/net/wireless/libertas/if_sdio.h |    4 ++++
->  2 files changed, 13 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 55864c1..69d7fd3 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -66,19 +66,19 @@ struct if_sdio_model {
->  static struct if_sdio_model if_sdio_models[] = {
->  	{
->  		/* 8385 */
-> -		.model = 0x04,
-> +		.model = IF_SDIO_MODEL_8385,
->  		.helper = "sd8385_helper.bin",
->  		.firmware = "sd8385.bin",
->  	},
->  	{
->  		/* 8686 */
-> -		.model = 0x0B,
-> +		.model = IF_SDIO_MODEL_8686,
->  		.helper = "sd8686_helper.bin",
->  		.firmware = "sd8686.bin",
->  	},
->  	{
->  		/* 8688 */
-> -		.model = 0x10,
-> +		.model = IF_SDIO_MODEL_8688,
->  		.helper = "sd8688_helper.bin",
->  		.firmware = "sd8688.bin",
->  	},
-> @@ -118,7 +118,7 @@ static u16 if_sdio_read_scratch(struct if_sdio_card *card, int *err)
->  	int ret, reg;
->  	u16 scratch;
->  
-> -	if (card->model == 0x04)
-> +	if (card->model == IF_SDIO_MODEL_8385)
->  		reg = IF_SDIO_SCRATCH_OLD;
->  	else
->  		reg = IF_SDIO_SCRATCH;
-> @@ -216,7 +216,7 @@ static int if_sdio_handle_event(struct if_sdio_card *card,
->  
->  	lbs_deb_enter(LBS_DEB_SDIO);
->  
-> -	if (card->model == 0x04) {
-> +	if (card->model == IF_SDIO_MODEL_8385) {
->  		event = sdio_readb(card->func, IF_SDIO_EVENT, &ret);
->  		if (ret)
->  			goto out;
-> @@ -829,10 +829,10 @@ static int if_sdio_probe(struct sdio_func *func,
->  		if (sscanf(func->card->info[i],
->  				"ID: %x", &model) == 1)
->  			break;
-> -               if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
-> -                       model = 4;
-> -                       break;
-> -               }
-> +		if (!strcmp(func->card->info[i], "IBIS Wireless SDIO Card")) {
-> +			model = IF_SDIO_MODEL_8385;
-> +			break;
-> +		}
->  	}
->  
->  	if (i == func->card->num_info) {
-> diff --git a/drivers/net/wireless/libertas/if_sdio.h b/drivers/net/wireless/libertas/if_sdio.h
-> index 37ada2c..cea343f 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.h
-> +++ b/drivers/net/wireless/libertas/if_sdio.h
-> @@ -12,6 +12,10 @@
->  #ifndef _LBS_IF_SDIO_H
->  #define _LBS_IF_SDIO_H
->  
-> +#define IF_SDIO_MODEL_8385	0x04
-> +#define IF_SDIO_MODEL_8686	0x0b
-> +#define IF_SDIO_MODEL_8688	0x10
-> +
->  #define IF_SDIO_IOPORT		0x00
->  
->  #define IF_SDIO_H_INT_MASK	0x04
-
+  Luis
