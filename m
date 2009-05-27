@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:52744 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbZEDRwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 13:52:51 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 May 2009 10:52:52 -0700
-Date: Mon, 4 May 2009 10:53:07 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH] cfg80211: fix race condition with
-	wiphy_apply_custom_regulatory()
-Message-ID: <20090504175307.GD8655@tesla>
-References: <1241217890-11650-1-git-send-email-lrodriguez@atheros.com> <9b2b86520905020729v331a9581q5d7916b5d36c02fb@mail.gmail.com>
+Received: from yw-out-2324.google.com ([74.125.46.30]:25245 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763307AbZE0MuS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2009 08:50:18 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so2601558ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 05:50:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <9b2b86520905020729v331a9581q5d7916b5d36c02fb@mail.gmail.com>
+In-Reply-To: <20090524222027.GA32198@god.dyndns.org>
+References: <20090524222027.GA32198@god.dyndns.org>
+Date: Wed, 27 May 2009 08:50:19 -0400
+Message-ID: <b6c5339f0905270550y50a925fbk4b891db8bbb9d9b@mail.gmail.com>
+Subject: Re: ath5k in AP mode works!! (but sometimes with an oops, and a
+	panic)
+From: Bob Copeland <me@bobcopeland.com>
+To: henk <henk@god.dyndns.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 02, 2009 at 07:29:43AM -0700, Alan Jenkins wrote:
-> On 5/1/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> > We forgot to lock using the cfg80211_mutex in
-> > wiphy_apply_custom_regulatory(). Without the lock
-> > there is possible race between processing a reply from CRDA
-> > and a driver calling wiphy_apply_custom_regulatory(). During
-> > the processing of the reply from CRDA we free last_request and
-> > wiphy_apply_custom_regulatory() eventually accesses an
-> > element from last_request in the through freq_reg_info_regd().
-> >
-> > This is very difficult to reproduce (I haven't), it takes us
-> > 3 hours and you need to be banging hard, but the race is obvious
-> > by looking at the code.
-> >
-> > This should only affect those who use this caller, which currently
-> > is ath5k, ath9k, and ar9170.
-> >
-> > EIP: 0060:[<f8ebec50>] EFLAGS: 00210282 CPU: 1
-> > EIP is at freq_reg_info_regd+0x24/0x121 [cfg80211]
-> 
-> This looks like the same bug I reported seeing on bootup (100% of the
-> time).  I'll test wireless-testing again for V9 of the rfkill rewrite,
-> so at that point I'll try to confirm that this patch fixes my problem.
+On Sun, May 24, 2009 at 6:20 PM, henk <henk@god.dyndns.org> wrote:
+>
+> First of all great work! AP mode works almost flawlessly.
+>
+> The only things I encounter:
+> - At hostapd shutdown the kernel panics frequently, freezing up the system.
+> - At startup I encounter the trace below.
+> - In between the WPA2 sessions seem to work flawlessly.
 
-Any luck?
+Hi,
 
-  Luis
+Apologies for the slow response, just returning from vacation today.
+
+Any chance you could capture the panic at hostapd shutdown via netconsole?
+
+> [   37.939171] WARNING: at /home/henk/compat-wireless-2009-05-22/drivers/net/wireless/ath/ath5k/base.c:2167 ath5k_beacon_update_timers+0x42/0xcd [ath5k]()
+
+WARN_ON(!intval) -- which has been reported already for IBSS as well.
+I should have
+a patch shortly.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
