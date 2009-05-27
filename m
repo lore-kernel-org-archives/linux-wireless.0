@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:50540 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbZEFLyO convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:62504 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760795AbZE0J7A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2009 07:54:14 -0400
-Received: by bwz22 with SMTP id 22so46206bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2009 04:54:13 -0700 (PDT)
+	Wed, 27 May 2009 05:59:00 -0400
+From: Florian Fainelli <florian@openwrt.org>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux
+Date: Wed, 27 May 2009 11:58:55 +0200
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	slapin@ossfans.org, maxim.osipov@siemens.com,
+	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
+References: <20090526112157.GA19976@doriath.ww600.siemens.net>
+In-Reply-To: <20090526112157.GA19976@doriath.ww600.siemens.net>
 MIME-Version: 1.0
-In-Reply-To: <200905052142.38780.alf@mypals.org>
-References: <200905021218.23747.alf@mypals.org>
-	 <20090504224952.GB9342@joutaro.lan>
-	 <b6c5339f0905042236o7ab21feai5aef015510428d02@mail.gmail.com>
-	 <200905052142.38780.alf@mypals.org>
-Date: Wed, 6 May 2009 14:54:13 +0300
-Message-ID: <40f31dec0905060454s513c5eeas44389e6527eed1fd@mail.gmail.com>
-Subject: Re: ath5k in 2.6.29.1 won't associate with AP
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Alf <alf@mypals.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Tulio Magno Quites Machado Filho <tuliom@quites.com.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200905271158.57067.florian@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/5/6 Alf <alf@mypals.org>:
-> On Monday 04 May 2009 11:36:06 pm Bob Copeland wrote:
->> Yes, 2413 should work -- also can you try latest
->> wireless-testing tree? =C2=A0It has a boatload of updates for
->> ath5k. =C2=A0If something there works then we can perhaps narrow
->> it down a bit.
+Hi Dmitry,
+
+Le Tuesday 26 May 2009 13:21:57 Dmitry Eremin-Solenikov, vous avez écrit :
+> Hi,
 >
-> I tried it a few days ago and it still didn't work. =C2=A0Even the la=
-test
-> snapshot from madwifi didn't work. =C2=A0They only thing that has wor=
-ked is
-> ndiswrapper.
+> As a part of research activities in the Embedded Systems - Open Platform
+> Group from Siemens Corporate Technology we are working on adding support
+> for the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our
+> current implementation is neither certified nor even feature complete.
+> However we'd like to present current state of our patchset to the Linux
+> developers community to gain comments, fixes, ideas, etc. This is not yet a
+> pull request, but more like an RFC.
+
+Let met just thank you for doing this, I am glad some people worked on this. 
+Got a couple of questions below.
+
 >
+> The project page is available at
+> http://apps.sourceforge.net/trac/linux-zigbee with source code of kernel
+> part available from git at
+> http://zigbee-linux.git.sourceforge.net, mirrored for convenience at
+> git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
+>
+> The source code for userspace utils is available from git at
+> http://linux-zigbee.git.sourceforge.net/
 
-Can you please post the full dmesg output when ath5k loads ?
+>From the project page I understand that you plan on providing a ZigBee stack, 
+based on this 802.15.4 stack ? Do you plan on submitting the ZigBee stack 
+later on ?
 
+Maybe you should mention that this implementation is royalty-free, but that 
+commercial products using it should both respect the GPL license and pay a 
+ZigBee royalty as per the ZigBee Alliance . That is just for clarification 
+since right now it simply does 802.15.4 which is not subject to this royalty 
+thing.
 
+>
+> Several comments about our implementation:
+> * As with 802.11 there are two types of devices: the smart ones that
+> implement most parts of the protocol by themselves and more or less dumb
+> ones which simply send and receive what they are told. Currently we do only
+> support the second type of devices (SoftMAC)
+> * The implementation is split between code driving radio, (master, mwpanX
+>   interface: mdev.c), code processing frames according the IEEE 802.15.4
+>   rules (slave wpanX devices) and finally sockets (af_ieee802154.c,
+> dgram.c, raw.c).
 
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This sounds good. Do you also plan on integrating some meshing algorithm on 
+top of 802.15.4 ? If so, 
+
+> * We do present two example drivers using our stack. One is purely virtual
+>   one either looping the packets back or connecting several virtual
+> interfaces (the one at fakelb.c), and the driver for the Freescale MC13192
+> evaluation boards (13192-SARD, 13192-EVK) using our custom firmware
+> (currently only available at request, we are working on publishing it). The
+> driver for the Atmel at86rf230/at86rf231 chips will follow in several
+> weeks.
+
+Is the virtual interface just like mac80211_hwsim for 802.11 ?h
+-- 
+Best regards, Florian Fainelli
+Email : florian@openwrt.org
+http://openwrt.org
+-------------------------------
