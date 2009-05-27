@@ -1,86 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40741 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090AbZEUWCc (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:57462 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956AbZE0IVc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 18:02:32 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1M7GLR-0006go-0z
-	for linux-wireless@vger.kernel.org; Fri, 22 May 2009 00:02:33 +0200
-Message-Id: <20090521220104.962925968@sipsolutions.net>
-References: <20090521215940.344214804@sipsolutions.net>
-Date: Thu, 21 May 2009 23:59:42 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFT 2/4] rfkill: add function to query state
-Mime-Version: 1.0
+	Wed, 27 May 2009 04:21:32 -0400
+Received: by bwz22 with SMTP id 22so4395408bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 01:21:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A1CD905.4090406@gmx.net>
+References: <4A199FED.7000609@gmx.net>
+	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>
+	 <4A1B00E7.5070801@gmx.net>
+	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>
+	 <4A1B2186.3070107@gmx.net>
+	 <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>
+	 <4A1C1766.3030004@gmx.net> <4A1C74C1.7060600@gmx.net>
+	 <3ace41890905261651l1cd3742bu5ac1af6f631798f3@mail.gmail.com>
+	 <4A1CD905.4090406@gmx.net>
+Date: Wed, 27 May 2009 09:21:33 +0100
+Message-ID: <3ace41890905270121r4d724c73h2187b7a89931f46e@mail.gmail.com>
+Subject: Re: RTL 8185
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Barkle <barkle@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes it is necessary to know how the state is,
-and it is easier to query rfkill than keep track of
-it somewhere else, so add a function for that. This
-could later be expanded to return hard/soft block,
-but so far that isn't necessary.
+On Wed, May 27, 2009 at 7:09 AM, Barkle <barkle@gmx.net> wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/rfkill.h |   12 ++++++++++++
- net/rfkill/core.c      |   13 +++++++++++++
- 2 files changed, 25 insertions(+)
+> After "ifconfig wlan0 up" the system freeze
+> It's just every time the interface has to work, it's gonna freeze. It
+> doesn't matter if I use wpa_supplicant or ifupdown (which invokes at last
+> wpa_supplicant, so far as I know, on the debian system)
 
---- wireless-testing.orig/include/linux/rfkill.h	2009-05-21 21:55:37.000000000 +0200
-+++ wireless-testing/include/linux/rfkill.h	2009-05-21 21:56:00.000000000 +0200
-@@ -225,6 +225,13 @@ void rfkill_set_states(struct rfkill *rf
-  *	registered drivers?
-  */
- void rfkill_set_global_sw_state(const enum rfkill_type type, bool blocked);
-+
-+/**
-+ * rfkill_blocked - query rfkill block
-+ *
-+ * @rfkill: rfkill struct to query
-+ */
-+bool rfkill_blocked(struct rfkill *rfkill);
- #else /* !RFKILL */
- static inline struct rfkill * __must_check
- rfkill_alloc(const char *name,
-@@ -277,6 +284,11 @@ static inline void rfkill_set_global_sw_
- 					      bool blocked)
- {
- }
-+
-+static inline bool rfkill_blocked(struct rfkill *rfkill)
-+{
-+	return false;
-+}
- #endif /* RFKILL || RFKILL_MODULE */
- 
- 
---- wireless-testing.orig/net/rfkill/core.c	2009-05-21 21:55:41.000000000 +0200
-+++ wireless-testing/net/rfkill/core.c	2009-05-21 21:56:00.000000000 +0200
-@@ -862,6 +862,19 @@ void rfkill_destroy(struct rfkill *rfkil
- }
- EXPORT_SYMBOL(rfkill_destroy);
- 
-+bool rfkill_blocked(struct rfkill *rfkill)
-+{
-+	unsigned long flags;
-+	u32 state;
-+
-+	spin_lock_irqsave(&rfkill->lock, flags);
-+	state = rfkill->state;
-+	spin_unlock_irqrestore(&rfkill->lock, flags);
-+
-+	return !!(state & RFKILL_BLOCK_ANY);
-+}
-+EXPORT_SYMBOL(rfkill_blocked);
-+
- 
- static int __init rfkill_init(void)
- {
-
--- 
-
+Hmm, try to disable any devices on the pci bus which you don't use
+with setpci <id> command=0 before anything else.
