@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:22585 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756404AbZEMSHP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42447 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762868AbZE0Hap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 14:07:15 -0400
-Received: by wa-out-1112.google.com with SMTP id j5so328419wah.21
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 11:07:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com>
-	 <1242206461-30793-3-git-send-email-lrodriguez@atheros.com>
-	 <1242208388.14227.46.camel@johannes.local>
-	 <43e72e890905131020y66111b1nb89a3f17596efca6@mail.gmail.com>
-Date: Wed, 13 May 2009 14:00:45 -0400
-Message-ID: <b6c5339f0905131100v5ea764cejf005734ce9289290@mail.gmail.com>
-Subject: Re: [RFC v2 2/5] mac80211: inform devices when we are suspending on
-	the stop callback
-From: Bob Copeland <bcopeland@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 27 May 2009 03:30:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Przemyslaw Kulczycki <azrael@autocom.pl>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rtl8187: add USB ID for Linksys WUSB54GC-EU v2 USB wifi dongle
+Date: Wed, 27 May 2009 09:28:15 +0200
+Message-Id: <1243409295-8363-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 1:20 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, May 13, 2009 at 2:53 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
->>> We inform the drivers so they can take appropriate actions during
->>> suspend for WoW support.
->>
->>> -static void ar9170_op_stop(struct ieee80211_hw *hw)
->>> +static void ar9170_op_stop(struct ieee80211_hw *hw, bool suspend)
+http://bugzilla.kernel.org/show_bug.cgi?id=13383
 
-Just curious, why can't the bus suspend method just turn the radio back on?
-You have to set up the wow parameters later anyway.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-I think it'd be cleaner if the stack knew about WoW somehow rather than
-doing stuff behind its back in the driver.  Then suspend/resume could do
-the right thing (e.g. ops->wow_enable() instead of stop) if the driver was
-WoW-capable.
-
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 6499ccc..2914de0 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -74,6 +74,8 @@ static struct usb_device_id rtl8187_table[] __devinitdata = {
+ 	{USB_DEVICE(0x18E8, 0x6232), .driver_info = DEVICE_RTL8187},
+ 	/* AirLive */
+ 	{USB_DEVICE(0x1b75, 0x8187), .driver_info = DEVICE_RTL8187},
++	/* Linksys */
++	{USB_DEVICE(0x1737, 0x0073), .driver_info = DEVICE_RTL8187B},
+ 	{}
+ };
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.0.6
+
