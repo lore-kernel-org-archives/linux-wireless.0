@@ -1,118 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:44776 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbZEYMmJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2009 08:42:09 -0400
-Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
-From: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
-	<alejandro.riveira@gmail.com>
-Reply-To: alejandro.riveira@gmail.com
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-In-Reply-To: <200905251323.07845.IvDoorn@gmail.com>
-References: <1243247687.5322.8.camel@varda>
-	 <200905251323.07845.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Tar+kO1GraXSYPlLpSIw"
-Date: Mon, 25 May 2009 14:42:06 +0200
-Message-Id: <1243255326.6297.53.camel@varda>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:43329 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752457AbZE0VEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2009 17:04:34 -0400
+Message-ID: <4A1DAADC.1080105@gmx.net>
+Date: Wed, 27 May 2009 23:04:28 +0200
+From: Barkle <barkle@gmx.net>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: RTL 8185
+References: <4A199FED.7000609@gmx.net>	 <3ace41890905242315i53dbb93dsf98e7a3a574a3c29@mail.gmail.com>	 <4A1B00E7.5070801@gmx.net>	 <3ace41890905251414v75544ed4o7bafdb3cdc170d1d@mail.gmail.com>	 <4A1B2186.3070107@gmx.net>	 <3ace41890905252258p54d858b0qfc172284cb65423f@mail.gmail.com>	 <4A1C1766.3030004@gmx.net> <4A1C74C1.7060600@gmx.net>	 <3ace41890905261651l1cd3742bu5ac1af6f631798f3@mail.gmail.com>	 <4A1CD905.4090406@gmx.net> <3ace41890905270121r4d724c73h2187b7a89931f46e@mail.gmail.com> <4A1D95F8.7050003@gmx.net> <4A1D9FC8.407@lwfinger.net>
+In-Reply-To: <4A1D9FC8.407@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger schrieb:
+> Barkle wrote:
+>   
+>> Hin-Tak Leung schrieb:
+>>     
+>>> On Wed, May 27, 2009 at 7:09 AM, Barkle <barkle@gmx.net> wrote:
+>>>
+>>>  
+>>>       
+>>>> After "ifconfig wlan0 up" the system freeze
+>>>> It's just every time the interface has to work, it's gonna freeze. It
+>>>> doesn't matter if I use wpa_supplicant or ifupdown (which invokes at
+>>>> last
+>>>> wpa_supplicant, so far as I know, on the debian system)
+>>>>     
+>>>>         
+>>> Hmm, try to disable any devices on the pci bus which you don't use
+>>> with setpci <id> command=0 before anything els
+>>>       
+>> Have a look at lspci
+>>
+>> *********************
+>> feta:~# lspci
+>> 00:00.0 Host bridge: Intel Corporation 82815 815 Chipset Host Bridge and
+>> Memory Controller Hub (rev 02)
+>> 00:02.0 VGA compatible controller: Intel Corporation 82815 Chipset
+>> Graphics Controller (CGC) (rev 02)
+>> 00:1e.0 PCI bridge: Intel Corporation 82801AA PCI Bridge (rev 02)
+>> 00:1f.0 ISA bridge: Intel Corporation 82801AA ISA Bridge (LPC) (rev 02)
+>> 00:1f.1 IDE interface: Intel Corporation 82801AA IDE Controller (rev 02)
+>> 00:1f.2 USB Controller: Intel Corporation 82801AA USB Controller (rev 02)
+>> 00:1f.3 SMBus: Intel Corporation 82801AA SMBus Controller (rev 02)
+>> 01:07.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8185
+>> IEEE 802.11a/b/g Wireless LAN Controller (rev 20)
+>> 01:09.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado]
+>> (rev 74)
+>> *********************
+>>
+>> Wich device do you mean?
+>>
+>> I disabled
+>> feta:~# setpci -d 8086:2413 command=0 [the SMBus]
+>> feta:~# setpci -d 8086:2412 command=0 [the USB]
+>> feta:~# setpci -d 8086:2410 command=0 [the ISA bridge]
+>> feta:~# setpci -d 8086:1132 command=0 [the VGA]
+>> feta:~# ifconfig wlan0 up
+>>
+>> => freeze
+>>     
+>
+> Please post the output of the following commands:
+>
+> iwconfig --version
+> ifconfig --version
+>   
 
---=-Tar+kO1GraXSYPlLpSIw
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+feta:~# iwconfig --version
+iwconfig  Wireless-Tools version 30
+          Compatible with Wireless Extension v11 to v22.
 
-El lun, 25-05-2009 a las 13:23 +0200, Ivo van Doorn escribi=C3=B3:
-> On Monday 25 May 2009, Alejandro Riveira Fern=C3=A1ndez wrote:
-> > I reported it previously but i'm resending it as a regresion
-> >=20
-> > More info on the bugzilla
-> >=20
-> >  http://bugzilla.kernel.org/show_bug.cgi?id=3D13362
-> >=20
-> > I bisected it in the estable tree (it regresses too) and the revert
-> > helps there but reverting the upstream commit in mainline does not help
-> > to fix it completely...
->=20
-> Bug 9273 -  rt2500pci: low TCP throughput
-> 	http://bugzilla.kernel.org/show_bug.cgi?id=3D9273
->=20
-> Bug 443203 -  Fedora rawhide + ralink =3D slow bit rate
-> 	https://bugzilla.redhat.com/show_bug.cgi?id=3D443203
->=20
-> [Hardy][Intrepid] Low bandwidth with rt2400 / rt2500 drivers
-> 	https://bugs.launchpad.net/ubuntu/+source/linux/+bug/190515
->=20
-> I can't call this a regression, dozens people have reported the problems
-> ranging from kernels 2.6.25 to 2.6.29. Perhaps in your case it worked sli=
-ghtly
-> better once, but that was not the case for all other users.
->=20
-> Have you tried the "iwconfig wlan0 rate54M" workaround?
+Kernel    Currently compiled with Wireless Extension v22.
 
-   Yep during various releases I used that workaround but once I
-switched to minstrel rate choosing alg (that's the neme isn't it) the
-problem gone away and i got allways a good connection for several
-releases and many kernels tried; till this patch. If I revert this patch
-the problem goes away completly and reliably (i'm using 2.6.29.4 with
-the patch reveted) so something has clearly regressed for me.
+wlan0     Recommend Wireless Extension v21 or later,
+          Currently compiled with Wireless Extension v22.
 
- You can see my coments ( ariveira ) on rt2x00 forums regarding the
-issues you mention (low speed that gets fixed forcing the rate) in the
-long thread about rt2500pci low rate[1].
-=20
- Checking the message i see that it was 2.6.27  when i began using
-minstrel and got a rock solid connection in 2.6.27.x, 2.6.28.x and
-2.6.29 minus 64e1b00c974ddeae6a60ebb02e1c487371905cea
-
- The problem is not that I get a low rate on connect (1Mbit) that i can
-easily fix with iwconfig the problem is that with 54M (and 48M and the
-like) connections I get a bumpy and low speed connection.
-=20
-So I honesty think it is not the same issue and I hope you read this as
-an interesting data point and not just as a duplicate.
-
-Would the output of this script[2] for 2.6.29.4 with and without the
-revert help you ?
-
->=20
-> Ivo
-
-Thanks for the response
-
-[1]
-http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=3D5&t=3D4579&start=3D4=
-5
-
-[2] http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=3D5&t=3D4660=20
-
---=-Tar+kO1GraXSYPlLpSIw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Esto es una parte de mensaje firmado digitalmente
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iQIcBAABAgAGBQJKGpIZAAoJEDO4iEReSTB2uOIQAJS9jIQd3a0T4OzZzF1m7QeY
-ec3Rdgv3w/bJt7fKiOmq7VPdEyzqFwl4vVKLSdQPE5Um6bwTUMOKf5DWaKSS3zeY
-nI09ynVi9e453C5Fe4rRoVFh1Fr6VuUhWZR5uQEadywSoi565qF5/kEjFfissvqS
-KzLTfUj/icX8MaJSPR0MnosLBE9jC+rIRrZ3vTMjdR/6itDcU49iGTy66Yjehv95
-4mLTua9TeBostrk5/XoMEy88S2W6xXb6ZigVKS5D9UBYgh3k4ttqbpfIP/C6DUCM
-ja+z9qtTw3I/oqy7Osp4CjZzOborXLRSp7gXSZrHN4ln5olRA0ylldcii6fIyr9z
-1VnN7W2V9eVb07PvJx7aHKcMoLHstM7Jd+iYWT/+4zUPdpD72H+4TxSQu5tdGC+R
-dvtsgrUdfRNBmdve7SYjlilM1yyLosouDt/e+LqobzOCStYL7aBkCStf9pf7pBWP
-wRukC415EorT5BhVfSvzK7tX2/0RTnwM0+axNLBZVAY//w1ewRp3A+hlC00YbaSg
-DtPsFEgyoB/ZJ+ndqMvPIMxXnn8fufpWzyDOv/JC8Y6bJxZxtbvQp7RM0S1PQOfH
-chutqFwZfRgrdvFmgah2oaCByoVKh2wiiLDYrzuElo7g47FBsLK6hb+QEuGvPzsB
-4i2B5PKn1tQnshqtgrPS
-=eiLk
------END PGP SIGNATURE-----
-
---=-Tar+kO1GraXSYPlLpSIw--
+feta:~# ifconfig --version
+net-tools 1.60
+ifconfig 1.42 (2001-04-13)
 
