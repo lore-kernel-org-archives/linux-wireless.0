@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49612 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755900AbZE3Utl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46722 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750695AbZE0FsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 16:49:41 -0400
-Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
- wireless on my system
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243716437.26585.4.camel@maxim-laptop>
-References: <1243716437.26585.4.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-T3YCNA5Dz2WVlxSeSqPu"
-Date: Sat, 30 May 2009 22:49:00 +0200
-Message-Id: <1243716540.13863.32.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 27 May 2009 01:48:10 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1M9Bzn-00013y-0G
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 01:48:11 -0400
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n4R5jCHE007456
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2009 07:45:12 +0200
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id n4R5jCIS007455
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2009 07:45:12 +0200
+From: Jeff Hansen <x@jeffhansen.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	ath9k-devel@lists.ath9k.org, Jeff Hansen <x@jeffhansen.com>
+Date: Wed, 27 May 2009 05:05:15 +0000
+Message-Id: <1243400715-13561-4-git-send-email-x@jeffhansen.com>
+In-Reply-To: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
+References: <1243400715-13561-1-git-send-email-x@jeffhansen.com>
+Subject: [PATCH 4/4] mac80211: Fix typos in "set default QoS values according to spec"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some of the acwmin and acwmax values were backwards in the original patch,
+which cut TX performance (on my device at least) down from ~25-30Mbps to
+2Mbps.  Performance is back up after this commit.
 
---=-T3YCNA5Dz2WVlxSeSqPu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jeff Hansen <x@jeffhansen.com>
+---
+ net/mac80211/util.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-On Sat, 2009-05-30 at 23:47 +0300, Maxim Levitsky wrote:
-> I use nl80211 wpa_suppicant driver.
-> With this commit (have just bisected) I can't connect to same AP twice,
-> and usually only a module reload, or somtimes restart of supplicant
-> help.
-> Actually usually I can't connect again after first successful connection
-> at all.
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 949d857..d096528 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -657,20 +657,20 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 
+ 		switch (queue) {
+ 		case 3: /* AC_BK */
+-			qparam.cw_max = aCWmin;
+-			qparam.cw_min = aCWmax;
++			qparam.cw_max = aCWmax;
++			qparam.cw_min = aCWmin;
+ 			qparam.txop = 0;
+ 			qparam.aifs = 7;
+ 			break;
+ 		default: /* never happens but let's not leave undefined */
+ 		case 2: /* AC_BE */
+-			qparam.cw_max = aCWmin;
+-			qparam.cw_min = aCWmax;
++			qparam.cw_max = aCWmax;
++			qparam.cw_min = aCWmin;
+ 			qparam.txop = 0;
+ 			qparam.aifs = 3;
+ 			break;
+ 		case 1: /* AC_VI */
+-			qparam.cw_max = aCWmin;
++			qparam.cw_max = aCWmax;
+ 			qparam.cw_min = (aCWmin + 1) / 2 - 1;
+ 			if (use_11b)
+ 				qparam.txop = 6016/32;
+@@ -679,7 +679,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 			qparam.aifs = 2;
+ 			break;
+ 		case 0: /* AC_VO */
+-			qparam.cw_max = (aCWmin + 1) / 2 - 1;
++			qparam.cw_max = (aCWmax + 1) / 2 - 1;
+ 			qparam.cw_min = (aCWmin + 1) / 4 - 1;
+ 			if (use_11b)
+ 				qparam.txop = 3264/32;
+-- 
+1.6.0.4
 
-Grab Luis's fix.
-
-johannes
-
---=-T3YCNA5Dz2WVlxSeSqPu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKIZu5AAoJEODzc/N7+QmaT+gQAIpMlUDObBxHgwTu488o7RGI
-44yp9FWzWmkx1xRFSzUwrUqynNaSHrI7OPn++ucl3yDaFpRHYF3fsVrzF+mgBuzm
-cQVtzQB+xY5EoetDu0jwdDNoD2uxTnb+U7BSpeGzO1jgWb2ssnlkHBaqdY/RIPTc
-e018XlqjzRUdDrt1grHZ6CPhNuOaqUnXsmpzBHzOXqKeHd5jBA+aNrinhNNf0BPN
-jxey6uIOkGEk6AVBgATAwhNorMsam4ps4kwc6OHu8/vq2OM0nLjpC9Hbe6Dbdyyr
-S4wXGgWT+ma5U2LpWxSER4a6/i2dgfbGt/r6/YBNf0fqihKeMbRzXRONpzTgtyq/
-0t2frBRKrS9F71h2ttN8gKE9MEE0fFfraT6TOarM618MV+pvYnSys350J/1P4t6J
-Exqaye/wkyoDWE5CskBSt/7i/IgZeORhOMj5nkkRVkodhcaO0KXg+0PLu9VK22C/
-Md3Zc2wF945AJ0kqDRi5Y7+bFKfVkX8YoCdHBIZy7pTx9ayq7Kq6CRAwKfpFw/Ej
-zkf512q3HzkHQhHN8gqA3XxwyqNW89eIirB1WjlcIxrqgHAOgXSSi1K6v4ghP9mf
-GG2AISBvDlDUTYtTvZs3Ae9xU76do3Jat6kR08N/42XdVM5oc1tWofsbbcYDnM14
-E4BNqiS5KobhKsXghKz9
-=m+bM
------END PGP SIGNATURE-----
-
---=-T3YCNA5Dz2WVlxSeSqPu--
 
