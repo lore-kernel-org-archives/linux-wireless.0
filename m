@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762592AbZE3RhT (ORCPT
+Received: from mail-gx0-f166.google.com ([209.85.217.166]:54558 "EHLO
+	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734AbZE1R1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 13:37:19 -0400
-Received: by mail-ew0-f176.google.com with SMTP id 24so6938274ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:20 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC v2 05/23] cfg80211: infer WPA and WPA2 support from TKIP and CCMP
-Date: Sat, 30 May 2009 18:36:39 +0100
-Message-Id: <1243705017-8784-6-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
-References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+	Thu, 28 May 2009 13:27:13 -0400
+Received: by gxk10 with SMTP id 10so9337360gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 10:27:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A1EC184.7040406@impulze.org>
+References: <4A1EAEA7.4070208@impulze.org> <1243528150.20853.7.camel@mj>
+	 <4A1EC184.7040406@impulze.org>
+Date: Thu, 28 May 2009 13:27:14 -0400
+Message-ID: <b6c5339f0905281027t29626cc9i9f7d2c49c571a170@mail.gmail.com>
+Subject: Re: ath5k: works only occasionaly
+From: Bob Copeland <me@bobcopeland.com>
+To: Daniel Mierswa <impulze@impulze.org>
+Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
-Not sure if this is how we want to detect WPA/WPA2 capability, but from
-what I've read this is valid. An alternative would be to add a
-capabilities flag to struct wiphy.
----
- net/wireless/wext-compat.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+On Thu, May 28, 2009 at 12:53 PM, Daniel Mierswa <impulze@impulze.org> wrote:
+> On 28.05.2009 18:29, Pavel Roskin wrote:
+>> If you can, try connecting to an access point with known good signal to
+>> see if the problem is caused by low signal.
+> Problem is that I don't have any "known working" APs in public. :-/
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index e5385f0..f090737 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -201,15 +201,15 @@ int cfg80211_wext_giwrange(struct net_device *dev,
- 	range->avg_qual.noise = range->max_qual.noise / 2;
- 	range->avg_qual.updated = range->max_qual.updated;
- 
--	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
--
- 	for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
- 		u32 suite = wdev->wiphy->cipher_suites[c];
- 
- 		if (suite == WLAN_CIPHER_SUITE_TKIP)
--			range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
-+			range->enc_capa |= (IW_ENC_CAPA_CIPHER_TKIP |
-+					    IW_ENC_CAPA_WPA);
- 		else if (suite == WLAN_CIPHER_SUITE_CCMP)
--			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
-+			range->enc_capa |= (IW_ENC_CAPA_CIPHER_CCMP |
-+					    IW_ENC_CAPA_WPA2);
- 		else if (suite == WLAN_CIPHER_SUITE_WEP40)
- 			range->encoding_size[range->num_encoding_sizes++] =
- 				WLAN_KEY_LEN_WEP40;
+Have you used other drivers for comparison purposes?
+
+If it works in madwifi or ndiswrapper/Windows, that would tend to indicate
+a driver bug (or missing feature like noise reduction), otherwise you may
+have a hardware problem, e.g. with the antenna connection.
+
 -- 
-1.6.0.6
-
+Bob Copeland %% www.bobcopeland.com
