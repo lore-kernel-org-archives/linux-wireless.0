@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx73.mail.ru ([94.100.176.87]:44417 "EHLO mx45.mail.ru"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754271AbZEZRLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 13:11:20 -0400
-Received: from mx27.mail.ru (mx27.mail.ru [94.100.176.41])
-	by mx45.mail.ru (mPOP.Fallback_MX) with ESMTP id 5F4A65BB1B4
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 20:52:16 +0400 (MSD)
-Received: from [91.77.192.80] (port=64495 helo=cooker.localnet)
-	by mx27.mail.ru with asmtp
-	id 1M8zsO-000NJU-00
-	for linux-wireless@vger.kernel.org; Tue, 26 May 2009 20:51:44 +0400
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: linux-wireless@vger.kernel.org
-Subject: iwl3945 losing association after resume from suspend
-Date: Tue, 26 May 2009 20:51:39 +0400
+Received: from reiner-h.de ([83.151.27.91]:43330 "EHLO reiner-h.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751352AbZE1Ieg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2009 04:34:36 -0400
+Received: from [192.168.0.42] (88-134-42-48-dynip.superkabel.de [88.134.42.48])
+	by reiner-h.de (Postfix) with ESMTP id C67A34E504
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 07:55:08 +0000 (UTC)
+Message-ID: <4A1E448E.1030201@reiner-h.de>
+Date: Thu, 28 May 2009 10:00:14 +0200
+From: Reiner Herrmann <reiner@reiner-h.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1748662.2MLGbgGHGS";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200905262051.42896.arvidjaar@mail.ru>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211_hwsim: Problem setting up communication
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1748662.2MLGbgGHGS
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-I am running 2.6.29.3. After resume from STR (assuming that long enough=20
-time has passed) connectivity is lost. There is no messages in log. Just=20
-running "wpa_cli reassociate" "fixes" it.
+I want to use mac80211_hwsim (from kernel 2.6.30-rc6) for some testing,
+but I can't get the two interfaces to communicate with each other.
 
-Is there any way driver can declare existing connection as "stale" and=20
-tell wpa_supplicant to reassociate?
+I've done the following:
 
-Thank you!
+# hostapd -B hostapd.conf
+Configuration file: hostapd.conf
+Using interface wlan0 with hwaddr 02:00:00:00:00:00 and ssid 'mac80211 test'
+# iwconfig wlan1 essid "mac80211 test"
+# ifconfig wlan0 10.0.0.1 up
+# ifconfig wlan1 10.0.0.2 up
 
-=2Dandrey
+wlan1 can successfully associate, but I can't reach any interface via
+the other:
 
---nextPart1748662.2MLGbgGHGS
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+# ping -I wlan0 10.0.0.2
+PING 10.0.0.2 (10.0.0.2) from 10.0.0.1 wlan0: 56(84) bytes of data.
+>From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
+# ping -I wlan1 10.0.0.1
+PING 10.0.0.1 (10.0.0.1) from 10.0.0.2 wlan1: 56(84) bytes of data.
+>From 10.0.0.2 icmp_seq=1 Destination Host Unreachable
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+With tcpdump I can see ARP requests on both interfaces:
+09:43:28.687273 ARP, Request who-has 10.0.0.2 tell 10.0.0.1, length 28
 
-iEYEABECAAYFAkocHhsACgkQR6LMutpd94wovgCg0oYQCwYMV9bgu9Jcr5T703vQ
-UogAoNCEWxti74kJUlCFt29EwZ3UmPSP
-=3pGh
------END PGP SIGNATURE-----
+But there is no answer or other traffic.
 
---nextPart1748662.2MLGbgGHGS--
+Did I forget soemthing in the setup?
+
+
+Thanks for your help.
+Regards,
+
+Reiner
