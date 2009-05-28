@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:22041 "EHLO c60.cesmail.net"
+Received: from www.tglx.de ([62.245.132.106]:54591 "EHLO www.tglx.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbZEKERs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 00:17:48 -0400
-Message-ID: <20090511001749.efx510zpk404owww-cebfxv@webmail.spamcop.net>
-Date: Mon, 11 May 2009 00:17:49 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Alexander Bartha <alex.xy.privat@gmx.at>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath
-	comes
-References: <20090203173228.GB9713@tesla> <20090206202205.218710@gmx.net>
-	<20090206211804.GG5031@tesla> <20090214230618.203560@gmx.net>
-	<43e72e890902141718v544f5caejb71f53bdadbf8a8f@mail.gmail.com>
-	<20090216205115.21860@gmx.net>
-	<43e72e890902161342j23b68a4eoabddb047fb9d9084@mail.gmail.com>
-	<20090508211237.316290@gmx.net> <1241818845.6240.4.camel@mj>
-	<43e72e890905081453h2d660e6dl38b714467c8f24cb@mail.gmail.com>
-	<43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
-In-Reply-To: <43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
+	id S1755468AbZE1JJA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2009 05:09:00 -0400
+Date: Thu, 28 May 2009 11:07:56 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+cc: linux-wireless@vger.kernel.org,
+	Steven Rostedt <rostedt@goodmis.org>,
+	bugzilla-daemon@bugzilla.kernel.org,
+	bugme-daemon@bugzilla.kernel.org, dandart@googlemail.com
+Subject: Re: [Bugme-new] [Bug 13317] New: No rt2x00 modules in RT kernels.
+In-Reply-To: <20090528000253.c731179c.akpm@linux-foundation.org>
+Message-ID: <alpine.LFD.2.00.0905281103310.3397@localhost.localdomain>
+References: <bug-13317-10286@http.bugzilla.kernel.org/> <20090528000253.c731179c.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+On Thu, 28 May 2009, Andrew Morton wrote:
+> > Is there a problem with using rt2x00 kernel modules with realtime kernels?
+> > In the info page it says that they need the symbol "BROKEN" which is probably
+> > to tell us that we can't use it. I can't compile it into kernels with an RT
+> > patch.
+> > Why? What's wrong with this mix of module and tree? Is there any way to make
+> > them happily coexist?
+> > 
+> 
+> Good question, but bugzilla isn't a good place to ask it.
+> 
+> Presumably there's some bustage in the rt2x00 driver which makes it not
+> work with -rt kernels.
+> 
+> Did the -rt guys tell the wireless guys about this?
 
-> I can reproduce, and I tried without the idle patches but I still see
-> the issue. I see this issue only after suspend. Did you suspend and
-> get this as well? I see this using AR5416. If you are seeing this on
-> suspend can you try with the patch I posted to linux-wireless to see
-> if it helps a little?
+There was some build failure which got fixed in meantime, but I forgot
+to remove the broken flag.
 
-I saw this on AR9280 without any suspends.  The card doesn't support  
-the 802.11a range, so it's not a direct equivalent of the problem I  
-bisected with ath5k (invalid rates when scanning and transmitting).
+Will do with the next release.
 
--- 
-Regards,
-Pavel Roskin
+Thanks,
+
+	tglx
+
