@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761221AbZE3RhJ (ORCPT
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:33898 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761597AbZE1GfV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 13:37:09 -0400
-Received: by mail-ew0-f176.google.com with SMTP id 24so6938274ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:11 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC v2 02/23] cfg80211: Advertise ciphers via WE according to driver capability
-Date: Sat, 30 May 2009 18:36:36 +0100
-Message-Id: <1243705017-8784-3-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
-References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+	Thu, 28 May 2009 02:35:21 -0400
+MIME-Version: 1.0
+Reply-To: maxim@mox.ru
+In-Reply-To: <1243480131.16597.174.camel@deadeye>
+References: <20090526112157.GA19976@doriath.ww600.siemens.net>
+	 <1243336988-20109-1-git-send-email-dbaryshkov@gmail.com>
+	 <1243336988-20109-2-git-send-email-dbaryshkov@gmail.com>
+	 <1243480131.16597.174.camel@deadeye>
+Date: Thu, 28 May 2009 10:35:20 +0400
+Message-ID: <6097c490905272335t55d96240j904c6f72438bd7fd@mail.gmail.com>
+Subject: Re: [PATCH 2/5] net: add IEEE 802.15.4 partial implementation
+From: Maxim Osipov <maxim.osipov@gmail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	slapin@ossfans.org, maxim.osipov@siemens.com,
+	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- net/wireless/wext-compat.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+> [...]
+>> --- /dev/null
+>> +++ b/include/net/ieee802154/nl.h
+> [...]
+>> +/* commands */
+>> +/* REQ should be responded with CONF
+>> + * and INDIC with RESP
+>> + */
+>> +enum {
+>> +     __IEEE802154_COMMAND_INVALID,
+>> +
+>> +     IEEE802154_ASSOCIATE_REQ,
+>> +     IEEE802154_ASSOCIATE_CONF,
+>> +     IEEE802154_DISASSOCIATE_REQ,
+>> +     IEEE802154_DISASSOCIATE_CONF,
+>> +     IEEE802154_GET_REQ,
+>> +     IEEE802154_GET_CONF,
+>> +/*   IEEE802154_GTS_REQ, */
+>> +/*   IEEE802154_GTS_CONF, */
+>
+> Why are some of these commented out?  Since they're apparently exposed
+> to user-space you can't insert them later.
+>
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 711e00a..b132f85 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -204,8 +204,16 @@ int cfg80211_wext_giwrange(struct net_device *dev,
- 	range->avg_qual.noise = range->max_qual.noise / 2;
- 	range->avg_qual.updated = range->max_qual.updated;
- 
--	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
--			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
-+	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
-+
-+	for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
-+		u32 suite = wdev->wiphy->cipher_suites[c];
-+
-+		if (suite == WLAN_CIPHER_SUITE_TKIP)
-+			range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
-+		else if (suite == WLAN_CIPHER_SUITE_CCMP)
-+			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
-+	}
- 
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
- 		int i;
--- 
-1.6.0.6
+We are working to define a next version of netlink API for the stack
+right now. But taking into account, that iz tool & upper layers of
+stack will be the only users of this API at least for next year, and
+IEEE802.15.4 spec is evolving, it is probably not necessary to come up
+with a very final version.
 
+Kind regards,
+Maxim
