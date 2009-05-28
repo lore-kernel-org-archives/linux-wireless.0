@@ -1,104 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:33333 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbZEZMnQ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45756 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbZE1C4I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 08:43:16 -0400
-Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
-From: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
-	<alejandro.riveira@gmail.com>
-Reply-To: alejandro.riveira@gmail.com
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-In-Reply-To: <200905261235.36658.IvDoorn@gmail.com>
-References: <1243247687.5322.8.camel@varda>
-	 <200905261058.01039.IvDoorn@gmail.com> <1243333072.4888.2.camel@varda>
-	 <200905261235.36658.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/EJ12HYXwbdaS93zvj3V"
-Date: Tue, 26 May 2009 14:43:11 +0200
-Message-Id: <1243341791.7607.4.camel@varda>
-Mime-Version: 1.0
+	Wed, 27 May 2009 22:56:08 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Jouni.Malinen@atheros.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Shan.Palanisamy@Atheros.com
+Subject: [PATCH] mac80211: handle -EALREADY on cfg80211 op assoc req
+Date: Wed, 27 May 2009 22:56:05 -0400
+Message-Id: <1243479365-19353-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the SME requests to associate to an open AP
+ieee80211_sta_set_extra_ie() can be called with zero IE
+length. When this happens or when the extra IE has already
+been set -EALREADY is passed down and the supplicant will
+complain that the operation is already in progress and it will
+not let us associate. We correct this by treating -EALREADY
+from ieee80211_sta_set_extra_ie() as a success just as we do
+for wext.
 
---=-/EJ12HYXwbdaS93zvj3V
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: Shan.Palanisamy@Atheros.com
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/cfg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-El mar, 26-05-2009 a las 12:35 +0200, Ivo van Doorn escribi=C3=B3:
-
-> > What causes the regression then?
->=20
-> No idea. Apparently the invalid bitmask is accepted by the device under
-> certain conditions. Which would be very odd.... But since dozens
-> of people reported this problem for 2.6.27 as well, it probably depends
-> heavily on the actual chipset revision or configuration.
->=20
-> > Anyway For the script to work what config options do I need? debugfs?
-> > Anything else ?
->=20
-> CONFIG_DEBUGFS
-> CONFIG_MAC80211_DEBUGFS
-> CONFIG_RT2X00_LIB_DEBUGFS
->=20
-> And thats it, make sure debugfs is mounted and just run the script.
-> The script will detect mount location and rt2x00 interface.
-
-
-That's what I get[1] with the good kernel but I think the script failed
-because I got a very short output
-
-$ sudo bash rt2x00_regdump.sh | xclip
-
-kernel: 2.6.29.4-00258-ga2c0a36
-driver: rt2500pci
-version: 2.2.3
-compiled: May 26 2009 13:05:03
-dev_flags: 0x00000a2f
-rt chip: 0201
-rf chip: 0003
-revision:00000004
-
-csr length: 93
-eeprom length: 256
-bbp length: 64
-rf length: 5
-
-
-And nothing more...
-
->=20
-> Ivo
-
-Alejandro
-
-[1] Had to install gawk mawk does not have --posix.=20
-
---=-/EJ12HYXwbdaS93zvj3V
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Esto es una parte de mensaje firmado digitalmente
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iQIcBAABAgAGBQJKG+PaAAoJEDO4iEReSTB2rF4P/2kYIa6k+zRB7VHNFA894EF7
-ml0NC8kQZS6ze2Umjy/FCH9S7d68izmTHMzU5K7A65tPXBhp33uZ0Su7yi+lHOho
-ftU5DTX+1+TiibbTwCcIICgyb0NzRfD4DG/ZIZbK0dd1wf3/xqGYL/VVoY98lGui
-eJl1+q09UWCNAnIYwoLY9D3kudKD0ttW5JVVEippbgQN40iocDPosssMRpu9ODMt
-+Q/vN9K3TXmnP82uu4S83A0jSJnlby+QrAnG2YNPxWrC8Pz9ieKJbD1Ah/00BG3l
-FrVbbHtErUfnpWYxIdnB4T0AtkJIpuKZfIgX9I3yYjfO2qqnnwdJTpBKzGsESlFw
-uD2LMVy0pKqrz/Lx437QKO/Y1tsS4sys+9e3Khay0FEafYz31Zj6LMgulCM7xonU
-77TC9TuLaMp37yedBsN6A6mNSe239MGo/k8dgHvNpZxdc7/DiYXGSuEHybnZHYa1
-xJcaA0UMBhGlth6GfemKQ1a2Vf+3xLWjr0Lu3CpyedRzgLItEAwEp7M3Jgel7RN7
-Jr86wvxQXFJYls1WNHEWWRv/5MfRzBRn6XvPZUsn1Fet4DVduHdvN5G6BwdaCnLE
-xvuyyJHeoTGAp1oIofQcKkabAZD3dcDqBWT7+0Pp+3NCpzd/ersfPC9vm/RPliET
-DwtRYas9msE+SKlUjMp8
-=2saU
------END PGP SIGNATURE-----
-
---=-/EJ12HYXwbdaS93zvj3V--
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 77e9ff5..68fa87b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1255,7 +1255,7 @@ static int ieee80211_assoc(struct wiphy *wiphy, struct net_device *dev,
+ 		sdata->u.mgd.flags |= IEEE80211_STA_AUTO_SSID_SEL;
+ 
+ 	ret = ieee80211_sta_set_extra_ie(sdata, req->ie, req->ie_len);
+-	if (ret)
++	if (ret && ret != -EALREADY)
+ 		return ret;
+ 
+ 	if (req->use_mfp) {
+-- 
+1.6.0.6
 
