@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:52304 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754897AbZENIYC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 04:24:02 -0400
-Received: by bwz22 with SMTP id 22so1127138bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 01:24:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890905132134v1f3f32f8p8dc73a09834100b4@mail.gmail.com>
-References: <1242030669.6930.10.camel@johannes.local>
-	 <9b2b86520905120709v4bd00e1eo4da26e6c5f75c4ba@mail.gmail.com>
-	 <43e72e890905132134v1f3f32f8p8dc73a09834100b4@mail.gmail.com>
-Date: Thu, 14 May 2009 09:24:01 +0100
-Message-ID: <9b2b86520905140124r8826484g7a0f040536785c8d@mail.gmail.com>
-Subject: Re: [RFT v9] rfkill: rewrite
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Gaurav.Jauhar@atheros.com,
-	Vivek Natarajan <vivek.natarajan@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:48212 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756216AbZE1Q3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2009 12:29:10 -0400
+Subject: Re: ath5k: works only occasionaly
+From: Pavel Roskin <proski@gnu.org>
+To: Daniel Mierswa <impulze@impulze.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A1EAEA7.4070208@impulze.org>
+References: <4A1EAEA7.4070208@impulze.org>
+Content-Type: text/plain
+Date: Thu, 28 May 2009 12:29:10 -0400
+Message-Id: <1243528150.20853.7.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/14/09, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, May 12, 2009 at 7:09 AM, Alan Jenkins
-> <sourcejedi.lkml@googlemail.com> wrote:
->> On 5/11/09, Johannes Berg <johannes@sipsolutions.net> wrote:
->>> This patch completely rewrites the rfkill core to address
->>> the following deficiencies:
+On Thu, 2009-05-28 at 17:32 +0200, Daniel Mierswa wrote:
+> i'm facing issues with ath5k and my laptop ever since i first installed
+> it, linux 2.6.24 or somewhere around there.
 
->> I tested on todays wireless-testing, aka v2.6.30-rc5-23297-gbf2c6a3.
->> Somehow, it triggers an OOPS
->>
->> Function: req_reg_info_regd
->> Process: modprobe
->>
->> Call trace:
->> wiphy_apply_custom_regulatory
->> ath5k_regd_init
->> ath5k_reg_notifier
->> ath5k_pci_probe
->> ...
->>
->> Photo:
->> <http://picasaweb.google.com/sourcejedi.lkml/Screenshots#5334936857267342674>
->
-> BTW can explain how to reproduce. Did you just use wireless-testing
-> and johanne's rfkill rewrite and use ath5k and can easily reproduce?
+The current kernel version is more important than the one you tried
+initially.  Also, the chip revision from the kernel log may be useful.
 
-Yes.  wireless-testing (v2.6.30-rc5-23297-gbf2c6a3) + Johan's rfkill
-rewrite.  ath5k on the original model EeePC.  The OOPS happens on
-every boot with this combination.
+> i get occasionaly associated and working wireless lan at home though any
+> attempt to access public wifi (university/schools/cafes) results in
+> "CTRL-EVENT-DISCONNECTED -- remove keys"
 
-> Do you have an ath9k card?
+The reason for disconnect should be printed before that line.
 
-No.
+>  or "noise floor calibration
+> timeout" errors from wpa_supplicant
 
-Thanks,
-Alan
+It must be from the driver, not from wpa_supplicant.
+
+>  (don't worry i already tried every
+> wpa_supplicant version from 0.6.1 to trunk, whereas the newer ones even
+> with the -Dnl80211 option).
+
+Using -Dwext or -Dnl80211 should have no effect on disconnects.
+
+>  sometimes wpa_supplicant associates me but
+> packets will just time out (dhcp, ping, etc) and it will disassociate me
+> shortly after that attempt, also tried using nohwcrypt=1 as module
+> parameter and different kernels (as of request in
+> #linux-wireless/Freenode) which didn't cause any effect at all.
+> as you can imagine it's hard to provide you with useful debug
+> information right now, since i'm at home but i'm thankful for any
+> suggestions and guides on how to give you more useful information than that.
+
+If you can, try connecting to an access point with known good signal to
+see if the problem is caused by low signal.
+
+-- 
+Regards,
+Pavel Roskin
