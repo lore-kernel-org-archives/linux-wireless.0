@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31164 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753017AbZEZDSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2009 23:18:39 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 3/3] iwmc3200wifi: fix link error when CFG80211 is not selected
-Date: Tue, 26 May 2009 11:10:48 +0800
-Message-Id: <1243307448-17441-3-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
-References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
- <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
+Received: from yx-out-2324.google.com ([74.125.44.29]:55656 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754878AbZE1Oke convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2009 10:40:34 -0400
+Received: by yx-out-2324.google.com with SMTP id 3so3044108yxj.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 07:40:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090528085555.GA20314@jm.kir.nu>
+References: <45e8e6c40905271630x39bcfca6w72560150222e7960@mail.gmail.com>
+	 <20090528085555.GA20314@jm.kir.nu>
+Date: Thu, 28 May 2009 07:40:36 -0700
+Message-ID: <45e8e6c40905280740i3ed1c25dkd0b1a86fe791f3b9@mail.gmail.com>
+Subject: Re: ath9k locks up when bringing up a mesh point interface
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch makes iwmc3200wifi select CFG80211 instead of LIB80211.
-This fixed module link error reported by Randy Dunlap
-<randy.dunlap@oracle.com> when compiling iwmc3200wifi without
-cfg80211 selected. WIRELESS_EXT is also selected by iwmc3200wifi.
+On Thu, May 28, 2009 at 1:55 AM, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, May 27, 2009 at 04:30:17PM -0700, Andrey Yurovsky wrote:
+>> With today's wireless-testing, bring up an ath9k mesh point locks up
+>> my test laptop (single CPU) but I don't get any messages (/proc/sysrq
+>> set to 9, unfortunately I can't use a serial console right now).
+>
+> I don't see a full lockup with two cores, but "ifconfig mesh0 up"
+> process ends up in some kind of unkillable state eating all CPU.. I
+> would assume this could be the same issue that just happens to show up
+> more severe with a single CPU.
+>
+> dmesg is not showing anything else apart from "mesh: running mesh
+> housekeeping" popping up every 60 seconds. Pretty much all networking
+> commands hang (rtnl lock held?) after that, though. After some while,
+> hung task debugging does indeed start popping up messages that show
+> rtnl_mutex held, so that's why the system is getting quite unusable.
+>
+> Anyway, I don't know what exactly is killing the mp setup (or well, not
+> exactly killing, but more like causing a busy loop somewhere) or whether
+> it has anything to do with the driver, but at least this one seems to be
+> trivial to reproduce:
+>
+> modprobe ath9k
+> iw phy phy0 interface add mesh0 type mp mesh_id foo
+> ifconfig mesh0 up
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/Kconfig |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Thanks.  For what it's worth, substituting rt2x00 for ath9k works (ie:
+one can bring up a mesh) on the same kernel, so it likely has
+something to do with the driver.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
-index ae84dda..41bd4b2 100644
---- a/drivers/net/wireless/iwmc3200wifi/Kconfig
-+++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
-@@ -1,7 +1,8 @@
- config IWM
- 	tristate "Intel Wireless Multicomm 3200 WiFi driver"
- 	depends on MMC && WLAN_80211 && EXPERIMENTAL
--	select LIB80211
-+	select WIRELESS_EXT
-+	select CFG80211
- 	select FW_LOADER
- 	select RFKILL
- 
--- 
-1.6.0.4
-
+  -Andrey
