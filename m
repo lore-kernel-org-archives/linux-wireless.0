@@ -1,77 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44607 "EHLO
+Received: from senator.holtmann.net ([87.106.208.187]:38823 "EHLO
 	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbZEDRs1 (ORCPT
+	with ESMTP id S1755780AbZE1HUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2009 13:48:27 -0400
-Subject: Re: [PATCH] add support for showing power constraint IE
+	Thu, 28 May 2009 03:20:51 -0400
+Subject: Re: [PATCH 3/4 v2] libertas: implement function init/shutdown
+ commands for SD8688
 From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1241458558.8683.84.camel@johannes.local>
-References: <1241453167-3720-1-git-send-email-marcel@holtmann.org>
-	 <1241453408.8683.53.camel@johannes.local>
-	 <1241454909.2903.17.camel@localhost.localdomain>
-	 <1241455125.8683.60.camel@johannes.local>
-	 <1241455848.2903.18.camel@localhost.localdomain>
-	 <1241456088.8683.62.camel@johannes.local>
-	 <1241456863.2903.29.camel@localhost.localdomain>
-	 <1241458558.8683.84.camel@johannes.local>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1243465413-4997-1-git-send-email-bzhao@marvell.com>
+References: <1243465413-4997-1-git-send-email-bzhao@marvell.com>
 Content-Type: text/plain
-Date: Mon, 04 May 2009 10:48:15 -0700
-Message-Id: <1241459295.2903.40.camel@localhost.localdomain>
+Date: Thu, 28 May 2009 09:20:32 +0200
+Message-Id: <1243495232.16631.5.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi Bing,
 
-> > 	Vendor specific: OUI 00:90:4c, data: 33 0c 10 1f ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > 	Vendor specific: OUI 00:90:4c, data: 34 03 00 05 00 00 00 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > 	Unknown IE (45): 0c 10 1f ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 00 00 00 00
-> > 	Unknown IE (61): 03 00 01 00 00 00 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > 	WPS:	 * Version: 1.0
-> > 		 * Manufacturer: D-Link Systems
-> > 		 * Model: DIR-615
-> > 		 * Device name: Wireless N Router
-> > 		 * Config methods: Label
-> > 
-> > I didn't find any specs to decode IE 45 and 61 since all of them mark
-> > these as reserved. Not sure if these are defined in future specs or if
-> > they are deprecated IE. And it seems its data is similar to what is in
-> > the vendor specific elements.
+> SD8688 is a WLAN/Bluetooth combo chip and both functions are supported
+> in a single firmware image. FUNC_INIT and FUNC_SHUTDOWN commands are
+> implemented to utilize the multiple function feature.
 > 
-> Both are HT.
-
-do we have the specs somewhere then I might can give it a try. Also WMM
-needs some improvements.
-
-> > The other one that keeps showing up in my area is:
-> > 
-> > 	Unknown IE (47): 06
+> When SD8688 card is inserted, the firmware image should be downloaded
+> only once through either WLAN function (Libertas driver) or Bluetooth
+> function (Bluetooth driver).
 > 
-> "Broadcom proprietary" -- seems it would make sense to ignore that.
-
-Since it not showing up until you give -u there is no need to ignore it,
-but where do you find that this is Broadcom proprietary and why the f*
-they get to use an official IE number?
-
-> > And I do have some other vendor specific ones, that I don't really care
-> > about and we might even never know what they are:
-> > 
-> > 	Vendor specific: OUI 00:03:7f, data: 01 01 00 17 00 00
-> > 	Vendor specific: OUI 00:03:7f, data: 02 01 01 4d 00 03 a4 00 00
-> > 	Vendor specific: OUI 00:03:2f, data: 01 00 01
+> This patch adds function init/shutdown for SD8688 WLAN function only.
 > 
-> You can check wireshark, sometimes it has something useful. I think
-> there are pre-wifi HT IEs too in some vendor IE, might be one of these.
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/libertas/host.h    |    2 +
+>  drivers/net/wireless/libertas/if_sdio.c |   43 +++++++++++++++++++++++++++++-
+>  2 files changed, 43 insertions(+), 2 deletions(-)
 > 
-> https://mentor.ieee.org/802.11/documents?x_dcn=31&x_year=2009 is useful
-> too (at least for 2009, for next year somebody will have to find the DCN
-> again)
+> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+> index 8ff8ac9..fe8f0cb 100644
+> --- a/drivers/net/wireless/libertas/host.h
+> +++ b/drivers/net/wireless/libertas/host.h
+> @@ -86,6 +86,8 @@
+>  #define CMD_MESH_CONFIG_OLD			0x00a3
+>  #define CMD_MESH_CONFIG				0x00ac
+>  #define	CMD_SET_BOOT2_VER			0x00a5
+> +#define	CMD_FUNC_INIT				0x00a9
+> +#define	CMD_FUNC_SHUTDOWN			0x00aa
+>  #define CMD_802_11_BEACON_CTRL			0x00b0
+>  
+>  /* For the IEEE Power Save */
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index e998c12..84fef6b 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -39,8 +39,12 @@
+>  #include "decl.h"
+>  #include "defs.h"
+>  #include "dev.h"
+> +#include "cmd.h"
+>  #include "if_sdio.h"
+>  
+> +/* set this flag in if_sdio_exit_module() if user removes this module */
+> +static u8 user_rmmod;
+> +
 
-I found an indication of what bit 1 of extended capabilities means. I do
-have seen an AP with that somewhere around :)
+what is this suppose to be doing? There is no description in the commit
+messages or the code. And it looks pretty hackish to me.
 
 Regards
 
