@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38471 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbZEKNqJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56622 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757763AbZE1Bsq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 09:46:09 -0400
-Date: Mon, 11 May 2009 08:48:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: feldmaus <feldmann_markus@gmx.de>
-Cc: linux-wireless@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: hints an infos to start debuging on hp-wmi
-Message-ID: <20090511124855.GA2721@tuxdriver.com>
-References: <gu4g0g$s1e$1@ger.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <gu4g0g$s1e$1@ger.gmane.org>
+	Wed, 27 May 2009 21:48:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: jal2@gmx.de, Peter.Grabienski@Atheros.com,
+	Stephen.Chen@Atheros.com, Michael.Fortin@Atheros.com,
+	Johnny.Cheng@Atheros.com, Yuan-Gu.Wei@atheros.com,
+	otus-devel@lists.madwifi-project.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 0/2] ar9170: initial stage 1 firmware support /  AVM fritz
+Date: Wed, 27 May 2009 21:48:44 -0400
+Message-Id: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 09, 2009 at 07:55:13PM +0200, feldmaus wrote:
+Please give this a shot with the AVM Fritz device.
+At least for me I can only scan, I cannot associate to an AP
+yet with the 1 stage firmware but I've been told it does seem
+to work with some devices..
 
-> i had many trouble with the wlan card of my girl friends HP zv5265ea
-> Laptop. It is a BCM4303 Wlan Card. The Problem i think is the
-> hp-wmi driver, so i want to debug it.
+If you can even at least scan with the AVM fritz devices then this means
+we just need to finish the 1 stage firmware support in order for them to work.
+I cannot work on this more though so if someone has time and you want to pick
+up the work please refer the Otus code (in staging/otus/ and ensure that the
+code #ifdef'd around ZM_OTUS_LINUX_PHASE_2 is _not_ used. ar9170 and otus
+are very different (which is good) but unfortunately for this exercise this
+means its very difficult to find the exact calls #ifdef'd on the ar9170 port.
+I may have missed one or two more.
 
-Is the problem related to RF-Kill?  If not, then hp-wmi is probably
-not the best place to start...
+Luis R. Rodriguez (2):
+  ar9170: add initial support for 1-stage firmware
+  ar9170: add AVM FRITZ devices
 
-> It would be nice if someody gives me a start point how to ?
-> I currently using the 2.6.29-rc7 kernel sources.
-> Which sources or header files do i have to modify ?
+ drivers/net/wireless/ath/ar9170/phy.c |   13 ++++++--
+ drivers/net/wireless/ath/ar9170/usb.c |   50 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ar9170/usb.h |    2 +
+ 3 files changed, 57 insertions(+), 8 deletions(-)
 
-./drivers/platform/x86/hp-wmi.c
-
-> Are there any developers documentation for the hp-wmi ?
-
-No idea...
-
-Good luck!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
