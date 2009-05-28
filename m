@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:60901 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971AbZE3P0P (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:58753 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756335AbZE1JD4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2009 11:26:15 -0400
+	Thu, 28 May 2009 05:03:56 -0400
+Received: by bwz22 with SMTP id 22so5279365bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 02:03:57 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: alan-jenkins@tuffmail.co.uk
-In-Reply-To: <1243638870.13863.1.camel@johannes.local>
-References: <1242850139-25438-1-git-send-email-jirislaby@gmail.com>
-	 <200905260124.03287.tobias.doerffel@gmail.com>
-	 <1243294366.29222.10.camel@johannes.local>
-	 <200905300033.12204.tobias.doerffel@gmail.com>
-	 <1243638870.13863.1.camel@johannes.local>
-Date: Sat, 30 May 2009 16:26:13 +0100
-Message-ID: <9b2b86520905300826q3eeab9cdjf575d98c7aca9ad2@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: added initial RFKILL support
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tobias Doerffel <tobias.doerffel@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20090528084050.GA4401@tuxdriver.com>
+References: <bug-13317-10286@http.bugzilla.kernel.org/>
+	 <20090528000253.c731179c.akpm@linux-foundation.org>
+	 <20090528084050.GA4401@tuxdriver.com>
+Date: Thu, 28 May 2009 11:03:57 +0200
+Message-ID: <a32f33a40905280203x772f0628ub0ab2f57b3b21da1@mail.gmail.com>
+Subject: Re: [Bugme-new] [Bug 13317] New: No rt2x00 modules in RT kernels.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	bugzilla-daemon@bugzilla.kernel.org,
+	bugme-daemon@bugzilla.kernel.org, dandart@googlemail.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/30/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sat, 2009-05-30 at 00:33 +0200, Tobias Doerffel wrote:
+On Thu, May 28, 2009 at 10:40 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, May 28, 2009 at 12:02:53AM -0700, Andrew Morton wrote:
 >
->> > Could you try to work against v11
->> > of my rfkill patch, or better even against the cfg80211 rfkill instead?
->> I didn't look at both of them yet. However I think we first should try to
->> get
->> current rfkill support into mainline as fast as possible. Improvements and
+>> Presumably there's some bustage in the rt2x00 driver which makes it not
+>> work with -rt kernels.
 >>
->> adaptations to reworked rfkill framework can follow.
+>> Did the -rt guys tell the wireless guys about this?
 >
-> No other comments from me -- but since the v11 of the rfkill rewrite
-> will certainly hit the tree before your patch (it's almost in) you
-> _will_ have to work against it. I'll also try to make the cfg80211
-> rfkill hit the tree very soon for reasons I'll explain elsewhere -- you
-> would be better off working against that because then your rfkill code
-> is very very very simple and doesn't need to do much at all.
->
-> johannes
+> Honestly, I don't recall hearing about it.  Ivo?
 
-Btw, I believe the new rfkill core behaviour should avoid the concern
-I raised about the EeePC.
+No, I can't recall any -rt specific issues either, and so far no
+regular open bug
+is critical enough to make rt2x00 depend on CONFIG_BROKEN.
 
-Reminder: the eeepc-laptop implements platform rfkill on the original
-model(s) by hotplugging the entire ath5k device.  If you boot with it
-in the blocked state, the old rfkill core would "lock in" that state
-as the default.  If you then hotplug the ath5k device _and it comes up
-with an rfkill device of it's own_, my concern is that the new rfkill
-device would be initialized to a blocked state.  It would be
-impossible to enable the wireless.
-
-The new core removes this idea of a separate "default" state, so it
-can't have this problem.
-
-Regards
-Alan
+Ivo
