@@ -1,75 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:7308 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754089AbZEAOKu (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:42709 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbZE1VgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 May 2009 10:10:50 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1166657fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2009 07:10:47 -0700 (PDT)
-Subject: Re: PHY hangs on AR2425 (AR5007EG)
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <bcopeland@gmail.com>
-Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <b6c5339f0905010507x75b14181t7263eb1717cd278e@mail.gmail.com>
-References: <1240761579.10972.11.camel@maxim-laptop>
-	 <1241036667.12942.0.camel@maxim-laptop>
-	 <b6c5339f0905010507x75b14181t7263eb1717cd278e@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 01 May 2009 17:10:43 +0300
-Message-Id: <1241187043.12695.10.camel@maxim-laptop>
-Mime-Version: 1.0
+	Thu, 28 May 2009 17:36:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org, jal2@gmx.de,
+	Peter.Grabienski@Atheros.com, Stephen.Chen@Atheros.com,
+	Michael.Fortin@Atheros.com, Johnny.Cheng@Atheros.com,
+	Yuan-Gu.Wei@atheros.com, otus-devel@lists.madwifi-project.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] ar9170: add support for 1-stage firmware
+Date: Thu, 28 May 2009 17:36:04 -0400
+Message-Id: <1243546565-19404-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
+References: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-05-01 at 08:07 -0400, Bob Copeland wrote:
-> On Wed, Apr 29, 2009 at 4:24 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> >> The issue is that if I load its TX unit up to it's maximum throughput,
-> >> it stalls each and every few seconds, and only way to
-> >
-> > Are you aware of that bug?
-> 
-> Yeah, thanks, haven't lost the report but haven't
-> had a chance to investigate so far.
-No problem
+You can get the stage 1 firmware from here:
 
-> 
-> By load TX up, do you mean you are sending large
-> files, using ping, iperf, or.. ?
-> 
-Yes, I use netcat to send zeros via tcp.
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/ar9170.fw
 
-Actually sometimes, it seems that doing a download, could also trigger
-same behavier, but this is much rareler.
+md5sum: 34feec4ec0eae3bb92c7c1ea2dfb4530
+sha1sum: 6e5250498b815c2940d97242de31e054ae44e079
 
-When I bombard the aspire one with udp packets (= TX unit doesn't work
-at all - maybe it sends ACKS, but I haven't tested this, then I get
-lower speed, don't remember what exactly, but around 1.5 MB/s, and no
-hangs at all).
+Its license:
 
-I also did another test, I manually lowered TX rate on both ends (and
-this does work now), and yet, I got same behavior. (ends were iwl3945
-and ath5k)
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/LICENSE
 
-On the other hand, if I transfer data via router again iwl3945-ath5k) (=
-half of the time card doesn't work) I never see any hangs.
+This is a new firmware, tested with WNDA3100.
 
-Same hangs happen if I transfer data to wired host, my third computer.
+Cc: Peter Grabienski <Peter.Grabienski@Atheros.com>
+Cc: Stephen Chen <Stephen.Chen@Atheros.com>
+Cc: Michael Fortin <Michael.Fortin@Atheros.com>
+Cc: Johnny Cheng <Johnny.Cheng@Atheros.com>
+Cc: Yuan-Gu Wei <Yuan-Gu.Wei@atheros.com>
+Cc: Joerg Albert <jal2@gmx.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ar9170/usb.c |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
 
-
-If there is anything I can test futher please ask,
-
-
-Also (small plug) still card hangs sometimes after resume from ram with
-message : 'failed to wakeup MAC' S2RAM/S2DISK doesn't help, module
-reload doesn't help, it will fail to load at all, since first thing it
-does it 'wakes up the MAC'
-
-Other that the above two bugs, everything works fine (ah forgot that I
-need to rewrite led code in mac80211, to make it usable, some day I do
-so).
-
-
-Best regards,
-	Maxim Levitsky
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index d7c13c0..3c97c09 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -51,6 +51,7 @@ MODULE_AUTHOR("Johannes Berg <johannes@sipsolutions.net>");
+ MODULE_AUTHOR("Christian Lamparter <chunkeey@web.de>");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Atheros AR9170 802.11n USB wireless");
++MODULE_FIRMWARE("ar9170.fw");
+ MODULE_FIRMWARE("ar9170-1.fw");
+ MODULE_FIRMWARE("ar9170-2.fw");
+ 
+@@ -504,17 +505,23 @@ static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
+ {
+ 	int err = 0;
+ 
+-	err = request_firmware(&aru->init_values, "ar9170-1.fw",
++	err = request_firmware(&aru->firmware, "ar9170.fw",
+ 			       &aru->udev->dev);
+-	if (err) {
+-		dev_err(&aru->udev->dev, "file with init values not found.\n");
+-		return err;
++	if (!err) {
++		aru->init_values = NULL;
++		return 0;
+ 	}
+ 
++	dev_err(&aru->udev->dev, "ar9170.fw firmware file "
++		"not found, trying old firmware...\n");
++
++	err = request_firmware(&aru->init_values, "ar9170-1.fw",
++			       &aru->udev->dev);
++
+ 	err = request_firmware(&aru->firmware, "ar9170-2.fw", &aru->udev->dev);
+ 	if (err) {
+ 		release_firmware(aru->init_values);
+-		dev_err(&aru->udev->dev, "firmware file not found.\n");
++		dev_err(&aru->udev->dev, "file with init values not found.\n");
+ 		return err;
+ 	}
+ 
+@@ -548,6 +555,9 @@ static int ar9170_usb_upload_firmware(struct ar9170_usb *aru)
+ {
+ 	int err;
+ 
++	if (!aru->init_values)
++		goto upload_fw_start;
++
+ 	/* First, upload initial values to device RAM */
+ 	err = ar9170_usb_upload(aru, aru->init_values->data,
+ 				aru->init_values->size, 0x102800, false);
+@@ -557,6 +567,8 @@ static int ar9170_usb_upload_firmware(struct ar9170_usb *aru)
+ 		return err;
+ 	}
+ 
++upload_fw_start:
++
+ 	/* Then, upload the firmware itself and start it */
+ 	return ar9170_usb_upload(aru, aru->firmware->data, aru->firmware->size,
+ 				0x200000, true);
+-- 
+1.6.0.6
 
