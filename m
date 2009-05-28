@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([204.127.217.101]:35871 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbZEQXQq (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60846 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754103AbZE1O6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2009 19:16:46 -0400
-Message-ID: <4A109AC5.7040008@lwfinger.net>
-Date: Sun, 17 May 2009 18:16:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 28 May 2009 10:58:07 -0400
+Date: Thu, 28 May 2009 17:58:04 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Reiner Herrmann <reiner@reiner-h.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211_hwsim: Problem setting up communication
+Message-ID: <20090528145804.GA32743@jm.kir.nu>
+References: <4A1E448E.1030201@reiner-h.de>
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [Bug #13319] Page allocation failures with b43 and p54usb
-References: <_AjETDMbIoL.A.DcH.RYzDKB@chimera>	<385Pu-agh7M.A.SU.iYzDKB@chimera> <20090516163610.8a012268.akpm@linux-foundation.org>
-In-Reply-To: <20090516163610.8a012268.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A1E448E.1030201@reiner-h.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Morton wrote:
+On Thu, May 28, 2009 at 10:00:14AM +0200, Reiner Herrmann wrote:
+
+> I want to use mac80211_hwsim (from kernel 2.6.30-rc6) for some testing,
+> but I can't get the two interfaces to communicate with each other.
+
+> # ifconfig wlan0 10.0.0.1 up
+> # ifconfig wlan1 10.0.0.2 up
 > 
-> Well..  order-1 GFP_ATOMIC allocations are unreliable.  The networking
-> code should hanlde the situation and recover.  I assume that is
-> happening in this case?
+> wlan1 can successfully associate, but I can't reach any interface via
+> the other:
+> 
+> # ping -I wlan0 10.0.0.2
+> PING 10.0.0.2 (10.0.0.2) from 10.0.0.1 wlan0: 56(84) bytes of data.
+> >From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
 
-Yes, the driver has recovered in all cases so far.
+Linux IP/networking stack does not really seem to like connections
+between local interfaces unless this goes through lo.. Or well, at least
+I haven't figured out how to configure this without some kernel code
+changes. It would be kind of nice to get this working, but anyway, I
+made a small program for checking both unicast and broadcast
+communications for this type of use: hwsim_test from
+http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim/tools
 
-> Perhaps we did something in that code after 2.6.29 which increased the
-> frequency of the order-1 allocation attempts?  Maybe earlier kernels
-> used order-0 all the time?  Those are much more reliable.
+(it uses packet sockets bound to the interface and does not rely on the
+kernel IP stack)
 
-I think something happened to change the allocation as I never saw these O(1)
-failures before with these particular drivers. I put in a few test printk's and
-the buffers were 700-800 bytes long, and I would not expect them to require more
-than an O(0) allocation.
-
-I pushed 2.6.30-rc6 hard for ~12 hours without any recurrence of the problem.
-Given the relative infrequency of the error, this certainly does not indicate a
-fix in recent code. I will be trying to force it again.
-
-Larry
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
