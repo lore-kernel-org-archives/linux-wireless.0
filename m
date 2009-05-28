@@ -1,52 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21029 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:57030 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751247AbZEMSOt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2009 14:14:49 -0400
-Received: from mail.atheros.com ([10.10.20.104])
+	id S1750740AbZE1TZx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2009 15:25:53 -0400
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 13 May 2009 11:14:51 -0700
-Date: Wed, 13 May 2009 11:14:58 -0700
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 12:25:56 -0700
+Date: Thu, 28 May 2009 12:26:01 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
 CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v2 3/5] cfg80211: add WoW support
-Message-ID: <20090513181458.GB19693@tesla>
-References: <1242206461-30793-1-git-send-email-lrodriguez@atheros.com> <1242206461-30793-4-git-send-email-lrodriguez@atheros.com> <1242208515.29288.0.camel@johannes.local>
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"jal2@gmx.de" <jal2@gmx.de>,
+	Peter Grabienski <Peter.Grabienski@Atheros.com>,
+	Stephen Chen <Stephen.Chen@Atheros.com>,
+	Michael Fortin <Michael.Fortin@Atheros.com>,
+	Johnny Cheng <Johnny.Cheng@Atheros.com>,
+	Yuan-Gu Wei <Yuan-Gu.Wei@Atheros.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>
+Subject: Re: [RFT 1/2] ar9170: add initial support for 1-stage firmware
+Message-ID: <20090528192601.GD20870@tesla>
+References: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com> <1243475326-28867-2-git-send-email-lrodriguez@atheros.com> <200905281803.44198.chunkeey@web.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1242208515.29288.0.camel@johannes.local>
+In-Reply-To: <200905281803.44198.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2009 at 02:55:15AM -0700, Johannes Berg wrote:
-> On Wed, 2009-05-13 at 05:20 -0400, Luis R. Rodriguez wrote:
+On Thu, May 28, 2009 at 09:03:43AM -0700, Christian Lamparter wrote:
+> On Thursday 28 May 2009 03:48:45 Luis R. Rodriguez wrote:
+> > You can get the stage 1 firmware from here:
+> >
+> > http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/ar9170.fw
+> >
+> > Its license:
+> >
+> > http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/LICENSE
+> >
+> > It seems with some devices this works, with some others
+> > I see only scan working. We shall not push this firmware
+> > into the linux-firmware tree until these issues have been
+> > resolved.
+> >
+> > Cc: Peter Grabienski <Peter.Grabienski@Atheros.com>
+> > Cc: Stephen Chen <Stephen.Chen@Atheros.com>
+> > Cc: Michael Fortin <Michael.Fortin@Atheros.com>
+> > Cc: Johnny Cheng <Johnny.Cheng@Atheros.com>
+> > Cc: Yuan-Gu Wei <Yuan-Gu.Wei@atheros.com>
+> > Cc: Joerg Albert <jal2@gmx.de>
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ar9170/phy.c |   13 ++++++++++---
+> >  drivers/net/wireless/ath/ar9170/usb.c |   22 +++++++++++++++++-----
+> >  2 files changed, 27 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+> > index 6ce2075..0675dc8 100644
+> > --- a/drivers/net/wireless/ath/ar9170/phy.c
+> > +++ b/drivers/net/wireless/ath/ar9170/phy.c
+> > @@ -39,6 +39,7 @@
+> >  #include <linux/bitrev.h>
+> >  #include "ar9170.h"
+> >  #include "cmd.h"
+> > +#include "usb.h"
+> >
+> >  static int ar9170_init_power_cal(struct ar9170 *ar)
+> >  {
+> > @@ -996,6 +997,10 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+> >       int idx, i, n;
+> >       u8 ackpower, ackchains, f;
+> >       u8 pwr_freqs[AR5416_MAX_NUM_TGT_PWRS];
+> > +     struct ar9170_usb *aru;
+> > +
+> > +     /* All ar9170 devices are USB */
+> > +     aru = container_of(ar, struct ar9170_usb, common);
+> >
+> >       if (freq < 3000)
+> >               f = freq - 2300;
+> > @@ -1102,9 +1107,11 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+> >       else
+> >               ackpower = ar->power_5G_leg[0] & 0x3f;
+> >
+> > -     ar9170_regwrite(0x1c3694, ackpower << 20 | ackchains << 26);
+> > -     ar9170_regwrite(0x1c3bb4, ackpower << 5 | ackchains << 11 |
+> > -                               ackpower << 21 | ackchains << 27);
+> > +     if (aru->init_values)  {
+> > +             ar9170_regwrite(0x1c3694, ackpower << 20 | ackchains << 26);
+> > +             ar9170_regwrite(0x1c3bb4, ackpower << 5 | ackchains << 11 |
+> > +                                       ackpower << 21 | ackchains << 27);
+> > +     }
+> >
+> >       ar9170_regwrite_finish();
+> >       return ar9170_regwrite_result();
+> I guess you can drop this changes. see hpmain.c line 4039, 4061, 4069
 > 
-> > +/**
-> > + * enum nl80211_wow_triggers - Wake-on-Wireless-LAN triggers
-> > + *
-> > + * NL80211_WOW_TRIGGER_MAGIC_PACKET: a wake signal will be sent to the
-> > + *     devices if a magic packet is received.
-> > + * NL80211_WOW_TRIGGER_BMISS: WoW signal will be sent to the device when
-> > + *     a beacon has been missed by the associated AP.
-> > + * NL80211_WOW_TRIGGER_LINK_CHANGE: a wake signal will be sent to
-> > + *     the device if a link change is detected on the device.
-> > + * NL80211_WOW_TRIGGER_USER_PATTERN: a wake sigal will be sent to the
-> > + *     device if a user configurable pattern is received by
-> > + *     the device.
-> > + */
-> > +enum nl80211_wow_triggers {
-> > +	NL80211_WOW_TRIGGER_MAGIC_PACKET	= 1 << 0,
-> > +	NL80211_WOW_TRIGGER_BMISS		= 1 << 1,
-> > +	NL80211_WOW_TRIGGER_LINK_CHANGE		= 1 << 2,
-> > +	NL80211_WOW_TRIGGER_PATTERN		= 1 << 3,
-> > +};
-> 
-> Seems like you need to have a way to set the pattern and magic packet?
+> --> #if_N_def ZM_OTUS_LINUX_PHASE_2 <--
+> zfDelayWriteInternalReg(dev, 0x1c3694, ((hpPriv->tPow2x2g[0]&0x3f) << 20) | (0x5<<26));
+> zfDelayWriteInternalReg(dev, 0x1c3bb4, ((hpPriv->tPow2x2g[0]&0x3f) << 5 ) | (0x5<<11) |
+>                                            ((hpPriv->tPow2x2g[0]&0x3f) << 21) | (0x5<<27)  );
+> #endif
+> so, the current ar9170 code is actually _wrong_ (but works!)...
+> and we should not touch these fields with the 2-stage firmware.
 
-Yeah TDB -- the code for that is a bit complex and I don't understand how
-things are being broken down yet. We could just not have the cabability
-present until that's properly figured out.
+Oh, hm, yeah good catch, but to match would actually need to call it
+when stage-1 firmware is used.
+
+> OT: since the firmware will (inevitably end up in the firmware-git-tree)
+> we should convert it to ihex, so it can be downloaded with the git-web.
+> (this can be done by: objcopy -I binary -O ihex ar9170.fw ar9170.fw.ihex )
+
+Sure, whatever works best. If you download it from gitweb you then
+have to do the conversion back though.
+
+> And for future: it might be a good idea to add a little header/tail on the
+> firmware files. e.g.:
+>         - firmware version and variant (e.g. 1-stage or 2-stage firmware)
+>         - supported hardware variants/interfaces
+>         - maybe API revision / feature bitmap
+>         - maybe more: e.g: vendor string / build / build-date / build no. etc.
+
+I think some version strings exist, but yeah you're right.
 
   Luis
