@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:41721 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbZERPCY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52923 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760756AbZE1Iph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:02:24 -0400
-Received: by fxm2 with SMTP id 2so3294734fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 08:02:24 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: respond to beacon loss report only once
-References: <1242151092.11924.2.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 18 May 2009 18:02:21 +0300
-In-Reply-To: <1242151092.11924.2.camel@johannes.local> (Johannes Berg's message of "Tue\, 12 May 2009 19\:58\:12 +0200")
-Message-ID: <87tz3ibgjm.fsf@litku.valot.fi>
+	Thu, 28 May 2009 04:45:37 -0400
+Date: Thu, 28 May 2009 10:40:51 +0200
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	bugzilla-daemon@bugzilla.kernel.org,
+	bugme-daemon@bugzilla.kernel.org, dandart@googlemail.com,
+	ivdoorn@gmail.com
+Subject: Re: [Bugme-new] [Bug 13317] New: No rt2x00 modules in RT kernels.
+Message-ID: <20090528084050.GA4401@tuxdriver.com>
+References: <bug-13317-10286@http.bugzilla.kernel.org/> <20090528000253.c731179c.akpm@linux-foundation.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090528000253.c731179c.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Thu, May 28, 2009 at 12:02:53AM -0700, Andrew Morton wrote:
 
-> The driver might keep reporting beacon loss until we
-> disassociate -- catch that and don't respond to any
-> subsequent events until the probe is either successful
-> or we disassociate.
+> Presumably there's some bustage in the rt2x00 driver which makes it not
+> work with -rt kernels.
+> 
+> Did the -rt guys tell the wireless guys about this?
 
-I agree.
+Honestly, I don't recall hearing about it.  Ivo?
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Reviewed-by: Kalle Valo <kalle.valo@iki.fi>
-
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
