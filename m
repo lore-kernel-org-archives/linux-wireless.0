@@ -1,45 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48333 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbZEZGli (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4829 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbZE1XrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 02:41:38 -0400
-Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ortiz, Samuel" <samuel.ortiz@intel.com>,
-	Kay Sievers <kay.sievers@vrfy.org>
-In-Reply-To: <20090526063602.GA21894@infradead.org>
-References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
-	 <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
-	 <1243312991.21383.3.camel@localhost.localdomain>
-	 <1243317777.3623.19.camel@debian>
-	 <1243319583.30938.2.camel@localhost.localdomain>
-	 <20090526063602.GA21894@infradead.org>
-Content-Type: text/plain
-Date: Tue, 26 May 2009 08:41:10 +0200
-Message-Id: <1243320070.30938.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Thu, 28 May 2009 19:47:20 -0400
+Date: Thu, 28 May 2009 19:47:02 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: henk <henk@god.dyndns.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k in AP mode works!! (but sometimes with an oops, and a
+	panic)
+Message-ID: <20090528234702.GA9455@hash.localnet>
+References: <20090524222027.GA32198@god.dyndns.org> <b6c5339f0905270550y50a925fbk4b891db8bbb9d9b@mail.gmail.com> <20090527184956.GA14462@god.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090527184956.GA14462@god.dyndns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christoph,
-
-> > I think we need to fix this. Especially since all the other name length
-> > limits in the driver model are gone.
+On Wed, May 27, 2009 at 08:49:56PM +0200, henk wrote:
 > 
-> Yeah, but at the same time the driver should get a shorter and actually
-> pronouncable name.  Why not just iwl3200 to follow the model set by
-> the other drivers?
+> I added some extra checks in ath5k/base.c
+> see http://bugzilla.kernel.org/show_bug.cgi?id=13381#c3
+> 
+> This resolves the panic for now.
 
-that beast is a multi-comm device with WiFi, WiMAX, Bluetooth and GPS. I
-think you can guess which pieces are coming next.
+Can you try this patch?  It should reduce to a warning if there is
+still a bug but hopefully you won't see the warning.  
 
-Regards
+There's also a chance that it could break beaconing if you kill
+hostapd and restart it a few times, but I did a little testing and
+it seemed to work ok.
 
-Marcel
+From: Bob Copeland <me@bobcopeland.com>
+Date: Thu, 28 May 2009 19:33:50 -0400
+Subject: [PATCH] ath5k: disable beacon interrupt when interface is down
 
+When we remove the active interface, there's no need to continue
+sending beacons; doing so would cause a null pointer deref in
+ieee80211_beacon_get().  Disable the interrupt in remove_interface
+and add a WARN_ON(!vif) in case there are other instances lurking.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b6fb15e..f011c44 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2070,6 +2070,13 @@ err_unmap:
+ 	return ret;
+ }
+ 
++static void ath5k_beacon_disable(struct ath5k_softc *sc)
++{
++	sc->imask &= ~(AR5K_INT_BMISS | AR5K_INT_SWBA);
++	ath5k_hw_set_imr(sc->ah, sc->imask);
++	ath5k_hw_stop_tx_dma(sc->ah, sc->bhalq);
++}
++
+ /*
+  * Transmit a beacon frame at SWBA.  Dynamic updates to the
+  * frame contents are done as needed and the slot time is
+@@ -2758,6 +2765,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	ath5k_hw_set_lladdr(sc->ah, mac);
+ 	sc->vif = NULL;
++	ath5k_beacon_disable(sc);
+ end:
+ 	mutex_unlock(&sc->lock);
+ }
+@@ -3059,7 +3067,14 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	int ret;
+ 	struct ath5k_softc *sc = hw->priv;
+-	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
++	struct sk_buff *skb;
++
++	if (WARN_ON(!vif)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	skb = ieee80211_beacon_get(hw, vif);
+ 
+ 	if (!skb) {
+ 		ret = -ENOMEM;
+-- 
+1.6.0.6
+
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
