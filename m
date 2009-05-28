@@ -1,71 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:48574 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755676AbZE2Kyy convert rfc822-to-8bit (ORCPT
+Received: from host2.marvell.com ([65.219.4.2]:32386 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751828AbZE1XZv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2009 06:54:54 -0400
-Received: by mail-fx0-f168.google.com with SMTP id 12so4301749fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2009 03:54:56 -0700 (PDT)
+	Thu, 28 May 2009 19:25:51 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 May 2009 16:25:51 -0700
+Subject: RE: [PATCH 3/4 v2] libertas: implement function init/shutdown
+ commands for SD8688
+Message-ID: <477F20668A386D41ADCC57781B1F704301E888DE61@SC-VEXCH1.marvell.com>
+References: <1243465413-4997-1-git-send-email-bzhao@marvell.com>
+	 <1243495232.16631.5.camel@localhost.localdomain>
+	 <477F20668A386D41ADCC57781B1F704301E888DD76@SC-VEXCH1.marvell.com>
+ <1243538409.23344.2.camel@localhost.localdomain>
+In-Reply-To: <1243538409.23344.2.camel@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <20090504121221.GA31147@tuxdriver.com>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <1239136768.7475.62.camel@johannes.local>
-	 <da94abde0905030143o77a27ac7tbdcb08944100df84@mail.gmail.com>
-	 <20090504121221.GA31147@tuxdriver.com>
-Date: Fri, 29 May 2009 11:54:56 +0100
-Message-ID: <efe7343f0905290354j37a84940g53fc89a34283b782@mail.gmail.com>
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Luis Correia <luis.f.correia@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-On Mon, May 4, 2009 at 13:12, John W. Linville <linville@tuxdriver.com> wrote:
-> On Sun, May 03, 2009 at 11:43:38AM +0300, Kalle Valo wrote:
->> On Tue, Apr 7, 2009 at 11:39 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > Hi,
->>
->> Hello,
->>
->> >> Also, please consider making some sort of prepared presentation.
->> >> Especially welcome would be topics that are accessible to those
->> >> outside of the core wireless developer group, such as current
->> >> projects on enhancing IBSS support, extended power savings, or any
->> >> other user-visible topic.  I'll be happy to take such proposals in
->> >> private email or you can post them as part of this thread.
->> >
->> > Since I've just booked my train (will arrive 1:30pm or so on the 25th,
->> > leave Sunday [28th] late afternoon), here are some things I could
->> > possibly talk about:
->> >
->> >  * status of moving to nl80211/cfg80211 -- overview over new cfg80211
->> >   operations, maybe with Jouni?
->> >  * power saving if Kalle can't make it
->>
->> I can now confirm that I'm joining the summit as well \o/
->>
->> I will arrive to Berlin on Thursday before noon and will leave on
->> Sunday evening.
->>
->> Kalle
->
-> Excellent news!  Anyone else?
->
-> John
 
-Better late then sorry.
+> -----Original Message-----
+> From: Marcel Holtmann [mailto:marcel@holtmann.org]
+> Sent: Thursday, May 28, 2009 12:20 PM
+> To: Bing Zhao
+> Cc: libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org
+> Subject: RE: [PATCH 3/4 v2] libertas: implement function init/shutdown commands for SD8688
+> 
+> Hi Bing,
+> 
+> > > > SD8688 is a WLAN/Bluetooth combo chip and both functions are supported
+> > > > in a single firmware image. FUNC_INIT and FUNC_SHUTDOWN commands are
+> > > > implemented to utilize the multiple function feature.
+> > > >
+> > > > When SD8688 card is inserted, the firmware image should be downloaded
+> > > > only once through either WLAN function (Libertas driver) or Bluetooth
+> > > > function (Bluetooth driver).
+> > > >
+> > > > This patch adds function init/shutdown for SD8688 WLAN function only.
+> > > >
+> > > > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > > > ---
+> > > >  drivers/net/wireless/libertas/host.h    |    2 +
+> > > >  drivers/net/wireless/libertas/if_sdio.c |   43 +++++++++++++++++++++++++++++-
+> > > >  2 files changed, 43 insertions(+), 2 deletions(-)
+> > > >
+> > > > diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+> > > > index 8ff8ac9..fe8f0cb 100644
+> > > > --- a/drivers/net/wireless/libertas/host.h
+> > > > +++ b/drivers/net/wireless/libertas/host.h
+> > > > @@ -86,6 +86,8 @@
+> > > >  #define CMD_MESH_CONFIG_OLD			0x00a3
+> > > >  #define CMD_MESH_CONFIG				0x00ac
+> > > >  #define	CMD_SET_BOOT2_VER			0x00a5
+> > > > +#define	CMD_FUNC_INIT				0x00a9
+> > > > +#define	CMD_FUNC_SHUTDOWN			0x00aa
+> > > >  #define CMD_802_11_BEACON_CTRL			0x00b0
+> > > >
+> > > >  /* For the IEEE Power Save */
+> > > > diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> > > > index e998c12..84fef6b 100644
+> > > > --- a/drivers/net/wireless/libertas/if_sdio.c
+> > > > +++ b/drivers/net/wireless/libertas/if_sdio.c
+> > > > @@ -39,8 +39,12 @@
+> > > >  #include "decl.h"
+> > > >  #include "defs.h"
+> > > >  #include "dev.h"
+> > > > +#include "cmd.h"
+> > > >  #include "if_sdio.h"
+> > > >
+> > > > +/* set this flag in if_sdio_exit_module() if user removes this module */
+> > > > +static u8 user_rmmod;
+> > > > +
+> > >
+> > > what is this suppose to be doing? There is no description in the commit
+> > > messages or the code. And it looks pretty hackish to me.
+> >
+> > I'm using this flag as the indication of module removal.
+> >
+> > I have to distinguish these scenarios and handle them differently:
+> > (1) user unplugs the card: As the card is unplugged, there is no way (no need) to send SHUTDOWN
+> command.
+> > (2) user removes the libertas_sdio module manually: Since the card is still in the slot, SHUTDOWN
+> command will be sent to firmware.
+> >
+> > When user rmmod the module, if_sdio_exit_module() is called and this flag "user_rmmod" is set to 1.
+> When if_sdio_remove() is called this flag will be used to determine whether the SHUTDOWN command
+> should be sent or not.
+> >
+> > I hesitated to use this global variable in such a weird way. But I couldn't think of a better
+> solution.
+> 
+> I still don't see why this is needed. The rmmod should trigger the
+> driver removal and you can do cleanup via the removal callback. I do
+> might be missing something essential here, but I have never seen any
+> driver needing such a weird hack.
+> 
+> Regards
+> 
+> Marcel
+> 
 
-I confirm that two members of the rt2x00 project will be present, me and Ivo.
+Hi Marcel,
 
-See you guys there!
+Unplugging the card also triggers if_sdio_remove() callback. I wonder if MMC/SDIO driver can provide such indication that upper layer driver can distinguish the two events: card removal or module removal.
 
-Luis Correia
-rt2x00 project admin
+Thanks,
+
+Bing
+ 
