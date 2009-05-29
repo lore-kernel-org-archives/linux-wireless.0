@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tur.go2.pl ([193.17.41.50]:45871 "EHLO tur.go2.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750AbZEESpt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2009 14:45:49 -0400
-Received: from poczta.o2.pl (mx12.go2.pl [193.17.41.142])
-	by tur.go2.pl (o2.pl Mailer 2.0.1) with ESMTP id 9FA46230AA8
-	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2009 20:45:45 +0200 (CEST)
-Received: from poczta.o2.pl (mx12 [127.0.0.1])
-	by poczta.o2.pl (Postfix) with ESMTP id 28A72104033
-	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2009 20:44:36 +0200 (CEST)
-Received: from localhost.localdomain (inet20908nj-0.nat.umts.dynamic.eranet.pl [213.158.196.116])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by poczta.o2.pl (Postfix) with ESMTP
-	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2009 20:44:32 +0200 (CEST)
-Message-ID: <4A0088EE.7010804@o2.pl>
-Date: Tue, 05 May 2009 20:43:58 +0200
-From: Karol Szuster <qflon@o2.pl>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: minstrel, fix memory corruption
-Content-Type: text/plain; charset=ISO-8859-2
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56932
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757378AbZE2Ik1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2009 04:40:27 -0400
+Date: Fri, 29 May 2009 01:40:27 -0700 (PDT)
+Message-Id: <20090529.014027.254773257.davem@davemloft.net>
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/10]: llc: Kill outdated and incorrect comment.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-There is another problem with this piece of code. The sband will be NULL
-after second iteration on single band device and cause null pointer
-dereference. Everything is working with dual band card. Sorry, but i
-don't know how to explain this clearly in English. I have looked on the
-second patch for pid algorithm and found similar bug.
+This comment suggested storing two pieces of state in the
+LLC skb control block, and in fact we do.  Someone did
+the implementation but never killed this todo comment :-)
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/llc/llc_conn.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/net/llc/llc_conn.c b/net/llc/llc_conn.c
+index 3477624..c6bab39 100644
+--- a/net/llc/llc_conn.c
++++ b/net/llc/llc_conn.c
+@@ -79,10 +79,6 @@ int llc_conn_state_process(struct sock *sk, struct sk_buff *skb)
+ 
+ 	if (unlikely(!ev->ind_prim && !ev->cfm_prim)) {
+ 		/* indicate or confirm not required */
+-		/* XXX this is not very pretty, perhaps we should store
+-		 * XXX indicate/confirm-needed state in the llc_conn_state_ev
+-		 * XXX control block of the SKB instead? -DaveM
+-		 */
+ 		if (!skb->next)
+ 			goto out_kfree_skb;
+ 		goto out_skb_put;
+-- 
+1.6.3
+
