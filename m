@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:34365 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153AbZEaSVM (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56920
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756788AbZE2IkM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 14:21:12 -0400
-Received: by ewy24 with SMTP id 24so7372966ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 11:21:13 -0700 (PDT)
-Message-ID: <4A22CAD4.1010507@tuffmail.co.uk>
-Date: Sun, 31 May 2009 19:22:12 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-References: <1243524688.10632.0.camel@johannes.local>	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com> <1243778069.5299.0.camel@johannes.local>
-In-Reply-To: <1243778069.5299.0.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 29 May 2009 04:40:12 -0400
+Date: Fri, 29 May 2009 01:40:11 -0700 (PDT)
+Message-Id: <20090529.014011.244789664.davem@davemloft.net>
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/10]: rtl8187: Remove pointless check in rtl8187_rx_cb().
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->> How should userspace test CONFIG_RFKILL_INPUT to determine whether
->> it's safe to start the daemon?  With the old core, debian-eeepc
->> scripts check if the module rfkill-input exists (which should work
->> even if it's built in).  If it exists, the scripts don't perform any
->> rfkill actions.  (Yeah, according to the doc this is not allowed
->> because the scripts don't use "claim", but you can see how it's
->> useful).
->>
->> The new rfkill-input isn't a module, so I'm not sure how your daemon
->> would test for it.
->>     
->
-> Maybe we should add an ioctl that disables rfkill-input if present.
->
-> johannes
->   
 
-Sounds good.
+First of all, it exposes the SKB list implementation.
+
+Second of all it's not needed.  If we get called here, we
+successfully enqueued the URB with the linked SKB and
+such a completion only gets called one time on such an
+SKB.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 6499ccc..3f22cc0 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -321,12 +321,7 @@ static void rtl8187_rx_cb(struct urb *urb)
+ 	unsigned long f;
+ 
+ 	spin_lock_irqsave(&priv->rx_queue.lock, f);
+-	if (skb->next)
+-		__skb_unlink(skb, &priv->rx_queue);
+-	else {
+-		spin_unlock_irqrestore(&priv->rx_queue.lock, f);
+-		return;
+-	}
++	__skb_unlink(skb, &priv->rx_queue);
+ 	spin_unlock_irqrestore(&priv->rx_queue.lock, f);
+ 	skb_put(skb, urb->actual_length);
+ 
+-- 
+1.6.3
+
