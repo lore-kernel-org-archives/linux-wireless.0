@@ -1,108 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35187 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757141AbZELWQR (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56930
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757350AbZE2Ik0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 18:16:17 -0400
-Subject: Re: [PATCH] mac80211: make noack test available
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910905121513t5436ec52u47d0c49657000090@mail.gmail.com>
-References: <1242158740.14227.12.camel@johannes.local>
-	 <69e28c910905121513t5436ec52u47d0c49657000090@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-XFZg47LNfjN6WnYdfHjv"
-Date: Wed, 13 May 2009 00:15:45 +0200
-Message-Id: <1242166545.14227.13.camel@johannes.local>
+	Fri, 29 May 2009 04:40:26 -0400
+Date: Fri, 29 May 2009 01:40:25 -0700 (PDT)
+Message-Id: <20090529.014025.223389403.davem@davemloft.net>
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 9/10]: irda: Use SKB queue and list helpers instead of
+ doing it by-hand.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-XFZg47LNfjN6WnYdfHjv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/irda/irlap_frame.c |   18 ++----------------
+ 1 files changed, 2 insertions(+), 16 deletions(-)
 
-On Wed, 2009-05-13 at 00:13 +0200, G=C3=A1bor Stefanik wrote:
-> On Tue, May 12, 2009 at 10:05 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > There's this internal wifi_wme_noack_test variable that
-> > we use to set the QoS control if set. For one, it is
-> > unlikely that it is set. Secondly, if set it needs to
-> > influence the IEEE80211_TX_CTL_NO_ACK TX control flag,
-> > and finally we should also be able to set it at all, so
-> > make it available in debugfs.
-> >
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> >  net/mac80211/debugfs.c     |   38 ++++++++++++++++++++++++++++++++++++=
-++
-> >  net/mac80211/ieee80211_i.h |    1 +
-> >  net/mac80211/tx.c          |    5 ++++-
-> >  net/mac80211/wme.c         |    2 +-
-> >  4 files changed, 44 insertions(+), 2 deletions(-)
-> >
-> > --- wireless-testing.orig/net/mac80211/tx.c     2009-05-12 21:44:01.000=
-000000 +0200
-> > +++ wireless-testing/net/mac80211/tx.c  2009-05-12 22:03:26.000000000 +=
-0200
-> > @@ -1087,7 +1087,10 @@ __ieee80211_tx_prepare(struct ieee80211_
-> >                info->flags |=3D IEEE80211_TX_CTL_NO_ACK;
-> >        } else {
-> >                tx->flags |=3D IEEE80211_TX_UNICAST;
-> > -               info->flags &=3D ~IEEE80211_TX_CTL_NO_ACK;
-> > +               if (unlikely(local->wifi_wme_noack_test))
-> > +                       info->flags |=3D IEEE80211_TX_CTL_NO_ACK;
-> > +               else
-> > +                       info->flags &=3D ~IEEE80211_TX_CTL_NO_ACK;
-> >        }
->=20
-> While you are at it, why not clean up this code completely?=20
-
-Because I'm lazy.
-
-> IMHO the
-> unset-bit operations are useless, given that both TX_UNICAST and
-> TX_CTL_NO_ACK are initialized to zero at the beginning of
-> __ieee80211_tx_prepare.=20
-
-Probably. But it works, why change it :)
-
-> This also makes it possible to set
-> TX_CTL_NO_ACK in a TX handler, which is IMO much nicer (not to mention
-> that it significantly simplifies the work needed to support Radiotap's
-> TX flags once they land).
-
-That seems to serve only you ;)
-
-> (BTW should we implement the already-stable parts of TX flags now, or
-> is it a better idea to wait till it is final?)
-
-Wait until it's final please.
-
-johannes
-
---=-XFZg47LNfjN6WnYdfHjv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKCfUKAAoJEODzc/N7+QmaglQP/iq9hy8EwQXc/1V1UfrrMPMc
-U+qro6PpwplB+i7Cx8VrvQapESYkhiDBY74YbKxzwfqIHHm+JEXZtWoeZOza1cua
-fkqp8Cot8xyrnqh6aCMA7gthU7CY7Wjh9JNjMlwfDcYNyTy3gNhwJNntf7M5MziL
-ijvvM6enEPzhq13f+6FvdExmFwuKGhJcvNJAd+bP43RpJ6A/QevxyDsg2GLLB/6Y
-tkEA0SemLshvkoA0OnJkSn2qMa2at0dAWJj3FdKbR9BmGQyDDu5RXzQUdCQfLuiP
-W8slTx88yFakNBNmkfjd+FopGVixTyqmdaVPxKhKgBFozqyF7Vsbun2mvfJI39GL
-ycthBuGBq6RRZ8JQ7GNgrNgpDMgiGNcCu69YMP3Dpd0YfnfWTcvev+AYPjYXap6g
-h1YloiMJcfSeF884iyZ+zxVy7le55qTLhUqO57t2CG9RM4wmn/MGFAOOnoZoFK3c
-a7C+Rgi9FVxcH9QS8i5Zzz7QyaUL3Rf+rYMcysgb/Na9gvhoSz8q1eRHcRh0ZDkC
-xErmHPWBe9I+rLufzpaSONOiU09J6sHOHTpWZ9QUoxnKXqbliKItQ2N4ii87gxEg
-kJrMixddoaC4l4Yw8y9xwBxGE+eesifiTr9ZVI7zpIkhxOknXWgLLTCjoVqOzdjL
-0v6JGMtRhrq4arlNIPZh
-=FslY
------END PGP SIGNATURE-----
-
---=-XFZg47LNfjN6WnYdfHjv--
+diff --git a/net/irda/irlap_frame.c b/net/irda/irlap_frame.c
+index 2562ebc..7af2e74 100644
+--- a/net/irda/irlap_frame.c
++++ b/net/irda/irlap_frame.c
+@@ -982,17 +982,12 @@ void irlap_resend_rejected_frames(struct irlap_cb *self, int command)
+ {
+ 	struct sk_buff *tx_skb;
+ 	struct sk_buff *skb;
+-	int count;
+ 
+ 	IRDA_ASSERT(self != NULL, return;);
+ 	IRDA_ASSERT(self->magic == LAP_MAGIC, return;);
+ 
+-	/* Initialize variables */
+-	count = skb_queue_len(&self->wx_list);
+-
+ 	/*  Resend unacknowledged frame(s) */
+-	skb = skb_peek(&self->wx_list);
+-	while (skb != NULL) {
++	skb_queue_walk(&self->wx_list, skb) {
+ 		irlap_wait_min_turn_around(self, &self->qos_tx);
+ 
+ 		/* We copy the skb to be retransmitted since we will have to
+@@ -1011,21 +1006,12 @@ void irlap_resend_rejected_frames(struct irlap_cb *self, int command)
+ 		/*
+ 		 *  Set poll bit on the last frame retransmitted
+ 		 */
+-		if (count-- == 1)
++		if (skb_queue_is_last(&self->wx_list, skb))
+ 			tx_skb->data[1] |= PF_BIT; /* Set p/f bit */
+ 		else
+ 			tx_skb->data[1] &= ~PF_BIT; /* Clear p/f bit */
+ 
+ 		irlap_send_i_frame(self, tx_skb, command);
+-
+-		/*
+-		 *  If our skb is the last buffer in the list, then
+-		 *  we are finished, if not, move to the next sk-buffer
+-		 */
+-		if (skb == skb_peek_tail(&self->wx_list))
+-			skb = NULL;
+-		else
+-			skb = skb->next;
+ 	}
+ #if 0 /* Not yet */
+ 	/*
+-- 
+1.6.3
 
