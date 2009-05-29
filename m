@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:58353 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796AbZERPns (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56916
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757282AbZE2IkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 11:43:48 -0400
-Received: by fxm2 with SMTP id 2so3320692fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2009 08:43:48 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: split out and decrease probe wait time
-References: <1242151393.11924.3.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 18 May 2009 18:43:46 +0300
-In-Reply-To: <1242151393.11924.3.camel@johannes.local> (Johannes Berg's message of "Tue\, 12 May 2009 20\:03\:13 +0200")
-Message-ID: <87pre6beml.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 29 May 2009 04:40:02 -0400
+Date: Fri, 29 May 2009 01:40:02 -0700 (PDT)
+Message-Id: <20090529.014002.66716606.davem@davemloft.net>
+From: David Miller <davem@davemloft.net>
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/10]: wavelan: Remove bogus debugging on skb->next being
+ non-NULL.
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: David Miller <davem@davemloft.net>
+Fcc: +backup
+X-Mailer: Mew version 6.2.51 on Emacs 22.1 / Mule 5.0 (SAKAKI)
+----
 
-> The time we wait for a probe response after probing an AP due to
-> beacon loss is currently the same as the monitoring interval, 2s.
-> This is far too long, APs should respond to probes within a
-> fraction of that time. To be able to adjust both values, add a
-> new constant IEEE80211_PROBE_WAIT, use it for checking the probe
-> response, and adjust it down to 200ms instead of 2 seconds.
+This eliminates explicit references to the SKB list handling
+implementation.
 
-Looks good to me.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/wireless/wavelan.c    |    4 ----
+ drivers/net/wireless/wavelan_cs.c |    5 -----
+ 2 files changed, 0 insertions(+), 9 deletions(-)
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-
+diff --git a/drivers/net/wireless/wavelan.c b/drivers/net/wireless/wavelan.c
+index 3ab3eb9..25d27b6 100644
+--- a/drivers/net/wireless/wavelan.c
++++ b/drivers/net/wireless/wavelan.c
+@@ -2869,10 +2869,6 @@ static int wavelan_packet_xmit(struct sk_buff *skb, struct net_device * dev)
+ 		if (lp->tx_n_in_use == (NTXBLOCKS - 1))
+ 			return 1;
+ 	}
+-#ifdef DEBUG_TX_ERROR
+-	if (skb->next)
+-		printk(KERN_INFO "skb has next\n");
+-#endif
+ 
+ 	/* Do we need some padding? */
+ 	/* Note : on wireless the propagation time is in the order of 1us,
+diff --git a/drivers/net/wireless/wavelan_cs.c b/drivers/net/wireless/wavelan_cs.c
+index e55b339..1a90d69 100644
+--- a/drivers/net/wireless/wavelan_cs.c
++++ b/drivers/net/wireless/wavelan_cs.c
+@@ -3107,11 +3107,6 @@ wavelan_packet_xmit(struct sk_buff *	skb,
+        * so the Tx buffer is now free */
+     }
+ 
+-#ifdef DEBUG_TX_ERROR
+-	if (skb->next)
+-		printk(KERN_INFO "skb has next\n");
+-#endif
+-
+ 	/* Check if we need some padding */
+ 	/* Note : on wireless the propagation time is in the order of 1us,
+ 	 * and we don't have the Ethernet specific requirement of beeing
 -- 
-Kalle Valo
+1.6.3
+
