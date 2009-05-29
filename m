@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:2243 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751382AbZERUEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2009 16:04:38 -0400
-Subject: Re: [PATCH] cfg80211: allow wext to remove keys that don't exist
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Samuel Ortiz <samuel@sortiz.org>
-In-Reply-To: <1242669396.29049.2.camel@johannes.local>
-References: <1242669396.29049.2.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 18 May 2009 16:04:36 -0400
-Message-Id: <1242677076.30019.5.camel@mj>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56926
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757350AbZE2IkU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2009 04:40:20 -0400
+Date: Fri, 29 May 2009 01:40:20 -0700 (PDT)
+Message-Id: <20090529.014020.135721424.davem@davemloft.net>
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/10]: econet: Use SKB queue and list helpers instead of
+ doing it by-hand.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-05-18 at 19:56 +0200, Johannes Berg wrote:
-> Some applications using wireless extensions expect to be able to
-> remove a key that doesn't exist. One example is wpa_supplicant
-> which doesn't actually change behaviour when running into an
-> error while trying to do that, but it prints an error message
-> which users interpret as wpa_supplicant having problems.
 
-It sounds like you are working around a userspace problem in the kernel.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/econet/af_econet.c |   18 ++++--------------
+ 1 files changed, 4 insertions(+), 14 deletions(-)
 
-> The safe thing to do is not change the behaviour of wireless
-> extensions any more, so when the driver reports -ENOENT let
-> the wext bridge code return success to userspace. To guarantee
-> this, also document that drivers should return -ENOENT when the
-> key doesn't exist.
-
-You patch is changing the behavior or wireless extensions.  It would be
-much more reasonable for wpa_supplicant not to remove non-existent keys
-or (if it's unsafe or non-practical for some reason) not to report
--ENOENT to the user.
-
+diff --git a/net/econet/af_econet.c b/net/econet/af_econet.c
+index 6f479fa..8121bf0 100644
+--- a/net/econet/af_econet.c
++++ b/net/econet/af_econet.c
+@@ -901,15 +901,10 @@ static void aun_tx_ack(unsigned long seq, int result)
+ 	struct ec_cb *eb;
+ 
+ 	spin_lock_irqsave(&aun_queue_lock, flags);
+-	skb = skb_peek(&aun_queue);
+-	while (skb && skb != (struct sk_buff *)&aun_queue)
+-	{
+-		struct sk_buff *newskb = skb->next;
++	skb_queue_walk(&aun_queue, skb) {
+ 		eb = (struct ec_cb *)&skb->cb;
+ 		if (eb->seq == seq)
+ 			goto foundit;
+-
+-		skb = newskb;
+ 	}
+ 	spin_unlock_irqrestore(&aun_queue_lock, flags);
+ 	printk(KERN_DEBUG "AUN: unknown sequence %ld\n", seq);
+@@ -982,23 +977,18 @@ static void aun_data_available(struct sock *sk, int slen)
+ 
+ static void ab_cleanup(unsigned long h)
+ {
+-	struct sk_buff *skb;
++	struct sk_buff *skb, *n;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&aun_queue_lock, flags);
+-	skb = skb_peek(&aun_queue);
+-	while (skb && skb != (struct sk_buff *)&aun_queue)
+-	{
+-		struct sk_buff *newskb = skb->next;
++	skb_queue_walk_safe(&aun_queue, skb, n) {
+ 		struct ec_cb *eb = (struct ec_cb *)&skb->cb;
+-		if ((jiffies - eb->start) > eb->timeout)
+-		{
++		if ((jiffies - eb->start) > eb->timeout) {
+ 			tx_result(skb->sk, eb->cookie,
+ 				  ECTYPE_TRANSMIT_NOT_PRESENT);
+ 			skb_unlink(skb, &aun_queue);
+ 			kfree_skb(skb);
+ 		}
+-		skb = newskb;
+ 	}
+ 	spin_unlock_irqrestore(&aun_queue_lock, flags);
+ 
 -- 
-Regards,
-Pavel Roskin
+1.6.3
+
