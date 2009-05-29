@@ -1,47 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33667 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754470AbZEUQcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2009 12:32:10 -0400
-Subject: Re: rfkill vs. interface up
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:50589 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825AbZE2Xjz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2009 19:39:55 -0400
+Subject: [PATCH] net: introduce pre-up netdev notifier
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	netdev <netdev@vger.kernel.org>
-In-Reply-To: <1242921924.4212.11.camel@johannes.local>
-References: <1242736331.4797.22.camel@johannes.local>
-	 <1242920389.14369.16.camel@localhost.localdomain>
-	 <1242921924.4212.11.camel@johannes.local>
 Content-Type: text/plain
-Date: Thu, 21 May 2009 12:32:07 -0400
-Message-Id: <1242923527.14369.29.camel@localhost.localdomain>
+Date: Sat, 30 May 2009 01:39:53 +0200
+Message-Id: <1243640394.13863.7.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-05-21 at 18:05 +0200, Johannes Berg wrote:
-> On Thu, 2009-05-21 at 11:39 -0400, Dan Williams wrote:
-> 
-> > That proposal sounds fine to me from a userspace perspective.  Sane
-> > implementations don't assume the interface is IFF_UP when they configure
-> > the device anyway (since it's not necessarily up at boot time or after
-> > hibernate for example), and since you need a reconfigure after rfkill,
-> > this seems reasonable.
-> > 
-> > You wouldn't have to give up on txpower either, you could simply map
-> > 'txpower off' to SW-rfkill, and 'txpower on' to un-SW-rfkill, where of
-> > course the interface would be !IFF_UP after 'txpower on' just like
-> > flipping the killswitch would.
-> 
-> Yeah, good point, that sounds better than having to give up on it -- the
-> key though is that we can't recover IFF_UP state when that happens; if
-> that's ok this should be fairly simple.
+NETDEV_UP is called after the device is set UP, but sometimes
+it is useful to be able to veto the device UP. Introduce a
+new NETDEV_PRE_UP notifier that can be used for exactly this.
+The first use case will be cfg80211 denying interfaces to be
+set UP if the device is known to be rfkill'ed.
 
-I don't think recovering IFF_UP needs to be done by the kernel.  rfkill
-already hoses the card state anyway, requiring a full setup by
-userspace, which usually includes ensuring the device is up (which, for
-example, both NM and wpa_supplicant have done since the beginning of
-time).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+John, please take this patch via your tree, I asked Dave and
+he's cool with that.
 
-Dan
+ include/linux/notifier.h |    1 +
+ net/core/dev.c           |    7 ++++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/include/linux/notifier.h	2009-05-29 10:28:02.000000000 +0200
++++ wireless-testing/include/linux/notifier.h	2009-05-30 01:38:44.000000000 +0200
+@@ -198,6 +198,7 @@ static inline int notifier_to_errno(int 
+ #define NETDEV_CHANGENAME	0x000A
+ #define NETDEV_FEAT_CHANGE	0x000B
+ #define NETDEV_BONDING_FAILOVER 0x000C
++#define NETDEV_PRE_UP		0x000D
+ 
+ #define SYS_DOWN	0x0001	/* Notify of system down */
+ #define SYS_RESTART	SYS_DOWN
+--- wireless-testing.orig/net/core/dev.c	2009-05-29 10:28:02.000000000 +0200
++++ wireless-testing/net/core/dev.c	2009-05-30 01:38:44.000000000 +0200
+@@ -1047,7 +1047,7 @@ void dev_load(struct net *net, const cha
+ int dev_open(struct net_device *dev)
+ {
+ 	const struct net_device_ops *ops = dev->netdev_ops;
+-	int ret = 0;
++	int ret;
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -1064,6 +1064,11 @@ int dev_open(struct net_device *dev)
+ 	if (!netif_device_present(dev))
+ 		return -ENODEV;
+ 
++	ret = call_netdevice_notifiers(NETDEV_PRE_UP, dev);
++	ret = notifier_to_errno(ret);
++	if (ret)
++		return ret;
++
+ 	/*
+ 	 *	Call device private open method
+ 	 */
+
 
