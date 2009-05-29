@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:26481 "EHLO mga14.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:43121 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756728AbZEZQyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 12:54:05 -0400
-Subject: Re: [PATCH] iwlwifi: avoid build warning in iwl-core.
-From: reinette chatre <reinette.chatre@intel.com>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <eb3ff54b0905241043i2c8a0407yeac7d2c07d1e7e1f@mail.gmail.com>
-References: <eb3ff54b0905241043i2c8a0407yeac7d2c07d1e7e1f@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 May 2009 10:00:45 -0700
-Message-Id: <1243357245.7624.3005.camel@rc-desk>
+	id S1751402AbZE2TTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2009 15:19:34 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MA7c6-0000QL-Et
+	for linux-wireless@vger.kernel.org; Fri, 29 May 2009 19:19:34 +0000
+Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2009 19:19:34 +0000
+Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2009 19:19:34 +0000
+To: linux-wireless@vger.kernel.org
+From: Matthieu CASTET <castet.matthieu@free.fr>
+Subject: b43 vs b43legacy
+Date: Fri, 29 May 2009 19:19:23 +0000 (UTC)
+Message-ID: <loom.20090529T190620-42@post.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-05-24 at 10:43 -0700, Rami Rosen wrote:
-> When building when CONFIG_IWLWIFI_DEBUG is not set is not set, we get
-> the following
-> warning:
-> /work/src/w/drivers/net/wireless/iwlwifi/iwl-core.c: In function ‘iwl_isr’:
-> /work/src/w/drivers/net/wireless/iwlwifi/iwl-core.c:1707: warning:
-> unused variable ‘inta_fh’
-> 
-> This patch avoids this warning by adding #ifdef CONFIG_IWLWIFI_DEBUG
-> before the declaration of inta_fh in iwl_isr() in
-> drivers/net/wireless/iwlwifi/iwl-core.c
-> 
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
-> 
-> ---
+Hi,
 
-There is just a double "is not set" in the commit message.
+what's the difference between b43 and b43legacy ?
 
-Thank you
+>From a first point a view, it seems b43 is for core >= 5 and b43legacy for the
+other.
+There is also firmware difference : b43 need v4 and b43legacy need v3.
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+But v4 firmware seems to support core 4 (pcm4 & ucode4) and b43 code got some
+support for old chips (<5).
 
-Reinette
+Is the split was made because nobody know how to use firmware v4 with core 4 or
+because core 4 it so different from newer core.
+In the latter case why code for older chip (<5) is not removed from the driver ?
 
+
+Thanks
+
+Matthieu
+
+PS : sorry if the answer is already available on internet, I try to search it
+without finding anything.
 
