@@ -1,68 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45379 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbZESIQ1 (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932496AbZE3RiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 04:16:27 -0400
-Subject: Re: DHCP broken when using A-band only
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1242701451.3147.2.camel@localhost.localdomain>
-References: <1242701451.3147.2.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oPwkmDApBO4hzYU7r7Dq"
-Date: Tue, 19 May 2009 10:16:23 +0200
-Message-Id: <1242720983.29049.16.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 30 May 2009 13:38:21 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so6938274ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:38:22 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC v2 22/23] orinoco: convert giwrange to cfg80211
+Date: Sat, 30 May 2009 18:36:56 +0100
+Message-Id: <1243705017-8784-23-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+We lose the following capabilities as part of this converion:
 
---=-oPwkmDApBO4hzYU7r7Dq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+PM capabilities..
+Event capabilities for SIOCGIWTHRSPY, IWEVTXDROP
 
-On Mon, 2009-05-18 at 19:50 -0700, Marcel Holtmann wrote:
-> Hi Johannes,
+I don't think anything uses these, so I'm not losing any sleep about
+them...
+---
+ drivers/net/wireless/orinoco/wext.c |  115 +----------------------------------
+ 1 files changed, 1 insertions(+), 114 deletions(-)
 
-Heh. Hi Marcel :)
-
-> so I am running the latest wireless-testing.git tree based on 2.6.30-rc6
-> and when connecting to my A-band only configured AP, I don't get any
-> packets through. Even DHCP fails. The only thing I see in dmesg is
->=20
-> [ 3221.246392] wlan0: dropped frame to 00:1f:f3:xx:xx:xx (unauthorized po=
-rt)
->=20
-> The wireless-testing.git tree based on 2.6.30-rc5 was working fine with
-> that access point. I was actually happily using the A-band since it is
-> less busy here. Any ideas why this might broke?
-
-Not at all, sorry. Were there any driver changes? There shouldn't be
-many changes at all maybe you could bisect?
-
-johannes
-
---=-oPwkmDApBO4hzYU7r7Dq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKEmrUAAoJEODzc/N7+QmaYzwQAMFPvrvLpK0YGk9jNPYvKqIC
-6glIKk2UJJZGnFpHvlN64YjRfbYzOwm9wNKeZistQqFwgT+jltPPCvHq35XLJPmj
-Bk450leFsMan7foA1TfTGQ9e/kFP8XnHvcZoCBBr9dRUmOczkuaGmwMNzO0Piq68
-n509RmrlISFRnvJbqGSiWo5WHe9IEpeJsmnAIR8cwB2LGzvPxpsT1Zzi+PgOVx7/
-4Ikji5zoz11N5HS8GmgN+J7mH7nHrC7KenvWMMxlW3szRA5eQ1wj4KxYc8xTwxZL
-fh7hd0vD+I/HZMKjRbJHSUR2Nl9XSPiAvfb4L0RjKvB6e+FznDfdIph4Y7ZHJyYY
-8mTBaAzYh6qbwQiTcRsOKqSOj5h/m79BQbrjOKVWh6dRjkeqTAcVDxbdkP0aL/TD
-NBxeYdvS/7Ev2FzPptT8KNCq3cvdKO3g+bEFPLneKbsLwKUE/Zrh/G0ywMBGuxSK
-gJPS9B2r1TLs3n9iPCiOmfb2JbZkD1ef6pxY1LL/xMH6SsLK+B1QqUrquC0jIMl6
-QD5BSk2BoSiU93VBhoX4TvPG+AG/6cNADyE+WQon58OVtYUHmYnHMplOrslqSwlS
-XaUR2fHXCX2c5XnnKezQGVex4ic3L+qLmdo3tiXCKzH9SVWzl61i53Fa3LAtwy5c
-3L370fKLb6YgXwp7eEsH
-=XxLO
------END PGP SIGNATURE-----
-
---=-oPwkmDApBO4hzYU7r7Dq--
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 082ea0a..21db578 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -172,119 +172,6 @@ static int orinoco_ioctl_getwap(struct net_device *dev,
+ 	return err;
+ }
+ 
+-static int orinoco_ioctl_getiwrange(struct net_device *dev,
+-				    struct iw_request_info *info,
+-				    struct iw_point *rrq,
+-				    char *extra)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	int err = 0;
+-	struct iw_range *range = (struct iw_range *) extra;
+-	int numrates;
+-	int i, k;
+-
+-	rrq->length = sizeof(struct iw_range);
+-	memset(range, 0, sizeof(struct iw_range));
+-
+-	range->we_version_compiled = WIRELESS_EXT;
+-	range->we_version_source = 22;
+-
+-	/* Set available channels/frequencies */
+-	range->num_channels = NUM_CHANNELS;
+-	k = 0;
+-	for (i = 0; i < NUM_CHANNELS; i++) {
+-		if (priv->channel_mask & (1 << i)) {
+-			range->freq[k].i = i + 1;
+-			range->freq[k].m = (ieee80211_dsss_chan_to_freq(i + 1) *
+-					    100000);
+-			range->freq[k].e = 1;
+-			k++;
+-		}
+-
+-		if (k >= IW_MAX_FREQUENCIES)
+-			break;
+-	}
+-	range->num_frequency = k;
+-	range->sensitivity = 3;
+-
+-	if (priv->has_wep) {
+-		range->max_encoding_tokens = ORINOCO_MAX_KEYS;
+-		range->encoding_size[0] = SMALL_KEY_SIZE;
+-		range->num_encoding_sizes = 1;
+-
+-		if (priv->has_big_wep) {
+-			range->encoding_size[1] = LARGE_KEY_SIZE;
+-			range->num_encoding_sizes = 2;
+-		}
+-	}
+-
+-	if (priv->has_wpa)
+-		range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_CIPHER_TKIP;
+-
+-	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) && (!SPY_NUMBER(priv))) {
+-		/* Quality stats meaningless in ad-hoc mode */
+-	} else {
+-		range->max_qual.qual = 0x8b - 0x2f;
+-		range->max_qual.level = 0x2f - 0x95 - 1;
+-		range->max_qual.noise = 0x2f - 0x95 - 1;
+-		/* Need to get better values */
+-		range->avg_qual.qual = 0x24;
+-		range->avg_qual.level = 0xC2;
+-		range->avg_qual.noise = 0x9E;
+-	}
+-
+-	err = orinoco_hw_get_bitratelist(priv, &numrates,
+-					 range->bitrate, IW_MAX_BITRATES);
+-	if (err)
+-		return err;
+-	range->num_bitrates = numrates;
+-
+-	/* Set an indication of the max TCP throughput in bit/s that we can
+-	 * expect using this interface. May be use for QoS stuff...
+-	 * Jean II */
+-	if (numrates > 2)
+-		range->throughput = 5 * 1000 * 1000;	/* ~5 Mb/s */
+-	else
+-		range->throughput = 1.5 * 1000 * 1000;	/* ~1.5 Mb/s */
+-
+-	range->min_rts = 0;
+-	range->max_rts = 2347;
+-	range->min_frag = 256;
+-	range->max_frag = 2346;
+-
+-	range->min_pmp = 0;
+-	range->max_pmp = 65535000;
+-	range->min_pmt = 0;
+-	range->max_pmt = 65535 * 1000;	/* ??? */
+-	range->pmp_flags = IW_POWER_PERIOD;
+-	range->pmt_flags = IW_POWER_TIMEOUT;
+-	range->pm_capa = (IW_POWER_PERIOD | IW_POWER_TIMEOUT |
+-			  IW_POWER_UNICAST_R);
+-
+-	range->retry_capa = IW_RETRY_LIMIT | IW_RETRY_LIFETIME;
+-	range->retry_flags = IW_RETRY_LIMIT;
+-	range->r_time_flags = IW_RETRY_LIFETIME;
+-	range->min_retry = 0;
+-	range->max_retry = 65535;	/* ??? */
+-	range->min_r_time = 0;
+-	range->max_r_time = 65535 * 1000;	/* ??? */
+-
+-	if (priv->firmware_type == FIRMWARE_TYPE_AGERE)
+-		range->scan_capa = IW_SCAN_CAPA_ESSID;
+-	else
+-		range->scan_capa = IW_SCAN_CAPA_NONE;
+-
+-	/* Event capability (kernel) */
+-	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
+-	/* Event capability (driver) */
+-	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWTHRSPY);
+-	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
+-	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWSCAN);
+-	IW_EVENT_CAPA_SET(range->event_capa, IWEVTXDROP);
+-
+-	return 0;
+-}
+-
+ static int orinoco_ioctl_setiwencode(struct net_device *dev,
+ 				     struct iw_request_info *info,
+ 				     struct iw_point *erq,
+@@ -1641,7 +1528,7 @@ static const iw_handler	orinoco_handler[] = {
+ 	STD_IW_HANDLER(SIOCGIWMODE,	cfg80211_wext_giwmode),
+ 	STD_IW_HANDLER(SIOCSIWSENS,	orinoco_ioctl_setsens),
+ 	STD_IW_HANDLER(SIOCGIWSENS,	orinoco_ioctl_getsens),
+-	STD_IW_HANDLER(SIOCGIWRANGE,	orinoco_ioctl_getiwrange),
++	STD_IW_HANDLER(SIOCGIWRANGE,	cfg80211_wext_giwrange),
+ 	STD_IW_HANDLER(SIOCSIWSPY,	iw_handler_set_spy),
+ 	STD_IW_HANDLER(SIOCGIWSPY,	iw_handler_get_spy),
+ 	STD_IW_HANDLER(SIOCSIWTHRSPY,	iw_handler_set_thrspy),
+-- 
+1.6.0.6
 
