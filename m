@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:53988 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755968AbZE0IKk (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932413AbZE3RiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 04:10:40 -0400
-Date: Wed, 27 May 2009 10:12:51 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless/p54: prepare for FIRMWARE_NAME_MAX removal
-Message-ID: <20090527081249.GA3777@sortiz.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 30 May 2009 13:38:24 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so6938274ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:38:26 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC v2 23/23] orinoco: remove WE nickname support
+Date: Sat, 30 May 2009 18:36:57 +0100
+Message-Id: <1243705017-8784-24-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
-
-We're going to remove the FIRMWARE_NAME_MAX definition in order to avoid any
-firmware name length restriction.
-This patch gets rid of the statically allocated p54usb firmware string, and
-replaces them with const char pointers.
-
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- drivers/net/wireless/p54/p54usb.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/orinoco/wext.c |   43 -----------------------------------
+ 1 files changed, 0 insertions(+), 43 deletions(-)
 
-Index: iwm-2.6/drivers/net/wireless/p54/p54usb.c
-===================================================================
---- iwm-2.6.orig/drivers/net/wireless/p54/p54usb.c	2009-05-27 09:52:58.000000000 +0200
-+++ iwm-2.6/drivers/net/wireless/p54/p54usb.c	2009-05-27 09:53:29.000000000 +0200
-@@ -84,8 +84,8 @@ MODULE_DEVICE_TABLE(usb, p54u_table);
- static const struct {
- 	u32 intf;
- 	enum p54u_hw_type type;
--	char fw[FIRMWARE_NAME_MAX];
--	char fw_legacy[FIRMWARE_NAME_MAX];
-+	const char *fw;
-+	const char *fw_legacy;
- 	char hw[20];
- } p54u_fwlist[__NUM_P54U_HWTYPES] = {
- 	{
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 21db578..b6ff3db 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -372,47 +372,6 @@ static int orinoco_ioctl_getessid(struct net_device *dev,
+ 	return 0;
+ }
+ 
+-static int orinoco_ioctl_setnick(struct net_device *dev,
+-				 struct iw_request_info *info,
+-				 struct iw_point *nrq,
+-				 char *nickbuf)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	unsigned long flags;
+-
+-	if (nrq->length > IW_ESSID_MAX_SIZE)
+-		return -E2BIG;
+-
+-	if (orinoco_lock(priv, &flags) != 0)
+-		return -EBUSY;
+-
+-	memset(priv->nick, 0, sizeof(priv->nick));
+-	memcpy(priv->nick, nickbuf, nrq->length);
+-
+-	orinoco_unlock(priv, &flags);
+-
+-	return -EINPROGRESS;		/* Call commit handler */
+-}
+-
+-static int orinoco_ioctl_getnick(struct net_device *dev,
+-				 struct iw_request_info *info,
+-				 struct iw_point *nrq,
+-				 char *nickbuf)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	unsigned long flags;
+-
+-	if (orinoco_lock(priv, &flags) != 0)
+-		return -EBUSY;
+-
+-	memcpy(nickbuf, priv->nick, IW_ESSID_MAX_SIZE);
+-	orinoco_unlock(priv, &flags);
+-
+-	nrq->length = strlen(priv->nick);
+-
+-	return 0;
+-}
+-
+ static int orinoco_ioctl_setfreq(struct net_device *dev,
+ 				 struct iw_request_info *info,
+ 				 struct iw_freq *frq,
+@@ -1539,8 +1498,6 @@ static const iw_handler	orinoco_handler[] = {
+ 	STD_IW_HANDLER(SIOCGIWSCAN,	cfg80211_wext_giwscan),
+ 	STD_IW_HANDLER(SIOCSIWESSID,	orinoco_ioctl_setessid),
+ 	STD_IW_HANDLER(SIOCGIWESSID,	orinoco_ioctl_getessid),
+-	STD_IW_HANDLER(SIOCSIWNICKN,	orinoco_ioctl_setnick),
+-	STD_IW_HANDLER(SIOCGIWNICKN,	orinoco_ioctl_getnick),
+ 	STD_IW_HANDLER(SIOCSIWRATE,	orinoco_ioctl_setrate),
+ 	STD_IW_HANDLER(SIOCGIWRATE,	orinoco_ioctl_getrate),
+ 	STD_IW_HANDLER(SIOCSIWRTS,	orinoco_ioctl_setrts),
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.6.0.6
+
