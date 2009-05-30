@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25549 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757401AbZEVRzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 13:55:12 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/10] iwlwifi: report the rate index as an MCS rate number
-Date: Fri, 22 May 2009 11:01:48 -0700
-Message-Id: <1243015315-13848-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
-References: <1243015315-13848-1-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-2-git-send-email-reinette.chatre@intel.com>
- <1243015315-13848-3-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:49612 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755900AbZE3Utl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 May 2009 16:49:41 -0400
+Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
+ wireless on my system
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1243716437.26585.4.camel@maxim-laptop>
+References: <1243716437.26585.4.camel@maxim-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-T3YCNA5Dz2WVlxSeSqPu"
+Date: Sat, 30 May 2009 22:49:00 +0200
+Message-Id: <1243716540.13863.32.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-If transmit in HT rate, report the rate index as an MCS rate number
-instead of an index. so "iw" can display correct BitRate
+--=-T3YCNA5Dz2WVlxSeSqPu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   31 +++++++++++++++++++++++++---
- 1 files changed, 27 insertions(+), 4 deletions(-)
+On Sat, 2009-05-30 at 23:47 +0300, Maxim Levitsky wrote:
+> I use nl80211 wpa_suppicant driver.
+> With this commit (have just bisected) I can't connect to same AP twice,
+> and usually only a module reload, or somtimes restart of supplicant
+> help.
+> Actually usually I can't connect again after first successful connection
+> at all.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 4c88e87..bcdfea7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -270,6 +270,8 @@ const static struct iwl_rate_mcs_info iwl_rate_mcs[IWL_RATE_COUNT] = {
-   {"60", "64QAM 5/6"}
- };
- 
-+#define MCS_INDEX_PER_STREAM	(8)
-+
- static inline u8 rs_extract_rate(u32 rate_n_flags)
- {
- 	return (u8)(rate_n_flags & 0xFF);
-@@ -2514,12 +2516,33 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 		}
- 	}
- 
--	if (rate_idx < 0 || rate_idx > IWL_RATE_COUNT)
--		rate_idx = rate_lowest_index(sband, sta);
--	else if (sband->band == IEEE80211_BAND_5GHZ)
-+	if (lq_sta->last_rate_n_flags & RATE_MCS_HT_MSK) {
- 		rate_idx -= IWL_FIRST_OFDM_RATE;
--
-+		/* 6M and 9M shared same MCS index */
-+		rate_idx = (rate_idx > 0) ? (rate_idx - 1) : 0;
-+		if (rs_extract_rate(lq_sta->last_rate_n_flags) >=
-+		    IWL_RATE_MIMO3_6M_PLCP)
-+			rate_idx = rate_idx + (2 * MCS_INDEX_PER_STREAM);
-+		else if (rs_extract_rate(lq_sta->last_rate_n_flags) >=
-+			 IWL_RATE_MIMO2_6M_PLCP)
-+			rate_idx = rate_idx + MCS_INDEX_PER_STREAM;
-+		info->control.rates[0].flags = IEEE80211_TX_RC_MCS;
-+		if (lq_sta->last_rate_n_flags & RATE_MCS_SGI_MSK)
-+			info->control.rates[0].flags |= IEEE80211_TX_RC_SHORT_GI;
-+		if (lq_sta->last_rate_n_flags & RATE_MCS_DUP_MSK)
-+			info->control.rates[0].flags |= IEEE80211_TX_RC_DUP_DATA;
-+		if (lq_sta->last_rate_n_flags & RATE_MCS_FAT_MSK)
-+			info->control.rates[0].flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+		if (lq_sta->last_rate_n_flags & RATE_MCS_GF_MSK)
-+			info->control.rates[0].flags |= IEEE80211_TX_RC_GREEN_FIELD;
-+	} else {
-+		if (rate_idx < 0 || rate_idx > IWL_RATE_COUNT)
-+			rate_idx = rate_lowest_index(sband, sta);
-+		else if (sband->band == IEEE80211_BAND_5GHZ)
-+			rate_idx -= IWL_FIRST_OFDM_RATE;
-+	}
- 	info->control.rates[0].idx = rate_idx;
-+
- }
- 
- static void *rs_alloc_sta(void *priv_rate, struct ieee80211_sta *sta,
--- 
-1.5.6.3
+Grab Luis's fix.
+
+johannes
+
+--=-T3YCNA5Dz2WVlxSeSqPu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKIZu5AAoJEODzc/N7+QmaT+gQAIpMlUDObBxHgwTu488o7RGI
+44yp9FWzWmkx1xRFSzUwrUqynNaSHrI7OPn++ucl3yDaFpRHYF3fsVrzF+mgBuzm
+cQVtzQB+xY5EoetDu0jwdDNoD2uxTnb+U7BSpeGzO1jgWb2ssnlkHBaqdY/RIPTc
+e018XlqjzRUdDrt1grHZ6CPhNuOaqUnXsmpzBHzOXqKeHd5jBA+aNrinhNNf0BPN
+jxey6uIOkGEk6AVBgATAwhNorMsam4ps4kwc6OHu8/vq2OM0nLjpC9Hbe6Dbdyyr
+S4wXGgWT+ma5U2LpWxSER4a6/i2dgfbGt/r6/YBNf0fqihKeMbRzXRONpzTgtyq/
+0t2frBRKrS9F71h2ttN8gKE9MEE0fFfraT6TOarM618MV+pvYnSys350J/1P4t6J
+Exqaye/wkyoDWE5CskBSt/7i/IgZeORhOMj5nkkRVkodhcaO0KXg+0PLu9VK22C/
+Md3Zc2wF945AJ0kqDRi5Y7+bFKfVkX8YoCdHBIZy7pTx9ayq7Kq6CRAwKfpFw/Ej
+zkf512q3HzkHQhHN8gqA3XxwyqNW89eIirB1WjlcIxrqgHAOgXSSi1K6v4ghP9mf
+GG2AISBvDlDUTYtTvZs3Ae9xU76do3Jat6kR08N/42XdVM5oc1tWofsbbcYDnM14
+E4BNqiS5KobhKsXghKz9
+=m+bM
+-----END PGP SIGNATURE-----
+
+--=-T3YCNA5Dz2WVlxSeSqPu--
 
