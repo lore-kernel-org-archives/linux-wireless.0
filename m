@@ -1,92 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:30137 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754051AbZEJSlx convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760573AbZE3RhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2009 14:41:53 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so1887856rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2009 11:41:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890905081453h2d660e6dl38b714467c8f24cb@mail.gmail.com>
-References: <20090203173228.GB9713@tesla> <20090206202205.218710@gmx.net>
-	<20090206211804.GG5031@tesla> <20090214230618.203560@gmx.net>
-	<43e72e890902141718v544f5caejb71f53bdadbf8a8f@mail.gmail.com>
-	<20090216205115.21860@gmx.net> <43e72e890902161342j23b68a4eoabddb047fb9d9084@mail.gmail.com>
-	<20090508211237.316290@gmx.net> <1241818845.6240.4.camel@mj>
-	<43e72e890905081453h2d660e6dl38b714467c8f24cb@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 10 May 2009 11:41:33 -0700
-Message-ID: <43e72e890905101141r6fe3b655ta158acabf4c87ec3@mail.gmail.com>
-Subject: Re: [ath9k-devel] ath9k module-Unable to set channel-since ath comes
-To: Pavel Roskin <proski@gnu.org>
-Cc: Alexander Bartha <alex.xy.privat@gmx.at>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 30 May 2009 13:37:00 -0400
+Received: by ewy24 with SMTP id 24so6938274ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:01 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC v2 00/23] orinoco: initiate conversion to cfg80211
+Date: Sat, 30 May 2009 18:36:34 +0100
+Message-Id: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 8, 2009 at 2:53 PM, Luis R. Rodriguez <mcgrof@gmail.com> wr=
-ote:
-> On Fri, May 8, 2009 at 2:40 PM, Pavel Roskin <proski@gnu.org> wrote:
->> On Fri, 2009-05-08 at 23:12 +0200, Alexander Bartha wrote:
->>> Hello to everybody at linuxwireless
->>>
->>> Since the "Submodule" ath comes aht9k says in messages:
->>>
->>> May =C2=A07 22:11:34 ws1 [ 4442.304763] ath9k: Unable to set channe=
-l
->>> May =C2=A07 22:11:34 ws1 [ 4442.425550] ath9k: timeout (100000 us) =
-on reg 0x9860: 0x0
->>> 0049d19 & 0x00000001 !=3D 0x00000000
->>> May =C2=A07 22:11:34 ws1 [ 4442.425555] ath9k: Unable to reset chan=
-nel (2422 Mhz) res
->>> et status 4294967291
->>> May =C2=A07 22:11:34 ws1 [ 4442.425560] ath9k: Unable to set channe=
-l
->>> May =C2=A07 22:11:34 ws1 [ 4442.546365] ath9k: timeout (100000 us) =
-on reg 0x9860: 0x0
->>> 0049d19 & 0x00000001 !=3D 0x00000000
+I've completely refactorred since the last RFC, and switched to the
+cfg80211 handlers for scanning, mode changing and giwrange.
 
-I can reproduce, and I tried without the idle patches but I still see
-the issue. I see this issue only after suspend. Did you suspend and
-get this as well? I see this using AR5416. If you are seeing this on
-suspend can you try with the patch I posted to linux-wireless to see
-if it helps a little?
+Patches 1-5 modify cfg80211, mostly so it can advertise (the more
+restrictive) orinoco capabilities correctly.
 
-  Luis
+Patches 6-13 refactor the orinoco internal interfaces and initialisation
+to make the switch to cfg80211 easier. The main thrust is to avoid using
+net_device in the device drivers allowing us to register the net_device
+later.
 
->>> i have tried different versions of the modules but since compat-wir=
-eless-2009-04-16 i get this errors.
->>>
->>> till that all works fine sometime the driver have little problems a=
-fter not using the network. thanks for the drivers
->>
->> I track wireless-testing.git and I saw it in the last weeks. =C2=A0I=
- think it
->> happens after about 260 pings at the normal speed (i.e. not with flo=
-od
->> ping). =C2=A0I was thinking about bisecting the problem, but I don't=
- have
->> much time right now.
->>
->> Last time I saw it was on Monday. =C2=A0There were some changes to a=
-th9k
->> since then, so maybe it's fixed.
->
-> This may have been caused by the idle patches for which Johannes has
-> posted a fix. This should get merged soon so give it a few more days
-> and try again.
->
-> If you want something a little more stable you can go with the stable
-> compat-wireless releases:
->
-> http://wireless.kernel.org/en/users/Download/stable
->
-> =C2=A0Luis
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patch 14 starts the cfg80211 conversion, before patches 15-19 cleanup
+the fallout from the conversion.
+
+Patches 20 though 23 convert a few of the WE handler to cfg80211
+handlers.
+
+The refactorring affects all the card and firmware types, but I'm only
+able to test orinoco_cs with Agere firmware.
+---
+David Kilroy (23):
+  cfg80211: add wrapper function to get wiphy from priv pointer
+  cfg80211: Advertise ciphers via WE according to driver capability
+  cfg80211: allow drivers that can't scan for specific ssids
+  cfg80211: set WE encoding size based on available ciphers
+  cfg80211: infer WPA and WPA2 support from TKIP and CCMP
+  orinoco: Move firmware capability determination into hw.c
+  orinoco: Move card reading code into hw.c
+  orinoco: Move FID allocation to hw.c
+  orinoco: use dev_err in early initialisation routines
+  orinoco: firmware helpers should use dev_err and friends
+  orinoco: Replace net_device with orinoco_private in driver interfaces
+  orinoco: initialise independently of netdev
+  orinoco: Change set_tkip to use orinoco_private instead of hermes_t
+  orinoco: initiate cfg80211 conversion
+  orinoco: make firmware download less verbose
+  orinoco: move netdev interface creation to main driver
+  airport: store irq in card private structure
+  orinoco: Handle suspend/restore in core driver
+  orinoco: provide generic commit function
+  orinoco: convert mode setting to cfg80211
+  orinoco: convert scanning to cfg80211
+  orinoco: convert giwrange to cfg80211
+  orinoco: remove WE nickname support
+
+ drivers/net/wireless/orinoco/Kconfig          |    1 +
+ drivers/net/wireless/orinoco/Makefile         |    2 +-
+ drivers/net/wireless/orinoco/airport.c        |   98 +--
+ drivers/net/wireless/orinoco/cfg.c            |  169 ++++
+ drivers/net/wireless/orinoco/cfg.h            |   15 +
+ drivers/net/wireless/orinoco/fw.c             |   41 +-
+ drivers/net/wireless/orinoco/hermes.h         |    2 +-
+ drivers/net/wireless/orinoco/hermes_dld.c     |   50 +-
+ drivers/net/wireless/orinoco/hw.c             |  668 +++++++++++++++-
+ drivers/net/wireless/orinoco/hw.h             |   11 +-
+ drivers/net/wireless/orinoco/main.c           | 1131 +++++++++----------------
+ drivers/net/wireless/orinoco/main.h           |    3 +-
+ drivers/net/wireless/orinoco/orinoco.h        |   49 +-
+ drivers/net/wireless/orinoco/orinoco_cs.c     |   96 +--
+ drivers/net/wireless/orinoco/orinoco_nortel.c |   38 +-
+ drivers/net/wireless/orinoco/orinoco_pci.c    |   38 +-
+ drivers/net/wireless/orinoco/orinoco_pci.h    |   57 +--
+ drivers/net/wireless/orinoco/orinoco_plx.c    |   38 +-
+ drivers/net/wireless/orinoco/orinoco_tmd.c    |   38 +-
+ drivers/net/wireless/orinoco/scan.c           |  265 +++----
+ drivers/net/wireless/orinoco/scan.h           |   21 +-
+ drivers/net/wireless/orinoco/spectrum_cs.c    |   96 +--
+ drivers/net/wireless/orinoco/wext.c           |  878 ++------------------
+ include/net/cfg80211.h                        |   11 +
+ net/wireless/core.c                           |    3 -
+ net/wireless/wext-compat.c                    |   24 +-
+ 26 files changed, 1725 insertions(+), 2118 deletions(-)
+ create mode 100644 drivers/net/wireless/orinoco/cfg.c
+ create mode 100644 drivers/net/wireless/orinoco/cfg.h
+
