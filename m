@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:58238 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759026AbZE0SFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 14:05:12 -0400
-Subject: Re: [PATCH v11] rfkill: rewrite
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Will Keaney <keaneyw@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090527080737.GB8134@tuxdriver.com>
-References: <1242942720.4212.19.camel@johannes.local>
-	 <1243068246.4606.45.camel@johannes.local> <4A1BDE51.7020009@gmail.com>
-	 <20090526131533.GA3932@tuxdriver.com>
-	 <20090527025516.GC22235@khazad-dum.debian.net>
-	 <20090527080737.GB8134@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 27 May 2009 14:04:31 -0400
-Message-Id: <1243447471.17301.21.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from fmailhost03.isp.att.net ([204.127.217.103]:53887 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756747AbZE3VAl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 May 2009 17:00:41 -0400
+Message-ID: <4A219E78.5070009@lwfinger.net>
+Date: Sat, 30 May 2009 16:00:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks wireless
+ on my system
+References: <1243716437.26585.4.camel@maxim-laptop>
+In-Reply-To: <1243716437.26585.4.camel@maxim-laptop>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-05-27 at 10:07 +0200, John W. Linville wrote:
-> On Tue, May 26, 2009 at 11:55:16PM -0300, Henrique de Moraes Holschuh wrote:
-> > On Tue, 26 May 2009, John W. Linville wrote:
-> > > On Tue, May 26, 2009 at 08:19:29AM -0400, Will Keaney wrote:
-> > > > Johannes Berg wrote:
-> > > > > This patch completely rewrites the rfkill core to address
-> > > > > the following deficiencies:
-> > > > >   
-> > > > I applied this to a fresh pull of wireless-testing this morning, and
-> > > > haven't had any problems from it.  It looks like the soft lockup I
-> > > > reported earlier has been fixed.
-> > > 
-> > > Cool, thanks for the report.
-> > > 
-> > > I'm leaning towards merging this in time for the 2.6.31 merge
-> > > window...who wants to complain? :-)
-> > 
-> > As long as the missing userspace control functionality (the lack of which is
-> > a _serious_ regression for platform drivers) is added before 2.6.31 ships, I
-> > have no complains.
-> > 
-> > Userspace must be able to change the (soft) state using sysfs.  This is
-> > not an optional part of rfkill :-)
+Maxim Levitsky wrote:
+> I use nl80211 wpa_suppicant driver.
+> With this commit (have just bisected) I can't connect to same AP twice,
+> and usually only a module reload, or somtimes restart of supplicant
+> help.
+> Actually usually I can't connect again after first successful connection
+> at all.
 > 
-> Are there any apps that actually use this feature?  It seems like
-> that even if there are apps, they need to handle drivers that don't
-> support it.
+> 
+> With wext supplicant works, but still sometimes hangs in same way.
+> 
+> commit 1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Tue May 19 22:16:25 2009 +0200
+> 
+>     mac80211: don't try to do anything on unchanged genIE
+>     
+>     When the genIE hasn't changed there's no reason to kick
+>     the state machine since it won't be able to do anything
+>     new -- doing this decreases the useless work we do for
+>     reassociating because if we do kick the state machine
+>     it will try to find a usable BSS but there might not be
+>     one because wpa_supplicant will only change the BSSID
+>     a little later.
+>     
+>     In a sense this is a workaround for userspace behaviour,
+>     but on the other hand userspace cannot really keep track
+>     of what the kernel currently has for genIE since any
+>     process could have changed that while wpa_supplicant
+>     wasn't looking.
+>     
+>     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-I'd use it NM for the "Enable Wireless" checkbox.  The alternative is
-SIOCSIWTXPOW -> off I guess, though it would be nicer to just talk to
-one thing in sysfs instead of listen to one and SIWTXPOW to set.
+>From the above patch, this hunk looks a little strange:
 
-Dan
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index c143947..a01154e 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -37,12 +37,13 @@ static int ieee80211_ioctl_siwgenie(struct
+net_device *dev,
 
+        if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+                int ret = ieee80211_sta_set_extra_ie(sdata, extra,
+data->length);
+-               if (ret)
++               if (ret && ret != -EALREADY)
+                        return ret;
+                sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_BSSID_SEL;
+                sdata->u.mgd.flags &= ~IEEE80211_STA_EXT_SME;
+                sdata->u.mgd.flags &= ~IEEE80211_STA_CONTROL_PORT;
+-               ieee80211_sta_req_auth(sdata);
++               if (ret != -EALREADY)
++                       ieee80211_sta_req_auth(sdata);
+                return 0;
+        }
+
+Why is there a check before the call to ieee80211_sta_req_auth()? If
+ret != -EALREADY, would we not have already exited?
+
+Larry
 
