@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:58753 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756335AbZE1JD4 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:56827 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761221AbZE3RhJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2009 05:03:56 -0400
-Received: by bwz22 with SMTP id 22so5279365bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2009 02:03:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090528084050.GA4401@tuxdriver.com>
-References: <bug-13317-10286@http.bugzilla.kernel.org/>
-	 <20090528000253.c731179c.akpm@linux-foundation.org>
-	 <20090528084050.GA4401@tuxdriver.com>
-Date: Thu, 28 May 2009 11:03:57 +0200
-Message-ID: <a32f33a40905280203x772f0628ub0ab2f57b3b21da1@mail.gmail.com>
-Subject: Re: [Bugme-new] [Bug 13317] New: No rt2x00 modules in RT kernels.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	bugzilla-daemon@bugzilla.kernel.org,
-	bugme-daemon@bugzilla.kernel.org, dandart@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 30 May 2009 13:37:09 -0400
+Received: by mail-ew0-f176.google.com with SMTP id 24so6938274ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:11 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC v2 02/23] cfg80211: Advertise ciphers via WE according to driver capability
+Date: Sat, 30 May 2009 18:36:36 +0100
+Message-Id: <1243705017-8784-3-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 28, 2009 at 10:40 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Thu, May 28, 2009 at 12:02:53AM -0700, Andrew Morton wrote:
->
->> Presumably there's some bustage in the rt2x00 driver which makes it not
->> work with -rt kernels.
->>
->> Did the -rt guys tell the wireless guys about this?
->
-> Honestly, I don't recall hearing about it.  Ivo?
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ net/wireless/wext-compat.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-No, I can't recall any -rt specific issues either, and so far no
-regular open bug
-is critical enough to make rt2x00 depend on CONFIG_BROKEN.
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 711e00a..b132f85 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -204,8 +204,16 @@ int cfg80211_wext_giwrange(struct net_device *dev,
+ 	range->avg_qual.noise = range->max_qual.noise / 2;
+ 	range->avg_qual.updated = range->max_qual.updated;
+ 
+-	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+-			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
++	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
++
++	for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
++		u32 suite = wdev->wiphy->cipher_suites[c];
++
++		if (suite == WLAN_CIPHER_SUITE_TKIP)
++			range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
++		else if (suite == WLAN_CIPHER_SUITE_CCMP)
++			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
++	}
+ 
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
+ 		int i;
+-- 
+1.6.0.6
 
-Ivo
