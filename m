@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59370 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbZETHFr (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:11165 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760595AbZE3RhH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2009 03:05:47 -0400
-Subject: [PATCH] mac80211: fix parameter confusion when finding IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 20 May 2009 09:05:10 +0200
-Message-Id: <1242803110.31350.13.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 30 May 2009 13:37:07 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so243532eye.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 10:37:07 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC v2 01/23] cfg80211: add wrapper function to get wiphy from priv pointer
+Date: Sat, 30 May 2009 18:36:35 +0100
+Message-Id: <1243705017-8784-2-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
+References: <1243705017-8784-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I fixed the crypto bit I must have done the negative
-test only -- it is quite clearly impossible to find _any_
-IBSS to join with the parameters put the wrong way around.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- net/mac80211/ibss.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ibss.c	2009-05-20 09:01:07.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-05-20 09:02:02.000000000 +0200
-@@ -535,9 +535,9 @@ static void ieee80211_sta_find_ibss(stru
- 		bssid = ifibss->bssid;
- 	bss = (void *)cfg80211_get_bss(local->hw.wiphy, chan, bssid,
- 				       ifibss->ssid, ifibss->ssid_len,
--				       capability,
- 				       WLAN_CAPABILITY_IBSS |
--				       WLAN_CAPABILITY_PRIVACY);
-+				       WLAN_CAPABILITY_PRIVACY,
-+				       capability);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f20da7d..27c6ef6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1032,6 +1032,17 @@ static inline void *wiphy_priv(struct wiphy *wiphy)
+ }
  
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 	if (bss)
-
+ /**
++ * priv_to_wiphy - return the wiphy containing the priv
++ *
++ * @priv: a pointer previously returned by wiphy_priv
++ */
++static inline struct wiphy *priv_to_wiphy(void *priv)
++{
++	BUG_ON(!priv);
++	return container_of(priv, struct wiphy, priv);
++}
++
++/**
+  * set_wiphy_dev - set device pointer for wiphy
+  *
+  * @wiphy: The wiphy whose device to bind
+-- 
+1.6.0.6
 
