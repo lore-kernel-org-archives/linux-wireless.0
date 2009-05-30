@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56622 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757763AbZE1Bsq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45216 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbZE3Ewt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2009 21:48:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org
-Cc: jal2@gmx.de, Peter.Grabienski@Atheros.com,
-	Stephen.Chen@Atheros.com, Michael.Fortin@Atheros.com,
-	Johnny.Cheng@Atheros.com, Yuan-Gu.Wei@atheros.com,
-	otus-devel@lists.madwifi-project.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 0/2] ar9170: initial stage 1 firmware support /  AVM fritz
-Date: Wed, 27 May 2009 21:48:44 -0400
-Message-Id: <1243475326-28867-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 30 May 2009 00:52:49 -0400
+Date: Sat, 30 May 2009 06:48:53 +0200
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-05-29
+Message-ID: <20090530044852.GB3371@tuxdriver.com>
+References: <20090529132858.GA3520@tuxdriver.com> <20090529.151651.59612837.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090529.151651.59612837.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please give this a shot with the AVM Fritz device.
-At least for me I can only scan, I cannot associate to an AP
-yet with the 1 stage firmware but I've been told it does seem
-to work with some devices..
+On Fri, May 29, 2009 at 03:16:51PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Fri, 29 May 2009 15:28:59 +0200
+> 
+> > Here are a couple of fixes that would be nice to have for 2.6.30 --
+> > nothing very controversial.  Each has a bugzilla.kernel.org entry listed
+> > in the changelog.
+> > 
+> > Please let me know if there are problems!
+> 
+> I know you're away and not at %100 but please do always CC:
+> netdev for your pull requests so that the attached patch gets
+> reviewed by networking folks and more importantly logged at:
+> 
+> 	http://patchwork.ozlabs.org/project/netdev/list/
+> 
+> so that I can track it properly.
 
-If you can even at least scan with the AVM fritz devices then this means
-we just need to finish the 1 stage firmware support in order for them to work.
-I cannot work on this more though so if someone has time and you want to pick
-up the work please refer the Otus code (in staging/otus/ and ensure that the
-code #ifdef'd around ZM_OTUS_LINUX_PHASE_2 is _not_ used. ar9170 and otus
-are very different (which is good) but unfortunately for this exercise this
-means its very difficult to find the exact calls #ifdef'd on the ar9170 port.
-I may have missed one or two more.
+Ooops!  Sorry...yes, not at 100%... :-)
 
-Luis R. Rodriguez (2):
-  ar9170: add initial support for 1-stage firmware
-  ar9170: add AVM FRITZ devices
-
- drivers/net/wireless/ath/ar9170/phy.c |   13 ++++++--
- drivers/net/wireless/ath/ar9170/usb.c |   50 +++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ar9170/usb.h |    2 +
- 3 files changed, 57 insertions(+), 8 deletions(-)
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
