@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f174.google.com ([209.85.218.174]:37110 "EHLO
-	mail-bw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592AbZENRns convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:40142 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751458AbZEaE4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 13:43:48 -0400
-Received: by bwz22 with SMTP id 22so1443878bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 10:43:48 -0700 (PDT)
+	Sun, 31 May 2009 00:56:46 -0400
+Received: by bwz22 with SMTP id 22so6862334bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2009 21:56:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1242322940.32358.31.camel@rc-desk>
-References: <1242321566.32358.19.camel@rc-desk>
-	 <b170af450905141022q29f7a8cfl1c079e473f575c49@mail.gmail.com>
-	 <1242322940.32358.31.camel@rc-desk>
-Date: Thu, 14 May 2009 19:43:48 +0200
-Message-ID: <b170af450905141043r50c4831eh73999eef98bea7bf@mail.gmail.com>
-Subject: Re: [ipw3945-devel] iwlwifi 5150 uCode available
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+Date: Sun, 31 May 2009 05:56:46 +0100
+Message-ID: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
+Subject: compat-wireless won't associate on 2nd load
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 maja 2009 19:42 użytkownik reinette chatre
-<reinette.chatre@intel.com> napisał:
-> Hi,
->
-> On Thu, 2009-05-14 at 10:22 -0700, Rafał Miłecki wrote:
->> 2009/5/14 reinette chatre <reinette.chatre@intel.com>:
->> > uCode for Intel Wireless WiFi Link 5150AGN is now available for download
->> > from http://intellinuxwireless.org/?n=Downloads
->>
->> Changelog is top secret as usually? ;)
->
-> Nope ... this is the very first release of this uCode for this
-> particular hardware. A changelog does not make sense in this case.
->
->
->> Should this fix
->> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1946 (wrong
->> command queue)?
->
->
-> This bug is against 5100/5300 hardware, so this uCode is not what you
-> are looking for. We are working on getting uCode for 5100/5300 hardware
-> (that includes a fix for this bug) out the door.
->
-> Reinette
+I have been having some curious problem with rtl8187 for about a week
+- having problem associating with 'direct probe to AP <mac-addrr>
+timed out' after a reboot, and/or switching between compat-wireless
+modules. I thought it is a temporary problem with
+wireless-testing/compat-wireless but obviously nobody else has seen
+anything like mine from the mailing-list traffic. So I tried
+bisecting, etc and the results are inconsistent. Then I came to a
+vaguely working solution - it seems that I cannot modprobe
+compat-wireless twice - i.e. I can associate with compat-wireless
+after make install, make unload, modprobe; but modprobe -r then
+modprobe -v again I can't associate . I thought about restarting
+network manager, wpa_supplicant, etc without success, but the surest
+way to re-gain connectivity is simply to blow away /lib/modules/`uname
+-r`/updates, depmod -a and load the as-shipped modules. (and then I
+can make install compat-wireless and use it, and the cycle repeats if
+I unload compat-wireless and try to install a different
+compat-wireless snapshot, etc).
 
-Ah, I gone wrong with that numbers understanding. Maybe putting
-supported hardware in ucode's README would be a good idea? :)
-Currently visiting http://intellinuxwireless.org/?n=Downloads doesn't
-provide much help about choosing right firmware for 5100/5300(/5200?).
-Or at last some short info on download page?
-
--- 
-Rafał Miłecki
+This is really curious, as it seems that I cannot unload
+compat-wireless and reload it (or a later snapshot) without going
+through as-shipped-by-distro modules ( 2.6.29.4-167.fc11.x86_64) in
+the middle. How is that possible? One possibility is that as-shipped
+module does a reset of hardware on unload or wireless-testing put the
+hardware in a bad state on unload; but I know of no change of that
+sort. Anybody else having problems associating after modprobe -r
+/modprobe  -v with recent compat-wireless/wireless-testing?
