@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f115.google.com ([209.85.222.115]:45500 "EHLO
-	mail-pz0-f115.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754104AbZEOBd1 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:57560 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750872AbZEaTFD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 21:33:27 -0400
-Received: by pzk13 with SMTP id 13so834854pzk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2009 18:33:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090515003202.GA17816@tesla>
-References: <1242033904-25694-1-git-send-email-lrodriguez@atheros.com>
-	<1242033904-25694-4-git-send-email-lrodriguez@atheros.com>
-	<1242036115.3284.15.camel@johannes.local> <43e72e890905111134u61f1600fie1950b6e12681e13@mail.gmail.com>
-	<1242068010.3873.46.camel@johannes.local> <20090511190922.GD18696@tesla>
-	<20090515003202.GA17816@tesla>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 14 May 2009 18:33:08 -0700
-Message-ID: <43e72e890905141833g214753d9lbdb00bd70ee28dfe@mail.gmail.com>
-Subject: Re: [RFC 3/5] mac80211: fix idle trigger upon resume
-To: Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 31 May 2009 15:05:03 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: alan-jenkins@tuffmail.co.uk,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1243778069.5299.0.camel@johannes.local>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
+	 <1243778069.5299.0.camel@johannes.local>
+Content-Type: text/plain
+Date: Sun, 31 May 2009 21:03:48 +0200
+Message-Id: <1243796628.6570.37.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2009 at 5:32 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, May 11, 2009 at 12:09:22PM -0700, Luis Rodriguez wrote:
->> On Mon, May 11, 2009 at 11:53:30AM -0700, Johannes Berg wrote:
->> > On Mon, 2009-05-11 at 11:34 -0700, Luis R. Rodriguez wrote:
->> >
->> > > > Also, __ieee80211_queues_stopped_by_reason is misnamed since it checks
->> > > > only a single queue. I also think that we can do this much better by
->> > > > keeping track of the suspend state in a new variable rather than looking
->> > > > at all the queues; even just checking queue 0 would be sufficient, but I
->> > > > think a new variable is warranted.
->> > >
->> > > A global variable for going to suspend? Hm, do we have a system wide
->> > > thing for this instead?
->> >
->> > No, and even then we couldn't use it I think since you can have
->> > per-device suspend. I was just thinking of a local->variable.
->>
->> OK thanks will add this.
->
-> So I've added the WARN_ON() here as we agreed to investigate on irc. Turns out
-> we hit it several times as expected. We hit it while going to suspend
-> once, and then on resume 3 times.
+Hi Johannes,
 
-The trace doesn't help much except for acknowledging the issue I was
-pointing out. The workqueue is run because we flush it, twice, during
-suspend. The idle recalc is run because we call it within
-ieee80211_sta_work(). If we want we can move the check for
-local->suspended to ieee80211_sta_work() but then we'd have to set
-local->suspended early on during suspend before the first flush and
-that doesn't seem right. So I think the patch as I have it is fine
-unless I'm missing something.
+> > How should userspace test CONFIG_RFKILL_INPUT to determine whether
+> > it's safe to start the daemon?  With the old core, debian-eeepc
+> > scripts check if the module rfkill-input exists (which should work
+> > even if it's built in).  If it exists, the scripts don't perform any
+> > rfkill actions.  (Yeah, according to the doc this is not allowed
+> > because the scripts don't use "claim", but you can see how it's
+> > useful).
+> > 
+> > The new rfkill-input isn't a module, so I'm not sure how your daemon
+> > would test for it.
+> 
+> Maybe we should add an ioctl that disables rfkill-input if present.
 
-  Luis
+I am against it. Can we just add a module parameter that allows us to
+disable it. I am against cluttering a new interface with legacy stuff
+since we are removing rfkill-input and replacing it by rfkilld anyway in
+a near future (meaning when I am back from vacation).
+
+Regards
+
+Marcel
+
+
