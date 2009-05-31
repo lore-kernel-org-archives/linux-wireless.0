@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58376 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49346 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486AbZEHROn (ORCPT
+	with ESMTP id S1754882AbZEaKLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2009 13:14:43 -0400
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+	Sun, 31 May 2009 06:11:39 -0400
+Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
+ wireless on my system
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <da94abde0905080956g3c6f49f3ta38412d886cfb2ec@mail.gmail.com>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <1241774338.1567.36.camel@johannes.local>
-	 <da94abde0905080956g3c6f49f3ta38412d886cfb2ec@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vO9VkcPfz5wS7xP9WsNY"
-Date: Fri, 08 May 2009 19:14:34 +0200
-Message-Id: <1241802874.4495.25.camel@johannes.local>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1243723044.25886.2.camel@maxim-laptop>
+References: <1243716437.26585.4.camel@maxim-laptop>
+	 <1243716540.13863.32.camel@johannes.local>
+	 <1243717165.5312.3.camel@maxim-laptop>
+	 <1243723044.25886.2.camel@maxim-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m/wL05897PCot1iOXCNJ"
+Date: Sun, 31 May 2009 12:11:31 +0200
+Message-Id: <1243764691.21851.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vO9VkcPfz5wS7xP9WsNY
+--=-m/wL05897PCot1iOXCNJ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Sun, 2009-05-31 at 01:37 +0300, Maxim Levitsky wrote:
 
-> > Feel free to edit and add suggestions
+> It appears that I don't receive half of mails of linux-wireless
+> nether they are in spam folder.
 >=20
-> What about proper roaming support? I think it will be the thing we are
-> lacking after power save is finished. There was talk about having GSoC
-> project, what happened to it?
+> I am subscribed to linux-wireless@vger.kernel.org>
+>=20
+> For example I see no trace of new intel fullmac driver.
+>=20
+> Is gmail that bad?
 
-That project was not accepted - and we even got three.
-
-> I'm interested about roaming, but I don't how much time if any I can
-> find for implementing it. But I could make a summary of all
-> discussions we have had here during the last year and maybe try to
-> start some discussion at the summit. What others think?
-
-Sounds useful. Helmut will have input too I guess, and he'll be there.
+Strange, I have no idea. FWIW, the patch is archived for the list, so it
+must have gotten to it:
+http://article.gmane.org/gmane.linux.kernel.wireless.general/33606
 
 johannes
 
-
---=-vO9VkcPfz5wS7xP9WsNY
+--=-m/wL05897PCot1iOXCNJ
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKBGhzAAoJEODzc/N7+QmacyAP/1qnZoGECt6YYxvMWdkH4q3/
-AdyJGG1Nhj+AZ7JuTZ1DVPeTJfb/F9qMIZkuxLP0MBo4dZqj+v9Rnxb1fs+lh5MB
-CHtaFAB9ajKMZJZNJUSkFDkm9Xy1BUTh2QxBkG6KaTH8ZJdwygqK3JowxddR+2Gb
-vL/ZSeaXf55BuTt9ggjLliv1f95UAQ+ZuMXWNh3+AOE5f5veZjnURiYWnsDU2Pxj
-0582ctHVBbdhxQVsz6lJ3OaYZOpKHTaXkq83FCCfr8YIPZlYxmLPV3E3qdujNP++
-ydKeru5clQut2zdxpYQ564lb9Z+zUGTex4ZircByNuJf+sgAayrVoaG/pH1PH0a+
-NR+HTLUSQRJJeE70dCrA4AcuSgijla44QSSa5R93VhXlAjk7pCgz+crjBI6gE4P6
-6ZSof8hvFB0ZnBBpyWeYgnpCgdQreN/ldE2ICBYdkV7/NpJoLt26htAHp3t6Q726
-9m0jBy6/s59px5GsXIx7ubXGNkMbQEamrwA8jbLVYtu7I96Y0FiTFzEWaVwlFYZT
-11TwVQ+Wd0C6ZP8hWWR4lqNbh1hJmE7M1a3heV1nqVt35AYZYD4E5RpBpgmcwJ0I
-KnbFTWTofkURy2sOazZdqXfs1bMmLAZpzZhgUwnetMGj8zNbUd3xtNuHM/5Ly801
-GIYGXtYjCq53Mt0Xobq/
-=gUYc
+iQIcBAABAgAGBQJKIlfQAAoJEODzc/N7+QmaNX8P/3zHneb0851cvsmrhmRPlEV1
+14avrPO/xqvqzYXedxpKetu+Dgw1v49WnFnkZXkrBXDbYaaR41VAZh5Z6DdSVMWq
+Hk2rsdqrkbpjuUuiPSIvl0MoUFrl8F6W4z+Nr2SjXkABMu1CQoKhtX9BFRcwwV0y
+VJ1bXJjUOc9LC36mjtJm75vqP3GsZyaaINZNFHF5KzoBp5OHBNITuTTiVl2y0Ima
+znjQlJYaSugAaSVtUm7lbyMKKuqeKx+bc/FAR0h/8sRRuH+lgjV0UYw1xXXEYpC/
+fYw4dPCO+PPPhN3gKSIFZipKIed+RgXfwBZZf1s6iqZH3e8aaB7YFU6GANIqPUoI
+aRpOuCdQh1tGVReXCAtm0ylqy+jfBaj3/kU5oLMomvJC4srIpu03cOJm4V124/xc
+T/MOPfWkgs2PLg0W/GFV1cdp4WX64CFs14xuL7XBFb8/Igp7teCnvcrMBrv1Yf+C
+hBlry/fPi8sGHiafch3Uh0GPZpzY4RNcQwnNSTnEtrl43vyUDnlPesScKEobrZr0
+J92jRnDgsPmASGXWPKV+xHbv/W5ZujjGe1JgcZtKYyfln1KxbgyByU1uQuuM/teN
+vbrRW8GhGFiRpMjm0Un6ALTXdiYxPZ3ZIeaOhrwtUITosSCwyEApVy35eYwmwX2m
+9Sj4x/2LN0E0MYc4ohWE
+=+MHJ
 -----END PGP SIGNATURE-----
 
---=-vO9VkcPfz5wS7xP9WsNY--
+--=-m/wL05897PCot1iOXCNJ--
 
