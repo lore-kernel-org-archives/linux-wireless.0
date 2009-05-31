@@ -1,75 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:54360 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984AbZFIALg convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f177.google.com ([209.85.222.177]:59984 "EHLO
+	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535AbZEaWYp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 20:11:36 -0400
-Received: by bwz9 with SMTP id 9so3475257bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 17:11:37 -0700 (PDT)
+	Sun, 31 May 2009 18:24:45 -0400
+Received: by pzk7 with SMTP id 7so5661977pzk.33
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 15:24:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ec5eb5d60906071135r4197c08fw464209b501358c83@mail.gmail.com>
-References: <ec5eb5d60906071116v564b9623q515ee9db4e5edc59@mail.gmail.com>
-	 <ec5eb5d60906071135r4197c08fw464209b501358c83@mail.gmail.com>
-Date: Tue, 9 Jun 2009 01:11:36 +0100
-Message-ID: <3ace41890906081711s4e16606fne0b54562d1e9d7f5@mail.gmail.com>
-Subject: Re: compile error compat-wireless kernel 2.6.28
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: =?ISO-8859-1?Q?Jorge_Mu=F1oz?= <jorgeroden@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1243803253.5417.12.camel@maxim-laptop>
+References: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+	<43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
+	<b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+	<1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop>
+	<43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com>
+	<1242986902.5544.8.camel@maxim-laptop> <20090531062217.GB23972@bombadil.infradead.org>
+	<1243774031.5741.5.camel@maxim-laptop> <1243803253.5417.12.camel@maxim-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 31 May 2009 15:24:24 -0700
+Message-ID: <43e72e890905311524m6bab2648qb778dd9952da8537@mail.gmail.com>
+Subject: Re: [BUG] Crda oopses the system
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 7, 2009 at 7:35 PM, Jorge Mu�oz<jorgeroden@gmail.com> wrote:
-> I tried to compile compat-wireless-2009-06-05 package and I saw this error
-> message� "field 'ops' has an incomplete data type".
-> I've got installed ubuntu 9.04 distro based, kernel 2.6.28-11-generic,
-> linux-headers-2.6.28-11-generic and build-essential package.
-> I have done this several ways with kernel 2.6.27-11-generic succesfully just
-> by typing $make, #make install, #make unload (trivial).
+On Sun, May 31, 2009 at 1:54 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> On Sun, 2009-05-31 at 15:47 +0300, Maxim Levitsky wrote:
+>> On Sun, 2009-05-31 at 02:22 -0400, Luis R. Rodriguez wrote:
+>> > On Fri, May 22, 2009 at 01:08:22PM +0300, Maxim Levitsky wrote:
+>> > > I am talking about
+>> > >
+>> > > BUG_ON(!country_ie_regdomain);
+>> > > in net/wireless/reg.c
+>> >
+>> > Please try this patch and leave a window open with this running:
+>> >
+>> > iw event
+>> >
+>> > Please be sure to grab iw from git, not sure if the reg events
+>> > have all gone into an official release yet. What I'm looking for
+>> > is whether or not a previous 11d setting was already processed
+>> > or if the !country_ie_regdomain condition happens from the first
+>> > 11d processing.
+>> >
+>> >   Luis
+>> >
+>> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> > index f87ac1d..1b60dfc 100644
+>> > --- a/net/wireless/reg.c
+>> > +++ b/net/wireless/reg.c
+>> > @@ -2171,7 +2171,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+>> >      * the country IE rd with what CRDA believes that country should have
+>> >      */
+>> >
+>> > -   BUG_ON(!country_ie_regdomain);
+>> > +   if (WARN_ON(!country_ie_regdomain)) {
+>> > +           kfree(rd);
+>> > +           rd = NULL;
+>> > +           return -EINVAL;
+>> > +   }
+>> >     BUG_ON(rd == country_ie_regdomain);
+>> >
+>> >     /*
+>> > @@ -2268,6 +2272,8 @@ int regulatory_init(void)
+>> >     if (IS_ERR(reg_pdev))
+>> >             return PTR_ERR(reg_pdev);
+>> >
+>> > +   country_ie_regdomain = NULL;
+>> > +
+>> >     spin_lock_init(&reg_requests_lock);
+>> >     spin_lock_init(&reg_pending_beacons_lock);
+>> >
+>>
+>>
+>> I'll test this today.
+>> I have iw from git.
+>>
+>> Best regards,
+>>       Maxim Levitsky
+>>
 >
-> These are compilation output messages
-> --------------------------------
-> jorgeroden@jorgeroden-laptop:~/driversWifi/compat-wireless-2009-06-05$ make
-> make -C /lib/modules/2.6.28-11-generic/build
-> M=/home/jorgeroden/driversWifi/compat-wireless-2009-06-05 modules
-> make[1]: se ingresa al directorio `/usr/src/linux-headers-2.6.28-11-generic'
-> � CC [M]
-> /home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless/ath/ath9k/hw.o
-> In file included from
-> /home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless/ath/ath9k/hw.c:20:
-> /home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless/ath/ath9k/ath9k.h:469:
-> error: el campo �ops� tiene tipo de dato incompleto
-> make[5]: ***
-> [/home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless/ath/ath9k/hw.o]
-> Error 1
-> make[4]: ***
-> [/home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless/ath/ath9k]
-> Error 2
-> make[3]: ***
-> [/home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless/ath]
-> Error 2
-> make[2]: ***
-> [/home/jorgeroden/driversWifi/compat-wireless-2009-06-05/drivers/net/wireless]
-> Error 2
-> make[1]: ***
-> [_module_/home/jorgeroden/driversWifi/compat-wireless-2009-06-05] Error 2
-> make[1]: se sale del directorio `/usr/src/linux-headers-2.6.28-11-generic'
-> make: *** [modules] Error 2
-> --------------------------
-> Thanks
->
-> --
-> www.jorgeroden.blogspot.com
-> FSF member 5687
 >
 >
 >
-> --
-> www.jorgeroden.blogspot.com
-> FSF member 5687
 >
+>
+>
+>
+>
+>
+> Here it is:
+>
+>
+>> wlan0 (phy #0): assoc 00:1b:9e:d8:77:02 -> 00:1b:77:f1:7c:29 status: 0: Successful
+>> wlan0 (phy #0): disassoc 00:1b:77:f1:7c:29 -> 00:1b:9e:d8:77:02 reason 3: Deauthenticated because sending station is leaving (or has left) the IBSS or ESS
+>> wlan0 (phy #0): scan finished
+>> wlan0 (phy #0): auth 00:23:4d:3c:80:27 -> 00:1b:77:f1:7c:29 status: 0: Successful
+>> wlan0 (phy #0): assoc 00:23:4d:3c:80:27 -> 00:1b:77:f1:7c:29 status: 0: Successful
+>> phy #0: regulatory domain change: intersection used due to a request made by a country IE on phy0
+>>
+> dmesg attached (I use nvidia drivers)
 
+I see only one userspace request *attempt* sent for the country IE in
+your log ("Calling CRDA" bits). So my assumption that we were only
+"trying" to send to userspace one request for the given country IE as
+far as cfg80211 is concerned is accurate however it does not seem
+accurate that the kernel won't send two requests or that userspace
+will not respond twice.
 
-Look at the compat-wireless rfkill discussion in the mailing list
-archive. Basically you need to revert the rkfill patch.
+> On top of that there are few more very bold bugs in ath5k AP mode:
+
+Your best bet is to report these separately.
+
+  Luis
