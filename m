@@ -1,69 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36520 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759116AbZEBVO4 (ORCPT
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:34048 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbZEaMrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2009 17:14:56 -0400
-Subject: Re: ath5k in 2.6.29.1 won't associate with AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alf <alf@mypals.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200905021218.23747.alf@mypals.org>
-References: <200905021218.23747.alf@mypals.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-PJlf3cXrZh75GemfnaRS"
-Date: Sat, 02 May 2009 23:14:54 +0200
-Message-Id: <1241298894.13562.28.camel@johannes.local>
+	Sun, 31 May 2009 08:47:15 -0400
+Received: by fxm12 with SMTP id 12so5259152fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 05:47:15 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090531062217.GB23972@bombadil.infradead.org>
+References: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+	 <1242256950.3241.13.camel@maxim-laptop>
+	 <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com>
+	 <1242258469.3241.19.camel@maxim-laptop>
+	 <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
+	 <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+	 <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop>
+	 <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com>
+	 <1242986902.5544.8.camel@maxim-laptop>
+	 <20090531062217.GB23972@bombadil.infradead.org>
+Content-Type: text/plain
+Date: Sun, 31 May 2009 15:47:11 +0300
+Message-Id: <1243774031.5741.5.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2009-05-31 at 02:22 -0400, Luis R. Rodriguez wrote:
+> On Fri, May 22, 2009 at 01:08:22PM +0300, Maxim Levitsky wrote:
+> > I am talking about 
+> > 
+> > BUG_ON(!country_ie_regdomain);
+> > in net/wireless/reg.c
+> 
+> Please try this patch and leave a window open with this running:
+> 
+> iw event
+> 
+> Please be sure to grab iw from git, not sure if the reg events
+> have all gone into an official release yet. What I'm looking for
+> is whether or not a previous 11d setting was already processed
+> or if the !country_ie_regdomain condition happens from the first
+> 11d processing.
+> 
+>   Luis
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index f87ac1d..1b60dfc 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -2171,7 +2171,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+>  	 * the country IE rd with what CRDA believes that country should have
+>  	 */
+>  
+> -	BUG_ON(!country_ie_regdomain);
+> +	if (WARN_ON(!country_ie_regdomain)) {
+> +		kfree(rd);
+> +		rd = NULL;
+> +		return -EINVAL;
+> +	}
+>  	BUG_ON(rd == country_ie_regdomain);
+>  
+>  	/*
+> @@ -2268,6 +2272,8 @@ int regulatory_init(void)
+>  	if (IS_ERR(reg_pdev))
+>  		return PTR_ERR(reg_pdev);
+>  
+> +	country_ie_regdomain = NULL;
+> +
+>  	spin_lock_init(&reg_requests_lock);
+>  	spin_lock_init(&reg_pending_beacons_lock);
+>  
 
---=-PJlf3cXrZh75GemfnaRS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-05-02 at 12:18 -0600, Alf wrote:
+I'll test this today.
+I have iw from git.
 
-> It seems I am able to associate with an AP (not just my AP) sporadically.=
- =20
-> It seems that when it works, it works reliably, but that's only 10% of th=
-e=20
-> time, if that.  I have turned on debugging on ath5 and on mac80211 but th=
-e=20
-> debug messages don't offer anything useful.  The only thing I get is this=
-:
->=20
-> May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 1
-> May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 2
-> May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 try 3
-> May  2 12:08:20 wlan0: direct probe to AP 00:30:bd:60:d3:44 timed out
-> May  2 12:08:28 wlan0 direct probe responded
-
-What kernel are you using?
-
-johannes
-
---=-PJlf3cXrZh75GemfnaRS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ/LfMAAoJEKVg1VMiehFYbnAP/Rt1//ZI0bpRKluzGIHGvsKI
-luEMSXCrrwSgJn56PYzMZ47DJrAkWV15ZOBOGTTaHpP8ZM7bhEkUrpBU5/2ptyXm
-tv+Ix1OeWqFr2xvEfhmJSgVLgjJ4SrBnll1RVFWZYPK6IuuZJPH2lT2zxDAwCBV1
-EYcAn/ZOcvhS6+0X0bJEajcqZiY1sJoJ0G8UXEZI6ueKOiWBYN9+7Y/m6/6cUUad
-k9ZadvH0RFdqtQ6iIdsLUSLroUzsBbhBAYH17UhRlONf/R3NQEAJ/Lw+anHNhMHA
-fHHHgnYSWJaQF6Vz6/SilQdlL2SKEQpyOBPdMnZ0t5AV4fhY2b2kjJMY3mraLLYo
-roiV0t1gUgQHdSk1E3tu2YzFS7QLRH0nzsCa9M9cyauNQwVDSeI94+P+HESji9QS
-+2A0vgA3T3/1KT1oCg7ejJtdoV623BfemiHhtsYWl1x7Ahf6Bfqmo+IilCV/XHF3
-X6Ph7edBv1xn1Y+e9OQ58onbRKRiIzSzw04EFc/JWJ5mnDX3b76RFwqtCEmSeq/4
-TzEFPBndGgwq0yZfWd1oiOhAKtvOuar4yPslKQSxWIDFyF75WpPtiPlgvxfouIiX
-JfmH8aTpZ0TUrtuwyy93cqY0ilqe1emeRh0oNwLM85bcDcAkcd09Lkr0RxcOvB4c
-JWLcQeg+1TvwcwQjxzPL
-=jpuH
------END PGP SIGNATURE-----
-
---=-PJlf3cXrZh75GemfnaRS--
+Best regards,
+	Maxim Levitsky
 
