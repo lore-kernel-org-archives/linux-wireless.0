@@ -1,93 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38389 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412AbZENTNS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54313 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbZEaGW1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2009 15:13:18 -0400
-Subject: Re: [RFC] Simulate medium behavior
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Wagner <wagi@monom.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090514184547.GA3225@newton.monom.org>
-References: <20090422092159.GA24586@toronto053.server4you.de>
-	 <1240393088.21756.3.camel@johannes.local>
-	 <20090422113556.GB24586@toronto053.server4you.de>
-	 <20090507184007.GA6684@newton.monom.org>
-	 <1241722972.7590.34.camel@johannes.local>
-	 <20090514184547.GA3225@newton.monom.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-z/xTPyXPCwhNY9sLoNei"
-Date: Thu, 14 May 2009 21:12:49 +0200
-Message-Id: <1242328369.5799.9.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 31 May 2009 02:22:27 -0400
+Date: Sun, 31 May 2009 02:22:17 -0400
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] Crda oopses the system
+Message-ID: <20090531062217.GB23972@bombadil.infradead.org>
+References: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com> <1242256950.3241.13.camel@maxim-laptop> <43e72e890905131628i51255cd0wc16b7827a2514413@mail.gmail.com> <1242258469.3241.19.camel@maxim-laptop> <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com> <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com> <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop> <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com> <1242986902.5544.8.camel@maxim-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1242986902.5544.8.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, May 22, 2009 at 01:08:22PM +0300, Maxim Levitsky wrote:
+> I am talking about 
+> 
+> BUG_ON(!country_ie_regdomain);
+> in net/wireless/reg.c
 
---=-z/xTPyXPCwhNY9sLoNei
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please try this patch and leave a window open with this running:
 
-On Thu, 2009-05-14 at 20:45 +0200, Daniel Wagner wrote:
+iw event
 
-Looks good to me, couple of comments below.
+Please be sure to grab iw from git, not sure if the reg events
+have all gone into an official release yet. What I'm looking for
+is whether or not a previous 11d setting was already processed
+or if the !country_ie_regdomain condition happens from the first
+11d processing.
 
-> +static int hwsim_fops_group_read(void *dat, u64 *val)
-> +{
-> +	struct mac80211_hwsim_data *data =3D dat;
-> +	*val =3D data->group;
-> +	return 0;
-> +}
-> +
-> +static int hwsim_fops_group_write(void *dat, u64 val)
-> +{
-> +	struct mac80211_hwsim_data *data =3D dat;
-> +	data->group =3D val;
-> +	return 0;
-> +}
-> +
-> +DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
-> +			hwsim_fops_group_read, hwsim_fops_group_write,
-> +			"%llu\n");
+  Luis
 
-I think %llx would work better for this? At least I can do bitops better
-in hex :)
-
->  		data->debugfs_ps =3D debugfs_create_file("ps", 0666,
->  						       data->debugfs, data,
->  						       &hwsim_fops_ps);
-> +		data->debugfs_group =3D debugfs_create_file("group", 0666,
-> +							data->debugfs, data,
-> +							&hwsim_fops_group);
-
-Good thing this is a test module only... debugfs files with user access
-permissions are a security risk. (a user can open the file and leave the
-fd open, if root then rmmods future reads/writes to the fd by the user
-crash the kernel)
-
-Anyway looks good, please submit properly with [PATCH] etc :)
-
-johannes
-
---=-z/xTPyXPCwhNY9sLoNei
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKDG0sAAoJEODzc/N7+QmahAcP/2wIcAbRccagXEvfVVQNndVb
-iYv1SymmRr3BjLea+txrKRi6cxdhBhMySRMNuXigvJ7ZOXLddcH8nwi6Dur4P5Bp
-B55iV2bz7oCN6gAjSXgHkogzWpdNcuzq92VP/ytCDRLm1kRgl11e4AKmFGK9FkrW
-x4I9fw0ca6bdD2u7zyCHh+/WI9R11mD5p5rGiBWAlYAf6KtpRzM9ITsWP4Gq9/fS
-LbDCjo/wpolpXapirQvJWiZNhaFzqeGk2Z2Vpq5yJcbRqwxCIkTRzH7OHioXWrz2
-W411mdiqHz3C7GddkiI2wxzicVtcYFAmRZzGmQ0bZ6uv2ZlvZpgU2M7BKsyC18wN
-c/dxACinm6nMklAXlLMEWVoVidjb0PJ4KL0koRMgPe8Gfhdzk621XLkW1Z3FsJIf
-4FoxbXHU0dh6kbwa9f84mjBFbtu7RYRDky9mmVj8WHwjEMT6B96SPTzPMLEvBoyk
-C7eB/CAmGmRpIwVaJqWBfnWIpGIbtoHEEuz0awIbvj5pNgKKguMlRKjdOSH373YC
-zXcA5VCuHVNPauSQBKzH0Bw6XA1eukaqaR1rL6hIk6XUYI1Wpe3xs1sOfbZklEIb
-lWCpFUEUDcgvJMskUk+HL3vcYi+NkbAuaTCIARfsohtiqAnwPib87wEMEFKU8zkt
-r8kUn1k62jfNr48YLWvB
-=fs3O
------END PGP SIGNATURE-----
-
---=-z/xTPyXPCwhNY9sLoNei--
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f87ac1d..1b60dfc 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2171,7 +2171,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	 * the country IE rd with what CRDA believes that country should have
+ 	 */
+ 
+-	BUG_ON(!country_ie_regdomain);
++	if (WARN_ON(!country_ie_regdomain)) {
++		kfree(rd);
++		rd = NULL;
++		return -EINVAL;
++	}
+ 	BUG_ON(rd == country_ie_regdomain);
+ 
+ 	/*
+@@ -2268,6 +2272,8 @@ int regulatory_init(void)
+ 	if (IS_ERR(reg_pdev))
+ 		return PTR_ERR(reg_pdev);
+ 
++	country_ie_regdomain = NULL;
++
+ 	spin_lock_init(&reg_requests_lock);
+ 	spin_lock_init(&reg_pending_beacons_lock);
+ 
