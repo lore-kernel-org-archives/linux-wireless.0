@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:58945 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759318AbZEKWZS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2009 18:25:18 -0400
-MIME-Version: 1.0
-In-Reply-To: <4A089E49.7080403@gmail.com>
-References: <dd18b0c30905111002y4aeb2033ma2fbb2730f5acdaf@mail.gmail.com>
-	<4A089E49.7080403@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 11 May 2009 15:24:59 -0700
-Message-ID: <43e72e890905111524t27c2659crad86643771d14a31@mail.gmail.com>
-Subject: Re: ath9k seems to be broken on 2.6.30-rc4 with a macbook pro
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Justin Mattock <justinmattock@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.redhat.com ([66.187.237.31]:37319 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752644AbZEaVTj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2009 17:19:39 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	alan-jenkins@tuffmail.co.uk,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1243796628.6570.37.camel@localhost.localdomain>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
+	 <1243778069.5299.0.camel@johannes.local>
+	 <1243796628.6570.37.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Sun, 31 May 2009 17:19:04 -0400
+Message-Id: <1243804744.4714.23.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 11, 2009 at 2:53 PM, Jiri Slaby <jirislaby@gmail.com> wrote=
-:
-> Adding some CCs.
->
-> On 05/11/2009 07:02 PM, Justin Mattock wrote:
->> I've been trying to diagnose an issue
->> with 2.6.30-rc4. At first thinking it
->> was not the kernel, but the network manager
->> (in my case I use wicd).
->> with 2.6.29-rc8 the system starts up,
->> connects no problem.
->> but as soon as I load 2.6.30-rc4
->> I get limited connection to none.
->> in dmesg I see:
->>
->> [ =C2=A0 36.337419] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try =
-1
->> [ =C2=A0 36.530106] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try =
-2
->> [ =C2=A0 36.730100] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try =
-3
->> [ =C2=A0 36.930101] wlan0: direct probe to AP 00:1e:2a:00:67:f0 time=
-d out
->> [ =C2=A0 44.421728] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try =
-1
->> [ =C2=A0 44.620080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try =
-2
->> [ =C2=A0 44.820080] wlan0: direct probe to AP 00:1e:2a:00:67:f0 try =
-3
->> [ =C2=A0 45.020076] wlan0: direct probe to AP 00:1e:2a:00:67:f0 time=
-d out
->>
->> The type of encryption used is just
->> a standard WEP key(no WPA).
->>
->> has this been resolved already?
+On Sun, 2009-05-31 at 21:03 +0200, Marcel Holtmann wrote:
+> Hi Johannes,
+> 
+> > > How should userspace test CONFIG_RFKILL_INPUT to determine whether
+> > > it's safe to start the daemon?  With the old core, debian-eeepc
+> > > scripts check if the module rfkill-input exists (which should work
+> > > even if it's built in).  If it exists, the scripts don't perform any
+> > > rfkill actions.  (Yeah, according to the doc this is not allowed
+> > > because the scripts don't use "claim", but you can see how it's
+> > > useful).
+> > > 
+> > > The new rfkill-input isn't a module, so I'm not sure how your daemon
+> > > would test for it.
+> > 
+> > Maybe we should add an ioctl that disables rfkill-input if present.
+> 
+> I am against it. Can we just add a module parameter that allows us to
+> disable it. I am against cluttering a new interface with legacy stuff
+> since we are removing rfkill-input and replacing it by rfkilld anyway in
+> a near future (meaning when I am back from vacation).
 
-Can you provide more details, like the AP you used, and card you have?
-(dmesg log would be nice).
+Module parameter to what?  Module parameters are almost always the wrong
+thing to do.  Or, just don't built rfkill_input it into your kernel
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+
