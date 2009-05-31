@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:36767 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753773AbZELWHi (ORCPT
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:49814 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912AbZEaMD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2009 18:07:38 -0400
-Received: by fxm2 with SMTP id 2so267386fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2009 15:07:38 -0700 (PDT)
-Subject: Re: [BUG] Crda oopses the system
+	Sun, 31 May 2009 08:03:58 -0400
+Received: by fxm12 with SMTP id 12so5246376fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 05:03:58 -0700 (PDT)
+Subject: Re: commit #1868cf308a3b3a336fcfe52c5aea4ac12d5e42ac breaks
+ wireless on my system
 From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
-References: <1241499867.4816.18.camel@maxim-laptop>
-	 <1241606838.18657.1.camel@maxim-laptop>  <1241642056.3289.6.camel@mj>
-	 <1241958023.6051.14.camel@maxim-laptop>
-	 <43e72e890905101133w2314250s7b95a8c100e83cce@mail.gmail.com>
-	 <1241984076.6051.18.camel@maxim-laptop>
-	 <43e72e890905101236h2cd24edewae808da384ae48dd@mail.gmail.com>
-	 <1242140728.5626.3.camel@maxim-laptop>
-	 <43e72e890905121024i79f743efo68c858bc0a0939a@mail.gmail.com>
-	 <1242149671.5210.2.camel@maxim-laptop>
-	 <43e72e890905121500k61545ff3mcdf099a08178b72c@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1243764691.21851.1.camel@johannes.local>
+References: <1243716437.26585.4.camel@maxim-laptop>
+	 <1243716540.13863.32.camel@johannes.local>
+	 <1243717165.5312.3.camel@maxim-laptop>
+	 <1243723044.25886.2.camel@maxim-laptop>
+	 <1243764691.21851.1.camel@johannes.local>
 Content-Type: text/plain
-Date: Wed, 13 May 2009 01:07:31 +0300
-Message-Id: <1242166051.26484.7.camel@maxim-laptop>
+Date: Sun, 31 May 2009 15:03:54 +0300
+Message-Id: <1243771434.5248.3.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-05-12 at 15:00 -0700, Luis R. Rodriguez wrote:
-> On Tue, May 12, 2009 at 10:34 AM, Maxim Levitsky
-> <maximlevitsky@gmail.com> wrote:
-> > On Tue, 2009-05-12 at 10:24 -0700, Luis R. Rodriguez wrote:
-> >> On Tue, May 12, 2009 at 8:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> >> > On Sun, 2009-05-10 at 12:36 -0700, Luis R. Rodriguez wrote:
-> >> >> On Sun, May 10, 2009 at 12:34 PM, Maxim Levitsky
-> >> >> <maximlevitsky@gmail.com> wrote:
-> >> >> > On Sun, 2009-05-10 at 11:33 -0700, Luis R. Rodriguez wrote:
-> >> >> >> On Sun, May 10, 2009 at 5:20 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> >> >> >> > On Wed, 2009-05-06 at 16:34 -0400, Pavel Roskin wrote:
-> >> >> >> >> gdb /lib/modules/`uname -r`/kernel/net/wireless/cfg80211.ko
-> >> >> >> >
-> >> >> >> > I have recompiled the kernel with debugging info.
-> >> >> >> >
-> >> >> >> > This is new backtrace:
-> >> >
-> >> > Ok, here is what I found:
-> >> >
-> >> > The real BUG_ON that fires up is at
-> >> >
-> >> > wireless/reg.c: __set_regdom: BUG_ON(!country_ie_regdomain)
-> >> >
-> >> > Confirmed by replacing it with printk.
-> >> >
-> >> >
-> >> > I attach a beacon sample that triggers this:
-> >>
-> >> Thanks for that. Was this from wireless-testing? If so as of what SHA1
-> >> sum? Can you provide steps to reproduce? What AP? What card?
-> > wireless-testing, b2382a4aeff07a481ccf860e4f716b48b52e3781
+On Sun, 2009-05-31 at 12:11 +0200, Johannes Berg wrote:
+> On Sun, 2009-05-31 at 01:37 +0300, Maxim Levitsky wrote:
 > 
-> That HEAD is buggy, its missing a fix for the minstrel/pid fix.
-> Although since you are running iwl3945 it explains why you haven't
-> seen that oops.
+> > It appears that I don't receive half of mails of linux-wireless
+> > nether they are in spam folder.
+> > 
+> > I am subscribed to linux-wireless@vger.kernel.org>
+> > 
+> > For example I see no trace of new intel fullmac driver.
+> > 
+> > Is gmail that bad?
 > 
-> Will look into this -- thanks. How easy can you reproduce BTW? Does it
-> happen immediately upon assoc? Does it happen with other APs at the
-> university?
-Happens always when I try to associate.
-In fact, after a boot, this oops is in dmesg, and whole system
-semi-frozen. (can't get root, etc probably due to locks held)
+> Strange, I have no idea. FWIW, the patch is archived for the list, so it
+> must have gotten to it:
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/33606
+> 
+> johannes
 
+Thanks,
 
-Other APs, I don't see many other APs there, (you mean other essids,
-right?)
+Well it turns out, that somehow I wasn't subscribed to linux-wireless,
+but since I am subscribed to ath5k-devel, LKML, I do receive most of its
+mails, and thus I didn't notice this till now, so sorry for this
+mistake.
 
-Most of them are encrypted anyway.
-
-
-I have just compiled HEAD of wireless-testing, I see how well it will
-work tomorrow.
-
-
-Thanks in advance,
+Best regards,
 	Maxim Levitsky
-> 
->   Luis
 
