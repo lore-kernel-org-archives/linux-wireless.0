@@ -1,133 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:36734 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751321AbZFXBoV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 21:44:21 -0400
-Date: Tue, 23 Jun 2009 18:44:21 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Jesper Dangaard Brouer <hawk@comx.dk>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dougthompson@xmission.com,
-	bluesmoke-devel@lists.sourceforge.net, axboe@kernel.dk,
-	Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Subject: Re: [PATCH 00/10] We must use rcu_barrier() on module unload
-Message-ID: <20090624014421.GN6748@linux.vnet.ibm.com>
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <20090623150330.22490.87327.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:55387 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462AbZEaWse (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2009 18:48:34 -0400
+Received: by fxm12 with SMTP id 12so5460071fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 15:48:34 -0700 (PDT)
+Subject: Re: [BUG] Crda oopses the system
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890905311524m6bab2648qb778dd9952da8537@mail.gmail.com>
+References: <43e72e890905131612w275685d2tfe5066453b8b255e@mail.gmail.com>
+	 <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com>
+	 <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com>
+	 <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop>
+	 <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com>
+	 <1242986902.5544.8.camel@maxim-laptop>
+	 <20090531062217.GB23972@bombadil.infradead.org>
+	 <1243774031.5741.5.camel@maxim-laptop>
+	 <1243803253.5417.12.camel@maxim-laptop>
+	 <43e72e890905311524m6bab2648qb778dd9952da8537@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 01 Jun 2009 01:48:30 +0300
+Message-Id: <1243810110.5298.5.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 05:03:53PM +0200, Jesper Dangaard Brouer wrote:
-> This patch series is an attempt to cleanup the entire tree, for
-> potential oops'es during module unload, due to outstanding RCU
-> callbacks. (My last rcu_barrier patch series only addressed net/).
+On Sun, 2009-05-31 at 15:24 -0700, Luis R. Rodriguez wrote:
+> On Sun, May 31, 2009 at 1:54 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> > On Sun, 2009-05-31 at 15:47 +0300, Maxim Levitsky wrote:
+> >> On Sun, 2009-05-31 at 02:22 -0400, Luis R. Rodriguez wrote:
+> >> > On Fri, May 22, 2009 at 01:08:22PM +0300, Maxim Levitsky wrote:
+> >> > > I am talking about
+> >> > >
+> >> > > BUG_ON(!country_ie_regdomain);
+> >> > > in net/wireless/reg.c
+> >> >
+> >> > Please try this patch and leave a window open with this running:
+> >> >
+> >> > iw event
+> >> >
+> >> > Please be sure to grab iw from git, not sure if the reg events
+> >> > have all gone into an official release yet. What I'm looking for
+> >> > is whether or not a previous 11d setting was already processed
+> >> > or if the !country_ie_regdomain condition happens from the first
+> >> > 11d processing.
+> >> >
+> >> >   Luis
+> >> >
+> >> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> >> > index f87ac1d..1b60dfc 100644
+> >> > --- a/net/wireless/reg.c
+> >> > +++ b/net/wireless/reg.c
+> >> > @@ -2171,7 +2171,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+> >> >      * the country IE rd with what CRDA believes that country should have
+> >> >      */
+> >> >
+> >> > -   BUG_ON(!country_ie_regdomain);
+> >> > +   if (WARN_ON(!country_ie_regdomain)) {
+> >> > +           kfree(rd);
+> >> > +           rd = NULL;
+> >> > +           return -EINVAL;
+> >> > +   }
+> >> >     BUG_ON(rd == country_ie_regdomain);
+> >> >
+> >> >     /*
+> >> > @@ -2268,6 +2272,8 @@ int regulatory_init(void)
+> >> >     if (IS_ERR(reg_pdev))
+> >> >             return PTR_ERR(reg_pdev);
+> >> >
+> >> > +   country_ie_regdomain = NULL;
+> >> > +
+> >> >     spin_lock_init(&reg_requests_lock);
+> >> >     spin_lock_init(&reg_pending_beacons_lock);
+> >> >
+> >>
+> >>
+> >> I'll test this today.
+> >> I have iw from git.
+> >>
+> >> Best regards,
+> >>       Maxim Levitsky
+> >>
+> >
+> >
+> >
+> >
+> >
+> >
+> >
+> >
+> >
+> >
+> > Here it is:
+> >
+> >
+> >> wlan0 (phy #0): assoc 00:1b:9e:d8:77:02 -> 00:1b:77:f1:7c:29 status: 0: Successful
+> >> wlan0 (phy #0): disassoc 00:1b:77:f1:7c:29 -> 00:1b:9e:d8:77:02 reason 3: Deauthenticated because sending station is leaving (or has left) the IBSS or ESS
+> >> wlan0 (phy #0): scan finished
+> >> wlan0 (phy #0): auth 00:23:4d:3c:80:27 -> 00:1b:77:f1:7c:29 status: 0: Successful
+> >> wlan0 (phy #0): assoc 00:23:4d:3c:80:27 -> 00:1b:77:f1:7c:29 status: 0: Successful
+> >> phy #0: regulatory domain change: intersection used due to a request made by a country IE on phy0
+> >>
+> > dmesg attached (I use nvidia drivers)
 > 
-> If an unloadable module uses RCU callbacks, it need to use
-> rcu_barrier() so that the module may be safely unloaded.
+> I see only one userspace request *attempt* sent for the country IE in
+> your log ("Calling CRDA" bits). So my assumption that we were only
+> "trying" to send to userspace one request for the given country IE as
+> far as cfg80211 is concerned is accurate however it does not seem
+> accurate that the kernel won't send two requests or that userspace
+> will not respond twice.
 > 
-> For documentation see:
+> > On top of that there are few more very bold bugs in ath5k AP mode:
 > 
->  Paul E. McKenney's Blog
->  http://paulmck.livejournal.com/7314.html
-> 
->  http://lwn.net/Articles/217484/
-> 
->  Documentation/RCU/rcubarrier.txt
-> 
-> 
-> Looking through the Linux kernel for call_rcu() users and unloadable
-> modules I found 10 modules that didn't behave correctly.
+> Your best bet is to report these separately.
+I did report some, I will report the reset, this is just a remainder,
+cause today I had really bad time with ath5k. I was trying to compile
+kernel on aspire one using distcc.
 
-These look good from an RCU viewpoint, but I am in no better position
-than is Jesper to analyze the individual modules.  From an RCU
-viewpoint:
+Thanks a lot for fixing the crda bug. I guess there is no need to test
+it, I already had that test removed, and everything did work fine.
 
-Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
 
-> Please: MAINTAINERS needs to verify that the module exit code prevent
-> any new RCU callbacks from being posted (before rcu_barrier() is
-> called). (I have tried to do this verification, but most of these
-> module are simply too large and complex for me to verify this within
-> reasonable time)
-> 
-> [Overview description, following patch ordering]
-> 
-> The modules ext4, bridge, mac80211, sunrpc, nfs and ipv6 are fairly
-> straight forward (maintainers still needs to check for prevent of new
-> RCU callbacks).
-> 
-> The module decnet, has disabled its module_exit() (since ^1da177e) but
-> it still seems relevant to keep the code updated.
-> 
-> The modules edac_core and cfq-iosched, has implemented their own
-> open-coded wait_for_completion() scheme, in order to wait for
-> call_rcu() calls.  Maintainers needs to look into removing this code
-> and using rcu_barrier() instead.
-> 
-> The module nf_conntrack, has embedded some comments that I would like
-> Patrick McHardy to look at.  As I'm not sure which is are most optimal
-> place to call rcu_barrier().  The patch probably calls rcu_barrier()
-> too much, but its a better safe than sorry approach.
-> 
-> 
-> I have made a patch for each individual module, so objections can be
-> made on a per module basis.  I have Cc'ed all of the patches to the
-> maintainers of each module (according to the MAINTAINERS file).
-> 
-> 
-> The patchset is made on top of Linus Torvalds tree (starting on top of
-> commit f234012f52a3).
-> 
-> Who wants to pickup these patches? (I usually go through DaveM, but
-> this also touches subsystems that are not (yet?) under DaveM's
-> maintainer ship)
-> 
-> 
-> ---
-> Jesper Dangaard Brouer (10):
->       nf_conntrack: Use rcu_barrier().
->       cfq-iosched: Uses its own open-coded rcu_barrier.
->       edac_core: Uses call_rcu() and its own wait_for_completion scheme.
->       decnet: Use rcu_barrier() on module unload.
->       ipv6: Use rcu_barrier() on module unload.
->       nfs: Use rcu_barrier() on module unload.
->       sunrpc: Use rcu_barrier() on unload.
->       mac80211: Use rcu_barrier() on unload.
->       bridge: Use rcu_barrier() instead of syncronize_net() on unload.
->       ext4: Use rcu_barrier() on module unload.
-> 
-> 
->  block/cfq-iosched.c                     |    6 ++++++
->  drivers/edac/edac_device.c              |    5 +++++
->  drivers/edac/edac_mc.c                  |    5 +++++
->  drivers/edac/edac_pci.c                 |    5 +++++
->  fs/ext4/mballoc.c                       |    4 +++-
->  fs/nfs/inode.c                          |    1 +
->  net/bridge/br.c                         |    2 +-
->  net/decnet/af_decnet.c                  |    6 ++++++
->  net/ipv6/af_inet6.c                     |    2 ++
->  net/mac80211/main.c                     |    2 ++
->  net/netfilter/nf_conntrack_core.c       |    5 +++++
->  net/netfilter/nf_conntrack_standalone.c |    2 ++
->  net/sunrpc/sunrpc_syms.c                |    1 +
->  13 files changed, 44 insertions(+), 2 deletions(-)
-> 
-> 
-> --
-> Best regards,
->   Jesper Brouer
->   ComX Networks A/S
->   Linux Network developer
->   Cand. Scient Datalog / MSc.
->   Author of http://adsl-optimizer.dk
->   LinkedIn: http://www.linkedin.com/in/brouer
-> 
+
+Best regards,
+	Maxim Levitsky
+
