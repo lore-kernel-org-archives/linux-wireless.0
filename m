@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36612 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751248AbZEZQaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2009 12:30:06 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2009 09:30:08 -0700
-Date: Tue, 26 May 2009 09:30:13 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@Atheros.com>
-Subject: Re: zd1211 3.0.0.56 "vendor driver" - please help port to zd1211rw
-Message-ID: <20090526163013.GA7072@tesla>
-References: <43e72e890904032115m7548f967m5020481c660c8f13@mail.gmail.com> <3ace41890904041944p6cd60084ub2d05a85373459c3@mail.gmail.com> <3ace41890904062120o78018361x409bb3e20b735b75@mail.gmail.com> <43e72e890904062234m3d572f36t1aa7fefa5f78ae74@mail.gmail.com> <3ace41890904070049tc2ed1baod4399a327505ef09@mail.gmail.com> <20090407160812.GA5758@tesla> <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:36154 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754379AbZEaOVC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2009 10:21:02 -0400
+Received: by bwz22 with SMTP id 22so7002130bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 07:21:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <3ace41890905250008q255d15dej45a4f53d9f8c90e4@mail.gmail.com>
+In-Reply-To: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
+References: <3ace41890905302156t6f3e4422h5083e2926ffaa6b0@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 31 May 2009 16:20:43 +0200
+Message-ID: <69e28c910905310720w227aa533td3ca82d96d615cb5@mail.gmail.com>
+Subject: Re: compat-wireless won't associate on 2nd load
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2009 at 12:08:05AM -0700, Hin-Tak Leung wrote:
-> This is just a head-up that I have a series of diffs to port the
-> vendor driver forward to current kernels, if anybody wants to have a
-> look, for side-by-side scavenging to the rw driver. (I probably will
-> post them to the sourceforge zd1211-dev list after a little look at
-> that oops)
+I've been experiencing something similar in vmware, though I thought
+it was vmware's fault. (I have an 8187L.) In my case, detaching and
+re-attaching the device to the VM was sufficient to reset it.
 
-That's great to hear, feel free to post them to linux-wireless as
-RFC/RFTs.
+On Sun, May 31, 2009 at 6:56 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> I have been having some curious problem with rtl8187 for about a week
+> - having problem associating with 'direct probe to AP <mac-addrr>
+> timed out' after a reboot, and/or switching between compat-wireless
+> modules. I thought it is a temporary problem with
+> wireless-testing/compat-wireless but obviously nobody else has seen
+> anything like mine from the mailing-list traffic. So I tried
+> bisecting, etc and the results are inconsistent. Then I came to a
+> vaguely working solution - it seems that I cannot modprobe
+> compat-wireless twice - i.e. I can associate with compat-wireless
+> after make install, make unload, modprobe; but modprobe -r then
+> modprobe -v again I can't associate . I thought about restarting
+> network manager, wpa_supplicant, etc without success, but the surest
+> way to re-gain connectivity is simply to blow away /lib/modules/`uname
+> -r`/updates, depmod -a and load the as-shipped modules. (and then I
+> can make install compat-wireless and use it, and the cycle repeats if
+> I unload compat-wireless and try to install a different
+> compat-wireless snapshot, etc).
+>
+> This is really curious, as it seems that I cannot unload
+> compat-wireless and reload it (or a later snapshot) without going
+> through as-shipped-by-distro modules ( 2.6.29.4-167.fc11.x86_64) in
+> the middle. How is that possible? One possibility is that as-shipped
+> module does a reset of hardware on unload or wireless-testing put the
+> hardware in a bad state on unload; but I know of no change of that
+> sort. Anybody else having problems associating after modprobe -r
+> /modprobe  -v with recent compat-wireless/wireless-testing?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> BTW, anybody has any idea what else is needed for the rw driver to
-> support AP mode?
 
-Not me.
 
-  Luis
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
