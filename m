@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55389 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbZEVNAW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2009 09:00:22 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1M7UMJ-0006zV-8y
-	for linux-wireless@vger.kernel.org; Fri, 22 May 2009 09:00:23 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n4MCkOR7005609
-	for <linux-wireless@vger.kernel.org>; Fri, 22 May 2009 08:46:24 -0400
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id n4MCkONg005607
-	for linux-wireless@vger.kernel.org; Fri, 22 May 2009 08:46:24 -0400
-Date: Fri, 22 May 2009 08:46:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: linville at UDS -- limited availability 23 May - 30 May 2009
-Message-ID: <20090522124623.GC3559@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:9935 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754307AbZEaCZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 May 2009 22:25:12 -0400
+Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090526222433.GA23972@bombadil.infradead.org>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	 <20090526222433.GA23972@bombadil.infradead.org>
+Content-Type: text/plain
+Date: Sun, 31 May 2009 10:17:07 +0800
+Message-Id: <1243736227.3623.180.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Canonical has seen fit to have me as their guest at UDS next week
-in Barcelona.  It seems they are interested in wireless improvements
-for their Karmic release and/or upstream.
+On Wed, 2009-05-27 at 06:24 +0800, Luis R. Rodriguez wrote:
+> On Thu, May 21, 2009 at 10:18:58AM +0800, Zhu Yi wrote:
+> > The iwmc3200wifi driver
+> > currently supports IEEE 802.11a/b/g (draft N is still working in progress)
+> > in managed and ad-hoc modes.
+> 
+> BTW how many streams will this device have?
 
-I've never been to one of their events, but I am anticipating that
-some participation is expected. :-)  Consequently, I may be less
-available than usual...no jokes, please! :-)
+The current (upcoming) one is an AGN with an SDIO interface. But the
+cores are going to be reused in the future.
 
-I intend to push wireless-next-2.6 to Dave M. later today.  Anything
-you desperately need merged...well, it probably should have already
-been posted.  So, move quickly...
+Thanks,
+-yi
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
