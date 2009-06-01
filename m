@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:27296 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905AbZFEHPo (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3727 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752218AbZFAAdp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 03:15:44 -0400
-Date: Fri, 5 Jun 2009 11:15:29 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
-	802.15.4 devices
-Message-ID: <20090605071529.GA7064@doriath.ww600.siemens.net>
-References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com> <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com> <1244168990-28355-3-git-send-email-dbaryshkov@gmail.com> <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com> <1244184737.22576.94.camel@johannes.local>
+	Sun, 31 May 2009 20:33:45 -0400
+Date: Sun, 31 May 2009 20:32:09 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] Crda oopses the system
+Message-ID: <20090601003209.GA3917@hash.localnet>
+References: <1242258469.3241.19.camel@maxim-laptop> <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com> <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com> <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop> <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com> <1242986902.5544.8.camel@maxim-laptop> <20090531062217.GB23972@bombadil.infradead.org> <1243774031.5741.5.camel@maxim-laptop> <1243803253.5417.12.camel@maxim-laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244184737.22576.94.camel@johannes.local>
+In-Reply-To: <1243803253.5417.12.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 05, 2009 at 08:52:17AM +0200, Johannes Berg wrote:
-> On Fri, 2009-06-05 at 06:29 +0400, Dmitry Eremin-Solenikov wrote:
-> 
-> > +/* This source file is shared between kernel and userspace sources, thus
-> > + * a bit of __KERNEL__ checks
-> > + */
-> > +#ifdef __KERNEL__
-> 
-> It's a C file. It can't be shared expect by copying, hence IMO these
-> things are pointless.
+On Sun, May 31, 2009 at 11:54:13PM +0300, Maxim Levitsky wrote:
+> 2 - ath5k makes kernel panic, reliably after few times hostapd have
+> started, I didn't yet captured the output.
+> I remember to see panics with ad-hoc as well. 
+> I mean blinking leds on keyboard.
 
-It is shared by copying. And I'd strongly prefer to have it shared
-directly by 'cp', not by 'cp' and 'patch'. E.g. currently I can ensure
-that policy definitions and commands are current just by comparing
-files. I'd like to still have that ability. Thus, I'd ask to permit this
-stuff in.
+This should be fixed at least with a patch I recently posted to
+linux-wireless.
+
+> 3 - couldn't transfer any frames between AP and client, only association
+> works.
+
+Yeah I still plan to fix it, just haven't found cycles for it yet.
 
 -- 
-With best wishes
-Dmitry
+Bob Copeland %% www.bobcopeland.com
 
