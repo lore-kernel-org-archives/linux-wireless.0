@@ -1,87 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1336 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:3176 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757681AbZFSUpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 16:45:33 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/5] iwlwifi: make software queue assignment more efficient
-Date: Fri, 19 Jun 2009 13:52:43 -0700
-Message-Id: <1245444765-29079-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1245444765-29079-3-git-send-email-reinette.chatre@intel.com>
-References: <1245444765-29079-1-git-send-email-reinette.chatre@intel.com>
- <1245444765-29079-2-git-send-email-reinette.chatre@intel.com>
- <1245444765-29079-3-git-send-email-reinette.chatre@intel.com>
+	id S1752753AbZFABhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2009 21:37:37 -0400
+Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
+From: Zhu Yi <yi.zhu@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1243771847.5248.10.camel@maxim-laptop>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	 <20090526222433.GA23972@bombadil.infradead.org>
+	 <1243736227.3623.180.camel@debian>
+	 <43e72e890905302327x23d0479bkb825ea05832c5ffd@mail.gmail.com>
+	 <1243752126.3623.375.camel@debian>  <1243771847.5248.10.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Mon, 01 Jun 2009 09:29:28 +0800
+Message-Id: <1243819768.3623.438.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Sun, 2009-05-31 at 20:10 +0800, Maxim Levitsky wrote:
+> This is a fullmac driver, thus if I understand correctly, it behaves
+> on the outside more like an Ethernet adapter.
 
-There really is no reason to be assigning txq->swq_id all the
-time, once at aggregation setup is sufficient.
+Depends on how you define "outside". From the user point of view: yes;
+from the firmware point of view: no. Take a look at the new functions
+ieee80211_data_{from|to}_8023 in cfg80211 and their usage in
+iwmc3200wifi.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+> This will mean that many things possible with normal softmac card
+> won't be possible, like sending raw packets, etc...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 85ae7a6..b35c1fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -348,6 +348,10 @@ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- 
- 	txq->need_update = 0;
- 
-+	/* aggregation TX queues will get their ID when aggregation begins */
-+	if (txq_id <= IWL_TX_FIFO_AC3)
-+		txq->swq_id = txq_id;
-+
- 	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
- 	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
- 	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
-@@ -734,8 +738,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
- 
--	swq_id = skb_get_queue_mapping(skb);
--	txq_id = swq_id;
-+	txq_id = skb_get_queue_mapping(skb);
- 	if (ieee80211_is_data_qos(fc)) {
- 		qc = ieee80211_get_qos_ctl(hdr);
- 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
-@@ -746,16 +749,14 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
- 		seq_number += 0x10;
- 		/* aggregation is on for this <sta,tid> */
--		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		if (info->flags & IEEE80211_TX_CTL_AMPDU)
- 			txq_id = priv->stations[sta_id].tid[tid].agg.txq_id;
--			swq_id = iwl_virtual_agg_queue_num(swq_id, txq_id);
--		}
- 		priv->stations[sta_id].tid[tid].tfds_in_queue++;
- 	}
- 
- 	txq = &priv->txq[txq_id];
-+	swq_id = txq->swq_id;
- 	q = &txq->q;
--	txq->swq_id = swq_id;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -1186,6 +1187,7 @@ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
- 	tid_data = &priv->stations[sta_id].tid[tid];
- 	*ssn = SEQ_TO_SN(tid_data->seq_number);
- 	tid_data->agg.txq_id = txq_id;
-+	priv->txq[txq_id].swq_id = iwl_virtual_agg_queue_num(tx_fifo, txq_id);
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
- 	ret = priv->cfg->ops->lib->txq_agg_enable(priv, txq_id, tx_fifo,
--- 
-1.5.6.3
+See above.
+
+> (and besides I belive that hardware is more or less the same,
+
+The hardware is different as we mentioned it is a multicomm device.
+
+> but more functionality is pushed down to firmware, and more firmware
+> code equals to bigger probability of bugs that aren't possible to
+> triage and solve easily.
+
+That's the con. The pro is saving more host CPU power and portability.
+
+> Does this device indicate that intel moves away from softmac devices,
+> or this is a device that will mostly be used in some dedicated market
+> sector (embedded devices for example)?
+
+I think it should be capable for embedded devices as well as
+desktop/laptops.
+
+Thanks,
+-yi
 
