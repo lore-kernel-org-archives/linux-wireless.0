@@ -1,130 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42257 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752251AbZFAVu6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36524 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753759AbZFAMuO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 17:50:58 -0400
-Date: Mon, 1 Jun 2009 22:52:05 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Subject: Re: [PATCH 09/10] ieee802154: add serial dongle driver
-Message-ID: <20090601225205.1e7e8944@lxorguk.ukuu.org.uk>
-In-Reply-To: <20090601202946.GB7143@doriath.ww600.siemens.net>
-References: <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-5-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-6-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-9-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-10-git-send-email-dbaryshkov@gmail.com>
-	<20090601162732.4a070c43@lxorguk.ukuu.org.uk>
-	<20090601202946.GB7143@doriath.ww600.siemens.net>
+	Mon, 1 Jun 2009 08:50:14 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090601124553.GE11011@khazad-dum.debian.net>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
+	 <1243763887.19302.29.camel@johannes.local>
+	 <1243796509.6570.35.camel@localhost.localdomain>
+	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
+	 <20090601122839.GB11011@khazad-dum.debian.net>
+	 <1243859931.5299.17.camel@johannes.local>
+	 <20090601124553.GE11011@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iNAV/5MHpwgmlmrt3P5J"
+Date: Mon, 01 Jun 2009 14:50:06 +0200
+Message-Id: <1243860606.5299.21.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > +	return _send_pending_data(zbdev);
-> > 
-> > Where do you check that the tty has enough space ?
-> 
-> Basically that means checking for ->write result, doesn't it?
 
-You should check write_room before writing if you want some control - you
-can also then respect internal flow control via the wakeup mechanism.
+--=-iNAV/5MHpwgmlmrt3P5J
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Something like:
-                /* Wait for space */
-                while ((space = tty_write_room(tty)) < len) {
-                        if (file->f_flags & O_NONBLOCK) {
-                                err = -EAGAIN;
-                                break;
-                        }
-                        interruptible_sleep_on(&tty->write_wait);
-                        if (signal_pending(current)) {
-                                err = -EINTR;
-                                break;
-                        }
-                }
-                /* Shove the entire frame down */
-                tty->ops->write(tty, data, len);
- 
-> > In all these ERR cases what stops a remote device from having fun spewing
-> > garbage at you and filling the log ?
-> 
-> And what stops your precious IDE controller from spewing garbage and
-> filling the log? Nothing I think. I'll lower the priority of the
-> messages though.
+On Mon, 2009-06-01 at 09:45 -0300, Henrique de Moraes Holschuh wrote:
 
-The fact the drive is entirely under my control and not potentially being
-spewed at from a hostile network. Also the fact that it takes about 30
-seconds to spank a misbehaving drive and reset it. The network laye
-generally uses time checks (search for ratelimit()).
+> I mean platform devices which remember state.  Those will be turned on/of=
+f
+> by the platform firmware at boot and often at resume time, and overriding
+> them in rfkill (especially if it is done later, by a rfkilld) will cause
+> some flicker (on/off/on, off/on/off) in certain situations. =20
+>=20
+> This is a regression, because the current interface doesn't suffer this
+> limitation.
 
-> any RS-232 device which implements IEEE 802.15.4 PHY layer and doesn't
-> follow this protocol, we can extend the ldisc to be more like hci-uart:
-> a multiplexor of protocols.
+Right, but that was already covered by the discussion and patch I just
+sent, no need to complain, afaict? What's your gripe with the current
+add-on patch that I just sent out?
 
-Ok
+johannes
 
-> > > +	zbdev->tty = tty;
-> > 
-> > Refcounting ?
-> 
-> Sample code? SLIP, hci-uart, ppp don't do it.
+--=-iNAV/5MHpwgmlmrt3P5J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-No I'm still running around clobbering them all - and slip needed a
-partial rewrite first.
+-----BEGIN PGP SIGNATURE-----
 
-	zbdev->tty = tty_kref_get(tty);
+iQIcBAABAgAGBQJKI856AAoJEODzc/N7+QmahLsP/2PjpCBw0XId/OoY7X+Jiftc
+uxzuX8ynhXTl+ceGtivZYTE1PwBHvcPUAL0HsgU8ZIv+oveKV6hYVO614qeM71Fx
+zugOWiaY/ykll1LUgHYQHsHjWtFjNDhd16c7eI7Seof4J0ULYGsbFQb0ULXdPTnI
+9ojGHVK4gX9p+4vCDXiFjKn0Cw3UF9Mb6vwNi2FtMZmUu4YnCKUKucfzWag9tkI3
+dVkfpk5JIwXFf/LUG/ggnGHbWul6qFZwnljCMuZI3aiivZcwm4G0nI+c0W9N5R7a
+i1or9nruM55DxhYElq3NzTZDIs3Sb7fr0msHS/teFFMwnua3cwdhbytncdAklGuA
+CZZq6T1YLwyqtgDd7gAPivFJO+IhU2kerGhJykE0Iz9cvukK1mgebZJAKVTZV+Ge
+yUjURF05H5Z4wvcu9q+2tt9FI07TVZhct0FZmIUKhEf60rqWMBb8OsA3IuSPuumC
+8gJaAdX6Vd1ixSolMXF0UEAyfGXLU7jiif/MQTxPygL5Cv/sgR+4gBlojqnAfNC+
+uvtYwrrpQY9vwlLaHwz3le5U1tw4gYdJ6K8ScRT1hOwFNQ8P9gJP/Sau4UCLQ8Nq
+R+3ZtQRMxxu2hPmjPpeKhL+9F0J5IBxe84qIw6qDj3Itb/ta7SGTMa3wydoLGAWQ
+fYIaHh5BwYU0oznUTBVg
+=4+jW
+-----END PGP SIGNATURE-----
 
-	tty_kref_put(foo);
+--=-iNAV/5MHpwgmlmrt3P5J--
 
-> > You can't go around mashing driver internal values - many drivers don't
-> > support low_latency mode and this will make them crash.
-> 
-> C&P from drivers/bluetooth/hci-ldisc.c, around line 466. We had problems
-> working with low-latency unset.
-
-The bluetooth one needs killing too. I will do that tomorrow ...
-
-How many releases ago - the entire tty buffering layer has been rewritten
-over time. tty->low_latency requires driver specific support that most
-don't have. Also as of 2.6.30rc you'll get debug spew if you misuse it.
-
-If you still need it we need to know why.
-
-
-> That's not a 'no, I won't do it', but rather 'wait, all those are also
-> buggy ?!'
-
-The tty layer has a lot of "yes, those are also buggy" - which is why I'm
-currently half way through systematically brutalising it.
-
-
-> > > +	default:
-> > > +		pr_debug("Unknown ioctl cmd: %u\n", cmd);
-> > > +		return -EINVAL;
-> > 
-> > This will break default ioctl processing. You probably want to call into
-> > some of the generic handlers at this point depending upon your hardware.
-> > Either way -EINVAL is wrong.
-> 
-> 
-> n_tty_ioctl_helper ?
-
-That depends what you need. tty_mode_ioctl() gives you all the mode
-stuff, n_tty_ioctl_helper adds things like software flow management which
-don't actually look relevant to your ldisc ?
-
-Any other queries let me know, and if the tty->low_latency is still
-needed let me know and we'll figure out why between us, as it should not
-be.
-
-Alan
