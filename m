@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53407 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbZFTLcz (ORCPT
+Received: from mail201.messagelabs.com ([216.82.254.211]:39562 "EHLO
+	mail201.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756732AbZFAJdD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jun 2009 07:32:55 -0400
-Subject: Re: [PATCH] wext: optimise, comment and fix event sending
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890906191059m321907dbr98395dda9e16b139@mail.gmail.com>
-References: <1245421739.16399.22.camel@johannes.local>
-	 <43e72e890906191059m321907dbr98395dda9e16b139@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UWzZpyo7X+tGyYzF2yTV"
-Date: Sat, 20 Jun 2009 13:32:51 +0200
-Message-Id: <1245497571.16399.25.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 1 Jun 2009 05:33:03 -0400
+Message-ID: <4A23A04A.2030004@digi.com>
+Date: Mon, 1 Jun 2009 11:32:58 +0200
+From: Luis Galdos <luis.galdos@digi.com>
+MIME-Version: 1.0
+To: Pierre Ossman <pierre@ossman.eu>
+CC: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pierre Ossman <drzeus@drzeus.cx>
+Subject: Re: [LIBERTAS-SDIO]  Support for single transfer blocks?
+References: <4A08392F.70108@digi.com>	<20090512231150.bc0c65c6.akpm@linux-foundation.org>	<1242223408.11182.34.camel@localhost.localdomain> <20090513182846.044fc461@mjolnir.ossman.eu>
+In-Reply-To: <20090513182846.044fc461@mjolnir.ossman.eu>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Pierre Ossman wrote:
+>>> On Mon, 11 May 2009 16:41:51 +0200 Luis Galdos <luis.galdos@digi.com> wrote:
+>>>> * The transfer of Ethernet-frames works only if the "complete" frame is smaller than the 
+>>>> block size of the SDIO-host. By larger packages, the SD8686 doesn't generate the expected 
+>>>> IRQ (cause it expected a multiple transfer) and the driver detects a timeout.
+>>>>
+> 
+> Unfortunately, the libertas chip cannot support your host as it
+> requires everything to be done in a single transaction. So I'm afraid
+> you'll have to look at another host controller or another wifi chip.
+Thanks a lot for this info, this confirms my expectation. And sorry for the delayed 
+feedback (I was on vacations).
 
---=-UWzZpyo7X+tGyYzF2yTV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-06-19 at 10:59 -0700, Luis R. Rodriguez wrote:
+> Rgds
+Regards,
 
-> >        /* Get the description of the Event */
-> >        if (cmd <=3D SIOCIWLAST) {
-> > @@ -1430,25 +1395,60 @@ void wireless_send_event(struct net_devi
-> >        hdr_len =3D event_type_size[descr->header_type];
-> >        event_len =3D hdr_len + extra_len;
-> >
-> > -       /* Create temporary buffer to hold the event */
-> > -       event =3D kmalloc(event_len, GFP_ATOMIC);
->=20
-> Hm, for stable purposes can this be fixed with a kzalloc here? If so
-> can this patch be split it up in 2 for that purpose?
 
-Yes, but since this bug has been around _forever_, and we've also known
-about it for a long time too, I don't think it's necessary to fix in
-stable.
-
-johannes
-
---=-UWzZpyo7X+tGyYzF2yTV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKPMjeAAoJEODzc/N7+QmaXb0P/0qnzXKvDVBkpjmWNAoswJWr
-XHmvdYCt9ineMAxoODGnhcXpLLOfK9inlU8rHKNYSRpwnOZc9MxGc/MTJUNhtUUi
-0UWtPI+Q7CkSAtTeKBRx1muJPGQgCVK7H0p0pq0z2xbHSgbML9WQPmbvRx8H0GPe
-0aqRvMYMWY3IHBn0uLnOsf7su25yaQ1RqJX/6EUbM12+1jY8I6DT8Bp620bHVoNw
-rCf7OHL/VO8+IvZgGqVGSjbgdaatmNN38DjdQ9Q9++P9F2zEr5AB96yRKNlsye9C
-TSaoPuagrLvGHKvqYtOaL1kbjdceiajVtvsKrlvhc76frji+F0QlczdbLJOGN3BL
-UgXXlz4z7hqfbX6/D3N9Kb752+VMiDPkHqCJ8ueaE+45tVrmlZ3ctl37aQJCw5uE
-47LLusFlPKcK+eQ3Us/YxTm1TvohK4EperiR5vD3ZU2Id7tMZ1lhDiSbC1+vCvKa
-taRuiIPRbO741Vt0ftuEluu2ebcfUgd2Ia817qa3h/k6syCE/fPlX0fb1r6sKX6H
-Oagobs5ZgjL2HvAVVtsiChVlMHLNwax1kMHyohzwPdoFglUtnsItd7nD0yxo24wq
-ywWxx3EnzKSI2WgFpvjXMUloz1DJL6Py/AanFvx2sHnadKYciU4CbYjpmDN6248G
-SykA59iyCUGS1DXp8Zl4
-=/tWz
------END PGP SIGNATURE-----
-
---=-UWzZpyo7X+tGyYzF2yTV--
-
+-- 
+Luis Galdos
