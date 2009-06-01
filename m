@@ -1,82 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37428 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756458AbZFJITp (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:43610 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190AbZFATpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:19:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 18/18] ath9k: remove rate control wraper
-Date: Wed, 10 Jun 2009 04:19:35 -0400
-Message-Id: <1244621975-1238-19-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
-References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 1 Jun 2009 15:45:17 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A23FD91.8020200@tuffmail.co.uk>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
+	 <1243763887.19302.29.camel@johannes.local>
+	 <1243796509.6570.35.camel@localhost.localdomain>
+	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
+	 <1243858256.5299.14.camel@johannes.local>
+	 <1243867620.3015.17.camel@localhost.localdomain>
+	 <4A23FD91.8020200@tuffmail.co.uk>
+Content-Type: text/plain
+Date: Mon, 01 Jun 2009 21:44:54 +0200
+Message-Id: <1243885494.3015.29.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the cleanup we just use get_rate as a wrapper, skip
-the wrapper.
+Hi Alan,
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   23 +++++++----------------
- 1 files changed, 7 insertions(+), 16 deletions(-)
+> > I really don't understand why this is needed. What benefit does it give
+> > us compared to just sent OP_CHANGE and OP_CHANGE as an update. My X200
+> > for example does this anyway on suspend/resume.
+> >   
+> 
+> This is required for boot only.  I have no reason for this event to be 
+> generated on resume.
+> 
+> The same effect could be had by generating an OP_CHANGE on f_open, 
+> _only_ when a platform driver has provided a value from NVS.  But it 
+> does seem clearer to make it a different type of event.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 630fcf4..e66734c 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -786,10 +786,11 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	tx_info->control.rts_cts_rate_idx = cix;
- }
- 
--static void ath_rc_ratefind(struct ath_softc *sc,
--			    struct ath_rate_priv *ath_rc_priv,
--			    struct ieee80211_tx_rate_control *txrc)
-+static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
-+			 struct ieee80211_tx_rate_control *txrc)
- {
-+	struct ath_softc *sc = priv;
-+	struct ath_rate_priv *ath_rc_priv = priv_sta;
- 	const struct ath_rate_table *rate_table;
- 	struct sk_buff *skb = txrc->skb;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -799,6 +800,9 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	u8 try_per_rate, i = 0, rix, nrix;
- 	int is_probe = 0;
- 
-+	if (rate_control_send_low(sta, priv_sta, txrc))
-+		return;
-+
- 	/*
- 	 * For Multi Rate Retry we use a different number of
- 	 * retry attempt counts. This ends up looking like this:
-@@ -1515,19 +1519,6 @@ exit:
- 	kfree(tx_info_priv);
- }
- 
--static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
--			 struct ieee80211_tx_rate_control *txrc)
--{
--	struct ath_softc *sc = priv;
--	struct ath_rate_priv *ath_rc_priv = priv_sta;
--
--	if (rate_control_send_low(sta, priv_sta, txrc))
--		return;
--
--	/* Find tx rate for unicast frames */
--	ath_rc_ratefind(sc, ath_rc_priv, txrc);
--}
--
- static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
-                           struct ieee80211_sta *sta, void *priv_sta)
- {
--- 
-1.6.0.6
+that is my whole point. If the kernel driver wants to preserve these
+then it can just issue OP_ADD to notify use about the current state of
+the values. The OP_ADD gets send once you open /dev/rfkill and if they
+not match with our policy we have to change them anyway. I really don't
+see the need for an extra operation here. Let me ask this again, how is
+it different from just sending the OP_ADD and then let rfkilld decide to
+either use that value or enforce its own policy. If the wish is to
+enforce policy you can't do anything about it anyway.
+
+> > So what is rfkilld suppose to be doing when receiving this report? What
+> > is the expected behavior? Why do we bother with multi-OS crap here? I am
+> > really unclear what are we trying to solve here.
+> 
+> In order to replicate the kernel behavior, it is expected that you set 
+> your internal state from this event.  E.g. when the user next presses 
+> the wireless toggle key, you set the inverse of that internal state.
+> 
+> Since this event is generated by a platform driver, you can expect it to 
+> be present following coldplug (the udev initscript).  If the event is 
+> not present after coldplug, you may then issue OP_CHANGE yourself, to 
+> e.g. restore the state from a file.  You would not be expected to handle 
+> OP_NVS_REPORT after startup.  (Unless the daemon is restarted).
+> 
+> Replicating the kernel behavior will allow us to avoid causing a couple 
+> of niggly little regressions on at least two platforms.  It preserves 
+> the behavior when dual-booting (possibly between different linux 
+> distros), and when the BIOS setup screen exposes the NVS state as an 
+> option.  The new behavior you suggest will annoy any users who have 
+> become used to these scenarios "just working". 
+> 
+> You may not use these platforms yourself.  But I'm as annoyed as 
+> Henrique is, we don't want to impose regressions just because other 
+> platforms don't implement the feature.
+> 
+> Why the fuss about implementing this, it seems easy enough?  Start 
+> rfkilld after udev (like everything else).  If you get NVS_REPORT, then 
+> use those states.  Fill in any other states from defaults or state files 
+> and issue OP_CHANGE for them, just as you're already planning.  Ignore 
+> any subsequent NVS_REPORTs.  That should cover it.
+> 
+> It's the cost for starting from a working implementation.  You benefit 
+> from having existing drivers and users, you pay by not breaking them 
+> without good reason.
+
+I really don't care about current behavior, because that has been just a
+hack anyway. And it happens to work if there is proper BIOS support. We
+are at the point now where we stop working around a complicated and in
+some cases broken implementation. Overloading it with weird special
+cases is just wrong and so far I am not buying into any of the arguments
+here. The point behind the whole effort from Johannes is to finally fix
+RFKILL support. If it breaks current behavior, I couldn't care less in
+some cases.
+
+So Johannes and I talked about it a lot last week. And we will be doing
+rfkilld so finally deprecated the broken idea of rfkill-input and move
+the policy into userspace where it belongs. To make this clear, the
+concept of cross-OS state keeping is broken. Having the BIOS or a
+different OS dictate policy makes no sense.
+
+Regards
+
+Marcel
+
 
