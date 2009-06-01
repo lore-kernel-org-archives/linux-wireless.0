@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33609 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759566AbZFOQKU (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:59814 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752307AbZFAIQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 12:10:20 -0400
-Subject: [PATCH 2.6.31] mac80211: fix wext bssid/ssid setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 15 Jun 2009 18:09:45 +0200
-Message-Id: <1245082185.23912.6.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 1 Jun 2009 04:16:35 -0400
+Received: by ewy24 with SMTP id 24so7647619ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 01:16:36 -0700 (PDT)
+Message-ID: <4A238EA2.4040106@tuffmail.co.uk>
+Date: Mon, 01 Jun 2009 09:17:38 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+References: <1243524688.10632.0.camel@johannes.local>	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>	 <1243763887.19302.29.camel@johannes.local>	 <1243796509.6570.35.camel@localhost.localdomain> <1243841639.5299.8.camel@johannes.local>
+In-Reply-To: <1243841639.5299.8.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When changing to a new BSSID or SSID, the code in
-ieee80211_set_disassoc() needs to have the old data
-still valid to be able to disconnect and clean up
-properly. Currently, however, the old data is thrown
-away before ieee80211_set_disassoc() is ever called,
-so fix that by calling the function _before_ the old
-data is overwritten.
+Johannes Berg wrote:
+> On Sun, 2009-05-31 at 21:01 +0200, Marcel Holtmann wrote:
+>
+>   
+>>> You have a point there, but I'm not sure it even cares? When restarted
+>>> it will probably want to impose its current policy anyway? It would be
+>>> easy to add that we send the global default value for newly added ones
+>>> too but I'm not sure it's necessary -- Marcel?
+>>>       
+>> we can be smart and send an additional CHANGE_ALL when opening the
+>> control device if it is set. We can also just send these anyway. Doesn't
+>> really matter? Does it?
+>>     
+>
+> Well, I don't think we want/need this.
+>
+> See, Henrique says that the use case is Thinkpads which store the
+> previous state in the BIOS. But that matters to you only if you use a
+> mixture of operation systems, which we don't have to support.
+>   
 
-This is (one of) the issue(s) causing mac80211 to hold
-cfg80211's BSS structs forever, and them thus being
-returned in scan results after they're long gone.
+"Other OS's" also includes the BIOS.  My BIOS setup screen has an option 
+to toggle the wireless state.  It's great to have this just work, and 
+annoying to have regressions.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-I'll be so happy when all this goes away to cfg80211...
+And it's not a "mixture" of operating systems if you dual-boot linux, 
+but that will have the same problem.  We'll get rather weird behaviour 
+if you dual boot A and B, where linux version A restores state to a 
+file, and linux version B uses the hardware persistent state.
 
- net/mac80211/mlme.c |   28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+> On the other hand, people on machines that don't store the rfkill state
+> in the BIOS might care about having their machine boot up with the same
+> rfkill state(s) as they shut down with, so the sane thing to do would be
+> to have rfkilld store the state persistently, and then recover it at
+> boot. At which point the BIOS state becomes irrelevant and a detail we
+> actually end up not even _wanting_ to support because it means we need
+> to be aware of machine differences in userspace.
+>   
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-15 17:22:34.691005518 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-15 17:58:42.582130381 +0200
-@@ -1102,14 +1102,6 @@ static void ieee80211_set_disassoc(struc
- 	struct sta_info *sta;
- 	u32 changed = 0, config_changed = 0;
- 
--	rcu_read_lock();
--
--	sta = sta_info_get(local, ifmgd->bssid);
--	if (!sta) {
--		rcu_read_unlock();
--		return;
--	}
--
- 	if (deauth) {
- 		ifmgd->direct_probe_tries = 0;
- 		ifmgd->auth_tries = 0;
-@@ -1120,7 +1112,14 @@ static void ieee80211_set_disassoc(struc
- 	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- 
--	ieee80211_sta_tear_down_BA_sessions(sta);
-+	rcu_read_lock();
-+	sta = sta_info_get(local, ifmgd->bssid);
-+	if (sta)
-+		ieee80211_sta_tear_down_BA_sessions(sta);
-+	else
-+		WARN(1, "Station entry for %pM (%pM) disappeared\n",
-+			ifmgd->bssid, ifmgd->prev_bssid);
-+	rcu_read_unlock();
- 
- 	bss = ieee80211_rx_bss_get(local, ifmgd->bssid,
- 				   conf->channel->center_freq,
-@@ -1156,8 +1155,6 @@ static void ieee80211_set_disassoc(struc
- 				ifmgd->ssid, ifmgd->ssid_len);
- 	}
- 
--	rcu_read_unlock();
--
- 	ieee80211_set_wmm_default(sdata);
- 
- 	ieee80211_recalc_idle(local);
-@@ -2479,6 +2476,10 @@ int ieee80211_sta_set_ssid(struct ieee80
- 	ifmgd = &sdata->u.mgd;
- 
- 	if (ifmgd->ssid_len != len || memcmp(ifmgd->ssid, ssid, len) != 0) {
-+		if (ifmgd->state == IEEE80211_STA_MLME_ASSOCIATED)
-+			ieee80211_set_disassoc(sdata, true, true,
-+					       WLAN_REASON_DEAUTH_LEAVING);
-+
- 		/*
- 		 * Do not use reassociation if SSID is changed (different ESS).
- 		 */
-@@ -2503,6 +2504,11 @@ int ieee80211_sta_set_bssid(struct ieee8
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
-+	if (compare_ether_addr(bssid, ifmgd->bssid) != 0 &&
-+	    ifmgd->state == IEEE80211_STA_MLME_ASSOCIATED)
-+		ieee80211_set_disassoc(sdata, true, true,
-+				       WLAN_REASON_DEAUTH_LEAVING);
-+
- 	if (is_valid_ether_addr(bssid)) {
- 		memcpy(ifmgd->bssid, bssid, ETH_ALEN);
- 		ifmgd->flags |= IEEE80211_STA_BSSID_SET;
+Complexity sucks, but I don't think this is irrelevant.  I can see you 
+don't want to rely on the kernel for the default value (even though it's 
+controllable by module option).
 
+I like one of the solutions Marcels suggested, that /dev/rfkill should 
+report the "global default values" only when they have been set - either 
+by userspace or by a platform driver.
 
+Thanks
+Alan
