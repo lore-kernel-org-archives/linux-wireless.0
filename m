@@ -1,72 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53046 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961AbZFPTiS (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:40152 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753069AbZFATmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 15:38:18 -0400
-Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org
-In-Reply-To: <445f43ac0906161232x743d7ab9u2f36a5893240b789@mail.gmail.com>
-References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
-	 <1245177307.21287.34.camel@johannes.local>
-	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
-	 <1245177946.21287.42.camel@johannes.local>
-	 <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
-	 <1245178613.21287.45.camel@johannes.local>
-	 <445f43ac0906161232x743d7ab9u2f36a5893240b789@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5vB3lVtSuIs6rxVrrBSL"
-Date: Tue, 16 Jun 2009 21:37:49 +0200
-Message-Id: <1245181069.21287.53.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 1 Jun 2009 15:42:09 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RESEND][PATCH 4/4] ar9170: introduce functions for MAC programming
+Date: Mon, 1 Jun 2009 21:42:01 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+References: <200905120108.47748.chunkeey@web.de>
+In-Reply-To: <200905120108.47748.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200906012142.02112.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch introduces 3 new function which are used to update
+the MAC state, whenever needed... e.g: after a band switch.
 
---=-5vB3lVtSuIs6rxVrrBSL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 17bd3ea..77dc647 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -215,6 +215,9 @@ int ar9170_update_multicast(struct ar9170 *ar);
+ int ar9170_update_frame_filter(struct ar9170 *ar);
+ int ar9170_set_operating_mode(struct ar9170 *ar);
+ int ar9170_set_beacon_timers(struct ar9170 *ar);
++int ar9170_set_dyn_sifs_ack(struct ar9170 *ar);
++int ar9170_set_slot_time(struct ar9170 *ar);
++int ar9170_set_basic_rates(struct ar9170 *ar);
+ int ar9170_set_hwretry_limit(struct ar9170 *ar, u32 max_retry);
+ int ar9170_update_beacon(struct ar9170 *ar);
+ void ar9170_new_beacon(struct work_struct *work);
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 706262f..d9f1f46 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -38,6 +38,55 @@
+ #include "ar9170.h"
+ #include "cmd.h"
+ 
++int ar9170_set_dyn_sifs_ack(struct ar9170 *ar)
++{
++	u32 val;
++
++	if (conf_is_ht40(&ar->hw->conf))
++		val = 0x010a;
++	else {
++		if (ar->hw->conf.channel->band == IEEE80211_BAND_2GHZ)
++			val = 0x105;
++		else
++			val = 0x104;
++	}
++
++	return ar9170_write_reg(ar, AR9170_MAC_REG_DYNAMIC_SIFS_ACK, val);
++}
++
++int ar9170_set_slot_time(struct ar9170 *ar)
++{
++	u32 slottime = 20;
++
++	if (!ar->vif)
++		return 0;
++
++	if ((ar->hw->conf.channel->band == IEEE80211_BAND_5GHZ) ||
++	    ar->vif->bss_conf.use_short_slot)
++		slottime = 9;
++
++	return ar9170_write_reg(ar, AR9170_MAC_REG_SLOT_TIME, slottime << 10);
++}
++
++int ar9170_set_basic_rates(struct ar9170 *ar)
++{
++	u8 cck, ofdm;
++
++	if (!ar->vif)
++		return 0;
++
++	ofdm = ar->vif->bss_conf.basic_rates >> 4;
++
++	/* FIXME: is still necessary? */
++	if (ar->hw->conf.channel->band == IEEE80211_BAND_5GHZ)
++		cck = 0;
++	else
++		cck = ar->vif->bss_conf.basic_rates & 0xf;
++
++	return ar9170_write_reg(ar, AR9170_MAC_REG_BASIC_RATE,
++				ofdm << 8 | cck);
++}
++
+ int ar9170_set_qos(struct ar9170 *ar)
+ {
+ 	ar9170_regwrite_begin(ar);
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 4ef1d2f..df83883 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1344,15 +1344,21 @@ static int ar9170_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++
++		/* adjust slot time for 5 GHz */
++		err = ar9170_set_slot_time(ar);
++		if (err)
++			goto out;
++
++		err = ar9170_set_dyn_sifs_ack(ar);
++		if (err)
++			goto out;
++
+ 		err = ar9170_set_channel(ar, hw->conf.channel,
+ 				AR9170_RFI_NONE,
+ 				nl80211_to_ar9170(hw->conf.channel_type));
+ 		if (err)
+ 			goto out;
+-		/* adjust slot time for 5 GHz */
+-		if (hw->conf.channel->band == IEEE80211_BAND_5GHZ)
+-			err = ar9170_write_reg(ar, AR9170_MAC_REG_SLOT_TIME,
+-					       9 << 10);
+ 	}
+ 
+ out:
+@@ -1464,15 +1470,19 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		memcpy(ar->bssid, bss_conf->bssid, ETH_ALEN);
+ 		err = ar9170_set_operating_mode(ar);
++		if (err)
++			goto out;
+ 	}
+ 
+ 	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
+ 		err = ar9170_update_beacon(ar);
+-		if (!err)
+-			ar9170_set_beacon_timers(ar);
+-	}
++		if (err)
++			goto out;
+ 
+-	ar9170_regwrite_begin(ar);
++		err = ar9170_set_beacon_timers(ar);
++		if (err)
++			goto out;
++	}
+ 
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		ar->state = bss_conf->assoc ? AR9170_ASSOCIATED : ar->state;
+@@ -1483,8 +1493,11 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ #endif /* CONFIG_AR9170_LEDS */
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BEACON_INT)
++	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		err = ar9170_set_beacon_timers(ar);
++		if (err)
++			goto out;
++	}
+ 
+ 	if (changed & BSS_CHANGED_HT) {
+ 		/* TODO */
+@@ -1492,31 +1505,18 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+-		u32 slottime = 20;
+-
+-		if (bss_conf->use_short_slot)
+-			slottime = 9;
+-
+-		ar9170_regwrite(AR9170_MAC_REG_SLOT_TIME, slottime << 10);
++		err = ar9170_set_slot_time(ar);
++		if (err)
++			goto out;
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BASIC_RATES) {
+-		u32 cck, ofdm;
+-
+-		if (hw->conf.channel->band == IEEE80211_BAND_5GHZ) {
+-			ofdm = bss_conf->basic_rates;
+-			cck = 0;
+-		} else {
+-			/* four cck rates */
+-			cck = bss_conf->basic_rates & 0xf;
+-			ofdm = bss_conf->basic_rates >> 4;
+-		}
+-		ar9170_regwrite(AR9170_MAC_REG_BASIC_RATE,
+-				ofdm << 8 | cck);
++		err = ar9170_set_basic_rates(ar);
++		if (err)
++			goto out;
+ 	}
+ 
+-	ar9170_regwrite_finish();
+-	err = ar9170_regwrite_result();
++out:
+ 	mutex_unlock(&ar->mutex);
+ }
+ 
 
-On Tue, 2009-06-16 at 12:32 -0700, Javier Cardona wrote:
-
-> There are some mesh parameters that you would probably want to be
-> uniform across the mesh network (timeouts, number of retries, etc).
-> But the only mesh parameter that would result in a different mesh
-> network is the mesh_id, and that's only settable when the mesh
-> interface is created.
->=20
-> Do you have a specific configuration parameter in mind?
-
-No, I don't have any in mind. I wasn't aware that only the mesh_id
-defines the mesh, I was under the impression that more needs to match,
-as codified in mesh_matches_local().
-
-johannes
-
---=-5vB3lVtSuIs6rxVrrBSL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKN/SHAAoJEODzc/N7+Qma89gQAMid/Ljigw0VWRaCMKbH6ji/
-fYPygf/frtiVaYnXhpVzfBE88dO6pLsSQ/fCpnp7NPUmnMr6YfyPIqOZIG7d9Mks
-bbAOfZJhtR6xmM3DiVHrtaNMHPnntHJ3RX8WY0SmIgFUNNJ2CEe5/flGemXPyKef
-/smpMm+wLIYHbZMTvo7F9LX3Bzzkswmvm7uXVMX0wQOzmra5CVO0gKevn2oEx6zJ
-IwdEBv/7IXVFD+cgwl6Q+27+A9hGJXilWjJz1TqLFfhaX5C8OlHrFuL/gd31vz6e
-qWHPla8FxRXD/NkcvGJTHHhvtW/EBGJIJV5lD+mbrcIqCs7vOHDM0o+/R4HMokvI
-Zlpcj2fOCuTEGcOcZ1IH64nAJuxPveaBMq8KXVgSFAIWw57BBzDNj5lnmFuKhvPu
-AAF9yGCpl9VFSlyhcAI1anFviR4LG9l7Hbd7vTPhMs0ZfR6BqPOw3a6eGNzMtloZ
-CTZHzpu/6AKKPBA5v1Lk1OyXzKne78KTJKzfIXeUtWRv/M26Rsv3CcUfbk/OxEcF
-K4BkvDJ1G974NApJMvs5mjwerD4BC2kM+YQYQvN/NnoxCwcN4QNLuGC2ZAT/if2y
-qUjf5CYXEbIwcqLmdq8DRuemy7H6wacXnP8iMkbHBQmzWiSN9K4x9cH7rcOYa3r2
-k0OlXGEzdff5T1v7OLRy
-=yzl2
------END PGP SIGNATURE-----
-
---=-5vB3lVtSuIs6rxVrrBSL--
 
