@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:52265 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbZFGR0O (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55220 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187AbZFAHTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 13:26:14 -0400
-Received: by bwz9 with SMTP id 9so2576147bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 10:26:15 -0700 (PDT)
-Message-ID: <4A2BF833.1050906@tuffmail.co.uk>
-Date: Sun, 07 Jun 2009 18:26:11 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Marcel Holtmann <marcel@holtmann.org>,
+	Mon, 1 Jun 2009 03:19:20 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	alan-jenkins@tuffmail.co.uk,
 	John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-References: <1243885494.3015.29.camel@localhost.localdomain>	 <4A24559D.7010201@tuffmail.co.uk>	 <1243928308.3192.38.camel@localhost.localdomain>	 <1243929706.20064.7.camel@johannes.local>	 <1243930703.3192.59.camel@localhost.localdomain>	 <20090603040315.GA10464@khazad-dum.debian.net>	 <1244008652.4145.7.camel@localhost.localdomain>	 <20090603213340.GB22809@khazad-dum.debian.net>	 <1244088806.4145.24.camel@localhost.localdomain>	 <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>	 <20090607125715.GC3340@khazad-dum.debian.net> <1244394963.12956.1.camel@johannes.local>
-In-Reply-To: <1244394963.12956.1.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1243804744.4714.23.camel@localhost.localdomain>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
+	 <1243778069.5299.0.camel@johannes.local>
+	 <1243796628.6570.37.camel@localhost.localdomain>
+	 <1243804744.4714.23.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Mon, 01 Jun 2009 09:18:58 +0200
+Message-Id: <1243840738.3015.7.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sun, 2009-06-07 at 09:57 -0300, Henrique de Moraes Holschuh wrote:
->
->   
->>>  1) remove rfkill_set_global_sw_state()
->>>  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
->>> registration, setting a flag.
->>>  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
->>> events, tho it may as well be set in all events)
->>>  4) rfkill-input preserves existing behaviour - *if enabled* - by
->>> initializing the global state from individual devices which have NVS.
->>> (As before, each _type_ of rfkill device has its own global state).
->>>  5) rfkill devices with NVS will have their current state preserved,
->>> so long as the global state has not yet been set (by userspace or by
->>> rfkill-input).  Of course userspace can change the state in response
->>> to the device being added.
->>>       
->
->   
->> Let's do it :-)
->>     
->
->
-> Alan, you're right in that we currently overwrite devices with the
-> global state upon registration. My suggestion would be to not do that
-> when set_sw_state() has been called on the device before it was
-> registered, by simply keeping track of that. Anyone want to propose a
-> patch?
->
-> johannes
->   
+Hi Dan,
 
-I'll have a go.  It seems within my abilities and I have hardware to
-test it on.  What could possibly go wrong :-).
+> > > > How should userspace test CONFIG_RFKILL_INPUT to determine whether
+> > > > it's safe to start the daemon?  With the old core, debian-eeepc
+> > > > scripts check if the module rfkill-input exists (which should work
+> > > > even if it's built in).  If it exists, the scripts don't perform any
+> > > > rfkill actions.  (Yeah, according to the doc this is not allowed
+> > > > because the scripts don't use "claim", but you can see how it's
+> > > > useful).
+> > > > 
+> > > > The new rfkill-input isn't a module, so I'm not sure how your daemon
+> > > > would test for it.
+> > > 
+> > > Maybe we should add an ioctl that disables rfkill-input if present.
+> > 
+> > I am against it. Can we just add a module parameter that allows us to
+> > disable it. I am against cluttering a new interface with legacy stuff
+> > since we are removing rfkill-input and replacing it by rfkilld anyway in
+> > a near future (meaning when I am back from vacation).
+> 
+> Module parameter to what?  Module parameters are almost always the wrong
+> thing to do.  Or, just don't built rfkill_input it into your kernel
 
-I'll try to do it in one swoop, get rid of set_global_sw_state() and
-convert tp-acpi as well as eeepc-laptop.
+we will make rfkill-input go away. This is just for the interim to
+detect if rfkill-input is supported by the kernel or not. And it allows
+to compile it into the kernel and disable it via modprobe.conf.
 
-Thanks
-Alan
+Regards
+
+Marcel
+
+
