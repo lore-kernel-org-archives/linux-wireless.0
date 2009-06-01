@@ -1,74 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:31378 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756442AbZFLAUt convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754741AbZFAMxj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 20:20:49 -0400
-Received: by an-out-0708.google.com with SMTP id d40so3536748and.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 17:20:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890906111713q338c178ah34d263db43693c58@mail.gmail.com>
-References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-	<1244763159.27363.103.camel@violet> <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
-	<1244765167.27395.1.camel@violet> <43e72e890906111713q338c178ah34d263db43693c58@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Jun 2009 17:20:31 -0700
-Message-ID: <43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
-Subject: Re: rfkill on T61
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 1 Jun 2009 08:53:39 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090601124931.GF11011@khazad-dum.debian.net>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
+	 <1243763887.19302.29.camel@johannes.local>
+	 <1243796509.6570.35.camel@localhost.localdomain>
+	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
+	 <20090601122839.GB11011@khazad-dum.debian.net>
+	 <1243860230.5299.19.camel@johannes.local>
+	 <20090601124931.GF11011@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kXpMk90TuWQxODTgZHoo"
+Date: Mon, 01 Jun 2009 14:53:33 +0200
+Message-Id: <1243860813.5299.23.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2009 at 5:13 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Thu, Jun 11, 2009 at 5:06 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
->> Hi Luis,
->>
->>> >> When I hit rfkill, I get:
->>> >>
->>> >> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
->>> >> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
->>> >>
->>> >> When I hit it again I get:
->>> >>
->>> >> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
->>> >> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
->>> >>
->>> >> The device that disappears upon rfkill is my bluetooth controller:
->>> >>
->>> >> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
->>> >> --- 1   2009-06-11 15:37:37.000000000 -0700
->>> >> +++ 2   2009-06-11 15:37:49.000000000 -0700
->>> >> @@ -6,7 +6,6 @@
->>> >>  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
->>> >>  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
->>> >>  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
->>> >> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
->>> >>  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
->>> >> Fingerprint Reader
->>> >>  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
->>> >>  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
->>> >>
->>> >> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
->>> >> I think this is the same behaviour I will get with bleeding edge, will
->>> >> try now on wireless-testing.
->>> >
->>> > what are you trying to tell us.
->>>
->>> my 802.11 device is not rfkill'ed on the T61, some patches recently
->>> went in to add support for rfkill on ath5k. I do have thinkpad_acpi
->>> loaded on this ancient 2.6.27 kernel.
->>>
->>> I'll try on wireless-testing next, build is almost done.
->>
->> still are not getting what you wanna tell us. What has Bluetooh RFKILL
->> switch to do with WiFi.
->
-> Nothing, I really was just unaware we rfkilled bluetooth as well. Plus
-> like I said my 802.11 device is not being rfkilled, which is what I
-> actually did expect.
 
-Yeah same thing with wireless-testing.
+--=-kXpMk90TuWQxODTgZHoo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Mon, 2009-06-01 at 09:49 -0300, Henrique de Moraes Holschuh wrote:
+> On Mon, 01 Jun 2009, Johannes Berg wrote:
+> > > Just don't expose a rfkill type until the first rfkill structure of t=
+hat
+> > > type gets registered.  THAT closes all holes in a sensible,
+> > > principle-of-least-suprise way.  The current code (including the rewr=
+ite)
+> > > already deals with defaults and firmware-backed state storage just fi=
+ne in
+> > > that case.   All you need is a full interface that deals with global =
+state
+> > > hotplug (which ain't difficult, that's one or two more notifications =
+only).
+> >=20
+> > Global state hotplug is just not really possible to support, and I don'=
+t
+>=20
+> I used 'expose' for a reason.  You don't expose them to userspace until
+> there is an user for that type.   You don't even have to hide it again af=
+ter
+> the last user gets unregistered...
+>=20
+> That's not hotplug as in 'create a new rfkill type for the kernel'.
+
+I ... just don't understand what you're getting at. Are you talking
+about /dev/rfkill with or without the add-on I just sent a while ago?
+
+> > think even your original code supported that, since it cannot affect
+> > previously registered rfkill instances. You definitely don't want to
+> > hotplug a wireless device and turn off all others "due to that".
+>=20
+> You do recall how the 'override system default' machinery worked?  It wou=
+ld
+> return an error if a rfkill struct of that type had already been register=
+ed,
+> or if a call to set the default for that particular rfkill type had alrea=
+dy
+> happened.
+
+Exactly. It never touched older devices, and ignored (well, it returned
+an error, but that was quite pointless) future attempts to set the
+default.
+
+johannes
+
+--=-kXpMk90TuWQxODTgZHoo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKI89EAAoJEODzc/N7+QmayKgQAJmZfb0PCHEdDKbNsL18FxfF
+fc/irn33n+4s1QrSETNr3vkr1ETitiWbXfXpDOvtmGmwiRfhng+F+hO7e4KB+Mx4
+30NXTvSC5sDMYCKIwhqBa5afCj+SZ4fOkFWGvAOJ6S6pbdPwjJQSBBLUX7qQ92uA
+AL1S+iLODXOF0UJr6Y35ukqgM7py9iTc5fhh3gRlt/84gaYvTLv7dB/4LWmIZaA1
+76/Z7Noy7asMraYgHsq+cagsHtJxDxCNU1E79F18NHV5pSmYmnK92tdhLs/xxRzU
+PHVHxV+k0Je8WxggGheFx9VOcadmFTHSAl8PXQSH2BX8uht88IGnahj2H/wJ90ra
+Dcn6uTxOW4SBwbxSLxjuK1AHtmhqKsTC8V3NkGcumHX1F4bfetQlVnM/Sv/pZ0jb
+JZo9X6/jOdpe1hTQ2AWckEf6TnDtlHnqYpYMIVcjPTVaSVJ8sD5wSxIFZU67C45U
+ev9whxUyeEyn4S3lPGNgRoAaMJnVdqlFSv5amLs4KtECxpILf2GoDneDipjdtETj
+EpGAdVwCI4PctK3OTFN3WERtG8cOQB56zZ74zmkwFZxpmsOhDLxcF+xOG08kW4WH
+90/wJnYevAY+f0GrY2PC3ixSE8mBOAoQJVgpR+C3nD/g18pL8A+Qc1eobDC9Zq4K
+ZUmf+hzQkYPdYpkDGga3
+=P5Gm
+-----END PGP SIGNATURE-----
+
+--=-kXpMk90TuWQxODTgZHoo--
+
