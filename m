@@ -1,122 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:36838 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754529AbZFCM2B (ORCPT
+Received: from asmtpout026.mac.com ([17.148.16.101]:40325 "EHLO
+	asmtpout026.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbZFAVsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 08:28:01 -0400
-Date: Wed, 3 Jun 2009 16:27:44 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	sfr@canb.auug.org.au, slapin@ossfans.org
-Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
-	802.15.4 devices
-Message-ID: <20090603122744.GC20508@doriath.ww600.siemens.net>
-References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com> <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com> <1244021964.10665.5.camel@johannes.local> <20090603.030911.162861804.davem@davemloft.net> <20090603105256.GB20508@doriath.ww600.siemens.net> <1244027110.1693.9.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244027110.1693.9.camel@johannes.local>
+	Mon, 1 Jun 2009 17:48:36 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Received: from MainMacMini.lan ([80.176.168.49])
+ by asmtp026.mac.com (Sun Java(tm) System Messaging Server 6.3-8.01 (built Dec
+ 16 2008; 32bit)) with ESMTPSA id <0KKK00JYNV4L6340@asmtp026.mac.com> for
+ linux-wireless@vger.kernel.org; Mon, 01 Jun 2009 13:48:25 -0700 (PDT)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Message-id: <21CA6416-CDD3-4435-8E35-9EADE00A8B6F@me.com>
+From: Tim Hawkins <tim.hawkins@me.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+In-reply-to: <1243888982.13273.21.camel@maxim-laptop>
+Subject: Re: Pending ath5k bugs
+Date: Mon, 01 Jun 2009 21:48:21 +0100
+References: <1243888982.13273.21.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 03, 2009 at 01:05:10PM +0200, Johannes Berg wrote:
-> On Wed, 2009-06-03 at 14:52 +0400, Dmitry Eremin-Solenikov wrote:
-> > +#define IEEE802154_ATTR_MAX (__IEEE802154_ATTR_MAX - 1)
-> > +#define NLA_HW_ADDR	NLA_U64
-> > +#define NLA_GET_HW_ADDR(attr, addr) do { u64 _temp = nla_get_u64(attr); memcpy(addr, &_temp, 8); } while (0)
-> > +#define NLA_PUT_HW_ADDR(msg, attr, addr) do { u64 _temp; memcpy(&_temp, addr, 8); NLA_PUT_U64(msg, attr, _temp); } while (0)
-> 
-> I really don't like this namespace pollution.
-> 
-> > +#ifdef IEEE802154_NL_WANT_POLICY
-> > +static struct nla_policy ieee802154_policy[IEEE802154_ATTR_MAX + 1] = {
-> 
-> Ho humm. This shouldn't be in a header file. Not even with an #ifdef
-> that exactly one C file then sets.
-> 
-> > +	[IEEE802154_ATTR_DURATION] = { .type = NLA_U8, },
-> > +#ifdef __KERNEL__
-> > +	[IEEE802154_ATTR_ED_LIST] = { .len = 27 },
-> > +#else
-> 
-> Ick.
+I can confirm 1 & 2, i have the same problems on my aspire one.
 
-We'd like to share the policy declaration between kernel and user space
-as a single file. I'll move this from header to the source file though.
+Also wrt: 1
 
-> 
-> > +/* commands */
-> > +/* REQ should be responded with CONF
-> > + * and INDIC with RESP
-> > + */
-> > +enum {
-> 
-> kernel-doc explaining the commands would be immensely helpful.
+The reported signal strength is much lower than running say madwifi on  
+the same hardware/os.
 
-What explanations whould you like to see? These commands are described
-in the IEEE 802.15.4 standard.
+On 1 Jun 2009, at 21:43, Maxim Levitsky wrote:
 
-> 
-> 
-> > +	IEEE802154_GTS_REQ, /* Not supported yet */
-> > +	IEEE802154_GTS_INDIC, /* Not supported yet */
-> > +	IEEE802154_GTS_CONF, /* Not supported yet */
-> > +	IEEE802154_RX_ENABLE_REQ, /* Not supported yet */
-> > +	IEEE802154_RX_ENABLE_CONF, /* Not supported yet */
-> 
-> Just leave it out then. You're fixing ABI here.
-
-Thas is the desired thing: the ABI is modelled after the subroutines in
-IEEE 802.15.4 standard. So we'd like to fix the numbers for the commands
-from the start.
-
-> > +#ifdef __KERNEL__
-> > +struct net_device;
-> > +
-> > +int ieee802154_nl_assoc_indic(struct net_device *dev, struct ieee802154_addr *addr, u8 cap);
-> > +int ieee802154_nl_assoc_confirm(struct net_device *dev, u16 short_addr, u8 status);
-> > +int ieee802154_nl_disassoc_indic(struct net_device *dev, struct ieee802154_addr *addr, u8 reason);
-> > +int ieee802154_nl_disassoc_confirm(struct net_device *dev, u8 status);
-> > +int ieee802154_nl_scan_confirm(struct net_device *dev, u8 status, u8 scan_type, u32 unscanned,
-> > +		u8 *edl/*, struct list_head *pan_desc_list */);
-> > +int ieee802154_nl_beacon_indic(struct net_device *dev, u16 panid, u16 coord_addr); /* TODO */
-> > +#endif
-> 
-> Why not just use two header files, one in net/ and one in linux/?
-
-What would you suggest to put into the linux/ header and what in the
-net/ one?
-
-> > +static int ieee802154_nl_put_failure(struct sk_buff *msg)
-> > +{
-> > +	void *hdr = genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is right at the start of msg */
-> > +	genlmsg_cancel(msg, hdr);
-> > +	nlmsg_free(msg);
-> > +	return -ENOBUFS;
-> > +}
-> 
-> This seems weird.
-
-Why?
-
-> > +static int ieee802154_associate_req(struct sk_buff *skb, struct genl_info *info)
-> > +{
-> > +	struct net_device *dev;
-> > +	struct ieee802154_addr addr;
-> > +	int ret = -EINVAL;
-> > +
-> > +	if (!info->attrs[IEEE802154_ATTR_CHANNEL]
-> > +	 || !info->attrs[IEEE802154_ATTR_COORD_PAN_ID]
-> > +	 || (!info->attrs[IEEE802154_ATTR_COORD_HW_ADDR] && !info->attrs[IEEE802154_ATTR_COORD_SHORT_ADDR])
-> > +	 || !info->attrs[IEEE802154_ATTR_CAPABILITY])
-> > +		return -EINVAL;
-> 
-> That's some odd coding style.
-
-Could you please elaborate this? What seems odd to you?
-
--- 
-With best wishes
-Dmitry
+> Hi,
+>
+> Just like ath9k thread, here is the list of bugs, I have seen on my
+> aspire one (with ath5k).
+>
+> This is an AR2425 device.
+>
+>
+> #1) - Data transfer often stalls, sometimes for few seconds, sometimes
+> for much longer periods.
+>
+> Transfer rate doesn't affect this, nether does network load (happens
+> much more often when it is high, but also happens, while it is  
+> medium to
+> low).
+>
+> I observed that, resetting the phy by triggering a scan, sometimes  
+> help,
+> although running the scan inside a 2 second per iteration loop,  
+> doesn't
+> prevent this stall to occur.
+>
+> Also encryption doesn't play any role in this, I have seen  same
+> scenario on open network configuration as well.
+>
+>
+> #2) - Driver sometimes doesn't wake the device up, after resume from
+> ram/disk. It happens not much often, but when it does, only a power
+> cycle (reboot or poweroff) helps to recover the device, and nether  
+> s2ram
+> nor s2disk do anything.
+>
+>
+>
+> #3) Ath5k often panics the kernel when it is in ibss/ap mode. This
+> reported to be fixed, but I use latest wireless-testing (less that 3  
+> day
+> old, on average)
+>
+>
+> #4) Ath5k doesn't send beacons, when hostapd is run for the first  
+> time.
+>
+>
+> #5) Can't send any frames between AP (ath5k) and a client.
+> But If I create a second monitor iface (in addition to the one hostapd
+> have created) I do see the frames from client on AP.
+>
+>
+> I especially hate bug #1, and would be happy to see bug #2 fixed.
+> I don't use AP mode much yet, but it would be nice if it were in  
+> working
+> state.
+>
+>
+>
+> Best regards,
+> 	Maxim Levitsky
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux- 
+> wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
