@@ -1,310 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41465 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:45398 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113AbZF3LyJ (ORCPT
+	with ESMTP id S1752465AbZFAH1t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 07:54:09 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MLbud-0003RJ-E9
-	for linux-wireless@vger.kernel.org; Tue, 30 Jun 2009 13:54:12 +0200
-Message-Id: <20090630115302.688317152@sipsolutions.net>
-References: <20090630115245.675553951@sipsolutions.net>
-Date: Tue, 30 Jun 2009 13:52:51 +0200
+	Mon, 1 Jun 2009 03:27:49 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/8 v3] cfg80211: implement IWRATE
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: alan-jenkins@tuffmail.co.uk,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1243796628.6570.37.camel@localhost.localdomain>
+References: <1243524688.10632.0.camel@johannes.local>
+	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
+	 <1243778069.5299.0.camel@johannes.local>
+	 <1243796628.6570.37.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nO+B8G1kmguDqGI4jHms"
+Date: Mon, 01 Jun 2009 09:27:43 +0200
+Message-Id: <1243841263.5299.2.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For now, let's implement that using a very hackish way:
-simply mirror the wext API in the cfg80211 API. This
-will have to be changed later when we implement proper
-bitrate API.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |   32 ++++++++++++++++++
- net/mac80211/cfg.c         |   43 +++++++++++++++++++++++++
- net/mac80211/wext.c        |   76 +--------------------------------------------
- net/wireless/wext-compat.c |   63 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 140 insertions(+), 74 deletions(-)
+--=-nO+B8G1kmguDqGI4jHms
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-06-30 12:43:47.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-06-30 12:43:51.000000000 +0200
-@@ -815,6 +815,26 @@ enum tx_power_setting {
- 	TX_POWER_FIXED,
- };
- 
-+/*
-+ * cfg80211_bitrate_mask - masks for bitrate control
-+ */
-+struct cfg80211_bitrate_mask {
-+/*
-+ * As discussed in Berlin, this struct really
-+ * should look like this:
-+
-+	struct {
-+		u32 legacy;
-+		u8 mcs[IEEE80211_HT_MCS_MASK_LEN];
-+	} control[IEEE80211_NUM_BANDS];
-+
-+ * Since we can always fix in-kernel users, let's keep
-+ * it simpler for now:
-+ */
-+	u32 fixed;   /* fixed bitrate, 0 == not fixed */
-+	u32 maxrate; /* in kbps, 0 == no limit */
-+};
-+
- /**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-@@ -1027,6 +1047,11 @@ struct cfg80211_ops {
- 	int	(*testmode_cmd)(struct wiphy *wiphy, void *data, int len);
- #endif
- 
-+	int	(*set_bitrate_mask)(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    const u8 *peer,
-+				    const struct cfg80211_bitrate_mask *mask);
-+
- 	/* some temporary stuff to finish wext */
- 	int	(*set_power_mgmt)(struct wiphy *wiphy, struct net_device *dev,
- 				  bool enabled, int timeout);
-@@ -1593,6 +1618,13 @@ int cfg80211_wext_giwauth(struct net_dev
- struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
- 					     struct iw_freq *freq);
- 
-+int cfg80211_wext_siwrate(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  struct iw_param *rate, char *extra);
-+int cfg80211_wext_giwrate(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  struct iw_param *rate, char *extra);
-+
- int cfg80211_wext_siwrts(struct net_device *dev,
- 			 struct iw_request_info *info,
- 			 struct iw_param *rts, char *extra);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-06-30 12:43:47.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-06-30 12:43:51.000000000 +0200
-@@ -1423,6 +1423,48 @@ static int ieee80211_set_power_mgmt(stru
- 	return 0;
- }
- 
-+static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
-+				      struct net_device *dev,
-+				      const u8 *addr,
-+				      const struct cfg80211_bitrate_mask *mask)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	int i, err = -EINVAL;
-+	u32 target_rate;
-+	struct ieee80211_supported_band *sband;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+
-+	/* target_rate = -1, rate->fixed = 0 means auto only, so use all rates
-+	 * target_rate = X, rate->fixed = 1 means only rate X
-+	 * target_rate = X, rate->fixed = 0 means all rates <= X */
-+	sdata->max_ratectrl_rateidx = -1;
-+	sdata->force_unicast_rateidx = -1;
-+
-+	if (mask->fixed)
-+		target_rate = mask->fixed / 100;
-+	else if (mask->maxrate)
-+		target_rate = mask->maxrate / 100;
-+	else
-+		return 0;
-+
-+	for (i=0; i< sband->n_bitrates; i++) {
-+		struct ieee80211_rate *brate = &sband->bitrates[i];
-+		int this_rate = brate->bitrate;
-+
-+		if (target_rate == this_rate) {
-+			sdata->max_ratectrl_rateidx = i;
-+			if (mask->fixed)
-+				sdata->force_unicast_rateidx = i;
-+			err = 0;
-+			break;
-+		}
-+	}
-+
-+	return err;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -1468,4 +1510,5 @@ struct cfg80211_ops mac80211_config_ops 
- 	.rfkill_poll = ieee80211_rfkill_poll,
- 	CFG80211_TESTMODE_CMD(ieee80211_testmode_cmd)
- 	.set_power_mgmt = ieee80211_set_power_mgmt,
-+	.set_bitrate_mask = ieee80211_set_bitrate_mask,
- };
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-30 12:43:47.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-30 12:43:51.000000000 +0200
-@@ -165,78 +165,6 @@ static int ieee80211_ioctl_giwap(struct 
- }
- 
- 
--static int ieee80211_ioctl_siwrate(struct net_device *dev,
--				  struct iw_request_info *info,
--				  struct iw_param *rate, char *extra)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	int i, err = -EINVAL;
--	u32 target_rate = rate->value / 100000;
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_supported_band *sband;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--
--	/* target_rate = -1, rate->fixed = 0 means auto only, so use all rates
--	 * target_rate = X, rate->fixed = 1 means only rate X
--	 * target_rate = X, rate->fixed = 0 means all rates <= X */
--	sdata->max_ratectrl_rateidx = -1;
--	sdata->force_unicast_rateidx = -1;
--	if (rate->value < 0)
--		return 0;
--
--	for (i=0; i< sband->n_bitrates; i++) {
--		struct ieee80211_rate *brate = &sband->bitrates[i];
--		int this_rate = brate->bitrate;
--
--		if (target_rate == this_rate) {
--			sdata->max_ratectrl_rateidx = i;
--			if (rate->fixed)
--				sdata->force_unicast_rateidx = i;
--			err = 0;
--			break;
--		}
--	}
--	return err;
--}
--
--static int ieee80211_ioctl_giwrate(struct net_device *dev,
--				  struct iw_request_info *info,
--				  struct iw_param *rate, char *extra)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct sta_info *sta;
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_supported_band *sband;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	if (sdata->vif.type != NL80211_IFTYPE_STATION)
--		return -EOPNOTSUPP;
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--
--	rcu_read_lock();
--
--	sta = sta_info_get(local, sdata->u.mgd.bssid);
--
--	if (sta && !(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS))
--		rate->value = sband->bitrates[sta->last_tx_rate.idx].bitrate;
--	else
--		rate->value = 0;
--
--	rcu_read_unlock();
--
--	if (!sta)
--		return -ENODEV;
--
--	rate->value *= 100000;
--
--	return 0;
--}
--
- /* Get wireless statistics.  Called by /proc/net/wireless and by SIOCGIWSTATS */
- static struct iw_statistics *ieee80211_get_wireless_stats(struct net_device *dev)
- {
-@@ -340,8 +268,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWNICKN */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) ieee80211_ioctl_siwrate,		/* SIOCSIWRATE */
--	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
-+	(iw_handler) cfg80211_wext_siwrate,		/* SIOCSIWRATE */
-+	(iw_handler) cfg80211_wext_giwrate,		/* SIOCGIWRATE */
- 	(iw_handler) cfg80211_wext_siwrts,		/* SIOCSIWRTS */
- 	(iw_handler) cfg80211_wext_giwrts,		/* SIOCGIWRTS */
- 	(iw_handler) cfg80211_wext_siwfrag,		/* SIOCSIWFRAG */
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-30 12:43:47.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-06-30 12:43:51.000000000 +0200
-@@ -1094,3 +1094,66 @@ int cfg80211_wds_wext_giwap(struct net_d
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(cfg80211_wds_wext_giwap);
-+
-+int cfg80211_wext_siwrate(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  struct iw_param *rate, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	struct cfg80211_bitrate_mask mask;
-+
-+	if (!rdev->ops->set_bitrate_mask)
-+		return -EOPNOTSUPP;
-+
-+	mask.fixed = 0;
-+	mask.maxrate = 0;
-+
-+	if (rate->value < 0) {
-+		/* nothing */
-+	} else if (rate->fixed) {
-+		mask.fixed = rate->value / 1000; /* kbps */
-+	} else {
-+		mask.maxrate = rate->value / 1000; /* kbps */
-+	}
-+
-+	return rdev->ops->set_bitrate_mask(wdev->wiphy, dev, NULL, &mask);
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wext_siwrate);
-+
-+int cfg80211_wext_giwrate(struct net_device *dev,
-+			  struct iw_request_info *info,
-+			  struct iw_param *rate, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	/* we are under RTNL - globally locked - so can use a static struct */
-+	static struct station_info sinfo;
-+	u8 *addr;
-+	int err;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION)
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->get_station)
-+		return -EOPNOTSUPP;
-+
-+	addr = wdev->wext.connect.bssid;
-+	if (!addr)
-+		return -EOPNOTSUPP;
-+
-+	err = rdev->ops->get_station(&rdev->wiphy, dev, addr, &sinfo);
-+	if (err)
-+		return err;
-+
-+	if (!(sinfo.filled & STATION_INFO_TX_BITRATE))
-+		return -EOPNOTSUPP;
-+
-+	rate->value = 0;
-+
-+	if (!(sinfo.txrate.flags & RATE_INFO_FLAGS_MCS))
-+		rate->value = 100000 * sinfo.txrate.legacy;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wext_giwrate);
+On Sun, 2009-05-31 at 21:03 +0200, Marcel Holtmann wrote:
 
--- 
+> > Maybe we should add an ioctl that disables rfkill-input if present.
+>=20
+> I am against it. Can we just add a module parameter that allows us to
+> disable it. I am against cluttering a new interface with legacy stuff
+> since we are removing rfkill-input and replacing it by rfkilld anyway in
+> a near future (meaning when I am back from vacation).
+
+Right. But you'll get a bunch of people get it mixed up. I think I would
+prefer adding the ioctl, but having it only when rfkill-input is
+compiled in, so userspace would always just get -ENOSYS if there's no
+rfkill-input present, which means the "cluttering" of the interface
+occurs only for as long as we have rfkill-input and at some point you
+would just remove that one line of code from rfkilld.
+
+johannes
+
+--=-nO+B8G1kmguDqGI4jHms
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKI4LrAAoJEODzc/N7+QmaVEMP/1wQKiRrmj55L5ldm7J0e3EM
+Y9XU/dDmEG366/lH5z5h7oaMxj1jz7Dfq6qI8IRRpCTf0ARcVIalx1lwD4uls6KZ
+HjeDK1eoyhSGyrNWRZTny1h0mywZZhde8rdQmzPJ6dHipL+qtcC51ByBmOFl//kb
+pb/9d0lJJw4gKV6gXOL+XurK/9yfVU5eDDa3xUXBHSyBb+7bzvLeyw+1dwINDzqB
+aNtOYXO5zbsKAvl6lqw54/Xt894NjY0qg/qtVdiOfOyN3HfEydP+5B2K4YP1dSXz
+yt5DBqvNPt95XAPJtqmqTYRXFDUE2Cx6JMnT8HnHitpiIk1h7xEwUHlc0IJ1Ddam
+dLTUz4azggPCP8ANiv7wF4OwnSCjThkH52Q/Vzc5+joZKoooZjxtg+T7W+jrSRTY
+laJlxwtCI8V963Kg7sgpgAiWuejImy7GWwhHj0h/ppFq4pt1EL7CwTu0GGtR2hyz
+wJZcV+PQ9W+APdWrlMwXT9Q5hTJswMDegc6zrdGxSpjoeptAMLhoy8hoR/hVOwJ5
+/FQv7ytKiBG3Y5g5V+SY6GfLjTAYfOXAU6Rk/fVt56xu0nAKfj0uqX7y1Wkj24tu
+tw4gsVdA4/rvqf4nsJ0qy6IHaA1kOxdH3cDIoq0ygLkatmCvJyyqIlXPipnAInLD
+td2AiLVHR/DzCMJuK5wE
+=unmP
+-----END PGP SIGNATURE-----
+
+--=-nO+B8G1kmguDqGI4jHms--
 
