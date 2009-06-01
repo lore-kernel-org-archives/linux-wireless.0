@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46174 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755696AbZFHPVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 11:21:14 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: gregor kowski <gregor.kowski@gmail.com>
-Subject: Re: [PATCH] b43 add harware tkip
-Date: Mon, 8 Jun 2009 17:20:59 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
-In-Reply-To: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:60004 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754278AbZFANdw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2009 09:33:52 -0400
+Date: Mon, 1 Jun 2009 10:33:51 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+Message-ID: <20090601133351.GI11011@khazad-dum.debian.net>
+References: <1243524688.10632.0.camel@johannes.local> <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com> <1243763887.19302.29.camel@johannes.local> <1243796509.6570.35.camel@localhost.localdomain> <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <20090601122839.GB11011@khazad-dum.debian.net> <1243859931.5299.17.camel@johannes.local> <20090601124553.GE11011@khazad-dum.debian.net> <1243860606.5299.21.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906081720.59594.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1243860606.5299.21.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, first thing is that I do think there is a reason Broadcom removed hw TKIP
-support from their drivers. ;)
+On Mon, 01 Jun 2009, Johannes Berg wrote:
+> > I mean platform devices which remember state.  Those will be turned on/off
+> > by the platform firmware at boot and often at resume time, and overriding
+> > them in rfkill (especially if it is done later, by a rfkilld) will cause
+> > some flicker (on/off/on, off/on/off) in certain situations.  
+> > 
+> > This is a regression, because the current interface doesn't suffer this
+> > limitation.
+> 
+> Right, but that was already covered by the discussion and patch I just
+> sent, no need to complain, afaict? What's your gripe with the current
+> add-on patch that I just sent out?
 
-But well, let's look at the patch.
+I don't know if I have any gripes with your latest patch ;)  Can't test it
+right now.  I was reacting to the comments in the thread.
 
-> +	/* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
-> +#if 0
->  	b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
->  	b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
->  	b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
->  	b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
-> +#endif
-
-This looks interesting. Care to find out the correct offsets and submit
-this fix as a separate patch?
-
-> +	if (algorithm == B43_SEC_ALGO_TKIP) {
-> +		/*
-> +		 * We should provide an initial iv32, phase1key pair.
-> +		 * We could start with iv32=0 and compute the corresponding
-> +		 * phase1key, but this mean calling ieee80211_get_tkip_key
-> +		 * with a fake skb (or export other tkip function).
-> +		 * Because we are lazy we hope iv32 won't start with
-> +		 * 0xffff and let's b43_mac_update_tkip_key provide a
-> +		 * correct pair.
-> +		 */
-> +		rx_tkip_phase1_write(dev, index, 0xffff, (u16*)buf);
-> +	} else /* clear it */
-> +		rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
-
-Why do you write phase1, if TKIP is not used?
-
-> +	/* FIXME : for b43_new_kidx_api, there can be 54 key
-> +	 * instead of 50 in RCMTA and TKIPTSCTTAK.
-> +	 */
-
-I don't understand this comment.
-
-> -		if (algorithm == B43_SEC_ALGO_TKIP) {
-> -			/* FIXME: No TKIP hardware encryption for now. */
-> +		if (algorithm == B43_SEC_ALGO_TKIP &&
-> +				(!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
-> +				   key->flags & IEEE80211_KEY_FLAG_WMM_STA )) {
-> +			/* We support only one rx queue (no QOS) and pairwise key */
-
-This comment doesn't really make sense to me, too.
-What does QoS have to do with the RX queue?
-
-
-Next time please inline the patch ;)
+On a related note, Johannes, would you be opposed to exporting something I
+could call from thinkpad-acpi to request a radio state change on a rfkill
+struct?   This would allow me to remove some of the mess in thinkpad-acpi.
 
 -- 
-Greetings, Michael.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
