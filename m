@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45456
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753390AbZFCKI0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50912 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850AbZFANa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 06:08:26 -0400
-Date: Wed, 03 Jun 2009 03:08:26 -0700 (PDT)
-Message-Id: <20090603.030826.03512651.davem@davemloft.net>
-To: dbaryshkov@gmail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
-	slapin@ossfans.org
-Subject: Re: [PATCH 2/6] Add constants for the ieee 802.15.4/ZigBee stack
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1244021629-18409-3-git-send-email-dbaryshkov@gmail.com>
-References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
-	<1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
-	<1244021629-18409-3-git-send-email-dbaryshkov@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 1 Jun 2009 09:30:27 -0400
+Date: Mon, 1 Jun 2009 09:17:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Georgy Berdyshev <codingmaster@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [GSoC 2009] Automation of testing using mac80211_hwsim and
+	Orbit -  status report 01
+Message-ID: <20090601131742.GA3386@tuxdriver.com>
+References: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com> <1243858809.5299.15.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1243858809.5299.15.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Date: Wed,  3 Jun 2009 13:33:45 +0400
-
-> IEEE 802.15.4/ZigBee stack requires several constants to be defined/adjusted.
+On Mon, Jun 01, 2009 at 02:20:09PM +0200, Johannes Berg wrote:
 > 
-> Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-> Signed-off-by: Sergey Lapin <slapin@ossfans.org>
-> ---
->  include/linux/if.h       |    2 ++
->  include/linux/if_arp.h   |    2 ++
->  include/linux/if_ether.h |    2 ++
->  include/linux/socket.h   |    6 +++++-
->  net/core/dev.c           |    6 ++++--
->  net/core/sock.c          |    3 +++
->  6 files changed, 18 insertions(+), 3 deletions(-)
+> > By the end of the week, I did start to have some strange problems with
+> > running hostapd (via nl80211) and using the
+> > mac80211_hwsim kernel driver.
 > 
-> diff --git a/include/linux/if.h b/include/linux/if.h
-> index 1108f3e..3f574b8 100644
-> --- a/include/linux/if.h
-> +++ b/include/linux/if.h
-> @@ -68,6 +68,8 @@
->  #define IFF_MASTER_ARPMON 0x100		/* bonding master, ARP mon in use */
->  #define IFF_WAN_HDLC	0x200		/* WAN HDLC device		*/
->  
-> +#define IFF_IEEE802154_COORD 0x100	/* IEEE802.15.4 PAN coordinator */
-> +
->  #define IF_GET_IFACE	0x0001		/* for querying only */
->  #define IF_GET_PROTO	0x0002
->  
+> It seems it would help if you explained what the strange problems are :)
 
-This constant isn't used by any of these patches, and it's
-value overlaps that of IFF_MASTER_ARPMON  so would need to be
-changed anyways.
+True.  However, overall this is a nice report -- please do continue
+to keep us informed!
 
-I didn't check if other things in this patch turn out to
-be unused as well, please audit that.
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
