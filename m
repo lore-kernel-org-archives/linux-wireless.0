@@ -1,84 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759191AbZFRWxM (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:46492 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161AbZFAWZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 18:53:12 -0400
-Subject: Re: [PATCH 00/23] orinoco: initiate cfg80211 conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6+WLBMjsqeOX89y+wrDr"
-Date: Fri, 19 Jun 2009 00:52:44 +0200
-Message-Id: <1245365564.16399.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 1 Jun 2009 18:25:33 -0400
+Received: by ewy24 with SMTP id 24so8214916ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 15:25:34 -0700 (PDT)
+Message-ID: <4A24559D.7010201@tuffmail.co.uk>
+Date: Mon, 01 Jun 2009 23:26:37 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+References: <1243524688.10632.0.camel@johannes.local>	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>	 <1243763887.19302.29.camel@johannes.local>	 <1243796509.6570.35.camel@localhost.localdomain>	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>	 <1243858256.5299.14.camel@johannes.local>	 <1243867620.3015.17.camel@localhost.localdomain>	 <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain>
+In-Reply-To: <1243885494.3015.29.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Marcel Holtmann wrote:
+> Hi Alan,
+>
+>   
+>>> I really don't understand why this is needed. What benefit does it give
+>>> us compared to just sent OP_CHANGE and OP_CHANGE as an update. My X200
+>>> for example does this anyway on suspend/resume.
+>>>   
+>>>       
+>> This is required for boot only.  I have no reason for this event to be 
+>> generated on resume.
+>>
+>> The same effect could be had by generating an OP_CHANGE on f_open, 
+>> _only_ when a platform driver has provided a value from NVS.  But it 
+>> does seem clearer to make it a different type of event.
+>>     
+>
+> that is my whole point. If the kernel driver wants to preserve these
+> then it can just issue OP_ADD to notify use about the current state of
+> the values. The OP_ADD gets send once you open /dev/rfkill and if they
+> not match with our policy we have to change them anyway. I really don't
+> see the need for an extra operation here. Let me ask this again, how is
+> it different from just sending the OP_ADD and then let rfkilld decide to
+> either use that value or enforce its own policy.
 
---=-6+WLBMjsqeOX89y+wrDr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I don't understand.
 
+Isn't OP_ADD generated for all rfkill devices, by the core itself?  How 
+does the driver ask to generate this event or not?
 
->  drivers/net/wireless/orinoco/Kconfig          |    1 +
->  drivers/net/wireless/orinoco/Makefile         |    2 +-
->  drivers/net/wireless/orinoco/airport.c        |   98 +--
->  drivers/net/wireless/orinoco/cfg.c            |  162 ++++
->  drivers/net/wireless/orinoco/cfg.h            |   15 +
->  drivers/net/wireless/orinoco/fw.c             |   41 +-
->  drivers/net/wireless/orinoco/hermes.h         |    2 +-
->  drivers/net/wireless/orinoco/hermes_dld.c     |   50 +-
->  drivers/net/wireless/orinoco/hw.c             |  668 +++++++++++++++-
->  drivers/net/wireless/orinoco/hw.h             |   11 +-
->  drivers/net/wireless/orinoco/main.c           | 1133 +++++++++----------=
-------
->  drivers/net/wireless/orinoco/main.h           |    3 +-
->  drivers/net/wireless/orinoco/orinoco.h        |   49 +-
->  drivers/net/wireless/orinoco/orinoco_cs.c     |   96 +--
->  drivers/net/wireless/orinoco/orinoco_nortel.c |   38 +-
->  drivers/net/wireless/orinoco/orinoco_pci.c    |   38 +-
->  drivers/net/wireless/orinoco/orinoco_pci.h    |   57 +--
->  drivers/net/wireless/orinoco/orinoco_plx.c    |   38 +-
->  drivers/net/wireless/orinoco/orinoco_tmd.c    |   38 +-
->  drivers/net/wireless/orinoco/scan.c           |  285 +++----
->  drivers/net/wireless/orinoco/scan.h           |   21 +-
->  drivers/net/wireless/orinoco/spectrum_cs.c    |   96 +--
->  drivers/net/wireless/orinoco/wext.c           |  878 ++-----------------=
--
->  include/net/cfg80211.h                        |   11 +
->  net/wireless/core.c                           |    3 -
->  net/wireless/wext-compat.c                    |   31 +-
->  26 files changed, 1748 insertions(+), 2117 deletions(-)
->  create mode 100644 drivers/net/wireless/orinoco/cfg.c
->  create mode 100644 drivers/net/wireless/orinoco/cfg.h
+As I understand it, the difference between NVS_REPORT and ADD is that 
+ADD is generated for all drivers.  NVS_REPORT is only generated if they 
+call rfkill_set_global_sw_state().
 
-Amazing. Very cool!
+The difference is that this exposes an extra bit of information: whether 
+the state was restored from NVS.
 
-johannes
+>  If the wish is to
+> enforce policy you can't do anything about it anyway.
+>   
 
---=-6+WLBMjsqeOX89y+wrDr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Sure.
 
------BEGIN PGP SIGNATURE-----
+>>> So what is rfkilld suppose to be doing when receiving this report? What
+>>> is the expected behavior? Why do we bother with multi-OS crap here? I am
+>>> really unclear what are we trying to solve here.
+>>>       
+>> In order to replicate the kernel behavior, it is expected that you set 
+>> your internal state from this event.  E.g. when the user next presses 
+>> the wireless toggle key, you set the inverse of that internal state.
+>>
+>> Since this event is generated by a platform driver, you can expect it to 
+>> be present following coldplug (the udev initscript).  If the event is 
+>> not present after coldplug, you may then issue OP_CHANGE yourself, to 
+>> e.g. restore the state from a file.  You would not be expected to handle 
+>> OP_NVS_REPORT after startup.  (Unless the daemon is restarted).
+>>
+>> Replicating the kernel behavior will allow us to avoid causing a couple 
+>> of niggly little regressions on at least two platforms.  It preserves 
+>> the behavior when dual-booting (possibly between different linux 
+>> distros), and when the BIOS setup screen exposes the NVS state as an 
+>> option.  The new behavior you suggest will annoy any users who have 
+>> become used to these scenarios "just working". 
+>>
+>> You may not use these platforms yourself.  But I'm as annoyed as 
+>> Henrique is, we don't want to impose regressions just because other 
+>> platforms don't implement the feature.
+>>
+>> Why the fuss about implementing this, it seems easy enough?  Start 
+>> rfkilld after udev (like everything else).  If you get NVS_REPORT, then 
+>> use those states.  Fill in any other states from defaults or state files 
+>> and issue OP_CHANGE for them, just as you're already planning.  Ignore 
+>> any subsequent NVS_REPORTs.  That should cover it.
+>>
+>> It's the cost for starting from a working implementation.  You benefit 
+>> from having existing drivers and users, you pay by not breaking them 
+>> without good reason.
+>>     
+>
+> I really don't care about current behavior, because that has been just a
+> hack anyway.
 
-iQIcBAABAgAGBQJKOsU5AAoJEODzc/N7+Qma8xcQAIdWvDK8TsxNw11kKdscHKEK
-VTiLhOBrtQX17yFk69LVnY/DviPtX5hmDyF+XUn0npc+KttFK4mMwQMHGz2CT0gH
-Xln5HO7mJWlbooD/BIkqgLFdQX51AavjTWjwW1qbZoZ0cArgbJ5EXHatLIWwBWxy
-u/hUuVXe8qUfYib+RDeNMb2ojcZfJgPE+Yvtvy4bnsQ790jXWFOKy8GeGniSGzwl
-C8HIcY/vJovC7qQEvCS3aATp+G5wzgSxwoQuQ6v+bcrMzo7yuWW0DBAKOQN6uOBr
-e9fxaodJN0V6EiQcwz9Un9X3zYpQZ+CLoFD+zpbPzSXJ+1QMGZdAjsXpPsiqjXjs
-V4XK3O9NeUEAjyjKN8wnEVtypFrH45GR+zk7D9t4r30POqCVQF8fKcvynnuLlED9
-WbefqSUAZie+k2AeToF9Ra7sogSzCPwxjXd0CNJym+i19n+I9QwE50YxZ+aE27Xs
-yhhZDZkUvn1ftplETzERgy1+s+QAP+YFufhKtjO/kLb7pW9MGpbxEwhXLaszO96V
-anIfT900RB+joE2xEfBUn91QTc5oiSOyXzZw3s6h1KnaI6FFxiamJbXanpplAyJ8
-k4j85Bq2TfA1He9bubUHgnvUpGvbRLCVpfJcXzm+eAFyS1dzapKtvuk7d8tIMz7q
-HEi6d6j2NsWEztFf0NUn
-=sTN3
------END PGP SIGNATURE-----
+Linux exports a stable ABI.  A reasonable justification would be "this 
+is trivial and has practically no users who care".  Hackishness is 
+second to that.
 
---=-6+WLBMjsqeOX89y+wrDr--
+> And it happens to work if there is proper BIOS support. We
+> are at the point now where we stop working around a complicated and in
+> some cases broken implementation. Overloading it with weird special
+> cases is just wrong and so far I am not buying into any of the arguments
+> here. The point behind the whole effort from Johannes is to finally fix
+> RFKILL support. If it breaks current behavior, I couldn't care less in
+> some cases.
+>   
 
+I really don't understand.  You say above that we don't need this 
+change, because drivers can already achieve the same event by 
+selectively generating OP_ADD.  In that case it's already overloaded 
+with "weird special cases", and NVS_REPORT is a cosmetic difference only.
+
+> So Johannes and I talked about it a lot last week. And we will be doing
+> rfkilld so finally deprecated the broken idea of rfkill-input and move
+> the policy into userspace where it belongs. 
+
+Great.  I think we can agree on one thing, that implementing 
+rfkill-input in the kernel without the possibility of a userspace 
+override is warped and twisted :-).
+
+> To make this clear, the
+> concept of cross-OS state keeping is broken. 
+
+> Having the BIOS or a
+> different OS dictate policy makes no sense.
+>   
+
+Seems to me these are two different points, and you haven't really said 
+why cross-OS state is broken.
+
+It doesn't make sense to be _dictated_ to by your other OS/BIOS.  That's 
+exactly what rfkilld would avoid, by allowing a configurable policy.
+
+"support cross-OS state keeping" is a policy which can be applied - or 
+not.  NVS_REPORT provides the necessary information.
+
+So, this policy doesn't work if the other OS is un-cooperative and 
+soft-blocks the wireless on shutdown.  That's the full extent to which 
+it is broken, yes?  [And it's a relatively obscure problem, so the risk 
+is that it just rots, and the effort spent on this code is wasted].
+
+But on eeepc-laptop, it seems safe to assume that the drivers on the 
+Other OS do the co-operative thing, because otherwise it would cause 
+confusion with the option in the BIOS setup.
+
+Henrique (or anyone), has this ever been a problem on thinkpad-acpi?  Do 
+you ever get a state in NVS at boot time, which the user had not requested?
+
+Note that the linux ACPI project has the explicit goal of compatibility 
+with Windows.  If a  new platform comes along with a Windows ACPI driver 
+which screws up the platform state, it would be reasonable for the Linux 
+ACPI driver to not call set_global_sw_state().
+
+You propose to exclude a feature that currently works, on the grounds 
+that it is inherently broken.  But you haven't said that this has ever 
+caused incorrect behavior.  All you have said so far is that it is a hack.
+
+Since this was the original intent, it's a pity 
+rfkill_set_global_sw_state() wasn't listed in the feature removal 
+schedule (or a user-level description of NVS).  I suggested something 
+like NVS_REPORT because, in the absence of a description of removal, it 
+looked like an oversight.  In the past I've raised a couple of apparent 
+oversights about the rewrite, and they were treated as constructive.
+
+But now its clear this was a policy decision, and I ended up draging out 
+an explanation of the policy from nitpicking details of the 
+implementation.  I guess this is my fault for opening the discussion 
+based on the one loose thread of a detail, instead of asking if the 
+change was an oversight or intentional :-(.
+
+Thanks
+Alan
