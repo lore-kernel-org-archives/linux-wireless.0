@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41442 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413AbZFQJa7 (ORCPT
+Received: from mail-pz0-f177.google.com ([209.85.222.177]:41965 "EHLO
+	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785AbZFAXAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 05:30:59 -0400
-Subject: Re: [RFC] net: refactor multicast/unicast address list
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Pirko <jpirko@redhat.com>
-Cc: Netdev <netdev@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	davem <davem@davemloft.net>
-In-Reply-To: <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
-References: <1244889678.13033.6.camel@johannes.local>
-	 <1244896094.13033.8.camel@johannes.local>
-	 <20090616111842.GG3521@psychotron.englab.brq.redhat.com>
-	 <1245151771.9256.3.camel@johannes.local>
-	 <20090616123808.GK3521@psychotron.englab.brq.redhat.com>
-	 <1245193788.21287.66.camel@johannes.local>
-	 <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dnQ+/1+qJHfXXfhoj60i"
-Date: Wed, 17 Jun 2009 11:30:24 +0200
-Message-Id: <1245231024.19769.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 1 Jun 2009 19:00:25 -0400
+Received: by pzk7 with SMTP id 7so6269224pzk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 16:00:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1243752126.3623.375.camel@debian>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	<20090526222433.GA23972@bombadil.infradead.org> <1243736227.3623.180.camel@debian>
+	<43e72e890905302327x23d0479bkb825ea05832c5ffd@mail.gmail.com>
+	<1243752126.3623.375.camel@debian>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 1 Jun 2009 16:00:07 -0700
+Message-ID: <43e72e890906011600s3290e579q5e2d3400ec609099@mail.gmail.com>
+Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, May 30, 2009 at 11:42 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Sun, 2009-05-31 at 14:27 +0800, Luis R. Rodriguez wrote:
+>>
+>> What is the 11n configuration on these devices? Do they have 2
+>> streams? Or are they just 1 stream?
+>
+> It has 1x1, 1x2 and 2x2 on for both 20MHz and 40MHz channels.
 
---=-dnQ+/1+qJHfXXfhoj60i
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks -- BTW so this to me reads as number of TX/RX chains, but how
+many streams does the device have? For example a 2-stream device can
+be used in a 1x1 configuration.
 
-On Wed, 2009-06-17 at 09:21 +0200, Jiri Pirko wrote:
+An example of our 1-stream device would be the Atheros AR9285, so
+hardware-wise it only supports up to MCS 7.
 
-> >I guess we could stick this one into wireless-testing, and then take it
-> >out again once your patch hits the tree and offers me similar API for
-> >list_head based multicast lists?
->=20
-> Or wait, I hope the patch will be ready in week tops.
+Will some of these devices be 1-stream or are they all 2-stream?
 
-Yeah, that's fine, I'll ask people to throw in the simple export patch
-for testing. Thanks for considering! Please disregard my work on
-mac80211, I'll rebase over your work.
-
-johannes
-
---=-dnQ+/1+qJHfXXfhoj60i
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKOLerAAoJEODzc/N7+Qma3PsQAI4I17KgsAViE89GdHtsAjPW
-lNLvCqooQFQn3otyhJ4eQn+jNF/c83Vjz3m7KfTjQG8hC3I5vum8akEld5+eunPN
-MT8GdLokKC7kpWLx7WyJYLiF1Puf9amUXsl/+HWUFG0wc9e/4pMIGe8OaDrEaAzW
-hwBfpDp84Fm18+74QkjnPdumGuc+mG4m8TrETBXuPl+chb9Cnq007ObGqaAwPV7O
-dIg1pTU8onPjmR/iryFw7Sn+jpHqQab9xqeSkwZFHR90o1OxARljkMOgjR49k8Mk
-26lgzN4T6132SGQL7WlpUJ9JUkR+1xdZdZp9JPYMPP+PraPCJL3BoOMZiErRMRT/
-qhMXmWo4QbpUm++ytAfdQDsByyBdbz1zLvrvnmBd7vnsT9sk5y74JUxt2BZg7b7D
-jF8pHs3vJmqh/61tyBkcwXVMChBhu5TFdyykJUwXHk7wlyRlbQiZXchrZyl7+z0i
-w72qwseisAk2MquQOQ00UYtP/90t2VANqQMoBdGg/W/GYwPy1p/s/UfHWKaGcTjG
-zDnLhgsKYhR6LxlbgVlNGim0xXb6r0Il5b6v1NKDjAkjaVcA54dBK7CRA3Ecgs9T
-Y54bFuKckvUeQQfpmhf5NVptFJ8JpdhAtlneZRgw9WGhuPdB9Hsf3Loeewl5D9cj
-Qjd2r5ErfU6jkVscanlj
-=oU1G
------END PGP SIGNATURE-----
-
---=-dnQ+/1+qJHfXXfhoj60i--
-
+  Luis
