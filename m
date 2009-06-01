@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:58838 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbZFDNYe (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:58200 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbZFATl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 09:24:34 -0400
-Received: by fxm9 with SMTP id 9so746538fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 06:24:35 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>, Samuel Ortiz <samuel@sortiz.org>,
-	j.neumann@ergomedia.de
-Subject: Re: Berlin minisummit tentative schedule
-References: <1244044127.4862.22.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 04 Jun 2009 16:24:32 +0300
-In-Reply-To: <1244044127.4862.22.camel@johannes.local> (Johannes Berg's message of "Wed\, 03 Jun 2009 17\:48\:47 +0200")
-Message-ID: <87r5y0dtdb.fsf@litku.valot.fi>
+	Mon, 1 Jun 2009 15:41:29 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RESEND][PATCH 1/4] ar9170: fix beacon plcp settings
+Date: Mon, 1 Jun 2009 21:41:31 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+References: <200905120108.16068.chunkeey@web.de>
+In-Reply-To: <200905120108.16068.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200906012141.31368.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+This patch fixes a simple copy & paste error that affected beacon
+transmission in 802.11a mode.
 
-> Then check out
-> http://wireless.kernel.org/en/developers/Summits/Berlin-2009#Schedule
-> for the tentative schedule I just hacked together. If you have any
-> conflicts, problems with it, anything we should add, let me know.
-
-Like I said earlier, I can take roaming improvements.
-
-> I'd prefer if we didn't have a whole bunch of people moving things
-> around, but feel free to edit it too.
-
-Sorry, I noticed this part only after I had edited the page :)
-
-> How much do we want to schedule for Sunday, if anything?
-
-I think it's better to not have any official programme on Sunday. We can
-meet and discuss in ad-hoc manner on Sunday.
-
--- 
-Kalle Valo
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+meh, no complains.
+---
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 43aeb69..72c7b5d 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -398,10 +398,10 @@ int ar9170_update_beacon(struct ar9170 *ar)
+ 	/* XXX: use skb->cb info */
+ 	if (ar->hw->conf.channel->band == IEEE80211_BAND_2GHZ)
+ 		ar9170_regwrite(AR9170_MAC_REG_BCN_PLCP,
+-				((skb->len + 4) << (3+16)) + 0x0400);
++				((skb->len + 4) << (3 + 16)) + 0x0400);
+ 	else
+ 		ar9170_regwrite(AR9170_MAC_REG_BCN_PLCP,
+-				((skb->len + 4) << (3+16)) + 0x0400);
++				((skb->len + 4) << 16) + 0x001b);
+ 
+ 	ar9170_regwrite(AR9170_MAC_REG_BCN_LENGTH, skb->len + 4);
+ 	ar9170_regwrite(AR9170_MAC_REG_BCN_ADDR, AR9170_BEACON_BUFFER_ADDRESS);
