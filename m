@@ -1,100 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55953 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59720 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555AbZFWN4y (ORCPT
+	with ESMTP id S1753201AbZFAMUW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 09:56:54 -0400
-Subject: [PATCH] cfg80211: move break statement to correct place
+	Mon, 1 Jun 2009 08:20:22 -0400
+Subject: Re: [GSoC 2009] Automation of testing using mac80211_hwsim and
+ Orbit -  status report 01
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 23 Jun 2009 15:56:53 +0200
-Message-Id: <1245765413.21314.8.camel@johannes.local>
+To: Georgy Berdyshev <codingmaster@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
+References: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5ztXBkINlwhm9oHP4tUC"
+Date: Mon, 01 Jun 2009 14:20:09 +0200
+Message-Id: <1243858809.5299.15.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move a break statement to the correct place _after_ the
-#endif, otherwise w/o WIRELESS_EXT things break badly.
-Also, while touching this code, do a cleanup and assign
-dev->ieee80211_ptr to a new variable.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/core.c |   31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+--=-5ztXBkINlwhm9oHP4tUC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/wireless/core.c	2009-06-23 14:51:41.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2009-06-23 14:52:11.000000000 +0200
-@@ -526,52 +526,53 @@ static int cfg80211_netdev_notifier_call
- 					 void *ndev)
- {
- 	struct net_device *dev = ndev;
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev;
- 
--	if (!dev->ieee80211_ptr)
-+	if (!wdev)
- 		return NOTIFY_DONE;
- 
--	rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
-+	rdev = wiphy_to_dev(wdev->wiphy);
- 
--	WARN_ON(dev->ieee80211_ptr->iftype == NL80211_IFTYPE_UNSPECIFIED);
-+	WARN_ON(wdev->iftype == NL80211_IFTYPE_UNSPECIFIED);
- 
- 	switch (state) {
- 	case NETDEV_REGISTER:
- 		mutex_lock(&rdev->devlist_mtx);
--		list_add(&dev->ieee80211_ptr->list, &rdev->netdev_list);
-+		list_add(&wdev->list, &rdev->netdev_list);
- 		if (sysfs_create_link(&dev->dev.kobj, &rdev->wiphy.dev.kobj,
- 				      "phy80211")) {
- 			printk(KERN_ERR "wireless: failed to add phy80211 "
- 				"symlink to netdev!\n");
- 		}
--		dev->ieee80211_ptr->netdev = dev;
-+		wdev->netdev = dev;
- #ifdef CONFIG_WIRELESS_EXT
--		dev->ieee80211_ptr->wext.default_key = -1;
--		dev->ieee80211_ptr->wext.default_mgmt_key = -1;
-+		wdev->wext.default_key = -1;
-+		wdev->wext.default_mgmt_key = -1;
- #endif
- 		mutex_unlock(&rdev->devlist_mtx);
- 		break;
- 	case NETDEV_GOING_DOWN:
--		if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_ADHOC)
-+		if (wdev->iftype != NL80211_IFTYPE_ADHOC)
- 			break;
--		if (!dev->ieee80211_ptr->ssid_len)
-+		if (!wdev->ssid_len)
- 			break;
- 		cfg80211_leave_ibss(rdev, dev, true);
- 		break;
- 	case NETDEV_UP:
- #ifdef CONFIG_WIRELESS_EXT
--		if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_ADHOC)
-+		if (wdev->iftype != NL80211_IFTYPE_ADHOC)
- 			break;
--		if (!dev->ieee80211_ptr->wext.ibss.ssid_len)
-+		if (!wdev->wext.ibss.ssid_len)
- 			break;
--		cfg80211_join_ibss(rdev, dev, &dev->ieee80211_ptr->wext.ibss);
--		break;
-+		cfg80211_join_ibss(rdev, dev, &wdev->wext.ibss);
- #endif
-+		break;
- 	case NETDEV_UNREGISTER:
- 		mutex_lock(&rdev->devlist_mtx);
--		if (!list_empty(&dev->ieee80211_ptr->list)) {
-+		if (!list_empty(&wdev->list)) {
- 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
--			list_del_init(&dev->ieee80211_ptr->list);
-+			list_del_init(&wdev->list);
- 		}
- 		mutex_unlock(&rdev->devlist_mtx);
- 		break;
 
+> By the end of the week, I did start to have some strange problems with
+> running hostapd (via nl80211) and using the
+> mac80211_hwsim kernel driver.
+
+It seems it would help if you explained what the strange problems are :)
+
+johannes
+
+--=-5ztXBkINlwhm9oHP4tUC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKI8d2AAoJEODzc/N7+QmaDh0P/2uB8jUTkuUftMXhTn6oFmuX
+nj8jUJXkRjTl0pf/6chn7vRdprgrmQl9mUL1G3oXdxhcbhOUemx2EItotyNM2q+y
+Jy0EfrCZRdgk7M4nsnBd6FAFDOhdwqKYApu+uiQrrbwlZT7kjKxXUAiwc6lCJ6fw
+51F7vfaJjPXGV/w9bCW0CR1ANQeHB59X+qF+szx9np0CM++yhbbuk1ayGzIu/e/2
+CM21hI329DH6LeDN4nHiJc0Lt/0TmYJk6Kb5ASXAF2+8DbFTb+5WSPohp17QG1sn
+0gE8n3YLZvzJ/k0MoZrg1lnH+XgUTczNDy5ajdsLKta54ldaa7EbXGIEUnmKXooM
+KN1RSFoxk+OX8PTQMYchlPZKLUUBpUbeHEuIgifMESUnymZR2ldZxTDWMXjK2MWH
+oR39jkCTgp4jpK/98MdZ1pS9jDz9N2efMPOeDBK+kQZJgxD4DdE43YkPxIs+NaU6
+UWjSWntLN+2PtuvPFmdV0fsAXV3Y255egykhFN44Pzq7/NVNjHZOA6s25dmifGXW
+A8+Y6CnYdGCfGSGt+R1XihhB24DBsBLht8o1pSMre6KHWgiclf/FT4aj0dtQ27NS
+E/XFSLE0Iu65zqdDbUNfnIXVBI8/yTTnxY9fQxELKemoIuJzro056lSuqkLDSnHj
+n3OSwEnUd2hbZQsTbVJS
+=RsaQ
+-----END PGP SIGNATURE-----
+
+--=-5ztXBkINlwhm9oHP4tUC--
 
