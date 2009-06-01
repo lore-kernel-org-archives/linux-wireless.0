@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35830 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753530AbZFCVkk (ORCPT
+Received: from ip78-183-211-87.adsl2.static.versatel.nl ([87.211.183.78]:55095
+	"EHLO god.dyndns.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957AbZFAWWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 17:40:40 -0400
-Date: Wed, 3 Jun 2009 18:40:40 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090603214040.GD22809@khazad-dum.debian.net>
-References: <1243867620.3015.17.camel@localhost.localdomain> <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk> <1243932109.3192.73.camel@localhost.localdomain> <20090603041030.GB10464@khazad-dum.debian.net> <1244034216.22679.22.camel@localhost.localdomain>
-MIME-Version: 1.0
+	Mon, 1 Jun 2009 18:22:47 -0400
+Date: Tue, 2 Jun 2009 00:22:46 +0200
+From: henk <henk@god.dyndns.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k in AP mode works!! (but sometimes with an oops, and a panic)
+Message-ID: <20090601222246.GA32667@god.dyndns.org>
+References: <20090524222027.GA32198@god.dyndns.org> <b6c5339f0905270550y50a925fbk4b891db8bbb9d9b@mail.gmail.com> <20090527184956.GA14462@god.dyndns.org> <20090528234702.GA9455@hash.localnet> <20090529220222.GA22246@god.dyndns.org> <b6c5339f0905291806j4a7f99f4r9fb40a6a0182cf52@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244034216.22679.22.camel@localhost.localdomain>
+In-Reply-To: <b6c5339f0905291806j4a7f99f4r9fb40a6a0182cf52@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 03 Jun 2009, Dan Williams wrote:
-> On Wed, 2009-06-03 at 01:10 -0300, Henrique de Moraes Holschuh wrote:
-> > On Tue, 02 Jun 2009, Marcel Holtmann wrote:
-> > > Forget about this EPO crap. That is just a stupid concept anyway.
-> > 
-> > Is it?  So, if I use the _hardware switch_ on my laptop to kill all
-> > internal radios, it shouldn't be enforced by the OS on extra radios I
-> > plugged?  Or on shitty internal WLAN cards that doesn't tie properly to
-> > the mini-pci and mini-pcie hardware kill lines?
-> > 
-> > And any userspace PoS program can decide to bring up such radios that
-> > are not hardware-killed even if I am clearly trying to disable them all?
+On Fri, May 29, 2009 at 09:06:57PM -0400, Bob Copeland wrote:
+> On Fri, May 29, 2009 at 6:02 PM, henk <henk@god.dyndns.org> wrote:
+> > Wouldn't it be better to reverse the deinitialisation? To make sure we
+> > dont hit an interrupt in between? Like:
+> >
+> > ? ? ? ?ath5k_beacon_disable(sc);
+> > ? ? ? ?ec->vif = NULL;
 > 
-> You hardkilled.  Of course it should bring down everything.  If you
-> don't want to hardkill, then disable specific radios via /sys or some
-> UI.  The hardswitch is the "eject" button.
+> Yeah, actually I gave this some thought but I can't now rationalize
+> the current order, so maybe I just goofed.
+> 
+> -- 
+> Bob Copeland %% www.bobcopeland.com
 
-That's exactly my point.  I want EPO to mean "no, you cannot turn this crap
-on, GO AWAY" for anyone but root (or whomever SELinux allowed to do it,
-etc).
+I have tested hostapd+ath5k (only master mode without VLANs) for a few days
+now with the new patches. System seems stable no glitches found.
 
-> Other types like pushbutton switches (Fn+F5, HP laptop touchbuttons,
-> etc) that *aren't* hardswitches connected to a GPIO on the wifi device
-> should probably just bring up some window letting you pick what gets
-> rfkilled.
+I have aggregated your patches against compat-wireless-2009-06-01:
+	http://bugzilla.kernel.org/show_bug.cgi?id=13381#c5
 
-Which reminds me, we STILL don't have a proper keycode for that.  Care to
-propose one to Dmitry?
+I would say a new milestone in ath5k driver development has been reached 
+with working AP support.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Thanks!
+
+Henk
