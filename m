@@ -1,87 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:41386 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238AbZFMDVc convert rfc822-to-8bit (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:57700 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754085AbZFAMqI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 23:21:32 -0400
+	Mon, 1 Jun 2009 08:46:08 -0400
+Date: Mon, 1 Jun 2009 09:45:53 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+Message-ID: <20090601124553.GE11011@khazad-dum.debian.net>
+References: <1243524688.10632.0.camel@johannes.local> <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com> <1243763887.19302.29.camel@johannes.local> <1243796509.6570.35.camel@localhost.localdomain> <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <20090601122839.GB11011@khazad-dum.debian.net> <1243859931.5299.17.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-Date: Fri, 12 Jun 2009 23:21:34 -0400
-Message-ID: <9e4733910906122021k4568df6rd80fb915b64ac12@mail.gmail.com>
-Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
-From: Jon Smirl <jonsmirl@gmail.com>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1243859931.5299.17.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
-Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
-> Hi,
->
-> As a part of research activities the Embedded Systems - Open Platform Group
-> from Siemens Corporate Technology we are working on adding support for
-> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
-> implementation is neither certified nor even feature complete. However
-> we'd like to present current state of our patchset to the Linux developers
-> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
-> but more like an RFC.
->
-> The project page is available at http://apps.sourceforge.net/trac/linux-zigbee
-> with source code of kernel part available from git at
-> http://zigbee-linux.git.sourceforge.net, mirrored for convenience at
-> git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
->
-> The source code for userspace utils is available from git at
-> http://linux-zigbee.git.sourceforge.net/
+Hi Johannes!
 
-The Zigbee alliance requires a minimum of $3,500/yr from any company
-making a product based on the spec. How are you going to reconcile
-this requirement with the GPL? They exempt non-commercial users but
-the GPL doesn't allow code to be free for one purpose and pay for
-another.
+On Mon, 01 Jun 2009, Johannes Berg wrote:
 
-"The ZigBee Specification is available to individuals, companies and
-institutions free of charge for all non-commercial purposes (including
-university research, technical evaluation, and development of
-non-commercial software, tools, or documentation). For ease of use,
-clearly marked errata have been incorporated into this document. These
-errata may not have been subjected to an Intellectual Property review,
-and as such, may contain undeclared Necessary Claims. No part of this
-specification may be used in development of a product for sale without
-becoming a member of ZigBee Alliance. Copyright © ZigBee Alliance,
-Inc. (2005). All rights Reserved. This information within this
-document is the property of the ZigBee Alliance and its use and
-disclosure are restricted.Elements of ZigBee Alliance specifications
-may be subject to third party intellectual property rights, including
-without limitation, patent, copyright or trademark rights (such a
-third party may or may not be a member of ZigBee). ZigBee is not
-responsible and shall not be held responsible in any manner for
-identifying or failing to identify any or all such third party
-intellectual property rights. This document and the information
-contained herein are provided on an “AS IS” basis and ZigBee DISCLAIMS
-ALL WARRANTIES EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO (A)
-ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE
-ANY RIGHTS OF THIRD PARTIES (INCLUDING WITH-OUT LIMITATION ANY
-INTELLECTUAL PROPERTY RIGHTS INCLUDING PATENT, COPYRIGHT OR TRADEMARK
-RIGHTS) OR (B) ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR
-A PARTICULAR PURPOSE, TITLE OR NON-INFRINGEMENT. IN NO EVENT WILL
-ZIGBEE BE LIABLE FOR ANY LOSS OF PROF-ITS, LOSS OF BUSINESS, LOSS OF
-USE OF DATA, INTERRUPTION OF BUSINESS, OR FOR ANY OTHER DIRECT,
-INDIRECT, SPECIAL OR EXEMPLARY, INCIDENTIAL, PUNITIVE OR CONSEQUENTIAL
-DAMAGES OF ANY KIND, IN CONTRACT OR IN TORT, IN CONNECTION WITH THIS
-DOCUMENT OR THE INFORMATION CONTAINED HEREIN, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH LOSS OR DAMAGE. All Company, brand and product
-names may be trademarks that are the sole property of their respective
-owners. <P>The above notice and this paragraph must be included on all
-copies of this document that are made. ZigBee Alliance, Inc.2400
-Camino Ramon, Suite 375San Ramon, CA 94583"
+> On Mon, 2009-06-01 at 09:28 -0300, Henrique de Moraes Holschuh wrote:
+> > On Mon, 01 Jun 2009, Alan Jenkins wrote:
+> > >> See, Henrique says that the use case is Thinkpads which store the
+> > >> previous state in the BIOS. But that matters to you only if you use a
+> > >> mixture of operation systems, which we don't have to support.
+> > 
+> > Well, if you do all in userspace, how do you propose to avoid the usual race
+> > conditions of the sort "radio starts on, but it should have started off",
+> > etc?  You'd have to kick the radios off on rfkill module load for safety,
+> > and that will also cause nastyness (it kicks my built-in wlan
+> > (eeepcargh)/bluetooth(most)/wwan(most) off bus, then hotplugs it again!).
+> 
+> Have you bothered reading the code? If you turn things off with
+> CHANGE_ALL that applies to hot-plugged devices too.
+
+I mean platform devices which remember state.  Those will be turned on/off
+by the platform firmware at boot and often at resume time, and overriding
+them in rfkill (especially if it is done later, by a rfkilld) will cause
+some flicker (on/off/on, off/on/off) in certain situations.  
+
+This is a regression, because the current interface doesn't suffer this
+limitation.
+
+Also, remember that this on/off stuff CAN mean kicking devices off-bus,
+that's very usual for everything other than WLAN, so it can be a lot more
+annoying than just turning a transmitter off for a moment.
+
+I certainly expect whatever the current global state to be applied to all
+new devices getting registered, that is not something I would complain
+about.
 
 -- 
-Jon Smirl
-jonsmirl@gmail.com
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
