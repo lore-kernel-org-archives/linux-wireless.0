@@ -1,99 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:2768 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbZFHSLT convert rfc822-to-8bit (ORCPT
+Received: from mail201.messagelabs.com ([216.82.254.211]:21844 "EHLO
+	mail201.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297AbZFAJxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 14:11:19 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1363793wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 11:11:20 -0700 (PDT)
+	Mon, 1 Jun 2009 05:53:34 -0400
+Message-ID: <4A23A51C.2000608@digi.com>
+Date: Mon, 1 Jun 2009 11:53:32 +0200
+From: Luis Galdos <luis.galdos@digi.com>
 MIME-Version: 1.0
-In-Reply-To: <200906081720.59594.mb@bu3sch.de>
-References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
-	 <200906081720.59594.mb@bu3sch.de>
-Date: Mon, 8 Jun 2009 20:04:33 +0200
-Message-ID: <83a869cd0906081104m2ecdf049rdcc7694f0974ca28@mail.gmail.com>
-Subject: Re: [PATCH] b43 add harware tkip
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Dan Williams <dcbw@redhat.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pierre Ossman <drzeus@drzeus.cx>
+Subject: Re: [LIBERTAS-SDIO]  Support for single transfer blocks?
+References: <4A08392F.70108@digi.com>	 <20090512231150.bc0c65c6.akpm@linux-foundation.org> <1242223408.11182.34.camel@localhost.localdomain>
+In-Reply-To: <1242223408.11182.34.camel@localhost.localdomain>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Dan Williams wrote:
+> On Tue, 2009-05-12 at 23:11 -0700, Andrew Morton wrote:
+>> Let's Cc the wireless development list.
+> 
+> And lets CC the MMC subsystem maintainer and original author of libertas_sdio too, so
+> we can get an informed opinion :)
+> 
+> What firmware version are you using?
+The installed firmware version is 9.70.3p24 (downloaded from the Marvell's website).
 
-thanks for your review
+> What SDIO controller is this?  Has this controller been validated by Marvell for use
+> with the 8686? (not that that is required or anything, just curious).
+The uC is from Digi (NS9215) and its SDIO-port hasn't been validated by Marvell.
 
-On Mon, Jun 8, 2009 at 5:20 PM, Michael Buesch<mb@bu3sch.de> wrote:
-> Well, first thing is that I do think there is a reason Broadcom removed hw TKIP
-> support from their drivers. ;)
->
-> But well, let's look at the patch.
->
->> +     /* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
->> +#if 0
->>       b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
->>       b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
->>       b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
->>       b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
->> +#endif
->
-> This looks interesting. Care to find out the correct offsets and submit
-> this fix as a separate patch?
->
-May be if I have time. But a comment suggest it is not used ?
->> +     if (algorithm == B43_SEC_ALGO_TKIP) {
->> +             /*
->> +              * We should provide an initial iv32, phase1key pair.
->> +              * We could start with iv32=0 and compute the corresponding
->> +              * phase1key, but this mean calling ieee80211_get_tkip_key
->> +              * with a fake skb (or export other tkip function).
->> +              * Because we are lazy we hope iv32 won't start with
->> +              * 0xffff and let's b43_mac_update_tkip_key provide a
->> +              * correct pair.
->> +              */
->> +             rx_tkip_phase1_write(dev, index, 0xffff, (u16*)buf);
->> +     } else /* clear it */
->> +             rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
->
-> Why do you write phase1, if TKIP is not used?
-I clear the value in shared memory. This help debugging. But I could
-remove it if you want.
->
->> +     /* FIXME : for b43_new_kidx_api, there can be 54 key
->> +      * instead of 50 in RCMTA and TKIPTSCTTAK.
->> +      */
->
-> I don't understand this comment.
-if  b43_new_kidx_api is true :
-- we set max_nr_keys to 58
-- we program B43_MMIO_RCMTA_COUNT to 50
-- in b43_key_write we can allocate key up to index 58 (4 for default,
-54 for sta)
+> All the information I have (up to firmware V10) references a block size of 32 bytes.
+> The main firmware is transferred in 32-byte blocks using CMD 53, with a maximum number
+> of 16 blocks transferred in a single CMD 53 write depending on how much data the helper
+> firmware can accept in single write.  The available vendor drivers also use a 32-byte
+> block size.
+That's right. I only was surprised that the SD8686 accepts data blocks of 512 bytes in a 
+single transfer too. This is just nice for SDIO-ports that only support single blocks :) 
+(like the NS9215). Anyway, Pierre has informed me that the SD8686 has need of multiple 
+blocks support, and the NS9215 doesn't. So, the problem is the controller.
 
-But there is only 50 entries for TKIPTSCTTAK, and a comment on bcm-v4
-suggest there is 50 entries for RCMTA. So if there more than 50
-station we will overflow RCMTA and TKIPTSCTTAK.
 
-So the fix will be do to something like
-dev->max_nr_keys = (dev->dev->id.revision >= 5) ? 58 : 20;
-if (b43_new_kidx_api())
-dev->max_nr_keys -= 4;
+> Dan
 
->
->> -             if (algorithm == B43_SEC_ALGO_TKIP) {
->> -                     /* FIXME: No TKIP hardware encryption for now. */
->> +             if (algorithm == B43_SEC_ALGO_TKIP &&
->> +                             (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
->> +                                key->flags & IEEE80211_KEY_FLAG_WMM_STA )) {
->> +                     /* We support only one rx queue (no QOS) and pairwise key */
->
-> This comment doesn't really make sense to me, too.
-> What does QoS have to do with the RX queue?
-each QOS queue got it's own tkip counters (iv16, iv32) (check tkip.c
-software implementation for more info).
+Thanks and sorry for the delayed answer (I was on vacations),
 
-> Next time please inline the patch ;)
-I will try, but I don't know if my mailer handle it.
 
-Gregor
+-- 
+Luis Galdos
+
