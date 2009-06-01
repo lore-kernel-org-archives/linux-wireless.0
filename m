@@ -1,96 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42688 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbZFVF5G (ORCPT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37648 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752488AbZFAP0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 01:57:06 -0400
-Subject: Re: [RFC/HACK] net/compat/wext: allow sending different messages
- to compat tasks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <200906220003.22458.arnd@arndb.de>
-References: <1245589835.5003.2.camel@johannes.local>
-	 <200906220003.22458.arnd@arndb.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OgOcFHhm4T8zG82A3Yj1"
-Date: Mon, 22 Jun 2009 07:57:04 +0200
-Message-Id: <1245650224.4180.5.camel@johannes.local>
+	Mon, 1 Jun 2009 11:26:24 -0400
+Date: Mon, 1 Jun 2009 16:27:32 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Subject: Re: [PATCH 09/10] ieee802154: add serial dongle driver
+Message-ID: <20090601162732.4a070c43@lxorguk.ukuu.org.uk>
+In-Reply-To: <1243868091-5315-10-git-send-email-dbaryshkov@gmail.com>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-5-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-6-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-9-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-10-git-send-email-dbaryshkov@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> +	zbdev->pending_data = kzalloc(zbdev->pending_size, GFP_KERNEL);
+> +	if (!zbdev->pending_data) {
+> +		printk(KERN_ERR "%s(): unable to allocate memory\n", __func__);
+> +		zbdev->pending_id = 0;
+> +		zbdev->pending_size = 0;
+> +		return -ENOMEM;
+> +	}
+> +	memcpy(zbdev->pending_data, buf, len);
+> +
+> +	return _send_pending_data(zbdev);
 
---=-OgOcFHhm4T8zG82A3Yj1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Where do you check that the tty has enough space ?
 
-On Mon, 2009-06-22 at 00:03 +0200, Arnd Bergmann wrote:
-> On Sunday 21 June 2009, Johannes Berg wrote:
-> > --- wireless-testing.orig/net/compat.c  2009-06-19 17:50:30.000000000 +=
-0200
-> > +++ wireless-testing/net/compat.c       2009-06-19 17:53:13.000000000 +=
-0200
-> > @@ -782,16 +782,18 @@ asmlinkage long compat_sys_socketcall(in
-> >                 ret =3D sys_socketpair(a0, a1, a[2], compat_ptr(a[3]));
-> >                 break;
-> >         case SYS_SEND:
-> > -               ret =3D sys_send(a0, compat_ptr(a1), a[2], a[3]);
-> > +               ret =3D sys_send(a0, compat_ptr(a1), a[2], a[3] | MSG_C=
-MSG_COMPAT);
-> >                 break;
-> >         case SYS_SENDTO:
-> > -               ret =3D sys_sendto(a0, compat_ptr(a1), a[2], a[3], comp=
-at_ptr(a[4]), a[5]);
-> > +               ret =3D sys_sendto(a0, compat_ptr(a1), a[2], a[3] | MSG=
-_CMSG_COMPAT,
-> > +                                compat_ptr(a[4]), a[5]);
-> >                 break;
-> >         case SYS_RECV:
-> > -               ret =3D sys_recv(a0, compat_ptr(a1), a[2], a[3]);
-> > +               ret =3D sys_recv(a0, compat_ptr(a1), a[2], a[3] | MSG_C=
-MSG_COMPAT);
-> >                 break;
-> >         case SYS_RECVFROM:
-> > -               ret =3D sys_recvfrom(a0, compat_ptr(a1), a[2], a[3], co=
-mpat_ptr(a[4]), compat_ptr(a[5]));
-> > +               ret =3D sys_recvfrom(a0, compat_ptr(a1), a[2], a[3] | M=
-SG_CMSG_COMPAT,
-> > +                                  compat_ptr(a[4]), compat_ptr(a[5]));
-> >                 break;
-> >         case SYS_SHUTDOWN:
-> >                 ret =3D sys_shutdown(a0,a1);
->=20
-> I suppose if you do this, you also need to introduce a
-> compat_sys_{send,sendto,recv,recvfrom} entry point
-> for architectures that do not go through sys_socket but
-> call sys_{send,sendto,recv,recvfrom} directly. I think
-> this is only sparc and mips.
 
-Thanks, good catch, I'll take a look. Since I only care about recv(from)
-I guess it would be better to only do those.
+> +	case STATE_WAIT_COMMAND:
+> +		if (is_command(c)) {
+> +			zbdev->id = c;
+> +			zbdev->state = STATE_WAIT_PARAM1;
+> +		} else {
+> +			cleanup(zbdev);
+> +			printk(KERN_ERR "%s, unexpected command id: %x\n", __func__, c);
 
-johannes
+In all these ERR cases what stops a remote device from having fun spewing
+garbage at you and filling the log ?
 
---=-OgOcFHhm4T8zG82A3Yj1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+>
+> +	 * channels 0-10 are not valid for us */
+> +	BUG_ON(channel < 11 || channel > 26);
+> +	/* ...  but our crappy firmware numbers channels from 1 to 16
+> +	 * which is a mystery. We suould enforce that using PIB API
+> +	 * but additional checking here won't kill, and gcc will
+> +	 * optimize this stuff anyway. */
+> +	BUG_ON((channel - 10) < 1 && (channel - 10) > 16);
 
------BEGIN PGP SIGNATURE-----
+Shouldn't be driver specific hacks in the ldisc surely - or is the ldisc
+only applicable to a specific single bit of hardware ?
 
-iQIcBAABAgAGBQJKPx0sAAoJEODzc/N7+QmaUQwP/RCoU7lJM8u1ZpJvLUd6xmPR
-4sgVDqOLVZql8VRp1WWnHw4jY0wyC3nX7UHqKFgSZNinWDADR06oejHzcRzwA3HM
-e+6j+txKX8EdZQM+fLUBnSary7UMvNNwc5ayZt7Fv6WnZgPmD61BBvqI8LlcMGCg
-j5bIn3l0OqV3Vrc3tyqu2hcduzBzEHPT0Ok9biSVbnKVdyrgPBTGQPOSC4Emfh5o
-Zn4533EmqIn69tV1/vOyPzgCBcRXomdhlG0IAKUpDJe4s9GVZH/Wze9k8Kei5+8T
-Iiwds4d2ap1eQVE1a6CyQ0D4yVHaywYRch+sjWpRFsZNrnj039dB8gUW2HWV3g8s
-ivx4YbMyLuN0++8DONqq8//q/RHdZat3rIErjy/xOUCY5T6U6jStKlNCPJ0RL7O4
-FAKEXGFIvLkZN3ekFtgWhwAYfnm53/qEGkLY0rOiDnTR8GdBcxGdTbBUEltVljAw
-lggxpfGOkyI7y+KE4b2ChCZnN2FOR6O8zFXOHB9LO924T5iPNMdMAJfpotYjBMDK
-jS3O18NWFI+sXYpFhqNxVYdnC4yMzBkSaxHPNUrqt/mB92Bj2AVHR6I18Fm1GgBN
-KA0xVWS4WtPE0GCkZndsxyUVGRQZp+mUokV2qvh/pkQIOFWfMiWJsGXySKaeL5bf
-X0gWSGUpKKWxc5v34cCW
-=nFKK
------END PGP SIGNATURE-----
+> + minor = tty->index + tty->driver->minor_start;
+> +	zbdev->dev->parent = class_find_device(tty_class, NULL, &minor, dev_minor_match);
+> +
 
---=-OgOcFHhm4T8zG82A3Yj1--
+That sort of thing shouldn't be buried in the depths of a driver. I'm not
+entirely averse to that sort of thing but it belongs in a helper in the
+tty layer.
+
+> +	zbdev->tty = tty;
+
+Refcounting ?
+
+> +	cleanup(zbdev);
+> +
+> +	tty->disc_data = zbdev;
+> +	tty->receive_room = MAX_DATA_SIZE;
+> +	tty->low_latency = 1;
+
+You can't go around mashing driver internal values - many drivers don't
+support low_latency mode and this will make them crash.
+
+> +
+> +	/* FIXME: why is this needed. Note don't use ldisc_ref here as the
+> +	   open path is before the ldisc is referencable */
+> +
+
+[Because otherwise after a SET_LDISC there may be bits from the old stuff
+ left over - this one will go away as I finish the ldisc switching
+ rewrite that is in the ttydev tree]
+
+> +/*
+> + * Called when the tty is put into another line discipline or it hangs up. We
+> + * have to wait for any cpu currently executing in any of the other zb_tty_*
+> + * routines to finish before we can call zb_tty_close and free the
+> + * zb_serial_dev struct. This routine must be called from process context, not
+> + * interrupt or softirq context.
+> + */
+> +static void
+> +ieee802154_tty_close(struct tty_struct *tty)
+> +{
+> +	struct zb_device *zbdev;
+> +
+> +	zbdev = tty->disc_data;
+> +	if (NULL == zbdev) {
+> +		printk(KERN_WARNING "%s: match is not found\n", __func__);
+> +		return;
+> +	}
+> +
+> +	tty->disc_data = NULL;
+> +	zbdev->tty = NULL;
+
+Again you want a refcount on these I suspect. You may actually be safe
+anyway but it would be cleaner to take/drop refs.
+
+
+
+> +static int
+> +ieee802154_tty_ioctl(struct tty_struct *tty, struct file *file, unsigned int cmd, unsigned long arg)
+> +{
+> +	struct zb_device *zbdev;
+> +	struct ifreq ifr;
+> +	int err;
+> +	void __user *argp = (void __user *) arg;
+> +
+> +	pr_debug("cmd = 0x%x\n", cmd);
+> +	memset(&ifr, 0, sizeof(ifr));
+> +
+> +	zbdev = tty->disc_data;
+> +	if (NULL == zbdev) {
+> +		pr_debug("match is not found\n");
+> +		return -EINVAL;
+> +	}
+
+If that is NULL it's a serious bug so WARN on it I think
+
+> +	default:
+> +		pr_debug("Unknown ioctl cmd: %u\n", cmd);
+> +		return -EINVAL;
+
+This will break default ioctl processing. You probably want to call into
+some of the generic handlers at this point depending upon your hardware.
+Either way -EINVAL is wrong.
+
+> +	}
+> +	return 0;
+
+Unreachable
+
+> +static void
+> +ieee802154_tty_receive(struct tty_struct *tty, const unsigned char *buf, char *cflags, int count)
+> +{
+> +	struct zb_device *zbdev;
+> +	int i;
+> +
+> +	/* Debug info */
+> +	printk(KERN_INFO "%lu %s, received %d bytes:", jiffies, __func__, count);
+> +	for (i = 0; i < count; ++i)
+> +		printk(KERN_CONT " 0x%02X", buf[i]);
+> +	printk(KERN_CONT "\n");
+
+I don't think the above is meant to be there....
 
