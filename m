@@ -1,89 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f216.google.com ([209.85.220.216]:63432 "EHLO
-	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753933AbZFBQvJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45865 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbZFAPxa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 12:51:09 -0400
-Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
-From: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
-	<alejandro.riveira@gmail.com>
-Reply-To: alejandro.riveira@gmail.com
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-In-Reply-To: <200906021834.40009.IvDoorn@gmail.com>
-References: <1243247687.5322.8.camel@varda> <1243351397.4888.2.camel@varda>
-	 <1243951292.22942.1.camel@varda>  <200906021834.40009.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xqSLr7diPuRo3bwbiEDD"
-Date: Tue, 02 Jun 2009 18:51:05 +0200
-Message-Id: <1243961465.9894.3.camel@varda>
+	Mon, 1 Jun 2009 11:53:30 -0400
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090601155020.GC15485@khazad-dum.debian.net>
+References: <1243841639.5299.8.camel@johannes.local>
+	 <4A238EA2.4040106@tuffmail.co.uk>
+	 <20090601122839.GB11011@khazad-dum.debian.net>
+	 <1243859931.5299.17.camel@johannes.local>
+	 <20090601124553.GE11011@khazad-dum.debian.net>
+	 <1243860606.5299.21.camel@johannes.local>
+	 <20090601133351.GI11011@khazad-dum.debian.net>
+	 <1243866545.5299.25.camel@johannes.local>
+	 <20090601153620.GB15485@khazad-dum.debian.net>
+	 <1243870669.5299.29.camel@johannes.local>
+	 <20090601155020.GC15485@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Lh8mnSBon0Si2dXY56t2"
+Date: Mon, 01 Jun 2009 17:53:25 +0200
+Message-Id: <1243871606.5299.30.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-xqSLr7diPuRo3bwbiEDD
-Content-Type: text/plain; charset="UTF-8"
+--=-Lh8mnSBon0Si2dXY56t2
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-El mar, 02-06-2009 a las 18:34 +0200, Ivo van Doorn escribi=C3=B3:
-> On Tuesday 02 June 2009, Alejandro Riveira Fern=C3=A1ndez wrote:
+On Mon, 2009-06-01 at 12:50 -0300, Henrique de Moraes Holschuh wrote:
 
-[...]
-
-> > ICMP ECHO REQUEST
-> >=20
-> > Any advance?
+> Yes, it "calls itself" right now... so I can certainly do that :)
 >=20
-> Well I checked the dumps from the bugreport, but like I expected
-> the only difference is that with the slow speed the correct value
-> is written, and the fast speed the wrong value is written.
+> However, the in-driver shortcut means I give rfkill a kick and say "the s=
+oft
+> state has changed, deal with it", instead of "please change the state" wh=
+ich
+> it might deny due to EPO, etc.
 
-So my chip works better with incorrect values written in its registers?
+But ... now I'm confused ... why would the driver ever ask to change the
+state? Sounds like something that should be a button instead.
 
-/me confused
+johannes
 
-What about other chips out there do they prefer wrong values too ;)
-Maybe what we thought wrong values are not that wrong ?
-
-/me stops rambling
-
-> I couldn't find anything else interesting in it... :(
-
-Thanks anyway.
-
->=20
-> Ivo
---=20
-OOP to me means only messaging, local retention and protection and
-hiding of state-process, and extreme late-binding of all things. It can
-be done in Smalltalk and in LISP. There are possibly other systems in
-which this is possible, but I'm not aware of them.
-                                                      -- Alan Kay --
-
---=-xqSLr7diPuRo3bwbiEDD
+--=-Lh8mnSBon0Si2dXY56t2
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Esto es una parte de mensaje firmado digitalmente
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJKJVhzAAoJEDO4iEReSTB2fg0QAML3N8nusJHAQ2+8+MGmspnA
-D5Zzmq5Wy03DSY4QP2yqXOE4B/nS9iEtBEtWXYt5t0NjuKySKykgNj9ZTQB87AoP
-uX1Ezuw1JW3yQ3nBpdKqNivPbXX9+hRvsvi7fVy5tt3CR1aD70tv09C5gsi7qKYY
-OhZaR72X5IArPkdyv+lGx1PrHWF+KB255L3iJ3rE+nBSWCHMS0n+EOUzGTlAuCpI
-mmN2wAJt32mpsuvLgTsFWu1r98yyQR8f5c9GzFvg+YpLkQWVz4nnNfpT/5g2ii3P
-AVJsFLMlGfr0luHYTf0M5c55J5A4nxZq0C4zXtb3yRmrXW2jCfp5w9UEq2lsYR/I
-23wW5RBJDSvb+VIS3hsvBv+awA5X17F0aClTdfXNw02p1cZ7P516+S1M6q6w7Qq1
-o5s5OskEL8aLbKQ7Ex2Dw1oxjQmUtNAiigo0z5NALNUSAG//RAYEA2GMuPwReuAC
-Ov+f624eYU5bbDk99poYyLT/omPRG67MsknjEq5Zm6JCWvHdJQSS2VjFHJm3QXT5
-OFcvoS7bwdL5iBVNh4vrWvAeZSoeDJXv/j+T0ArXLkRAo8WBw36AB0XBz2Lcv426
-9khuD+IsLfxtvMbExeGkDicBESzFWXXJg02t+I0o9HyzSSxpOsm9rvuHwPr1g3n0
-UJhEzNS4xOXWTQKnDfpi
-=tvS2
+iQIcBAABAgAGBQJKI/ltAAoJEODzc/N7+QmaqZ8P/1sTc35eZfNyYkMZ9BrOfB3j
+gUB7jLiZbE0Sgs3Xez/JLXA091VrRpVXMkzCTkV/jvwlONv8HYFGNZV8O033oTLT
+Flzc6CT3BuwAKIoJLRKMy8vD/okxaKBEwcqNaAYj1FDhg6OKYntx0DhyjOb9tGks
+YeoLr3aRea5lFl8UjrDs6on5tG24PQjSPvU2npiukd13CqJGACw6pkyCR0a2wOyP
+L5FMVmlvfY27Jymrq+TPZUAQKvVIxtqgYCYLrZsxDHgyhw2yzlgKORUtbBgn0sOp
+r2mgnBqWf/jNxCNOw59zD10NmQUAyoAQXrzEPbYAI0arXwmaH/XJxXExcbli7VEr
+kx2PO+lFX7QF8cpqbgpDuqr7bgX74fIM1ObfkRJXlFPpStxGWzlPVI27Veb9nBuv
+wmNR7qahkCtAH8gOG9Ye8uT4bQz9FVXKdLpcKek6GREF9mO3VsE9x0W7DLrnMObb
+7hc0K0X/Rp552JpPe5OzRpTBqIwfX5PVZMhPnQn+7dfsU47Jhbl2JCwlu3p7ogBM
++jmbNAEBWuCV/y50N0KtmqCjIljsljEk7urK1qy6PNX19hD8dxUEYITmFSTha9mj
+RA4yoUkZVb1bOOVW3gPMEFzBnrQSu+m93N35vfZR8PMeutr7xs2LWBbVwUWjQ9n8
+MLIWgqnSaF7LgqaA2ONZ
+=yXok
 -----END PGP SIGNATURE-----
 
---=-xqSLr7diPuRo3bwbiEDD--
+--=-Lh8mnSBon0Si2dXY56t2--
 
