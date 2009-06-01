@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21389 "EHLO mail.atheros.com"
+Received: from smtp2-g21.free.fr ([212.27.42.2]:36945 "EHLO smtp2-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757173AbZFXN1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 09:27:14 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2009 06:27:17 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 5/7] ath9k: stop ani when the STA gets disconnected.
-Date: Wed, 24 Jun 2009 18:56:40 +0530
-Message-ID: <1245850002-26351-6-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1245850002-26351-5-git-send-email-senthilkumar@atheros.com>
-References: <1245850002-26351-1-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-2-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-3-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-4-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-5-git-send-email-senthilkumar@atheros.com>
+	id S1751636AbZFAVrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2009 17:47:14 -0400
+Message-ID: <4A244C5A.50307@free.fr>
+Date: Mon, 01 Jun 2009 23:47:06 +0200
+From: matthieu castet <castet.matthieu@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 vs b43legacy
+References: <loom.20090529T190620-42@post.gmane.org> <4A20505D.40908@lwfinger.net>
+In-Reply-To: <4A20505D.40908@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ANI is not required when the STA is disconnected. So stop it and enable
-ANI for adhoc and monitor mode.
+Larry Finger wrote:
+> Matthieu CASTET wrote:
+>> what's the difference between b43 and b43legacy ?
+>>
+>> >From a first point a view, it seems b43 is for core >= 5 and b43legacy for the
+>> other.
+>> There is also firmware difference : b43 need v4 and b43legacy need v3.
+> 
+> The firmware difference is the primary one.
+> 
+>> But v4 firmware seems to support core 4 (pcm4 & ucode4) and b43 code got some
+>> support for old chips (<5).
+> 
+> The Broadcom V4 drivers do have core 4 firmware embedded in them and it is
+> extracted by b43-fwcutter; however, b43 will _NOT_ work with core 4 chips. The
+> firmware loader will only find firmware for core 5 and later.
+Ok but what prevent b43 to support core 4 chip with v4 firmware like the 
+broadcom driver does ?
+I am aware that the current driver doesn't support it, but what are the 
+missing part to support it ?
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+If it is the difference from core4 from newer chip, why b43legacy 
+contains only few special case for core4 chip.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a977f80..81de792 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -950,6 +950,8 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 	} else {
- 		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info DISASSOC\n");
- 		sc->curaid = 0;
-+		/* Stop ANI */
-+		del_timer_sync(&sc->ani.timer);
- 	}
- }
- 
-@@ -2197,7 +2199,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
- 
--	if (conf->type == NL80211_IFTYPE_AP)
-+	if (conf->type == NL80211_IFTYPE_AP    ||
-+	    conf->type == NL80211_IFTYPE_ADHOC ||
-+	    conf->type == NL80211_IFTYPE_MONITOR)
- 		ath_start_ani(sc);
- 
- out:
--- 
-1.6.0.4
+> 
+> I suspect that any residual code for older chips left in b43 was missed. If you
+> want to prepare patches to remove such code, please do.
+Yes, I could prepare such patches
 
+Thanks
+
+Matthieu
+
+PS : I don't have core 4 chip nor plan to get some, I ask this out of 
+curiosity.
