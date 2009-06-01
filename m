@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39259 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbZFFRUU (ORCPT
+Received: from fmailhost03.isp.att.net ([207.115.11.53]:38282 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751838AbZFAWRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:20:20 -0400
-Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A2AA395.3060406@web.de>
-References: <4A2AA395.3060406@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1TlPAY/eThmWfywvyAKX"
-Date: Sat, 06 Jun 2009 19:20:08 +0200
-Message-Id: <1244308808.15640.4.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 1 Jun 2009 18:17:06 -0400
+Message-ID: <4A245361.9060807@lwfinger.net>
+Date: Mon, 01 Jun 2009 17:17:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: matthieu castet <castet.matthieu@free.fr>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 vs b43legacy
+References: <loom.20090529T190620-42@post.gmane.org> <4A20505D.40908@lwfinger.net> <4A244C5A.50307@free.fr>
+In-Reply-To: <4A244C5A.50307@free.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+matthieu castet wrote:
+> Larry Finger wrote:
+>> Matthieu CASTET wrote:
+>>> what's the difference between b43 and b43legacy ?
+>>>
+>>> >From a first point a view, it seems b43 is for core >= 5 and
+>>> b43legacy for the
+>>> other.
+>>> There is also firmware difference : b43 need v4 and b43legacy need v3.
+>>
+>> The firmware difference is the primary one.
+>>
+>>> But v4 firmware seems to support core 4 (pcm4 & ucode4) and b43 code
+>>> got some
+>>> support for old chips (<5).
+>>
+>> The Broadcom V4 drivers do have core 4 firmware embedded in them and
+>> it is
+>> extracted by b43-fwcutter; however, b43 will _NOT_ work with core 4
+>> chips. The
+>> firmware loader will only find firmware for core 5 and later.
+> Ok but what prevent b43 to support core 4 chip with v4 firmware like the
+> broadcom driver does ?
+> I am aware that the current driver doesn't support it, but what are the
+> missing part to support it ?
 
---=-1TlPAY/eThmWfywvyAKX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The firmware loader code is the first step. Beyond that, I have no idea.
 
-On Sat, 2009-06-06 at 19:12 +0200, Jan Kiszka wrote:
+> If it is the difference from core4 from newer chip, why b43legacy
+> contains only few special case for core4 chip.
 
-> On the other hand, the AP firmware doesn't work on my DWA-160a anyway
-> ("device is in a bad state"),=20
+I do not know other than that is what the specs called for.
 
-This is normal. Not sure what's wrong with that, but I don't really care
-either.
+> PS : I don't have core 4 chip nor plan to get some, I ask this out of
+> curiosity.
 
-johannes
+I do have such a chip, but I use it to verify b43legacy code.
 
---=-1TlPAY/eThmWfywvyAKX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKqVEAAoJEODzc/N7+QmaReQP/iQzlR6id27EP7GoLrJTxgIH
-tkiXeVkzVko90Yr1ieyw3N6rvOb2XFkN9/MZBH/436MCAXzmp+4ofl2nOCMflXlC
-dSatSKBYFsogH+CywY3Qgm2C06sRnqu6Ng5mnmDvDD3YUNEEtTc5sS1vVM/G2wUR
-KMapuLU76r80YcIHLxvsdU70ucR1uobFtgs6bXisbd9RN5FR6FHZ32H5d1641JG4
-4kAyZA/vI2awym9d8GhNP39niWh8SRdyCEgXyMTeocllkCeVorTUpL87lEIFP/UO
-L+ZQ2BSVKumP/1qB7t2KSgpJ0HH66oBUp3v9FBp+GoKBwTbL+fh8oTagLq6wJPcS
-eZbb6exJwUex+xujmaIAsQ/zOjvk7wkPxqG8bdFP7q0j+z0NSn4rCjTbYr3Q2tnj
-+ou1fUv7yQSsnpBKN0su29rQlPZaP3XkeQY9kw5L0ZzUcOL0hAFhwU2WD+kSbF9k
-4RHE2w04Pr0Uc4GGqfOTYsmg6tYJlLlOFofSwFIpbuMutDNf7zSAG3X7qdaBy6Wx
-VzBXwYtpMwzpGhb2m8Cxonnnb3lxqfPxo8HVVY77YkoT+LSB/Fl5/zCL1C/x088/
-XvIHRZHaKMOGDSo5MRJaJddpGCGr9ZC1gTIkE+FYQVrt/uy/M3nBNpBgaA4tiDME
-T7SjHjAyuGa/tzf5evQu
-=rRSc
------END PGP SIGNATURE-----
-
---=-1TlPAY/eThmWfywvyAKX--
+Larry
 
