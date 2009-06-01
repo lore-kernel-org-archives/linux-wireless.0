@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47277 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754AbZFFAEC (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:46350 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750845AbZFAPuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 20:04:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: [PATCH v2 13/15] iwlwifi: use ieee80211_is_data(fc)
-Date: Fri,  5 Jun 2009 20:03:47 -0400
-Message-Id: <1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 1 Jun 2009 11:50:21 -0400
+Date: Mon, 1 Jun 2009 12:50:20 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+Message-ID: <20090601155020.GC15485@khazad-dum.debian.net>
+References: <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <20090601122839.GB11011@khazad-dum.debian.net> <1243859931.5299.17.camel@johannes.local> <20090601124553.GE11011@khazad-dum.debian.net> <1243860606.5299.21.camel@johannes.local> <20090601133351.GI11011@khazad-dum.debian.net> <1243866545.5299.25.camel@johannes.local> <20090601153620.GB15485@khazad-dum.debian.net> <1243870669.5299.29.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1243870669.5299.29.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
- 2 files changed, 5 insertions(+), 7 deletions(-)
+On Mon, 01 Jun 2009, Johannes Berg wrote:
+> On Mon, 2009-06-01 at 12:36 -0300, Henrique de Moraes Holschuh wrote:
+> > > > On a related note, Johannes, would you be opposed to exporting something I
+> > > > could call from thinkpad-acpi to request a radio state change on a rfkill
+> > > > struct?   This would allow me to remove some of the mess in thinkpad-acpi.
+> > > 
+> > > I don't think I understand what you want? What do you mean by "request a
+> > > radio state change"?
+> > 
+> > As in "please try to block this _specific_ radio", and "please try to
+> > unblock this _specific_ radio".
+> > 
+> > I.e. what one would do by a write to the "state" attribute of the _old_
+> > rfkill sysfs (and which would get overriden the next time someone changed
+> > the global state, etc).
+> 
+> Ok, but where would you want that exported to? It's available
+> on /dev/rfkill, why would you want that for the driver, it can just call
+> itself, no?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 5eb538d..bd2f709 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	s8 scale_action = 0;
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	u16 fc;
-+	__le16 fc;
- 	u16 rate_mask = 0;
- 	s8 max_rate_idx = -1;
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
-@@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 		rate_mask = sta->supp_rates[sband->band];
- 
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = le16_to_cpu(hdr->frame_control);
--	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
-+	fc = hdr->frame_control;
-+	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
- 	    !sta || !priv_sta) {
- 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
- 		if (!rate_mask)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 2addf73..afa1633 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
- int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
- {
- 	int sta_id;
--	u16 fc = le16_to_cpu(hdr->frame_control);
-+	__le16 fc = hdr->frame_control;
- 
- 	/* If this frame is broadcast or management, use broadcast station id */
--	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
--	    is_multicast_ether_addr(hdr->addr1))
-+	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
- 		return priv->hw_params.bcast_sta_id;
- 
- 	switch (priv->iw_mode) {
+Yes, it "calls itself" right now... so I can certainly do that :)
+
+However, the in-driver shortcut means I give rfkill a kick and say "the soft
+state has changed, deal with it", instead of "please change the state" which
+it might deny due to EPO, etc.
+
 -- 
-1.6.0.6
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
