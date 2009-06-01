@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58252 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751927AbZFJBWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 21:22:31 -0400
-Subject: Re: Sending netlink messages in mac80211 tx handler
-From: Zhu Yi <yi.zhu@intel.com>
-To: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernelnewbies@nl.linux.org" <kernelnewbies@nl.linux.org>,
-	"m_wilhel@informatik.uni-kl.de" <m_wilhel@informatik.uni-kl.de>
-In-Reply-To: <4A2EEA07.1050306@informatik.uni-kl.de>
-References: <4A2EEA07.1050306@informatik.uni-kl.de>
-Content-Type: text/plain
-Date: Wed, 10 Jun 2009 09:13:52 +0800
-Message-Id: <1244596432.5034.27.camel@debian>
-Mime-Version: 1.0
+Received: from mail-pz0-f177.google.com ([209.85.222.177]:45618 "EHLO
+	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753826AbZFATxN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2009 15:53:13 -0400
+Received: by pzk7 with SMTP id 7so6198098pzk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 12:53:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090601184134.GC5516@tesla>
+References: <20090601184134.GC5516@tesla>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 1 Jun 2009 12:52:54 -0700
+Message-ID: <43e72e890906011252s43d2c596m6ec79569f5074837@mail.gmail.com>
+Subject: Re: [ath9k-devel] Pending ath9k bugs
+To: linux-wireless@vger.kernel.org
+Cc: parag.warudkar@gmail.com, Gaurav.Jauhar@atheros.com,
+	fabian.deutsch@gmx.de, arxs@fedoraproject.org,
+	linville@tuxdriver.com, debaditya@gmail.com,
+	senthilkumar@atheros.com, drago01@gmail.com,
+	ath9k-devel@lists.ath9k.org, michal@harddata.com,
+	leann.ogasawara@canonical.com, tim.gardner@canonical.com,
+	jirislaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-06-10 at 07:02 +0800, Reiner Herrmann wrote:
-> Hi,
-> 
-> I want to register a TX handler for mac80211 and send a (generic)
-> netlink message in it. But everytime the handler gets invoked and
-> the message sent, the kernel crashes.
-> 
-> 
-> A minimal version of the TX handler looks like that:
-> 
-> 
-> static ieee80211_tx_result debug_noinline
-> ieee80211_tx_h_test(struct ieee80211_tx_data *tx)
-> {
->         struct sk_buff* skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+On Mon, Jun 1, 2009 at 11:41 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
 
-I think you need GFP_ATOMIC here.
+> ath9k-devel:
 
->         void* hdr;
-> 
->         if(!skb)
->                 goto out;
-> 
->         hdr = genlmsg_put(skb, 0, 0, &nl80211_fam, 0, NL80211_CMD_DISCOSEC);
->         if(IS_ERR(hdr))
->                 goto free_skb;
-> 
->         nla_put_u32(skb, NL80211_ATTR_DISCOSEC_HELO, 42);
->         genlmsg_end(skb, hdr);
->         genlmsg_unicast(skb, get_daemon_pid());
-> 
-> free_skb:
->         nlmsg_free(skb);
+I just remembered of another issue:
 
-No need to free on the correct path. The skb is added to the
-receive_queue directly for Rx.
+BUG_ON in rc.c when using 11n. This could be caused by an incorrect
+assumption in ath9k that the rc priv is correctly for the target rate.
+The issue may be seen when trying to associate and changing between
+legacy and HT rates on SMP systems when mac80211 passes frames on
+different queues due to multiqueue support. If that is indeed the
+reason for the issue we will probably need locking on the rc priv or
+simply to revamp it. I'll send a patch for now to downgrade the BUG_ON
+but we do need a proper fix for this, it just needs more careful
+review.
 
-Thanks,
--yi
+While on the topic I should mention a welcomed change would be to
+actually revamp ath9k RC to fix it to correctly report MCS rates to
+mac80211. Then add MCS support for minstrel, and finally allow ath9k
+to make use of minstrel as an optional rate control algo. If anyone is
+up for the task please say so :)
 
+  Luis
