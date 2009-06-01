@@ -1,136 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33450 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756711AbZFWOHe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 10:07:34 -0400
-Subject: [PATCH v2] mac80211: fix todo lock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1245751007.4184.17.camel@johannes.local>
-References: <1245751007.4184.17.camel@johannes.local>
+Received: from mail.atheros.com ([12.36.123.2]:63432 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750975AbZFAOFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2009 10:05:36 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 07:05:39 -0700
+Subject: Re: [PATCH] ath9k: Add sanity check for beacon_int in adhoc/mesh
+ case
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87skikt72k.fsf@litku.valot.fi>
+References: <20090528162528.GA8117@jm.kir.nu>
+	 <87skikt72k.fsf@litku.valot.fi>
 Content-Type: text/plain
-Date: Tue, 23 Jun 2009 16:07:18 +0200
-Message-Id: <1245766038.21314.24.camel@johannes.local>
-Mime-Version: 1.0
+Date: Mon, 1 Jun 2009 17:05:35 +0300
+Message-ID: <1243865135.1930.2.camel@jm-desktop>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The key todo lock can be taken from different locks
-that require it to be _bh to avoid lock inversion
-due to (soft)irqs.
+On Mon, 2009-06-01 at 06:30 -0700, Kalle Valo wrote:
+> Jouni Malinen <jouni.malinen@atheros.com> writes:
+> 
+> > +     /*
+> > +      * It looks like mac80211 may end up using beacon interval of zero in
+> > +      * some cases (at least for mesh point). Avoid getting into an
+> > +      * infinite loop by using a bit safer value instead..
+> > +      */
+> > +     if (intval == 0)
+> > +             intval = 100;
+> 
+> Maybe a big fat warning here would help with debugging the issue?
 
-This should fix the two problems reported by Bob and
-Gabor:
-http://mid.gmane.org/20090619113049.GB18956@hash.localnet
-http://mid.gmane.org/4A3FA376.8020307@openwrt.org
+If we agree that this should never happen, such a thing could be added.
+Though, it would probably be better to place that in mac80211 so that it
+would catch the issue with any driver. The beacon_int=0 notification is
+not really in any way specific to ath9k; only this workaround for driver
+behavior is.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <me@bobcopeland.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>
----
- net/mac80211/key.c |   26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
-
---- wireless-testing.orig/net/mac80211/key.c	2009-06-23 11:48:12.000000000 +0200
-+++ wireless-testing/net/mac80211/key.c	2009-06-23 16:06:07.000000000 +0200
-@@ -67,6 +67,8 @@ static DECLARE_WORK(todo_work, key_todo)
-  *
-  * @key: key to add to do item for
-  * @flag: todo flag(s)
-+ *
-+ * Must be called with IRQs or softirqs disabled.
-  */
- static void add_todo(struct ieee80211_key *key, u32 flag)
- {
-@@ -140,9 +142,9 @@ static void ieee80211_key_enable_hw_acce
- 	ret = drv_set_key(key->local, SET_KEY, &sdata->vif, sta, &key->conf);
- 
- 	if (!ret) {
--		spin_lock(&todo_lock);
-+		spin_lock_bh(&todo_lock);
- 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
--		spin_unlock(&todo_lock);
-+		spin_unlock_bh(&todo_lock);
- 	}
- 
- 	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
-@@ -164,12 +166,12 @@ static void ieee80211_key_disable_hw_acc
- 	if (!key || !key->local->ops->set_key)
- 		return;
- 
--	spin_lock(&todo_lock);
-+	spin_lock_bh(&todo_lock);
- 	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
- 		spin_unlock(&todo_lock);
- 		return;
- 	}
--	spin_unlock(&todo_lock);
-+	spin_unlock_bh(&todo_lock);
- 
- 	sta = get_sta_for_key(key);
- 	sdata = key->sdata;
-@@ -188,9 +190,9 @@ static void ieee80211_key_disable_hw_acc
- 		       wiphy_name(key->local->hw.wiphy),
- 		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
- 
--	spin_lock(&todo_lock);
-+	spin_lock_bh(&todo_lock);
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
--	spin_unlock(&todo_lock);
-+	spin_unlock_bh(&todo_lock);
- }
- 
- static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
-@@ -437,14 +439,14 @@ void ieee80211_key_link(struct ieee80211
- 
- 	__ieee80211_key_replace(sdata, sta, old_key, key);
- 
--	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
--
- 	/* free old key later */
- 	add_todo(old_key, KEY_FLAG_TODO_DELETE);
- 
- 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
- 	if (netif_running(sdata->dev))
- 		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
-+
-+	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
- }
- 
- static void __ieee80211_key_free(struct ieee80211_key *key)
-@@ -547,7 +549,7 @@ static void __ieee80211_key_todo(void)
- 	 */
- 	synchronize_rcu();
- 
--	spin_lock(&todo_lock);
-+	spin_lock_bh(&todo_lock);
- 	while (!list_empty(&todo_list)) {
- 		key = list_first_entry(&todo_list, struct ieee80211_key, todo);
- 		list_del_init(&key->todo);
-@@ -558,7 +560,7 @@ static void __ieee80211_key_todo(void)
- 					  KEY_FLAG_TODO_HWACCEL_REMOVE |
- 					  KEY_FLAG_TODO_DELETE);
- 		key->flags &= ~todoflags;
--		spin_unlock(&todo_lock);
-+		spin_unlock_bh(&todo_lock);
- 
- 		work_done = false;
- 
-@@ -591,9 +593,9 @@ static void __ieee80211_key_todo(void)
- 
- 		WARN_ON(!work_done);
- 
--		spin_lock(&todo_lock);
-+		spin_lock_bh(&todo_lock);
- 	}
--	spin_unlock(&todo_lock);
-+	spin_unlock_bh(&todo_lock);
- }
- 
- void ieee80211_key_todo(void)
+- Jouni
 
 
