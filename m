@@ -1,151 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:54749 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762005AbZFOPiV (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:34440 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752253AbZFAQJ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 11:38:21 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 03/12][2.6.31 and w-t] iwmc3200wifi: add iwm_if_add and iwm_if_remove
-Date: Mon, 15 Jun 2009 17:39:19 +0200
-Message-Id: <9b2b9b463d1313b871f56ad77b48b4960653b766.1245076752.git.samuel@sortiz.org>
-In-Reply-To: <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org>
- <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org>
- <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245076752.git.samuel@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org>
+	Mon, 1 Jun 2009 12:09:56 -0400
+Received: by ewy24 with SMTP id 24so7944429ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 09:09:57 -0700 (PDT)
+Message-ID: <4A23FD91.8020200@tuffmail.co.uk>
+Date: Mon, 01 Jun 2009 17:10:57 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+References: <1243524688.10632.0.camel@johannes.local>	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>	 <1243763887.19302.29.camel@johannes.local>	 <1243796509.6570.35.camel@localhost.localdomain>	 <1243841639.5299.8.camel@johannes.local>  <4A238EA2.4040106@tuffmail.co.uk>	 <1243858256.5299.14.camel@johannes.local> <1243867620.3015.17.camel@localhost.localdomain>
+In-Reply-To: <1243867620.3015.17.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+Marcel Holtmann wrote:
+> Hi Johannes,
+>
+>   
+>> Would everybody be happy with this rolled in?
+>>
+>> johannes
+>>
+>> Subject: rfkill: userspace API improvements
+>>
+>> This adds the two following things to /dev/rfkill:
+>>  1) notification to userspace with a new operation
+>>     RFKILL_OP_NVS_REPORT about default states restored
+>>     from platform non-volatile storage
+>>     
+>
+> I really don't understand why this is needed. What benefit does it give
+> us compared to just sent OP_CHANGE and OP_CHANGE as an update. My X200
+> for example does this anyway on suspend/resume.
+>   
 
-We used to do alloc_netdev and register_netdev at the same time in
-iwm_if_alloc. But some bus related structures will only be initialized
-after iwm_priv is allocated. This caused a race condition that the
-netdev might be registered earlier. The patch adds iwm_if_add and
-iwm_if_remove so that the bus layer could register the device after
-all initialization is done.
+This is required for boot only.  I have no reason for this event to be 
+generated on resume.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/iwm.h    |    2 +
- drivers/net/wireless/iwmc3200wifi/netdev.c |   32 +++++++++++++++++----------
- drivers/net/wireless/iwmc3200wifi/sdio.c   |    9 +++++++
- 3 files changed, 31 insertions(+), 12 deletions(-)
+The same effect could be had by generating an OP_CHANGE on f_open, 
+_only_ when a platform driver has provided a value from NVS.  But it 
+does seem clearer to make it a different type of event.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index a0e7377..73c1011 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -316,6 +316,8 @@ extern const struct iw_handler_def iwm_iw_handler_def;
- void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- 		   struct iwm_if_ops *if_ops);
- void iwm_if_free(struct iwm_priv *iwm);
-+int iwm_if_add(struct iwm_priv *iwm);
-+void iwm_if_remove(struct iwm_priv *iwm);
- int iwm_mode_to_nl80211_iftype(int mode);
- int iwm_priv_init(struct iwm_priv *iwm);
- void iwm_priv_deinit(struct iwm_priv *iwm);
-diff --git a/drivers/net/wireless/iwmc3200wifi/netdev.c b/drivers/net/wireless/iwmc3200wifi/netdev.c
-index de16b2b..d1797b9 100644
---- a/drivers/net/wireless/iwmc3200wifi/netdev.c
-+++ b/drivers/net/wireless/iwmc3200wifi/netdev.c
-@@ -125,8 +125,7 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- 
- 	wdev->iftype = iwm_mode_to_nl80211_iftype(iwm->conf.mode);
- 
--	ndev = alloc_netdev_mq(0, "wlan%d", ether_setup,
--			       IWM_TX_QUEUES);
-+	ndev = alloc_netdev_mq(0, "wlan%d", ether_setup, IWM_TX_QUEUES);
- 	if (!ndev) {
- 		dev_err(dev, "no memory for network device instance\n");
- 		goto out_priv;
-@@ -136,19 +135,10 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- 	ndev->wireless_handlers = &iwm_iw_handler_def;
- 	ndev->ieee80211_ptr = wdev;
- 	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
--	ret = register_netdev(ndev);
--	if (ret < 0) {
--		dev_err(dev, "Failed to register netdev: %d\n", ret);
--		goto out_ndev;
--	}
--
- 	wdev->netdev = ndev;
- 
- 	return iwm;
- 
-- out_ndev:
--	free_netdev(ndev);
--
-  out_priv:
- 	iwm_priv_deinit(iwm);
- 
-@@ -162,8 +152,26 @@ void iwm_if_free(struct iwm_priv *iwm)
- 	if (!iwm_to_ndev(iwm))
- 		return;
- 
--	unregister_netdev(iwm_to_ndev(iwm));
- 	free_netdev(iwm_to_ndev(iwm));
- 	iwm_wdev_free(iwm);
- 	iwm_priv_deinit(iwm);
- }
-+
-+int iwm_if_add(struct iwm_priv *iwm)
-+{
-+	struct net_device *ndev = iwm_to_ndev(iwm);
-+	int ret;
-+
-+	ret = register_netdev(ndev);
-+	if (ret < 0) {
-+		dev_err(&ndev->dev, "Failed to register netdev: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void iwm_if_remove(struct iwm_priv *iwm)
-+{
-+	unregister_netdev(iwm_to_ndev(iwm));
-+}
-diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.c b/drivers/net/wireless/iwmc3200wifi/sdio.c
-index 97e7da3..057a588 100644
---- a/drivers/net/wireless/iwmc3200wifi/sdio.c
-+++ b/drivers/net/wireless/iwmc3200wifi/sdio.c
-@@ -454,6 +454,12 @@ static int iwm_sdio_probe(struct sdio_func *func,
- 
- 	INIT_WORK(&hw->isr_worker, iwm_sdio_isr_worker);
- 
-+	ret = iwm_if_add(iwm);
-+	if (ret) {
-+		dev_err(dev, "add SDIO interface failed\n");
-+		goto destroy_wq;
-+	}
-+
- 	/* The SDIO bus is set and ready to be enabled */
- 	set_bit(IWM_STATUS_BUS_READY, &iwm->status);
- 
-@@ -461,6 +467,8 @@ static int iwm_sdio_probe(struct sdio_func *func,
- 
- 	return 0;
- 
-+ destroy_wq:
-+	destroy_workqueue(hw->isr_wq);
-  debugfs_exit:
- 	iwm_debugfs_exit(iwm);
-  if_free:
-@@ -475,6 +483,7 @@ static void iwm_sdio_remove(struct sdio_func *func)
- 	struct device *dev = &func->dev;
- 
- 	iwm_debugfs_exit(iwm);
-+	iwm_if_remove(iwm);
- 	iwm_if_free(iwm);
- 	destroy_workqueue(hw->isr_wq);
- 
--- 
-1.6.3.1
+> So what is rfkilld suppose to be doing when receiving this report? What
+> is the expected behavior? Why do we bother with multi-OS crap here? I am
+> really unclear what are we trying to solve here.
+>   
 
+In order to replicate the kernel behavior, it is expected that you set 
+your internal state from this event.  E.g. when the user next presses 
+the wireless toggle key, you set the inverse of that internal state.
+
+Since this event is generated by a platform driver, you can expect it to 
+be present following coldplug (the udev initscript).  If the event is 
+not present after coldplug, you may then issue OP_CHANGE yourself, to 
+e.g. restore the state from a file.  You would not be expected to handle 
+OP_NVS_REPORT after startup.  (Unless the daemon is restarted).
+
+Replicating the kernel behavior will allow us to avoid causing a couple 
+of niggly little regressions on at least two platforms.  It preserves 
+the behavior when dual-booting (possibly between different linux 
+distros), and when the BIOS setup screen exposes the NVS state as an 
+option.  The new behavior you suggest will annoy any users who have 
+become used to these scenarios "just working". 
+
+You may not use these platforms yourself.  But I'm as annoyed as 
+Henrique is, we don't want to impose regressions just because other 
+platforms don't implement the feature.
+
+Why the fuss about implementing this, it seems easy enough?  Start 
+rfkilld after udev (like everything else).  If you get NVS_REPORT, then 
+use those states.  Fill in any other states from defaults or state files 
+and issue OP_CHANGE for them, just as you're already planning.  Ignore 
+any subsequent NVS_REPORTs.  That should cover it.
+
+It's the cost for starting from a working implementation.  You benefit 
+from having existing drivers and users, you pay by not breaking them 
+without good reason.
+
+Thanks
+Alan
