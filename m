@@ -1,268 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:59691 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754440AbZFPOjz (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41410 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbZFBUaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 10:39:55 -0400
-Received: by ewy6 with SMTP id 6so6067407ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 07:39:56 -0700 (PDT)
-Message-ID: <4A37AEB7.6060405@tuffmail.co.uk>
-Date: Tue, 16 Jun 2009 15:39:51 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCHv2 2/4] rfkill: don't restore software blocked state on persistent
- devices
-References: <4A37A3E1.8060606@tuffmail.co.uk> <1245161645.13461.3.camel@johannes.local>
-In-Reply-To: <1245161645.13461.3.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 2 Jun 2009 16:30:03 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] mac80211: check for existance sta before adding it
+Date: Tue,  2 Jun 2009 16:30:03 -0400
+Message-Id: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The setting of the "persistent" flag is also made more explicit using
-a new rfkill_init_sw_state() function, instead of special-casing
-rfkill_set_sw_state() when it is called before registration.
+Lets just check for the STA before its addition through
+sta_info_insert() and make this mandatory. It simpifies
+code.
 
-Suspend is a bit of a corner case so we try to get away without adding
-another hack to rfkill-input - it's going to be removed soon.
-If the state does change over suspend, users will simply have to prod
-rfkill-input twice in order to toggle the state.
+In our mac80211 cfg80211 callback for device addition we
+also can simplify the code by first checking for the STA
+before trying to add it and then checking for -EEXIST which
+we were not doing. If that actualy would happen we could
+end up potentially with a stale sta and the rate info was
+never updated. We should now be updating accordingly.
 
-Userspace policy agents will be able to implement a more consistent user
-experience.  For example, they can avoid the above problem if they
-toggle devices individually.  Then there would be no "global state"
-to get out of sync.
+Since we are making part of the API to check for the STA
+prior to addition lets warn in sta_info_insert() if the
+sta does already exist instead of passing an -EEXIST.
 
-Currently there are only two rfkill drivers with persistent soft-blocked
-state.  thinkpad-acpi already checks the software state on resume.
-eeepc-laptop will require modification.
-
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-CC: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-v2: build fix for RFKILL=n
 
- drivers/platform/x86/eeepc-laptop.c  |    8 +++---
- drivers/platform/x86/thinkpad_acpi.c |   14 ++++++------
- include/linux/rfkill.h               |   32 +++++++++++++++++++++++----
- net/rfkill/core.c                    |   40 +++++++++++++++++++++------------
- 4 files changed, 63 insertions(+), 31 deletions(-)
+johill, this is what I meant. Still not the right approach?
 
-diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
-index 03bf522..01682ec 100644
---- a/drivers/platform/x86/eeepc-laptop.c
-+++ b/drivers/platform/x86/eeepc-laptop.c
-@@ -675,8 +675,8 @@ static int eeepc_hotk_add(struct acpi_device *device)
- 		if (!ehotk->eeepc_wlan_rfkill)
- 			goto wlan_fail;
+ net/mac80211/cfg.c      |   33 ++++++++++++++++++---------------
+ net/mac80211/mlme.c     |    4 ++++
+ net/mac80211/sta_info.c |   18 ++++++++++++++----
+ 3 files changed, 36 insertions(+), 19 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 77e9ff5..657e6b4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -717,6 +717,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int err;
+ 	int layer2_update;
++	bool new_sta = true;
  
--		rfkill_set_sw_state(ehotk->eeepc_wlan_rfkill,
--				    get_acpi(CM_ASL_WLAN) != 1);
-+		rfkill_init_sw_state(ehotk->eeepc_wlan_rfkill,
-+				     get_acpi(CM_ASL_WLAN) != 1);
- 		result = rfkill_register(ehotk->eeepc_wlan_rfkill);
- 		if (result)
- 			goto wlan_fail;
-@@ -693,8 +693,8 @@ static int eeepc_hotk_add(struct acpi_device *device)
- 		if (!ehotk->eeepc_bluetooth_rfkill)
- 			goto bluetooth_fail;
+ 	if (params->vlan) {
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+@@ -733,9 +734,18 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (is_multicast_ether_addr(mac))
+ 		return -EINVAL;
  
--		rfkill_set_sw_state(ehotk->eeepc_bluetooth_rfkill,
--				    get_acpi(CM_ASL_BLUETOOTH) != 1);
-+		rfkill_init_sw_state(ehotk->eeepc_bluetooth_rfkill,
-+				     get_acpi(CM_ASL_BLUETOOTH) != 1);
- 		result = rfkill_register(ehotk->eeepc_bluetooth_rfkill);
- 		if (result)
- 			goto bluetooth_fail;
-diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
-index 86e9585..40d64c0 100644
---- a/drivers/platform/x86/thinkpad_acpi.c
-+++ b/drivers/platform/x86/thinkpad_acpi.c
-@@ -1163,8 +1163,8 @@ static int __init tpacpi_new_rfkill(const enum tpacpi_rfk_id id,
- {
- 	struct tpacpi_rfk *atp_rfk;
- 	int res;
--	bool initial_sw_state = false;
--	int initial_sw_status;
-+	bool sw_state = false;
-+	int sw_status;
+-	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
+-	if (!sta)
+-		return -ENOMEM;
++	rcu_read_lock();
++
++	sta = sta_info_get(local, mac);
++
++	if (!sta) {
++		sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
++		if (!sta) {
++			rcu_read_unlock();
++			return -ENOMEM;
++		}
++	} else
++		new_sta = false;
  
- 	BUG_ON(id >= TPACPI_RFK_SW_MAX || tpacpi_rfkill_switches[id]);
+ 	sta->flags = WLAN_STA_AUTH | WLAN_STA_ASSOC;
  
-@@ -1185,17 +1185,17 @@ static int __init tpacpi_new_rfkill(const enum tpacpi_rfk_id id,
- 	atp_rfk->id = id;
- 	atp_rfk->ops = tp_rfkops;
+@@ -746,19 +756,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		sdata->vif.type == NL80211_IFTYPE_AP;
  
--	initial_sw_status = (tp_rfkops->get_status)();
--	if (initial_sw_status < 0) {
-+	sw_status = (tp_rfkops->get_status)();
-+	if (sw_status < 0) {
- 		printk(TPACPI_ERR
- 			"failed to read initial state for %s, error %d\n",
--			name, initial_sw_status);
-+			name, sw_status);
- 	} else {
--		initial_sw_state = (initial_sw_status == TPACPI_RFK_RADIO_OFF);
-+		sw_state = (sw_status == TPACPI_RFK_RADIO_OFF);
- 		if (set_default) {
- 			/* try to keep the initial state, since we ask the
- 			 * firmware to preserve it across S5 in NVRAM */
--			rfkill_set_sw_state(atp_rfk->rfkill, initial_sw_state);
-+			rfkill_init_sw_state(atp_rfk->rfkill, sw_state);
+-	rcu_read_lock();
+-
+-	err = sta_info_insert(sta);
+-	if (err) {
+-		/* STA has been freed */
+-		if (err == -EEXIST && layer2_update) {
+-			/* Need to update layer 2 devices on reassociation */
+-			sta = sta_info_get(local, mac);
+-			if (sta)
+-				ieee80211_send_layer2_update(sta);
++	if (new_sta) {
++		err = sta_info_insert(sta);
++		if (err) {
++			rcu_read_unlock();
++			return err;
  		}
+-		rcu_read_unlock();
+-		return err;
  	}
- 	rfkill_set_hw_state(atp_rfk->rfkill, tpacpi_rfk_check_hwblock_state());
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 16e39c7..dcac724 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -160,8 +160,9 @@ struct rfkill * __must_check rfkill_alloc(const char *name,
-  * the rfkill structure. Before calling this function the driver needs
-  * to be ready to service method calls from rfkill.
-  *
-- * If the software blocked state is not set before registration,
-- * set_block will be called to initialize it to a default value.
-+ * If rfkill_init_sw_state() is not called before registration,
-+ * set_block() will be called to initialize the software blocked state
-+ * to a default value.
-  *
-  * If the hardware blocked state is not set before registration,
-  * it is assumed to be unblocked.
-@@ -234,9 +235,11 @@ bool __must_check rfkill_set_hw_state(struct rfkill *rfkill, bool blocked);
-  * rfkill drivers that get events when the soft-blocked state changes
-  * (yes, some platforms directly act on input but allow changing again)
-  * use this function to notify the rfkill core (and through that also
-- * userspace) of the current state.  It is not necessary to notify on
-- * resume; since hibernation can always change the soft-blocked state,
-- * the rfkill core will unconditionally restore the previous state.
-+ * userspace) of the current state.
-+ *
-+ * Drivers should also call this function after resume if the state has
-+ * been changed by the user.  This only makes sense for "persistent"
-+ * devices (see rfkill_init_sw_state()).
-  *
-  * This function can be called in any context, even from within rfkill
-  * callbacks.
-@@ -247,6 +250,21 @@ bool __must_check rfkill_set_hw_state(struct rfkill *rfkill, bool blocked);
- bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked);
  
- /**
-+ * rfkill_init_sw_state - Initialize persistent software block state
-+ * @rfkill: pointer to the rfkill class to modify.
-+ * @state: the current software block state to set
-+ *
-+ * rfkill drivers that preserve their software block state over power off
-+ * use this function to notify the rfkill core (and through that also
-+ * userspace) of their initial state.  It should only be used before
-+ * registration.
-+ *
-+ * In addition, it marks the device as "persistent".  Persistent devices
-+ * are expected to preserve preserve their own state when suspended.
+ 	if (layer2_update)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 509469c..ef79823 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1782,6 +1782,10 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (newsta) {
+ 		int err = sta_info_insert(sta);
++		/*
++		 * Since we checked earlier for this STA and we're under RCU
++		 * this should not happen.
++		 */
+ 		if (err) {
+ 			printk(KERN_DEBUG "%s: failed to insert STA entry for"
+ 			       " the AP (error %d)\n", sdata->dev->name, err);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index d5611d8..c64a277 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -42,7 +42,9 @@
+  * it may not start any mesh peer link management or add encryption keys.
+  *
+  * When the insertion fails (sta_info_insert()) returns non-zero), the
+- * structure will have been freed by sta_info_insert()!
++ * structure will have been freed by sta_info_insert()! You _must_
++ * call sta_info_insert() only prior to first checking if the sta already
++ * exists with sta_info_get().
+  *
+  * Because there are debugfs entries for each station, and adding those
+  * must be able to sleep, it is also possible to "pin" a station entry,
+@@ -309,6 +311,11 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	return sta;
+ }
+ 
++/*
++ * Must be called with rcu_read_lock() held, you should also
++ * first check if the STA exists first prior to calling
++ * this routine to add it.
 + */
-+void rfkill_init_sw_state(struct rfkill *rfkill, bool blocked);
-+
-+/**
-  * rfkill_set_states - Set the internal rfkill block states
-  * @rfkill: pointer to the rfkill class to modify.
-  * @sw: the current software block state to set
-@@ -307,6 +325,10 @@ static inline bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked)
- 	return blocked;
- }
- 
-+static inline void rfkill_init_sw_state(struct rfkill *rfkill, bool blocked)
-+{
-+}
-+
- static inline void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
+ int sta_info_insert(struct sta_info *sta)
  {
- }
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 868d79f..dcf8df7 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -56,7 +56,6 @@ struct rfkill {
- 	u32			idx;
+ 	struct ieee80211_local *local = sta->local;
+@@ -333,10 +340,13 @@ int sta_info_insert(struct sta_info *sta)
+ 	}
  
- 	bool			registered;
--	bool			suspended;
- 	bool			persistent;
- 
- 	const struct rfkill_ops	*ops;
-@@ -224,7 +223,7 @@ static void rfkill_send_events(struct rfkill *rfkill, enum rfkill_operation op)
- 
- static void rfkill_event(struct rfkill *rfkill)
- {
--	if (!rfkill->registered || rfkill->suspended)
-+	if (!rfkill->registered)
- 		return;
- 
- 	kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
-@@ -508,19 +507,32 @@ bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked)
- 	blocked = blocked || hwblock;
- 	spin_unlock_irqrestore(&rfkill->lock, flags);
- 
--	if (!rfkill->registered) {
--		rfkill->persistent = true;
--	} else {
--		if (prev != blocked && !hwblock)
--			schedule_work(&rfkill->uevent_work);
-+	if (!rfkill->registered)
-+		return blocked;
- 
--		rfkill_led_trigger_event(rfkill);
--	}
-+	if (prev != blocked && !hwblock)
-+		schedule_work(&rfkill->uevent_work);
-+
-+	rfkill_led_trigger_event(rfkill);
- 
- 	return blocked;
- }
- EXPORT_SYMBOL(rfkill_set_sw_state);
- 
-+void rfkill_init_sw_state(struct rfkill *rfkill, bool blocked)
-+{
-+	unsigned long flags;
-+
-+	BUG_ON(!rfkill);
-+	BUG_ON(rfkill->registered);
-+
-+	spin_lock_irqsave(&rfkill->lock, flags);
-+	__rfkill_set_sw_state(rfkill, blocked);
-+	rfkill->persistent = true;
-+	spin_unlock_irqrestore(&rfkill->lock, flags);
-+}
-+EXPORT_SYMBOL(rfkill_init_sw_state);
-+
- void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
- {
- 	unsigned long flags;
-@@ -718,8 +730,6 @@ static int rfkill_suspend(struct device *dev, pm_message_t state)
- 
- 	rfkill_pause_polling(rfkill);
- 
--	rfkill->suspended = true;
--
- 	return 0;
- }
- 
-@@ -728,10 +738,10 @@ static int rfkill_resume(struct device *dev)
- 	struct rfkill *rfkill = to_rfkill(dev);
- 	bool cur;
- 
--	cur = !!(rfkill->state & RFKILL_BLOCK_SW);
--	rfkill_set_block(rfkill, cur);
--
--	rfkill->suspended = false;
-+	if (!rfkill->persistent) {
-+		cur = !!(rfkill->state & RFKILL_BLOCK_SW);
-+		rfkill_set_block(rfkill, cur);
-+	}
- 
- 	rfkill_resume_polling(rfkill);
- 
-
+ 	spin_lock_irqsave(&local->sta_lock, flags);
+-	/* check if STA exists already */
+-	if (sta_info_get(local, sta->sta.addr)) {
++	/*
++	 * check if STA exists already - callers should have
++	 * already done this while holding the RCU lock
++	 */
++	if (WARN_ON(sta_info_get(local, sta->sta.addr))) {
+ 		spin_unlock_irqrestore(&local->sta_lock, flags);
+-		err = -EEXIST;
++		err = -EIO;
+ 		goto out_free;
+ 	}
+ 	list_add(&sta->list, &local->sta_list);
+-- 
+1.6.0.6
 
