@@ -1,68 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:53658 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061AbZFCMfN convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189AbZFBUL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 08:35:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <20090403182724.GA7364@tuxdriver.com>
-References: <20090403182724.GA7364@tuxdriver.com>
-Date: Wed, 3 Jun 2009 15:35:14 +0300
-Message-ID: <40f31dec0906030535k3af1f6e7u68c82a4f984e7029@mail.gmail.com>
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Jun 2009 16:11:28 -0400
+Subject: Re: [RFT 3/3] b43/legacy: port to cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200906022208.46288.mb@bu3sch.de>
+References: <20090602111027.460530075@sipsolutions.net>
+	 <200906021641.11019.mb@bu3sch.de> <1243973079.6461.3.camel@johannes.local>
+	 <200906022208.46288.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7RpFrH/L85jNyu60ILJQ"
+Date: Tue, 02 Jun 2009 22:11:27 +0200
+Message-Id: <1243973487.7176.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/4/3 John W. Linville <linville@tuxdriver.com>:
-> Greetings,
->
-> As you may know, we are planning on having a wireless summit meeting
-> in Berlin, Germany this June.  This meeting is in cooperation with
-> the Fedora FUDCon event, which will be accomodating us under the
-> guise of a "hackfest".  This event also overlaps (and co-locates)
-> with LinuxTag 2009.  Details are available here:
->
->        https://fedoraproject.org/wiki/FUDCon:Berlin_2009
->
-> FUDCon's are typically self-organizing under the BarCamp model.
-> However, I have secured a promise that we will be allocated space
-> for 1-2 dozen people on at least Friday 26 June and Saturday 27 June
-> for our wireless event.  I personally encourage everyone not only to
-> attend LinuxTag but also to participate in the rest of FUDCon!
->
-> So, here I open the floor for discussion of agenda items for our
-> wireless meeting/hackfest.  What do we think is important to discuss
-> face-to-face this year?  What isn't getting done?  What is getting
-> done wrong?  What do we need that we didn't realize last year?
->
-> Also, please consider making some sort of prepared presentation.
-> Especially welcome would be topics that are accessible to those
-> outside of the core wireless developer group, such as current
-> projects on enhancing IBSS support, extended power savings, or any
-> other user-visible topic.  I'll be happy to take such proposals in
-> private email or you can post them as part of this thread.
->
-> Hopefully this gets the discussion started...please comment!
->
-> John
->
-> P.S.  We are also planning a meeting in Portland this September for
-> those unable or unwilling to travel outside of North America for
-> whatever reason -- stay tuned.
 
-Can we book a room on Holiday in
-(http://fedoraproject.org/wiki/FUDCon:Berlin_2009_lodging) or is it
-only for Fedora people ? What's the process ? I've managed to find
-some funding for travel expenses but most hotels are really expensive
-(i plan to come on 24 and leave on 29).
+--=-7RpFrH/L85jNyu60ILJQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2009-06-02 at 22:08 +0200, Michael Buesch wrote:
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> > Well, rfkill isn't always present but the APIs are always present.
+>=20
+> Ok, makes sense, so I guess you rewrote the API. ;)
+>=20
+> I'll ack this, if somebody with rfkill device tests it.
+> Unfortunately I don't have such a device.
+
+Me neither, so I really need somebody to test this... I suspect there
+will be problems when the device is set down because of rfkill, and then
+we can no longer poll the rfkill hw state? But that might have been a
+problem before too, since if my suspicion is right we could never do:
+ * hw rfkill
+ * set if down
+ * hw un-rfkill
+ * set if up
+
+and have it show the events to userspace as expected, or something...
+
+johannes
+
+--=-7RpFrH/L85jNyu60ILJQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKJYdsAAoJEODzc/N7+QmaWDoP/jbASQsesEmg4gQpBIOwwjUv
+QFAehJkydx0AvSlxymQBfGhX0LtGNyxd33DqKEpKUU/ioH5KZ8HIPFbO2v0oOTB4
+EpznTMyqE5Cmn+3lJWPIk09P3Rb1YxJ2828nsiiB6S1/0QKWaIxtAFn6CZw/c94u
+yghmIStBo/3S9Ybn/9lRF2/dAFb3NjnK5bhkHBziS1mp6YHp8LFKjOiICT2iFBCn
+JDH52RzHHRn2ikKBNt1MEIDvszlKU3G5kMAcWI/0xD7FcHL9d3jBiD3PMKArhvMZ
+zgrlRSNYHjxJo6+MI2u97fGJzNOoYua2aXuMPGxpfkGpb8Q1rLpb9wg/fz49U0by
+vu4+uEOXQHmUY8BUQNQMpztTQRw7+R6x3y4/Qh+qbXTxppSqoX53YRWTUghnZ9rN
+G5T/kOiExbZojVNoK7XOrnwyBDKAD9+0aVqA/q9YhNc9jbuCuUDUmH6eRr0pQojO
+fRieakIFpklwYJEX4A/4RrkIAs2ZwfXC2peytc9pLVHEO/aS/JrJb9wGe2+yXpMn
+iYeuVbyArSPO0koK/rnfzn4fvSoDK+0pHsar9E+VFOip0qGRdig+SID4QC3wLeRT
+tzEXDXg6qIYJvRUmVeekHfXnlLb4k2dqoQbbEa/oSF05F1kLvFTNAhaKejbu5TjQ
+XF53M+zi7KmZivgheiRD
+=ptsd
+-----END PGP SIGNATURE-----
+
+--=-7RpFrH/L85jNyu60ILJQ--
+
