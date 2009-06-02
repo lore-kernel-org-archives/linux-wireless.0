@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:35409 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751273AbZF3QVN convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:34411 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758040AbZFBIV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 12:21:13 -0400
-Received: by gxk26 with SMTP id 26so368278gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 09:21:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A49EEC3.3060108@mrs.ro>
-References: <4A49EEC3.3060108@mrs.ro>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 30 Jun 2009 09:20:56 -0700
-Message-ID: <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com>
-Subject: Re: mac80211 and broadcast frames
-To: Valentin Manea <linux-wireless@mrs.ro>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Jun 2009 04:21:56 -0400
+Subject: Re: [PATCH 10/10] ieee802154: add at86rf230/rf231 spi driver
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	slapin@ossfans.org, maxim.osipov@siemens.com,
+	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
+In-Reply-To: <200906021010.49613.hs4233@mail.mn-solutions.de>
+References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
+	 <69e28c910906010921r56cf7017gc858cb7ba819c385@mail.gmail.com>
+	 <20090601203348.GC7143@doriath.ww600.siemens.net>
+	 <200906021010.49613.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Tue, 02 Jun 2009 10:21:33 +0200
+Message-Id: <1243930893.3192.62.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 30, 2009 at 3:53 AM, Valentin Manea<linux-wireless@mrs.ro> wrote:
-> Hi,
->
->   I've been working on a small project that basically sends broadcast UDP
-> frames from an Wireless AP to multiple clients. While I can send UDP frames
-> just fine from the AP to the client the only a few broadcast frames reach my
-> client. What is really puzzling is that on the client machine using tcpdump
-> I can see all the broadcast frames arriving, my application sees only a
-> small fraction of them.
+Hi Holger,
 
-Keep in mind when you use tcpdump it will modify the RX filters of the
-device you use but if you say you see them on tcpdump and at the same
-time do not see them on the application that seems fishy and non
-driver related.
+> > I thought about drivers/net as about ip (well, more or less)
+> > network drivers. We have drivers/atm or drivers/bluetooth (and
+> > bluetooth is 802.15.1...).
+> 
+> I actually like that this is drivers/bluetooth and not 
+> drivers/ieee802151. Would you consider drivers/zigbee instead of 
+> drivers/ieee802154 ???
 
-  Luis
+I fully agree here.
+
+Please use "zigbee" instead of "ieee*" names since that can become messy
+and confusing. I know that in theory the IEEE part of ZigBee is more
+low-level radio and could be used by non-ZigBee devices, but that is not
+gonna happen anyway. Especially with Bluetooth Low Energy pushing into
+the turf of ZigBee. So please use proper names and not confuse people
+with IEEE numbers ;)
+
+Regards
+
+Marcel
+
+
