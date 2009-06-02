@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:63861 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754177AbZFEEt5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 00:49:57 -0400
+Received: from mga09.intel.com ([134.134.136.24]:32395 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758186AbZFBIV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 04:21:57 -0400
+Date: Tue, 2 Jun 2009 10:24:07 +0200
+From: Samuel Ortiz <samuel.ortiz@intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
+Message-ID: <20090602082403.GC4376@sortiz.org>
+References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com> <1243307448-17441-2-git-send-email-yi.zhu@intel.com> <20090601182940.GC3386@tuxdriver.com> <20090602075439.GA4376@sortiz.org> <1243929723.3192.44.camel@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <9e4733910906042103q6c21886cia02d33cb278cef1e@mail.gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-	 <9e4733910906042103q6c21886cia02d33cb278cef1e@mail.gmail.com>
-Date: Fri, 5 Jun 2009 08:49:57 +0400
-Message-ID: <bc64b4640906042149pb83911bk4e0397da11f9fde6@mail.gmail.com>
-Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Jon Smirl <jonsmirl@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1243929723.3192.44.camel@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/5 Jon Smirl <jonsmirl@gmail.com>:
-> On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
-> Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
->> Hi,
->>
->> As a part of research activities the Embedded Systems - Open Platform Group
->> from Siemens Corporate Technology we are working on adding support for
->> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
->> implementation is neither certified nor even feature complete. However
->> we'd like to present current state of our patchset to the Linux developers
->> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
->> but more like an RFC.
->
-> Does this stack work with the Atmel USB version of at86rf230?
-> ATAVRRZUSBSTICK, http://www.atmel.com/dyn/products/tools_card.asp?tool_id=4396
+On Tue, Jun 02, 2009 at 01:02:03AM -0700, Marcel Holtmann wrote:
+> Hi Samuel,
+> 
+> > > > Firmware names can not be longer than 30 characters, and
+> > > > iwmc3200wifi-lmac-calib-sdio.bin is too long.
+> > > > Renaming it to iwmc3200wifi-calib-sdio.bin.
+> > > > 
+> > > > Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+> > > > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> > > 
+> > > Is this still wanted?
+> > I havent heard anything from Greg regarding my firmware name length patch set.
+> > I'll ping him and check if the patches are queued for rc1 inclusion.
+> > Meanwhile I think you can leave this one aside for now, thanks.
+> 
+> actually we have to get the firmware straight before 2.6.31-rc1 hits the
+> streets. So at some point we have to make up our mind ;)
+Yep, we lacked some synchronization with Yi.
 
-No, we do not support Atmel USB sticks, nor we do not have plans for
-adding support
-for it in the foreseable feature. However if the onboard ATmega can be
-programmed to
-provide usb-serial interface, one can use/adapt our serial discipline
-driver to control it.
-One will still have to write firmware for the on-stick ATmega chip.
 
-Or you can add support for any existing interface that is provided by
-RazorUSB card by yourself.
-We tried to make mac802154 drivers easy to implement.
+> Either way is fine btw. and fixing the firmware name length limitation
+> is also the right thing to do. 
+Yes, that needed a fix, regardless of our local iwmc issues. I also agree with
+Yi that our calibration firmware name is too long/verbose and needs to be
+shortened. So both fixes should go in I think.
 
-> It's not so simple to plug in the at86rf230 using SPI. Supporting USB
-> sticks lets you develop on a desktop PC.
 
-Hmm. One can solder (e.g.) the FTDI 2232 together with AT86RF230/231
-and use that combo
-instead of RazorUSB sticks.
+> Cutting the name because of a bogus
+> legacy limitation was just the wrong fix here ;)
+I agree, I was just too lazy to fix the firmware class stuff at first :/
 
-> freaklabs.org is using ATAVRRZUSBSTICK
+Cheers,
+Samuel.
 
-I'll look for the interface they are using to control sticks and check
-how easy will it be to
-write a driver for it.
+> Regards
+> 
+> Marcel
+> 
+> 
+
 -- 
-With best wishes
-Dmitry
+Intel Open Source Technology Centre
+http://oss.intel.com/
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
