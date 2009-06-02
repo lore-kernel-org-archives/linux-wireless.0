@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.162]:19099 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbZFGPEi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42116 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbZFBNP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 11:04:38 -0400
-Message-ID: <4A2BD706.1040100@hartkopp.net>
-Date: Sun, 07 Jun 2009 17:04:38 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
+	Tue, 2 Jun 2009 09:15:28 -0400
+Date: Tue, 2 Jun 2009 09:12:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl80211: use GFP_ATOMIC for michael mic failure message
+Message-ID: <20090602131222.GA30509@tuxdriver.com>
+References: <20090602040503.GA5385@hash.localnet>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-06-04
-References: <20090604152011.GC2839@tuxdriver.com> <20090607.033751.191866033.davem@davemloft.net> <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>
-In-Reply-To: <20090607145830.GA2736@tuxdriver.com>
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090602040503.GA5385@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sun, Jun 07, 2009 at 04:18:41PM +0200, Oliver Hartkopp wrote:
->> scripts/kconfig/conf -o arch/x86/Kconfig
->> .config:614:warning: symbol value 'm' invalid for RFKILL_INPUT
-> 
-> That functionality is no longer available as a module.  If you need
-> it, then select Y.
-> 
-> Hth!
+On Tue, Jun 02, 2009 at 12:05:04AM -0400, Bob Copeland wrote:
+> nl80211_michael_mic_failure can be called in atomic context but
+> does a GFP_KERNEL allocation.  Fixes the error below:
 
-It does! Thanks for the clarification. I'll select CONFIG_RFKILL=y now.
+This is not the first one of these.  Anyone care to audit nl80211.c for others?
 
-Oliver
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
