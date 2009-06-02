@@ -1,344 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1336 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755776AbZFSUpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 16:45:34 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/5] iwlwifi: unify iwl_setup_rxon_timing
-Date: Fri, 19 Jun 2009 13:52:45 -0700
-Message-Id: <1245444765-29079-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1245444765-29079-5-git-send-email-reinette.chatre@intel.com>
-References: <1245444765-29079-1-git-send-email-reinette.chatre@intel.com>
- <1245444765-29079-2-git-send-email-reinette.chatre@intel.com>
- <1245444765-29079-3-git-send-email-reinette.chatre@intel.com>
- <1245444765-29079-4-git-send-email-reinette.chatre@intel.com>
- <1245444765-29079-5-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59967 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbZFBH2z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 03:28:55 -0400
+Subject: Re: [RFC] mac80211: handle -EXIST on sta_info_insert()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, Jouni.Malinen@atheros.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890906011830q2867ed1el7914846c15c8eb3e@mail.gmail.com>
+References: <1243905828-21933-1-git-send-email-lrodriguez@atheros.com>
+	 <43e72e890906011830q2867ed1el7914846c15c8eb3e@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hA1EwI6qy2sjgLlK349R"
+Date: Tue, 02 Jun 2009 09:28:49 +0200
+Message-Id: <1243927729.5299.35.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch unifies setup_rxon_timing funcions
-of AGN and 3945. HWs differ only in supported maximal
-beacon interval. This is reflected in hw_paras.max_beacon_itrvl
+--=-hA1EwI6qy2sjgLlK349R
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   64 -----------------------
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +
- drivers/net/wireless/iwlwifi/iwl-core.c     |   59 +++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   74 +--------------------------
- 7 files changed, 66 insertions(+), 136 deletions(-)
+On Mon, 2009-06-01 at 18:30 -0700, Luis R. Rodriguez wrote:
+> On Mon, Jun 1, 2009 at 6:23 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > There's a few places where we either did not rcu_read_lock()
+> > prior to addition of a a new sta or we allocated it before
+> > checking for its existance. In most places, like device open
+> > and close we should have at least some guarantee the stas are
+> > wiped but in other places this could not be the case.
+> >
+> > Lets protect against RCU in the missing places. The only
+> > place I see is is in ieee80211_rx_bss_info(). Not sure
+> > we are calling ieee80211_ibss_add_sta() twice there though.
+> >
+> > In our mac80211 cfg80211 callback for device addition we
+> > also can simplify the code by first checking for the STA
+> > before trying to add it and then checking for -EEXIST which
+> > we were not doing. If that actualy would happen we could
+> > end up potentially with a stale sta and the rate info was
+> > never updated. It seems cleaner to check for the sta first.
+> >
+> > Lastly, we add a WARN_ON() on the STA mlme path upon call to
+> > ieee80211_rx_mgmt_assoc_resp() for -EEXIST. This should not
+> > happen, we could just return -EIO or simply ignore it.
+>=20
+> Hm, actually on second thought what if we simply kdoc that you should
+> check for the sta's existence first prior to addition. Then we can
+> remove the pesky -EEXIST.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 8cfc830..b0246db 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2563,6 +2563,7 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.bcast_sta_id = IWL3945_BROADCAST_ID;
- 
- 	priv->hw_params.rx_wrt_ptr_reg = FH39_RSCSR_CHNL0_WPTR;
-+	priv->hw_params.max_beacon_itrvl = IWL39_MAX_UCODE_BEACON_INTERVAL;
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d928561..1d4e9ca 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -512,70 +512,6 @@ int iwl_hw_tx_queue_init(struct iwl_priv *priv,
- 	return 0;
- }
- 
--
--/******************************************************************************
-- *
-- * Misc. internal state and helper functions
-- *
-- ******************************************************************************/
--
--#define MAX_UCODE_BEACON_INTERVAL	4096
--
--static u16 iwl_adjust_beacon_interval(u16 beacon_val)
--{
--	u16 new_val = 0;
--	u16 beacon_factor = 0;
--
--	beacon_factor = (beacon_val + MAX_UCODE_BEACON_INTERVAL)
--					/ MAX_UCODE_BEACON_INTERVAL;
--	new_val = beacon_val / beacon_factor;
--
--	if (!new_val)
--		new_val = MAX_UCODE_BEACON_INTERVAL;
--
--	return new_val;
--}
--
--static void iwl_setup_rxon_timing(struct iwl_priv *priv)
--{
--	u64 tsf;
--	s32 interval_tm, rem;
--	unsigned long flags;
--	struct ieee80211_conf *conf = NULL;
--	u16 beacon_int = 0;
--
--	conf = ieee80211_get_hw_conf(priv->hw);
--
--	spin_lock_irqsave(&priv->lock, flags);
--	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
--	priv->rxon_timing.listen_interval = cpu_to_le16(conf->listen_interval);
--
--	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
--		beacon_int = iwl_adjust_beacon_interval(priv->beacon_int);
--		priv->rxon_timing.atim_window = 0;
--	} else {
--		beacon_int = iwl_adjust_beacon_interval(
--			priv->vif->bss_conf.beacon_int);
--
--		/* TODO: we need to get atim_window from upper stack
--		 * for now we set to 0 */
--		priv->rxon_timing.atim_window = 0;
--	}
--
--	priv->rxon_timing.beacon_interval = cpu_to_le16(beacon_int);
--
--	tsf = priv->timestamp; /* tsf is modifed by do_div: copy it */
--	interval_tm = beacon_int * 1024;
--	rem = do_div(tsf, interval_tm);
--	priv->rxon_timing.beacon_init_val = cpu_to_le32(interval_tm - rem);
--
--	spin_unlock_irqrestore(&priv->lock, flags);
--	IWL_DEBUG_ASSOC(priv, "beacon interval %d beacon timer %d beacon tim %d\n",
--			le16_to_cpu(priv->rxon_timing.beacon_interval),
--			le32_to_cpu(priv->rxon_timing.beacon_init_val),
--			le16_to_cpu(priv->rxon_timing.atim_window));
--}
--
- /******************************************************************************
-  *
-  * Generic RX handler implementations
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index c87033b..6e9b8a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -765,6 +765,8 @@ struct iwl5000_rxon_assoc_cmd {
- } __attribute__ ((packed));
- 
- #define IWL_CONN_MAX_LISTEN_INTERVAL	10
-+#define IWL_MAX_UCODE_BEACON_INTERVAL	4 /* 4096 */
-+#define IWL39_MAX_UCODE_BEACON_INTERVAL	1 /* 1024 */
- 
- /*
-  * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 11a1969..7e528a0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -635,6 +635,63 @@ u8 iwl_is_fat_tx_allowed(struct iwl_priv *priv,
- }
- EXPORT_SYMBOL(iwl_is_fat_tx_allowed);
- 
-+static u16 iwl_adjust_beacon_interval(u16 beacon_val, u16 max_beacon_val)
-+{
-+	u16 new_val = 0;
-+	u16 beacon_factor = 0;
-+
-+	beacon_factor = (beacon_val + max_beacon_val) / max_beacon_val;
-+	new_val = beacon_val / beacon_factor;
-+
-+	if (!new_val)
-+		new_val = max_beacon_val;
-+
-+	return new_val;
-+}
-+
-+void iwl_setup_rxon_timing(struct iwl_priv *priv)
-+{
-+	u64 tsf;
-+	s32 interval_tm, rem;
-+	unsigned long flags;
-+	struct ieee80211_conf *conf = NULL;
-+	u16 beacon_int;
-+
-+	conf = ieee80211_get_hw_conf(priv->hw);
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
-+	priv->rxon_timing.listen_interval = cpu_to_le16(conf->listen_interval);
-+
-+	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
-+		beacon_int = priv->beacon_int;
-+		priv->rxon_timing.atim_window = 0;
-+	} else {
-+		beacon_int = priv->vif->bss_conf.beacon_int;
-+
-+		/* TODO: we need to get atim_window from upper stack
-+		 * for now we set to 0 */
-+		priv->rxon_timing.atim_window = 0;
-+	}
-+
-+	beacon_int = iwl_adjust_beacon_interval(beacon_int,
-+				priv->hw_params.max_beacon_itrvl * 1024);
-+	priv->rxon_timing.beacon_interval = cpu_to_le16(beacon_int);
-+
-+	tsf = priv->timestamp; /* tsf is modifed by do_div: copy it */
-+	interval_tm = beacon_int * 1024;
-+	rem = do_div(tsf, interval_tm);
-+	priv->rxon_timing.beacon_init_val = cpu_to_le32(interval_tm - rem);
-+
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+	IWL_DEBUG_ASSOC(priv,
-+			"beacon interval %d beacon timer %d beacon tim %d\n",
-+			le16_to_cpu(priv->rxon_timing.beacon_interval),
-+			le32_to_cpu(priv->rxon_timing.beacon_init_val),
-+			le16_to_cpu(priv->rxon_timing.atim_window));
-+}
-+EXPORT_SYMBOL(iwl_setup_rxon_timing);
-+
- void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, int hw_decrypt)
- {
- 	struct iwl_rxon_cmd *rxon = &priv->staging_rxon;
-@@ -1369,6 +1426,8 @@ int iwl_set_hw_params(struct iwl_priv *priv)
- 		priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE_4K;
- 	priv->hw_params.max_pkt_size = priv->hw_params.rx_buf_size - 256;
- 
-+	priv->hw_params.max_beacon_itrvl = IWL_MAX_UCODE_BEACON_INTERVAL;
-+
- 	if (priv->cfg->mod_params->disable_11n)
- 		priv->cfg->sku &= ~IWL_SKU_N;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 356d4e3..a658410 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -554,6 +554,7 @@ extern void iwl_rx_reply_rx_phy(struct iwl_priv *priv,
- void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
- 					   struct iwl_rx_mem_buffer *rxb);
- 
-+void iwl_setup_rxon_timing(struct iwl_priv *priv);
- static inline int iwl_send_rxon_assoc(struct iwl_priv *priv)
- {
- 	return priv->cfg->ops->hcmd->rxon_assoc(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 5da60e4..1a2fe37 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -608,6 +608,7 @@ struct iwl_hw_params {
- 	u8  max_stations;
- 	u8  bcast_sta_id;
- 	u8 fat_channel;
-+	u8  max_beacon_itrvl;	/* in 1024 ms */
- 	u32 max_inst_size;
- 	u32 max_data_size;
- 	u32 max_bsm_size;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 016567f..303c4b4 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -361,76 +361,6 @@ static void iwl3945_unset_hw_params(struct iwl_priv *priv)
- 				    priv->shared_phys);
- }
- 
--#define MAX_UCODE_BEACON_INTERVAL	1024
--#define INTEL_CONN_LISTEN_INTERVAL	cpu_to_le16(0xA)
--
--static __le16 iwl3945_adjust_beacon_interval(u16 beacon_val)
--{
--	u16 new_val = 0;
--	u16 beacon_factor = 0;
--
--	beacon_factor =
--	    (beacon_val + MAX_UCODE_BEACON_INTERVAL)
--		/ MAX_UCODE_BEACON_INTERVAL;
--	new_val = beacon_val / beacon_factor;
--
--	return cpu_to_le16(new_val);
--}
--
--static void iwl3945_setup_rxon_timing(struct iwl_priv *priv)
--{
--	u64 interval_tm_unit;
--	u64 tsf, result;
--	unsigned long flags;
--	struct ieee80211_conf *conf = NULL;
--	u16 beacon_int = 0;
--
--	conf = ieee80211_get_hw_conf(priv->hw);
--
--	spin_lock_irqsave(&priv->lock, flags);
--	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
--	priv->rxon_timing.listen_interval = INTEL_CONN_LISTEN_INTERVAL;
--
--	tsf = priv->timestamp;
--
--	beacon_int = priv->beacon_int;
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
--		if (beacon_int == 0) {
--			priv->rxon_timing.beacon_interval = cpu_to_le16(100);
--			priv->rxon_timing.beacon_init_val = cpu_to_le32(102400);
--		} else {
--			priv->rxon_timing.beacon_interval =
--				cpu_to_le16(beacon_int);
--			priv->rxon_timing.beacon_interval =
--			    iwl3945_adjust_beacon_interval(
--				le16_to_cpu(priv->rxon_timing.beacon_interval));
--		}
--
--		priv->rxon_timing.atim_window = 0;
--	} else {
--		priv->rxon_timing.beacon_interval =
--			iwl3945_adjust_beacon_interval(
--				priv->vif->bss_conf.beacon_int);
--		/* TODO: we need to get atim_window from upper stack
--		 * for now we set to 0 */
--		priv->rxon_timing.atim_window = 0;
--	}
--
--	interval_tm_unit =
--		(le16_to_cpu(priv->rxon_timing.beacon_interval) * 1024);
--	result = do_div(tsf, interval_tm_unit);
--	priv->rxon_timing.beacon_init_val =
--	    cpu_to_le32((u32) ((u64) interval_tm_unit - result));
--
--	IWL_DEBUG_ASSOC(priv,
--		"beacon interval %d beacon timer %d beacon tim %d\n",
--		le16_to_cpu(priv->rxon_timing.beacon_interval),
--		le32_to_cpu(priv->rxon_timing.beacon_init_val),
--		le16_to_cpu(priv->rxon_timing.atim_window));
--}
--
- static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
- 				      struct ieee80211_tx_info *info,
- 				      struct iwl_cmd *cmd,
-@@ -3066,7 +2996,7 @@ void iwl3945_post_associate(struct iwl_priv *priv)
- 	iwlcore_commit_rxon(priv);
- 
- 	memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
--	iwl3945_setup_rxon_timing(priv);
-+	iwl_setup_rxon_timing(priv);
- 	rc = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 			      sizeof(priv->rxon_timing), &priv->rxon_timing);
- 	if (rc)
-@@ -3261,7 +3191,7 @@ void iwl3945_config_ap(struct iwl_priv *priv)
- 
- 		/* RXON Timing */
- 		memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
--		iwl3945_setup_rxon_timing(priv);
-+		iwl_setup_rxon_timing(priv);
- 		rc = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 				      sizeof(priv->rxon_timing),
- 				      &priv->rxon_timing);
--- 
-1.5.6.3
+Umm, no? Neither approach is correct.
+
+johannes
+
+--=-hA1EwI6qy2sjgLlK349R
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKJNSuAAoJEODzc/N7+Qma6U4P/2+/3pGGFbVgdm409/2PgzIp
+NbgE4YOKq1HnO/Aqzg0Wy7aUC2x6d/K7DGeHWB5x5M5UvxKVYROJNjCadf8jKBll
+LeXgsurBJ0s6xLCXZ6KBr6YvpAOlEZA3hMZsfcErlEcrN+oYlTlUquPR40ONB+jw
+Xb7Y7/juXQeqehVva4cG/IoK1/8Ia2SzJYP+NP9UDZ5ISsRMgcptCj8Fgsu21HO2
+nK0E4G/+PcusqxUD46dDiWG+/nm93mbgeFMZ6rQISyHH0osXTYekESrvMGs8J0kH
+FfwOLSJezS2420PsWLaTBrKMGWGcDfY2zXy800usv4QYugmg8R1i9/b+DQKBkTUN
+p2tbBsAn80hSWcTFnFB3H2m99E/l/RZJPprgElMsqlOe038clQLxuKWsePV77Xp4
+NZLPi+FyxyOsOkQISIm7FnO6jCEW/O5kIZgNcBxOJ67dUksRmno2PMz5U71y00j5
+At+OFrbyX5uDDnxTcHaz4l+x6Jqx2TvHe3kg+e0ZU6BQJvkSKpy7ls3rwrlUNunv
+TYLsyZizna+tmFepdBvH9hUYR5i/mUH67tlEard5kp43jpYp/YJ1M8p4cUico3Us
+WQ3VrIOqW6y+vG5clHTqqlpAl4KlR8B3khqx4F9YxFmk6nfcwFb5sYSyzaenqa3b
+Unv1k+54mqc6Re0ZJpaV
+=t+b3
+-----END PGP SIGNATURE-----
+
+--=-hA1EwI6qy2sjgLlK349R--
 
