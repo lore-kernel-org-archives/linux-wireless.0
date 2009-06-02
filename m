@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:64766 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbZFYOFL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56455 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814AbZFBWiU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 10:05:11 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so283727fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 07:05:12 -0700 (PDT)
-Date: Thu, 25 Jun 2009 10:36:36 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: kernel crashes, 2.6.30, rt2x00, ath5k, ieee80211_get_*_rate,
-	automatic rate control
-Message-ID: <20090625083636.GA6323@linux-m68k.org>
-References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20090623202541.GA3635@hash.localnet>
+	Tue, 2 Jun 2009 18:38:20 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] mac80211: extend sta kdoc - explain when they are added
+Date: Tue,  2 Jun 2009 18:38:14 -0400
+Message-Id: <1243982294-6175-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 04:25:41PM -0400, Bob Copeland wrote:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/sta_info.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-> 
-> The patch should already be on the way to stable, but I'll check on it.
-
-thanks, you certainly have my vote that it should get into 2.6.30.*
-
-On an unrelated note, the ath5k device is in a netbook with an wifi LED and
-Fn-F2 hotkey to toggle wlan.
-
-The hotkey works, the LED not. What do I need to make the LED working on the 
-device?
-
-Also, while the hotkey works how do query the current on/off status of it 
-in Linux?
-
-Richard
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index d5611d8..a360bce 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -44,6 +44,15 @@
+  * When the insertion fails (sta_info_insert()) returns non-zero), the
+  * structure will have been freed by sta_info_insert()!
+  *
++ * sta entries are added by mac80211 when you establish a link with a
++ * peer. This means different things for the different type of interfaces
++ * we support. For a regular station this mean we add the AP sta when we
++ * receive an assocation response from the AP. For IBSS this occurs when
++ * we receive a probe response or a beacon from target IBSS network. For
++ * WDS we add the sta for the peer imediately upon device open. When using
++ * AP mode we add stations for each respective station upon request from
++ * userspace through nl80211.
++ *
+  * Because there are debugfs entries for each station, and adding those
+  * must be able to sleep, it is also possible to "pin" a station entry,
+  * that means it can be removed from the hash table but not be freed.
+-- 
+1.5.6.4
 
