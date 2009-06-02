@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:14719 "EHLO mx2.netapp.com"
+Received: from smtp3-g21.free.fr ([212.27.42.3]:43178 "EHLO smtp3-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755524AbZFWRAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 13:00:16 -0400
-Subject: Re: [PATCH 04/10] sunrpc: Use rcu_barrier() on unload.
-From: Trond Myklebust <Trond.Myklebust@netapp.com>
-To: Jesper Dangaard Brouer <hawk@comx.dk>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
-	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
-	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
-	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
-In-Reply-To: <20090623150414.22490.14888.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
-	 <20090623150414.22490.14888.stgit@localhost>
-Content-Type: text/plain
-Date: Tue, 23 Jun 2009 12:59:13 -0400
-Message-Id: <1245776353.9586.1.camel@heimdal.trondhjem.org>
-Mime-Version: 1.0
+	id S1754713AbZFBSRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 14:17:55 -0400
+Message-ID: <4A256CCC.5040908@free.fr>
+Date: Tue, 02 Jun 2009 20:17:48 +0200
+From: matthieu castet <castet.matthieu@free.fr>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 : unaligned access on mips
+References: <4A244E19.7090501@free.fr> <4A244F6C.3000509@free.fr> <200906021720.39080.mb@bu3sch.de>
+In-Reply-To: <200906021720.39080.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-06-23 at 17:04 +0200, Jesper Dangaard Brouer wrote:
-> The sunrpc module uses rcu_call() thus it should use rcu_barrier() on
-> module unload.
-> 
-> Have not verified that the possibility for new call_rcu() callbacks
-> has been disabled.  As a hint for checking, the functions calling
-> call_rcu() (unx_destroy_cred and generic_destroy_cred) are
-> registered as crdestroy function pointer in struct rpc_credops.
-> 
-> Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
-> ---
-> 
->  net/sunrpc/sunrpc_syms.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/sunrpc/sunrpc_syms.c b/net/sunrpc/sunrpc_syms.c
-> index 843629f..adaa819 100644
-> --- a/net/sunrpc/sunrpc_syms.c
-> +++ b/net/sunrpc/sunrpc_syms.c
-> @@ -66,6 +66,7 @@ cleanup_sunrpc(void)
->  #ifdef CONFIG_PROC_FS
->  	rpc_proc_exit();
->  #endif
-> +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
->  }
->  MODULE_LICENSE("GPL");
->  module_init(init_sunrpc);
-> 
+Hi Michael,
 
-Acked-by: Trond Myklebust <Trond.Myklebust@netapp.com>
--- 
-Trond Myklebust
-Linux NFS client maintainer
+Michael Buesch wrote:
+> On Tuesday 02 June 2009 00:00:12 matthieu castet wrote:
+>> matthieu castet wrote:
+>>> Hi,
+>>>
+>>> b43_generate_plcp_hdr generate unaligned access on mips with gcc [1] 
+>>> from openwrt.
+>>>
+>>> A small testcase [2] show that &plcp->data is access as a 32 bit aligned 
+>>> variable (see the "lw      $2,0($4)" and "sw      $2,0($4)").
+>>> I don't know enough mips to know if it is a gcc bug (ignoring the packed 
+>>> attribute) or something missing in b43 code.
+>> For example using "plcp->data" instead "*data" produce the correct code.
+> 
+> Uhm, I'm not sure. This code has been in the driver as-is forever and I don't
+> see any unaligned access issues on mips (I checked a month or so ago).
+Where does this pointer come from ? May be other code change change this 
+pointer alignement?
+Which toolchain did you use ?
+Could you try to build the testcase I posted and see which code it 
+generate ?
 
-NetApp
-Trond.Myklebust@netapp.com
-www.netapp.com
+
+> The plcp data structure is also __attribute__((packed)), so there can't be any
+> unaligned accesses, as gcc is required to _expect_ unaligned accesses on structures
+> with packed attribute. So it is required to do byte accesses on architectures where
+> alignment matters.
+> So I don't think there's an issue in the code.
+> 
+But the code doesn't use the structure to access the data.
+It use by an extra pointer "data", and I believe gcc loose the packed 
+info (use byte accesses) when we do the "u32 *data = &plcp->data".
+
+
+Matthieu
