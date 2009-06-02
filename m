@@ -1,80 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38755 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751179AbZFPAlR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 20:41:17 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2009 17:41:20 -0700
-Date: Mon, 15 Jun 2009 17:41:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Greg KH <greg@kroah.com>, <corbet@lwn.net>
-CC: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
-Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
-	window
-Message-ID: <20090616004122.GC5492@tesla>
-References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com> <20090615201934.GA12685@kroah.com> <20090615214735.GE23972@bombadil.infradead.org> <20090615223206.GA4966@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090615223206.GA4966@kroah.com>
+Received: from mail-fx0-f216.google.com ([209.85.220.216]:63432 "EHLO
+	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753933AbZFBQvJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 12:51:09 -0400
+Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
+From: Alejandro Riveira =?ISO-8859-1?Q?Fern=E1ndez?=
+	<alejandro.riveira@gmail.com>
+Reply-To: alejandro.riveira@gmail.com
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+In-Reply-To: <200906021834.40009.IvDoorn@gmail.com>
+References: <1243247687.5322.8.camel@varda> <1243351397.4888.2.camel@varda>
+	 <1243951292.22942.1.camel@varda>  <200906021834.40009.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xqSLr7diPuRo3bwbiEDD"
+Date: Tue, 02 Jun 2009 18:51:05 +0200
+Message-Id: <1243961465.9894.3.camel@varda>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 15, 2009 at 03:32:06PM -0700, Greg KH wrote:
-> On Mon, Jun 15, 2009 at 05:47:35PM -0400, Luis R. Rodriguez wrote:
-> > From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > Subject: [PATCH] Documentation: add documentation summary for rc-series and merge window
-> >
-> > This is losely based on previous discussions on linux-kernel [1][2].
-> > Lets also refer people reading the stable rules to
-> > Documentation/development-process/.
-> >
-> > [1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
-> > [2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
-> >
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >  Documentation/development-process/2.Process |   66 +++++++++++++++++++++++++++
-> >  Documentation/stable_kernel_rules.txt       |    5 ++
-> >  2 files changed, 71 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/Documentation/development-process/2.Process b/Documentation/development-process/2.Process
-> > index d750321..e023db6 100644
-> > --- a/Documentation/development-process/2.Process
-> > +++ b/Documentation/development-process/2.Process
-> 
-> You should cc: the author of this document, when modifying it.
 
-Added.
+--=-xqSLr7diPuRo3bwbiEDD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> > @@ -7,6 +7,72 @@ course of one year, the kernel has since had to evolve a number of
-> >  processes to keep development happening smoothly.  A solid understanding of
-> >  how the process works is required in order to be an effective part of it.
-> >
-> > +2.0 SUMMARY
-> > +
-> > +This section provides a brief summary of the new kernel release rules.
-> > +
-> > +2.0.0 NEW KERNEL RELEASE RULES
-> 
-> "New"?  We've been doing this for many many years now, what is "new"
-> about it?
+El mar, 02-06-2009 a las 18:34 +0200, Ivo van Doorn escribi=C3=B3:
+> On Tuesday 02 June 2009, Alejandro Riveira Fern=C3=A1ndez wrote:
 
-New as in the next kernel release, sorry. Didn't mean as in "this is a
-new process".
+[...]
 
-> And why are you starting a series with "0"?  Just to keep from having to
-> modify all of the other numbers?  None of the other files in this
-> directory start at 0...
+> > ICMP ECHO REQUEST
+> >=20
+> > Any advance?
+>=20
+> Well I checked the dumps from the bugreport, but like I expected
+> the only difference is that with the slow speed the correct value
+> is written, and the fast speed the wrong value is written.
 
-Heh yeah.
+So my chip works better with incorrect values written in its registers?
 
-  Luis
+/me confused
+
+What about other chips out there do they prefer wrong values too ;)
+Maybe what we thought wrong values are not that wrong ?
+
+/me stops rambling
+
+> I couldn't find anything else interesting in it... :(
+
+Thanks anyway.
+
+>=20
+> Ivo
+--=20
+OOP to me means only messaging, local retention and protection and
+hiding of state-process, and extreme late-binding of all things. It can
+be done in Smalltalk and in LISP. There are possibly other systems in
+which this is possible, but I'm not aware of them.
+                                                      -- Alan Kay --
+
+--=-xqSLr7diPuRo3bwbiEDD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Esto es una parte de mensaje firmado digitalmente
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQIcBAABAgAGBQJKJVhzAAoJEDO4iEReSTB2fg0QAML3N8nusJHAQ2+8+MGmspnA
+D5Zzmq5Wy03DSY4QP2yqXOE4B/nS9iEtBEtWXYt5t0NjuKySKykgNj9ZTQB87AoP
+uX1Ezuw1JW3yQ3nBpdKqNivPbXX9+hRvsvi7fVy5tt3CR1aD70tv09C5gsi7qKYY
+OhZaR72X5IArPkdyv+lGx1PrHWF+KB255L3iJ3rE+nBSWCHMS0n+EOUzGTlAuCpI
+mmN2wAJt32mpsuvLgTsFWu1r98yyQR8f5c9GzFvg+YpLkQWVz4nnNfpT/5g2ii3P
+AVJsFLMlGfr0luHYTf0M5c55J5A4nxZq0C4zXtb3yRmrXW2jCfp5w9UEq2lsYR/I
+23wW5RBJDSvb+VIS3hsvBv+awA5X17F0aClTdfXNw02p1cZ7P516+S1M6q6w7Qq1
+o5s5OskEL8aLbKQ7Ex2Dw1oxjQmUtNAiigo0z5NALNUSAG//RAYEA2GMuPwReuAC
+Ov+f624eYU5bbDk99poYyLT/omPRG67MsknjEq5Zm6JCWvHdJQSS2VjFHJm3QXT5
+OFcvoS7bwdL5iBVNh4vrWvAeZSoeDJXv/j+T0ArXLkRAo8WBw36AB0XBz2Lcv426
+9khuD+IsLfxtvMbExeGkDicBESzFWXXJg02t+I0o9HyzSSxpOsm9rvuHwPr1g3n0
+UJhEzNS4xOXWTQKnDfpi
+=tvS2
+-----END PGP SIGNATURE-----
+
+--=-xqSLr7diPuRo3bwbiEDD--
+
