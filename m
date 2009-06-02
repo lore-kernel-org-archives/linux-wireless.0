@@ -1,73 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43076 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbZFFR7c (ORCPT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35233 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752499AbZFBOeC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:59:32 -0400
-Subject: Re: [PATCH 2/2] ar9170-fw: Use self-built toolchain by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A2AA3BA.4050200@web.de>
-References: <4A2AA3BA.4050200@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IVUFuM0prXlzt2RVpsJl"
-Date: Sat, 06 Jun 2009 19:59:29 +0200
-Message-Id: <1244311169.17485.16.camel@johannes.local>
+	Tue, 2 Jun 2009 10:34:02 -0400
+Date: Tue, 2 Jun 2009 15:35:08 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Subject: Re: [PATCH 08/10] tty_io: export tty_class
+Message-ID: <20090602153508.45e57292@lxorguk.ukuu.org.uk>
+In-Reply-To: <20090602142241.GA18656@doriath.ww600.siemens.net>
+References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-5-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-6-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
+	<1243868091-5315-9-git-send-email-dbaryshkov@gmail.com>
+	<20090601160721.7b262469@lxorguk.ukuu.org.uk>
+	<bc64b4640906010810l8ace77byfbd650b549f9b5c3@mail.gmail.com>
+	<20090601163418.465be751@lxorguk.ukuu.org.uk>
+	<20090602142241.GA18656@doriath.ww600.siemens.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > Yes - create a proper tty helper function for doing the job and document
+> > what it does. That way if the tty layer is changed it is obvious that
+> > this code also needs considering.
+> 
+> Is this suitable:
 
---=-IVUFuM0prXlzt2RVpsJl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Perfect - add the needed documentation to the public function and submit
+it for merging.
 
-On Sat, 2009-06-06 at 19:13 +0200, Jan Kiszka wrote:
-> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
-> ---
->=20
->  Makefile |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/Makefile b/Makefile
-> index e0113d6..5fc0868 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -1,7 +1,7 @@
->  # Type is AP or STA
->  TYPE ?=3D STA
-> =20
-> -PFX ?=3D /usr/share/gnush_v0901_elf-1/bin/sh-elf-
-> +PFX ?=3D $(shell pwd)/toolchain/inst/bin/sh-elf-
-
-This will fail in strange ways if the user doesn't first manually build
-the toolchain... It does that if you don't have it installed, but it
-would be nice to tell them to build it?
-
-johannes
-
---=-IVUFuM0prXlzt2RVpsJl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKq59AAoJEODzc/N7+QmaPzwP/RfzpNoJycsZTLyGXRPvswGo
-lEG9qxVXxRwJ8K78y50LNWhr8uYFTAAepOgqPhaQv2O6zvn4O/rBUKWAjmnMR72Y
-L2S8gXNvdeL0jKftjEVA31eZMKkLvjIeigNGxf0aHeNEa93jKw9I/+x2kQwab/Uj
-kAQ1yVYLTkBLJi9cIFYAV79QtzMXYoWJGjvhnf4Q3ORJleujlg6PYN0rW578jGXm
-eOu8ZKGfde1mJNZ/VVitnMVWNa5ujck3wyxmFwHWvkcStWT6rViwoMHUft0ytMi5
-ONGQ9n7wczx7ClaKSPl9tDmoUrXGxfoUhRSsa5zflKihe9g4cAVues8GCv09EQuc
-wi/T5Epfs62JPDyfyYHR8q8A+/FOtuluLC6FhAAA6rVSbqftAiwmPAnxDmRQgckm
-PX1wl/y+ttSLbzYIwKbUMsK/GHB4uZobGV7mqK5eIdXH3Yt9MVZv18q78vVdKmfG
-OJazLOah7RvzDfC7+s6bX7mCMDzy0KEwJ95HjvBe5NwcoBqunjFNOkUZSVpgvjzI
-Obxicaffe2jatyXBqhFqLXu1dGOoBNEZx/YC0TUa8NMM9lRWRg5hW5DHeUV9kbEX
-XIQg8LGvPOA7a2zefN3Z9wQkcRmM5H+kfvmsmif6ghSRf+9hD8t8hq2XIWeQw2se
-WI2BLSVMc8qQDfVIbVaQ
-=bqTZ
------END PGP SIGNATURE-----
-
---=-IVUFuM0prXlzt2RVpsJl--
-
+Alan
