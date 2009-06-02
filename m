@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46201 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbZFRAfw (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:41587 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759370AbZFBI3z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 20:35:52 -0400
-Subject: Re: [PATCH] wireless extensions: play with netns
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-In-Reply-To: <m18wjqs7x4.fsf@fess.ebiederm.org>
-References: <1245263058.31588.38.camel@johannes.local>
-	 <m1y6rqwpur.fsf@fess.ebiederm.org>
-	 <1245276899.31588.57.camel@johannes.local>
-	 <m1r5xitpdh.fsf@fess.ebiederm.org>
-	 <1245282099.31588.69.camel@johannes.local>
-	 <1245282315.31588.71.camel@johannes.local>
-	 <m18wjqs7x4.fsf@fess.ebiederm.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-o/b8sLPUEjy3s79FMXvp"
-Date: Thu, 18 Jun 2009 02:35:21 +0200
-Message-Id: <1245285321.31588.75.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 2 Jun 2009 04:29:55 -0400
+MIME-Version: 1.0
+In-Reply-To: <1243930893.3192.62.camel@localhost.localdomain>
+References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
+	 <69e28c910906010921r56cf7017gc858cb7ba819c385@mail.gmail.com>
+	 <20090601203348.GC7143@doriath.ww600.siemens.net>
+	 <200906021010.49613.hs4233@mail.mn-solutions.de>
+	 <1243930893.3192.62.camel@localhost.localdomain>
+Date: Tue, 2 Jun 2009 12:29:55 +0400
+Message-ID: <bc64b4640906020129x4fe15e5en9d8e2cad1d86b236@mail.gmail.com>
+Subject: =?KOI8-R?B?79TXxdQ6IFtQQVRDSCAxMC8xMF0gaWVlZTgwMjE1NDogYWRkIGF0ODZyZjIzMC8=?=
+	=?KOI8-R?B?cmYyMzEgc3BpIGRyaXZlcg==?=
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	slapin@ossfans.org, maxim.osipov@siemens.com,
+	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/6/2, Marcel Holtmann <marcel@holtmann.org>:
+> Hi Holger,
+>
+>> > I thought about drivers/net as about ip (well, more or less)
+>> > network drivers. We have drivers/atm or drivers/bluetooth (and
+>> > bluetooth is 802.15.1...).
+>>
+>> I actually like that this is drivers/bluetooth and not
+>> drivers/ieee802151. Would you consider drivers/zigbee instead of
+>> drivers/ieee802154 ???
+>
+> I fully agree here.
+>
+> Please use "zigbee" instead of "ieee*" names since that can become messy
+> and confusing. I know that in theory the IEEE part of ZigBee is more
+> low-level radio and could be used by non-ZigBee devices, but that is not
+> gonna happen anyway. Especially with Bluetooth Low Energy pushing into
+> the turf of ZigBee. So please use proper names and not confuse people
+> with IEEE numbers ;)
 
---=-o/b8sLPUEjy3s79FMXvp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This gonna happen, as we are most probably going to implement 6lowpan
+on top of our stack. 6lowpan is a way to encapsulate IPv6 frames into
+IEEE 802.15.4 and has nothing in common with ZigBee. Moreover
+ZigBee is a trademark with strict rules upon it's usage. Our lawyers are
+currently investigating if it's possible to use this name in projects like
+Linux kernel which are open-source, non-related to any project but
+OTOH can be encapsulated in any commercial project.
 
-On Wed, 2009-06-17 at 17:27 -0700, Eric W. Biederman wrote:
+IEEE 802.15.4 is a term like IEEE 802.11. We do have mac80211,
+we have had (until recently) ieee80211 dir, so why bother?
 
-> > Subject: genetlink: make netns aware
-> >
-> > This makes generic netlink network namespace aware.
-> > No actual generic netlink families are made namespace
-> > aware, they need to be checked one by one and then
-> > set the family->netnsok member to true.
->=20
-> Are skb_clone and nlmsg_multicast really guaranteed not to sleep?
+For Bluetooth naming directories 'bluetooth' is logical, as 802.15.1
+standard is a less known name, doesn't incorporate latest changes
+from Bluetooth, etc.
 
-Yes, definitely, we call them in atomic callbacks already in various
-places. There are many callers that use the existing genlmsg_multicast()
-in atomic contexts.
-
-johannes
-
---=-o/b8sLPUEjy3s79FMXvp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKOYu7AAoJEODzc/N7+QmadTQQAI2yvGnGUpHXL9118eqUVBTq
-rGXHTB1IVHQEF2CynksnSQ9MvjhkaDVHsWxteERvKKo9oWmPFaL7idMBE0INoyWg
-Q5yOXN8O1em5tm7bs9qaSLoh+9IhaC3eO7gz6xyoSMzez7XhcFBsd9a9EYsEJL+E
-3f5V6t3sL7pEy3T8RxvbAv3XvRJWWNJwh514AaTwLQ1HWEWjgYkwTJt5h1Rklkzf
-XuzrBkgg9ub7gkXfLgxK+nAYGz4ROvNi84vpB1oLWr5LvQ8JgzJXl3/16QN0TvSz
-hLCJUS63CSWB8ZmUpitUK3/k5RgiJ/lVR1f0jh+JPXKICEbcGARfx5KlD4B+E3LQ
-tZqy2OGtrXpGkuZUJpaUdiWcjPSLNOKCyGKXiHbhsdS/uHGiIAOshgOFdidrAXBh
-0NYnP5zFabJR3zyCz6TslKZdy/irw/WgwTX8VBxuO7/FxKIXhO3WJBeNDn9kMyGC
-2zlYAG+pFv+JN3tuWabeWXU4yV8ui8Mv1dqp8SoxO3Kixqq8FvUMElN2UHrBlJJx
-Hvi0uTYWp3zQBa6P5eZ0Rg7JG5p984HNFJwpJuPOkltTOszSK44wvw8LUKto33ww
-XxuPkyN1ZO13+Ju8iXJADqZr9YyskG3snUUDOnYyjXmUF42Nwx38yLOKralto0Zx
-iDnpuShE/vcwDaCbv8TD
-=tK3N
------END PGP SIGNATURE-----
-
---=-o/b8sLPUEjy3s79FMXvp--
-
+-- 
+With best wishes
+Dmitry
