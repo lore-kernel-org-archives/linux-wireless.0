@@ -1,47 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:52150 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbZFZE2T (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40230 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757161AbZFBLMw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2009 00:28:19 -0400
-Received: by ewy6 with SMTP id 6so2972149ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 21:28:21 -0700 (PDT)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: [PATCH] zd1211rw: adding SONY IFU-WLM2 (054c:0257) as a zd1211b device
-Date: Fri, 26 Jun 2009 05:28:15 +0100
-Message-Id: <1245990495-5681-1-git-send-email-HinTak.Leung@gmail.com>
+	Tue, 2 Jun 2009 07:12:52 -0400
+Message-Id: <20090602110150.402332241@sipsolutions.net>
+References: <20090602110136.631660156@sipsolutions.net>
+Date: Tue, 02 Jun 2009 13:01:40 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] rfkill: add function to query state
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yevgen Kotikov reported success on the sourceforge zd1211-devs list
-with the following details:
+Sometimes it is necessary to know how the state is,
+and it is easier to query rfkill than keep track of
+it somewhere else, so add a function for that. This
+could later be expanded to return hard/soft block,
+but so far that isn't necessary.
 
-Brand/retail: SONY IFU-WLM2
-USB-IDs: Vendor: 0x054C Device: 0x0257
-chip ID: zd1211b chip 054c:0257 v4802 high 00-0b-6b AL2230_RF pa0 -----
-FCC ID: unknown
-
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Tested-by: Yevgen Kotikov <yevgen.kotikov@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/zd1211rw/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ include/linux/rfkill.h |   12 ++++++++++++
+ net/rfkill/core.c      |   13 +++++++++++++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 2c24dd9..722b20c 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -66,6 +66,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0471, 0x1237), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x050d, 0x705c), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x054c, 0x0257), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x340f), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x3410), .driver_info = DEVICE_ZD1211B },
+--- wireless-testing.orig/include/linux/rfkill.h	2009-06-02 12:55:02.000000000 +0200
++++ wireless-testing/include/linux/rfkill.h	2009-06-02 12:55:20.000000000 +0200
+@@ -261,6 +261,13 @@ void rfkill_set_states(struct rfkill *rf
+  *	registered drivers?
+  */
+ void rfkill_set_global_sw_state(const enum rfkill_type type, bool blocked);
++
++/**
++ * rfkill_blocked - query rfkill block
++ *
++ * @rfkill: rfkill struct to query
++ */
++bool rfkill_blocked(struct rfkill *rfkill);
+ #else /* !RFKILL */
+ static inline struct rfkill * __must_check
+ rfkill_alloc(const char *name,
+@@ -313,6 +320,11 @@ static inline void rfkill_set_global_sw_
+ 					      bool blocked)
+ {
+ }
++
++static inline bool rfkill_blocked(struct rfkill *rfkill)
++{
++	return false;
++}
+ #endif /* RFKILL || RFKILL_MODULE */
+ 
+ 
+--- wireless-testing.orig/net/rfkill/core.c	2009-06-02 12:55:02.000000000 +0200
++++ wireless-testing/net/rfkill/core.c	2009-06-02 12:55:20.000000000 +0200
+@@ -773,6 +773,19 @@ static struct class rfkill_class = {
+ 	.resume		= rfkill_resume,
+ };
+ 
++bool rfkill_blocked(struct rfkill *rfkill)
++{
++	unsigned long flags;
++	u32 state;
++
++	spin_lock_irqsave(&rfkill->lock, flags);
++	state = rfkill->state;
++	spin_unlock_irqrestore(&rfkill->lock, flags);
++
++	return !!(state & RFKILL_BLOCK_ANY);
++}
++EXPORT_SYMBOL(rfkill_blocked);
++
+ 
+ struct rfkill * __must_check rfkill_alloc(const char *name,
+ 					  struct device *parent,
+
 -- 
-1.6.2.5
 
