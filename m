@@ -1,90 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from build.ossfans.org ([67.223.233.67]:32875 "EHLO
-	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754073AbZFGBSl (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:60351 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753793AbZFBBaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 21:18:41 -0400
-From: Sergey Lapin <slapin@ossfans.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Sergey Lapin <slapin@ossfans.org>
-Subject: [PATCH 0/5] IEEE 802.15.4 stack: generic parts v3
-Date: Sun,  7 Jun 2009 05:18:29 +0400
-Message-Id: <cover.1244337432.git.slapin@ossfans.org>
+	Mon, 1 Jun 2009 21:30:18 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so2686378wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 18:30:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1243905828-21933-1-git-send-email-lrodriguez@atheros.com>
+References: <1243905828-21933-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 1 Jun 2009 18:30:00 -0700
+Message-ID: <43e72e890906011830q2867ed1el7914846c15c8eb3e@mail.gmail.com>
+Subject: Re: [RFC] mac80211: handle -EXIST on sta_info_insert()
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Jouni.Malinen@atheros.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, Jun 1, 2009 at 6:23 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> There's a few places where we either did not rcu_read_lock()
+> prior to addition of a a new sta or we allocated it before
+> checking for its existance. In most places, like device open
+> and close we should have at least some guarantee the stas are
+> wiped but in other places this could not be the case.
+>
+> Lets protect against RCU in the missing places. The only
+> place I see is is in ieee80211_rx_bss_info(). Not sure
+> we are calling ieee80211_ibss_add_sta() twice there though.
+>
+> In our mac80211 cfg80211 callback for device addition we
+> also can simplify the code by first checking for the STA
+> before trying to add it and then checking for -EEXIST which
+> we were not doing. If that actualy would happen we could
+> end up potentially with a stale sta and the rate info was
+> never updated. It seems cleaner to check for the sta first.
+>
+> Lastly, we add a WARN_ON() on the STA mlme path upon call to
+> ieee80211_rx_mgmt_assoc_resp() for -EEXIST. This should not
+> happen, we could just return -EIO or simply ignore it.
 
-This is a third version of pull/merge request for IEEE 802.15.4 stack.
+Hm, actually on second thought what if we simply kdoc that you should
+check for the sta's existence first prior to addition. Then we can
+remove the pesky -EEXIST.
 
-As per Dmitry request I'm taking over passing this patchset through
-review. This is my first pull request through mail lists, so I might
-do some mistakes, but I hope I did not miss any.
-
-Major changes from previous post:
- * Fixed email addresses for Sergey Lapin.
-
-The following changes since commit 81ee1bad86bd6752c626018d43a74e3f81f1ae72:
-  Linus Torvalds (1):
-        Merge branch 'for-linus' of git://git.kernel.org/.../viro/vfs-2.6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/slapin/lowpan.git for-next
-
-Sergey Lapin (5):
-      Add constants for the ieee 802.15.4 stack
-      net: add IEEE 802.15.4 socket family implementation
-      net: add NL802154 interface for configuration of 802.15.4 devices
-      ieee802154: add documentation about our stack
-      ieee802154: add simple HardMAC driver sample
-
- Documentation/networking/ieee802154.txt |   76 +++++
- MAINTAINERS                             |   12 +
- drivers/Makefile                        |    1 +
- drivers/ieee802154/Kconfig              |   22 ++
- drivers/ieee802154/Makefile             |    3 +
- drivers/ieee802154/fakehard.c           |  270 ++++++++++++++++
- drivers/net/Kconfig                     |    2 +
- include/linux/if_arp.h                  |    2 +
- include/linux/if_ether.h                |    1 +
- include/linux/nl802154.h                |  119 +++++++
- include/linux/socket.h                  |    4 +-
- include/net/ieee802154/af_ieee802154.h  |   60 ++++
- include/net/ieee802154/mac_def.h        |  160 ++++++++++
- include/net/ieee802154/netdevice.h      |  115 +++++++
- include/net/ieee802154/nl802154.h       |   41 +++
- net/Kconfig                             |    1 +
- net/Makefile                            |    1 +
- net/core/dev.c                          |    6 +-
- net/core/sock.c                         |    3 +
- net/ieee802154/Kconfig                  |   12 +
- net/ieee802154/Makefile                 |    5 +
- net/ieee802154/af802154.h               |   36 +++
- net/ieee802154/af_ieee802154.c          |  372 ++++++++++++++++++++++
- net/ieee802154/dgram.c                  |  394 +++++++++++++++++++++++
- net/ieee802154/netlink.c                |  523 +++++++++++++++++++++++++++++++
- net/ieee802154/nl_policy.c              |   52 +++
- net/ieee802154/raw.c                    |  254 +++++++++++++++
- 27 files changed, 2544 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/networking/ieee802154.txt
- create mode 100644 drivers/ieee802154/Kconfig
- create mode 100644 drivers/ieee802154/Makefile
- create mode 100644 drivers/ieee802154/fakehard.c
- create mode 100644 include/linux/nl802154.h
- create mode 100644 include/net/ieee802154/af_ieee802154.h
- create mode 100644 include/net/ieee802154/mac_def.h
- create mode 100644 include/net/ieee802154/netdevice.h
- create mode 100644 include/net/ieee802154/nl802154.h
- create mode 100644 net/ieee802154/Kconfig
- create mode 100644 net/ieee802154/Makefile
- create mode 100644 net/ieee802154/af802154.h
- create mode 100644 net/ieee802154/af_ieee802154.c
- create mode 100644 net/ieee802154/dgram.c
- create mode 100644 net/ieee802154/netlink.c
- create mode 100644 net/ieee802154/nl_policy.c
- create mode 100644 net/ieee802154/raw.c
+  Luis
