@@ -1,122 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51392 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757531AbZFDQUE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 12:20:04 -0400
-Subject: Re: [PATCH] rfkill: always init poll delayed work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <4A27EF6C.8000208@lwfinger.net>
-References: <1244015729.7176.28.camel@johannes.local>
-	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>
-	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>
-	 <4A27EF6C.8000208@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zTNMdhjVvGwD6WbgYO6i"
-Date: Thu, 04 Jun 2009 18:19:56 +0200
-Message-Id: <1244132396.22576.82.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:33852 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755918AbZFBOEx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 10:04:53 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 07:04:55 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Fix write callback of 'debug' which configures debug mask
+Date: Tue, 2 Jun 2009 19:28:55 +0530
+Message-ID: <1243951136-4033-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Handle error condition on copy_from_user() properly and
+make sure a NUL terminated char[] is sent to strict_strtoul()
+for proper conversion.
 
---=-zTNMdhjVvGwD6WbgYO6i
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   22 ++++++++++++++--------
+ 1 files changed, 14 insertions(+), 8 deletions(-)
 
-On Thu, 2009-06-04 at 10:59 -0500, Larry Finger wrote:
-> Johannes Berg wrote:
-> >=20
-> > Could you try, without the patch in question, what happens in terms of
-> > uevents
-> >  * have everything on
-> >  * press rfkill button (expect -> hw_blocked transition)
-> >  * put interface down
-> >  * press rfkill button (expect -> unblocked transition)
-> >  * put interface up
->=20
-> I'm running v2.6.30-rc8-25743-g3b2029b from wireless-testing.
-
-But this is without the patch?! If yes that would confuse me.
-
-johannes
-
-> This is with interface UP and switch off:
->=20
-> larrylap:/etc/sysconfig/network # cat /sys/class/rfkill/rfkill0/uevent
-> PHYSDEVPATH=3D/devices/pci0000:00/0000:00:0d.0/0000:04:00.0/ssb0:0
-> PHYSDEVBUS=3Dssb
-> PHYSDEVDRIVER=3Db43
-> RFKILL_NAME=3Dphy0
-> RFKILL_TYPE=3Dwlan
-> RFKILL_STATE=3D2
->=20
->=20
-> larrylap:/etc/sysconfig/network # ifdown eth1
->     eth1      name: BCM4312 802.11a/b/g
-> larrylap:/etc/sysconfig/network # cat /sys/class/rfkill/rfkill0/uevent
-> PHYSDEVPATH=3D/devices/pci0000:00/0000:00:0d.0/0000:04:00.0/ssb0:0
-> PHYSDEVBUS=3Dssb
-> PHYSDEVDRIVER=3Db43
-> RFKILL_NAME=3Dphy0
-> RFKILL_TYPE=3Dwlan
-> RFKILL_STATE=3D2
->=20
-> At this point, radio kill switch turned on:
->=20
-> larrylap:/etc/sysconfig/network # ifup eth1
->     eth1      name: BCM4312 802.11a/b/g
->     eth1      warning: WPA configured but may be unsupported
->     eth1      warning: by this device
->     eth1      starting wpa_supplicant
-> SIOCSIFFLAGS: Unknown error 132
-> Could not set interface 'eth1' UP
-> RTNETLINK answers: Unknown error 132
-> Starting DHCP4 client on eth1. . . .
->     eth1      DHCP4 client NOT running
-> RTNETLINK answers: Unknown error 132
-> Cannot enable interface eth1.
-> interface eth1 is not up
->=20
-> larrylap:/etc/sysconfig/network # cat /sys/class/rfkill/rfkill0/uevent
-> PHYSDEVPATH=3D/devices/pci0000:00/0000:00:0d.0/0000:04:00.0/ssb0:0
-> PHYSDEVBUS=3Dssb
-> PHYSDEVDRIVER=3Db43
-> RFKILL_NAME=3Dphy0
-> RFKILL_TYPE=3Dwlan
-> RFKILL_STATE=3D2
->=20
-> The ERFKILL (132) prevents it from coming up. Again, the switch was on
-> at this point.
->=20
-> I could not restore service until rmmod/insmod of b43.
->=20
-> Larry
->=20
-
---=-zTNMdhjVvGwD6WbgYO6i
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKJ/QoAAoJEODzc/N7+QmaMOEP/0sNmAR6O8bQWZ676c+w3vLb
-euJwR2h3mL21kIZUIosCg14dkaToIJxMA9EK+mnapNfGwS+Ux42aso3Apapeq9NH
-ckjkCNZtpziNpaa3A1fUZMqaYjgURqkeoq5rnt2IwYpFHaYA2jbaz9Dk4WvMZ80l
-yGxWVqw8xwMTHxgwqKAUTOQVFuOUXevt50BrgTtET3vkfmreF3TuWdjC8/jyA/XM
-qVrG3+IgDyzUvzcbi7lGNkitis6DwT+XDE1AZMMMj0hk/2LftF0SXlagFnhLN0yV
-Mj8MXj/dRCbnmBK9hikwsOfUCvvBePFywtm63qKhcaoo9Aux9pDEQtwbEPlmOpW6
-4r/+4u3hBd9Cro9H+emceIiwVboiGQLK4wI3Y6uXczFxLtUU44J2uUKr+W+7FVYk
-SG/D7IEhrmj5cCs/O62cGd0vGkBOoUoyywSccwjJwTbOdEjt6z8wjePozz29vIkP
-Cr8UH9WjaTbRBoh+wHwsdNcR1uwphOS6uEdYRr/+5l9LqLQDmqLYF3scwmduBoKo
-WrQMnaNTB2S65DfZ+YoGaywpbkLqIX01ZePiRb1R2HBvrx/GTRuQBTqpskthMQEO
-X5PAmIK/2IZXsDGktiMUmuS9bxHrXFCaRG8pyR4HPlLS2LMZ0gGg+20M6GuDjVJV
-IWAodvHqRMcujd87gFAO
-=SlAe
------END PGP SIGNATURE-----
-
---=-zTNMdhjVvGwD6WbgYO6i--
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index a42d631..6d20725 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -49,8 +49,9 @@ static ssize_t read_file_debug(struct file *file, char __user *user_buf,
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 	char buf[32];
+-	unsigned int len = 0;
+-	len += snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.debug_mask);
++	unsigned int len;
++
++	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.debug_mask);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -60,12 +61,17 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
+ 	struct ath_softc *sc = file->private_data;
+ 	unsigned long mask;
+ 	char buf[32];
+-	if (copy_from_user(buf, user_buf, (sizeof(buf) - 1) < count ?
+-		(sizeof(buf) - 1) : count))
+-		return 0;
+-	buf[sizeof(buf)-1] = 0;
+-	if (strict_strtoul(buf, 0, &mask) == 0)
+-		sc->debug.debug_mask = mask;
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EINVAL;
++
++	buf[len] = '\0';
++	if (strict_strtoul(buf, 0, &mask))
++		return -EINVAL;
++
++	sc->debug.debug_mask = mask;
+ 	return count;
+ }
+ 
+-- 
+1.5.5.1
 
