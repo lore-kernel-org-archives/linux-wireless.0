@@ -1,98 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.160]:57888 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138AbZFNJRu (ORCPT
+Received: from mail-fx0-f216.google.com ([209.85.220.216]:44431 "EHLO
+	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754340AbZFBIzb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2009 05:17:50 -0400
-Message-ID: <4A34C03B.4030909@hartkopp.net>
-Date: Sun, 14 Jun 2009 11:17:47 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
+	Tue, 2 Jun 2009 04:55:31 -0400
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: rfkill regression in net-next-2.6
-References: <20090604152011.GC2839@tuxdriver.com>	 <20090607.033751.191866033.davem@davemloft.net>	 <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>	 <4A2BD8A5.4040302@hartkopp.net> <1244388583.23850.87.camel@localhost.localdomain> <4A34BAB9.9000104@hartkopp.net>
-In-Reply-To: <4A34BAB9.9000104@hartkopp.net>
+Reply-To: maxim@mox.ru
+In-Reply-To: <1243931809.3192.68.camel@localhost.localdomain>
+References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
+	 <69e28c910906010921r56cf7017gc858cb7ba819c385@mail.gmail.com>
+	 <20090601203348.GC7143@doriath.ww600.siemens.net>
+	 <200906021010.49613.hs4233@mail.mn-solutions.de>
+	 <1243930893.3192.62.camel@localhost.localdomain>
+	 <bc64b4640906020129x4fe15e5en9d8e2cad1d86b236@mail.gmail.com>
+	 <1243931809.3192.68.camel@localhost.localdomain>
+Date: Tue, 2 Jun 2009 12:49:36 +0400
+Message-ID: <6097c490906020149j5d614064ied2a4bfebd13ddb0@mail.gmail.com>
+Subject: =?KOI8-R?Q?Re=3A_=EF=D4=D7=C5=D4=3A_=5BPATCH_10=2F10=5D_ieee802154=3A_add_at86rf?=
+	=?KOI8-R?Q?230=2Frf231_spi_driver?=
+From: Maxim Osipov <maxim.osipov@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	slapin@ossfans.org, maxim.osipov@siemens.com,
+	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I missed the Dell dcdbas log output that seems to kill the LED ...
-see below.
+Hi Marcel,
 
-Oliver Hartkopp wrote:
-> Marcel Holtmann wrote:
-> 
->> compiling RFKILL itself as a module is still working perfectly fine. It
->> is just the RFKILL_INPUT that can't be built as a module anymore. That
->> part was pointless anyway. And in the future RFKILL_INPUT will go away
->> and be replaced by a userspace implementation with proper support for
->> platform specific policies.
-> 
-> Hi all,
-> 
-> i have a Dell Lattitude 830 with Bluetooh and b43 WLAN and my RFKILL-switch is
-> set to ON.
-> 
-> On power on the BT LED is on and when booting with 2.6.30 or with 2.6.30-git5
-> the WLAN LED becomes illuminated within the boot process after b43 pulled his
-> firmware.
-> 
-> With net-next-2.6 the BT LED is switched OFF(!) during the boot process and
-> the Kernel log says:
-> 
-> [   15.276568] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
-> [   15.423540] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-> [   15.545096] b43-phy0 debug: Chip initialized
-> [   15.545317] b43-phy0 debug: 32-bit DMA initialized
-> [   15.566383] b43-phy0 debug: Wireless interface started
-> [   15.566394] b43-phy0 debug: Adding Interface type 2
-> [   15.566670] b43-phy0: Radio hardware status changed to DISABLED
-> [   15.633069] b43-phy0: Radio turned on by software
-> [   15.647094] b43-phy0: The hardware RF-kill button still turns the radio
-> physically off. Press the button to turn it on.
-> [   15.673598] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [   15.721053] b43-phy0 debug: Removing Interface type 2
-> [   15.733877] b43-phy0 debug: Wireless interface stopped
-> 
-> The WLAN LED is never illuminated with net-next-2.6.
-> 
-> The BT LED is switched off something around this time in the log:
+On Tue, Jun 2, 2009 at 12:36 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+>> For Bluetooth naming directories 'bluetooth' is logical, as 802.15.1
+>> standard is a less known name, doesn't incorporate latest changes
+>> from Bluetooth, etc.
+>
+> and so is IEEE 802.15.4 hence we propose using "zigbee" here. Using the
+> mac80211 has historical reasons and 802.11 is a known name and even used
+> on product marketing material. IEEE 802.15.4 is not. We are also using
+> the term "wimax" and not its IEEE numbering.
 
+Actually, ieee802154 is better in this case, because as Dmitry
+mentioned, an entire family of standards is implemented on the top of
+it, including:
 
-[    4.079342] usb 7-1.2: configuration #1 chosen from 1 choice
-[    6.663535] dcdbas dcdbas: Dell Systems Management Base Driver (version
-5.6.0-3.2)
-[    7.097116] usb 3-2: USB disconnect, address 2
-[    7.623369] Bluetooth: Core ver 2.15
-[    7.639047] NET: Registered protocol family 31
+- ZigBee
+- 6LoWPAN
+- ISA100.11a
+- WirelessHART
+ - and probably something I don't know about
 
-> 
-> [    7.639047] NET: Registered protocol family 31
-> [    7.651562] Bluetooth: HCI device and connection manager initialized
-> [    7.664155] Bluetooth: HCI socket layer initialized
-> [    7.756113] b43-pci-bridge 0000:0c:00.0: PCI INT A -> GSI 17 (level, low)
-> -> IRQ 17
-> [    7.769117] b43-pci-bridge 0000:0c:00.0: setting latency timer to 64
-> [    7.828160] yenta_cardbus 0000:03:01.0: CardBus bridge found [1028:01fe]
-> [    7.841107] yenta_cardbus 0000:03:01.0: O2: res at 0x94/0xD4: 00/ea
-> [    7.853830] yenta_cardbus 0000:03:01.0: O2: enabling read prefetch/write burst
-> [    7.867428] i801_smbus 0000:00:1f.3: PCI INT B -> GSI 17 (level, low) -> IRQ 17
-> [    7.881369] ssb: Sonics Silicon Backplane found on PCI device 0000:0c:00.0
-> [    7.897694] Bluetooth: Generic Bluetooth USB driver ver 0.5
-> [    7.910910] usbcore: registered new interface driver btusb
-> 
-> 
-> When i see the BT LED switching to off, i can manually switch the RFKILL
-> switch to OFF and ON, and then both LEDs get illuminated and WLAN is
-> successfully initialized by the boot process.
-> 
-> As we discussed about RFKILL and modules, i set CONFIG_RFKILL=y in my
-> net-netx-2.6 tree with no change of the behaviour.
-> 
-> Any idea what changed in net-next-2.6 that could produce this behaviour?
-> 
-> Regards,
-> Oliver
+All of them (once implemented) will use ieee802.15.4 drivers. It is
+better to avoid future confusion and use correct terminology from the
+very beginning.
+
+Kind regards,
+Maxim
