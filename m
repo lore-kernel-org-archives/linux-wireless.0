@@ -1,151 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:35242 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764944AbZFORuT (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:50983 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756987AbZFBICZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 13:50:19 -0400
-Date: Mon, 15 Jun 2009 19:52:26 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: Re: [PATCH 01/12][2.6.31 and w-t] iwmc3200wifi: fix sdio
-	initialisation race
-Message-ID: <20090615175225.GF4094@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org> <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org> <1245080647.23912.3.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245080647.23912.3.camel@johannes.local>
+	Tue, 2 Jun 2009 04:02:25 -0400
+Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Samuel Ortiz <samuel.ortiz@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090602075439.GA4376@sortiz.org>
+References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
+	 <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
+	 <20090601182940.GC3386@tuxdriver.com>  <20090602075439.GA4376@sortiz.org>
+Content-Type: text/plain
+Date: Tue, 02 Jun 2009 10:02:03 +0200
+Message-Id: <1243929723.3192.44.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 15, 2009 at 05:44:07PM +0200, Johannes Berg wrote:
-> On Mon, 2009-06-15 at 17:39 +0200, Samuel Ortiz wrote:
-> > From: Samuel Ortiz <samuel.ortiz@intel.com>
+Hi Samuel,
+
+> > > Firmware names can not be longer than 30 characters, and
+> > > iwmc3200wifi-lmac-calib-sdio.bin is too long.
+> > > Renaming it to iwmc3200wifi-calib-sdio.bin.
+> > > 
+> > > Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+> > > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 > > 
-> > When modprobing this driver, the netdev interface is ready before the SDIO
-> > function is correctly set.
-> > This can lead to userspace calling ndo_open() before the SDIO bus is ready.
-> > We fix that by returning an error from ndo_open() when the
-> > IWM_STATUS_BUS_READY bit is not set yet.
-> 
-> Can't you wait for it to be set instead?
-I thought about it, but I didnt want to add one more completion/wait_queue
-pointer to our already crowded iwm structures.
-But if you or John insist on it, I can definitely do it.
+> > Is this still wanted?
+> I havent heard anything from Greg regarding my firmware name length patch set.
+> I'll ping him and check if the patches are queued for rc1 inclusion.
+> Meanwhile I think you can leave this one aside for now, thanks.
 
-Cheers,
-Samuel.
- 
-> johannes
-> 
-> > Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-> > ---
-> >  drivers/net/wireless/iwmc3200wifi/iwm.h    |   11 ++++++-----
-> >  drivers/net/wireless/iwmc3200wifi/main.c   |    6 +++++-
-> >  drivers/net/wireless/iwmc3200wifi/netdev.c |   10 ++++++----
-> >  drivers/net/wireless/iwmc3200wifi/sdio.c   |    4 ++++
-> >  4 files changed, 21 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-> > index 635c16e..3cc4e91 100644
-> > --- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-> > +++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-> > @@ -180,11 +180,12 @@ struct iwm_key {
-> >  
-> >  #define IWM_SCAN_ID_MAX 0xff
-> >  
-> > -#define IWM_STATUS_READY		0
-> > -#define IWM_STATUS_SCANNING		1
-> > -#define IWM_STATUS_SCAN_ABORTING	2
-> > -#define IWM_STATUS_ASSOCIATING		3
-> > -#define IWM_STATUS_ASSOCIATED		4
-> > +#define IWM_STATUS_BUS_READY		0
-> > +#define IWM_STATUS_READY		1
-> > +#define IWM_STATUS_SCANNING		2
-> > +#define IWM_STATUS_SCAN_ABORTING	3
-> > +#define IWM_STATUS_ASSOCIATING		4
-> > +#define IWM_STATUS_ASSOCIATED		5
-> >  
-> >  #define IWM_RADIO_RFKILL_OFF		0
-> >  #define IWM_RADIO_RFKILL_HW		1
-> > diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-> > index 6a2640f..09ed247 100644
-> > --- a/drivers/net/wireless/iwmc3200wifi/main.c
-> > +++ b/drivers/net/wireless/iwmc3200wifi/main.c
-> > @@ -227,11 +227,15 @@ int iwm_priv_init(struct iwm_priv *iwm)
-> >  void iwm_reset(struct iwm_priv *iwm)
-> >  {
-> >  	struct iwm_notif *notif, *next;
-> > +	unsigned long status = 0;
-> >  
-> >  	if (test_bit(IWM_STATUS_READY, &iwm->status))
-> >  		iwm_target_reset(iwm);
-> >  
-> > -	iwm->status = 0;
-> > +	if (test_bit(IWM_STATUS_BUS_READY, &iwm->status))
-> > +		set_bit(IWM_STATUS_BUS_READY, &status);
-> > +
-> > +	iwm->status = status;
-> >  	iwm->scan_id = 1;
-> >  
-> >  	list_for_each_entry_safe(notif, next, &iwm->pending_notif, pending) {
-> > diff --git a/drivers/net/wireless/iwmc3200wifi/netdev.c b/drivers/net/wireless/iwmc3200wifi/netdev.c
-> > index 68e2c3b..5b7aa34 100644
-> > --- a/drivers/net/wireless/iwmc3200wifi/netdev.c
-> > +++ b/drivers/net/wireless/iwmc3200wifi/netdev.c
-> > @@ -54,9 +54,10 @@
-> >  static int iwm_open(struct net_device *ndev)
-> >  {
-> >  	struct iwm_priv *iwm = ndev_to_iwm(ndev);
-> > -	int ret = 0;
-> > +	int ret = -ENODEV;
-> >  
-> > -	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio))
-> > +	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio)
-> > +	    && test_bit(IWM_STATUS_BUS_READY, &iwm->status))
-> >  		ret = iwm_up(iwm);
-> >  
-> >  	return ret;
-> > @@ -65,9 +66,10 @@ static int iwm_open(struct net_device *ndev)
-> >  static int iwm_stop(struct net_device *ndev)
-> >  {
-> >  	struct iwm_priv *iwm = ndev_to_iwm(ndev);
-> > -	int ret = 0;
-> > +	int ret = -ENODEV;
-> >  
-> > -	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio))
-> > +	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio)
-> > +	    && test_bit(IWM_STATUS_BUS_READY, &iwm->status))
-> >  		ret = iwm_down(iwm);
-> >  
-> >  	return ret;
-> > diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.c b/drivers/net/wireless/iwmc3200wifi/sdio.c
-> > index b54da67..97e7da3 100644
-> > --- a/drivers/net/wireless/iwmc3200wifi/sdio.c
-> > +++ b/drivers/net/wireless/iwmc3200wifi/sdio.c
-> > @@ -454,6 +454,9 @@ static int iwm_sdio_probe(struct sdio_func *func,
-> >  
-> >  	INIT_WORK(&hw->isr_worker, iwm_sdio_isr_worker);
-> >  
-> > +	/* The SDIO bus is set and ready to be enabled */
-> > +	set_bit(IWM_STATUS_BUS_READY, &iwm->status);
-> > +
-> >  	dev_info(dev, "IWM SDIO probe\n");
-> >  
-> >  	return 0;
-> > @@ -476,6 +479,7 @@ static void iwm_sdio_remove(struct sdio_func *func)
-> >  	destroy_workqueue(hw->isr_wq);
-> >  
-> >  	sdio_set_drvdata(func, NULL);
-> > +	clear_bit(IWM_STATUS_BUS_READY, &iwm->status);
-> >  
-> >  	dev_info(dev, "IWM SDIO remove\n");
-> >  
+actually we have to get the firmware straight before 2.6.31-rc1 hits the
+streets. So at some point we have to make up our mind ;)
+
+Either way is fine btw. and fixing the firmware name length limitation
+is also the right thing to do. Cutting the name because of a bogus
+legacy limitation was just the wrong fix here ;)
+
+Regards
+
+Marcel
 
 
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
