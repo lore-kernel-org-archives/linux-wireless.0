@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34692 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753598AbZFBPUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 11:20:43 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: matthieu castet <castet.matthieu@free.fr>
-Subject: Re: b43 : unaligned access on mips
-Date: Tue, 2 Jun 2009 17:20:38 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4A244E19.7090501@free.fr> <4A244F6C.3000509@free.fr>
-In-Reply-To: <4A244F6C.3000509@free.fr>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906021720.39080.mb@bu3sch.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755517AbZFBNyX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 09:54:23 -0400
+Subject: Re: [PATCH] nl80211: use GFP_ATOMIC for michael mic failure message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20090602131222.GA30509@tuxdriver.com>
+References: <20090602040503.GA5385@hash.localnet>
+	 <20090602131222.GA30509@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-B+3PwYSa3t+Yv4lI2lfO"
+Date: Tue, 02 Jun 2009 15:54:17 +0200
+Message-Id: <1243950857.4516.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 02 June 2009 00:00:12 matthieu castet wrote:
-> matthieu castet wrote:
-> > Hi,
-> > 
-> > b43_generate_plcp_hdr generate unaligned access on mips with gcc [1] 
-> > from openwrt.
-> > 
-> > A small testcase [2] show that &plcp->data is access as a 32 bit aligned 
-> > variable (see the "lw      $2,0($4)" and "sw      $2,0($4)").
-> > I don't know enough mips to know if it is a gcc bug (ignoring the packed 
-> > attribute) or something missing in b43 code.
-> For example using "plcp->data" instead "*data" produce the correct code.
 
-Uhm, I'm not sure. This code has been in the driver as-is forever and I don't
-see any unaligned access issues on mips (I checked a month or so ago).
-The plcp data structure is also __attribute__((packed)), so there can't be any
-unaligned accesses, as gcc is required to _expect_ unaligned accesses on structures
-with packed attribute. So it is required to do byte accesses on architectures where
-alignment matters.
-So I don't think there's an issue in the code.
+--=-B+3PwYSa3t+Yv4lI2lfO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Tue, 2009-06-02 at 09:12 -0400, John W. Linville wrote:
+> On Tue, Jun 02, 2009 at 12:05:04AM -0400, Bob Copeland wrote:
+> > nl80211_michael_mic_failure can be called in atomic context but
+> > does a GFP_KERNEL allocation.  Fixes the error below:
+>=20
+> This is not the first one of these.  Anyone care to audit nl80211.c for o=
+thers?
+
+We should just make them all take a gfp_t argument and use that instead
+so the caller gets to specify it... Anyone want to do that?
+
+johannes
+
+--=-B+3PwYSa3t+Yv4lI2lfO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKJS8FAAoJEODzc/N7+QmasZIQAJBlVFmAjXLPtC+TSFlk6zbC
+M8Z00beFYa6yRJuTUp5Nq6IuTthF6H+2NT2zLkCJKhwuegUy448lSdEYR0rnZvzo
+0RZXUlboWmt8u2qrWzpYgvxCFVkkYHBxQX/uNMt9oHRGR4lx5r9rA1g1TNnbq43y
+dlBechm2FbUvVzySIxmlRLtxoi1681PA1yKuhEiXtr7+U/B1mNYIYIhqKlZVpabE
+5Jwnjk0UCm535OaTUbPaZVaMmO0v+us/L4wioK2qHuA8rgxFoGjsxP2TrjWxogWT
+kXNWAuiSa61/5MqEF/OE54mSm+3IFZXTs1ChD9aVNLargv7ZkdfRiMIYC1/pCDyp
+qeoYDHSqVvm25Vng/yV+vXKbZxVryc5gPg2O+Mu2NS9dltnlMIR2a064adhOugHP
+lHFrMYdp/ugZkz+cQbvjMcyBdPkJNpXjpdDrIrVLp89FkBkw6ZVG6FRwXeDQIY4J
+Pumr8Pi54FcZbTzmlckxD2t5fZ00TPsyyDUHLkoIHqqToAnzaJLNYiqJXrHodrRR
+hAcwcgkAuCaqr5saItiJKD8Uh91dBEA6tP6ixGvOxLOYl9czNi8yeA4AZVbvjYDa
+xBvOphLYlrwzWHtFYOeT5ScmSrurumXIGePOtuvrmHzmEYvoNClibp1VqqmMIXZa
+kAJDy5i7lupWYiFWYB2/
+=ZLiN
+-----END PGP SIGNATURE-----
+
+--=-B+3PwYSa3t+Yv4lI2lfO--
+
