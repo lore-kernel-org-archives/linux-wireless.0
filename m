@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38557 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbZFJBpa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 21:45:30 -0400
-Date: Tue, 9 Jun 2009 21:34:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, sfr@canb.auug.org.au,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rfkill: include err.h
-Message-ID: <20090610013440.GA3523@tuxdriver.com>
-References: <1244555812.4672.9.camel@johannes.local> <20090609.174952.40068461.davem@davemloft.net>
+Received: from mail.atheros.com ([12.36.123.2]:61727 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751228AbZFBWaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 18:30:08 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 15:30:11 -0700
+Date: Tue, 2 Jun 2009 15:30:16 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+CC: "austinxxh-ath9k@yahoo.com" <austinxxh-ath9k@yahoo.com>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+Message-ID: <20090602223016.GF11052@tesla>
+References: <661650.46971.qm@web55304.mail.re4.yahoo.com> <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090609.174952.40068461.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 09, 2009 at 05:49:52PM -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 09 Jun 2009 15:56:52 +0200
-> 
-> > Since we use ERR_PTR and similar macros, we need to include linux/err.h.
-> > 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> I'm applying this directly to net-next-2.6 to fix the -next
-> build.
-> 
-> Please submit the more critical build fixes for regressions
-> introduced by the wireless tree direclty to me in the future
-> thanks.
+On Tue, Jun 02, 2009 at 09:58:59AM -0700, Andrey Yurovsky wrote:
+> With wireless-testing from a couple of days ago, an X86 system, and this patch:
+> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+> ath9k can bring up a mesh point interface and doesn't crash for me,
+> but there are no mesh beacons, so mesh isn't working.  On ath5k, there
+> are also no beacons and mesh doesn't work, but there's no crash.
 
-That's a fine policy -- no objection.  However, please be aware that
-Stephen picks-up stuff from the wireless trees even when I haven't
-yet asked Dave to pull (so Dave might not always have the patch that
-causes the break).  So, just keep that in mind (and CC me as well,
-please). :-)
+If no one is really interested in fixing we should just disable mesh
+for both ath5k and ath9k.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
