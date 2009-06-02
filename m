@@ -1,64 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56345 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754922AbZFBS1j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 14:27:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: matthieu castet <castet.matthieu@free.fr>
-Subject: Re: b43 : unaligned access on mips
-Date: Tue, 2 Jun 2009 20:27:35 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4A244E19.7090501@free.fr> <200906021720.39080.mb@bu3sch.de> <4A256CCC.5040908@free.fr>
-In-Reply-To: <4A256CCC.5040908@free.fr>
+Received: from mail-fx0-f216.google.com ([209.85.220.216]:56709 "EHLO
+	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753796AbZFBIlU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 04:41:20 -0400
+Received: by fxm12 with SMTP id 12so6320844fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 01:41:21 -0700 (PDT)
+Message-ID: <4A24E3E4.1050505@tuffmail.co.uk>
+Date: Tue, 02 Jun 2009 09:33:40 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906022027.35609.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+References: <1243524688.10632.0.camel@johannes.local>	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>	 <1243763887.19302.29.camel@johannes.local>	 <1243796509.6570.35.camel@localhost.localdomain>	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>	 <1243858256.5299.14.camel@johannes.local>	 <1243867620.3015.17.camel@localhost.localdomain>	 <4A23FD91.8020200@tuffmail.co.uk>	 <1243885494.3015.29.camel@localhost.localdomain>	 <4A24559D.7010201@tuffmail.co.uk>	 <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local>
+In-Reply-To: <1243929706.20064.7.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 02 June 2009 20:17:48 matthieu castet wrote:
-> Hi Michael,
-> 
-> Michael Buesch wrote:
-> > On Tuesday 02 June 2009 00:00:12 matthieu castet wrote:
-> >> matthieu castet wrote:
-> >>> Hi,
-> >>>
-> >>> b43_generate_plcp_hdr generate unaligned access on mips with gcc [1] 
-> >>> from openwrt.
-> >>>
-> >>> A small testcase [2] show that &plcp->data is access as a 32 bit aligned 
-> >>> variable (see the "lw      $2,0($4)" and "sw      $2,0($4)").
-> >>> I don't know enough mips to know if it is a gcc bug (ignoring the packed 
-> >>> attribute) or something missing in b43 code.
-> >> For example using "plcp->data" instead "*data" produce the correct code.
-> > 
-> > Uhm, I'm not sure. This code has been in the driver as-is forever and I don't
-> > see any unaligned access issues on mips (I checked a month or so ago).
-> Where does this pointer come from ? May be other code change change this 
-> pointer alignement?
-> Which toolchain did you use ?
-> Could you try to build the testcase I posted and see which code it 
-> generate ?
+Johannes Berg wrote:
+> On Tue, 2009-06-02 at 09:38 +0200, Marcel Holtmann wrote:
+>
+>   
+>> If you really don't wanna have rfkilld _not_ impose a policy on cold
+>> boot, then we can certainly add that. However that is part of rfkilld
+>> and not the kernel.
+>>
+>> For global states, I am questioning the platform that actually has
+>> storage for global states. All platforms that I have seen so far store
+>> individual per device based states and not the global one.
+>>     
+>
+> Yeah, unfortunately the platform drivers do store/restore global state.
+> And in a sense that makes (made) sense since the default rfkill-input
+> policy was to toggle everything based on the platform button. It's icky
+> though.
+>
+> The problem with not telling rfkilld about this though is that the
+> kernel will suddenly impose a hotplug policy that rfkilld doesn't know
+> about. This might not even matter though since the _ADD will be sent
+> with that policy already applied, and if it wants to change the policy
+> rfkilld will do _CHANGE_ALL.
+>
+>   
+>> If you wanna just accept what the BIOS (or other OS) tells you then that
+>> is an acceptable policy. So rfkilld will just map key input events in
+>> that case. Fine by me. Question is if we can't do that right now? I
+>> think we just can.
+>>     
+>
+> Yes, we probably can do that right now, by making rfkilld start up
+> without setting a policy (CHANGE_ALL). It just doesn't know what the
+> policy is, then.
+>
+>   
+>> Question is if we really have a global state here. I doubt it since all
+>> of these are device specific states. And having the BIOS or ACPI dictate
+>> what state my external Bluetooth or WiFi device is in is pointless and a
+>> total broken concept.
+>>     
+>
+> Unfortunately that's how it worked before, it's part of the rfkill
+> legacy that it seems we'll have to accept. I guess we have only
+> ourselves to blame for not reviewing Henrique's rfkill implementation...
+>
+>   
+>>> You propose to exclude a feature that currently works, on the grounds 
+>>> that it is inherently broken.  But you haven't said that this has ever 
+>>> caused incorrect behavior.  All you have said so far is that it is a hack.
+>>>       
+>> This never worked so far. The mac80211 or Bluetooth subsystems have no
+>> RFKILL state and thus global states are not enforced. An external dongle
+>> without RFKILL support is not taken into account. You are not talking
+>> about global states here. They are all device specific. The device just
+>> happens to be a platform device builtin the system.
+>>     
+>
+> Right, but rfkill does actually have a function to set the global policy
+> state (rfkill_set_global_sw_state) which some platform drivers insist on
+> calling.
+>
+> The only reason we would need the NVS_REPORT then is to detect whether
+> or not anything in the kernel called rfkill_set_global_sw_state(). If we
+> can live with just configuring rfkilld for the (arguably broken) case
+> where somebody cares about this, I'm happy with removing it.
+>
+> Hope that helps clear up your confusion.
+>   
 
-OpenWRT trunk.
+The reason for drivers doing this is that otherwise, the kernel forces 
+the new rfkill device to the current global default.  So this API is 
+used for the device to preserve it's current state - without it, we just 
+throw the NVS information away and no-one can get at it.
 
-> > The plcp data structure is also __attribute__((packed)), so there can't be any
-> > unaligned accesses, as gcc is required to _expect_ unaligned accesses on structures
-> > with packed attribute. So it is required to do byte accesses on architectures where
-> > alignment matters.
-> > So I don't think there's an issue in the code.
-> > 
-> But the code doesn't use the structure to access the data.
-> It use by an extra pointer "data", and I believe gcc loose the packed 
-> info (use byte accesses) when we do the "u32 *data = &plcp->data".
+We could switch to using the non-global set_sw_state() after 
+registration.  But that's pretty nasty because it means most drivers 
+call set_sw_state() before registration, a few drivers call it 
+afterwards, and it's not going to be obvious why.  Plus I think it 
+bypasses EPO.  So I think some sort of separate API is needed.
 
-Ok, yeah. Maybe they changed semantics then.
+If we can also export this NVS status to userspace somehow, then 
+userspace can distinguish between
 
-Can you send a patch please?
-I do actually prefer patches anyway instead of verbose explanations. I'd have
-immediately understood what you were talking about, if you'd just sent a patch. ;)
+a) rfkill is currently unblocked, because this was the kernel default, 
+so there's no reason not to override the state
+b) rfkill is currently unblocked, because this was restored from NVS, 
+which hopefully reflects the most recent request from the user.  rfkilld 
+is still able to override this state, but it would also be reasonable 
+not to.
 
--- 
-Greetings, Michael.
+I take Marcels point, if /dev/rfkill exposes a sub-optimal interface, it 
+can be very difficult to fix it.  It's probably better to fix the mess 
+of global states before trying to add NVS information to /dev/rfkill.
+
+Btw, I think there's a third scenario to add to the other OS / BIOS 
+setup.  Some hardware has a handover mechanism, right?  Where the BIOS 
+handles rfkill keypresses by default, and toggles the soft rfkill state, 
+but allows the driver to take over when loaded.  So if the user presses 
+the key _before_ the driver gets loaded - they will see the wireless LED 
+change, and they will expect that state change to persist when the 
+driver is loaded.
+
+Thanks
+Alan
