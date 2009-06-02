@@ -1,83 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:33080 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306AbZFFRhR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:37:17 -0400
-Message-ID: <4A2AA94E.3050700@web.de>
-Date: Sat, 06 Jun 2009 19:37:18 +0200
-From: Jan Kiszka <jan.kiszka@web.de>
+Received: from mail.atheros.com ([12.36.123.2]:51174 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754036AbZFBFKj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 01:10:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 22:10:41 -0700
+Date: Tue, 2 Jun 2009 10:39:04 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"parag.warudkar@gmail.com" <parag.warudkar@gmail.com>,
+	Gaurav Jauhar <Gaurav.Jauhar@Atheros.com>,
+	"fabian.deutsch@gmx.de" <fabian.deutsch@gmx.de>,
+	"arxs@fedoraproject.org" <arxs@fedoraproject.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"debaditya@gmail.com" <debaditya@gmail.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"drago01@gmail.com" <drago01@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"michal@harddata.com" <michal@harddata.com>,
+	"leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	"jirislaby@gmail.com" <jirislaby@gmail.com>
+Subject: Re: [ath9k-devel] Pending ath9k bugs
+Message-ID: <20090602050904.GC17632@vasanth-laptop>
+References: <20090601184134.GC5516@tesla> <43e72e890906011252s43d2c596m6ec79569f5074837@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-References: <4A2AA395.3060406@web.de>	 <1244308808.15640.4.camel@johannes.local>  <4A2AA6BC.5040004@web.de> <1244309333.17485.0.camel@johannes.local>
-In-Reply-To: <1244309333.17485.0.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig701576715B887BC0FE5CE0EB"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890906011252s43d2c596m6ec79569f5074837@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig701576715B887BC0FE5CE0EB
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+ 
+> BUG_ON in rc.c when using 11n. This could be caused by an incorrect
+> assumption in ath9k that the rc priv is correctly for the target rate.
+> The issue may be seen when trying to associate and changing between
+> legacy and HT rates on SMP systems when mac80211 passes frames on
+> different queues due to multiqueue support. If that is indeed the
+> reason for the issue we will probably need locking on the rc priv or
+> simply to revamp it. I'll send a patch for now to downgrade the BUG_ON
+> but we do need a proper fix for this, it just needs more careful
+> review.
 
-Johannes Berg wrote:
-> On Sat, 2009-06-06 at 19:26 +0200, Jan Kiszka wrote:
->=20
->> But does you device enter an endless reset loop?
->>
->> [ 5337.468082] usb 2-2: new high speed USB device using ehci_hcd and a=
-ddress 30
->> [ 5337.648024] usb 2-2: New USB device found, idVendor=3D07d1, idProdu=
-ct=3D3c10
->> [ 5337.648032] usb 2-2: New USB device strings: Mfr=3D16, Product=3D32=
-, SerialNumber=3D48
->> [ 5337.648038] usb 2-2: Product: USB2.0 WLAN
->> [ 5337.648042] usb 2-2: Manufacturer: ATHER
->> [ 5337.648046] usb 2-2: SerialNumber: 12345
->> [ 5337.648235] usb 2-2: configuration #1 chosen from 1 choice
->> [ 5337.764060] usb 2-2: reset high speed USB device using ehci_hcd and=
- address 30
->> [ 5338.940054] usb 2-2: firmware: requesting ar9170.fw
->> [ 5340.552081] usb 2-2: device is in a bad state. please reconnect it!=
+I agree that rc priv needs proper locking, but I dont think this
+particular issue is related to some race in rc priv. As I already
+mentioned in one of the mails related to this problem, the root
+cause can be a failure in channel set, have we confirmed that?.
+I tried to reproduce this on my setup but no luck.
 
->> [ 5341.552118] ar9170usb: probe of 2-2:1.0 failed with error -110
->> [ 5341.556838] usb 2-2: USB disconnect, address 30
->> [ 5341.800076] usb 2-2: new high speed USB device using ehci_hcd and a=
-ddress 31
->> ...
->=20
-> Yes. With the AP firmware, that is. I don't care about that firmware at=
+> 
+> While on the topic I should mention a welcomed change would be to
+> actually revamp ath9k RC to fix it to correctly report MCS rates to
+> mac80211. 
 
-> all.
-
-I do as it shall upgrade my soft-AP from an oldish rt2500 to this
-dwa-160 stick.
-
-Are you at least interested in porting the missing AP bits into the STA
-version (likely the best long-term approach anyway)? And do you have a
-rough idea which bits are missing / where to look at?
-
-Jan
+This needs complete rewrite of ath9k rate control alg.
 
 
---------------enig701576715B887BC0FE5CE0EB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+Vasanth
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
 
-iEYEARECAAYFAkoqqU4ACgkQniDOoMHTA+nMmwCfYv0F3Rllvu11/eM/iVmHjIKO
-gKcAn0CQYsW9Xjgt/rG104ZmUxeC4VMC
-=h8Ex
------END PGP SIGNATURE-----
-
---------------enig701576715B887BC0FE5CE0EB--
