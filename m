@@ -1,367 +1,711 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:65469 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755850AbZFCJea (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40225 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756921AbZFBLMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 05:34:30 -0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>,
-	Sergey Lapin <slapin@ossfans.org>,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Subject: [PATCH 6/6] ieee802154: add simple HardMAC driver sample
-Date: Wed,  3 Jun 2009 13:33:49 +0400
-Message-Id: <1244021629-18409-7-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1244021629-18409-6-git-send-email-dbaryshkov@gmail.com>
-References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
- <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
- <1244021629-18409-3-git-send-email-dbaryshkov@gmail.com>
- <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
- <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
- <1244021629-18409-6-git-send-email-dbaryshkov@gmail.com>
+	Tue, 2 Jun 2009 07:12:48 -0400
+Message-Id: <20090602110149.979830513@sipsolutions.net>
+References: <20090602110136.631660156@sipsolutions.net>
+Date: Tue, 02 Jun 2009 13:01:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH 2/6 v6] rfkill: create useful userspace interface
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fakehard is a really simple driver implementing only necessary
-callbacks and serves the role of an example of driver for HardMAC
-IEEE 802.15.4 device.
+The new code added by this patch will make rfkill create
+a misc character device /dev/rfkill that userspace can use
+to control rfkill soft blocks and get status of devices as
+well as events when the status changes.
 
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+Using it is very simple -- when you open it you can read
+a number of times to get the initial state, and every
+further read blocks (you can poll) on getting the next
+event from the kernel. The same structure you read is
+also used when writing to it to change the soft block of
+a given device, all devices of a given type, or all
+devices.
+
+This also makes CONFIG_RFKILL_INPUT selectable again in
+order to be able to test without it present since its
+functionality can now be replaced by userspace entirely
+and distros and users may not want the input part of
+rfkill interfering with their userspace code. We will
+also write a userspace daemon to handle all that and
+consequently add the input code to the feature removal
+schedule.
+
+In order to have rfkilld support both kernels with and
+without CONFIG_RFKILL_INPUT (or new kernels after its
+eventual removal) we also add an ioctl (that only exists
+if rfkill-input is present) to disable rfkill-input.
+It is not very efficient, but at least gives the correct
+behaviour in all cases.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
 ---
- drivers/Makefile              |    1 +
- drivers/ieee802154/Kconfig    |   21 ++++
- drivers/ieee802154/Makefile   |    3 +
- drivers/ieee802154/fakehard.c |  258 +++++++++++++++++++++++++++++++++++++++++
- drivers/net/Kconfig           |    2 +
- 5 files changed, 285 insertions(+), 0 deletions(-)
- create mode 100644 drivers/ieee802154/Kconfig
- create mode 100644 drivers/ieee802154/Makefile
- create mode 100644 drivers/ieee802154/fakehard.c
+v4: set default global state from userspace for rfkill hotplug
+    (pointed out by Marcel)
+v5: add ioctl
+v6: hook up compat_ioctl
 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 1266ead..9e7d4e5 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -107,3 +107,4 @@ obj-$(CONFIG_SSB)		+= ssb/
- obj-$(CONFIG_VIRTIO)		+= virtio/
- obj-$(CONFIG_STAGING)		+= staging/
- obj-y				+= platform/
-+obj-y				+= ieee802154/
-diff --git a/drivers/ieee802154/Kconfig b/drivers/ieee802154/Kconfig
-new file mode 100644
-index 0000000..2aaa5b6
---- /dev/null
-+++ b/drivers/ieee802154/Kconfig
-@@ -0,0 +1,21 @@
-+menuconfig IEEE802154_DRIVERS
-+	bool "IEEE 802.15.4 drivers"
-+	depends on NETDEVICES && IEEE802154
-+	default y
-+	---help---
-+	  Say Y here to get to see options for IEEE 802.15.4 Low-Rate
-+	  Wireless Personal Area Network device drivers. This option alone
-+	  does not add any kernel code.
-+
-+	  If you say N, all options in this submenu will be skipped and disabled.
-+
-+config IEEE802154_FAKEHARD
-+	tristate "Fake LR-WPAN driver with several interconnected devices"
-+	depends on  IEEE802154_DRIVERS
-+	---help---
-+	  Say Y here to enable the fake driver that serves as an example
-+          of HardMAC device driver.
-+
-+          This driver can also be built as a module. To do so say M here.
-+	  The module will be called 'fakehard'.
-+
-diff --git a/drivers/ieee802154/Makefile b/drivers/ieee802154/Makefile
-new file mode 100644
-index 0000000..e0e8e1a
---- /dev/null
-+++ b/drivers/ieee802154/Makefile
-@@ -0,0 +1,3 @@
-+obj-$(CONFIG_IEEE802154_FAKEHARD) += fakehard.o
-+
-+EXTRA_CFLAGS += -DDEBUG -DCONFIG_FFD
-diff --git a/drivers/ieee802154/fakehard.c b/drivers/ieee802154/fakehard.c
-new file mode 100644
-index 0000000..82664a5
---- /dev/null
-+++ b/drivers/ieee802154/fakehard.c
-@@ -0,0 +1,258 @@
-+/*
-+ * Sample driver for HardMAC IEEE 802.15.4 devices
-+ *
-+ * Copyright (C) 2009 Siemens AG
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Written by:
-+ * Dmitry Eremin-Solenikov <dmitry.baryshkov@siemens.com>
+ Documentation/feature-removal-schedule.txt |    7 
+ include/linux/rfkill.h                     |   84 +++++--
+ net/rfkill/Kconfig                         |    4 
+ net/rfkill/core.c                          |  330 ++++++++++++++++++++++++++++-
+ 4 files changed, 394 insertions(+), 31 deletions(-)
+
+--- wireless-testing.orig/include/linux/rfkill.h	2009-06-01 22:34:04.000000000 +0200
++++ wireless-testing/include/linux/rfkill.h	2009-06-02 11:39:11.000000000 +0200
+@@ -22,34 +22,17 @@
+  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#include <linux/types.h>
+ 
+ /* define userspace visible states */
+ #define RFKILL_STATE_SOFT_BLOCKED	0
+ #define RFKILL_STATE_UNBLOCKED		1
+ #define RFKILL_STATE_HARD_BLOCKED	2
+ 
+-/* and that's all userspace gets */
+-#ifdef __KERNEL__
+-/* don't allow anyone to use these in the kernel */
+-enum rfkill_user_states {
+-	RFKILL_USER_STATE_SOFT_BLOCKED	= RFKILL_STATE_SOFT_BLOCKED,
+-	RFKILL_USER_STATE_UNBLOCKED	= RFKILL_STATE_UNBLOCKED,
+-	RFKILL_USER_STATE_HARD_BLOCKED	= RFKILL_STATE_HARD_BLOCKED,
+-};
+-#undef RFKILL_STATE_SOFT_BLOCKED
+-#undef RFKILL_STATE_UNBLOCKED
+-#undef RFKILL_STATE_HARD_BLOCKED
+-
+-#include <linux/types.h>
+-#include <linux/kernel.h>
+-#include <linux/list.h>
+-#include <linux/mutex.h>
+-#include <linux/device.h>
+-#include <linux/leds.h>
+-
+ /**
+  * enum rfkill_type - type of rfkill switch.
+  *
++ * @RFKILL_TYPE_ALL: toggles all switches (userspace only)
+  * @RFKILL_TYPE_WLAN: switch is on a 802.11 wireless network device.
+  * @RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
+  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
+@@ -58,6 +41,7 @@ enum rfkill_user_states {
+  * @NUM_RFKILL_TYPES: number of defined rfkill types
+  */
+ enum rfkill_type {
++	RFKILL_TYPE_ALL = 0,
+ 	RFKILL_TYPE_WLAN,
+ 	RFKILL_TYPE_BLUETOOTH,
+ 	RFKILL_TYPE_UWB,
+@@ -66,6 +50,62 @@ enum rfkill_type {
+ 	NUM_RFKILL_TYPES,
+ };
+ 
++/**
++ * enum rfkill_operation - operation types
++ * @RFKILL_OP_ADD: a device was added
++ * @RFKILL_OP_DEL: a device was removed
++ * @RFKILL_OP_CHANGE: a device's state changed -- userspace changes one device
++ * @RFKILL_OP_CHANGE_ALL: userspace changes all devices (of a type, or all)
 + */
++enum rfkill_operation {
++	RFKILL_OP_ADD = 0,
++	RFKILL_OP_DEL,
++	RFKILL_OP_CHANGE,
++	RFKILL_OP_CHANGE_ALL,
++};
++
++/**
++ * struct rfkill_event - events for userspace on /dev/rfkill
++ * @idx: index of dev rfkill
++ * @type: type of the rfkill struct
++ * @op: operation code
++ * @hard: hard state (0/1)
++ * @soft: soft state (0/1)
++ *
++ * Structure used for userspace communication on /dev/rfkill,
++ * used for events from the kernel and control to the kernel.
++ */
++struct rfkill_event {
++	__u32 idx;
++	__u8  type;
++	__u8  op;
++	__u8  soft, hard;
++} __packed;
++
++/* ioctl for turning off rfkill-input (if present) */
++#define RFKILL_IOC_MAGIC	'R'
++#define RFKILL_IOC_NOINPUT	1
++#define RFKILL_IOCTL_NOINPUT	_IO(RFKILL_IOC_MAGIC, RFKILL_IOC_NOINPUT)
++
++/* and that's all userspace gets */
++#ifdef __KERNEL__
++/* don't allow anyone to use these in the kernel */
++enum rfkill_user_states {
++	RFKILL_USER_STATE_SOFT_BLOCKED	= RFKILL_STATE_SOFT_BLOCKED,
++	RFKILL_USER_STATE_UNBLOCKED	= RFKILL_STATE_UNBLOCKED,
++	RFKILL_USER_STATE_HARD_BLOCKED	= RFKILL_STATE_HARD_BLOCKED,
++};
++#undef RFKILL_STATE_SOFT_BLOCKED
++#undef RFKILL_STATE_UNBLOCKED
++#undef RFKILL_STATE_HARD_BLOCKED
++
++#include <linux/types.h>
 +#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+#include <linux/netdevice.h>
-+#include <linux/skbuff.h>
-+#include <linux/if_arp.h>
++#include <linux/list.h>
++#include <linux/mutex.h>
++#include <linux/device.h>
++#include <linux/leds.h>
 +
-+#include <net/ieee802154/af_ieee802154.h>
-+#include <net/ieee802154/netdevice.h>
-+#include <net/ieee802154/mac_def.h>
-+#include <net/ieee802154/nl802154.h>
+ /* this is opaque */
+ struct rfkill;
+ 
+@@ -84,11 +124,7 @@ struct rfkill;
+  *	the rfkill core query your driver before setting a requested
+  *	block.
+  * @set_block: turn the transmitter on (blocked == false) or off
+- *	(blocked == true) -- this is called only while the transmitter
+- *	is not hard-blocked, but note that the core's view of whether
+- *	the transmitter is hard-blocked might differ from your driver's
+- *	view due to race conditions, so it is possible that it is still
+- *	called at the same time as you are calling rfkill_set_hw_state().
++ *	(blocked == true) -- ignore and return 0 when hard blocked.
+  *	This callback must be assigned.
+  */
+ struct rfkill_ops {
+--- wireless-testing.orig/net/rfkill/core.c	2009-06-01 22:34:04.000000000 +0200
++++ wireless-testing/net/rfkill/core.c	2009-06-02 11:39:29.000000000 +0200
+@@ -28,6 +28,10 @@
+ #include <linux/mutex.h>
+ #include <linux/rfkill.h>
+ #include <linux/spinlock.h>
++#include <linux/miscdevice.h>
++#include <linux/wait.h>
++#include <linux/poll.h>
++#include <linux/fs.h>
+ 
+ #include "rfkill.h"
+ 
+@@ -49,6 +53,8 @@ struct rfkill {
+ 
+ 	unsigned long		state;
+ 
++	u32			idx;
 +
-+static u16 fake_get_pan_id(struct net_device *dev)
-+{
-+	BUG_ON(dev->type != ARPHRD_IEEE802154);
-+
-+	return 0xeba1;
-+}
-+
-+static u16 fake_get_short_addr(struct net_device *dev)
-+{
-+	BUG_ON(dev->type != ARPHRD_IEEE802154);
-+
-+	return 0x1;
-+}
-+
-+static u8 fake_get_dsn(struct net_device *dev)
-+{
-+	BUG_ON(dev->type != ARPHRD_IEEE802154);
-+
-+	return 0x00; /* DSN are implemented in HW, so return just 0 */
-+}
-+
-+static u8 fake_get_bsn(struct net_device *dev)
-+{
-+	BUG_ON(dev->type != ARPHRD_IEEE802154);
-+
-+	return 0x00; /* BSN are implemented in HW, so return just 0 */
-+}
-+
-+static int fake_assoc_req(struct net_device *dev, struct ieee802154_addr *addr, u8 channel, u8 cap)
-+{
-+	/* We simply emulate it here */
-+	return ieee802154_nl_assoc_confirm(dev, fake_get_short_addr(dev), IEEE802154_SUCCESS);
-+}
-+
-+static int fake_assoc_resp(struct net_device *dev, struct ieee802154_addr *addr, u16 short_addr, u8 status)
-+{
-+	return 0;
-+}
-+
-+static int fake_disassoc_req(struct net_device *dev, struct ieee802154_addr *addr, u8 reason)
-+{
-+	return ieee802154_nl_disassoc_confirm(dev, IEEE802154_SUCCESS);
-+}
-+
-+static int fake_start_req(struct net_device *dev, struct ieee802154_addr *addr,
-+				u8 channel,
-+				u8 bcn_ord, u8 sf_ord, u8 pan_coord, u8 blx,
-+				u8 coord_realign)
-+{
-+	return 0;
-+}
-+
-+static int fake_scan_req(struct net_device *dev, u8 type, u32 channels, u8 duration)
-+{
-+	u8 edl[27] = {};
-+	return ieee802154_nl_scan_confirm(dev, IEEE802154_SUCCESS, type, channels,
-+			type == IEEE802154_MAC_SCAN_ED ? edl : NULL);
-+}
-+
-+static struct ieee802154_mlme_ops fake_mlme = {
-+	.assoc_req = fake_assoc_req,
-+	.assoc_resp = fake_assoc_resp,
-+	.disassoc_req = fake_disassoc_req,
-+	.start_req = fake_start_req,
-+	.scan_req = fake_scan_req,
-+
-+	.get_pan_id = fake_get_pan_id,
-+	.get_short_addr = fake_get_short_addr,
-+	.get_dsn = fake_get_dsn,
-+	.get_bsn = fake_get_bsn,
+ 	bool			registered;
+ 	bool			suspended;
+ 
+@@ -69,6 +75,18 @@ struct rfkill {
+ };
+ #define to_rfkill(d)	container_of(d, struct rfkill, dev)
+ 
++struct rfkill_int_event {
++	struct list_head	list;
++	struct rfkill_event	ev;
 +};
 +
-+static int ieee802154_fake_open(struct net_device *dev)
++struct rfkill_data {
++	struct list_head	list;
++	struct list_head	events;
++	struct mutex		mtx;
++	wait_queue_head_t	read_wait;
++	bool			input_handler;
++};
+ 
+ 
+ MODULE_AUTHOR("Ivo van Doorn <IvDoorn@gmail.com>");
+@@ -90,6 +108,7 @@ MODULE_LICENSE("GPL");
+  */
+ static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
+ static DEFINE_MUTEX(rfkill_global_mutex);
++static LIST_HEAD(rfkill_fds);	/* list of open fds of /dev/rfkill */
+ 
+ static unsigned int rfkill_default_state = 1;
+ module_param_named(default_state, rfkill_default_state, uint, 0444);
+@@ -171,12 +190,48 @@ static inline void rfkill_led_trigger_un
+ }
+ #endif /* CONFIG_RFKILL_LEDS */
+ 
+-static void rfkill_uevent(struct rfkill *rfkill)
++static void rfkill_fill_event(struct rfkill_event *ev, struct rfkill *rfkill,
++			      enum rfkill_operation op)
 +{
-+	netif_start_queue(dev);
-+	return 0;
++	unsigned long flags;
++
++	ev->idx = rfkill->idx;
++	ev->type = rfkill->type;
++	ev->op = op;
++
++	spin_lock_irqsave(&rfkill->lock, flags);
++	ev->hard = !!(rfkill->state & RFKILL_BLOCK_HW);
++	ev->soft = !!(rfkill->state & (RFKILL_BLOCK_SW |
++					RFKILL_BLOCK_SW_PREV));
++	spin_unlock_irqrestore(&rfkill->lock, flags);
 +}
 +
-+static int ieee802154_fake_close(struct net_device *dev)
++static void rfkill_send_events(struct rfkill *rfkill, enum rfkill_operation op)
 +{
-+	netif_stop_queue(dev);
-+	return 0;
-+}
++	struct rfkill_data *data;
++	struct rfkill_int_event *ev;
 +
-+static int ieee802154_fake_xmit(struct sk_buff *skb, struct net_device *dev)
-+{
-+	skb->iif = dev->ifindex;
-+	skb->dev = dev;
-+	dev->stats.tx_packets++;
-+	dev->stats.tx_bytes += skb->len;
-+
-+	dev->trans_start = jiffies;
-+
-+	/* FIXME: do hardware work here ... */
-+
-+	return 0;
-+}
-+
-+
-+static int ieee802154_fake_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
-+{
-+	struct sockaddr_ieee802154 *sa = (struct sockaddr_ieee802154 *)&ifr->ifr_addr;
-+	u16 pan_id, short_addr;
-+
-+	switch (cmd) {
-+	case SIOCGIFADDR:
-+		/* FIXME: fixed here, get from device IRL */
-+		pan_id = fake_get_pan_id(dev);
-+		short_addr = fake_get_short_addr(dev);
-+		if (pan_id == IEEE802154_PANID_BROADCAST || short_addr == IEEE802154_ADDR_BROADCAST)
-+			return -EADDRNOTAVAIL;
-+
-+		sa->family = AF_IEEE802154;
-+		sa->addr.addr_type = IEEE802154_ADDR_SHORT;
-+		sa->addr.pan_id = pan_id;
-+		sa->addr.short_addr = short_addr;
-+		return 0;
++	list_for_each_entry(data, &rfkill_fds, list) {
++		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++		if (!ev)
++			continue;
++		rfkill_fill_event(&ev->ev, rfkill, op);
++		mutex_lock(&data->mtx);
++		list_add_tail(&ev->list, &data->events);
++		mutex_unlock(&data->mtx);
++		wake_up_interruptible(&data->read_wait);
 +	}
-+	return -ENOIOCTLCMD;
 +}
 +
-+static int ieee802154_fake_mac_addr(struct net_device *dev, void *p)
++static void rfkill_event(struct rfkill *rfkill)
+ {
+ 	if (!rfkill->registered || rfkill->suspended)
+ 		return;
+ 
+ 	kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
++
++	/* also send event to /dev/rfkill */
++	rfkill_send_events(rfkill, RFKILL_OP_CHANGE);
+ }
+ 
+ static bool __rfkill_set_hw_state(struct rfkill *rfkill,
+@@ -260,9 +315,12 @@ static void rfkill_set_block(struct rfki
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
+ 
+ 	rfkill_led_trigger_event(rfkill);
+-	rfkill_uevent(rfkill);
++	rfkill_event(rfkill);
+ }
+ 
++#ifdef CONFIG_RFKILL_INPUT
++static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
++
+ /**
+  * __rfkill_switch_all - Toggle state of all switches of given type
+  * @type: type of interfaces to be affected
+@@ -299,6 +357,9 @@ static void __rfkill_switch_all(const en
+  */
+ void rfkill_switch_all(enum rfkill_type type, bool blocked)
+ {
++	if (atomic_read(&rfkill_input_disabled))
++		return;
++
+ 	mutex_lock(&rfkill_global_mutex);
+ 
+ 	if (!rfkill_epo_lock_active)
+@@ -321,6 +382,9 @@ void rfkill_epo(void)
+ 	struct rfkill *rfkill;
+ 	int i;
+ 
++	if (atomic_read(&rfkill_input_disabled))
++		return;
++
+ 	mutex_lock(&rfkill_global_mutex);
+ 
+ 	rfkill_epo_lock_active = true;
+@@ -331,6 +395,7 @@ void rfkill_epo(void)
+ 		rfkill_global_states[i].def = rfkill_global_states[i].cur;
+ 		rfkill_global_states[i].cur = true;
+ 	}
++
+ 	mutex_unlock(&rfkill_global_mutex);
+ }
+ 
+@@ -345,6 +410,9 @@ void rfkill_restore_states(void)
+ {
+ 	int i;
+ 
++	if (atomic_read(&rfkill_input_disabled))
++		return;
++
+ 	mutex_lock(&rfkill_global_mutex);
+ 
+ 	rfkill_epo_lock_active = false;
+@@ -361,6 +429,9 @@ void rfkill_restore_states(void)
+  */
+ void rfkill_remove_epo_lock(void)
+ {
++	if (atomic_read(&rfkill_input_disabled))
++		return;
++
+ 	mutex_lock(&rfkill_global_mutex);
+ 	rfkill_epo_lock_active = false;
+ 	mutex_unlock(&rfkill_global_mutex);
+@@ -391,9 +462,12 @@ bool rfkill_get_global_sw_state(const en
+ {
+ 	return rfkill_global_states[type].cur;
+ }
++#endif
+ 
+ void rfkill_set_global_sw_state(const enum rfkill_type type, bool blocked)
+ {
++	BUG_ON(type == RFKILL_TYPE_ALL);
++
+ 	mutex_lock(&rfkill_global_mutex);
+ 
+ 	/* don't allow unblock when epo */
+@@ -537,6 +611,15 @@ static ssize_t rfkill_type_show(struct d
+ 	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
+ }
+ 
++static ssize_t rfkill_idx_show(struct device *dev,
++			       struct device_attribute *attr,
++			       char *buf)
 +{
-+	return -EBUSY; /* HW address is built into the device */
++	struct rfkill *rfkill = to_rfkill(dev);
++
++	return sprintf(buf, "%d\n", rfkill->idx);
 +}
 +
-+static const struct net_device_ops fake_ops = {
-+	.ndo_open		= ieee802154_fake_open,
-+	.ndo_stop		= ieee802154_fake_close,
-+	.ndo_start_xmit		= ieee802154_fake_xmit,
-+	.ndo_do_ioctl		= ieee802154_fake_ioctl,
-+	.ndo_set_mac_address	= ieee802154_fake_mac_addr,
-+};
-+
-+
-+static void ieee802154_fake_setup(struct net_device *dev)
+ static u8 user_state_from_blocked(unsigned long state)
+ {
+ 	if (state & RFKILL_BLOCK_HW)
+@@ -594,6 +677,7 @@ static ssize_t rfkill_claim_store(struct
+ static struct device_attribute rfkill_dev_attrs[] = {
+ 	__ATTR(name, S_IRUGO, rfkill_name_show, NULL),
+ 	__ATTR(type, S_IRUGO, rfkill_type_show, NULL),
++	__ATTR(index, S_IRUGO, rfkill_idx_show, NULL),
+ 	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
+ 	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
+ 	__ATTR_NULL
+@@ -708,7 +792,7 @@ struct rfkill * __must_check rfkill_allo
+ 	if (WARN_ON(!name))
+ 		return NULL;
+ 
+-	if (WARN_ON(type >= NUM_RFKILL_TYPES))
++	if (WARN_ON(type == RFKILL_TYPE_ALL || type >= NUM_RFKILL_TYPES))
+ 		return NULL;
+ 
+ 	rfkill = kzalloc(sizeof(*rfkill), GFP_KERNEL);
+@@ -754,7 +838,9 @@ static void rfkill_uevent_work(struct wo
+ 
+ 	rfkill = container_of(work, struct rfkill, uevent_work);
+ 
+-	rfkill_uevent(rfkill);
++	mutex_lock(&rfkill_global_mutex);
++	rfkill_event(rfkill);
++	mutex_unlock(&rfkill_global_mutex);
+ }
+ 
+ static void rfkill_sync_work(struct work_struct *work)
+@@ -785,6 +871,7 @@ int __must_check rfkill_register(struct 
+ 		goto unlock;
+ 	}
+ 
++	rfkill->idx = rfkill_no;
+ 	dev_set_name(dev, "rfkill%lu", rfkill_no);
+ 	rfkill_no++;
+ 
+@@ -819,6 +906,7 @@ int __must_check rfkill_register(struct 
+ 
+ 	INIT_WORK(&rfkill->sync_work, rfkill_sync_work);
+ 	schedule_work(&rfkill->sync_work);
++	rfkill_send_events(rfkill, RFKILL_OP_ADD);
+ 
+ 	mutex_unlock(&rfkill_global_mutex);
+ 	return 0;
+@@ -848,6 +936,7 @@ void rfkill_unregister(struct rfkill *rf
+ 	device_del(&rfkill->dev);
+ 
+ 	mutex_lock(&rfkill_global_mutex);
++	rfkill_send_events(rfkill, RFKILL_OP_DEL);
+ 	list_del_init(&rfkill->node);
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+@@ -862,6 +951,227 @@ void rfkill_destroy(struct rfkill *rfkil
+ }
+ EXPORT_SYMBOL(rfkill_destroy);
+ 
++static int rfkill_fop_open(struct inode *inode, struct file *file)
 +{
-+	dev->addr_len		= IEEE802154_ADDR_LEN;
-+	memset(dev->broadcast, 0xff, IEEE802154_ADDR_LEN);
-+	dev->features		= NETIF_F_NO_CSUM;
-+	dev->needed_tailroom	= 2; /* FCS */
-+	dev->mtu		= 127;
-+	dev->tx_queue_len	= 10;
-+	dev->type		= ARPHRD_IEEE802154;
-+	dev->flags		= IFF_NOARP | IFF_BROADCAST;
-+	dev->watchdog_timeo	= 0;
-+}
++	struct rfkill_data *data;
++	struct rfkill *rfkill;
++	struct rfkill_int_event *ev, *tmp;
 +
-+
-+static int __devinit ieee802154fake_probe(struct platform_device *pdev)
-+{
-+	struct net_device *dev = alloc_netdev(0, "hardwpan%d", ieee802154_fake_setup);
-+	int err;
-+
-+	if (!dev)
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
 +		return -ENOMEM;
 +
-+	memcpy(dev->dev_addr, "\xba\xbe\xca\xfe\xde\xad\xbe\xef", dev->addr_len);
-+	memcpy(dev->perm_addr, dev->dev_addr, dev->addr_len);
++	INIT_LIST_HEAD(&data->events);
++	mutex_init(&data->mtx);
++	init_waitqueue_head(&data->read_wait);
 +
-+	dev->netdev_ops = &fake_ops;
-+	dev->ml_priv = &fake_mlme;
-+
++	mutex_lock(&rfkill_global_mutex);
++	mutex_lock(&data->mtx);
 +	/*
-+	 * If the name is a format string the caller wants us to do a
-+	 * name allocation.
++	 * start getting events from elsewhere but hold mtx to get
++	 * startup events added first
 +	 */
-+	if (strchr(dev->name, '%')) {
-+		err = dev_alloc_name(dev, dev->name);
-+		if (err < 0)
++	list_add(&data->list, &rfkill_fds);
++
++	list_for_each_entry(rfkill, &rfkill_list, node) {
++		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++		if (!ev)
++			goto free;
++		rfkill_fill_event(&ev->ev, rfkill, RFKILL_OP_ADD);
++		list_add_tail(&ev->list, &data->events);
++	}
++	mutex_unlock(&data->mtx);
++	mutex_unlock(&rfkill_global_mutex);
++
++	file->private_data = data;
++
++	return nonseekable_open(inode, file);
++
++ free:
++	mutex_unlock(&data->mtx);
++	mutex_unlock(&rfkill_global_mutex);
++	mutex_destroy(&data->mtx);
++	list_for_each_entry_safe(ev, tmp, &data->events, list)
++		kfree(ev);
++	kfree(data);
++	return -ENOMEM;
++}
++
++static unsigned int rfkill_fop_poll(struct file *file, poll_table *wait)
++{
++	struct rfkill_data *data = file->private_data;
++	unsigned int res = POLLOUT | POLLWRNORM;
++
++	poll_wait(file, &data->read_wait, wait);
++
++	mutex_lock(&data->mtx);
++	if (!list_empty(&data->events))
++		res = POLLIN | POLLRDNORM;
++	mutex_unlock(&data->mtx);
++
++	return res;
++}
++
++static bool rfkill_readable(struct rfkill_data *data)
++{
++	bool r;
++
++	mutex_lock(&data->mtx);
++	r = !list_empty(&data->events);
++	mutex_unlock(&data->mtx);
++
++	return r;
++}
++
++static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
++			       size_t count, loff_t *pos)
++{
++	struct rfkill_data *data = file->private_data;
++	struct rfkill_int_event *ev;
++	unsigned long sz;
++	int ret;
++
++	mutex_lock(&data->mtx);
++
++	while (list_empty(&data->events)) {
++		if (file->f_flags & O_NONBLOCK) {
++			ret = -EAGAIN;
++			goto out;
++		}
++		mutex_unlock(&data->mtx);
++		ret = wait_event_interruptible(data->read_wait,
++					       rfkill_readable(data));
++		mutex_lock(&data->mtx);
++
++		if (ret)
 +			goto out;
 +	}
 +
-+	SET_NETDEV_DEV(dev, &pdev->dev);
++	ev = list_first_entry(&data->events, struct rfkill_int_event,
++				list);
 +
-+	platform_set_drvdata(pdev, dev);
++	sz = min_t(unsigned long, sizeof(ev->ev), count);
++	ret = sz;
++	if (copy_to_user(buf, &ev->ev, sz))
++		ret = -EFAULT;
 +
-+	err = register_netdev(dev);
-+	if (err < 0)
-+		goto out;
-+
-+
-+	dev_info(&pdev->dev, "Added ieee802154 HardMAC hardware\n");
-+	return 0;
-+
-+out:
-+	unregister_netdev(dev);
-+	return err;
++	list_del(&ev->list);
++	kfree(ev);
++ out:
++	mutex_unlock(&data->mtx);
++	return ret;
 +}
 +
-+static int __devexit ieee802154fake_remove(struct platform_device *pdev)
++static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
++				size_t count, loff_t *pos)
 +{
-+	struct net_device *dev = platform_get_drvdata(pdev);
-+	unregister_netdev(dev);
-+	free_netdev(dev);
++	struct rfkill *rfkill;
++	struct rfkill_event ev;
++
++	/* we don't need the 'hard' variable but accept it */
++	if (count < sizeof(ev) - 1)
++		return -EINVAL;
++
++	if (copy_from_user(&ev, buf, sizeof(ev) - 1))
++		return -EFAULT;
++
++	if (ev.op != RFKILL_OP_CHANGE && ev.op != RFKILL_OP_CHANGE_ALL)
++		return -EINVAL;
++
++	if (ev.type >= NUM_RFKILL_TYPES)
++		return -EINVAL;
++
++	mutex_lock(&rfkill_global_mutex);
++
++	if (ev.op == RFKILL_OP_CHANGE_ALL) {
++		if (ev.type == RFKILL_TYPE_ALL) {
++			enum rfkill_type i;
++			for (i = 0; i < NUM_RFKILL_TYPES; i++)
++				rfkill_global_states[i].cur = ev.soft;
++		} else {
++			rfkill_global_states[ev.type].cur = ev.soft;
++		}
++	}
++
++	list_for_each_entry(rfkill, &rfkill_list, node) {
++		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
++			continue;
++
++		if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
++			continue;
++
++		rfkill_set_block(rfkill, ev.soft);
++	}
++	mutex_unlock(&rfkill_global_mutex);
++
++	return count;
++}
++
++static int rfkill_fop_release(struct inode *inode, struct file *file)
++{
++	struct rfkill_data *data = file->private_data;
++	struct rfkill_int_event *ev, *tmp;
++
++	mutex_lock(&rfkill_global_mutex);
++	list_del(&data->list);
++	mutex_unlock(&rfkill_global_mutex);
++
++	mutex_destroy(&data->mtx);
++	list_for_each_entry_safe(ev, tmp, &data->events, list)
++		kfree(ev);
++
++#ifdef CONFIG_RFKILL_INPUT
++	if (data->input_handler)
++		atomic_dec(&rfkill_input_disabled);
++#endif
++
++	kfree(data);
++
 +	return 0;
 +}
 +
-+static struct platform_device *ieee802154fake_dev;
++#ifdef CONFIG_RFKILL_INPUT
++static long rfkill_fop_ioctl(struct file *file, unsigned int cmd,
++			     unsigned long arg)
++{
++	struct rfkill_data *data = file->private_data;
 +
-+static struct platform_driver ieee802154fake_driver = {
-+	.probe = ieee802154fake_probe,
-+	.remove = __devexit_p(ieee802154fake_remove),
-+	.driver = {
-+			.name = "ieee802154hardmac",
-+			.owner = THIS_MODULE,
-+	},
++	if (_IOC_TYPE(cmd) != RFKILL_IOC_MAGIC)
++		return -ENOSYS;
++
++	if (_IOC_NR(cmd) != RFKILL_IOC_NOINPUT)
++		return -ENOSYS;
++
++	mutex_lock(&data->mtx);
++
++	if (!data->input_handler) {
++		atomic_inc(&rfkill_input_disabled);
++		data->input_handler = true;
++	}
++
++	mutex_unlock(&data->mtx);
++
++	return 0;
++}
++#endif
++
++static const struct file_operations rfkill_fops = {
++	.open		= rfkill_fop_open,
++	.read		= rfkill_fop_read,
++	.write		= rfkill_fop_write,
++	.poll		= rfkill_fop_poll,
++	.release	= rfkill_fop_release,
++#ifdef CONFIG_RFKILL_INPUT
++	.unlocked_ioctl	= rfkill_fop_ioctl,
++	.compat_ioctl	= rfkill_fop_ioctl,
++#endif
 +};
 +
-+static __init int fake_init(void)
-+{
-+	ieee802154fake_dev = platform_device_register_simple("ieee802154hardmac", -1, NULL, 0);
-+	return platform_driver_register(&ieee802154fake_driver);
-+}
-+
-+static __exit void fake_exit(void)
-+{
-+	platform_driver_unregister(&ieee802154fake_driver);
-+	platform_device_unregister(ieee802154fake_dev);
-+}
-+
-+module_init(fake_init);
-+module_exit(fake_exit);
-+MODULE_LICENSE("GPL");
-+
-diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index 214a92d..ec8cf21 100644
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -2704,6 +2704,8 @@ source "drivers/net/wan/Kconfig"
++static struct miscdevice rfkill_miscdev = {
++	.name	= "rfkill",
++	.fops	= &rfkill_fops,
++	.minor	= MISC_DYNAMIC_MINOR,
++};
  
- source "drivers/atm/Kconfig"
+ static int __init rfkill_init(void)
+ {
+@@ -875,10 +1185,19 @@ static int __init rfkill_init(void)
+ 	if (error)
+ 		goto out;
  
-+source "drivers/ieee802154/Kconfig"
++	error = misc_register(&rfkill_miscdev);
++	if (error) {
++		class_unregister(&rfkill_class);
++		goto out;
++	}
 +
- source "drivers/s390/net/Kconfig"
+ #ifdef CONFIG_RFKILL_INPUT
+ 	error = rfkill_handler_init();
+-	if (error)
++	if (error) {
++		misc_deregister(&rfkill_miscdev);
+ 		class_unregister(&rfkill_class);
++		goto out;
++	}
+ #endif
  
- config XEN_NETDEV_FRONTEND
+  out:
+@@ -891,6 +1210,7 @@ static void __exit rfkill_exit(void)
+ #ifdef CONFIG_RFKILL_INPUT
+ 	rfkill_handler_exit();
+ #endif
++	misc_deregister(&rfkill_miscdev);
+ 	class_unregister(&rfkill_class);
+ }
+ module_exit(rfkill_exit);
+--- wireless-testing.orig/net/rfkill/Kconfig	2009-06-01 22:34:04.000000000 +0200
++++ wireless-testing/net/rfkill/Kconfig	2009-06-01 22:36:50.000000000 +0200
+@@ -18,7 +18,7 @@ config RFKILL_LEDS
+ 	default y
+ 
+ config RFKILL_INPUT
+-	bool
++	bool "RF switch input support"
+ 	depends on RFKILL
+ 	depends on INPUT = y || RFKILL = INPUT
+-	default y
++	default y if !EMBEDDED
+--- wireless-testing.orig/Documentation/feature-removal-schedule.txt	2009-06-01 22:32:03.000000000 +0200
++++ wireless-testing/Documentation/feature-removal-schedule.txt	2009-06-01 22:36:50.000000000 +0200
+@@ -437,3 +437,10 @@ Why:	Superseded by tdfxfb. I2C/DDC suppo
+ 	driver but this caused driver conflicts.
+ Who:	Jean Delvare <khali@linux-fr.org>
+ 	Krzysztof Helt <krzysztof.h1@wp.pl>
++
++---------------------------
++
++What:	CONFIG_RFKILL_INPUT
++When:	2.6.33
++Why:	Should be implemented in userspace, policy daemon.
++Who:	Johannes Berg <johannes@sipsolutions.net>
+
 -- 
-1.6.3.1
 
