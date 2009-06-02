@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:54029 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbZFLAGI (ORCPT
+Received: from mail-qy0-f104.google.com ([209.85.221.104]:41619 "EHLO
+	mail-qy0-f104.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373AbZFBQ7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 20:06:08 -0400
-Subject: Re: rfkill on T61
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
-References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-	 <1244763159.27363.103.camel@violet>
-	 <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 12 Jun 2009 02:06:07 +0200
-Message-Id: <1244765167.27395.1.camel@violet>
-Mime-Version: 1.0
+	Tue, 2 Jun 2009 12:59:46 -0400
+Received: by qyk2 with SMTP id 2so930072qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 09:59:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1243928539.5799.8.camel@joice>
+References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
+	<20090526222433.GA23972@bombadil.infradead.org> <1243736227.3623.180.camel@debian>
+	<43e72e890905302327x23d0479bkb825ea05832c5ffd@mail.gmail.com>
+	<1243752126.3623.375.camel@debian> <43e72e890906011600s3290e579q5e2d3400ec609099@mail.gmail.com>
+	<1243928539.5799.8.camel@joice>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 2 Jun 2009 09:53:07 -0700
+Message-ID: <43e72e890906020953l4b0f8fe4k1f799cb7fd0d824e@mail.gmail.com>
+Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Tue, Jun 2, 2009 at 12:42 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Tue, 2009-06-02 at 00:00 +0100, Luis R. Rodriguez wrote:
+>> On Sat, May 30, 2009 at 11:42 PM, Zhu Yi <yi.zhu@intel.com> wrote:
+>> > On Sun, 2009-05-31 at 14:27 +0800, Luis R. Rodriguez wrote:
+>> >>
+>> >> What is the 11n configuration on these devices? Do they have 2
+>> >> streams? Or are they just 1 stream?
+>> >
+>> > It has 1x1, 1x2 and 2x2 on for both 20MHz and 40MHz channels.
+>>
+>> Thanks -- BTW so this to me reads as number of TX/RX chains, but how
+>> many streams does the device have? For example a 2-stream device can
+>> be used in a 1x1 configuration.
+>>
+>> An example of our 1-stream device would be the Atheros AR9285, so
+>> hardware-wise it only supports up to MCS 7.
+>>
+>> Will some of these devices be 1-stream or are they all 2-stream?
+>
+> The one I have should be a 2 streams one. What does 1 stream version buy
+> if we have already built the 2 streams (configurable for 1x1) version?
 
-> >> When I hit rfkill, I get:
-> >>
-> >> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
-> >> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
-> >>
-> >> When I hit it again I get:
-> >>
-> >> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
-> >> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
-> >>
-> >> The device that disappears upon rfkill is my bluetooth controller:
-> >>
-> >> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
-> >> --- 1   2009-06-11 15:37:37.000000000 -0700
-> >> +++ 2   2009-06-11 15:37:49.000000000 -0700
-> >> @@ -6,7 +6,6 @@
-> >>  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
-> >>  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
-> >>  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> >> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
-> >>  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
-> >> Fingerprint Reader
-> >>  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> >>  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> >>
-> >> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
-> >> I think this is the same behaviour I will get with bleeding edge, will
-> >> try now on wireless-testing.
-> >
-> > what are you trying to tell us.
-> 
-> my 802.11 device is not rfkill'ed on the T61, some patches recently
-> went in to add support for rfkill on ath5k. I do have thinkpad_acpi
-> loaded on this ancient 2.6.27 kernel.
-> 
-> I'll try on wireless-testing next, build is almost done.
+Price.
 
-still are not getting what you wanna tell us. What has Bluetooh RFKILL
-switch to do with WiFi. With an updated mac80211/cfg80211 the soft kill
-should work for every mac80211 based driver. Works for me with iwlwifi
-in my X200.
-
-Regards
-
-Marcel
-
-
+  Luis
