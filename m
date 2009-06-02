@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c.6b.1343.static.theplanet.com ([67.19.107.12]:51739 "EHLO
-	mail.bitnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750732AbZFSKBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 06:01:50 -0400
-Received: from [10.99.1.99] (77.109.121.166.adsl.dyn.edpnet.net [77.109.121.166])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.bitnet.be (Postfix) with ESMTP id 2123229806D
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 04:31:56 -0500 (CDT)
-Message-ID: <4A3B5B11.7060103@bitnet.be>
-Date: Fri, 19 Jun 2009 11:32:01 +0200
-From: Hans Maes <Hans@bitnet.be>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: current status of 802.11s mesh in ath5k ?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:47425 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752285AbZFBUft (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 16:35:49 -0400
+Subject: Re: [PATCH] mac80211: check for existance sta before adding it
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com>
+References: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-j3ktzlBnNTo5Y7ouN1Hd"
+Date: Tue, 02 Jun 2009 22:35:47 +0200
+Message-Id: <1243974947.7176.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-I've been reading conflicting articles on several linux wireless 
-websites about this, so I'm asking the question here:
+--=-j3ktzlBnNTo5Y7ouN1Hd
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What is the status of 802.11s mesh support in ath5k in the 2.6.30 
-kernel, in the current wireless-compat, and in the current 
-wireless-testing ?
-Does it work, or is it broken ?
-Can/should it be used in a production environment ?
+On Tue, 2009-06-02 at 16:30 -0400, Luis R. Rodriguez wrote:
+> Lets just check for the STA before its addition through
+> sta_info_insert() and make this mandatory. It simpifies
+> code.
+>=20
+> In our mac80211 cfg80211 callback for device addition we
+> also can simplify the code by first checking for the STA
+> before trying to add it and then checking for -EEXIST which
+> we were not doing. If that actualy would happen we could
+> end up potentially with a stale sta and the rate info was
+> never updated. We should now be updating accordingly.
+>=20
+> Since we are making part of the API to check for the STA
+> prior to addition lets warn in sta_info_insert() if the
+> sta does already exist instead of passing an -EEXIST.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>=20
+> johill, this is what I meant. Still not the right approach?
 
+This may sound flippy, but you do need to understand RCU first. This is
+simply not correct, even with rcu_read_lock() the sta info might be
+unlinked from the list, your pointer will just point to something no
+longer on the list.
 
-Also, what is the best place to track the status/progress on 802.11s 
-mesh in ath5k ?
+johannes
 
-Thanks!
+--=-j3ktzlBnNTo5Y7ouN1Hd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Regards,
+-----BEGIN PGP SIGNATURE-----
 
-Hans
+iQIcBAABAgAGBQJKJY0fAAoJEODzc/N7+QmaLK8QAK6eBxFNFu0vUBU/IrrKI6nO
+D4pgYS51KDSDx39lfhiPOBPPxYB0CHruAkeI5U8r4ctA9JfKcBZjtXYcZbK1rZlv
+uUDKau8VfhIivKfqLhLzQQf5CY1ug00n74K6QnGrMxwBbgeFmaO8JR+3JBky8eoo
+IaML90Cy4VRKQE1E2IiHjvYWAj6a5FEWqtPpfeZNd0s1+TVEmqUjxCIPjF11/dAG
+TEI+i5/yd0mycBUyRbPbu964wTY/6U6tWohBlN3iqvKMuFcPFelpvvK2tvY68ooO
+4E8NbO2ctvw8Z56T6NR/vIOE9Bk9DCRoHgdDID+Qz800AHwYRrXxSVM59SwxV9NZ
+UryTgE5GWwiCjCRu7AxKlGWnM8LsXlIArnLGxIs79ffDTsQeK3xSfitfcBX1VpQ7
+Cmwuf3x6BT0qsVyTJkwVhgOKiDeMhUokqRie6Z3o1JSrF01n2m4rGXAnMs1IERNG
+4T6FX4cIWQx7yuUy8+JtJxqql7+oker4cVkwSEFQINJn/E4MQQwDdHeNnRnepWan
+YBibhIZxdj+EGOzswamlgxn8i03uv91XrMAb7UnXxK9+9n/XXgl6ZpRsxvxa1G+2
+ePAfBr7F+B9CpLVAdhiuYUHSoOq7CZxaqH90T9+Ysbg4gvuOoUx0HlUHso8Ojy7d
+btq4SyQ03AUZ9wvIqiAn
+=9h1E
+-----END PGP SIGNATURE-----
+
+--=-j3ktzlBnNTo5Y7ouN1Hd--
+
