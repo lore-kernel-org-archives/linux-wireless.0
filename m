@@ -1,297 +1,343 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3041 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753380AbZFRC0H (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40227 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757006AbZFBLMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 22:26:07 -0400
-Date: Wed, 17 Jun 2009 22:25:24 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Pierre Ossman <pierre@ossman.eu>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	san@google.com
-Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
-Message-ID: <20090618022524.GC10014@hash.localnet>
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <1244685780-28930-8-git-send-email-me@bobcopeland.com> <20090613132144.6c7783bc@mjolnir.ossman.eu> <87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu> <20090613205737.GA30439@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090613205737.GA30439@hash.localnet>
+	Tue, 2 Jun 2009 07:12:50 -0400
+Message-Id: <20090602110150.149497638@sipsolutions.net>
+References: <20090602110136.631660156@sipsolutions.net>
+Date: Tue, 02 Jun 2009 13:01:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/6] cfg80211: move txpower wext from mac80211
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 13, 2009 at 04:57:37PM -0400, Bob Copeland wrote:
-> > I think this should be somewhere under arch/ in the board setup code,
-> > where currently you have some code adding the "msm_wifi" platform
-> > device.
-> 
-> Yeah, in fact I tried that a while ago but something didn't work right,
-> some ordering issue perhaps.  I'll try again.
+This patch introduces new cfg80211 API to set the TX power
+via cfg80211, puts the wext code into cfg80211 and updates
+mac80211 to use all that. The -ENETDOWN bits are a hack but
+will go away soon.
 
-Just to follow up now that I've tested that again: the issue is msm_wifi
-setup loads before the mmc host driver, which interferes with mounting the
-sdcard in the other slot.  There's also some platform code in the host
-driver that registers callbacks when the wifi driver is loaded, presumably
-to avoid using a timer for card detect.
-
-Anyway, this is only compile tested but should work when we get all that
-sorted...
-
-v3:
-  * remove platform junk
-  * fix ordering of remove()
-  * move IDs to sdio_ids.h
-  * remove sdio_set_block_size() call
-
-From: Bob Copeland <me@bobcopeland.com>
-Date: Sat, 30 May 2009 13:50:29 -0400
-Subject: [PATCH] wl12xx: add sdio support
-
-This adds the wl12xx_sdio module, enabling the SDIO interface for
-wl12xx, as used by the Google G1 phone and others.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ include/net/cfg80211.h     |   30 ++++++++++++++++
+ net/mac80211/cfg.c         |   54 ++++++++++++++++++++++++++++++
+ net/mac80211/wext.c        |   80 +--------------------------------------------
+ net/wireless/wext-compat.c |   80 +++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 166 insertions(+), 78 deletions(-)
 
- drivers/net/wireless/wl12xx/Kconfig  |   11 ++
- drivers/net/wireless/wl12xx/Makefile |    2 +
- drivers/net/wireless/wl12xx/sdio.c   |  180 ++++++++++++++++++++++++++++++++++
- include/linux/mmc/sdio_ids.h         |    3 +
- 4 files changed, 196 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/sdio.c
-
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 9575d16..c4af50a 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -20,3 +20,14 @@ config WL12XX_SPI
+--- wireless-testing.orig/include/net/cfg80211.h	2009-06-02 12:53:52.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-06-02 12:55:01.000000000 +0200
+@@ -752,6 +752,21 @@ enum wiphy_params_flags {
+ };
  
- 	  If you choose to build a module, it'll be called wl12xx_spi. Say N if
- 	  unsure.
-+
-+config WL12XX_SDIO
-+	tristate "TI wl1251/wl1271 SDIO support"
-+	depends on WL12XX && MMC
-+	---help---
-+	  This module adds support for the SDIO interface of adapters using
-+	  TI wl1251/wl1271 chipsets.  Select this if your platform is using
-+	  the SDIO bus.
-+
-+	  If you choose to build a module, it'll be called wl12xx_sdio. Say N if
-+	  unsure.
-diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
-index ffd5664..25df712 100644
---- a/drivers/net/wireless/wl12xx/Makefile
-+++ b/drivers/net/wireless/wl12xx/Makefile
-@@ -3,6 +3,8 @@ wl12xx-objs		= main.o event.o tx.o rx.o \
- 			  debugfs.o io.o
- 
- wl12xx_spi-objs		+= spi.o
-+wl12xx_sdio-objs	+= sdio.o
- 
- obj-$(CONFIG_WL12XX)	+= wl12xx.o
- obj-$(CONFIG_WL12XX_SPI)	+= wl12xx_spi.o
-+obj-$(CONFIG_WL12XX_SDIO)	+= wl12xx_sdio.o
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-new file mode 100644
-index 0000000..afe6bd4
---- /dev/null
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -0,0 +1,180 @@
-+/*
-+ * wl12xx SDIO routines
+ /**
++ * enum tx_power_setting - TX power adjustment
 + *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ * Copyright (C) 2005 Texas Instruments Incorporated
-+ * Copyright (C) 2008 Google Inc
-+ * Copyright (C) 2009 Bob Copeland (me@bobcopeland.com)
++ * @TX_POWER_AUTOMATIC: the dbm parameter is ignored
++ * @TX_POWER_LIMITED: limit TX power by the dbm parameter
++ * @TX_POWER_FIXED: fix TX power to the dbm parameter
++ * @TX_POWER_OFF: turn off completely (will go away)
 + */
-+#include <linux/module.h>
-+#include <linux/crc7.h>
-+#include <linux/mod_devicetable.h>
-+#include <linux/irq.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/platform_device.h>
-+
-+#include "wl12xx.h"
-+#include "wl12xx_80211.h"
-+#include "reg.h"
-+#include "ps.h"
-+#include "io.h"
-+#include "tx.h"
-+#include "debugfs.h"
-+
-+static struct sdio_func *wl_to_func(struct wl12xx *wl)
-+{
-+	return wl->if_priv;
-+}
-+
-+static void wl12xx_sdio_interrupt(struct sdio_func *func)
-+{
-+	wl12xx_irq(0, sdio_get_drvdata(func));
-+}
-+
-+static const struct sdio_device_id wl12xx_devices[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1251) },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(sdio, wl12xx_devices);
-+
-+
-+void wl12xx_sdio_read(struct wl12xx *wl, int addr, void *buf, size_t len)
-+{
-+	int ret;
-+	struct sdio_func *func = wl_to_func(wl);
-+
-+	sdio_claim_host(func);
-+	ret = sdio_memcpy_fromio(func, buf, addr, len);
-+	if (ret)
-+		wl12xx_error("sdio read failed (%d)", ret);
-+	sdio_release_host(func);
-+}
-+
-+void wl12xx_sdio_write(struct wl12xx *wl, int addr, void *buf, size_t len)
-+{
-+	int ret;
-+	struct sdio_func *func = wl_to_func(wl);
-+
-+	sdio_claim_host(func);
-+	ret = sdio_memcpy_toio(func, addr, buf, len);
-+	if (ret)
-+		wl12xx_error("sdio write failed (%d)", ret);
-+	sdio_release_host(func);
-+}
-+
-+void wl12xx_sdio_reset(struct wl12xx *wl)
-+{
-+}
-+
-+void wl12xx_sdio_set_power(bool enable)
-+{
-+}
-+
-+struct wl12xx_if_operations wl12xx_sdio_ops = {
-+	.read = wl12xx_sdio_read,
-+	.write = wl12xx_sdio_write,
-+	.reset = wl12xx_sdio_reset,
++enum tx_power_setting {
++	TX_POWER_AUTOMATIC,
++	TX_POWER_LIMITED,
++	TX_POWER_FIXED,
++	TX_POWER_OFF,
 +};
 +
-+int wl12xx_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
-+{
-+	int ret;
-+	struct wl12xx *wl;
-+	struct ieee80211_hw *hw;
-+
-+	printk(KERN_DEBUG "wl12xx: in probe\n");
-+
-+	hw = wl12xx_alloc_hw();
-+	if (IS_ERR(hw))
-+		return PTR_ERR(hw);
-+
-+	wl = hw->priv;
-+
-+	sdio_claim_host(func);
-+	ret = sdio_enable_func(func);
-+	if (ret)
-+		goto release;
-+
-+	SET_IEEE80211_DEV(hw, &func->dev);
-+	wl->if_priv = func;
-+	wl->if_ops = &wl12xx_sdio_ops;
-+	wl->set_power = wl12xx_sdio_set_power;
-+
-+	sdio_release_host(func);
-+	ret = wl12xx_init_ieee80211(wl);
-+	sdio_claim_host(func);
-+	if (ret)
-+		goto disable;
-+
-+	ret = sdio_claim_irq(func, wl12xx_sdio_interrupt);
-+	if (ret)
-+		goto no_irq;
-+
-+	sdio_release_host(func);
-+	sdio_set_drvdata(func, wl);
-+	return ret;
-+
-+no_irq:
-+	wl12xx_free_hw(wl);
-+disable:
-+	sdio_disable_func(func);
-+release:
-+	sdio_release_host(func);
-+	return ret;
-+}
-+
-+static void __devexit wl12xx_sdio_remove(struct sdio_func *func)
-+{
-+	struct wl12xx *wl = sdio_get_drvdata(func);
-+
-+	wl12xx_free_hw(wl);
-+
-+	sdio_claim_host(func);
-+	sdio_release_irq(func);
-+	sdio_disable_func(func);
-+	sdio_release_host(func);
-+}
-+
-+static struct sdio_driver wl12xx_sdio_driver = {
-+	.name		= "wl12xx_sdio",
-+	.id_table	= wl12xx_devices,
-+	.probe		= wl12xx_sdio_probe,
-+	.remove		= __devexit_p(wl12xx_sdio_remove),
-+};
-+
-+static int __init wl12xx_sdio_init(void)
-+{
-+	int err;
-+
-+	err = sdio_register_driver(&wl12xx_sdio_driver);
-+	if (err)
-+		wl12xx_error("failed to register sdio driver: %d", err);
-+	return err;
-+}
-+
-+static void __exit wl12xx_sdio_exit(void)
-+{
-+	sdio_unregister_driver(&wl12xx_sdio_driver);
-+	wl12xx_notice("unloaded");
-+}
-+
-+module_init(wl12xx_sdio_init);
-+module_exit(wl12xx_sdio_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
-+MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index c7211ab..403840f 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -28,4 +28,7 @@
- #define SDIO_DEVICE_ID_MARVELL_8688WLAN		0x9104
- #define SDIO_DEVICE_ID_MARVELL_8688BT		0x9105
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -837,6 +852,11 @@ enum wiphy_params_flags {
+  *	@changed bitfield (see &enum wiphy_params_flags) describes which values
+  *	have changed. The actual parameter values are available in
+  *	struct wiphy. If returning an error, no value should be changed.
++ *
++ * @set_tx_power: set the transmit power according to the parameters
++ * @get_tx_power: store the current TX power into the dbm variable;
++ *	return 0 if successful; or -ENETDOWN if successful but power
++ *	is disabled (this will go away)
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy);
+@@ -928,6 +948,10 @@ struct cfg80211_ops {
+ 	int	(*leave_ibss)(struct wiphy *wiphy, struct net_device *dev);
  
-+#define SDIO_VENDOR_ID_TI			0x104c
-+#define SDIO_DEVICE_ID_TI_WL1251		0x9066
+ 	int	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
 +
- #endif
--- 
-1.6.2.2
++	int	(*set_tx_power)(struct wiphy *wiphy,
++				enum tx_power_setting type, int dbm);
++	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
+ };
+ 
+ /*
+@@ -1451,6 +1475,12 @@ int cfg80211_wext_siwencode(struct net_d
+ int cfg80211_wext_giwencode(struct net_device *dev,
+ 			    struct iw_request_info *info,
+ 			    struct iw_point *erq, char *keybuf);
++int cfg80211_wext_siwtxpower(struct net_device *dev,
++			     struct iw_request_info *info,
++			     union iwreq_data *data, char *keybuf);
++int cfg80211_wext_giwtxpower(struct net_device *dev,
++			     struct iw_request_info *info,
++			     union iwreq_data *data, char *keybuf);
+ 
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-06-02 12:53:52.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-06-02 12:55:01.000000000 +0200
+@@ -1334,6 +1334,58 @@ static int ieee80211_set_wiphy_params(st
+ 	return 0;
+ }
+ 
++static int ieee80211_set_tx_power(struct wiphy *wiphy,
++				  enum tx_power_setting type, int dbm)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_channel *chan = local->hw.conf.channel;
++	u32 changes = 0;
++	bool radio_enabled = true;
++
++	switch (type) {
++	case TX_POWER_AUTOMATIC:
++		local->user_power_level = -1;
++		break;
++	case TX_POWER_LIMITED:
++		if (dbm < 0)
++			return -EINVAL;
++		local->user_power_level = dbm;
++		break;
++	case TX_POWER_FIXED:
++		if (dbm < 0)
++			return -EINVAL;
++		/* TODO: move to cfg80211 when it knows the channel */
++		if (dbm > chan->max_power)
++			return -EINVAL;
++		local->user_power_level = dbm;
++		break;
++	case TX_POWER_OFF:
++		radio_enabled = false;
++		break;
++	}
++
++	if (radio_enabled != local->hw.conf.radio_enabled) {
++		changes |= IEEE80211_CONF_CHANGE_RADIO_ENABLED;
++		local->hw.conf.radio_enabled = radio_enabled;
++	}
++
++	ieee80211_hw_config(local, changes);
++
++	return 0;
++}
++
++static int ieee80211_get_tx_power(struct wiphy *wiphy, int *dbm)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	*dbm = local->hw.conf.power_level;
++
++	if (!local->hw.conf.radio_enabled)
++		return -ENETDOWN;
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1373,4 +1425,6 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.join_ibss = ieee80211_join_ibss,
+ 	.leave_ibss = ieee80211_leave_ibss,
+ 	.set_wiphy_params = ieee80211_set_wiphy_params,
++	.set_tx_power = ieee80211_set_tx_power,
++	.get_tx_power = ieee80211_get_tx_power,
+ };
+--- wireless-testing.orig/net/mac80211/wext.c	2009-06-02 12:53:52.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-06-02 12:54:40.000000000 +0200
+@@ -306,82 +306,6 @@ static int ieee80211_ioctl_giwrate(struc
+ 	return 0;
+ }
+ 
+-static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
+-				      struct iw_request_info *info,
+-				      union iwreq_data *data, char *extra)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_channel* chan = local->hw.conf.channel;
+-	bool reconf = false;
+-	u32 reconf_flags = 0;
+-	int new_power_level;
+-
+-	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
+-		return -EINVAL;
+-	if (data->txpower.flags & IW_TXPOW_RANGE)
+-		return -EINVAL;
+-	if (!chan)
+-		return -EINVAL;
+-
+-	/* only change when not disabling */
+-	if (!data->txpower.disabled) {
+-		if (data->txpower.fixed) {
+-			if (data->txpower.value < 0)
+-				return -EINVAL;
+-			new_power_level = data->txpower.value;
+-			/*
+-			 * Debatable, but we cannot do a fixed power
+-			 * level above the regulatory constraint.
+-			 * Use "iwconfig wlan0 txpower 15dBm" instead.
+-			 */
+-			if (new_power_level > chan->max_power)
+-				return -EINVAL;
+-		} else {
+-			/*
+-			 * Automatic power level setting, max being the value
+-			 * passed in from userland.
+-			 */
+-			if (data->txpower.value < 0)
+-				new_power_level = -1;
+-			else
+-				new_power_level = data->txpower.value;
+-		}
+-
+-		reconf = true;
+-
+-		/*
+-		 * ieee80211_hw_config() will limit to the channel's
+-		 * max power and possibly power constraint from AP.
+-		 */
+-		local->user_power_level = new_power_level;
+-	}
+-
+-	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+-		local->hw.conf.radio_enabled = !(data->txpower.disabled);
+-		reconf_flags |= IEEE80211_CONF_CHANGE_RADIO_ENABLED;
+-		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
+-	}
+-
+-	if (reconf || reconf_flags)
+-		ieee80211_hw_config(local, reconf_flags);
+-
+-	return 0;
+-}
+-
+-static int ieee80211_ioctl_giwtxpower(struct net_device *dev,
+-				   struct iw_request_info *info,
+-				   union iwreq_data *data, char *extra)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-
+-	data->txpower.fixed = 1;
+-	data->txpower.disabled = !(local->hw.conf.radio_enabled);
+-	data->txpower.value = local->hw.conf.power_level;
+-	data->txpower.flags = IW_TXPOW_DBM;
+-
+-	return 0;
+-}
+-
+ static int ieee80211_ioctl_siwpower(struct net_device *dev,
+ 				    struct iw_request_info *info,
+ 				    struct iw_param *wrq,
+@@ -658,8 +582,8 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) cfg80211_wext_giwrts,		/* SIOCGIWRTS */
+ 	(iw_handler) cfg80211_wext_siwfrag,		/* SIOCSIWFRAG */
+ 	(iw_handler) cfg80211_wext_giwfrag,		/* SIOCGIWFRAG */
+-	(iw_handler) ieee80211_ioctl_siwtxpower,	/* SIOCSIWTXPOW */
+-	(iw_handler) ieee80211_ioctl_giwtxpower,	/* SIOCGIWTXPOW */
++	(iw_handler) cfg80211_wext_siwtxpower,		/* SIOCSIWTXPOW */
++	(iw_handler) cfg80211_wext_giwtxpower,		/* SIOCGIWTXPOW */
+ 	(iw_handler) cfg80211_wext_siwretry,		/* SIOCSIWRETRY */
+ 	(iw_handler) cfg80211_wext_giwretry,		/* SIOCGIWRETRY */
+ 	(iw_handler) cfg80211_wext_siwencode,		/* SIOCSIWENCODE */
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-02 12:53:52.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-06-02 12:55:01.000000000 +0200
+@@ -744,3 +744,83 @@ int cfg80211_wext_giwencode(struct net_d
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwencode);
++
++int cfg80211_wext_siwtxpower(struct net_device *dev,
++			     struct iw_request_info *info,
++			     union iwreq_data *data, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	enum tx_power_setting type;
++	int dbm = 0;
++
++	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
++		return -EINVAL;
++	if (data->txpower.flags & IW_TXPOW_RANGE)
++		return -EINVAL;
++
++	if (!rdev->ops->set_tx_power)
++		return -EOPNOTSUPP;
++
++	/* only change when not disabling */
++	if (!data->txpower.disabled) {
++		if (data->txpower.fixed) {
++			/*
++			 * wext doesn't support negative values, see
++			 * below where it's for automatic
++			 */
++			if (data->txpower.value < 0)
++				return -EINVAL;
++			dbm = data->txpower.value;
++			type = TX_POWER_FIXED;
++			/* TODO: do regulatory check! */
++		} else {
++			/*
++			 * Automatic power level setting, max being the value
++			 * passed in from userland.
++			 */
++			if (data->txpower.value < 0) {
++				type = TX_POWER_AUTOMATIC;
++			} else {
++				dbm = data->txpower.value;
++				type = TX_POWER_LIMITED;
++			}
++		}
++	} else {
++		type = TX_POWER_OFF;
++	}
++
++	return rdev->ops->set_tx_power(wdev->wiphy, type, dbm);;
++}
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwtxpower);
++
++int cfg80211_wext_giwtxpower(struct net_device *dev,
++			     struct iw_request_info *info,
++			     union iwreq_data *data, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	int err, val;
++
++	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
++		return -EINVAL;
++	if (data->txpower.flags & IW_TXPOW_RANGE)
++		return -EINVAL;
++
++	if (!rdev->ops->get_tx_power)
++		return -EOPNOTSUPP;
++
++	err = rdev->ops->get_tx_power(wdev->wiphy, &val);
++	/* HACK!!! */
++	if (err && err != -ENETDOWN)
++		return err;
++
++	/* well... oh well */
++	data->txpower.fixed = 1;
++	data->txpower.disabled = err == -ENETDOWN;
++	data->txpower.value = val;
++	data->txpower.flags = IW_TXPOW_DBM;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwtxpower);
 
-
 -- 
-Bob Copeland %% www.bobcopeland.com
 
