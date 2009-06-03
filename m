@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:42875 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbZFHASw (ORCPT
+Received: from L01SLCSMTP01.calltower.com ([69.4.184.248]:16069 "EHLO
+	L01SLCSMTP01.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752447AbZFCSKS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 20:18:52 -0400
-Subject: Re: [PATCH] rfkill: print events when input handler is
- disabled/enabled
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1244395114.12956.2.camel@johannes.local>
-References: <1244370412.2907.2.camel@johannes.local>
-	 <1244388331.23850.85.camel@localhost.localdomain>
-	 <1244395114.12956.2.camel@johannes.local>
+	Wed, 3 Jun 2009 14:10:18 -0400
+Subject: Re: ar9170 vs otus advice?
+From: Jon Loeliger <jdl@bigfootnetworks.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200906032032.25344.chunkeey@web.de>
+References: <1243894020.1559.22.camel@bigfoot-m4a75t>
+	 <200906030337.27448.chunkeey@web.de>
+	 <1244044799.1559.38.camel@bigfoot-m4a75t>
+	 <200906032032.25344.chunkeey@web.de>
 Content-Type: text/plain
-Date: Mon, 08 Jun 2009 02:18:24 +0200
-Message-Id: <1244420304.23850.112.camel@localhost.localdomain>
+Date: Wed, 03 Jun 2009 13:09:58 -0500
+Message-Id: <1244052598.1559.42.camel@bigfoot-m4a75t>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Wed, 2009-06-03 at 20:32 +0200, Christian Lamparter wrote:
 
-> > >  	if (!data->input_handler) {
-> > > -		atomic_inc(&rfkill_input_disabled);
-> > > +		if (atomic_inc_return(&rfkill_input_disabled) == 1)
-> > > +			printk(KERN_DEBUG "rfkill: input handler disabled\n");
-> > >  		data->input_handler = true;
-> > >  	}
-> > 
-> > do you really think the == 1 is the correct thing here. I think that
-> > should be a > 0.
+> I'm not aware of any problems with/as a 802.11a/b/g station,
+> no one has reported any so far: so a/b/g works as _advertised_.
+> (at least for me and other developers)
+
+OK, good!
+
+> > Is the in-tree Otus up-to-date with all of these workarounds?
+> I'm not really sure. the latest (and last) otus driver can be found here:
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/otus/
 > 
-> Why would you want to know every time somebody uses the ioctl? I think
-> the first time should be sufficient, no? Common case will hopefully be
-> only one program using it anyway though.
+> That said, I could get a decent HT20 (up to 70Mbits tx & 90 Mbit rx)
+> performance with the in-kernel driver... Does it work for you as well,
+> or are you asking, because it doesn't?
 
-you are right, we only care about the printk once. No need to keep
-printing it on every change.
+I'm just working on setting expectations (mine) so far,
+and getting a handle on what is presumed working so that
+I may choose the correct starting point for some work I
+would like to do.  I've not tested it yet.
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+> Regards,
+> 	Chr
 
-Regard
-
-Marcel
+Thanks,
+jdl
 
 
