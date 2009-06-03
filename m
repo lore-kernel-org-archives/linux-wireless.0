@@ -1,85 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54863 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755003AbZFPXKW (ORCPT
+Received: from mail-fx0-f168.google.com ([209.85.220.168]:59807 "EHLO
+	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751902AbZFCMyn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 19:10:22 -0400
-Subject: Re: [RFC] net: refactor multicast/unicast address list
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Pirko <jpirko@redhat.com>
-Cc: Netdev <netdev@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	davem <davem@davemloft.net>
-In-Reply-To: <20090616123808.GK3521@psychotron.englab.brq.redhat.com>
-References: <1244889678.13033.6.camel@johannes.local>
-	 <1244896094.13033.8.camel@johannes.local>
-	 <20090616111842.GG3521@psychotron.englab.brq.redhat.com>
-	 <1245151771.9256.3.camel@johannes.local>
-	 <20090616123808.GK3521@psychotron.englab.brq.redhat.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UE8ydtDeKZ87RgRr96Gg"
-Date: Wed, 17 Jun 2009 01:09:48 +0200
-Message-Id: <1245193788.21287.66.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 3 Jun 2009 08:54:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <1244033004.21215.4.camel@deadeye>
+References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
+	 <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
+	 <1244033004.21215.4.camel@deadeye>
+Date: Wed, 3 Jun 2009 16:48:08 +0400
+Message-ID: <bc64b4640906030548v2825961ck7fb44ded5d32c376@mail.gmail.com>
+Subject: Re: [PATCH 1/6] crc-itu-t: add bit-reversed calculation
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, davem@davemloft.net,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>,
+	Darren Salt <linux@youmustbejoking.demon.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/6/3 Ben Hutchings <ben@decadent.org.uk>:
+> On Wed, 2009-06-03 at 13:33 +0400, Dmitry Eremin-Solenikov wrote:
+> [...]
+>> +/**
+>> + * crc_itu_t_bitreversed - Compute the CRC-ITU-T for the data buffer;
+>> + * the buffer content is assumed to be bit-reversed
+> [...]
+>
+> This short description spills onto two lines which is invalid and breaks
+> the generation of docs.  Sorry to point this out after recommending the
+> patch to you.
+>
+> I've changed the description to "crc_itu_t_bitreversed - Compute the
+> CRC-ITU-T for a bit-reversed data buffer" all on one line.
 
---=-UE8ydtDeKZ87RgRr96Gg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changing patch here in accordance with your suggestion.
 
-On Tue, 2009-06-16 at 14:38 +0200, Jiri Pirko wrote:
-
-> >> Yes, I've already converted unicast lists to use list_head there. I'm =
-sending
-> >> the patch doing the same for multicast lists soon.
-> >
-> >Very nice! After that maybe I'll take a look again at moving things into
-> >a common structure -- I ultimately want to use a multicast list without
-> >a netdev to sync multiple netdevs onto a common multicast list that is
-> >not part of a netdev.
->=20
-> I see, hmm, I think I can do this change with my conversion... I was thin=
-king
-> about similar thing as you suggest before...
-
-I don't think the patch for converting the multicast lists will hit .31,
-I take it?
-
-I'd like to get this patch into the .32 tree once it opens
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-net-core-mc-=
-sync-list.patch
-
-but I don't know how to handle that wrt. your patch, which will clearly
-conflict with mein. Will you be sending that soon?
-
-I guess we could stick this one into wireless-testing, and then take it
-out again once your patch hits the tree and offers me similar API for
-list_head based multicast lists?
-
-johannes
-
---=-UE8ydtDeKZ87RgRr96Gg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKOCY3AAoJEODzc/N7+QmadVgQAIii74dXzgsltM2khSGbpJq0
-+HduX2BMg43HlyA09C7iZJJ+U5I25pfyx3+zjqdy2blj/I76eSdEJLQlSjjxN5pd
-8rCTJJMOrVByk+wqs9vlZVKMc42wf0YYN1GupBZgEyI8ofYSnZBFtVzKn49CLlDc
-AQRb7UvAL0tIeM6Xm8wU7WPAP55isdn/0ah9yoCtPhC+cFcvR+xINGdHd0g+worx
-JAIykN/RNrVhnVV11FqqL0xw2rtsEFzBH/zYN/dEGD442wBvgYnjOJK63BBX97SD
-5sHCxqhh5HdqXKvB+I/fZS/WZX0PLyc+Rm4AsV1tp92eYuz0tIDitXA173cuWo11
-bDmmV7gcdKvXezHHbE7u2fy1ckJfOiHImbyeYEfEkaLujZ/k3yoVK8W58NrSVPfS
-FeeAkic3mkXcuiKpE6czRzWhFcmnkv6gbqC4F0vhXOxv8wxSnyhICeeW6WPWSxPt
-ImZ56vLlsPdYKNryWp+txlW9aknJfWLaor5c0G1cQxuqgTCb1pPwtQgwdRZCt1fY
-IFnkGqXQR9bYrGah1PnJnwr1GdLILylRGaLHUB1aM2T/nwngPs8nKNrZ+73e32Se
-zcwm9vWjaV4Nl9SABbpV1HkYBEwhe3TJpnrtEJKs4x5LNni4dqcg7szeAUxeq9Pk
-4j+0/6bXwx01uqO/Q5nm
-=B1Ly
------END PGP SIGNATURE-----
-
---=-UE8ydtDeKZ87RgRr96Gg--
-
+-- 
+With best wishes
+Dmitry
