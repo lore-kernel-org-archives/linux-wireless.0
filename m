@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60097 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753494AbZFBUxF (ORCPT
+Received: from rcsinet11.oracle.com ([148.87.113.123]:46936 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754295AbZFCRSE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:53:05 -0400
-Subject: Re: [PATCH] mac80211: add missing RCU lock/unlock on
- ieee80211_rx_bss_info()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890906021343v41f69346mc844e8a80daf2314@mail.gmail.com>
-References: <1243974537-12774-1-git-send-email-lrodriguez@atheros.com>
-	 <1243974886.7176.8.camel@johannes.local>
-	 <43e72e890906021343v41f69346mc844e8a80daf2314@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TPXfTu+zCljO5TD1lF59"
-Date: Tue, 02 Jun 2009 22:53:02 +0200
-Message-Id: <1243975982.7176.10.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 3 Jun 2009 13:18:04 -0400
+Message-ID: <4A26B0D2.3090207@oracle.com>
+Date: Wed, 03 Jun 2009 10:20:18 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+MIME-Version: 1.0
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+CC: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	johannes@sipsolutions.net,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-wimax@intel.com, wimax@linuxwimax.org
+Subject: Re: linux-next: Tree for June 3 (rfkill)
+References: <20090603190952.2dd0cc70.sfr@canb.auug.org.au> <4A269539.8020607@oracle.com>
+In-Reply-To: <4A269539.8020607@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Randy Dunlap wrote:
+> Stephen Rothwell wrote:
+>> Hi all,
+>>
+>> Looks like a real rush since -rc7 ...
+> 
+> 
+> CFG80211=y
+> MAC80211=y
+> RFKILL=m
+> 
+> net/built-in.o: In function `cfg80211_netdev_notifier_call':
+> core.c:(.text+0xa678b): undefined reference to `rfkill_blocked'
+> net/built-in.o: In function `cfg80211_dev_free':
+> (.text+0xa67e2): undefined reference to `rfkill_destroy'
+> net/built-in.o: In function `cfg80211_rfkill_sync_work':
+> core.c:(.text+0xa686e): undefined reference to `rfkill_blocked'
+> net/built-in.o: In function `wiphy_new':
+> (.text+0xa69f2): undefined reference to `rfkill_alloc'
+> net/built-in.o: In function `wiphy_rfkill_start_polling':
+> (.text+0xa6bd2): undefined reference to `rfkill_resume_polling'
+> net/built-in.o: In function `wiphy_rfkill_stop_polling':
+> (.text+0xa6bdf): undefined reference to `rfkill_pause_polling'
+> net/built-in.o: In function `wiphy_unregister':
+> (.text+0xa6bf4): undefined reference to `rfkill_unregister'
+> net/built-in.o: In function `wiphy_rfkill_set_hw_state':
+> (.text+0xa6c64): undefined reference to `rfkill_set_hw_state'
+> net/built-in.o: In function `wiphy_register':
+> (.text+0xa6db4): undefined reference to `rfkill_register'
+> net/built-in.o: In function `cfg80211_wext_giwtxpower':
+> (.text+0xb01e9): undefined reference to `rfkill_blocked'
+> net/built-in.o: In function `cfg80211_wext_siwtxpower':
+> (.text+0xb0cf3): undefined reference to `rfkill_set_sw_state'
+> net/built-in.o: In function `cfg80211_wext_siwtxpower':
+> (.text+0xb0d1f): undefined reference to `rfkill_set_sw_state'
 
---=-TPXfTu+zCljO5TD1lF59
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-06-02 at 13:43 -0700, Luis R. Rodriguez wrote:
+Ugh, there are similar errors in the wimax area, which doesn't
+seem to mention RFKILL in its Kconfig file at all.  :(
 
-> Hm yeah, I failed to see it doesn't get the sta before allocating it
-> and/or adding it. Is that right for this particular case? If the sta
-> does exist we wouldn't have set up the things for it that
-> ieee80211_ibss_add_sta() is setting.
+net/built-in.o: In function `wimax_rfkill':
+(.text+0x81996): undefined reference to `rfkill_set_sw_state'
+net/built-in.o: In function `wimax_report_rfkill_sw':
+(.text+0x81ac0): undefined reference to `rfkill_set_sw_state'
+net/built-in.o: In function `wimax_report_rfkill_hw':
+(.text+0x81bd3): undefined reference to `rfkill_set_hw_state'
+net/built-in.o: In function `wimax_rfkill_rm':
+(.text+0x81c8f): undefined reference to `rfkill_unregister'
+net/built-in.o: In function `wimax_rfkill_rm':
+(.text+0x81c9a): undefined reference to `rfkill_destroy'
+net/built-in.o: In function `wimax_rfkill_add':
+(.text+0x81d52): undefined reference to `rfkill_alloc'
+net/built-in.o: In function `wimax_rfkill_add':
+(.text+0x81db3): undefined reference to `rfkill_register'
+net/built-in.o: In function `wimax_rfkill_add':
+(.text+0x81e2d): undefined reference to `rfkill_destroy'
 
-Yeah, but that's a corner case we can only hit via this function racing
-against itself, if that's even possible.
 
-johannes
-
---=-TPXfTu+zCljO5TD1lF59
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKJZEqAAoJEODzc/N7+QmaLsQP/jqYVSU26OkD5lllXORTo7KD
-ggvmg12uUPHu6ChKDLPI6oSOhyIJAKHgKnRhPA+3CHpzQ2/slifm2kCZY/h7dtgL
-kDOjQdCpGeBJ4mqmA59E5Q8shD1FF2jh4+HRsXB6c+Ytzr91n6xANV7e0xRR7KvW
-2eIZVOyDzZP860o/sTZfZYjDrkgvBrsfhc01tU1584OC48jAvvbj1ivwJjP3AzKt
-a6s+7IviCFpwXL1/phoIDiqlWenw+VQglEKuShP461QKnkTUl41xW1h8N9AuNRQh
-EZkEWNNKKMdWqFsovfq/pmvr9NMGm2clsaH4AE1RA+eld77tl0G96cM7nnsDClHq
-zLc6oll6bjA67GOLEM9N9U2W7g91VEQfVfBRaSjTH9+jLLz6sMflwCDNLXP3VnwT
-vF3uH0LvnaGlK8Impnk9sBvao6fB/FXyxBZ2PWh2qYYjKTZ1cH9w31aa9w/Qw3A+
-qRPIeUZQL68bxSGpq+DP8gSsJhNQYyIijgJGR12Uo+tZVY4/k5pJ8Wb8EFQk68TK
-xTnxxG/eeTTq0WxWaWaPSbr0xqnAjpX6eZkW+Ht/Mt/JqugethRDEMUa4A5YMkxe
-oqUQPLxHptHPDB0iYKuIt3K2Mj15RsTUGhBwmjuGmB5qU2BwWr3mONJlPkDTmRJK
-i3/R+TgwxJamQHlM413Z
-=pLQO
------END PGP SIGNATURE-----
-
---=-TPXfTu+zCljO5TD1lF59--
-
+-- 
+~Randy
+LPC 2009, Sept. 23-25, Portland, Oregon
+http://linuxplumbersconf.org/2009/
