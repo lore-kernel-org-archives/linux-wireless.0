@@ -1,247 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:54334 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755774AbZFBHiv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 03:38:51 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from mga09.intel.com ([134.134.136.24]:9881 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753578AbZFCWsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2009 18:48:54 -0400
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: wimax@linuxwimax.org
+Subject: Re: linux-next: Tree for June 3 (rfkill)
+Date: Thu, 4 Jun 2009 06:48:11 +0800
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A24559D.7010201@tuffmail.co.uk>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
-	 <1243763887.19302.29.camel@johannes.local>
-	 <1243796509.6570.35.camel@localhost.localdomain>
-	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
-	 <1243858256.5299.14.camel@johannes.local>
-	 <1243867620.3015.17.camel@localhost.localdomain>
-	 <4A23FD91.8020200@tuffmail.co.uk>
-	 <1243885494.3015.29.camel@localhost.localdomain>
-	 <4A24559D.7010201@tuffmail.co.uk>
-Content-Type: text/plain
-Date: Tue, 02 Jun 2009 09:38:28 +0200
-Message-Id: <1243928308.3192.38.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-wimax@intel.com,
+	linux-next@vger.kernel.org
+References: <20090603190952.2dd0cc70.sfr@canb.auug.org.au> <4A26B0D2.3090207@oracle.com> <1244050400.22105.0.camel@johannes.local>
+In-Reply-To: <1244050400.22105.0.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200906040648.11839.inaky@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alan,
+On Thursday 04 June 2009, Johannes Berg wrote:
+> On Wed, 2009-06-03 at 10:20 -0700, Randy Dunlap wrote:
+> > Ugh, there are similar errors in the wimax area, which doesn't
+> > seem to mention RFKILL in its Kconfig file at all.  :(
+>
+> Guess it too will have to get a
+>
+> 	depends on RFKILL || !RFKILL
+>
+> I can take care of it after dinner.
 
-> >>> I really don't understand why this is needed. What benefit does it give
-> >>> us compared to just sent OP_CHANGE and OP_CHANGE as an update. My X200
-> >>> for example does this anyway on suspend/resume.
-> >>>   
-> >>>       
-> >> This is required for boot only.  I have no reason for this event to be 
-> >> generated on resume.
-> >>
-> >> The same effect could be had by generating an OP_CHANGE on f_open, 
-> >> _only_ when a platform driver has provided a value from NVS.  But it 
-> >> does seem clearer to make it a different type of event.
-> >>     
-> >
-> > that is my whole point. If the kernel driver wants to preserve these
-> > then it can just issue OP_ADD to notify use about the current state of
-> > the values. The OP_ADD gets send once you open /dev/rfkill and if they
-> > not match with our policy we have to change them anyway. I really don't
-> > see the need for an extra operation here. Let me ask this again, how is
-> > it different from just sending the OP_ADD and then let rfkilld decide to
-> > either use that value or enforce its own policy.
-> 
-> I don't understand.
-> 
-> Isn't OP_ADD generated for all rfkill devices, by the core itself?  How 
-> does the driver ask to generate this event or not?
-> 
-> As I understand it, the difference between NVS_REPORT and ADD is that 
-> ADD is generated for all drivers.  NVS_REPORT is only generated if they 
-> call rfkill_set_global_sw_state().
-> 
-> The difference is that this exposes an extra bit of information: whether 
-> the state was restored from NVS.
+Ugh...bitten again by Randy's evil autobuilder. Thanks for fixing
+it, Johannes.
 
-currently every time you open an instance of /dev/rfkill you get the
-OP_ADD for the current RFKILL states. It gives you the current state.
-Some times you see it followed by a OP_CHANGE, but that are drivers that
-don't register their RFKILL switches with the current state and then end
-up changing it later. That needs fixing btw., but is a minor detail that
-can be taken care of later.
-
-So we get the current state when opening /dev/rfkill and once we fixed
-the drivers to register with the current state, I don't see any need for
-an extra NVS operation.
-
-If you really don't wanna have rfkilld _not_ impose a policy on cold
-boot, then we can certainly add that. However that is part of rfkilld
-and not the kernel.
-
-For global states, I am questioning the platform that actually has
-storage for global states. All platforms that I have seen so far store
-individual per device based states and not the global one.
-
-> >>> So what is rfkilld suppose to be doing when receiving this report? What
-> >>> is the expected behavior? Why do we bother with multi-OS crap here? I am
-> >>> really unclear what are we trying to solve here.
-> >>>       
-> >> In order to replicate the kernel behavior, it is expected that you set 
-> >> your internal state from this event.  E.g. when the user next presses 
-> >> the wireless toggle key, you set the inverse of that internal state.
-> >>
-> >> Since this event is generated by a platform driver, you can expect it to 
-> >> be present following coldplug (the udev initscript).  If the event is 
-> >> not present after coldplug, you may then issue OP_CHANGE yourself, to 
-> >> e.g. restore the state from a file.  You would not be expected to handle 
-> >> OP_NVS_REPORT after startup.  (Unless the daemon is restarted).
-> >>
-> >> Replicating the kernel behavior will allow us to avoid causing a couple 
-> >> of niggly little regressions on at least two platforms.  It preserves 
-> >> the behavior when dual-booting (possibly between different linux 
-> >> distros), and when the BIOS setup screen exposes the NVS state as an 
-> >> option.  The new behavior you suggest will annoy any users who have 
-> >> become used to these scenarios "just working". 
-> >>
-> >> You may not use these platforms yourself.  But I'm as annoyed as 
-> >> Henrique is, we don't want to impose regressions just because other 
-> >> platforms don't implement the feature.
-> >>
-> >> Why the fuss about implementing this, it seems easy enough?  Start 
-> >> rfkilld after udev (like everything else).  If you get NVS_REPORT, then 
-> >> use those states.  Fill in any other states from defaults or state files 
-> >> and issue OP_CHANGE for them, just as you're already planning.  Ignore 
-> >> any subsequent NVS_REPORTs.  That should cover it.
-> >>
-> >> It's the cost for starting from a working implementation.  You benefit 
-> >> from having existing drivers and users, you pay by not breaking them 
-> >> without good reason.
-> >>     
-> >
-> > I really don't care about current behavior, because that has been just a
-> > hack anyway.
-> 
-> Linux exports a stable ABI.  A reasonable justification would be "this 
-> is trivial and has practically no users who care".  Hackishness is 
-> second to that.
-
-If we have to break it, we will break it. Don't give me the stable
-non-sense API/ABI thing. We have done this in the past and we will keep
-doing it. However that said, we try to make the issues arising from it
-as small as possible.
-
-> > And it happens to work if there is proper BIOS support. We
-> > are at the point now where we stop working around a complicated and in
-> > some cases broken implementation. Overloading it with weird special
-> > cases is just wrong and so far I am not buying into any of the arguments
-> > here. The point behind the whole effort from Johannes is to finally fix
-> > RFKILL support. If it breaks current behavior, I couldn't care less in
-> > some cases.
-> 
-> I really don't understand.  You say above that we don't need this 
-> change, because drivers can already achieve the same event by 
-> selectively generating OP_ADD.  In that case it's already overloaded 
-> with "weird special cases", and NVS_REPORT is a cosmetic difference only.
-
-Drivers can not generate OP_ADD, except the re-register the RFKILL
-switch, but OP_ADD is send for every instance of /dev/rfkill to inform
-the userspace application of the current available switches.
-
-> > So Johannes and I talked about it a lot last week. And we will be doing
-> > rfkilld so finally deprecated the broken idea of rfkill-input and move
-> > the policy into userspace where it belongs. 
-> 
-> Great.  I think we can agree on one thing, that implementing 
-> rfkill-input in the kernel without the possibility of a userspace 
-> override is warped and twisted :-).
-
-I understand why rfkill-input exists and that it is needed. The only
-reason why it is inside the kernel is that nobody bothered to create a
-proper user interface for RFKILL. Since that is fixed now, we can
-finally do it right, yeah :)
-
-> > To make this clear, the
-> > concept of cross-OS state keeping is broken. 
-> 
-> > Having the BIOS or a
-> > different OS dictate policy makes no sense.
-> >   
-> 
-> Seems to me these are two different points, and you haven't really said 
-> why cross-OS state is broken.
-> 
-> It doesn't make sense to be _dictated_ to by your other OS/BIOS.  That's 
-> exactly what rfkilld would avoid, by allowing a configurable policy.
-> 
-> "support cross-OS state keeping" is a policy which can be applied - or 
-> not.  NVS_REPORT provides the necessary information.
-
-If you wanna just accept what the BIOS (or other OS) tells you then that
-is an acceptable policy. So rfkilld will just map key input events in
-that case. Fine by me. Question is if we can't do that right now? I
-think we just can.
-
-> So, this policy doesn't work if the other OS is un-cooperative and 
-> soft-blocks the wireless on shutdown.  That's the full extent to which 
-> it is broken, yes?  [And it's a relatively obscure problem, so the risk 
-> is that it just rots, and the effort spent on this code is wasted].
-
-If the other OS soft-blocks it and our policy is to just accept that,
-then it is fine. We can always soft-unblock it later. If our policy is
-to restore unblock state, then we soft-unblock it when rfkilld starts.
-
-> But on eeepc-laptop, it seems safe to assume that the drivers on the 
-> Other OS do the co-operative thing, because otherwise it would cause 
-> confusion with the option in the BIOS setup.
-
-The BIOS block is not enforced by ACPI, then it is pointless anyway and
-we should just ignore it. Really. We are not trying to fix totally
-broken BIOS details here.
-
-> Henrique (or anyone), has this ever been a problem on thinkpad-acpi?  Do 
-> you ever get a state in NVS at boot time, which the user had not requested?
-> 
-> Note that the linux ACPI project has the explicit goal of compatibility 
-> with Windows.  If a  new platform comes along with a Windows ACPI driver 
-> which screws up the platform state, it would be reasonable for the Linux 
-> ACPI driver to not call set_global_sw_state().
-
-Question is if we really have a global state here. I doubt it since all
-of these are device specific states. And having the BIOS or ACPI dictate
-what state my external Bluetooth or WiFi device is in is pointless and a
-total broken concept.
-
-> You propose to exclude a feature that currently works, on the grounds 
-> that it is inherently broken.  But you haven't said that this has ever 
-> caused incorrect behavior.  All you have said so far is that it is a hack.
-
-This never worked so far. The mac80211 or Bluetooth subsystems have no
-RFKILL state and thus global states are not enforced. An external dongle
-without RFKILL support is not taken into account. You are not talking
-about global states here. They are all device specific. The device just
-happens to be a platform device builtin the system.
-
-> Since this was the original intent, it's a pity 
-> rfkill_set_global_sw_state() wasn't listed in the feature removal 
-> schedule (or a user-level description of NVS).  I suggested something 
-> like NVS_REPORT because, in the absence of a description of removal, it 
-> looked like an oversight.  In the past I've raised a couple of apparent 
-> oversights about the rewrite, and they were treated as constructive.
-> 
-> But now its clear this was a policy decision, and I ended up draging out 
-> an explanation of the policy from nitpicking details of the 
-> implementation.  I guess this is my fault for opening the discussion 
-> based on the one loose thread of a detail, instead of asking if the 
-> change was an oversight or intentional :-(.
-
-I am confused now. Do we have the concept of a driver that will set the
-system wide RFKILL state? The real hardware switches should do that, but
-that is enforced differently anyway. As long as it is a software switch,
-the enforcing should be done via /dev/rfkill and that is possible right
-now (or when rfkill-input is finally replaced).
-
-Regards
-
-Marcel
-
-
+-- 
+Inaky
