@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:63922 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757462AbZFLLQZ (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4741 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228AbZFCDEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:16:25 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 10/33] wl12xx: add wl12xx_spi_reg_read() and
-	wl12xx_spi_reg_write() functions
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:15:22 +0300
-Message-ID: <20090612111521.8877.50373.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 2 Jun 2009 23:04:09 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, henk@god.dyndns.org
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: disable beacon interrupt when interface is down
+Date: Tue,  2 Jun 2009 23:03:06 -0400
+Message-Id: <1243998186-9200-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@nokia.com>
+When we remove the active interface, there's no need to continue
+sending beacons; doing so would cause a null pointer deref in
+ieee80211_beacon_get().  Disable the interrupt in remove_interface
+and add a WARN_ON(!vif) in case there are other instances lurking.
 
-In some cases we need to read more than 32 bits from the register area.
-These functions were added to support that, like the existing
-wl12xx_spi_mem_read() and wl12xx_spi_mem_write() already do for large blocks
-in the memory area.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
+ drivers/net/wireless/ath/ath5k/base.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/wl12xx/spi.c |   18 ++++++++++++++++++
- drivers/net/wireless/wl12xx/spi.h |    2 ++
- 2 files changed, 20 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index bcdcfbc..0d2b13a 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -348,6 +348,24 @@ void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf,
- 	wl12xx_spi_write(wl, physical, buf, len);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ab2048b..85a00db 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2070,6 +2070,13 @@ err_unmap:
+ 	return ret;
  }
  
-+void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len)
++static void ath5k_beacon_disable(struct ath5k_softc *sc)
 +{
-+	int physical;
-+
-+	physical = wl12xx_translate_reg_addr(wl, addr);
-+
-+	wl12xx_spi_read(wl, physical, buf, len);
++	sc->imask &= ~(AR5K_INT_BMISS | AR5K_INT_SWBA);
++	ath5k_hw_set_imr(sc->ah, sc->imask);
++	ath5k_hw_stop_tx_dma(sc->ah, sc->bhalq);
 +}
 +
-+void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf, size_t len)
-+{
-+	int physical;
-+
-+	physical = wl12xx_translate_reg_addr(wl, addr);
-+
-+	wl12xx_spi_write(wl, physical, buf, len);
-+}
-+
- u32 wl12xx_mem_read32(struct wl12xx *wl, int addr)
+ /*
+  * Transmit a beacon frame at SWBA.  Dynamic updates to the
+  * frame contents are done as needed and the slot time is
+@@ -2757,6 +2764,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
+ 		goto end;
+ 
+ 	ath5k_hw_set_lladdr(sc->ah, mac);
++	ath5k_beacon_disable(sc);
+ 	sc->vif = NULL;
+ end:
+ 	mutex_unlock(&sc->lock);
+@@ -3060,7 +3068,14 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
  {
- 	return wl12xx_read32(wl, wl12xx_translate_mem_addr(wl, addr));
-diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
-index 1a19557..0996e48 100644
---- a/drivers/net/wireless/wl12xx/spi.h
-+++ b/drivers/net/wireless/wl12xx/spi.h
-@@ -81,6 +81,8 @@ u32 wl12xx_mem_read32(struct wl12xx *wl, int addr);
- void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val);
+ 	int ret;
+ 	struct ath5k_softc *sc = hw->priv;
+-	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
++	struct sk_buff *skb;
++
++	if (WARN_ON(!vif)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	skb = ieee80211_beacon_get(hw, vif);
  
- /* Registers IO */
-+void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len);
-+void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf,size_t len);
- u32 wl12xx_reg_read32(struct wl12xx *wl, int addr);
- void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
- 
+ 	if (!skb) {
+ 		ret = -ENOMEM;
+-- 
+1.6.0.6
+
 
