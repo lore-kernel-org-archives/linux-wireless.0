@@ -1,195 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:61010 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbZFWPhv (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:44273 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755591AbZFCT76 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:37:51 -0400
-Date: Tue, 23 Jun 2009 10:37:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/8] p54: Move LED code
-Message-ID: <4a40f6d7.O9KreZzbF9bctSfd%Larry.Finger@lwfinger.net>
+	Wed, 3 Jun 2009 15:59:58 -0400
+Received: by pxi12 with SMTP id 12so270496pxi.33
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 12:59:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45e8e6c40906031252x7f22a1c1mf4fb4a9612eb5ce0@mail.gmail.com>
+References: <661650.46971.qm@web55304.mail.re4.yahoo.com>
+	 <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
+	 <40f31dec0906031121xfb76641h3137f53ed5c8a792@mail.gmail.com>
+	 <45e8e6c40906031252x7f22a1c1mf4fb4a9612eb5ce0@mail.gmail.com>
+Date: Wed, 3 Jun 2009 22:59:58 +0300
+Message-ID: <40f31dec0906031259u1a9c4b0dh977cade85bded168@mail.gmail.com>
+Subject: Re: ath9k/ath5k + 80211s crash
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: austinxxh-ath9k@yahoo.com, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Christian Lamparter <chunkeey@web.de>
+2009/6/3 Andrey Yurovsky <andrey@cozybit.com>:
+> On Wed, Jun 3, 2009 at 11:21 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>> 2009/6/2 Andrey Yurovsky <andrey@cozybit.com>:
+>>> With wireless-testing from a couple of days ago, an X86 system, and this patch:
+>>> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+>>> ath9k can bring up a mesh point interface and doesn't crash for me,
+>>> but there are no mesh beacons, so mesh isn't working.  On ath5k, there
+>>> are also no beacons and mesh doesn't work, but there's no crash.
+>>>
+>>
+>>
+>> Hmm, try adding NL80211_IFTYPE_MESH_POINT here ->
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/pcu.c;h=ec35503f6a40e6b6a1cc4323287b31e7cdd3a428;hb=HEAD#l733
+>
+> It's already there, in ath5k_hw_set_opmode.  We'll need to trace
+> what's going on and see why we don't get beacons.  Last night I had an
+> ath5k MP suddenly start beaconing but I haven't been able to reproduce
+> that yet.
 
-Copy the LED code from p54common.c into a new file led.c
+736         /* When in AP mode zero timer0 to start TSF */
+737         if (ah->ah_op_mode == NL80211_IFTYPE_AP)
+738                 ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+We need to do this for NL80211_IFTYPE_MESH_POINT or DBA won't fire up
+and beacon queue wont start...
 
-diff --git a/drivers/net/wireless/p54/led.c b/drivers/net/wireless/p54/led.c
-new file mode 100644
-index 0000000..c00115b
---- /dev/null
-+++ b/drivers/net/wireless/p54/led.c
-@@ -0,0 +1,163 @@
-+/*
-+ * Common code for mac80211 Prism54 drivers
-+ *
-+ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright (c) 2007-2009, Christian Lamparter <chunkeey@web.de>
-+ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-+ *
-+ * Based on:
-+ * - the islsm (softmac prism54) driver, which is:
-+ *   Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-+ * - stlc45xx driver
-+ *   Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/firmware.h>
-+#include <linux/etherdevice.h>
-+
-+#include <net/mac80211.h>
-+#ifdef CONFIG_P54_LEDS
-+#include <linux/leds.h>
-+#endif /* CONFIG_P54_LEDS */
-+
-+#include "p54.h"
-+#include "lmac.h"
-+
-+static void p54_update_leds(struct work_struct *work)
-+{
-+	struct p54_common *priv = container_of(work, struct p54_common,
-+					       led_work.work);
-+	int err, i, tmp, blink_delay = 400;
-+	bool rerun = false;
-+
-+	/* Don't toggle the LED, when the device is down. */
-+	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
-+		return ;
-+
-+	for (i = 0; i < ARRAY_SIZE(priv->leds); i++)
-+		if (priv->leds[i].toggled) {
-+			priv->softled_state |= BIT(i);
-+
-+			tmp = 70 + 200 / (priv->leds[i].toggled);
-+			if (tmp < blink_delay)
-+				blink_delay = tmp;
-+
-+			if (priv->leds[i].led_dev.brightness == LED_OFF)
-+				rerun = true;
-+
-+			priv->leds[i].toggled =
-+				!!priv->leds[i].led_dev.brightness;
-+		} else
-+			priv->softled_state &= ~BIT(i);
-+
-+	err = p54_set_leds(priv);
-+	if (err && net_ratelimit())
-+		printk(KERN_ERR "%s: failed to update LEDs (%d).\n",
-+			wiphy_name(priv->hw->wiphy), err);
-+
-+	if (rerun)
-+		queue_delayed_work(priv->hw->workqueue, &priv->led_work,
-+			msecs_to_jiffies(blink_delay));
-+}
-+
-+static void p54_led_brightness_set(struct led_classdev *led_dev,
-+				   enum led_brightness brightness)
-+{
-+	struct p54_led_dev *led = container_of(led_dev, struct p54_led_dev,
-+					       led_dev);
-+	struct ieee80211_hw *dev = led->hw_dev;
-+	struct p54_common *priv = dev->priv;
-+
-+	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
-+		return ;
-+
-+	if ((brightness) && (led->registered)) {
-+		led->toggled++;
-+		queue_delayed_work(priv->hw->workqueue, &priv->led_work,
-+				   HZ/10);
-+	}
-+}
-+
-+static int p54_register_led(struct p54_common *priv,
-+			    unsigned int led_index,
-+			    char *name, char *trigger)
-+{
-+	struct p54_led_dev *led = &priv->leds[led_index];
-+	int err;
-+
-+	if (led->registered)
-+		return -EEXIST;
-+
-+	snprintf(led->name, sizeof(led->name), "p54-%s::%s",
-+		 wiphy_name(priv->hw->wiphy), name);
-+	led->hw_dev = priv->hw;
-+	led->index = led_index;
-+	led->led_dev.name = led->name;
-+	led->led_dev.default_trigger = trigger;
-+	led->led_dev.brightness_set = p54_led_brightness_set;
-+
-+	err = led_classdev_register(wiphy_dev(priv->hw->wiphy), &led->led_dev);
-+	if (err)
-+		printk(KERN_ERR "%s: Failed to register %s LED.\n",
-+			wiphy_name(priv->hw->wiphy), name);
-+	else
-+		led->registered = 1;
-+
-+	return err;
-+}
-+
-+int p54_init_leds(struct p54_common *priv)
-+{
-+	int err;
-+
-+	/*
-+	 * TODO:
-+	 * Figure out if the EEPROM contains some hints about the number
-+	 * of available/programmable LEDs of the device.
-+	 */
-+
-+	INIT_DELAYED_WORK(&priv->led_work, p54_update_leds);
-+
-+	err = p54_register_led(priv, 0, "assoc",
-+			       ieee80211_get_assoc_led_name(priv->hw));
-+	if (err)
-+		return err;
-+
-+	err = p54_register_led(priv, 1, "tx",
-+			       ieee80211_get_tx_led_name(priv->hw));
-+	if (err)
-+		return err;
-+
-+	err = p54_register_led(priv, 2, "rx",
-+			       ieee80211_get_rx_led_name(priv->hw));
-+	if (err)
-+		return err;
-+
-+	err = p54_register_led(priv, 3, "radio",
-+			       ieee80211_get_radio_led_name(priv->hw));
-+	if (err)
-+		return err;
-+
-+	err = p54_set_leds(priv);
-+	return err;
-+}
-+
-+void p54_unregister_leds(struct p54_common *priv)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(priv->leds); i++) {
-+		if (priv->leds[i].registered) {
-+			priv->leds[i].registered = false;
-+			priv->leds[i].toggled = 0;
-+			led_classdev_unregister(&priv->leds[i].led_dev);
-+		}
-+	}
-+
-+	cancel_delayed_work_sync(&priv->led_work);
-+}
 
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
