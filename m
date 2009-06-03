@@ -1,100 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37436 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756875AbZFJITp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52803 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755628AbZFCRdb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:19:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 06/18] ath9k: remove unused min rate calculation code
-Date: Wed, 10 Jun 2009 04:19:23 -0400
-Message-Id: <1244621975-1238-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
-References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 3 Jun 2009 13:33:31 -0400
+Subject: Re: linux-next: Tree for June 3 (rfkill)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-wimax@intel.com, wimax@linuxwimax.org
+In-Reply-To: <4A26B0D2.3090207@oracle.com>
+References: <20090603190952.2dd0cc70.sfr@canb.auug.org.au>
+	 <4A269539.8020607@oracle.com>  <4A26B0D2.3090207@oracle.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GeECyou/NqU0JF9rluOW"
+Date: Wed, 03 Jun 2009 19:33:20 +0200
+Message-Id: <1244050400.22105.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used, and when we need to get the lowest rate
-we should simply use mac80211's own rate_lowest_index(sband, sta).
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   33 +++++++++------------------------
- 1 files changed, 9 insertions(+), 24 deletions(-)
+--=-GeECyou/NqU0JF9rluOW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a23b66b..7b37b27 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -817,28 +817,17 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- static u8 ath_rc_rate_getidx(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
- 			     const struct ath_rate_table *rate_table,
--			     u8 rix, u16 stepdown,
--			     u16 min_rate)
-+			     u8 rix, u16 stepdown)
- {
- 	u32 j;
- 	u8 nextindex = 0;
- 
--	if (min_rate) {
--		for (j = RATE_TABLE_SIZE; j > 0; j--) {
--			if (ath_rc_get_nextlowervalid_txrate(rate_table,
--						ath_rc_priv, rix, &nextindex))
--				rix = nextindex;
--			else
--				break;
--		}
--	} else {
--		for (j = stepdown; j > 0; j--) {
--			if (ath_rc_get_nextlowervalid_txrate(rate_table,
--						ath_rc_priv, rix, &nextindex))
--				rix = nextindex;
--			else
--				break;
--		}
-+	for (j = stepdown; j > 0; j--) {
-+		if (ath_rc_get_nextlowervalid_txrate(rate_table,
-+					ath_rc_priv, rix, &nextindex))
-+			rix = nextindex;
-+		else
-+			break;
- 	}
- 	return rix;
- }
-@@ -882,7 +871,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		 * after the probe rate
- 		 */
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1, 0);
-+					  rate_table, nrix, 1);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -895,16 +884,12 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 
- 	/* Fill in the other rates for multirate retry */
- 	for ( ; i < 4; i++) {
--		u8 min_rate;
--
- 		/* Use twice the number of tries for the last MRR segment. */
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		min_rate = (((i + 1) == 4) && 0);
--
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1, min_rate);
-+					  rate_table, nrix, 1);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
--- 
-1.6.0.6
+On Wed, 2009-06-03 at 10:20 -0700, Randy Dunlap wrote:
+
+> Ugh, there are similar errors in the wimax area, which doesn't
+> seem to mention RFKILL in its Kconfig file at all.  :(
+
+Guess it too will have to get a
+
+	depends on RFKILL || !RFKILL
+
+I can take care of it after dinner.
+
+johannes
+
+--=-GeECyou/NqU0JF9rluOW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKJrPdAAoJEODzc/N7+QmaN/sP/iBHXVPwc/uhbzWEuk4LNvkE
+SJo9RFxFHA4ALCCkCfp9VZL3jtws5BABBdNJxvRN3nUMnQehmANfCAiRtbAOqr3Y
+xsE2nMDmJzZKIKpp4LMQUMN0HMa/PK6S8S5VJlPG/KsPZDzerw22kk/Kf9o8Wdoc
+Juag+qtk8H7alIyyI0JGuatN/szikDdzIvq+BKsKfe3Y6hPRcA/VvF1tl9Wn2l+t
+75BOwYZQyXYPsE0bDgWXkWctau6OHec35RU9afnUFUQTrlRPqs5TzjadVcXHWXvE
+2oaa9B72LBxpHMutSuCsvGELvWf88GXw9VXU4cXoZ9GkhXsW6jSWGyAhsSeACKTH
+KoGVQsgEJi87HkHCH8O9ORneK+1Hcc70R/Z4p3e6/jV9ialByNpoeR+zfcRnlRWA
+WcINYmbGl5Ak4GaAftdJKEqKlimle8MvKtOXxPc5Q1NH6uFj3iivLGJa7F8IAp2x
+/th/exuhe9LcbbxvHV/4c7s3npG1ndfhD94UeTyozmXHszo3FFWnBFMWuZobqtgb
+jSL000TjVaTtU+ZjoUl99ZDq5FIEELnnnCit4MmsdeKwkrZnnuUJAmXqCp/wikv0
+VkkQY01yMIRSEMSzIjK8vtfgzpc/q9EPrCmQ4h/zGpk62KqUiMR4anR2t5l+UQrY
+Se8CSndSgefpfF7+z5XF
+=cJyO
+-----END PGP SIGNATURE-----
+
+--=-GeECyou/NqU0JF9rluOW--
 
