@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49576 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756653AbZFWP3u (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:42064 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753332AbZFCMna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:50 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 04/10] sunrpc: Use rcu_barrier() on unload.
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:04:14 +0200
-Message-ID: <20090623150414.22490.14888.stgit@localhost>
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 3 Jun 2009 08:43:30 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, davem@davemloft.net,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>,
+	Darren Salt <linux@youmustbejoking.demon.co.uk>
+In-Reply-To: <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
+References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
+	 <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EmZRZA+LukKqUoaZJojX"
+Date: Wed, 03 Jun 2009 13:43:24 +0100
+Message-Id: <1244033004.21215.4.camel@deadeye>
+Mime-Version: 1.0
+Subject: Re: [PATCH 1/6] crc-itu-t: add bit-reversed calculation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sunrpc module uses rcu_call() thus it should use rcu_barrier() on
-module unload.
 
-Have not verified that the possibility for new call_rcu() callbacks
-has been disabled.  As a hint for checking, the functions calling
-call_rcu() (unx_destroy_cred and generic_destroy_cred) are
-registered as crdestroy function pointer in struct rpc_credops.
+--=-EmZRZA+LukKqUoaZJojX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
+On Wed, 2009-06-03 at 13:33 +0400, Dmitry Eremin-Solenikov wrote:
+[...]=20
+> +/**
+> + * crc_itu_t_bitreversed - Compute the CRC-ITU-T for the data buffer;
+> + * the buffer content is assumed to be bit-reversed
+[...]
 
- net/sunrpc/sunrpc_syms.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This short description spills onto two lines which is invalid and breaks
+the generation of docs.  Sorry to point this out after recommending the
+patch to you.
 
-diff --git a/net/sunrpc/sunrpc_syms.c b/net/sunrpc/sunrpc_syms.c
-index 843629f..adaa819 100644
---- a/net/sunrpc/sunrpc_syms.c
-+++ b/net/sunrpc/sunrpc_syms.c
-@@ -66,6 +66,7 @@ cleanup_sunrpc(void)
- #ifdef CONFIG_PROC_FS
- 	rpc_proc_exit();
- #endif
-+	rcu_barrier(); /* Wait for completion of call_rcu()'s */
- }
- MODULE_LICENSE("GPL");
- module_init(init_sunrpc);
+I've changed the description to "crc_itu_t_bitreversed - Compute the
+CRC-ITU-T for a bit-reversed data buffer" all on one line.
 
+Ben.
+=20
+--=20
+Ben Hutchings
+Logic doesn't apply to the real world. - Marvin Minsky
+
+--=-EmZRZA+LukKqUoaZJojX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iD8DBQBKJm/i79ZNCRIGYgcRAuH+AJ0R1XimrXgIoZRiTPJhce06vouOmwCfaMi/
+PHrKQyUstX71t14CbcFoZB8=
+=rl3w
+-----END PGP SIGNATURE-----
+
+--=-EmZRZA+LukKqUoaZJojX--
