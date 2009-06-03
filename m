@@ -1,67 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52765 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754730AbZFJMy3 (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:65407 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751988AbZFCTsH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 08:54:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/18 v2] mac80211: disable moving between PS modes during scan
-Date: Wed, 10 Jun 2009 08:54:28 -0400
-Message-Id: <1244638468-28662-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 3 Jun 2009 15:48:07 -0400
+Received: by bwz9 with SMTP id 9so240616bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 12:48:08 -0700 (PDT)
+Message-ID: <4A26CBD3.8050009@gmail.com>
+Date: Wed, 03 Jun 2009 20:15:31 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH] cfg80211: fix Kconfig for users of cfg80211
+References: <1244046631.4862.34.camel@johannes.local>
+In-Reply-To: <1244046631.4862.34.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't want to trigger moving between PS mode during
-scan. With this enabled we sometimes end up sending nullfunc
-frames during scan. We're supposed to only send one prior to
-scan and after scan.
+Johannes Berg wrote:
+>  * iwm doesn't depend on cfg80211 or wireless extensions
+>  * rndis wlan selects cfg80211 - needs to depend
+>  * mac80211 selects cfg80211 - needs to depend
 
-This fixes an oops which occured due to an assert in ath9k:
+Hmm. Consider:
 
-http://marc.info/?l=linux-wireless&m=124277331319024
+1. User using a rndis_wlan device on old kernel with cfg80211 unselected.
+2. Upgrades kernel with make old_config
 
-The assert was happening because the rate control algorithm
-figures it should find at least one valid dual stream or
-single stream rate. Since we allow mac80211 to send nullfunc
-frames during scan and dynamic PS was enabled at times we ended
-up trying to send nullfunc frames for the target sta on the
-wrong band for which we have no valid rate to communicate with
-it. This brakes the assumptions in rate control. We'll handle
-this sanity check next, but this fix does prevent the
-spurious nullfunc frames from actually being sent.
+Result: the rndis_wlan driver is no longer configured to build.
 
-We determine we also need to disable moving between PS modes
-when not associated so lets just add that now as well.
+I don't think it's a big issue, as you can reconfigure and rebuild as
+soon as you realise. But you may have to 'realise' without google access.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+The only reason I'm thinking of this is because orinoco may be in the
+same boat shortly. Ditto other wireless drivers as they get converted.
+So I had a play with Kconfig. How about something like the patch below
+instead?
+
+cfg80211 should just get autoselected in the most appropriate mode, and
+drivers get the same restrictions as cfg80211. The option setting
+appears to work fine, but I haven't done any build testing.
+
+It might be possible to chain things like this, so mac80211 could be
+done in the same way. But I guess we wouldn't want too much of this
+going on...
+
+
+
+Dave.
+
 ---
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index a67d292..9038bd6 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -333,11 +333,12 @@ config USB_ZD1201
+ config USB_NET_RNDIS_WLAN
+        tristate "Wireless RNDIS USB support"
+        depends on USB && WLAN_80211 && EXPERIMENTAL
++       depends on CFG80211_AS_MODULE
+        select USB_USBNET
+        select USB_NET_CDCETHER
+        select USB_NET_RNDIS_HOST
+        select WIRELESS_EXT
+-       select CFG80211
++       select CFG80211_USED
+        ---help---
+          This is a driver for wireless RNDIS devices.
+          These are USB based adapters found in devices such as:
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 9cbf545..2de2bd8 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -1,12 +1,14 @@
++# If cfg80211 has to be configured as a module, so do we
+ config MAC80211
+        tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
++       depends on CFG80211_AS_MODULE
+        select CRYPTO
+        select CRYPTO_ECB
+        select CRYPTO_ARC4
+        select CRYPTO_AES
+        select CRC32
+        select WIRELESS_EXT
+-       select CFG80211
++       select CFG80211_USED
+        ---help---
+          This option enables the hardware independent IEEE 802.11
+          networking stack.
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 4428dd5..d3f08c4 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -1,6 +1,23 @@
+-config CFG80211
+-       tristate "Improved wireless configuration API"
++# Selected by drivers which use cfg80211
++config CFG80211_USED
++       tristate
++
++# Is cfg80211 restricted to being a module by its dependencies?
++# Drivers must depend on this so they inherit the restriction.
++#
++# Careful: m means that CFG80211 is restricted to being a module
++#          Both n and y mean there is no restriction
++config CFG80211_AS_MODULE
++       tristate
+        depends on RFKILL || !RFKILL
++       default y
++
++# Avoid presenting a UI option so we inherit the value of CFG80211_USED
++# If one driver is set to m, and another to y, CFG80211_USED will be y.
++config CFG80211
++       tristate
++       depends on CFG80211_AS_MODULE
++       default CFG80211_USED
 
-While testing when I was sleep walking I noticed I couldn't switch
-to a different AP. The new changes here fixed that.
-
-I'm not seeing any more strange deadbeef stuff with this series now.
-
- net/mac80211/tx.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1aed88d..e0a4e06 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1415,7 +1415,9 @@ int ieee80211_master_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	}
- 
- 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
--	    local->hw.conf.dynamic_ps_timeout > 0) {
-+	    local->hw.conf.dynamic_ps_timeout > 0 &&
-+	    !local->sw_scanning && !local->hw_scanning && local->ps_sdata &&
-+	    (local->ps_sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED)) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_PS);
--- 
-1.5.6.3
+ config CFG80211_REG_DEBUG
+        bool "cfg80211 regulatory debugging"
 
