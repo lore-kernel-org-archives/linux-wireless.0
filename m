@@ -1,128 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f216.google.com ([209.85.220.216]:56709 "EHLO
-	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796AbZFBIlU (ORCPT
+Received: from mail-qy0-f104.google.com ([209.85.221.104]:59778 "EHLO
+	mail-qy0-f104.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbZFCCXd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 04:41:20 -0400
-Received: by fxm12 with SMTP id 12so6320844fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 01:41:21 -0700 (PDT)
-Message-ID: <4A24E3E4.1050505@tuffmail.co.uk>
-Date: Tue, 02 Jun 2009 09:33:40 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Tue, 2 Jun 2009 22:23:33 -0400
+Received: by qyk2 with SMTP id 2so1486565qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 19:23:35 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-References: <1243524688.10632.0.camel@johannes.local>	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>	 <1243763887.19302.29.camel@johannes.local>	 <1243796509.6570.35.camel@localhost.localdomain>	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>	 <1243858256.5299.14.camel@johannes.local>	 <1243867620.3015.17.camel@localhost.localdomain>	 <4A23FD91.8020200@tuffmail.co.uk>	 <1243885494.3015.29.camel@localhost.localdomain>	 <4A24559D.7010201@tuffmail.co.uk>	 <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local>
-In-Reply-To: <1243929706.20064.7.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <ee8eb53d0906021917q787c160ja3b3a453f09da1d0@mail.gmail.com>
+References: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
+	 <1243858809.5299.15.camel@johannes.local>
+	 <20090601131742.GA3386@tuxdriver.com>
+	 <ee8eb53d0906021917q787c160ja3b3a453f09da1d0@mail.gmail.com>
+Date: Tue, 2 Jun 2009 23:23:34 -0300
+Message-ID: <ee8eb53d0906021923k3dc3578er755c4b3676d6495@mail.gmail.com>
+Subject: Re: [GSoC 2009] Automation of testing using mac80211_hwsim and Orbit
+	- status report 01
+From: Georgy Berdyshev <codingmaster@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2009-06-02 at 09:38 +0200, Marcel Holtmann wrote:
->
->   
->> If you really don't wanna have rfkilld _not_ impose a policy on cold
->> boot, then we can certainly add that. However that is part of rfkilld
->> and not the kernel.
->>
->> For global states, I am questioning the platform that actually has
->> storage for global states. All platforms that I have seen so far store
->> individual per device based states and not the global one.
->>     
->
-> Yeah, unfortunately the platform drivers do store/restore global state.
-> And in a sense that makes (made) sense since the default rfkill-input
-> policy was to toggle everything based on the platform button. It's icky
-> though.
->
-> The problem with not telling rfkilld about this though is that the
-> kernel will suddenly impose a hotplug policy that rfkilld doesn't know
-> about. This might not even matter though since the _ADD will be sent
-> with that policy already applied, and if it wants to change the policy
-> rfkilld will do _CHANGE_ALL.
->
->   
->> If you wanna just accept what the BIOS (or other OS) tells you then that
->> is an acceptable policy. So rfkilld will just map key input events in
->> that case. Fine by me. Question is if we can't do that right now? I
->> think we just can.
->>     
->
-> Yes, we probably can do that right now, by making rfkilld start up
-> without setting a policy (CHANGE_ALL). It just doesn't know what the
-> policy is, then.
->
->   
->> Question is if we really have a global state here. I doubt it since all
->> of these are device specific states. And having the BIOS or ACPI dictate
->> what state my external Bluetooth or WiFi device is in is pointless and a
->> total broken concept.
->>     
->
-> Unfortunately that's how it worked before, it's part of the rfkill
-> legacy that it seems we'll have to accept. I guess we have only
-> ourselves to blame for not reviewing Henrique's rfkill implementation...
->
->   
->>> You propose to exclude a feature that currently works, on the grounds 
->>> that it is inherently broken.  But you haven't said that this has ever 
->>> caused incorrect behavior.  All you have said so far is that it is a hack.
->>>       
->> This never worked so far. The mac80211 or Bluetooth subsystems have no
->> RFKILL state and thus global states are not enforced. An external dongle
->> without RFKILL support is not taken into account. You are not talking
->> about global states here. They are all device specific. The device just
->> happens to be a platform device builtin the system.
->>     
->
-> Right, but rfkill does actually have a function to set the global policy
-> state (rfkill_set_global_sw_state) which some platform drivers insist on
-> calling.
->
-> The only reason we would need the NVS_REPORT then is to detect whether
-> or not anything in the kernel called rfkill_set_global_sw_state(). If we
-> can live with just configuring rfkilld for the (arguably broken) case
-> where somebody cares about this, I'm happy with removing it.
->
-> Hope that helps clear up your confusion.
->   
+Hi again,
 
-The reason for drivers doing this is that otherwise, the kernel forces 
-the new rfkill device to the current global default.  So this API is 
-used for the device to preserve it's current state - without it, we just 
-throw the NVS information away and no-one can get at it.
+I was doing some additional tests and it seems that unloading the
+mac80211_hwsim kernel module and reloading
+it with the same configuration triggers the same error again.
 
-We could switch to using the non-global set_sw_state() after 
-registration.  But that's pretty nasty because it means most drivers 
-call set_sw_state() before registration, a few drivers call it 
-afterwards, and it's not going to be obvious why.  Plus I think it 
-bypasses EPO.  So I think some sort of separate API is needed.
+Georgy
 
-If we can also export this NVS status to userspace somehow, then 
-userspace can distinguish between
+On Tue, Jun 2, 2009 at 11:17 PM, Georgy Berdyshev
+<codingmaster@gmail.com> wrote:
+> Hi,
+>
+> I had recompiled the kernel and tried to run hostapd again and now it
+> is working.
+> Still using the same settings. It seems that the problem has been
+> solved with the latest git pull.
+>
+> That was the problem before (e.g. running the vlan example
+> hostapd.conf within hostap/mac80211_hwsim/tests/0002-vlan)
+> /opt/wifi/bin/hostapd hostapd.conf
+> Configuration file: hostapd.conf
+> nl80211: Failed to set interface wlan0 into AP mode
+> nl80211 driver initialization failed.
+> ELOOP: remaining socket: sock=3 eloop_data=0x977be10
+> user_data=0x977bfa0 handler=0x8076200
+>
+> Thanks, Georgy
+>
+> --
+> Georgy Berdyshev
+>
+> GPG key: 830F68C5
+> Fingerprint: 0379 ED5A BEE5 65A8 7BD5  31E7 F5B4 1EC7 830F 68C5
+>
 
-a) rfkill is currently unblocked, because this was the kernel default, 
-so there's no reason not to override the state
-b) rfkill is currently unblocked, because this was restored from NVS, 
-which hopefully reflects the most recent request from the user.  rfkilld 
-is still able to override this state, but it would also be reasonable 
-not to.
 
-I take Marcels point, if /dev/rfkill exposes a sub-optimal interface, it 
-can be very difficult to fix it.  It's probably better to fix the mess 
-of global states before trying to add NVS information to /dev/rfkill.
 
-Btw, I think there's a third scenario to add to the other OS / BIOS 
-setup.  Some hardware has a handover mechanism, right?  Where the BIOS 
-handles rfkill keypresses by default, and toggles the soft rfkill state, 
-but allows the driver to take over when loaded.  So if the user presses 
-the key _before_ the driver gets loaded - they will see the wireless LED 
-change, and they will expect that state change to persist when the 
-driver is loaded.
+-- 
+Georgy Berdyshev
 
-Thanks
-Alan
+GPG key: 830F68C5
+Fingerprint: 0379 ED5A BEE5 65A8 7BD5  31E7 F5B4 1EC7 830F 68C5
