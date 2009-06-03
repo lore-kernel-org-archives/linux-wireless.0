@@ -1,210 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42648 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:15916 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756831AbZFLUPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:15:53 -0400
+	id S1752950AbZFCShR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2009 14:37:17 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/8 v2.6.31 and w-t ] iwlwifi: revamp bss_info_changed
-Date: Fri, 12 Jun 2009 13:22:48 -0700
-Message-Id: <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
-References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 2/6] iwl3945: port allow skb allocation in tasklet patch
+Date: Wed,  3 Jun 2009 11:44:08 -0700
+Message-Id: <1244054652-19451-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1244054652-19451-2-git-send-email-reinette.chatre@intel.com>
+References: <1244054652-19451-1-git-send-email-reinette.chatre@intel.com>
+ <1244054652-19451-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-My earlier patch,
-	"mac80211: unify config_interface and bss_info_changed"
-introduced a bug in iwlwifi where it will do some things
-incorrectly now when reassociating.
+Port "iwlcore: Allow skb allocation from tasklet" to 3945
 
-Revamp iwl_bss_info_changed to fix that issue and make it
-easier to read. Also, while at it, add comments about things
-that it should do but currently doesn't.
+commit c8881170b7ce9897a7b9087d37ca3f281b347707
+Author: Mohamed Abbas <mohamed.abbas@intel.com>
+Date:   Fri May 22 11:01:51 2009 -0700
 
-Finally, also improve the locking in the function.
+    iwlcore: Allow skb allocation from tasklet.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+If RX queue becomes empty then we need to restock the queue from tasklet to prevent
+ucode from starving. A caller to iwl_rx_allocate will decide if allocated buffer should
+come from GFP_ATOMIC or GFP_KERNEL.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |  114 +++++++++++++++++++------------
- 1 files changed, 70 insertions(+), 44 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   32 +++++++++++++++++++++------
+ 1 files changed, 25 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f9d16ca..e05faa0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2390,39 +2390,46 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 745eaae..92fa1a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1176,7 +1176,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
  
--	if ((changes & BSS_CHANGED_BSSID) && !iwl_is_rfkill(priv)) {
--		/* If there is currently a HW scan going on in the background
--		 * then we need to cancel it else the RXON below will fail. */
-+	if (changes & BSS_CHANGED_BEACON_INT) {
-+		priv->beacon_int = bss_conf->beacon_int;
-+		/* TODO: in AP mode, do something to make this take effect */
-+	}
-+
-+	if (changes & BSS_CHANGED_BSSID) {
-+		IWL_DEBUG_MAC80211(priv, "BSSID %pM\n", bss_conf->bssid);
-+
-+		/*
-+		 * If there is currently a HW scan going on in the
-+		 * background then we need to cancel it else the RXON
-+		 * below/in post_associate will fail.
-+		 */
- 		if (iwl_scan_cancel_timeout(priv, 100)) {
--			IWL_WARN(priv, "Aborted scan still in progress "
--				    "after 100ms\n");
-+			IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
- 			IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
- 			mutex_unlock(&priv->mutex);
- 			return;
- 		}
--		memcpy(priv->staging_rxon.bssid_addr,
--		       bss_conf->bssid, ETH_ALEN);
- 
--		/* TODO: Audit driver for usage of these members and see
--		 * if mac80211 deprecates them (priv->bssid looks like it
--		 * shouldn't be there, but I haven't scanned the IBSS code
--		 * to verify) - jpk */
--		memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
-+		/* mac80211 only sets assoc when in STATION mode */
-+		if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
-+		    bss_conf->assoc) {
-+			memcpy(priv->staging_rxon.bssid_addr,
-+			       bss_conf->bssid, ETH_ALEN);
- 
--		if (priv->iw_mode == NL80211_IFTYPE_AP)
--			iwlcore_config_ap(priv);
--		else {
--			int rc = iwlcore_commit_rxon(priv);
--			if ((priv->iw_mode == NL80211_IFTYPE_STATION) && rc)
--				iwl_rxon_add_station(
--					priv, priv->active_rxon.bssid_addr, 1);
-+			/* currently needed in a few places */
-+			memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
-+		} else {
-+			priv->staging_rxon.filter_flags &=
-+				~RXON_FILTER_ASSOC_MSK;
- 		}
--	} else if (!iwl_is_rfkill(priv)) {
--		iwl_scan_cancel_timeout(priv, 100);
--		priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
--		iwlcore_commit_rxon(priv);
-+
- 	}
- 
-+	/*
-+	 * This needs to be after setting the BSSID in case
-+	 * mac80211 decides to do both changes at once because
-+	 * it will invoke post_associate.
-+	 */
- 	if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
- 	    changes & BSS_CHANGED_BEACON) {
- 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
-@@ -2431,8 +2438,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 			iwl_mac_beacon_update(hw, beacon);
- 	}
- 
--	mutex_unlock(&priv->mutex);
--
- 	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
- 		IWL_DEBUG_MAC80211(priv, "ERP_PREAMBLE %d\n",
- 				   bss_conf->use_short_preamble);
-@@ -2450,6 +2455,23 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 			priv->staging_rxon.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
- 	}
- 
-+	if (changes & BSS_CHANGED_BASIC_RATES) {
-+		/* XXX use this information
-+		 *
-+		 * To do that, remove code from iwl_set_rate() and put something
-+		 * like this here:
-+		 *
-+		if (A-band)
-+			priv->staging_rxon.ofdm_basic_rates =
-+				bss_conf->basic_rates;
-+		else
-+			priv->staging_rxon.ofdm_basic_rates =
-+				bss_conf->basic_rates >> 4;
-+			priv->staging_rxon.cck_basic_rates =
-+				bss_conf->basic_rates & 0xF;
-+		 */
-+	}
-+
- 	if (changes & BSS_CHANGED_HT) {
- 		iwl_ht_conf(priv, bss_conf);
- 
-@@ -2459,10 +2481,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	if (changes & BSS_CHANGED_ASSOC) {
- 		IWL_DEBUG_MAC80211(priv, "ASSOC %d\n", bss_conf->assoc);
--		/* This should never happen as this function should
--		 * never be called from interrupt context. */
--		if (WARN_ON_ONCE(in_interrupt()))
--			return;
- 		if (bss_conf->assoc) {
- 			priv->assoc_id = bss_conf->aid;
- 			priv->beacon_int = bss_conf->beacon_int;
-@@ -2470,27 +2488,35 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 			priv->timestamp = bss_conf->timestamp;
- 			priv->assoc_capability = bss_conf->assoc_capability;
- 
--			/* we have just associated, don't start scan too early
--			 * leave time for EAPOL exchange to complete
-+			/*
-+			 * We have just associated, don't start scan too early
-+			 * leave time for EAPOL exchange to complete.
-+			 *
-+			 * XXX: do this in mac80211
- 			 */
- 			priv->next_scan_jiffies = jiffies +
- 					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
--			mutex_lock(&priv->mutex);
--			priv->cfg->ops->lib->post_associate(priv);
--			mutex_unlock(&priv->mutex);
--		} else {
-+			if (!iwl_is_rfkill(priv))
-+				priv->cfg->ops->lib->post_associate(priv);
-+		} else
- 			priv->assoc_id = 0;
--			IWL_DEBUG_MAC80211(priv, "DISASSOC %d\n", bss_conf->assoc);
-+
-+	}
-+
-+	if (changes && iwl_is_associated(priv) && priv->assoc_id) {
-+		IWL_DEBUG_MAC80211(priv, "Changes (%#x) while associated\n",
-+				   changes);
-+		ret = iwl_send_rxon_assoc(priv);
-+		if (!ret) {
-+			/* Sync active_rxon with latest change. */
-+			memcpy((void *)&priv->active_rxon,
-+				&priv->staging_rxon,
-+				sizeof(struct iwl_rxon_cmd));
- 		}
--	} else if (changes && iwl_is_associated(priv) && priv->assoc_id) {
--			IWL_DEBUG_MAC80211(priv, "Associated Changes %d\n", changes);
--			ret = iwl_send_rxon_assoc(priv);
--			if (!ret)
--				/* Sync active_rxon with latest change. */
--				memcpy((void *)&priv->active_rxon,
--					&priv->staging_rxon,
--					sizeof(struct iwl_rxon_cmd));
- 	}
-+
-+	mutex_unlock(&priv->mutex);
-+
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 	/* If we've added more space for the firmware to place data, tell it.
+ 	 * Increment device's write pointer in multiples of 8. */
+-	if ((write != (rxq->write & ~0x7))
++	if ((rxq->write_actual != (rxq->write & ~0x7))
+ 	    || (abs(rxq->write - rxq->read) > 7)) {
+ 		spin_lock_irqsave(&rxq->lock, flags);
+ 		rxq->need_update = 1;
+@@ -1197,7 +1197,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
+  * Also restock the Rx queue via iwl3945_rx_queue_restock.
+  * This is called as a scheduled work item (except for during initialization)
+  */
+-static void iwl3945_rx_allocate(struct iwl_priv *priv)
++static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ {
+ 	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+@@ -1220,7 +1220,7 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
+ 		/* Alloc a new receive buffer */
+ 		rxb->skb =
+ 		    alloc_skb(priv->hw_params.rx_buf_size,
+-				GFP_KERNEL);
++				priority);
+ 		if (!rxb->skb) {
+ 			if (net_ratelimit())
+ 				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
+@@ -1279,6 +1279,7 @@ void iwl3945_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+ 	 * not restocked the Rx queue with fresh buffers */
+ 	rxq->read = rxq->write = 0;
+ 	rxq->free_count = 0;
++	rxq->write_actual = 0;
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
  }
- EXPORT_SYMBOL(iwl_bss_info_changed);
+ 
+@@ -1287,13 +1288,21 @@ void iwl3945_rx_replenish(void *data)
+ 	struct iwl_priv *priv = data;
+ 	unsigned long flags;
+ 
+-	iwl3945_rx_allocate(priv);
++	iwl3945_rx_allocate(priv, GFP_KERNEL);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl3945_rx_queue_restock(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
++static void iwl3945_rx_replenish_now(struct iwl_priv *priv)
++{
++	iwl3945_rx_allocate(priv, GFP_ATOMIC);
++
++	iwl3945_rx_queue_restock(priv);
++}
++
++
+ /* Assumes that the skb field of the buffers in 'pool' is kept accurate.
+  * If an SKB has been detached, the POOL needs to have its SKB set to NULL
+  * This free routine walks the list of POOL entries and if SKB is set to
+@@ -1416,13 +1425,19 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 	unsigned long flags;
+ 	u8 fill_rx = 0;
+ 	u32 count = 8;
++	int total_empty = 0;
+ 
+ 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
+ 	 * buffer that the driver may process (last buffer filled by ucode). */
+ 	r = le16_to_cpu(rxq->rb_stts->closed_rb_num) &  0x0FFF;
+ 	i = rxq->read;
+ 
+-	if (iwl_rx_queue_space(rxq) > (RX_QUEUE_SIZE / 2))
++	/* calculate total frames need to be restock after handling RX */
++	total_empty = r - priv->rxq.write_actual;
++	if (total_empty < 0)
++		total_empty += RX_QUEUE_SIZE;
++
++	if (total_empty > (RX_QUEUE_SIZE / 2))
+ 		fill_rx = 1;
+ 	/* Rx interrupt, but nothing sent from uCode */
+ 	if (i == r)
+@@ -1499,7 +1514,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 			count++;
+ 			if (count >= 8) {
+ 				priv->rxq.read = i;
+-				iwl3945_rx_queue_restock(priv);
++				iwl3945_rx_replenish_now(priv);
+ 				count = 0;
+ 			}
+ 		}
+@@ -1507,7 +1522,10 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 
+ 	/* Backtrack one entry */
+ 	priv->rxq.read = i;
+-	iwl3945_rx_queue_restock(priv);
++	if (fill_rx)
++		iwl3945_rx_replenish_now(priv);
++	else
++		iwl3945_rx_queue_restock(priv);
+ }
+ 
+ /* call this function to flush any scheduled tasklet */
 -- 
 1.5.6.3
 
