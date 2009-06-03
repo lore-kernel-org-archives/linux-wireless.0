@@ -1,181 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41464 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276AbZF3LyH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 07:54:07 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MLbub-0003RF-6P
-	for linux-wireless@vger.kernel.org; Tue, 30 Jun 2009 13:54:09 +0200
-Message-Id: <20090630115302.465073283@sipsolutions.net>
-References: <20090630115245.675553951@sipsolutions.net>
-Date: Tue, 30 Jun 2009 13:52:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/8 v3] cfg80211: implement IWAP for WDS
-Mime-Version: 1.0
+Received: from web55304.mail.re4.yahoo.com ([206.190.58.183]:35477 "HELO
+	web55304.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752621AbZFCAzT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 20:55:19 -0400
+Message-ID: <434964.30813.qm@web55304.mail.re4.yahoo.com>
+Date: Tue, 2 Jun 2009 17:55:20 -0700 (PDT)
+From: austinxxh-ath9k@yahoo.com
+Reply-To: austinxxh-ath9k@yahoo.com
+Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+To: Andrey Yurovsky <andrey@cozybit.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements siocsiwap/giwap for WDS mode.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |   10 +++++++++
- net/mac80211/cfg.c         |   11 ++++++++++
- net/mac80211/wext.c        |   26 +++----------------------
- net/wireless/wext-compat.c |   46 +++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 71 insertions(+), 22 deletions(-)
+Not good, I definitely like to use 80211s with ath9k, though I'm not familiar enough to fix anything related to them yet. Say, I don't know what's the relationship between 80211s and ath9k/ath5k at this point. Trying 0602 release now and see if it improves anything. 
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-06-30 12:43:43.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-06-30 12:43:47.000000000 +0200
-@@ -1018,6 +1018,9 @@ struct cfg80211_ops {
- 				enum tx_power_setting type, int dbm);
- 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
- 
-+	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
-+				u8 *addr);
-+
- 	void	(*rfkill_poll)(struct wiphy *wiphy);
- 
- #ifdef CONFIG_NL80211_TESTMODE
-@@ -1631,6 +1634,13 @@ int cfg80211_wext_giwpower(struct net_de
- 			   struct iw_request_info *info,
- 			   struct iw_param *wrq, char *extra);
- 
-+int cfg80211_wds_wext_siwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra);
-+int cfg80211_wds_wext_giwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra);
-+
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-  * functions and BSS handling helpers
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-30 12:43:43.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-30 12:43:47.000000000 +0200
-@@ -140,23 +140,8 @@ static int ieee80211_ioctl_siwap(struct 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		return cfg80211_mgd_wext_siwap(dev, info, ap_addr, extra);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
--		/*
--		 * If it is necessary to update the WDS peer address
--		 * while the interface is running, then we need to do
--		 * more work here, namely if it is running we need to
--		 * add a new and remove the old STA entry, this is
--		 * normally handled by _open() and _stop().
--		 */
--		if (netif_running(dev))
--			return -EBUSY;
--
--		memcpy(&sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
--		       ETH_ALEN);
--
--		return 0;
--	}
--
-+	if (sdata->vif.type == NL80211_IFTYPE_WDS)
-+		return cfg80211_wds_wext_siwap(dev, info, ap_addr, extra);
- 	return -EOPNOTSUPP;
- }
- 
-@@ -173,11 +158,8 @@ static int ieee80211_ioctl_giwap(struct 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		return cfg80211_mgd_wext_giwap(dev, info, ap_addr, extra);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
--		ap_addr->sa_family = ARPHRD_ETHER;
--		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
--		return 0;
--	}
-+	if (sdata->vif.type == NL80211_IFTYPE_WDS)
-+		return cfg80211_wds_wext_giwap(dev, info, ap_addr, extra);
- 
- 	return -EOPNOTSUPP;
- }
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-30 12:43:43.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-06-30 12:43:47.000000000 +0200
-@@ -1048,3 +1048,49 @@ int cfg80211_wext_giwpower(struct net_de
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwpower);
-+
-+int cfg80211_wds_wext_siwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	int err;
-+
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WDS))
-+		return -EINVAL;
-+
-+	if (addr->sa_family != ARPHRD_ETHER)
-+		return -EINVAL;
-+
-+	if (netif_running(dev))
-+		return -EBUSY;
-+
-+	if (!rdev->ops->set_wds_peer)
-+		return -EOPNOTSUPP;
-+
-+	err = rdev->ops->set_wds_peer(wdev->wiphy, dev, (u8 *) &addr->sa_data);
-+	if (err)
-+		return err;
-+
-+	memcpy(&wdev->wext.bssid, (u8 *) &addr->sa_data, ETH_ALEN);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wds_wext_siwap);
-+
-+int cfg80211_wds_wext_giwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WDS))
-+		return -EINVAL;
-+
-+	addr->sa_family = ARPHRD_ETHER;
-+	memcpy(&addr->sa_data, wdev->wext.bssid, ETH_ALEN);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wds_wext_giwap);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-06-30 12:43:43.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-06-30 12:43:47.000000000 +0200
-@@ -1369,6 +1369,16 @@ static int ieee80211_get_tx_power(struct
- 	return 0;
- }
- 
-+static int ieee80211_set_wds_peer(struct wiphy *wiphy, struct net_device *dev,
-+				  u8 *addr)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	memcpy(&sdata->u.wds.remote_addr, addr, ETH_ALEN);
-+
-+	return 0;
-+}
-+
- static void ieee80211_rfkill_poll(struct wiphy *wiphy)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-@@ -1454,6 +1464,7 @@ struct cfg80211_ops mac80211_config_ops 
- 	.set_wiphy_params = ieee80211_set_wiphy_params,
- 	.set_tx_power = ieee80211_set_tx_power,
- 	.get_tx_power = ieee80211_get_tx_power,
-+	.set_wds_peer = ieee80211_set_wds_peer,
- 	.rfkill_poll = ieee80211_rfkill_poll,
- 	CFG80211_TESTMODE_CMD(ieee80211_testmode_cmd)
- 	.set_power_mgmt = ieee80211_set_power_mgmt,
+I was told b43 runs well with 80211s, hope ath5k/ath9k will do the same someday.
 
--- 
+X Xiao
 
+--- On Tue, 6/2/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+> To: "Andrey Yurovsky" <andrey@cozybit.com>
+> Cc: "austinxxh-ath9k@yahoo.com" <austinxxh-ath9k@yahoo.com>, "devel@lists.open80211s.org" <devel@lists.open80211s.org>, "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+> Date: Tuesday, June 2, 2009, 5:30 PM
+> On Tue, Jun 02, 2009 at 09:58:59AM
+> -0700, Andrey Yurovsky wrote:
+> > With wireless-testing from a couple of days ago, an
+> X86 system, and this patch:
+> > http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+> > ath9k can bring up a mesh point interface and doesn't
+> crash for me,
+> > but there are no mesh beacons, so mesh isn't
+> working.  On ath5k, there
+> > are also no beacons and mesh doesn't work, but there's
+> no crash.
+> 
+> If no one is really interested in fixing we should just
+> disable mesh
+> for both ath5k and ath9k.
+> 
+>   Luis
+> 
