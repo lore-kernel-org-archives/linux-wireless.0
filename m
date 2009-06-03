@@ -1,170 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756244AbZFRWWa (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:21206 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755399AbZFCJe0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 18:22:30 -0400
-Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:22:32 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 15/23] orinoco: make firmware download less verbose
-Date: Thu, 18 Jun 2009 23:21:27 +0100
-Message-Id: <1245363695-8289-16-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 3 Jun 2009 05:34:26 -0400
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Subject: [PATCH 5/6] ieee802154: add documentation about our stack
+Date: Wed,  3 Jun 2009 13:33:48 +0400
+Message-Id: <1244021629-18409-6-git-send-email-dbaryshkov@gmail.com>
+In-Reply-To: <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
+References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-3-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware download code has been in a couple of releases, without any
-significant issues reported in this code.
+Add MAINTAINERS entry and a small text describing our stack interfaces,
+how to hook the drivers, etc.
 
-Convert to use pr_debug, so the messages can be recoverred by defining
-DEBUG.
-
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Signed-off-by: Sergey Lapin <slapin@ossfans.org>
 ---
- drivers/net/wireless/orinoco/hermes_dld.c |   50 +++++++++++++---------------
- 1 files changed, 23 insertions(+), 27 deletions(-)
+ Documentation/networking/ieee802154.txt |   76 +++++++++++++++++++++++++++++++
+ MAINTAINERS                             |   12 +++++
+ 2 files changed, 88 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/networking/ieee802154.txt
 
-diff --git a/drivers/net/wireless/orinoco/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
-index a9ba195..a3eefe1 100644
---- a/drivers/net/wireless/orinoco/hermes_dld.c
-+++ b/drivers/net/wireless/orinoco/hermes_dld.c
-@@ -309,7 +309,7 @@ int hermes_read_pda(hermes_t *hw,
+diff --git a/Documentation/networking/ieee802154.txt b/Documentation/networking/ieee802154.txt
+new file mode 100644
+index 0000000..a0280ad
+--- /dev/null
++++ b/Documentation/networking/ieee802154.txt
+@@ -0,0 +1,76 @@
++
++		Linux IEEE 802.15.4 implementation
++
++
++Introduction
++============
++
++The Linux-ZigBee project goal is to provide complete implementation
++of IEEE 802.15.4 / ZigBee / 6LoWPAN protocols. IEEE 802.15.4 is a stack
++of protocols for organizing Low-Rate Wireless Personal Area Networks.
++
++Currently only IEEE 802.15.4 layer is implemented. We have choosen
++to use plain Berkeley socket API, the generic Linux networking stack
++to transfer IEEE 802.15.4 messages and a special protocol over genetlink
++for configuration/management
++
++
++Socket API
++==========
++
++int sd = socket(PF_IEEE802154, SOCK_DGRAM, 0);
++.....
++
++The address family, socket addresses etc. are defined in the
++include/net/ieee802154/af_ieee802154.h header or in the special header
++in our userspace package (see either linux-zigbee sourceforge download page
++or git tree at git://linux-zigbee.git.sourceforge.net/gitroot/linux-zigbee).
++
++One can use SOCK_RAW for passing raw data towards device xmit function. YMMV.
++
++
++MLME - MAC Level Management
++============================
++
++Most of IEEE 802.15.4 MLME interfaces are directly mapped on netlink commands.
++See the include/net/ieee802154/nl802154.h header. Our userspace tools package
++(see above) provides CLI configuration utility for radio interfaces and simple
++coordinator for IEEE 802.15.4 networks as an example users of MLME protocol.
++
++
++Kernel side
++=============
++
++Like with WiFi, there are several types of devices implementing IEEE 802.15.4.
++1) 'HardMAC'. The MAC layer is implemented in the device itself, the device
++   exports MLME and data API.
++2) 'SoftMAC' or just radio. These types of devices are just radio transceivers
++   possibly with some kinds of acceleration like automatic CRC computation and
++   comparation, automagic ACK handling, address matching, etc.
++
++Those types of devices require different approach to be hooked into Linux kernel.
++
++
++HardMAC
++=======
++
++See the header include/net/ieee802154/netdevice.h. You have to implement Linux
++net_device, with .type = ARPHRD_IEEE802154. Data is exchanged with socket family
++code via plain sk_buffs. The control block of sk_buffs will contain additional
++info as described in the struct ieee802154_mac_cb.
++
++To hook the MLME interface you have to populate the ml_priv field of your
++net_device with a pointer to struct ieee802154_mlme_ops instance. All fields are
++required.
++
++We provide an example of simple HardMAC driver at drivers/ieee802154/fakehard.c
++
++
++SoftMAC
++=======
++
++We are going to provide intermediate layer impelementing IEEE 802.15.4 MAC
++in software. This is currently WIP.
++
++See header include/net/ieee802154/mac802154.h and several drivers in
++drivers/ieee802154/
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 77cbfb1..d7214c7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2807,6 +2807,18 @@ L:	linux1394-devel@lists.sourceforge.net
+ S:	Maintained
+ F:	drivers/ieee1394/raw1394*
  
- 	/* Open auxiliary port */
- 	ret = hermes_aux_control(hw, 1);
--	printk(KERN_DEBUG PFX "AUX enable returned %d\n", ret);
-+	pr_debug(PFX "AUX enable returned %d\n", ret);
- 	if (ret)
- 		return ret;
- 
-@@ -319,12 +319,12 @@ int hermes_read_pda(hermes_t *hw,
- 
- 	/* Close aux port */
- 	ret = hermes_aux_control(hw, 0);
--	printk(KERN_DEBUG PFX "AUX disable returned %d\n", ret);
-+	pr_debug(PFX "AUX disable returned %d\n", ret);
- 
- 	/* Check PDA length */
- 	pda_size = le16_to_cpu(pda[0]);
--	printk(KERN_DEBUG PFX "Actual PDA length %d, Max allowed %d\n",
--	       pda_size, pda_len);
-+	pr_debug(PFX "Actual PDA length %d, Max allowed %d\n",
-+		 pda_size, pda_len);
- 	if (pda_size > pda_len)
- 		return -EINVAL;
- 
-@@ -422,20 +422,19 @@ int hermesi_program_init(hermes_t *hw, u32 offset)
- 		return err;
- 
- 	err = hermes_aux_control(hw, 1);
--	printk(KERN_DEBUG PFX "AUX enable returned %d\n", err);
-+	pr_debug(PFX "AUX enable returned %d\n", err);
- 
- 	if (err)
- 		return err;
- 
--	printk(KERN_DEBUG PFX "Enabling volatile, EP 0x%08x\n", offset);
-+	pr_debug(KERN_DEBUG PFX "Enabling volatile, EP 0x%08x\n", offset);
- 	err = hermes_doicmd_wait(hw,
- 				 HERMES_PROGRAM_ENABLE_VOLATILE,
- 				 offset & 0xFFFFu,
- 				 offset >> 16,
- 				 0,
- 				 NULL);
--	printk(KERN_DEBUG PFX "PROGRAM_ENABLE returned %d\n",
--	       err);
-+	pr_debug(PFX "PROGRAM_ENABLE returned %d\n", err);
- 
- 	return err;
- }
-@@ -454,16 +453,16 @@ int hermesi_program_end(hermes_t *hw)
- 
- 	rc = hermes_docmd_wait(hw, HERMES_PROGRAM_DISABLE, 0, &resp);
- 
--	printk(KERN_DEBUG PFX "PROGRAM_DISABLE returned %d, "
--	       "r0 0x%04x, r1 0x%04x, r2 0x%04x\n",
--	       rc, resp.resp0, resp.resp1, resp.resp2);
-+	pr_debug(PFX "PROGRAM_DISABLE returned %d, "
-+		 "r0 0x%04x, r1 0x%04x, r2 0x%04x\n",
-+		 rc, resp.resp0, resp.resp1, resp.resp2);
- 
- 	if ((rc == 0) &&
- 	    ((resp.status & HERMES_STATUS_CMDCODE) != HERMES_CMD_DOWNLD))
- 		rc = -EIO;
- 
- 	err = hermes_aux_control(hw, 0);
--	printk(KERN_DEBUG PFX "AUX disable returned %d\n", err);
-+	pr_debug(PFX "AUX disable returned %d\n", err);
- 
- 	/* Acknowledge any outstanding command */
- 	hermes_write_regn(hw, EVACK, 0xFFFF);
-@@ -496,9 +495,8 @@ int hermes_program(hermes_t *hw, const char *first_block, const void *end)
- 
- 	while ((blkaddr != BLOCK_END) &&
- 	       (((void *) blk + blklen) <= end)) {
--		printk(KERN_DEBUG PFX
--		       "Programming block of length %d to address 0x%08x\n",
--		       blklen, blkaddr);
-+		pr_debug(PFX "Programming block of length %d "
-+			 "to address 0x%08x\n", blklen, blkaddr);
- 
- #if !LIMIT_PROGRAM_SIZE
- 		/* wl_lkm driver splits this into writes of 2000 bytes */
-@@ -510,10 +508,9 @@ int hermes_program(hermes_t *hw, const char *first_block, const void *end)
- 		addr = blkaddr;
- 
- 		while (addr < (blkaddr + blklen)) {
--			printk(KERN_DEBUG PFX
--			       "Programming subblock of length %d "
--			       "to address 0x%08x. Data @ %p\n",
--			       len, addr, &blk->data[addr - blkaddr]);
-+			pr_debug(PFX "Programming subblock of length %d "
-+				 "to address 0x%08x. Data @ %p\n",
-+				 len, addr, &blk->data[addr - blkaddr]);
- 
- 			hermes_aux_setaddr(hw, addr);
- 			hermes_write_bytes(hw, HERMES_AUXDATA,
-@@ -643,8 +640,8 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
- 
- 		pdi = hermes_find_pdi(first_pdi, record_id, pda_end);
- 		if (pdi)
--			printk(KERN_DEBUG PFX "Found record 0x%04x at %p\n",
--			       record_id, pdi);
-+			pr_debug(PFX "Found record 0x%04x at %p\n",
-+				 record_id, pdi);
- 
- 		switch (record_id) {
- 		case 0x110: /* Modem REFDAC values */
-@@ -654,9 +651,9 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
- 			default_pdi = NULL;
- 			if (outdoor_pdi) {
- 				pdi = outdoor_pdi;
--				printk(KERN_DEBUG PFX
--				       "Using outdoor record 0x%04x at %p\n",
--				       record_id + 1, pdi);
-+				pr_debug(PFX
-+					 "Using outdoor record 0x%04x at %p\n",
-+					 record_id + 1, pdi);
- 			}
- 			break;
- 		case 0x5: /*  HWIF Compatiblity */
-@@ -684,9 +681,8 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
- 		if (!pdi && default_pdi) {
- 			/* Use default */
- 			pdi = default_pdi;
--			printk(KERN_DEBUG PFX
--			       "Using default record 0x%04x at %p\n",
--			       record_id, pdi);
-+			pr_debug(PFX "Using default record 0x%04x at %p\n",
-+				 record_id, pdi);
- 		}
- 
- 		if (pdi) {
++IEEE 802.15.4 SUBSYSTEM
++P:	Dmitry Eremin-Solenikov
++M:	dbaryshkov@gmail.com
++P:	Sergey Lapin
++M:	slapin@ossfans.org
++L:	linux-zigbee-devel@lists.sourceforge.net
++W:	http://apps.sourceforge.net/trac/linux-zigbee
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
++S:	Maintained
++F:	net/ieee802154/
++F:	drivers/ieee801254/
++
+ INTEGRITY MEASUREMENT ARCHITECTURE (IMA)
+ P:	Mimi Zohar
+ M:	zohar@us.ibm.com
 -- 
-1.6.0.6
+1.6.3.1
 
