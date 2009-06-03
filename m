@@ -1,74 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:53727 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901AbZFGSZx convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52077 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbZFCHA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 14:25:53 -0400
-Received: by fxm9 with SMTP id 9so1697695fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 11:25:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1244246629-28179-12-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-	<1244246629-28179-12-git-send-email-lrodriguez@atheros.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 7 Jun 2009 20:25:31 +0200
-Message-ID: <69e28c910906071125n54128452ja77495ae5f62beed@mail.gmail.com>
-Subject: Re: [PATCH v2 11/15] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK
-	checks
+	Wed, 3 Jun 2009 03:00:59 -0400
+Subject: Re: [PATCH] mac80211: check for existance sta before adding it
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890906021401r2200bad9n1ffbe2c56c3a2c22@mail.gmail.com>
+References: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com>
+	 <1243974947.7176.9.camel@johannes.local>
+	 <43e72e890906021401r2200bad9n1ffbe2c56c3a2c22@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-na+46HdUFU4jSI6dozMC"
+Date: Wed, 03 Jun 2009 09:00:50 +0200
+Message-Id: <1244012450.7176.15.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 6, 2009 at 2:03 AM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
-> We check for this condition early on in our mac80211 get_rate()
-> callback ath_get_rate(), so remove this check later down the path.
->
-> Cc: Derek Smithies <derek@indranet.co.nz>
-> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-> index 9907f2f..d8d2152 100644
-> --- a/drivers/net/wireless/ath/ath9k/rc.c
-> +++ b/drivers/net/wireless/ath/ath9k/rc.c
-> @@ -783,7 +783,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
->         * just CTS.  Note that this is only done for OFDM/HT unicast frames.
->         */
->        if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
-> -           !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
->            (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
->             WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
->                rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
-> @@ -890,9 +889,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
->         *
->         * FIXME: Fix duration
->         */
-> -       if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
-> -           (ieee80211_has_morefrags(fc) ||
-> -            (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
-> +       if (ieee80211_has_morefrags(fc) ||
-> +           (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
->                rates[1].count = rates[2].count = rates[3].count = 0;
->                rates[1].idx = rates[2].idx = rates[3].idx = 0;
->                rates[0].count = ATH_TXMAXTRY;
-> --
-> 1.6.0.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Is this a side effect of my NO_ACK retry count patchset accepted earlier?
+--=-na+46HdUFU4jSI6dozMC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+On Tue, 2009-06-02 at 14:01 -0700, Luis R. Rodriguez wrote:
+
+> Thanks, yeah I see where I was making an incorrect assumption here.
+>=20
+> There still is a case here where userpsace can try to add a sta twice
+> and the second parameters passed would be ignored.
+
+Don't we show that -EEXIST to userspace then? I thought we did.
+
+johannes
+
+--=-na+46HdUFU4jSI6dozMC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKJh+eAAoJEODzc/N7+QmaYIAQAJr18VB/D/Awc2QgCvr4mhbb
+5pQwxbfawmyHkF2k8hxi17s679xY7dY/GikZnmuOaPGgYDeOzgtkZnYL+pSJrLM+
+ChVccBJYCzk0/D+DWS1dzk08zP68AVXFX0XLvOOl+Iq59stQuMfL8VPRqexUb4rr
+yCYINqvI8FezbaQbnj9QgErWruVIDiyLfovTTkb9Kh6IFPvNkDGuqFTac2Lt/nv1
+DuR+EEdrtX7HFuWbNH1NqB5NQtJgAe0roFxzu2qBBcz+8PAWO5GGQrzMCAM+FW6P
+N54oSp/+HDtM0t4C/y53DxyAzoA4CYhOM+E8Rx8BOuUvGp6L0yCoeH5V4p2PmSRZ
+ygqxTUEL+7ULEvjlKguPia8b1lLTRUKG6eF184H6D9OdrurwOcUXPU1fwjKQMBlV
+klvQG2pT6yIdh2tua0icQLv+cQ0/+Mq2ZCshSYK1xSRD1ru4wYv31DyXrhkoa2UH
+wFKlOkivo0gzQiAJuhsaWF9M6Xtnk7uS1pPEsk80BRr4nHAs3eB/pgWsM1AdNPpT
+YsLNmj7vFccPHCK1x55rlziZ1rhx6zN8gynGPu/Ecshrb4oId9J/YUCKV0/KUssR
+GhyVhz3mueRTx01lH68MPlFWYVkhuaW/UehR7b0vMvcnbvdO4TZsHTH4cgkUnQLl
+nw+lPTPpRYUaoxl3K9ah
+=96dM
+-----END PGP SIGNATURE-----
+
+--=-na+46HdUFU4jSI6dozMC--
+
