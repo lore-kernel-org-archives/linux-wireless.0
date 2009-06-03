@@ -1,89 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbZFNPgt (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:65469 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755850AbZFCJea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2009 11:36:49 -0400
-Subject: [PATCH] mac80211: add queue debugfs file
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sun, 14 Jun 2009 17:37:39 +0200
-Message-Id: <1244993859.13033.22.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 3 Jun 2009 05:34:30 -0400
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Subject: [PATCH 6/6] ieee802154: add simple HardMAC driver sample
+Date: Wed,  3 Jun 2009 13:33:49 +0400
+Message-Id: <1244021629-18409-7-git-send-email-dbaryshkov@gmail.com>
+In-Reply-To: <1244021629-18409-6-git-send-email-dbaryshkov@gmail.com>
+References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-3-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
+ <1244021629-18409-6-git-send-email-dbaryshkov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I suspect that some driver bugs can cause queues to be
-stopped while they shouldn't be, but it's hard to find
-out whether that is the case or not without having any
-visible information about the queues. This adds a file
-to debugfs that allows us to see the queues' statuses.
+fakehard is a really simple driver implementing only necessary
+callbacks and serves the role of an example of driver for HardMAC
+IEEE 802.15.4 device.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Signed-off-by: Sergey Lapin <slapin@ossfans.org>
 ---
- net/mac80211/debugfs.c     |   25 +++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    1 +
- 2 files changed, 26 insertions(+)
+ drivers/Makefile              |    1 +
+ drivers/ieee802154/Kconfig    |   21 ++++
+ drivers/ieee802154/Makefile   |    3 +
+ drivers/ieee802154/fakehard.c |  258 +++++++++++++++++++++++++++++++++++++++++
+ drivers/net/Kconfig           |    2 +
+ 5 files changed, 285 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ieee802154/Kconfig
+ create mode 100644 drivers/ieee802154/Makefile
+ create mode 100644 drivers/ieee802154/fakehard.c
 
---- wireless-testing.orig/net/mac80211/debugfs.c	2009-06-14 17:18:26.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs.c	2009-06-14 17:28:07.000000000 +0200
-@@ -163,6 +163,29 @@ static const struct file_operations noac
- 	.open = mac80211_open_file_generic
- };
- 
-+static ssize_t queues_read(struct file *file, char __user *user_buf,
-+			   size_t count, loff_t *ppos)
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 1266ead..9e7d4e5 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -107,3 +107,4 @@ obj-$(CONFIG_SSB)		+= ssb/
+ obj-$(CONFIG_VIRTIO)		+= virtio/
+ obj-$(CONFIG_STAGING)		+= staging/
+ obj-y				+= platform/
++obj-y				+= ieee802154/
+diff --git a/drivers/ieee802154/Kconfig b/drivers/ieee802154/Kconfig
+new file mode 100644
+index 0000000..2aaa5b6
+--- /dev/null
++++ b/drivers/ieee802154/Kconfig
+@@ -0,0 +1,21 @@
++menuconfig IEEE802154_DRIVERS
++	bool "IEEE 802.15.4 drivers"
++	depends on NETDEVICES && IEEE802154
++	default y
++	---help---
++	  Say Y here to get to see options for IEEE 802.15.4 Low-Rate
++	  Wireless Personal Area Network device drivers. This option alone
++	  does not add any kernel code.
++
++	  If you say N, all options in this submenu will be skipped and disabled.
++
++config IEEE802154_FAKEHARD
++	tristate "Fake LR-WPAN driver with several interconnected devices"
++	depends on  IEEE802154_DRIVERS
++	---help---
++	  Say Y here to enable the fake driver that serves as an example
++          of HardMAC device driver.
++
++          This driver can also be built as a module. To do so say M here.
++	  The module will be called 'fakehard'.
++
+diff --git a/drivers/ieee802154/Makefile b/drivers/ieee802154/Makefile
+new file mode 100644
+index 0000000..e0e8e1a
+--- /dev/null
++++ b/drivers/ieee802154/Makefile
+@@ -0,0 +1,3 @@
++obj-$(CONFIG_IEEE802154_FAKEHARD) += fakehard.o
++
++EXTRA_CFLAGS += -DDEBUG -DCONFIG_FFD
+diff --git a/drivers/ieee802154/fakehard.c b/drivers/ieee802154/fakehard.c
+new file mode 100644
+index 0000000..82664a5
+--- /dev/null
++++ b/drivers/ieee802154/fakehard.c
+@@ -0,0 +1,258 @@
++/*
++ * Sample driver for HardMAC IEEE 802.15.4 devices
++ *
++ * Copyright (C) 2009 Siemens AG
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Written by:
++ * Dmitry Eremin-Solenikov <dmitry.baryshkov@siemens.com>
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/netdevice.h>
++#include <linux/skbuff.h>
++#include <linux/if_arp.h>
++
++#include <net/ieee802154/af_ieee802154.h>
++#include <net/ieee802154/netdevice.h>
++#include <net/ieee802154/mac_def.h>
++#include <net/ieee802154/nl802154.h>
++
++static u16 fake_get_pan_id(struct net_device *dev)
 +{
-+	struct ieee80211_local *local = file->private_data;
-+	unsigned long flags;
-+	char buf[IEEE80211_MAX_QUEUES * 20];
-+	int q, res = 0;
++	BUG_ON(dev->type != ARPHRD_IEEE802154);
 +
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+	for (q = 0; q < local->hw.queues; q++)
-+		res += sprintf(buf + res, "%02d: %#.8lx/%d\n", q,
-+				local->queue_stop_reasons[q],
-+				__netif_subqueue_stopped(local->mdev, q));
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
++	return 0xeba1;
 +}
 +
-+static const struct file_operations queues_ops = {
-+	.read = queues_read,
-+	.open = mac80211_open_file_generic
++static u16 fake_get_short_addr(struct net_device *dev)
++{
++	BUG_ON(dev->type != ARPHRD_IEEE802154);
++
++	return 0x1;
++}
++
++static u8 fake_get_dsn(struct net_device *dev)
++{
++	BUG_ON(dev->type != ARPHRD_IEEE802154);
++
++	return 0x00; /* DSN are implemented in HW, so return just 0 */
++}
++
++static u8 fake_get_bsn(struct net_device *dev)
++{
++	BUG_ON(dev->type != ARPHRD_IEEE802154);
++
++	return 0x00; /* BSN are implemented in HW, so return just 0 */
++}
++
++static int fake_assoc_req(struct net_device *dev, struct ieee802154_addr *addr, u8 channel, u8 cap)
++{
++	/* We simply emulate it here */
++	return ieee802154_nl_assoc_confirm(dev, fake_get_short_addr(dev), IEEE802154_SUCCESS);
++}
++
++static int fake_assoc_resp(struct net_device *dev, struct ieee802154_addr *addr, u16 short_addr, u8 status)
++{
++	return 0;
++}
++
++static int fake_disassoc_req(struct net_device *dev, struct ieee802154_addr *addr, u8 reason)
++{
++	return ieee802154_nl_disassoc_confirm(dev, IEEE802154_SUCCESS);
++}
++
++static int fake_start_req(struct net_device *dev, struct ieee802154_addr *addr,
++				u8 channel,
++				u8 bcn_ord, u8 sf_ord, u8 pan_coord, u8 blx,
++				u8 coord_realign)
++{
++	return 0;
++}
++
++static int fake_scan_req(struct net_device *dev, u8 type, u32 channels, u8 duration)
++{
++	u8 edl[27] = {};
++	return ieee802154_nl_scan_confirm(dev, IEEE802154_SUCCESS, type, channels,
++			type == IEEE802154_MAC_SCAN_ED ? edl : NULL);
++}
++
++static struct ieee802154_mlme_ops fake_mlme = {
++	.assoc_req = fake_assoc_req,
++	.assoc_resp = fake_assoc_resp,
++	.disassoc_req = fake_disassoc_req,
++	.start_req = fake_start_req,
++	.scan_req = fake_scan_req,
++
++	.get_pan_id = fake_get_pan_id,
++	.get_short_addr = fake_get_short_addr,
++	.get_dsn = fake_get_dsn,
++	.get_bsn = fake_get_bsn,
 +};
 +
- /* statistics stuff */
++static int ieee802154_fake_open(struct net_device *dev)
++{
++	netif_start_queue(dev);
++	return 0;
++}
++
++static int ieee802154_fake_close(struct net_device *dev)
++{
++	netif_stop_queue(dev);
++	return 0;
++}
++
++static int ieee802154_fake_xmit(struct sk_buff *skb, struct net_device *dev)
++{
++	skb->iif = dev->ifindex;
++	skb->dev = dev;
++	dev->stats.tx_packets++;
++	dev->stats.tx_bytes += skb->len;
++
++	dev->trans_start = jiffies;
++
++	/* FIXME: do hardware work here ... */
++
++	return 0;
++}
++
++
++static int ieee802154_fake_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++{
++	struct sockaddr_ieee802154 *sa = (struct sockaddr_ieee802154 *)&ifr->ifr_addr;
++	u16 pan_id, short_addr;
++
++	switch (cmd) {
++	case SIOCGIFADDR:
++		/* FIXME: fixed here, get from device IRL */
++		pan_id = fake_get_pan_id(dev);
++		short_addr = fake_get_short_addr(dev);
++		if (pan_id == IEEE802154_PANID_BROADCAST || short_addr == IEEE802154_ADDR_BROADCAST)
++			return -EADDRNOTAVAIL;
++
++		sa->family = AF_IEEE802154;
++		sa->addr.addr_type = IEEE802154_ADDR_SHORT;
++		sa->addr.pan_id = pan_id;
++		sa->addr.short_addr = short_addr;
++		return 0;
++	}
++	return -ENOIOCTLCMD;
++}
++
++static int ieee802154_fake_mac_addr(struct net_device *dev, void *p)
++{
++	return -EBUSY; /* HW address is built into the device */
++}
++
++static const struct net_device_ops fake_ops = {
++	.ndo_open		= ieee802154_fake_open,
++	.ndo_stop		= ieee802154_fake_close,
++	.ndo_start_xmit		= ieee802154_fake_xmit,
++	.ndo_do_ioctl		= ieee802154_fake_ioctl,
++	.ndo_set_mac_address	= ieee802154_fake_mac_addr,
++};
++
++
++static void ieee802154_fake_setup(struct net_device *dev)
++{
++	dev->addr_len		= IEEE802154_ADDR_LEN;
++	memset(dev->broadcast, 0xff, IEEE802154_ADDR_LEN);
++	dev->features		= NETIF_F_NO_CSUM;
++	dev->needed_tailroom	= 2; /* FCS */
++	dev->mtu		= 127;
++	dev->tx_queue_len	= 10;
++	dev->type		= ARPHRD_IEEE802154;
++	dev->flags		= IFF_NOARP | IFF_BROADCAST;
++	dev->watchdog_timeo	= 0;
++}
++
++
++static int __devinit ieee802154fake_probe(struct platform_device *pdev)
++{
++	struct net_device *dev = alloc_netdev(0, "hardwpan%d", ieee802154_fake_setup);
++	int err;
++
++	if (!dev)
++		return -ENOMEM;
++
++	memcpy(dev->dev_addr, "\xba\xbe\xca\xfe\xde\xad\xbe\xef", dev->addr_len);
++	memcpy(dev->perm_addr, dev->dev_addr, dev->addr_len);
++
++	dev->netdev_ops = &fake_ops;
++	dev->ml_priv = &fake_mlme;
++
++	/*
++	 * If the name is a format string the caller wants us to do a
++	 * name allocation.
++	 */
++	if (strchr(dev->name, '%')) {
++		err = dev_alloc_name(dev, dev->name);
++		if (err < 0)
++			goto out;
++	}
++
++	SET_NETDEV_DEV(dev, &pdev->dev);
++
++	platform_set_drvdata(pdev, dev);
++
++	err = register_netdev(dev);
++	if (err < 0)
++		goto out;
++
++
++	dev_info(&pdev->dev, "Added ieee802154 HardMAC hardware\n");
++	return 0;
++
++out:
++	unregister_netdev(dev);
++	return err;
++}
++
++static int __devexit ieee802154fake_remove(struct platform_device *pdev)
++{
++	struct net_device *dev = platform_get_drvdata(pdev);
++	unregister_netdev(dev);
++	free_netdev(dev);
++	return 0;
++}
++
++static struct platform_device *ieee802154fake_dev;
++
++static struct platform_driver ieee802154fake_driver = {
++	.probe = ieee802154fake_probe,
++	.remove = __devexit_p(ieee802154fake_remove),
++	.driver = {
++			.name = "ieee802154hardmac",
++			.owner = THIS_MODULE,
++	},
++};
++
++static __init int fake_init(void)
++{
++	ieee802154fake_dev = platform_device_register_simple("ieee802154hardmac", -1, NULL, 0);
++	return platform_driver_register(&ieee802154fake_driver);
++}
++
++static __exit void fake_exit(void)
++{
++	platform_driver_unregister(&ieee802154fake_driver);
++	platform_device_unregister(ieee802154fake_dev);
++}
++
++module_init(fake_init);
++module_exit(fake_exit);
++MODULE_LICENSE("GPL");
++
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index 214a92d..ec8cf21 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -2704,6 +2704,8 @@ source "drivers/net/wan/Kconfig"
  
- #define DEBUGFS_STATS_FILE(name, buflen, fmt, value...)			\
-@@ -298,6 +321,7 @@ void debugfs_hw_add(struct ieee80211_loc
- 	DEBUGFS_ADD(total_ps_buffered);
- 	DEBUGFS_ADD(wep_iv);
- 	DEBUGFS_ADD(tsf);
-+	DEBUGFS_ADD(queues);
- 	DEBUGFS_ADD_MODE(reset, 0200);
- 	DEBUGFS_ADD(noack);
+ source "drivers/atm/Kconfig"
  
-@@ -350,6 +374,7 @@ void debugfs_hw_del(struct ieee80211_loc
- 	DEBUGFS_DEL(total_ps_buffered);
- 	DEBUGFS_DEL(wep_iv);
- 	DEBUGFS_DEL(tsf);
-+	DEBUGFS_DEL(queues);
- 	DEBUGFS_DEL(reset);
- 	DEBUGFS_DEL(noack);
++source "drivers/ieee802154/Kconfig"
++
+ source "drivers/s390/net/Kconfig"
  
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-06-14 17:27:19.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-06-14 17:27:25.000000000 +0200
-@@ -783,6 +783,7 @@ struct ieee80211_local {
- 		struct dentry *total_ps_buffered;
- 		struct dentry *wep_iv;
- 		struct dentry *tsf;
-+		struct dentry *queues;
- 		struct dentry *reset;
- 		struct dentry *noack;
- 		struct dentry *statistics;
-
+ config XEN_NETDEV_FRONTEND
+-- 
+1.6.3.1
 
