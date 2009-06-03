@@ -1,252 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:44547 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750844AbZFINzC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 09:55:02 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-Subject: Re: [PATCH, RFC] b43: Add fw capabilities
-Date: Tue, 9 Jun 2009 15:54:44 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <200904080211.16298.mb@bu3sch.de> <200906082105.00868.s.L-H@gmx.de>
-In-Reply-To: <200906082105.00868.s.L-H@gmx.de>
+Received: from web55303.mail.re4.yahoo.com ([206.190.58.182]:42290 "HELO
+	web55303.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752315AbZFCD2R convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 23:28:17 -0400
+Message-ID: <380442.8741.qm@web55303.mail.re4.yahoo.com>
+Date: Tue, 2 Jun 2009 20:28:18 -0700 (PDT)
+From: austinxxh-ath9k@yahoo.com
+Reply-To: austinxxh-ath9k@yahoo.com
+Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+To: devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?6rO9cmVvbQ==?= <acidreom@hotmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200906091554.45182.mb@bu3sch.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
 
-> Subject: [PATCH, RFC] b44: Add fw capabilities
+the new wireless-testing(6/2/09) did not cause reset anymore. however "iw dev mesh station dump" showed nothing, even after I did "ifconfig mesh up" and "ifconfig mesh down" a few times. How did you know if it's sending beacons or not? are you using the monitor interface or something?
+
+this is what i did:
+-------------------
+iw dev wlan0 interface add mesh type mp mesh_id mesh
+ifconfig mesh up
+ifconfig mesh 192.168.3.80 
+iw dev mesh station dump
+--------------------
+do the same on a second node, with a different mesh IP address.
+
+nothing showed up, with olsr I can see two nodes are "merged"
+
+wish i know more to debug this, learning...
+
+xxiao
+
+--- On Tue, 6/2/09, 곽reom <acidreom@hotmail.com> wrote:
+
+> From: 곽reom <acidreom@hotmail.com>
+> Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+> To: devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+> Date: Tuesday, June 2, 2009, 8:26 PM
 > 
->  Completely untested patch to implement firmware capabilities
->  and automagic QoS-disabling.
 > 
-
-Add automagic feature flags, so the firmware can tell the driver
-about supported features and the driver can switch features on/off as needed.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-> Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-> Tested-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-> ---
->  drivers/net/wireless/b43/b43.h  |   14 +++++++++
->  drivers/net/wireless/b43/dma.c  |    2 +-
->  drivers/net/wireless/b43/main.c |   56 +++++++++++++++++++++++++++++++-------
->  drivers/net/wireless/b43/main.h |    1 -
->  drivers/net/wireless/b43/pio.c  |    2 +-
->  5 files changed, 61 insertions(+), 14 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-> index 4e8ad84..61d2ec8 100644
-> --- a/drivers/net/wireless/b43/b43.h
-> +++ b/drivers/net/wireless/b43/b43.h
-> @@ -163,6 +163,7 @@ enum {
->  #define B43_SHM_SH_WLCOREREV		0x0016	/* 802.11 core revision */
->  #define B43_SHM_SH_PCTLWDPOS		0x0008
->  #define B43_SHM_SH_RXPADOFF		0x0034	/* RX Padding data offset (PIO only) */
-> +#define B43_SHM_SH_FWCAPA		0x0042	/* Firmware capabilities (Opensource firmware only) */
->  #define B43_SHM_SH_PHYVER		0x0050	/* PHY version */
->  #define B43_SHM_SH_PHYTYPE		0x0052	/* PHY type */
->  #define B43_SHM_SH_ANTSWAP		0x005C	/* Antenna swap threshold */
-> @@ -297,6 +298,10 @@ enum {
->  #define B43_HF_MLADVW		0x001000000000ULL /* N PHY ML ADV workaround (rev >= 13 only) */
->  #define B43_HF_PR45960W		0x080000000000ULL /* PR 45960 workaround (rev >= 13 only) */
+> #yiv1908813577 .hmmessage P
+> {
+> margin:0px;padding:0px;}
+> #yiv1908813577 {
+> font-size:9pt;font-family:굴림;}
+> 
+> 
 >  
-> +/* Firmware capabilities field in SHM (Opensource firmware only) */
-> +#define B43_FWCAPA_HWCRYPTO	0x0001
-> +#define B43_FWCAPA_QOS		0x0002
-> +
->  /* MacFilter offsets. */
->  #define B43_MACFILTER_SELF		0x0000
->  #define B43_MACFILTER_BSSID		0x0003
-> @@ -596,6 +601,13 @@ struct b43_wl {
->  	/* Pointer to the ieee80211 hardware data structure */
->  	struct ieee80211_hw *hw;
+> 802.11s works fine on my system with latest
+> wireless-testing ath5k.
+> 
+> There's only one problem. 
+> 
+> mesh0 doesn't send beacon automatically when i up mesh0
+> first time.
+> 
+> Only after doing down and up again mesh0, beacon was send
+> and mesh works.
+> 
+> I don't think crashing and rebooting with mesh setting
+> is a related problem with ath5k or ath9k.
+>  
+> > Date: Tue, 2 Jun 2009 17:55:20 -0700
+> > From: austinxxh-ath9k@yahoo.com
+> > To: andrey@cozybit.com; lrodriguez@atheros.com
+> > CC: devel@lists.open80211s.org;
+> ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org
+> > Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+> > 
+> > 
+> > Not good, I definitely like to use 80211s with ath9k,
+> though I'm not familiar enough to fix anything related
+> to them yet. Say, I don't know what's the
+> relationship between 80211s and ath9k/ath5k at this point.
+> Trying 0602 release now and see if it improves anything. 
+> > 
+> > I was told b43 runs well with 80211s, hope ath5k/ath9k
+> will do the same someday.
+> > 
+> > X Xiao
+> > 
+> > --- On Tue, 6/2/09, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > 
+> > > From: Luis R. Rodriguez
+> <lrodriguez@atheros.com>
+> > > Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s
+> crash
+> > > To: "Andrey Yurovsky"
+> <andrey@cozybit.com>
+> > > Cc: "austinxxh-ath9k@yahoo.com"
+> <austinxxh-ath9k@yahoo.com>,
+> "devel@lists.open80211s.org"
+> <devel@lists.open80211s.org>,
+> "ath9k-devel@lists.ath9k.org"
+> <ath9k-devel@lists.ath9k.org>,
+> "linux-wireless@vger.kernel.org"
+> <linux-wireless@vger.kernel.org>
+> > > Date: Tuesday, June 2, 2009, 5:30 PM
+> > > On Tue, Jun 02, 2009 at 09:58:59AM
+> > > -0700, Andrey Yurovsky wrote:
+> > > > With wireless-testing from a couple of days
+> ago, an
+> > > X86 system, and this patch:
+> > > >
+> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+> > > > ath9k can bring up a mesh point interface
+> and doesn't
+> > > crash for me,
+> > > > but there are no mesh beacons, so mesh
+> isn't
+> > > working.  On ath5k, there
+> > > > are also no beacons and mesh doesn't
+> work, but there's
+> > > no crash.
+> > > 
+> > > If no one is really interested in fixing we
+> should just
+> > > disable mesh
+> > > for both ath5k and ath9k.
+> > > 
+> > >   Luis
+> > > 
+> > _______________________________________________
+> > ath9k-devel mailing list
+> > ath9k-devel@lists.ath9k.org
+> > https://lists.ath9k.org/mailman/listinfo/ath9k-devel
 >  
-> +	/* The number of queues that were registered with the mac80211 subsystem
-> +	 * initially. This is a backup copy of hw->queues in case hw->queues has
-> +	 * to be dynamically lowered at runtime (Firmware does not support QoS).
-> +	 * hw->queues has to be restored to the original value before unregistering
-> +	 * from the mac80211 subsystem. */
-> +	u16 mac80211_initially_registered_queues;
-> +
->  	struct mutex mutex;
->  	spinlock_t irq_lock;
->  	/* R/W lock for data transmission.
-> @@ -752,6 +764,8 @@ struct b43_wldev {
->  	bool dfq_valid;		/* Directed frame queue valid (IBSS PS mode, ATIM) */
->  	bool radio_hw_enable;	/* saved state of radio hardware enabled state */
->  	bool suspend_in_progress;	/* TRUE, if we are in a suspend/resume cycle */
-> +	bool qos_enabled;		/* TRUE, if QoS is used. */
-> +	bool hwcrypto_enabled;		/* TRUE, if HW crypto acceleration is enabled. */
->  
->  	/* PHY/Radio device. */
->  	struct b43_phy phy;
-> diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-> index eae680b..7964cc3 100644
-> --- a/drivers/net/wireless/b43/dma.c
-> +++ b/drivers/net/wireless/b43/dma.c
-> @@ -1285,7 +1285,7 @@ static struct b43_dmaring *select_ring_by_priority(struct b43_wldev *dev,
->  {
->  	struct b43_dmaring *ring;
->  
-> -	if (b43_modparam_qos) {
-> +	if (dev->qos_enabled) {
->  		/* 0 = highest priority */
->  		switch (queue_prio) {
->  		default:
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 1d3e400..a7cadc6 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -80,8 +80,8 @@ static int modparam_nohwcrypt;
->  module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
->  MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
->  
-> -int b43_modparam_qos = 1;
-> -module_param_named(qos, b43_modparam_qos, int, 0444);
-> +static int modparam_qos = 1;
-> +module_param_named(qos, modparam_qos, int, 0444);
->  MODULE_PARM_DESC(qos, "Enable QOS support (default on)");
->  
->  static int modparam_btcoex = 1;
-> @@ -538,6 +538,13 @@ void b43_hf_write(struct b43_wldev *dev, u64 value)
->  	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFHI, hi);
->  }
->  
-> +/* Read the firmware capabilities bitmask (Opensource firmware only) */
-> +static u16 b43_fwcapa_read(struct b43_wldev *dev)
-> +{
-> +	B43_WARN_ON(!dev->fw.opensource);
-> +	return b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_FWCAPA);
-> +}
-> +
->  void b43_tsf_read(struct b43_wldev *dev, u64 *tsf)
->  {
->  	u32 low, high;
-> @@ -2307,12 +2314,34 @@ static int b43_upload_microcode(struct b43_wldev *dev)
->  	dev->fw.patch = fwpatch;
->  	dev->fw.opensource = (fwdate == 0xFFFF);
->  
-> +	/* Default to use-all-queues. */
-> +	dev->wl->hw->queues = dev->wl->mac80211_initially_registered_queues;
-> +	dev->qos_enabled = !!modparam_qos;
-> +	/* Default to firmware/hardware crypto acceleration. */
-> +	dev->hwcrypto_enabled = 1;
-> +
->  	if (dev->fw.opensource) {
-> +		u16 fwcapa;
-> +
->  		/* Patchlevel info is encoded in the "time" field. */
->  		dev->fw.patch = fwtime;
-> -		b43info(dev->wl, "Loading OpenSource firmware version %u.%u%s\n",
-> -			dev->fw.rev, dev->fw.patch,
-> -			dev->fw.pcm_request_failed ? " (Hardware crypto not supported)" : "");
-> +		b43info(dev->wl, "Loading OpenSource firmware version %u.%u\n",
-> +			dev->fw.rev, dev->fw.patch);
-> +
-> +		fwcapa = b43_fwcapa_read(dev);
-> +		if (!(fwcapa & B43_FWCAPA_HWCRYPTO) || dev->fw.pcm_request_failed) {
-> +			b43info(dev->wl, "Hardware crypto acceleration not supported by firmware\n");
-> +			/* Disable hardware crypto and fall back to software crypto. */
-> +			dev->hwcrypto_enabled = 0;
-> +		}
-> +		if (!(fwcapa & B43_FWCAPA_QOS)) {
-> +			b43info(dev->wl, "QoS not supported by firmware\n");
-> +			/* Disable QoS. Tweak hw->queues to 1. It will be restored before
-> +			 * ieee80211_unregister to make sure the networking core can
-> +			 * properly free possible resources. */
-> +			dev->wl->hw->queues = 1;
-> +			dev->qos_enabled = 0;
-> +		}
->  	} else {
->  		b43info(dev->wl, "Loading firmware version %u.%u "
->  			"(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
-> @@ -3627,7 +3656,7 @@ static int b43_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->  	if (!dev || b43_status(dev) < B43_STAT_INITIALIZED)
->  		goto out_unlock;
->  
-> -	if (dev->fw.pcm_request_failed) {
-> +	if (dev->fw.pcm_request_failed || !dev->hwcrypto_enabled) {
->  		/* We don't have firmware for the crypto engine.
->  		 * Must use software-crypto. */
->  		err = -EOPNOTSUPP;
-> @@ -4735,6 +4764,7 @@ static int b43_wireless_init(struct ssb_device *dev)
->  		b43err(NULL, "Could not allocate ieee80211 device\n");
->  		goto out;
->  	}
-> +	wl = hw_to_b43_wl(hw);
->  
->  	/* fill hw info */
->  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
-> @@ -4748,7 +4778,8 @@ static int b43_wireless_init(struct ssb_device *dev)
->  		BIT(NL80211_IFTYPE_WDS) |
->  		BIT(NL80211_IFTYPE_ADHOC);
->  
-> -	hw->queues = b43_modparam_qos ? 4 : 1;
-> +	hw->queues = modparam_qos ? 4 : 1;
-> +	wl->mac80211_initially_registered_queues = hw->queues;
->  	hw->max_rates = 2;
->  	SET_IEEE80211_DEV(hw, dev->dev);
->  	if (is_valid_ether_addr(sprom->et1mac))
-> @@ -4756,9 +4787,7 @@ static int b43_wireless_init(struct ssb_device *dev)
->  	else
->  		SET_IEEE80211_PERM_ADDR(hw, sprom->il0mac);
->  
-> -	/* Get and initialize struct b43_wl */
-> -	wl = hw_to_b43_wl(hw);
-> -	memset(wl, 0, sizeof(*wl));
-> +	/* Initialize struct b43_wl */
->  	wl->hw = hw;
->  	spin_lock_init(&wl->irq_lock);
->  	rwlock_init(&wl->tx_lock);
-> @@ -4824,8 +4853,13 @@ static void b43_remove(struct ssb_device *dev)
->  	cancel_work_sync(&wldev->restart_work);
->  
->  	B43_WARN_ON(!wl);
-> -	if (wl->current_dev == wldev)
-> +	if (wl->current_dev == wldev) {
-> +		/* Restore the queues count before unregistering, because firmware detect
-> +		 * might have modified it. Restoring is important, so the networking
-> +		 * stack can properly free resources. */
-> +		wl->hw->queues = wl->mac80211_initially_registered_queues;
->  		ieee80211_unregister_hw(wl->hw);
-> +	}
->  
->  	b43_one_core_detach(dev);
->  
-> diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-> index 40abcf5..950fb1b 100644
-> --- a/drivers/net/wireless/b43/main.h
-> +++ b/drivers/net/wireless/b43/main.h
-> @@ -39,7 +39,6 @@
->  #define PAD_BYTES(nr_bytes)		P4D_BYTES( __LINE__ , (nr_bytes))
->  
->  
-> -extern int b43_modparam_qos;
->  extern int b43_modparam_verbose;
->  
->  /* Logmessage verbosity levels. Update the b43_modparam_verbose helptext, if
-> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-> index 8cd9776..69138e8 100644
-> --- a/drivers/net/wireless/b43/pio.c
-> +++ b/drivers/net/wireless/b43/pio.c
-> @@ -313,7 +313,7 @@ static struct b43_pio_txqueue *select_queue_by_priority(struct b43_wldev *dev,
->  {
->  	struct b43_pio_txqueue *q;
->  
-> -	if (b43_modparam_qos) {
-> +	if (dev->qos_enabled) {
->  		/* 0 = highest priority */
->  		switch (queue_prio) {
->  		default:
-
-
-
--- 
-Greetings, Michael.
+> 
+> -----Inline Attachment Follows-----
+> 
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> 
