@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f166.google.com ([209.85.217.166]:42803 "EHLO
-	mail-gx0-f166.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbZFBU5U convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:60726 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbZFCSYv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:57:20 -0400
-Received: by gxk10 with SMTP id 10so14706670gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 13:57:22 -0700 (PDT)
+	Wed, 3 Jun 2009 14:24:51 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ar9170: remove deprecated code
+Date: Wed, 3 Jun 2009 22:24:48 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1243974656-15600-1-git-send-email-lrodriguez@atheros.com>
-References: <1243974656-15600-1-git-send-email-lrodriguez@atheros.com>
-Date: Tue, 2 Jun 2009 16:57:22 -0400
-Message-ID: <b6c5339f0906021357y14c64003lbbfaa0744ced7617@mail.gmail.com>
-Subject: Re: [PATCH] ath: make regulatory parsing more verbose on debug
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200906032224.48483.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 2, 2009 at 4:30 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> This should help when reviewing issues regarding regulatory
-> domain on ath5k/ath9k/ar9170.
+This patch removes code (deprecated by "cfg80211: add rfkill support" )
 
-i.e. code is too complicated to reason about :)
+main.c: In function 'ar9170_op_config':
+main.c:1306: warning: '__IEEE80211_CONF_CHANGE_RADIO_ENABLED' 
+is deprecated (declared at include/net/mac80211.h:551)
 
-> +       printk(KERN_DEBUG "ath: EEPROM regdomain: 0x%0x\n", reg->current_rd);
+and a useless device state.
 
-definite ACK on that at least...
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 4c4b08f..c7cba66 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -102,7 +102,6 @@ enum ar9170_device_state {
+ 	AR9170_STOPPED,
+ 	AR9170_IDLE,
+ 	AR9170_STARTED,
+-	AR9170_ASSOCIATED,
+ };
+ 
+ struct ar9170_rxstream_mpdu_merge {
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index b889fda..b104d7e 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1303,11 +1303,6 @@ static int ar9170_op_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	mutex_lock(&ar->mutex);
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED) {
+-		/* TODO */
+-		err = 0;
+-	}
+-
+ 	if (changed & IEEE80211_CONF_CHANGE_LISTEN_INTERVAL) {
+ 		/* TODO */
+ 		err = 0;
+@@ -1490,8 +1485,6 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ASSOC) {
+-		ar->state = bss_conf->assoc ? AR9170_ASSOCIATED : ar->state;
+-
+ #ifndef CONFIG_AR9170_LEDS
+ 		/* enable assoc LED. */
+ 		err = ar9170_set_leds_state(ar, bss_conf->assoc ? 2 : 0);
