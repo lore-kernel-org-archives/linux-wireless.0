@@ -1,106 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:44736 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804AbZFDN3b (ORCPT
+Received: from build.ossfans.org ([67.223.233.67]:34120 "EHLO
+	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836AbZFCMzk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 09:29:31 -0400
-Received: by bwz9 with SMTP id 9so733840bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 06:29:31 -0700 (PDT)
+	Wed, 3 Jun 2009 08:55:40 -0400
+Date: Wed, 3 Jun 2009 16:55:07 +0400
+From: Sergey Lapin <slapin@ossfans.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
+Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
+	802.15.4 devices
+Message-ID: <20090603125507.GA22673@build.ossfans.org>
+References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com> <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com> <1244021964.10665.5.camel@johannes.local> <20090603.030911.162861804.davem@davemloft.net> <20090603105256.GB20508@doriath.ww600.siemens.net> <1244027110.1693.9.camel@johannes.local>
 MIME-Version: 1.0
-Reply-To: maxim@mox.ru
-Date: Thu, 4 Jun 2009 17:29:31 +0400
-Message-ID: <6097c490906040629o9c4f858pf1fa41932ed446fe@mail.gmail.com>
-Subject: [RFC] ieee802154 configuration interface (iz)
-From: Maxim Osipov <maxim.osipov@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1244027110.1693.9.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+> > +#define IEEE802154_ATTR_MAX (__IEEE802154_ATTR_MAX - 1)
+> > +#define NLA_HW_ADDR	NLA_U64
+> > +#define NLA_GET_HW_ADDR(attr, addr) do { u64 _temp = nla_get_u64(attr); memcpy(addr, &_temp, 8); } while (0)
+> > +#define NLA_PUT_HW_ADDR(msg, attr, addr) do { u64 _temp; memcpy(&_temp, addr, 8); NLA_PUT_U64(msg, attr, _temp); } while (0)
 
-I'm working currently on defining a command line configuration
-interface for ieee802154 stack, keeping in mind further possible
-extensions with ZigBee support, etc.
+What would you propose here? adding prefix will add length to macro,
+IEEE802154_NL_PUT_HW_ADDR is damn long name. Using repeated code
+sequence is not better (it is error-prone and unreadable).
 
-Current version below, however we have a heavy discussion regarding
-design of the tool, and main questions are the following:
+Any ideas?
 
-1. Is it better to have a single tool for configuration of all
-protocols or one for ieee802154 (iz), one for ZigBee (zb) and so on?
-2. Is it better to have a command defined (like "iz dev wpan0 poll")
-and returning "Not implemented" or not defined at all?
-3. Does it make sense to have a "phy" class? Currently we do not
-provide any netlink interface to ieee802154 PHY, but I consider it may
-be useful a) for testing b) for user-space implementation of certain
-protocols.
-
-Would appreciate comments and suggestions.
-
------
-
-iz [options] [class command]
-
-Options:
- -d [--debug] - print netlink messages and other debug information
- -v [--version] - print version
- -h [--help] - print help
-
-Classes:
- all - all known object classes
- phy - radio (master, PHY) interfaces
- dev - network interfaces (IEEE802.15.4 MAC, ZigBee, ...)
-
-Common commands:
- list - list all interfaces of class(es)
- event - monitor events of class(es) from the kernel
- add <iface> - add interface
- del <iface> - delete interface
-
-IEEE 802.15.4 PHY specific commands:
- cca - perform clear channel assignment procedure
- ed - perform energy detect procedure
- set-trx-state - change transmitter state
- get - get PIB value
- set - set PIB value
-
- Events are: CCA-CONF, ED-CONF, SET-TRX-STATE-CONF, GET-CONF, SET-CONF
-
-IEEE 802.15.4 MAC specific commands:
- associate - associate with a network
- disassociate - disassociate from a network
- gts - configure guaranteed time slots
- orphan-response - react to orphan indication
- reset - reset
- rx-enable - enable receiver
- scan - perform scan
- start - start node
- sync - synchronize with a beacon
- poll - poll for data
- get - get MIB value
- set - set MIB value
-
- Events are: ASSOCIATE-IND, ASSOCIATE-CONF, DISASSOCIATE-IND,
-DISASSOCIATE-CONF, BEACON-IND...
-
-ZigBee specific commands:
- net-discovery - discover networks operating within device visibility
- net-formation - start a new network as a coordinator
- permit-join - start accepting devices to a network (router or coordinator)
- start-router - start router activities (router)
- ed-scan - request energy detection scan
- join - join/rejoin a network or change operating channel
- direct-join - directly join another device to a network
- leave - leave a network
- reset - perform reset operation
- sync - synchronize (with coordinator or router) or check for pending data
- route-discovery - initiate route discovery
- get - get NIB or AIB value
- set - set NIB or AIB value
-
- Events are: NET-DISCOVERY-CONF, NET-FORMATION-CONF,
-PERMIT-JOINING-CONF, START-ROUTER-CONF, ED-SCAN-CONF, JOIN-IND,
-JOIN-CONF...
-
-Kind regards,
-Maxim
