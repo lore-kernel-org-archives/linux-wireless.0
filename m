@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6527 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755921AbZFLUPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:15:52 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 8/8] iwlwifi: remove disable_tx_power for device > 4965
-Date: Fri, 12 Jun 2009 13:22:55 -0700
-Message-Id: <1244838175-15491-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244838175-15491-8-git-send-email-reinette.chatre@intel.com>
-References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-4-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-5-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-6-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-7-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-8-git-send-email-reinette.chatre@intel.com>
+Received: from an-out-0708.google.com ([209.85.132.247]:53658 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753061AbZFCMfN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2009 08:35:13 -0400
+MIME-Version: 1.0
+In-Reply-To: <20090403182724.GA7364@tuxdriver.com>
+References: <20090403182724.GA7364@tuxdriver.com>
+Date: Wed, 3 Jun 2009 15:35:14 +0300
+Message-ID: <40f31dec0906030535k3af1f6e7u68c82a4f984e7029@mail.gmail.com>
+Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+2009/4/3 John W. Linville <linville@tuxdriver.com>:
+> Greetings,
+>
+> As you may know, we are planning on having a wireless summit meeting
+> in Berlin, Germany this June.  This meeting is in cooperation with
+> the Fedora FUDCon event, which will be accomodating us under the
+> guise of a "hackfest".  This event also overlaps (and co-locates)
+> with LinuxTag 2009.  Details are available here:
+>
+>        https://fedoraproject.org/wiki/FUDCon:Berlin_2009
+>
+> FUDCon's are typically self-organizing under the BarCamp model.
+> However, I have secured a promise that we will be allocated space
+> for 1-2 dozen people on at least Friday 26 June and Saturday 27 June
+> for our wireless event.  I personally encourage everyone not only to
+> attend LinuxTag but also to participate in the rest of FUDCon!
+>
+> So, here I open the floor for discussion of agenda items for our
+> wireless meeting/hackfest.  What do we think is important to discuss
+> face-to-face this year?  What isn't getting done?  What is getting
+> done wrong?  What do we need that we didn't realize last year?
+>
+> Also, please consider making some sort of prepared presentation.
+> Especially welcome would be topics that are accessible to those
+> outside of the core wireless developer group, such as current
+> projects on enhancing IBSS support, extended power savings, or any
+> other user-visible topic.  I'll be happy to take such proposals in
+> private email or you can post them as part of this thread.
+>
+> Hopefully this gets the discussion started...please comment!
+>
+> John
+>
+> P.S.  We are also planning a meeting in Portland this September for
+> those unable or unwilling to travel outside of North America for
+> whatever reason -- stay tuned.
 
-After 4965, tx_power_calibration moved from driver to uCode.
-remove "disable_tx_power" from debugfs to minimize the confusion.
+Can we book a room on Holiday in
+(http://fedoraproject.org/wiki/FUDCon:Berlin_2009_lodging) or is it
+only for Fedora people ? What's the process ? I've managed to find
+some funding for travel expenses but most hotels are really expensive
+(i plan to come on 24 and leave on 29).
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 11e08c0..f32ac74 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -615,7 +615,10 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	DEBUGFS_ADD_BOOL(disable_sensitivity, rf, &priv->disable_sens_cal);
- 	DEBUGFS_ADD_BOOL(disable_chain_noise, rf,
- 			 &priv->disable_chain_noise_cal);
--	DEBUGFS_ADD_BOOL(disable_tx_power, rf, &priv->disable_tx_power_cal);
-+	if (((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_4965) ||
-+	    ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_3945))
-+		DEBUGFS_ADD_BOOL(disable_tx_power, rf,
-+				&priv->disable_tx_power_cal);
- 	return 0;
- 
- err:
-@@ -646,7 +649,9 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
- 	DEBUGFS_REMOVE(priv->dbgfs->dir_data);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_sensitivity);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_chain_noise);
--	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_tx_power);
-+	if (((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_4965) ||
-+	    ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_3945))
-+		DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_tx_power);
- 	DEBUGFS_REMOVE(priv->dbgfs->dir_rf);
- 	DEBUGFS_REMOVE(priv->dbgfs->dir_drv);
- 	kfree(priv->dbgfs);
 -- 
-1.5.6.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
