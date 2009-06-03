@@ -1,57 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:30681 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641AbZFKVLK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 17:11:10 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1187519ywb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 14:11:12 -0700 (PDT)
+Received: from web55304.mail.re4.yahoo.com ([206.190.58.183]:20962 "HELO
+	web55304.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751786AbZFCBq7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2009 21:46:59 -0400
+Message-ID: <681254.69024.qm@web55304.mail.re4.yahoo.com>
+Date: Tue, 2 Jun 2009 18:47:00 -0700 (PDT)
+From: austinxxh-ath9k@yahoo.com
+Reply-To: austinxxh-ath9k@yahoo.com
+Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+To: devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?6rO9cmVvbQ==?= <acidreom@hotmail.com>
 MIME-Version: 1.0
-In-Reply-To: <200906112305.33675.mb@bu3sch.de>
-References: <4A30CE70.4050605@web.de> <43e72e890906111148w1c242bd1qf97cb668a98f883e@mail.gmail.com>
-	<200906112305.33675.mb@bu3sch.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Jun 2009 14:10:52 -0700
-Message-ID: <43e72e890906111410n3766ceb7t4b4efda05730c693@mail.gmail.com>
-Subject: Re: compat-wireless: ridiculous build speed
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jan Kiszka <jan.kiszka@web.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2009 at 2:05 PM, Michael Buesch<mb@bu3sch.de> wrote:
-> On Thursday 11 June 2009 20:48:13 Luis R. Rodriguez wrote:
->> On Thu, Jun 11, 2009 at 2:29 AM, Jan Kiszka<jan.kiszka@web.de> wrote:
->> > Hi,
->> >
->> > while watching compat-wireless-2009-06-11 doing baby-steps building all
->> > its modules, I wonder what slows this down so horribly. No other
->> > external module build package I know is that slow (I would say *at
->> > least* one order of magnitude slower than normal). Is this really required?
->> >
->> > [ Hurray, it's finished! ]
->>
->> I think the many depmod -ae are the culprit. This is in place to
->> account for all the crap of madwifi which may be present or older
->> drivers which have been renamed.
->>
->> This could be improved. Patches are welcomed.
->>
->> Ps. Try building with make -j 2, etc.
->
-> -j does not help. It will hardly build in parallel then.
 
-It works swell for me. The only thing that does not build in parellel
-is the autoconf stuff but after its done with that step everything
-builds as expected with -j 2.
+Yes I just tried 0602 release of wireless and the reboot problem is gone. I'm fighting with other problems(ifconfig segfault) which are unrelated to ath9k/11s before I can fully test them.
 
-> There's something
-> that serializes most of it (implicitly).
+Thanks!
+Xxiao
 
-You certain its just not the first part? I had written some patches to
-make the first autoconf step into another step to then allow make -j
-foo to work without a warning but that would involve another step. The
--j option does work for me though.
+--- On Tue, 6/2/09, 곽reom <acidreom@hotmail.com> wrote:
 
-  Luis
+> From: 곽reom <acidreom@hotmail.com>
+> Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+> To: devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+> Date: Tuesday, June 2, 2009, 8:26 PM
+> 
+> 
+> 
+> #yiv1864732320 .hmmessage P
+> {
+> margin:0px;padding:0px;}
+> #yiv1864732320 {
+> font-size:9pt;font-family:굴림;}
+> 
+> 
+>  
+> 802.11s works fine on my system with latest
+> wireless-testing ath5k.
+> 
+> There's only one problem. 
+> 
+> mesh0 doesn't send beacon automatically when i up mesh0
+> first time.
+> 
+> Only after doing down and up again mesh0, beacon was send
+> and mesh works.
+> 
+> I don't think crashing and rebooting with mesh setting
+> is a related problem with ath5k or ath9k.
+>  
+> > Date: Tue, 2 Jun 2009 17:55:20 -0700
+> > From: austinxxh-ath9k@yahoo.com
+> > To: andrey@cozybit.com; lrodriguez@atheros.com
+> > CC: devel@lists.open80211s.org;
+> ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org
+> > Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
+> > 
+> > 
+> > Not good, I definitely like to use 80211s with ath9k,
+> though I'm not familiar enough to fix anything related
+> to them yet. Say, I don't know what's the
+> relationship between 80211s and ath9k/ath5k at this point.
+> Trying 0602 release now and see if it improves anything. 
+> > 
+> > I was told b43 runs well with 80211s, hope ath5k/ath9k
+> will do the same someday.
+> > 
+> > X Xiao
+> > 
+> > --- On Tue, 6/2/09, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > 
+> > > From: Luis R. Rodriguez
+> <lrodriguez@atheros.com>
+> > > Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s
+> crash
+> > > To: "Andrey Yurovsky"
+> <andrey@cozybit.com>
+> > > Cc: "austinxxh-ath9k@yahoo.com"
+> <austinxxh-ath9k@yahoo.com>,
+> "devel@lists.open80211s.org"
+> <devel@lists.open80211s.org>,
+> "ath9k-devel@lists.ath9k.org"
+> <ath9k-devel@lists.ath9k.org>,
+> "linux-wireless@vger.kernel.org"
+> <linux-wireless@vger.kernel.org>
+> > > Date: Tuesday, June 2, 2009, 5:30 PM
+> > > On Tue, Jun 02, 2009 at 09:58:59AM
+> > > -0700, Andrey Yurovsky wrote:
+> > > > With wireless-testing from a couple of days
+> ago, an
+> > > X86 system, and this patch:
+> > > >
+> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+> > > > ath9k can bring up a mesh point interface
+> and doesn't
+> > > crash for me,
+> > > > but there are no mesh beacons, so mesh
+> isn't
+> > > working.  On ath5k, there
+> > > > are also no beacons and mesh doesn't
+> work, but there's
+> > > no crash.
+> > > 
+> > > If no one is really interested in fixing we
+> should just
+> > > disable mesh
+> > > for both ath5k and ath9k.
+> > > 
+> > >   Luis
+> > > 
+> > _______________________________________________
+> > ath9k-devel mailing list
+> > ath9k-devel@lists.ath9k.org
+> > https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>  
+> 
+> -----Inline Attachment Follows-----
+> 
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> 
