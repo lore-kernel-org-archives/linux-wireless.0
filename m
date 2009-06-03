@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:37626 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753197AbZFOT57 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 15:57:59 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 05/11 v2][w-t] iwmc3200wifi: invalidate keys when changing the BSSID
-Date: Mon, 15 Jun 2009 21:59:50 +0200
-Message-Id: <4fa0241c41670096a2933b81c7bd32e6a5551faa.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <e72e3c0d6b16655fdf4da5dcabc6349be7b5c0a2.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
- <7413d2605b449b8e43bcfe61719ee30fccb592b7.1245091931.git.samuel@sortiz.org>
- <e72e3c0d6b16655fdf4da5dcabc6349be7b5c0a2.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
+Received: from mail.atheros.com ([12.36.123.2]:22975 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752798AbZFCSfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2009 14:35:53 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 11:35:56 -0700
+Date: Wed, 3 Jun 2009 11:36:02 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: check for existance sta before adding it
+Message-ID: <20090603183602.GD13156@tesla>
+References: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com> <1243974947.7176.9.camel@johannes.local> <43e72e890906021401r2200bad9n1ffbe2c56c3a2c22@mail.gmail.com> <1244012450.7176.15.camel@johannes.local> <20090603180830.GA13156@tesla> <1244053423.22576.2.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1244053423.22576.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <samuel.ortiz@intel.com>
+On Wed, Jun 03, 2009 at 11:23:43AM -0700, Johannes Berg wrote:
+> On Wed, 2009-06-03 at 11:08 -0700, Luis R. Rodriguez wrote:
+> > On Wed, Jun 03, 2009 at 12:00:50AM -0700, Johannes Berg wrote:
+> > > On Tue, 2009-06-02 at 14:01 -0700, Luis R. Rodriguez wrote:
+> > > 
+> > > > Thanks, yeah I see where I was making an incorrect assumption here.
+> > > > 
+> > > > There still is a case here where userpsace can try to add a sta twice
+> > > > and the second parameters passed would be ignored.
+> > > 
+> > > Don't we show that -EEXIST to userspace then? I thought we did.
+> > 
+> > We do, but why don't we *first* try to check for its existence?
+> 
+> Because that's racy -- after the check completes and before we go try to
+> insert a station might have come to life. Well, it might actually be ok
+> due to external factors (AP mode _only_ gets stations from userspace)
+> but it seems better to not rely on that.
 
-While associated, we have to invalidate our key cache if we clear our BSSID
-through siwap.
+I see.
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/wext.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+> What problem were you trying to solve btw?
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/wext.c b/drivers/net/wireless/iwmc3200wifi/wext.c
-index 584c94d..8891949 100644
---- a/drivers/net/wireless/iwmc3200wifi/wext.c
-+++ b/drivers/net/wireless/iwmc3200wifi/wext.c
-@@ -82,6 +82,7 @@ static int iwm_wext_siwap(struct net_device *dev, struct iw_request_info *info,
- 			  struct sockaddr *ap_addr, char *extra)
- {
- 	struct iwm_priv *iwm = ndev_to_iwm(dev);
-+	int ret;
- 
- 	if (iwm->conf.mode == UMAC_MODE_IBSS)
- 		return cfg80211_ibss_wext_siwap(dev, info, ap_addr, extra);
-@@ -104,10 +105,26 @@ static int iwm_wext_siwap(struct net_device *dev, struct iw_request_info *info,
- 	}
- 
- 	if (iwm->umac_profile_active) {
-+		int i;
-+
- 		if (!memcmp(&iwm->umac_profile->bssid[0], iwm->bssid, ETH_ALEN))
- 			return 0;
- 
--		iwm_invalidate_mlme_profile(iwm);
-+		/*
-+		 * If we're clearing the BSSID, and we're associated,
-+		 * we have to clear the keys as they're no longer valid.
-+		 */
-+		if (is_zero_ether_addr(ap_addr->sa_data)) {
-+			for (i = 0; i < IWM_NUM_KEYS; i++)
-+				iwm->keys[i].in_use = 0;
-+
-+		}
-+
-+		ret = iwm_invalidate_mlme_profile(iwm);
-+		if (ret < 0) {
-+			IWM_ERR(iwm, "Couldn't invalidate profile\n");
-+			return ret;
-+		}
- 	}
- 
- 	if (iwm->umac_profile->ssid.ssid_len)
--- 
-1.6.3.1
+Nothing in particular, I was just reviewing sta code path.
 
+  Luis
