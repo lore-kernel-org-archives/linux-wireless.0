@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36867 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761015AbZFJUAf (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40813 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752268AbZFCEDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 16:00:35 -0400
-Date: Wed, 10 Jun 2009 15:55:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
+	Wed, 3 Jun 2009 00:03:17 -0400
+Date: Wed, 3 Jun 2009 01:03:15 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Marcel Holtmann <marcel@holtmann.org>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
-Message-ID: <20090610195527.GE3892@tuxdriver.com>
-References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com> <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com> <3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com> <69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com> <3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com> <1244619027.18481.55.camel@johannes.local> <20090610113158.GA2798@tuxdriver.com> <87ws7jsxqt.fsf@litku.valot.fi>
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+Message-ID: <20090603040315.GA10464@khazad-dum.debian.net>
+References: <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <1243858256.5299.14.camel@johannes.local> <1243867620.3015.17.camel@localhost.localdomain> <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <1243930703.3192.59.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ws7jsxqt.fsf@litku.valot.fi>
+In-Reply-To: <1243930703.3192.59.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 10, 2009 at 10:19:06PM +0300, Kalle Valo wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
+On Tue, 02 Jun 2009, Marcel Holtmann wrote:
+> We just need to fix the platform drivers then. They should not set
+> global states since that is not what they are controlling. They control
 
-> > I'm still a bit "on the fence" regarding this requirement for AP mode.
-> > I think there is a reasonable body of users that would prefer a
-> > not-quite-right AP mode over no AP mode at all.
-> 
-> I understand your point, but the problems from this are so severe that
-> it would just create a headache for everyone, both for the users and for
-> us. Think of what kind of problems randomly loosing broadcast and
-> multicast frames would create: random disconnects, not finding hosts
-> from the local network etc. How would a normal user realise that this is
-> because of broken power save support in the AP?
+We should change things, yes.  So that the platform stores the global
+state.  That was half-broken on the old core (the platform stored the
+state of its own device, which could be out of sync with the global
+state), but the part of it setting the global state is correct.
 
-I agree that it is a problem -- that is why I'm "on the fence"!
+That needs a new in-kernel API to tie the core to platform drivers
+capable of storing global states without causing problems when drivers
+are unloaded, but it is not hard.
 
-> Also deliberately breaking 802.11 specification sounds very wrong to me.
-> We can, and should, aim higher than that.
+As for NVS events, they have a clear use case: to let rfkilld know which
+global states it could leave alone the first time it loads, and which
+ones have to be restored...
 
-> Sorry for not being diplomatic here, but hey, I'm a finn. We are born
-> to be rude. Heritage from the viking era, I guess :)
-
-(Note to the reader, this is an inside joke -- I threatened to run for
-US President and then name Kalle as US Ambassador to the Vikings...have
-you seen him?  The vikings would be scared!)
-
-Finn's aren't rude!  Why Linus is the most diplomatic...hmmm...
-nevermind... :-)
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
