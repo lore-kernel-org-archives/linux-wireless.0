@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6-g21.free.fr ([212.27.42.6]:34949 "EHLO smtp6-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753676AbZFGJY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 05:24:56 -0400
-Message-ID: <4A2B8760.10001@free.fr>
-Date: Sun, 07 Jun 2009 11:24:48 +0200
-From: matthieu castet <castet.matthieu@free.fr>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:36875 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753706AbZFCVig (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2009 17:38:36 -0400
+Date: Wed, 3 Jun 2009 18:38:35 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+Message-ID: <20090603213835.GC22809@khazad-dum.debian.net>
+References: <1243867620.3015.17.camel@localhost.localdomain> <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk> <1243932109.3192.73.camel@localhost.localdomain> <20090603041030.GB10464@khazad-dum.debian.net> <1244008862.4145.10.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Georgy Berdyshev <codingmaster@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 : fix unaligned rx skb
-References: <4A282B92.70609@free.fr> <43e72e890906041353y98a3a13s2b8d60328a9c0c6d@mail.gmail.com> <ee8eb53d0906041416q52812277x7061070d1d9a683c@mail.gmail.com> <200906042340.23997.mb@bu3sch.de> <4A28B3D0.4070201@free.fr>
-In-Reply-To: <4A28B3D0.4070201@free.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1244008862.4145.10.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-matthieu castet wrote:
-> Michael Buesch wrote:
->> On Thursday 04 June 2009 23:16:13 Georgy Berdyshev wrote:
->>> Hi,
->>>
->>> that's the inline version:
->>> -------
->>> mac80211 is checking is the skb is aligned on 32 bit boundary.
->>> But it is checking against ethernet header, whereas Linux expect IP
->>> header aligned.
->>> And ethernet ether size is 6*2+2=14, so aligning ethernet header make
->>> IP header unaligned.
->>>
->>> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
->>> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->>> index 9776f73..0845fb3 100644
->>> --- a/net/mac80211/rx.c
->>> +++ b/net/mac80211/rx.c
->>> @@ -1397,7 +1397,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data 
->>> *rx)
->>>           * mac80211. That also explains the __skb_push()
->>>           * below.
->>>           */
->>> -        align = (unsigned long)skb->data & 3;
->>> +        align = ((unsigned long)(skb->data + sizeof(struct ethhdr))) 
->>> & 3;
->>>          if (align) {
->>>              if (WARN_ON(skb_headroom(skb) < 3)) {
->>>                  dev_kfree_skb(skb);
->>
->> Uhm, can you give a more verbose explanation? Without that I'd say 
->> this patch is plain wrong.
->> What the hell does struct ethhdr have to do with wireless?
->  > This is not ethernet. It's 802.11. There is no such thing as an
->  > ethernet header in a 802.11 packet.
->  >
-> Where are in ieee80211_deliver_skb that is called after 
-> ieee80211_data_to_8023. So it is not 802.11.
-> 
-Do you want more explanation ?
+On Wed, 03 Jun 2009, Marcel Holtmann wrote:
+> any user program with proper rights (remember that /dev/rfkill can now
+> be controlled by Unix permissions and SELinux) can bring up a specific
+> device. That is policy and it belongs in userspace.
 
-Matthieu
+If I hardkill (EPO) the devices, I want them to stay hardkilled, and only a
+system daemon (if that) should be able to mess with that.
+
+I very much doubt I am the only one who see things that way :-)
+
+I'd like to keep working towards that goal (no, we're not there yet), and
+not away from it.
+
+> This of course only works on soft blocked devices. The hard blocked
+> devices stay off. And in case of ThinkPads where the button does the
+> hard block, you can't bring it back from software.
+
+Yes.  But the rfkill core is also meant to bring some band-aid help to the
+devices that the hardware can't kill by itself.  That's good usability.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
