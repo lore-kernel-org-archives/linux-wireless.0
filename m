@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:62309 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbZFRQui (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 12:50:38 -0400
-Received: by pxi27 with SMTP id 27so1214937pxi.33
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 09:50:40 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] libertas: correct card cleanup order in SPI driver
-Date: Thu, 18 Jun 2009 09:51:57 -0700
-Message-Id: <1245343917-15534-1-git-send-email-andrey@cozybit.com>
-In-Reply-To: <20090618081206.GB2770@Chamillionaire.breakpoint.cc>
-References: <20090618081206.GB2770@Chamillionaire.breakpoint.cc>
+Received: from bu3sch.de ([62.75.166.246]:47088 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752268AbZFDVka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 17:40:30 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Georgy Berdyshev <codingmaster@gmail.com>
+Subject: Re: mac80211 : fix unaligned rx skb
+Date: Thu, 4 Jun 2009 23:40:23 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	matthieu castet <castet.matthieu@free.fr>,
+	linux-wireless@vger.kernel.org
+References: <4A282B92.70609@free.fr> <43e72e890906041353y98a3a13s2b8d60328a9c0c6d@mail.gmail.com> <ee8eb53d0906041416q52812277x7061070d1d9a683c@mail.gmail.com>
+In-Reply-To: <ee8eb53d0906041416q52812277x7061070d1d9a683c@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200906042340.23997.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SPI driver does a couple of card cleanup steps in the wrong order on
-module removal.  If IEEE PS is enabled, this results in the card being
-left in IEEE PS mode and subsequent failures to reload the module.  The
-problem is that the surpriseremoved flag is set before calling
-lbs_remove_card, but that function needs to issue a command to exit IEEE
-PS mode (the flag blocks the command path).  In addition, lbs_stop_card
-should be called first because it clears out any pending commands.
+On Thursday 04 June 2009 23:16:13 Georgy Berdyshev wrote:
+> Hi,
+> 
+> that's the inline version:
+> -------
+> mac80211 is checking is the skb is aligned on 32 bit boundary.
+> But it is checking against ethernet header, whereas Linux expect IP
+> header aligned.
+> And ethernet ether size is 6*2+2=14, so aligning ethernet header make
+> IP header unaligned.
+> 
+> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 9776f73..0845fb3 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1397,7 +1397,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+>  		 * mac80211. That also explains the __skb_push()
+>  		 * below.
+>  		 */
+> -		align = (unsigned long)skb->data & 3;
+> +		align = ((unsigned long)(skb->data + sizeof(struct ethhdr))) & 3;
+>  		if (align) {
+>  			if (WARN_ON(skb_headroom(skb) < 3)) {
+>  				dev_kfree_skb(skb);
 
-Tested on a GSPI device with V9 firmware by confirming that we can
-reload the module with or without IEEE PS enabled.
+Uhm, can you give a more verbose explanation? Without that I'd say this patch is plain wrong.
+What the hell does struct ethhdr have to do with wireless?
+This is not ethernet. It's 802.11. There is no such thing as an ethernet header in a 802.11 packet.
 
-Also fix a warning from the wrong uint format in a printk.
-
-V2: use z modifier, thanks Sebastian.
-
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- drivers/net/wireless/libertas/if_spi.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 923ed58..8d8bc0b 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -737,7 +737,7 @@ static int if_spi_c2h_data(struct if_spi_card *card)
- 		goto out;
- 	} else if (len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
- 		lbs_pr_err("%s: error: card has %d bytes of data, but "
--			   "our maximum skb size is %lu\n",
-+			   "our maximum skb size is %zu\n",
- 			   __func__, len, MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
- 		err = -EINVAL;
- 		goto out;
-@@ -1171,12 +1171,13 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
- 
- 	lbs_deb_spi("libertas_spi_remove\n");
- 	lbs_deb_enter(LBS_DEB_SPI);
--	priv->surpriseremoved = 1;
- 
- 	lbs_stop_card(priv);
-+	lbs_remove_card(priv); /* will call free_netdev */
-+
-+	priv->surpriseremoved = 1;
- 	free_irq(spi->irq, card);
- 	if_spi_terminate_spi_thread(card);
--	lbs_remove_card(priv); /* will call free_netdev */
- 	if (card->pdata->teardown)
- 		card->pdata->teardown(spi);
- 	free_if_spi_card(card);
 -- 
-1.5.6.3
-
+Greetings, Michael.
