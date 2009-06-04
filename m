@@ -1,43 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48235
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932131AbZFIMHE (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:44736 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804AbZFDN3b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 08:07:04 -0400
-Date: Tue, 09 Jun 2009 05:07:06 -0700 (PDT)
-Message-Id: <20090609.050706.241520518.davem@davemloft.net>
-To: slapin@ossfans.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, dbaryshkov@gmail.com, sfr@canb.auug.org.au
-Subject: Re: [PULL REQUEST] IEEE 802.15.4 stack: generic parts v4
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <cover.1244498867.git.slapin@ossfans.org>
-References: <cover.1244498867.git.slapin@ossfans.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 4 Jun 2009 09:29:31 -0400
+Received: by bwz9 with SMTP id 9so733840bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 06:29:31 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: maxim@mox.ru
+Date: Thu, 4 Jun 2009 17:29:31 +0400
+Message-ID: <6097c490906040629o9c4f858pf1fa41932ed446fe@mail.gmail.com>
+Subject: [RFC] ieee802154 configuration interface (iz)
+From: Maxim Osipov <maxim.osipov@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sergey Lapin <slapin@ossfans.org>
-Date: Tue,  9 Jun 2009 02:18:46 +0400
+Hello,
 
-> Major changes from previous post:
->  * Changed net/ieee802154/Makefile according to Sam Ravnborg suggestion
-> 
-> The following changes since commit 81ee1bad86bd6752c626018d43a74e3f81f1ae72:
->   Linus Torvalds (1):
->         Merge branch 'for-linus' of git://git.kernel.org/.../viro/vfs-2.6
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/slapin/lowpan.git for-next
+I'm working currently on defining a command line configuration
+interface for ieee802154 stack, keeping in mind further possible
+extensions with ZigBee support, etc.
 
-I can't pull from a tree that is prepared like this.
+Current version below, however we have a heavy discussion regarding
+design of the tool, and main questions are the following:
 
-You have to make a clean clone of the net-next-2.6 GIT tree and
-add your changes on top of that.  When you use a clone of
-Linus's tree, I'm going to end up getting all kinds of changes
-from upstream that I haven't merged into net-next-2.6 yet which
-creates a complete mess.
+1. Is it better to have a single tool for configuration of all
+protocols or one for ieee802154 (iz), one for ZigBee (zb) and so on?
+2. Is it better to have a command defined (like "iz dev wpan0 poll")
+and returning "Not implemented" or not defined at all?
+3. Does it make sense to have a "phy" class? Currently we do not
+provide any netlink interface to ieee802154 PHY, but I consider it may
+be useful a) for testing b) for user-space implementation of certain
+protocols.
 
-I'm going to apply these changes by hand.
+Would appreciate comments and suggestions.
+
+-----
+
+iz [options] [class command]
+
+Options:
+ -d [--debug] - print netlink messages and other debug information
+ -v [--version] - print version
+ -h [--help] - print help
+
+Classes:
+ all - all known object classes
+ phy - radio (master, PHY) interfaces
+ dev - network interfaces (IEEE802.15.4 MAC, ZigBee, ...)
+
+Common commands:
+ list - list all interfaces of class(es)
+ event - monitor events of class(es) from the kernel
+ add <iface> - add interface
+ del <iface> - delete interface
+
+IEEE 802.15.4 PHY specific commands:
+ cca - perform clear channel assignment procedure
+ ed - perform energy detect procedure
+ set-trx-state - change transmitter state
+ get - get PIB value
+ set - set PIB value
+
+ Events are: CCA-CONF, ED-CONF, SET-TRX-STATE-CONF, GET-CONF, SET-CONF
+
+IEEE 802.15.4 MAC specific commands:
+ associate - associate with a network
+ disassociate - disassociate from a network
+ gts - configure guaranteed time slots
+ orphan-response - react to orphan indication
+ reset - reset
+ rx-enable - enable receiver
+ scan - perform scan
+ start - start node
+ sync - synchronize with a beacon
+ poll - poll for data
+ get - get MIB value
+ set - set MIB value
+
+ Events are: ASSOCIATE-IND, ASSOCIATE-CONF, DISASSOCIATE-IND,
+DISASSOCIATE-CONF, BEACON-IND...
+
+ZigBee specific commands:
+ net-discovery - discover networks operating within device visibility
+ net-formation - start a new network as a coordinator
+ permit-join - start accepting devices to a network (router or coordinator)
+ start-router - start router activities (router)
+ ed-scan - request energy detection scan
+ join - join/rejoin a network or change operating channel
+ direct-join - directly join another device to a network
+ leave - leave a network
+ reset - perform reset operation
+ sync - synchronize (with coordinator or router) or check for pending data
+ route-discovery - initiate route discovery
+ get - get NIB or AIB value
+ set - set NIB or AIB value
+
+ Events are: NET-DISCOVERY-CONF, NET-FORMATION-CONF,
+PERMIT-JOINING-CONF, START-ROUTER-CONF, ED-SCAN-CONF, JOIN-IND,
+JOIN-CONF...
+
+Kind regards,
+Maxim
