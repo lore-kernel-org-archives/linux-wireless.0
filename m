@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25838 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751869AbZF3N1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 09:27:21 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 06:27:25 -0700
-Date: Tue, 30 Jun 2009 18:55:48 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 8/8 v3] mac80211: re-add HT disabling
-Message-ID: <20090630132547.GB24667@vasanth-laptop>
-References: <20090630115245.675553951@sipsolutions.net> <20090630115303.111250594@sipsolutions.net>
+Received: from stinky.trash.net ([213.144.137.162]:34559 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674AbZFDPMJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 11:12:09 -0400
+Message-ID: <4A27E448.3040305@trash.net>
+Date: Thu, 04 Jun 2009 17:12:08 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090630115303.111250594@sipsolutions.net>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
+	slapin@ossfans.org
+Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
+ 	802.15.4 devices
+References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>	 <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>	 <1244021964.10665.5.camel@johannes.local>	 <20090603.030911.162861804.davem@davemloft.net>	 <20090603105256.GB20508@doriath.ww600.siemens.net>	 <1244027110.1693.9.camel@johannes.local>	 <20090603122744.GC20508@doriath.ww600.siemens.net>	 <1244124749.22576.71.camel@johannes.local> <bc64b4640906040751i3c64c317i4eedb7d53307092a@mail.gmail.com>
+In-Reply-To: <bc64b4640906040751i3c64c317i4eedb7d53307092a@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 30, 2009 at 05:22:53PM +0530, Johannes Berg wrote:
-> The IEEE80211_STA_TKIP_WEP_USED flag is used internally to
-> disable HT when WEP or TKIP are used. Now that cfg80211 is
-> giving us the required information, we can set the flag
-> appropriately again.
+Dmitry Eremin-Solenikov wrote:
+> 2009/6/4 Johannes Berg <johannes@sipsolutions.net>:
+>> On Wed, 2009-06-03 at 16:27 +0400, Dmitry Eremin-Solenikov wrote:
+>>
+>>>>> +static int ieee802154_nl_put_failure(struct sk_buff *msg)
+>>>>> +{
+>>>>> + void *hdr = genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is right at the start of msg */
+>>>>> + genlmsg_cancel(msg, hdr);
+>>>>> + nlmsg_free(msg);
+>>>>> + return -ENOBUFS;
+>>>>> +}
+>>>> This seems weird.
+>>> Why?
+>> Because it's strange to cancel then free?
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/cfg.c |   15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
+>>From looking at the other code, the usual pattern for netlink is
+> (please, correct me if I'm wrong):
 > 
-> --- wireless-testing.orig/net/mac80211/cfg.c    2009-06-30 13:25:43.000000000 +0200
-> +++ wireless-testing/net/mac80211/cfg.c 2009-06-30 13:25:45.000000000 +0200
-> @@ -1228,7 +1228,7 @@ static int ieee80211_assoc(struct wiphy
->                            struct cfg80211_assoc_request *req)
->  {
->         struct ieee80211_sub_if_data *sdata;
-> -       int ret;
-> +       int ret, i;
+> int fill (....)
+> {
+>    genlmsg_put();
+>    NLA_PUT(...)
+>    NLA_PUT(...)
+>    return genlmsg_end();
 > 
->         sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> nla_put_failure:
+>    genlmsg_cancel();
+>    return -EMSGSIZE;
+> }
 > 
-> @@ -1236,6 +1236,19 @@ static int ieee80211_assoc(struct wiphy
->             !(sdata->u.mgd.flags & IEEE80211_STA_AUTHENTICATED))
->                 return -ENOLINK; /* not authenticated */
+> int cmd(...)
+> {
+>     int rc;
+>     nlmsg_new();
 > 
-> +       sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
-> +
-> +       if (req->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP40 ||
-> +           req->crypto.cipher_group == WLAN_CIPHER_SUITE_TKIP ||
-> +           req->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP104)
-> +               sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
+>     rc = fill();
+>     if (rc < 0)
+>         goto out;
+> 
+>     genlmsg_unicast();
+> 
+> out:
+>     nlmsg_free();
+>     return -ENOBUFS;
+> }
+> 
+> This is equivalent to our code:
+> 
+> sk_buff *new()
+> {
+>    msg = nlmsg_new();
+>    genlmsg_put();
+>    return msg;
+> }
 
-No, we have to disable HT only when WEP/TKIP is used as pairwise,
-not used as group cipher.
+canceling messages is only necessary in fill functions that are
+also used for dumps, where as many elements are stuffed in the
+skb as possible. When the last element doesn't completely fit,
+its removed again (canceled) and put into the next skb.
 
-Vasanth
