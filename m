@@ -1,89 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:52090 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375AbZFSKRq (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60366 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbZFDSCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 06:17:46 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/2] ath9k: remove ath_rx_ps_back_to_sleep helper
-Date: Fri, 19 Jun 2009 12:17:48 +0200
-Message-Id: <1245406668-4715-2-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1245406668-4715-1-git-send-email-juhosg@openwrt.org>
-References: <1245406668-4715-1-git-send-email-juhosg@openwrt.org>
+	Thu, 4 Jun 2009 14:02:54 -0400
+Subject: Re: [PATCH] rfkill: always init poll delayed work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <4A2809F8.6020006@lwfinger.net>
+References: <1244015729.7176.28.camel@johannes.local>
+	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>
+	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>
+	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>
+	 <4A27F649.9080203@lwfinger.net> <1244133087.22576.86.camel@johannes.local>
+	 <4A27FB8D.5000605@lwfinger.net> <1244134635.22576.88.camel@johannes.local>
+	 <4A2809F8.6020006@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Q30pq/nZPABojBHsfmCc"
+Date: Thu, 04 Jun 2009 20:02:52 +0200
+Message-Id: <1244138572.22576.90.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helper only clears the SC_OP_WAIT_FOR_{BEACON,CAB} flags.
-Remove it and clear these flags directly in the approptiate
-places instead.
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/recv.c |   17 ++++++-----------
- 1 files changed, 6 insertions(+), 11 deletions(-)
+--=-Q30pq/nZPABojBHsfmCc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a681f88..065aa0f 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -505,11 +505,6 @@ static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
- 	return false;
- }
- 
--static void ath_rx_ps_back_to_sleep(struct ath_softc *sc)
--{
--	sc->sc_flags &= ~(SC_OP_WAIT_FOR_BEACON | SC_OP_WAIT_FOR_CAB);
--}
--
- static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- {
- 	struct ieee80211_mgmt *mgmt;
-@@ -521,6 +516,8 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- 	if (memcmp(sc->curbssid, mgmt->bssid, ETH_ALEN) != 0)
- 		return; /* not from our current AP */
- 
-+	sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
-+
- 	if (sc->sc_flags & SC_OP_BEACON_SYNC) {
- 		sc->sc_flags &= ~SC_OP_BEACON_SYNC;
- 		DPRINTF(sc, ATH_DBG_PS, "Reconfigure Beacon timers based on "
-@@ -545,11 +542,9 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- 		 * fails to send a frame indicating that all CAB frames have
- 		 * been delivered.
- 		 */
-+		sc->sc_flags &= ~SC_OP_WAIT_FOR_CAB;
- 		DPRINTF(sc, ATH_DBG_PS, "PS wait for CAB frames timed out\n");
- 	}
--
--	/* No more broadcast/multicast frames to be received at this point. */
--	ath_rx_ps_back_to_sleep(sc);
- }
- 
- static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
-@@ -567,13 +562,13 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
- 		  ieee80211_is_action(hdr->frame_control)) &&
- 		 is_multicast_ether_addr(hdr->addr1) &&
- 		 !ieee80211_has_moredata(hdr->frame_control)) {
--		DPRINTF(sc, ATH_DBG_PS, "All PS CAB frames received, back to "
--			"sleep\n");
- 		/*
- 		 * No more broadcast/multicast frames to be received at this
- 		 * point.
- 		 */
--		ath_rx_ps_back_to_sleep(sc);
-+		sc->sc_flags &= ~SC_OP_WAIT_FOR_CAB;
-+		DPRINTF(sc, ATH_DBG_PS, "All PS CAB frames received, back to "
-+			"sleep\n");
- 	} else if ((sc->sc_flags & SC_OP_WAIT_FOR_PSPOLL_DATA) &&
- 		   !is_multicast_ether_addr(hdr->addr1) &&
- 		   !ieee80211_has_morefrags(hdr->frame_control)) {
--- 
-1.5.3.2
+On Thu, 2009-06-04 at 12:52 -0500, Larry Finger wrote:
+> Johannes Berg wrote:
+> >=20
+> > Right. So we already have the problem in the old code, we just don't
+> > notice much... can we take the core up, check, and put it down again? O=
+r
+> > I think it's GPIOs, can we query those via chipcommon when the 802.11
+> > core is down?
+>=20
+> If you mean the check for the switch, that is an MMIO access. I think
+> that we can access it even if the 802.11 core is down.
+
+I do mean that, but I don't think you can access the 802.11 core's MMIO
+while it's down. I'm out of ideas expect taking the core up, checking,
+and down again periodically.
+
+johannes
+
+--=-Q30pq/nZPABojBHsfmCc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKAxJAAoJEODzc/N7+QmaB78P/R07UaTRi9rBA4nVv/6k6hm3
+7KqUuZg13Rc15g6LaytRNEaH5Rx9VdX91VXsam6YRFvoHFnBFwp1Aao3V1mBmqRm
+v2q8TX9OOzhZUc5iHTE2znDLMebHgiPDVU7io9ofXY4ynwglmVEbr7czUjX/OnJy
+O/xsZfkiC5ZuBrqNFzUrwNXxiD3pVb7D5r4T1DrPabmYBgkHX6YMgrwjCgUZMRRS
+m/FKcos9m7/yk0OpSP/f++4Ij3y5mSbtxiXXBs0RRyJb+RsquBaBvDNKDktwPNQh
+dHQcYMlEOUPY03d4SZpHxLLrrqlBy6t2an0yjf66oYJ9AOahQzuJsGjnS5C577Gb
+zbgcSttO59tvVMCNA2nv33LIp3T2+vBDjiHyDqQc4sz3V/rMOmVC2JRlFvbAjGPd
+IUPP6iWtOLSNvbPL5kP5h6tlIivl+HGE4qkegIDAlgwasignoOHXZzvY8z9DHc37
+0ed4OIS4PBQWnP2gkdblVAA/lkfS8Am611orbgMtmT3axcE+Z/2qcoYRQRhJ3HVY
+XSun258s3wkHiNWPIA2WVb/3+6O3AzE0AOnU6j/T5UZqNxpcnd8nTGoh7CahgV7e
+xFsA4nOKlPibwWvlBB+f7oAUUyIg74mhVVpjoFeXgxzVo2VuvVeL7SqT4om9mDiO
+hH8TR6fEKl4e7waF/3AL
+=ixHD
+-----END PGP SIGNATURE-----
+
+--=-Q30pq/nZPABojBHsfmCc--
 
