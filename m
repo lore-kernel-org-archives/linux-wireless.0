@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55220 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752187AbZFAHTU (ORCPT
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:57709 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760097AbZFDQ25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 03:19:20 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	alan-jenkins@tuffmail.co.uk,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243804744.4714.23.camel@localhost.localdomain>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
-	 <1243778069.5299.0.camel@johannes.local>
-	 <1243796628.6570.37.camel@localhost.localdomain>
-	 <1243804744.4714.23.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 01 Jun 2009 09:18:58 +0200
-Message-Id: <1243840738.3015.7.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Thu, 4 Jun 2009 12:28:57 -0400
+Message-ID: <4A27F649.9080203@lwfinger.net>
+Date: Thu, 04 Jun 2009 11:28:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] rfkill: always init poll delayed work
+References: <1244015729.7176.28.camel@johannes.local>	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>
+In-Reply-To: <1244132396.22576.82.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Johannes Berg wrote:
 
-> > > > How should userspace test CONFIG_RFKILL_INPUT to determine whether
-> > > > it's safe to start the daemon?  With the old core, debian-eeepc
-> > > > scripts check if the module rfkill-input exists (which should work
-> > > > even if it's built in).  If it exists, the scripts don't perform any
-> > > > rfkill actions.  (Yeah, according to the doc this is not allowed
-> > > > because the scripts don't use "claim", but you can see how it's
-> > > > useful).
-> > > > 
-> > > > The new rfkill-input isn't a module, so I'm not sure how your daemon
-> > > > would test for it.
-> > > 
-> > > Maybe we should add an ioctl that disables rfkill-input if present.
-> > 
-> > I am against it. Can we just add a module parameter that allows us to
-> > disable it. I am against cluttering a new interface with legacy stuff
-> > since we are removing rfkill-input and replacing it by rfkilld anyway in
-> > a near future (meaning when I am back from vacation).
-> 
-> Module parameter to what?  Module parameters are almost always the wrong
-> thing to do.  Or, just don't built rfkill_input it into your kernel
+> But this is without the patch?! If yes that would confuse me.
 
-we will make rfkill-input go away. This is just for the interim to
-detect if rfkill-input is supported by the kernel or not. And it allows
-to compile it into the kernel and disable it via modprobe.conf.
+My bad. That test was with the patch "[RFT 3/3] b43/legacy: port to
+cfg80211 rfkill". Without it, everything works just fine. The LED
+works and the radio follows the switch.
 
-Regards
+Sorry for the noise.
 
-Marcel
+Now that I know the problem is in the patch, it should be easier to debug.
 
-
+Larry
