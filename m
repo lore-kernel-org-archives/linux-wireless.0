@@ -1,112 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:17332 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752833AbZFHW7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 18:59:48 -0400
-Received: from [192.168.0.22] (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by smtprelay2.cesmail.net (Postfix) with ESMTPSA id 17BB234C6A
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Jun 2009 19:03:56 -0400 (EDT)
-Subject: BUG at net/wireless/reg.c:2132 on PowerPC
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 08 Jun 2009 18:59:48 -0400
-Message-Id: <1244501988.25158.57.camel@mj>
-Mime-Version: 1.0
+Received: from fmailhost01.isp.att.net ([207.115.11.51]:62338 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951AbZFDRwz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 13:52:55 -0400
+Message-ID: <4A2809F8.6020006@lwfinger.net>
+Date: Thu, 04 Jun 2009 12:52:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] rfkill: always init poll delayed work
+References: <1244015729.7176.28.camel@johannes.local>	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>	 <4A27F649.9080203@lwfinger.net> <1244133087.22576.86.camel@johannes.local>	 <4A27FB8D.5000605@lwfinger.net> <1244134635.22576.88.camel@johannes.local>
+In-Reply-To: <1244134635.22576.88.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Johannes Berg wrote:
+> 
+> Right. So we already have the problem in the old code, we just don't
+> notice much... can we take the core up, check, and put it down again? Or
+> I think it's GPIOs, can we query those via chipcommon when the 802.11
+> core is down?
 
-After upgrading a PowerPC system from Fedora 10 to Fedora 11, I started
-getting a BUG on startup.  I'm using a self-compiled kernel from
-writeless-testing.git.  The current source is affected, and so is an
-older revision identified as 2.6.30-rc6-wl.
+If you mean the check for the switch, that is an MMIO access. I think
+that we can access it even if the 802.11 core is down.
 
-The BUS causes a long wait on startup (about 3 minutes).  Perhaps it's
-caused by udev waiting for something.
+Larry
 
-mac80211 is compiled into the kernel, but ath5k is not:
-
-$ lsmod
-Module                  Size  Used by
-hfs                    52980  1 
-ath5k                 130428  0 
-ath                     7564  1 ath5k
-
-The system has 2 Atheros devices:
-
-01:02.0 Ethernet controller: Atheros Communications Inc. Atheros AR5001X+ Wireless Network Adapter (rev 01)
-01:03.0 Network controller: Atheros Communications Inc. Atheros AR5001X+ Wireless Network Adapter (rev 01)
-
-That's the relevant part of the kernel log:
-
-udevd version 127 started
-ath5k 0000:01:02.0: enabling device (0014 -> 0016)
-ath5k 0000:01:02.0: registered as 'phy0'
-ath: EEPROM regdomain: 0x0
-ath: EEPROM indicates default country code should be used
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-phy0: Selected rate control algorithm 'minstrel'
-ath5k phy0: Atheros AR2414 chip found (MAC: 0x79, PHY: 0x45)
-ath5k 0000:01:03.0: enabling device (0014 -> 0016)
-ath5k 0000:01:03.0: registered as 'phy1'
-ath: EEPROM regdomain: 0x0
-ath: EEPROM indicates default country code should be used
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-cfg80211: Calling CRDA for country: US
-phy1: Selected rate control algorithm 'minstrel'
-ath5k phy1: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-ath5k phy1: RF2112B 2GHz radio found (0x46)
-udev: renamed network interface wlan0 to wlan1
-udev: renamed network interface wlan1_rename to wlan0
-------------[ cut here ]------------
-kernel BUG at /home/proski/src/linux-2.6/net/wireless/reg.c:2132!
-Oops: Exception in kernel mode, sig: 5 [#1]
-PowerMac
-Modules linked in: ath5k ath [last unloaded: scsi_wait_scan]
-NIP: c02f3eac LR: c02f3d08 CTR: 00000000
-REGS: ef107aa0 TRAP: 0700   Not tainted  (2.6.30-rc8-wl)
-MSR: 00029032 <EE,ME,CE,IR,DR>  CR: 88002442  XER: 20000000
-TASK = ef84acb0[834] 'crda' THREAD: ef106000
-GPR00: ef953840 ef107b50 ef84acb0 ef1380bc 00000006 c035a5c8 ef107b90 c035a5c8 
-GPR08: 00080005 efb68980 c0445628 ef130004 28002422 10019ce0 10012d3c 00000001 
-GPR16: 1070b2ac 00000005 48023558 1070b380 4802304c 00000000 ef107ddc c035a5c8 
-GPR24: ef107b78 c0443350 ef8bcb00 00000005 ef138080 c04a6a70 c04a0000 ef8bcb00 
-NIP [c02f3eac] set_regdom+0x4c4/0x4ec
-LR [c02f3d08] set_regdom+0x320/0x4ec
-Call Trace:
-[ef107b50] [c02f3d08] set_regdom+0x320/0x4ec (unreliable)
-[ef107b70] [c02f9d10] nl80211_set_reg+0x140/0x2d0
-[ef107bc0] [c02aa2b8] genl_rcv_msg+0x204/0x228
-[ef107c10] [c02a97cc] netlink_rcv_skb+0xe8/0x10c
-[ef107c30] [c02aa094] genl_rcv+0x3c/0x5c
-[ef107c40] [c02a9050] netlink_unicast+0x308/0x36c
-[ef107c80] [c02a92bc] netlink_sendmsg+0x208/0x2f0
-[ef107cd0] [c0282048] sock_sendmsg+0xac/0xe4
-[ef107db0] [c02822b4] sys_sendmsg+0x234/0x2d8
-[ef107f00] [c0283a88] sys_socketcall+0x108/0x258
-[ef107f40] [c0012790] ret_from_syscall+0x0/0x38
---- Exception: c01 at 0xfa6b3b4
-    LR = 0xfb4b5d4
-Instruction dump:
-80690000 4bffc1e9 2c030000 4182003c 88a30039 88830038 3c60c03c 38632a18 
-4802c20d 4bfffed0 7f83e378 8403003c <0f000000> 7fe4fb78 4bffe6d1 7c7b1b79 
----[ end trace c8eebdfbe3eb31de ]---
-
-net/wireless/reg.c:2132 is:
-
-BUG_ON(request_wiphy->regd);
-
-An x86_64 running Fedora 11 and the current wireless-testing kernel
-doesn't exhibit this behavior.
-
--- 
-Regards,
-Pavel Roskin
