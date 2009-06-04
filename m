@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57915
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751775AbZFJAtu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53419 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796AbZFDApg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 20:49:50 -0400
-Date: Tue, 09 Jun 2009 17:49:52 -0700 (PDT)
-Message-Id: <20090609.174952.40068461.davem@davemloft.net>
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, sfr@canb.auug.org.au,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rfkill: include err.h
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1244555812.4672.9.camel@johannes.local>
-References: <1244555812.4672.9.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 3 Jun 2009 20:45:36 -0400
+Date: Wed, 3 Jun 2009 20:41:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <samuel@sortiz.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>, yi.zhu@intel.com
+Subject: Re: [PATCH] cfg80211: fix Kconfig for users of cfg80211
+Message-ID: <20090604004127.GA2228@tuxdriver.com>
+References: <1244046631.4862.34.camel@johannes.local> <1244073490.2723.3.camel@sortiz-mobl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1244073490.2723.3.camel@sortiz-mobl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 09 Jun 2009 15:56:52 +0200
-
-> Since we use ERR_PTR and similar macros, we need to include linux/err.h.
+On Thu, Jun 04, 2009 at 01:58:09AM +0200, Samuel Ortiz wrote:
+> Hi Johannes
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> On Wed, 2009-06-03 at 18:30 +0200, Johannes Berg wrote:
+> > * iwm doesn't depend on cfg80211 or wireless extensions
+> This one will conflict with a patch Yi sent a week ago.
+> Dave Miller applied it to his net-next-2.6 tree, commit
+> d0fc1d5e3fe869f8a32a2bc1dd02d8383a057164.
+> See also:
+> http://marc.info/?l=linux-wireless&m=124331653022408&w=2
 
-I'm applying this directly to net-next-2.6 to fix the -next
-build.
+Don't worry, I have the conflict resolved in wireless-next-2.6...
 
-Please submit the more critical build fixes for regressions
-introduced by the wireless tree direclty to me in the future
-thanks.
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
