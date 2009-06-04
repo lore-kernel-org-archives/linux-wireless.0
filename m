@@ -1,775 +1,774 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:48572 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507AbZFCXVR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51902 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755547AbZFDQ2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 19:21:17 -0400
-Date: Thu, 4 Jun 2009 03:12:48 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	sfr@canb.auug.org.au, slapin@ossfans.org
-Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
-	802.15.4 devices
-Message-ID: <20090603231248.GA32561@doriath.ww600.siemens.net>
-References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com> <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com> <1244021964.10665.5.camel@johannes.local> <20090603.030911.162861804.davem@davemloft.net> <20090603105256.GB20508@doriath.ww600.siemens.net> <1244027110.1693.9.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244027110.1693.9.camel@johannes.local>
+	Thu, 4 Jun 2009 12:28:08 -0400
+Subject: [PATCH] iwlwifi: port to cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Content-Type: text/plain
+Date: Thu, 04 Jun 2009 18:26:06 +0200
+Message-Id: <1244132766.22576.85.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This ports the iwlwifi rfkill code to the new API offered by
+cfg80211 and thus removes a lot of useless stuff. The soft-
+rfkill is completely removed since that is now handled by
+setting the interfaces down.
 
-This doesn't address all the comments all comments by Johannes (as I
-didn't understood the two last one), but I'd like to post this heavily
-updated version.
-
->From 1aae1d7a60b104d271082c7612d1b9b9314c5949 Mon Sep 17 00:00:00 2001
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Date: Thu, 4 Jun 2009 03:09:42 +0400
-Subject: [PATCH 4/6] net: add NL802154 interface for configuration of 802.15.4 devices
-
-Add a netlink interface for configuration of IEEE 802.15.4 device. Also this
-interface specifies events notification sent by devices towards higher layers.
-
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Tested-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- include/net/ieee802154/nl802154.h |  137 +++++++++++
- net/ieee802154/Makefile           |    3 +-
- net/ieee802154/netlink.c          |  489 +++++++++++++++++++++++++++++++++++++
- net/ieee802154/nl_policy.c        |   65 +++++
- 4 files changed, 693 insertions(+), 1 deletions(-)
- create mode 100644 include/net/ieee802154/nl802154.h
- create mode 100644 net/ieee802154/netlink.c
- create mode 100644 net/ieee802154/nl_policy.c
+Net code removal, better behaviour to userspace -- win :)
+We would like to see this in .31 if possible.
 
-diff --git a/include/net/ieee802154/nl802154.h b/include/net/ieee802154/nl802154.h
-new file mode 100644
-index 0000000..0b03979
---- /dev/null
-+++ b/include/net/ieee802154/nl802154.h
-@@ -0,0 +1,137 @@
-+/*
-+ * nl802154.h
-+ *
-+ * Copyright (C) 2007, 2008 Siemens AG
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ */
-+
-+#ifndef IEEE802154_NL_H
-+#define IEEE802154_NL_H
-+
-+#ifdef __KERNEL__
-+#include <net/netlink.h>
-+#endif
-+
-+#define IEEE802154_NL_NAME "802.15.4 MAC"
-+#define IEEE802154_MCAST_COORD_NAME "coordinator"
-+#define IEEE802154_MCAST_BEACON_NAME "beacon"
-+
-+enum {
-+	__IEEE802154_ATTR_INVALID,
-+
-+	IEEE802154_ATTR_DEV_NAME,
-+	IEEE802154_ATTR_DEV_INDEX,
-+
-+	IEEE802154_ATTR_STATUS,
-+
-+	IEEE802154_ATTR_SHORT_ADDR,
-+	IEEE802154_ATTR_HW_ADDR,
-+	IEEE802154_ATTR_PAN_ID,
-+
-+	IEEE802154_ATTR_CHANNEL,
-+
-+	IEEE802154_ATTR_COORD_SHORT_ADDR,
-+	IEEE802154_ATTR_COORD_HW_ADDR,
-+	IEEE802154_ATTR_COORD_PAN_ID,
-+
-+	IEEE802154_ATTR_SRC_SHORT_ADDR,
-+	IEEE802154_ATTR_SRC_HW_ADDR,
-+	IEEE802154_ATTR_SRC_PAN_ID,
-+
-+	IEEE802154_ATTR_DEST_SHORT_ADDR,
-+	IEEE802154_ATTR_DEST_HW_ADDR,
-+	IEEE802154_ATTR_DEST_PAN_ID,
-+
-+	IEEE802154_ATTR_CAPABILITY,
-+	IEEE802154_ATTR_REASON,
-+	IEEE802154_ATTR_SCAN_TYPE,
-+	IEEE802154_ATTR_CHANNELS,
-+	IEEE802154_ATTR_DURATION,
-+	IEEE802154_ATTR_ED_LIST,
-+	IEEE802154_ATTR_BCN_ORD,
-+	IEEE802154_ATTR_SF_ORD,
-+	IEEE802154_ATTR_PAN_COORD,
-+	IEEE802154_ATTR_BAT_EXT,
-+	IEEE802154_ATTR_COORD_REALIGN,
-+	IEEE802154_ATTR_SEC,
-+
-+	__IEEE802154_ATTR_MAX,
-+};
-+
-+#define IEEE802154_ATTR_MAX (__IEEE802154_ATTR_MAX - 1)
-+
-+extern struct nla_policy ieee802154_policy[];
-+
-+/* commands */
-+/* REQ should be responded with CONF
-+ * and INDIC with RESP
-+ */
-+enum {
-+	__IEEE802154_COMMAND_INVALID,
-+
-+	IEEE802154_ASSOCIATE_REQ,
-+	IEEE802154_ASSOCIATE_CONF,
-+	IEEE802154_DISASSOCIATE_REQ,
-+	IEEE802154_DISASSOCIATE_CONF,
-+	IEEE802154_GET_REQ,
-+	IEEE802154_GET_CONF,
-+	IEEE802154_RESET_REQ,
-+	IEEE802154_RESET_CONF,
-+	IEEE802154_SCAN_REQ,
-+	IEEE802154_SCAN_CONF,
-+	IEEE802154_SET_REQ,
-+	IEEE802154_SET_CONF,
-+	IEEE802154_START_REQ,
-+	IEEE802154_START_CONF,
-+	IEEE802154_SYNC_REQ,
-+	IEEE802154_POLL_REQ,
-+	IEEE802154_POLL_CONF,
-+
-+	IEEE802154_ASSOCIATE_INDIC,
-+	IEEE802154_ASSOCIATE_RESP,
-+	IEEE802154_DISASSOCIATE_INDIC,
-+	IEEE802154_BEACON_NOTIFY_INDIC,
-+	IEEE802154_ORPHAN_INDIC,
-+	IEEE802154_ORPHAN_RESP,
-+	IEEE802154_COMM_STATUS_INDIC,
-+	IEEE802154_SYNC_LOSS_INDIC,
-+
-+	IEEE802154_GTS_REQ, /* Not supported yet */
-+	IEEE802154_GTS_INDIC, /* Not supported yet */
-+	IEEE802154_GTS_CONF, /* Not supported yet */
-+	IEEE802154_RX_ENABLE_REQ, /* Not supported yet */
-+	IEEE802154_RX_ENABLE_CONF, /* Not supported yet */
-+
-+	__IEEE802154_CMD_MAX,
-+};
-+
-+#define IEEE802154_CMD_MAX (__IEEE802154_CMD_MAX - 1)
-+
-+
-+#ifdef __KERNEL__
-+struct net_device;
-+struct ieee802154_addr;
-+
-+int ieee802154_nl_assoc_indic(struct net_device *dev, struct ieee802154_addr *addr, u8 cap);
-+int ieee802154_nl_assoc_confirm(struct net_device *dev, u16 short_addr, u8 status);
-+int ieee802154_nl_disassoc_indic(struct net_device *dev, struct ieee802154_addr *addr, u8 reason);
-+int ieee802154_nl_disassoc_confirm(struct net_device *dev, u8 status);
-+int ieee802154_nl_scan_confirm(struct net_device *dev, u8 status, u8 scan_type, u32 unscanned,
-+		u8 *edl/*, struct list_head *pan_desc_list */);
-+int ieee802154_nl_beacon_indic(struct net_device *dev, u16 panid, u16 coord_addr); /* TODO */
-+#endif
-+
-+#endif
-diff --git a/net/ieee802154/Makefile b/net/ieee802154/Makefile
-index cb88054..0b11995 100644
---- a/net/ieee802154/Makefile
-+++ b/net/ieee802154/Makefile
-@@ -1,4 +1,5 @@
--obj-$(CONFIG_IEEE802154) +=	af_802154.o
-+obj-$(CONFIG_IEEE802154) +=	nl802154.o af_802154.o
-+nl802154-objs		:= netlink.o nl_policy.o
- af_802154-objs		:= af_ieee802154.o raw.o dgram.o
+ drivers/net/wireless/iwlwifi/Kconfig        |    4 
+ drivers/net/wireless/iwlwifi/Makefile       |    1 
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    5 -
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   42 ++------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  138 ----------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   16 ---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    5 -
+ drivers/net/wireless/iwlwifi/iwl-rfkill.c   |  131 --------------------------
+ drivers/net/wireless/iwlwifi/iwl-rfkill.h   |   48 ---------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   41 +-------
+ 11 files changed, 19 insertions(+), 414 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/Kconfig	2009-06-03 08:41:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/Kconfig	2009-06-03 08:43:51.000000000 +0200
+@@ -10,10 +10,6 @@ config IWLWIFI_LEDS
+ 	bool "Enable LED support in iwlagn and iwl3945 drivers"
+ 	depends on IWLWIFI
  
- EXTRA_CFLAGS += -Wall -DDEBUG
-diff --git a/net/ieee802154/netlink.c b/net/ieee802154/netlink.c
-new file mode 100644
-index 0000000..6163db6
---- /dev/null
-+++ b/net/ieee802154/netlink.c
-@@ -0,0 +1,489 @@
-+/*
-+ * Netlink inteface for IEEE 802.15.4 stack
-+ *
-+ * Copyright 2007, 2008 Siemens AG
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Written by:
-+ * Sergey Lapin <sergey.lapin@siemens.com>
-+ * Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/if_arp.h>
-+#include <net/netlink.h>
-+#include <net/genetlink.h>
-+#include <linux/netdevice.h>
-+#include <net/ieee802154/af_ieee802154.h>
-+#define IEEE802154_NL_WANT_POLICY
-+#include <net/ieee802154/nl802154.h>
-+#include <net/ieee802154/netdevice.h>
-+
-+static unsigned int ieee802154_seq_num;
-+
-+static struct genl_family ieee802154_coordinator_family = {
-+	.id		= GENL_ID_GENERATE,
-+	.hdrsize	= 0,
-+	.name		= IEEE802154_NL_NAME,
-+	.version	= 1,
-+	.maxattr	= IEEE802154_ATTR_MAX,
-+};
-+
-+static struct genl_multicast_group ieee802154_coord_mcgrp = {
-+	.name		= IEEE802154_MCAST_COORD_NAME,
-+};
-+
-+static struct genl_multicast_group ieee802154_beacon_mcgrp = {
-+	.name		= IEEE802154_MCAST_BEACON_NAME,
-+};
-+
-+/* Requests to userspace */
-+static struct sk_buff *ieee802154_nl_create(int flags, u8 req)
-+{
-+	void *hdr;
-+	struct sk_buff *msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
-+
-+	if (!msg)
-+		return NULL;
-+
-+	hdr = genlmsg_put(msg, 0, ieee802154_seq_num++, &ieee802154_coordinator_family, flags, req);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return NULL;
-+	}
-+
-+	return msg;
-+}
-+
-+static int ieee802154_nl_finish(struct sk_buff *msg)
-+{
-+	void *hdr = genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is right at the start of msg */
-+
-+	if (!genlmsg_end(msg, hdr))
-+		goto out;
-+
-+	return genlmsg_multicast(msg, 0, ieee802154_coord_mcgrp.id, GFP_ATOMIC);
-+out:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+static int ieee802154_nl_put_failure(struct sk_buff *msg)
-+{
-+	void *hdr = genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is right at the start of msg */
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+int ieee802154_nl_assoc_indic(struct net_device *dev, struct ieee802154_addr *addr, u8 cap)
-+{
-+	struct sk_buff *msg;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	if (addr->addr_type != IEEE802154_ADDR_LONG) {
-+		pr_err("%s: received non-long source address!\n", __func__);
-+		return -EINVAL;
-+	}
-+
-+	msg = ieee802154_nl_create(/* flags*/ 0, IEEE802154_ASSOCIATE_INDIC);
-+	if (!msg)
-+		return -ENOBUFS;
-+
-+	NLA_PUT_STRING(msg, IEEE802154_ATTR_DEV_NAME, dev->name);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_DEV_INDEX, dev->ifindex);
-+	NLA_PUT(msg, IEEE802154_ATTR_HW_ADDR, IEEE802154_ADDR_LEN, dev->dev_addr);
-+
-+	NLA_PUT(msg, IEEE802154_ATTR_SRC_HW_ADDR, IEEE802154_ADDR_LEN, addr->hwaddr);
-+
-+	NLA_PUT_U8(msg, IEEE802154_ATTR_CAPABILITY, cap);
-+
-+	return ieee802154_nl_finish(msg);
-+
-+nla_put_failure:
-+	return ieee802154_nl_put_failure(msg);
-+}
-+EXPORT_SYMBOL(ieee802154_nl_assoc_indic);
-+
-+int ieee802154_nl_assoc_confirm(struct net_device *dev, u16 short_addr, u8 status)
-+{
-+	struct sk_buff *msg;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	msg = ieee802154_nl_create(/* flags*/ 0, IEEE802154_ASSOCIATE_CONF);
-+	if (!msg)
-+		return -ENOBUFS;
-+
-+	NLA_PUT_STRING(msg, IEEE802154_ATTR_DEV_NAME, dev->name);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_DEV_INDEX, dev->ifindex);
-+	NLA_PUT(msg, IEEE802154_ATTR_HW_ADDR, IEEE802154_ADDR_LEN, dev->dev_addr);
-+
-+	NLA_PUT_U16(msg, IEEE802154_ATTR_SHORT_ADDR, short_addr);
-+	NLA_PUT_U8(msg, IEEE802154_ATTR_STATUS, status);
-+
-+	return ieee802154_nl_finish(msg);
-+
-+nla_put_failure:
-+	return ieee802154_nl_put_failure(msg);
-+}
-+EXPORT_SYMBOL(ieee802154_nl_assoc_confirm);
-+
-+int ieee802154_nl_disassoc_indic(struct net_device *dev, struct ieee802154_addr *addr, u8 reason)
-+{
-+	struct sk_buff *msg;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	msg = ieee802154_nl_create(/* flags*/ 0, IEEE802154_DISASSOCIATE_INDIC);
-+	if (!msg)
-+		return -ENOBUFS;
-+
-+	NLA_PUT_STRING(msg, IEEE802154_ATTR_DEV_NAME, dev->name);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_DEV_INDEX, dev->ifindex);
-+	NLA_PUT(msg, IEEE802154_ATTR_HW_ADDR, IEEE802154_ADDR_LEN, dev->dev_addr);
-+
-+	if (addr->addr_type == IEEE802154_ADDR_LONG)
-+		NLA_PUT(msg, IEEE802154_ATTR_SRC_HW_ADDR, IEEE802154_ADDR_LEN, addr->hwaddr);
-+	else
-+		NLA_PUT_U16(msg, IEEE802154_ATTR_SRC_SHORT_ADDR, addr->short_addr);
-+
-+	NLA_PUT_U8(msg, IEEE802154_ATTR_REASON, reason);
-+
-+	return ieee802154_nl_finish(msg);
-+
-+nla_put_failure:
-+	return ieee802154_nl_put_failure(msg);
-+}
-+EXPORT_SYMBOL(ieee802154_nl_disassoc_indic);
-+
-+int ieee802154_nl_disassoc_confirm(struct net_device *dev, u8 status)
-+{
-+	struct sk_buff *msg;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	msg = ieee802154_nl_create(/* flags*/ 0, IEEE802154_DISASSOCIATE_CONF);
-+	if (!msg)
-+		return -ENOBUFS;
-+
-+	NLA_PUT_STRING(msg, IEEE802154_ATTR_DEV_NAME, dev->name);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_DEV_INDEX, dev->ifindex);
-+	NLA_PUT(msg, IEEE802154_ATTR_HW_ADDR, IEEE802154_ADDR_LEN, dev->dev_addr);
-+
-+	NLA_PUT_U8(msg, IEEE802154_ATTR_STATUS, status);
-+
-+	return ieee802154_nl_finish(msg);
-+
-+nla_put_failure:
-+	return ieee802154_nl_put_failure(msg);
-+}
-+EXPORT_SYMBOL(ieee802154_nl_disassoc_confirm);
-+
-+int ieee802154_nl_beacon_indic(struct net_device *dev, u16 panid, u16 coord_addr) /* TODO */
-+{
-+	struct sk_buff *msg;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	msg = ieee802154_nl_create(/* flags*/ 0, IEEE802154_BEACON_NOTIFY_INDIC);
-+	if (!msg)
-+		return -ENOBUFS;
-+
-+	NLA_PUT_STRING(msg, IEEE802154_ATTR_DEV_NAME, dev->name);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_DEV_INDEX, dev->ifindex);
-+	NLA_PUT(msg, IEEE802154_ATTR_HW_ADDR, IEEE802154_ADDR_LEN, dev->dev_addr);
-+	NLA_PUT_U16(msg, IEEE802154_ATTR_COORD_SHORT_ADDR, coord_addr);
-+	NLA_PUT_U16(msg, IEEE802154_ATTR_COORD_PAN_ID, panid);
-+
-+	return ieee802154_nl_finish(msg);
-+
-+nla_put_failure:
-+	return ieee802154_nl_put_failure(msg);
-+}
-+EXPORT_SYMBOL(ieee802154_nl_beacon_indic);
-+
-+int ieee802154_nl_scan_confirm(struct net_device *dev, u8 status, u8 scan_type, u32 unscanned,
-+		u8 *edl/* , struct list_head *pan_desc_list */)
-+{
-+	struct sk_buff *msg;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	msg = ieee802154_nl_create(/* flags*/ 0, IEEE802154_SCAN_CONF);
-+	if (!msg)
-+		return -ENOBUFS;
-+
-+	NLA_PUT_STRING(msg, IEEE802154_ATTR_DEV_NAME, dev->name);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_DEV_INDEX, dev->ifindex);
-+	NLA_PUT(msg, IEEE802154_ATTR_HW_ADDR, IEEE802154_ADDR_LEN, dev->dev_addr);
-+
-+	NLA_PUT_U8(msg, IEEE802154_ATTR_STATUS, status);
-+	NLA_PUT_U8(msg, IEEE802154_ATTR_SCAN_TYPE, scan_type);
-+	NLA_PUT_U32(msg, IEEE802154_ATTR_CHANNELS, unscanned);
-+
-+	if (edl)
-+		NLA_PUT(msg, IEEE802154_ATTR_ED_LIST, 27, edl);
-+
-+	return ieee802154_nl_finish(msg);
-+
-+nla_put_failure:
-+	return ieee802154_nl_put_failure(msg);
-+}
-+EXPORT_SYMBOL(ieee802154_nl_scan_confirm);
-+
-+/* Requests from userspace */
-+static struct net_device *ieee802154_nl_get_dev(struct genl_info *info)
-+{
-+	struct net_device *dev;
-+
-+	if (info->attrs[IEEE802154_ATTR_DEV_NAME]) {
-+		char name[IFNAMSIZ + 1];
-+		nla_strlcpy(name, info->attrs[IEEE802154_ATTR_DEV_NAME], sizeof(name));
-+		dev = dev_get_by_name(&init_net, name);
-+	} else if (info->attrs[IEEE802154_ATTR_DEV_INDEX])
-+		dev = dev_get_by_index(&init_net, nla_get_u32(info->attrs[IEEE802154_ATTR_DEV_INDEX]));
-+	else
-+		return NULL;
-+
-+	if (dev->type != ARPHRD_IEEE802154) {
-+		dev_put(dev);
-+		return NULL;
-+	}
-+
-+	return dev;
-+}
-+
-+static int ieee802154_associate_req(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct net_device *dev;
-+	struct ieee802154_addr addr;
-+	int ret = -EINVAL;
-+
-+	if (!info->attrs[IEEE802154_ATTR_CHANNEL]
-+	 || !info->attrs[IEEE802154_ATTR_COORD_PAN_ID]
-+	 || (!info->attrs[IEEE802154_ATTR_COORD_HW_ADDR] && !info->attrs[IEEE802154_ATTR_COORD_SHORT_ADDR])
-+	 || !info->attrs[IEEE802154_ATTR_CAPABILITY])
-+		return -EINVAL;
-+
-+	dev = ieee802154_nl_get_dev(info);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	if (info->attrs[IEEE802154_ATTR_COORD_HW_ADDR]) {
-+		addr.addr_type = IEEE802154_ADDR_LONG;
-+		nla_memcpy(addr.hwaddr, info->attrs[IEEE802154_ATTR_COORD_HW_ADDR], IEEE802154_ADDR_LEN);
-+	} else {
-+		addr.addr_type = IEEE802154_ADDR_SHORT;
-+		addr.short_addr = nla_get_u16(info->attrs[IEEE802154_ATTR_COORD_SHORT_ADDR]);
-+	}
-+	addr.pan_id = nla_get_u16(info->attrs[IEEE802154_ATTR_COORD_PAN_ID]);
-+
-+	ret = IEEE802154_MLME_OPS(dev)->assoc_req(dev, &addr,
-+			nla_get_u8(info->attrs[IEEE802154_ATTR_CHANNEL]),
-+			nla_get_u8(info->attrs[IEEE802154_ATTR_CAPABILITY]));
-+
-+	dev_put(dev);
-+	return ret;
-+}
-+
-+static int ieee802154_associate_resp(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct net_device *dev;
-+	struct ieee802154_addr addr;
-+	int ret = -EINVAL;
-+
-+	if (!info->attrs[IEEE802154_ATTR_STATUS]
-+	 || !info->attrs[IEEE802154_ATTR_DEST_HW_ADDR]
-+	 || !info->attrs[IEEE802154_ATTR_DEST_SHORT_ADDR])
-+		return -EINVAL;
-+
-+	dev = ieee802154_nl_get_dev(info);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	addr.addr_type = IEEE802154_ADDR_LONG;
-+	nla_memcpy(addr.hwaddr, info->attrs[IEEE802154_ATTR_DEST_HW_ADDR], IEEE802154_ADDR_LEN);
-+	addr.pan_id = IEEE802154_MLME_OPS(dev)->get_pan_id(dev);
-+
-+
-+	ret = IEEE802154_MLME_OPS(dev)->assoc_resp(dev, &addr,
-+			nla_get_u16(info->attrs[IEEE802154_ATTR_DEST_SHORT_ADDR]),
-+			nla_get_u8(info->attrs[IEEE802154_ATTR_STATUS]));
-+
-+	dev_put(dev);
-+	return ret;
-+}
-+
-+static int ieee802154_disassociate_req(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct net_device *dev;
-+	struct ieee802154_addr addr;
-+	int ret = -EINVAL;
-+
-+	if ((!info->attrs[IEEE802154_ATTR_DEST_HW_ADDR] && !info->attrs[IEEE802154_ATTR_DEST_SHORT_ADDR])
-+	 || !info->attrs[IEEE802154_ATTR_REASON])
-+		return -EINVAL;
-+
-+	dev = ieee802154_nl_get_dev(info);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	if (info->attrs[IEEE802154_ATTR_DEST_HW_ADDR]) {
-+		addr.addr_type = IEEE802154_ADDR_LONG;
-+		nla_memcpy(addr.hwaddr, info->attrs[IEEE802154_ATTR_DEST_HW_ADDR], IEEE802154_ADDR_LEN);
-+	} else {
-+		addr.addr_type = IEEE802154_ADDR_SHORT;
-+		addr.short_addr = nla_get_u16(info->attrs[IEEE802154_ATTR_DEST_SHORT_ADDR]);
-+	}
-+	addr.pan_id = IEEE802154_MLME_OPS(dev)->get_pan_id(dev);
-+
-+	ret = IEEE802154_MLME_OPS(dev)->disassoc_req(dev, &addr,
-+			nla_get_u8(info->attrs[IEEE802154_ATTR_REASON]));
-+
-+	dev_put(dev);
-+	return ret;
-+}
-+
-+/*
-+ * PANid, channel, beacon_order = 15, superframe_order = 15,
-+ * PAN_coordinator, battery_life_extension = 0,
-+ * coord_realignment = 0, security_enable = 0
-+*/
-+static int ieee802154_start_req(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct net_device *dev;
-+	struct ieee802154_addr addr;
-+
-+	u8 channel, bcn_ord, sf_ord;
-+	int pan_coord, blx, coord_realign;
-+	int ret;
-+
-+	if (!info->attrs[IEEE802154_ATTR_COORD_PAN_ID]
-+	 || !info->attrs[IEEE802154_ATTR_COORD_SHORT_ADDR]
-+	 || !info->attrs[IEEE802154_ATTR_CHANNEL]
-+	 || !info->attrs[IEEE802154_ATTR_BCN_ORD]
-+	 || !info->attrs[IEEE802154_ATTR_SF_ORD]
-+	 || !info->attrs[IEEE802154_ATTR_PAN_COORD]
-+	 || !info->attrs[IEEE802154_ATTR_BAT_EXT]
-+	 || !info->attrs[IEEE802154_ATTR_COORD_REALIGN]
-+	 )
-+		return -EINVAL;
-+
-+	dev = ieee802154_nl_get_dev(info);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	addr.addr_type = IEEE802154_ADDR_SHORT;
-+	addr.short_addr = nla_get_u16(info->attrs[IEEE802154_ATTR_COORD_SHORT_ADDR]);
-+	addr.pan_id = nla_get_u16(info->attrs[IEEE802154_ATTR_COORD_PAN_ID]);
-+
-+	channel = nla_get_u8(info->attrs[IEEE802154_ATTR_CHANNEL]);
-+	bcn_ord = nla_get_u8(info->attrs[IEEE802154_ATTR_BCN_ORD]);
-+	sf_ord = nla_get_u8(info->attrs[IEEE802154_ATTR_SF_ORD]);
-+	pan_coord = nla_get_u8(info->attrs[IEEE802154_ATTR_PAN_COORD]);
-+	blx = nla_get_u8(info->attrs[IEEE802154_ATTR_BAT_EXT]);
-+	coord_realign = nla_get_u8(info->attrs[IEEE802154_ATTR_COORD_REALIGN]);
-+
-+	ret = IEEE802154_MLME_OPS(dev)->start_req(dev, &addr, channel, bcn_ord, sf_ord,
-+		pan_coord, blx, coord_realign);
-+
-+	dev_put(dev);
-+	return ret;
-+}
-+
-+static int ieee802154_scan_req(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct net_device *dev;
-+	int ret;
-+	u8 type;
-+	u32 channels;
-+	u8 duration;
-+
-+	if (!info->attrs[IEEE802154_ATTR_SCAN_TYPE]
-+	 || !info->attrs[IEEE802154_ATTR_CHANNELS]
-+	 || !info->attrs[IEEE802154_ATTR_DURATION])
-+		return -EINVAL;
-+
-+	dev = ieee802154_nl_get_dev(info);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	type = nla_get_u8(info->attrs[IEEE802154_ATTR_SCAN_TYPE]);
-+	channels = nla_get_u32(info->attrs[IEEE802154_ATTR_CHANNELS]);
-+	duration = nla_get_u8(info->attrs[IEEE802154_ATTR_DURATION]);
-+
-+	ret = IEEE802154_MLME_OPS(dev)->scan_req(dev, type, channels, duration);
-+
-+	dev_put(dev);
-+	return ret;
-+}
-+
-+#define IEEE802154_OP(_cmd, _func)			\
-+	{						\
-+		.cmd	= _cmd,				\
-+		.policy	= ieee802154_policy,		\
-+		.doit	= _func,			\
-+		.dumpit	= NULL,				\
-+		.flags	= GENL_ADMIN_PERM,		\
-+	}
-+
-+static struct genl_ops ieee802154_coordinator_ops[] = {
-+	IEEE802154_OP(IEEE802154_ASSOCIATE_REQ, ieee802154_associate_req),
-+	IEEE802154_OP(IEEE802154_ASSOCIATE_RESP, ieee802154_associate_resp),
-+	IEEE802154_OP(IEEE802154_DISASSOCIATE_REQ, ieee802154_disassociate_req),
-+	IEEE802154_OP(IEEE802154_SCAN_REQ, ieee802154_scan_req),
-+	IEEE802154_OP(IEEE802154_START_REQ, ieee802154_start_req),
-+};
-+
-+static int __init ieee802154_nl_init(void)
-+{
-+	int rc;
-+	int i;
-+
-+	rc = genl_register_family(&ieee802154_coordinator_family);
-+	if (rc)
-+		goto fail;
-+
-+	rc = genl_register_mc_group(&ieee802154_coordinator_family, &ieee802154_coord_mcgrp);
-+	if (rc)
-+		goto fail;
-+
-+	rc = genl_register_mc_group(&ieee802154_coordinator_family, &ieee802154_beacon_mcgrp);
-+	if (rc)
-+		goto fail;
-+
-+
-+	for (i = 0; i < ARRAY_SIZE(ieee802154_coordinator_ops); i++) {
-+		rc = genl_register_ops(&ieee802154_coordinator_family, &ieee802154_coordinator_ops[i]);
-+		if (rc)
-+			goto fail;
-+	}
-+
-+	return 0;
-+
-+fail:
-+	genl_unregister_family(&ieee802154_coordinator_family);
-+	return rc;
-+}
-+module_init(ieee802154_nl_init);
-+
-+static void __exit ieee802154_nl_exit(void)
-+{
-+	genl_unregister_family(&ieee802154_coordinator_family);
-+}
-+module_exit(ieee802154_nl_exit);
-+
-diff --git a/net/ieee802154/nl_policy.c b/net/ieee802154/nl_policy.c
-new file mode 100644
-index 0000000..099e965
---- /dev/null
-+++ b/net/ieee802154/nl_policy.c
-@@ -0,0 +1,65 @@
-+/*
-+ * nl802154.h
-+ *
-+ * Copyright (C) 2007, 2008 Siemens AG
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along
-+ * with this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ */
-+
-+/* This source file is shared between kernel and userspace sources, thus
-+ * a bit of __KERNEL__ checks
-+ */
-+#ifdef __KERNEL__
-+#include <linux/kernel.h>
-+#include <net/netlink.h>
-+#include <net/ieee802154/nl802154.h>
-+#else
-+#include <netlink/netlink.h>
-+#include <netlink/attr.h>
-+#include <nl802154.h>
-+#endif
-+
-+#define NLA_HW_ADDR NLA_U64
-+
-+struct nla_policy ieee802154_policy[IEEE802154_ATTR_MAX + 1] = {
-+	[IEEE802154_ATTR_DEV_NAME] = { .type = NLA_STRING, },
-+	[IEEE802154_ATTR_DEV_INDEX] = { .type = NLA_U32, },
-+
-+	[IEEE802154_ATTR_STATUS] = { .type = NLA_U8, },
-+	[IEEE802154_ATTR_SHORT_ADDR] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_HW_ADDR] = { .type = NLA_HW_ADDR, },
-+	[IEEE802154_ATTR_PAN_ID] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_CHANNEL] = { .type = NLA_U8, },
-+	[IEEE802154_ATTR_COORD_SHORT_ADDR] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_COORD_HW_ADDR] = { .type = NLA_HW_ADDR, },
-+	[IEEE802154_ATTR_COORD_PAN_ID] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_SRC_SHORT_ADDR] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_SRC_HW_ADDR] = { .type = NLA_HW_ADDR, },
-+	[IEEE802154_ATTR_SRC_PAN_ID] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_DEST_SHORT_ADDR] = { .type = NLA_U16, },
-+	[IEEE802154_ATTR_DEST_HW_ADDR] = { .type = NLA_HW_ADDR, },
-+	[IEEE802154_ATTR_DEST_PAN_ID] = { .type = NLA_U16, },
-+
-+	[IEEE802154_ATTR_CAPABILITY] = { .type = NLA_U8, },
-+	[IEEE802154_ATTR_REASON] = { .type = NLA_U8, },
-+	[IEEE802154_ATTR_SCAN_TYPE] = { .type = NLA_U8, },
-+	[IEEE802154_ATTR_CHANNELS] = { .type = NLA_U32, },
-+	[IEEE802154_ATTR_DURATION] = { .type = NLA_U8, },
-+#ifdef __KERNEL__
-+	[IEEE802154_ATTR_ED_LIST] = { .len = 27 },
-+#else
-+	[IEEE802154_ATTR_ED_LIST] = { .minlen = 27, .maxlen = 27 },
-+#endif
-+};
--- 
-1.6.3.1
+-config IWLWIFI_RFKILL
+-	def_bool y
+-	depends on IWLWIFI && RFKILL
+-
+ config IWLWIFI_SPECTRUM_MEASUREMENT
+ 	bool "Enable Spectrum Measurement in iwlagn driver"
+ 	depends on IWLWIFI
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945.h	2009-06-03 08:38:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945.h	2009-06-03 08:43:51.000000000 +0200
+@@ -36,10 +36,6 @@
+ #include <linux/kernel.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+-/*used for rfkill*/
+-#include <linux/rfkill.h>
+-#include <linux/input.h>
+-
+ /* Hardware specific file defines the PCI IDs table for that hardware module */
+ extern struct pci_device_id iwl3945_hw_card_ids[];
+ 
+@@ -155,7 +151,6 @@ struct iwl3945_frame {
+ #define STATUS_HCMD_SYNC_ACTIVE	1	/* sync host command in progress */
+ #define STATUS_INT_ENABLED	2
+ #define STATUS_RF_KILL_HW	3
+-#define STATUS_RF_KILL_SW	4
+ #define STATUS_INIT		5
+ #define STATUS_ALIVE		6
+ #define STATUS_READY		7
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2009-06-03 08:38:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.c	2009-06-03 08:43:51.000000000 +0200
+@@ -737,19 +737,13 @@ static void iwl_rx_card_state_notif(stru
+ 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
+ 
+ 
+-	if (flags & SW_CARD_DISABLED)
+-		set_bit(STATUS_RF_KILL_SW, &priv->status);
+-	else
+-		clear_bit(STATUS_RF_KILL_SW, &priv->status);
+-
+ 	if (!(flags & RXON_CARD_DISABLED))
+ 		iwl_scan_cancel(priv);
+ 
+ 	if ((test_bit(STATUS_RF_KILL_HW, &status) !=
+-	     test_bit(STATUS_RF_KILL_HW, &priv->status)) ||
+-	    (test_bit(STATUS_RF_KILL_SW, &status) !=
+-	     test_bit(STATUS_RF_KILL_SW, &priv->status)))
+-		queue_work(priv->workqueue, &priv->rf_kill);
++	     test_bit(STATUS_RF_KILL_HW, &priv->status)))
++		wiphy_rfkill_set_hw_state(priv->hw->wiphy,
++			test_bit(STATUS_RF_KILL_HW, &priv->status));
+ 	else
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ }
+@@ -1045,7 +1039,7 @@ static void iwl_irq_tasklet_legacy(struc
+ 				set_bit(STATUS_RF_KILL_HW, &priv->status);
+ 			else
+ 				clear_bit(STATUS_RF_KILL_HW, &priv->status);
+-			queue_work(priv->workqueue, &priv->rf_kill);
++			wiphy_rfkill_set_hw_state(priv->hw->wiphy, hw_rf_kill);
+ 		}
+ 
+ 		handled |= CSR_INT_BIT_RF_KILL;
+@@ -1218,7 +1212,7 @@ static void iwl_irq_tasklet(struct iwl_p
+ 				set_bit(STATUS_RF_KILL_HW, &priv->status);
+ 			else
+ 				clear_bit(STATUS_RF_KILL_HW, &priv->status);
+-			queue_work(priv->workqueue, &priv->rf_kill);
++			wiphy_rfkill_set_hw_state(priv->hw->wiphy, hw_rf_kill);
+ 		}
+ 
+ 		handled |= CSR_INT_BIT_RF_KILL;
+@@ -1726,12 +1720,10 @@ static void __iwl_down(struct iwl_priv *
+ 		ieee80211_stop_queues(priv->hw);
+ 
+ 	/* If we have not previously called iwl_init() then
+-	 * clear all bits but the RF Kill bits and return */
++	 * clear all bits but the RF Kill bit and return */
+ 	if (!iwl_is_init(priv)) {
+ 		priv->status = test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+ 					STATUS_RF_KILL_HW |
+-			       test_bit(STATUS_RF_KILL_SW, &priv->status) <<
+-					STATUS_RF_KILL_SW |
+ 			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+ 					STATUS_GEO_CONFIGURED |
+ 			       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+@@ -1740,11 +1732,9 @@ static void __iwl_down(struct iwl_priv *
+ 	}
+ 
+ 	/* ...otherwise clear out all the status bits but the RF Kill
+-	 * bits and continue taking the NIC down. */
++	 * bit and continue taking the NIC down. */
+ 	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+ 				STATUS_RF_KILL_HW |
+-			test_bit(STATUS_RF_KILL_SW, &priv->status) <<
+-				STATUS_RF_KILL_SW |
+ 			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+ 				STATUS_GEO_CONFIGURED |
+ 			test_bit(STATUS_FW_ERROR, &priv->status) <<
+@@ -1866,9 +1856,10 @@ static int __iwl_up(struct iwl_priv *pri
+ 		set_bit(STATUS_RF_KILL_HW, &priv->status);
+ 
+ 	if (iwl_is_rfkill(priv)) {
++		wiphy_rfkill_set_hw_state(priv->hw->wiphy, true);
++
+ 		iwl_enable_interrupts(priv);
+-		IWL_WARN(priv, "Radio disabled by %s RF Kill switch\n",
+-		    test_bit(STATUS_RF_KILL_HW, &priv->status) ? "HW" : "SW");
++		IWL_WARN(priv, "Radio disabled by HW RF Kill switch\n");
+ 		return 0;
+ 	}
+ 
+@@ -2000,7 +1991,6 @@ static void iwl_bg_up(struct work_struct
+ 	mutex_lock(&priv->mutex);
+ 	__iwl_up(priv);
+ 	mutex_unlock(&priv->mutex);
+-	iwl_rfkill_set_hw_state(priv);
+ }
+ 
+ static void iwl_bg_restart(struct work_struct *data)
+@@ -2178,8 +2168,6 @@ static int iwl_mac_start(struct ieee8021
+ 
+ 	mutex_unlock(&priv->mutex);
+ 
+-	iwl_rfkill_set_hw_state(priv);
+-
+ 	if (ret)
+ 		return ret;
+ 
+@@ -2774,7 +2762,6 @@ static void iwl_setup_deferred_work(stru
+ 	INIT_WORK(&priv->up, iwl_bg_up);
+ 	INIT_WORK(&priv->restart, iwl_bg_restart);
+ 	INIT_WORK(&priv->rx_replenish, iwl_bg_rx_replenish);
+-	INIT_WORK(&priv->rf_kill, iwl_bg_rf_kill);
+ 	INIT_WORK(&priv->beacon_update, iwl_bg_beacon_update);
+ 	INIT_WORK(&priv->run_time_calib_work, iwl_bg_run_time_calib_work);
+ 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
+@@ -3045,12 +3032,8 @@ static int iwl_pci_probe(struct pci_dev 
+ 	else
+ 		set_bit(STATUS_RF_KILL_HW, &priv->status);
+ 
+-	err = iwl_rfkill_init(priv);
+-	if (err)
+-		IWL_ERR(priv, "Unable to initialize RFKILL system. "
+-				  "Ignoring error: %d\n", err);
+-	else
+-		iwl_rfkill_set_hw_state(priv);
++	wiphy_rfkill_set_hw_state(priv->hw->wiphy,
++		test_bit(STATUS_RF_KILL_HW, &priv->status));
+ 
+ 	iwl_power_initialize(priv);
+ 	return 0;
+@@ -3114,7 +3097,6 @@ static void __devexit iwl_pci_remove(str
+ 
+ 	iwl_synchronize_irq(priv);
+ 
+-	iwl_rfkill_unregister(priv);
+ 	iwl_dealloc_ucode_pci(priv);
+ 
+ 	if (priv->rxq.bd)
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-06-03 08:38:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-06-03 08:43:52.000000000 +0200
+@@ -36,7 +36,6 @@
+ #include "iwl-debug.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+-#include "iwl-rfkill.h"
+ #include "iwl-power.h"
+ #include "iwl-sta.h"
+ #include "iwl-helpers.h"
+@@ -2211,126 +2210,6 @@ int iwl_send_card_state(struct iwl_priv 
+ }
+ EXPORT_SYMBOL(iwl_send_card_state);
+ 
+-void iwl_radio_kill_sw_disable_radio(struct iwl_priv *priv)
+-{
+-	unsigned long flags;
+-
+-	if (test_bit(STATUS_RF_KILL_SW, &priv->status))
+-		return;
+-
+-	IWL_DEBUG_RF_KILL(priv, "Manual SW RF KILL set to: RADIO OFF\n");
+-
+-	iwl_scan_cancel(priv);
+-	/* FIXME: This is a workaround for AP */
+-	if (priv->iw_mode != NL80211_IFTYPE_AP) {
+-		spin_lock_irqsave(&priv->lock, flags);
+-		iwl_write32(priv, CSR_UCODE_DRV_GP1_SET,
+-			    CSR_UCODE_SW_BIT_RFKILL);
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-		/* call the host command only if no hw rf-kill set */
+-		if (!test_bit(STATUS_RF_KILL_HW, &priv->status) &&
+-		    iwl_is_ready(priv))
+-			iwl_send_card_state(priv,
+-				CARD_STATE_CMD_DISABLE, 0);
+-		set_bit(STATUS_RF_KILL_SW, &priv->status);
+-			/* make sure mac80211 stop sending Tx frame */
+-		if (priv->mac80211_registered)
+-			ieee80211_stop_queues(priv->hw);
+-	}
+-}
+-EXPORT_SYMBOL(iwl_radio_kill_sw_disable_radio);
+-
+-int iwl_radio_kill_sw_enable_radio(struct iwl_priv *priv)
+-{
+-	unsigned long flags;
+-
+-	if (!test_bit(STATUS_RF_KILL_SW, &priv->status))
+-		return 0;
+-
+-	IWL_DEBUG_RF_KILL(priv, "Manual SW RF KILL set to: RADIO ON\n");
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
+-
+-	/* If the driver is up it will receive CARD_STATE_NOTIFICATION
+-	 * notification where it will clear SW rfkill status.
+-	 * Setting it here would break the handler. Only if the
+-	 * interface is down we can set here since we don't
+-	 * receive any further notification.
+-	 */
+-	if (!priv->is_open)
+-		clear_bit(STATUS_RF_KILL_SW, &priv->status);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	/* wake up ucode */
+-	msleep(10);
+-
+-	iwl_read32(priv, CSR_UCODE_DRV_GP1);
+-	spin_lock_irqsave(&priv->reg_lock, flags);
+-	if (!iwl_grab_nic_access(priv))
+-		iwl_release_nic_access(priv);
+-	spin_unlock_irqrestore(&priv->reg_lock, flags);
+-
+-	if (test_bit(STATUS_RF_KILL_HW, &priv->status)) {
+-		IWL_DEBUG_RF_KILL(priv, "Can not turn radio back on - "
+-				  "disabled by HW switch\n");
+-		return 0;
+-	}
+-
+-	/* when driver is up while rfkill is on, it wont receive
+-	 * any CARD_STATE_NOTIFICATION notifications so we have to
+-	 * restart it in here
+-	 */
+-	if (priv->is_open && !test_bit(STATUS_ALIVE, &priv->status)) {
+-		clear_bit(STATUS_RF_KILL_SW, &priv->status);
+-		if (!iwl_is_rfkill(priv))
+-			queue_work(priv->workqueue, &priv->up);
+-	}
+-
+-	/* If the driver is already loaded, it will receive
+-	 * CARD_STATE_NOTIFICATION notifications and the handler will
+-	 * call restart to reload the driver.
+-	 */
+-	return 1;
+-}
+-EXPORT_SYMBOL(iwl_radio_kill_sw_enable_radio);
+-
+-void iwl_bg_rf_kill(struct work_struct *work)
+-{
+-	struct iwl_priv *priv = container_of(work, struct iwl_priv, rf_kill);
+-
+-	wake_up_interruptible(&priv->wait_command_queue);
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return;
+-
+-	mutex_lock(&priv->mutex);
+-
+-	if (!iwl_is_rfkill(priv)) {
+-		IWL_DEBUG_RF_KILL(priv,
+-			  "HW and/or SW RF Kill no longer active, restarting "
+-			  "device\n");
+-		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+-		    priv->is_open)
+-			queue_work(priv->workqueue, &priv->restart);
+-	} else {
+-		/* make sure mac80211 stop sending Tx frame */
+-		if (priv->mac80211_registered)
+-			ieee80211_stop_queues(priv->hw);
+-
+-		if (!test_bit(STATUS_RF_KILL_HW, &priv->status))
+-			IWL_DEBUG_RF_KILL(priv, "Can not turn radio back on - "
+-					  "disabled by SW switch\n");
+-		else
+-			IWL_WARN(priv, "Radio Frequency Kill Switch is On:\n"
+-				    "Kill switch must be turned off for "
+-				    "wireless networking to work.\n");
+-	}
+-	mutex_unlock(&priv->mutex);
+-	iwl_rfkill_set_hw_state(priv);
+-}
+-EXPORT_SYMBOL(iwl_bg_rf_kill);
+-
+ void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
+ 			   struct iwl_rx_mem_buffer *rxb)
+ {
+@@ -2849,23 +2728,6 @@ int iwl_mac_config(struct ieee80211_hw *
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain)
+ 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED) {
+-		if (conf->radio_enabled &&
+-			iwl_radio_kill_sw_enable_radio(priv)) {
+-			IWL_DEBUG_MAC80211(priv, "leave - RF-KILL - "
+-						"waiting for uCode\n");
+-			goto out;
+-		}
+-
+-		if (!conf->radio_enabled)
+-			iwl_radio_kill_sw_disable_radio(priv);
+-	}
+-
+-	if (!conf->radio_enabled) {
+-		IWL_DEBUG_MAC80211(priv, "leave - radio disabled\n");
+-		goto out;
+-	}
+-
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+ 		goto out;
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h	2009-06-03 08:38:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h	2009-06-03 08:43:52.000000000 +0200
+@@ -358,14 +358,6 @@ int iwl_txq_check_empty(struct iwl_priv 
+  ****************************************************/
+ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
+ 
+-/*****************************************************
+- * RF -Kill - here and not in iwl-rfkill.h to be available when
+- * RF-kill subsystem is not compiled.
+- ****************************************************/
+-void iwl_bg_rf_kill(struct work_struct *work);
+-void iwl_radio_kill_sw_disable_radio(struct iwl_priv *priv);
+-int iwl_radio_kill_sw_enable_radio(struct iwl_priv *priv);
+-
+ /*******************************************************************************
+  * Rate
+  ******************************************************************************/
+@@ -508,7 +500,6 @@ void iwlcore_free_geos(struct iwl_priv *
+ #define STATUS_HCMD_SYNC_ACTIVE	1	/* sync host command in progress */
+ #define STATUS_INT_ENABLED	2
+ #define STATUS_RF_KILL_HW	3
+-#define STATUS_RF_KILL_SW	4
+ #define STATUS_INIT		5
+ #define STATUS_ALIVE		6
+ #define STATUS_READY		7
+@@ -543,11 +534,6 @@ static inline int iwl_is_init(struct iwl
+ 	return test_bit(STATUS_INIT, &priv->status);
+ }
+ 
+-static inline int iwl_is_rfkill_sw(struct iwl_priv *priv)
+-{
+-	return test_bit(STATUS_RF_KILL_SW, &priv->status);
+-}
+-
+ static inline int iwl_is_rfkill_hw(struct iwl_priv *priv)
+ {
+ 	return test_bit(STATUS_RF_KILL_HW, &priv->status);
+@@ -555,7 +541,7 @@ static inline int iwl_is_rfkill_hw(struc
+ 
+ static inline int iwl_is_rfkill(struct iwl_priv *priv)
+ {
+-	return iwl_is_rfkill_hw(priv) || iwl_is_rfkill_sw(priv);
++	return iwl_is_rfkill_hw(priv);
+ }
+ 
+ static inline int iwl_is_ready_rf(struct iwl_priv *priv)
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-debugfs.c	2009-06-03 08:38:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-debugfs.c	2009-06-03 08:43:52.000000000 +0200
+@@ -449,8 +449,6 @@ static ssize_t iwl_dbgfs_status_read(str
+ 		test_bit(STATUS_INT_ENABLED, &priv->status));
+ 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_RF_KILL_HW:\t %d\n",
+ 		test_bit(STATUS_RF_KILL_HW, &priv->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_RF_KILL_SW:\t %d\n",
+-		test_bit(STATUS_RF_KILL_SW, &priv->status));
+ 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_INIT:\t\t %d\n",
+ 		test_bit(STATUS_INIT, &priv->status));
+ 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_ALIVE:\t\t %d\n",
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-dev.h	2009-06-03 08:38:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-dev.h	2009-06-03 08:43:52.000000000 +0200
+@@ -41,7 +41,6 @@
+ #include "iwl-prph.h"
+ #include "iwl-fh.h"
+ #include "iwl-debug.h"
+-#include "iwl-rfkill.h"
+ #include "iwl-4965-hw.h"
+ #include "iwl-3945-hw.h"
+ #include "iwl-3945-led.h"
+@@ -937,9 +936,6 @@ struct iwl_priv {
+ 	 * 4965's initialize alive response contains some calibration data. */
+ 	struct iwl_init_alive_resp card_alive_init;
+ 	struct iwl_alive_resp card_alive;
+-#if defined(CONFIG_IWLWIFI_RFKILL)
+-	struct rfkill *rfkill;
+-#endif
+ 
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	unsigned long last_blink_time;
+@@ -1073,7 +1069,6 @@ struct iwl_priv {
+ 	struct work_struct calibrated_work;
+ 	struct work_struct scan_completed;
+ 	struct work_struct rx_replenish;
+-	struct work_struct rf_kill;
+ 	struct work_struct abort_scan;
+ 	struct work_struct update_link_led;
+ 	struct work_struct auth_work;
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-06-03 08:38:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c	2009-06-03 08:43:52.000000000 +0200
+@@ -1149,18 +1149,12 @@ static void iwl3945_rx_card_state_notif(
+ 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
+ 
+ 
+-	if (flags & SW_CARD_DISABLED)
+-		set_bit(STATUS_RF_KILL_SW, &priv->status);
+-	else
+-		clear_bit(STATUS_RF_KILL_SW, &priv->status);
+-
+ 	iwl_scan_cancel(priv);
+ 
+ 	if ((test_bit(STATUS_RF_KILL_HW, &status) !=
+-	     test_bit(STATUS_RF_KILL_HW, &priv->status)) ||
+-	    (test_bit(STATUS_RF_KILL_SW, &status) !=
+-	     test_bit(STATUS_RF_KILL_SW, &priv->status)))
+-		queue_work(priv->workqueue, &priv->rf_kill);
++	     test_bit(STATUS_RF_KILL_HW, &priv->status)))
++		wiphy_rfkill_set_hw_state(priv->hw->wiphy,
++				test_bit(STATUS_RF_KILL_HW, &priv->status));
+ 	else
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ }
+@@ -2708,8 +2702,6 @@ static void __iwl3945_down(struct iwl_pr
+ 	if (!iwl_is_init(priv)) {
+ 		priv->status = test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+ 					STATUS_RF_KILL_HW |
+-			       test_bit(STATUS_RF_KILL_SW, &priv->status) <<
+-					STATUS_RF_KILL_SW |
+ 			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+ 					STATUS_GEO_CONFIGURED |
+ 				test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+@@ -2718,11 +2710,9 @@ static void __iwl3945_down(struct iwl_pr
+ 	}
+ 
+ 	/* ...otherwise clear out all the status bits but the RF Kill
+-	 * bits and continue taking the NIC down. */
++	 * bit and continue taking the NIC down. */
+ 	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+ 				STATUS_RF_KILL_HW |
+-			test_bit(STATUS_RF_KILL_SW, &priv->status) <<
+-				STATUS_RF_KILL_SW |
+ 			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+ 				STATUS_GEO_CONFIGURED |
+ 			test_bit(STATUS_FW_ERROR, &priv->status) <<
+@@ -2779,12 +2769,6 @@ static int __iwl3945_up(struct iwl_priv 
+ 		return -EIO;
+ 	}
+ 
+-	if (test_bit(STATUS_RF_KILL_SW, &priv->status)) {
+-		IWL_WARN(priv, "Radio disabled by SW RF kill (module "
+-			    "parameter)\n");
+-		return -ENODEV;
+-	}
+-
+ 	if (!priv->ucode_data_backup.v_addr || !priv->ucode_data.v_addr) {
+ 		IWL_ERR(priv, "ucode not available for device bring up\n");
+ 		return -EIO;
+@@ -2901,15 +2885,14 @@ static void iwl3945_rfkill_poll(struct w
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, rfkill_poll.work);
+-	unsigned long status = priv->status;
+ 
+ 	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+ 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
+ 	else
+ 		set_bit(STATUS_RF_KILL_HW, &priv->status);
+ 
+-	if (test_bit(STATUS_RF_KILL_HW, &status) != test_bit(STATUS_RF_KILL_HW, &priv->status))
+-		queue_work(priv->workqueue, &priv->rf_kill);
++	wiphy_rfkill_set_hw_state(priv->hw->wiphy,
++			test_bit(STATUS_RF_KILL_HW, &priv->status));
+ 
+ 	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+ 			   round_jiffies_relative(2 * HZ));
+@@ -3141,7 +3124,6 @@ static void iwl3945_bg_up(struct work_st
+ 	mutex_lock(&priv->mutex);
+ 	__iwl3945_up(priv);
+ 	mutex_unlock(&priv->mutex);
+-	iwl_rfkill_set_hw_state(priv);
+ }
+ 
+ static void iwl3945_bg_restart(struct work_struct *data)
+@@ -3304,8 +3286,6 @@ static int iwl3945_mac_start(struct ieee
+ 
+ 	mutex_unlock(&priv->mutex);
+ 
+-	iwl_rfkill_set_hw_state(priv);
+-
+ 	if (ret)
+ 		goto out_release_irq;
+ 
+@@ -3958,7 +3938,6 @@ static void iwl3945_setup_deferred_work(
+ 	INIT_WORK(&priv->up, iwl3945_bg_up);
+ 	INIT_WORK(&priv->restart, iwl3945_bg_restart);
+ 	INIT_WORK(&priv->rx_replenish, iwl3945_bg_rx_replenish);
+-	INIT_WORK(&priv->rf_kill, iwl_bg_rf_kill);
+ 	INIT_WORK(&priv->beacon_update, iwl3945_bg_beacon_update);
+ 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl3945_bg_init_alive_start);
+ 	INIT_DELAYED_WORK(&priv->alive_start, iwl3945_bg_alive_start);
+@@ -4325,13 +4304,6 @@ static int iwl3945_pci_probe(struct pci_
+ 	if (err)
+ 		IWL_ERR(priv, "failed to create debugfs files. Ignoring error: %d\n", err);
+ 
+-	err = iwl_rfkill_init(priv);
+-	if (err)
+-		IWL_ERR(priv, "Unable to initialize RFKILL system. "
+-				  "Ignoring error: %d\n", err);
+-	else
+-		iwl_rfkill_set_hw_state(priv);
+-
+ 	/* Start monitoring the killswitch */
+ 	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+ 			   2 * HZ);
+@@ -4397,7 +4369,6 @@ static void __devexit iwl3945_pci_remove
+ 
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+ 
+-	iwl_rfkill_unregister(priv);
+ 	cancel_delayed_work_sync(&priv->rfkill_poll);
+ 
+ 	iwl3945_dealloc_ucode_pci(priv);
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-rfkill.c	2009-06-03 08:41:49.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,131 +0,0 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2003 - 2009 Intel Corporation. All rights reserved.
+- *
+- * Portions of this file are derived from the ipw3945 project, as well
+- * as portions of the ieee80211 subsystem header files.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *****************************************************************************/
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/init.h>
+-
+-#include <net/mac80211.h>
+-
+-#include "iwl-eeprom.h"
+-#include "iwl-dev.h"
+-#include "iwl-core.h"
+-
+-/* software rf-kill from user */
+-static int iwl_rfkill_soft_rf_kill(void *data, bool blocked)
+-{
+-	struct iwl_priv *priv = data;
+-
+-	if (!priv->rfkill)
+-		return -EINVAL;
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return 0;
+-
+-	IWL_DEBUG_RF_KILL(priv, "received soft RFKILL: block=%d\n", blocked);
+-
+-	mutex_lock(&priv->mutex);
+-
+-	if (iwl_is_rfkill_hw(priv))
+-		goto out_unlock;
+-
+-	if (!blocked)
+-		iwl_radio_kill_sw_enable_radio(priv);
+-	else
+-		iwl_radio_kill_sw_disable_radio(priv);
+-
+-out_unlock:
+-	mutex_unlock(&priv->mutex);
+-	return 0;
+-}
+-
+-static const struct rfkill_ops iwl_rfkill_ops = {
+-	.set_block = iwl_rfkill_soft_rf_kill,
+-};
+-
+-int iwl_rfkill_init(struct iwl_priv *priv)
+-{
+-	struct device *device = wiphy_dev(priv->hw->wiphy);
+-	int ret = 0;
+-
+-	BUG_ON(device == NULL);
+-
+-	IWL_DEBUG_RF_KILL(priv, "Initializing RFKILL.\n");
+-	priv->rfkill = rfkill_alloc(priv->cfg->name,
+-				    device,
+-				    RFKILL_TYPE_WLAN,
+-				    &iwl_rfkill_ops, priv);
+-	if (!priv->rfkill) {
+-		IWL_ERR(priv, "Unable to allocate RFKILL device.\n");
+-		ret = -ENOMEM;
+-		goto error;
+-	}
+-
+-	ret = rfkill_register(priv->rfkill);
+-	if (ret) {
+-		IWL_ERR(priv, "Unable to register RFKILL: %d\n", ret);
+-		goto free_rfkill;
+-	}
+-
+-	IWL_DEBUG_RF_KILL(priv, "RFKILL initialization complete.\n");
+-	return 0;
+-
+-free_rfkill:
+-	rfkill_destroy(priv->rfkill);
+-	priv->rfkill = NULL;
+-
+-error:
+-	IWL_DEBUG_RF_KILL(priv, "RFKILL initialization complete.\n");
+-	return ret;
+-}
+-EXPORT_SYMBOL(iwl_rfkill_init);
+-
+-void iwl_rfkill_unregister(struct iwl_priv *priv)
+-{
+-
+-	if (priv->rfkill) {
+-		rfkill_unregister(priv->rfkill);
+-		rfkill_destroy(priv->rfkill);
+-	}
+-
+-	priv->rfkill = NULL;
+-}
+-EXPORT_SYMBOL(iwl_rfkill_unregister);
+-
+-/* set RFKILL to the right state. */
+-void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
+-{
+-	if (!priv->rfkill)
+-		return;
+-
+-	if (rfkill_set_hw_state(priv->rfkill,
+-				!!iwl_is_rfkill_hw(priv)))
+-		iwl_radio_kill_sw_disable_radio(priv);
+-	else
+-		iwl_radio_kill_sw_enable_radio(priv);
+-}
+-EXPORT_SYMBOL(iwl_rfkill_set_hw_state);
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-rfkill.h	2009-06-03 08:38:20.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,48 +0,0 @@
+-/******************************************************************************
+- *
+- * Copyright(c) 2007 - 2009 Intel Corporation. All rights reserved.
+- *
+- * Portions of this file are derived from the ipw3945 project, as well
+- * as portions of the ieee80211 subsystem header files.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+- * The full GNU General Public License is included in this distribution in the
+- * file called LICENSE.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *****************************************************************************/
+-#ifndef __iwl_rf_kill_h__
+-#define __iwl_rf_kill_h__
+-
+-struct iwl_priv;
+-
+-#include <linux/rfkill.h>
+-
+-#ifdef CONFIG_IWLWIFI_RFKILL
+-
+-void iwl_rfkill_set_hw_state(struct iwl_priv *priv);
+-void iwl_rfkill_unregister(struct iwl_priv *priv);
+-int iwl_rfkill_init(struct iwl_priv *priv);
+-#else
+-static inline void iwl_rfkill_set_hw_state(struct iwl_priv *priv) {}
+-static inline void iwl_rfkill_unregister(struct iwl_priv *priv) {}
+-static inline int iwl_rfkill_init(struct iwl_priv *priv) { return 0; }
+-#endif
+-
+-
+-
+-#endif  /* __iwl_rf_kill_h__ */
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/Makefile	2009-06-03 08:38:19.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/Makefile	2009-06-03 08:43:52.000000000 +0200
+@@ -4,7 +4,6 @@ iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-
+ iwlcore-objs 		+= iwl-scan.o
+ iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+ iwlcore-$(CONFIG_IWLWIFI_LEDS) += iwl-led.o
+-iwlcore-$(CONFIG_IWLWIFI_RFKILL) += iwl-rfkill.o
+ iwlcore-$(CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT) += iwl-spectrum.o
+ 
+ obj-$(CONFIG_IWLAGN)	+= iwlagn.o
 
--- 
-With best wishes
-Dmitry
 
