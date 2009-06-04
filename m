@@ -1,154 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:45347 "EHLO mx2.redhat.com"
+Received: from www.tglx.de ([62.245.132.106]:55073 "EHLO www.tglx.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217AbZFGREy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 13:04:54 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: alan-jenkins@tuffmail.co.uk,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1244389617.23850.102.camel@localhost.localdomain>
-References: <1243858256.5299.14.camel@johannes.local>
-	 <1243885494.3015.29.camel@localhost.localdomain>
-	 <4A24559D.7010201@tuffmail.co.uk>
-	 <1243928308.3192.38.camel@localhost.localdomain>
-	 <1243929706.20064.7.camel@johannes.local>
-	 <1243930703.3192.59.camel@localhost.localdomain>
-	 <20090603040315.GA10464@khazad-dum.debian.net>
-	 <1244008652.4145.7.camel@localhost.localdomain>
-	 <20090603213340.GB22809@khazad-dum.debian.net>
-	 <1244088806.4145.24.camel@localhost.localdomain>
-	 <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>
-	 <1244389617.23850.102.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Sun, 07 Jun 2009 13:04:18 -0400
-Message-Id: <1244394258.1846.3.camel@localhost.localdomain>
+	id S1752966AbZFDTsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 15:48:24 -0400
+Date: Thu, 4 Jun 2009 21:47:26 +0200
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	Mike Rapoport <mike@compulab.co.il>,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH v2] net/libertas: remove GPIO-CS handling in SPI interface code
+Message-ID: <20090604194726.GA22760@www.tglx.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-06-07 at 17:46 +0200, Marcel Holtmann wrote:
-> Hi Alan,
-> 
-> > >> > > > We just need to fix the platform drivers then. They should not set
-> > >> > > > global states since that is not what they are controlling. They
-> > >> > > > control
-> > >> > >
-> > >> > > We should change things, yes.  So that the platform stores the global
-> > >> > > state.  That was half-broken on the old core (the platform stored the
-> > >> > > state of its own device, which could be out of sync with the global
-> > >> > > state), but the part of it setting the global state is correct.
-> > >> > >
-> > >> > > That needs a new in-kernel API to tie the core to platform drivers
-> > >> > > capable of storing global states without causing problems when drivers
-> > >> > > are unloaded, but it is not hard.
-> > >> > >
-> > >> > > As for NVS events, they have a clear use case: to let rfkilld know
-> > >> > > which
-> > >> > > global states it could leave alone the first time it loads, and which
-> > >> > > ones have to be restored...
-> > >> >
-> > >> > show me an example of a platform device that stores the global state. I
-> > >> > think you are confusing the word platform as in system with a platform
-> > >> > device. The ThinkPad Bluetooth and WWAN switches are platform devices
-> > >> > and control each one specific device. Same goes for the EeePC. They are
-> > >> > not controlling a global state.
-> > >>
-> > >> I don't know what big difference you see between the two uses of
-> > >> "platform",
-> > >> but I will just work around it to get something useful out of this mail.
-> > >>
-> > >> The laptop stores in NVS the state of its 'switches'.  This is as close as
-> > >> one gets from 'storing the global state'.   When the laptop boots,
-> > >> these devices get set by the firware to the state in NVS.  It is the best
-> > >> place to store global state, because these devices will be in their proper
-> > >> state (i.e. matching what will be the global state when the rfkill core
-> > >> loads) all the time.  It also gives you for free multi-OS/multi-kernel
-> > >> state
-> > >> storage for these devices, and compatibility with BIOSes that let you
-> > >> define
-> > >> the initial state for the devices in the firmware configuration, etc.
-> > >
-> > > it stores the state of its switches and why should these be enforced as
-> > > a global state? Who says that this is a global state? For me that sounds
-> > > like policy.
-> > 
-> > We don't seem to be getting very far :-(.  I agree that these do not
-> > appear to be global states, just the states of individual rfkill
-> > devices.
-> > 
-> > So I would propose the following changes.  (I'm happy to write the
-> > code as well, but I think it's easier to read English).
-> > 
-> >  1) remove rfkill_set_global_sw_state()
-> >  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
-> > registration, setting a flag.
-> >  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
-> > events, tho it may as well be set in all events)
-> 
-> you can do things like this already if you just set the states correctly
-> between rfkill_alloc and rfkill_register. So you should make sure you
-> register your RFKILL switch with the correct state and not toggle it
-> later. As far as I can tell the tpacpi driver does that already.
-> 
-> >  4) rfkill-input preserves existing behaviour - *if enabled* - by
-> > initializing the global state from individual devices which have NVS.
-> > (As before, each _type_ of rfkill device has its own global state).
-> 
-> That still sounds horribly wrong and has been for a long time, but
-> again, I don't care about rfkill-input since it will go away.
-> 
-> >  5) rfkill devices with NVS will have their current state preserved,
-> > so long as the global state has not yet been set (by userspace or by
-> > rfkill-input).  Of course userspace can change the state in response
-> > to the device being added.
-> 
-> If you register your RFKILL switch properly, they do that already. See
-> my comment above. You start up with the proper state to begin with.
-> 
-> >  => rfkilld then has the information required to implement the same
-> > policy as rfkill-input.  Furthermore, it will have enough information
-> > that it could implement file-based storage as a fallback, and still
-> > support NVS where available.
-> > 
-> > It will also allow implementation (or configuration) of completely
-> > different policy to rfkill-input.  E.g. if your internal wireless
-> > w/NVS is broken and should be disabled, that can be done independently
-> > of your replacement USB wireless adaptor.
-> 
-> I did actually looked into this and userspace has all information
-> available to create a proper policy if you wanna treat your NVS states
-> (for example the tpacpi ones) as global states, you can easily do that
-> right now. It became really simple with /dev/rfkill.
-> 
-> So I have code for adding full native and integrated RFKILL support to
-> the Bluetooth subsystem and that works nicely in conjunction with the
-> hardware killswitch my system has. I still have to test WiMAX and do
-> some modifications for the Ericsson MBM 3G stuff. So at some point we
-> should have softkill support for all major radios. Only exception are
-> the 3G cards that present themselves as modems with PPP. They are to
-> tricky and I have no idea right now how we could integrate them.
+This removes the dependency on GPIO framework and lets the SPI host
+driver handle the chip select. The SPI host driver is required to keep
+the CS active for the entire message unless cs_change says otherwise.
+This patch collects the two/three single SPI transfers into a message.
+Also the delay in read path in case use_dummy_writes are not used is
+moved into the SPI host driver.
 
-3G cards have two ways of being killed:
+Tested-by: Mike Rapoport <mike@compulab.co.il>
+Tested-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+The only change I've made since v1 is that I've replaced
++		reg_trans.delay_usecs = (100 + (delay * 10)) / 1000; 
 
-1) Put them to sleep; Sierra for example has code that does this
-already, it will take the modem out of D3 sleep on startup.  No reason
-why rfkill couldn't just stick it back there.  Drivers that implement
-this method would be easy to integrate with rfkill if the BIOS/platform
-module doesn't do it for them (hp-wmi will drop the 3G card off the bus
-on the 2530p when you rfkill it, just like bluetooth, so nothing else is
-needed there).
+ with
 
-2) CFUN=0; that is supposed to shut down all radios, but of course that
-requires the serial port of the card and the firmware to be loaded and
-whatever.  And that should only be done by the daemon (if any, like
-ModemManager or Wader or whatever) that is arbitrating the serial port.
-That's not something that rfkilld should do.
++		reg_trans.delay_usecs =
++			DIV_ROUND_UP((100 + (delay * 10)), 1000);
 
-Dan
+The latter should not end up with delay_usecs = 0 if delay is < 90
 
+ drivers/net/wireless/Kconfig           |    2 +-
+ drivers/net/wireless/libertas/if_spi.c |   92 +++++++++++++++-----------------
+ 2 files changed, 45 insertions(+), 49 deletions(-)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index daf4c80..fb7541c 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -153,7 +153,7 @@ config LIBERTAS_SDIO
+ 
+ config LIBERTAS_SPI
+ 	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
+-	depends on LIBERTAS && SPI && GENERIC_GPIO
++	depends on LIBERTAS && SPI
+ 	---help---
+ 	  A driver for Marvell Libertas 8686 SPI devices.
+ 
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index ea23c5d..f8c2898 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -19,7 +19,6 @@
+ 
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+-#include <linux/gpio.h>
+ #include <linux/jiffies.h>
+ #include <linux/kthread.h>
+ #include <linux/list.h>
+@@ -51,13 +50,6 @@ struct if_spi_card {
+ 	u16				card_id;
+ 	u8				card_rev;
+ 
+-	/* Pin number for our GPIO chip-select. */
+-	/* TODO: Once the generic SPI layer has some additional features, we
+-	 * should take this out and use the normal chip select here.
+-	 * We need support for chip select delays, and not dropping chipselect
+-	 * after each word. */
+-	int				gpio_cs;
+-
+ 	/* The last time that we initiated an SPU operation */
+ 	unsigned long			prev_xfer_time;
+ 
+@@ -130,12 +122,10 @@ static void spu_transaction_init(struct if_spi_card *card)
+ 		 * If not, we have to busy-wait to be on the safe side. */
+ 		ndelay(400);
+ 	}
+-	gpio_set_value(card->gpio_cs, 0); /* assert CS */
+ }
+ 
+ static void spu_transaction_finish(struct if_spi_card *card)
+ {
+-	gpio_set_value(card->gpio_cs, 1); /* drop CS */
+ 	card->prev_xfer_time = jiffies;
+ }
+ 
+@@ -145,6 +135,13 @@ static int spu_write(struct if_spi_card *card, u16 reg, const u8 *buf, int len)
+ {
+ 	int err = 0;
+ 	u16 reg_out = cpu_to_le16(reg | IF_SPI_WRITE_OPERATION_MASK);
++	struct spi_message m;
++	struct spi_transfer reg_trans;
++	struct spi_transfer data_trans;
++
++	spi_message_init(&m);
++	memset(&reg_trans, 0, sizeof(reg_trans));
++	memset(&data_trans, 0, sizeof(data_trans));
+ 
+ 	/* You must give an even number of bytes to the SPU, even if it
+ 	 * doesn't care about the last one.  */
+@@ -153,13 +150,16 @@ static int spu_write(struct if_spi_card *card, u16 reg, const u8 *buf, int len)
+ 	spu_transaction_init(card);
+ 
+ 	/* write SPU register index */
+-	err = spi_write(card->spi, (u8 *)&reg_out, sizeof(u16));
+-	if (err)
+-		goto out;
++	reg_trans.tx_buf = &reg_out;
++	reg_trans.len = sizeof(reg_out);
+ 
+-	err = spi_write(card->spi, buf, len);
++	data_trans.tx_buf = buf;
++	data_trans.len = len;
+ 
+-out:
++	spi_message_add_tail(&reg_trans, &m);
++	spi_message_add_tail(&data_trans, &m);
++
++	err = spi_sync(card->spi, &m);
+ 	spu_transaction_finish(card);
+ 	return err;
+ }
+@@ -186,10 +186,13 @@ static inline int spu_reg_is_port_reg(u16 reg)
+ 
+ static int spu_read(struct if_spi_card *card, u16 reg, u8 *buf, int len)
+ {
+-	unsigned int i, delay;
++	unsigned int delay;
+ 	int err = 0;
+-	u16 zero = 0;
+ 	u16 reg_out = cpu_to_le16(reg | IF_SPI_READ_OPERATION_MASK);
++	struct spi_message m;
++	struct spi_transfer reg_trans;
++	struct spi_transfer dummy_trans;
++	struct spi_transfer data_trans;
+ 
+ 	/* You must take an even number of bytes from the SPU, even if you
+ 	 * don't care about the last one.  */
+@@ -197,29 +200,34 @@ static int spu_read(struct if_spi_card *card, u16 reg, u8 *buf, int len)
+ 
+ 	spu_transaction_init(card);
+ 
++	spi_message_init(&m);
++	memset(&reg_trans, 0, sizeof(reg_trans));
++	memset(&dummy_trans, 0, sizeof(dummy_trans));
++	memset(&data_trans, 0, sizeof(data_trans));
++
+ 	/* write SPU register index */
+-	err = spi_write(card->spi, (u8 *)&reg_out, sizeof(u16));
+-	if (err)
+-		goto out;
++	reg_trans.tx_buf = &reg_out;
++	reg_trans.len = sizeof(reg_out);
++	spi_message_add_tail(&reg_trans, &m);
+ 
+ 	delay = spu_reg_is_port_reg(reg) ? card->spu_port_delay :
+ 						card->spu_reg_delay;
+ 	if (card->use_dummy_writes) {
+ 		/* Clock in dummy cycles while the SPU fills the FIFO */
+-		for (i = 0; i < delay / 16; ++i) {
+-			err = spi_write(card->spi, (u8 *)&zero, sizeof(u16));
+-			if (err)
+-				return err;
+-		}
++		dummy_trans.len = delay / 8;
++		spi_message_add_tail(&dummy_trans, &m);
+ 	} else {
+ 		/* Busy-wait while the SPU fills the FIFO */
+-		ndelay(100 + (delay * 10));
++		reg_trans.delay_usecs =
++			DIV_ROUND_UP((100 + (delay * 10)), 1000);
+ 	}
+ 
+ 	/* read in data */
+-	err = spi_read(card->spi, buf, len);
++	data_trans.rx_buf = buf;
++	data_trans.len = len;
++	spi_message_add_tail(&data_trans, &m);
+ 
+-out:
++	err = spi_sync(card->spi, &m);
+ 	spu_transaction_finish(card);
+ 	return err;
+ }
+@@ -1049,7 +1057,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	spi_set_drvdata(spi, card);
+ 	card->pdata = pdata;
+ 	card->spi = spi;
+-	card->gpio_cs = pdata->gpio_cs;
+ 	card->prev_xfer_time = jiffies;
+ 
+ 	sema_init(&card->spi_ready, 0);
+@@ -1058,26 +1065,18 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	INIT_LIST_HEAD(&card->data_packet_list);
+ 	spin_lock_init(&card->buffer_lock);
+ 
+-	/* set up GPIO CS line. TODO: use  regular CS line */
+-	err = gpio_request(card->gpio_cs, "if_spi_gpio_chip_select");
+-	if (err)
+-		goto free_card;
+-	err = gpio_direction_output(card->gpio_cs, 1);
+-	if (err)
+-		goto free_gpio;
+-
+ 	/* Initialize the SPI Interface Unit */
+ 	err = spu_init(card, pdata->use_dummy_writes);
+ 	if (err)
+-		goto free_gpio;
++		goto free_card;
+ 	err = spu_get_chip_revision(card, &card->card_id, &card->card_rev);
+ 	if (err)
+-		goto free_gpio;
++		goto free_card;
+ 
+ 	/* Firmware load */
+ 	err = spu_read_u32(card, IF_SPI_SCRATCH_4_REG, &scratch);
+ 	if (err)
+-		goto free_gpio;
++		goto free_card;
+ 	if (scratch == SUCCESSFUL_FW_DOWNLOAD_MAGIC)
+ 		lbs_deb_spi("Firmware is already loaded for "
+ 			    "Marvell WLAN 802.11 adapter\n");
+@@ -1085,7 +1084,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 		err = if_spi_calculate_fw_names(card->card_id,
+ 				card->helper_fw_name, card->main_fw_name);
+ 		if (err)
+-			goto free_gpio;
++			goto free_card;
+ 
+ 		lbs_deb_spi("Initializing FW for Marvell WLAN 802.11 adapter "
+ 				"(chip_id = 0x%04x, chip_rev = 0x%02x) "
+@@ -1096,23 +1095,23 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 				spi->max_speed_hz);
+ 		err = if_spi_prog_helper_firmware(card);
+ 		if (err)
+-			goto free_gpio;
++			goto free_card;
+ 		err = if_spi_prog_main_firmware(card);
+ 		if (err)
+-			goto free_gpio;
++			goto free_card;
+ 		lbs_deb_spi("loaded FW for Marvell WLAN 802.11 adapter\n");
+ 	}
+ 
+ 	err = spu_set_interrupt_mode(card, 0, 1);
+ 	if (err)
+-		goto free_gpio;
++		goto free_card;
+ 
+ 	/* Register our card with libertas.
+ 	 * This will call alloc_etherdev */
+ 	priv = lbs_add_card(card, &spi->dev);
+ 	if (!priv) {
+ 		err = -ENOMEM;
+-		goto free_gpio;
++		goto free_card;
+ 	}
+ 	card->priv = priv;
+ 	priv->card = card;
+@@ -1157,8 +1156,6 @@ terminate_thread:
+ 	if_spi_terminate_spi_thread(card);
+ remove_card:
+ 	lbs_remove_card(priv); /* will call free_netdev */
+-free_gpio:
+-	gpio_free(card->gpio_cs);
+ free_card:
+ 	free_if_spi_card(card);
+ out:
+@@ -1179,7 +1176,6 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+ 	free_irq(spi->irq, card);
+ 	if_spi_terminate_spi_thread(card);
+ 	lbs_remove_card(priv); /* will call free_netdev */
+-	gpio_free(card->gpio_cs);
+ 	if (card->pdata->teardown)
+ 		card->pdata->teardown(spi);
+ 	free_if_spi_card(card);
+-- 
+1.6.0.6
 
