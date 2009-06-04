@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-220-247-10-204.b-man.svips.gol.ne.jp ([220.247.10.204]:37978
-	"EHLO smtp.kamineko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755899AbZFHWtQ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51913 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815AbZFDQba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 18:49:16 -0400
-Date: Tue, 9 Jun 2009 07:49:15 +0900
-From: Mattia Dongili <malattia@linux.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux acpi <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH] sony-laptop: no need to unblock rfkill on load
-Message-ID: <20090608224915.GA4583@kamineko.org>
-References: <4A2CE86F.9040209@tuffmail.co.uk> <1244457418.18863.8.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
-In-Reply-To: <1244457418.18863.8.camel@johannes.local>
+	Thu, 4 Jun 2009 12:31:30 -0400
+Subject: Re: [PATCH] rfkill: always init poll delayed work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <4A27F649.9080203@lwfinger.net>
+References: <1244015729.7176.28.camel@johannes.local>
+	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>
+	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>
+	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>
+	 <4A27F649.9080203@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-S/KSieVuyl3FVXcm1ShM"
+Date: Thu, 04 Jun 2009 18:31:27 +0200
+Message-Id: <1244133087.22576.86.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---cWoXeonUoKmBZSoM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-S/KSieVuyl3FVXcm1ShM
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 08, 2009 at 12:36:58PM +0200, Johannes Berg wrote:
-> On Mon, 2009-06-08 at 11:31 +0100, Alan Jenkins wrote:
-> > The re-written rfkill core ensures rfkill devices are initialized to
-> > the system default state.  The core calls set_block after registration
-> > so the driver shouldn't need to.
-> >=20
-> > Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+On Thu, 2009-06-04 at 11:28 -0500, Larry Finger wrote:
+> Johannes Berg wrote:
 >=20
-> Good catch, thanks.
+> > But this is without the patch?! If yes that would confuse me.
+>=20
+> My bad. That test was with the patch "[RFT 3/3] b43/legacy: port to
+> cfg80211 rfkill". Without it, everything works just fine. The LED
+> works and the radio follows the switch.
+>=20
+> Sorry for the noise.
 
-Just to confirm, is this patch going to sit in the wireless-testing tree
-and you will submit it for inclusion together with the rfkill work
-right?
-=20
-> > ---
-> >=20
-> > This patch applies on top of the rfkill rewrite in the wireless-testing=
- tree.
-> >=20
-> > diff --git a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/=
-sony-laptop.c
-> > index aec0b27..c1b21a4 100644
-> > --- a/drivers/platform/x86/sony-laptop.c
-> > +++ b/drivers/platform/x86/sony-laptop.c
-> > @@ -1114,7 +1114,6 @@ static int sony_nc_setup_rfkill(struct acpi_devic=
-e *device,
-> >  		return err;
-> >  	}
-> >  	sony_rfkill_devices[nc_type] =3D rfk;
-> > -	sony_nc_rfkill_set((void *)nc_type, false);
-> >  	return err;
-> >  }
-> > =20
-> >=20
-> >=20
+No worries.
 
-thanks
---=20
-mattia
-:wq!
+> Now that I know the problem is in the patch, it should be easier to debug=
+.
 
---cWoXeonUoKmBZSoM
+Would you do the same test with the uevents w/o the patch? I suspect
+that you won't get the event at the right spot.
+
+johannes
+
+--=-S/KSieVuyl3FVXcm1ShM
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkotlWsACgkQgpRPaOotLEG8iACgsvpH3LJR9/cITzKSuG4cvHTi
-G+oAoMXpl3iQzVWVZXHSIKfbAYUMmPiV
-=B97G
+iQIcBAABAgAGBQJKJ/bcAAoJEODzc/N7+QmayAcP/RM0TiwbfYT++ACzWz7x6O/M
+Gw6TBeykHJENsHM8iyY/TfI8/5E9XNw7G6SnRezYOTrNXP4i+LP4YBNmLRsuvl+i
+TBeUniiNqYmRGQUj+UqCd4jiWCqqBClC+T0DM1raW9SqzzYTV6bA7djzqtSXF/+J
+TP8Sayp/umxpiGIu41ayJziPEgt5l2rPS8VNrI59XDyE8abmsNGcHtZgKnCn4Fxq
+2yp+pijRa0+fVX+mxX3SdRV8UIEA73uQEQY63ELhS31sL41qF0UOpwbOkixsYPam
+7i7e3PKFHQvXJLQA9yZ1XOsTT070wafcSOGbP8E2+WinAwq1ekd2SOKVORbi0Tou
+OTGbE1brojiwpA4z8Q5EsFhDk4lPHi0UbDNjKzP7A+tjMZv0y2BxTN5pi4fcOKza
+uSZGFf4GRI+12hT9GyWMi47pwYmz4xHH2iupWfIyAQv4kzWF4Rkm32RCtdKZ4pRC
+UC109d7Oc6ogTOyulFBQJNKtlIxuv3zDPnQ/B7548bAZTR93p9obn/c8DkxGCIC6
+yeIhkxye3/Egq9iibEzGIf0lM/gC74zDAzPKQzrRujv6WWPfheGYQu6C2XFox8Qd
+NDcxcZox16EPcQPOgpucW2e2HaOVJzXlHFG6ZLPcVj3keIWrovPvsT3IiBxLJzJ/
+KUFIEiFwzxFKPcMmrMtN
+=jH+d
 -----END PGP SIGNATURE-----
 
---cWoXeonUoKmBZSoM--
+--=-S/KSieVuyl3FVXcm1ShM--
+
