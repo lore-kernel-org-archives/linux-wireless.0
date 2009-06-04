@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36341 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456AbZF3JJI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 05:09:08 -0400
-Subject: [PATCH] mac80211: remove an unused function declaration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 30 Jun 2009 11:09:05 +0200
-Message-Id: <1246352945.16643.5.camel@johannes.local>
-Mime-Version: 1.0
+Received: from smtp4-g21.free.fr ([212.27.42.4]:53049 "EHLO smtp4-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752705AbZFDTvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 15:51:25 -0400
+Message-ID: <4A2825B5.3000405@free.fr>
+Date: Thu, 04 Jun 2009 21:51:17 +0200
+From: matthieu castet <castet.matthieu@free.fr>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 : unaligned access on mips
+References: <4A244E19.7090501@free.fr> <200906021720.39080.mb@bu3sch.de> <4A256CCC.5040908@free.fr> <200906022027.35609.mb@bu3sch.de>
+In-Reply-To: <200906022027.35609.mb@bu3sch.de>
+Content-Type: multipart/mixed;
+ boundary="------------030403080704020109050209"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_scan_results function hasn't existed for a
-long time now, so its declaration should be removed as
-well.
+This is a multi-part message in MIME format.
+--------------030403080704020109050209
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    3 ---
- 1 file changed, 3 deletions(-)
+Michael Buesch wrote:
+> On Tuesday 02 June 2009 20:17:48 matthieu castet wrote:
+> Can you send a patch please?
+> I do actually prefer patches anyway instead of verbose explanations. I'd have
+> immediately understood what you were talking about, if you'd just sent a patch. ;)
+> 
+Here you are
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-06-30 11:06:42.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-06-30 11:07:35.000000000 +0200
-@@ -979,9 +979,6 @@ int ieee80211_request_internal_scan(stru
- 				    const u8 *ssid, u8 ssid_len);
- int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 			   struct cfg80211_scan_request *req);
--int ieee80211_scan_results(struct ieee80211_local *local,
--			   struct iw_request_info *info,
--			   char *buf, size_t len);
- void ieee80211_scan_cancel(struct ieee80211_local *local);
- ieee80211_rx_result
- ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
+--------------030403080704020109050209
+Content-Type: text/x-diff;
+ name="b43_unaligned.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="b43_unaligned.diff"
 
+Fix an unaligned access on b43.
+unaligned data is read/write with a u32 pointer instead of using the
+packed structure.
 
+Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index a63d888..55f36a7 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -118,7 +118,6 @@ u8 b43_plcp_get_ratecode_ofdm(const u8 bitrate)
+ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 			   const u16 octets, const u8 bitrate)
+ {
+-	__le32 *data = &(plcp->data);
+ 	__u8 *raw = plcp->raw;
+ 
+ 	if (b43_is_ofdm_rate(bitrate)) {
+@@ -127,7 +126,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 		d = b43_plcp_get_ratecode_ofdm(bitrate);
+ 		B43_WARN_ON(octets & 0xF000);
+ 		d |= (octets << 5);
+-		*data = cpu_to_le32(d);
++		plcp->data = cpu_to_le32(d);
+ 	} else {
+ 		u32 plen;
+ 
+@@ -141,7 +140,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 				raw[1] = 0x04;
+ 		} else
+ 			raw[1] = 0x04;
+-		*data |= cpu_to_le32(plen << 16);
++		plcp->data |= cpu_to_le32(plen << 16);
+ 		raw[0] = b43_plcp_get_ratecode_cck(bitrate);
+ 	}
+ }
+
+--------------030403080704020109050209--
