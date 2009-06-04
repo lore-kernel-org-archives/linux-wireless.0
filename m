@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39839 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752520AbZFGRgB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 13:36:01 -0400
-Subject: Re: [PATCH V2] b43/legacy: port to cfg80211 rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <4a2bf93a.bTrtb32iihvyZWD3%Larry.Finger@lwfinger.net>
-References: <4a2bf93a.bTrtb32iihvyZWD3%Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zG6EvaV3mw1rdVA49xWd"
-Date: Sun, 07 Jun 2009 19:35:54 +0200
-Message-Id: <1244396154.12956.11.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:45130 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151AbZFDVT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 17:19:28 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: Fix possible unaligned u32 access
+Date: Thu, 4 Jun 2009 23:18:33 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Matthieu CASTET <castet.matthieu@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200906042318.33895.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Matthieu CASTET <castet.matthieu@free.fr>
 
---=-zG6EvaV3mw1rdVA49xWd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Fix possible unaligned u32 access in b43_generate_plcp_hdr().
+Unaligned data is read/write with a u32 pointer instead of using the
+packed structure. Some versions of gcc ignore the "packed" attribute, if the
+structure element is accessed through a local pointer.
 
-Thanks Larry. John: please pick up this one, the subject should be v4 :)
+Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-johannes
+---
 
---=-zG6EvaV3mw1rdVA49xWd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Please queue this bugfix.
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKK/pxAAoJEODzc/N7+Qma2gUQAIEm/JcyqdXvB0UfZ7n0Tkfq
-ygL3LFIFTDLieRUwXIlUICqjtRQIzd90wxJ3q/0E1FFPo7cDVRR0Ol9uCz6dkwdU
-S4UGl9q9U26r3h2n/ANeRp1DzHFgwNoXltBxId6E+mlxXRebjqqnjIfnuFFRp3rA
-CZsS2dM5EPGlqjFCsm6RHthmtOC3IiPa166Ena73bqigmYOO+W4fPmDtiqOMQKcH
-LAgkdf4fGmSNgPL/g1LgHnlN601id/Rv4vaEWa54BBerbJZ+39tZm5S0DU7ruNss
-kaYzT3goF2RuygY7utGesXgUC5yfaWjEynuuzIC1OsoMx58fW4Pe8laxpZsgNTTx
-tIux5B3S7WdOIPYaI0y4F/N3NYUuF8vap5O7ZaG5tnLDDqDwULqNOYwLxMxNJeHh
-0746n4ws0LpZVNPVkxrgMzfrbAm/2H37NlesUOTSMiDJ65Qe9EhXdBWXGfUfPSaA
-hx6DqtLAHBM6Eecd4XxsgK4VGY5XPQ0BYcHO3EYzhOnQ1fYAPoHuNwpuQJPisWt3
-ljgMR/lskr2kWWZwJqiX7/3EFY9NxBRNzurhCFv2de9ISE9qOcMJIqnT1B1cYV8i
-i5En+I6z/4vmE386Xq/i5yhoRAeAUJdDjgfJoh/3sdYseWETK/1/G6/FtG5rKlsv
-6x1lPpsRUBeRoDWw6LJ5
-=hQuM
------END PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index a63d888..55f36a7 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -118,7 +118,6 @@ u8 b43_plcp_get_ratecode_ofdm(const u8 bitrate)
+ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 			   const u16 octets, const u8 bitrate)
+ {
+-	__le32 *data = &(plcp->data);
+ 	__u8 *raw = plcp->raw;
+ 
+ 	if (b43_is_ofdm_rate(bitrate)) {
+@@ -127,7 +126,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 		d = b43_plcp_get_ratecode_ofdm(bitrate);
+ 		B43_WARN_ON(octets & 0xF000);
+ 		d |= (octets << 5);
+-		*data = cpu_to_le32(d);
++		plcp->data = cpu_to_le32(d);
+ 	} else {
+ 		u32 plen;
+ 
+@@ -141,7 +140,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
+ 				raw[1] = 0x04;
+ 		} else
+ 			raw[1] = 0x04;
+-		*data |= cpu_to_le32(plen << 16);
++		plcp->data |= cpu_to_le32(plen << 16);
+ 		raw[0] = b43_plcp_get_ratecode_cck(bitrate);
+ 	}
+ }
 
---=-zG6EvaV3mw1rdVA49xWd--
-
+-- 
+Greetings, Michael.
