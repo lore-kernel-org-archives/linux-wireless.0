@@ -1,104 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41428 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399AbZFBUay (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:40312 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbZFDOv7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:30:54 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath: make regulatory parsing more verbose on debug
-Date: Tue,  2 Jun 2009 16:30:56 -0400
-Message-Id: <1243974656-15600-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 4 Jun 2009 10:51:59 -0400
+MIME-Version: 1.0
+In-Reply-To: <1244124749.22576.71.camel@johannes.local>
+References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
+	 <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
+	 <1244021964.10665.5.camel@johannes.local>
+	 <20090603.030911.162861804.davem@davemloft.net>
+	 <20090603105256.GB20508@doriath.ww600.siemens.net>
+	 <1244027110.1693.9.camel@johannes.local>
+	 <20090603122744.GC20508@doriath.ww600.siemens.net>
+	 <1244124749.22576.71.camel@johannes.local>
+Date: Thu, 4 Jun 2009 18:51:58 +0400
+Message-ID: <bc64b4640906040751i3c64c317i4eedb7d53307092a@mail.gmail.com>
+Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
+	802.15.4 devices
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	sfr@canb.auug.org.au, slapin@ossfans.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should help when reviewing issues regarding regulatory
-domain on ath5k/ath9k/ar9170.
+2009/6/4 Johannes Berg <johannes@sipsolutions.net>:
+> On Wed, 2009-06-03 at 16:27 +0400, Dmitry Eremin-Solenikov wrote:
+>
+>> > > +static int ieee802154_nl_put_failure(struct sk_buff *msg)
+>> > > +{
+>> > > + void *hdr = genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is right at the start of msg */
+>> > > + genlmsg_cancel(msg, hdr);
+>> > > + nlmsg_free(msg);
+>> > > + return -ENOBUFS;
+>> > > +}
+>> >
+>> > This seems weird.
+>>
+>> Why?
+>
+> Because it's strange to cancel then free?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/regd.c |   29 +++++++++++++++++++++++++----
- 1 files changed, 25 insertions(+), 4 deletions(-)
+>From looking at the other code, the usual pattern for netlink is
+(please, correct me if I'm wrong):
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 7a89f9f..eef370b 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -366,11 +366,17 @@ static bool ath_regd_is_eeprom_valid(struct ath_regulatory *reg)
- 	if (rd & COUNTRY_ERD_FLAG) {
- 		/* EEPROM value is a country code */
- 		u16 cc = rd & ~COUNTRY_ERD_FLAG;
-+		printk(KERN_DEBUG
-+		       "ath: EEPROM indicates we should expect "
-+			"a country code\n");
- 		for (i = 0; i < ARRAY_SIZE(allCountries); i++)
- 			if (allCountries[i].countryCode == cc)
- 				return true;
- 	} else {
- 		/* EEPROM value is a regpair value */
-+		if (rd != CTRY_DEFAULT)
-+			printk(KERN_DEBUG "ath: EEPROM indicates we "
-+			       "should expect a direct regpair map\n");
- 		for (i = 0; i < ARRAY_SIZE(regDomainPairs); i++)
- 			if (regDomainPairs[i].regDmnEnum == rd)
- 				return true;
-@@ -477,6 +483,11 @@ ath_regd_init(struct ath_regulatory *reg,
- 	struct country_code_to_enum_rd *country = NULL;
- 	u16 regdmn;
- 
-+	if (!reg)
-+		return -EINVAL;
-+
-+	printk(KERN_DEBUG "ath: EEPROM regdomain: 0x%0x\n", reg->current_rd);
-+
- 	if (!ath_regd_is_eeprom_valid(reg)) {
- 		printk(KERN_ERR "ath: Invalid EEPROM contents\n");
- 		return -EINVAL;
-@@ -486,20 +497,30 @@ ath_regd_init(struct ath_regulatory *reg,
- 	reg->country_code = ath_regd_get_default_country(regdmn);
- 
- 	if (reg->country_code == CTRY_DEFAULT &&
--	    regdmn == CTRY_DEFAULT)
-+	    regdmn == CTRY_DEFAULT) {
-+		printk(KERN_DEBUG "ath: EEPROM indicates default "
-+		       "country code should be used\n");
- 		reg->country_code = CTRY_UNITED_STATES;
-+	}
- 
- 	if (reg->country_code == CTRY_DEFAULT) {
- 		country = NULL;
- 	} else {
-+		printk(KERN_DEBUG "ath: doing EEPROM country->regdmn "
-+		       "map search\n");
- 		country = ath_regd_find_country(reg->country_code);
- 		if (country == NULL) {
- 			printk(KERN_DEBUG
--				"ath: Country is NULL!!!!, cc= %d\n",
-+				"ath: no valid country maps found for "
-+				"country code: 0x%0x\n",
- 				reg->country_code);
- 			return -EINVAL;
--		} else
-+		} else {
- 			regdmn = country->regDmnEnum;
-+			printk(KERN_DEBUG "ath: country maps to "
-+			       "regdmn code: 0x%0x\n",
-+			       regdmn);
-+		}
- 	}
- 
- 	reg->regpair = ath_get_regpair(regdmn);
-@@ -523,7 +544,7 @@ ath_regd_init(struct ath_regulatory *reg,
- 
- 	printk(KERN_DEBUG "ath: Country alpha2 being used: %c%c\n",
- 		reg->alpha2[0], reg->alpha2[1]);
--	printk(KERN_DEBUG "ath: Regpair detected: 0x%0x\n",
-+	printk(KERN_DEBUG "ath: Regpair used: 0x%0x\n",
- 		reg->regpair->regDmnEnum);
- 
- 	ath_regd_init_wiphy(reg, wiphy, reg_notifier);
+int fill (....)
+{
+   genlmsg_put();
+   NLA_PUT(...)
+   NLA_PUT(...)
+   return genlmsg_end();
+
+nla_put_failure:
+   genlmsg_cancel();
+   return -EMSGSIZE;
+}
+
+int cmd(...)
+{
+    int rc;
+    nlmsg_new();
+
+    rc = fill();
+    if (rc < 0)
+        goto out;
+
+    genlmsg_unicast();
+
+out:
+    nlmsg_free();
+    return -ENOBUFS;
+}
+
+This is equivalent to our code:
+
+sk_buff *new()
+{
+   msg = nlmsg_new();
+   genlmsg_put();
+   return msg;
+}
+
+int finish()
+{
+    genlmsg_end();
+    return genlmsg_unicast(); /*multicast in our case, but doesn't matter */
+}
+
+int cancel()
+{
+   genlmsg_cancel();
+   nlmsg_free();
+   return -ENOBUFS;
+}
+
+int cmd()
+{
+  msg = new();
+  NLA_PUT()
+  NLA_PUT();
+  return finish();
+nla_put_failure:
+  return cancel();
+}
+
+>> > > +static int ieee802154_associate_req(struct sk_buff *skb, struct genl_info *info)
+>> > > +{
+>> > > + struct net_device *dev;
+>> > > + struct ieee802154_addr addr;
+>> > > + int ret = -EINVAL;
+>> > > +
+>> > > + if (!info->attrs[IEEE802154_ATTR_CHANNEL]
+>> > > +  || !info->attrs[IEEE802154_ATTR_COORD_PAN_ID]
+>> > > +  || (!info->attrs[IEEE802154_ATTR_COORD_HW_ADDR] && !info->attrs[IEEE802154_ATTR_COORD_SHORT_ADDR])
+>> > > +  || !info->attrs[IEEE802154_ATTR_CAPABILITY])
+>> > > +         return -EINVAL;
+>> >
+>> > That's some odd coding style.
+>>
+>> Could you please elaborate this? What seems odd to you?
+>
+> if (X
+>    && Y)
+>
+> vs
+>
+> if (X &&
+>    Y)
+>
+> where the latter is used for all other sources files in the kernel. Try
+> applying that to _all_ your patches while you rework the sources to fit
+> into 80 columns.
+
+Fine, I'll apply the latter pattern and try to reformat code to fit to
+80 columns.
+
 -- 
-1.6.0.6
-
+With best wishes
+Dmitry
