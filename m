@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f224.google.com ([209.85.220.224]:51744 "EHLO
-	mail-fx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbZFVUR4 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54038
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753578AbZFDAtU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 16:17:56 -0400
-Received: by fxm24 with SMTP id 24so1007667fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 13:17:57 -0700 (PDT)
-Date: Mon, 22 Jun 2009 22:15:02 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: kernel crashes, 2.6.30, rt2x00, ath5k, ieee80211_get_*_rate,
-	automatic rate control
-Message-ID: <20090622201502.GA13052@linux-m68k.org>
-References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20090621180447.GA29469@hash.localnet>
+	Wed, 3 Jun 2009 20:49:20 -0400
+Date: Wed, 03 Jun 2009 17:49:21 -0700 (PDT)
+Message-Id: <20090603.174921.184497846.davem@davemloft.net>
+To: dbaryshkov@gmail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
+	slapin@ossfans.org
+Subject: Re: [PATCH 2/6] Add constants for the ieee 802.15.4/ZigBee stack
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090603231537.GB32561@doriath.ww600.siemens.net>
+References: <20090603105151.GA20508@doriath.ww600.siemens.net>
+	<20090603.141919.261921857.davem@davemloft.net>
+	<20090603231537.GB32561@doriath.ww600.siemens.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 21, 2009 at 02:04:47PM -0400, Bob Copeland wrote:
-> On Sun, Jun 21, 2009 at 03:49:54PM +0200, Richard Zidlicky wrote:
-> > 
-> > The good news - setting a fixed rate appears to prevent all crashes. This is
-> > perhaps the reason why wireless developers never see this crashes?
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Date: Thu, 4 Jun 2009 03:15:37 +0400
+
+> From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> Date: Thu, 4 Jun 2009 03:09:40 +0400
+> Subject: [PATCH 2/6] Add constants for the ieee 802.15.4/ZigBee stack
 > 
-> Sounds like the rate controller.  Does this patch help?
+> IEEE 802.15.4/ZigBee stack requires several constants to be defined/adjusted.
 > 
-> http://lkml.org/lkml/2009/6/5/269
+> Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> Signed-off-by: Sergey Lapin <slapin@ossfans.org>
 
+Looks a lot better, except that there is no reason to mention
+ZigBee anymore in the commit message I guess :-)
 
-did not crash for a day which does not prove much yet. I have now added a printk
-that would alert me that the bugfix actually did anything and so far waiting to 
-see it.
+Once all the feedback is sorted out, please make a formal
+resubmission of the entire series.
 
-Something is still going very wrong with the automatic rate selection on the rt73usb
-device - it is receiving fine with 11-24M but TX rate is not even 1M (50-100Kb/s). 
-TX is fine with fixed rates 11-24M.
-
-Richard
+Thank you.
