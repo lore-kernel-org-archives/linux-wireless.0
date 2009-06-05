@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42869
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753749AbZFFBAK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47264 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753089AbZFEGwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 21:00:10 -0400
-Date: Fri, 05 Jun 2009 18:00:11 -0700 (PDT)
-Message-Id: <20090605.180011.218685961.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: mb@bu3sch.de, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, castet.matthieu@free.fr
-Subject: Re: [PATCH] b43: Fix possible unaligned u32 access
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090605122503.GA2791@tuxdriver.com>
-References: <200906042318.33895.mb@bu3sch.de>
-	<20090605122503.GA2791@tuxdriver.com>
+	Fri, 5 Jun 2009 02:52:23 -0400
+Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
+ 802.15.4 devices
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>
+In-Reply-To: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
+References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
+	 <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com>
+	 <1244168990-28355-3-git-send-email-dbaryshkov@gmail.com>
+	 <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zhkfR7yzDtOADSFsCaNU"
+Date: Fri, 05 Jun 2009 08:52:17 +0200
+Message-Id: <1244184737.22576.94.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 5 Jun 2009 08:25:03 -0400
 
-> On Thu, Jun 04, 2009 at 11:18:33PM +0200, Michael Buesch wrote:
->> From: Matthieu CASTET <castet.matthieu@free.fr>
->> 
->> Fix possible unaligned u32 access in b43_generate_plcp_hdr().
->> Unaligned data is read/write with a u32 pointer instead of using the
->> packed structure. Some versions of gcc ignore the "packed" attribute, if the
->> structure element is accessed through a local pointer.
->> 
->> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
->> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> That seems pretty brain-dead...can you cite a source for this
-> information?  The patch seems like a no-op...
+--=-zhkfR7yzDtOADSFsCaNU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The "packed" attribute simply doesn't propagate.  It isn't
-a GCC bug.  Look at this:
+On Fri, 2009-06-05 at 06:29 +0400, Dmitry Eremin-Solenikov wrote:
 
-struct foo {
-	u32 x;
-} attribute((packed));
+> +/* This source file is shared between kernel and userspace sources, thus
+> + * a bit of __KERNEL__ checks
+> + */
+> +#ifdef __KERNEL__
 
-u32 bar(struct foo *p)
-{
-	u32 *p = &p->x;
+It's a C file. It can't be shared expect by copying, hence IMO these
+things are pointless.
 
-	return *p;
-}
+johannes
 
-That will (correctly) do a 32-bit aligned load, only doing
-the "return p->x;" will proply respect the packed attribute.
+--=-zhkfR7yzDtOADSFsCaNU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKMCeAAoJEODzc/N7+QmaOkYP/2WkkWFvXl+8pgzsvjTkyRj/
+J9jTDFnigkCNmFd07/fOageIoQJzUNasgXbzEPyXGrF7r6iVVj4sInSKmuBBCrMp
+wXwF0qzkRTGVfhL2jDdb80DUjZlavEajFXqTOMV66VE82QHUkPAuklscOKjy+LQU
+c49IkqI7IPglQYMoA8Rae0EPSzcLig/rHiMMwjGK/3eVS4/Yp0jKLjdRITVOZNiy
+O6oh7sABcWEiZ6T73c9WfTlnwL9qJrQZp5GvLrGx0JwkElw+JMX/2/PKpcYIkBUl
+rkwm/57RMIrNp3aBoofceLSxK+FQca++CgqzcOnObXVaU3s+Zfw4/8NXRq38riY7
+/bVsaXgk4Af6M7qoz/d3GwkbxUn1TcTwluBqeTo6hDKk1rt5KDEWOYeTuNj5rDxW
+1PrIVSW7dnrwpaM27LHKzxHByC3uHg/xoqmuLj67L+OpPkbN9OXWx6LMoMId8ihY
+CDWhEtTHTgwATXhGOBoQ/tz9iqS2E26Wbp6Fd5Od89VQ/sx0EEWFnh/j+Tz8b84E
+hyiezLkOsT9hn0Z2K3KuNKpdZ5UFfXDvRO4UVaSo7DtN3p9aXpM+4K858TMb0gaZ
+jR2MDMpy/OtcuiugKXvftP7C8xLd4g9UZct5nIBUXKDTJo+lseZ8FB5pnmpB5quz
+D0YJorA+lakschrhBCZ6
+=5I1f
+-----END PGP SIGNATURE-----
+
+--=-zhkfR7yzDtOADSFsCaNU--
+
