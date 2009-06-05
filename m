@@ -1,28 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web55306.mail.re4.yahoo.com ([206.190.58.185]:31055 "HELO
-	web55306.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752773AbZFBPx0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 11:53:26 -0400
-Message-ID: <94068.60053.qm@web55306.mail.re4.yahoo.com>
-Date: Tue, 2 Jun 2009 08:53:27 -0700 (PDT)
-From: austinxxh-ath9k@yahoo.com
-Reply-To: austinxxh-ath9k@yahoo.com
-Subject: 11n mode under mesh/adhoc/station
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Received: from mail.atheros.com ([12.36.123.2]:43479 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752571AbZFEHnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 03:43:03 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2009 00:43:05 -0700
+Subject: Re: [ath9k-devel] [PATCH 14/15] mac80211: move management / no-ack
+ frame rate decision to mac80211
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Derek Smithies <derek@indranet.co.nz>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1244183288.22576.93.camel@johannes.local>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	 <1244180502-4323-15-git-send-email-lrodriguez@atheros.com>
+	 <1244183288.22576.93.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 5 Jun 2009 10:42:58 +0300
+Message-ID: <1244187778.3952.2.camel@jm-desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-06-04 at 23:28 -0700, Johannes Berg wrote:
+> On Fri, 2009-06-05 at 01:41 -0400, Luis R. Rodriguez wrote:
+> > All rate control algorithms agree to send management and no-ack
+> > frames at the lowest rate. They also agree to do this when sta
+> > and the private rate control data is NULL. We move this to mac80211
+> > and simplify the rate control algorithm code.
+> 
+> We previously thought this would constrain our rate control algorithms
+> more than we would like for future experimentation with higher multicast
+> rates. Has that changed?
 
-for AP mode using hostapd, I can set up 11n mode:
-ieee80211n=1
-ht_capab=[HT40-][SHORT-GI-40][DSSS_CCK-40]
+I hope not. I don't like the idea of forcing the lowest rate in
+mac80211; we should allow rate control algorithms to be improved to do
+more intelligent selection of rate at least for multicast/broadcast
+frames. That might also be of use for some (likely post-association)
+unicast management frames since their use is going to increase in the
+future.
 
-what about other modes, e.g. mesh, ad-hoc, station, even monitor, how can I be sure it's not running b/g mode and it's indeed set up for 11n mode, even better, it's set as 11n-only mode. Is this do-able at all? I'm using ath9k driver (atheros).
+- Jouni
 
-Please cc-me as I'm not on the linux-wireless@vger list.
 
-Thanks!
-X Xiao
