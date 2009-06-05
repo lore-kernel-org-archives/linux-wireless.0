@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33661 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbZFXIsf (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:42891 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876AbZFETMW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 04:48:35 -0400
-Subject: Re: [RFC/HACK] net/compat/wext: allow sending different messages
- to compat tasks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-In-Reply-To: <1245589835.5003.2.camel@johannes.local>
-References: <1245589835.5003.2.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vT0sr91OMfl2dOhgrsVY"
-Date: Wed, 24 Jun 2009 10:48:35 +0200
-Message-Id: <1245833315.21314.47.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 5 Jun 2009 15:12:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 5 Jun 2009 21:12:03 +0200
+Message-ID: <69e28c910906051212l6f6548bflf7d83c4eccf80fad@mail.gmail.com>
+Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jun 5, 2009 at 9:04 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> I'm pleased to announce we have released the source code to our
+> Atheros 802.11n USB Otus/ar9170 device under the GPL. You can grab the
+> source, compile and use it with the upstream ar9170 device driver.
+> Patches are welcomed. The git tree available for this is at:
+>
+> http://git.sipsolutions.net/ar9170-fw.git
+>
+> For more information please visit the home page for this project is on
+> our Linux wireless wiki:
+>
+> http://wireless.kernel.org/en/users/Drivers/ar9170.fw
+>
+> The ar9170 device driver home page is at:
+>
+> http://wireless.kernel.org/en/users/Drivers/ar9170
+>
+> I'd like to thank Johannes Berg and Christian Lamparter for their
+> incredible contributions to the project both firmware and ar9170
+> driver so far without which this would not have been possible.
+>
+>  Luis
 
---=-vT0sr91OMfl2dOhgrsVY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Great! That's a first for any wireless chip...
 
-On Sun, 2009-06-21 at 15:10 +0200, Johannes Berg wrote:
-> Wireless extensions have the unfortunate problem that events
-> are multicast, and are not independent of pointer size. Thus,
-> currently 32-bit tasks on 64-bit platforms cannot properly
-> receive events and fail with all kinds of strange problems,
-> for instance wpa_supplicant never notices disassociations, due
-> to the way the 64-bit event looks to a 32-bit process the fact
-> that the address is all zeroes is lost, it thinks instead it
-> is 00:01:00:00:00:00 (actually I'm not entirely sure about the
-> position of the 1 but it's like that).
+BTW can we expect a similar firmware source release for ar2524/zd1211?
 
-No further comments on this? If I fix sparc and mips, can I get it
-merged?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-johannes
 
---=-vT0sr91OMfl2dOhgrsVY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKQehfAAoJEODzc/N7+QmapqkP/i2cik9RB8+iyzK7uThbMsgo
-v6RYaOFo6t6TRRTccxdJbFs9c9RtTVoF/t8aiDGo1rrEtZE9FV+P5WAH55D8TkZB
-t+v0LMJm1HVgf2jQyS1IpEa21+djSM0FEr7UsgHWGsVxDGo5juagIRuSn8YCl3Or
-oJPwcNVvjP0NhfqYfEcZg3k2d2vDBdTtA/S04u64dNBJH3jgQnwPtS1eaP6RoXA7
-f8ZvNV2Yb0K1ieZdIaorU2fzYID7OwhhrZs2t4EMnn4XAaHZvwowmZWGbBigjtwy
-iHx8TMS43MqD45HMau3mNu4vj5JUtcUVD9gF6PwKmhHNpuu1g1NMC28QoMvqL21S
-nHQVGwRyjyuvlBZpCSsVLrBnalVUKtrrB4k23TjmMGoYyMfHit1Q/Ysz6RPjGoY1
-EgScHhIPIqgD7J9RnsG3Zr16PclExLJT3oBrdAq++thiIl/NNAXS9Omma+jmCtE7
-EDqAcrs48+EmoQZayUTLyICyk/lmVO7upf1mznDapraHhUYriElYeBxhFD/mOCnP
-KOVml38jYgJZDeXH2UC+2cX5IAtiGa8GNQefmOpiBTnL1803FouCoLktlp+Hgn3K
-eWC6FAKi8pDwjE3q3OcL5mXuzNN3wp1qrbxfA2q1VMD002j+gJtfreaP6RY5hfDC
-ZEIr+Gt3WErtOdAAyxI0
-=Ea06
------END PGP SIGNATURE-----
-
---=-vT0sr91OMfl2dOhgrsVY--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
