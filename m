@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52803 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628AbZFCRdb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 13:33:31 -0400
-Subject: Re: linux-next: Tree for June 3 (rfkill)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-wimax@intel.com, wimax@linuxwimax.org
-In-Reply-To: <4A26B0D2.3090207@oracle.com>
-References: <20090603190952.2dd0cc70.sfr@canb.auug.org.au>
-	 <4A269539.8020607@oracle.com>  <4A26B0D2.3090207@oracle.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GeECyou/NqU0JF9rluOW"
-Date: Wed, 03 Jun 2009 19:33:20 +0200
-Message-Id: <1244050400.22105.0.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:51447 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751503AbZFETB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 15:01:56 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+Date: Fri, 5 Jun 2009 21:01:46 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net>
+In-Reply-To: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200906052101.47168.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 05 June 2009 20:19:19 Larry Finger wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> 
+> This ports the b43/legacy rfkill code to the new API offered
+> by cfg80211 and thus removes a lot of useless stuff.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Michael Buesch <mb@bu3sch.de>
+> ---
+> 
+> V1 - Original by Johannes.
+> V2 - Modified in testing by Larry.
+>      The rfkill polling routine brings the interface back to the initialized
+>      state if it is found to be uninitialized. This way the rfkill switch
+>      may be interpreted. In addition, the radio LED is not turned on in the
+>      initialization routine unless the rfkill switch is on.
 
---=-GeECyou/NqU0JF9rluOW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is pretty silly behavior IMO. Just to bring it to the point:
+We initialize a huge wireless MAC, PHY and Radio that consume several watts of power
+just to poll a silly RF-kill bit.
 
-On Wed, 2009-06-03 at 10:20 -0700, Randy Dunlap wrote:
+We can't we just accept that the RF-kill status is unknown while the device is down?
 
-> Ugh, there are similar errors in the wimax area, which doesn't
-> seem to mention RFKILL in its Kconfig file at all.  :(
+I really do hate all that rfkill crap and I'm still refusing to sign off on anything that's
+related to rfkill (like I did for the past year or so). If people want this merged,
+somebody else maintain and sign it off, please.
 
-Guess it too will have to get a
-
-	depends on RFKILL || !RFKILL
-
-I can take care of it after dinner.
-
-johannes
-
---=-GeECyou/NqU0JF9rluOW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKJrPdAAoJEODzc/N7+QmaN/sP/iBHXVPwc/uhbzWEuk4LNvkE
-SJo9RFxFHA4ALCCkCfp9VZL3jtws5BABBdNJxvRN3nUMnQehmANfCAiRtbAOqr3Y
-xsE2nMDmJzZKIKpp4LMQUMN0HMa/PK6S8S5VJlPG/KsPZDzerw22kk/Kf9o8Wdoc
-Juag+qtk8H7alIyyI0JGuatN/szikDdzIvq+BKsKfe3Y6hPRcA/VvF1tl9Wn2l+t
-75BOwYZQyXYPsE0bDgWXkWctau6OHec35RU9afnUFUQTrlRPqs5TzjadVcXHWXvE
-2oaa9B72LBxpHMutSuCsvGELvWf88GXw9VXU4cXoZ9GkhXsW6jSWGyAhsSeACKTH
-KoGVQsgEJi87HkHCH8O9ORneK+1Hcc70R/Z4p3e6/jV9ialByNpoeR+zfcRnlRWA
-WcINYmbGl5Ak4GaAftdJKEqKlimle8MvKtOXxPc5Q1NH6uFj3iivLGJa7F8IAp2x
-/th/exuhe9LcbbxvHV/4c7s3npG1ndfhD94UeTyozmXHszo3FFWnBFMWuZobqtgb
-jSL000TjVaTtU+ZjoUl99ZDq5FIEELnnnCit4MmsdeKwkrZnnuUJAmXqCp/wikv0
-VkkQY01yMIRSEMSzIjK8vtfgzpc/q9EPrCmQ4h/zGpk62KqUiMR4anR2t5l+UQrY
-Se8CSndSgefpfF7+z5XF
-=cJyO
------END PGP SIGNATURE-----
-
---=-GeECyou/NqU0JF9rluOW--
-
+-- 
+Greetings, Michael.
