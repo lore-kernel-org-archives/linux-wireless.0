@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:63733 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757399AbZFLLOd (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35528 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754639AbZFEFlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:14:33 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 02/33] wl12xx: reserver buffer for read32()/write32() in
-	struct wl12xx
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:14:28 +0300
-Message-ID: <20090612111428.8877.33418.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 5 Jun 2009 01:41:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: [PATCH 13/15] iwlwifi: use ieee80211_is_data(fc)
+Date: Fri,  5 Jun 2009 01:41:40 -0400
+Message-Id: <1244180502-4323-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
-
-The buffer is needed for DMA safe transfers.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
- drivers/net/wireless/wl12xx/spi.h    |    9 ++++-----
- drivers/net/wireless/wl12xx/wl12xx.h |    2 ++
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
-index fd3227e..f3f1895 100644
---- a/drivers/net/wireless/wl12xx/spi.h
-+++ b/drivers/net/wireless/wl12xx/spi.h
-@@ -94,16 +94,15 @@ void wl12xx_set_partition(struct wl12xx *wl,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index 5eb538d..bd2f709 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	s8 scale_action = 0;
+ 	unsigned long flags;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	u16 fc;
++	__le16 fc;
+ 	u16 rate_mask = 0;
+ 	s8 max_rate_idx = -1;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+@@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 		rate_mask = sta->supp_rates[sband->band];
  
- static inline u32 wl12xx_read32(struct wl12xx *wl, int addr)
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+-	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
++	fc = hdr->frame_control;
++	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+ 	    !sta || !priv_sta) {
+ 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+ 		if (!rate_mask)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2addf73..afa1633 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
  {
--	u32 response;
-+	wl12xx_spi_read(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
+ 	int sta_id;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
++	__le16 fc = hdr->frame_control;
  
--	wl12xx_spi_read(wl, addr, &response, sizeof(u32));
--
--	return response;
-+	return wl->buffer_32;
- }
+ 	/* If this frame is broadcast or management, use broadcast station id */
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+-	    is_multicast_ether_addr(hdr->addr1))
++	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+ 		return priv->hw_params.bcast_sta_id;
  
- static inline void wl12xx_write32(struct wl12xx *wl, int addr, u32 val)
- {
--	wl12xx_spi_write(wl, addr, &val, sizeof(u32));
-+	wl->buffer_32 = val;
-+	wl12xx_spi_write(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
- }
- 
- #endif /* __WL12XX_SPI_H__ */
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 4864143..f252a11 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -382,6 +382,8 @@ struct wl12xx {
- 
- 	struct wl12xx_stats stats;
- 	struct wl12xx_debugfs debugfs;
-+
-+	u32 buffer_32;
- };
- 
- int wl12xx_plt_start(struct wl12xx *wl);
+ 	switch (priv->iw_mode) {
+-- 
+1.6.0.6
 
