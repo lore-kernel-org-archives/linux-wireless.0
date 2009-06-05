@@ -1,70 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:51251 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751950AbZFCVdo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50926 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752797AbZFEWGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 17:33:44 -0400
-Date: Wed, 3 Jun 2009 18:33:40 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090603213340.GB22809@khazad-dum.debian.net>
-References: <1243858256.5299.14.camel@johannes.local> <1243867620.3015.17.camel@localhost.localdomain> <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <1243930703.3192.59.camel@localhost.localdomain> <20090603040315.GA10464@khazad-dum.debian.net> <1244008652.4145.7.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244008652.4145.7.camel@localhost.localdomain>
+	Fri, 5 Jun 2009 18:06:36 -0400
+Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-f3vsak4YmTXKurATDDCA"
+Date: Sat, 06 Jun 2009 00:06:31 +0200
+Message-Id: <1244239591.7876.30.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 03 Jun 2009, Marcel Holtmann wrote:
-> > > We just need to fix the platform drivers then. They should not set
-> > > global states since that is not what they are controlling. They control
-> > 
-> > We should change things, yes.  So that the platform stores the global
-> > state.  That was half-broken on the old core (the platform stored the
-> > state of its own device, which could be out of sync with the global
-> > state), but the part of it setting the global state is correct.
-> > 
-> > That needs a new in-kernel API to tie the core to platform drivers
-> > capable of storing global states without causing problems when drivers
-> > are unloaded, but it is not hard.
-> > 
-> > As for NVS events, they have a clear use case: to let rfkilld know which
-> > global states it could leave alone the first time it loads, and which
-> > ones have to be restored...
-> 
-> show me an example of a platform device that stores the global state. I
-> think you are confusing the word platform as in system with a platform
-> device. The ThinkPad Bluetooth and WWAN switches are platform devices
-> and control each one specific device. Same goes for the EeePC. They are
-> not controlling a global state.
 
-I don't know what big difference you see between the two uses of "platform",
-but I will just work around it to get something useful out of this mail.
+--=-f3vsak4YmTXKurATDDCA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The laptop stores in NVS the state of its 'switches'.  This is as close as
-one gets from 'storing the global state'.   When the laptop boots,
-these devices get set by the firware to the state in NVS.  It is the best
-place to store global state, because these devices will be in their proper
-state (i.e. matching what will be the global state when the rfkill core
-loads) all the time.  It also gives you for free multi-OS/multi-kernel state
-storage for these devices, and compatibility with BIOSes that let you define
-the initial state for the devices in the firmware configuration, etc.
+On Fri, 2009-06-05 at 12:04 -0700, Luis R. Rodriguez wrote:
+> I'm pleased to announce we have released the source code to our
+> Atheros 802.11n USB Otus/ar9170 device under the GPL. You can grab the
+> source, compile and use it with the upstream ar9170 device driver.
+> Patches are welcomed. The git tree available for this is at:
+>=20
+> http://git.sipsolutions.net/ar9170-fw.git
+>=20
+> For more information please visit the home page for this project is on
+> our Linux wireless wiki:
+>=20
+> http://wireless.kernel.org/en/users/Drivers/ar9170.fw
+>=20
+> The ar9170 device driver home page is at:
+>=20
+> http://wireless.kernel.org/en/users/Drivers/ar9170
+>=20
+> I'd like to thank Johannes Berg and Christian Lamparter for their
+> incredible contributions to the project both firmware and ar9170
+> driver so far without which this would not have been possible.
 
-There.  I didn't use the 'p' word once.  Now, please tell me why show we
-just dump the storage done by the firmware in NVS, and instead store the
-global state for those switches in userspace?
+So, plan: I would like to add a command that tells us
+   - it's open source firmware
+   - what additional capabilities the firmware has
+This has to be a command like the debug commands that we can send from
+the firmware unilaterally. Easy to do.
 
-If it was a extremely complicated and fragile thing to do, it would be a
-different matter, but it isn't.  It isn't even ugly code, even after we fix
-it to be all about global states.
+What I would then like to add is at least proper tx status reporting. I
+would also like to get rid of the key limitation, if possible.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+johannes
+
+--=-f3vsak4YmTXKurATDDCA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKZbjAAoJEODzc/N7+QmagesP+waJHvVERwX6PtDAQjGNTY/C
+eRcPI5pj8Sv4Sk9GdeWPHufl4+m5edgA+0k6DURA6uhwSkDpATy8USSzjNlcB584
+HbTTxixEnjcWfGIw1iqdeUpJXBO0TT4EXZkHrqlLeGE8c/RHc+nlhopOcxMgCsOC
+2gWxWZLsjbTkgljICKg42an9JcNWqmrQprGwy2n4EhGIKJKS9TiqtVUI2Vj8XQtm
+pC+PBAI3EEBsd1xHYyVYfuArqyRs5bYYFO7qrttik5vHsMzKdGOcP1DGsnRzRZvz
+70+gnIms2N8rbElXWT+U5afGv1zFlq0RWPI66fb7QGR3jz+AoyKRAw+MRevGkXcf
+BX2YjczFk6TMpH9GoS8k5ssfxvR5aIp7SudEpwKL+tHlD6FkG0hryMDNGjaB8cyb
+ecIIsSmQC+nuST+98qAiydpdIFODOQCsQErl4wlfExaVAynGBRkxuS/Tdn7XnDlZ
+9/MdeUoUtqFEgXc79R66GGhw0Dt/N7F4z03ahghhvcYGN2CmiBsnJLLzERGOHQUl
+k2ohhITyOcMoljDc/B5a/pM/KQsqVINPAajcm3vuF1Z9ahxYGeImGmnWiauIrShE
+dvhfAgw6kp4DItMfnkPNbmTPXx2Dz73UHVrTqEtuYv/8yUr6UKSoPLIm/sVRG0u8
+WQF3D4jHuFqDFolPujdS
+=gT6u
+-----END PGP SIGNATURE-----
+
+--=-f3vsak4YmTXKurATDDCA--
+
