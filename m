@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:41542 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335AbZFPVkW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 17:40:22 -0400
-Received: from localhost (filter1.syneticon.net [192.168.113.83])
-	by mx03.syneticon.net (Postfix) with ESMTP id B8BDB3607B
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 23:40:12 +0200 (CEST)
-Received: from mx03.syneticon.net ([192.168.113.84])
-	by localhost (mx03.syneticon.net [192.168.113.83]) (amavisd-new, port 10025)
-	with ESMTP id TNamY3Duoa-G for <linux-wireless@vger.kernel.org>;
-	Tue, 16 Jun 2009 23:40:10 +0200 (CEST)
-Received: from [192.168.10.145] (koln-4db418c1.pool.einsundeins.de [77.180.24.193])
-	by mx03.syneticon.net (Postfix) with ESMTPSA
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 23:40:10 +0200 (CEST)
-Message-ID: <4A381159.70301@wpkg.org>
-Date: Tue, 16 Jun 2009 23:40:41 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
+Received: from mail.atheros.com ([12.36.123.2]:53616 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751005AbZFES3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 14:29:37 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2009 11:29:40 -0700
+Date: Fri, 5 Jun 2009 11:29:44 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
+Message-ID: <20090605182944.GD30211@tesla>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com> <1244180502-4323-2-git-send-email-lrodriguez@atheros.com> <20090605063059.GF17632@vasanth-laptop> <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com> <20090605075252.GG17632@vasanth-laptop>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ath5k AP support?
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090605075252.GG17632@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to http://linuxwireless.org/en/users/Drivers/ath5k, AP mode is 
-"reported to work, we just need some further tests on all cards to be sure".
+On Fri, Jun 05, 2009 at 12:52:52AM -0700, Vasanth Thiagarajan wrote:
+> On Fri, Jun 05, 2009 at 01:17:16PM +0530, Luis Rodriguez wrote:
+> > On Thu, Jun 4, 2009 at 11:30 PM, Vasanthakumar
+> > Thiagarajan<vasanth@atheros.com> wrote:
+> > >
+> > >> +
+> > >> +       /*
+> > >> +        * Fine tuning for when no decent rate was found, the
+> > >> +        * lowest should *not* be used under normal circumstances.
+> > >> +        */
+> > >> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
+> > >> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+> > >> +                       "disabling MRR\n");
+> > >> +               rates[0].idx = rate_lowest_index(sband, sta);
+> > >> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
+> > >> +               rates[1].idx = -1;
+> > >> +       }
+> > >
+> > > I think we can still fill other rates (1..3) with the lowest rate
+> > > index as we dont differentiate the situation where the lowest rate
+> > > is chosen truely by the algorithm from this particular case.
+> >
+> > I thought about that as well, but does it really make sense for us to
+> > use MRR with the same lowest rate? That's why I just used one segment.
+> > Thoughts?
+> 
+> or we can try for max_retry (4) times. In that case the rate indices of
+> other rates (just not 1) should be made -1 or this segment should be
+> moved just below the rate find.
 
-I just tried it with 2.6.30 kernel with this card:
+So the count should have already been set up to 4, and the next segment [1]
+is set to -1. Please let me know if there is anything else you see needs
+change.
 
-00:02.0 Ethernet controller: Atheros Communications Inc. AR5212/AR5213 
-Multiprotocol MAC/baseband processor (rev 01)
-
-And it doesn't work:
-
-1245188059.756414: Configuration file: /etc/hostapd/hostapd-wlan0.conf
-1245188059.766698: nl80211: Add own interface ifindex 6
-1245188059.768470: nl80211: Add own interface ifindex 5
-1245188059.770822: nl80211: Failed to set interface 5 to mode 3: -122 
-(Operation not supported)
-1245188059.772627: nl80211: Failed to set interface wlan1 into AP mode
-1245188059.774811: nl80211 driver initialization failed.
-1245188059.776564: wlan1: Unable to setup interface.
-1245188059.778342: Flushing old station entries
-1245188059.780055: Deauthenticate all stations
-rmdir[ctrl_interface]: No such file or directory
-ELOOP: remaining socket: sock=3 eloop_data=0x47b860 user_data=0x47bda0 
-handler=0x43929c
-
-
-Is there anything more needed for ath5k to work (some external patches, 
-git tree etc.)?
-
-I tested it on ASUS WL-500gP (BCM47XX mips platform).
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+  Luis
