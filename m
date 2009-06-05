@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:57700 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754085AbZFAMqI (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:50286 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750701AbZFEFxI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 08:46:08 -0400
-Date: Mon, 1 Jun 2009 09:45:53 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090601124553.GE11011@khazad-dum.debian.net>
-References: <1243524688.10632.0.camel@johannes.local> <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com> <1243763887.19302.29.camel@johannes.local> <1243796509.6570.35.camel@localhost.localdomain> <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <20090601122839.GB11011@khazad-dum.debian.net> <1243859931.5299.17.camel@johannes.local>
+	Fri, 5 Jun 2009 01:53:08 -0400
+Received: by gxk10 with SMTP id 10so2384485gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 22:53:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243859931.5299.17.camel@johannes.local>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 4 Jun 2009 22:52:49 -0700
+Message-ID: <43e72e890906042252k62f85192i25355d10410776c0@mail.gmail.com>
+Subject: Re: [PATCH 00/15] ath9k/mac80211/iwlwifi: rate control cleanup
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes!
+On Thu, Jun 4, 2009 at 10:41 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> ath9k's rate control code is so convoluted that it really make it
+> difficult to spot bugs and fix them. Here's a bunch of cleanups for
+> ath9k rate control code, and a few for mac80211. I just tested ath9k.
+> Will have to test others later.
 
-On Mon, 01 Jun 2009, Johannes Berg wrote:
+Here's the all-in-one file patch:
 
-> On Mon, 2009-06-01 at 09:28 -0300, Henrique de Moraes Holschuh wrote:
-> > On Mon, 01 Jun 2009, Alan Jenkins wrote:
-> > >> See, Henrique says that the use case is Thinkpads which store the
-> > >> previous state in the BIOS. But that matters to you only if you use a
-> > >> mixture of operation systems, which we don't have to support.
-> > 
-> > Well, if you do all in userspace, how do you propose to avoid the usual race
-> > conditions of the sort "radio starts on, but it should have started off",
-> > etc?  You'd have to kick the radios off on rfkill module load for safety,
-> > and that will also cause nastyness (it kicks my built-in wlan
-> > (eeepcargh)/bluetooth(most)/wwan(most) off bus, then hotplugs it again!).
-> 
-> Have you bothered reading the code? If you turn things off with
-> CHANGE_ALL that applies to hot-plugged devices too.
+http://bombadil.infradead.org/~mcgrof/patches/ath9k/2009-06-04/rate-all.patch
 
-I mean platform devices which remember state.  Those will be turned on/off
-by the platform firmware at boot and often at resume time, and overriding
-them in rfkill (especially if it is done later, by a rfkilld) will cause
-some flicker (on/off/on, off/on/off) in certain situations.  
+Testing appreciated.
 
-This is a regression, because the current interface doesn't suffer this
-limitation.
-
-Also, remember that this on/off stuff CAN mean kicking devices off-bus,
-that's very usual for everything other than WLAN, so it can be a lot more
-annoying than just turning a transmitter off for a moment.
-
-I certainly expect whatever the current global state to be applied to all
-new devices getting registered, that is not something I would complain
-about.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+  Luis
