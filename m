@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:37301 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751372AbZFPDZm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 23:25:42 -0400
-Date: Mon, 15 Jun 2009 20:20:34 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: corbet@lwn.net, Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>, mcgrof@gmail.com
-Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
-	window
-Message-ID: <20090616032034.GA17932@kroah.com>
-References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com> <20090615201934.GA12685@kroah.com> <20090615214735.GE23972@bombadil.infradead.org> <20090615223206.GA4966@kroah.com> <20090616004122.GC5492@tesla> <20090616021011.GF23972@bombadil.infradead.org>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:63861 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754177AbZFEEt5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 00:49:57 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090616021011.GF23972@bombadil.infradead.org>
+In-Reply-To: <9e4733910906042103q6c21886cia02d33cb278cef1e@mail.gmail.com>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+	 <9e4733910906042103q6c21886cia02d33cb278cef1e@mail.gmail.com>
+Date: Fri, 5 Jun 2009 08:49:57 +0400
+Message-ID: <bc64b4640906042149pb83911bk4e0397da11f9fde6@mail.gmail.com>
+Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: Jon Smirl <jonsmirl@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 15, 2009 at 10:10:11PM -0400, Luis R. Rodriguez wrote:
-> +	2.6.30	June 10, 2009 - 79 days
-> +	2.6.29  March 23, 2009 - 84 days
-> +	2.6.28	December 29, 2008 - 82 days
-> +	2.6.27	October 8, 2008 - 87 days
-> +	2.6.26	July 13, 2008 - 88 days
-> +	2.6.25	April 16, 2008 - 83 days
-> +	2.6.24	January 24, 2008 - 107 days
-> +	2.6.23	October 9, 2007 - 93 days
-> +	2.6.22	July 8, 2007 - 74 days
-> +	2.6.21	April 25, 2007 - 80 days
->  	2.6.20	February 4, 2007
+2009/6/5 Jon Smirl <jonsmirl@gmail.com>:
+> On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
+> Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
+>> Hi,
+>>
+>> As a part of research activities the Embedded Systems - Open Platform Group
+>> from Siemens Corporate Technology we are working on adding support for
+>> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
+>> implementation is neither certified nor even feature complete. However
+>> we'd like to present current state of our patchset to the Linux developers
+>> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
+>> but more like an RFC.
+>
+> Does this stack work with the Atmel USB version of at86rf230?
+> ATAVRRZUSBSTICK, http://www.atmel.com/dyn/products/tools_card.asp?tool_id=4396
 
-Are you sure about those dates and the count of number of days?
-According to my "big spreadsheet of kernel releases", your day count is
-wrong...
+No, we do not support Atmel USB sticks, nor we do not have plans for
+adding support
+for it in the foreseable feature. However if the onboard ATmega can be
+programmed to
+provide usb-serial interface, one can use/adapt our serial discipline
+driver to control it.
+One will still have to write firmware for the on-stick ATmega chip.
 
-I have:
+Or you can add support for any existing interface that is provided by
+RazorUSB card by yourself.
+We tried to make mac802154 drivers easy to implement.
 
-release: v2.6.20  v2.6.21  v2.6.22  v2.6.23  v2.6.24  v2.6.25  v2.6.26	v2.6.27  v2.6.28  v2.6.29  v2.6.30
- date:   02/04/07 04/25/07 07/08/07 10/09/07 01/24/08 04/16/08 07/13/08 10/09/08 12/24/08 03/23/09 06/09/09
-# Days:  68       81       75       94       108      83       88       88       76       89       78
+> It's not so simple to plug in the at86rf230 using SPI. Supporting USB
+> sticks lets you develop on a desktop PC.
 
-thanks,
+Hmm. One can solder (e.g.) the FTDI 2232 together with AT86RF230/231
+and use that combo
+instead of RazorUSB sticks.
 
-greg k-h
+> freaklabs.org is using ATAVRRZUSBSTICK
+
+I'll look for the interface they are using to control sticks and check
+how easy will it be to
+write a driver for it.
+-- 
+With best wishes
+Dmitry
