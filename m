@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35499 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958AbZFEFlr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55832 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbZFEGYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 01:41:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/15] ath9k/mac80211/iwlwifi: rate control cleanup
-Date: Fri,  5 Jun 2009 01:41:27 -0400
-Message-Id: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 5 Jun 2009 02:24:10 -0400
+Subject: Re: [PATCH 12/15] mac80211: make minstrel/pid RC use
+ ieee80211_is_data(fc)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+In-Reply-To: <1244180502-4323-13-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	 <1244180502-4323-13-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YJjR8Z8IlKlpX1HTVT+k"
+Date: Fri, 05 Jun 2009 08:24:05 +0200
+Message-Id: <1244183046.22576.92.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k's rate control code is so convoluted that it really make it
-difficult to spot bugs and fix them. Here's a bunch of cleanups for
-ath9k rate control code, and a few for mac80211. I just tested ath9k.
-Will have to test others later.
 
-Luis R. Rodriguez (15):
-  ath9k: fix oops by downgrading assert in rc.c
-  ath9k: cleanup try count for MRR in rate control
-  ath9k: remove unused min rate calculation code
-  ath9k: remove unused stepdown when looking for the next rate
-  ath9k: remove pointless wrapper ath_rc_rate_getidx()
-  ath9k: rename ath_rc_get_nextlowervalid_txrate()
-  ath9k: remove unused ath_rc_isvalid_txmask()
-  ath9k: remove ATH9K_MODE_11B
-  ath9k: remap ATH9K_MODE_*
-  ath9k: rename ath_rc_ratefind_ht() to ath_rc_get_highest_rix()
-  ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
-  mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
-  iwlwifi: use ieee80211_is_data(fc)
-  mac80211: move management / no-ack frame rate decision to mac80211
-  ath9k: remove rate control wraper
+--=-YJjR8Z8IlKlpX1HTVT+k
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/ath/ath9k/ath9k.h     |    1 -
- drivers/net/wireless/ath/ath9k/debug.h     |    1 +
- drivers/net/wireless/ath/ath9k/hw.c        |    1 -
- drivers/net/wireless/ath/ath9k/hw.h        |   17 ++--
- drivers/net/wireless/ath/ath9k/main.c      |    3 +-
- drivers/net/wireless/ath/ath9k/rc.c        |  190 ++++++++++------------------
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   21 +---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   10 --
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 +-
- net/mac80211/rate.c                        |   29 ++++-
- net/mac80211/rc80211_minstrel.c            |   24 ----
- net/mac80211/rc80211_pid_algo.c            |   15 ---
- 12 files changed, 111 insertions(+), 206 deletions(-)
+On Fri, 2009-06-05 at 01:41 -0400, Luis R. Rodriguez wrote:
+
+> -	u16 fc;
+> +	__le16 fc;
+> =20
+>  	if (txrc->rts)
+>  		info->control.rates[0].count =3D
+> @@ -291,8 +291,7 @@ rate_control_pid_get_rate(void *priv, struct ieee8021=
+1_sta *sta,
+> =20
+>  	/* Send management frames and NO_ACK data using lowest rate. */
+>  	fc =3D le16_to_cpu(hdr->frame_control);
+> -	if (!sta || !spinfo ||
+> -	    (fc & IEEE80211_FCTL_FTYPE) !=3D IEEE80211_FTYPE_DATA ||
+> +	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
+
+you might want to run sparse on this entire patchset.
+
+johannes
+
+--=-YJjR8Z8IlKlpX1HTVT+k
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKLoBAAoJEODzc/N7+QmayG8P/0J6Ks5tPNEyt25fG1StdCP8
+ceMF6DPbERIiAhZSLimwtPGCzynISRc4nc7Vedn0u39FQmJuBtTtrcM6VxjJp6nQ
+O9yi/l7tTxr2gfwCikiGYda949OAnogHL2UVHlWjC+RaxD4OwOIMWvvmcFehuNzj
+VYKCKgOk+8bSWI+duxTR6+o67FVGxef8rHVgse3pZLU+qgEtKmGvXaO7xo98m3nQ
+uK6yJPGOvhCQvXEzbh7H7eWxP76UTG7kiRByXGxngVFlbcDcOsB8sVeFDoC6DpwR
+qaepaGY43ymX4nUzTrv6xDBAHxTu588sjSRWUhInBEW2QKrHhvtRv1Ons+Gw2vW5
+pNw7wQIG3WST5/CGKd1ebCLAQIGOAQ9wFBESIlDIqXDryFKzcLM+vCzk9awsCw03
+Pu3npA8nAr2/PKXwMWJxPDpmBsIoQPIxCD98jUT4QKTtvbQL3OWZ+h0+VU1ME9Qd
+522rYbeScKlPTpDj7Gut2OyGbo0qhWeQ44v1l20xy9p/wgnXYkbTBkIM1cPIzC/w
+aitaKvG2CcOHhM2QH589iWfQqZy6boIYUR4YHbuntZBbAAR6ya9uFTD/Df03/fmA
+YwylpcO6DsJyEd2b46CI1jRNRo1Lp/ua1bq4WjJx1MyJz0CAM4W2IidyTcLjcgsl
+/GaCJwHar0lIXfurB4A6
+=QmGG
+-----END PGP SIGNATURE-----
+
+--=-YJjR8Z8IlKlpX1HTVT+k--
 
