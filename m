@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:60341 "EHLO
+Received: from yw-out-2324.google.com ([74.125.46.30]:33230 "EHLO
 	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbZFWQ4E (ORCPT
+	with ESMTP id S1752447AbZFEGeT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 12:56:04 -0400
+	Fri, 5 Jun 2009 02:34:19 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so781270ywb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 23:34:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1245775609.15367.129.camel@violet>
-References: <1245775609.15367.129.camel@violet>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 23 Jun 2009 09:55:47 -0700
-Message-ID: <43e72e890906230955i4761c1b7q56368afc57cd8cdc@mail.gmail.com>
-Subject: Re: Announcing ConnMan.net
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jukka.rissanen@nokia.com
+In-Reply-To: <1244183046.22576.92.camel@johannes.local>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	<1244180502-4323-13-git-send-email-lrodriguez@atheros.com>
+	<1244183046.22576.92.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 4 Jun 2009 23:34:01 -0700
+Message-ID: <43e72e890906042334r5cb24fban1ba8cae92b9a3d8c@mail.gmail.com>
+Subject: Re: [PATCH 12/15] mac80211: make minstrel/pid RC use
+	ieee80211_is_data(fc)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 9:46 AM, Marcel
-Holtmann<holtmann@linux.intel.com> wrote:
-> Intel and Nokia are pleased to jointly launch the ConnMan project, an
-> open source project to accelerate and expand development of Internet
-> connection management for Linux Devices. ConnMan will be utilized as a
-> technology within Moblin and Maemo. Connman.net is now the place to
-> bring developers together who are interested in furthering the
-> development of Internet connection management within Linux. Review the
-> source code for more information. ConnMan is licensed under GPLv2, and
-> provides a daemon for managing Internet connections within Linux
-> devices. ConnMan is a fully modular system that can be extended, through
-> plugins, to support all kinds of wired or wireless technologies.
-> Configuration methods, like DHCP and domain name resolving, are
-> implemented using plug-ins as well. The plug-in approach allows for easy
-> adaption and modification for various use cases. Nokia and Intel will
-> jointly maintain the ConnMan project. We'd like to invite all developers
-> to join the connman.net effort and community.
+On Thu, Jun 4, 2009 at 11:24 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-06-05 at 01:41 -0400, Luis R. Rodriguez wrote:
+>
+>> -     u16 fc;
+>> +     __le16 fc;
+>>
+>>       if (txrc->rts)
+>>               info->control.rates[0].count =
+>> @@ -291,8 +291,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+>>
+>>       /* Send management frames and NO_ACK data using lowest rate. */
+>>       fc = le16_to_cpu(hdr->frame_control);
+>> -     if (!sta || !spinfo ||
+>> -         (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+>> +     if (!sta || !spinfo || !ieee80211_is_data(fc) ||
+>
+> you might want to run sparse on this entire patchset.
 
-Here's a wiki for it:
+I did, PID was not on my kconfig though, so its the only thing I
+didn't test compile.
 
-http://wireless.kernel.org/en/users/Documentation/connman
-
-Can we get a link to it from the home page?
-
-  Luis
+ Luis
