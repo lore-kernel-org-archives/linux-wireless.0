@@ -1,143 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42435 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbZFDOMh (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:54109 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbZFEMZC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 10:12:37 -0400
-Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
- 802.15.4 devices
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 5 Jun 2009 08:25:02 -0400
+Date: Fri, 5 Jun 2009 14:24:56 +0200
+From: Pavel Machek <pavel@ucw.cz>
 To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	sfr@canb.auug.org.au, slapin@ossfans.org
-In-Reply-To: <20090603122744.GC20508@doriath.ww600.siemens.net>
-References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
-	 <1244021964.10665.5.camel@johannes.local>
-	 <20090603.030911.162861804.davem@davemloft.net>
-	 <20090603105256.GB20508@doriath.ww600.siemens.net>
-	 <1244027110.1693.9.camel@johannes.local>
-	 <20090603122744.GC20508@doriath.ww600.siemens.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1bMfWXsvCYywcrD7EZsF"
-Date: Thu, 04 Jun 2009 16:12:29 +0200
-Message-Id: <1244124749.22576.71.camel@johannes.local>
-Mime-Version: 1.0
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Subject: Re: [PATCH 06/10] mac802154: add a software MAC 802.15.4
+	implementation
+Message-ID: <20090605122456.GA1717@ucw.cz>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-5-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-6-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon 2009-06-01 18:54:47, Dmitry Eremin-Solenikov wrote:
+> Some of available devices are just dump radios implementing IEEE 802.15.4
+> PHY layer. This commit adds a common library that acts like an intermediate
+> layer between our socket family and drivers for those dumb devices.
+> 
+> Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+> ---
+>  include/net/ieee802154/mac802154.h |   79 ++++
 
---=-1bMfWXsvCYywcrD7EZsF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-06-03 at 16:27 +0400, Dmitry Eremin-Solenikov wrote:
-
-> > > +/* commands */
-> > > +/* REQ should be responded with CONF
-> > > + * and INDIC with RESP
-> > > + */
-> > > +enum {
-> >=20
-> > kernel-doc explaining the commands would be immensely helpful.
->=20
-> What explanations whould you like to see? These commands are described
-> in the IEEE 802.15.4 standard.
-
-Well, for example which arguments they require...
-
-> > > +#ifdef __KERNEL__
-> > > +struct net_device;
-> > > +
-> > > +int ieee802154_nl_assoc_indic(struct net_device *dev, struct ieee802=
-154_addr *addr, u8 cap);
-> > > +int ieee802154_nl_assoc_confirm(struct net_device *dev, u16 short_ad=
-dr, u8 status);
-> > > +int ieee802154_nl_disassoc_indic(struct net_device *dev, struct ieee=
-802154_addr *addr, u8 reason);
-> > > +int ieee802154_nl_disassoc_confirm(struct net_device *dev, u8 status=
-);
-> > > +int ieee802154_nl_scan_confirm(struct net_device *dev, u8 status, u8=
- scan_type, u32 unscanned,
-> > > +		u8 *edl/*, struct list_head *pan_desc_list */);
-> > > +int ieee802154_nl_beacon_indic(struct net_device *dev, u16 panid, u1=
-6 coord_addr); /* TODO */
-> > > +#endif
-> >=20
-> > Why not just use two header files, one in net/ and one in linux/?
->=20
-> What would you suggest to put into the linux/ header and what in the
-> net/ one?
-
-userspace vs. in-kernel separation
-
-> > > +static int ieee802154_nl_put_failure(struct sk_buff *msg)
-> > > +{
-> > > +	void *hdr =3D genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is r=
-ight at the start of msg */
-> > > +	genlmsg_cancel(msg, hdr);
-> > > +	nlmsg_free(msg);
-> > > +	return -ENOBUFS;
-> > > +}
-> >=20
-> > This seems weird.
->=20
-> Why?
-
-Because it's strange to cancel then free?
-
-> > > +static int ieee802154_associate_req(struct sk_buff *skb, struct genl=
-_info *info)
-> > > +{
-> > > +	struct net_device *dev;
-> > > +	struct ieee802154_addr addr;
-> > > +	int ret =3D -EINVAL;
-> > > +
-> > > +	if (!info->attrs[IEEE802154_ATTR_CHANNEL]
-> > > +	 || !info->attrs[IEEE802154_ATTR_COORD_PAN_ID]
-> > > +	 || (!info->attrs[IEEE802154_ATTR_COORD_HW_ADDR] && !info->attrs[IE=
-EE802154_ATTR_COORD_SHORT_ADDR])
-> > > +	 || !info->attrs[IEEE802154_ATTR_CAPABILITY])
-> > > +		return -EINVAL;
-> >=20
-> > That's some odd coding style.
->=20
-> Could you please elaborate this? What seems odd to you?
-
-if (X
-    && Y)
-
-vs
-
-if (X &&
-    Y)
-
-where the latter is used for all other sources files in the kernel. Try
-applying that to _all_ your patches while you rework the sources to fit
-into 80 columns.
-
-johannes
-
---=-1bMfWXsvCYywcrD7EZsF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKJ9ZKAAoJEODzc/N7+QmaP30P/2eTUPIJOD7ZyD5sC7zCXkXm
-cUDPVT9ozDBrfMVIpB7uNPFJb/2Jfrr5wEcZCwZ56el4Cq4vB6NqlpkXZ1zs6uGJ
-7ISjqQmVK/iKzfPH7tUR4j6cvrEwPdiX87moeX6M+HXxBkiw2p8jJNtJZexdoYIK
-ETIO6QjsT8ABnWAjrkttVp96z21HtXwPELNIVh88hnMO4vK94fNC872MwyMjY2n+
-KY4oMFrCcgvbawVqDBYdtWLVslVV33d9COF2OTjLTvkc9aR2AAXnd1kpZOMPkB9s
-FNdKNIZoNwhLPM0re4plGfW5JELvDt9GNtd6eJ8p/+dxnK0RYL7USLzX7NsuvK1u
-JoqADzPm02EoqbFZ3M+EeKX4apajo9UNspEmuegCruIr4yTKMYHp9RIby4dIL+zK
-WGfEGf+orGWyL9LcURck0USOlajbMqJ591WSr5LEcbUPw1Qrkia6peZs8ZvuH+V0
-sY1rAXu26/drCk5BPMdRHiQmPCwTWB2ZsDH/6MGv4HNXkZe8qPUZ3PX83wHBgs4r
-vd4pmXOl4J4hUN+kH7S3g6MsxY8GynGeCm5OcKl7UBal6XEDdKfize5+1FSybZ6Z
-YOZxmI0CR3HGyCNiBT1vmDJ5BvGnMzLZuBMU9lME7EHs+WbohF7yGuaTKNjNxO/t
-TgM7Vve/X9JNgOcnsPLv
-=zBxM
------END PGP SIGNATURE-----
-
---=-1bMfWXsvCYywcrD7EZsF--
-
+Could we get some name that is not alphabet soup? Is 'zigbee'
+trademarked so heavily that it can't be used? Maybe 'wpan'?
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
