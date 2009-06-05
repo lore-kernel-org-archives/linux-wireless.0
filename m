@@ -1,134 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:50271 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbZFECbG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41535 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbZFETPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 22:31:06 -0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, davem@davemloft.net,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Subject: [PATCH 1/5] Add constants for the ieee 802.15.4 stack
-Date: Fri,  5 Jun 2009 06:29:46 +0400
-Message-Id: <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
-References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
+	Fri, 5 Jun 2009 15:15:31 -0400
+Date: Fri, 5 Jun 2009 15:08:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: castet.matthieu@free.fr
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Fix possible unaligned u32 access
+Message-ID: <20090605190855.GC7361@tuxdriver.com>
+References: <200906042318.33895.mb@bu3sch.de> <20090605122503.GA2791@tuxdriver.com> <1244214237.4a2933dda6634@imp.free.fr> <20090605185307.GB7361@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090605185307.GB7361@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE 802.15.4 stack requires several constants to be defined/adjusted.
+On Fri, Jun 05, 2009 at 02:53:07PM -0400, John W. Linville wrote:
+> On Fri, Jun 05, 2009 at 05:03:57PM +0200, castet.matthieu@free.fr wrote:
+> > Quoting "John W. Linville" <linville@tuxdriver.com>:
+> > 
+> > > On Thu, Jun 04, 2009 at 11:18:33PM +0200, Michael Buesch wrote:
+> > > > From: Matthieu CASTET <castet.matthieu@free.fr>
+> > > >
+> > > > Fix possible unaligned u32 access in b43_generate_plcp_hdr().
+> > > > Unaligned data is read/write with a u32 pointer instead of using the
+> > > > packed structure. Some versions of gcc ignore the "packed" attribute, if
+> > > the
+> > > > structure element is accessed through a local pointer.
+> > > >
+> > > > Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+> > > > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> > >
+> > > That seems pretty brain-dead...can you cite a source for this
+> > > information?
+> > The test I did with the attached test case in the first post.
+> 
+> Link?
+> 
+> > I don't see why gcc should propagate packed structure info to assignment.
+> > That will be impossible to handle (think of passing it to function parameter).
+> 
+> Perhaps this is obvious to you, but it isn't to me.
 
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
----
- include/linux/if_arp.h   |    2 ++
- include/linux/if_ether.h |    1 +
- include/linux/socket.h   |    4 +++-
- net/core/dev.c           |    6 ++++--
- net/core/sock.c          |    3 +++
- 5 files changed, 13 insertions(+), 3 deletions(-)
+OK, I got an explanation from Kyle McMartin that I grok...
 
-diff --git a/include/linux/if_arp.h b/include/linux/if_arp.h
-index 5ff8980..b554300 100644
---- a/include/linux/if_arp.h
-+++ b/include/linux/if_arp.h
-@@ -86,6 +86,8 @@
- #define ARPHRD_IEEE80211 801		/* IEEE 802.11			*/
- #define ARPHRD_IEEE80211_PRISM 802	/* IEEE 802.11 + Prism2 header  */
- #define ARPHRD_IEEE80211_RADIOTAP 803	/* IEEE 802.11 + radiotap header */
-+#define ARPHRD_IEEE802154	  804
-+#define ARPHRD_IEEE802154_PHY	  805
- 
- #define ARPHRD_PHONET	820		/* PhoNet media type		*/
- #define ARPHRD_PHONET_PIPE 821		/* PhoNet pipe header		*/
-diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
-index cfe4fe1..11a60e4 100644
---- a/include/linux/if_ether.h
-+++ b/include/linux/if_ether.h
-@@ -106,6 +106,7 @@
- #define ETH_P_DSA	0x001B		/* Distributed Switch Arch.	*/
- #define ETH_P_TRAILER	0x001C		/* Trailer switch tagging	*/
- #define ETH_P_PHONET	0x00F5		/* Nokia Phonet frames          */
-+#define ETH_P_IEEE802154 0x00F6		/* IEEE802.15.4 frame		*/
- 
- /*
-  *	This is an Ethernet frame header.
-diff --git a/include/linux/socket.h b/include/linux/socket.h
-index 421afb4..642d1f1 100644
---- a/include/linux/socket.h
-+++ b/include/linux/socket.h
-@@ -194,7 +194,8 @@ struct ucred {
- #define AF_RXRPC	33	/* RxRPC sockets 		*/
- #define AF_ISDN		34	/* mISDN sockets 		*/
- #define AF_PHONET	35	/* Phonet sockets		*/
--#define AF_MAX		36	/* For now.. */
-+#define AF_IEEE802154	36	/* IEEE802154 sockets		*/
-+#define AF_MAX		37	/* For now.. */
- 
- /* Protocol families, same as address families. */
- #define PF_UNSPEC	AF_UNSPEC
-@@ -233,6 +234,7 @@ struct ucred {
- #define PF_RXRPC	AF_RXRPC
- #define PF_ISDN		AF_ISDN
- #define PF_PHONET	AF_PHONET
-+#define PF_IEEE802154	AF_IEEE802154
- #define PF_MAX		AF_MAX
- 
- /* Maximum queue length specifiable by listen.  */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index e2e9e4a..4119dfc 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -268,7 +268,8 @@ static const unsigned short netdev_lock_type[] =
- 	 ARPHRD_IRDA, ARPHRD_FCPP, ARPHRD_FCAL, ARPHRD_FCPL,
- 	 ARPHRD_FCFABRIC, ARPHRD_IEEE802_TR, ARPHRD_IEEE80211,
- 	 ARPHRD_IEEE80211_PRISM, ARPHRD_IEEE80211_RADIOTAP, ARPHRD_PHONET,
--	 ARPHRD_PHONET_PIPE, ARPHRD_VOID, ARPHRD_NONE};
-+	 ARPHRD_PHONET_PIPE, ARPHRD_IEEE802154, ARPHRD_IEEE802154_PHY,
-+	 ARPHRD_VOID, ARPHRD_NONE};
- 
- static const char *netdev_lock_name[] =
- 	{"_xmit_NETROM", "_xmit_ETHER", "_xmit_EETHER", "_xmit_AX25",
-@@ -285,7 +286,8 @@ static const char *netdev_lock_name[] =
- 	 "_xmit_IRDA", "_xmit_FCPP", "_xmit_FCAL", "_xmit_FCPL",
- 	 "_xmit_FCFABRIC", "_xmit_IEEE802_TR", "_xmit_IEEE80211",
- 	 "_xmit_IEEE80211_PRISM", "_xmit_IEEE80211_RADIOTAP", "_xmit_PHONET",
--	 "_xmit_PHONET_PIPE", "_xmit_VOID", "_xmit_NONE"};
-+	 "_xmit_PHONET_PIPE", "_xmit_IEEE802154", "_xmit_IEEE802154_PHY",
-+	 "_xmit_VOID", "_xmit_NONE"};
- 
- static struct lock_class_key netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
- static struct lock_class_key netdev_addr_lock_key[ARRAY_SIZE(netdev_lock_type)];
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 7dbf3ff..8a1644c 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -155,6 +155,7 @@ static const char *af_family_key_strings[AF_MAX+1] = {
-   "sk_lock-27"       , "sk_lock-28"          , "sk_lock-AF_CAN"      ,
-   "sk_lock-AF_TIPC"  , "sk_lock-AF_BLUETOOTH", "sk_lock-IUCV"        ,
-   "sk_lock-AF_RXRPC" , "sk_lock-AF_ISDN"     , "sk_lock-AF_PHONET"   ,
-+  "sk_lock-AF_IEEE802154",
-   "sk_lock-AF_MAX"
- };
- static const char *af_family_slock_key_strings[AF_MAX+1] = {
-@@ -170,6 +171,7 @@ static const char *af_family_slock_key_strings[AF_MAX+1] = {
-   "slock-27"       , "slock-28"          , "slock-AF_CAN"      ,
-   "slock-AF_TIPC"  , "slock-AF_BLUETOOTH", "slock-AF_IUCV"     ,
-   "slock-AF_RXRPC" , "slock-AF_ISDN"     , "slock-AF_PHONET"   ,
-+  "slock-AF_IEEE802154",
-   "slock-AF_MAX"
- };
- static const char *af_family_clock_key_strings[AF_MAX+1] = {
-@@ -185,6 +187,7 @@ static const char *af_family_clock_key_strings[AF_MAX+1] = {
-   "clock-27"       , "clock-28"          , "clock-AF_CAN"      ,
-   "clock-AF_TIPC"  , "clock-AF_BLUETOOTH", "clock-AF_IUCV"     ,
-   "clock-AF_RXRPC" , "clock-AF_ISDN"     , "clock-AF_PHONET"   ,
-+  "clock-AF_IEEE802154",
-   "clock-AF_MAX"
- };
- 
+> > 
+> > > The patch seems like a no-op...
+> > At least the code produced on mips is different.
+> 
+> Then why aren't you trying to get the mips gcc guys to fix it?
+
+Still worth wondering...anyway, the patch is fine -- I just didn't
+grok the explanation.
+
+John
 -- 
-1.6.3.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
