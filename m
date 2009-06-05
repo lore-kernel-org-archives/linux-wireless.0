@@ -1,58 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:50926 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758231AbZFIHdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 03:33:05 -0400
-Date: Tue, 9 Jun 2009 00:01:05 -0700
-From: Greg KH <gregkh@suse.de>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] Staging: stlc45xx: sync with gitorious git tree
-Message-ID: <20090609070105.GA25780@suse.de>
-References: <20090608190901.25081.26264.stgit@tikku> <20090609004532.GA22830@suse.de> <87prde2ft8.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87prde2ft8.fsf@litku.valot.fi>
+Received: from fg-out-1718.google.com ([72.14.220.155]:28317 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268AbZFECbM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 22:31:12 -0400
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	slapin@ossfans.org, davem@davemloft.net,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Subject: [PATCH 4/5] ieee802154: add documentation about our stack
+Date: Fri,  5 Jun 2009 06:29:49 +0400
+Message-Id: <1244168990-28355-5-git-send-email-dbaryshkov@gmail.com>
+In-Reply-To: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
+References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
+ <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com>
+ <1244168990-28355-3-git-send-email-dbaryshkov@gmail.com>
+ <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 09, 2009 at 07:26:27AM +0300, Kalle Valo wrote:
-> Greg KH <gregkh@suse.de> writes:
-> 
-> > On Mon, Jun 08, 2009 at 10:09:01PM +0300, Kalle Valo wrote:
-> >> From: Kalle Valo <kalle.valo@nokia.com>
-> >> 
-> >> Sync up with stlc45xx repository in gitorious.org from commit
-> >> bb8675d6e59c34b43618970d37d56d724a5e3d96.
-> >
-> > Hm, any reason you smushed 23 patches down into 3?  In doing so you lost
-> > some good information, and some authorship information as well, which is
-> > not acceptable.
-> 
-> I did shortcuts to avoid the merge hassle. I had some branch trickery
-> with the gitorious stlc45xx repository which will most probably take
-> some time to solve.
-> 
-> > So care to send me the 23 patches instead, with the proper authorship
-> > information?
-> 
-> Sure I can. It might take some time, though.
+Add MAINTAINERS entry and a small text describing our stack interfaces,
+how to hook the drivers, etc.
 
-Ok, I'm in no rush :)
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+---
+ Documentation/networking/ieee802154.txt |   76 +++++++++++++++++++++++++++++++
+ MAINTAINERS                             |   12 +++++
+ 2 files changed, 88 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/networking/ieee802154.txt
 
-> Please note that slc45xx won't compile in linux-next due to mac80211 API
-> changes until these patches have been applied.
+diff --git a/Documentation/networking/ieee802154.txt b/Documentation/networking/ieee802154.txt
+new file mode 100644
+index 0000000..a0280ad
+--- /dev/null
++++ b/Documentation/networking/ieee802154.txt
+@@ -0,0 +1,76 @@
++
++		Linux IEEE 802.15.4 implementation
++
++
++Introduction
++============
++
++The Linux-ZigBee project goal is to provide complete implementation
++of IEEE 802.15.4 / ZigBee / 6LoWPAN protocols. IEEE 802.15.4 is a stack
++of protocols for organizing Low-Rate Wireless Personal Area Networks.
++
++Currently only IEEE 802.15.4 layer is implemented. We have choosen
++to use plain Berkeley socket API, the generic Linux networking stack
++to transfer IEEE 802.15.4 messages and a special protocol over genetlink
++for configuration/management
++
++
++Socket API
++==========
++
++int sd = socket(PF_IEEE802154, SOCK_DGRAM, 0);
++.....
++
++The address family, socket addresses etc. are defined in the
++include/net/ieee802154/af_ieee802154.h header or in the special header
++in our userspace package (see either linux-zigbee sourceforge download page
++or git tree at git://linux-zigbee.git.sourceforge.net/gitroot/linux-zigbee).
++
++One can use SOCK_RAW for passing raw data towards device xmit function. YMMV.
++
++
++MLME - MAC Level Management
++============================
++
++Most of IEEE 802.15.4 MLME interfaces are directly mapped on netlink commands.
++See the include/net/ieee802154/nl802154.h header. Our userspace tools package
++(see above) provides CLI configuration utility for radio interfaces and simple
++coordinator for IEEE 802.15.4 networks as an example users of MLME protocol.
++
++
++Kernel side
++=============
++
++Like with WiFi, there are several types of devices implementing IEEE 802.15.4.
++1) 'HardMAC'. The MAC layer is implemented in the device itself, the device
++   exports MLME and data API.
++2) 'SoftMAC' or just radio. These types of devices are just radio transceivers
++   possibly with some kinds of acceleration like automatic CRC computation and
++   comparation, automagic ACK handling, address matching, etc.
++
++Those types of devices require different approach to be hooked into Linux kernel.
++
++
++HardMAC
++=======
++
++See the header include/net/ieee802154/netdevice.h. You have to implement Linux
++net_device, with .type = ARPHRD_IEEE802154. Data is exchanged with socket family
++code via plain sk_buffs. The control block of sk_buffs will contain additional
++info as described in the struct ieee802154_mac_cb.
++
++To hook the MLME interface you have to populate the ml_priv field of your
++net_device with a pointer to struct ieee802154_mlme_ops instance. All fields are
++required.
++
++We provide an example of simple HardMAC driver at drivers/ieee802154/fakehard.c
++
++
++SoftMAC
++=======
++
++We are going to provide intermediate layer impelementing IEEE 802.15.4 MAC
++in software. This is currently WIP.
++
++See header include/net/ieee802154/mac802154.h and several drivers in
++drivers/ieee802154/
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cf4abdd..a1bbc8f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2816,6 +2816,18 @@ L:	linux1394-devel@lists.sourceforge.net
+ S:	Maintained
+ F:	drivers/ieee1394/raw1394*
+ 
++IEEE 802.15.4 SUBSYSTEM
++P:	Dmitry Eremin-Solenikov
++M:	dbaryshkov@gmail.com
++P:	Sergey Lapin
++M:	slapin@ossfans.org
++L:	linux-zigbee-devel@lists.sourceforge.net
++W:	http://apps.sourceforge.net/trac/linux-zigbee
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
++S:	Maintained
++F:	net/ieee802154/
++F:	drivers/ieee801254/
++
+ INTEGRITY MEASUREMENT ARCHITECTURE (IMA)
+ P:	Mimi Zohar
+ M:	zohar@us.ibm.com
+-- 
+1.6.3.1
 
-Understood.
-
-> > And why is development for this driver being done outside the kernel
-> > tree now that is in it?
-> 
-> These changes have been implemented before stlc45xx was accepted to the
-> staging tree. They have been just pending on my side.
-
-Ah, ok.
-
-thanks,
-
-greg k-h
