@@ -1,64 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:56130 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755396AbZFWLrN (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35498 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbZFEFlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 07:47:13 -0400
-Date: Tue, 23 Jun 2009 13:49:18 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH 1/2 RFC] cfg80211: connect/disconnect API
-Message-ID: <20090623114917.GB5349@sortiz.org>
-References: <20090622170409.GB30147@sortiz.org> <1245697719.4184.1.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245697719.4184.1.camel@johannes.local>
+	Fri, 5 Jun 2009 01:41:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 03/15] ath9k: remove unused min rate calculation code
+Date: Fri,  5 Jun 2009 01:41:30 -0400
+Message-Id: <1244180502-4323-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 22, 2009 at 09:08:39PM +0200, Johannes Berg wrote:
-> On Mon, 2009-06-22 at 19:04 +0200, Samuel Ortiz wrote:
-> 
-> >  /**
-> > + * struct cfg80211_connect_params - Connection parameters
-> > + *
-> > + * This structure provides information needed to complete IEEE 802.11
-> > + * authentication and association.
-> > + *
-> > + * @channel: The channel to use or %NULL if not specified (auto-select based
-> > + *	on scan results)
-> > + * @bssid: The AP BSSID or %NULL if not specified (auto-select based on scan
-> > + *	results)
-> > + * @ssid: SSID
-> > + * @ssid_len: Length of ssid in octets
-> > + * @auth_type: Authentication type (algorithm)
-> > + * @assoc_ie: IEs for association request
-> > + * @assoc_ie_len: Length of assoc_ie in octets
-> > + * @control_port: Whether user space controls IEEE 802.1X port, i.e.,
-> > + *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
-> > + *	required to assume that the port is unauthorized until authorized by
-> > + *	user space. Otherwise, port is marked authorized by default.
-> 
-> One question I just had -- if bssid is NULL, and the card selects the
-> BSSID, I suppose it will also roam by itself if it can [1]. Don't we
-> need a "roamed" event for that then, even if we're not yet adding a
-> ->roam() call?
-I guess userspace will get 2 events: a disconnect one and then a connect one.
-Not exactly a "roamed" event though, I agree.
+This is not used, and when we need to get the lowest rate
+we should simply use mac80211's own rate_lowest_index(sband, sta).
 
-Cheers,
-Samuel.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   33 +++++++++------------------------
+ 1 files changed, 9 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 4f619ae..f62361c 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -823,28 +823,17 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ static u8 ath_rc_rate_getidx(struct ath_softc *sc,
+ 			     struct ath_rate_priv *ath_rc_priv,
+ 			     const struct ath_rate_table *rate_table,
+-			     u8 rix, u16 stepdown,
+-			     u16 min_rate)
++			     u8 rix, u16 stepdown)
+ {
+ 	u32 j;
+ 	u8 nextindex = 0;
  
-> johannes
-> 
-> [1] yes, we need to have a way to export roaming capabilities of the
-> card to user space
-
-
-
+-	if (min_rate) {
+-		for (j = RATE_TABLE_SIZE; j > 0; j--) {
+-			if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-						ath_rc_priv, rix, &nextindex))
+-				rix = nextindex;
+-			else
+-				break;
+-		}
+-	} else {
+-		for (j = stepdown; j > 0; j--) {
+-			if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-						ath_rc_priv, rix, &nextindex))
+-				rix = nextindex;
+-			else
+-				break;
+-		}
++	for (j = stepdown; j > 0; j--) {
++		if (ath_rc_get_nextlowervalid_txrate(rate_table,
++					ath_rc_priv, rix, &nextindex))
++			rix = nextindex;
++		else
++			break;
+ 	}
+ 	return rix;
+ }
+@@ -890,7 +879,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		 * after the probe rate
+ 		 */
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix, 1, 0);
++					  rate_table, nrix, 1);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
+ 
+@@ -903,16 +892,12 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 
+ 	/* Fill in the other rates for multirate retry */
+ 	for ( ; i < 4; i++) {
+-		u8 min_rate;
+-
+ 		/* Use twice the number of tries for the last MRR segment. */
+ 		if (i + 1 == 4)
+ 			try_per_rate = 4;
+ 
+-		min_rate = (((i + 1) == 4) && 0);
+-
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix, 1, min_rate);
++					  rate_table, nrix, 1);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.6.0.6
+
