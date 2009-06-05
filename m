@@ -1,39 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:54109 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbZFEMZC (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35529 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754643AbZFEFlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 08:25:02 -0400
-Date: Fri, 5 Jun 2009 14:24:56 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Subject: Re: [PATCH 06/10] mac802154: add a software MAC 802.15.4
-	implementation
-Message-ID: <20090605122456.GA1717@ucw.cz>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-5-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-6-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
+	Fri, 5 Jun 2009 01:41:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 05/15] ath9k: remove pointless wrapper ath_rc_rate_getidx()
+Date: Fri,  5 Jun 2009 01:41:32 -0400
+Message-Id: <1244180502-4323-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2009-06-01 18:54:47, Dmitry Eremin-Solenikov wrote:
-> Some of available devices are just dump radios implementing IEEE 802.15.4
-> PHY layer. This commit adds a common library that acts like an intermediate
-> layer between our socket family and drivers for those dumb devices.
-> 
-> Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-> Signed-off-by: Sergey Lapin <slapin@ossfans.org>
-> ---
->  include/net/ieee802154/mac802154.h |   79 ++++
+This is just calling another helper, so just use the other
+helper directly. This should make it clear that when do not
+find the next rate we stick to the current one.
 
-Could we get some name that is not alphabet soup? Is 'zigbee'
-trademarked so heavily that it can't be used? Maybe 'wpan'?
-									Pavel
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   21 ++++-----------------
+ 1 files changed, 4 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 557f054..6ccd565 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -820,19 +820,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	tx_info->control.rts_cts_rate_idx = cix;
+ }
+ 
+-static u8 ath_rc_rate_getidx(struct ath_softc *sc,
+-			     struct ath_rate_priv *ath_rc_priv,
+-			     const struct ath_rate_table *rate_table,
+-			     u8 rix)
+-{
+-	u8 nextindex = 0;
+-	if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-					     ath_rc_priv, rix, &nextindex))
+-		return nextindex;
+-	else
+-		return rix;
+-}
+-
+ static void ath_rc_ratefind(struct ath_softc *sc,
+ 			    struct ath_rate_priv *ath_rc_priv,
+ 			    struct ieee80211_tx_rate_control *txrc,
+@@ -873,8 +860,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		/* Get the next tried/allowed rate. No RTS for the next series
+ 		 * after the probe rate
+ 		 */
+-		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix);
++		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
++						 rix, &nrix);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
+ 
+@@ -891,8 +878,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		if (i + 1 == 4)
+ 			try_per_rate = 4;
+ 
+-		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix);
++		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
++						 rix, &nrix);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.6.0.6
+
