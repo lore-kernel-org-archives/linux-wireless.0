@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f212.google.com ([209.85.220.212]:45402 "EHLO
-	mail-fx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbZFRMRy (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35507 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753082AbZFEFlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 08:17:54 -0400
-Received: by fxm8 with SMTP id 8so990966fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 05:17:56 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: push rx status into skb->cb
-References: <1245237180.20613.4.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 18 Jun 2009 15:17:53 +0300
-In-Reply-To: <1245237180.20613.4.camel@johannes.local> (Johannes Berg's message of "Wed\, 17 Jun 2009 13\:13\:00 +0200")
-Message-ID: <87d491n3bi.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 5 Jun 2009 01:41:49 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 10/15] ath9k: rename ath_rc_ratefind_ht() to ath_rc_get_highest_rix()
+Date: Fri,  5 Jun 2009 01:41:37 -0400
+Message-Id: <1244180502-4323-11-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+The purpose is to find the highest rate we can use.
 
-> From:	Johannes Berg <johannes@sipsolutions.net>
-> Subject: [PATCH] mac80211: push rx status into skb->cb
-> To:	John Linville <linville@tuxdriver.com>
-> Cc:	linux-wireless <linux-wireless@vger.kernel.org>
-> Date:	Wed, 17 Jun 2009 13:13:00 +0200
->
-> Within mac80211, we often need to copy the rx status into
-> skb->cb. This is wasteful, as drivers could be building it
-> in there to start with. This patch changes the API so that
-> drivers are expected to pass the RX status in skb->cb, now
-> accessible as IEEE80211_SKB_RXCB(skb). It also updates all
-> drivers to pass the rx status in there, but only by making
-> them memcpy() it into place before the call to the receive
-> function (ieee80211_rx(_irqsafe)). Each driver can now be
-> optimised on its own schedule.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-[...]
-
->  drivers/net/wireless/wl12xx/rx.c           |    3 -
-
-Last night John applied a patch which renamed this to wl1251_rx.c.
-
->  drivers/staging/agnx/xmit.c                |    3 -
->  drivers/staging/stlc45xx/stlc45xx.c        |    3 -
->  drivers/staging/winbond/wb35rx.c           |    3 -
-
-John takes staging patches now? And stlc45xx won't even compile right
-now :(
-
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 7cea944..16e41b1 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -601,10 +601,11 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
+ 	return hi;
+ }
+ 
+-static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
+-			     struct ath_rate_priv *ath_rc_priv,
+-			     const struct ath_rate_table *rate_table,
+-			     int *is_probing)
++/* Finds the highest rate index we can use */
++static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
++			         struct ath_rate_priv *ath_rc_priv,
++				 const struct ath_rate_table *rate_table,
++				 int *is_probing)
+ {
+ 	u32 dt, best_thruput, this_thruput, now_msec;
+ 	u8 rate, next_rate, best_rate, maxindex, minindex;
+@@ -820,7 +821,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	try_per_rate = sc->hw->max_rate_tries;
+ 
+ 	rate_table = sc->cur_rate_table;
+-	rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
++	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
+ 	nrix = rix;
+ 
+ 	if (is_probe) {
+@@ -908,7 +909,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+ 			"disabling MRR\n");
+ 		rates[0].idx = rate_lowest_index(sband, sta);
+-		/* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
++		/* Disable MRR when ath_rc_get_highest_rix() found rate 0 */
+ 		rates[1].idx = -1;
+ 	}
+ }
 -- 
-Kalle Valo
+1.6.0.6
+
