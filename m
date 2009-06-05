@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:58390 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751767AbZFQXyO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 19:54:14 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-Subject: Re: [PATCH] wireless extensions: play with netns
-References: <1245263058.31588.38.camel@johannes.local>
-	<m1y6rqwpur.fsf@fess.ebiederm.org>
-	<1245276899.31588.57.camel@johannes.local>
-	<m1r5xitpdh.fsf@fess.ebiederm.org>
-	<1245282099.31588.69.camel@johannes.local>
-From: ebiederm@xmission.com (Eric W. Biederman)
-Date: Wed, 17 Jun 2009 16:54:12 -0700
-In-Reply-To: <1245282099.31588.69.camel@johannes.local> (Johannes Berg's message of "Thu\, 18 Jun 2009 01\:41\:38 +0200")
-Message-ID: <m17hzato0r.fsf@fess.ebiederm.org>
+Received: from bu3sch.de ([62.75.166.246]:51582 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752106AbZFETDt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 15:03:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Fix possible unaligned u32 access
+Date: Fri, 5 Jun 2009 21:03:41 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Matthieu CASTET <castet.matthieu@free.fr>
+References: <200906042318.33895.mb@bu3sch.de> <200906051929.07714.mb@bu3sch.de> <20090605185047.GA7361@tuxdriver.com>
+In-Reply-To: <20090605185047.GA7361@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200906052103.41381.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Friday 05 June 2009 20:50:48 John W. Linville wrote:
+> On Fri, Jun 05, 2009 at 07:29:07PM +0200, Michael Buesch wrote:
+> > On Friday 05 June 2009 14:25:03 John W. Linville wrote:
+> > > On Thu, Jun 04, 2009 at 11:18:33PM +0200, Michael Buesch wrote:
+> > > > From: Matthieu CASTET <castet.matthieu@free.fr>
+> > > > 
+> > > > Fix possible unaligned u32 access in b43_generate_plcp_hdr().
+> > > > Unaligned data is read/write with a u32 pointer instead of using the
+> > > > packed structure. Some versions of gcc ignore the "packed" attribute, if the
+> > > > structure element is accessed through a local pointer.
+> > > > 
+> > > > Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+> > > > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> > > 
+> > > That seems pretty brain-dead...can you cite a source for this
+> > > information?  The patch seems like a no-op...
+> > > 
+> > > John
+> > 
+> > struct foo {
+> > 	int data;
+> > } __attribute__((packed));
+> > 
+> > struct foo foo;
+> > int *d = &foo->data;
+> > foo->data = x;	/* Works for unaligned */
+> > *d = y;		/* Does not work for unaligned */
+> 
+> Why not?
+> 
 
-> On Wed, 2009-06-17 at 16:24 -0700, Eric W. Biederman wrote:
->
->> > So it looks like I can also use rcu_read_lock(), but there's no
->> > for_each_net_rcu(), should there be?
->> 
->> I'm not using rcu safe list manipulation.  What makes it look like
->> rcu_read_lock() is safe?
->
-> Indeed. I was looking at rcu_barrier() only. How about the patch below?
->
-> johannes
->
-> Subject: net: make namespace iteration possible under RCU
->
-> We already call rcu_barrier(), so all we need to take
-> care of is using proper RCU list add/del primitives.
+Because some compilers don't carry the "packed" attribute of "data" though the "d" pointer.
+So foo->data is a "packed" access, while *d might not.
 
-This of course gives you a network namespace that can be found by for_each_net rcu
-while the per net exit functions are running.  I think that opens up to races
-that I don't want to think about.
-
-I still haven't tracked down how I am occasionally getting time wait sockets
-with an invalid network namespace.
-
-Eric
+-- 
+Greetings, Michael.
