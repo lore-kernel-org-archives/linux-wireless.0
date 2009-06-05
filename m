@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42648 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754774AbZFLUPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:15:51 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/8 v2.6.31 and w-t ] iwlwifi: check control channel for pure 40MHz
-Date: Fri, 12 Jun 2009 13:22:50 -0700
-Message-Id: <1244838175-15491-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
-References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:62554 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbZFEN1n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 09:27:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <1244208197.23850.22.camel@localhost.localdomain>
+References: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
+	 <1244184737.22576.94.camel@johannes.local>
+	 <20090605071529.GA7064@doriath.ww600.siemens.net>
+	 <20090605.005418.07362083.davem@davemloft.net>
+	 <20090605091229.GA25280@doriath.ww600.siemens.net>
+	 <20090605094619.GB23085@build.ossfans.org>
+	 <bc64b4640906050345t5ed23d7bxc8a777a4a0ada147@mail.gmail.com>
+	 <1244208197.23850.22.camel@localhost.localdomain>
+Date: Fri, 5 Jun 2009 17:27:43 +0400
+Message-ID: <bc64b4640906050627s466b4289h7e67864c0cfbf184@mail.gmail.com>
+Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
+	802.15.4 devices
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Sergey Lapin <slapin@ossfans.org>,
+	David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+2009/6/5 Marcel Holtmann <marcel@holtmann.org>:
+> Hi Dmitry,
+>
+>> > Dmitry, please toss all my @siemens.com addresses from all patches, since my
+>> > access is already disabled and it's pointless to have invalid emails
+>> > in source tree. Please replace them with @ossfans.org ones.
+>>
+>> Could you please send an incremental patch on top of this serie? I
+>> hope that my last
+>> push can be pulled/merged and I don't want to redo all commits.
+>
+> either start getting used to git-rebase or manual rebase of commits. You
+> better be familiar with git before asking people to merge. We are
+> expecting you to provide proper trees to pull from a patches to apply.
 
-for pure 40MHz mode, set the control channel location if provided, but not
-like Mixed mode; if information is not provided, still allow 40MHz
-operation.
+I am used to git rebase and git merge. I am used to maintaining topic branches
+and merging them into development trees. I'd just prefer to have a 'merge-ready'
+branch that isn't rebased too much, if things can be done clearly w/o
+unnecessary
+rebase.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+> And since Dave and Johannes already asked you to fix the __KERNEL__ part
+> you have to redo the pull request anyway.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index b2875fe..b122eed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -826,9 +826,18 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
- 			 RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK);
- 	if (iwl_is_fat_tx_allowed(priv, NULL)) {
- 		/* pure 40 fat */
--		if (ht_info->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
-+		if (ht_info->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ) {
- 			rxon->flags |= RXON_FLG_CHANNEL_MODE_PURE_40;
--		else {
-+			/* Note: control channel is opposite of extension channel */
-+			switch (ht_info->extension_chan_offset) {
-+			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+				rxon->flags &= ~RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK;
-+				break;
-+			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+				rxon->flags |= RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK;
-+				break;
-+			}
-+		} else {
- 			/* Note: control channel is opposite of extension channel */
- 			switch (ht_info->extension_chan_offset) {
- 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+It's done long ago.
+
 -- 
-1.5.6.3
-
+With best wishes
+Dmitry
