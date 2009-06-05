@@ -1,211 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:47755 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526AbZFDLQs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 07:16:48 -0400
-Date: Thu, 4 Jun 2009 15:16:34 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Subject: Re: [PATCH 03/10] net: add IEEE 802.15.4 socket family
-	implementation
-Message-ID: <20090604111634.GA28064@doriath.ww600.siemens.net>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com> <20090603173214.6d3997f7.akpm@linux-foundation.org>
+Received: from bu3sch.de ([62.75.166.246]:37724 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753024AbZFEViQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 17:38:16 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+Date: Fri, 5 Jun 2009 23:38:05 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052101.47168.mb@bu3sch.de> <4A298C37.9030503@lwfinger.net>
+In-Reply-To: <4A298C37.9030503@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090603173214.6d3997f7.akpm@linux-foundation.org>
+Message-Id: <200906052338.05653.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 03, 2009 at 05:32:14PM -0700, Andrew Morton wrote:
-> On Mon,  1 Jun 2009 18:54:44 +0400
-> Dmitry Eremin-Solenikov <dbaryshkov@gmail.com> wrote:
-> 
-> > Add support for communication over IEEE 802.15.4 networks. This implementation
-> > is neither certified nor complete, but aims to that goal. This commit contains
-> > only the socket interface for communication over IEEE 802.15.4 networks.
-> > One can either send RAW datagrams or use SOCK_DGRAM to encapsulate data
-> > inside normal IEEE 802.15.4 packets.
+On Friday 05 June 2009 23:20:55 Larry Finger wrote:
+> Michael Buesch wrote:
 > > 
-> > Configuration interface, drivers and software MAC 802.15.4 implementation will
-> > follow.
-> > 
-> > Initial implementation was done by Maxim Gorbachyov, Maxim Osipov and Pavel
-> > Smolensky as a research project at Siemens AG. Later the stack was heavily
-> > reworked to better suit the linux networking model, and is now maitained
-> > as an open project partially sponsored by Siemens.
-> > 
+> > This is pretty silly behavior IMO. Just to bring it to the point:
+> > We initialize a huge wireless MAC, PHY and Radio that consume several watts of power
+> > just to poll a silly RF-kill bit.
 > 
-> Some drive-by nitpicking, and I saw a bug...
+> That is what the driver already does.
+
+No. If the device is down, then it _is_ down. There won't be an rfkill thing
+trying to bring it up again although the interface is down.
+
+> > We can't we just accept that the RF-kill status is unknown while the device is down?
 > 
-> > +	switch (addr->addr_type) {
-> > +	case IEEE802154_ADDR_LONG:
-> > +		rtnl_lock();
-> > +		dev = dev_getbyhwaddr(net, ARPHRD_IEEE802154, addr->hwaddr);
-> > +		if (dev)
-> > +			dev_hold(dev);
-> > +		rtnl_unlock();
-> > +		break;
-> > +	case IEEE802154_ADDR_SHORT:
-> > +		if (addr->pan_id != 0xffff && addr->short_addr != IEEE802154_ADDR_UNDEF && addr->short_addr != 0xffff) {
-> > +			struct net_device *tmp;
-> > +
-> > +			rtnl_lock();
-> > +
-> > +			for_each_netdev(net, tmp) {
-> > +				if (tmp->type == ARPHRD_IEEE802154) {
-> > +					if (IEEE802154_MLME_OPS(tmp)->get_pan_id(tmp) == addr->pan_id
-> > +					  && IEEE802154_MLME_OPS(tmp)->get_short_addr(tmp) == addr->short_addr) {
+> The problem is that while the interface is down the switch status
+> cannot be interrogated. If you try, you get a fatal SSB error. Thus
+> the only way to bring it back up is to flip the switch, then
+> rmmod/insmod the driver. If you want hardware rfkill to be one-way,
+> then take Johannes's patch. We would save a little power by calling
+> b43_wireless_exit() if we brought it up to test the switch, and the
+> switch was still off. That would leave everything off most of the time.
+
+Yeah well. We cannot read the rfkill status while the device is down. That is
+a hardware limitation. I think we should _live_ with that limitation instead of
+working around it by always keeping the device initialized.
+Can't we teach the rfkill subsystem about an "unknown" state? Because that's what we're in.
+
+> > I really do hate all that rfkill crap and I'm still refusing to sign off on anything that's
+> > related to rfkill (like I did for the past year or so). If people want this merged,
+> > somebody else maintain and sign it off, please.
 > 
-> You must use very wide xterms :(
+> I'm sick of rfkill as well and really detest the endless discussions
+> that have taken place; however, I do want the stuff to work.
 
-~120 chars in width :)  We prefer to have a single code line split between
-several screen lines, rather than split it manually in some weird places
-just to justify width of 80 chars.
+Yeah. But wasting huge amounts of power to keep polling a bit that's not even used
+most of the time is not really what I like.
 
-> 
-> > +						dev = tmp;
-> > +						dev_hold(dev);
-> > +						break;
-> > +					}
-> > +				}
-> > +			}
-> > +
-> > +			rtnl_unlock();
-> > +		}
-> > +		break;
-> > +	default:
-> > +		pr_warning("Unsupported ieee802154 address type: %d\n", addr->addr_type);
-> > +		break;
-> > +	}
-> > +
-> > +	return dev;
-> > +}
-> > +
-> >
-> > ...
-> >
-> > +static int ieee802154_create(struct net *net, struct socket *sock, int protocol)
-> > +{
-> > +	struct sock *sk;
-> > +	int rc;
-> > +	struct proto *proto;
-> > +	const struct proto_ops *ops;
-> > +
-> > +	/* FIXME: init_net */
-> > +	if (net != &init_net)
-> > +		return -EAFNOSUPPORT;
-> 
-> yeah, I was going to ask about that.  What's the problem here?
+> 1. We switch to the cfg80211 rfkill and use this patch modified to
+> turn the interface back off if the switch is still off.
 
-The FIXME was dedicated to the fact that I didn't understand what is
-this. The code fragment is c&p from lots of examples of similar code
-(check can, appletalk, etc. for example)
++void b43_rfkill_poll(struct ieee80211_hw *hw)
+ {
+-       struct b43_wldev *dev = data;
+-       struct b43_wl *wl = dev->wl;
++       struct b43_wl *wl = hw_to_b43_wl(hw);
++       struct b43_wldev *dev = wl->current_dev;
+        bool enabled;
+ 
+        mutex_lock(&wl->mutex);
+        if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
+-               mutex_unlock(&wl->mutex);
+-               return;
++               if (b43_wireless_core_init(dev)) {
++                       mutex_unlock(&wl->mutex);
++                       return;
++               }
+        }
 
-> > +	switch (sock->type) {
-> > +	case SOCK_RAW:
-> > +		proto = &ieee802154_raw_prot;
-> > +		ops = &ieee802154_raw_ops;
-> > +		break;
-> > +	case SOCK_DGRAM:
-> > +		proto = &ieee802154_dgram_prot;
-> > +		ops = &ieee802154_dgram_ops;
-> > +		break;
-> > +	default:
-> > +		rc = -ESOCKTNOSUPPORT;
-> > +		goto out;
-> > +	}
-> > +
-> > +	rc = -ENOMEM;
-> > +	sk = sk_alloc(net, PF_IEEE802154, GFP_KERNEL, proto);
-> > +	if (!sk)
-> > +		goto out;
-> > +	rc = 0;
-> > +
-> > +	sock->ops = ops;
-> > +
-> > +	sock_init_data(sock, sk);
-> > +	/* FIXME: sk->sk_destruct */
-> 
-> ?
+This is the part of the code which I really really really dislike.
+Hell, just return a freaking error from b43_rfkill_poll(), if the interface
+is down. If rfkill can't handle that, it should probably be taught to handle it.
+Especially as there can be other errors as well, like memory allocation failures.
 
-Oh... I nearly forgot about this. When writing this code, I examined
-several existing address families. Usually (but not always) the sk_destruct
-callback will purge sk_receive_queue and sk_write_queue. However I
-didn't understand why and in which case should these queues (or others)
-be purged. Could please one clarify this?
+> 2. We continue to use the old rfkill mechanism. It works just fine,
+> but this method runs the risk of the old method being deprecated and
+> eliminated.
 
-> > ...
-> >
-> > +static void af_ieee802154_remove(void)
-> 
-> Could be __exit, althugh __exit doesn't do much (it used to be
-> implemented on UML and might still be).
+I agree that this is not really an option.
 
-Added. BTW: I thought, that __exit functions aren't added to (or are
-stripped from) the final vmlinux image. Am I wrong?
+> 3. We get new callbacks that will only power down/up the radio when it
+> is blocked. That saves a little power.
 
-> >
-> > +static inline struct dgram_sock *dgram_sk(const struct sock *sk)
-> > +{
-> > +	return (struct dgram_sock *)sk;
-> 
-> Better to use container_of() - it's clearer and doesn't assume that
-> dgram_sock.sk is the first member.
-
-Fixed.
-
-> > +}
-> >
-> > ...
-> >
-> > +static int dgram_bind(struct sock *sk, struct sockaddr *uaddr, int len)
-> > +{
-> > +	struct sockaddr_ieee802154 *addr = (struct sockaddr_ieee802154 *)uaddr;
-> 
-> sigh, more casting.  Often these things can be done in ways which are
-> nicer to the C type system.
-
-Unfortunately sockaddr things can't be done in a more clean way IMO.
-
-> > +	struct dgram_sock *ro = dgram_sk(sk);
-> > +	int err = 0;
-> > +	struct net_device *dev;
-> > +
-> > +	ro->bound = 0;
-> > +
-
-> > ...
-> >
-> > +struct proto ieee802154_dgram_prot = {
-> 
-> I suspect this could/should be const.
-
-No. proto_register changes the passed protocol struct during
-registration.
-
-> 
-> > +	.name		= "IEEE-802.15.4-MAC",
-> > +	.owner		= THIS_MODULE,
-> > +	.obj_size	= sizeof(struct dgram_sock),
-> > +	.init		= dgram_init,
-> > +	.close		= dgram_close,
-> > +	.bind		= dgram_bind,
-> > +	.sendmsg	= dgram_sendmsg,
-> > +	.recvmsg	= dgram_recvmsg,
-> > +	.hash		= dgram_hash,
-> > +	.unhash		= dgram_unhash,
-> > +	.connect	= dgram_connect,
-> > +	.disconnect	= dgram_disconnect,
-> > +	.ioctl		= dgram_ioctl,
-> > +};
-> > +
+What is wrong with the current mechanism to power up the radio, if the interface is up
+and powering it down if the interface is down? I think the power of the PHY/Radio should
+not be affected by rfkill. It should work the other way around instead. Rfkill should
+be tolerant to a radio that is down and simply live with an unknown switch state.
 
 -- 
-With best wishes
-Dmitry
-
+Greetings, Michael.
