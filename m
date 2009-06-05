@@ -1,50 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from build.ossfans.org ([67.223.233.67]:59852 "EHLO
-	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756033AbZFKDwn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 23:52:43 -0400
-Date: Thu, 11 Jun 2009 07:52:35 +0400
-From: Sergey Lapin <slapin@ossfans.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, dbaryshkov@gmail.com, sfr@canb.auug.org.au
-Subject: Re: [PULL REQUEST] IEEE 802.15.4 stack: generic parts v4
-Message-ID: <20090611035234.GC17271@build.ossfans.org>
-References: <cover.1244498867.git.slapin@ossfans.org> <20090609.050706.241520518.davem@davemloft.net>
+Received: from web55301.mail.re4.yahoo.com ([206.190.58.180]:43501 "HELO
+	web55301.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750779AbZFEEmI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 00:42:08 -0400
+Message-ID: <483055.8746.qm@web55301.mail.re4.yahoo.com>
+Date: Thu, 4 Jun 2009 21:42:09 -0700 (PDT)
+From: austinxxh-ath9k@yahoo.com
+Reply-To: austinxxh-ath9k@yahoo.com
+Subject: Re: ath9k/ath5k + 80211s crash
+To: Andrey Yurovsky <andrey@cozybit.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090609.050706.241520518.davem@davemloft.net>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 09, 2009 at 05:07:06AM -0700, David Miller wrote:
-> From: Sergey Lapin <slapin@ossfans.org>
-> Date: Tue,  9 Jun 2009 02:18:46 +0400
-> 
-> > Major changes from previous post:
-> >  * Changed net/ieee802154/Makefile according to Sam Ravnborg suggestion
-> > 
-> > The following changes since commit 81ee1bad86bd6752c626018d43a74e3f81f1ae72:
-> >   Linus Torvalds (1):
-> >         Merge branch 'for-linus' of git://git.kernel.org/.../viro/vfs-2.6
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/slapin/lowpan.git for-next
-> 
-> I can't pull from a tree that is prepared like this.
-> 
-> You have to make a clean clone of the net-next-2.6 GIT tree and
-> add your changes on top of that.  When you use a clone of
-> Linus's tree, I'm going to end up getting all kinds of changes
-> from upstream that I haven't merged into net-next-2.6 yet which
-> creates a complete mess.
-Sorry, we did not know about that. But we'll do that next time.
 
+ath9k + 80211s has no crash anymore. however after assigned IP to the mesh node, I could not ping at all, it's not working.
+
+ath5k crashes on ar71xx boards, just learned it might have something to do with silicon bug from atheros instead of ath5k driver bug.
+
+xxiao
+
+--- On Thu, 6/4/09, Nick Kossifidis <mickflemm@gmail.com> wrote:
+
+> From: Nick Kossifidis <mickflemm@gmail.com>
+> Subject: Re: ath9k/ath5k + 80211s crash
+> To: "Andrey Yurovsky" <andrey@cozybit.com>
+> Cc: austinxxh-ath9k@yahoo.com, devel@lists.open80211s.org, linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+> Date: Thursday, June 4, 2009, 10:39 PM
+> 2009/6/4 Andrey Yurovsky <andrey@cozybit.com>:
+> > On Wed, Jun 3, 2009 at 12:59 PM, Nick Kossifidis
+> <mickflemm@gmail.com>
+> wrote:
+> >> 2009/6/3 Andrey Yurovsky <andrey@cozybit.com>:
+> >>> On Wed, Jun 3, 2009 at 11:21 AM, Nick
+> Kossifidis <mickflemm@gmail.com>
+> wrote:
+> >>>> 2009/6/2 Andrey Yurovsky <andrey@cozybit.com>:
+> >>>>> With wireless-testing from a couple of
+> days ago, an X86 system, and this patch:
+> >>>>> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+> >>>>> ath9k can bring up a mesh point
+> interface and doesn't crash for me,
+> >>>>> but there are no mesh beacons, so mesh
+> isn't working.  On ath5k, there
+> >>>>> are also no beacons and mesh doesn't
+> work, but there's no crash.
+> >>>>>
+> >>>>
+> >>>>
+> >>>> Hmm, try adding NL80211_IFTYPE_MESH_POINT
+> here ->
+> >>>>
+> >>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/pcu.c;h=ec35503f6a40e6b6a1cc4323287b31e7cdd3a428;hb=HEAD#l733
+> >>>
+> >>> It's already there, in ath5k_hw_set_opmode.
+>  We'll need to trace
+> >>> what's going on and see why we don't get
+> beacons.  Last night I had an
+> >>> ath5k MP suddenly start beaconing but I
+> haven't been able to reproduce
+> >>> that yet.
+> >>
+> >> 736         /* When in AP mode zero timer0 to
+> start TSF */
+> >> 737         if (ah->ah_op_mode ==
+> NL80211_IFTYPE_AP)
+> >> 738                 ath5k_hw_reg_write(ah,
+> 0, AR5K_TIMER0);
+> >>
+> >> We need to do this for NL80211_IFTYPE_MESH_POINT
+> or DBA won't fire up
+> >> and beacon queue wont start...
+> >
+> > Thanks Nik, that gets beaconing going but only after a
+> issuing a scan
+> > (we have the same problem on rt2x00).
+> >
 > 
-> I'm going to apply these changes by hand.
-Thanks a lot!
-
-S.
-
+> Cool, i'll send a patch for this asap ;-)
+> 
+> Thanks for testing !
+> 
+> 
+> -- 
+> GPG ID: 0xD21DB2DB
+> As you read this post global entropy rises. Have Fun ;-)
+> Nick
+> 
