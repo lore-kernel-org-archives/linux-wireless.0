@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([204.127.217.104]:34118 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912AbZFENDl (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:17683 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876AbZFETFP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 09:03:41 -0400
-Message-ID: <4A2917AD.2090008@lwfinger.net>
-Date: Fri, 05 Jun 2009 08:03:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 5 Jun 2009 15:05:15 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rfkill: always init poll delayed work
-References: <1244015729.7176.28.camel@johannes.local>	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>	 <4A27F649.9080203@lwfinger.net> <1244133087.22576.86.camel@johannes.local>	 <4A27FB8D.5000605@lwfinger.net> <1244134635.22576.88.camel@johannes.local>	 <4A2809F8.6020006@lwfinger.net> <1244138572.22576.90.camel@johannes.local>
-In-Reply-To: <1244138572.22576.90.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 5 Jun 2009 12:04:55 -0700
+Message-ID: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+Subject: [ANN] Atheros 802.11n USB firmware source code released
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 
-> I do mean that, but I don't think you can access the 802.11 core's MMIO
-> while it's down. I'm out of ideas expect taking the core up, checking,
-> and down again periodically.
+I'm pleased to announce we have released the source code to our
+Atheros 802.11n USB Otus/ar9170 device under the GPL. You can grab the
+source, compile and use it with the upstream ar9170 device driver.
+Patches are welcomed. The git tree available for this is at:
 
-You were right. What I missed was that the stop callback was taking
-the interface down to the uninitialized state, which caused the rfkill
-poll routine to bail out without testing the switch state in the
-hardware. A quick fix is for the poll routine to call
-b43_wireless_core_init() whenever it detects the uninitialized state.
-This call brings the interface back to the initialized state where the
- switch state can be tested. With this change, the radio now follows
-the switch. The LED now stays on all the time - always something to fix.
+http://git.sipsolutions.net/ar9170-fw.git
 
-What bothers me is that this seems like a lot of work when the same
-effect could be achieved by simply turning the radio off/on when the
-rfkill blocking state changes. Perhaps there should be the option of
-using two new ieee80211_ops callbacks (radio_off/radio_on) that would
-default to stop/start if not specified. By specifying these callbacks,
-each driver could choose how intrusive the radio shutdown need be.
+For more information please visit the home page for this project is on
+our Linux wireless wiki:
 
-Larry
+http://wireless.kernel.org/en/users/Drivers/ar9170.fw
+
+The ar9170 device driver home page is at:
+
+http://wireless.kernel.org/en/users/Drivers/ar9170
+
+I'd like to thank Johannes Berg and Christian Lamparter for their
+incredible contributions to the project both firmware and ar9170
+driver so far without which this would not have been possible.
+
+  Luis
