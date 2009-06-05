@@ -1,48 +1,65 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:62966 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754198AbZF3Fap (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 01:30:45 -0400
-Message-ID: <4A49A349.8030702@gmail.com>
-Date: Mon, 29 Jun 2009 22:31:53 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Return-path: <joseluisvargasaraoz@hotmail.com>
+Message-ID: <SNT117-W29906DB70F06BAA727E2B7A8480@phx.gbl>
+Content-Type: multipart/alternative;
+	boundary="_b343d78d-058a-4942-871e-5f70ae775f68_"
+From: =?iso-8859-1?Q?Jos=E9_Luis_Vargas_Araoz?=
+	<joseluisvargasaraoz@hotmail.com>
+To: <lrodriguez@atheros.com>, <linville@tuxdriver.com>,
+	<johannes@sipsolutions.net>
+CC: lista linux wireless <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>, <yi.zhu@intel.com>,
+	<reinette.chatre@intel.com>, <ipw3945-devel@lists.sourceforge.net>
+Subject: Help ath5k
+Date: Fri, 5 Jun 2009 09:56:01 -0500
+In-Reply-To: <1244180502-4323-14-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+ <1244180502-4323-14-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: need help figuring out what makes my wireless"iwconfig" not respond
-References: <4A499531.4040001@gmail.com> <4A49980E.2010405@lwfinger.net>
-In-Reply-To: <4A49980E.2010405@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Justin P. Mattock wrote:
->    
->> from 2.6.31-rc1 to present there was a couple of commits for
->> wireless. prior to that the wireless on my machine(imac)
->> was o.k.,
->> Now the wireless does work(streams music,t.v. etc..)
->> but when I look at iwconfig there's nothing no info.
->> (I use wicd as my connection manager, and in the bottom corner
->> of the screen the transmit power is down to almost nothing,
->> causing wicd to constantly reconnect)
->>
->> out of a random guess what commit might have caused this, so I can at least
->> fix this over here(that is until the manufacturer comes out with a new
->> version). I can go in and individually revert all of the wireless, but
->> before that
->> I want a quick lead.
->>
->> any ideas?
->>
->>      
->
-> If you have a git tree, use the "git bisect" commands to find the bad
-> commit.
->
->    
-alright. I'll give that a try.
+--_b343d78d-058a-4942-871e-5f70ae775f68_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Justin P. Mattock
+
+Good morning all.
+I wanna configured LinuxVoyage (Debian distro kernel 2.6.26) in 802.11a wit=
+h Ath5k.
+How i've to modify /etc/network/interfaces?
+
+Thanks for your time.
+
+
+_________________________________________________________________
+News=2C entertainment and everything you care about at Live.com. Get it now=
+!
+http://www.live.com/getstarted.aspx=
+
+--_b343d78d-058a-4942-871e-5f70ae775f68_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<style>
+.hmmessage P
+{
+margin:0px=3B
+padding:0px
+}
+body.hmmessage
+{
+font-size: 10pt=3B
+font-family:Verdana
+}
+</style>
+</head>
+<body class=3D'hmmessage'>
+Good morning all.<br>I wanna configured LinuxVoyage (Debian distro kernel 2=
+.6.26) in 802.11a with Ath5k.<br>How i've to modify /etc/network/interfaces=
+?<br><br>Thanks for your time.<br><br><br /><hr />Get news=2C entertainment=
+ and everything you care about at Live.com. <a href=3D'http://www.live.com/=
+getstarted.aspx ' target=3D'_new'>Check it out!</a></body>
+</html>=
+
+--_b343d78d-058a-4942-871e-5f70ae775f68_--
