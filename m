@@ -1,226 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:55592 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754140AbZFGRQJ (ORCPT
+Received: from fmailhost06.isp.att.net ([207.115.11.56]:49055 "EHLO
+	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbZFEWiP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 13:16:09 -0400
-Received: by bwz9 with SMTP id 9so2572532bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 10:16:10 -0700 (PDT)
-Message-ID: <4A2BF5D6.3060704@tuffmail.co.uk>
-Date: Sun, 07 Jun 2009 18:16:06 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Fri, 5 Jun 2009 18:38:15 -0400
+Message-ID: <4A299E57.4020007@lwfinger.net>
+Date: Fri, 05 Jun 2009 17:38:15 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-References: <1243858256.5299.14.camel@johannes.local>	 <1243885494.3015.29.camel@localhost.localdomain>	 <4A24559D.7010201@tuffmail.co.uk>	 <1243928308.3192.38.camel@localhost.localdomain>	 <1243929706.20064.7.camel@johannes.local>	 <1243930703.3192.59.camel@localhost.localdomain>	 <20090603040315.GA10464@khazad-dum.debian.net>	 <1244008652.4145.7.camel@localhost.localdomain>	 <20090603213340.GB22809@khazad-dum.debian.net>	 <1244088806.4145.24.camel@localhost.localdomain>	 <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>	 <1244389617.23850.102.camel@localhost.localdomain>	 <4A2BE520.6080207@tuffmail.co.uk> <1244392536.23850.109.camel@localhost.localdomain>
-In-Reply-To: <1244392536.23850.109.camel@localhost.localdomain>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052101.47168.mb@bu3sch.de> <4A298C37.9030503@lwfinger.net> <200906052338.05653.mb@bu3sch.de>
+In-Reply-To: <200906052338.05653.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel Holtmann wrote:
-> Hi Alan,
->
->   
->>>>>>>>> We just need to fix the platform drivers then. They should not set
->>>>>>>>> global states since that is not what they are controlling. They
->>>>>>>>> control
->>>>>>>>>               
->>>>>>>>>                   
->>>>>>>> We should change things, yes.  So that the platform stores the global
->>>>>>>> state.  That was half-broken on the old core (the platform stored the
->>>>>>>> state of its own device, which could be out of sync with the global
->>>>>>>> state), but the part of it setting the global state is correct.
->>>>>>>>
->>>>>>>> That needs a new in-kernel API to tie the core to platform drivers
->>>>>>>> capable of storing global states without causing problems when drivers
->>>>>>>> are unloaded, but it is not hard.
->>>>>>>>
->>>>>>>> As for NVS events, they have a clear use case: to let rfkilld know
->>>>>>>> which
->>>>>>>> global states it could leave alone the first time it loads, and which
->>>>>>>> ones have to be restored...
->>>>>>>>             
->>>>>>>>                 
->>>>>>> show me an example of a platform device that stores the global state. I
->>>>>>> think you are confusing the word platform as in system with a platform
->>>>>>> device. The ThinkPad Bluetooth and WWAN switches are platform devices
->>>>>>> and control each one specific device. Same goes for the EeePC. They are
->>>>>>> not controlling a global state.
->>>>>>>           
->>>>>>>               
->>>>>> I don't know what big difference you see between the two uses of
->>>>>> "platform",
->>>>>> but I will just work around it to get something useful out of this mail.
->>>>>>
->>>>>> The laptop stores in NVS the state of its 'switches'.  This is as close as
->>>>>> one gets from 'storing the global state'.   When the laptop boots,
->>>>>> these devices get set by the firware to the state in NVS.  It is the best
->>>>>> place to store global state, because these devices will be in their proper
->>>>>> state (i.e. matching what will be the global state when the rfkill core
->>>>>> loads) all the time.  It also gives you for free multi-OS/multi-kernel
->>>>>> state
->>>>>> storage for these devices, and compatibility with BIOSes that let you
->>>>>> define
->>>>>> the initial state for the devices in the firmware configuration, etc.
->>>>>>         
->>>>>>             
->>>>> it stores the state of its switches and why should these be enforced as
->>>>> a global state? Who says that this is a global state? For me that sounds
->>>>> like policy.
->>>>>       
->>>>>           
->>>> We don't seem to be getting very far :-(.  I agree that these do not
->>>> appear to be global states, just the states of individual rfkill
->>>> devices.
->>>>
->>>> So I would propose the following changes.  (I'm happy to write the
->>>> code as well, but I think it's easier to read English).
->>>>
->>>>  1) remove rfkill_set_global_sw_state()
->>>>  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
->>>> registration, setting a flag.
->>>>  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
->>>> events, tho it may as well be set in all events)
->>>>     
->>>>         
->>> you can do things like this already if you just set the states correctly
->>> between rfkill_alloc and rfkill_register. So you should make sure you
->>> register your RFKILL switch with the correct state and not toggle it
->>> later. As far as I can tell the tpacpi driver does that already.
->>>   
->>>       
->> Ah.  I need to read the (rewritten) code again.
->>     
->
-> it could be still broken to some degree, but some stuff is just because
-> rfkill-input interferes. So disable rfkill-input via ioctl or not
-> compile it at all.
->   
+Michael Buesch wrote:
+> On Friday 05 June 2009 23:20:55 Larry Finger wrote:
+>> That is what the driver already does.
+> 
+> No. If the device is down, then it _is_ down. There won't be an rfkill thing
+> trying to bring it up again although the interface is down.
 
-Hmm, this looks more like a core feature than an rfkill-input bug:
+But in the current driver, turning the radio switch off only shuts
+down the radio. The rest of the interface is still up.
 
-"
- v4: set default global state from userspace for rfkill hotplug
-    (pointed out by Marcel)
+>>> We can't we just accept that the RF-kill status is unknown while the device is down?
+>> The problem is that while the interface is down the switch status
+>> cannot be interrogated. If you try, you get a fatal SSB error. Thus
+>> the only way to bring it back up is to flip the switch, then
+>> rmmod/insmod the driver. If you want hardware rfkill to be one-way,
+>> then take Johannes's patch. We would save a little power by calling
+>> b43_wireless_exit() if we brought it up to test the switch, and the
+>> switch was still off. That would leave everything off most of the time.
+> 
+> Yeah well. We cannot read the rfkill status while the device is down. That is
+> a hardware limitation. I think we should _live_ with that limitation instead of
+> working around it by always keeping the device initialized.
+> Can't we teach the rfkill subsystem about an "unknown" state? Because that's what we're in.
 
-...
+An "unknown" state would be OK, but I don't know how to get the state
+of the switch to the rfkill system.
 
-+	if (ev.op == RFKILL_OP_CHANGE_ALL) {
-+		if (ev.type == RFKILL_TYPE_ALL) {
-+			enum rfkill_type i;
-+			for (i = 0; i < NUM_RFKILL_TYPES; i++)
-+				rfkill_global_states[i].cur = ev.soft;
-+		} else {
-+			rfkill_global_states[ev.type].cur = ev.soft;
-+		}
-+	}
+> Yeah. But wasting huge amounts of power to keep polling a bit that's not even used
+> most of the time is not really what I like.
 
 
-It still looks like this global state will apply even if rfkill-input is
-disabled and userspace has not requested OP_CHANGE_ALL; the default
-state will be enforced on hotplug.  If you want to keep this, I think we
-still need my full scheme.
+> +void b43_rfkill_poll(struct ieee80211_hw *hw)
+>  {
+> -       struct b43_wldev *dev = data;
+> -       struct b43_wl *wl = dev->wl;
+> +       struct b43_wl *wl = hw_to_b43_wl(hw);
+> +       struct b43_wldev *dev = wl->current_dev;
+>         bool enabled;
+>  
+>         mutex_lock(&wl->mutex);
+>         if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
+> -               mutex_unlock(&wl->mutex);
+> -               return;
+> +               if (b43_wireless_core_init(dev)) {
+> +                       mutex_unlock(&wl->mutex);
+> +                       return;
+> +               }
+>         }
+> 
+> This is the part of the code which I really really really dislike.
+> Hell, just return a freaking error from b43_rfkill_poll(), if the interface
+> is down. If rfkill can't handle that, it should probably be taught to handle it.
+> Especially as there can be other errors as well, like memory allocation failures.
 
+I understand that this is the part that you do not like. I don't like
+it either, but unless we can read the switch-state bit, the interface
+will never come back up. I do not find rmmod/insmod a suitable
+recovery mechanism.
 
-Eek!  On a related note, what are we doing on resume?  Johannes added it
-in a response to one of my annoying eeepc-laptop scenarios, but I didn't
-look at the code, only the results.  It seems the individual devices are
-forced into the _global_ states (indexed by device type) on resume.  I
-thought you were trying to neuter these global states so userspace had
-full discretion?  Shouldn't we just restore the individual device state?
+>> 2. We continue to use the old rfkill mechanism. It works just fine,
+>> but this method runs the risk of the old method being deprecated and
+>> eliminated.
+> 
+> I agree that this is not really an option.
+> 
+>> 3. We get new callbacks that will only power down/up the radio when it
+>> is blocked. That saves a little power.
+> 
+> What is wrong with the current mechanism to power up the radio, if the interface is up
+> and powering it down if the interface is down? I think the power of the PHY/Radio should
+> not be affected by rfkill. It should work the other way around instead. Rfkill should
+> be tolerant to a radio that is down and simply live with an unknown switch state.
 
-    static int rfkill_resume(struct device *dev)
-    {
-    	struct rfkill *rfkill = to_rfkill(dev);
-    	bool cur;
+I don't know what was intended in the new rfkill method. Remember, I
+don't read those E-mails either, but what I observe is that cfg80211
+calls the stop callback when the switch goes from on to off, but the
+start callback is not called when the off to on transition occurs.
+That may be a bug - I don't know. Johannes, is there a simple
+explanation as to why the start routine is not called? If that were to
+happen, the rfkill poll routine would happily exit immediately if the
+interface were down.
 
-    	mutex_lock(&rfkill_global_mutex);
-    	cur = rfkill_global_states[rfkill->type].cur;
-    	rfkill_set_block(rfkill, cur);
-    	mutex_unlock(&rfkill_global_mutex);
+I think rfkill should just be a means of letting drivers know that the
+user wants the radio off, either by turning off a switch, or by
+setting some software flag from userland, and the driver should honor
+those wishes.
 
-    	rfkill->suspended = false;
+Larry
 
-    	schedule_work(&rfkill->uevent_work);
-
-    	rfkill_resume_polling(rfkill);
-
-    	return 0;
-    }
-
-      
-
-
->> I'm still more familiar with the old rfkill core.  My understanding was
->> that the old core required drivers to say what their current state was,
->> but if that differed from the global state then it would be changed to
->> match.
->>
->>     
->>>>  4) rfkill-input preserves existing behaviour - *if enabled* - by
->>>> initializing the global state from individual devices which have NVS.
->>>> (As before, each _type_ of rfkill device has its own global state).
->>>>     
->>>>         
->>> That still sounds horribly wrong and has been for a long time, but
->>> again, I don't care about rfkill-input since it will go away.
->>>
->>>   
->>>       
->>>>  5) rfkill devices with NVS will have their current state preserved,
->>>> so long as the global state has not yet been set (by userspace or by
->>>> rfkill-input).  Of course userspace can change the state in response
->>>> to the device being added.
->>>>     
->>>>         
->>> If you register your RFKILL switch properly, they do that already. See
->>> my comment above. You start up with the proper state to begin with.
->>>
->>>   
->>>       
->>>>  => rfkilld then has the information required to implement the same
->>>> policy as rfkill-input.  Furthermore, it will have enough information
->>>> that it could implement file-based storage as a fallback, and still
->>>> support NVS where available.
->>>>
->>>> It will also allow implementation (or configuration) of completely
->>>> different policy to rfkill-input.  E.g. if your internal wireless
->>>> w/NVS is broken and should be disabled, that can be done independently
->>>> of your replacement USB wireless adaptor.
->>>>     
->>>>         
->>> I did actually looked into this and userspace has all information
->>> available to create a proper policy if you wanna treat your NVS states
->>> (for example the tpacpi ones) as global states, you can easily do that
->>> right now. It became really simple with /dev/rfkill.
->>>   
->>>       
->> I still think userspace is missing an important piece of information:
->> whether the state of a certain rfkill device is persistent or not.
->>
->> The driver knows exactly whether this is the case; from what you say it
->> will call rfkill_set_state() before rfkill_register().  If it _doesn't_
->> do this, there won't be any persistent state for userspace to retrieve
->> anyway :-).
->>
->> I don't think we should expect userspace to know whether or not a device
->> has a persistent state.  Yes, it _could_ maintain whitelists, but why
->> should it have to if the driver already knows?
->>     
->
-> If you want that, then the best approach seems an extra sysfs attribute
-> for this. It is not intrusive on the event API and lets udev etc. have
-> these information, too.
->   
-
-Urg.  Yes, it would be nice to expose it in sysfs.  I guess I can live
-with readfile("/sys/class/rfkill%d/persistent"), if there is strong
-objection to cluttering up struct rfkill_event with extra flags.
-
-Thanks
-Alan
