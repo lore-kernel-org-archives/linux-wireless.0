@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40813 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752268AbZFCEDR (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:38685 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255AbZFEHre convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 00:03:17 -0400
-Date: Wed, 3 Jun 2009 01:03:15 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090603040315.GA10464@khazad-dum.debian.net>
-References: <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <1243858256.5299.14.camel@johannes.local> <1243867620.3015.17.camel@localhost.localdomain> <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <1243930703.3192.59.camel@localhost.localdomain>
+	Fri, 5 Jun 2009 03:47:34 -0400
+Received: by gxk10 with SMTP id 10so2466560gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2009 00:47:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243930703.3192.59.camel@localhost.localdomain>
+In-Reply-To: <20090605063059.GF17632@vasanth-laptop>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	<1244180502-4323-2-git-send-email-lrodriguez@atheros.com>
+	<20090605063059.GF17632@vasanth-laptop>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 5 Jun 2009 00:47:16 -0700
+Message-ID: <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com>
+Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 02 Jun 2009, Marcel Holtmann wrote:
-> We just need to fix the platform drivers then. They should not set
-> global states since that is not what they are controlling. They control
+On Thu, Jun 4, 2009 at 11:30 PM, Vasanthakumar
+Thiagarajan<vasanth@atheros.com> wrote:
+>
+>> +
+>> +       /*
+>> +        * Fine tuning for when no decent rate was found, the
+>> +        * lowest should *not* be used under normal circumstances.
+>> +        */
+>> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
+>> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+>> +                       "disabling MRR\n");
+>> +               rates[0].idx = rate_lowest_index(sband, sta);
+>> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
+>> +               rates[1].idx = -1;
+>> +       }
+>
+> I think we can still fill other rates (1..3) with the lowest rate
+> index as we dont differentiate the situation where the lowest rate
+> is chosen truely by the algorithm from this particular case.
 
-We should change things, yes.  So that the platform stores the global
-state.  That was half-broken on the old core (the platform stored the
-state of its own device, which could be out of sync with the global
-state), but the part of it setting the global state is correct.
+I thought about that as well, but does it really make sense for us to
+use MRR with the same lowest rate? That's why I just used one segment.
+Thoughts?
 
-That needs a new in-kernel API to tie the core to platform drivers
-capable of storing global states without causing problems when drivers
-are unloaded, but it is not hard.
-
-As for NVS events, they have a clear use case: to let rfkilld know which
-global states it could leave alone the first time it loads, and which
-ones have to be restored...
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+  Luis
