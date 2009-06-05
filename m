@@ -1,69 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:36686 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750944AbZFGNy6 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35527 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754621AbZFEFlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 09:54:58 -0400
-Date: Sun, 7 Jun 2009 10:54:56 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090607135456.GE3340@khazad-dum.debian.net>
-References: <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk> <1243932109.3192.73.camel@localhost.localdomain> <20090603041030.GB10464@khazad-dum.debian.net> <1244034216.22679.22.camel@localhost.localdomain> <20090603214040.GD22809@khazad-dum.debian.net> <1244089486.4145.33.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244089486.4145.33.camel@localhost.localdomain>
+	Fri, 5 Jun 2009 01:41:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 02/15] ath9k: cleanup try count for MRR in rate control
+Date: Fri,  5 Jun 2009 01:41:29 -0400
+Message-Id: <1244180502-4323-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 04 Jun 2009, Marcel Holtmann wrote:
-> > > > > Forget about this EPO crap. That is just a stupid concept anyway.
-> > > > 
-> > > > Is it?  So, if I use the _hardware switch_ on my laptop to kill all
-> > > > internal radios, it shouldn't be enforced by the OS on extra radios I
-> > > > plugged?  Or on shitty internal WLAN cards that doesn't tie properly to
-> > > > the mini-pci and mini-pcie hardware kill lines?
-> > > > 
-> > > > And any userspace PoS program can decide to bring up such radios that
-> > > > are not hardware-killed even if I am clearly trying to disable them all?
-> > > 
-> > > You hardkilled.  Of course it should bring down everything.  If you
-> > > don't want to hardkill, then disable specific radios via /sys or some
-> > > UI.  The hardswitch is the "eject" button.
-> > 
-> > That's exactly my point.  I want EPO to mean "no, you cannot turn this crap
-> > on, GO AWAY" for anyone but root (or whomever SELinux allowed to do it,
-> > etc).
-> 
-> let me repeat, this is what you want and that is policy. Feel free to
-> implement that in userspace. Leave such policy out of the kernel.
+This has no functional change and just cleans up the code
+to be more legible and removes a useless variable for
+Multi Rate Retry.
 
-EPO is not policy, it is functionality.  Entering EPO and going out of
-EPO state would be policy, though.
+For regular frames we use 2 retries for MRR segments [0-2].
+For the last MRR segment [3] we use 4.
 
-What happens while in EPO state is NOT policy.  The very definition of
-EPO is that, once enabled, it cannot be overriden until it is disabled
-(and it is usual to have strong rules for how it can be disabled, but
-this is not important right now).  EPO is a term from real world
-engineering, its meaning is set in stone.
+MRR[0] = 2
+MRR[1] = 2
+MRR[2] = 2
+MRR[3] = 4
 
-You can remove the EPO functionality and add a "switch all radios off"
-and "switch all radios on" accell commands.  But that's all you can do
-if you depend on userspace.  It will -not- be EPO.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |    3 ++-
+ drivers/net/wireless/ath/ath9k/rc.c    |   29 ++++++++++++++++++++---------
+ 3 files changed, 22 insertions(+), 11 deletions(-)
 
-You can have EPO in the kernel, and have userspace command the kernel to
-enter and exit EPO state.
-
-I have more to say on that, and will do so in a separate email, but I
-don't have the time to properly compose it right now.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9cd523f..ca14642 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -169,7 +169,6 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+ #define WME_NUM_TID             16
+ #define ATH_TXBUF               512
+ #define ATH_TXMAXTRY            13
+-#define ATH_11N_TXMAXTRY        10
+ #define ATH_MGT_TXMAXTRY        4
+ #define WME_BA_BMP_SIZE         64
+ #define WME_MAX_BA              WME_BA_BMP_SIZE
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f7baa40..2270166 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1573,7 +1573,8 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->max_rates = 4;
+ 	hw->channel_change_time = 5000;
+ 	hw->max_listen_interval = 10;
+-	hw->max_rate_tries = ATH_11N_TXMAXTRY;
++	/* Hardware supports 10 but we use 4 */
++	hw->max_rate_tries = 4;
+ 	hw->sta_data_size = sizeof(struct ath_node);
+ 	hw->vif_data_size = sizeof(struct ath_vif);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index abad86b..4f619ae 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -861,9 +861,21 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_supported_band *sband = txrc->sband;
+ 	__le16 fc = hdr->frame_control;
+-	u8 try_per_rate = 0, i = 0, rix, nrix;
++	u8 try_per_rate, i = 0, rix, nrix;
+ 	int is_probe = 0;
+ 
++	/*
++	 * For Multi Rate Retry we use a different number of
++	 * retry attempt counts. This ends up looking like this:
++	 *
++	 * MRR[0] = 2
++	 * MRR[1] = 2
++	 * MRR[2] = 2
++	 * MRR[3] = 4
++	 *
++	 */
++	try_per_rate = sc->hw->max_rate_tries;
++
+ 	rate_table = sc->cur_rate_table;
+ 	rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
+ 	nrix = rix;
+@@ -874,7 +886,6 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       1, nrix, 0);
+ 
+-		try_per_rate = (ATH_11N_TXMAXTRY/4);
+ 		/* Get the next tried/allowed rate. No RTS for the next series
+ 		 * after the probe rate
+ 		 */
+@@ -885,7 +896,6 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 
+ 		tx_info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+ 	} else {
+-		try_per_rate = (ATH_11N_TXMAXTRY/4);
+ 		/* Set the choosen rate. No RTS for first series entry. */
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
+@@ -893,18 +903,19 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 
+ 	/* Fill in the other rates for multirate retry */
+ 	for ( ; i < 4; i++) {
+-		u8 try_num;
+ 		u8 min_rate;
+ 
+-		try_num = ((i + 1) == 4) ?
+-			ATH_11N_TXMAXTRY - (try_per_rate * i) : try_per_rate ;
++		/* Use twice the number of tries for the last MRR segment. */
++		if (i + 1 == 4)
++			try_per_rate = 4;
++
+ 		min_rate = (((i + 1) == 4) && 0);
+ 
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+ 					  rate_table, nrix, 1, min_rate);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+-				       try_num, nrix, 1);
++				       try_per_rate, nrix, 1);
+ 	}
+ 
+ 	/*
+@@ -1549,7 +1560,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	/*
+ 	 * If underrun error is seen assume it as an excessive retry only
+ 	 * if prefetch trigger level have reached the max (0x3f for 5416)
+-	 * Adjust the long retry as if the frame was tried ATH_11N_TXMAXTRY
++	 * Adjust the long retry as if the frame was tried hw->max_rate_tries
+ 	 * times. This affects how ratectrl updates PER for the failed rate.
+ 	 */
+ 	if (tx_info_priv->tx.ts_flags &
+@@ -1564,7 +1575,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 		tx_status = 1;
+ 
+ 	ath_rc_tx_status(sc, ath_rc_priv, tx_info, final_ts_idx, tx_status,
+-			 (is_underrun) ? ATH_11N_TXMAXTRY :
++			 (is_underrun) ? sc->hw->max_rate_tries :
+ 			 tx_info_priv->tx.ts_longretry);
+ 
+ 	/* Check if aggregation has to be enabled for this tid */
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.6.0.6
+
