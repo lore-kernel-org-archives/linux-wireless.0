@@ -1,164 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:45818 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764032AbZFLOID (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:26444 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbZFEEK1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 10:08:03 -0400
-Message-ID: <4A326142.8030905@trash.net>
-Date: Fri, 12 Jun 2009 16:08:02 +0200
-From: Patrick McHardy <kaber@trash.net>
+	Fri, 5 Jun 2009 00:10:27 -0400
 MIME-Version: 1.0
-To: "David S. Miller" <davem@davemloft.net>
-CC: Linux Netdev List <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Zhu Yi <yi.zhu@intel.com>, mcgrof@gmail.com,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
-Subject: net: fix network drivers ndo_start_xmit() return values (part 3)
-Content-Type: multipart/mixed;
- boundary="------------020206070100020502010700"
+In-Reply-To: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+Date: Fri, 5 Jun 2009 00:03:30 -0400
+Message-ID: <9e4733910906042103q6c21886cia02d33cb278cef1e@mail.gmail.com>
+Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
+From: Jon Smirl <jonsmirl@gmail.com>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020206070100020502010700
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
+Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
+> Hi,
+>
+> As a part of research activities the Embedded Systems - Open Platform Group
+> from Siemens Corporate Technology we are working on adding support for
+> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
+> implementation is neither certified nor even feature complete. However
+> we'd like to present current state of our patchset to the Linux developers
+> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
+> but more like an RFC.
+
+Does this stack work with the Atmel USB version of at86rf230?
+ATAVRRZUSBSTICK, http://www.atmel.com/dyn/products/tools_card.asp?tool_id=4396
+
+It's not so simple to plug in the at86rf230 using SPI. Supporting USB
+sticks lets you develop on a desktop PC.
+
+freaklabs.org is using ATAVRRZUSBSTICK
 
 
---------------020206070100020502010700
-Content-Type: text/x-patch;
- name="03.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="03.diff"
+>
+> The project page is available at http://apps.sourceforge.net/trac/linux-zigbee
+> with source code of kernel part available from git at
+> http://zigbee-linux.git.sourceforge.net, mirrored for convenience at
+> git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
+>
+> The source code for userspace utils is available from git at
+> http://linux-zigbee.git.sourceforge.net/
+>
+> Changes since previous RFC:
+>  * Split the code into socket family, netlink interface and separate
+>    MAC 802.15.4 implementation.
+>  * Add a sample driver for devices implementing mac level of IEEE 802.15.4
+>    on their own.
+>  * Major cleanup of public interfaces.
+>  * Drop our CRC implementation and use a variant of CRC-ITU-T one
+>  * Add preliminary version of AT86RF231 Atmel chip driver
+>
+> The following changes since commit 59a3759d0fe8d969888c741bb33f4946e4d3750d:
+>  Linus Torvalds (1):
+>        Linux 2.6.30-rc7
+>
+> are available in the git repository at:
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git for-review-v1
+>
+> Darren Salt (1):
+>      crc-itu-t: add bit-reversed calculation
+>
+> Dmitry Eremin-Solenikov (9):
+>      Add constants for the ieee 802.15.4/ZigBee stack
+>      net: add IEEE 802.15.4 socket family implementation
+>      net: add NL802154 interface for configuration of 802.15.4 devices
+>      ieee802154: add simple HardMAC driver sample
+>      mac802154: add a software MAC 802.15.4 implementation
+>      ieee802154: add virtual loopback driver
+>      tty_io: export tty_class
+>      ieee802154: add serial dongle driver
+>      ieee802154: add at86rf230/rf231 spi driver
+>
+>  drivers/Makefile                       |    1 +
+>  drivers/char/tty_io.c                  |    1 +
+>  drivers/ieee802154/Kconfig             |   42 ++
+>  drivers/ieee802154/Makefile            |    6 +
+>  drivers/ieee802154/at86rf230.c         |  971 +++++++++++++++++++++++++++++++
+>  drivers/ieee802154/fakehard.c          |  253 ++++++++
+>  drivers/ieee802154/fakelb.c            |  335 +++++++++++
+>  drivers/ieee802154/serial.c            |  999 ++++++++++++++++++++++++++++++++
+>  drivers/net/Kconfig                    |    2 +
+>  include/linux/crc-itu-t.h              |   10 +
+>  include/linux/if.h                     |    2 +
+>  include/linux/if_arp.h                 |    2 +
+>  include/linux/if_ether.h               |    2 +
+>  include/linux/socket.h                 |    6 +-
+>  include/linux/spi/at86rf230.h          |   32 +
+>  include/linux/tty.h                    |    3 +-
+>  include/net/ieee802154/af_ieee802154.h |   60 ++
+>  include/net/ieee802154/mac802154.h     |   79 +++
+>  include/net/ieee802154/mac_def.h       |  158 +++++
+>  include/net/ieee802154/netdevice.h     |   84 +++
+>  include/net/ieee802154/nl802154.h      |  165 ++++++
+>  lib/crc-itu-t.c                        |   18 +
+>  net/Kconfig                            |    2 +
+>  net/Makefile                           |    2 +
+>  net/core/dev.c                         |    6 +-
+>  net/core/sock.c                        |    3 +
+>  net/ieee802154/Kconfig                 |   12 +
+>  net/ieee802154/Makefile                |    5 +
+>  net/ieee802154/af802154.h              |   35 ++
+>  net/ieee802154/af_ieee802154.c         |  356 ++++++++++++
+>  net/ieee802154/dgram.c                 |  373 ++++++++++++
+>  net/ieee802154/netlink.c               |  485 ++++++++++++++++
+>  net/ieee802154/raw.c                   |  250 ++++++++
+>  net/mac802154/Kconfig                  |   13 +
+>  net/mac802154/Makefile                 |    5 +
+>  net/mac802154/beacon.c                 |  242 ++++++++
+>  net/mac802154/beacon.h                 |   48 ++
+>  net/mac802154/beacon_hash.c            |  103 ++++
+>  net/mac802154/beacon_hash.h            |   40 ++
+>  net/mac802154/dev.c                    |  843 +++++++++++++++++++++++++++
+>  net/mac802154/mac802154.h              |   64 ++
+>  net/mac802154/mac_cmd.c                |  325 +++++++++++
+>  net/mac802154/main.c                   |   96 +++
+>  net/mac802154/mdev.c                   |  283 +++++++++
+>  net/mac802154/mib.h                    |   32 +
+>  net/mac802154/pib.c                    |   87 +++
+>  net/mac802154/pib.h                    |   35 ++
+>  net/mac802154/scan.c                   |  215 +++++++
+>  48 files changed, 7187 insertions(+), 4 deletions(-)
+>  create mode 100644 drivers/ieee802154/Kconfig
+>  create mode 100644 drivers/ieee802154/Makefile
+>  create mode 100644 drivers/ieee802154/at86rf230.c
+>  create mode 100644 drivers/ieee802154/fakehard.c
+>  create mode 100644 drivers/ieee802154/fakelb.c
+>  create mode 100644 drivers/ieee802154/serial.c
+>  create mode 100644 include/linux/spi/at86rf230.h
+>  create mode 100644 include/net/ieee802154/af_ieee802154.h
+>  create mode 100644 include/net/ieee802154/mac802154.h
+>  create mode 100644 include/net/ieee802154/mac_def.h
+>  create mode 100644 include/net/ieee802154/netdevice.h
+>  create mode 100644 include/net/ieee802154/nl802154.h
+>  create mode 100644 net/ieee802154/Kconfig
+>  create mode 100644 net/ieee802154/Makefile
+>  create mode 100644 net/ieee802154/af802154.h
+>  create mode 100644 net/ieee802154/af_ieee802154.c
+>  create mode 100644 net/ieee802154/dgram.c
+>  create mode 100644 net/ieee802154/netlink.c
+>  create mode 100644 net/ieee802154/raw.c
+>  create mode 100644 net/mac802154/Kconfig
+>  create mode 100644 net/mac802154/Makefile
+>  create mode 100644 net/mac802154/beacon.c
+>  create mode 100644 net/mac802154/beacon.h
+>  create mode 100644 net/mac802154/beacon_hash.c
+>  create mode 100644 net/mac802154/beacon_hash.h
+>  create mode 100644 net/mac802154/dev.c
+>  create mode 100644 net/mac802154/mac802154.h
+>  create mode 100644 net/mac802154/mac_cmd.c
+>  create mode 100644 net/mac802154/main.c
+>  create mode 100644 net/mac802154/mdev.c
+>  create mode 100644 net/mac802154/mib.h
+>  create mode 100644 net/mac802154/pib.c
+>  create mode 100644 net/mac802154/pib.h
+>  create mode 100644 net/mac802154/scan.c
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
-commit 1fd73a30c86a658fdc61710b187fda8d6b914ced
-Author: Patrick McHardy <kaber@trash.net>
-Date:   Fri Jun 12 16:02:08 2009 +0200
 
-    net: fix network drivers ndo_start_xmit() return values (part 3)
-    
-    Fix up wireless drivers that return an errno value to qdisc_restart(), causing
-    qdisc_restart() to print a warning an requeue/retransmit the skb.
-    
-    - airo: transmission not implemented for chip, intention is to free and abort
-    - ipw2200: transmission not implemented for promiscous mode, intention is to
-               drop
-    - prism54: intention is to drop
-    - wl3501_cs: intention appears to be to drop
-    - zd1201: error counter indicates intention is to drop
-    
-    All drivers compile tested.
-    
-    Signed-off-by: Patrick McHardy <kaber@trash.net>
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 9eabf4d..dfb30b9 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -2193,7 +2193,8 @@ static int airo_start_xmit11(struct sk_buff *skb, struct net_device *dev) {
- 	if (test_bit(FLAG_MPI, &priv->flags)) {
- 		/* Not implemented yet for MPI350 */
- 		netif_stop_queue(dev);
--		return -ENETDOWN;
-+		dev_kfree_skb_any(skb);
-+		return NETDEV_TX_OK;
- 	}
- 
- 	if ( skb == NULL ) {
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index c3b3dfe..44c29b3 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11524,7 +11524,8 @@ static int ipw_prom_stop(struct net_device *dev)
- static int ipw_prom_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
- 	IPW_DEBUG_INFO("prom dev->xmit\n");
--	return -EOPNOTSUPP;
-+	dev_kfree_skb(skb);
-+	return NETDEV_TX_OK;
- }
- 
- static const struct net_device_ops ipw_prom_netdev_ops = {
-diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wireless/prism54/islpci_eth.c
-index ef3ef45..8f62109 100644
---- a/drivers/net/wireless/prism54/islpci_eth.c
-+++ b/drivers/net/wireless/prism54/islpci_eth.c
-@@ -87,7 +87,6 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 	unsigned long flags;
- 	unsigned char wds_mac[6];
- 	u32 curr_frag;
--	int err = 0;
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_transmit \n");
-@@ -107,8 +106,6 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 		isl38xx_w32_flush(priv->device_base, ISL38XX_DEV_INT_UPDATE,
- 				  ISL38XX_DEV_INT_REG);
- 		udelay(ISL38XX_WRITEIO_DELAY);
--
--		err = -EBUSY;
- 		goto drop_free;
- 	}
- 	/* Check alignment and WDS frame formatting. The start of the packet should
-@@ -152,7 +149,6 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 			if (unlikely(newskb == NULL)) {
- 				printk(KERN_ERR "%s: Cannot allocate skb\n",
- 				       ndev->name);
--				err = -ENOMEM;
- 				goto drop_free;
- 			}
- 			newskb_offset = (4 - (long) newskb->data) & 0x03;
-@@ -197,8 +193,6 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 	if (unlikely(pci_map_address == 0)) {
- 		printk(KERN_WARNING "%s: cannot map buffer to PCI\n",
- 		       ndev->name);
--
--		err = -EIO;
- 		goto drop_free;
- 	}
- 	/* Place the fragment in the control block structure. */
-@@ -246,7 +240,7 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 	ndev->stats.tx_dropped++;
- 	spin_unlock_irqrestore(&priv->slock, flags);
- 	dev_kfree_skb(skb);
--	return err;
-+	return NETDEV_TX_OK;
- }
- 
- static inline int
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index 1f64d60..e3e96bb 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -1348,6 +1348,7 @@ static int wl3501_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	if (rc) {
- 		++dev->stats.tx_dropped;
- 		netif_stop_queue(dev);
-+		rc = NETDEV_TX_OK;
- 	} else {
- 		++dev->stats.tx_packets;
- 		dev->stats.tx_bytes += skb->len;
-diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
-index 5fabd9c..4430b8d 100644
---- a/drivers/net/wireless/zd1201.c
-+++ b/drivers/net/wireless/zd1201.c
-@@ -819,11 +819,11 @@ static int zd1201_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	if (err) {
- 		dev->stats.tx_errors++;
- 		netif_start_queue(dev);
--		return err;
-+	} else {
-+		dev->stats.tx_packets++;
-+		dev->stats.tx_bytes += skb->len;
-+		dev->trans_start = jiffies;
- 	}
--	dev->stats.tx_packets++;
--	dev->stats.tx_bytes += skb->len;
--	dev->trans_start = jiffies;
- 	kfree_skb(skb);
- 
- 	return 0;
-
---------------020206070100020502010700--
+-- 
+Jon Smirl
+jonsmirl@gmail.com
