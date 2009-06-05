@@ -1,54 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43479 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571AbZFEHnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 03:43:03 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2009 00:43:05 -0700
-Subject: Re: [ath9k-devel] [PATCH 14/15] mac80211: move management / no-ack
- frame rate decision to mac80211
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
+Received: from bombadil.infradead.org ([18.85.46.34]:35533 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754670AbZFEFlx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 01:41:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
 	Derek Smithies <derek@indranet.co.nz>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1244183288.22576.93.camel@johannes.local>
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 12/15] mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
+Date: Fri,  5 Jun 2009 01:41:39 -0400
+Message-Id: <1244180502-4323-13-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
-	 <1244180502-4323-15-git-send-email-lrodriguez@atheros.com>
-	 <1244183288.22576.93.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 5 Jun 2009 10:42:58 +0300
-Message-ID: <1244187778.3952.2.camel@jm-desktop>
-MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-06-04 at 23:28 -0700, Johannes Berg wrote:
-> On Fri, 2009-06-05 at 01:41 -0400, Luis R. Rodriguez wrote:
-> > All rate control algorithms agree to send management and no-ack
-> > frames at the lowest rate. They also agree to do this when sta
-> > and the private rate control data is NULL. We move this to mac80211
-> > and simplify the rate control algorithm code.
-> 
-> We previously thought this would constrain our rate control algorithms
-> more than we would like for future experimentation with higher multicast
-> rates. Has that changed?
+Cc: Felix Fietkau <nbd@openwrt.org>
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/rc80211_minstrel.c |    7 +++----
+ net/mac80211/rc80211_pid_algo.c |    5 ++---
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-I hope not. I don't like the idea of forcing the lowest rate in
-mac80211; we should allow rate control algorithms to be improved to do
-more intelligent selection of rate at least for multicast/broadcast
-frames. That might also be of use for some (likely post-association)
-unicast management frames since their use is going to increase in the
-future.
-
-- Jouni
-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 0a11515..0e1db92 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -75,12 +75,11 @@ use_low_rate(struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	u16 fc;
++	__le16 fc;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
++	fc = hdr->frame_control;
+ 
+-	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) ||
+-		(fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA);
++	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
+ }
+ 
+ 
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index a0bef76..ac6dad6 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -280,7 +280,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct rc_pid_sta_info *spinfo = priv_sta;
+ 	int rateidx;
+-	u16 fc;
++	__le16 fc;
+ 
+ 	if (txrc->rts)
+ 		info->control.rates[0].count =
+@@ -291,8 +291,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+ 	fc = le16_to_cpu(hdr->frame_control);
+-	if (!sta || !spinfo ||
+-	    (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
++	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
+ 	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
+ 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-- 
+1.6.0.6
 
