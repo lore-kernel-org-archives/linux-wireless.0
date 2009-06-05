@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16356 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755776AbZFSUpc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 16:45:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/5] iwlwifi: Check HW ready before prepare card.
-Date: Fri, 19 Jun 2009 13:52:41 -0700
-Message-Id: <1245444765-29079-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1245444765-29079-1-git-send-email-reinette.chatre@intel.com>
-References: <1245444765-29079-1-git-send-email-reinette.chatre@intel.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:15176 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387AbZFEDjk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2009 23:39:40 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so738985ywb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 20:39:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <45e8e6c40906041042p7e9986fauf993fed27e95e2c5@mail.gmail.com>
+References: <661650.46971.qm@web55304.mail.re4.yahoo.com>
+	 <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
+	 <40f31dec0906031121xfb76641h3137f53ed5c8a792@mail.gmail.com>
+	 <45e8e6c40906031252x7f22a1c1mf4fb4a9612eb5ce0@mail.gmail.com>
+	 <40f31dec0906031259u1a9c4b0dh977cade85bded168@mail.gmail.com>
+	 <45e8e6c40906041042p7e9986fauf993fed27e95e2c5@mail.gmail.com>
+Date: Fri, 5 Jun 2009 06:39:42 +0300
+Message-ID: <40f31dec0906042039w44d9165cx87d86fef17900881@mail.gmail.com>
+Subject: Re: ath9k/ath5k + 80211s crash
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: austinxxh-ath9k@yahoo.com, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+2009/6/4 Andrey Yurovsky <andrey@cozybit.com>:
+> On Wed, Jun 3, 2009 at 12:59 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>> 2009/6/3 Andrey Yurovsky <andrey@cozybit.com>:
+>>> On Wed, Jun 3, 2009 at 11:21 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>>>> 2009/6/2 Andrey Yurovsky <andrey@cozybit.com>:
+>>>>> With wireless-testing from a couple of days ago, an X86 system, and this patch:
+>>>>> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
+>>>>> ath9k can bring up a mesh point interface and doesn't crash for me,
+>>>>> but there are no mesh beacons, so mesh isn't working.  On ath5k, there
+>>>>> are also no beacons and mesh doesn't work, but there's no crash.
+>>>>>
+>>>>
+>>>>
+>>>> Hmm, try adding NL80211_IFTYPE_MESH_POINT here ->
+>>>>
+>>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/pcu.c;h=ec35503f6a40e6b6a1cc4323287b31e7cdd3a428;hb=HEAD#l733
+>>>
+>>> It's already there, in ath5k_hw_set_opmode.  We'll need to trace
+>>> what's going on and see why we don't get beacons.  Last night I had an
+>>> ath5k MP suddenly start beaconing but I haven't been able to reproduce
+>>> that yet.
+>>
+>> 736         /* When in AP mode zero timer0 to start TSF */
+>> 737         if (ah->ah_op_mode == NL80211_IFTYPE_AP)
+>> 738                 ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
+>>
+>> We need to do this for NL80211_IFTYPE_MESH_POINT or DBA won't fire up
+>> and beacon queue wont start...
+>
+> Thanks Nik, that gets beaconing going but only after a issuing a scan
+> (we have the same problem on rt2x00).
+>
 
-Hardware may be ready for us to manage it without us trying to prepare
-it first. Check if this is the case.
+Cool, i'll send a patch for this asap ;-)
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Thanks for testing !
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 6d1519e..63cba8c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1812,6 +1812,11 @@ static int iwl_prepare_card_hw(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO(priv, "iwl_prepare_card_hw enter \n");
- 
-+	ret = iwl_set_hw_ready(priv);
-+	if (priv->hw_ready)
-+		return ret;
-+
-+	/* If HW is not ready, prepare the conditions to check again */
- 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
- 			CSR_HW_IF_CONFIG_REG_PREPARE);
- 
-@@ -1819,6 +1824,7 @@ static int iwl_prepare_card_hw(struct iwl_priv *priv)
- 			~CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE,
- 			CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE, 150000);
- 
-+	/* HW should be ready by now, check again. */
- 	if (ret != -ETIMEDOUT)
- 		iwl_set_hw_ready(priv);
- 
+
 -- 
-1.5.6.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
