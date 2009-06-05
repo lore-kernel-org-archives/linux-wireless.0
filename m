@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42046 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbZFHGYC (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35499 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958AbZFEFlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 02:24:02 -0400
-Subject: Re: [PATCH] b43 add harware tkip
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: gregor kowski <gregor.kowski@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910906071534n7f2f3e66r34ac76f503c96fcb@mail.gmail.com>
-References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
-	 <69e28c910906071534n7f2f3e66r34ac76f503c96fcb@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DGiYoYx+LMopGsWpsrRL"
-Date: Mon, 08 Jun 2009 08:24:00 +0200
-Message-Id: <1244442240.11006.0.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 5 Jun 2009 01:41:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 00/15] ath9k/mac80211/iwlwifi: rate control cleanup
+Date: Fri,  5 Jun 2009 01:41:27 -0400
+Message-Id: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ath9k's rate control code is so convoluted that it really make it
+difficult to spot bugs and fix them. Here's a bunch of cleanups for
+ath9k rate control code, and a few for mac80211. I just tested ath9k.
+Will have to test others later.
 
---=-DGiYoYx+LMopGsWpsrRL
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Luis R. Rodriguez (15):
+  ath9k: fix oops by downgrading assert in rc.c
+  ath9k: cleanup try count for MRR in rate control
+  ath9k: remove unused min rate calculation code
+  ath9k: remove unused stepdown when looking for the next rate
+  ath9k: remove pointless wrapper ath_rc_rate_getidx()
+  ath9k: rename ath_rc_get_nextlowervalid_txrate()
+  ath9k: remove unused ath_rc_isvalid_txmask()
+  ath9k: remove ATH9K_MODE_11B
+  ath9k: remap ATH9K_MODE_*
+  ath9k: rename ath_rc_ratefind_ht() to ath_rc_get_highest_rix()
+  ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
+  mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
+  iwlwifi: use ieee80211_is_data(fc)
+  mac80211: move management / no-ack frame rate decision to mac80211
+  ath9k: remove rate control wraper
 
-On Mon, 2009-06-08 at 00:34 +0200, G=C3=A1bor Stefanik wrote:
-> On Sun, Jun 7, 2009 at 11:50 PM, gregor kowski<gregor.kowski@gmail.com> w=
-rote:
-
-> This is your entire mail body.
-> Please inline the patch, or at least include a description.
-
-This is ridiculous, you've never managed to do that correctly yourself.
-
-johannes
-
---=-DGiYoYx+LMopGsWpsrRL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKLK58AAoJEODzc/N7+QmaYgcP/2js60Dn6wWq+MgC3hUesz4K
-wSCbrtdwHqjxJ9LbXOjhMW35nOzE/yjGohumwJG+tEYvYSRDYdIpKjg/pouhDNDe
-3/m/EHGCK32Z24BvMM7a9az7Ghrvfoesa+mzrh9vpubQh2FXsayWKY5/zdy22Exj
-bSowHloEQc/W0NHcq9P7ms9PCiOrsuHStWX+Li1VNDDD9WQwE0MyyAckg4E6dHaC
-6mE93Kj7XtzoLxD4aVhz87vIhex3aVLHI1cu5xgmHb48LMou4KON8rhNcBjhSi6f
-siccMQsN63FzSJvn3MXJSHtrlqeE6kYlVGwESXcJQxlSrdoTYGRj4gCZP5fFkrsH
-Ytkq8Emek94vJFk/qJfW0yZ5U9fK+HC2abGjB+xmslq7/POtCkcHdNFH2zQeVNd5
-2lxKj+/G/AJHrFUhfNk2uYZ+VCw4HMlWI2oRLn0QdlDAoK2n50Xjpqy8CERzjtlF
-g1VrNcPKvOvx3zqZjUnHdDXY1iAud1+5J+jQWX/SIoshjmuOujnB9XuEimVMCGFF
-6OZFXjpgJLH3d5FEh80ikHlHqhjeImFqbbyKIqRhdvoFgjbamNwc7TdpjXBU6thr
-Lb3GtXHIBENLNTdMDuxO9j8bW1ZDfU6X4+VbcQKHmEomQjBZPZ0cuK6kxi61LHIr
-1lzcb569Bu6Acwz6PTyr
-=fRzn
------END PGP SIGNATURE-----
-
---=-DGiYoYx+LMopGsWpsrRL--
+ drivers/net/wireless/ath/ath9k/ath9k.h     |    1 -
+ drivers/net/wireless/ath/ath9k/debug.h     |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c        |    1 -
+ drivers/net/wireless/ath/ath9k/hw.h        |   17 ++--
+ drivers/net/wireless/ath/ath9k/main.c      |    3 +-
+ drivers/net/wireless/ath/ath9k/rc.c        |  190 ++++++++++------------------
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   21 +---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   10 --
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 +-
+ net/mac80211/rate.c                        |   29 ++++-
+ net/mac80211/rc80211_minstrel.c            |   24 ----
+ net/mac80211/rc80211_pid_algo.c            |   15 ---
+ 12 files changed, 111 insertions(+), 206 deletions(-)
 
