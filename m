@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([207.115.11.53]:38282 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838AbZFAWRG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47014 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbZFEJro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 18:17:06 -0400
-Message-ID: <4A245361.9060807@lwfinger.net>
-Date: Mon, 01 Jun 2009 17:17:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: matthieu castet <castet.matthieu@free.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 vs b43legacy
-References: <loom.20090529T190620-42@post.gmane.org> <4A20505D.40908@lwfinger.net> <4A244C5A.50307@free.fr>
-In-Reply-To: <4A244C5A.50307@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 5 Jun 2009 05:47:44 -0400
+Subject: [PATCH] ar9170: interpret firmware debug commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 05 Jun 2009 11:47:43 +0200
+Message-Id: <1244195263.22576.96.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-matthieu castet wrote:
-> Larry Finger wrote:
->> Matthieu CASTET wrote:
->>> what's the difference between b43 and b43legacy ?
->>>
->>> >From a first point a view, it seems b43 is for core >= 5 and
->>> b43legacy for the
->>> other.
->>> There is also firmware difference : b43 need v4 and b43legacy need v3.
->>
->> The firmware difference is the primary one.
->>
->>> But v4 firmware seems to support core 4 (pcm4 & ucode4) and b43 code
->>> got some
->>> support for old chips (<5).
->>
->> The Broadcom V4 drivers do have core 4 firmware embedded in them and
->> it is
->> extracted by b43-fwcutter; however, b43 will _NOT_ work with core 4
->> chips. The
->> firmware loader will only find firmware for core 5 and later.
-> Ok but what prevent b43 to support core 4 chip with v4 firmware like the
-> broadcom driver does ?
-> I am aware that the current driver doesn't support it, but what are the
-> missing part to support it ?
+This adds new commands that the original firmware will not send
+but we can use them to debug firmware.
 
-The firmware loader code is the first step. Beyond that, I have no idea.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/ath/ar9170/main.c |   32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-> If it is the difference from core4 from newer chip, why b43legacy
-> contains only few special case for core4 chip.
+--- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2009-06-05 09:28:48.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2009-06-05 09:46:38.000000000 +0200
+@@ -442,6 +442,38 @@ void ar9170_handle_command_response(stru
+ 		/* retransmission issue / SIFS/EIFS collision ?! */
+ 		break;
+ 
++	/* firmware debug */
++	case 0xca:
++		printk(KERN_DEBUG "ar9170 FW: %.*s\n", len - 4, (char *)buf + 4);
++		break;
++	case 0xcb:
++		len -= 4;
++
++		switch (len) {
++		case 1:
++			printk(KERN_DEBUG "ar9170 FW: u8: %#.2x\n",
++				*((char *)buf + 4));
++			break;
++		case 2:
++			printk(KERN_DEBUG "ar9170 FW: u8: %#.4x\n",
++				le16_to_cpup((__le16 *)((char *)buf + 4)));
++			break;
++		case 4:
++			printk(KERN_DEBUG "ar9170 FW: u8: %#.8x\n",
++				le32_to_cpup((__le32 *)((char *)buf + 4)));
++			break;
++		case 8:
++			printk(KERN_DEBUG "ar9170 FW: u8: %#.16lx\n",
++				(unsigned long)le64_to_cpup(
++						(__le64 *)((char *)buf + 4)));
++			break;
++		}
++		break;
++	case 0xcc:
++		print_hex_dump_bytes("ar9170 FW:", DUMP_PREFIX_NONE,
++				     (char *)buf + 4, len - 4);
++		break;
++
+ 	default:
+ 		printk(KERN_INFO "received unhandled event %x\n", cmd->type);
+ 		print_hex_dump_bytes("dump:", DUMP_PREFIX_NONE, buf, len);
 
-I do not know other than that is what the specs called for.
-
-> PS : I don't have core 4 chip nor plan to get some, I ask this out of
-> curiosity.
-
-I do have such a chip, but I use it to verify b43legacy code.
-
-Larry
 
