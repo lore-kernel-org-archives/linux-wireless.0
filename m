@@ -1,119 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:26738 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759034AbZFII4F convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47282 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776AbZFFAEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 04:56:05 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so2491413ywb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 01:56:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1244537651.4672.0.camel@johannes.local>
-References: <1244536211-22535-1-git-send-email-lrodriguez@atheros.com>
-	<1244536211-22535-2-git-send-email-lrodriguez@atheros.com>
-	<1244537651.4672.0.camel@johannes.local>
+	Fri, 5 Jun 2009 20:04:02 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 9 Jun 2009 01:55:47 -0700
-Message-ID: <43e72e890906090155n15f286x19a82910272016a1@mail.gmail.com>
-Subject: Re: [PATCH 1/3] mac80211: fix - drop frames for sta with no valid
-	rate
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, j@w1.fi, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 01/15] ath9k: fix oops by downgrading assert in rc.c
+Date: Fri,  5 Jun 2009 20:03:35 -0400
+Message-Id: <1244246629-28179-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 9, 2009 at 1:54 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-06-09 at 04:30 -0400, Luis R. Rodriguez wrote:
->> If we're associated and scanning mac80211 will allow through
->> nullfunc and probe request frames. When we're scanning on a
->> different band than the one we're associated on we should
->> not send nullfunc frames to the sta on that band as it would
->> be the incorrect band.
->>
->> Lets catch the case where no valid rate is usable when associated
->> and discard those frames and warn only for the case the frame is
->> not a nullfunc or probe request as those are the only accounted
->> for frames mac80211 should allow through while scanning.
->>
->> This fixes an oops which occured due to an assert in ath9k:
->>
->> http://marc.info/?l=linux-wireless&m=124277331319024
->>
->> The assert was happening because the rate control algorithm
->> figures it should find at least one valid dual stream or
->> single stream rate. Since we allow mac80211 to send get_rate
->> callback for drivers for a sta on invalid band no valid will
->> actually have been found and hence the assert.
->>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  include/net/mac80211.h |   11 +++++++++++
->>  net/mac80211/tx.c      |   38 ++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 49 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index 17d61d1..9559efa 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -2103,6 +2103,17 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
->>       return 0;
->>  }
->>
->> +static inline
->> +bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
->> +                           struct ieee80211_sta *sta)
->> +{
->> +     unsigned int i;
->> +
->> +     for (i = 0; i < sband->n_bitrates; i++)
->> +             if (rate_supported(sta, sband->band, i))
->> +                     return true;
->> +     return false;
->> +}
->>
->>  int ieee80211_rate_control_register(struct rate_control_ops *ops);
->>  void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
->> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
->> index 1436f74..03f9a4e 100644
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> @@ -511,6 +511,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->>       int i, len;
->>       bool inval = false, rts = false, short_preamble = false;
->>       struct ieee80211_tx_rate_control txrc;
->> +     u32 sta_flags;
->>
->>       memset(&txrc, 0, sizeof(txrc));
->>
->> @@ -543,7 +544,44 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->>            (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
->>               txrc.short_preamble = short_preamble = true;
->>
->> +     sta_flags = tx->sta ? get_sta_flags(tx->sta) : 0;
->> +
->> +     /*
->> +      * Lets not bother rate control if we're associated and cannot
->> +      * talk to the sta. It makes little since for this to happen,
->> +      * it should mean we're scanning on another band somehow some frames
->> +      * got through the TX queue -- these should have been not been added
->> +      * to our TX queue. There is one excemption to this, but we handle
->> +      * these below.
->> +      */
->> +
->> +     if (unlikely((tx->local->sw_scanning) &&
->> +         (sta_flags & WLAN_STA_ASSOC) &&
->> +         !rate_usable_index_exists(sband, &tx->sta->sta))) {
->> +             /*
->> +              *  The only accounted for frames of this type in
->> +              *  mac80211 are probe requests and null func frames,
->> +              *  so just warn for other drop of frames. Drop the
->> +              *  frames anyway as we have no usable bit rate.
->> +              */
->
-> Can we not avoid this situation to start with by flushing the master
-> device queues before we go scan?
+Unfortunately locking the driver rate control private area
+doesn't resolve this issue and in fact causes some issues.
+The root cause is yet undetermined. For now instead of crashing
+lets just downgrades the ASSERT() and only show a trace when
+we are debugging with ATH_DBG_CONFIG enabled. That attempt
+and its results can be seen here:
 
-How do you do that?
+http://marc.info/?l=linux-wireless&m=124399166108295&w=1
 
-  Luis
+The ASSERT was happening because the rate control algorithm
+figures it should find at least one valid dual stream or
+single stream rate. *Something* is causing us to not find
+such rate. This happens after association and only when HT
+is enabled AFAICT. What we are doing by downgrading the assert
+is informing the driver to use the lowest rate index. When
+this happens lets disable multi rate retry and only try on
+the lowest supported rate.
+
+Traces of the ASSERT are available on this thread:
+
+http://marc.info/?l=linux-wireless&m=124277331319024
+
+At least one bug report (as side issue, mind you):
+
+https://bugzilla.redhat.com/show_bug.cgi?id=503285
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.h |    1 +
+ drivers/net/wireless/ath/ath9k/rc.c    |   41 +++++++++++++++++++++++++++----
+ 2 files changed, 36 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index edda15b..9d72bc8 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -30,6 +30,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_CONFIG		= 0x00000200,
+ 	ATH_DBG_FATAL		= 0x00000400,
+ 	ATH_DBG_PS		= 0x00000800,
++	ATH_DBG_RATE		= 0x00001000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index ba06e78..53cb4fb 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -741,10 +741,24 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
+ 	if (rate > (ath_rc_priv->rate_table_size - 1))
+ 		rate = ath_rc_priv->rate_table_size - 1;
+ 
+-	ASSERT((rate_table->info[rate].valid &&
+-		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
+-	       (rate_table->info[rate].valid_single_stream &&
+-		!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
++	if (rate_table->info[rate].valid &&
++	    (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG))
++		return rate;
++
++	if (rate_table->info[rate].valid_single_stream &&
++	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG));
++		return rate;
++
++	/*
++	 * This should not happen, but we know it does for now... This
++	 * needs a proper fix but we're still not sure how this is caused.
++	 * Its not *critical* though so lets just warn when debug is enabled
++	 * for configuration changes.
++	 */
++#ifdef CONFIG_ATH9K_DEBUG
++	WARN_ON(sc->debug.debug_mask & ATH_DBG_RATE);
++#endif
++	rate = ath_rc_priv->valid_rate_index[0];
+ 
+ 	return rate;
+ }
+@@ -837,13 +851,15 @@ static u8 ath_rc_rate_getidx(struct ath_softc *sc,
+ 
+ static void ath_rc_ratefind(struct ath_softc *sc,
+ 			    struct ath_rate_priv *ath_rc_priv,
+-			    struct ieee80211_tx_rate_control *txrc)
++			    struct ieee80211_tx_rate_control *txrc,
++			    struct ieee80211_sta *sta)
+ {
+ 	const struct ath_rate_table *rate_table;
+ 	struct sk_buff *skb = txrc->skb;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_supported_band *sband = txrc->sband;
+ 	__le16 fc = hdr->frame_control;
+ 	u8 try_per_rate = 0, i = 0, rix, nrix;
+ 	int is_probe = 0;
+@@ -935,6 +951,19 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 
+ 	/* Setup RTS/CTS */
+ 	ath_rc_rate_set_rtscts(sc, rate_table, tx_info);
++
++	/*
++	 * Fine tuning for when no decent rate was found, the
++	 * lowest should *not* be used under normal circumstances.
++	 */
++	if (rix == ath_rc_priv->valid_rate_index[0]) {
++		DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
++			"disabling MRR\n");
++		rates[0].idx = rate_lowest_index(sband, sta);
++		rates[0].count = 4;
++		/* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
++		rates[1].idx = -1;
++	}
+ }
+ 
+ static bool ath_rc_update_per(struct ath_softc *sc,
+@@ -1582,7 +1611,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	}
+ 
+ 	/* Find tx rate for unicast frames */
+-	ath_rc_ratefind(sc, ath_rc_priv, txrc);
++	ath_rc_ratefind(sc, ath_rc_priv, txrc, sta);
+ }
+ 
+ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+-- 
+1.6.0.6
+
