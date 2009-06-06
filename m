@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:53530 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbZFLVYN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 17:24:13 -0400
-Message-ID: <4A32C77D.5010102@lwfinger.net>
-Date: Fri, 12 Jun 2009 16:24:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:33860 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752306AbZFFRtS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Jun 2009 13:49:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+Date: Sat, 6 Jun 2009 19:49:06 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052101.47168.mb@bu3sch.de> <1244310138.17485.11.camel@johannes.local>
+In-Reply-To: <1244310138.17485.11.camel@johannes.local>
 MIME-Version: 1.0
-To: "Fabio A. Correa" <facorread@gmail.com>
-CC: bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: 4311 not detected at all
-References: <ec2083b20906120654j370e5bdo724a7c3b6d505a6c@mail.gmail.com>	 <4A326771.6030301@lwfinger.net> <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com>
-In-Reply-To: <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200906061949.06735.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fabio A. Correa wrote:
+On Saturday 06 June 2009 19:42:18 Johannes Berg wrote:
+> On Fri, 2009-06-05 at 21:01 +0200, Michael Buesch wrote:
 > 
-> Hey, I found an updated BIOS available in the HP site, obviously
-> requiring Windows. I had deleted those partitions, so I will get a
-> Windows hard disk/CD and try to flash it. I did not work under Wine...
-> I will keep you informed.
+> > >      The rfkill polling routine brings the interface back to the initialized
+> > >      state if it is found to be uninitialized. This way the rfkill switch
+> > >      may be interpreted. In addition, the radio LED is not turned on in the
+> > >      initialization routine unless the rfkill switch is on.
+> > 
+> > This is pretty silly behavior IMO. Just to bring it to the point:
+> > We initialize a huge wireless MAC, PHY and Radio that consume several watts of power
+> > just to poll a silly RF-kill bit.
 > 
-> By the way, what is BAR?
+> 1) you're MUCH overstating the power consumption
 
-Base Address Register
+Care to measure it?
 
+> Fine. Just don't stand in my way then.
 
+I am not standing in your way. I'm just not going to maintain it.
+In fact, I'd like to pass the whole maintainership to somebody else. But I guess there is nobody.
+
+-- 
+Greetings, Michael.
