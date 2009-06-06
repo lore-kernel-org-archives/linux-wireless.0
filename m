@@ -1,51 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52448 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952AbZFSSPb (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47274 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbZFFAEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 14:15:31 -0400
-Date: Fri, 19 Jun 2009 14:02:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH 21/23] orinoco: convert scanning to cfg80211
-Message-ID: <20090619180233.GD2753@tuxdriver.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com> <1245363695-8289-22-git-send-email-kilroyd@googlemail.com> <20090619173541.GC2753@tuxdriver.com> <4A3BD06D.7080702@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A3BD06D.7080702@gmail.com>
+	Fri, 5 Jun 2009 20:04:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH v2 03/15] ath9k: remove unused min rate calculation code
+Date: Fri,  5 Jun 2009 20:03:37 -0400
+Message-Id: <1244246629-28179-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 19, 2009 at 06:52:45PM +0100, Dave wrote:
-> John W. Linville wrote:
-> > On Thu, Jun 18, 2009 at 11:21:33PM +0100, David Kilroy wrote:
-> >> This removes the custom scan cache used by orinoco.
-> >>
-> >> We also have to avoid calling cfg80211_scan_done from the hard
-> >> interrupt, so we offload the entirety of scan processing to a workqueue.
-> >>
-> >> This may behave strangely if you start scanning just prior to
-> >> suspending...
-> >>
-> >> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-> > 
-> > Hmmm...please do try to compile test patches before posting! :-)
-> > 
-> > John
-> 
-> Compile? I'm running it! (and sparse didn't complain either)
-> 
-> I'll go have a look see what's special on my end. I'm guessing no SMP or
-> something.
+This is not used, and when we need to get the lowest rate
+we should simply use mac80211's own rate_lowest_index(sband, sta).
 
-Haha...yeah, that's probably it...
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   33 +++++++++------------------------
+ 1 files changed, 9 insertions(+), 24 deletions(-)
 
-> Would you like the series/patch reposted including this fix?
-
-No, I've got it fixed.
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 2040ee8..93e480c 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -823,28 +823,17 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ static u8 ath_rc_rate_getidx(struct ath_softc *sc,
+ 			     struct ath_rate_priv *ath_rc_priv,
+ 			     const struct ath_rate_table *rate_table,
+-			     u8 rix, u16 stepdown,
+-			     u16 min_rate)
++			     u8 rix, u16 stepdown)
+ {
+ 	u32 j;
+ 	u8 nextindex = 0;
+ 
+-	if (min_rate) {
+-		for (j = RATE_TABLE_SIZE; j > 0; j--) {
+-			if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-						ath_rc_priv, rix, &nextindex))
+-				rix = nextindex;
+-			else
+-				break;
+-		}
+-	} else {
+-		for (j = stepdown; j > 0; j--) {
+-			if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-						ath_rc_priv, rix, &nextindex))
+-				rix = nextindex;
+-			else
+-				break;
+-		}
++	for (j = stepdown; j > 0; j--) {
++		if (ath_rc_get_nextlowervalid_txrate(rate_table,
++					ath_rc_priv, rix, &nextindex))
++			rix = nextindex;
++		else
++			break;
+ 	}
+ 	return rix;
+ }
+@@ -890,7 +879,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		 * after the probe rate
+ 		 */
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix, 1, 0);
++					  rate_table, nrix, 1);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
+ 
+@@ -903,16 +892,12 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 
+ 	/* Fill in the other rates for multirate retry */
+ 	for ( ; i < 4; i++) {
+-		u8 min_rate;
+-
+ 		/* Use twice the number of tries for the last MRR segment. */
+ 		if (i + 1 == 4)
+ 			try_per_rate = 4;
+ 
+-		min_rate = (((i + 1) == 4) && 0);
+-
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix, 1, min_rate);
++					  rate_table, nrix, 1);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.0.6
+
