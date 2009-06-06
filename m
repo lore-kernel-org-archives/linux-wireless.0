@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:49315 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751523AbZFXOFS (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:53743 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbZFFHGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 10:05:18 -0400
-Date: Wed, 24 Jun 2009 16:07:22 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: linville@tuxdriver.com
-Cc: Matthew Wilcox <matthew@wil.cx>, "Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] iwmc3200wifi: add Kconfig help
-Message-ID: <20090624140721.GA3427@sortiz.org>
+	Sat, 6 Jun 2009 03:06:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090605.175825.168276404.davem@davemloft.net>
+References: <20090605091229.GA25280@doriath.ww600.siemens.net>
+	 <20090605094619.GB23085@build.ossfans.org>
+	 <bc64b4640906050345t5ed23d7bxc8a777a4a0ada147@mail.gmail.com>
+	 <20090605.175825.168276404.davem@davemloft.net>
+Date: Sat, 6 Jun 2009 11:06:33 +0400
+Message-ID: <bc64b4640906060006w1d623172p2595158cc5204f3b@mail.gmail.com>
+Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
+	802.15.4 devices
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: slapin@ossfans.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/6/6, David Miller <davem@davemloft.net>:
+> From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+>
+> Date: Fri, 5 Jun 2009 14:45:06 +0400
+>
+>
+>  > Could you please send an incremental patch on top of this serie? I
+>  > hope that my last
+>  > push can be pulled/merged and I don't want to redo all commits.
+>
+>
+> Dmitry, no shortcuts ok?
+>
+>  Just respin the series and resend it just like anyone else has to.
+>
+>  The changes just aren't ready, and until they are you'll need to
+>  respin them like this a few more times.
 
-We're missing a Kconfig help for the iwmc3200wifi driver.
+I'm on vacation for the next following days. In the mean time Sergey
+Lapin will continue working on this patchset, updating it to pass
+through review.
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
 -- 
-drivers/net/wireless/iwmc3200wifi/Kconfig |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
-index 1eccb6d..030401d 100644
---- a/drivers/net/wireless/iwmc3200wifi/Kconfig
-+++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
-@@ -4,6 +4,15 @@ config IWM
- 	depends on CFG80211
- 	select WIRELESS_EXT
- 	select FW_LOADER
-+	help
-+	  The Intel Wireless Multicomm 3200 hardware is a combo
-+	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
-+	  runs over SDIO and is typically found on Moorestown
-+	  based platform. This driver takes care of the 802.11
-+	  part, which is a fullmac one.
-+
-+	  If you choose to build it as a module, it'll be called
-+	  iwmc3200wifi.ko.
- 
- config IWM_DEBUG
- 	bool "Enable full debugging output in iwmc3200wifi"
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+With best wishes
+Dmitry
