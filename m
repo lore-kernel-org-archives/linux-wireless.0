@@ -1,70 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:35339 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbZFGMX7 (ORCPT
+Received: from caiajhbdccac.dreamhost.com ([208.97.132.202]:41902 "EHLO
+	spunkymail-a11.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751958AbZFFHZ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 08:23:59 -0400
-Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1244370250.2907.1.camel@johannes.local>
-References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-	 <1244326943.12159.5.camel@localhost>  <1244334102.16810.3.camel@localhost>
-	 <1244367815.26071.4.camel@johannes.local>
-	 <1244368455.22643.4.camel@localhost>
-	 <1244370250.2907.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Sun, 07 Jun 2009 15:23:42 +0300
-Message-Id: <1244377422.15333.6.camel@nadejda-laptop>
-Mime-Version: 1.0
+	Sat, 6 Jun 2009 03:25:58 -0400
+Message-ID: <4A2A19FD.3030302@hiramoto.org>
+Date: Sat, 06 Jun 2009 09:25:49 +0200
+From: Karl Hiramoto <karl@hiramoto.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi,
+	Derek Smithies <derek@indranet.co.nz>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: Re: [ath9k-devel] [PATCH v2 08/15] ath9k: remove ATH9K_MODE_11B
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com> <1244246629-28179-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-9-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-06-07 at 12:24 +0200, Johannes Berg wrote:
-> On Sun, 2009-06-07 at 12:54 +0300, Maxim Levitsky wrote:
-> 
-> > Fine, like I expected, but still, I guess there is some 'loader' in
-> > eeprom?
-> 
-> Yes.
-> 
-> > If there were a documentation too.
-> > Isn't it possible to publish it?
-> > 
-> > This firmware contains so many 'magic' registers.
-> 
-> There is some, but it's not public. We can try to document some when we
-> replace the magic values by constants.
-> 
-> johannes
+Luis R. Rodriguez wrote:
+> This saves us 2733 bytes.
+>
+>    text    data     bss     dec     hex filename
+>  252265    3628    1584  257477   3edc5 ath9k-has-b-rate.ko
+>  249905    3628    1584  255117   3e48d ath9k.ko
+>
+> Cc: Derek Smithies <derek@indranet.co.nz>
+> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> Siged-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.c |    1 -
+>  drivers/net/wireless/ath/ath9k/hw.h |    1 -
+>  drivers/net/wireless/ath/ath9k/rc.c |   23 -----------------------
+>  3 files changed, 0 insertions(+), 25 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 1579c94..de2c000 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -3294,7 +3294,6 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>  	}
+>  
+>  	if (eeval & AR5416_OPFLAGS_11G) {
+> -		set_bit(ATH9K_MODE_11B, pCap->wireless_modes);
+>  		set_bit(ATH9K_MODE_11G, pCap->wireless_modes);
+>  		if (ah->config.ht_enable) {
+>  			if (!(eeval & AR5416_OPFLAGS_N_2G_HT20))
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index dd8508e..73d859e 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -113,7 +113,6 @@
+>  
+>  enum wireless_mode {
+>  	ATH9K_MODE_11A = 0,
+> -	ATH9K_MODE_11B = 2,
+>  	ATH9K_MODE_11G = 3,
+>  	ATH9K_MODE_11NA_HT20 = 6,
+>  	ATH9K_MODE_11NG_HT20 = 7,
+> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> index 01586d2..980040b 100644
+> --- a/drivers/net/wireless/ath/ath9k/rc.c
+> +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> @@ -380,27 +380,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+>  	0,   /* Phy rates allowed initially */
+>  };
+>  
+> -static const struct ath_rate_table ar5416_11b_ratetable = {
+> -	4,
+> -	{
+> -		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
+> -			900, 0x1b,  0x00, (0x80|2),
+> -			0, 0, 1, 0, 0 },
+> -		{ VALID, VALID, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
+> -			1800, 0x1a, 0x04, (0x80|4),
+> -			1, 1, 1, 1, 0 },
+> -		{ VALID, VALID, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
+> -			4300, 0x19, 0x04, (0x80|11),
+> -			1, 2, 2, 2, 0 },
+> -		{ VALID, VALID, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
+> -			7100, 0x18, 0x04, (0x80|22),
+> -			1, 4, 100, 3, 0 },
+> -	},
+> -	100, /* probe interval */
+> -	100, /* rssi reduce interval */
+> -	0,   /* Phy rates allowed initially */
+> -};
+> -
+>  static inline int8_t median(int8_t a, int8_t b, int8_t c)
+>  {
+>  	if (a >= b) {
+> @@ -1723,8 +1702,6 @@ static struct rate_control_ops ath_rate_ops = {
+>  
+>  void ath_rate_attach(struct ath_softc *sc)
+>  {
+> -	sc->hw_rate_table[ATH9K_MODE_11B] =
+> -		&ar5416_11b_ratetable;
+>  	sc->hw_rate_table[ATH9K_MODE_11A] =
+>  		&ar5416_11a_ratetable;
+>  	sc->hw_rate_table[ATH9K_MODE_11G] =
+>   
 
-Exactly.
 
-If you could make it public.....
-
-I am taking even not especially about this device, but 
-about ath5k AR2425.
-
-My aspire one has several very nasty bugs, and little hope they will be
-fixed, and I blame no one for that, developers are busy, and  load is
-high.
-
-But on the other hand, chances I fix them are low, I already read whole
-ath5k drivers, and without documentation it is hard to see what it going
-on.
-
-The only way out I see, it to load windows driver in ndiswrapper, pray
-that it will work, and then use mmiotrace to see what is done
-differently. I really hate going this way.
-
-
-Best regards,
-	Maxim Levitsky
+Does this mean that 802.11b will not work anymore? A lot of legacy 
+equipment that only supports B is still arround.
 
 
 
+
+--
+Karl
