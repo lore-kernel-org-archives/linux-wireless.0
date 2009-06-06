@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47279 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740AbZFFAEC (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39259 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752835AbZFFRUU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 20:04:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH v2 09/15] ath9k: remap ATH9K_MODE_*
-Date: Fri,  5 Jun 2009 20:03:43 -0400
-Message-Id: <1244246629-28179-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 6 Jun 2009 13:20:20 -0400
+Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	otus-devel@lists.madwifi-project.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A2AA395.3060406@web.de>
+References: <4A2AA395.3060406@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1TlPAY/eThmWfywvyAKX"
+Date: Sat, 06 Jun 2009 19:20:08 +0200
+Message-Id: <1244308808.15640.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a lot of gaps here.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.h |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+--=-1TlPAY/eThmWfywvyAKX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 73d859e..08eb5ae 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -113,14 +113,14 @@
- 
- enum wireless_mode {
- 	ATH9K_MODE_11A = 0,
--	ATH9K_MODE_11G = 3,
--	ATH9K_MODE_11NA_HT20 = 6,
--	ATH9K_MODE_11NG_HT20 = 7,
--	ATH9K_MODE_11NA_HT40PLUS = 8,
--	ATH9K_MODE_11NA_HT40MINUS = 9,
--	ATH9K_MODE_11NG_HT40PLUS = 10,
--	ATH9K_MODE_11NG_HT40MINUS = 11,
--	ATH9K_MODE_MAX
-+	ATH9K_MODE_11G,
-+	ATH9K_MODE_11NA_HT20,
-+	ATH9K_MODE_11NG_HT20,
-+	ATH9K_MODE_11NA_HT40PLUS,
-+	ATH9K_MODE_11NA_HT40MINUS,
-+	ATH9K_MODE_11NG_HT40PLUS,
-+	ATH9K_MODE_11NG_HT40MINUS,
-+	ATH9K_MODE_MAX,
- };
- 
- enum ath9k_hw_caps {
--- 
-1.6.0.6
+On Sat, 2009-06-06 at 19:12 +0200, Jan Kiszka wrote:
+
+> On the other hand, the AP firmware doesn't work on my DWA-160a anyway
+> ("device is in a bad state"),=20
+
+This is normal. Not sure what's wrong with that, but I don't really care
+either.
+
+johannes
+
+--=-1TlPAY/eThmWfywvyAKX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKqVEAAoJEODzc/N7+QmaReQP/iQzlR6id27EP7GoLrJTxgIH
+tkiXeVkzVko90Yr1ieyw3N6rvOb2XFkN9/MZBH/436MCAXzmp+4ofl2nOCMflXlC
+dSatSKBYFsogH+CywY3Qgm2C06sRnqu6Ng5mnmDvDD3YUNEEtTc5sS1vVM/G2wUR
+KMapuLU76r80YcIHLxvsdU70ucR1uobFtgs6bXisbd9RN5FR6FHZ32H5d1641JG4
+4kAyZA/vI2awym9d8GhNP39niWh8SRdyCEgXyMTeocllkCeVorTUpL87lEIFP/UO
+L+ZQ2BSVKumP/1qB7t2KSgpJ0HH66oBUp3v9FBp+GoKBwTbL+fh8oTagLq6wJPcS
+eZbb6exJwUex+xujmaIAsQ/zOjvk7wkPxqG8bdFP7q0j+z0NSn4rCjTbYr3Q2tnj
++ou1fUv7yQSsnpBKN0su29rQlPZaP3XkeQY9kw5L0ZzUcOL0hAFhwU2WD+kSbF9k
+4RHE2w04Pr0Uc4GGqfOTYsmg6tYJlLlOFofSwFIpbuMutDNf7zSAG3X7qdaBy6Wx
+VzBXwYtpMwzpGhb2m8Cxonnnb3lxqfPxo8HVVY77YkoT+LSB/Fl5/zCL1C/x088/
+XvIHRZHaKMOGDSo5MRJaJddpGCGr9ZC1gTIkE+FYQVrt/uy/M3nBNpBgaA4tiDME
+T7SjHjAyuGa/tzf5evQu
+=rRSc
+-----END PGP SIGNATURE-----
+
+--=-1TlPAY/eThmWfywvyAKX--
 
