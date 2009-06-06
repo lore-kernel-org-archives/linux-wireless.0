@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:64130 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbZFYI1a convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47276 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752764AbZFFAEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 04:27:30 -0400
-Received: by bwz9 with SMTP id 9so1233255bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 01:27:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <efe7343f0906250111v4d02a77ci6d474abb63ff2940@mail.gmail.com>
-References: <20090621144752.GA14349@redhat.com>
-	 <20090625071421.GA4632@tuxdriver.com>
-	 <efe7343f0906250111v4d02a77ci6d474abb63ff2940@mail.gmail.com>
-Date: Thu, 25 Jun 2009 09:27:31 +0100
-Message-ID: <efe7343f0906250127l3d02cdb1lb863f5c18aef4966@mail.gmail.com>
-Subject: Re: wireless mini-summit in Berlin -- [mspevack@redhat.com: LinuxTag
-	& FUDCon Berlin 2009]
-From: Luis Correia <luis.f.correia@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 5 Jun 2009 20:04:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH v2 12/15] mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
+Date: Fri,  5 Jun 2009 20:03:46 -0400
+Message-Id: <1244246629-28179-13-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Cc: Felix Fietkau <nbd@openwrt.org>
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/rc80211_minstrel.c |    7 +++----
+ net/mac80211/rc80211_pid_algo.c |    7 +++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-(resent due to HTML mailing list restrictions)
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 0a11515..0e1db92 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -75,12 +75,11 @@ use_low_rate(struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	u16 fc;
++	__le16 fc;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
++	fc = hdr->frame_control;
+ 
+-	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) ||
+-		(fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA);
++	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
+ }
+ 
+ 
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index a0bef76..5496077 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -280,7 +280,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct rc_pid_sta_info *spinfo = priv_sta;
+ 	int rateidx;
+-	u16 fc;
++	__le16 fc;
+ 
+ 	if (txrc->rts)
+ 		info->control.rates[0].count =
+@@ -290,9 +290,8 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 			txrc->hw->conf.short_frame_max_tx_count;
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!sta || !spinfo ||
+-	    (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
++	fc = hdr->frame_control;
++	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
+ 	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
+ 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-- 
+1.6.0.6
 
-> On Thu, Jun 25, 2009 at 08:14, John W. Linville <linville@tuxdriver.com> wrote:
->>
->> More information:
->>
->>        http://spevack.livejournal.com/84441.html
->>
->> It seems that the FUDCon events will be in the Marshall Haus.
->> I have not located this yet myself, but I understand it to be in the
->> Sommergarten area near Messe Sud in the vicinity of LinuxTag.
->>
->> John
->> --
->> John W. Linville                Someday the world will need a hero, and you
->> linville@tuxdriver.com                  might be all we have.  Be ready.
->> --
-
-this is the location of the mentioned building, it is the one with a
-circular ending :)
-
-http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q=kaiserdamm,+berlin+germany&sll=52.525961,13.255348&sspn=0.017859,0.055747&ie=UTF8&ll=52.503448,13.273383&spn=0.00463,0.013937&t=h&z=17
-
-Luis Correia
-rt2x00 project admin
