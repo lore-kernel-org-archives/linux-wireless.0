@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526AbZFXMJ3 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47278 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752735AbZFFAEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 08:09:29 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MJRIA-0002y5-D6
-	for linux-wireless@vger.kernel.org; Wed, 24 Jun 2009 14:09:30 +0200
-Message-Id: <20090624120745.239294066@sipsolutions.net>
-Date: Wed, 24 Jun 2009 14:07:45 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 00/11] cfg80211 connect API + wireless extension move
-Mime-Version: 1.0
+	Fri, 5 Jun 2009 20:04:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH v2 11/15] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
+Date: Fri,  5 Jun 2009 20:03:45 -0400
+Message-Id: <1244246629-28179-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This finally introduces nl80211 and cfg80211 connect API,
-and makes wireless extensions entirely self-contained in
-cfg80211.
+We check for this condition early on in our mac80211 get_rate()
+callback ath_get_rate(), so remove this check later down the path.
 
-YES.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-The last four patches still need more work:
- * the combine patches require getting iwm ported
- * the internalise patch requires getting orinoco
-   and rndis ported.
-
-Samuel, who also worked a lot on the first three bits of   
-this series, is working on getting iwm ported, and then    
-we can stick this into the tree except for the last patch, 
-and gradually work on the rest. Maybe we even decide to    
-not internalise it this way because orinoco wants to keep  
-some ioctls that we'll not offer in cfg80211, not sure yet.
-
-Also, this still needs a bit of work for auth algorithms.  
-Currently, the series breaks shared key auth. For iwm, the 
-device will only try the auth algorithm you ask it to use, 
-but mac80211 is able to select the algorithm automatically.
-It might make most sense to make cfg80211 try different 
-algorithms if userspace didn't specify which one to use.
-
-Anyway, comments welcome!
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 9907f2f..d8d2152 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -783,7 +783,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
+ 	 */
+ 	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
+-	    !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+ 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
+ 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
+ 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+@@ -890,9 +889,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	 *
+ 	 * FIXME: Fix duration
+ 	 */
+-	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+-	    (ieee80211_has_morefrags(fc) ||
+-	     (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
++	if (ieee80211_has_morefrags(fc) ||
++	    (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
+ 		rates[1].count = rates[2].count = rates[3].count = 0;
+ 		rates[1].idx = rates[2].idx = rates[3].idx = 0;
+ 		rates[0].count = ATH_TXMAXTRY;
+-- 
+1.6.0.6
 
