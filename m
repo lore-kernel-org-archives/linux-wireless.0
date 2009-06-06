@@ -1,52 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49008 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:40100 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750827AbZFKGxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 02:53:35 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 23:53:38 -0700
-Date: Thu, 11 Jun 2009 12:22:03 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <mcgrof@gmail.com>
-Subject: Re: [RFT 2/3] ath9k: port to cfg80211 rfkill
-Message-ID: <20090611065203.GC10126@vasanth-laptop>
-References: <20090602111027.460530075@sipsolutions.net> <20090602111112.191915040@sipsolutions.net> <20090610132015.GA10126@vasanth-laptop> <1244644712.26814.6.camel@johannes.local>
+	id S1752327AbZFFJiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Jun 2009 05:38:12 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+Date: Sat, 6 Jun 2009 11:38:02 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052338.05653.mb@bu3sch.de> <4A299E57.4020007@lwfinger.net>
+In-Reply-To: <4A299E57.4020007@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1244644712.26814.6.camel@johannes.local>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200906061138.02636.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 10, 2009 at 08:08:32PM +0530, Johannes Berg wrote:
+On Saturday 06 June 2009 00:38:15 Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Friday 05 June 2009 23:20:55 Larry Finger wrote:
+> >> That is what the driver already does.
+> > 
+> > No. If the device is down, then it _is_ down. There won't be an rfkill thing
+> > trying to bring it up again although the interface is down.
 > 
-> Thanks, will fix, this doesn't seem to be ath9k specific. It's the
-> dreaded locking in rfkill. I can work around it easily in cfg80211, or
-> fix rfkill, will see what's easier.
+> But in the current driver, turning the radio switch off only shuts
+> down the radio. The rest of the interface is still up.
 
-Thanks.
+This is not what I'm talking about.
+I was talking about bringing the device up just for the purpose of checking the bit.
+
+> >>> We can't we just accept that the RF-kill status is unknown while the device is down?
+> >> The problem is that while the interface is down the switch status
+> >> cannot be interrogated. If you try, you get a fatal SSB error. Thus
+> >> the only way to bring it back up is to flip the switch, then
+> >> rmmod/insmod the driver. If you want hardware rfkill to be one-way,
+> >> then take Johannes's patch. We would save a little power by calling
+> >> b43_wireless_exit() if we brought it up to test the switch, and the
+> >> switch was still off. That would leave everything off most of the time.
+> > 
+> > Yeah well. We cannot read the rfkill status while the device is down. That is
+> > a hardware limitation. I think we should _live_ with that limitation instead of
+> > working around it by always keeping the device initialized.
+> > Can't we teach the rfkill subsystem about an "unknown" state? Because that's what we're in.
 > 
-> > One more issue is, when rfkill is enabled before
-> > reboot, I could not bring up the interface when the rfkill is turned
-> > off after reboot. 
+> An "unknown" state would be OK, but I don't know how to get the state
+> of the switch to the rfkill system.
 > 
-> Sounds like the driver doesn't initialise properly.
+> > Yeah. But wasting huge amounts of power to keep polling a bit that's not even used
+> > most of the time is not really what I like.
+> 
+> 
+> > +void b43_rfkill_poll(struct ieee80211_hw *hw)
+> >  {
+> > -       struct b43_wldev *dev = data;
+> > -       struct b43_wl *wl = dev->wl;
+> > +       struct b43_wl *wl = hw_to_b43_wl(hw);
+> > +       struct b43_wldev *dev = wl->current_dev;
+> >         bool enabled;
+> >  
+> >         mutex_lock(&wl->mutex);
+> >         if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
+> > -               mutex_unlock(&wl->mutex);
+> > -               return;
+> > +               if (b43_wireless_core_init(dev)) {
+> > +                       mutex_unlock(&wl->mutex);
+> > +                       return;
+> > +               }
+> >         }
+> > 
+> > This is the part of the code which I really really really dislike.
+> > Hell, just return a freaking error from b43_rfkill_poll(), if the interface
+> > is down. If rfkill can't handle that, it should probably be taught to handle it.
+> > Especially as there can be other errors as well, like memory allocation failures.
+> 
+> I understand that this is the part that you do not like. I don't like
+> it either, but unless we can read the switch-state bit, the interface
+> will never come back up. I do not find rmmod/insmod a suitable
+> recovery mechanism.
 
-I dont think this one is driver specific as this happens
-only when module is loaded at boot time. I works fine after ath9k
-is reloaded.
+Huh? We cannot do a simple  ifconfig wlan0 up  anymore to bring the interface up?
+Is that overridden by rfkill now?
 
-> need to move ath_start_rfkill_poll() to ath_attach(), could you please
-> try that?
-
-We do hw reset during radio enable/disable, this needs current
-channel to be configured but i'm not sure if we need to do all these
-during attach time.
-
-Thanks,
-
-Vasanth
-
+-- 
+Greetings, Michael.
