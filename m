@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from build.ossfans.org ([67.223.233.67]:34120 "EHLO
-	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752836AbZFCMzk (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47279 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740AbZFFAEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 08:55:40 -0400
-Date: Wed, 3 Jun 2009 16:55:07 +0400
-From: Sergey Lapin <slapin@ossfans.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
-Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
-	802.15.4 devices
-Message-ID: <20090603125507.GA22673@build.ossfans.org>
-References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com> <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com> <1244021964.10665.5.camel@johannes.local> <20090603.030911.162861804.davem@davemloft.net> <20090603105256.GB20508@doriath.ww600.siemens.net> <1244027110.1693.9.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244027110.1693.9.camel@johannes.local>
+	Fri, 5 Jun 2009 20:04:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH v2 09/15] ath9k: remap ATH9K_MODE_*
+Date: Fri,  5 Jun 2009 20:03:43 -0400
+Message-Id: <1244246629-28179-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +#define IEEE802154_ATTR_MAX (__IEEE802154_ATTR_MAX - 1)
-> > +#define NLA_HW_ADDR	NLA_U64
-> > +#define NLA_GET_HW_ADDR(attr, addr) do { u64 _temp = nla_get_u64(attr); memcpy(addr, &_temp, 8); } while (0)
-> > +#define NLA_PUT_HW_ADDR(msg, attr, addr) do { u64 _temp; memcpy(&_temp, addr, 8); NLA_PUT_U64(msg, attr, _temp); } while (0)
+There are a lot of gaps here.
 
-What would you propose here? adding prefix will add length to macro,
-IEEE802154_NL_PUT_HW_ADDR is damn long name. Using repeated code
-sequence is not better (it is error-prone and unreadable).
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Any ideas?
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 73d859e..08eb5ae 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -113,14 +113,14 @@
+ 
+ enum wireless_mode {
+ 	ATH9K_MODE_11A = 0,
+-	ATH9K_MODE_11G = 3,
+-	ATH9K_MODE_11NA_HT20 = 6,
+-	ATH9K_MODE_11NG_HT20 = 7,
+-	ATH9K_MODE_11NA_HT40PLUS = 8,
+-	ATH9K_MODE_11NA_HT40MINUS = 9,
+-	ATH9K_MODE_11NG_HT40PLUS = 10,
+-	ATH9K_MODE_11NG_HT40MINUS = 11,
+-	ATH9K_MODE_MAX
++	ATH9K_MODE_11G,
++	ATH9K_MODE_11NA_HT20,
++	ATH9K_MODE_11NG_HT20,
++	ATH9K_MODE_11NA_HT40PLUS,
++	ATH9K_MODE_11NA_HT40MINUS,
++	ATH9K_MODE_11NG_HT40PLUS,
++	ATH9K_MODE_11NG_HT40MINUS,
++	ATH9K_MODE_MAX,
+ };
+ 
+ enum ath9k_hw_caps {
+-- 
+1.6.0.6
 
