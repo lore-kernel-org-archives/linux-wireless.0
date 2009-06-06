@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:39157 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756204AbZFGM5Q (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40323 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbZFFRiy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 08:57:16 -0400
-Date: Sun, 7 Jun 2009 09:57:15 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: alan-jenkins@tuffmail.co.uk
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090607125715.GC3340@khazad-dum.debian.net>
-References: <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <1243930703.3192.59.camel@localhost.localdomain> <20090603040315.GA10464@khazad-dum.debian.net> <1244008652.4145.7.camel@localhost.localdomain> <20090603213340.GB22809@khazad-dum.debian.net> <1244088806.4145.24.camel@localhost.localdomain> <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>
+	Sat, 6 Jun 2009 13:38:54 -0400
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200906061134.47483.mb@bu3sch.de>
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net>
+	 <200906052338.05653.mb@bu3sch.de> <1244241126.15640.3.camel@johannes.local>
+	 <200906061134.47483.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-pU/FDuILB2gr409cBCd3"
+Date: Sat, 06 Jun 2009 19:38:54 +0200
+Message-Id: <1244309934.17485.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 07 Jun 2009, Alan Jenkins wrote:
->  1) remove rfkill_set_global_sw_state()
->  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
-> registration, setting a flag.
->  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
-> events, tho it may as well be set in all events)
->  4) rfkill-input preserves existing behaviour - *if enabled* - by
-> initializing the global state from individual devices which have NVS.
-> (As before, each _type_ of rfkill device has its own global state).
->  5) rfkill devices with NVS will have their current state preserved,
-> so long as the global state has not yet been set (by userspace or by
-> rfkill-input).  Of course userspace can change the state in response
-> to the device being added.
 
-I can agree to that, it will avoid the regression I have been
-complaining about, and seems to address the major complaints against
-what we have now...
+--=-pU/FDuILB2gr409cBCd3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I think it should probably be enhanced (it doesn't have to be enhanced
-_now_, however) to let the core call back into NVS-providing drivers to
-checkpoint NVS state.  But that's not something I feel strongly about.
+On Sat, 2009-06-06 at 11:34 +0200, Michael Buesch wrote:
 
-Otherwise, the driver will checkpoint to NVS whatever is the state of
-its rfkill device, which could have been changed outside of the global
-scope.  While that's exacly what we do right now, it is arguably not the
-best way to go about it (i.e. it is broken).
+> It is OK to poll the bit while the device is supposed to be on. But it's =
+not
+> OK to turn it on to check the bit.
 
-> Comments?
+Well, I'm going to do that anyway.
 
-Let's do it :-)
+> > Larry, thanks for your patch, I'll modify it to turn off the core again
+> > after checking the rfkill bit tomorrow.
+>=20
+> How frequent will that polling happen?
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Every 2 seconds, currently, I think.
+
+johannes
+
+--=-pU/FDuILB2gr409cBCd3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKqmqAAoJEODzc/N7+Qma7DIP/jQH6DPLzsp8HAKe4AtoNvWi
+7wGoqXvFqbnl36b1V9LID4w7w8J5UIrNNYwE1T92uHJ/BS4AnxlY4n7+rSsQc2TB
+SSGVd5qmZh0lpNODNYkgRZsY1sbXTPlZScA7xX4gFuOyToq7cUYnsBbvWTY8xXyr
++0VkRFoL76gJZ42mXreD2fnF5caBni1+/nUZAg3WDeIbn1yZOI+WQk70C7+oFu5z
+e7ArL5MUoEkVhZQTHEEkNS3vSYYJh1CZ3t+0L/i9qTmB5KGZHbAqu+iNenu+dfgG
+CIFAXOftzC7leiqgacpi8DVBmQtQtI/8zGBoCkLhi5lmfMJA26LHGk9gtmBn2A3v
+sw2f0A8G7bPSpwaB2NYQaC8iPsQlij/P6VaRf5kch/jk+hts1GEieyuGM7M8fdog
+wCjN58ps+2V2lqKgDg0FiXa0lp0r0Jic3om1DFtBVHAx7A4RI+7g1Tow32xQ8Gix
+9qBmlFfWKdaf89jZRJ9/AMDyPNJeQV1ls+ZYJ1MjobHXwgOXnBdVRh5VnUNUPexm
+zf+Ng+mtNFxZgLjAIZGAV3A8ZsyiO1V71iKNtwobC65qhLQEXSfEyuMoDcxYJ1Ej
+ItZ65uErBpf7/CKiRUfhKGJ71xvlni3Kr2AHfxu69Z93qzljkw7yFMCwFqUwlUNH
+ba+EOG2lIyDKOr83mkna
+=RzL2
+-----END PGP SIGNATURE-----
+
+--=-pU/FDuILB2gr409cBCd3--
+
