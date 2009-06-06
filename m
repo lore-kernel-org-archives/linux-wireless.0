@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35293 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712AbZFFSBp (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42869
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753749AbZFFBAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 14:01:45 -0400
-Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A2AAE4A.6060100@web.de>
-References: <4A2AA395.3060406@web.de>
-	 <1244308808.15640.4.camel@johannes.local>  <4A2AA6BC.5040004@web.de>
-	 <1244309333.17485.0.camel@johannes.local>  <4A2AA94E.3050700@web.de>
-	 <1244310329.17485.15.camel@johannes.local>  <4A2AAE4A.6060100@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-keYD3NcmkI+TK+o+KB8S"
-Date: Sat, 06 Jun 2009 20:01:43 +0200
-Message-Id: <1244311303.17485.18.camel@johannes.local>
+	Fri, 5 Jun 2009 21:00:10 -0400
+Date: Fri, 05 Jun 2009 18:00:11 -0700 (PDT)
+Message-Id: <20090605.180011.218685961.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: mb@bu3sch.de, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, castet.matthieu@free.fr
+Subject: Re: [PATCH] b43: Fix possible unaligned u32 access
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090605122503.GA2791@tuxdriver.com>
+References: <200906042318.33895.mb@bu3sch.de>
+	<20090605122503.GA2791@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 5 Jun 2009 08:25:03 -0400
 
---=-keYD3NcmkI+TK+o+KB8S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Thu, Jun 04, 2009 at 11:18:33PM +0200, Michael Buesch wrote:
+>> From: Matthieu CASTET <castet.matthieu@free.fr>
+>> 
+>> Fix possible unaligned u32 access in b43_generate_plcp_hdr().
+>> Unaligned data is read/write with a u32 pointer instead of using the
+>> packed structure. Some versions of gcc ignore the "packed" attribute, if the
+>> structure element is accessed through a local pointer.
+>> 
+>> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+>> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> That seems pretty brain-dead...can you cite a source for this
+> information?  The patch seems like a no-op...
 
-On Sat, 2009-06-06 at 19:58 +0200, Jan Kiszka wrote:
+The "packed" attribute simply doesn't propagate.  It isn't
+a GCC bug.  Look at this:
 
-> The last statement I read was: "haven't found a way to properly transmit
-> multicast frames after DTIM". Does this still apply on the new STA
-> firmware?=20
+struct foo {
+	u32 x;
+} attribute((packed));
 
-Yes.
+u32 bar(struct foo *p)
+{
+	u32 *p = &p->x;
 
-> What is the state of AP mode in the driver source? Just
-> disabled, some bits missing - or even ready to work?
+	return *p;
+}
 
-It works if you're willing to live with the above limitation, by just
-enabling the AP bit. I've used it before.
-
-> Another silly question: You wrote that 802.11n works with the firmware,
-> and I blindly assumed that this of course includes a/b/g. I was right?
-> My current AP works in g-mode when association with the ar9170 fails...
-
-I never said anything works...
-
-Anyhow, I _really_ can't support the firmware in any way. I just hacked
-on it for fun and it turns out it ended up kinda working...
-
-johannes
-
---=-keYD3NcmkI+TK+o+KB8S
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKq8EAAoJEODzc/N7+QmaY/QP/iNKOVxBzNuWDZ1KPXCC/BoE
-aaesBBtO1ReNpIQ3LGC15cEJX/jiXuBGlxAbc5LhppRQShGGHvP6c/N68MJj6siw
-x8HJSqHyWJjUpXbuORYCboIj3JtNSS6L1jKcl9A/hQSNIMf0O26TNI5h6JQhU3qc
-y6l3PL8/JDJnNraiTwV8owwrnPZLCvq8fYCaFwealBhY3UV0Q3DLBmyIJ4wAOCC/
-2liwxZb1B2utE7gw/ranaVq0qN/g34T5tcy6oqwrX3uUO+fIx5HET7ABR3jzaMuf
-b0HfffRAThx6ut/lP2J+rRxW9VJilhhxAW6dyPdp58E1K5tnyqMOwqyYs06il7sA
-fRu0oJqsZP6vXnybSjWHOmrS1JT8f3TCqQ7EUQ0aWFkJjPxwkXFBv0JGdYU6Pjzj
-L3wSgTij5X6awadhig/CBg1J2Rkg8yxo/WehWdbDqTKW18TDhNAFobV73OzC3y8s
-a8CO5wcdXkS+l1omaPPM9x+otejQPY2nzPvp3KELfVa4v4DTiqI4D05JM1pc0ChG
-cCMHRhPT4vtsl4vx6NLMx8tN3OyUyhmYiYs7phoq8HP43/EstmyGN9QYl/xL6zqO
-bvSfPBnUqyeRplMX19WDG6Kr6Mt3As8Jus0ccSnLFVJB+BaMObaLP9oP3zAWWqHQ
-8b3pEfuF5prQZZElsAp/
-=t5X/
------END PGP SIGNATURE-----
-
---=-keYD3NcmkI+TK+o+KB8S--
-
+That will (correctly) do a 32-bit aligned load, only doing
+the "return p->x;" will proply respect the packed attribute.
