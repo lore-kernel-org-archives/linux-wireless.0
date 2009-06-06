@@ -1,27 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16356 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752774AbZFSUpc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 16:45:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/5] iwlwifi driver updates 6/19/2009
-Date: Fri, 19 Jun 2009 13:52:40 -0700
-Message-Id: <1245444765-29079-1-git-send-email-reinette.chatre@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42861
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752399AbZFFA6X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2009 20:58:23 -0400
+Date: Fri, 05 Jun 2009 17:58:25 -0700 (PDT)
+Message-Id: <20090605.175825.168276404.davem@davemloft.net>
+To: dbaryshkov@gmail.com
+Cc: slapin@ossfans.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
+Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
+ 802.15.4 devices
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <bc64b4640906050345t5ed23d7bxc8a777a4a0ada147@mail.gmail.com>
+References: <20090605091229.GA25280@doriath.ww600.siemens.net>
+	<20090605094619.GB23085@build.ossfans.org>
+	<bc64b4640906050345t5ed23d7bxc8a777a4a0ada147@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-General cleanup and the addition of support to be able to scan requested
-channels.
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Date: Fri, 5 Jun 2009 14:45:06 +0400
 
-[PATCH 1/5] iwlwifi: Check HW ready before prepare card.
-[PATCH 2/5] iwlwifi: drop sw_crypto from hw_params.
-[PATCH 3/5] iwlwifi: make software queue assignment more efficient
-[PATCH 4/5] iwlwifi: scan requested channels only
-[PATCH 5/5] iwlwifi: unify iwl_setup_rxon_timing
+> Could you please send an incremental patch on top of this serie? I
+> hope that my last
+> push can be pulled/merged and I don't want to redo all commits.
 
+Dmitry, no shortcuts ok?
 
-Reinette
+Just respin the series and resend it just like anyone else has to.
+
+The changes just aren't ready, and until they are you'll need to
+respin them like this a few more times.
