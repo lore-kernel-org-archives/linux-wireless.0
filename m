@@ -1,147 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15916 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950AbZFCShR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 14:37:17 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/6] iwl3945: port allow skb allocation in tasklet patch
-Date: Wed,  3 Jun 2009 11:44:08 -0700
-Message-Id: <1244054652-19451-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244054652-19451-2-git-send-email-reinette.chatre@intel.com>
-References: <1244054652-19451-1-git-send-email-reinette.chatre@intel.com>
- <1244054652-19451-2-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58920 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965AbZFFRog (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Jun 2009 13:44:36 -0400
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <4A298C37.9030503@lwfinger.net>
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net>
+	 <200906052101.47168.mb@bu3sch.de>  <4A298C37.9030503@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GA8MuBDRV4a034OjMN6f"
+Date: Sat, 06 Jun 2009 19:44:34 +0200
+Message-Id: <1244310274.17485.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Port "iwlcore: Allow skb allocation from tasklet" to 3945
+--=-GA8MuBDRV4a034OjMN6f
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-commit c8881170b7ce9897a7b9087d37ca3f281b347707
-Author: Mohamed Abbas <mohamed.abbas@intel.com>
-Date:   Fri May 22 11:01:51 2009 -0700
+On Fri, 2009-06-05 at 16:20 -0500, Larry Finger wrote:
 
-    iwlcore: Allow skb allocation from tasklet.
+> The problem is that while the interface is down the switch status
+> cannot be interrogated. If you try, you get a fatal SSB error. Thus
+> the only way to bring it back up is to flip the switch, then
+> rmmod/insmod the driver. If you want hardware rfkill to be one-way,
+> then take Johannes's patch. We would save a little power by calling
+> b43_wireless_exit() if we brought it up to test the switch, and the
+> switch was still off. That would leave everything off most of the time.
 
-If RX queue becomes empty then we need to restock the queue from tasklet to prevent
-ucode from starving. A caller to iwl_rx_allocate will decide if allocated buffer should
-come from GFP_ATOMIC or GFP_KERNEL.
+Actually we should do that all the time, since after the user pushes the
+button he might still not actually want to use the device.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   32 +++++++++++++++++++++------
- 1 files changed, 25 insertions(+), 7 deletions(-)
+> > I really do hate all that rfkill crap and I'm still refusing to sign of=
+f on anything that's
+> > related to rfkill (like I did for the past year or so). If people want =
+this merged,
+> > somebody else maintain and sign it off, please.
+>=20
+> I'm sick of rfkill as well and really detest the endless discussions
+> that have taken place; however, I do want the stuff to work.
+>=20
+> As I see it, we have several options (presented in my order of
+> preference):
+>=20
+> 1. We switch to the cfg80211 rfkill and use this patch modified to
+> turn the interface back off if the switch is still off.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 745eaae..92fa1a3 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1176,7 +1176,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
- 
- 	/* If we've added more space for the firmware to place data, tell it.
- 	 * Increment device's write pointer in multiples of 8. */
--	if ((write != (rxq->write & ~0x7))
-+	if ((rxq->write_actual != (rxq->write & ~0x7))
- 	    || (abs(rxq->write - rxq->read) > 7)) {
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		rxq->need_update = 1;
-@@ -1197,7 +1197,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
-  * Also restock the Rx queue via iwl3945_rx_queue_restock.
-  * This is called as a scheduled work item (except for during initialization)
-  */
--static void iwl3945_rx_allocate(struct iwl_priv *priv)
-+static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- {
- 	struct iwl_rx_queue *rxq = &priv->rxq;
- 	struct list_head *element;
-@@ -1220,7 +1220,7 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
- 		/* Alloc a new receive buffer */
- 		rxb->skb =
- 		    alloc_skb(priv->hw_params.rx_buf_size,
--				GFP_KERNEL);
-+				priority);
- 		if (!rxb->skb) {
- 			if (net_ratelimit())
- 				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
-@@ -1279,6 +1279,7 @@ void iwl3945_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 	 * not restocked the Rx queue with fresh buffers */
- 	rxq->read = rxq->write = 0;
- 	rxq->free_count = 0;
-+	rxq->write_actual = 0;
- 	spin_unlock_irqrestore(&rxq->lock, flags);
- }
- 
-@@ -1287,13 +1288,21 @@ void iwl3945_rx_replenish(void *data)
- 	struct iwl_priv *priv = data;
- 	unsigned long flags;
- 
--	iwl3945_rx_allocate(priv);
-+	iwl3945_rx_allocate(priv, GFP_KERNEL);
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 	iwl3945_rx_queue_restock(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- }
- 
-+static void iwl3945_rx_replenish_now(struct iwl_priv *priv)
-+{
-+	iwl3945_rx_allocate(priv, GFP_ATOMIC);
-+
-+	iwl3945_rx_queue_restock(priv);
-+}
-+
-+
- /* Assumes that the skb field of the buffers in 'pool' is kept accurate.
-  * If an SKB has been detached, the POOL needs to have its SKB set to NULL
-  * This free routine walks the list of POOL entries and if SKB is set to
-@@ -1416,13 +1425,19 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
- 	unsigned long flags;
- 	u8 fill_rx = 0;
- 	u32 count = 8;
-+	int total_empty = 0;
- 
- 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
- 	 * buffer that the driver may process (last buffer filled by ucode). */
- 	r = le16_to_cpu(rxq->rb_stts->closed_rb_num) &  0x0FFF;
- 	i = rxq->read;
- 
--	if (iwl_rx_queue_space(rxq) > (RX_QUEUE_SIZE / 2))
-+	/* calculate total frames need to be restock after handling RX */
-+	total_empty = r - priv->rxq.write_actual;
-+	if (total_empty < 0)
-+		total_empty += RX_QUEUE_SIZE;
-+
-+	if (total_empty > (RX_QUEUE_SIZE / 2))
- 		fill_rx = 1;
- 	/* Rx interrupt, but nothing sent from uCode */
- 	if (i == r)
-@@ -1499,7 +1514,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
- 			count++;
- 			if (count >= 8) {
- 				priv->rxq.read = i;
--				iwl3945_rx_queue_restock(priv);
-+				iwl3945_rx_replenish_now(priv);
- 				count = 0;
- 			}
- 		}
-@@ -1507,7 +1522,10 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
- 
- 	/* Backtrack one entry */
- 	priv->rxq.read = i;
--	iwl3945_rx_queue_restock(priv);
-+	if (fill_rx)
-+		iwl3945_rx_replenish_now(priv);
-+	else
-+		iwl3945_rx_queue_restock(priv);
- }
- 
- /* call this function to flush any scheduled tasklet */
--- 
-1.5.6.3
+I'll do that.
+
+> 2. We continue to use the old rfkill mechanism. It works just fine,
+> but this method runs the risk of the old method being deprecated and
+> eliminated.
+
+It won't be, but you won't get proper userspace integration, NM will not
+integrate properly and then we will continue having to rely on users
+reading dmesg saying something like "rfkill off, press button before
+wireless will connect" and mac80211 will at the same time try to connect
+and do things unsuccessfully.
+
+> 3. We get new callbacks that will only power down/up the radio when it
+> is blocked. That saves a little power.
+
+Less so than actually turning off most things most of the time, I'd
+think.
+
+johannes
+
+--=-GA8MuBDRV4a034OjMN6f
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKqr+AAoJEODzc/N7+Qma59EP/2TgSNfryAx6o8hbKoBGEqx/
+07n3+GbHj/7U8CesVb5Pq2lWsPs8uEoD7Bm7ET/VjavN9N1/lmtCe9IFPrWq+sCC
+0aHCKnl58HEPV9Z1X/DmsptE1tALlcJUX1fpEohSSGbHRVR5x0Urmy+weOGbCwgD
+pyhNiNGprzTWCVrQpmqrynFFfwONW4ImSRnFmkJtGe5x50kn6H3oR41Qasrcmr5k
+VqfYCh+2iLygQRImCj8XtH3wxkymvlOK+tNLZbNLpvIKPHrxRNR27gWJ1ylgfBZK
+OOCuYn5frQRk4c/spoeFBW+q7k4GJOKr69UyacYC8ioPQB4o4GwWvXKYagP9E4R/
+CUdXBOmRTOz9NQzexQxrTxsJtw6lJOUnw8DSawsi91wYZ2PYAECePIGTECVR7Z/r
+1+Fsx0vG3M+mmhZ9T1/Nz9NVQnzepXkr8O2hw1q2B8pg6fSF6w0+I84sd/J8bBxG
+Posy1TbA1/syGzPCZo9k+vMUsF/VRzmA7ROQmN935vW0HTRHGC+TpeqmcV8/Vk/M
+Ci2I67DfM8HuBaLhBpMml2SMGNHi8L4eG5pjDGTjicxcOxVITf7BetJgDZHS9qfP
+k2JPRP9X7eY7+87QT9Xydg2vKzPdDcC1B6BbzTdUpFIP95iHbQkDvUAgDuHBTchH
+R5KGe+SsLWchqDb2tH1F
+=TBgr
+-----END PGP SIGNATURE-----
+
+--=-GA8MuBDRV4a034OjMN6f--
 
