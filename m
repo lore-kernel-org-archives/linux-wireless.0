@@ -1,115 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756060AbZFPXrZ (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:53564 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753086AbZFFR02 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 19:47:25 -0400
-Subject: Re: [PATCH] mac80211: Successfully set master mode and get/set
- ESSID in master mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: James Le Cuirot <chewi@aura-online.co.uk>
-Cc: "John W.Linville" <linville@tuxdriver.com>,
+	Sat, 6 Jun 2009 13:26:28 -0400
+Message-ID: <4A2AA6BC.5040004@web.de>
+Date: Sat, 06 Jun 2009 19:26:20 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	otus-devel@lists.madwifi-project.org,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20090617004435.3801930f@symphony>
-References: <20090617004435.3801930f@symphony>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eQDVRJ/IOEkDe4vpUuH/"
-Date: Wed, 17 Jun 2009 01:46:57 +0200
-Message-Id: <1245196017.21287.75.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
+References: <4A2AA395.3060406@web.de> <1244308808.15640.4.camel@johannes.local>
+In-Reply-To: <1244308808.15640.4.camel@johannes.local>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig2DD70F40389FEDC4A9014611"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-eQDVRJ/IOEkDe4vpUuH/
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig2DD70F40389FEDC4A9014611
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-06-17 at 00:44 +0100, James Le Cuirot wrote:
-> This allows wext-based drivers to successfully put the adapter into maste=
-r
-> mode and get/set the ESSID while in master mode. I'm not sure why this
-> code was not already present but the "Invalid argument" error I was
-> getting has now gone and getting/setting the ESSID afterwards now
-> works. Hopefully this helps and I haven't misunderstood something. This
-> patch is against the wireless-testing branch. Admittedly, I haven't
-> actually tested it against this branch but I've made identical changes
-> to 2.6.30 and that's working fine. For the record, I'm using a p54usb
-> adapter.
-
-NACK.
-http://wireless.kernel.org/RTFM-AP
-
-johannes
-
-> Signed-off-by: James Le Cuirot <chewi@aura-online.co.uk>
+Johannes Berg wrote:
+> On Sat, 2009-06-06 at 19:12 +0200, Jan Kiszka wrote:
 >=20
-> ---
+>> On the other hand, the AP firmware doesn't work on my DWA-160a anyway
+>> ("device is in a bad state"),=20
 >=20
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index 1da81f4..e8d5cee 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -131,7 +131,8 @@ static int ieee80211_ioctl_siwessid(struct net_device=
- *dev,
->         size_t len =3D data->length;
->         int ret;
-> =20
-> -       if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC)
-> +       if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC ||
-> +           sdata->vif.type =3D=3D NL80211_IFTYPE_AP)
->                 return cfg80211_ibss_wext_siwessid(dev, info, data, ssid)=
-;
-> =20
->         /* iwconfig uses nul termination in SSID.. */
-> @@ -167,7 +168,8 @@ static int ieee80211_ioctl_giwessid(struct net_device=
- *dev,
-> =20
->         sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> =20
-> -       if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC)
-> +       if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC ||
-> +           sdata->vif.type =3D=3D NL80211_IFTYPE_AP)
->                 return cfg80211_ibss_wext_giwessid(dev, info, data, ssid)=
-;
-> =20
->         if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
-> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-> index d030c53..5c1f215 100644
-> --- a/net/wireless/wext-compat.c
-> +++ b/net/wireless/wext-compat.c
-> @@ -82,6 +82,9 @@ int cfg80211_wext_siwmode(struct net_device *dev, struc=
-t iw_request_info *info,
->                 return -EOPNOTSUPP;
-> =20
->         switch (*mode) {
-> +       case IW_MODE_MASTER:
-> +               type =3D NL80211_IFTYPE_AP;
-> +               break;
->         case IW_MODE_INFRA:
->                 type =3D NL80211_IFTYPE_STATION;
->                 break;
->=20
+> This is normal. Not sure what's wrong with that, but I don't really car=
+e
+> either.
 
---=-eQDVRJ/IOEkDe4vpUuH/
+But does you device enter an endless reset loop?
+
+[ 5337.468082] usb 2-2: new high speed USB device using ehci_hcd and addr=
+ess 30
+[ 5337.648024] usb 2-2: New USB device found, idVendor=3D07d1, idProduct=3D=
+3c10
+[ 5337.648032] usb 2-2: New USB device strings: Mfr=3D16, Product=3D32, S=
+erialNumber=3D48
+[ 5337.648038] usb 2-2: Product: USB2.0 WLAN
+[ 5337.648042] usb 2-2: Manufacturer: ATHER
+[ 5337.648046] usb 2-2: SerialNumber: 12345
+[ 5337.648235] usb 2-2: configuration #1 chosen from 1 choice
+[ 5337.764060] usb 2-2: reset high speed USB device using ehci_hcd and ad=
+dress 30
+[ 5338.940054] usb 2-2: firmware: requesting ar9170.fw
+[ 5340.552081] usb 2-2: device is in a bad state. please reconnect it!
+[ 5341.552118] ar9170usb: probe of 2-2:1.0 failed with error -110
+[ 5341.556838] usb 2-2: USB disconnect, address 30
+[ 5341.800076] usb 2-2: new high speed USB device using ehci_hcd and addr=
+ess 31
+=2E..
+
+Obviously not usable that way for me.
+
+Maybe a toolchain issue - could you throw some AP firewire over that
+works for you?
+
+Thanks,
+Jan
+
+
+--------------enig2DD70F40389FEDC4A9014611
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
 
-iQIcBAABAgAGBQJKOC7uAAoJEODzc/N7+QmavkUQALi/H0AyrpOoZAtQ1yoEbiWa
-Q1cxtMEMmhg9g4X+i/NG1NeCedhuyf5P+kMWYu1Sgk1BaDGB2aRqpwYyu1KHUSEu
-WpvcsvXGEuDZWFdF5vXITjspkaQbUIBUgP++WWnl3ADf6O6wg6kKZbfHZqM9Uzh1
-6Kltgko23FgY25b6Zo7fagLI7bVGeJabU5/p9jXDcdJ7M3AEWboT8CECceCtj0CN
-tMGsOgvH+QDyoZ6Eq9YY6KgH/RhZDvRwDp2XG3qDEP/YfHPsfKgy5em9ZDXkyYXx
-wApYEt8HQwG96W01BRBMCCWHFcT618kF8GVfQMfPjRh15vb+5ERkPdAbWVIatQhx
-xg8p81F1GCP1llyfzVbdYttJUG+ZhuRzr4CH6J2i4zEhXnMX7g0kYu3HmTlH4oAf
-kcz0Uj1UsD6Z9LAfOXO8Nrwkxh2vb2NNqZV9x5uTXSxIjcMr0lKjaK+aEditmYWl
-jeDmC2OBa/9Xqimy2JIQhqO4j9o9lBlot4GU5gHIeHY0JpHQYw2XXuJfHp0je9Z2
-TC+ebr4JCW3XlD0OI2sTCc0sWMnxLFuSZ8i47x1uoLHJK9VSMqLC84ykOSckHkzy
-alUPazCMtVdYfhdYFl5NLM4n72ic5Vu7ISz3Guolve60S6JtLSRBs3Yv4IGCThPB
-VE4dwiTljIFRv4G9i4/7
-=gZ+z
+iEYEARECAAYFAkoqpsQACgkQniDOoMHTA+nw5wCdELwHJ+wZILcJG0iMIwv9/+mo
+F9MAn1yor4iolyGMQwL0V/rMzmEzDf4R
+=fNPV
 -----END PGP SIGNATURE-----
 
---=-eQDVRJ/IOEkDe4vpUuH/--
-
+--------------enig2DD70F40389FEDC4A9014611--
