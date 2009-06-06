@@ -1,76 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:33976 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750960AbZFSTY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 15:24:27 -0400
-Date: Fri, 19 Jun 2009 21:24:19 +0200
-From: Pierre Ossman <pierre@ossman.eu>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	san@google.com
-Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
-Message-ID: <20090619212419.2f3626d7@mjolnir.ossman.eu>
-In-Reply-To: <20090618022524.GC10014@hash.localnet>
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
-	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
-	<20090613132144.6c7783bc@mjolnir.ossman.eu>
-	<87bposnmxi.fsf@litku.valot.fi>
-	<20090613220908.271865cd@mjolnir.ossman.eu>
-	<20090613205737.GA30439@hash.localnet>
-	<20090618022524.GC10014@hash.localnet>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-10991-1245439468-0001-2"
+Received: from fmmailgate01.web.de ([217.72.192.221]:38408 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbZFFSdF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Jun 2009 14:33:05 -0400
+Message-ID: <4A2AB634.9020904@web.de>
+Date: Sat, 06 Jun 2009 20:32:20 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	otus-devel@lists.madwifi-project.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ar9170-fw: Use self-built toolchain by default
+References: <4A2AA3BA.4050200@web.de> <1244311169.17485.16.camel@johannes.local>
+In-Reply-To: <1244311169.17485.16.camel@johannes.local>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig37E4E8BF5FA8BDBB89A9D2DD"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
-
---=_freyr.ossman.eu-10991-1245439468-0001-2
-Content-Type: text/plain; charset=US-ASCII
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig37E4E8BF5FA8BDBB89A9D2DD
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 17 Jun 2009 22:25:24 -0400
-Bob Copeland <me@bobcopeland.com> wrote:
-
+Johannes Berg wrote:
+> On Sat, 2009-06-06 at 19:13 +0200, Jan Kiszka wrote:
+>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+>> ---
+>>
+>>  Makefile |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/Makefile b/Makefile
+>> index e0113d6..5fc0868 100644
+>> --- a/Makefile
+>> +++ b/Makefile
+>> @@ -1,7 +1,7 @@
+>>  # Type is AP or STA
+>>  TYPE ?=3D STA
+>> =20
+>> -PFX ?=3D /usr/share/gnush_v0901_elf-1/bin/sh-elf-
+>> +PFX ?=3D $(shell pwd)/toolchain/inst/bin/sh-elf-
 >=20
-> Just to follow up now that I've tested that again: the issue is msm_wifi
-> setup loads before the mmc host driver, which interferes with mounting the
-> sdcard in the other slot.  There's also some platform code in the host
-> driver that registers callbacks when the wifi driver is loaded, presumably
-> to avoid using a timer for card detect.
+> This will fail in strange ways if the user doesn't first manually build=
+
+> the toolchain... It does that if you don't have it installed, but it
+> would be nice to tell them to build it?
 >=20
 
-I'm afraid I don't understand the problem. If you power up the card
-before the MMC system has started, it should still properly find the
-card and activate the wl12xx driver once things are in sync.
+What about this? There are probably smarter ways to achieve this, but
+I'm not speaking fluently 'make'.
 
-> Anyway, this is only compile tested but should work when we get all that
-> sorted...
->=20
+---------->
 
-Do you want me to merge it?
+Switch the default to our own toolchain and provide a hint in case it's
+missing or the provided PFX does not point to a gcc.
 
-Rgds
---=20
-     -- Pierre Ossman
+Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+---
 
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
+ Makefile |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
---=_freyr.ossman.eu-10991-1245439468-0001-2
+diff --git a/Makefile b/Makefile
+index e0113d6..6316f62 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,11 +1,13 @@
+ # Type is AP or STA
+ TYPE ?=3D STA
+=20
+-PFX ?=3D /usr/share/gnush_v0901_elf-1/bin/sh-elf-
+-CC =3D $(PFX)gcc
+-LD =3D $(PFX)ld
+-AS =3D $(PFX)as
+-OBJCOPY =3D $(PFX)objcopy
++PFX ?=3D $(shell pwd)/toolchain/inst/bin/sh-elf-
++VALID_PFX =3D $(if $(wildcard $(PFX)gcc), $(PFX), \
++	$(error Error: sh2 gcc not found. To build your own, invoke 'make -C to=
+olchain'.))
++CC =3D $(VALID_PFX)gcc
++LD =3D $(VALID_PFX)ld
++AS =3D $(VALID_PFX)as
++OBJCOPY =3D $(VALID_PFX)objcopy
+=20
+ # CPU is a Little endian sh2a-nofpu-or-sh3-nommu
+ CPU =3D -m2
+
+
+--------------enig37E4E8BF5FA8BDBB89A9D2DD
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
 
-iEYEARECAAYFAko75ecACgkQ7b8eESbyJLigIgCgl4J32tb+w6McFY73TD03ndEF
-7WQAnicYgddi9s608wR0AiFcZBkl5fTi
-=/fxr
+iEYEARECAAYFAkoqtjgACgkQniDOoMHTA+nC/QCeJPtpGu1QRUhdAhlc1fI9lnZr
+xu4An1v3utD2I/jntlZLyD4qM2A/okKb
+=Jq1j
 -----END PGP SIGNATURE-----
 
---=_freyr.ossman.eu-10991-1245439468-0001-2--
+--------------enig37E4E8BF5FA8BDBB89A9D2DD--
