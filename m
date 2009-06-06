@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45089 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782AbZFHGOf (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47264 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbZFFAEB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 02:14:35 -0400
-Subject: [PATCH v2] rfkill: remove input Kconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1244420209.23850.111.camel@localhost.localdomain>
-References: <1244396398.12956.12.camel@johannes.local>
-	 <1244420209.23850.111.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 08 Jun 2009 08:14:28 +0200
-Message-Id: <1244441668.4188.2.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 5 Jun 2009 20:04:01 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 00/15] ath9k: few rate control cleanups
+Date: Fri,  5 Jun 2009 20:03:34 -0400
+Message-Id: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that we added the ioctl, there's no need to ask
-the user to configure this. We will keep it enabled
-for now, and eventually swap the default to n. Also
-let embedded users select it only if they need it.
+Addressed the few comments and tested compile against PID this
+time and when disabling ath9k debug. This time around we just
+make the settings for low rate on management frames and no-ack
+frames a helper and let rate control algorithms use it. When
+we want to extend these the helper just can be lifted.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: Turn default back to N for embedded, and make the question itself
-    depend on embedded.
+Luis R. Rodriguez (15):
+  ath9k: fix oops by downgrading assert in rc.c
+  ath9k: cleanup try count for MRR in rate control
+  ath9k: remove unused min rate calculation code
+  ath9k: remove unused stepdown when looking for the next rate
+  ath9k: remove pointless wrapper ath_rc_rate_getidx()
+  ath9k: rename ath_rc_get_nextlowervalid_txrate()
+  ath9k: remove unused ath_rc_isvalid_txmask()
+  ath9k: remove ATH9K_MODE_11B
+  ath9k: remap ATH9K_MODE_*
+  ath9k: rename ath_rc_ratefind_ht() to ath_rc_get_highest_rix()
+  ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
+  mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
+  iwlwifi: use ieee80211_is_data(fc)
+  mac80211: add helper for management / no-ack frame rate decision
+  ath9k: remove rate control wraper
 
- net/rfkill/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- wireless-testing.orig/net/rfkill/Kconfig	2009-06-07 21:26:29.000000000 +0200
-+++ wireless-testing/net/rfkill/Kconfig	2009-06-08 08:11:15.000000000 +0200
-@@ -18,7 +18,7 @@ config RFKILL_LEDS
- 	default y
- 
- config RFKILL_INPUT
--	bool "RF switch input support"
-+	bool "RF switch input support" if EMBEDDED
- 	depends on RFKILL
- 	depends on INPUT = y || RFKILL = INPUT
- 	default y if !EMBEDDED
-
+ drivers/net/wireless/ath/ath9k/ath9k.h     |    1 -
+ drivers/net/wireless/ath/ath9k/debug.h     |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c        |    1 -
+ drivers/net/wireless/ath/ath9k/hw.h        |   17 +--
+ drivers/net/wireless/ath/ath9k/main.c      |    3 +-
+ drivers/net/wireless/ath/ath9k/rc.c        |  194 +++++++++++-----------------
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   22 +---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   12 +--
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 +-
+ include/net/mac80211.h                     |   23 ++++
+ net/mac80211/rate.c                        |   29 ++++
+ net/mac80211/rc80211_minstrel.c            |   23 +---
+ net/mac80211/rc80211_pid_algo.c            |   12 +--
+ 13 files changed, 144 insertions(+), 199 deletions(-)
 
