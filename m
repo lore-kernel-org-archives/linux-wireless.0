@@ -1,85 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43571 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752867AbZF2Ifs (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47240 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbZFFAD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 04:35:48 -0400
-Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A473730.3000409@gmail.com>
-References: <20090624120745.239294066@sipsolutions.net>
-	 <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
-	 <4A43E002.2060309@gmail.com> <1246047520.21314.67.camel@johannes.local>
-	 <4A473730.3000409@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2ak1OS88rXZrt71HcrPN"
-Date: Mon, 29 Jun 2009 10:35:47 +0200
-Message-Id: <1246264547.7775.8.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 5 Jun 2009 20:03:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH v2 06/15] ath9k: rename ath_rc_get_nextlowervalid_txrate()
+Date: Fri,  5 Jun 2009 20:03:40 -0400
+Message-Id: <1244246629-28179-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+What this does is get us our next lower rate so call it that,
+ath_rc_get_lower_rix().
 
---=-2ak1OS88rXZrt71HcrPN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   16 +++++++---------
+ 1 files changed, 7 insertions(+), 9 deletions(-)
 
-On Sun, 2009-06-28 at 10:26 +0100, Dave wrote:
-> Johannes Berg wrote:
-> > Yes. Mind you, I was not only talking about iwpriv, but also about
-> > things like orinoco's spy support or get/set sensitivity. The latter we
-> > don't quite understand -- can you tell us what it actually does? Spy
-> > support should just be removed, I think.
->=20
-> I've had a closer look at this.
-
-Thanks!
-
-> The sensitivity basically controls the roaming threshold when handled by
-> firmware. It is a firmware setting, though the Agere driver also
-> validates the multicast rates based on it. The drivers/firmware use
-> terms like system scale, AP density, distance between APs.
->=20
-> There are 3 valid values:
->=20
-> 3 - high density of APs. Maintain 11Mbps by roaming.
-> 2 - medium density of APs. Maintain 2Mbps.
-> 1 - low density. Maintain 1Mbps.
->=20
-> Although the values are defined in terms of the usable bitrate, the
-> (Intersil) documentation states that the implementation is based on SNR.
-
-That's actually what people suspected when I asked around at the summit,
-and it seemed the general consensus is that we need a proper setting for
-that in nl80211 along with some of the roaming capability exports.
-
-So until that happens, the last patch won't get in anyway, and we'll see
-about the NEED_... stuff later.
-
-johannes
-
---=-2ak1OS88rXZrt71HcrPN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKSHzgAAoJEODzc/N7+Qmat9QQAMgB5wq0s4gxS7C2auWp8fSy
-QJizex7jDgH1DeFOBTH7E+9ungwGvIKE57AFM//oqzyjcPm+mO37bL3kcce4Ll6V
-QNFr1yIEB8+LtxZKfBNO29X2IQWCn9OFVfw3ASw3h1+lnRIZv8IiJKwyjADtoIL8
-jhAUovT/5m/MuQXoUSNhOmZfLHvV/wrCvBBOkmZBaqrW3CJn4rCDO9AuvXwNZnCW
-wE52qHjidyka5eP/V4ykIXgYQ8lecRrWlY2vXJfwew/DFOuWr4jMSsEmlzu740bd
-RVdvdVFdoWFmokEQBT6pYev+WVLYHcvSfID5ROlEcgnqYKHJihAf2M2zucjt/ZdH
-HQh9F3X402A4CxkiD9EpOW+I2l28EzELNpRBlW49GgGOuozazlwwmW3s0hPDIogz
-JBmG5jOa9FrYYVnDrEEjoaqA448O/O8q3tiDWbrOTuXHQF9/+1NSKjyQHHJUg804
-f6hmBy9hhDbxOW+bBI9V01cP7UIIIKGCt61gQIL2WDPzZ3XqbS9fG+vPdUAEd/vt
-dbzGyHGNbVCt5yTa1nRNn8Y0ZnGIy7BO4D7UdWsXrgbdM6W3Cb10eczXfyK05/kH
-cr9XxRMjlTbXISvgBBoowcvGdEq9pKjQQIeIVFLMfas7QUEhudD9CyxeZWC6bhXx
-GVj5iny9+N+cvN/kHMz9
-=RXFu
------END PGP SIGNATURE-----
-
---=-2ak1OS88rXZrt71HcrPN--
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index d855572..2c57944 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -501,9 +501,9 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
+ }
+ 
+ static inline int
+-ath_rc_get_nextlowervalid_txrate(const struct ath_rate_table *rate_table,
+-				 struct ath_rate_priv *ath_rc_priv,
+-				 u8 cur_valid_txrate, u8 *next_idx)
++ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
++		     struct ath_rate_priv *ath_rc_priv,
++		     u8 cur_valid_txrate, u8 *next_idx)
+ {
+ 	int8_t i;
+ 
+@@ -860,8 +860,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		/* Get the next tried/allowed rate. No RTS for the next series
+ 		 * after the probe rate
+ 		 */
+-		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
+-						 rix, &nrix);
++		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
+ 
+@@ -878,8 +877,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		if (i + 1 == 4)
+ 			try_per_rate = 4;
+ 
+-		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
+-						 rix, &nrix);
++		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
+@@ -1177,8 +1175,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	if (ath_rc_priv->state[tx_rate].per >= 55 && tx_rate > 0 &&
+ 	    rate_table->info[tx_rate].ratekbps <=
+ 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
+-		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
+-				 (u8)tx_rate, &ath_rc_priv->rate_max_phy);
++		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
++				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
+ 
+ 		/* Don't probe for a little while. */
+ 		ath_rc_priv->probe_time = now_msec;
+-- 
+1.6.0.6
 
