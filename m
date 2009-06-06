@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f201.google.com ([209.85.210.201]:38661 "EHLO
-	mail-yx0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbZFLAXP convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47277 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754AbZFFAEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 20:23:15 -0400
-Received: by yxe39 with SMTP id 39so128531yxe.33
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 17:23:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
-References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-	<1244763159.27363.103.camel@violet> <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
-	<1244765167.27395.1.camel@violet> <43e72e890906111713q338c178ah34d263db43693c58@mail.gmail.com>
-	<43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Jun 2009 17:22:54 -0700
-Message-ID: <43e72e890906111722h678221dfrf2d4d7e082a0cd16@mail.gmail.com>
-Subject: Re: rfkill on T61
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 5 Jun 2009 20:04:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: [PATCH v2 13/15] iwlwifi: use ieee80211_is_data(fc)
+Date: Fri,  5 Jun 2009 20:03:47 -0400
+Message-Id: <1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2009 at 5:20 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Thu, Jun 11, 2009 at 5:13 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> On Thu, Jun 11, 2009 at 5:06 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
->>> Hi Luis,
->>>
->>>> >> When I hit rfkill, I get:
->>>> >>
->>>> >> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
->>>> >> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
->>>> >>
->>>> >> When I hit it again I get:
->>>> >>
->>>> >> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
->>>> >> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
->>>> >>
->>>> >> The device that disappears upon rfkill is my bluetooth controller:
->>>> >>
->>>> >> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
->>>> >> --- 1   2009-06-11 15:37:37.000000000 -0700
->>>> >> +++ 2   2009-06-11 15:37:49.000000000 -0700
->>>> >> @@ -6,7 +6,6 @@
->>>> >>  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
->>>> >>  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
->>>> >>  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
->>>> >> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
->>>> >>  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
->>>> >> Fingerprint Reader
->>>> >>  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
->>>> >>  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
->>>> >>
->>>> >> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
->>>> >> I think this is the same behaviour I will get with bleeding edge, will
->>>> >> try now on wireless-testing.
->>>> >
->>>> > what are you trying to tell us.
->>>>
->>>> my 802.11 device is not rfkill'ed on the T61, some patches recently
->>>> went in to add support for rfkill on ath5k. I do have thinkpad_acpi
->>>> loaded on this ancient 2.6.27 kernel.
->>>>
->>>> I'll try on wireless-testing next, build is almost done.
->>>
->>> still are not getting what you wanna tell us. What has Bluetooh RFKILL
->>> switch to do with WiFi.
->>
->> Nothing, I really was just unaware we rfkilled bluetooth as well. Plus
->> like I said my 802.11 device is not being rfkilled, which is what I
->> actually did expect.
->
-> Yeah same thing with wireless-testing.
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-Heh nevermind me, the 802.11 rfkill button is in a different place. Doh!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index 5eb538d..bd2f709 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	s8 scale_action = 0;
+ 	unsigned long flags;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	u16 fc;
++	__le16 fc;
+ 	u16 rate_mask = 0;
+ 	s8 max_rate_idx = -1;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+@@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 		rate_mask = sta->supp_rates[sband->band];
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+-	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
++	fc = hdr->frame_control;
++	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+ 	    !sta || !priv_sta) {
+ 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+ 		if (!rate_mask)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2addf73..afa1633 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+ {
+ 	int sta_id;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
++	__le16 fc = hdr->frame_control;
+ 
+ 	/* If this frame is broadcast or management, use broadcast station id */
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+-	    is_multicast_ether_addr(hdr->addr1))
++	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+ 		return priv->hw_params.bcast_sta_id;
+ 
+ 	switch (priv->iw_mode) {
+-- 
+1.6.0.6
 
-  Luis
