@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:53488 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948AbZFBUnU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:43:20 -0400
-Received: by qw-out-2122.google.com with SMTP id 5so5787836qwd.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 13:43:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1243974886.7176.8.camel@johannes.local>
-References: <1243974537-12774-1-git-send-email-lrodriguez@atheros.com>
-	<1243974886.7176.8.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 2 Jun 2009 13:43:02 -0700
-Message-ID: <43e72e890906021343v41f69346mc844e8a80daf2314@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: add missing RCU lock/unlock on
-	ieee80211_rx_bss_info()
+Received: from bu3sch.de ([62.75.166.246]:39703 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752297AbZFFJe5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Jun 2009 05:34:57 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+Date: Sat, 6 Jun 2009 11:34:47 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052338.05653.mb@bu3sch.de> <1244241126.15640.3.camel@johannes.local>
+In-Reply-To: <1244241126.15640.3.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200906061134.47483.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 2, 2009 at 1:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-06-02 at 16:28 -0400, Luis R. Rodriguez wrote:
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  net/mac80211/ibss.c |    2 ++
->>  1 files changed, 2 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
->> index 0b30277..446cada 100644
->> --- a/net/mac80211/ibss.c
->> +++ b/net/mac80211/ibss.c
->> @@ -365,7 +365,9 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->>                      sdata->dev->name, mgmt->bssid);
->>  #endif
->>               ieee80211_sta_join_ibss(sdata, bss);
->> +             rcu_read_lock();
->>               ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
->> +             rcu_read_unlock();
->>       }
->
-> I see no reason for this to be necessary.
+On Saturday 06 June 2009 00:32:06 Johannes Berg wrote:
+> On Fri, 2009-06-05 at 23:38 +0200, Michael Buesch wrote:
+> 
+> > Hell, just return a freaking error from b43_rfkill_poll(), if the interface
+> > is down. If rfkill can't handle that, it should probably be taught to handle it.
+> > Especially as there can be other errors as well, like memory allocation failures.
+> 
+> Be my guest. You'll notice eventually that it's not really easy or
+> possible to do. I've explained the currently broken scenario already.
+> And even if you introduce the 'unknown' state, you still end up having
+> to poll the bit when userspace tries to turn on the device... doesn't
+> help much.
 
-Hm yeah, I failed to see it doesn't get the sta before allocating it
-and/or adding it. Is that right for this particular case? If the sta
-does exist we wouldn't have set up the things for it that
-ieee80211_ibss_add_sta() is setting.
+It is OK to poll the bit while the device is supposed to be on. But it's not
+OK to turn it on to check the bit.
 
-  Luis
+> Larry, thanks for your patch, I'll modify it to turn off the core again
+> after checking the rfkill bit tomorrow.
+
+How frequent will that polling happen?
+
+-- 
+Greetings, Michael.
