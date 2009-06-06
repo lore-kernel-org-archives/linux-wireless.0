@@ -1,56 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57763 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763AbZFPPhO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbZFFRmT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 11:37:14 -0400
-Subject: Re: [PATCHv2 2/4] rfkill: don't restore software blocked state on
- persistent devices
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A37AEB7.6060405@tuffmail.co.uk>
-References: <4A37A3E1.8060606@tuffmail.co.uk>
-	 <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
-Content-Type: text/plain
-Date: Tue, 16 Jun 2009 17:37:04 +0200
-Message-Id: <1245166624.15367.24.camel@violet>
+	Sat, 6 Jun 2009 13:42:19 -0400
+Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200906052101.47168.mb@bu3sch.de>
+References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net>
+	 <200906052101.47168.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Z9s+/RukPsmSQ2oYzIaM"
+Date: Sat, 06 Jun 2009 19:42:18 +0200
+Message-Id: <1244310138.17485.11.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alan,
 
-> The setting of the "persistent" flag is also made more explicit using
-> a new rfkill_init_sw_state() function, instead of special-casing
-> rfkill_set_sw_state() when it is called before registration.
-> 
-> Suspend is a bit of a corner case so we try to get away without adding
-> another hack to rfkill-input - it's going to be removed soon.
-> If the state does change over suspend, users will simply have to prod
-> rfkill-input twice in order to toggle the state.
-> 
-> Userspace policy agents will be able to implement a more consistent user
-> experience.  For example, they can avoid the above problem if they
-> toggle devices individually.  Then there would be no "global state"
-> to get out of sync.
-> 
-> Currently there are only two rfkill drivers with persistent soft-blocked
-> state.  thinkpad-acpi already checks the software state on resume.
-> eeepc-laptop will require modification.
-> 
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> CC: Marcel Holtmann <marcel@holtmann.org>
+--=-Z9s+/RukPsmSQ2oYzIaM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-looks good to me and is way better than using a complicated API for this
-non-volatile storage details.
+On Fri, 2009-06-05 at 21:01 +0200, Michael Buesch wrote:
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+> >      The rfkill polling routine brings the interface back to the initia=
+lized
+> >      state if it is found to be uninitialized. This way the rfkill swit=
+ch
+> >      may be interpreted. In addition, the radio LED is not turned on in=
+ the
+> >      initialization routine unless the rfkill switch is on.
+>=20
+> This is pretty silly behavior IMO. Just to bring it to the point:
+> We initialize a huge wireless MAC, PHY and Radio that consume several wat=
+ts of power
+> just to poll a silly RF-kill bit.
 
-Regards
+1) you're MUCH overstating the power consumption
+2) we don't actually have to turn on the PHY, just the MAC core, if we
+   can do that, but that requires some refactoring afaict
 
-Marcel
+> We can't we just accept that the RF-kill status is unknown while the devi=
+ce is down?
 
+No, because then we don't know whether we can allow users to bring up
+the device. We could work around that and bring it up, check rfkill, and
+bring it back down return -ERFKILL to the user then. But then guess what
+will happen: userspace will have to poll rfkill again.
+
+> I really do hate all that rfkill crap and I'm still refusing to sign off =
+on anything that's
+> related to rfkill (like I did for the past year or so). If people want th=
+is merged,
+> somebody else maintain and sign it off, please.
+
+Fine. Just don't stand in my way then.
+
+johannes
+
+--=-Z9s+/RukPsmSQ2oYzIaM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKKqp3AAoJEODzc/N7+Qma9rQP/3pmphN/OZC6NMK1ew29DVpl
+B0yCHp+p96kH5+MHp9I2GK/bmEduxM0DLOz4iJfCcBXPWiQLGfSi3FQaCMrjmuFQ
+TP3D8125zCDE8cI87LTq5JaQBDRiWhygoaVG7NDU8EFh9fwRo/73lILTpMATqvYY
+9TY2UjNiVSvPmDE+eRghwBs2BMzoCyTO2Ak4OGGvJdOKOXS/R9zytuBdxJxuZ9re
+O4QbNC6KwZe86bBldjyTc8tN/ShMQMWO98RPOich2QJysqnyd1NWEGR4xoXDxnpk
+67At6cNn6K1UZfnWe8+AfeB6Li7Df+Fc4u0G3Z0w+Kli34XLdmm2YNaXp17vrDGw
+FLFccQfOI5W7gCN7g1ZLhnYfxmIenlBaB6j+8/xAHfLDmnx1ShTYj0fpynk+a8eg
+hkHbSswk1f9r+mm1jKsxlYkpRTxb61Bx6qsRLaG98QgCApW5ihzvon4Vwk4mINfF
+jbRCPbSygY6GtCZVIlijRFGhq/5vXA4obXv0eTqr5xdtTgMtX4Tbromt5DpF9yp+
++lfZ1XTo4bYWdYauIOaCXoXBkVhHE4wp8D997LFO+pMistGei9oSEHQTaVl7LG8S
+iVZSvUtHn8vukQpdT0pZtcw3a8YipknhqPYGG7rQ2IKKWdC8VOvsjesILaH79WVe
+9/QED+KqDjf4qkOPGMeP
+=7u3o
+-----END PGP SIGNATURE-----
+
+--=-Z9s+/RukPsmSQ2oYzIaM--
 
