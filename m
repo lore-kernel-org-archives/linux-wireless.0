@@ -1,81 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:45928 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754241AbZFBIy3 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39830 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462AbZFGKYO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 04:54:29 -0400
-From: Florian Fainelli <florian@openwrt.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: =?utf-8?q?=D0=9E=D1=82=D0=B2=D0=B5=D1=82=3A_=5BPATCH_10/10=5D_ieee802154=3A?=
- =?utf-8?q?_add_at86rf230/rf231_spi?= driver
-Date: Tue, 2 Jun 2009 10:46:51 +0200
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	=?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
-References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com> <bc64b4640906020129x4fe15e5en9d8e2cad1d86b236@mail.gmail.com> <1243931809.3192.68.camel@localhost.localdomain>
-In-Reply-To: <1243931809.3192.68.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906021046.52681.florian@openwrt.org>
+	Sun, 7 Jun 2009 06:24:14 -0400
+Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1244368455.22643.4.camel@localhost>
+References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+	 <1244326943.12159.5.camel@localhost>  <1244334102.16810.3.camel@localhost>
+	 <1244367815.26071.4.camel@johannes.local>
+	 <1244368455.22643.4.camel@localhost>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dA85OnZ+aOc51V5Kly+z"
+Date: Sun, 07 Jun 2009 12:24:10 +0200
+Message-Id: <1244370250.2907.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Tuesday 02 June 2009 10:36:49 Marcel Holtmann, vous avez écrit :
-> Hi Dmitry,
->
-> > >> > I thought about drivers/net as about ip (well, more or less)
-> > >> > network drivers. We have drivers/atm or drivers/bluetooth (and
-> > >> > bluetooth is 802.15.1...).
-> > >>
-> > >> I actually like that this is drivers/bluetooth and not
-> > >> drivers/ieee802151. Would you consider drivers/zigbee instead of
-> > >> drivers/ieee802154 ???
-> > >
-> > > I fully agree here.
-> > >
-> > > Please use "zigbee" instead of "ieee*" names since that can become
-> > > messy and confusing. I know that in theory the IEEE part of ZigBee is
-> > > more low-level radio and could be used by non-ZigBee devices, but that
-> > > is not gonna happen anyway. Especially with Bluetooth Low Energy
-> > > pushing into the turf of ZigBee. So please use proper names and not
-> > > confuse people with IEEE numbers ;)
-> >
-> > This gonna happen, as we are most probably going to implement 6lowpan
-> > on top of our stack. 6lowpan is a way to encapsulate IPv6 frames into
-> > IEEE 802.15.4 and has nothing in common with ZigBee. Moreover
-> > ZigBee is a trademark with strict rules upon it's usage. Our lawyers are
-> > currently investigating if it's possible to use this name in projects
-> > like Linux kernel which are open-source, non-related to any project but
-> > OTOH can be encapsulated in any commercial project.
-> >
-> > IEEE 802.15.4 is a term like IEEE 802.11. We do have mac80211,
-> > we have had (until recently) ieee80211 dir, so why bother?
-> >
-> > For Bluetooth naming directories 'bluetooth' is logical, as 802.15.1
-> > standard is a less known name, doesn't incorporate latest changes
-> > from Bluetooth, etc.
->
-> and so is IEEE 802.15.4 hence we propose using "zigbee" here. Using the
-> mac80211 has historical reasons and 802.11 is a known name and even used
-> on product marketing material. IEEE 802.15.4 is not. We are also using
-> the term "wimax" and not its IEEE numbering.
 
-Because you have an IEEE 802.15.4 PHY/MAC chip does not mean you want to do 
-ZigBee on top of it and Dmitry explained that well. I would stick with the 
-ieee802154 name here for that reason. If your drivers go in ZigBee, it means 
-that your hardware implements parts of the ZigBee profiles, and that is not 
-the case here.
+--=-dA85OnZ+aOc51V5Kly+z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The current Bluetooth implementation in the kernel deserves its name since 
-drivers are implementing the HCI Bluetooth profile (maybe others as well), 
-that is not plain IEEE 802.15.1.
--- 
-Best regards, Florian Fainelli
-Email : florian@openwrt.org
-http://openwrt.org
--------------------------------
+On Sun, 2009-06-07 at 12:54 +0300, Maxim Levitsky wrote:
+
+> Fine, like I expected, but still, I guess there is some 'loader' in
+> eeprom?
+
+Yes.
+
+> If there were a documentation too.
+> Isn't it possible to publish it?
+>=20
+> This firmware contains so many 'magic' registers.
+
+There is some, but it's not public. We can try to document some when we
+replace the magic values by constants.
+
+johannes
+
+--=-dA85OnZ+aOc51V5Kly+z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKK5VGAAoJEODzc/N7+Qma/dYP/iUfOkbf6yuFwWLdlATdHqNp
+HvP/So597y9PjpzKpYvJQEnQJyiccWeMcJIRkeltJWc8Cel0+6zmiyjZ+LUzN4Nl
+qcZi7wm2tXC7tVa1+FRNxpOlX5/fgErkSMOmt5P09+icufXF4SR2aCHp8YAOJcGX
+TcibdA0RPQo538bbxJMdj24FKqjS+BFP2nGR72qhTeD91brhvs+aAGUVY4qaUkEg
+7qrexLxWYL21sVDkASkENsco27tHqx3xWL9qCoetScSi5OokXFxui8FUIlcXe8ke
+U9dkSTR2w5PUnFqRQE0y2SuIhTwCfQ1N4680cF54w0zIVmrJni5G5mIA9BmjxU3C
+sesPBrbcsd5ghZmtFmfG7dPQxSiNkcHHOUUXGfkYh27NpuPppSK1uOL4e3j/NbcQ
+1OyXrWDR2LWl6WwPV7NNzDAs0a/dh4atja/D/iiv2YU+typZQREQCwjJ/mKwKa9p
+2JyZjHwMLsy9SZgPRxNBzi5oZwnnZwSXu8Dj7v+G5myUI8PNdi+BiJ9dHGZQuSC4
+XTJbgPrQehaOYWB3PSCgnS+E0n0KQMVVWqLUi3vmnUlP/VdL/ZqhVurv2iqwsKq3
+0yxcqbnZ9a57m3T9OIUXxtsUj2vr28i5QzDDi6MlxEw8jGnjD7u4K1OY0o0frgoD
+JTYnLHfojEwpUTYpKfyM
+=y589
+-----END PGP SIGNATURE-----
+
+--=-dA85OnZ+aOc51V5Kly+z--
+
