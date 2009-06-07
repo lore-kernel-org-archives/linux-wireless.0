@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38534 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763124AbZFLQsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 12:48:53 -0400
-Subject: Re: [Ilw] iwlagn crash on 2.6.29.4
-From: reinette chatre <reinette.chatre@intel.com>
-To: Robby Workman <rworkman@slackware.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com>
-References: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848AbZFGT5M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2009 15:57:12 -0400
+Subject: [PATCH] sony: fix rfkill code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
 Content-Type: text/plain
-Date: Fri, 12 Jun 2009 09:55:49 -0700
-Message-Id: <1244825750.20900.468.camel@rc-desk>
+Date: Sun, 07 Jun 2009 21:57:08 +0200
+Message-Id: <1244404628.12956.16.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+During the rfkill conversion I added code to call
+sony_nc_rfkill_set with the wrong argument, causing
+a segfault Reinette reported. The compiler could not
+catch that because the argument is, and needs to be,
+void *.
 
-On Thu, 2009-06-11 at 22:51 -0700, Robby Workman wrote:
-> On 2.6.29.4, I just got a crash in iwlagn under heavy network
-> throughput.  I was transferring a dvd iso from one box in my
-> lan to another, and the following occurred:
-> 
->    http://slackware.com/~rworkman/OOPS
-> 
-> It didn't bring the entire system to a halt (thankfully);
-> removing and reloading the iwlagn module made everything
-> just fine. :-)
-> 
-> If any more information is needed, let me know.  I'm more than
-> willing to test patches and such...
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/platform/x86/sony-laptop.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Which hardware are you using?
+--- wireless-testing.orig/drivers/platform/x86/sony-laptop.c	2009-06-07 21:26:30.000000000 +0200
++++ wireless-testing/drivers/platform/x86/sony-laptop.c	2009-06-07 21:49:53.000000000 +0200
+@@ -1135,8 +1135,7 @@ static void sony_nc_rfkill_update()
+ 
+ 		if (hwblock) {
+ 			if (rfkill_set_hw_state(sony_rfkill_devices[i], true))
+-				sony_nc_rfkill_set(sony_rfkill_devices[i],
+-						   true);
++				sony_nc_rfkill_set((void *)i, true);
+ 			continue;
+ 		}
+ 
 
-We released new ucode for 4965, 5100, 5300, and 5350 that address this
-issue. The new 4965 ucode should work fine with your driver. If you are
-using later hardware then you need a more recent driver to be able to
-use its new ucode.
-
-You can download the new ucode from:
-http://intellinuxwireless.org/?n=Downloads
-
-Reinette
 
