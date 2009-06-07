@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:7034 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751382AbZFOTeP (ORCPT
+Received: from cernmx13.cern.ch ([137.138.142.200]:45693 "EHLO
+	cernmx13.cern.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753390AbZFGM3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 15:34:15 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 00/11 v2] iwmc3200wifi updates
-Date: Mon, 15 Jun 2009 21:36:12 +0200
-Message-Id: <cover.1245091931.git.samuel@sortiz.org>
+	Sun, 7 Jun 2009 08:29:47 -0400
+Message-ID: <4A2BB2BB.7000605@cern.ch>
+Date: Sun, 7 Jun 2009 14:29:47 +0200
+From: Wojciech Zabolotny CERN <wojciech.zabolotny@cern.ch>
+MIME-Version: 1.0
+To: <linux-wireless@vger.kernel.org>
+Subject: Re: Which firmware for Belkin F5D7050 (ISL3880 + NET2280)
+References: <4A2BA2E0.7020709@cern.ch>
+In-Reply-To: <4A2BA2E0.7020709@cern.ch>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi,
 
-Here go some updates for the iwmc3200wifi driver.
-Some of those patches are bug fixes and we'd like them to eventually make it
-to 2.6.31. The rest are targeted at wireless-testing inclusion.
-I tried to set an explicit subject line to let you clearly understand where
-we'd like each of them to land, please let me know if that's not the case.
+I've managed to run my NIC with the older firmware:
+http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.1.0.lm86.arm
 
-Changes:
-v2: Removed patch #1 from the previous patch set.
-With patch #3 (#2 on patch set v2), we are actually registering the netdev
-_after_ the SDIO bus is really ready.
+Now I get the following output in dmesg:
 
-Samuel Ortiz (4):
-  iwmc3200wifi: invalidate keys when changing the BSSID
-  iwmc3200wifi: handling wifi_if_ntfy responses
-  iwmc3200wifi: cfg80211 key hooks implemetation
-  iwmc3200wifi: cache keys when interface is down
+cfg80211: Using static regulatory domain info
+cfg80211: Regulatory domain: US
+    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+    (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+    (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: US
+usb 1-4: firmware: requesting isl3886usb
+phy0: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2392
+phy0: FW rev 2.13.1.0 - Softmac protocol 5.5
+phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy0: hwaddr 00:30:43:11:33:39, MAC:isl3886 RF:Frisbee
+wmaster0 (p54usb): not using net_device_ops yet
+phy0: Selected rate control algorithm 'minstrel'
+wlan0 (p54usb): not using net_device_ops yet
+usbcore: registered new interface driver p54usb
 
-Zhu Yi (7):
-  iwmc3200wifi: check for iwm_priv_init error
-  iwmc3200wifi: add iwm_if_add and iwm_if_remove
-  iwmc3200wifi: fix potential kernel oops on module removal
-  iwmc3200wifi: add a mutex to protect iwm_reset_worker
-  iwmc3200wifi: change coexist periodic calibration flag
-  iwmc3200wifi: remove select LIB80211 from Kconfig
-  iwmc3200wifi: rfkill cleanup
 
- drivers/net/wireless/iwmc3200wifi/Kconfig    |    1 -
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |  204 +++++++++++++++++
- drivers/net/wireless/iwmc3200wifi/commands.c |  116 +++++------
- drivers/net/wireless/iwmc3200wifi/commands.h |    7 +-
- drivers/net/wireless/iwmc3200wifi/iwm.h      |   28 ++--
- drivers/net/wireless/iwmc3200wifi/main.c     |   89 ++++++--
- drivers/net/wireless/iwmc3200wifi/netdev.c   |   72 ++++---
- drivers/net/wireless/iwmc3200wifi/rx.c       |   27 ++-
- drivers/net/wireless/iwmc3200wifi/sdio.c     |   17 +-
- drivers/net/wireless/iwmc3200wifi/umac.h     |    2 +
- drivers/net/wireless/iwmc3200wifi/wext.c     |  305 +++-----------------------
- 11 files changed, 443 insertions(+), 425 deletions(-)
+Then everything works correctly.
+So it seems, that the new firmware is just incompatible with this card :-(.
+-- 
+BR, WZab
 
