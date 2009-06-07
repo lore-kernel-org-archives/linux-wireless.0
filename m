@@ -1,126 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:59653 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757713AbZFXJdI (ORCPT
+Received: from build.ossfans.org ([67.223.233.67]:32874 "EHLO
+	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754007AbZFGBSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 05:33:08 -0400
-Subject: Re: [PATCH 10/10] nf_conntrack: Use rcu_barrier().
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-To: Patrick McHardy <kaber@trash.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, christine.caulfield@googlemail.com,
-	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
-	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
-	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
-	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
-In-Reply-To: <4A410185.3090706@trash.net>
-References: <20090623150330.22490.87327.stgit@localhost>
-	 <20090623150444.22490.27931.stgit@localhost>  <4A410185.3090706@trash.net>
-Content-Type: text/plain
-Date: Wed, 24 Jun 2009 11:02:19 +0200
-Message-Id: <1245834139.6695.31.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Sat, 6 Jun 2009 21:18:41 -0400
+From: Sergey Lapin <slapin@ossfans.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>
+Subject: [PATCH 1/5] Add constants for the ieee 802.15.4 stack
+Date: Sun,  7 Jun 2009 05:18:30 +0400
+Message-Id: <ab05794d9f99e4ef522953445a19a39b1f693ede.1244337432.git.slapin@ossfans.org>
+In-Reply-To: <cover.1244337432.git.slapin@ossfans.org>
+References: <cover.1244337432.git.slapin@ossfans.org>
+In-Reply-To: <cover.1244337432.git.slapin@ossfans.org>
+References: <cover.1244337432.git.slapin@ossfans.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-06-23 at 18:23 +0200, Patrick McHardy wrote:
-> Jesper Dangaard Brouer wrote:
-> > I'm not sure which is are most optimal place to call rcu_barrier().
-> > The patch probably calls rcu_barrier() too much, but its a better
-> > safe than sorry approach.
-> > 
-> > There is embedded some comments that I would like Patrick McHardy
-> > to look at.
-> > 
-> > diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
-> > index 5f72b94..cea4537 100644
-> > --- a/net/netfilter/nf_conntrack_core.c
-> > +++ b/net/netfilter/nf_conntrack_core.c
-> > @@ -1084,6 +1084,8 @@ static void nf_conntrack_cleanup_init_net(void)
-> >  {
-> >  	nf_conntrack_helper_fini();
-> >  	nf_conntrack_proto_fini();
-> > +	rcu_barrier();
-> > +	/* Need to wait for call_rcu() before dealloc the kmem_cache */
-> >  	kmem_cache_destroy(nf_conntrack_cachep);
-> 
-> Which call_rcu() is this referring to? 
+IEEE 802.15.4 stack requires several constants to be defined/adjusted.
 
-It is the call_rcu() in nf_conntrack_expect.c (which is linked into
-nf_conntrack.ko).  But that also means that it should have been the slab
-cache called "nf_ct_expect_cachep" we should have waited for... (and I
-also notice that "nf_ct_expect_cachep" is missing the
-SLAB_DESTROY_BY_RCU flag, and the SLAB_DESTROY_BY_RCU flag should be
-removed from "nf_conntrack_cachep")
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+---
+ include/linux/if_arp.h   |    2 ++
+ include/linux/if_ether.h |    1 +
+ include/linux/socket.h   |    4 +++-
+ net/core/dev.c           |    6 ++++--
+ net/core/sock.c          |    3 +++
+ 5 files changed, 13 insertions(+), 3 deletions(-)
 
-> If its the conntrack destruction,
-> that one is gone in the current kernel and I think destruction is
-> handled properly by the sl*b-allocators (SLAB_DESTROY_BY_RCU).
-
-Just dived into the slab.c code and noticed that it also is flawed,
-ARGH!.  When the SLAB_DESTROY_BY_RCU flags is set, it only calls
-synchronize_rcu() and not rcu_barrier() as it should!
-
-I'll fix that up in another patch series... 
-
-Looking into slub and slob at the moment, and it seems that they
-schedule another call_rcu callback for freeing when the
-SLAB_DESTROY_BY_RCU flags is set.  That seems racy to me... Paul?
-
-
-> > @@ -1118,6 +1120,9 @@ void nf_conntrack_cleanup(struct net *net)
-> >  	/* This makes sure all current packets have passed through
-> >  	   netfilter framework.  Roll on, two-stage module
-> >  	   delete... */
-> > +	/* hawk@comx.dk 2009-06-20: Think this should be replaced by a
-> > +          rcu_barrier() ???
-> > +	*/
-> >  	synchronize_net();
-> 
-> AFAICT this one is used to make sure the old value of the ip_ct_attach
-> hook is not visible anymore before beginning cleanup and is not needed
-> for anything else.
-
-Fine!
-
-> >  	nf_conntrack_cleanup_net(net);
-> > diff --git a/net/netfilter/nf_conntrack_standalone.c b/net/netfilter/nf_conntrack_standalone.c
-> > index 1935153..29c6cd0 100644
-> > --- a/net/netfilter/nf_conntrack_standalone.c
-> > +++ b/net/netfilter/nf_conntrack_standalone.c
-> > @@ -500,6 +500,8 @@ static void nf_conntrack_net_exit(struct net *net)
-> >  	nf_conntrack_standalone_fini_sysctl(net);
-> >  	nf_conntrack_standalone_fini_proc(net);
-> >  	nf_conntrack_cleanup(net);
-> > +	/* hawk@comx.dk: Think rcu_barrier() should to be called earlier? */
-> > +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
-> >  }
-> 
-> Which call_rcu() is this referring to? We should place them in
-> the cleanup sub-functions to make this clearly visible.
-
-This call_rcu() is the one done in nf_conntrack_extend.c:114  (notice
-"_extend" NOT "_expect"), which calls __nf_ct_ext_free_rcu().
-
-Guess this rcu_barrier() should then be move to
-nf_ct_extend_unregister() right? (it already invokes a
-synchronize_rcu() that should be replaced by rcu_barrier()).
-Although this means the nf_ct_extend_unregister() will be called three
-times in nf_conntrack_cleanup_net() when unregistering ecache, acct and
-expect.
-
-
-Thank you for your feedback :-) ... I'll post a new v2 patch...
+diff --git a/include/linux/if_arp.h b/include/linux/if_arp.h
+index 5ff8980..b554300 100644
+--- a/include/linux/if_arp.h
++++ b/include/linux/if_arp.h
+@@ -86,6 +86,8 @@
+ #define ARPHRD_IEEE80211 801		/* IEEE 802.11			*/
+ #define ARPHRD_IEEE80211_PRISM 802	/* IEEE 802.11 + Prism2 header  */
+ #define ARPHRD_IEEE80211_RADIOTAP 803	/* IEEE 802.11 + radiotap header */
++#define ARPHRD_IEEE802154	  804
++#define ARPHRD_IEEE802154_PHY	  805
+ 
+ #define ARPHRD_PHONET	820		/* PhoNet media type		*/
+ #define ARPHRD_PHONET_PIPE 821		/* PhoNet pipe header		*/
+diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
+index cfe4fe1..11a60e4 100644
+--- a/include/linux/if_ether.h
++++ b/include/linux/if_ether.h
+@@ -106,6 +106,7 @@
+ #define ETH_P_DSA	0x001B		/* Distributed Switch Arch.	*/
+ #define ETH_P_TRAILER	0x001C		/* Trailer switch tagging	*/
+ #define ETH_P_PHONET	0x00F5		/* Nokia Phonet frames          */
++#define ETH_P_IEEE802154 0x00F6		/* IEEE802.15.4 frame		*/
+ 
+ /*
+  *	This is an Ethernet frame header.
+diff --git a/include/linux/socket.h b/include/linux/socket.h
+index 421afb4..642d1f1 100644
+--- a/include/linux/socket.h
++++ b/include/linux/socket.h
+@@ -194,7 +194,8 @@ struct ucred {
+ #define AF_RXRPC	33	/* RxRPC sockets 		*/
+ #define AF_ISDN		34	/* mISDN sockets 		*/
+ #define AF_PHONET	35	/* Phonet sockets		*/
+-#define AF_MAX		36	/* For now.. */
++#define AF_IEEE802154	36	/* IEEE802154 sockets		*/
++#define AF_MAX		37	/* For now.. */
+ 
+ /* Protocol families, same as address families. */
+ #define PF_UNSPEC	AF_UNSPEC
+@@ -233,6 +234,7 @@ struct ucred {
+ #define PF_RXRPC	AF_RXRPC
+ #define PF_ISDN		AF_ISDN
+ #define PF_PHONET	AF_PHONET
++#define PF_IEEE802154	AF_IEEE802154
+ #define PF_MAX		AF_MAX
+ 
+ /* Maximum queue length specifiable by listen.  */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index e2e9e4a..4119dfc 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -268,7 +268,8 @@ static const unsigned short netdev_lock_type[] =
+ 	 ARPHRD_IRDA, ARPHRD_FCPP, ARPHRD_FCAL, ARPHRD_FCPL,
+ 	 ARPHRD_FCFABRIC, ARPHRD_IEEE802_TR, ARPHRD_IEEE80211,
+ 	 ARPHRD_IEEE80211_PRISM, ARPHRD_IEEE80211_RADIOTAP, ARPHRD_PHONET,
+-	 ARPHRD_PHONET_PIPE, ARPHRD_VOID, ARPHRD_NONE};
++	 ARPHRD_PHONET_PIPE, ARPHRD_IEEE802154, ARPHRD_IEEE802154_PHY,
++	 ARPHRD_VOID, ARPHRD_NONE};
+ 
+ static const char *netdev_lock_name[] =
+ 	{"_xmit_NETROM", "_xmit_ETHER", "_xmit_EETHER", "_xmit_AX25",
+@@ -285,7 +286,8 @@ static const char *netdev_lock_name[] =
+ 	 "_xmit_IRDA", "_xmit_FCPP", "_xmit_FCAL", "_xmit_FCPL",
+ 	 "_xmit_FCFABRIC", "_xmit_IEEE802_TR", "_xmit_IEEE80211",
+ 	 "_xmit_IEEE80211_PRISM", "_xmit_IEEE80211_RADIOTAP", "_xmit_PHONET",
+-	 "_xmit_PHONET_PIPE", "_xmit_VOID", "_xmit_NONE"};
++	 "_xmit_PHONET_PIPE", "_xmit_IEEE802154", "_xmit_IEEE802154_PHY",
++	 "_xmit_VOID", "_xmit_NONE"};
+ 
+ static struct lock_class_key netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
+ static struct lock_class_key netdev_addr_lock_key[ARRAY_SIZE(netdev_lock_type)];
+diff --git a/net/core/sock.c b/net/core/sock.c
+index 7dbf3ff..8a1644c 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -155,6 +155,7 @@ static const char *af_family_key_strings[AF_MAX+1] = {
+   "sk_lock-27"       , "sk_lock-28"          , "sk_lock-AF_CAN"      ,
+   "sk_lock-AF_TIPC"  , "sk_lock-AF_BLUETOOTH", "sk_lock-IUCV"        ,
+   "sk_lock-AF_RXRPC" , "sk_lock-AF_ISDN"     , "sk_lock-AF_PHONET"   ,
++  "sk_lock-AF_IEEE802154",
+   "sk_lock-AF_MAX"
+ };
+ static const char *af_family_slock_key_strings[AF_MAX+1] = {
+@@ -170,6 +171,7 @@ static const char *af_family_slock_key_strings[AF_MAX+1] = {
+   "slock-27"       , "slock-28"          , "slock-AF_CAN"      ,
+   "slock-AF_TIPC"  , "slock-AF_BLUETOOTH", "slock-AF_IUCV"     ,
+   "slock-AF_RXRPC" , "slock-AF_ISDN"     , "slock-AF_PHONET"   ,
++  "slock-AF_IEEE802154",
+   "slock-AF_MAX"
+ };
+ static const char *af_family_clock_key_strings[AF_MAX+1] = {
+@@ -185,6 +187,7 @@ static const char *af_family_clock_key_strings[AF_MAX+1] = {
+   "clock-27"       , "clock-28"          , "clock-AF_CAN"      ,
+   "clock-AF_TIPC"  , "clock-AF_BLUETOOTH", "clock-AF_IUCV"     ,
+   "clock-AF_RXRPC" , "clock-AF_ISDN"     , "clock-AF_PHONET"   ,
++  "clock-AF_IEEE802154",
+   "clock-AF_MAX"
+ };
+ 
 -- 
-Med venlig hilsen / Best regards
-  Jesper Brouer
-  ComX Networks A/S
-  Linux Network developer
-  Cand. Scient Datalog / MSc.
-  Author of http://adsl-optimizer.dk
-  LinkedIn: http://www.linkedin.com/in/brouer
+1.6.3.1
 
