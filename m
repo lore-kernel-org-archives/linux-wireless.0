@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59793 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54128 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751376AbZFIOuB (ORCPT
+	with ESMTP id S1754328AbZFGRSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 10:50:01 -0400
-Subject: Re: [PATCH] mac80211: don't use master netdev name
+	Sun, 7 Jun 2009 13:18:35 -0400
+Subject: Re: [PATCH] rfkill: print events when input handler is
+ disabled/enabled
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1244558869.895.7.camel@mj>
-References: <1244557112.4672.20.camel@johannes.local>
-	 <1244558869.895.7.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YsUwbOYDh2/wZ7WICpRd"
-Date: Tue, 09 Jun 2009 16:49:30 +0200
-Message-Id: <1244558970.4672.26.camel@johannes.local>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1244388331.23850.85.camel@localhost.localdomain>
+References: <1244370412.2907.2.camel@johannes.local>
+	 <1244388331.23850.85.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lZi4T44zvsAq0n+OaUmK"
+Date: Sun, 07 Jun 2009 19:18:34 +0200
+Message-Id: <1244395114.12956.2.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-YsUwbOYDh2/wZ7WICpRd
+--=-lZi4T44zvsAq0n+OaUmK
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-06-09 at 10:47 -0400, Pavel Roskin wrote:
-> On Tue, 2009-06-09 at 16:18 +0200, Johannes Berg wrote:
-> > Always use the wiphy name instead.
->=20
-> No objections against the patch.
->=20
-> Maybe we could use wiphy names for the network devices?  That is,
-> wmaster0 would become phy0 and so on.  Using two names for the same
-> thing is confusing.  What's better is that we won't have wmaster0
-> corresponding to phy1 after the driver is reloaded.  We'll have "phy1"
-> in both namespaces.
->=20
-> I wish we could hide those master devices using some "hidden network
-> device" attribute, but it's not happening.
+On Sun, 2009-06-07 at 17:25 +0200, Marcel Holtmann wrote:
 
-Actually, the reason I'm posting this patch is that I'm killing the
-mdev.
+> >  	if (!data->input_handler) {
+> > -		atomic_inc(&rfkill_input_disabled);
+> > +		if (atomic_inc_return(&rfkill_input_disabled) =3D=3D 1)
+> > +			printk(KERN_DEBUG "rfkill: input handler disabled\n");
+> >  		data->input_handler =3D true;
+> >  	}
+>=20
+> do you really think the =3D=3D 1 is the correct thing here. I think that
+> should be a > 0.
+
+Why would you want to know every time somebody uses the ioctl? I think
+the first time should be sufficient, no? Common case will hopefully be
+only one program using it anyway though.
 
 johannes
 
---=-YsUwbOYDh2/wZ7WICpRd
+--=-lZi4T44zvsAq0n+OaUmK
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKLnZ3AAoJEODzc/N7+Qma++sP/RSYjknxAfNxYMmN6dy6lTlO
-Mm9OGxvqRigNP/+yq4InxokZkICr/HYV2hRT2MC6c6tlRqeOqT5VDr/x4u/PDZdJ
-oG/kdUUP6j+dSNo5HHsOyzLsgm1IdwJ+qZFDPbf0y3kfq4CGLxz9tTTyTwb21G/B
-Xrd4VoEIVq6aC5xuaXBpGWBM4QEDVvoi54wK+uCSXZ9divqU2e2YBIhIS+QULYT5
-44RMfdHsJMGFyf+Kpd9MvyH+1ZnQY4LPhIfdI/gK17Uo37E+zbjN5xn7u0ufZoqZ
-UXeMibgk+S1zgwtc9p9FOYuT5BAEHFUZtXPR2C8mcPzexnPzf6ul8XLNODyuD77S
-mhblGs+4hNrnh0amN61PMHOM3NIBlst40T7QEcoqyildCbW8FE3X06NMJYwXa/N7
-2A3gyZK+xhzkVTcgIG9aYzOB0PmHxcO1mfnqm8P1ccycCSBVmS5XrNxbQrZXMAPY
-yU6WyOjfKyx0uDj/vvJNr8Cs4bnDkMrOK1N91FGVlpXJzrrFvxcv044br6hfDXR3
-TBu9gzTY/E1UrWG3QhI4HtrFvhXK5N/PyPia25KzE5ERUN6NZAO0cWo/QUxvbzhG
-8KwGl4dAj5DBr0GiU6WvFEH/WEE0LLZUsTZj7h1yNz7LFOk9qfxITf8MNSxUU00P
-AhvvPwtebGGrms6aqsYe
-=1Y6T
+iQIcBAABAgAGBQJKK/ZmAAoJEODzc/N7+QmaPB8QAIt6DVGR5qvHQY74E8B3445D
+m8Ys9WQDMl983W1d3toqMuMtKxlPGAFsf13XCVeEZwFPVmj1ujTvQVt06U1//hYy
+6IQt49i77DaALxqq7RdSVafjehq7MCv576BI04aGmcTlobevGxFNTOyqmEMtFbB5
+aQAmllhO1d6YX03/Oxo6rkJO/1ySRgtxqEUCyzXeM3+9lj7mNJEXi3xfAQApU9vr
+J+d02qU9Vb7vNoLSKnHh/NdRoEzPLIWi2eq473+qoxT4Zg6pfthN7/rmv8dPgith
+XAHLDAIosxo+/TL8/jj6A08dTT6Rf+36Oi+6Tx0wlAkg8tTaTWoYHvtKnxpASE3S
+am+SlCI01ny3R/26Lpym/jltiRergaPPrWGRtjp0jx0Ppj+FoCiQ6xBUJg44F4zd
+4JK1p8D7Y6P3jeQi4D92pQRgRj5NUU9Z9a0w5ls9QP9oLVaHbjtt7uyImYvRqyxA
+IVgbKXsDbQcPVaKIARv4n6qXqwd78QZD9aOIUZMS2Kb4z65StRYfmb076bmV4DD/
+Mb+pjINdrttVeNeJboXI/zhr4Kb2nby2OcPDNTXXwUpMYD6FYRdyrvnDyhO+H9IP
+oqj4Xwa8GuzRFkKeMdzeMNUCBVdQqgxHeeDVtADF/bBmGCkQmUPllTzEQUzHEQ5j
+LS2O7goNfd06CseX/i6c
+=9KIN
 -----END PGP SIGNATURE-----
 
---=-YsUwbOYDh2/wZ7WICpRd--
+--=-lZi4T44zvsAq0n+OaUmK--
 
