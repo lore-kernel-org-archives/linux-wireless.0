@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3727 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752218AbZFAAdp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39839 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520AbZFGRgB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 20:33:45 -0400
-Date: Sun, 31 May 2009 20:32:09 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] Crda oopses the system
-Message-ID: <20090601003209.GA3917@hash.localnet>
-References: <1242258469.3241.19.camel@maxim-laptop> <43e72e890905131707k2933f3cftfdec6e632f5b9fc3@mail.gmail.com> <b6c5339f0905140720p29be483cr1968f50a6bea48e5@mail.gmail.com> <1242742647.23110.10.camel@ibm172> <1242951611.5206.9.camel@maxim-laptop> <43e72e890905211736i3dfaf7d5q78d511eac0fbca1e@mail.gmail.com> <1242986902.5544.8.camel@maxim-laptop> <20090531062217.GB23972@bombadil.infradead.org> <1243774031.5741.5.camel@maxim-laptop> <1243803253.5417.12.camel@maxim-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243803253.5417.12.camel@maxim-laptop>
+	Sun, 7 Jun 2009 13:36:01 -0400
+Subject: Re: [PATCH V2] b43/legacy: port to cfg80211 rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <4a2bf93a.bTrtb32iihvyZWD3%Larry.Finger@lwfinger.net>
+References: <4a2bf93a.bTrtb32iihvyZWD3%Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zG6EvaV3mw1rdVA49xWd"
+Date: Sun, 07 Jun 2009 19:35:54 +0200
+Message-Id: <1244396154.12956.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 31, 2009 at 11:54:13PM +0300, Maxim Levitsky wrote:
-> 2 - ath5k makes kernel panic, reliably after few times hostapd have
-> started, I didn't yet captured the output.
-> I remember to see panics with ad-hoc as well. 
-> I mean blinking leds on keyboard.
 
-This should be fixed at least with a patch I recently posted to
-linux-wireless.
+--=-zG6EvaV3mw1rdVA49xWd
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 3 - couldn't transfer any frames between AP and client, only association
-> works.
+Thanks Larry. John: please pick up this one, the subject should be v4 :)
 
-Yeah I still plan to fix it, just haven't found cycles for it yet.
+johannes
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--=-zG6EvaV3mw1rdVA49xWd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKK/pxAAoJEODzc/N7+Qma2gUQAIEm/JcyqdXvB0UfZ7n0Tkfq
+ygL3LFIFTDLieRUwXIlUICqjtRQIzd90wxJ3q/0E1FFPo7cDVRR0Ol9uCz6dkwdU
+S4UGl9q9U26r3h2n/ANeRp1DzHFgwNoXltBxId6E+mlxXRebjqqnjIfnuFFRp3rA
+CZsS2dM5EPGlqjFCsm6RHthmtOC3IiPa166Ena73bqigmYOO+W4fPmDtiqOMQKcH
+LAgkdf4fGmSNgPL/g1LgHnlN601id/Rv4vaEWa54BBerbJZ+39tZm5S0DU7ruNss
+kaYzT3goF2RuygY7utGesXgUC5yfaWjEynuuzIC1OsoMx58fW4Pe8laxpZsgNTTx
+tIux5B3S7WdOIPYaI0y4F/N3NYUuF8vap5O7ZaG5tnLDDqDwULqNOYwLxMxNJeHh
+0746n4ws0LpZVNPVkxrgMzfrbAm/2H37NlesUOTSMiDJ65Qe9EhXdBWXGfUfPSaA
+hx6DqtLAHBM6Eecd4XxsgK4VGY5XPQ0BYcHO3EYzhOnQ1fYAPoHuNwpuQJPisWt3
+ljgMR/lskr2kWWZwJqiX7/3EFY9NxBRNzurhCFv2de9ISE9qOcMJIqnT1B1cYV8i
+i5En+I6z/4vmE386Xq/i5yhoRAeAUJdDjgfJoh/3sdYseWETK/1/G6/FtG5rKlsv
+6x1lPpsRUBeRoDWw6LJ5
+=hQuM
+-----END PGP SIGNATURE-----
+
+--=-zG6EvaV3mw1rdVA49xWd--
 
