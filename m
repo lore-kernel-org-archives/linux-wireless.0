@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:35420 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758188AbZFAOze (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 10:55:34 -0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Subject: [PATCH 08/10] tty_io: export tty_class
-Date: Mon,  1 Jun 2009 18:54:49 +0400
-Message-Id: <1243868091-5315-9-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-5-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-6-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
- <1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:53034 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754205AbZFGUox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2009 16:44:53 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MDPEa-0004CF-OW
+	for linux-wireless@vger.kernel.org; Sun, 07 Jun 2009 20:44:52 +0000
+Received: from p5086D5AB.dip.t-dialin.net ([80.134.213.171])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 20:44:52 +0000
+Received: from sparcoular by p5086D5AB.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 20:44:52 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus <sparcoular@t-online.de>
+Subject: Re: bcm43xx 5.10.38.35 firmware
+Date: Sun, 7 Jun 2009 20:44:39 +0000 (UTC)
+Message-ID: <loom.20090607T201048-919@post.gmane.org>
+References: <loom.20090607T124008-575@post.gmane.org> <4A2BBD98.4040708@lwfinger.net> <loom.20090607T140512-723@post.gmane.org> <4A2BEAFF.7090109@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently tty_class in a public variable in the tty_io.c
-Export it to the modules to allow some usefull tricks.
+> As it says in the wiki, an interface with the 0x4328 ID is not
+> supported. You need to use the Broadcom wl driver, which is
+> proprietary. I suppose that this was the "Restricted Driver" from
+> Ubuntu. Your other option would be to get the driver from Broadcom and
+> build it on your system.
+> 
+> We are in the process of doing the reverse engineering on the N-PHY
+> devices, but it does not have high priority at the moment.
+> 
+> Larry
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
----
- drivers/char/tty_io.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/char/tty_io.c b/drivers/char/tty_io.c
-index 66b99a2..4b12d03 100644
---- a/drivers/char/tty_io.c
-+++ b/drivers/char/tty_io.c
-@@ -2809,6 +2809,7 @@ int tty_put_char(struct tty_struct *tty, unsigned char ch)
- EXPORT_SYMBOL_GPL(tty_put_char);
- 
- struct class *tty_class;
-+EXPORT_SYMBOL(tty_class);
- 
- /**
-  *	tty_register_device - register a tty device
--- 
-1.6.2.4
+Finally got it working again. 
+
+A patched sta- version from the Ubuntu repository did it.
+
+That one directly from Broadcom won't compile without
+
+some code-change.
+
+Thx and keep on Hacking
+
+Markus
+
 
