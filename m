@@ -1,60 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:55576 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbZFRUW0 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:22752 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753694AbZFGAVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 16:22:26 -0400
-Message-ID: <4A3AA20C.6020908@wpkg.org>
-Date: Thu, 18 Jun 2009 22:22:36 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath5k AP support?
-References: <4A381159.70301@wpkg.org> <b6c5339f0906161454tbdaf382k654450a9f1cf8ae7@mail.gmail.com> <4A3AA08E.4050400@wpkg.org>
-In-Reply-To: <4A3AA08E.4050400@wpkg.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 6 Jun 2009 20:21:46 -0400
+Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1244326943.12159.5.camel@localhost>
+References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+	 <1244326943.12159.5.camel@localhost>
+Content-Type: text/plain
+Date: Sun, 07 Jun 2009 03:21:42 +0300
+Message-Id: <1244334102.16810.3.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomasz Chmielewski wrote:
-> Bob Copeland wrote:
->> On Tue, Jun 16, 2009 at 5:40 PM, Tomasz Chmielewski<mangoo@wpkg.org> 
->> wrote:
->>> According to http://linuxwireless.org/en/users/Drivers/ath5k, AP mode is
->>> "reported to work, we just need some further tests on all cards to be 
->>> sure".
->>>
->>> I just tried it with 2.6.30 kernel with this card:
->>
->> 2.6.30 does not enable AP mode, you should try the wireless-testing
->> tree instead.
->>
->> There is at least one known bug (the patch at the end is broken but
->> close):  http://bugzilla.kernel.org/show_bug.cgi?id=13237
+On Sun, 2009-06-07 at 01:22 +0300, Maxim Levitsky wrote:
+> On Fri, 2009-06-05 at 12:04 -0700, Luis R. Rodriguez wrote:
+> > I'm pleased to announce we have released the source code to our
+> > Atheros 802.11n USB Otus/ar9170 device under the GPL. You can grab the
+> > source, compile and use it with the upstream ar9170 device driver.
+> > Patches are welcomed. The git tree available for this is at:
+> > 
+> > http://git.sipsolutions.net/ar9170-fw.git
+> > 
+> > For more information please visit the home page for this project is on
+> > our Linux wireless wiki:
+> > 
+> > http://wireless.kernel.org/en/users/Drivers/ar9170.fw
+> > 
+> > The ar9170 device driver home page is at:
+> > 
+> > http://wireless.kernel.org/en/users/Drivers/ar9170
+> > 
+> > I'd like to thank Johannes Berg and Christian Lamparter for their
+> > incredible contributions to the project both firmware and ar9170
+> > driver so far without which this would not have been possible.
 > 
-> I tried compat-wireless-2009-06-17, but I can't connect:
+> I just want to say thanks!
 > 
-> Jun 18 22:12:31 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
-> 802.11: authenticated
-> Jun 18 22:12:31 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
-> 802.11: associated (aid 1)
-> Jun 18 22:12:34 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
-> 802.11: deauthenticated due to local deauth request
-> Jun 18 22:12:40 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
-> 802.11: authenticated
-> (...)
+> I will buy this device very soon.
+> Is this source for same firmware that was closed?
+> Will AP mode work in future?
+> 
+> If you were to release the documentation, then it would be really
+> possible to fix AP mode for this firmware.
+> 
+> 
+> If you could just release ath5k documentation.... I would fix its
+> numerous problems I have with my aspire one (AR2425)...
+> 
+> 
+> Best regards,
+> 	Maxim Levitsky
+> 
 
-Oh well.
-The above is with hostapd 0.7.0 snapshot.
-With 0.6.9 I can connect and the connection works fine
+What does this mean:
 
-Is it normal?
-
-hostapd 0.7.0 snapshot worked with a b43 card (but my b43 card doesn't 
-work well on my ASUS router, and hence I'm trying a different card, ath5k).
+eeprom   : ORIGIN = 0x000000, LENGTH = 1024k
 
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Does the device have whole 1M of eeprom?
+What is there?
+
+
+Also what is this:
+
+sram     : ORIGIN = 0x100000, LENGTH = 64k
+
+
+
+Description says that pram is 32K, but:
+ 
+pram     : ORIGIN = 0x200000, LENGTH = 16k
+
+
+Best regards,
+	Maxim Levitsk
+
