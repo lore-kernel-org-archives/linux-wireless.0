@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35201 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806AbZESIjg (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:35339 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbZFGMX7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2009 04:39:36 -0400
-Subject: [PATCH] mac80211: fix kernel-doc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+	Sun, 7 Jun 2009 08:23:59 -0400
+Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1244370250.2907.1.camel@johannes.local>
+References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+	 <1244326943.12159.5.camel@localhost>  <1244334102.16810.3.camel@localhost>
+	 <1244367815.26071.4.camel@johannes.local>
+	 <1244368455.22643.4.camel@localhost>
+	 <1244370250.2907.1.camel@johannes.local>
 Content-Type: text/plain
-Date: Tue, 19 May 2009 10:39:34 +0200
-Message-Id: <1242722374.17164.3.camel@johannes.local>
+Date: Sun, 07 Jun 2009 15:23:42 +0300
+Message-Id: <1244377422.15333.6.camel@nadejda-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moving information from config_interface to bss_info_changed
-removed struct ieee80211_if_conf which the documentation still
-refers to, additionally there's one kernel-doc description too
-much and one other missing, fix all this.
+On Sun, 2009-06-07 at 12:24 +0200, Johannes Berg wrote:
+> On Sun, 2009-06-07 at 12:54 +0300, Maxim Levitsky wrote:
+> 
+> > Fine, like I expected, but still, I guess there is some 'loader' in
+> > eeprom?
+> 
+> Yes.
+> 
+> > If there were a documentation too.
+> > Isn't it possible to publish it?
+> > 
+> > This firmware contains so many 'magic' registers.
+> 
+> There is some, but it's not public. We can try to document some when we
+> replace the magic values by constants.
+> 
+> johannes
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- Documentation/DocBook/mac80211.tmpl |    1 -
- include/net/mac80211.h              |    1 -
- net/mac80211/sta_info.h             |    1 +
- 3 files changed, 1 insertion(+), 2 deletions(-)
+Exactly.
 
---- wireless-testing.orig/include/net/mac80211.h	2009-05-19 10:25:25.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-05-19 10:35:11.000000000 +0200
-@@ -173,7 +173,6 @@ enum ieee80211_bss_change {
-  * @timestamp: beacon timestamp
-  * @beacon_int: beacon interval
-  * @assoc_capability: capabilities taken from assoc resp
-- * @ht: BSS's HT configuration
-  * @basic_rates: bitmap of basic rates, each bit stands for an
-  *	index into the rate table configured by the driver in
-  *	the current band.
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-05-19 10:27:04.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2009-05-19 10:35:11.000000000 +0200
-@@ -216,6 +216,7 @@ struct sta_ampdu_mlme {
-  * @plink_state: peer link state
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-+ * @plink_timer_was_running: used by suspend/resume to restore timers
-  * @debugfs: debug filesystem info
-  * @sta: station information we share with the driver
-  */
---- wireless-testing.orig/Documentation/DocBook/mac80211.tmpl	2009-05-19 10:37:35.000000000 +0200
-+++ wireless-testing/Documentation/DocBook/mac80211.tmpl	2009-05-19 10:37:41.000000000 +0200
-@@ -145,7 +145,6 @@ usage should require reading the full do
-         interface in STA mode at first!
-       </para>
- !Finclude/net/mac80211.h ieee80211_if_init_conf
--!Finclude/net/mac80211.h ieee80211_if_conf
-     </chapter>
- 
-     <chapter id="rx-tx">
+If you could make it public.....
+
+I am taking even not especially about this device, but 
+about ath5k AR2425.
+
+My aspire one has several very nasty bugs, and little hope they will be
+fixed, and I blame no one for that, developers are busy, and  load is
+high.
+
+But on the other hand, chances I fix them are low, I already read whole
+ath5k drivers, and without documentation it is hard to see what it going
+on.
+
+The only way out I see, it to load windows driver in ndiswrapper, pray
+that it will work, and then use mmiotrace to see what is done
+differently. I really hate going this way.
+
+
+Best regards,
+	Maxim Levitsky
+
 
 
