@@ -1,57 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37440 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757213AbZFJITp (ORCPT
+Received: from build.ossfans.org ([67.223.233.67]:32875 "EHLO
+	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754073AbZFGBSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:19:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 14/18] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
-Date: Wed, 10 Jun 2009 04:19:31 -0400
-Message-Id: <1244621975-1238-15-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
-References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 6 Jun 2009 21:18:41 -0400
+From: Sergey Lapin <slapin@ossfans.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>
+Subject: [PATCH 0/5] IEEE 802.15.4 stack: generic parts v3
+Date: Sun,  7 Jun 2009 05:18:29 +0400
+Message-Id: <cover.1244337432.git.slapin@ossfans.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We check for this condition early on in our mac80211 get_rate()
-callback ath_get_rate(), so remove this check later down the path.
+Hello,
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+This is a third version of pull/merge request for IEEE 802.15.4 stack.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 96d46d6..2c72901 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -777,7 +777,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
- 	 */
- 	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
--	    !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
- 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
- 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
- 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
-@@ -882,9 +881,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	 *
- 	 * FIXME: Fix duration
- 	 */
--	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
--	    (ieee80211_has_morefrags(fc) ||
--	     (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
-+	if (ieee80211_has_morefrags(fc) ||
-+	    (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
- 		rates[1].count = rates[2].count = rates[3].count = 0;
- 		rates[1].idx = rates[2].idx = rates[3].idx = 0;
- 		rates[0].count = ATH_TXMAXTRY;
--- 
-1.6.0.6
+As per Dmitry request I'm taking over passing this patchset through
+review. This is my first pull request through mail lists, so I might
+do some mistakes, but I hope I did not miss any.
 
+Major changes from previous post:
+ * Fixed email addresses for Sergey Lapin.
+
+The following changes since commit 81ee1bad86bd6752c626018d43a74e3f81f1ae72:
+  Linus Torvalds (1):
+        Merge branch 'for-linus' of git://git.kernel.org/.../viro/vfs-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/slapin/lowpan.git for-next
+
+Sergey Lapin (5):
+      Add constants for the ieee 802.15.4 stack
+      net: add IEEE 802.15.4 socket family implementation
+      net: add NL802154 interface for configuration of 802.15.4 devices
+      ieee802154: add documentation about our stack
+      ieee802154: add simple HardMAC driver sample
+
+ Documentation/networking/ieee802154.txt |   76 +++++
+ MAINTAINERS                             |   12 +
+ drivers/Makefile                        |    1 +
+ drivers/ieee802154/Kconfig              |   22 ++
+ drivers/ieee802154/Makefile             |    3 +
+ drivers/ieee802154/fakehard.c           |  270 ++++++++++++++++
+ drivers/net/Kconfig                     |    2 +
+ include/linux/if_arp.h                  |    2 +
+ include/linux/if_ether.h                |    1 +
+ include/linux/nl802154.h                |  119 +++++++
+ include/linux/socket.h                  |    4 +-
+ include/net/ieee802154/af_ieee802154.h  |   60 ++++
+ include/net/ieee802154/mac_def.h        |  160 ++++++++++
+ include/net/ieee802154/netdevice.h      |  115 +++++++
+ include/net/ieee802154/nl802154.h       |   41 +++
+ net/Kconfig                             |    1 +
+ net/Makefile                            |    1 +
+ net/core/dev.c                          |    6 +-
+ net/core/sock.c                         |    3 +
+ net/ieee802154/Kconfig                  |   12 +
+ net/ieee802154/Makefile                 |    5 +
+ net/ieee802154/af802154.h               |   36 +++
+ net/ieee802154/af_ieee802154.c          |  372 ++++++++++++++++++++++
+ net/ieee802154/dgram.c                  |  394 +++++++++++++++++++++++
+ net/ieee802154/netlink.c                |  523 +++++++++++++++++++++++++++++++
+ net/ieee802154/nl_policy.c              |   52 +++
+ net/ieee802154/raw.c                    |  254 +++++++++++++++
+ 27 files changed, 2544 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/networking/ieee802154.txt
+ create mode 100644 drivers/ieee802154/Kconfig
+ create mode 100644 drivers/ieee802154/Makefile
+ create mode 100644 drivers/ieee802154/fakehard.c
+ create mode 100644 include/linux/nl802154.h
+ create mode 100644 include/net/ieee802154/af_ieee802154.h
+ create mode 100644 include/net/ieee802154/mac_def.h
+ create mode 100644 include/net/ieee802154/netdevice.h
+ create mode 100644 include/net/ieee802154/nl802154.h
+ create mode 100644 net/ieee802154/Kconfig
+ create mode 100644 net/ieee802154/Makefile
+ create mode 100644 net/ieee802154/af802154.h
+ create mode 100644 net/ieee802154/af_ieee802154.c
+ create mode 100644 net/ieee802154/dgram.c
+ create mode 100644 net/ieee802154/netlink.c
+ create mode 100644 net/ieee802154/nl_policy.c
+ create mode 100644 net/ieee802154/raw.c
