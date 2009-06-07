@@ -1,75 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095AbZFAPxa (ORCPT
+Received: from build.ossfans.org ([67.223.233.67]:32871 "EHLO
+	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753742AbZFGBSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 11:53:30 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090601155020.GC15485@khazad-dum.debian.net>
-References: <1243841639.5299.8.camel@johannes.local>
-	 <4A238EA2.4040106@tuffmail.co.uk>
-	 <20090601122839.GB11011@khazad-dum.debian.net>
-	 <1243859931.5299.17.camel@johannes.local>
-	 <20090601124553.GE11011@khazad-dum.debian.net>
-	 <1243860606.5299.21.camel@johannes.local>
-	 <20090601133351.GI11011@khazad-dum.debian.net>
-	 <1243866545.5299.25.camel@johannes.local>
-	 <20090601153620.GB15485@khazad-dum.debian.net>
-	 <1243870669.5299.29.camel@johannes.local>
-	 <20090601155020.GC15485@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Lh8mnSBon0Si2dXY56t2"
-Date: Mon, 01 Jun 2009 17:53:25 +0200
-Message-Id: <1243871606.5299.30.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 6 Jun 2009 21:18:41 -0400
+From: Sergey Lapin <slapin@ossfans.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>
+Subject: [PATCH 4/5] ieee802154: add documentation about our stack
+Date: Sun,  7 Jun 2009 05:18:33 +0400
+Message-Id: <5c2bda0944c5601e408b24d2b7078763c35f1747.1244337432.git.slapin@ossfans.org>
+In-Reply-To: <0c9cef2f39292adb09c60c8a11bf4d3d44debeca.1244337432.git.slapin@ossfans.org>
+References: <cover.1244337432.git.slapin@ossfans.org>
+ <ab05794d9f99e4ef522953445a19a39b1f693ede.1244337432.git.slapin@ossfans.org>
+ <47c250c4bb2069d4faa2d6c5217d1aae15a5bc34.1244337432.git.slapin@ossfans.org>
+ <0c9cef2f39292adb09c60c8a11bf4d3d44debeca.1244337432.git.slapin@ossfans.org>
+In-Reply-To: <cover.1244337432.git.slapin@ossfans.org>
+References: <cover.1244337432.git.slapin@ossfans.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add MAINTAINERS entry and a small text describing our stack interfaces,
+how to hook the drivers, etc.
 
---=-Lh8mnSBon0Si2dXY56t2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+---
+ Documentation/networking/ieee802154.txt |   76 +++++++++++++++++++++++++++++++
+ MAINTAINERS                             |   12 +++++
+ 2 files changed, 88 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/networking/ieee802154.txt
 
-On Mon, 2009-06-01 at 12:50 -0300, Henrique de Moraes Holschuh wrote:
-
-> Yes, it "calls itself" right now... so I can certainly do that :)
->=20
-> However, the in-driver shortcut means I give rfkill a kick and say "the s=
-oft
-> state has changed, deal with it", instead of "please change the state" wh=
-ich
-> it might deny due to EPO, etc.
-
-But ... now I'm confused ... why would the driver ever ask to change the
-state? Sounds like something that should be a button instead.
-
-johannes
-
---=-Lh8mnSBon0Si2dXY56t2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKI/ltAAoJEODzc/N7+QmaqZ8P/1sTc35eZfNyYkMZ9BrOfB3j
-gUB7jLiZbE0Sgs3Xez/JLXA091VrRpVXMkzCTkV/jvwlONv8HYFGNZV8O033oTLT
-Flzc6CT3BuwAKIoJLRKMy8vD/okxaKBEwcqNaAYj1FDhg6OKYntx0DhyjOb9tGks
-YeoLr3aRea5lFl8UjrDs6on5tG24PQjSPvU2npiukd13CqJGACw6pkyCR0a2wOyP
-L5FMVmlvfY27Jymrq+TPZUAQKvVIxtqgYCYLrZsxDHgyhw2yzlgKORUtbBgn0sOp
-r2mgnBqWf/jNxCNOw59zD10NmQUAyoAQXrzEPbYAI0arXwmaH/XJxXExcbli7VEr
-kx2PO+lFX7QF8cpqbgpDuqr7bgX74fIM1ObfkRJXlFPpStxGWzlPVI27Veb9nBuv
-wmNR7qahkCtAH8gOG9Ye8uT4bQz9FVXKdLpcKek6GREF9mO3VsE9x0W7DLrnMObb
-7hc0K0X/Rp552JpPe5OzRpTBqIwfX5PVZMhPnQn+7dfsU47Jhbl2JCwlu3p7ogBM
-+jmbNAEBWuCV/y50N0KtmqCjIljsljEk7urK1qy6PNX19hD8dxUEYITmFSTha9mj
-RA4yoUkZVb1bOOVW3gPMEFzBnrQSu+m93N35vfZR8PMeutr7xs2LWBbVwUWjQ9n8
-MLIWgqnSaF7LgqaA2ONZ
-=yXok
------END PGP SIGNATURE-----
-
---=-Lh8mnSBon0Si2dXY56t2--
+diff --git a/Documentation/networking/ieee802154.txt b/Documentation/networking/ieee802154.txt
+new file mode 100644
+index 0000000..a0280ad
+--- /dev/null
++++ b/Documentation/networking/ieee802154.txt
+@@ -0,0 +1,76 @@
++
++		Linux IEEE 802.15.4 implementation
++
++
++Introduction
++============
++
++The Linux-ZigBee project goal is to provide complete implementation
++of IEEE 802.15.4 / ZigBee / 6LoWPAN protocols. IEEE 802.15.4 is a stack
++of protocols for organizing Low-Rate Wireless Personal Area Networks.
++
++Currently only IEEE 802.15.4 layer is implemented. We have choosen
++to use plain Berkeley socket API, the generic Linux networking stack
++to transfer IEEE 802.15.4 messages and a special protocol over genetlink
++for configuration/management
++
++
++Socket API
++==========
++
++int sd = socket(PF_IEEE802154, SOCK_DGRAM, 0);
++.....
++
++The address family, socket addresses etc. are defined in the
++include/net/ieee802154/af_ieee802154.h header or in the special header
++in our userspace package (see either linux-zigbee sourceforge download page
++or git tree at git://linux-zigbee.git.sourceforge.net/gitroot/linux-zigbee).
++
++One can use SOCK_RAW for passing raw data towards device xmit function. YMMV.
++
++
++MLME - MAC Level Management
++============================
++
++Most of IEEE 802.15.4 MLME interfaces are directly mapped on netlink commands.
++See the include/net/ieee802154/nl802154.h header. Our userspace tools package
++(see above) provides CLI configuration utility for radio interfaces and simple
++coordinator for IEEE 802.15.4 networks as an example users of MLME protocol.
++
++
++Kernel side
++=============
++
++Like with WiFi, there are several types of devices implementing IEEE 802.15.4.
++1) 'HardMAC'. The MAC layer is implemented in the device itself, the device
++   exports MLME and data API.
++2) 'SoftMAC' or just radio. These types of devices are just radio transceivers
++   possibly with some kinds of acceleration like automatic CRC computation and
++   comparation, automagic ACK handling, address matching, etc.
++
++Those types of devices require different approach to be hooked into Linux kernel.
++
++
++HardMAC
++=======
++
++See the header include/net/ieee802154/netdevice.h. You have to implement Linux
++net_device, with .type = ARPHRD_IEEE802154. Data is exchanged with socket family
++code via plain sk_buffs. The control block of sk_buffs will contain additional
++info as described in the struct ieee802154_mac_cb.
++
++To hook the MLME interface you have to populate the ml_priv field of your
++net_device with a pointer to struct ieee802154_mlme_ops instance. All fields are
++required.
++
++We provide an example of simple HardMAC driver at drivers/ieee802154/fakehard.c
++
++
++SoftMAC
++=======
++
++We are going to provide intermediate layer impelementing IEEE 802.15.4 MAC
++in software. This is currently WIP.
++
++See header include/net/ieee802154/mac802154.h and several drivers in
++drivers/ieee802154/
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cf4abdd..a1bbc8f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2816,6 +2816,18 @@ L:	linux1394-devel@lists.sourceforge.net
+ S:	Maintained
+ F:	drivers/ieee1394/raw1394*
+ 
++IEEE 802.15.4 SUBSYSTEM
++P:	Dmitry Eremin-Solenikov
++M:	dbaryshkov@gmail.com
++P:	Sergey Lapin
++M:	slapin@ossfans.org
++L:	linux-zigbee-devel@lists.sourceforge.net
++W:	http://apps.sourceforge.net/trac/linux-zigbee
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
++S:	Maintained
++F:	net/ieee802154/
++F:	drivers/ieee801254/
++
+ INTEGRITY MEASUREMENT ARCHITECTURE (IMA)
+ P:	Mimi Zohar
+ M:	zohar@us.ibm.com
+-- 
+1.6.3.1
 
