@@ -1,70 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:29286 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060AbZFADIR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39281 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbZFGJnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 23:08:17 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so4161913ywb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2009 20:08:18 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 1 Jun 2009 00:08:17 -0300
-Message-ID: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
-Subject: [GSoC 2009] Automation of testing using mac80211_hwsim and Orbit -
-	status report 01
-From: Georgy Berdyshev <codingmaster@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 7 Jun 2009 05:43:39 -0400
+Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1244334102.16810.3.camel@localhost>
+References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
+	 <1244326943.12159.5.camel@localhost>  <1244334102.16810.3.camel@localhost>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1DXZmgPadoca42y1QXNa"
+Date: Sun, 07 Jun 2009 11:43:34 +0200
+Message-Id: <1244367815.26071.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Automation of testing using mac80211_hwsim and Orbit
 
-Hello Linux wireless users and kernel developers, Luis, John and Johannes,
+--=-1DXZmgPadoca42y1QXNa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-this is the first status report of the "Automation of testing using
-mac80211_hwsim and Orbit",
-which is kindly sponsored by Google in the Summer of Code program and
-mentored by the Linux Foundation.
+On Sun, 2009-06-07 at 03:21 +0300, Maxim Levitsky wrote:
 
-http://www.linuxwireless.org/en/developers/GSoC/2009/Automation_of_testing
-http://socghop.appspot.com/student_project/show/google/gsoc2009/linux_foundation/t124022664044
+> > Is this source for same firmware that was closed?
 
-In the first week, I did implement a ground base for the testing
-command line tool, which is written
-in Python and will create statistics from the test set and later on
-collect them and provide nice
-statistics.
+Yes, but it was compiled differently afaik so you won't arrive at the
+same binary.
 
-The installer, some basic commands and the parser are finished and I
-did translate some of the available
-tests (link from Luis) to Python. Moreover I have concentrated on
-creating new tests and adding the loading
-of kernel modules and setting options to the program.
+> > Will AP mode work in future?
 
-By the end of the week, I did start to have some strange problems with
-running hostapd (via nl80211) and using the
-mac80211_hwsim kernel driver.
+Well, not TYPE=3DAP, but we'll integrate whatever is necessary into one
+firmware, I expect. It shouldn't be very hard given that AP mode really
+works with the TYPE=3DSTA firmware already, almost.
 
-In case that someone did run into that problem with 2.6.30-rc5,6,7 +
-latest git and latest git of hostap / wpa_supplicant,
-it would be great to have a feedback on that.
+> What does this mean:
+>=20
+> eeprom   : ORIGIN =3D 0x000000, LENGTH =3D 1024k
+>=20
+>=20
+> Does the device have whole 1M of eeprom?
+> What is there?
 
-One of the first tasks for the new week will be the creation of a wiki
-documentation and also an introduction
-how to check out the code, run some tests locally and also send
-feedbacks / bug reports.
-Like planned, I will continue to extend the test scenario by adding
-more tests and also functionality to the command
-line test tool.
+The eeprom is mapped there, but I don't think it's 1M, it's just the max
+size of the mapping to the CPUs address space.
 
+> Also what is this:
+>=20
+> sram     : ORIGIN =3D 0x100000, LENGTH =3D 64k
 
-Thanks, Georgy
+This is just memory. It's used for buffering frames and dma descriptors
+etc. internally. I want to change the code to do this with the linker
+script rather than manually assigning addresses in the source. But if
+you grep for this address you'll find how it's used.
 
--- 
-Georgy Berdyshev
+> Description says that pram is 32K, but:
+> =20
+> pram     : ORIGIN =3D 0x200000, LENGTH =3D 16k
 
-GPG key: 830F68C5
-Fingerprint: 0379 ED5A BEE5 65A8 7BD5  31E7 F5B4 1EC7 830F 68C5
+Yeah, we're not exactly sure about this yet, but using 32k definitely
+crashes the device.
+
+johannes
+
+--=-1DXZmgPadoca42y1QXNa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKK4vDAAoJEODzc/N7+Qma7UgQAKqMZgRxczqHMDNAV+NdeiU0
+hQdbIaGVlLB2LiNbbfdFxEq/NUGUp8HIh8UXwlX+sWDBaFlD7z65yvxgzn/hO7L0
+q6bc3MLihl7VMPlrnR3AUwEJzrGsrYyg2hCnGtdntyKJLrRWADxmREv99kFOx//F
+mC6qMC84viMIaV27hUvOPwBIBeX4+zItzXnp9jW5KccAG3RbB/yXPdhn+Pn7SYGy
+xvNryxllm6xcSoW3rlvbukgj1gQVOElvOOSqaK6eGCi6vIKTZE/JOmQ2iYLHm1TY
+0nZLhppA1slYa3D6O0psNi4qGTorXIJehzFSZlokNmmm03XihK+dxCRaM2Tb2zpE
+U8SBIF3wT6lgHPeeaFzKoxsS3qXgaTheXwk5p4Uwuoj7RobhQhFbKZaGl2JctFcn
+BRCyx0kJPeHjK/6QXhF5EfWsHRdtPCkljHuUkQY6MzVcMRazNZ3FC+aMnmVbaV1D
+0bFdOZpkuvUMDGYWavCRh6cveiNR2W3mzzJkCtAilc9ZC2uUM6ENJeLHOUi6rIJL
+Daj/pAcFj3ExCYivTaUNGzFO76GN7bZz1uLUlzjBq8+ImRqGYIV9crTOifFVwm6u
+8z/98u7MHBgUyNpqN6eTsK3vuQ41IfquiVDbM7VcdbrKQ/suExgY7tGdI7bwyIkU
+T9vPyDcdbKy/O7AJMxjH
+=7/A/
+-----END PGP SIGNATURE-----
+
+--=-1DXZmgPadoca42y1QXNa--
+
