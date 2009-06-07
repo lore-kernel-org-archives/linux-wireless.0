@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41437 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014AbZFBUbJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51873 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753208AbZFGPAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:31:09 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] cfg80211: make ieee80211_get_mesh_hdrlen() static
-Date: Tue,  2 Jun 2009 16:31:10 -0400
-Message-Id: <1243974670-15760-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 7 Jun 2009 11:00:30 -0400
+Date: Sun, 7 Jun 2009 10:58:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-06-04
+Message-ID: <20090607145830.GA2736@tuxdriver.com>
+References: <20090604152011.GC2839@tuxdriver.com> <20090607.033751.191866033.davem@davemloft.net> <4A2BCC41.1060508@hartkopp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A2BCC41.1060508@hartkopp.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes spares warning:
-net/wireless/util.c:261:5: warning:
-symbol 'ieee80211_get_mesh_hdrlen' was not declared. Should it be static?
+On Sun, Jun 07, 2009 at 04:18:41PM +0200, Oliver Hartkopp wrote:
+> David Miller wrote:
+> > From: "John W. Linville" <linville@tuxdriver.com>
+> > Date: Thu, 4 Jun 2009 11:20:11 -0400
+> > 
+> >> Hopefully this is (almost?) the last wireless pull request for
+> >> non-bugfix patches intended for 2.6.31...
+> >>
+> 
+> (..)
+> 
+> >>
+> >> Please let me know if there are problems!
+> > 
+> > Pulled into net-next-2.6 and I'll push it back out to kernel.org
+> > after some build testing.
+> 
+> Hi John,
+> 
+> after pulling the latest net-next-2.6 i got this warning which is probably
+> caused by CONFIG_RFKILL=m in my config:
+> 
+> hartko@vwagwolkf320:~/net-next-2.6$ make oldconfig
+> scripts/kconfig/conf -o arch/x86/Kconfig
+> .config:614:warning: symbol value 'm' invalid for RFKILL_INPUT
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/util.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+That functionality is no longer available as a module.  If you need
+it, then select Y.
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index d072bff..2043ee9 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -259,7 +259,7 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- 
--int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
-+static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
- {
- 	int ae = meshhdr->flags & MESH_FLAGS_AE;
- 	/* 7.1.3.5a.2 */
+Hth!
+
+John
 -- 
-1.6.0.6
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
