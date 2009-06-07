@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mrs.ro ([207.192.75.59]:50396 "EHLO li37-59.members.linode.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751379AbZF3Psb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 11:48:31 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by li37-59.members.linode.com (Postfix) with ESMTP id 5B89A794B
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 18:48:34 +0300 (EEST)
-Received: from li37-59.members.linode.com ([127.0.0.1])
-	by localhost (mrs.ro [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
-	id HJMED8Mfk6pn for <linux-wireless@vger.kernel.org>;
-	Tue, 30 Jun 2009 18:48:27 +0300 (EEST)
-Received: from [192.168.0.130] (unknown [86.35.141.223])
-	by li37-59.members.linode.com (Postfix) with ESMTP id AD2C9794A
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 18:48:26 +0300 (EEST)
-Message-ID: <4A4A33C8.5080601@mrs.ro>
-Date: Tue, 30 Jun 2009 18:48:24 +0300
-From: Valentin Manea <linux-wireless@mrs.ro>
+Received: from wf-out-1314.google.com ([209.85.200.171]:44027 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046AbZFGVtB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2009 17:49:01 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1132057wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 14:49:02 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+Date: Sun, 7 Jun 2009 21:49:02 +0000
+Message-ID: <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
+Subject: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and broadcast frames
-References: <4A49EEC3.3060108@mrs.ro>
-In-Reply-To: <4A49EEC3.3060108@mrs.ro>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/mixed; boundary=000e0cd2287c064044046bc918ce
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Again,
+--000e0cd2287c064044046bc918ce
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-    I have been studying the network statistics for this problem and 
-they don't really make sense to me, if I bombard the wireless device 
-with broadcast packets *RX packets* in ifconfig increases very fast but 
-*RX bytes* does not. However when I'm doing the same thing over the 
-wired device both of them increase very fast.
-    This doesn't really make sense to me, I don't understand where those 
-packets are going exactly.
 
-Thanks,
-Valentin
 
-On 06/30/2009 01:53 PM, Valentin Manea wrote:
-> Hi,
->
->    I've been working on a small project that basically sends broadcast 
-> UDP frames from an Wireless AP to multiple clients. While I can send 
-> UDP frames just fine from the AP to the client the only a few 
-> broadcast frames reach my client. What is really puzzling is that on 
-> the client machine using tcpdump I can see all the broadcast frames 
-> arriving, my application sees only a small fraction of them.
->
-> * I have suspected some bug in the application, but the same app using 
-> the same computers works fine when using wired ethernet.
-> * I have used both 2.6.30 and the latest wireless-testing kernels, the 
-> results are the same
-> * I have used the latest hostapd in AP mode
-> * I did the same tests in ad-hoc mode, the results are the same
-> * I used both atheros and intel wireless cards, the problem is not 
-> related to the wireless drivers.
->
-> Any ideea what I'm doing wrong?
->
->
-> Thanks,
-> Valentin
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--000e0cd2287c064044046bc918ce
+Content-Type: text/x-diff; charset=US-ASCII; name="tkip_core.diff"
+Content-Disposition: attachment; filename="tkip_core.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fvoa8l1e0
+
+VGhlIG1hYzgwMjExIHRraXAgY29kZSB3b24ndCBjYWxsIHVwZGF0ZV90a2lwX2tleSwgaWYgc29t
+ZSByeCBwYWNrZXRzCmdldCByZWNlaXZlZCB3aXRob3V0IEtFWV9GTEFHX1VQTE9BREVEX1RPX0hB
+UkRXQVJFLiBUaGlzIGNhbiBoYXBwZW4gb24KZmlyc3QgcGFja2V0IGJlY2F1c2UgdGhlIGhhcmR3
+YXJlIGtleSBzdHVmZiBpcyBjYWxsZWQgYXN5bmNocm9ub3VzbHkgd2l0aCAKdG9kbyB3b3JrcXVl
+dWUuCgpUaGlzIHBhdGNoIHdvcmthcm91bmQgdGhhdCBieSBhbHdheXMgY2FsbGluZyB1cGRhdGVf
+dGtpcF9rZXkgaWYKdGhlIHBhY2tldCB3YXNuJ3QgZGVjcnlwdGVkIGJ5IHRoZSBoYXJkd2FyZS4K
+ClNpZ25lZC1vZmYtYnk6IEdyZWdvciBLb3dza2kgPGdyZWdvci5rb3dza2lAZ21haWwuY29tPgpJ
+bmRleDogbGludXgtMi42L25ldC9tYWM4MDIxMS90a2lwLmMKPT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgt
+Mi42Lm9yaWcvbmV0L21hYzgwMjExL3RraXAuYwkyMDA5LTA2LTA3IDE5OjMyOjI2LjAwMDAwMDAw
+MCArMDAwMAorKysgbGludXgtMi42L25ldC9tYWM4MDIxMS90a2lwLmMJMjAwOS0wNi0wNyAyMToz
+MTozMS4wMDAwMDAwMDAgKzAwMDAKQEAgLTI5OCwxOSArMjk4LDE5IEBACiAJCQlwcmludGsoIlxu
+Iik7CiAJCX0KICNlbmRpZgotCQlpZiAoa2V5LT5sb2NhbC0+b3BzLT51cGRhdGVfdGtpcF9rZXkg
+JiYKLQkJCWtleS0+ZmxhZ3MgJiBLRVlfRkxBR19VUExPQURFRF9UT19IQVJEV0FSRSkgewotCQkJ
+dTggYmNhc3RbRVRIX0FMRU5dID0KLQkJCQl7MHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwg
+MHhmZn07Ci0JCQl1OCAqc3RhX2FkZHIgPSBrZXktPnN0YS0+c3RhLmFkZHI7CisJfQorCWlmIChr
+ZXktPmxvY2FsLT5vcHMtPnVwZGF0ZV90a2lwX2tleSAmJgorCQlrZXktPmZsYWdzICYgS0VZX0ZM
+QUdfVVBMT0FERURfVE9fSEFSRFdBUkUpIHsKKwkJdTggYmNhc3RbRVRIX0FMRU5dID0KKwkJCXsw
+eGZmLCAweGZmLCAweGZmLCAweGZmLCAweGZmLCAweGZmfTsKKwkJdTggKnN0YV9hZGRyID0ga2V5
+LT5zdGEtPnN0YS5hZGRyOwogCi0JCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIocmEpKQot
+CQkJCXN0YV9hZGRyID0gYmNhc3Q7CisJCWlmIChpc19tdWx0aWNhc3RfZXRoZXJfYWRkcihyYSkp
+CisJCQlzdGFfYWRkciA9IGJjYXN0OwogCi0JCQlrZXktPmxvY2FsLT5vcHMtPnVwZGF0ZV90a2lw
+X2tleSgKLQkJCQlsb2NhbF90b19odyhrZXktPmxvY2FsKSwgJmtleS0+Y29uZiwKLQkJCQlzdGFf
+YWRkciwgaXYzMiwga2V5LT51LnRraXAucnhbcXVldWVdLnAxayk7Ci0JCX0KKwkJa2V5LT5sb2Nh
+bC0+b3BzLT51cGRhdGVfdGtpcF9rZXkoCisJCQlsb2NhbF90b19odyhrZXktPmxvY2FsKSwgJmtl
+eS0+Y29uZiwKKwkJCXN0YV9hZGRyLCBpdjMyLCBrZXktPnUudGtpcC5yeFtxdWV1ZV0ucDFrKTsK
+IAl9CiAKIAl0a2lwX21peGluZ19waGFzZTIodGssICZrZXktPnUudGtpcC5yeFtxdWV1ZV0sIGl2
+MTYsIHJjNGtleSk7Cg==
+--000e0cd2287c064044046bc918ce--
