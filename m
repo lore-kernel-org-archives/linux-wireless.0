@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759562AbZFXLkI (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:63265 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbZFGP1a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 07:40:08 -0400
-Subject: Re: [PATCH 03/10] mac80211: Use rcu_barrier() on unload.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jesper Dangaard Brouer <hawk@comx.dk>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, axboe@kernel.dk,
-	Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, yoshfuji@linux-ipv6.org,
-	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
-	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
-	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
-In-Reply-To: <1245843137.6695.48.camel@localhost.localdomain>
-References: <20090623150330.22490.87327.stgit@localhost>
-	 <20090623150409.22490.99106.stgit@localhost>
-	 <1245770155.21314.38.camel@johannes.local>
-	 <1245837965.6695.45.camel@localhost.localdomain>
-	 <1245838862.21314.48.camel@johannes.local>
-	 <1245843137.6695.48.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YEzT/e4ratx/XQsl9Mjj"
-Date: Wed, 24 Jun 2009 13:39:00 +0200
-Message-Id: <1245843540.21314.49.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 7 Jun 2009 11:27:30 -0400
+Received: by bwz9 with SMTP id 9so2534245bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 08:27:30 -0700 (PDT)
+Message-ID: <4A2BDCB7.7060104@tuffmail.co.uk>
+Date: Sun, 07 Jun 2009 16:28:55 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+References: <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <1243930703.3192.59.camel@localhost.localdomain> <20090603040315.GA10464@khazad-dum.debian.net> <1244008652.4145.7.camel@localhost.localdomain> <20090603213340.GB22809@khazad-dum.debian.net> <1244088806.4145.24.camel@localhost.localdomain> <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com> <20090607125715.GC3340@khazad-dum.debian.net>
+In-Reply-To: <20090607125715.GC3340@khazad-dum.debian.net>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Henrique de Moraes Holschuh wrote:
+> On Sun, 07 Jun 2009, Alan Jenkins wrote:
+>   
+>>  1) remove rfkill_set_global_sw_state()
+>>  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
+>> registration, setting a flag.
+>>  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
+>> events, tho it may as well be set in all events)
+>>  4) rfkill-input preserves existing behaviour - *if enabled* - by
+>> initializing the global state from individual devices which have NVS.
+>> (As before, each _type_ of rfkill device has its own global state).
+>>  5) rfkill devices with NVS will have their current state preserved,
+>> so long as the global state has not yet been set (by userspace or by
+>> rfkill-input).  Of course userspace can change the state in response
+>> to the device being added.
+>>     
+>
+> I can agree to that, it will avoid the regression I have been
+> complaining about, and seems to address the major complaints against
+> what we have now...
+>   
 
---=-YEzT/e4ratx/XQsl9Mjj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, I hope it avoids the objections about NVS in /dev/rfkill. We avoid 
+the separate NVS operation. And it exports the NVS state through the 
+specific device it comes from, rather than exporting it as a global state.
 
-On Wed, 2009-06-24 at 13:32 +0200, Jesper Dangaard Brouer wrote:
+So userspace gets more specific information; at the same time the 
+interface is simpler because the information comes in a single message, 
+and it's less prescriptive because it doesn't push the idea of global 
+state(s) quite so much.
 
-> > > Should it then not be in mesh.c ieee80211_stop_mesh().  We can replac=
-e
-> > > the synchronize_rcu() in this function with a rcu_barrier().
-> >=20
-> > Yes, this seems correct.
-> >=20
-> > johannes
->=20
-> Can I consider this a:
->=20
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> I think it should probably be enhanced (it doesn't have to be enhanced
+> _now_, however) to let the core call back into NVS-providing drivers to
+> checkpoint NVS state.  But that's not something I feel strongly about.
+>   
 
-Yeah,=20
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Ok. I think that feature would be subject to further debate / 
+clarification. So I will ignore it and code up the basics outlined above 
+:-).
 
-johannes
+> Otherwise, the driver will checkpoint to NVS whatever is the state of
+> its rfkill device, which could have been changed outside of the global
+> scope.  While that's exacly what we do right now, it is arguably not the
+> best way to go about it (i.e. it is broken).
+>
+>   
+>> Comments?
+>>     
+>
+> Let's do it :-)
+>   
 
---=-YEzT/e4ratx/XQsl9Mjj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Cool :-). I'll see what I can do.
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKQhBQAAoJEODzc/N7+QmaApEQAKY+MQjzru+Kp3Gn0d62KnpL
-0xKxjQpcEFiqF6OlOjJgDoP7I1f1k5jtYm9DwaL4ptM5DAIH0zTD0Y5slIAu5Bgq
-WmtIWfvrhRhLTkZ9iflySejABl8QCS6hDQlP3Kd9gB8/v+X81iLIJ6VA3q0sC3Pb
-zjEPp3fWp95p9/bJtL08GtgFNYxXBrJqlQmn28QsRG26zQjnaNfioAK/G0U8pO9S
-mW599dxHFZAPC1W88BSVaP5ZkzMibaLREEGR19JGZ8pSeqEz6a9j4PY9A4R0QX72
-odsIovpX6ZftFe1UA3WZrfyLBOXtfPb5F4g92ZTCedde0hU2Y70TUjAojY0PUD0p
-4UvljPCb03r7bBe9ZRcWJ593iWvS5q5FXOZKFBGf/5rtINiRGQ7djrBhRvwyQgMp
-uEpWk6FdZIQIu4kS+oZG3Ipos5ruAbEKgG/Qo3d/B4J2T3/14r2CgpSYLQAlt6/I
-BKub/jT+EYW2z4tMRAKtgLgYo5xNSwT0nMaY2zQ2nFIsX4nKHvippQ5HXFoeg1qB
-sMoR04kHl9oJfpvAqBAD+A1bJUpmIR07YdSb/c1519gQIYIF7TbTAr3VvkR4W3TP
-Mc7pMAu9BWg70RaOccRPD7t0rxzTXlCJ9BGjvtLTw4/AWAPFQ4e5T+MtQZdW6/0l
-n/rDXKSU3b07r4JONNy9
-=grWI
------END PGP SIGNATURE-----
-
---=-YEzT/e4ratx/XQsl9Mjj--
+Alan
 
