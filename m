@@ -1,122 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:59917 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbZFRBMb (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:58392 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754121AbZFGM7V convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 21:12:31 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-References: <1245263058.31588.38.camel@johannes.local>
-	<m1y6rqwpur.fsf@fess.ebiederm.org>
-	<1245276899.31588.57.camel@johannes.local>
-	<m1r5xitpdh.fsf@fess.ebiederm.org>
-	<1245282099.31588.69.camel@johannes.local>
-	<m17hzato0r.fsf@fess.ebiederm.org>
-	<1245283327.31588.74.camel@johannes.local>
-	<m1my86qt73.fsf@fess.ebiederm.org>
-	<1245285541.31588.79.camel@johannes.local>
-From: ebiederm@xmission.com (Eric W. Biederman)
-Date: Wed, 17 Jun 2009 18:12:29 -0700
-In-Reply-To: <1245285541.31588.79.camel@johannes.local> (Johannes Berg's message of "Thu\, 18 Jun 2009 02\:39\:01 +0200")
-Message-ID: <m18wjqqr9e.fsf@fess.ebiederm.org>
+	Sun, 7 Jun 2009 08:59:21 -0400
+Received: by bwz9 with SMTP id 9so2481766bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 05:59:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Subject: Re: [PATCH] wireless extensions: play with netns
+In-Reply-To: <4A2BB2BB.7000605@cern.ch>
+References: <4A2BA2E0.7020709@cern.ch> <4A2BB2BB.7000605@cern.ch>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 7 Jun 2009 14:59:01 +0200
+Message-ID: <69e28c910906070559n6b9db923ucd73ccfc78cb382f@mail.gmail.com>
+Subject: Re: Which firmware for Belkin F5D7050 (ISL3880 + NET2280)
+To: Wojciech Zabolotny CERN <wojciech.zabolotny@cern.ch>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Sun, Jun 7, 2009 at 2:29 PM, Wojciech Zabolotny
+CERN<wojciech.zabolotny@cern.ch> wrote:
+> Hi,
+>
+> I've managed to run my NIC with the older firmware:
+> http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.1.0.lm86.arm
+>
+> Now I get the following output in dmesg:
+>
+> cfg80211: Using static regulatory domain info
+> cfg80211: Regulatory domain: US
+>    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>    (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+>    (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+>    (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+>    (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+>    (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+>    (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+> cfg80211: Calling CRDA for country: US
+> usb 1-4: firmware: requesting isl3886usb
+> phy0: p54 detected a LM86 firmware
+> p54: rx_mtu reduced from 3240 to 2392
+> phy0: FW rev 2.13.1.0 - Softmac protocol 5.5
+> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+> phy0: hwaddr 00:30:43:11:33:39, MAC:isl3886 RF:Frisbee
+> wmaster0 (p54usb): not using net_device_ops yet
+> phy0: Selected rate control algorithm 'minstrel'
+> wlan0 (p54usb): not using net_device_ops yet
+> usbcore: registered new interface driver p54usb
+>
+>
+> Then everything works correctly.
+> So it seems, that the new firmware is just incompatible with this card :-(.
 
-> On Wed, 2009-06-17 at 17:30 -0700, Eric W. Biederman wrote:
->
->> >> This of course gives you a network namespace that can be found by for_each_net rcu
->> >> while the per net exit functions are running.  I think that opens up to races
->> >> that I don't want to think about.
->> >
->> > Indeed. Can we move the rcu_barrier() up? Or we could insert a
->> > synchronize_rcu() (which is sufficient for rcu_read_lock) before the
->> > exit functions are run?
->> 
->> I don't think we can move the barrier.   But adding an extra synchronize_rcu
->> should be fine.  We are talking about the slowest of the slow paths here.
->> It is so slow it even gets it's own kernel thread.
->
-> Ok :) New patch below.
->
-> Yes, you're right, we can't move it, it might still be used from exit
-> for net_assign_generic or so.
+What about an LM87 firmware? It should be supported now...
 
-Except for the changelog which is wrong about not needing any rcu
-primitives I can't spot any bugs.
+> --
+> BR, WZab
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> johannes
->
-> Subject: net: make namespace iteration possible under RCU
->
-> We already call rcu_barrier(), so all we need to take
-> care of is using proper RCU list add/del primitives.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  include/net/net_namespace.h |    3 +++
->  net/core/net_namespace.c    |   10 +++++++---
->  2 files changed, 10 insertions(+), 3 deletions(-)
->
-> --- wireless-testing.orig/include/net/net_namespace.h	2009-06-18 01:36:26.000000000 +0200
-> +++ wireless-testing/include/net/net_namespace.h	2009-06-18 02:17:14.000000000 +0200
-> @@ -211,6 +211,9 @@ static inline struct net *read_pnet(stru
->  #define for_each_net(VAR)				\
->  	list_for_each_entry(VAR, &net_namespace_list, list)
->  
-> +#define for_each_net_rcu(VAR)				\
-> +	list_for_each_entry_rcu(VAR, &net_namespace_list, list)
-> +
->  #ifdef CONFIG_NET_NS
->  #define __net_init
->  #define __net_exit
-> --- wireless-testing.orig/net/core/net_namespace.c	2009-06-18 01:36:39.000000000 +0200
-> +++ wireless-testing/net/core/net_namespace.c	2009-06-18 02:03:06.000000000 +0200
-> @@ -6,6 +6,7 @@
->  #include <linux/delay.h>
->  #include <linux/sched.h>
->  #include <linux/idr.h>
-> +#include <linux/rculist.h>
->  #include <net/net_namespace.h>
->  #include <net/netns/generic.h>
->  
-> @@ -134,7 +135,7 @@ struct net *copy_net_ns(unsigned long fl
->  	err = setup_net(new_net);
->  	if (!err) {
->  		rtnl_lock();
-> -		list_add_tail(&new_net->list, &net_namespace_list);
-> +		list_add_tail_rcu(&new_net->list, &net_namespace_list);
->  		rtnl_unlock();
->  	}
->  	mutex_unlock(&net_mutex);
-> @@ -163,9 +164,12 @@ static void cleanup_net(struct work_stru
->  
->  	/* Don't let anyone else find us. */
->  	rtnl_lock();
-> -	list_del(&net->list);
-> +	list_del_rcu(&net->list);
->  	rtnl_unlock();
->  
-> +	/* if somebody is rcu-iterating the list, wait */
-> +	synchronize_rcu();
-> +
->  	/* Run all of the network namespace exit methods */
->  	list_for_each_entry_reverse(ops, &pernet_list, list) {
->  		if (ops->exit)
-> @@ -227,7 +231,7 @@ static int __init net_ns_init(void)
->  	err = setup_net(&init_net);
->  
->  	rtnl_lock();
-> -	list_add_tail(&init_net.list, &net_namespace_list);
-> +	list_add_tail_rcu(&init_net.list, &net_namespace_list);
->  	rtnl_unlock();
->  
->  	mutex_unlock(&net_mutex);
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
