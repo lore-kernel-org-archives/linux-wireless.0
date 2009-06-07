@@ -1,46 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:64712 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753672AbZFLLQU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:16:20 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 17/33] wl12xx: Fix incorrect warning message.
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:16:07 +0300
-Message-ID: <20090612111607.8877.84870.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from main.gmane.org ([80.91.229.2]:45161 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753054AbZFGO01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2009 10:26:27 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MDJKL-0002LS-Qf
+	for linux-wireless@vger.kernel.org; Sun, 07 Jun 2009 14:26:26 +0000
+Received: from p5086E73E.dip.t-dialin.net ([80.134.231.62])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 14:26:25 +0000
+Received: from sparcoular by p5086E73E.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 14:26:25 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus <sparcoular@t-online.de>
+Subject: Re: bcm43xx 5.10.38.35 firmware
+Date: Sun, 7 Jun 2009 14:26:00 +0000 (UTC)
+Message-ID: <loom.20090607T140512-723@post.gmane.org>
+References: <loom.20090607T124008-575@post.gmane.org> <4A2BBD98.4040708@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ari Kauppi <Ext-Ari.Kauppi@nokia.com>
+Larry Finger <Larry.Finger@...> writes:
 
-A warning message in wl12xx_acx_event_mbox_mask has a copy/paste
-error. Fix it to print the correct acx command.
+> 
+> Markus wrote:
+> > Hello,
+> > 
+> > 
+> > after MacOSX Airport firmware update 5.10.38.35
+> > 
+> > (bcm43xx/ Macbook Core2Duo SR)
+> > 
+> > I cannot connect to my Wlan-Router anymore.
+> > 
+> > 
+> > The b43-module gets modprobed without errors
+> > 
+> > and nm-applet shows my Access-Points SSID.
+> > 
+> > Alas, it won't establish a connection to it.
+> > 
+> > 
+> > Any clues?
+> 
+> Please post all items in dmesg that pertain to ssb or b43 using
+> 
+> dmesg | egrep "ssb|b43"
+> 
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Ari Kauppi <Ext-Ari.Kauppi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
 
- drivers/net/wireless/wl12xx/acx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--------------------------
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index a6b8945..8227d6d 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -735,7 +735,7 @@ int wl12xx_acx_event_mbox_mask(struct wl12xx *wl, u32 event_mask)
- 	ret = wl12xx_cmd_configure(wl, ACX_EVENT_MBOX_MASK,
- 				   mask, sizeof(*mask));
- 	if (ret < 0) {
--		wl12xx_warning("failed to set aid: %d", ret);
-+		wl12xx_warning("failed to set acx_event_mbox_mask: %d", ret);
- 		goto out;
- 	}
- 
+dmesg | egrep "ssb|b43"
+
+
+[  101.205300] b43-pci-bridge 0000:02:00.0: PCI
+INT A -> GSI 16 (level, low) -> IRQ 16
+
+[  101.205322] b43-pci-bridge 0000:02:00.0: setting
+latency timer to 64
+
+[  101.272313] ssb: Sonics Silicon Backplane found
+on PCI device 0000:02:00.0
+
+
+----------------
+
+lspci | egrep BCM
+
+
+02:00.0 Network controller: Broadcom Corporation
+ BCM4328 802.11a/b/g/n (rev 03)
+
+
+---------------------------
+
+BTW I don't know if the b43 official Kernel Module ever worked
+
+with my WIFI Controller. I'm using Ubuntu and as with kernel
+
+2.28 I could enable the proprietary Broadcom Driver via
+
+the "Restricted Drivers Manager". And that Driver doesn't seem
+
+ to work now anymore.
+
+
+
+The above command outputs are nevertheless produced using
+Kernel 2.6.30 and the official b43 module.
+
+Is my BCM-Chip supported by the official driver anyway? 
+
+
+
+iwconfig can't find a wireless-supporting device either.
+
+Only eth0, loopback and the (fw-controller?)
+
+The proprietary driver lists eth1 in addition to that.
+
 
