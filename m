@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:35743 "EHLO
-	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754834AbZF3VTg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56733 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753336AbZFGM22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 17:19:36 -0400
-Subject: [PATCH 5/5] Unbury Makefile-meta config definitions.
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 30 Jun 2009 16:19:40 -0500
-Message-Id: <1246396780.13176.265.camel@jdl-desktop>
+	Sun, 7 Jun 2009 08:28:28 -0400
+Subject: Re: [PATCH] ath5k: added cfg80211 based rfkill support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tobias Doerffel <tobias.doerffel@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1244374833-11987-1-git-send-email-tobias.doerffel@gmail.com>
+References: <1244374833-11987-1-git-send-email-tobias.doerffel@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hVZFKh8Tgo4LvW2cLvoC"
+Date: Sun, 07 Jun 2009 14:28:24 +0200
+Message-Id: <1244377705.2907.4.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rather than having them buried in the middle of the Makefile,
-relocate the "quiet/not-quiet" options, MKDIR and INSTALL definitions
-to the top of the file.
 
-Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
----
- Makefile |   23 ++++++++++++-----------
- 1 files changed, 12 insertions(+), 11 deletions(-)
+--=-hVZFKh8Tgo4LvW2cLvoC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Makefile b/Makefile
-index b755b67..9f9ae01 100644
---- a/Makefile
-+++ b/Makefile
-@@ -25,6 +25,18 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
- PUBKEY_DIR?=pubkeys
- 
- 
-+MKDIR ?= mkdir -p
-+INSTALL ?= install
-+
-+
-+ifeq ($(V),1)
-+    Q=
-+    NQ=@true
-+else
-+    Q=@
-+    NQ=@echo
-+endif
-+
- #
- # Determine what target and host libraries and executables
- # need to be built as that will determine what libraries will
-@@ -236,17 +248,6 @@ verify: $(REG_BIN) host/regdbdump
- 	$(Q)./host/regdbdump $(REG_BIN) >/dev/null
- 
- 
--MKDIR ?= mkdir -p
--INSTALL ?= install
--
--ifeq ($(V),1)
--Q=
--NQ=@true
--else
--Q=@
--NQ=@echo
--endif
--
- $(REG_BIN):
- 	$(NQ) '  EXIST ' $(REG_BIN)
- 	$(NQ)
--- 
-1.6.3.GIT
+On Sun, 2009-06-07 at 13:40 +0200, Tobias Doerffel wrote:
 
+> +config ATH5K_RFKILL
+> +	bool "Atheros 5xxx rfkill support"
+> +	depends on RFKILL
+> +	depends on ATH5K
+> +	default y
+> +	---help---
+> +	  Include support for enabling/disabling WiFi via rfkill switch
+> +	  with Atheros 5xxx cards
 
+This shouldn't be necessary. All APIs are always present.
+
+johannes
+
+--=-hVZFKh8Tgo4LvW2cLvoC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKK7JlAAoJEODzc/N7+QmaUHQP/2Qy3GGE4YWm138scf0Yo0yg
+W6oIuPfn150JNjUmJ3QFnpcHFgbzV9BwpwyjtwWcf9+hKFQpLECnZSoHBQZ/qfTb
+8hCEyyB1Nxoc01iFRNGXxbnHTMLZOheYypES8eTM0myZEdfItrUGVgtsPBlYE67G
+vIW+vvIg9euyUatSSkAQlntP1C/D7uDF18gmf6qMxq8vZPMEGQdJwkrso3D4+RcJ
+PbCK1e96QhHkRCaSIl7D/p79wPJKbyBuLIz3usg8QX5yKDiqGfYkQoK0j+eZao2i
+Cxp1yJPKkXXvaVgm1W/2Sjzn54OPdB1sZIuFR7DBjL8ajwtb6VCRA4x1VqJ5XvZn
+sil5hNbpBj/xLSVbI0KjEWOqc1x4Oi8vrgsMZpClN2yeCgVHLA3XlFbzrHGmz34A
+S6EyEXhKu/nJHUC1OGkLnBQakIBl0zLo4lh7YNuV9KXeuiD5ul0yTKaG1fAUD/jv
+aUkAj8LOlYNBOuVJgSgU6JIIEiKlJcZnfbIQ3lQHy4dRJHvcsRlz5Zl/ZMHFGQnj
+HMCRy0rH/9oUoPGKCJzXRr6beHQG1V/DTJ7bioKKmzzhqBX9wED87x1FKD1g1srL
+TWm8Ti3CerJUWk4dG0oZi0xDS4Vi9tIr+ovUuTKAcSlbSoz1Ub3GYK2+kyuH0Db0
+exaBIoPIqwKFnCpboD+r
+=H5QT
+-----END PGP SIGNATURE-----
+
+--=-hVZFKh8Tgo4LvW2cLvoC--
 
