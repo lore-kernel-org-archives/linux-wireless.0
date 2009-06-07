@@ -1,146 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52244 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757528AbZF2H7a (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:36686 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750944AbZFGNy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 03:59:30 -0400
-Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
- way
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ivan.kuten@promwad.com
-Cc: linux-wireless@vger.kernel.org,
-	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
-In-Reply-To: <4A475F82.9040007@promwad.com>
-References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
-	 <1245150895.8623.3.camel@johannes.local>  <4A475F82.9040007@promwad.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m/FOmKfnfD653g/xhurV"
-Date: Mon, 29 Jun 2009 09:58:40 +0200
-Message-Id: <1246262320.5947.3.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 7 Jun 2009 09:54:58 -0400
+Date: Sun, 7 Jun 2009 10:54:56 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+Message-ID: <20090607135456.GE3340@khazad-dum.debian.net>
+References: <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk> <1243932109.3192.73.camel@localhost.localdomain> <20090603041030.GB10464@khazad-dum.debian.net> <1244034216.22679.22.camel@localhost.localdomain> <20090603214040.GD22809@khazad-dum.debian.net> <1244089486.4145.33.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1244089486.4145.33.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 04 Jun 2009, Marcel Holtmann wrote:
+> > > > > Forget about this EPO crap. That is just a stupid concept anyway.
+> > > > 
+> > > > Is it?  So, if I use the _hardware switch_ on my laptop to kill all
+> > > > internal radios, it shouldn't be enforced by the OS on extra radios I
+> > > > plugged?  Or on shitty internal WLAN cards that doesn't tie properly to
+> > > > the mini-pci and mini-pcie hardware kill lines?
+> > > > 
+> > > > And any userspace PoS program can decide to bring up such radios that
+> > > > are not hardware-killed even if I am clearly trying to disable them all?
+> > > 
+> > > You hardkilled.  Of course it should bring down everything.  If you
+> > > don't want to hardkill, then disable specific radios via /sys or some
+> > > UI.  The hardswitch is the "eject" button.
+> > 
+> > That's exactly my point.  I want EPO to mean "no, you cannot turn this crap
+> > on, GO AWAY" for anyone but root (or whomever SELinux allowed to do it,
+> > etc).
+> 
+> let me repeat, this is what you want and that is policy. Feel free to
+> implement that in userspace. Leave such policy out of the kernel.
 
---=-m/FOmKfnfD653g/xhurV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+EPO is not policy, it is functionality.  Entering EPO and going out of
+EPO state would be policy, though.
 
-On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
-> Hello,
->=20
-> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unaligned=
- allocations
-> for creq->ssids and creq->channels. Should it be something like that?
+What happens while in EPO state is NOT policy.  The very definition of
+EPO is that, once enabled, it cannot be overriden until it is disabled
+(and it is usual to have strong rules for how it can be disabled, but
+this is not important right now).  EPO is a term from real world
+engineering, its meaning is set in stone.
 
-Seems alright, but there is more than one instance of this, maybe you
-can make a function to allocate a scan request properly and have it be
-called from all the places it's needed.
+You can remove the EPO functionality and add a "switch all radios off"
+and "switch all radios on" accell commands.  But that's all you can do
+if you depend on userspace.  It will -not- be EPO.
 
-johannes
+You can have EPO in the kernel, and have userspace command the kernel to
+enter and exit EPO state.
 
-> Modified: trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wi=
-reless/scan.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D
-> --- trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless=
-/scan.c (original)
-> +++ trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless=
-/scan.c Fri Jun 26 14:00:52 2009
-> @@ -619,7 +619,7 @@
->  		if (wiphy->bands[band])
->  			n_channels +=3D wiphy->bands[band]->n_channels;
->=20
-> -	creq =3D kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
-> +	creq =3D kzalloc(roundup(sizeof(*creq), 4) + roundup(sizeof(struct cfg8=
-0211_ssid), 4) +
->  		       n_channels * sizeof(void *),
->  		       GFP_ATOMIC);
->  	if (!creq) {
-> @@ -629,8 +629,8 @@
->=20
->  	creq->wiphy =3D wiphy;
->  	creq->ifidx =3D dev->ifindex;
-> -	creq->ssids =3D (void *)(creq + 1);
-> -	creq->channels =3D (void *)(creq->ssids + 1);
-> +	creq->ssids =3D (void *)creq + roundup(sizeof(*creq), 4);
-> +	creq->channels =3D (void *)creq->ssids + roundup(sizeof(*creq->ssids), =
-4);
->  	creq->n_channels =3D n_channels;
->  	creq->n_ssids =3D 1;
->=20
-> Regards,
-> Ivan
->=20
-> > On Tue, 2009-06-16 at 13:54 +0300, Yauhen Kharuzhy wrote:
-> >> When we try to run RTL8187 driver on AD BlackFin platform, we got
-> >> messages from kernel about unaligned memory access at
-> >> compare_ether_addr() calls.
-> >>
-> >> Replacing of compare_ether_addr() by memcmp() fixes this problem.
-> >=20
-> > This shouldn't be necessary. Which operand is unaligned?
-> >=20
-> >> --- a/net/mac80211/ibss.c
-> >> +++ b/net/mac80211/ibss.c
-> >> @@ -395,7 +395,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct iee=
-e80211_sub_if_data *sdata,
-> >>  		return NULL;
-> >>  	}
-> >> =20
-> >> -	if (compare_ether_addr(bssid, sdata->u.ibss.bssid))
-> >> +	if (memcmp(bssid, sdata->u.ibss.bssid, ETH_ALEN))
-> >>  		return NULL;
-> >=20
-> > So in this case it seems that it is possible that u.ibss.bssid is not
-> > aligned, consider fixing by doing
-> >=20
-> > --- ieee80211_i.h
-> > +++ ieee80211_i.h
-> > -	u8 bssid[ETH_ALEN];
-> > +	u8 bssid[ETH_ALEN] __align(2);
-> >=20
-> > or so instead.
-> > =20
-> >> --- a/net/wireless/scan.c
-> >> +++ b/net/wireless/scan.c
-> >> @@ -134,7 +134,7 @@ static bool is_bss(struct cfg80211_bss *a,
-> >>  {
-> >>  	const u8 *ssidie;
-> >> =20
-> >> -	if (bssid && compare_ether_addr(a->bssid, bssid))
-> >> +	if (bssid && memcmp(a->bssid, bssid, ETH_ALEN))
-> >=20
-> > Since a->bssid is after a pointer I can't see how it would be unaligned=
-,
-> > and bssid should be unaligned only if the call trace shows it's coming
-> > from the above u.ibss.bssid.
-> >=20
-> > johannes
->=20
->=20
+I have more to say on that, and will do so in a separate email, but I
+don't have the time to properly compose it right now.
 
---=-m/FOmKfnfD653g/xhurV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKSHQsAAoJEODzc/N7+QmaX9IP/3FZ7yky8r4Ph1MRz9T5qCkV
-2WqyVnSI4dCm0XtiX5JL9d5hX49Xq961zvJAev+QsOpo7exU/skpS5Jc5zcyRtn2
-KoUKW4J9jvZC0SnLV9NVopymry+/3AgaNIitATN491WpSavxIANDqUSivZslp3NP
-q45TluCGnwQukhqwMmGvfM0qUrbWzLqGMk6RsfuQRkwl0PXZ3Ye7xtUwBZ67IEPu
-r/PzevUzW8m8Yk1a3dVsYP0rlFjV5JRpyxU/Des0/ggPugUCKb4Q0Rcq5xuHT1fV
-wxQpi03lsr5xCofFawNJGDvok8jnH833iBaA5hCmAMoVP0RTFeQ3ESKpcTs1lB3c
-w+GBmKhH7UYkNLU9QwNkLkz2C1KudFEn4ELWPnz6sq8i72otcwkzhbPeAd1a6fMi
-1712DdzN2QAXSgvG5hR9dliv6q6xUuKjRGN3+l3QEghw3KY8T2YgKOqcoW6mw5jo
-GwyFzcwwk35Fvf70gouWJbgQaTEOatjhip13tcKlN3Q7NcZdpY2lLdm3aDH1x0O1
-N/QyrjLjT7MOfXbFh23+wh+bRzC4I6Q3zA7n3blNvbHVhGGHoveP3Lr6SSoBAkGa
-CuQlacemlCaonlKVQGHC1wh4NzwWMFvhwK2I8uv8yKO1DkrNH7U1LE03dubbq6Vz
-0SGIHkDH9TqN5Sxxn4wC
-=FnGN
------END PGP SIGNATURE-----
-
---=-m/FOmKfnfD653g/xhurV--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
