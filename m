@@ -1,104 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:54982 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752576AbZF0Jtz (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:52265 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbZFGR0O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jun 2009 05:49:55 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [2.6.31-rc1] iwlagn (4965): no wireless due to RFKILL problem
-Date: Sat, 27 Jun 2009 11:49:54 +0200
-References: <200906261336.29318.elendil@planet.nl> <200906261410.58808.elendil@planet.nl> <1246048132.21314.75.camel@johannes.local>
-In-Reply-To: <1246048132.21314.75.camel@johannes.local>
+	Sun, 7 Jun 2009 13:26:14 -0400
+Received: by bwz9 with SMTP id 9so2576147bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 10:26:15 -0700 (PDT)
+Message-ID: <4A2BF833.1050906@tuffmail.co.uk>
+Date: Sun, 07 Jun 2009 18:26:11 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906271149.56051.elendil@planet.nl>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: create useful userspace interface
+References: <1243885494.3015.29.camel@localhost.localdomain>	 <4A24559D.7010201@tuffmail.co.uk>	 <1243928308.3192.38.camel@localhost.localdomain>	 <1243929706.20064.7.camel@johannes.local>	 <1243930703.3192.59.camel@localhost.localdomain>	 <20090603040315.GA10464@khazad-dum.debian.net>	 <1244008652.4145.7.camel@localhost.localdomain>	 <20090603213340.GB22809@khazad-dum.debian.net>	 <1244088806.4145.24.camel@localhost.localdomain>	 <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>	 <20090607125715.GC3340@khazad-dum.debian.net> <1244394963.12956.1.camel@johannes.local>
+In-Reply-To: <1244394963.12956.1.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 June 2009, Johannes Berg wrote:
-> On Fri, 2009-06-26 at 14:10 +0200, Frans Pop wrote:
-> > Well, with 2.6.30 hp-wmi worked together with rfkill without
-> > problems. Looking at the commit logs, it looks like the rfkill
-> > rewrite by Johannes and Alan is the cause here. CCs added.
+Johannes Berg wrote:
+> On Sun, 2009-06-07 at 09:57 -0300, Henrique de Moraes Holschuh wrote:
 >
-> Hmm, looks like there might be another polarity error, try this:
-> -       int query = BIT(b + 8) | ((!!blocked) << b);
-> +       int query = BIT(b + 8) | ((!blocked) << b);
+>   
+>>>  1) remove rfkill_set_global_sw_state()
+>>>  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
+>>> registration, setting a flag.
+>>>  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
+>>> events, tho it may as well be set in all events)
+>>>  4) rfkill-input preserves existing behaviour - *if enabled* - by
+>>> initializing the global state from individual devices which have NVS.
+>>> (As before, each _type_ of rfkill device has its own global state).
+>>>  5) rfkill devices with NVS will have their current state preserved,
+>>> so long as the global state has not yet been set (by userspace or by
+>>> rfkill-input).  Of course userspace can change the state in response
+>>> to the device being added.
+>>>       
+>
+>   
+>> Let's do it :-)
+>>     
+>
+>
+> Alan, you're right in that we currently overwrite devices with the
+> global state upon registration. My suggestion would be to not do that
+> when set_sw_state() has been called on the device before it was
+> registered, by simply keeping track of that. Anyone want to propose a
+> patch?
+>
+> johannes
+>   
 
-Thanks Johannes, that makes wireless work again.
+I'll have a go.  It seems within my abilities and I have hardware to
+test it on.  What could possibly go wrong :-).
 
-However, I just saw another possible issue.
+I'll try to do it in one swoop, get rid of set_global_sw_state() and
+convert tp-acpi as well as eeepc-laptop.
 
-When I disable wireless using the hardware switch and the enable it again
-almost immediately after on 2.6.30, I get:
-[disable]
-iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
-Kill switch must be turned off for wireless networking to work.
-usb 3-1: USB disconnect, address 2
-[enable]
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-usb 3-1: new full speed USB device using uhci_hcd and address 3
-usb 3-1: configuration #1 chosen from 1 choice
-wlan0: no probe response from AP 00:14:c1:38:e5:15 - disassociating
-iwlagn 0000:10:00.0: index 0 not used in uCode key table.
-wlan0: authenticate with AP 00:14:c1:38:e5:15
-wlan0: authenticate with AP 00:14:c1:38:e5:15
-wlan0: authenticated
-wlan0: associate with AP 00:14:c1:38:e5:15
-wlan0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
-wlan0: associated
-
-And without any other action networking is up again.
-
-With 2.6.31 I get this:
-[disable]
-wlan0: deauthenticating by local choice (reason=3)
-iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
-mac80211-phy0: failed to remove key (0, 00:14:c1:38:e5:15) from hardware (-5)
-iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
-mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-5)
-usb 3-1: USB disconnect, address 2
-[enable]
-usb 3-1: new full speed USB device using uhci_hcd and address 3
-usb 3-1: configuration #1 chosen from 1 choice
-
-A lot uglier with those errors. And after that I have to run ifdown/ifup
-before networking is up again (ifup only does not work as it will complain
-"interface already configured"):
-
-[ifdown wlan0]
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[ifup wlan 0]
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-wlan0: authenticate with AP 00:14:c1:38:e5:15
-wlan0: authenticated
-wlan0: associate with AP 00:14:c1:38:e5:15
-wlan0: RX AssocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
-wlan0: associated
-ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-
-BTW, would it make sense to bring back the first two lines shown with .30
-(or at least the first one):
-   iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
-   Kill switch must be turned off for wireless networking to work.
-IMHO it's good to register the reason for the disconnect.
-
-Cheers,
-FJP
+Thanks
+Alan
