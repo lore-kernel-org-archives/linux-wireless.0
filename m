@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47278 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735AbZFFAEC (ORCPT
+Received: from mail-px0-f187.google.com ([209.85.216.187]:53348 "EHLO
+	mail-px0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782AbZFHGI1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 20:04:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH v2 11/15] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
-Date: Fri,  5 Jun 2009 20:03:45 -0400
-Message-Id: <1244246629-28179-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 8 Jun 2009 02:08:27 -0400
+Received: by pxi17 with SMTP id 17so213970pxi.33
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 23:08:29 -0700 (PDT)
+Message-ID: <4A2CA95B.2050605@gmail.com>
+Date: Mon, 08 Jun 2009 16:02:03 +1000
+From: Julian Calaby <julian.calaby@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] compat-wireless: Add entry for master-tag in .gitignore
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We check for this condition early on in our mac80211 get_rate()
-callback ath_get_rate(), so remove this check later down the path.
+master-tag wasn't mentioned in .gitignore, despite it being manufactured by
+scripts/admin-update.sh.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ .gitignore |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 9907f2f..d8d2152 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -783,7 +783,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
- 	 */
- 	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
--	    !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
- 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
- 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
- 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
-@@ -890,9 +889,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	 *
- 	 * FIXME: Fix duration
- 	 */
--	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
--	    (ieee80211_has_morefrags(fc) ||
--	     (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
-+	if (ieee80211_has_morefrags(fc) ||
-+	    (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
- 		rates[1].count = rates[2].count = rates[3].count = 0;
- 		rates[1].idx = rates[2].idx = rates[3].idx = 0;
- 		rates[0].count = ATH_TXMAXTRY;
--- 
-1.6.0.6
-
+diff --git a/.gitignore b/.gitignore
+index 6b78bab..b6a26d3 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -4,6 +4,7 @@ net
+ *~
+ git-describe
+ compat-release
++master-tag
+ .compat_autoconf*
+ .config.md5
+ .config.mk_md5sum.txt
