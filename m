@@ -1,79 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:35144 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981AbZFVVPp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 17:15:45 -0400
-Date: Mon, 22 Jun 2009 23:15:40 +0200
-From: Pavel Machek <pavel@ucw.cz>
+Received: from mga03.intel.com ([143.182.124.21]:48075 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750727AbZFHRv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 13:51:28 -0400
+Subject: Re: [PATCH v2 13/15] iwlwifi: use ieee80211_is_data(fc)
+From: reinette chatre <reinette.chatre@intel.com>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: torvalds@linux-foundation.org, Greg KH <greg@kroah.com>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"j@w1.fi" <j@w1.fi>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
-Subject: Re: [PATCH] Documentation: add documentation summary for rc-series
-	and merge window
-Message-ID: <20090622211540.GD24236@elf.ucw.cz>
-References: <20090622180438.GG23972@bombadil.infradead.org> <20090622204500.GB24236@elf.ucw.cz> <43e72e890906221411od16be51k2fc811dbf223ed9f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890906221411od16be51k2fc811dbf223ed9f@mail.gmail.com>
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	 <1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Mon, 08 Jun 2009 10:58:29 -0700
+Message-Id: <1244483909.20900.178.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2009-06-22 14:11:45, Luis R. Rodriguez wrote:
-> On Mon, Jun 22, 2009 at 1:45 PM, Pavel Machek<pavel@ucw.cz> wrote:
-> > On Mon 2009-06-22 14:04:38, Luis R. Rodriguez wrote:
-> >> This is losely based on previous discussions on linux-kernel [1][2][3].
-> >> Lets also refer people reading the stable rules to
-> >> Documentation/development-process/.
-> >>
-> >> Also add the number of days it has taken between releases,
-> >> and provide the average for the last 10 releases: 86.0 days.
-> >>
-> >> [1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
-> >> [2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
-> >> [3] http://marc.info/?l=linux-kernel&m=124515657407679&w=2
-> >>
-> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > NAK.
-> >
-> >> +2.0.2: RC-SERIES RULES
-> >> +
-> >> +This section summarizes what kind of patches are accepted before the merge
-> >> +window closes and after it closes. These patches are targeted for the kernel
-> >> +prior to its final release.
-> >> +
-> >> +The rc-series focus should really be to address regressions.
-> >> +
-> >> +2.0.2.0: RC-SERIES RULES PRIOR TO THE RC1 RELEASE
-> >> +
-> >> +These are the types of patches that will get accepted prior to a kernel rc1 release,
-> >> +during the merge window:
-> >> +
-> >> + - it must fix a regression
-> >> + - it must fix a security hole
-> >> + - it must fix a oops/kernel hang
-> >> +
-> >> +Non-intrusive bug fixes or small fixes will not be accepted. If the
-> >> patch in
-> >
-> > What? Prior to rc1, new features are accepted.
+Hi Luis,
+
+On Fri, 2009-06-05 at 17:03 -0700, Luis R. Rodriguez wrote:
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Cc: ipw3945-devel@lists.sourceforge.net
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+>  drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+>  2 files changed, 5 insertions(+), 7 deletions(-)
 > 
-> For maintainers yes, for developers sending to the subsystem
-> maintainer no, at least not for that kernel release being worked on. I
-> can try to make this a little clearer.
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> index 5eb538d..bd2f709 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> @@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>  	s8 scale_action = 0;
+>  	unsigned long flags;
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> -	u16 fc;
+> +	__le16 fc;
+>  	u16 rate_mask = 0;
+>  	s8 max_rate_idx = -1;
+>  	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+> @@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>  		rate_mask = sta->supp_rates[sband->band];
+>  
+>  	/* Send management frames and NO_ACK data using lowest rate. */
+> -	fc = le16_to_cpu(hdr->frame_control);
+> -	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+> -	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
+> +	fc = hdr->frame_control;
+> +	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+>  	    !sta || !priv_sta) {
+>  		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+>  		if (!rate_mask)
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> index 2addf73..afa1633 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> @@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
+>  int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+>  {
+>  	int sta_id;
+> -	u16 fc = le16_to_cpu(hdr->frame_control);
+> +	__le16 fc = hdr->frame_control;
+>  
+>  	/* If this frame is broadcast or management, use broadcast station id */
+> -	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+> -	    is_multicast_ether_addr(hdr->addr1))
+> +	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+>  		return priv->hw_params.bcast_sta_id;
+>  
+>  	switch (priv->iw_mode) {
 
-Yes, it would be good if it was clearer.
 
-If maintainer accepts non-intrusive bugfixes during merge window is
-pretty much his decision, I'd say. I'd expect him to take them if he
-has bandwidth available.
-								Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+
+Thank you
+
+Reinette
+
+
