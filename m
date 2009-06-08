@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:37376 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751306AbZFRDII (ORCPT
+Received: from mail-qy0-f195.google.com ([209.85.221.195]:43252 "EHLO
+	mail-qy0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377AbZFHTPZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 23:08:08 -0400
-Date: Thu, 18 Jun 2009 00:08:06 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 2/4] rfkill: don't restore software blocked state on
-	persistent devices
-Message-ID: <20090618030806.GE29569@khazad-dum.debian.net>
-References: <4A37A3E1.8060606@tuffmail.co.uk> <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
+	Mon, 8 Jun 2009 15:15:25 -0400
+Received: by qyk33 with SMTP id 33so312164qyk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 12:15:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A37AEB7.6060405@tuffmail.co.uk>
+In-Reply-To: <69e28c910906081130q3f8363c2i64e05d61812e7be3@mail.gmail.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	<1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
+	<69e28c910906081130q3f8363c2i64e05d61812e7be3@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 8 Jun 2009 12:15:07 -0700
+Message-ID: <43e72e890906081215u54f76ae6uded65345829ea843@mail.gmail.com>
+Subject: Re: [PATCH v2 13/15] iwlwifi: use ieee80211_is_data(fc)
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 16 Jun 2009, Alan Jenkins wrote:
-> The setting of the "persistent" flag is also made more explicit using
-> a new rfkill_init_sw_state() function, instead of special-casing
-> rfkill_set_sw_state() when it is called before registration.
-> 
-> Suspend is a bit of a corner case so we try to get away without adding
-> another hack to rfkill-input - it's going to be removed soon.
-> If the state does change over suspend, users will simply have to prod
-> rfkill-input twice in order to toggle the state.
-> 
-> Userspace policy agents will be able to implement a more consistent user
-> experience.  For example, they can avoid the above problem if they
-> toggle devices individually.  Then there would be no "global state"
-> to get out of sync.
-> 
-> Currently there are only two rfkill drivers with persistent soft-blocked
-> state.  thinkpad-acpi already checks the software state on resume.
-> eeepc-laptop will require modification.
-> 
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> CC: Marcel Holtmann <marcel@holtmann.org>
+2009/6/8 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Sat, Jun 6, 2009 at 2:03 AM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
+>> Cc: Zhu Yi <yi.zhu@intel.com>
+>> Cc: Reinette Chatre <reinette.chatre@intel.com>
+>> Cc: ipw3945-devel@lists.sourceforge.net
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+>>  drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+>>  2 files changed, 5 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>> index 5eb538d..bd2f709 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>> @@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>>        s8 scale_action = 0;
+>>        unsigned long flags;
+>>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>> -       u16 fc;
+>> +       __le16 fc;
+>>        u16 rate_mask = 0;
+>>        s8 max_rate_idx = -1;
+>>        struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+>> @@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>>                rate_mask = sta->supp_rates[sband->band];
+>>
+>>        /* Send management frames and NO_ACK data using lowest rate. */
+>> -       fc = le16_to_cpu(hdr->frame_control);
+>> -       if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+>> -           info->flags & IEEE80211_TX_CTL_NO_ACK ||
+>> +       fc = hdr->frame_control;
+>> +       if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+>
+> iwl-agn-rs.c also needs this change I think...
 
-Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+You are right, but in my later patch "mac80211: add helper for
+management / no-ack frame rate decision" we just nuke this in favor
+for the helper. The goal of this intermediary patch was just to make
+the changes for that other patch easier to read.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Please let me know if such a change is required in this intermediary
+patch. It gets nuked in the end.
+
+  Luis
