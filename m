@@ -1,114 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35209 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752075AbZFOUbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 16:31:23 -0400
-Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
- window
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	greg@kroah.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, tshibata@ab.jp.nec.com
-In-Reply-To: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
-References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Mon, 15 Jun 2009 16:31:23 -0400
-Message-Id: <1245097883.10970.5.camel@mj>
-Mime-Version: 1.0
+Received: from mail-px0-f187.google.com ([209.85.216.187]:53348 "EHLO
+	mail-px0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063AbZFHGIe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 02:08:34 -0400
+Received: by mail-px0-f187.google.com with SMTP id 17so213970pxi.33
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 23:08:36 -0700 (PDT)
+Message-ID: <4A2CA986.3070500@gmail.com>
+Date: Mon, 08 Jun 2009 16:02:46 +1000
+From: Julian Calaby <julian.calaby@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] compat-wireless: update for 2009-06-08
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-15 at 16:12 -0400, Luis R. Rodriguez wrote:
->  
-> +Stable kernel releases
-> +----------------------
-> +
-> +Stable kernels are released when they are ready. This means there is no
-> +strict guidelines for sticking to specific dates for a kernel release.
+Update to match wireless-testing v2.6.30-rc8-25759-g00f7164
 
-there are no strict guidelines
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+---
+ compat/compat.diff |   42 +++++++++++++++++++++++-------------------
+ 1 files changed, 23 insertions(+), 19 deletions(-)
 
-> +After a maintainer has sent his pull request to Linus during the merge
-> +window no further new development will be accepted for that tree and
-> +as such it marks the closure of development for that subsystem for that
-> +kernel cycle. Developers wishing to target deadlines should simply work
-> +on their development without regards or consideration for inclusion to
-> +a specific kernel release. Once development is done it should simply be
-> +posted. If you insist on targetting a kernel release for deadlines you can
-
-targeting
-
-> +try to be aware of the current rc cycle development and how soon it seems
-> +the next stable kernel relase will be made. When Linus notes the last rc
-
-release
-
-> +cycle released may be the last -- that is a good sign you should already
-> +have all your development done and merged in the respective development
-> +tree. If your code is not ready and merged into the respective maintainers
-> +tree prior to the announced last potential rc kernel release chances are
-> +you missed getting your code in for the next kernel merge window.
-> +Excemptions here are new drivers, covered below.
-
-Exemptions
-
-> +rc-series rules
-> +---------------
-> +
-> +Rules on what kind of patches are accepted after the merge window closes.
-> +These are patches targetted for the kernel rc-series of a kernel prior
-
-targeted
-
-> +to its release.
-> +
-> + - it must fix a reported regression
-> + - if must fix a reported security hole
-> + - if must fix a reported oops/kernel hang
-> +
-> +This means any small-non-fix code changes, although they mix fix an issue,
-
-might fix
-
-> +will not be accepted. If the patch in question is for a driver that has been
-> +around for more than a kernel release, then "small fixes" really can't be
-> +worth all that much. And "small fixes" may be small and "obvious" they
-> +definitely can regress.
-> +
-> +rc-series new driver excemption rule
-
-exemption
-
-> +------------------------------------
-> +
-> +The very first release a new driver (or filesystem) is special. New drivers
-> +are accepted during the rc series. Patches for the same driver then are
-> +also accepted uring the same rc series of a kernel as well as fixes as it
-
-during
-
-> +cannot regress as no previous kernels exists with it.
-> +
-> +Once drivers are upstream for one kernel release (say on 2.6.29) the target
-> +*goal* after the merge window of the next kernel (respectively this would be
-> +the 2.6.30 rc-series) is to address address regressions. Kernel oops/hangs
-
-s/address address/address/
-
-> +and security issues are obviously accepted but the point is these should have
-> +also been caught earlier as a general development goal. The rc-series focus
-> +should really be to address regressions.
-> +
-> +Stable kernel rules
-> +-------------------
-> +
->  Rules on what kind of patches are accepted, and which ones are not, into the
->  "-stable" tree:
-
-Sorry, I'm in pedantic mood today.
- 
--- 
-Regards,
-Pavel Roskin
+diff --git a/compat/compat.diff b/compat/compat.diff
+index d89ea98..846e8f5 100644
+--- a/compat/compat.diff
++++ b/compat/compat.diff
+@@ -181,6 +181,12 @@
+  obj-$(CONFIG_LIBERTAS)		+= libertas/
+  
+  obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
++@@ -60,5 +34,3 @@
++ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
++ 
++ obj-$(CONFIG_WL12XX)	+= wl12xx/
++-
++-obj-$(CONFIG_IWM)	+= iwmc3200wifi/
+ --- a/drivers/net/wireless/b43/pcmcia.c
+ +++ b/drivers/net/wireless/b43/pcmcia.c
+ @@ -87,7 +87,11 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
+@@ -405,7 +411,7 @@
+  
+ --- a/drivers/net/wireless/mac80211_hwsim.c	2009-05-18 14:35:29.000000000 -0700
+ +++ b/drivers/net/wireless/mac80211_hwsim.c	2009-05-18 14:35:29.000000000 -0700
+-@@ -744,16 +744,22 @@
++@@ -733,16 +733,22 @@
+  	.name = "mac80211_hwsim"
+  };
+  
+@@ -430,30 +436,30 @@
+  	dev->tx_queue_len = 0;
+ --- a/drivers/net/wireless/rndis_wlan.c	2009-04-28 15:35:05.000000000 -0700
+ +++ b/drivers/net/wireless/rndis_wlan.c	2009-04-28 15:35:06.000000000 -0700
+-@@ -2342,6 +2342,7 @@
++@@ -2362,6 +2362,7 @@
+  	return 0;
+  }
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+  /* same as rndis_netdev_ops but with local multicast handler */
+- static const struct net_device_ops rndis_wext_netdev_ops = {
++ static const struct net_device_ops rndis_wlan_netdev_ops = {
+  	.ndo_open		= usbnet_open,
+-@@ -2352,6 +2353,7 @@
++@@ -2372,6 +2373,7 @@
+  	.ndo_validate_addr	= eth_validate_addr,
+- 	.ndo_set_multicast_list	= rndis_wext_set_multicast_list,
++ 	.ndo_set_multicast_list	= rndis_wlan_set_multicast_list,
+  };
+ +#endif
+  
+  
+- static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+-@@ -2402,7 +2404,11 @@
++ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
++@@ -2422,7 +2424,11 @@
+  	 * rndis_host wants to avoid all OID as much as possible
+- 	 * so do promisc/multicast handling in rndis_wext.
++ 	 * so do promisc/multicast handling in rndis_wlan.
+  	 */
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+- 	usbdev->net->netdev_ops = &rndis_wext_netdev_ops;
++ 	usbdev->net->netdev_ops = &rndis_wlan_netdev_ops;
+ +#else
+-+	usbdev->net->set_multicast_list = rndis_wext_set_multicast_list;
+++	usbdev->net->set_multicast_list = rndis_wlan_set_multicast_list;
+ +#endif
+  
+  	tmp = RNDIS_PACKET_TYPE_DIRECTED | RNDIS_PACKET_TYPE_BROADCAST;
+@@ -675,7 +681,7 @@
+  	return sent;
+ --- a/net/mac80211/wme.c
+ +++ b/net/mac80211/wme.c
+-@@ -125,6 +125,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
++@@ -97,6 +97,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+  	if (unlikely(queue >= local->hw.queues))
+  		queue = local->hw.queues - 1;
+  
+@@ -683,7 +689,7 @@
+  	/*
+  	 * Now we know the 1d priority, fill in the QoS header if
+  	 * there is one (and we haven't done this before).
+-@@ -140,6 +141,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
++@@ -112,6 +113,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+  		*p++ = ack_policy | tid;
+  		*p = 0;
+  	}
+@@ -693,7 +699,7 @@
+  }
+ --- a/net/wireless/Makefile
+ +++ b/net/wireless/Makefile
+-@@ -1,12 +1,11 @@
++@@ -1,11 +1,10 @@
+ -obj-$(CONFIG_WIRELESS_EXT) += wext.o
+  obj-$(CONFIG_CFG80211) += cfg80211.o
+  obj-$(CONFIG_LIB80211) += lib80211.o
+@@ -706,11 +712,9 @@
+  cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
+  cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
+  
+- ccflags-y += -D__CHECK_ENDIAN__
+---- a/net/wireless/core.h
+ --- a/net/wireless/core.h	2009-05-18 14:36:20.000000000 -0700
+ +++ b/net/wireless/core.h	2009-05-18 14:36:20.000000000 -0700
+-@@ -97,7 +97,11 @@
++@@ -104,7 +104,11 @@
+  	struct rb_node rbn;
+  	unsigned long ts;
+  	struct kref ref;
+@@ -724,7 +728,7 @@
+  	struct cfg80211_bss pub;
+ --- a/net/wireless/scan.c	2009-04-28 15:34:48.000000000 -0700
+ +++ b/net/wireless/scan.c	2009-04-28 15:35:06.000000000 -0700
+-@@ -58,10 +58,12 @@
++@@ -59,10 +59,12 @@
+  	bss = container_of(ref, struct cfg80211_internal_bss, ref);
+  	if (bss->pub.free_priv)
+  		bss->pub.free_priv(&bss->pub);
+@@ -737,7 +741,7 @@
+  	kfree(bss);
+  }
+  
+-@@ -364,13 +366,26 @@
++@@ -365,13 +367,26 @@
+  
+  	found = rb_find_bss(dev, res);
+  
+@@ -764,7 +768,7 @@
+  
+  		/* overwrite IEs */
+  		if (overwrite) {
+-@@ -398,6 +413,7 @@
++@@ -399,6 +414,7 @@
+  			}
+  		}
+  
