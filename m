@@ -1,65 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47264 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753089AbZFEGwX (ORCPT
+Received: from static-220-247-10-204.b-man.svips.gol.ne.jp ([220.247.10.204]:37978
+	"EHLO smtp.kamineko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755899AbZFHWtQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 02:52:23 -0400
-Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
- 802.15.4 devices
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>
-In-Reply-To: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
-References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-3-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zhkfR7yzDtOADSFsCaNU"
-Date: Fri, 05 Jun 2009 08:52:17 +0200
-Message-Id: <1244184737.22576.94.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 8 Jun 2009 18:49:16 -0400
+Date: Tue, 9 Jun 2009 07:49:15 +0900
+From: Mattia Dongili <malattia@linux.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux acpi <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH] sony-laptop: no need to unblock rfkill on load
+Message-ID: <20090608224915.GA4583@kamineko.org>
+References: <4A2CE86F.9040209@tuffmail.co.uk> <1244457418.18863.8.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
+In-Reply-To: <1244457418.18863.8.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-zhkfR7yzDtOADSFsCaNU
-Content-Type: text/plain
+--cWoXeonUoKmBZSoM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-06-05 at 06:29 +0400, Dmitry Eremin-Solenikov wrote:
+On Mon, Jun 08, 2009 at 12:36:58PM +0200, Johannes Berg wrote:
+> On Mon, 2009-06-08 at 11:31 +0100, Alan Jenkins wrote:
+> > The re-written rfkill core ensures rfkill devices are initialized to
+> > the system default state.  The core calls set_block after registration
+> > so the driver shouldn't need to.
+> >=20
+> > Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+>=20
+> Good catch, thanks.
 
-> +/* This source file is shared between kernel and userspace sources, thus
-> + * a bit of __KERNEL__ checks
-> + */
-> +#ifdef __KERNEL__
+Just to confirm, is this patch going to sit in the wireless-testing tree
+and you will submit it for inclusion together with the rfkill work
+right?
+=20
+> > ---
+> >=20
+> > This patch applies on top of the rfkill rewrite in the wireless-testing=
+ tree.
+> >=20
+> > diff --git a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/=
+sony-laptop.c
+> > index aec0b27..c1b21a4 100644
+> > --- a/drivers/platform/x86/sony-laptop.c
+> > +++ b/drivers/platform/x86/sony-laptop.c
+> > @@ -1114,7 +1114,6 @@ static int sony_nc_setup_rfkill(struct acpi_devic=
+e *device,
+> >  		return err;
+> >  	}
+> >  	sony_rfkill_devices[nc_type] =3D rfk;
+> > -	sony_nc_rfkill_set((void *)nc_type, false);
+> >  	return err;
+> >  }
+> > =20
+> >=20
+> >=20
 
-It's a C file. It can't be shared expect by copying, hence IMO these
-things are pointless.
+thanks
+--=20
+mattia
+:wq!
 
-johannes
-
---=-zhkfR7yzDtOADSFsCaNU
+--cWoXeonUoKmBZSoM
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJKKMCeAAoJEODzc/N7+QmaOkYP/2WkkWFvXl+8pgzsvjTkyRj/
-J9jTDFnigkCNmFd07/fOageIoQJzUNasgXbzEPyXGrF7r6iVVj4sInSKmuBBCrMp
-wXwF0qzkRTGVfhL2jDdb80DUjZlavEajFXqTOMV66VE82QHUkPAuklscOKjy+LQU
-c49IkqI7IPglQYMoA8Rae0EPSzcLig/rHiMMwjGK/3eVS4/Yp0jKLjdRITVOZNiy
-O6oh7sABcWEiZ6T73c9WfTlnwL9qJrQZp5GvLrGx0JwkElw+JMX/2/PKpcYIkBUl
-rkwm/57RMIrNp3aBoofceLSxK+FQca++CgqzcOnObXVaU3s+Zfw4/8NXRq38riY7
-/bVsaXgk4Af6M7qoz/d3GwkbxUn1TcTwluBqeTo6hDKk1rt5KDEWOYeTuNj5rDxW
-1PrIVSW7dnrwpaM27LHKzxHByC3uHg/xoqmuLj67L+OpPkbN9OXWx6LMoMId8ihY
-CDWhEtTHTgwATXhGOBoQ/tz9iqS2E26Wbp6Fd5Od89VQ/sx0EEWFnh/j+Tz8b84E
-hyiezLkOsT9hn0Z2K3KuNKpdZ5UFfXDvRO4UVaSo7DtN3p9aXpM+4K858TMb0gaZ
-jR2MDMpy/OtcuiugKXvftP7C8xLd4g9UZct5nIBUXKDTJo+lseZ8FB5pnmpB5quz
-D0YJorA+lakschrhBCZ6
-=5I1f
+iEYEARECAAYFAkotlWsACgkQgpRPaOotLEG8iACgsvpH3LJR9/cITzKSuG4cvHTi
+G+oAoMXpl3iQzVWVZXHSIKfbAYUMmPiV
+=B97G
 -----END PGP SIGNATURE-----
 
---=-zhkfR7yzDtOADSFsCaNU--
-
+--cWoXeonUoKmBZSoM--
