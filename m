@@ -1,110 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60171 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467AbZFIOCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 10:02:31 -0400
-Subject: Re: [PATCH] mac80211: Fix the way ADDBA request count being
- modified
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1244536906-22335-1-git-send-email-vasanth@atheros.com>
-References: <1244536906-22335-1-git-send-email-vasanth@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/H4diQiVXAxtyHAuXnzI"
-Date: Tue, 09 Jun 2009 16:01:58 +0200
-Message-Id: <1244556118.4672.10.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:55742 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752879AbZFHV6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 17:58:20 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 14:58:23 -0700
+Date: Mon, 8 Jun 2009 14:58:23 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: reinette chatre <reinette.chatre@intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: Re: [PATCH v2 14/15] mac80211: add helper for management / no-ack
+	frame rate decision
+Message-ID: <20090608215823.GB380@tesla>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com> <1244246629-28179-15-git-send-email-lrodriguez@atheros.com> <1244492902.20900.196.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1244492902.20900.196.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jun 08, 2009 at 01:28:22PM -0700, reinette chatre wrote:
+> Hi Luis,
+> 
+> On Fri, 2009-06-05 at 17:03 -0700, Luis R. Rodriguez wrote:
+> > All current rate control algorithms agree to send management and no-ack
+> > frames at the lowest rate. They also agree to do this when sta
+> > and the private rate control data is NULL. We add a hlper to mac80211
+> > for this and simplify the rate control algorithm code.
+> >
+> > Developers wishing to make enhancements to rate control algorithms
+> > are for broadcast/multicast can opt to not use this in their
+> > gate_rate() mac80211 callback.
+> >
+> > Cc: Zhu Yi <yi.zhu@intel.com>
+> > Cc: Reinette Chatre <reinette.chatre@intel.com>
+> > Cc: ipw3945-devel@lists.sourceforge.net
+> > Cc: Gabor Juhos <juhosg@openwrt.org>
+> > Cc: Felix Fietkau <nbd@openwrt.org>
+> > Cc: Derek Smithies <derek@indranet.co.nz>
+> > Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
+> >  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   21 ++-----------------
+> >  drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   12 +----------
+> >  include/net/mac80211.h                     |   23 ++++++++++++++++++++++
+> >  net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
+> >  net/mac80211/rc80211_minstrel.c            |   22 +--------------------
+> >  net/mac80211/rc80211_pid_algo.c            |   11 +---------
+> >  7 files changed, 59 insertions(+), 73 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> > index d8d2152..9199ce9 100644
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> > index bd2f709..8bd496f 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> > @@ -673,7 +673,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+> >       s8 scale_action = 0;
+> >       unsigned long flags;
+> >       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> > -     __le16 fc;
+> >       u16 rate_mask = 0;
+> >       s8 max_rate_idx = -1;
+> >       struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+> > @@ -681,24 +680,10 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+> >
+> >       IWL_DEBUG_RATE(priv, "enter\n");
+> >
+> > -     if (sta)
+> > -             rate_mask = sta->supp_rates[sband->band];
+> > -
+> > -     /* Send management frames and NO_ACK data using lowest rate. */
+> > -     fc = hdr->frame_control;
+> > -     if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+> > -         !sta || !priv_sta) {
+> > -             IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+> > -             if (!rate_mask)
+> > -                     info->control.rates[0].idx =
+> > -                                     rate_lowest_index(sband, NULL);
+> > -             else
+> > -                     info->control.rates[0].idx =
+> > -                                     rate_lowest_index(sband, sta);
+> > -             if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+> > -                     info->control.rates[0].count = 1;
+> > +     if (rate_control_send_low(sta, priv_sta, txrc))
+> >               return;
+> > -     }
+> > +
+> > +     rate_mask = sta->supp_rates[sband->band];
+> >
+> >       /* get user max rate if set */
+> >       max_rate_idx = txrc->max_rate_idx;
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> > index ff20e50..7a3e4dd 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> > @@ -2485,18 +2485,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+> >               mask_bit = sta->supp_rates[sband->band];
+> >
+> >       /* Send management frames and NO_ACK data using lowest rate. */
+> > -     if (!ieee80211_is_data(hdr->frame_control) ||
+> > -         info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
+> > -             if (!mask_bit)
+> > -                     info->control.rates[0].idx =
+> > -                                     rate_lowest_index(sband, NULL);
+> > -             else
+> > -                     info->control.rates[0].idx =
+> > -                                     rate_lowest_index(sband, sta);
+> > -             if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+> > -                     info->control.rates[0].count = 1;
+> > +     if (rate_control_send_low(sta, priv_r, txrc))
+> >               return;
+> > -     }
+> >
+> >       rate_idx  = lq_sta->last_txrate_idx;
+> 
+> 
+> The iwlwifi way of computing rates is not captured in the new helper. We
+> used to do it in the way you change it to, but run into the
+> "rs_get_rate" WARN very often (see
+> http://www.kerneloops.org/searchweek.php?search=rs_get_rate and
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1822 ). We
+> submitted patch "iwlwifi: fix rs_get_rate WARN_ON()" to address that.
+> 
+> Changing this back will make that warning reappear.
 
---=-/H4diQiVXAxtyHAuXnzI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Point taken -- this highlights an issue we see if we apply these patches
+and this needs to be dealt with properly. For example if we're a STA and
+already associated I don't believe it makes sense to send data to the sta
+if the sta does not support the minimum bitrate. The issue here would be
+we're trying to send to the sta using a band it does not support. I'll look
+into this a bit further...
 
-On Tue, 2009-06-09 at 14:11 +0530, Vasanthakumar Thiagarajan wrote:
-> addba_req_num[tid] is supposed to have the count of consecutive
-> addba request attempts on 'tid' which failed. This count is checked
-> against a retry threshold (3 times) before starting the addba negotiation=
-.
-> This patch fixes the way this addba count is incremented/reset and thereb=
-y
-> avoids indefinite addba attempts.
-
-I've never actually seen this hit in practise, so I'll trust you on
-it :)
-
-johannes
-
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  net/mac80211/agg-tx.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-> index 43d00ff..9e5762a 100644
-> --- a/net/mac80211/agg-tx.c
-> +++ b/net/mac80211/agg-tx.c
-> @@ -132,6 +132,9 @@ static int ___ieee80211_stop_tx_ba_session(struct sta=
-_info *sta, u16 tid,
-> =20
->  	state =3D &sta->ampdu_mlme.tid_state_tx[tid];
-> =20
-> +	if (*state =3D=3D HT_AGG_STATE_OPERATIONAL)
-> +		sta->ampdu_mlme.addba_req_num[tid] =3D 0;
-> +
->  	*state =3D HT_AGG_STATE_REQ_STOP_BA_MSK |
->  		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-> =20
-> @@ -337,6 +340,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw=
- *hw, u8 *ra, u16 tid)
->  			 sta->ampdu_mlme.tid_tx[tid]->dialog_token,
->  			 sta->ampdu_mlme.tid_tx[tid]->ssn,
->  			 0x40, 5000);
-> +	sta->ampdu_mlme.addba_req_num[tid]++;
->  	/* activate the timer for the recipient's addBA response */
->  	sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer.expires =3D
->  				jiffies + ADDBA_RESP_INTERVAL;
-> @@ -606,7 +610,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw,=
- u8 *ra, u8 tid)
-> =20
->  	*state =3D HT_AGG_STATE_IDLE;
->  	/* from now on packets are no longer put onto sta->pending */
-> -	sta->ampdu_mlme.addba_req_num[tid] =3D 0;
->  	kfree(sta->ampdu_mlme.tid_tx[tid]);
->  	sta->ampdu_mlme.tid_tx[tid] =3D NULL;
-> =20
-> @@ -689,7 +692,6 @@ void ieee80211_process_addba_resp(struct ieee80211_lo=
-cal *local,
-> =20
->  		sta->ampdu_mlme.addba_req_num[tid] =3D 0;
->  	} else {
-> -		sta->ampdu_mlme.addba_req_num[tid]++;
->  		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
->  	}
->  	spin_unlock_bh(&sta->lock);
-
---=-/H4diQiVXAxtyHAuXnzI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKLmtTAAoJEODzc/N7+QmaQKsP/iOZr+gLnsSPdlWel+ZvbpUn
-Kw0zLirfbWBmTr9+W/j8B5DPVx18d6wxr0FcngqidjPJJ2X0XNKWZGK0BEgZcoEJ
-Fkw3QJ1onY+uu2EvpA6rGZkFXmr2EQVqvJO3b0n9NpUBKVm38o/ZgpplJoQgBKM+
-JYEk+IBnJk4dLg5suRsxVOsMyeHsTiKjaxrNHLLNW70yFR5RO2nGJ3odNuxTkB93
-SydU6u6/SIBxjtpDWbCO1Nv/QWJWO56gKu8nudE+W/QcSQvx2XyHT91C6Oj+fpEO
-Fm8AOadQ6gFxumIcICYgU0KY0NBkaKkXLtefIkqsuGIkAQ7qNmmzE6wpw6LAB9pw
-FvzWzwKVoYc8R4SSmmQ4lwdSfG2oOGsKFwa0wPvOWL3r9c7aOVOsVI8lLEKASJz6
-iYgPxh0bdePuenR0Hh58RNwWTPBPUwtCo5k67qs/r3kgh/aJHT1ZmGiYywCZ/3X9
-lLAQ+vMzDhedjRYEU9nNzmaNATewus3Z/nnRrA0HB4pnl1gUiZqLGElYoWSANfJB
-oCf88xRG/YY3d7e9ZHYDxGLmEh+ervbNg0jUC++OuzYjOI/YhVasigIRtc5JBbn7
-UGH1bvA2znkFaWxM7yYzS8gnUUMRaD0O8jEI01qZU1ozBqHmeCJSyfVC95M05f9J
-sI7pprvudvJPnbhn7YYv
-=Pj4h
------END PGP SIGNATURE-----
-
---=-/H4diQiVXAxtyHAuXnzI--
-
+  Luis
