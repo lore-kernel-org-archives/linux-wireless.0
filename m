@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from build.ossfans.org ([67.223.233.67]:53561 "EHLO
-	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951AbZFEJqo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45089 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782AbZFHGOf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 05:46:44 -0400
-Date: Fri, 5 Jun 2009 13:46:19 +0400
-From: Sergey Lapin <slapin@ossfans.org>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
-Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
-	802.15.4 devices
-Message-ID: <20090605094619.GB23085@build.ossfans.org>
-References: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com> <1244184737.22576.94.camel@johannes.local> <20090605071529.GA7064@doriath.ww600.siemens.net> <20090605.005418.07362083.davem@davemloft.net> <20090605091229.GA25280@doriath.ww600.siemens.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090605091229.GA25280@doriath.ww600.siemens.net>
+	Mon, 8 Jun 2009 02:14:35 -0400
+Subject: [PATCH v2] rfkill: remove input Kconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1244420209.23850.111.camel@localhost.localdomain>
+References: <1244396398.12956.12.camel@johannes.local>
+	 <1244420209.23850.111.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Mon, 08 Jun 2009 08:14:28 +0200
+Message-Id: <1244441668.4188.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> @@ -0,0 +1,523 @@
-> +/*
-> + * Netlink inteface for IEEE 802.15.4 stack
-> + *
-> + * Copyright 2007, 2008 Siemens AG
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2
-> + * as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along
-> + * with this program; if not, write to the Free Software Foundation, Inc.,
-> + * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-> + *
-> + * Written by:
-> + * Sergey Lapin <sergey.lapin@siemens.com>
-Dmitry, please toss all my @siemens.com addresses from all patches, since my
-access is already disabled and it's pointless to have invalid emails
-in source tree. Please replace them with @ossfans.org ones.
+Now that we added the ioctl, there's no need to ask
+the user to configure this. We will keep it enabled
+for now, and eventually swap the default to n. Also
+let embedded users select it only if they need it.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: Turn default back to N for embedded, and make the question itself
+    depend on embedded.
+
+ net/rfkill/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/rfkill/Kconfig	2009-06-07 21:26:29.000000000 +0200
++++ wireless-testing/net/rfkill/Kconfig	2009-06-08 08:11:15.000000000 +0200
+@@ -18,7 +18,7 @@ config RFKILL_LEDS
+ 	default y
+ 
+ config RFKILL_INPUT
+-	bool "RF switch input support"
++	bool "RF switch input support" if EMBEDDED
+ 	depends on RFKILL
+ 	depends on INPUT = y || RFKILL = INPUT
+ 	default y if !EMBEDDED
+
 
