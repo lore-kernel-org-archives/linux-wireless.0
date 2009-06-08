@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:53034 "EHLO ciao.gmane.org"
+Received: from mga11.intel.com ([192.55.52.93]:2317 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754205AbZFGUox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 16:44:53 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MDPEa-0004CF-OW
-	for linux-wireless@vger.kernel.org; Sun, 07 Jun 2009 20:44:52 +0000
-Received: from p5086D5AB.dip.t-dialin.net ([80.134.213.171])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 20:44:52 +0000
-Received: from sparcoular by p5086D5AB.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 20:44:52 +0000
-To: linux-wireless@vger.kernel.org
-From: Markus <sparcoular@t-online.de>
-Subject: Re: bcm43xx 5.10.38.35 firmware
-Date: Sun, 7 Jun 2009 20:44:39 +0000 (UTC)
-Message-ID: <loom.20090607T201048-919@post.gmane.org>
-References: <loom.20090607T124008-575@post.gmane.org> <4A2BBD98.4040708@lwfinger.net> <loom.20090607T140512-723@post.gmane.org> <4A2BEAFF.7090109@lwfinger.net>
+	id S1750725AbZFHSrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 14:47:22 -0400
+Subject: Re: Doubt regarding Wifi Driver iwlagn
+From: reinette chatre <reinette.chatre@intel.com>
+To: Sivabalan Thirunavukkarasu <siva886@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <be4915c60906060247m7c66b9fdse58991a133e48138@mail.gmail.com>
+References: <be4915c60906060247m7c66b9fdse58991a133e48138@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 08 Jun 2009 11:54:24 -0700
+Message-Id: <1244487264.20900.186.camel@rc-desk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> As it says in the wiki, an interface with the 0x4328 ID is not
-> supported. You need to use the Broadcom wl driver, which is
-> proprietary. I suppose that this was the "Restricted Driver" from
-> Ubuntu. Your other option would be to get the driver from Broadcom and
-> build it on your system.
+Hi Siva,
+
+On Sat, 2009-06-06 at 02:47 -0700, Sivabalan Thirunavukkarasu wrote:
+> Hi all,
 > 
-> We are in the process of doing the reverse engineering on the N-PHY
-> devices, but it does not have high priority at the moment.
+>       I am using Ubuntu 9.04 64bit running its default kernel
+> 2.6.28-11-generic. My doubt is regarding the wireless driver. The card
+> my HP HDX16 laptop has is, ( from lspci )
 > 
-> Larry
+>       02:00.0 Network controller: Intel Corporation PRO/Wireless 5100
+> AGN [Shiloh] Network Connection
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>       Whenever my card tries to associate with any of my AP's, i get
+> the following messages on dmesg.
 > 
+>      .
+>      ..
+>      [   73.333572] wlan0: disassociating by local choice (reason=3)
+>      [   73.344039] iwlagn: index 0 not used in uCode key table.
+>      [   81.500026] Clocksource tsc unstable (delta = -273035428 ns)
+>      [   86.239909] wlan0: authenticate with AP 00:1e:40:af:cc:7e
+>      ..
+>      .
 > 
+>      I am not clear whether its a bug or what exactly is the problem
+> here. Have attached the full dmesg log from start of inclusion of Wifi
+> driver with this for reference.
+> 
+>      Please clarify.
 
+Could you please add your logs to
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2009 ?
 
-Finally got it working again. 
+Thank you very much
 
-A patched sta- version from the Ubuntu repository did it.
-
-That one directly from Broadcom won't compile without
-
-some code-change.
-
-Thx and keep on Hacking
-
-Markus
+Reinette
 
 
