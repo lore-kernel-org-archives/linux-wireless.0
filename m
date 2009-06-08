@@ -1,93 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52508 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752925AbZFQPmT (ORCPT
+Received: from build.ossfans.org ([67.223.233.67]:43061 "EHLO
+	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754564AbZFHWS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 11:42:19 -0400
-Subject: [PATCH] cfg80211: prohibit scanning the same channel more than once
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 17 Jun 2009 17:41:49 +0200
-Message-Id: <1245253309.31588.25.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 8 Jun 2009 18:18:58 -0400
+From: Sergey Lapin <slapin@ossfans.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>
+Subject: [PULL REQUEST] IEEE 802.15.4 stack: generic parts v4
+Date: Tue,  9 Jun 2009 02:18:46 +0400
+Message-Id: <cover.1244498867.git.slapin@ossfans.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It isn't very useful to scan the same channel more than once
-during a given scan, and some hardware (notably iwlwifi) can
-only scan a limited number of channels at a time. To prevent
-any overflows, simply disallow scanning any channel multiple
-times in a given scan command. This is a small change in the
-userspace ABI, but the only user, wpa_supplicant, never asks
-for a scan with the same frequency listed twice.
+Hello,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/nl80211.c |   33 ++++++++++++++++++++++++++++++---
- 1 file changed, 30 insertions(+), 3 deletions(-)
+This is a fourth version of pull/merge request for IEEE 802.15.4 stack.
 
---- wireless-testing.orig/net/wireless/nl80211.c	2009-06-17 02:46:22.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-06-17 02:55:01.000000000 +0200
-@@ -2629,6 +2629,31 @@ static int nl80211_set_reg(struct sk_buf
- 	return r;
- }
- 
-+static int validate_scan_freqs(struct nlattr *freqs)
-+{
-+	struct nlattr *attr1, *attr2;
-+	int n_channels = 0, tmp1, tmp2;
-+
-+	nla_for_each_nested(attr1, freqs, tmp1) {
-+		n_channels++;
-+		/*
-+		 * Some hardware has a limited channel list for
-+		 * scanning, and it is pretty much nonsensical
-+		 * to scan for a channel twice, so disallow that
-+		 * and don't require drivers to check that the
-+		 * channel list they get isn't longer than what
-+		 * they can scan, as long as they can scan all
-+		 * the channels they registered at once.
-+		 */
-+		nla_for_each_nested(attr2, freqs, tmp2)
-+			if (attr1 != attr2 &&
-+			    nla_get_u32(attr1) == nla_get_u32(attr2))
-+				return 0;
-+	}
-+
-+	return n_channels;
-+}
-+
- static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
-@@ -2638,7 +2663,7 @@ static int nl80211_trigger_scan(struct s
- 	struct ieee80211_channel *channel;
- 	struct nlattr *attr;
- 	struct wiphy *wiphy;
--	int err, tmp, n_ssids = 0, n_channels = 0, i;
-+	int err, tmp, n_ssids = 0, n_channels, i;
- 	enum ieee80211_band band;
- 	size_t ie_len;
- 
-@@ -2669,13 +2694,15 @@ static int nl80211_trigger_scan(struct s
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
--		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_FREQUENCIES], tmp)
--			n_channels++;
-+		n_channels = validate_scan_freqs(
-+				info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
- 		if (!n_channels) {
- 			err = -EINVAL;
- 			goto out;
- 		}
- 	} else {
-+		n_channels = 0;
-+
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++)
- 			if (wiphy->bands[band])
- 				n_channels += wiphy->bands[band]->n_channels;
+As per Dmitry request I'm taking over passing this patchset through
+review. This is my first pull request through mail lists, so I might
+do some mistakes, but I hope I did not miss any.
 
+Major changes from previous post:
+ * Changed net/ieee802154/Makefile according to Sam Ravnborg suggestion
 
+The following changes since commit 81ee1bad86bd6752c626018d43a74e3f81f1ae72:
+  Linus Torvalds (1):
+        Merge branch 'for-linus' of git://git.kernel.org/.../viro/vfs-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/slapin/lowpan.git for-next
+
+Sergey Lapin (5):
+      Add constants for the ieee 802.15.4 stack
+      net: add IEEE 802.15.4 socket family implementation
+      net: add NL802154 interface for configuration of 802.15.4 devices
+      ieee802154: add documentation about our stack
+      ieee802154: add simple HardMAC driver sample
+
+ Documentation/networking/ieee802154.txt |   76 +++++
+ MAINTAINERS                             |   12 +
+ drivers/Makefile                        |    1 +
+ drivers/ieee802154/Kconfig              |   22 ++
+ drivers/ieee802154/Makefile             |    3 +
+ drivers/ieee802154/fakehard.c           |  270 ++++++++++++++++
+ drivers/net/Kconfig                     |    2 +
+ include/linux/if_arp.h                  |    2 +
+ include/linux/if_ether.h                |    1 +
+ include/linux/nl802154.h                |  119 +++++++
+ include/linux/socket.h                  |    4 +-
+ include/net/ieee802154/af_ieee802154.h  |   60 ++++
+ include/net/ieee802154/mac_def.h        |  160 ++++++++++
+ include/net/ieee802154/netdevice.h      |  115 +++++++
+ include/net/ieee802154/nl802154.h       |   41 +++
+ net/Kconfig                             |    1 +
+ net/Makefile                            |    1 +
+ net/core/dev.c                          |    6 +-
+ net/core/sock.c                         |    3 +
+ net/ieee802154/Kconfig                  |   12 +
+ net/ieee802154/Makefile                 |    5 +
+ net/ieee802154/af802154.h               |   36 +++
+ net/ieee802154/af_ieee802154.c          |  372 ++++++++++++++++++++++
+ net/ieee802154/dgram.c                  |  394 +++++++++++++++++++++++
+ net/ieee802154/netlink.c                |  523 +++++++++++++++++++++++++++++++
+ net/ieee802154/nl_policy.c              |   52 +++
+ net/ieee802154/raw.c                    |  254 +++++++++++++++
+ 27 files changed, 2544 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/networking/ieee802154.txt
+ create mode 100644 drivers/ieee802154/Kconfig
+ create mode 100644 drivers/ieee802154/Makefile
+ create mode 100644 drivers/ieee802154/fakehard.c
+ create mode 100644 include/linux/nl802154.h
+ create mode 100644 include/net/ieee802154/af_ieee802154.h
+ create mode 100644 include/net/ieee802154/mac_def.h
+ create mode 100644 include/net/ieee802154/netdevice.h
+ create mode 100644 include/net/ieee802154/nl802154.h
+ create mode 100644 net/ieee802154/Kconfig
+ create mode 100644 net/ieee802154/Makefile
+ create mode 100644 net/ieee802154/af802154.h
+ create mode 100644 net/ieee802154/af_ieee802154.c
+ create mode 100644 net/ieee802154/dgram.c
+ create mode 100644 net/ieee802154/netlink.c
+ create mode 100644 net/ieee802154/nl_policy.c
+ create mode 100644 net/ieee802154/raw.c
