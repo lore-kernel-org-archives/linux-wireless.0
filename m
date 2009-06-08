@@ -1,32 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:40219 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754836AbZFRGBj (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:39498 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794AbZFHRob convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 02:01:39 -0400
-Received: by gxk10 with SMTP id 10so1385630gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 23:01:41 -0700 (PDT)
+	Mon, 8 Jun 2009 13:44:31 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so2096655qwd.37
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 10:44:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1245302612-18112-4-git-send-email-vasanth@atheros.com>
-References: <1245302612-18112-1-git-send-email-vasanth@atheros.com>
-	<1245302612-18112-2-git-send-email-vasanth@atheros.com> <1245302612-18112-3-git-send-email-vasanth@atheros.com>
-	<1245302612-18112-4-git-send-email-vasanth@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 17 Jun 2009 23:01:21 -0700
-Message-ID: <43e72e890906172301x2dc2a4abp26e504617a7a1219@mail.gmail.com>
-Subject: Re: [PATCH 4/4] ath9k: Nuke struct ath_tx_ratectrl_state
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
-	ath9k-devel@lists.ath9k.org
+In-Reply-To: <646765f40906072312y5043ac12rd6d756230e98b746@mail.gmail.com>
+References: <4A2CA986.3070500@gmail.com> <646765f40906072312y5043ac12rd6d756230e98b746@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Mon, 8 Jun 2009 10:44:12 -0700
+Message-ID: <43e72e890906081044x566514c5mc02299282e9c9ff2@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: update for 2009-06-08
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 17, 2009 at 10:23 PM, Vasanthakumar
-Thiagarajan<vasanth@atheros.com> wrote:
-> Move its only member (u8 per) to struct ath_rate_priv.
+On Sun, Jun 7, 2009 at 11:12 PM, Julian Calaby<julian.calaby@gmail.com> wrote:
+> On Mon, Jun 8, 2009 at 16:02, Julian Calaby<julian.calaby@gmail.com> wrote:
+>> Update to match wireless-testing v2.6.30-rc8-25759-g00f7164
+>>
+>> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+>> ---
+>>  compat/compat.diff |   42 +++++++++++++++++++++++-------------------
+>>  1 files changed, 23 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/compat/compat.diff b/compat/compat.diff
+>> index d89ea98..846e8f5 100644
+>> --- a/compat/compat.diff
+>> +++ b/compat/compat.diff
+>> @@ -181,6 +181,12 @@
+>>  obj-$(CONFIG_LIBERTAS)                += libertas/
+>>
+>>  obj-$(CONFIG_LIBERTAS_THINFIRM)       += libertas_tf/
+>> +@@ -60,5 +34,3 @@
+>> + obj-$(CONFIG_MAC80211_HWSIM)  += mac80211_hwsim.o
+>> +
+>> + obj-$(CONFIG_WL12XX)  += wl12xx/
+>> +-
+>> +-obj-$(CONFIG_IWM)     += iwmc3200wifi/
+>
+> Sigh.
+>
+> Of course, I forgot to describe the changes in this patch.
+>
+> compat.diff has been updated to apply cleanly over the
+> wireless-testing.git version specified above with no fuzz.
+>
+> iwmc3200wifi, as I don't know if it compiles on anything but
+> wireless-testing.git, has been disabled by editing it out of the
+> Makefile as it's directory isn't actually copied from
+> wireless-testing. -- I'm not sure that this is the correct way to do
+> this as it's hiding the problem away in compat.diff - not obviously
+> fixing it by, e.g. copying the directory from wireless-testing.git or
+> making it compile on older kernels.
 
-yay! BTW are these based on top of my rate series?
+This is fine for now.
 
- Luis
+> I must note that even after these changes, this still doesn't actually
+> compile for me, as ath9k uses the rfkill_ops structure which isn't
+> present in my 2.6.29 kernel.
+
+Thanks for the note, both patches applied. For rfkill we'll need
+someone brave and with time to backport it... as rfkill has been
+re-written. The easiest solution is to revert the patches for older
+kernels through compat.diff. That is add #ifdefs and for old kernel
+revisions use the old stuff, for new kernels (as of 2.6.31) leave the
+code in place.
+
+  Luis
