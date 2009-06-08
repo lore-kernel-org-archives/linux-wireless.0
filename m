@@ -1,146 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:60184 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871AbZFFJrC (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:28462 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754872AbZFHP6K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 05:47:02 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1253940ywb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jun 2009 02:47:04 -0700 (PDT)
+	Mon, 8 Jun 2009 11:58:10 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 08:58:13 -0700
+Date: Mon, 8 Jun 2009 08:58:13 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: Re: [PATCH v2 11/15] ath9k: remove unnecessary
+	IEEE80211_TX_CTL_NO_ACK  checks
+Message-ID: <20090608155813.GB22060@tesla>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com> <1244246629-28179-12-git-send-email-lrodriguez@atheros.com> <69e28c910906071125n54128452ja77495ae5f62beed@mail.gmail.com>
 MIME-Version: 1.0
-Date: Sat, 6 Jun 2009 15:17:04 +0530
-Message-ID: <be4915c60906060247m7c66b9fdse58991a133e48138@mail.gmail.com>
-Subject: Doubt regarding Wifi Driver iwlagn
-From: Sivabalan Thirunavukkarasu <siva886@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=0016361e88c637c928046baae46f
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <69e28c910906071125n54128452ja77495ae5f62beed@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016361e88c637c928046baae46f
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Sun, Jun 07, 2009 at 11:25:31AM -0700, Gábor Stefanik wrote:
+> On Sat, Jun 6, 2009 at 2:03 AM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
+> > We check for this condition early on in our mac80211 get_rate()
+> > callback ath_get_rate(), so remove this check later down the path.
+> >
+> > Cc: Derek Smithies <derek@indranet.co.nz>
+> > Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
+> >  1 files changed, 2 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> > index 9907f2f..d8d2152 100644
+> > --- a/drivers/net/wireless/ath/ath9k/rc.c
+> > +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> > @@ -783,7 +783,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+> >         * just CTS.  Note that this is only done for OFDM/HT unicast frames.
+> >         */
+> >        if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
+> > -           !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+> >            (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
+> >             WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
+> >                rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+> > @@ -890,9 +889,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+> >         *
+> >         * FIXME: Fix duration
+> >         */
+> > -       if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+> > -           (ieee80211_has_morefrags(fc) ||
+> > -            (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
+> > +       if (ieee80211_has_morefrags(fc) ||
+> > +           (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
+> >                rates[1].count = rates[2].count = rates[3].count = 0;
+> >                rates[1].idx = rates[2].idx = rates[3].idx = 0;
+> >                rates[0].count = ATH_TXMAXTRY;
+> > --
+> > 1.6.0.6
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> Is this a side effect of my NO_ACK retry count patchset accepted earlier?
 
-Hi all,
+Yes.
 
-      I am using Ubuntu 9.04 64bit running its default kernel
-2.6.28-11-generic. My doubt is regarding the wireless driver. The card
-my HP HDX16 laptop has is, ( from lspci )
-
-      02:00.0 Network controller: Intel Corporation PRO/Wireless 5100
-AGN [Shiloh] Network Connection
-
-      Whenever my card tries to associate with any of my AP's, i get
-the following messages on dmesg.
-
-     .
-     ..
-     [   73.333572] wlan0: disassociating by local choice (reason=3)
-     [   73.344039] iwlagn: index 0 not used in uCode key table.
-     [   81.500026] Clocksource tsc unstable (delta = -273035428 ns)
-     [   86.239909] wlan0: authenticate with AP 00:1e:40:af:cc:7e
-     ..
-     .
-
-     I am not clear whether its a bug or what exactly is the problem
-here. Have attached the full dmesg log from start of inclusion of Wifi
-driver with this for reference.
-
-     Please clarify.
-
-Thanks
-Siva
-
---0016361e88c637c928046baae46f
-Content-Type: text/x-log; charset=US-ASCII; name="dmesg.log"
-Content-Disposition: attachment; filename="dmesg.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fvm554r80
-
-WyAgIDEyLjQ5OTUyMF0gaXdsYWduOiBJbnRlbChSKSBXaXJlbGVzcyBXaUZpIExpbmsgQUdOIGRy
-aXZlciBmb3IgTGludXgsIDEuMy4yN2tzClsgICAxMi40OTk1MjNdIGl3bGFnbjogQ29weXJpZ2h0
-KGMpIDIwMDMtMjAwOCBJbnRlbCBDb3Jwb3JhdGlvbgpbICAgMTIuNDk5NjI4XSBpd2xhZ24gMDAw
-MDowMjowMC4wOiBQQ0kgSU5UIEEgLT4gR1NJIDE2IChsZXZlbCwgbG93KSAtPiBJUlEgMTYKWyAg
-IDEyLjQ5OTYzNV0gaXdsYWduIDAwMDA6MDI6MDAuMDogc2V0dGluZyBsYXRlbmN5IHRpbWVyIHRv
-IDY0ClsgICAxMi40OTk2OTFdIGl3bGFnbjogRGV0ZWN0ZWQgSW50ZWwgV2lyZWxlc3MgV2lGaSBM
-aW5rIDUxMDBBR04gUkVWPTB4NTQKWyAgIDEyLjUyMTU4MV0gaXdsYWduOiBUdW5hYmxlIGNoYW5u
-ZWxzOiAxMyA4MDIuMTFiZywgMjQgODAyLjExYSBjaGFubmVscwpbICAgMTIuNTIxNjQ2XSBpd2xh
-Z24gMDAwMDowMjowMC4wOiBpcnEgMjI5NSBmb3IgTVNJL01TSS1YClsgICAxMi41MjI1MDVdIHBo
-eTA6IFNlbGVjdGVkIHJhdGUgY29udHJvbCBhbGdvcml0aG0gJ2l3bC1hZ24tcnMnClsgICAxMi41
-NjU5NTVdIHN5bmFwdGljcyB3YXMgcmVzZXQgb24gcmVzdW1lLCBzZWUgc3luYXB0aWNzX3Jlc3Vt
-ZV9yZXNldCBpZiB5b3UgaGF2ZSB0cm91YmxlIG9uIHJlc3VtZQpbICAgMTIuNjU0OTg3XSBIREEg
-SW50ZWwgMDAwMDowMDoxYi4wOiBQQ0kgSU5UIEEgLT4gR1NJIDIyIChsZXZlbCwgbG93KSAtPiBJ
-UlEgMjIKWyAgIDEyLjY1NTA3OF0gSERBIEludGVsIDAwMDA6MDA6MWIuMDogc2V0dGluZyBsYXRl
-bmN5IHRpbWVyIHRvIDY0ClsgICAxMi42ODYzMzVdIGlucHV0OiBIREEgRGlnaXRhbCBQQ0JlZXAg
-YXMgL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjFiLjAvaW5wdXQvaW5wdXQxMQpbICAgMTIu
-ODk0NTAyXSBscDogZHJpdmVyIGxvYWRlZCBidXQgbm8gZGV2aWNlcyBmb3VuZApbICAgMTIuOTg0
-MjYzXSBBZGRpbmcgMTEzMjU0MGsgc3dhcCBvbiAvZGV2L3NkYTYuICBQcmlvcml0eTotMSBleHRl
-bnRzOjEgYWNyb3NzOjExMzI1NDBrClsgICAxMi45OTg3NjZdIEVYVDMgRlMgb24gc2RhNSwgaW50
-ZXJuYWwgam91cm5hbApbICAgMTMuMzEyNzIwXSB0eXBlPTE1MDUgYXVkaXQoMTI0NDI3NTk2MS45
-MTc6Mik6IG9wZXJhdGlvbj0icHJvZmlsZV9sb2FkIiBuYW1lPSIvdXNyL3NoYXJlL2dkbS9ndWVz
-dC1zZXNzaW9uL1hzZXNzaW9uIiBuYW1lMj0iZGVmYXVsdCIgcGlkPTIyNTMKWyAgIDEzLjM0NTQy
-MV0gdHlwZT0xNTA1IGF1ZGl0KDEyNDQyNzU5NjEuOTUzOjMpOiBvcGVyYXRpb249InByb2ZpbGVf
-bG9hZCIgbmFtZT0iL3NiaW4vZGhjbGllbnQtc2NyaXB0IiBuYW1lMj0iZGVmYXVsdCIgcGlkPTIy
-NTcKWyAgIDEzLjM0NTUyOF0gdHlwZT0xNTA1IGF1ZGl0KDEyNDQyNzU5NjEuOTUzOjQpOiBvcGVy
-YXRpb249InByb2ZpbGVfbG9hZCIgbmFtZT0iL3NiaW4vZGhjbGllbnQzIiBuYW1lMj0iZGVmYXVs
-dCIgcGlkPTIyNTcKWyAgIDEzLjM0NTU2M10gdHlwZT0xNTA1IGF1ZGl0KDEyNDQyNzU5NjEuOTUz
-OjUpOiBvcGVyYXRpb249InByb2ZpbGVfbG9hZCIgbmFtZT0iL3Vzci9saWIvTmV0d29ya01hbmFn
-ZXIvbm0tZGhjcC1jbGllbnQuYWN0aW9uIiBuYW1lMj0iZGVmYXVsdCIgcGlkPTIyNTcKWyAgIDEz
-LjM0NTU5M10gdHlwZT0xNTA1IGF1ZGl0KDEyNDQyNzU5NjEuOTUzOjYpOiBvcGVyYXRpb249InBy
-b2ZpbGVfbG9hZCIgbmFtZT0iL3Vzci9saWIvY29ubm1hbi9zY3JpcHRzL2RoY2xpZW50LXNjcmlw
-dCIgbmFtZTI9ImRlZmF1bHQiIHBpZD0yMjU3ClsgICAxMy40Mzk0NzRdIHR5cGU9MTUwNSBhdWRp
-dCgxMjQ0Mjc1OTYyLjA0NTo3KTogb3BlcmF0aW9uPSJwcm9maWxlX2xvYWQiIG5hbWU9Ii91c3Iv
-bGliL2N1cHMvYmFja2VuZC9jdXBzLXBkZiIgbmFtZTI9ImRlZmF1bHQiIHBpZD0yMjYyClsgICAx
-My40Mzk2MThdIHR5cGU9MTUwNSBhdWRpdCgxMjQ0Mjc1OTYyLjA0NTo4KTogb3BlcmF0aW9uPSJw
-cm9maWxlX2xvYWQiIG5hbWU9Ii91c3Ivc2Jpbi9jdXBzZCIgbmFtZTI9ImRlZmF1bHQiIHBpZD0y
-MjYyClsgICAxMy40NjE0MjldIHR5cGU9MTUwNSBhdWRpdCgxMjQ0Mjc1OTYyLjA2OTo5KTogb3Bl
-cmF0aW9uPSJwcm9maWxlX2xvYWQiIG5hbWU9Ii91c3Ivc2Jpbi9teXNxbGQtYWtvbmFkaSIgbmFt
-ZTI9ImRlZmF1bHQiIHBpZD0yMjY2ClsgICAxMy40ODEyMjNdIHR5cGU9MTUwNSBhdWRpdCgxMjQ0
-Mjc1OTYyLjA4OToxMCk6IG9wZXJhdGlvbj0icHJvZmlsZV9sb2FkIiBuYW1lPSIvdXNyL3NiaW4v
-dGNwZHVtcCIgbmFtZTI9ImRlZmF1bHQiIHBpZD0yMjcwClsgICAxMy42NDg2MzVdIFN5bmFwdGlj
-cyBUb3VjaHBhZCwgbW9kZWw6IDEsIGZ3OiA2LjMsIGlkOiAweDFhMGIxLCBjYXBzOiAweGEwNDcx
-MS8weGEwMDAwMApbICAgMTMuNzMzMjk1XSBpbnB1dDogU3luUFMvMiBTeW5hcHRpY3MgVG91Y2hQ
-YWQgYXMgL2RldmljZXMvcGxhdGZvcm0vaTgwNDIvc2VyaW8xL2lucHV0L2lucHV0MTIKWyAgIDE1
-Ljg4OTUyM10gQmx1ZXRvb3RoOiBCTkVQIChFdGhlcm5ldCBFbXVsYXRpb24pIHZlciAxLjMKWyAg
-IDE1Ljg4OTUyNl0gQmx1ZXRvb3RoOiBCTkVQIGZpbHRlcnM6IHByb3RvY29sIG11bHRpY2FzdApb
-ICAgMTUuOTAzMDc5XSBCcmlkZ2UgZmlyZXdhbGxpbmcgcmVnaXN0ZXJlZApbICAgMTcuMzU4MzIy
-XSBwcGRldjogdXNlci1zcGFjZSBwYXJhbGxlbCBwb3J0IGRyaXZlcgpbICAgMjEuMzkzMTgyXSBy
-ODE2OTogZXRoMDogbGluayBkb3duClsgICAyMS4zOTM3ODZdIEFERFJDT05GKE5FVERFVl9VUCk6
-IGV0aDA6IGxpbmsgaXMgbm90IHJlYWR5ClsgICAyMS4zOTQzNjddIGl3bGFnbiAwMDAwOjAyOjAw
-LjA6IGZpcm13YXJlOiByZXF1ZXN0aW5nIGl3bHdpZmktNTAwMC0xLnVjb2RlClsgICAyMi4zOTg1
-NzhdIFJlZ2lzdGVyZWQgbGVkIGRldmljZTogaXdsLXBoeTA6cmFkaW8KWyAgIDIyLjM5ODU5NF0g
-UmVnaXN0ZXJlZCBsZWQgZGV2aWNlOiBpd2wtcGh5MDphc3NvYwpbICAgMjIuMzk4NjA2XSBSZWdp
-c3RlcmVkIGxlZCBkZXZpY2U6IGl3bC1waHkwOlJYClsgICAyMi4zOTg2MThdIFJlZ2lzdGVyZWQg
-bGVkIGRldmljZTogaXdsLXBoeTA6VFgKWyAgIDIzLjI2MjE0OV0gQUREUkNPTkYoTkVUREVWX1VQ
-KTogd2xhbjA6IGxpbmsgaXMgbm90IHJlYWR5ClsgICA1OC42OTQzMDVdIENQVTAgYXR0YWNoaW5n
-IE5VTEwgc2NoZWQtZG9tYWluLgpbICAgNTguNjk0MzEwXSBDUFUxIGF0dGFjaGluZyBOVUxMIHNj
-aGVkLWRvbWFpbi4KWyAgIDU4LjcxMjA4MV0gQ1BVMCBhdHRhY2hpbmcgc2NoZWQtZG9tYWluOgpb
-ICAgNTguNzEyMDg0XSAgZG9tYWluIDA6IHNwYW4gMC0xIGxldmVsIE1DClsgICA1OC43MTIwODdd
-ICAgZ3JvdXBzOiAwIDEKWyAgIDU4LjcxMjA5MF0gICBkb21haW4gMTogc3BhbiAwLTEgbGV2ZWwg
-Q1BVClsgICA1OC43MTIwOTFdICAgIGdyb3VwczogMC0xClsgICA1OC43MTIwOTVdIENQVTEgYXR0
-YWNoaW5nIHNjaGVkLWRvbWFpbjoKWyAgIDU4LjcxMjA5Nl0gIGRvbWFpbiAwOiBzcGFuIDAtMSBs
-ZXZlbCBNQwpbICAgNTguNzEyMDk3XSAgIGdyb3VwczogMSAwClsgICA1OC43MTIxMDBdICAgZG9t
-YWluIDE6IHNwYW4gMC0xIGxldmVsIENQVQpbICAgNTguNzEyMTAxXSAgICBncm91cHM6IDAtMQpb
-ICAgNjAuMjI1MzczXSB3bGFuMDogYXV0aGVudGljYXRlIHdpdGggQVAgMDA6MWU6NDA6YWY6YzM6
-N2MKWyAgIDYwLjIyNzUxNl0gd2xhbjA6IGF1dGhlbnRpY2F0ZWQKWyAgIDYwLjIyNzUxOV0gd2xh
-bjA6IGFzc29jaWF0ZSB3aXRoIEFQIDAwOjFlOjQwOmFmOmMzOjdjClsgICA2MC4yMzAwMTVdIHds
-YW4wOiBSWCBBc3NvY1Jlc3AgZnJvbSAwMDoxZTo0MDphZjpjMzo3YyAoY2FwYWI9MHg0MTEgc3Rh
-dHVzPTAgYWlkPTIpClsgICA2MC4yMzAwMThdIHdsYW4wOiBhc3NvY2lhdGVkClsgICA2MC4yMzQw
-MDJdIEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiB3bGFuMDogbGluayBiZWNvbWVzIHJlYWR5Clsg
-ICA3MS4xOTYwMzJdIHdsYW4wOiBubyBJUHY2IHJvdXRlcnMgcHJlc2VudApbICAgNzMuMzE2NTgz
-XSB3bGFuMDogZGlzYXNzb2NpYXRpbmcgYnkgbG9jYWwgY2hvaWNlIChyZWFzb249MykKWyAgIDcz
-LjMxNjg4MF0gd2xhbjA6IGRpcmVjdCBwcm9iZSB0byBBUCAwMDoxZTo0MDphZjpjMzo3YyB0cnkg
-MQpbICAgNzMuMzE4OTQwXSB3bGFuMCBkaXJlY3QgcHJvYmUgcmVzcG9uZGVkClsgICA3My4zMTg5
-NDVdIHdsYW4wOiBhdXRoZW50aWNhdGUgd2l0aCBBUCAwMDoxZTo0MDphZjpjMzo3YwpbICAgNzMu
-MzIwOTE2XSB3bGFuMDogYXV0aGVudGljYXRlZApbICAgNzMuMzIwOTIwXSB3bGFuMDogYXNzb2Np
-YXRlIHdpdGggQVAgMDA6MWU6NDA6YWY6YzM6N2MKWyAgIDczLjMyNjgzNl0gd2xhbjA6IFJYIEFz
-c29jUmVzcCBmcm9tIDAwOjFlOjQwOmFmOmMzOjdjIChjYXBhYj0weDQxMSBzdGF0dXM9MCBhaWQ9
-MikKWyAgIDczLjMyNjg0MF0gd2xhbjA6IGFzc29jaWF0ZWQKWyAgIDczLjMzMzU3Ml0gd2xhbjA6
-IGRpc2Fzc29jaWF0aW5nIGJ5IGxvY2FsIGNob2ljZSAocmVhc29uPTMpClsgICA3My4zNDQwMzld
-IGl3bGFnbjogaW5kZXggMCBub3QgdXNlZCBpbiB1Q29kZSBrZXkgdGFibGUuClsgICA4MS41MDAw
-MjZdIENsb2Nrc291cmNlIHRzYyB1bnN0YWJsZSAoZGVsdGEgPSAtMjczMDM1NDI4IG5zKQpbICAg
-ODYuMjM5OTA5XSB3bGFuMDogYXV0aGVudGljYXRlIHdpdGggQVAgMDA6MWU6NDA6YWY6Y2M6N2UK
-WyAgIDg2LjI0ODEyNF0gd2xhbjA6IGF1dGhlbnRpY2F0ZWQKWyAgIDg2LjI0ODEzMV0gd2xhbjA6
-IGFzc29jaWF0ZSB3aXRoIEFQIDAwOjFlOjQwOmFmOmNjOjdlClsgICA4Ni4yNTA3MzRdIHdsYW4w
-OiBSWCBBc3NvY1Jlc3AgZnJvbSAwMDoxZTo0MDphZjpjYzo3ZSAoY2FwYWI9MHg0MTEgc3RhdHVz
-PTAgYWlkPTMpClsgICA4Ni4yNTA3NDBdIHdsYW4wOiBhc3NvY2lhdGVkCg==
---0016361e88c637c928046baae46f--
+  Luis
