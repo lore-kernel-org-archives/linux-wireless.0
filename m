@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11329 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751253AbZFQE1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 00:27:18 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 21:27:21 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 1/1] ath9k: Handle different TX and RX streams properly.
-Date: Wed, 17 Jun 2009 09:57:07 +0530
-Message-ID: <1245212828-7342-2-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
-References: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:48929 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbZFHSbz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 14:31:55 -0400
+Received: by bwz9 with SMTP id 9so3284107bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 11:31:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1244442240.11006.0.camel@johannes.local>
+References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
+	<69e28c910906071534n7f2f3e66r34ac76f503c96fcb@mail.gmail.com>
+	<1244442240.11006.0.camel@johannes.local>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 8 Jun 2009 20:31:29 +0200
+Message-ID: <69e28c910906081131q32c43346r7b4bf15d70ee2813@mail.gmail.com>
+Subject: Re: [PATCH] b43 add harware tkip
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: gregor kowski <gregor.kowski@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an issue when the TX and RX streams are different.
+2009/6/8 Johannes Berg <johannes@sipsolutions.net>:
+> On Mon, 2009-06-08 at 00:34 +0200, Gábor Stefanik wrote:
+>> On Sun, Jun 7, 2009 at 11:50 PM, gregor kowski<gregor.kowski@gmail.com> wrote:
+>
+>> This is your entire mail body.
+>> Please inline the patch, or at least include a description.
+>
+> This is ridiculous, you've never managed to do that correctly yourself.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   26 ++++++++++++++------------
- 1 files changed, 14 insertions(+), 12 deletions(-)
+Well, I never sent an empty mail with only an attachment and nothing
+in the body...
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2ebd0ed..ebe559c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -874,6 +874,7 @@ static void setup_ht_cap(struct ath_softc *sc,
- {
- #define	ATH9K_HT_CAP_MAXRXAMPDU_65536 0x3	/* 2 ^ 16 */
- #define	ATH9K_HT_CAP_MPDUDENSITY_8 0x6		/* 8 usec */
-+	u8 tx_streams, rx_streams;
- 
- 	ht_info->ht_supported = true;
- 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-@@ -886,21 +887,22 @@ static void setup_ht_cap(struct ath_softc *sc,
- 
- 	/* set up supported mcs set */
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
-+	tx_streams = !(sc->tx_chainmask & (sc->tx_chainmask - 1)) ? 1 : 2;
-+	rx_streams = !(sc->rx_chainmask & (sc->rx_chainmask - 1)) ? 1 : 2;
- 
--	switch(sc->rx_chainmask) {
--	case 1:
--		ht_info->mcs.rx_mask[0] = 0xff;
--		break;
--	case 3:
--	case 5:
--	case 7:
--	default:
--		ht_info->mcs.rx_mask[0] = 0xff;
--		ht_info->mcs.rx_mask[1] = 0xff;
--		break;
-+	if (tx_streams != rx_streams) {
-+		DPRINTF(sc, ATH_DBG_CONFIG, "TX streams %d, RX streams: %d\n",
-+			tx_streams, rx_streams);
-+		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
-+		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-+				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
- 	}
- 
--	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
-+	ht_info->mcs.rx_mask[0] = 0xff;
-+	if (rx_streams >= 2)
-+		ht_info->mcs.rx_mask[1] = 0xff;
-+
-+	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
- }
- 
- static void ath9k_bss_assoc_info(struct ath_softc *sc,
+>
+> johannes
+>
+
+
+
 -- 
-1.6.0.4
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
