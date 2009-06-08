@@ -1,50 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:53151 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756814AbZFJW66 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 18:58:58 -0400
-Message-ID: <4A30388F.1020701@informatik.uni-kl.de>
-Date: Thu, 11 Jun 2009 00:49:51 +0200
-From: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
-MIME-Version: 1.0
-To: Zhu Yi <yi.zhu@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernelnewbies@nl.linux.org" <kernelnewbies@nl.linux.org>,
-	"m_wilhel@informatik.uni-kl.de" <m_wilhel@informatik.uni-kl.de>
-Subject: Re: Sending netlink messages in mac80211 tx handler
-References: <4A2EEA07.1050306@informatik.uni-kl.de> <1244596432.5034.27.camel@debian>
-In-Reply-To: <1244596432.5034.27.camel@debian>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:61339 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753090AbZFHUVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 16:21:22 -0400
+Subject: Re: [PATCH v2 14/15] mac80211: add helper for management / no-ack
+ frame rate decision
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+In-Reply-To: <1244246629-28179-15-git-send-email-lrodriguez@atheros.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	 <1244246629-28179-15-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Mon, 08 Jun 2009 13:28:22 -0700
+Message-Id: <1244492902.20900.196.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi wrote:
->>         void* hdr;
->>
->>         if(!skb)
->>                 goto out;
->>
->>         hdr = genlmsg_put(skb, 0, 0, &nl80211_fam, 0, NL80211_CMD_DISCOSEC);
->>         if(IS_ERR(hdr))
->>                 goto free_skb;
->>
->>         nla_put_u32(skb, NL80211_ATTR_DISCOSEC_HELO, 42);
->>         genlmsg_end(skb, hdr);
->>         genlmsg_unicast(skb, get_daemon_pid());
->>
->> free_skb:
->>         nlmsg_free(skb);
-> 
-> No need to free on the correct path. The skb is added to the
-> receive_queue directly for Rx.
-> 
-> Thanks,
-> -yi
-> 
+Hi Luis,
 
-Thank you for your hint! I searched for hours and couldn't
-find the problem. It's working great now.
+On Fri, 2009-06-05 at 17:03 -0700, Luis R. Rodriguez wrote:
+> All current rate control algorithms agree to send management and no-ack
+> frames at the lowest rate. They also agree to do this when sta
+> and the private rate control data is NULL. We add a hlper to mac80211
+> for this and simplify the rate control algorithm code.
+> 
+> Developers wishing to make enhancements to rate control algorithms
+> are for broadcast/multicast can opt to not use this in their
+> gate_rate() mac80211 callback.
+> 
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Cc: ipw3945-devel@lists.sourceforge.net
+> Cc: Gabor Juhos <juhosg@openwrt.org>
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Cc: Derek Smithies <derek@indranet.co.nz>
+> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
+>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   21 ++-----------------
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   12 +----------
+>  include/net/mac80211.h                     |   23 ++++++++++++++++++++++
+>  net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
+>  net/mac80211/rc80211_minstrel.c            |   22 +--------------------
+>  net/mac80211/rc80211_pid_algo.c            |   11 +---------
+>  7 files changed, 59 insertions(+), 73 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> index d8d2152..9199ce9 100644
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> index bd2f709..8bd496f 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+> @@ -673,7 +673,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>  	s8 scale_action = 0;
+>  	unsigned long flags;
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> -	__le16 fc;
+>  	u16 rate_mask = 0;
+>  	s8 max_rate_idx = -1;
+>  	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+> @@ -681,24 +680,10 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>  
+>  	IWL_DEBUG_RATE(priv, "enter\n");
+>  
+> -	if (sta)
+> -		rate_mask = sta->supp_rates[sband->band];
+> -
+> -	/* Send management frames and NO_ACK data using lowest rate. */
+> -	fc = hdr->frame_control;
+> -	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+> -	    !sta || !priv_sta) {
+> -		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+> -		if (!rate_mask)
+> -			info->control.rates[0].idx =
+> -					rate_lowest_index(sband, NULL);
+> -		else
+> -			info->control.rates[0].idx =
+> -					rate_lowest_index(sband, sta);
+> -		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+> -			info->control.rates[0].count = 1;
+> +	if (rate_control_send_low(sta, priv_sta, txrc))
+>  		return;
+> -	}
+> +
+> +	rate_mask = sta->supp_rates[sband->band];
+>  
+>  	/* get user max rate if set */
+>  	max_rate_idx = txrc->max_rate_idx;
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> index ff20e50..7a3e4dd 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> @@ -2485,18 +2485,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+>  		mask_bit = sta->supp_rates[sband->band];
+>  
+>  	/* Send management frames and NO_ACK data using lowest rate. */
+> -	if (!ieee80211_is_data(hdr->frame_control) ||
+> -	    info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
+> -		if (!mask_bit)
+> -			info->control.rates[0].idx =
+> -					rate_lowest_index(sband, NULL);
+> -		else
+> -			info->control.rates[0].idx =
+> -					rate_lowest_index(sband, sta);
+> -		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+> -			info->control.rates[0].count = 1;
+> +	if (rate_control_send_low(sta, priv_r, txrc))
+>  		return;
+> -	}
+>  
+>  	rate_idx  = lq_sta->last_txrate_idx;
 
-Regards,
-  Reiner
+
+The iwlwifi way of computing rates is not captured in the new helper. We
+used to do it in the way you change it to, but run into the
+"rs_get_rate" WARN very often (see
+http://www.kerneloops.org/searchweek.php?search=rs_get_rate and
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1822 ). We
+submitted patch "iwlwifi: fix rs_get_rate WARN_ON()" to address that.
+
+Changing this back will make that warning reappear.
+
+
+Reinette
+
+
