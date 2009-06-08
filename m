@@ -1,137 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from build.ossfans.org ([67.223.233.67]:32874 "EHLO
-	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754007AbZFGBSl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51981 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbZFHG3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 21:18:41 -0400
-From: Sergey Lapin <slapin@ossfans.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Sergey Lapin <slapin@ossfans.org>
-Subject: [PATCH 1/5] Add constants for the ieee 802.15.4 stack
-Date: Sun,  7 Jun 2009 05:18:30 +0400
-Message-Id: <ab05794d9f99e4ef522953445a19a39b1f693ede.1244337432.git.slapin@ossfans.org>
-In-Reply-To: <cover.1244337432.git.slapin@ossfans.org>
-References: <cover.1244337432.git.slapin@ossfans.org>
-In-Reply-To: <cover.1244337432.git.slapin@ossfans.org>
-References: <cover.1244337432.git.slapin@ossfans.org>
+	Mon, 8 Jun 2009 02:29:10 -0400
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: gregor kowski <gregor.kowski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ONM7psanqdFObURFsWbO"
+Date: Mon, 08 Jun 2009 08:29:09 +0200
+Message-Id: <1244442549.11006.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE 802.15.4 stack requires several constants to be defined/adjusted.
 
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
----
- include/linux/if_arp.h   |    2 ++
- include/linux/if_ether.h |    1 +
- include/linux/socket.h   |    4 +++-
- net/core/dev.c           |    6 ++++--
- net/core/sock.c          |    3 +++
- 5 files changed, 13 insertions(+), 3 deletions(-)
+--=-ONM7psanqdFObURFsWbO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/linux/if_arp.h b/include/linux/if_arp.h
-index 5ff8980..b554300 100644
---- a/include/linux/if_arp.h
-+++ b/include/linux/if_arp.h
-@@ -86,6 +86,8 @@
- #define ARPHRD_IEEE80211 801		/* IEEE 802.11			*/
- #define ARPHRD_IEEE80211_PRISM 802	/* IEEE 802.11 + Prism2 header  */
- #define ARPHRD_IEEE80211_RADIOTAP 803	/* IEEE 802.11 + radiotap header */
-+#define ARPHRD_IEEE802154	  804
-+#define ARPHRD_IEEE802154_PHY	  805
- 
- #define ARPHRD_PHONET	820		/* PhoNet media type		*/
- #define ARPHRD_PHONET_PIPE 821		/* PhoNet pipe header		*/
-diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
-index cfe4fe1..11a60e4 100644
---- a/include/linux/if_ether.h
-+++ b/include/linux/if_ether.h
-@@ -106,6 +106,7 @@
- #define ETH_P_DSA	0x001B		/* Distributed Switch Arch.	*/
- #define ETH_P_TRAILER	0x001C		/* Trailer switch tagging	*/
- #define ETH_P_PHONET	0x00F5		/* Nokia Phonet frames          */
-+#define ETH_P_IEEE802154 0x00F6		/* IEEE802.15.4 frame		*/
- 
- /*
-  *	This is an Ethernet frame header.
-diff --git a/include/linux/socket.h b/include/linux/socket.h
-index 421afb4..642d1f1 100644
---- a/include/linux/socket.h
-+++ b/include/linux/socket.h
-@@ -194,7 +194,8 @@ struct ucred {
- #define AF_RXRPC	33	/* RxRPC sockets 		*/
- #define AF_ISDN		34	/* mISDN sockets 		*/
- #define AF_PHONET	35	/* Phonet sockets		*/
--#define AF_MAX		36	/* For now.. */
-+#define AF_IEEE802154	36	/* IEEE802154 sockets		*/
-+#define AF_MAX		37	/* For now.. */
- 
- /* Protocol families, same as address families. */
- #define PF_UNSPEC	AF_UNSPEC
-@@ -233,6 +234,7 @@ struct ucred {
- #define PF_RXRPC	AF_RXRPC
- #define PF_ISDN		AF_ISDN
- #define PF_PHONET	AF_PHONET
-+#define PF_IEEE802154	AF_IEEE802154
- #define PF_MAX		AF_MAX
- 
- /* Maximum queue length specifiable by listen.  */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index e2e9e4a..4119dfc 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -268,7 +268,8 @@ static const unsigned short netdev_lock_type[] =
- 	 ARPHRD_IRDA, ARPHRD_FCPP, ARPHRD_FCAL, ARPHRD_FCPL,
- 	 ARPHRD_FCFABRIC, ARPHRD_IEEE802_TR, ARPHRD_IEEE80211,
- 	 ARPHRD_IEEE80211_PRISM, ARPHRD_IEEE80211_RADIOTAP, ARPHRD_PHONET,
--	 ARPHRD_PHONET_PIPE, ARPHRD_VOID, ARPHRD_NONE};
-+	 ARPHRD_PHONET_PIPE, ARPHRD_IEEE802154, ARPHRD_IEEE802154_PHY,
-+	 ARPHRD_VOID, ARPHRD_NONE};
- 
- static const char *netdev_lock_name[] =
- 	{"_xmit_NETROM", "_xmit_ETHER", "_xmit_EETHER", "_xmit_AX25",
-@@ -285,7 +286,8 @@ static const char *netdev_lock_name[] =
- 	 "_xmit_IRDA", "_xmit_FCPP", "_xmit_FCAL", "_xmit_FCPL",
- 	 "_xmit_FCFABRIC", "_xmit_IEEE802_TR", "_xmit_IEEE80211",
- 	 "_xmit_IEEE80211_PRISM", "_xmit_IEEE80211_RADIOTAP", "_xmit_PHONET",
--	 "_xmit_PHONET_PIPE", "_xmit_VOID", "_xmit_NONE"};
-+	 "_xmit_PHONET_PIPE", "_xmit_IEEE802154", "_xmit_IEEE802154_PHY",
-+	 "_xmit_VOID", "_xmit_NONE"};
- 
- static struct lock_class_key netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
- static struct lock_class_key netdev_addr_lock_key[ARRAY_SIZE(netdev_lock_type)];
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 7dbf3ff..8a1644c 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -155,6 +155,7 @@ static const char *af_family_key_strings[AF_MAX+1] = {
-   "sk_lock-27"       , "sk_lock-28"          , "sk_lock-AF_CAN"      ,
-   "sk_lock-AF_TIPC"  , "sk_lock-AF_BLUETOOTH", "sk_lock-IUCV"        ,
-   "sk_lock-AF_RXRPC" , "sk_lock-AF_ISDN"     , "sk_lock-AF_PHONET"   ,
-+  "sk_lock-AF_IEEE802154",
-   "sk_lock-AF_MAX"
- };
- static const char *af_family_slock_key_strings[AF_MAX+1] = {
-@@ -170,6 +171,7 @@ static const char *af_family_slock_key_strings[AF_MAX+1] = {
-   "slock-27"       , "slock-28"          , "slock-AF_CAN"      ,
-   "slock-AF_TIPC"  , "slock-AF_BLUETOOTH", "slock-AF_IUCV"     ,
-   "slock-AF_RXRPC" , "slock-AF_ISDN"     , "slock-AF_PHONET"   ,
-+  "slock-AF_IEEE802154",
-   "slock-AF_MAX"
- };
- static const char *af_family_clock_key_strings[AF_MAX+1] = {
-@@ -185,6 +187,7 @@ static const char *af_family_clock_key_strings[AF_MAX+1] = {
-   "clock-27"       , "clock-28"          , "clock-AF_CAN"      ,
-   "clock-AF_TIPC"  , "clock-AF_BLUETOOTH", "clock-AF_IUCV"     ,
-   "clock-AF_RXRPC" , "clock-AF_ISDN"     , "clock-AF_PHONET"   ,
-+  "clock-AF_IEEE802154",
-   "clock-AF_MAX"
- };
- 
--- 
-1.6.3.1
+On Sun, 2009-06-07 at 21:49 +0000, gregor kowski wrote:
+> The mac80211 tkip code won't call update_tkip_key, if some rx packets
+> get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
+> first packet because the hardware key stuff is called asynchronously
+> with=20
+> todo workqueue.
+>=20
+> This patch workaround that by always calling update_tkip_key if
+> the packet wasn't decrypted by the hardware.
+>=20
+> Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+> Index: linux-2.6/net/mac80211/tkip.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/net/mac80211/tkip.c  2009-06-07 19:32:26.000000000
+> +0000
+> +++ linux-2.6/net/mac80211/tkip.c       2009-06-07 21:31:31.000000000
+> +0000
+> @@ -298,19 +298,19 @@
+>                         printk("\n");
+>                 }
+>  #endif
+> -               if (key->local->ops->update_tkip_key &&
+> -                       key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+> -                       u8 bcast[ETH_ALEN] =3D
+> -                               {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+> -                       u8 *sta_addr =3D key->sta->sta.addr;
+> +       }
+> +       if (key->local->ops->update_tkip_key &&
+> +               key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+> +               u8 bcast[ETH_ALEN] =3D
+> +                       {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+> +               u8 *sta_addr =3D key->sta->sta.addr;
+
+There's a quite obvious disconnect between what your patch does and what
+your description says, please fix one of them. As it is, the patch only
+skips the IV rollover which is *completely* wrong because it will call
+the function for *every* packet.
+
+johannes
+
+--=-ONM7psanqdFObURFsWbO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKLK+yAAoJEODzc/N7+QmatOsQAKBzYaDerfwUQ6tf0qjQnxVC
+bmJWpHWUa1//6snO3BUsLbn4a2FD40u4AnZ8HGnBMLhEoAoLDtngPUtsXnH4tvkV
+GV/fk+ck0/cmbl08ry2JCiMmbo/74ahSeDeslCGrEKRWV3khLddUmb0FbE1gvTK8
+v1eNlpijYtnANqUZ4pkcJVY8vskdIdFaxqz84uTMIjb5IFFPtfROPuFHeHuMfvbS
+p/nGz2qmj6ON8cVW8beRlgrtJh2NkOOW7+pSFS47bjmDy75tJT4cxwaD9M8f/OEQ
+gS8mSHwyKfDLfI6cclQRbFqO0/HLmUXNJ+xyTqBOYt8qCFeM2XHXiP+/xA0YXsCa
+VoSN8TGwp8Qs1fdP2J5NSI5H5Qfy1C67PH/a9/MVCNm3qSn/RCURGQGFpW3K1kcW
+qgmicXVbSaJY8Ckkzk4YmzPxF2LfoD6NF+2GNxGCjC1ocNIVSlTkjFaUq8i3VeU9
+GHedZ8JvfV5WFp9tpLXJqnYSAnzgvfWNXcgMH6F0tzcO5LccIQqrU4bNp61O75RW
+YUadMy8INgADl7RJiFSbQ2ytWvgW0gW+Z07jxJl9xV5HhHn29liTw9IUSBJOgLZV
+VbPlOUtwjA+tg/2Y0nGoKrj/ZjvMPK55F2B3y6LyDmeMwvlO4tP9993rl2U8gbRV
+rW8RJj+4tjYB7OK3bl5R
+=kVOA
+-----END PGP SIGNATURE-----
+
+--=-ONM7psanqdFObURFsWbO--
 
