@@ -1,71 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086AbZFFRpb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:45:31 -0400
-Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A2AA94E.3050700@web.de>
-References: <4A2AA395.3060406@web.de>
-	 <1244308808.15640.4.camel@johannes.local>  <4A2AA6BC.5040004@web.de>
-	 <1244309333.17485.0.camel@johannes.local>  <4A2AA94E.3050700@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+4HPqckB0XAFDnNb/CFy"
-Date: Sat, 06 Jun 2009 19:45:29 +0200
-Message-Id: <1244310329.17485.15.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:28442 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754419AbZFHP5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 11:57:37 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 08:57:40 -0700
+Date: Mon, 8 Jun 2009 08:57:40 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Karl Hiramoto <karl@hiramoto.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"j@w1.fi" <j@w1.fi>, Derek Smithies <derek@indranet.co.nz>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: Re: [ath9k-devel] [PATCH v2 08/15] ath9k: remove ATH9K_MODE_11B
+Message-ID: <20090608155740.GA22060@tesla>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com> <1244246629-28179-9-git-send-email-lrodriguez@atheros.com> <4A2A19FD.3030302@hiramoto.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A2A19FD.3030302@hiramoto.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Jun 06, 2009 at 12:25:49AM -0700, Karl Hiramoto wrote:
+> Luis R. Rodriguez wrote:
+> > This saves us 2733 bytes.
+> >
+> >    text    data     bss     dec     hex filename
+> >  252265    3628    1584  257477   3edc5 ath9k-has-b-rate.ko
+> >  249905    3628    1584  255117   3e48d ath9k.ko
+> >
+> > Cc: Derek Smithies <derek@indranet.co.nz>
+> > Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> > Siged-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/hw.c |    1 -
+> >  drivers/net/wireless/ath/ath9k/hw.h |    1 -
+> >  drivers/net/wireless/ath/ath9k/rc.c |   23 -----------------------
+> >  3 files changed, 0 insertions(+), 25 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> > index 1579c94..de2c000 100644
+> > --- a/drivers/net/wireless/ath/ath9k/hw.c
+> > +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> > @@ -3294,7 +3294,6 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+> >       }
+> >
+> >       if (eeval & AR5416_OPFLAGS_11G) {
+> > -             set_bit(ATH9K_MODE_11B, pCap->wireless_modes);
+> >               set_bit(ATH9K_MODE_11G, pCap->wireless_modes);
+> >               if (ah->config.ht_enable) {
+> >                       if (!(eeval & AR5416_OPFLAGS_N_2G_HT20))
+> > diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> > index dd8508e..73d859e 100644
+> > --- a/drivers/net/wireless/ath/ath9k/hw.h
+> > +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> > @@ -113,7 +113,6 @@
+> >
+> >  enum wireless_mode {
+> >       ATH9K_MODE_11A = 0,
+> > -     ATH9K_MODE_11B = 2,
+> >       ATH9K_MODE_11G = 3,
+> >       ATH9K_MODE_11NA_HT20 = 6,
+> >       ATH9K_MODE_11NG_HT20 = 7,
+> > diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> > index 01586d2..980040b 100644
+> > --- a/drivers/net/wireless/ath/ath9k/rc.c
+> > +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> > @@ -380,27 +380,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+> >       0,   /* Phy rates allowed initially */
+> >  };
+> >
+> > -static const struct ath_rate_table ar5416_11b_ratetable = {
+> > -     4,
+> > -     {
+> > -             { VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
+> > -                     900, 0x1b,  0x00, (0x80|2),
+> > -                     0, 0, 1, 0, 0 },
+> > -             { VALID, VALID, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
+> > -                     1800, 0x1a, 0x04, (0x80|4),
+> > -                     1, 1, 1, 1, 0 },
+> > -             { VALID, VALID, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
+> > -                     4300, 0x19, 0x04, (0x80|11),
+> > -                     1, 2, 2, 2, 0 },
+> > -             { VALID, VALID, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
+> > -                     7100, 0x18, 0x04, (0x80|22),
+> > -                     1, 4, 100, 3, 0 },
+> > -     },
+> > -     100, /* probe interval */
+> > -     100, /* rssi reduce interval */
+> > -     0,   /* Phy rates allowed initially */
+> > -};
+> > -
+> >  static inline int8_t median(int8_t a, int8_t b, int8_t c)
+> >  {
+> >       if (a >= b) {
+> > @@ -1723,8 +1702,6 @@ static struct rate_control_ops ath_rate_ops = {
+> >
+> >  void ath_rate_attach(struct ath_softc *sc)
+> >  {
+> > -     sc->hw_rate_table[ATH9K_MODE_11B] =
+> > -             &ar5416_11b_ratetable;
+> >       sc->hw_rate_table[ATH9K_MODE_11A] =
+> >               &ar5416_11a_ratetable;
+> >       sc->hw_rate_table[ATH9K_MODE_11G] =
+> >
+> 
+> 
+> Does this mean that 802.11b will not work anymore? A lot of legacy
+> equipment that only supports B is still arround.
 
---=-+4HPqckB0XAFDnNb/CFy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+11b rates are in the 11g rate table. AFAICT this was just legacy code
+which was present due to support of old 11b only cards.
 
-On Sat, 2009-06-06 at 19:37 +0200, Jan Kiszka wrote:
-
-> > Yes. With the AP firmware, that is. I don't care about that firmware at
-> > all.
->=20
-> I do as it shall upgrade my soft-AP from an oldish rt2500 to this
-> dwa-160 stick.
-
-No, you don't actually need AP software for that. The STA software
-supports most of AP already.
-
-> Are you at least interested in porting the missing AP bits into the STA
-> version (likely the best long-term approach anyway)? And do you have a
-> rough idea which bits are missing / where to look at?
-
-Yes, that would be the plan. No, I have no idea what's missing. There
-are tools like diff though :)
-
-johannes
-
---=-+4HPqckB0XAFDnNb/CFy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKqs1AAoJEODzc/N7+QmaVWkP/0lJswBKKHtd+c/g5e6jWnC7
-9XaWKonJOAzrrgyRvSGkKxHHoqM8L9Mab7+yb/jknIZS9UjZtenu4BwWepVWy64M
-CG2FfRlAvT6RM7vxZzrzEIJgcXrt87Aq+NIP7YTx9Kh/oFRMSivhEfbQ19nUXcDq
-GXnWCB1LMeOG9ZKZxfyQ1E6reqa6XeuT5QZwtCw5up4DCyiqsGV92WmzeF6fpap5
-iVr2brvpSZ9pxUzykAtjzbvjTV96efNutjiigKu797Y6GLI4dqN3oX19QHpIFisy
-6/OAs3DfWY/WW+CAlSteeQzh/qN0V7PUwN2QMow7cgNuWWyc5C4WCtfGJmGKngAF
-xvs7iLzWMxovoA8QhkkU+rqMicfkG7xcQjr9r9irxJjlxaeUWjfQLU9JeJZq4iXJ
-MZIhzTOHlR0358tnOgAgBT2jFt5xROh3remwISFVwXp56eSpv/4R64wTrhpAJvXq
-YShd4voiNyl5WA8EwG0BNhrAwOXc7HyDUWmnTADq74OpZ5qTjNDkg82LkYQc3KxO
-JFINt5QwllRYFFBjQ6F/dumhdBY5IpqASU10vvxWaErr2St3cojNoAcbqgCEll8Z
-DpZ4ItEWYu4A82n6iT0g3XCw95/TDuckN8gVd+dxFcviGRMmJa2xmQw8F6K6zN/U
-8oAGnBrQHEH2tr5wD0H5
-=g62N
------END PGP SIGNATURE-----
-
---=-+4HPqckB0XAFDnNb/CFy--
-
+  Luis
