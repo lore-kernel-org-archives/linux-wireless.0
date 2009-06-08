@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33860 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752306AbZFFRtS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:49:18 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
-Date: Sat, 6 Jun 2009 19:49:06 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052101.47168.mb@bu3sch.de> <1244310138.17485.11.camel@johannes.local>
-In-Reply-To: <1244310138.17485.11.camel@johannes.local>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:39184 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754822AbZFHMM3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 08:12:29 -0400
+Received: by bwz9 with SMTP id 9so2994139bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 05:12:30 -0700 (PDT)
+Message-ID: <4A2D0027.6030100@tuffmail.co.uk>
+Date: Mon, 08 Jun 2009 13:12:23 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906061949.06735.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rfkill: don't impose global states on resume (just restore
+ the previous states)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 06 June 2009 19:42:18 Johannes Berg wrote:
-> On Fri, 2009-06-05 at 21:01 +0200, Michael Buesch wrote:
-> 
-> > >      The rfkill polling routine brings the interface back to the initialized
-> > >      state if it is found to be uninitialized. This way the rfkill switch
-> > >      may be interpreted. In addition, the radio LED is not turned on in the
-> > >      initialization routine unless the rfkill switch is on.
-> > 
-> > This is pretty silly behavior IMO. Just to bring it to the point:
-> > We initialize a huge wireless MAC, PHY and Radio that consume several watts of power
-> > just to poll a silly RF-kill bit.
-> 
-> 1) you're MUCH overstating the power consumption
+Once rfkill-input is disabled, the "global" states will only be used as
+default initial states.
 
-Care to measure it?
+Since the states will always be the same after resume, we shouldn't
+generate events on resume.
 
-> Fine. Just don't stand in my way then.
+Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 
-I am not standing in your way. I'm just not going to maintain it.
-In fact, I'd like to pass the whole maintainership to somebody else. But I guess there is nobody.
+---
+ include/linux/rfkill.h |    7 ++++---
+ net/rfkill/core.c      |    6 +-----
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
--- 
-Greetings, Michael.
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index e98a4b3..7b27a68 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -211,7 +211,7 @@ void rfkill_destroy(struct rfkill *rfkill);
+  *
+  * rfkill drivers that get events when the hard-blocked state changes
+  * use this function to notify the rfkill core (and through that also
+- * userspace) of the current state -- they should also use this after
++ * userspace) of the current state.  They should also use this after
+  * resume if the state could have changed.
+  *
+  * You need not (but may) call this function if poll_state is assigned.
+@@ -233,8 +233,9 @@ bool __must_check rfkill_set_hw_state(struct rfkill *rfkill, bool blocked);
+  * rfkill drivers that get events when the soft-blocked state changes
+  * (yes, some platforms directly act on input but allow changing again)
+  * use this function to notify the rfkill core (and through that also
+- * userspace) of the current state -- they should also use this after
+- * resume if the state could have changed.
++ * userspace) of the current state.  It is not necessary to notify on
++ * resume; since hibernation can always change the soft-blocked state,
++ * the rfkill core will unconditionally restore the previous state.
+  *
+  * This function can be called in any context, even from within rfkill
+  * callbacks.
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index d14493f..c02bda8 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -728,15 +728,11 @@ static int rfkill_resume(struct device *dev)
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 	bool cur;
+ 
+-	mutex_lock(&rfkill_global_mutex);
+-	cur = rfkill_global_states[rfkill->type].cur;
++	cur = !!(rfkill->state & RFKILL_BLOCK_SW);
+ 	rfkill_set_block(rfkill, cur);
+-	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	rfkill->suspended = false;
+ 
+-	schedule_work(&rfkill->uevent_work);
+-
+ 	rfkill_resume_polling(rfkill);
+ 
+ 	return 0;
+
+
