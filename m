@@ -1,128 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:39840 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753330AbZFRCx3 (ORCPT
+Received: from storm.alittletooquiet.net ([67.23.28.199]:45103 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbZFHRxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 22:53:29 -0400
-Received: by ewy6 with SMTP id 6so1108771ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 19:53:30 -0700 (PDT)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: [PATCH 1/2] zd1211rw: sort vid/pid pairs by numerical value
-Date: Thu, 18 Jun 2009 03:53:26 +0100
-Message-Id: <1245293606-2101-1-git-send-email-HinTak.Leung@gmail.com>
+	Mon, 8 Jun 2009 13:53:17 -0400
+Date: Mon, 8 Jun 2009 13:45:35 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Olivier Blin <blino@mandriva.com>
+Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Greg KH <greg@kroah.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
+Message-ID: <20090608174534.GD25718@alittletooquiet.net>
+References: <20090414105200.GE25746@storm.local.network> <69e28c910906010935n28f69921xd589a945e982ca1@mail.gmail.com> <20090601165207.GA12481@alittletooquiet.net> <m3prdeac1t.fsf@dynamo.mandriva.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="o71xDhNo7p97+qVi"
+In-Reply-To: <m3prdeac1t.fsf@dynamo.mandriva.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the past ids were inserted in no particular order and it has
-become hard to see what ids are already included or not. This
-patch sorts the ids by numerical value and has no functional effect.
 
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
- drivers/net/wireless/zd1211rw/zd_usb.c |   72 ++++++++++++++++----------------
- 1 files changed, 36 insertions(+), 36 deletions(-)
+--o71xDhNo7p97+qVi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 14a19ba..2c24dd9 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -36,57 +36,57 @@
- 
- static struct usb_device_id usb_ids[] = {
- 	/* ZD1211 */
-+	{ USB_DEVICE(0x0105, 0x145f), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0586, 0x3401), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0586, 0x3402), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0586, 0x3407), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0586, 0x3409), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x079b, 0x004a), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0ace, 0x1211), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0ace, 0xa211), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0b05, 0x170c), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0b3b, 0x1630), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0b3b, 0x5630), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0df6, 0x9071), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0df6, 0x9075), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x157e, 0x300b), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x079b, 0x004a), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x1740, 0x2000), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x157e, 0x3204), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0586, 0x3402), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0b3b, 0x5630), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0b05, 0x170c), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x129b, 0x1666), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x13b1, 0x001e), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x1435, 0x0711), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0586, 0x3409), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0b3b, 0x1630), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0586, 0x3401), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x14ea, 0xab13), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x13b1, 0x001e), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0586, 0x3407), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x129b, 0x1666), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x157e, 0x300a), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x0105, 0x145f), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x157e, 0x300b), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x157e, 0x3204), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x1740, 0x2000), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
- 	/* ZD1211B */
--	{ USB_DEVICE(0x0ace, 0x1215), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0ace, 0xb215), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x157e, 0x300d), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x079b, 0x0062), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x1582, 0x6003), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x050d, 0x705c), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x083a, 0xe503), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x083a, 0xe506), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0471, 0x1237), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x050d, 0x705c), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x340f), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0b05, 0x171b), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x3410), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0baf, 0x0121), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x3412), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x129b, 0x1667), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0cde, 0x001a), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
--	{ USB_DEVICE(0x0471, 0x1237), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x079b, 0x0062), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x07fa, 0x1196), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x083a, 0xe503), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x083a, 0xe506), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0ace, 0x1215), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0ace, 0xb215), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0b05, 0x171b), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0baf, 0x0121), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0cde, 0x001a), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0df6, 0x0036), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x129b, 0x1667), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x1582, 0x6003), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x157e, 0x300d), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
--- 
-1.6.2.2
+Hi Olivier,
 
+On Mon, Jun 08, 2009 at 07:08:14PM +0200, Olivier Blin wrote:
+> By the way, are you sure about the hook below about wpactl.c in commit
+> 8f2c32b86b3ac16ba4c93bf0c2b766089644d9d1 ?
+>=20
+> If I do the same in vt6656, it is freezing the kernel, or causing random
+> crashes. Removing the netdev priv assignation makes the driver ok.
+> I don't think the wpa priv was really useful, but I fail to see where it
+> was used, and why it caused the hang.
+>=20
+> Don't you have the same issue with vt6655?
+
+I'm embarrassed to say that I haven't actually tested this change on real
+hardware yet.  I've been trying to make changes that do not introduce any
+difference in functionality, but that fix the compile errors resulting from
+changing kernel APIs.
+
+Let me restate that I'm not really a kernel hacker, so much of my work is
+best-effort material.  TBH, I don't really understand the wpadev stuff, so =
+it's
+not clear to me why wpadev->priv can be removed.  If you have insight here =
+that
+I lack, I'd love to hear it.
+
+I should be able to get some real hardware to test on sometime this week.
+
+> BTW, I have some patches to send for vt6656, what is the proper place to
+> submit them since vt6656 is not in staging for now?
+
+I have a similar set of patches for vt6656 mostly prepared that I was going=
+ to
+submit to Greg.  Hopefully I can do that soon.  I suspect your patches are
+roughly the same; if they look anything like the vt6655 patches, they proba=
+bly
+are.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--o71xDhNo7p97+qVi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFKLU4+RO4fQQdv5AwRAusZAKDSbNZ66/ntZFIvR841LV3b+qPl8ACfc28m
+O0rSdD2WdfCU7I0RSddHhWI=
+=tXjL
+-----END PGP SIGNATURE-----
+
+--o71xDhNo7p97+qVi--
