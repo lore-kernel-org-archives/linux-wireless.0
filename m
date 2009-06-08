@@ -1,94 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60509 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275AbZFIF20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 01:28:26 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 22:28:29 -0700
-Date: Tue, 9 Jun 2009 10:57:06 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <Luis.Rodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
-Message-ID: <20090609052706.GC22194@vasanth-laptop>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com> <1244180502-4323-2-git-send-email-lrodriguez@atheros.com> <20090605063059.GF17632@vasanth-laptop> <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com> <20090605075252.GG17632@vasanth-laptop> <20090605182944.GD30211@tesla> <44EE5C37ADC36343B0625A05DD408C485068DEBF69@CHEXMB-01.global.atheros.com> <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com> <20090609005821.GD380@tesla> <20090609052400.GB22194@vasanth-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090609052400.GB22194@vasanth-laptop>
+Received: from senator.holtmann.net ([87.106.208.187]:42870 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbZFHARS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2009 20:17:18 -0400
+Subject: Re: [PATCH] rfkill: remove input Kconfig
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1244396398.12956.12.camel@johannes.local>
+References: <1244396398.12956.12.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 08 Jun 2009 02:16:49 +0200
+Message-Id: <1244420209.23850.111.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 09, 2009 at 10:54:00AM +0530, Vasanth Thiagarajan wrote:
-> On Tue, Jun 09, 2009 at 06:28:21AM +0530, Luis Rodriguez wrote:
-> > On Mon, Jun 08, 2009 at 05:26:41PM -0700, Luis R. Rodriguez wrote:
-> > > On Fri, Jun 5, 2009 at 11:55 PM, Vasanth
-> > > Thiagarajan<Vasanth.Thiagarajan@atheros.com> wrote:
-> > > >
-> > > > ________________________________________
-> > > >
-> > > >> > >> +       /*
-> > > >> > >> +        * Fine tuning for when no decent rate was found, the
-> > > >> > >> +        * lowest should *not* be used under normal circumstances.
-> > > >> > >> +        */
-> > > >> > >> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
-> > > >> > >> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
-> > > >> > >> +                       "disabling MRR\n");
-> > > >> > >> +               rates[0].idx = rate_lowest_index(sband, sta);
-> > > >> > >> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
-> > > >> > >> +               rates[1].idx = -1;
-> > > >> > >> +       }
-> > > >> > >
-> > > >> > > I think we can still fill other rates (1..3) with the lowest rate
-> > > >> > > index as we dont differentiate the situation where the lowest rate
-> > > >> > > is chosen truely by the algorithm from this particular case.
-> > > >> >
-> > > >> > I thought about that as well, but does it really make sense for us to
-> > > >> > use MRR with the same lowest rate? That's why I just used one segment.
-> > > >> > Thoughts?
-> > > >>
-> > > >> or we can try for max_retry (4) times. In that case the rate indices of
-> > > >> other rates (just not 1) should be made -1 or this segment should
-> > > >> moved just below the rate find.
-> > > >
-> > > > and the next segment [1]
-> > > > is set to -1. Please let me know if there is anything else you see needs
-> > > > change.
-> > > >
-> > > > Setting rate index of the rate series[1] is not enough as you are still filling the others rate
-> > > > segments(2 and 3) by ath_rc_rate_getidx() in the for..loop, so other segments are also be
-> > > > set to -1, but it looks hacky, one clean way of doing this can be, moving you code segment to
-> > > > just below ath_rc_ratefind_ht(), like the following diff.
-> > > >
-> > > >
-> > > >        rate_table = sc->cur_rate_table;
-> > > >        rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
-> > > > +
-> > > > +       if (rix == ath_rc_priv->valid_rate_index[0]) {
-> > > > +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
-> > > > +                               "disabling MRR\n");
-> > > > +
-> > > > +               ath_rc_rate_set_series(rate_table, &rates[0], txrc,
-> > > > +                                      4, rix, 0);
-> > >
-> > > The above sets the rate[0].idx to rix
-> > >
-> > > > +               rates[0].idx = rate_lowest_index(sband, sta);
-> > >
-> > > and then here we set it to rate_lowest_index(sband, sta) comes up
-> > > with. They should be the same, but this just goes to show we need to
-> > > clean this better.
-> >
-> > I just found this is wrong too.. the rate table used to find
-> > rix is different than the rate table for the mode. ie, in 5ghz
-> > when associated to an 11n station this could not include any
-> > legacy rates.
-> 
-> This is wrong. All basci rates still be used in 11n mode.
+Hi Johannes,
 
-Never mind, i think this is only true in 11ng mode
+> Now that we added the ioctl, there's no need to ask
+> the user to configure this. We will keept it enabled
+> for now, and eventually swap the default to n, maybe
+> let people configure it under EMBEDDED or so. In any
+> case, there's no need to bother users with this now.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  net/rfkill/Kconfig |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> --- wireless-testing.orig/net/rfkill/Kconfig	2009-06-07 19:37:34.000000000 +0200
+> +++ wireless-testing/net/rfkill/Kconfig	2009-06-07 19:37:41.000000000 +0200
+> @@ -18,7 +18,7 @@ config RFKILL_LEDS
+>  	default y
+>  
+>  config RFKILL_INPUT
+> -	bool "RF switch input support"
+> +	bool
+>  	depends on RFKILL
+>  	depends on INPUT = y || RFKILL = INPUT
+> -	default y if !EMBEDDED
+> +	default y
+
+if you want this for normal setups, I totally agree that we not should
+ask the user. However when in EMBEDDED, lets give them a chance to not
+compile this in. Since most likely it is not needed at all.
+
+Regards
+
+Marcel
+
+
