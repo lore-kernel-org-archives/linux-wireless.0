@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49577 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756958AbZFWP3u (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42875 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092AbZFHASw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:50 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 02/10] bridge: Use rcu_barrier() instead of syncronize_net()
-	on unload.
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:04:04 +0200
-Message-ID: <20090623150404.22490.15268.stgit@localhost>
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 7 Jun 2009 20:18:52 -0400
+Subject: Re: [PATCH] rfkill: print events when input handler is
+ disabled/enabled
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1244395114.12956.2.camel@johannes.local>
+References: <1244370412.2907.2.camel@johannes.local>
+	 <1244388331.23850.85.camel@localhost.localdomain>
+	 <1244395114.12956.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 08 Jun 2009 02:18:24 +0200
+Message-Id: <1244420304.23850.112.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When unloading modules that uses call_rcu() callbacks, then we must
-use rcu_barrier().  This module uses syncronize_net() which is not
-enough to be sure that all callback has been completed.
+Hi Johannes,
 
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
+> > >  	if (!data->input_handler) {
+> > > -		atomic_inc(&rfkill_input_disabled);
+> > > +		if (atomic_inc_return(&rfkill_input_disabled) == 1)
+> > > +			printk(KERN_DEBUG "rfkill: input handler disabled\n");
+> > >  		data->input_handler = true;
+> > >  	}
+> > 
+> > do you really think the == 1 is the correct thing here. I think that
+> > should be a > 0.
+> 
+> Why would you want to know every time somebody uses the ioctl? I think
+> the first time should be sufficient, no? Common case will hopefully be
+> only one program using it anyway though.
 
- net/bridge/br.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+you are right, we only care about the printk once. No need to keep
+printing it on every change.
 
-diff --git a/net/bridge/br.c b/net/bridge/br.c
-index 9aac521..e1241c7 100644
---- a/net/bridge/br.c
-+++ b/net/bridge/br.c
-@@ -93,7 +93,7 @@ static void __exit br_deinit(void)
- 
- 	unregister_pernet_subsys(&br_net_ops);
- 
--	synchronize_net();
-+	rcu_barrier(); /* Wait for completion of call_rcu()'s */
- 
- 	br_netfilter_fini();
- #if defined(CONFIG_ATM_LANE) || defined(CONFIG_ATM_LANE_MODULE)
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regard
+
+Marcel
+
 
