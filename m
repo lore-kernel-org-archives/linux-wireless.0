@@ -1,125 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49572 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756259AbZFWP3t (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:2768 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbZFHSLT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:49 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 00/10] We must use rcu_barrier() on module unload
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:03:53 +0200
-Message-ID: <20090623150330.22490.87327.stgit@localhost>
+	Mon, 8 Jun 2009 14:11:19 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1363793wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 11:11:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <200906081720.59594.mb@bu3sch.de>
+References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
+	 <200906081720.59594.mb@bu3sch.de>
+Date: Mon, 8 Jun 2009 20:04:33 +0200
+Message-ID: <83a869cd0906081104m2ecdf049rdcc7694f0974ca28@mail.gmail.com>
+Subject: Re: [PATCH] b43 add harware tkip
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series is an attempt to cleanup the entire tree, for
-potential oops'es during module unload, due to outstanding RCU
-callbacks. (My last rcu_barrier patch series only addressed net/).
+Hi,
 
-If an unloadable module uses RCU callbacks, it need to use
-rcu_barrier() so that the module may be safely unloaded.
+thanks for your review
 
-For documentation see:
+On Mon, Jun 8, 2009 at 5:20 PM, Michael Buesch<mb@bu3sch.de> wrote:
+> Well, first thing is that I do think there is a reason Broadcom removed hw TKIP
+> support from their drivers. ;)
+>
+> But well, let's look at the patch.
+>
+>> +     /* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
+>> +#if 0
+>>       b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
+>>       b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
+>>       b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
+>>       b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
+>> +#endif
+>
+> This looks interesting. Care to find out the correct offsets and submit
+> this fix as a separate patch?
+>
+May be if I have time. But a comment suggest it is not used ?
+>> +     if (algorithm == B43_SEC_ALGO_TKIP) {
+>> +             /*
+>> +              * We should provide an initial iv32, phase1key pair.
+>> +              * We could start with iv32=0 and compute the corresponding
+>> +              * phase1key, but this mean calling ieee80211_get_tkip_key
+>> +              * with a fake skb (or export other tkip function).
+>> +              * Because we are lazy we hope iv32 won't start with
+>> +              * 0xffff and let's b43_mac_update_tkip_key provide a
+>> +              * correct pair.
+>> +              */
+>> +             rx_tkip_phase1_write(dev, index, 0xffff, (u16*)buf);
+>> +     } else /* clear it */
+>> +             rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
+>
+> Why do you write phase1, if TKIP is not used?
+I clear the value in shared memory. This help debugging. But I could
+remove it if you want.
+>
+>> +     /* FIXME : for b43_new_kidx_api, there can be 54 key
+>> +      * instead of 50 in RCMTA and TKIPTSCTTAK.
+>> +      */
+>
+> I don't understand this comment.
+if  b43_new_kidx_api is true :
+- we set max_nr_keys to 58
+- we program B43_MMIO_RCMTA_COUNT to 50
+- in b43_key_write we can allocate key up to index 58 (4 for default,
+54 for sta)
 
- Paul E. McKenney's Blog
- http://paulmck.livejournal.com/7314.html
+But there is only 50 entries for TKIPTSCTTAK, and a comment on bcm-v4
+suggest there is 50 entries for RCMTA. So if there more than 50
+station we will overflow RCMTA and TKIPTSCTTAK.
 
- http://lwn.net/Articles/217484/
+So the fix will be do to something like
+dev->max_nr_keys = (dev->dev->id.revision >= 5) ? 58 : 20;
+if (b43_new_kidx_api())
+dev->max_nr_keys -= 4;
 
- Documentation/RCU/rcubarrier.txt
+>
+>> -             if (algorithm == B43_SEC_ALGO_TKIP) {
+>> -                     /* FIXME: No TKIP hardware encryption for now. */
+>> +             if (algorithm == B43_SEC_ALGO_TKIP &&
+>> +                             (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
+>> +                                key->flags & IEEE80211_KEY_FLAG_WMM_STA )) {
+>> +                     /* We support only one rx queue (no QOS) and pairwise key */
+>
+> This comment doesn't really make sense to me, too.
+> What does QoS have to do with the RX queue?
+each QOS queue got it's own tkip counters (iv16, iv32) (check tkip.c
+software implementation for more info).
 
+> Next time please inline the patch ;)
+I will try, but I don't know if my mailer handle it.
 
-Looking through the Linux kernel for call_rcu() users and unloadable
-modules I found 10 modules that didn't behave correctly.
-
-Please: MAINTAINERS needs to verify that the module exit code prevent
-any new RCU callbacks from being posted (before rcu_barrier() is
-called). (I have tried to do this verification, but most of these
-module are simply too large and complex for me to verify this within
-reasonable time)
-
-[Overview description, following patch ordering]
-
-The modules ext4, bridge, mac80211, sunrpc, nfs and ipv6 are fairly
-straight forward (maintainers still needs to check for prevent of new
-RCU callbacks).
-
-The module decnet, has disabled its module_exit() (since ^1da177e) but
-it still seems relevant to keep the code updated.
-
-The modules edac_core and cfq-iosched, has implemented their own
-open-coded wait_for_completion() scheme, in order to wait for
-call_rcu() calls.  Maintainers needs to look into removing this code
-and using rcu_barrier() instead.
-
-The module nf_conntrack, has embedded some comments that I would like
-Patrick McHardy to look at.  As I'm not sure which is are most optimal
-place to call rcu_barrier().  The patch probably calls rcu_barrier()
-too much, but its a better safe than sorry approach.
-
-
-I have made a patch for each individual module, so objections can be
-made on a per module basis.  I have Cc'ed all of the patches to the
-maintainers of each module (according to the MAINTAINERS file).
-
-
-The patchset is made on top of Linus Torvalds tree (starting on top of
-commit f234012f52a3).
-
-Who wants to pickup these patches? (I usually go through DaveM, but
-this also touches subsystems that are not (yet?) under DaveM's
-maintainer ship)
-
-
----
-Jesper Dangaard Brouer (10):
-      nf_conntrack: Use rcu_barrier().
-      cfq-iosched: Uses its own open-coded rcu_barrier.
-      edac_core: Uses call_rcu() and its own wait_for_completion scheme.
-      decnet: Use rcu_barrier() on module unload.
-      ipv6: Use rcu_barrier() on module unload.
-      nfs: Use rcu_barrier() on module unload.
-      sunrpc: Use rcu_barrier() on unload.
-      mac80211: Use rcu_barrier() on unload.
-      bridge: Use rcu_barrier() instead of syncronize_net() on unload.
-      ext4: Use rcu_barrier() on module unload.
-
-
- block/cfq-iosched.c                     |    6 ++++++
- drivers/edac/edac_device.c              |    5 +++++
- drivers/edac/edac_mc.c                  |    5 +++++
- drivers/edac/edac_pci.c                 |    5 +++++
- fs/ext4/mballoc.c                       |    4 +++-
- fs/nfs/inode.c                          |    1 +
- net/bridge/br.c                         |    2 +-
- net/decnet/af_decnet.c                  |    6 ++++++
- net/ipv6/af_inet6.c                     |    2 ++
- net/mac80211/main.c                     |    2 ++
- net/netfilter/nf_conntrack_core.c       |    5 +++++
- net/netfilter/nf_conntrack_standalone.c |    2 ++
- net/sunrpc/sunrpc_syms.c                |    1 +
- 13 files changed, 44 insertions(+), 2 deletions(-)
-
-
---
-Best regards,
-  Jesper Brouer
-  ComX Networks A/S
-  Linux Network developer
-  Cand. Scient Datalog / MSc.
-  Author of http://adsl-optimizer.dk
-  LinkedIn: http://www.linkedin.com/in/brouer
-
+Gregor
