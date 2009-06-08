@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c.6b.1343.static.theplanet.com ([67.19.107.12]:53689 "EHLO
-	mail.bitnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751081AbZFTA6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 20:58:11 -0400
-Message-ID: <4A3C3423.2060007@bitnet.be>
-Date: Sat, 20 Jun 2009 02:58:11 +0200
-From: Hans Maes <Hans@bitnet.be>
+Received: from bu3sch.de ([62.75.166.246]:46174 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755696AbZFHPVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 11:21:14 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: gregor kowski <gregor.kowski@gmail.com>
+Subject: Re: [PATCH] b43 add harware tkip
+Date: Mon, 8 Jun 2009 17:20:59 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
+In-Reply-To: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
 MIME-Version: 1.0
-To: Andrey Yurovsky <andrey@cozybit.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: current status of 802.11s mesh in ath5k ?
-References: <4A3B5B11.7060103@bitnet.be> <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
-In-Reply-To: <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200906081720.59594.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Yurovsky wrote:
->
->  However ath5k will not beacon until you issue a scan due
-> to a bug.  You can bring up an ath5k node like this:
->
-> # iw phy phy0 interface add mesh type mp mesh_id mymesh
-> # ifconfig mesh up
-> # iwlist mesh scan
->
->   
-So, once the first scan triggers the beaconing, everything should keep 
-working ok ?
-Or should I throw together a small script that triggers a scan once 
-every 10minutes until this bug is fixed ?
-(In my case the mesh nodes should stay online 24/7 without user interaction)
-> Things seem to work well aside from the scan issue, however I haven't
-> fully verified multi-hop yet.  
->   
-I have a semi production setup with about 10 mesh nodes, in a building 
-where multihop is required due to the extensive use of metal plating and 
-therefore 'poor' wireless performance. In a typical scenario I need 
-about 4 to 5 hops to reach the nodes at the other end of the building.
+Well, first thing is that I do think there is a reason Broadcom removed hw TKIP
+support from their drivers. ;)
 
-The nodes only have a single antenna connected, so I need to change some 
-code to disable antenna switching, but I'm not a C expert/module 
-developer at all so that might take a while to figure out...
-I thought I managed to do it about 2 months ago but broke something 
-since the nodes seemed to work perfectly after updating the wireless 
-modules but they all went offline 3 to 5 days later and only came back 
-online after reverting to the stable 2.6.29 wireless modules.
+But well, let's look at the patch.
 
-Anyway, when I get that issue worked out without breaking anything else 
-I'll see how the multihop performs and report back in a few days.
+> +	/* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
+> +#if 0
+>  	b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
+>  	b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
+>  	b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
+>  	b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
+> +#endif
 
-Thanks!
+This looks interesting. Care to find out the correct offsets and submit
+this fix as a separate patch?
 
-Hans
+> +	if (algorithm == B43_SEC_ALGO_TKIP) {
+> +		/*
+> +		 * We should provide an initial iv32, phase1key pair.
+> +		 * We could start with iv32=0 and compute the corresponding
+> +		 * phase1key, but this mean calling ieee80211_get_tkip_key
+> +		 * with a fake skb (or export other tkip function).
+> +		 * Because we are lazy we hope iv32 won't start with
+> +		 * 0xffff and let's b43_mac_update_tkip_key provide a
+> +		 * correct pair.
+> +		 */
+> +		rx_tkip_phase1_write(dev, index, 0xffff, (u16*)buf);
+> +	} else /* clear it */
+> +		rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
+
+Why do you write phase1, if TKIP is not used?
+
+> +	/* FIXME : for b43_new_kidx_api, there can be 54 key
+> +	 * instead of 50 in RCMTA and TKIPTSCTTAK.
+> +	 */
+
+I don't understand this comment.
+
+> -		if (algorithm == B43_SEC_ALGO_TKIP) {
+> -			/* FIXME: No TKIP hardware encryption for now. */
+> +		if (algorithm == B43_SEC_ALGO_TKIP &&
+> +				(!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
+> +				   key->flags & IEEE80211_KEY_FLAG_WMM_STA )) {
+> +			/* We support only one rx queue (no QOS) and pairwise key */
+
+This comment doesn't really make sense to me, too.
+What does QoS have to do with the RX queue?
+
+
+Next time please inline the patch ;)
+
+-- 
+Greetings, Michael.
