@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45847 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbZFVTIm (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:35772 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759472AbZFIIaB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 15:08:42 -0400
-Subject: Re: [PATCH 1/2 RFC] cfg80211: connect/disconnect API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <20090622170409.GB30147@sortiz.org>
-References: <20090622170409.GB30147@sortiz.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-DTuiJimn0TuqU936jy83"
-Date: Mon, 22 Jun 2009 21:08:39 +0200
-Message-Id: <1245697719.4184.1.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 9 Jun 2009 04:30:01 -0400
+Message-ID: <4A2E1DE3.4020509@tuffmail.co.uk>
+Date: Tue, 09 Jun 2009 09:31:31 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Mattia Dongili <malattia@linux.it>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux acpi <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH] sony-laptop: no need to unblock rfkill on load
+References: <4A2CE86F.9040209@tuffmail.co.uk> <1244457418.18863.8.camel@johannes.local> <20090608224915.GA4583@kamineko.org>
+In-Reply-To: <20090608224915.GA4583@kamineko.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Mattia Dongili wrote:
+> On Mon, Jun 08, 2009 at 12:36:58PM +0200, Johannes Berg wrote:
+>   
+>> On Mon, 2009-06-08 at 11:31 +0100, Alan Jenkins wrote:
+>>     
+>>> The re-written rfkill core ensures rfkill devices are initialized to
+>>> the system default state.  The core calls set_block after registration
+>>> so the driver shouldn't need to.
+>>>
+>>> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+>>>       
+>> Good catch, thanks.
+>>     
+>
+> Just to confirm, is this patch going to sit in the wireless-testing tree
+> and you will submit it for inclusion together with the rfkill work
+> right?
+>   
 
---=-DTuiJimn0TuqU936jy83
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes.  I probably didn't need to ping you at this point.
 
-On Mon, 2009-06-22 at 19:04 +0200, Samuel Ortiz wrote:
+It just bothered me because I was effectively reverting a recent 
+commit.  I figuired I should let you know.  In case it didn't work, when 
+it was merged you'd know why I did it and who to blame.  But there is 
+always Git history for that :-).
 
->  /**
-> + * struct cfg80211_connect_params - Connection parameters
-> + *
-> + * This structure provides information needed to complete IEEE 802.11
-> + * authentication and association.
-> + *
-> + * @channel: The channel to use or %NULL if not specified (auto-select b=
-ased
-> + *	on scan results)
-> + * @bssid: The AP BSSID or %NULL if not specified (auto-select based on =
-scan
-> + *	results)
-> + * @ssid: SSID
-> + * @ssid_len: Length of ssid in octets
-> + * @auth_type: Authentication type (algorithm)
-> + * @assoc_ie: IEs for association request
-> + * @assoc_ie_len: Length of assoc_ie in octets
-> + * @control_port: Whether user space controls IEEE 802.1X port, i.e.,
-> + *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
-> + *	required to assume that the port is unauthorized until authorized by
-> + *	user space. Otherwise, port is marked authorized by default.
-
-One question I just had -- if bssid is NULL, and the card selects the
-BSSID, I suppose it will also roam by itself if it can [1]. Don't we
-need a "roamed" event for that then, even if we're not yet adding a
-->roam() call?
-
-johannes
-
-[1] yes, we need to have a way to export roaming capabilities of the
-card to user space
-
---=-DTuiJimn0TuqU936jy83
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKP9a0AAoJEODzc/N7+Qmag6cP/iDzgSy5OdvzBqpMGvqW44CO
-lG/CUrxN2wD3yHW74hB7pGr83zf9K1SjyW6ZO6Vrx0GpmUd6dEHB+9eFD9PwnuFp
-RAdKZJPwnyzJB5JoADfcuNXCmJyst4KiQcqVUY5bs4RM09toh5eWktGrC6GRbcWR
-FwMYteWeaxe9ACK/GzLOunyUrdn3Ved9bq3ItyazNV7cvH/rQBg8vUM2d+rTiO7E
-nJGTW8yyykyRMouJmrOFYa9v0B/2ueBwnVQ3kYtzaLweoP/kd91u4IclT2kkHah7
-cPtaN0ILf+gf/4rwxKZQyk4xps0aY9tbH0PsEW8mwZGdhk97pBmoOvQKBqW2xkUe
-nr/e+V1bDqk2xOsCLzbanGjp7WmCrlMqFTopQsCmMhaa4yQzmoSVMuG6wxdKur3H
-8dBIqBVqeLaddLEud6wJTPm0FZRc/3aHJ1pGbJTDk0Py/7OKK41VM+yG4zi4ZHef
-649XFfFxqSu3LB3UMMq2qjWGE5eTE4sonwiNKiU5ShyoLYBkYH9+ApyMS/EB8rYm
-zdcHBnc8t4ZZGIca4jJYeQhZaofzql39MCG/tkEO4itCWfH/8MLAPGdEWw2GadJG
-9jvKp2PCK0Oe/d8lpc3NTimJXjdWvVy+TeTwKXYOrgaFMmHvXhpat4s0LMEvao15
-tIG+gNlhHmqizprUAe+Y
-=Cif0
------END PGP SIGNATURE-----
-
---=-DTuiJimn0TuqU936jy83--
-
+Regards
+Alan
