@@ -1,31 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3701 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbZFWCTi (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:25971 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310AbZFIARH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 22:19:38 -0400
-Date: Mon, 22 Jun 2009 22:18:57 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Pierre Ossman <pierre@ossman.eu>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	san@google.com
-Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
-Message-ID: <20090623021857.GA307@hash.localnet>
-References: <87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu> <20090613205737.GA30439@hash.localnet> <20090618022524.GC10014@hash.localnet> <20090619212419.2f3626d7@mjolnir.ossman.eu> <b6c5339f0906191331x6c360d63wec431fc9d35b38c0@mail.gmail.com> <20090621203800.08cb4a2d@mjolnir.ossman.eu> <20090622000512.GA30186@hash.localnet> <20090622080931.66aa51fa@mjolnir.ossman.eu> <20090622081436.24c78984@mjolnir.ossman.eu>
+	Mon, 8 Jun 2009 20:17:07 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so2266419qwd.37
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 17:17:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090622081436.24c78984@mjolnir.ossman.eu>
+In-Reply-To: <43e72e890906081215u54f76ae6uded65345829ea843@mail.gmail.com>
+References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	<1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
+	<69e28c910906081130q3f8363c2i64e05d61812e7be3@mail.gmail.com>
+	<43e72e890906081215u54f76ae6uded65345829ea843@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 8 Jun 2009 17:16:49 -0700
+Message-ID: <43e72e890906081716n12083f22j9d69e631b540a15d@mail.gmail.com>
+Subject: Re: [PATCH v2 13/15] iwlwifi: use ieee80211_is_data(fc)
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 22, 2009 at 08:14:36AM +0200, Pierre Ossman wrote:
-> SDIO interrupts are level interrupts, not edge. That means that the
-> interrupt source needs to be handled before the interrupt routine
-> returns or the system will get stuck in a fairly tight loop, rehandling
-> the same interrupt over and over again.
+2009/6/8 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> 2009/6/8 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> On Sat, Jun 6, 2009 at 2:03 AM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
+>>> Cc: Zhu Yi <yi.zhu@intel.com>
+>>> Cc: Reinette Chatre <reinette.chatre@intel.com>
+>>> Cc: ipw3945-devel@lists.sourceforge.net
+>>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>> ---
+>>>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+>>>  drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+>>>  2 files changed, 5 insertions(+), 7 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>>> index 5eb538d..bd2f709 100644
+>>> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>>> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>>> @@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>>>        s8 scale_action = 0;
+>>>        unsigned long flags;
+>>>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>>> -       u16 fc;
+>>> +       __le16 fc;
+>>>        u16 rate_mask = 0;
+>>>        s8 max_rate_idx = -1;
+>>>        struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+>>> @@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+>>>                rate_mask = sta->supp_rates[sband->band];
+>>>
+>>>        /* Send management frames and NO_ACK data using lowest rate. */
+>>> -       fc = le16_to_cpu(hdr->frame_control);
+>>> -       if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+>>> -           info->flags & IEEE80211_TX_CTL_NO_ACK ||
+>>> +       fc = hdr->frame_control;
+>>> +       if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+>>
+>> iwl-agn-rs.c also needs this change I think...
+>
+> You are right, but in my later patch "mac80211: add helper for
+> management / no-ack frame rate decision" we just nuke this in favor
+> for the helper. The goal of this intermediary patch was just to make
+> the changes for that other patch easier to read.
+>
+> Please let me know if such a change is required in this intermediary
+> patch. It gets nuked in the end.
 
-Hmm good point, let me look into that.
+Oh I just checked and actually it was that iwl-agn-rs.c already used it.
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
