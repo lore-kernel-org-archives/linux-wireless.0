@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49564 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753504AbZFWP3r (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41163 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945AbZFIRnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:47 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 05/10] nfs: Use rcu_barrier() on module unload.
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:04:19 +0200
-Message-ID: <20090623150419.22490.94087.stgit@localhost>
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 9 Jun 2009 13:43:11 -0400
+Subject: [PATCH] mac80211: clean up return value of
+ __ieee80211_parse_tx_radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 09 Jun 2009 19:42:38 +0200
+Message-Id: <1244569358.18481.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The exit path unregister and destroys a lot of stuff, but I have not
-verified that nfs_free_delegation() cannot start new call_rcu() callbacks.
+The return type has more than two values, but it can validly
+only ever return TX_DROP and TX_CONTINUE, so use a bool
+instead of ieee80211_tx_result.
 
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ net/mac80211/tx.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
- fs/nfs/inode.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
-index 64f8719..40bf2b7 100644
---- a/fs/nfs/inode.c
-+++ b/fs/nfs/inode.c
-@@ -1518,6 +1518,7 @@ static void __exit exit_nfs_fs(void)
- 	unregister_nfs_fs();
- 	nfs_fs_proc_exit();
- 	nfsiod_stop();
-+	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+--- wireless-testing.orig/net/mac80211/tx.c	2009-06-09 19:39:55.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-06-09 19:40:39.000000000 +0200
+@@ -908,9 +908,8 @@ ieee80211_tx_h_stats(struct ieee80211_tx
+  * deal with packet injection down monitor interface
+  * with Radiotap Header -- only called for monitor mode interface
+  */
+-static ieee80211_tx_result
+-__ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
+-			      struct sk_buff *skb)
++static bool __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
++					  struct sk_buff *skb)
+ {
+ 	/*
+ 	 * this is the moment to interpret and discard the radiotap header that
+@@ -983,7 +982,7 @@ __ieee80211_parse_tx_radiotap(struct iee
+ 	}
+ 
+ 	if (ret != -ENOENT) /* ie, if we didn't simply run out of fields */
+-		return TX_DROP;
++		return false;
+ 
+ 	/*
+ 	 * remove the radiotap header
+@@ -992,7 +991,7 @@ __ieee80211_parse_tx_radiotap(struct iee
+ 	 */
+ 	skb_pull(skb, iterator.max_length);
+ 
+-	return TX_CONTINUE;
++	return true;
  }
  
- /* Not quite true; I just maintain it */
+ /*
+@@ -1026,7 +1025,7 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	/* process and remove the injection radiotap header */
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED)) {
+-		if (__ieee80211_parse_tx_radiotap(tx, skb) == TX_DROP)
++		if (!__ieee80211_parse_tx_radiotap(tx, skb))
+ 			return TX_DROP;
+ 
+ 		/*
+
 
