@@ -1,70 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:20855 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752116AbZF3QRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 12:17:34 -0400
-Subject: Re: iwlagn: possible regressions from 2.6.29 in 2.6.30
-From: reinette chatre <reinette.chatre@intel.com>
-To: Paul Collins <paul@burly.ondioline.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <874oty9tlf.fsf@bulky.wgtn.ondioline.org>
-References: <874oty9tlf.fsf@bulky.wgtn.ondioline.org>
-Content-Type: text/plain
-Date: Tue, 30 Jun 2009 09:17:31 -0700
-Message-Id: <1246378651.17896.523.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:43792 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753951AbZFIJm7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2009 05:42:59 -0400
+Received: by gxk10 with SMTP id 10so2981175gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 02:43:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890906081044x566514c5mc02299282e9c9ff2@mail.gmail.com>
+References: <4A2CA986.3070500@gmail.com> <646765f40906072312y5043ac12rd6d756230e98b746@mail.gmail.com>
+	<43e72e890906081044x566514c5mc02299282e9c9ff2@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 9 Jun 2009 19:42:41 +1000
+Message-ID: <646765f40906090242m7c34adaaq8d89abf1ffc96c89@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: update for 2009-06-08
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
+On Tue, Jun 9, 2009 at 03:44, Luis R.
+Rodriguez<mcgrof@winlab.rutgers.edu> wrote:
+> On Sun, Jun 7, 2009 at 11:12 PM, Julian Calaby<julian.calaby@gmail.com> wrote:
+>> On Mon, Jun 8, 2009 at 16:02, Julian Calaby<julian.calaby@gmail.com> wrote:
+>>> Update to match wireless-testing v2.6.30-rc8-25759-g00f7164
+>>>
+>>> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+>>> ---
+>>>  compat/compat.diff |   42 +++++++++++++++++++++++-------------------
+>>>  1 files changed, 23 insertions(+), 19 deletions(-)
+>>>
+>>> diff --git a/compat/compat.diff b/compat/compat.diff
+>>> index d89ea98..846e8f5 100644
+>>> --- a/compat/compat.diff
+>>> +++ b/compat/compat.diff
+>>> @@ -181,6 +181,12 @@
+>>>  obj-$(CONFIG_LIBERTAS)                += libertas/
+>>>
+>>>  obj-$(CONFIG_LIBERTAS_THINFIRM)       += libertas_tf/
+>>> +@@ -60,5 +34,3 @@
+>>> + obj-$(CONFIG_MAC80211_HWSIM)  += mac80211_hwsim.o
+>>> +
+>>> + obj-$(CONFIG_WL12XX)  += wl12xx/
+>>> +-
+>>> +-obj-$(CONFIG_IWM)     += iwmc3200wifi/
+>>
+>> Sigh.
+>>
+>> Of course, I forgot to describe the changes in this patch.
+>>
+>> compat.diff has been updated to apply cleanly over the
+>> wireless-testing.git version specified above with no fuzz.
+>>
+>> iwmc3200wifi, as I don't know if it compiles on anything but
+>> wireless-testing.git, has been disabled by editing it out of the
+>> Makefile as it's directory isn't actually copied from
+>> wireless-testing. -- I'm not sure that this is the correct way to do
+>> this as it's hiding the problem away in compat.diff - not obviously
+>> fixing it by, e.g. copying the directory from wireless-testing.git or
+>> making it compile on older kernels.
+>
+> This is fine for now.
 
-On Mon, 2009-06-29 at 22:30 -0700, Paul Collins wrote:
-> Two things I liked about iwlagn in 2.6.29 no longer happen with 2.6.30:
-> 
-> 1. reassociation following resume from suspend-to-ram
-> 2. transmission of packets > 250 bytes following resume from suspend-to-ram
-> 
-> I can script around the first problem just by doing "iwconfig wlan0 ap
-> auto" on resume, but the second problem requires me to ifdown/ifup wlan0
-> before I can usefully use my network again, so fixing the first problem
-> doesn't get me very far.
+Cool.
 
-For reliable reassociation you need to use a userspace application like
-wpa_supplicant.
+>> I must note that even after these changes, this still doesn't actually
+>> compile for me, as ath9k uses the rfkill_ops structure which isn't
+>> present in my 2.6.29 kernel.
+>
+> Thanks for the note, both patches applied. For rfkill we'll need
+> someone brave and with time to backport it... as rfkill has been
+> re-written. The easiest solution is to revert the patches for older
+> kernels through compat.diff. That is add #ifdefs and for old kernel
+> revisions use the old stuff, for new kernels (as of 2.6.31) leave the
+> code in place.
 
-> 
-> When I say "packets > 250 bytes" I mean 250-byte packets as claimed by
-> "ping -s 222 mygateway":
-> 
->         PING cornelius.lan (10.2.4.1) 222(250) bytes of data.
-> 
-> The above will work, but "ping -s 223 cornelius" yields no replies.
+Thanks for applying them.
 
-Are you saying this works before suspend, but not after resume? What do
-you usually do to get this working again?
-
-Could you please try this patch?
-
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 753fca3..3f3147e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -873,7 +876,8 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	iwl_print_hex_dump(priv, IWL_DL_TX, (u8 *)tx_cmd->hdr, hdr_len);
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
--	priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq,
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+		priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq,
- 						     le16_to_cpu(tx_cmd->len));
- 
- 	pci_dma_sync_single_for_device(priv->pci_dev, txcmd_phys,
 -- 
-1.5.6.3
 
+Julian Calaby
 
-
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
