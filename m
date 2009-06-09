@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45035 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754460AbZFMJ0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2009 05:26:44 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2009 02:26:47 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/3] ath9k: Make sure we have current channel in ah_curchan before rf disable/enable
-Date: Sat, 13 Jun 2009 14:50:25 +0530
-Message-ID: <1244884826-3009-3-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1244884826-3009-2-git-send-email-vasanth@atheros.com>
-References: <1244884826-3009-1-git-send-email-vasanth@atheros.com>
- <1244884826-3009-2-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:41097 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757460AbZFIRwf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2009 13:52:35 -0400
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: gregor kowski <gregor.kowski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
+	 <1244442549.11006.2.camel@johannes.local>
+	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
+	 <1244556179.4672.11.camel@johannes.local>
+	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zZIf/Bn5AAEBc1ml1Ncq"
+Date: Tue, 09 Jun 2009 19:52:06 +0200
+Message-Id: <1244569926.18481.27.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5fd17a4..48b117d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1125,6 +1125,9 @@ void ath_radio_enable(struct ath_softc *sc)
- 	ath9k_ps_wakeup(sc);
- 	ath9k_hw_configpcipowersave(ah, 0);
- 
-+	if (!ah->curchan)
-+		ah->curchan = ath_get_curchannel(sc, sc->hw);
-+
- 	spin_lock_bh(&sc->sc_resetlock);
- 	r = ath9k_hw_reset(ah, ah->curchan, false);
- 	if (r) {
-@@ -1177,6 +1180,9 @@ void ath_radio_disable(struct ath_softc *sc)
- 	ath_stoprecv(sc);		/* turn off frame recv */
- 	ath_flushrecv(sc);		/* flush recv queue */
- 
-+	if (!ah->curchan)
-+		ah->curchan = ath_get_curchannel(sc, sc->hw);
-+
- 	spin_lock_bh(&sc->sc_resetlock);
- 	r = ath9k_hw_reset(ah, ah->curchan, false);
- 	if (r) {
--- 
-1.5.5.1
+--=-zZIf/Bn5AAEBc1ml1Ncq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-06-09 at 19:48 +0200, gregor kowski wrote:
+
+> > Right. But drivers are free to even only _encrypt_ tkip frames and neve=
+r
+> > _decrypt_ them after having accepted a hardware key, iow that is
+> > perfectly valid behaviour and I don't think we should keep uploading th=
+e
+> > key to the driver. Worst case is that the proper upload fails and we
+> > decrypt all frames in software until the next rollover.
+> >
+> What's the point of setting the tkip callback if we aren't interested
+> in decrypting data by hardware ?
+
+Might depend on something else? Anyhow I don't see the point of
+continuing to call the callback. Maybe it should just be part of the key
+todo instead when the key is initially uploaded to the hw.
+
+johannes
+
+--=-zZIf/Bn5AAEBc1ml1Ncq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKLqFCAAoJEODzc/N7+QmaMA0P+gJoyoMInruxm3tRVn9944ae
+QUTcy8lX2cg9IBLP+K1umYyC/magSXGR6Ju+fj835Y/opzZjv4q2iMCc88zqGLJz
+gWn9dy0fVEffQQC2EBdxce0Ia8JPozYYff4kR51dKWZz03u8XKoXlU+kmh+1iHUX
+fFh/qnnCEU5kXdAGvAgfVFJNiXddj5G7RL7eOL5bSLlWAlgrafejqhz3Dtkqhqgx
+vrSDXeIXNRgakiPjh0SLJZzcQlzStrZMlz3wwGlOOwsmTSGWFURj4GTZHoD20pNy
+q1P9nQLTFFL1QTDafKJ2UxTxujPbkxD7Vo87DCt/reYK+anHW2XnGXsJ9jwOwMAj
++lsMfg6ajmT+kbk6m/SkAgmAuYqxg1bM9YrqCyC+dRwT4YVugFpIHiyX9PTiEmxm
+bcbzmu824xsD24ivrDqZlPJEF/D50KMUUvAJ06JOJnrPW/0r2DmDiYg0HvgU5DOB
+0P9utBb1ET9f9mq0UImkBqAWgXuSLteymSxhwbbPeAKq3tZ56z6JhU7QM+WtSOyT
+c08yD7raLXarO7htZSfdaktYEmWwhb9mjkbbEKrvEC/2ZL6lT2tlIeIHYMAgb+uR
+A2Nkc9IJFEYQjaqUGe8adsE3uVtPGk8HuoOEEGoZo3LFAUI/Gv650yjliYSLOXkZ
+veVHtSOobZS8j9gdBc+m
+=hgBt
+-----END PGP SIGNATURE-----
+
+--=-zZIf/Bn5AAEBc1ml1Ncq--
 
