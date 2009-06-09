@@ -1,108 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:61865 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbZFDPO2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 11:14:28 -0400
+Received: from mail.atheros.com ([12.36.123.2]:13190 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754644AbZFIA6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2009 20:58:19 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 17:58:22 -0700
+Date: Mon, 8 Jun 2009 17:58:21 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
+Message-ID: <20090609005821.GD380@tesla>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com> <1244180502-4323-2-git-send-email-lrodriguez@atheros.com> <20090605063059.GF17632@vasanth-laptop> <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com> <20090605075252.GG17632@vasanth-laptop> <20090605182944.GD30211@tesla> <44EE5C37ADC36343B0625A05DD408C485068DEBF69@CHEXMB-01.global.atheros.com> <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4A27E448.3040305@trash.net>
-References: <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
-	 <1244021964.10665.5.camel@johannes.local>
-	 <20090603.030911.162861804.davem@davemloft.net>
-	 <20090603105256.GB20508@doriath.ww600.siemens.net>
-	 <1244027110.1693.9.camel@johannes.local>
-	 <20090603122744.GC20508@doriath.ww600.siemens.net>
-	 <1244124749.22576.71.camel@johannes.local>
-	 <bc64b4640906040751i3c64c317i4eedb7d53307092a@mail.gmail.com>
-	 <4A27E448.3040305@trash.net>
-Date: Thu, 4 Jun 2009 19:14:28 +0400
-Message-ID: <bc64b4640906040814m1756ea13s19e20592ecf90e9b@mail.gmail.com>
-Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
-	802.15.4 devices
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Patrick McHardy <kaber@trash.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
-	slapin@ossfans.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/4 Patrick McHardy <kaber@trash.net>:
-> Dmitry Eremin-Solenikov wrote:
->>
->> 2009/6/4 Johannes Berg <johannes@sipsolutions.net>:
->>>
->>> On Wed, 2009-06-03 at 16:27 +0400, Dmitry Eremin-Solenikov wrote:
->>>
->>>>>> +static int ieee802154_nl_put_failure(struct sk_buff *msg)
->>>>>> +{
->>>>>> + void *hdr = genlmsg_data(NLMSG_DATA(msg->data)); /* XXX: nlh is
->>>>>> right at the start of msg */
->>>>>> + genlmsg_cancel(msg, hdr);
->>>>>> + nlmsg_free(msg);
->>>>>> + return -ENOBUFS;
->>>>>> +}
->>>>>
->>>>> This seems weird.
->>>>
->>>> Why?
->>>
->>> Because it's strange to cancel then free?
->>
->>> From looking at the other code, the usual pattern for netlink is
->>
->> (please, correct me if I'm wrong):
->>
->> int fill (....)
->> {
->>   genlmsg_put();
->>   NLA_PUT(...)
->>   NLA_PUT(...)
->>   return genlmsg_end();
->>
->> nla_put_failure:
->>   genlmsg_cancel();
->>   return -EMSGSIZE;
->> }
->>
->> int cmd(...)
->> {
->>    int rc;
->>    nlmsg_new();
->>
->>    rc = fill();
->>    if (rc < 0)
->>        goto out;
->>
->>    genlmsg_unicast();
->>
->> out:
->>    nlmsg_free();
->>    return -ENOBUFS;
->> }
->>
->> This is equivalent to our code:
->>
->> sk_buff *new()
->> {
->>   msg = nlmsg_new();
->>   genlmsg_put();
->>   return msg;
->> }
->
-> canceling messages is only necessary in fill functions that are
-> also used for dumps, where as many elements are stuffed in the
-> skb as possible. When the last element doesn't completely fit,
-> its removed again (canceled) and put into the next skb.
+On Mon, Jun 08, 2009 at 05:26:41PM -0700, Luis R. Rodriguez wrote:
+> On Fri, Jun 5, 2009 at 11:55 PM, Vasanth
+> Thiagarajan<Vasanth.Thiagarajan@atheros.com> wrote:
+> >
+> > ________________________________________
+> >
+> >> > >> +       /*
+> >> > >> +        * Fine tuning for when no decent rate was found, the
+> >> > >> +        * lowest should *not* be used under normal circumstances.
+> >> > >> +        */
+> >> > >> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
+> >> > >> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+> >> > >> +                       "disabling MRR\n");
+> >> > >> +               rates[0].idx = rate_lowest_index(sband, sta);
+> >> > >> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
+> >> > >> +               rates[1].idx = -1;
+> >> > >> +       }
+> >> > >
+> >> > > I think we can still fill other rates (1..3) with the lowest rate
+> >> > > index as we dont differentiate the situation where the lowest rate
+> >> > > is chosen truely by the algorithm from this particular case.
+> >> >
+> >> > I thought about that as well, but does it really make sense for us to
+> >> > use MRR with the same lowest rate? That's why I just used one segment.
+> >> > Thoughts?
+> >>
+> >> or we can try for max_retry (4) times. In that case the rate indices of
+> >> other rates (just not 1) should be made -1 or this segment should
+> >> moved just below the rate find.
+> >
+> > and the next segment [1]
+> > is set to -1. Please let me know if there is anything else you see needs
+> > change.
+> >
+> > Setting rate index of the rate series[1] is not enough as you are still filling the others rate
+> > segments(2 and 3) by ath_rc_rate_getidx() in the for..loop, so other segments are also be
+> > set to -1, but it looks hacky, one clean way of doing this can be, moving you code segment to
+> > just below ath_rc_ratefind_ht(), like the following diff.
+> >
+> >
+> >        rate_table = sc->cur_rate_table;
+> >        rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
+> > +
+> > +       if (rix == ath_rc_priv->valid_rate_index[0]) {
+> > +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+> > +                               "disabling MRR\n");
+> > +
+> > +               ath_rc_rate_set_series(rate_table, &rates[0], txrc,
+> > +                                      4, rix, 0);
+> 
+> The above sets the rate[0].idx to rix
+> 
+> > +               rates[0].idx = rate_lowest_index(sband, sta);
+> 
+> and then here we set it to rate_lowest_index(sband, sta) comes up
+> with. They should be the same, but this just goes to show we need to
+> clean this better.
 
-Understood. So you'd suggest just to drop the genlmsg_cancel()
-from the failure call chain?
+I just found this is wrong too.. the rate table used to find
+rix is different than the rate table for the mode. ie, in 5ghz
+when associated to an 11n station this could not include any
+legacy rates.
 
-
--- 
-With best wishes
-Dmitry
+  Luis
