@@ -1,46 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55491 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473AbZFNPLt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbZFITFO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2009 11:11:49 -0400
-Subject: Re: [PATCH 0/2] ar9170: 1-stage firmware support / AVM fritz
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, chunkeey@web.de,
-	linux-wireless@vger.kernel.org, jal2@gmx.de,
-	Peter.Grabienski@Atheros.com, Stephen.Chen@Atheros.com,
-	Michael.Fortin@Atheros.com, Johnny.Cheng@Atheros.com,
-	Yuan-Gu.Wei@atheros.com, otus-devel@lists.madwifi-project.org
-In-Reply-To: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
-References: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 9 Jun 2009 15:05:14 -0400
+Subject: [PATCH] cfg80211: pass netdev to change_virtual_intf
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <samuel@sortiz.org>
 Content-Type: text/plain
-Date: Sun, 14 Jun 2009 17:11:48 +0200
-Message-Id: <1244992308.15367.3.camel@violet>
+Date: Tue, 09 Jun 2009 21:04:43 +0200
+Message-Id: <1244574283.18481.29.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+If there was a reason I'm passing the ifidx I cannot
+remember it any more and don't see one now, so let's
+just pass the pointer itself.
 
-> This series now works for me on my WNDA31000, it took a newer shiny
-> 1-stage firmware to work. I'll push the firmware into linux-firmware
-> next.
-> 
-> Should work with the AVM Fritz devices now, haven't tested it but
-> I think it should work.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |    9 ++-------
+ include/net/cfg80211.h                       |    3 ++-
+ net/mac80211/cfg.c                           |    9 ++-------
+ net/wireless/nl80211.c                       |   12 +++++-------
+ net/wireless/wext-compat.c                   |    2 +-
+ 5 files changed, 12 insertions(+), 23 deletions(-)
 
-I happened to have one of these AVM devices. With ar9170.fw firmware it
-does work fine with the other ones it doesn't.
-
-The ar9170.fw is still not in linux-firmware.git, any reason for that?
-
-Also since ar9170-1.fw and ar9170-2.fw are not working at all, we better
-not even try and give the user a crypted error message that the device
-is in a bad state. Just printk that the firmware might be too old.
-
-Regards
-
-Marcel
+--- wireless-testing.orig/include/net/cfg80211.h	2009-06-09 20:56:03.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-06-09 20:56:47.000000000 +0200
+@@ -866,7 +866,8 @@ struct cfg80211_ops {
+ 				    enum nl80211_iftype type, u32 *flags,
+ 				    struct vif_params *params);
+ 	int	(*del_virtual_intf)(struct wiphy *wiphy, int ifindex);
+-	int	(*change_virtual_intf)(struct wiphy *wiphy, int ifindex,
++	int	(*change_virtual_intf)(struct wiphy *wiphy,
++				       struct net_device *dev,
+ 				       enum nl80211_iftype type, u32 *flags,
+ 				       struct vif_params *params);
+ 
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-06-09 20:56:54.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-06-09 20:57:06.000000000 +0200
+@@ -74,19 +74,14 @@ static int ieee80211_del_iface(struct wi
+ 	return 0;
+ }
+ 
+-static int ieee80211_change_iface(struct wiphy *wiphy, int ifindex,
++static int ieee80211_change_iface(struct wiphy *wiphy,
++				  struct net_device *dev,
+ 				  enum nl80211_iftype type, u32 *flags,
+ 				  struct vif_params *params)
+ {
+-	struct net_device *dev;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+ 
+-	/* we're under RTNL */
+-	dev = __dev_get_by_index(&init_net, ifindex);
+-	if (!dev)
+-		return -ENODEV;
+-
+ 	if (!nl80211_type_check(type))
+ 		return -EINVAL;
+ 
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-06-09 20:57:19.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-06-09 21:02:33.000000000 +0200
+@@ -766,7 +766,7 @@ static int nl80211_set_interface(struct 
+ {
+ 	struct cfg80211_registered_device *drv;
+ 	struct vif_params params;
+-	int err, ifindex;
++	int err;
+ 	enum nl80211_iftype otype, ntype;
+ 	struct net_device *dev;
+ 	u32 _flags, *flags = NULL;
+@@ -780,9 +780,7 @@ static int nl80211_set_interface(struct 
+ 	if (err)
+ 		goto unlock_rtnl;
+ 
+-	ifindex = dev->ifindex;
+ 	otype = ntype = dev->ieee80211_ptr->iftype;
+-	dev_put(dev);
+ 
+ 	if (info->attrs[NL80211_ATTR_IFTYPE]) {
+ 		ntype = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
+@@ -825,20 +823,20 @@ static int nl80211_set_interface(struct 
+ 	}
+ 
+ 	if (change)
+-		err = drv->ops->change_virtual_intf(&drv->wiphy, ifindex,
++		err = drv->ops->change_virtual_intf(&drv->wiphy, dev,
+ 						    ntype, flags, &params);
+ 	else
+ 		err = 0;
+ 
+-	dev = __dev_get_by_index(&init_net, ifindex);
+-	WARN_ON(!dev || (!err && dev->ieee80211_ptr->iftype != ntype));
++	WARN_ON(!err && dev->ieee80211_ptr->iftype != ntype);
+ 
+-	if (dev && !err && (ntype != otype)) {
++	if (!err && (ntype != otype)) {
+ 		if (otype == NL80211_IFTYPE_ADHOC)
+ 			cfg80211_clear_ibss(dev, false);
+ 	}
+ 
+  unlock:
++	dev_put(dev);
+ 	cfg80211_put_dev(drv);
+  unlock_rtnl:
+ 	rtnl_unlock();
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-09 20:59:03.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-06-09 20:59:14.000000000 +0200
+@@ -103,7 +103,7 @@ int cfg80211_wext_siwmode(struct net_dev
+ 
+ 	memset(&vifparams, 0, sizeof(vifparams));
+ 
+-	ret = rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
++	ret = rdev->ops->change_virtual_intf(wdev->wiphy, dev, type,
+ 					     NULL, &vifparams);
+ 	WARN_ON(!ret && wdev->iftype != type);
+ 
+--- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/cfg80211.c	2009-06-09 20:59:44.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwmc3200wifi/cfg80211.c	2009-06-09 21:00:02.000000000 +0200
+@@ -167,20 +167,15 @@ int iwm_cfg80211_inform_bss(struct iwm_p
+ 	return 0;
+ }
+ 
+-static int iwm_cfg80211_change_iface(struct wiphy *wiphy, int ifindex,
++static int iwm_cfg80211_change_iface(struct wiphy *wiphy,
++				     struct net_device *ndev,
+ 				     enum nl80211_iftype type, u32 *flags,
+ 				     struct vif_params *params)
+ {
+-	struct net_device *ndev;
+ 	struct wireless_dev *wdev;
+ 	struct iwm_priv *iwm;
+ 	u32 old_mode;
+ 
+-	/* we're under RTNL */
+-	ndev = __dev_get_by_index(&init_net, ifindex);
+-	if (!ndev)
+-		return -ENODEV;
+-
+ 	wdev = ndev->ieee80211_ptr;
+ 	iwm = ndev_to_iwm(ndev);
+ 	old_mode = iwm->conf.mode;
 
 
