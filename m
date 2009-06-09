@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:36027 "EHLO c60.cesmail.net"
+Received: from main.gmane.org ([80.91.229.2]:49160 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751776AbZFIAl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 20:41:57 -0400
-Subject: Re: BUG at net/wireless/reg.c:2132 on PowerPC
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A2D9B23.20208@lwfinger.net>
-References: <1244501988.25158.57.camel@mj>  <4A2D9B23.20208@lwfinger.net>
-Content-Type: text/plain
-Date: Mon, 08 Jun 2009 20:41:58 -0400
-Message-Id: <1244508118.28215.2.camel@mj>
+	id S1759352AbZFIITx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2009 04:19:53 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MDwYk-0001bu-7T
+	for linux-wireless@vger.kernel.org; Tue, 09 Jun 2009 08:19:54 +0000
+Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 08:19:54 +0000
+Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 08:19:54 +0000
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+Date: Tue, 09 Jun 2009 09:19:43 +0100
+Message-ID: <wfd49d7ra8.fsf@calligramme.charmers>
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com> <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-08 at 18:13 -0500, Larry Finger wrote:
+Stefan Steuerwald <salsasepp@googlemail.com> writes:
 
-> I don't know what is triggering the kernel BUG, but you have an error
-> in your udev rules. The pertinent file is
-> /etc/udev/rules.d/70-persistent-net.rules. Any rule that renames a
-> wireless device should look like the following:
-> 
-> SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", \
-> ATTR{address}=="00:90:4b:d2:1f:cd", ATTR{type}=="1", \
-> KERNEL=="wlan*", NAME="wlan0"
-> 
-> The ATTR{address} should match the MAC address of the device, but the
-> ATTR{type}=="1" is really important as it keeps the master device from
-> being renamed, which is the usual cause of the presence of a name like
-> wlanX_rename.
+> Dear all,
+>
+> I have tried unsuccessfully to obtain any WLAN USB stick with a
+> chipset that supports AP mode.
 
-I actually removed 70-persistent-net.rules, but I think "1" was there.
-The failed rename was due to /etc/sysconfig/network-scripts/ifcfg-wlan0
-that was specifying the MAC address that must have conflicted with the
-udev rules.
+[...]
+
+> Turns out that anything current I can buy probably has RTL8187, RT73
+
+There's been recent work on getting rt73 to work as an AP.
+Search the list archive for the subject "rt73usb Access
+point status" and then "rt73usb: fix for master mode"
+
 
 -- 
-Regards,
-Pavel Roskin
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+
+
