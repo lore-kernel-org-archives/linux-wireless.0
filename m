@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:35167 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012AbZFRB3H (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbZFIOTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 21:29:07 -0400
-Received: by pxi27 with SMTP id 27so723569pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 18:29:09 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] libertas: copy WPA keys to priv when associating
-Date: Wed, 17 Jun 2009 18:30:27 -0700
-Message-Id: <1245288627-21442-1-git-send-email-andrey@cozybit.com>
-In-Reply-To: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
-References: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
+	Tue, 9 Jun 2009 10:19:02 -0400
+Subject: [PATCH] mac80211: don't use master netdev name
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 09 Jun 2009 16:18:32 +0200
+Message-Id: <1244557112.4672.20.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Libertas currently maintains a copy of the WPA unicast and group keys
-when using WPA or WPA2.  This copy is checked when deciding whether or
-not to return to sleep in IEEE PS mode but the actual copying back to
-priv was omitted, which breaks IEEE PS mode with WPA/WPA2 when one
-issues commands that require temporarily keeping the device awake.
+Always use the wiphy name instead.
 
-This patch introduces the omitted copy-back of the keys so that IEEE PS
-functions correctly in WPA/WPA2 mode.  Thanks to Dan Williams for
-clearing up the issue.
-
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/libertas/assoc.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ net/mac80211/cfg.c  |    4 ++--
+ net/mac80211/mlme.c |    8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index b9b3741..b7c7cb0 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -1368,11 +1368,17 @@ static int assoc_helper_wpa_keys(struct lbs_private *priv,
- 	if (ret)
- 		goto out;
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-06-09 16:17:44.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-06-09 16:17:47.000000000 +0200
+@@ -793,13 +793,13 @@ static void ieee80211_sta_wmm_params(str
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 		printk(KERN_DEBUG "%s: WMM queue=%d aci=%d acm=%d aifs=%d "
+ 		       "cWmin=%d cWmax=%d txop=%d\n",
+-		       local->mdev->name, queue, aci, acm, params.aifs, params.cw_min,
+-		       params.cw_max, params.txop);
++		       wiphy_name(local->hw.wiphy), queue, aci, acm,
++		       params.aifs, params.cw_min, params.cw_max, params.txop);
+ #endif
+ 		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
+ 			printk(KERN_DEBUG "%s: failed to set TX queue "
+-			       "parameters for queue %d\n", local->mdev->name,
+-			       queue);
++			       "parameters for queue %d\n",
++			       wiphy_name(local->hw.wiphy), queue);
+ 	}
+ }
  
-+	memcpy(&priv->wpa_unicast_key, &assoc_req->wpa_mcast_key,
-+			sizeof(struct enc_key));
-+
- 	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)) {
- 		clear_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags);
- 
- 		ret = lbs_cmd_802_11_key_material(priv, CMD_ACT_SET, assoc_req);
- 		assoc_req->flags = flags;
-+
-+		memcpy(&priv->wpa_mcast_key, &assoc_req->wpa_mcast_key,
-+				sizeof(struct enc_key));
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-06-09 16:17:44.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-06-09 16:17:47.000000000 +0200
+@@ -1122,8 +1122,8 @@ static int ieee80211_set_txq_params(stru
+ 	p.txop = params->txop;
+ 	if (drv_conf_tx(local, params->queue, &p)) {
+ 		printk(KERN_DEBUG "%s: failed to set TX queue "
+-		       "parameters for queue %d\n", local->mdev->name,
+-		       params->queue);
++		       "parameters for queue %d\n",
++		       wiphy_name(local->hw.wiphy), params->queue);
+ 		return -EINVAL;
  	}
  
- out:
--- 
-1.5.6.3
+
 
