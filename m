@@ -1,181 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:24290 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758547AbZFOPip (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:28989 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbZFIBuy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 11:38:45 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 05/12][2.6.31 and w-t] iwmc3200wifi: add a mutex to protect iwm_reset_worker
-Date: Mon, 15 Jun 2009 17:39:21 +0200
-Message-Id: <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
-In-Reply-To: <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org>
- <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org>
- <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
- <9b2b9b463d1313b871f56ad77b48b4960653b766.1245076752.git.samuel@sortiz.org>
- <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245076752.git.samuel@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org>
+	Mon, 8 Jun 2009 21:50:54 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so2297697qwd.37
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 18:50:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1244510236.28215.32.camel@mj>
+References: <1244501988.25158.57.camel@mj> <20090608231919.GC23972@bombadil.infradead.org>
+	<1244510236.28215.32.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 8 Jun 2009 18:50:36 -0700
+Message-ID: <43e72e890906081850q641f8c0m211d531544f499f9@mail.gmail.com>
+Subject: Re: BUG at net/wireless/reg.c:2132 on PowerPC
+To: Pavel Roskin <proski@gnu.org>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+On Mon, Jun 8, 2009 at 6:17 PM, Pavel Roskin<proski@gnu.org> wrote:
+> On Mon, 2009-06-08 at 19:19 -0400, Luis R. Rodriguez wrote:
+>
+>> Thank you for reporting this, try loading the system without ath5k present
+>> (mv ath5k.ko ath5k.ignore is an easy way) then prior to loadin git in a window
+>> get 'iw event' running.
+>
+> I'm sorry, but I managed to "fix" the problem without having a way to
+> recreate it again.  I emptied /etc/udev/rules.d/70-persistent-net.rules
+> and removed /etc/sysconfig/network-scripts/ifcfg-wlan0, and the problem
+> is gone, but I didn't preserve the original files, and I cannot make the
+> crash happen again.
+>
+> Also, it turns out that pciutils failed to upgrade to the Fedora 11
+> version, and "lspci -v" was crashing.  After upgrading pciutils the BUG
+> was gone, but downgrading it didn't make it reappear :-(
+>
+> I tried what you said, and that's what I get:
+>
+> # iw event
+> phy #0: regulatory domain change: set to US by a driver request on phy0
+> phy #1: regulatory domain change: set to US by a driver request on phy1
+>
+>>
+>> -             BUG_ON(request_wiphy->regd);
+>> +             /*
+>> +              * Userspace could have sent two replies with only
+>> +              * one kernel request.
+>> +              */
+>> +             if (request_wiphy->regd)
+>> +                     return -EALREADY;
+>
+> I think it's a good idea.  Stupid userspace shouldn't cause kernel bugs.
 
-The patch adds a mutex to protect the iwm_reset_worker against netdev
-ndo_open and ndo_stop because all of them call iwm_up and iwm_down in
-the implementation. Note the latter two are already protected by
-rtnl. So if iwm_reset_worker is not required in the future, the mutex
-can also be removed.
+Agreed.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/iwm.h  |    1 +
- drivers/net/wireless/iwmc3200wifi/main.c |   54 ++++++++++++++++++++++++++---
- 2 files changed, 49 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index 73c1011..8b22df3 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -289,6 +289,7 @@ struct iwm_priv {
- 	u8 *eeprom;
- 	struct timer_list watchdog;
- 	struct work_struct reset_worker;
-+	struct mutex mutex;
- 	struct rfkill *rfkill;
- 
- 	char private[0] __attribute__((__aligned__(NETDEV_ALIGN)));
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index cfe1890..fdac13a 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -112,6 +112,9 @@ static void iwm_statistics_request(struct work_struct *work)
- 	iwm_send_umac_stats_req(iwm, 0);
- }
- 
-+int __iwm_up(struct iwm_priv *iwm);
-+int __iwm_down(struct iwm_priv *iwm);
-+
- static void iwm_reset_worker(struct work_struct *work)
- {
- 	struct iwm_priv *iwm;
-@@ -120,6 +123,19 @@ static void iwm_reset_worker(struct work_struct *work)
- 
- 	iwm = container_of(work, struct iwm_priv, reset_worker);
- 
-+	/*
-+	 * XXX: The iwm->mutex is introduced purely for this reset work,
-+	 * because the other users for iwm_up and iwm_down are only netdev
-+	 * ndo_open and ndo_stop which are already protected by rtnl.
-+	 * Please remove iwm->mutex together if iwm_reset_worker() is not
-+	 * required in the future.
-+	 */
-+	if (!mutex_trylock(&iwm->mutex)) {
-+		IWM_WARN(iwm, "We are in the middle of interface bringing "
-+			 "UP/DOWN. Skip driver resetting.\n");
-+		return;
-+	}
-+
- 	if (iwm->umac_profile_active) {
- 		profile = kmalloc(sizeof(struct iwm_umac_profile), GFP_KERNEL);
- 		if (profile)
-@@ -128,10 +144,10 @@ static void iwm_reset_worker(struct work_struct *work)
- 			IWM_ERR(iwm, "Couldn't alloc memory for profile\n");
- 	}
- 
--	iwm_down(iwm);
-+	__iwm_down(iwm);
- 
- 	while (retry++ < 3) {
--		ret = iwm_up(iwm);
-+		ret = __iwm_up(iwm);
- 		if (!ret)
- 			break;
- 
-@@ -142,7 +158,7 @@ static void iwm_reset_worker(struct work_struct *work)
- 		IWM_WARN(iwm, "iwm_up() failed: %d\n", ret);
- 
- 		kfree(profile);
--		return;
-+		goto out;
- 	}
- 
- 	if (profile) {
-@@ -151,6 +167,9 @@ static void iwm_reset_worker(struct work_struct *work)
- 		iwm_send_mlme_profile(iwm);
- 		kfree(profile);
- 	}
-+
-+ out:
-+	mutex_unlock(&iwm->mutex);
- }
- 
- static void iwm_watchdog(unsigned long data)
-@@ -215,6 +234,7 @@ int iwm_priv_init(struct iwm_priv *iwm)
- 	init_timer(&iwm->watchdog);
- 	iwm->watchdog.function = iwm_watchdog;
- 	iwm->watchdog.data = (unsigned long)iwm;
-+	mutex_init(&iwm->mutex);
- 
- 	return 0;
- }
-@@ -480,7 +500,7 @@ void iwm_link_off(struct iwm_priv *iwm)
- 
- 	iwm_rx_free(iwm);
- 
--	cancel_delayed_work(&iwm->stats_request);
-+	cancel_delayed_work_sync(&iwm->stats_request);
- 	memset(wstats, 0, sizeof(struct iw_statistics));
- 	wstats->qual.updated = IW_QUAL_ALL_INVALID;
- 
-@@ -525,7 +545,7 @@ static int iwm_channels_init(struct iwm_priv *iwm)
- 	return 0;
- }
- 
--int iwm_up(struct iwm_priv *iwm)
-+int __iwm_up(struct iwm_priv *iwm)
- {
- 	int ret;
- 	struct iwm_notif *notif_reboot, *notif_ack = NULL;
-@@ -661,7 +681,18 @@ int iwm_up(struct iwm_priv *iwm)
- 	return -EIO;
- }
- 
--int iwm_down(struct iwm_priv *iwm)
-+int iwm_up(struct iwm_priv *iwm)
-+{
-+	int ret;
-+
-+	mutex_lock(&iwm->mutex);
-+	ret = __iwm_up(iwm);
-+	mutex_unlock(&iwm->mutex);
-+
-+	return ret;
-+}
-+
-+int __iwm_down(struct iwm_priv *iwm)
- {
- 	int ret;
- 
-@@ -692,3 +723,14 @@ int iwm_down(struct iwm_priv *iwm)
- 
- 	return 0;
- }
-+
-+int iwm_down(struct iwm_priv *iwm)
-+{
-+	int ret;
-+
-+	mutex_lock(&iwm->mutex);
-+	ret = __iwm_down(iwm);
-+	mutex_unlock(&iwm->mutex);
-+
-+	return ret;
-+}
--- 
-1.6.3.1
-
+  Luis
