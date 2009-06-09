@@ -1,50 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:54139 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757243AbZFLNLz convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45224 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759489AbZFIIaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 09:11:55 -0400
-Received: by bwz9 with SMTP id 9so2064601bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2009 06:11:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890906120051r63569011k1ffb10410e7ebcb6@mail.gmail.com>
-References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-	<43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
-	<43e72e890906111722h678221dfrf2d4d7e082a0cd16@mail.gmail.com>
-	<200906112127.53124.keaneyw@gmail.com> <43e72e890906120051r63569011k1ffb10410e7ebcb6@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 12 Jun 2009 15:11:36 +0200
-Message-ID: <69e28c910906120611g6f08d95dj3d095d5948d5fb21@mail.gmail.com>
-Subject: Re: rfkill on T61
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: William Keaney <keaneyw@gmail.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 9 Jun 2009 04:30:13 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/3] mac80211: fix - drop frames for sta with no valid rate
+Date: Tue,  9 Jun 2009 04:30:09 -0400
+Message-Id: <1244536211-22535-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244536211-22535-1-git-send-email-lrodriguez@atheros.com>
+References: <1244536211-22535-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 12, 2009 at 9:51 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Thu, Jun 11, 2009 at 6:27 PM, William Keaney<keaneyw@gmail.com> wrote:
->> On Thursday 11 June 2009 20:22:54 Luis R. Rodriguez wrote:
->> <--snip-->
->>> Heh nevermind me, the 802.11 rfkill button is in a different place. Doh!
->>
->> Is it? I have a T61p, which seems to have 2 switches - one master on the front
->> left side, which slides left and right; and one that toggles Bluetooth only,
->> with a combination of Fn + F5.  The Bluetooth toggle doesn't do anything
->> unless the main switch has been turned on.
->
-> Not for me, the switch in front of the laptop kills 802.11 and only
-> 802.11. The Fn + F5 key kills bluetooth.
->
->> I don't see an independent rfkill
->> switch for the 802.11.
->
-> Strange, thinkpadisms I guess.
->
->  Luis
+If we're associated and scanning mac80211 will allow through
+nullfunc and probe request frames. When we're scanning on a
+different band than the one we're associated on we should
+not send nullfunc frames to the sta on that band as it would
+be the incorrect band.
 
-I'm tempted to say StinkPad.
+Lets catch the case where no valid rate is usable when associated
+and discard those frames and warn only for the case the frame is
+not a nullfunc or probe request as those are the only accounted
+for frames mac80211 should allow through while scanning.
 
+This fixes an oops which occured due to an assert in ath9k:
+
+http://marc.info/?l=linux-wireless&m=124277331319024
+
+The assert was happening because the rate control algorithm
+figures it should find at least one valid dual stream or
+single stream rate. Since we allow mac80211 to send get_rate
+callback for drivers for a sta on invalid band no valid will
+actually have been found and hence the assert.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/mac80211.h |   11 +++++++++++
+ net/mac80211/tx.c      |   38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 17d61d1..9559efa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2103,6 +2103,17 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
+ 	return 0;
+ }
+ 
++static inline
++bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
++			      struct ieee80211_sta *sta)
++{
++	unsigned int i;
++
++	for (i = 0; i < sband->n_bitrates; i++)
++		if (rate_supported(sta, sband->band, i))
++			return true;
++	return false;
++}
+ 
+ int ieee80211_rate_control_register(struct rate_control_ops *ops);
+ void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1436f74..03f9a4e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -511,6 +511,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	int i, len;
+ 	bool inval = false, rts = false, short_preamble = false;
+ 	struct ieee80211_tx_rate_control txrc;
++	u32 sta_flags;
+ 
+ 	memset(&txrc, 0, sizeof(txrc));
+ 
+@@ -543,7 +544,44 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	     (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
+ 		txrc.short_preamble = short_preamble = true;
+ 
++	sta_flags = tx->sta ? get_sta_flags(tx->sta) : 0;
++
++	/*
++	 * Lets not bother rate control if we're associated and cannot
++	 * talk to the sta. It makes little since for this to happen,
++	 * it should mean we're scanning on another band somehow some frames
++	 * got through the TX queue -- these should have been not been added
++	 * to our TX queue. There is one excemption to this, but we handle
++	 * these below.
++	 */
++
++	if (unlikely((tx->local->sw_scanning) &&
++	    (sta_flags & WLAN_STA_ASSOC) &&
++	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
++		/*
++		 *  The only accounted for frames of this type in
++		 *  mac80211 are probe requests and null func frames,
++		 *  so just warn for other drop of frames. Drop the
++		 *  frames anyway as we have no usable bit rate.
++		 */
++		if (!ieee80211_is_probe_req(hdr->frame_control) &&
++		    !ieee80211_is_nullfunc(hdr->frame_control)) {
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++			printk(KERN_DEBUG "%s: dropped data frame -- no "
++			       "supported rate for station %pM on %c "
++			       "GHz band\n",
++			       tx->dev->name, hdr->addr1,
++			       tx->channel->band ? '5' : '2');
++			WARN_ON(1);
++#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
++		}
++		return TX_DROP;
++	}
+ 
++	/*
++	 * If we're associated at this point with the sta we know we can at
++	 * least send the frame at the lowest bit rate.
++	 */
+ 	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+ 
+ 	if (unlikely(info->control.rates[0].idx < 0))
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.0.6
+
