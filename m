@@ -1,62 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:47729 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbZFRBoP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45223 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759480AbZFIIaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 21:44:15 -0400
-Received: by pxi27 with SMTP id 27so730623pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 18:44:17 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH V2] libertas: copy WPA keys to priv when associating
-Date: Wed, 17 Jun 2009 18:45:34 -0700
-Message-Id: <1245289534-21888-1-git-send-email-andrey@cozybit.com>
-In-Reply-To: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
-References: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
+	Tue, 9 Jun 2009 04:30:13 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/3] mac80211: add debugfs counter for not valid birate frames
+Date: Tue,  9 Jun 2009 04:30:10 -0400
+Message-Id: <1244536211-22535-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244536211-22535-1-git-send-email-lrodriguez@atheros.com>
+References: <1244536211-22535-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Libertas currently maintains a copy of the WPA unicast and group keys
-when using WPA or WPA2.  This copy is checked when deciding whether or
-not to return to sleep in IEEE PS mode but the actual copying back to
-priv was omitted, which breaks IEEE PS mode with WPA/WPA2 when one
-issues commands that require temporarily keeping the device awake.
+Lets keep track of how many frames we drop due to not having
+a valid bitrate for the sta.
 
-This patch introduces the omitted copy-back of the keys so that IEEE PS
-functions correctly in WPA/WPA2 mode.  Thanks to Dan Williams for
-clearing up the issue.
-
-V2: fix typo.  Also, this has been tested on GSPI and SDIO with V9 firmware.
-
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/libertas/assoc.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ net/mac80211/debugfs.c     |    4 ++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/tx.c          |    1 +
+ 3 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index b9b3741..b7c7cb0 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -1368,11 +1368,17 @@ static int assoc_helper_wpa_keys(struct lbs_private *priv,
- 	if (ret)
- 		goto out;
- 
-+	memcpy(&priv->wpa_unicast_key, &assoc_req->wpa_unicast_key,
-+			sizeof(struct enc_key));
-+
- 	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)) {
- 		clear_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags);
- 
- 		ret = lbs_cmd_802_11_key_material(priv, CMD_ACT_SET, assoc_req);
- 		assoc_req->flags = flags;
-+
-+		memcpy(&priv->wpa_mcast_key, &assoc_req->wpa_mcast_key,
-+				sizeof(struct enc_key));
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 11c7231..6a4b15c 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -248,6 +248,8 @@ DEBUGFS_STATS_FILE(tx_handlers_drop_wep, 20, "%u",
+ 		   local->tx_handlers_drop_wep);
+ DEBUGFS_STATS_FILE(tx_handlers_drop_not_assoc, 20, "%u",
+ 		   local->tx_handlers_drop_not_assoc);
++DEBUGFS_STATS_FILE(tx_handlers_drop_no_bitrate, 20, "%u",
++		   local->tx_handlers_drop_no_bitrate);
+ DEBUGFS_STATS_FILE(tx_handlers_drop_unauth_port, 20, "%u",
+ 		   local->tx_handlers_drop_unauth_port);
+ DEBUGFS_STATS_FILE(rx_handlers_drop, 20, "%u",
+@@ -324,6 +326,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_STATS_ADD(tx_handlers_drop_fragment);
+ 	DEBUGFS_STATS_ADD(tx_handlers_drop_wep);
+ 	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_no_bitrate);
+ 	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port);
+ 	DEBUGFS_STATS_ADD(rx_handlers_drop);
+ 	DEBUGFS_STATS_ADD(rx_handlers_queued);
+@@ -370,6 +373,7 @@ void debugfs_hw_del(struct ieee80211_local *local)
+ 	DEBUGFS_STATS_DEL(tx_handlers_drop_fragment);
+ 	DEBUGFS_STATS_DEL(tx_handlers_drop_wep);
+ 	DEBUGFS_STATS_DEL(tx_handlers_drop_not_assoc);
++	DEBUGFS_STATS_DEL(tx_handlers_drop_no_bitrate);
+ 	DEBUGFS_STATS_DEL(tx_handlers_drop_unauth_port);
+ 	DEBUGFS_STATS_DEL(rx_handlers_drop);
+ 	DEBUGFS_STATS_DEL(rx_handlers_queued);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c088c46..b46f46f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -733,6 +733,7 @@ struct ieee80211_local {
+ 	unsigned int tx_handlers_drop_fragment;
+ 	unsigned int tx_handlers_drop_wep;
+ 	unsigned int tx_handlers_drop_not_assoc;
++	unsigned int tx_handlers_drop_no_bitrate;
+ 	unsigned int tx_handlers_drop_unauth_port;
+ 	unsigned int rx_handlers_drop;
+ 	unsigned int rx_handlers_queued;
+@@ -804,6 +805,7 @@ struct ieee80211_local {
+ 			struct dentry *tx_handlers_drop_fragment;
+ 			struct dentry *tx_handlers_drop_wep;
+ 			struct dentry *tx_handlers_drop_not_assoc;
++			struct dentry *tx_handlers_drop_no_bitrate;
+ 			struct dentry *tx_handlers_drop_unauth_port;
+ 			struct dentry *rx_handlers_drop;
+ 			struct dentry *rx_handlers_queued;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 03f9a4e..9f0a23b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -575,6 +575,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 			WARN_ON(1);
+ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+ 		}
++		I802_DEBUG_INC(tx->local->tx_handlers_drop_no_bitrate);
+ 		return TX_DROP;
  	}
  
- out:
 -- 
-1.5.6.3
+1.6.0.6
 
