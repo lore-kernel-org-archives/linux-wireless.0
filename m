@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:39091 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457AbZFLLQ6 (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:54345 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbZFIS0K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:16:58 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 22/33] wl12xx: enable ELP mode
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:16:39 +0300
-Message-ID: <20090612111639.8877.31334.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
+	Tue, 9 Jun 2009 14:26:10 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so100687ywb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 11:26:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1244561607-6304-1-git-send-email-tobias.doerffel@gmail.com>
+References: <20090607150755.GA19635@hash.localnet>
+	 <1244561607-6304-1-git-send-email-tobias.doerffel@gmail.com>
+Date: Tue, 9 Jun 2009 14:26:12 -0400
+Message-ID: <b6c5339f0906091126k573b8725hf623367abcdcdf1f@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: added cfg80211 based rfkill support
+From: Bob Copeland <me@bobcopeland.com>
+To: Tobias Doerffel <tobias.doerffel@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Tue, Jun 9, 2009 at 11:33 AM, Tobias
+Doerffel<tobias.doerffel@gmail.com> wrote:
 
-ELP mode is working now, let's enable it so that the firmware can sleep
-and reduce power consumption.
+> +config ATH5K_RFKILL
+> +       bool "Atheros 5xxx rfkill support"
+> +       depends on ATH5K
+> +       default y
+> +       ---help---
+> +         Include support for enabling/disabling WiFi via rfkill switch
+> +         with Atheros 5xxx cards
+> +
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
+We can still drop this.
 
- drivers/net/wireless/wl12xx/ps.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+> +       /* enable interrupt for rfkill switch */
+> +       if (AR5K_EEPROM_HDR_RFKILL(ah->ah_capabilities.cap_eeprom.ee_header)) {
+> +               ath5k_rfkill_set_intr(sc, true);
+> +       }
 
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index fe5e2d1..f28f194 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -85,11 +85,7 @@ static int wl12xx_ps_set_elp(struct wl12xx *wl, bool enable)
- 	if (enable) {
- 		wl12xx_debug(DEBUG_PSM, "sleep auth psm/elp");
- 
--		/*
--		 * FIXME: we should PSM_ELP, but because of firmware wakeup
--		 * problems let's use only PSM_PS
--		 */
--		ret = wl12xx_acx_sleep_auth(wl, WL12XX_PSM_PS);
-+		ret = wl12xx_acx_sleep_auth(wl, WL12XX_PSM_ELP);
- 		if (ret < 0)
- 			return ret;
- 
+Coding style...
 
+> +       if (AR5K_EEPROM_HDR_RFKILL(ah->ah_capabilities.cap_eeprom.ee_header)) {
+> +               ath5k_rfkill_set_intr(sc, false);
+> +       }
+
+Ditto..
+
+> +       /* enable RFKILL when stopping HW so Wifi LED is turned off */
+> +       ath5k_rfkill_enable(sc);
+
+Odd, but ok :)
+
+This looks really close and the remaining changes are pretty small.  If
+you want, I can take care of the above and resubmit it with your s-o-b
+so you don't have to go through another respin.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
