@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35074 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbZFDOAz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 10:00:55 -0400
-Date: Thu, 4 Jun 2009 09:46:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Subject: Re: [PATCH 03/10] net: add IEEE 802.15.4 socket family
-	implementation
-Message-ID: <20090604134455.GB2839@tuxdriver.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com> <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com> <20090603173214.6d3997f7.akpm@linux-foundation.org> <20090604111634.GA28064@doriath.ww600.siemens.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090604111634.GA28064@doriath.ww600.siemens.net>
+Received: from c60.cesmail.net ([216.154.195.49]:1892 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752496AbZFIOrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2009 10:47:48 -0400
+Subject: Re: [PATCH] mac80211: don't use master netdev name
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1244557112.4672.20.camel@johannes.local>
+References: <1244557112.4672.20.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 09 Jun 2009 10:47:49 -0400
+Message-Id: <1244558869.895.7.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 04, 2009 at 03:16:34PM +0400, Dmitry Eremin-Solenikov wrote:
-> On Wed, Jun 03, 2009 at 05:32:14PM -0700, Andrew Morton wrote:
-> > On Mon,  1 Jun 2009 18:54:44 +0400
-> > Dmitry Eremin-Solenikov <dbaryshkov@gmail.com> wrote:
+On Tue, 2009-06-09 at 16:18 +0200, Johannes Berg wrote:
+> Always use the wiphy name instead.
 
-> > > +	switch (addr->addr_type) {
-> > > +	case IEEE802154_ADDR_LONG:
-> > > +		rtnl_lock();
-> > > +		dev = dev_getbyhwaddr(net, ARPHRD_IEEE802154, addr->hwaddr);
-> > > +		if (dev)
-> > > +			dev_hold(dev);
-> > > +		rtnl_unlock();
-> > > +		break;
-> > > +	case IEEE802154_ADDR_SHORT:
-> > > +		if (addr->pan_id != 0xffff && addr->short_addr != IEEE802154_ADDR_UNDEF && addr->short_addr != 0xffff) {
-> > > +			struct net_device *tmp;
-> > > +
-> > > +			rtnl_lock();
-> > > +
-> > > +			for_each_netdev(net, tmp) {
-> > > +				if (tmp->type == ARPHRD_IEEE802154) {
-> > > +					if (IEEE802154_MLME_OPS(tmp)->get_pan_id(tmp) == addr->pan_id
-> > > +					  && IEEE802154_MLME_OPS(tmp)->get_short_addr(tmp) == addr->short_addr) {
-> > 
-> > You must use very wide xterms :(
-> 
-> ~120 chars in width :)  We prefer to have a single code line split between
-> several screen lines, rather than split it manually in some weird places
-> just to justify width of 80 chars.
+No objections against the patch.
 
-Hopefully you realize that many find this difficult to read -- I just
-can't spread my eyes far enough to comprehend the lines.
+Maybe we could use wiphy names for the network devices?  That is,
+wmaster0 would become phy0 and so on.  Using two names for the same
+thing is confusing.  What's better is that we won't have wmaster0
+corresponding to phy1 after the driver is reloaded.  We'll have "phy1"
+in both namespaces.
 
-80 chars is not a hard limit, but it is a good goal.  120 is too wide.
+I wish we could hide those master devices using some "hidden network
+device" attribute, but it's not happening.
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Pavel Roskin
