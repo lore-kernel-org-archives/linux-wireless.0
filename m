@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:56140 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792AbZFFHMf (ORCPT
+Received: from fmailhost05.isp.att.net ([204.127.217.105]:38081 "EHLO
+	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725AbZFIOTf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 03:12:35 -0400
+	Tue, 9 Jun 2009 10:19:35 -0400
+Message-ID: <4A2E6F75.5070802@lwfinger.net>
+Date: Tue, 09 Jun 2009 09:19:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: maxim@mox.ru
-In-Reply-To: <1244211945.23850.53.camel@localhost.localdomain>
-References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-3-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
-	 <1244168990-28355-5-git-send-email-dbaryshkov@gmail.com>
-	 <1244207921.23850.17.camel@localhost.localdomain>
-	 <bc64b4640906050640n77bddf37u8e549dff72508c2d@mail.gmail.com>
-	 <1244211945.23850.53.camel@localhost.localdomain>
-Date: Sat, 6 Jun 2009 11:12:35 +0400
-Message-ID: <6097c490906060012s4f1965d1sd29eabab2040f02b@mail.gmail.com>
-Subject: Re: [PATCH 4/5] ieee802154: add documentation about our stack
-From: Maxim Osipov <maxim.osipov@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH, RFC] b43: Add fw capabilities
+References: <200904080211.16298.mb@bu3sch.de> <200906082105.00868.s.L-H@gmx.de> <200906091554.45182.mb@bu3sch.de>
+In-Reply-To: <200906091554.45182.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 5, 2009 at 6:25 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
->> Hmm. AX.25, AppleTalk, CAN, DecNet, most of other procotols sitting inside
->> Linux kernel do use net_device structure, why should we differ?
->
-> Don't know about CAN since I never looked deep enough into it. However
-> for the other, they do transport some sort of networking packets over
-> it. So my point is as long as I can use ifconfig of ip to set an address
-> on these interfaces and route them it makes sense to. Just to reuse
-> net_device because it is convenient for a control interface sounds wrong
-> to me. The IrDA stuff is one big example of this.
->
+Michael Buesch wrote:
+> From: Michael Buesch <mb@bu3sch.de>
+> 
+>> Subject: [PATCH, RFC] b44: Add fw capabilities
+>>
+>>  Completely untested patch to implement firmware capabilities
+>>  and automagic QoS-disabling.
+>>
+> 
+> Add automagic feature flags, so the firmware can tell the driver
+> about supported features and the driver can switch features on/off as needed.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-ieee802154 does actually transport networking packets. It is
-networking and not just another peer-to-peer interface, so I guess it
-shall be implemented as a network.
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Kind regards,
-Maxim
