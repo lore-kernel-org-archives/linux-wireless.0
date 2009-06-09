@@ -1,70 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45398 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752465AbZFAH1t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 03:27:49 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: alan-jenkins@tuffmail.co.uk,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243796628.6570.37.camel@localhost.localdomain>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310651g41babab2hb05729b0699dd81f@mail.gmail.com>
-	 <1243778069.5299.0.camel@johannes.local>
-	 <1243796628.6570.37.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nO+B8G1kmguDqGI4jHms"
-Date: Mon, 01 Jun 2009 09:27:43 +0200
-Message-Id: <1243841263.5299.2.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:60447 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752496AbZFIFUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2009 01:20:54 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 22:20:57 -0700
+Date: Tue, 9 Jun 2009 10:49:34 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
+Message-ID: <20090609051933.GA22194@vasanth-laptop>
+References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com> <1244180502-4323-2-git-send-email-lrodriguez@atheros.com> <20090605063059.GF17632@vasanth-laptop> <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com> <20090605075252.GG17632@vasanth-laptop> <20090605182944.GD30211@tesla> <44EE5C37ADC36343B0625A05DD408C485068DEBF69@CHEXMB-01.global.atheros.com> <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 09, 2009 at 05:56:41AM +0530, Luis R. Rodriguez wrote:
+> On Fri, Jun 5, 2009 at 11:55 PM, Vasanth
+> Thiagarajan<Vasanth.Thiagarajan@atheros.com> wrote:
+> >
+> > ________________________________________
+> >
+> >> > >> +       /*
+> >> > >> +        * Fine tuning for when no decent rate was found, the
+> >> > >> +        * lowest should *not* be used under normal circumstances.
+> >> > >> +        */
+> >> > >> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
+> >> > >> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+> >> > >> +                       "disabling MRR\n");
+> >> > >> +               rates[0].idx = rate_lowest_index(sband, sta);
+> >> > >> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
+> >> > >> +               rates[1].idx = -1;
+> >> > >> +       }
+> >> > >
+> >> > > I think we can still fill other rates (1..3) with the lowest rate
+> >> > > index as we dont differentiate the situation where the lowest rate
+> >> > > is chosen truely by the algorithm from this particular case.
+> >> >
+> >> > I thought about that as well, but does it really make sense for us to
+> >> > use MRR with the same lowest rate? That's why I just used one segment.
+> >> > Thoughts?
+> >>
+> >> or we can try for max_retry (4) times. In that case the rate indices of
+> >> other rates (just not 1) should be made -1 or this segment should
+> >> moved just below the rate find.
+> >
+> > and the next segment [1]
+> > is set to -1. Please let me know if there is anything else you see needs
+> > change.
+> >
+> > Setting rate index of the rate series[1] is not enough as you are still filling the others rate
+> > segments(2 and 3) by ath_rc_rate_getidx() in the for..loop, so other segments are also be
+> > set to -1, but it looks hacky, one clean way of doing this can be, moving you code segment to
+> > just below ath_rc_ratefind_ht(), like the following diff.
+> >
+> >
+> >        rate_table = sc->cur_rate_table;
+> >        rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
+> > +
+> > +       if (rix == ath_rc_priv->valid_rate_index[0]) {
+> > +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
+> > +                               "disabling MRR\n");
+> > +
+> > +               ath_rc_rate_set_series(rate_table, &rates[0], txrc,
+> > +                                      4, rix, 0);
+> 
+> The above sets the rate[0].idx to rix
+> 
+> > +               rates[0].idx = rate_lowest_index(sband, sta);
+> 
+> and then here we set it to rate_lowest_index(sband, sta) comes up
+> with. They should be the same, but this just goes to show we need to
+> clean this better.
 
---=-nO+B8G1kmguDqGI4jHms
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+yeah, set rix to lowest rate index before passing rix to
+ath_rc_rate_set_series().
+> 
+> ath_rc_rate_set_series() is also doing some flag checks which I'm not
+> so sure we need to do all the time so I'd like to avoid it.
 
-On Sun, 2009-05-31 at 21:03 +0200, Marcel Holtmann wrote:
+We need preamble and RTS_CTS bits in rate flags.
 
-> > Maybe we should add an ioctl that disables rfkill-input if present.
->=20
-> I am against it. Can we just add a module parameter that allows us to
-> disable it. I am against cluttering a new interface with legacy stuff
-> since we are removing rfkill-input and replacing it by rfkilld anyway in
-> a near future (meaning when I am back from vacation).
+> there's also that is_probe check and the flags that sets.
 
-Right. But you'll get a bunch of people get it mixed up. I think I would
-prefer adding the ioctl, but having it only when rfkill-input is
-compiled in, so userspace would always just get -ENOSYS if there's no
-rfkill-input present, which means the "cluttering" of the interface
-occurs only for as long as we have rfkill-input and at some point you
-would just remove that one line of code from rfkilld.
+This should be ignored for lowest rate index as there is no way
+that a new rate has been probed in this case.
 
-johannes
 
---=-nO+B8G1kmguDqGI4jHms
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKI4LrAAoJEODzc/N7+QmaVEMP/1wQKiRrmj55L5ldm7J0e3EM
-Y9XU/dDmEG366/lH5z5h7oaMxj1jz7Dfq6qI8IRRpCTf0ARcVIalx1lwD4uls6KZ
-HjeDK1eoyhSGyrNWRZTny1h0mywZZhde8rdQmzPJ6dHipL+qtcC51ByBmOFl//kb
-pb/9d0lJJw4gKV6gXOL+XurK/9yfVU5eDDa3xUXBHSyBb+7bzvLeyw+1dwINDzqB
-aNtOYXO5zbsKAvl6lqw54/Xt894NjY0qg/qtVdiOfOyN3HfEydP+5B2K4YP1dSXz
-yt5DBqvNPt95XAPJtqmqTYRXFDUE2Cx6JMnT8HnHitpiIk1h7xEwUHlc0IJ1Ddam
-dLTUz4azggPCP8ANiv7wF4OwnSCjThkH52Q/Vzc5+joZKoooZjxtg+T7W+jrSRTY
-laJlxwtCI8V963Kg7sgpgAiWuejImy7GWwhHj0h/ppFq4pt1EL7CwTu0GGtR2hyz
-wJZcV+PQ9W+APdWrlMwXT9Q5hTJswMDegc6zrdGxSpjoeptAMLhoy8hoR/hVOwJ5
-/FQv7ytKiBG3Y5g5V+SY6GfLjTAYfOXAU6Rk/fVt56xu0nAKfj0uqX7y1Wkj24tu
-tw4gsVdA4/rvqf4nsJ0qy6IHaA1kOxdH3cDIoq0ygLkatmCvJyyqIlXPipnAInLD
-td2AiLVHR/DzCMJuK5wE
-=unmP
------END PGP SIGNATURE-----
-
---=-nO+B8G1kmguDqGI4jHms--
-
+Vasanth
