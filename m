@@ -1,71 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP01.calltower.com ([69.4.184.248]:3230 "EHLO
-	L01SLCSMTP01.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758885AbZF2Pjv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42297 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756008AbZFIVoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 11:39:51 -0400
-Subject: Re: Repeater Bridge Mode with ar9170?
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1246278355.4585.3.camel@johannes.local>
-References: <1245861185.13356.2.camel@jdl-desktop>
-	 <1245881310.13356.10.camel@jdl-desktop>
-	 <1246278355.4585.3.camel@johannes.local>
+	Tue, 9 Jun 2009 17:44:22 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1ME97G-0000Ad-Ne
+	for linux-wireless@vger.kernel.org; Tue, 09 Jun 2009 23:44:22 +0200
+Subject: [RFC] mac80211: disconnect when user changes channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 29 Jun 2009 10:39:53 -0500
-Message-Id: <1246289993.15012.10.camel@jdl-desktop>
+Date: Tue, 09 Jun 2009 23:43:53 +0200
+Message-Id: <1244583833.18481.44.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-29 at 14:25 +0200, Johannes Berg wrote:
-> On Wed, 2009-06-24 at 17:08 -0500, Jon Loeliger wrote:
-> 
-> > OK, so, in the other (non-mac80211) drivers, there was a mode
-> > called IW_MODE_REPEATER that implemented 4-address framing for
-> > clients that provided the bridging ability.
-> > 
-> > That same functionality is currently not implemented in the
-> > mac80211 code (ie, no NL80211_IFTYPE_REPEATER mode).
-> 
-> Actually, the IW_MODE_REPEATER was never quite clearly defined afaict
-> and we made it WDS instead.
+If we do not disconnect when a channel switch is requested,
+we end up eventually detection beacon loss from the AP and
+then disconnecting, without ever really telling the AP, so
+we might just as well disconnect right away.
 
-I think WDS is an "AP variant" whereas I'm looking for
-a "client variant".
+Additionally, this fixes a problem with iwlwifi where the
+driver will clear some internal state on channel changes
+like this and then get confused when we actually go clear
+that state from mac80211.
 
-> > My perhaps mistaken understanding of what it would take to
-> > make this work would be to create a new NL80211_IFTYPE_REPEATER
-> > mode that was a hybrid between _STATION and _WDS modes.  In
-> > particular, it would act like _STATION as far as association
-> > and authentication are concerned, but would also have _WDS-like
-> > 4-address frame handling.
-> > 
-> That seems acceptable, though I don't necessarily see a need for adding
-> a new mode since you can very easily detect that you need to use 4addr
-> frames, and then it is up to the AP whether to accept them or not.
-> 
-> As far as the AP is concerned, it would probably be violating 802.1X to
-> accept such frames. Thus, it seems like some fairly obscure
-> functionality you would only want to enable with a Kconfig option even
-> on the client side?
+It may look like this patch drops the no-IBSS check, but
+that is already handled by cfg80211 in the wext handler it
+provides for IBSS (cfg80211_ibss_wext_siwfreq).
 
-I think I need to do this strictly from a client/station perspective.
-The only AP in this picture would be the "upstream" AP to which my
-client is associated.  We shouldn't be changing any code running on
-those APs at all.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/mlme.c        |    5 ++++-
+ net/mac80211/util.c        |   25 -------------------------
+ net/mac80211/wext.c        |   28 ++++++++++++++++++++++++----
+ 4 files changed, 28 insertions(+), 31 deletions(-)
 
-Which leads to me trying to figure out how the client is able to
-know what the correct "MAC level NAT address" needs to be to
-when it converts the 802.11 header to the 802.3 header.  Doesn't
-the upstream AP have to have already sent you 4-address frames
-for this to work?  Or will it respond with a 4-address frame if
-it is sent a 4-address frame from the station?
-
-> johannes
-
-Thanks,
-jdl
+--- wireless-testing.orig/net/mac80211/util.c	2009-06-09 23:14:10.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2009-06-09 23:23:04.000000000 +0200
+@@ -774,31 +774,6 @@ void ieee80211_tx_skb(struct ieee80211_s
+ 	dev_queue_xmit(skb);
+ }
+ 
+-int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
+-{
+-	int ret = -EINVAL;
+-	struct ieee80211_channel *chan;
+-	struct ieee80211_local *local = sdata->local;
+-
+-	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
+-
+-	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
+-		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
+-		    chan->flags & IEEE80211_CHAN_NO_IBSS)
+-			return ret;
+-		local->oper_channel = chan;
+-		local->oper_channel_type = NL80211_CHAN_NO_HT;
+-
+-		if (local->sw_scanning || local->hw_scanning)
+-			ret = 0;
+-		else
+-			ret = ieee80211_hw_config(
+-				local, IEEE80211_CONF_CHANGE_CHANNEL);
+-	}
+-
+-	return ret;
+-}
+-
+ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ 			      enum ieee80211_band band)
+ {
+--- wireless-testing.orig/net/mac80211/wext.c	2009-06-09 23:14:00.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-06-09 23:42:11.000000000 +0200
+@@ -55,6 +55,8 @@ static int ieee80211_ioctl_siwfreq(struc
+ 				   struct iw_freq *freq, char *extra)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_channel *chan;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+ 		return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
+@@ -69,17 +71,35 @@ static int ieee80211_ioctl_siwfreq(struc
+ 					IEEE80211_STA_AUTO_CHANNEL_SEL;
+ 			return 0;
+ 		} else
+-			return ieee80211_set_freq(sdata,
++			chan = ieee80211_get_channel(local->hw.wiphy,
+ 				ieee80211_channel_to_frequency(freq->m));
+ 	} else {
+ 		int i, div = 1000000;
+ 		for (i = 0; i < freq->e; i++)
+ 			div /= 10;
+-		if (div > 0)
+-			return ieee80211_set_freq(sdata, freq->m / div);
+-		else
++		if (div <= 0)
+ 			return -EINVAL;
++		chan = ieee80211_get_channel(local->hw.wiphy, freq->m / div);
+ 	}
++
++	if (chan->flags & IEEE80211_CHAN_DISABLED)
++		return -EINVAL;
++
++	/*
++	 * no change except maybe auto -> fixed, ignore the HT
++	 * setting so you can fix a channel you're on already
++	 */
++	if (local->oper_channel == chan)
++		return 0;
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		ieee80211_sta_req_auth(sdata);
++
++	local->oper_channel = chan;
++	local->oper_channel_type = NL80211_CHAN_NO_HT;
++	ieee80211_hw_config(local, 0);
++
++	return 0;
+ }
+ 
+ 
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-06-09 23:23:09.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-06-09 23:23:13.000000000 +0200
+@@ -1100,7 +1100,6 @@ void ieee802_11_parse_elems(u8 *start, s
+ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			       struct ieee802_11_elems *elems,
+ 			       u64 filter, u32 crc);
+-int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
+ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ 			      enum ieee80211_band band);
+ 
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-06-09 23:22:24.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-06-09 23:22:59.000000000 +0200
+@@ -2204,7 +2204,10 @@ static int ieee80211_sta_config_auth(str
+ 				       capa_mask, capa_val);
+ 
+ 	if (bss) {
+-		ieee80211_set_freq(sdata, bss->cbss.channel->center_freq);
++		local->oper_channel = bss->cbss.channel;
++		local->oper_channel_type = NL80211_CHAN_NO_HT;
++		ieee80211_hw_config(local, 0);
++
+ 		if (!(ifmgd->flags & IEEE80211_STA_SSID_SET))
+ 			ieee80211_sta_set_ssid(sdata, bss->ssid,
+ 					       bss->ssid_len);
 
 
