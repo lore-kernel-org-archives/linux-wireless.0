@@ -1,68 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48739 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755829AbZFWLlG (ORCPT
+Received: from jessica.hrz.tu-chemnitz.de ([134.109.132.47]:41574 "EHLO
+	jessica.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751000AbZFIPf3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 07:41:06 -0400
-Subject: Re: [PATCH 2/2 RFC] mac80211: connect API port
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <20090623113712.GA5349@sortiz.org>
-References: <20090622170409.GB30147@sortiz.org>
-	 <20090622175154.GC30147@sortiz.org>
-	 <1245755947.4184.42.camel@johannes.local>
-	 <20090623113712.GA5349@sortiz.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gmaU3kJgNJXUmZKayEcd"
-Date: Tue, 23 Jun 2009 13:41:06 +0200
-Message-Id: <1245757266.20595.0.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 9 Jun 2009 11:35:29 -0400
+From: Tobias Doerffel <tobias.doerffel@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: Tobias Doerffel <tobias.doerffel@gmail.com>
+Subject: [PATCH] ath5k: added cfg80211 based rfkill support
+Date: Tue,  9 Jun 2009 17:33:27 +0200
+Message-Id: <1244561607-6304-1-git-send-email-tobias.doerffel@gmail.com>
+In-Reply-To: <20090607150755.GA19635@hash.localnet>
+References: <20090607150755.GA19635@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch introduces initial rfkill support for the ath5k driver
+based on rfkill support in the cfg80211 framework.
+All rfkill related code is separated into newly created rfkill.c.
 
---=-gmaU3kJgNJXUmZKayEcd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes to existing code are minimal:
 
-On Tue, 2009-06-23 at 13:37 +0200, Samuel Ortiz wrote:
-> Hi Johannes,
+* added a new data structure ath5k_rfkill to the ath5k_softc structure
+* inserted calls to HW rfkill init/deinit routines
+* ath5k_intr() has been extended to handle AR5K_INT_GPIO interrupts
+---
+ drivers/net/wireless/ath/ath5k/Kconfig  |    8 ++
+ drivers/net/wireless/ath/ath5k/Makefile |    1 +
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    9 +++
+ drivers/net/wireless/ath/ath5k/base.c   |   10 +++
+ drivers/net/wireless/ath/ath5k/base.h   |   14 ++++
+ drivers/net/wireless/ath/ath5k/reset.c  |   17 -----
+ drivers/net/wireless/ath/ath5k/rfkill.c |  121 +++++++++++++++++++++++++++++++
+ 7 files changed, 163 insertions(+), 17 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath5k/rfkill.c
 
-> >  net/mac80211/mlme.c |   54 -------------------------------------------=
----------
-> >  1 file changed, 54 deletions(-)
-> I thought about this one, but wasnt sure since we're now sending an
-> IWEVASSOCRESPIE event while the current code is sending a custom one. I g=
-uess
-> it's fine, just wanted to know if Jouni is fine with it.
-
-Complicated story, but it boils down to this being ok if (and only if!)
-we put in the wext compat event patch. If not, we need to send the
-custom event in cfg80211. Maybe that's safer for now.
-
-johannes
-
---=-gmaU3kJgNJXUmZKayEcd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKQL9OAAoJEODzc/N7+QmaDukP/2iHLkT16xZ0O2J7uxG/VADg
-6oPg7h+XHEOVRUVkWFln8lp4r1Fb2X4++7UsGDXeVF5HxAe4CPUSuJ21CG6P8STn
-g+7DS7pRrVe6smF3TZzPkPAzkbUlf64Unkq7Xz2JAsT3TRA7cxrUt2UbASx2nyGR
-oUBgXyzWWBTN7Pvcq8x6TvUkM1NGXhWEo5vfWUgE5Bg+OGuWk7ntCCpowyPV48RP
-s0wcafTX6N+rWaFLZW0PwDxkmd0k4osifpg1lYLgsg3FJimeWtzfeauq0rE1+4BS
-7Ow1vDt9uCuBFulpMK5IkBr1xgUvMDoq+SMdTezFioxjsp0CXvRwyT0kC0+DZcqI
-+oYazJqpB/tJ2MCBCt7eysP7c7LuHuxi4HV6Hzl90LWEJ8ojOex11qVXZi9bljUO
-APbMh0zYXicjAF4nKD5lvJRU1XuC+fDkPxIR1AxS08XcZUOX6QwOieSMZYxYFNRs
-pzggqxVEpJtY6dJwLjJySVZdQjPUYNWICrXOu9frmA277dKJiyHBzZXgGvsx453H
-r73Jcqs5SSCEEgpMC06qDvF20xpUP0SWNUlkLGioS6kPCiLj+sHzHr/3sOyNBosW
-TRZQgDpuXZOqnuxYl/rYs6L+eGzILCoZcZahMC/WjNbVSlKcbUoKbOGPbzIWpNL+
-KZAPlXJne5iJghL9EwQe
-=w3H9
------END PGP SIGNATURE-----
-
---=-gmaU3kJgNJXUmZKayEcd--
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index 509b6f9..4863f4b 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -39,3 +39,11 @@ config ATH5K_DEBUG
+ 
+ 	  modprobe ath5k debug=0x00000400
+ 
++config ATH5K_RFKILL
++	bool "Atheros 5xxx rfkill support"
++	depends on ATH5K
++	default y
++	---help---
++	  Include support for enabling/disabling WiFi via rfkill switch
++	  with Atheros 5xxx cards
++
+diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
+index 84a74c5..f1e281c 100644
+--- a/drivers/net/wireless/ath/ath5k/Makefile
++++ b/drivers/net/wireless/ath/ath5k/Makefile
+@@ -12,4 +12,5 @@ ath5k-y				+= attach.o
+ ath5k-y				+= base.o
+ ath5k-y				+= led.o
+ ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
++ath5k-$(CONFIG_ATH5K_RFKILL)	+= rfkill.o
+ obj-$(CONFIG_ATH5K)		+= ath5k.o
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 8137182..4c84e30 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1256,6 +1256,15 @@ extern u32 ath5k_hw_get_gpio(struct ath5k_hw *ah, u32 gpio);
+ extern int ath5k_hw_set_gpio(struct ath5k_hw *ah, u32 gpio, u32 val);
+ extern void ath5k_hw_set_gpio_intr(struct ath5k_hw *ah, unsigned int gpio, u32 interrupt_level);
+ 
++/* rfkill Functions */
++#ifdef CONFIG_ATH5K_RFKILL
++extern void ath5k_rfkill_hw_start(struct ath5k_hw *ah);
++extern void ath5k_rfkill_hw_stop(struct ath5k_hw *ah);
++#else
++static inline void ath5k_rfkill_hw_start(struct ath5k_hw *ah) {}
++static inline void ath5k_rfkill_hw_stop(struct ath5k_hw *ah) {}
++#endif
++
+ /* Misc functions */
+ int ath5k_hw_set_capabilities(struct ath5k_hw *ah);
+ extern int ath5k_hw_get_capability(struct ath5k_hw *ah, enum ath5k_capability_type cap_type, u32 capability, u32 *result);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 85a00db..f55675c 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2360,6 +2360,8 @@ ath5k_init(struct ath5k_softc *sc)
+ 	if (ret)
+ 		goto done;
+ 
++	ath5k_rfkill_hw_start(ah);
++
+ 	/*
+ 	 * Reset the key cache since some parts do not reset the
+ 	 * contents on initial power up or resume from suspend.
+@@ -2468,6 +2470,8 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	tasklet_kill(&sc->restq);
+ 	tasklet_kill(&sc->beacontq);
+ 
++	ath5k_rfkill_hw_stop(sc->ah);
++
+ 	return ret;
+ }
+ 
+@@ -2526,6 +2530,12 @@ ath5k_intr(int irq, void *dev_id)
+ 				 */
+ 				ath5k_hw_update_mib_counters(ah, &sc->ll_stats);
+ 			}
++#ifdef CONFIG_ATH5K_RFKILL
++			if (status & AR5K_INT_GPIO)
++			{
++				tasklet_schedule(&sc->rf_kill.toggleq);
++			}
++#endif
+ 		}
+ 	} while (ath5k_hw_is_intr_pending(ah) && --counter > 0);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 852b2c1..7a0ecdd 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -46,6 +46,7 @@
+ #include <linux/wireless.h>
+ #include <linux/if_ether.h>
+ #include <linux/leds.h>
++#include <linux/rfkill.h>
+ 
+ #include "ath5k.h"
+ #include "debug.h"
+@@ -91,6 +92,15 @@ struct ath5k_led
+ 	struct led_classdev led_dev;		/* led classdev */
+ };
+ 
++/* Rfkill */
++struct ath5k_rfkill {
++	/* GPIO PIN for rfkill */
++	u16 gpio;
++	/* polarity of rfkill GPIO PIN */
++	bool polarity;
++	/* RFKILL toggle tasklet */
++	struct tasklet_struct toggleq;
++};
+ 
+ #if CHAN_DEBUG
+ #define ATH_CHAN_MAX	(26+26+26+200+200)
+@@ -167,6 +177,10 @@ struct ath5k_softc {
+ 	struct tasklet_struct	txtq;		/* tx intr tasklet */
+ 	struct ath5k_led	tx_led;		/* tx led */
+ 
++#ifdef CONFIG_ATH5K_RFKILL
++	struct ath5k_rfkill	rf_kill;
++#endif
++
+ 	spinlock_t		block;		/* protects beacon */
+ 	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
+ 	struct ath5k_buf	*bbuf;		/* beacon buffer */
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index bd1940e..8077f0a 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1305,23 +1305,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	if (ah->ah_version != AR5K_AR5210)
+ 		ath5k_hw_set_imr(ah, ah->ah_imr);
+ 
+-	/*
+-	 * Setup RFKill interrupt if rfkill flag is set on eeprom.
+-	 * TODO: Use gpio pin and polarity infos from eeprom
+-	 * TODO: Handle this in ath5k_intr because it'll result
+-	 * 	 a nasty interrupt storm.
+-	 */
+-#if 0
+-	if (AR5K_EEPROM_HDR_RFKILL(ah->ah_capabilities.cap_eeprom.ee_header)) {
+-		ath5k_hw_set_gpio_input(ah, 0);
+-		ah->ah_gpio[0] = ath5k_hw_get_gpio(ah, 0);
+-		if (ah->ah_gpio[0] == 0)
+-			ath5k_hw_set_gpio_intr(ah, 0, 1);
+-		else
+-			ath5k_hw_set_gpio_intr(ah, 0, 0);
+-	}
+-#endif
+-
+ 	/* Enable 32KHz clock function for AR5212+ chips
+ 	 * Set clocks to 32KHz operation and use an
+ 	 * external 32KHz crystal when sleeping if one
+diff --git a/drivers/net/wireless/ath/ath5k/rfkill.c b/drivers/net/wireless/ath/ath5k/rfkill.c
+new file mode 100644
+index 0000000..492ada9
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath5k/rfkill.c
+@@ -0,0 +1,121 @@
++/*
++ * RFKILL support for ath5k
++ *
++ * Copyright (c) 2009 Tobias Doerffel <tobias.doerffel@gmail.com>
++ *
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer,
++ *    without modification.
++ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
++ *    similar to the "NO WARRANTY" disclaimer below ("Disclaimer") and any
++ *    redistribution must be conditioned upon including a substantially
++ *    similar Disclaimer requirement for further binary redistribution.
++ * 3. Neither the names of the above-listed copyright holders nor the names
++ *    of any contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * NO WARRANTY
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF NONINFRINGEMENT, MERCHANTIBILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY,
++ * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
++ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
++ * THE POSSIBILITY OF SUCH DAMAGES.
++ */
++
++#include "base.h"
++
++
++static inline void ath5k_rfkill_disable(struct ath5k_softc *sc)
++{
++	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "rfkill disable (gpio:%d polarity:%d)\n",
++		sc->rf_kill.gpio, sc->rf_kill.polarity);
++	ath5k_hw_set_gpio_output(sc->ah, sc->rf_kill.gpio);
++	ath5k_hw_set_gpio(sc->ah, sc->rf_kill.gpio, !sc->rf_kill.polarity);
++}
++
++
++static inline void ath5k_rfkill_enable(struct ath5k_softc *sc)
++{
++	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "rfkill enable (gpio:%d polarity:%d)\n",
++		sc->rf_kill.gpio, sc->rf_kill.polarity);
++	ath5k_hw_set_gpio_output(sc->ah, sc->rf_kill.gpio);
++	ath5k_hw_set_gpio(sc->ah, sc->rf_kill.gpio, sc->rf_kill.polarity);
++}
++
++static inline void ath5k_rfkill_set_intr(struct ath5k_softc *sc, bool enable)
++{
++	struct ath5k_hw *ah = sc->ah;
++	ath5k_hw_set_gpio_input(ah, sc->rf_kill.gpio);
++	ah->ah_gpio[0] = ath5k_hw_get_gpio(ah, sc->rf_kill.gpio);
++	ath5k_hw_set_gpio_intr(ah, sc->rf_kill.gpio, enable ?
++					!!ah->ah_gpio[0] : !ah->ah_gpio[0]);
++}
++
++static bool
++ath5k_is_rfkill_set(struct ath5k_softc *sc)
++{
++	/* configuring GPIO for input for some reason disables rfkill */
++	/*ath5k_hw_set_gpio_input(sc->ah, sc->rf_kill.gpio);*/
++	return ath5k_hw_get_gpio(sc->ah, sc->rf_kill.gpio) ==
++							sc->rf_kill.polarity;
++}
++
++static void
++ath5k_tasklet_rfkill_toggle(unsigned long data)
++{
++	struct ath5k_softc *sc = (void *)data;
++	bool blocked;
++
++	blocked = ath5k_is_rfkill_set(sc);
++	wiphy_rfkill_set_hw_state(sc->hw->wiphy, blocked);
++}
++
++
++void
++ath5k_rfkill_hw_start(struct ath5k_hw *ah)
++{
++	struct ath5k_softc *sc = ah->ah_sc;
++
++	/* read rfkill GPIO configuration from EEPROM header */
++	sc->rf_kill.gpio = ah->ah_capabilities.cap_eeprom.ee_rfkill_pin;
++	sc->rf_kill.polarity = ah->ah_capabilities.cap_eeprom.ee_rfkill_pol;
++
++	tasklet_init(&sc->rf_kill.toggleq, ath5k_tasklet_rfkill_toggle,
++		(unsigned long)sc);
++
++	ath5k_rfkill_disable(sc);
++
++	/* enable interrupt for rfkill switch */
++	if (AR5K_EEPROM_HDR_RFKILL(ah->ah_capabilities.cap_eeprom.ee_header)) {
++		ath5k_rfkill_set_intr(sc, true);
++	}
++}
++
++
++void
++ath5k_rfkill_hw_stop(struct ath5k_hw *ah)
++{
++	struct ath5k_softc *sc = ah->ah_sc;
++
++	/* disable interrupt for rfkill switch */
++	if (AR5K_EEPROM_HDR_RFKILL(ah->ah_capabilities.cap_eeprom.ee_header)) {
++		ath5k_rfkill_set_intr(sc, false);
++	}
++
++	tasklet_kill(&sc->rf_kill.toggleq);
++
++	/* enable RFKILL when stopping HW so Wifi LED is turned off */
++	ath5k_rfkill_enable(sc);
++}
++
+-- 
+1.6.3.1
 
