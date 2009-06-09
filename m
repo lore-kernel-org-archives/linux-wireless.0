@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36936
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754630AbZFEHyR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 03:54:17 -0400
-Date: Fri, 05 Jun 2009 00:54:18 -0700 (PDT)
-Message-Id: <20090605.005418.07362083.davem@davemloft.net>
-To: dbaryshkov@gmail.com
-Cc: johannes@sipsolutions.net, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, sfr@canb.auug.org.au
-Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
- 802.15.4 devices
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090605071529.GA7064@doriath.ww600.siemens.net>
-References: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
-	<1244184737.22576.94.camel@johannes.local>
-	<20090605071529.GA7064@doriath.ww600.siemens.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:32974 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750810AbZFIOKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2009 10:10:14 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 07:10:17 -0700
+Date: Tue, 9 Jun 2009 19:38:48 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Fix the way ADDBA request count being
+	modified
+Message-ID: <20090609140847.GA4459@vasanth-laptop>
+References: <1244536906-22335-1-git-send-email-vasanth@atheros.com> <1244556118.4672.10.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1244556118.4672.10.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Date: Fri, 5 Jun 2009 11:15:29 +0400
-
-> On Fri, Jun 05, 2009 at 08:52:17AM +0200, Johannes Berg wrote:
->> On Fri, 2009-06-05 at 06:29 +0400, Dmitry Eremin-Solenikov wrote:
->> 
->> > +/* This source file is shared between kernel and userspace sources, thus
->> > + * a bit of __KERNEL__ checks
->> > + */
->> > +#ifdef __KERNEL__
->> 
->> It's a C file. It can't be shared expect by copying, hence IMO these
->> things are pointless.
+On Tue, Jun 09, 2009 at 07:31:58PM +0530, Johannes Berg wrote:
+> On Tue, 2009-06-09 at 14:11 +0530, Vasanthakumar Thiagarajan wrote:
+> > addba_req_num[tid] is supposed to have the count of consecutive
+> > addba request attempts on 'tid' which failed. This count is checked
+> > against a retry threshold (3 times) before starting the addba negotiation.
+> > This patch fixes the way this addba count is incremented/reset and thereby
+> > avoids indefinite addba attempts.
 > 
-> It is shared by copying. And I'd strongly prefer to have it shared
-> directly by 'cp', not by 'cp' and 'patch'. E.g. currently I can ensure
-> that policy definitions and commands are current just by comparing
-> files. I'd like to still have that ability. Thus, I'd ask to permit this
-> stuff in.
+> I've never actually seen this hit in practise, so I'll trust you on
+> it :)
+> 
+> johannes
+> 
 
-You can maintain your own code in your own directories in your
-own source tree however you like.
+I have seen this happening with most of the 11n APs around when AMPDU
+is disabled (configured to deny addba) on them.
 
-But if you want you code in the upstream kernel, you have to clean it
-of things like this.
-
-I agree with Johannes, you have to get rid of this.
+Vasanth
