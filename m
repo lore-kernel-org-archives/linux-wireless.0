@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49576 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbZFCJj3 (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:56210 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754741AbZFJTkx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 05:39:29 -0400
-Subject: Re: [PATCH 4/6] net: add NL802154 interface for configuration of
- 802.15.4 devices
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, davem@davemloft.net,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Sergey Lapin <slapin@ossfans.org>
-In-Reply-To: <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
-References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-3-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-4-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-5-git-send-email-dbaryshkov@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-f1uVj3P7zhwS81FSTB85"
-Date: Wed, 03 Jun 2009 11:39:24 +0200
-Message-Id: <1244021964.10665.5.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 10 Jun 2009 15:40:53 -0400
+Received: by bwz9 with SMTP id 9so1003783bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 12:40:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87ocsvswxa.fsf@litku.valot.fi>
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
+	<f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
+	<3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com>
+	<69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com>
+	<3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com>
+	<1244619027.18481.55.camel@johannes.local> <20090610113158.GA2798@tuxdriver.com>
+	<87ws7jsxqt.fsf@litku.valot.fi> <20090610192825.GA23353@jm.kir.nu>
+	<87ocsvswxa.fsf@litku.valot.fi>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 10 Jun 2009 21:40:34 +0200
+Message-ID: <69e28c910906101240x10cb1c99h67bd43e450f0121b@mail.gmail.com>
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 10, 2009 at 9:36 PM, Kalle Valo<kalle.valo@iki.fi> wrote:
+> Jouni Malinen <j@w1.fi> writes:
+>
+>>> Also deliberately breaking 802.11 specification sounds very wrong to me.
+>>> We can, and should, aim higher than that.
+>>
+>> Well, breaking specifications may have to be done in some cases ;-), but
+>> this particular feature is not really such a case.
+>
+> Yes, you are correct (as usual). The specification is not perfect, far
+> from it :)
+>
+>> However, I do understand the desire to be able to use some kind of AP
+>> mode even if it is known to be broken for some cases.
+>
+> Actually what are the reasons why an user would prefer AP mode over
+> Ad-Hoc mode, if he doesn't care about power save? Better coverage
+> between clients and better encryption, but that's it. Right?
+>
+> --
+> Kalle Valo
+>
 
---=-f1uVj3P7zhwS81FSTB85
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There might be another reason - I'm not sure whether all versions of
+Windows are capable of using an ad-hoc network for Internet connection
+sharing. So, to bridge the connection from a Linux machine to a
+Windows one, one might need to use AP mode.
 
-On Wed, 2009-06-03 at 13:33 +0400, Dmitry Eremin-Solenikov wrote:
-
-> +enum {
-> +	__IEEE802154_COMMAND_INVALID,
-> +
-> +	IEEE802154_ASSOCIATE_REQ,
-> +	IEEE802154_ASSOCIATE_CONF,
-> +	IEEE802154_DISASSOCIATE_REQ,
-> +	IEEE802154_DISASSOCIATE_CONF,
-> +	IEEE802154_GET_REQ,
-> +	IEEE802154_GET_CONF,
-> +/* 	IEEE802154_GTS_REQ, */
-> +/* 	IEEE802154_GTS_CONF, */
-> +	IEEE802154_RESET_REQ,
-> +	IEEE802154_RESET_CONF,
-> +/* 	IEEE802154_RX_ENABLE_REQ, */
-> +/* 	IEEE802154_RX_ENABLE_CONF, */
-
-This is a recipe for disaster. Somebody will come along and uncomment
-things. Why this is bad, I leave as an exercise for the reader.
-
-johannes
-
---=-f1uVj3P7zhwS81FSTB85
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKJkTJAAoJEODzc/N7+QmacIAP/j4pABnzbTeH28988f091okj
-X/woSZkYWYMpopmE/TAHXuQrsPDgt3MGzutTnXb2ctVZzLQb+iN5JpRtT2VE45ba
-Bz7sHuWLPw1GJZsS5bbETgGoho7NCZj/3fWHrdppgKoOI8qbIdIH3iEnjeiPTR8S
-/OIoDzASLfJ/5JunYZCpbfFrBn9lc0tKaus/LISO8r+rPUoL9dBuTzjqGCOuwMek
-T3yTEs5eTyIxyUMmDLkYV6BfrGjubGiEPLM/6CAh99PkC/MNLo9WQANi8Kl4mmlo
-dXb1Cq/mydhhSGHTdzIZ2UWTCY/BQCCh0lFBrTqvEfYb4NdkhHhTAEW91g0VeY8X
-+579VKNr+kCGpej0mSGKsJ127YJIM5ueSixAWLUiuinIcX+QrIFKi2nqdv7eYI2K
-7Fmi4/y3jzZiPe2cDGvCzBdwZZ98G1CzzrCQUgOqQ8HZHNQHYrWtL1eY2E9639aG
-H/cBAED9qTGyKew+aUbXFcT1+zVd0sGZmTbZoQMz0MiaGa0E4NHHz+ofvDfXJoY+
-broEJ3LH/3OcF4Z2WTx+YuNXMJKDZyrpadnrHh/7se8th/8DaHZWb8Y7EyujYI2i
-dHTX/DphX201FijyiNFXqfWxVqMAaSFovmpJ3rrE4NlihAGsSmE8GrqVMl3nDMvm
-pwdl74AZxvhugdrhM3Nh
-=uRcT
------END PGP SIGNATURE-----
-
---=-f1uVj3P7zhwS81FSTB85--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
