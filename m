@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35740 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756874AbZFOQMF (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37442 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757457AbZFJITp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 12:12:05 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linwille <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: process rx packet if we are waiting for CAB
-Date: Mon, 15 Jun 2009 17:49:11 +0200
-Message-Id: <1245080951-24804-3-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1245080951-24804-1-git-send-email-juhosg@openwrt.org>
-References: <1245080951-24804-1-git-send-email-juhosg@openwrt.org>
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 03/18] ath9k: downgrade assert in rc.c for invalid rate
+Date: Wed, 10 Jun 2009 04:19:20 -0400
+Message-Id: <1244621975-1238-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we are in PS mode, we have to process the received frame if
-the SC_OP_WAIT_FOR_CAB bit is set.
+The case where no vaid rate is found should not happen now
+but to help debugging and downgrade this to a warn.
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |   16 ++++++++++++----
+ 1 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 5014a19..f99f3a7 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -817,6 +817,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index ba06e78..d7f4030 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -741,10 +741,18 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
+ 	if (rate > (ath_rc_priv->rate_table_size - 1))
+ 		rate = ath_rc_priv->rate_table_size - 1;
  
- 		if (unlikely(sc->sc_flags & (SC_OP_WAIT_FOR_BEACON |
-+					     SC_OP_WAIT_FOR_CAB |
- 					     SC_OP_WAIT_FOR_PSPOLL_DATA)))
- 			ath_rx_ps(sc, skb);
+-	ASSERT((rate_table->info[rate].valid &&
+-		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
+-	       (rate_table->info[rate].valid_single_stream &&
+-		!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
++	if (rate_table->info[rate].valid &&
++	    (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG))
++		return rate;
++
++	if (rate_table->info[rate].valid_single_stream &&
++	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG));
++		return rate;
++
++	/* This should not happen */
++	WARN_ON(1);
++
++	rate = ath_rc_priv->valid_rate_index[0];
  
+ 	return rate;
+ }
 -- 
-1.5.3.2
+1.6.0.6
 
