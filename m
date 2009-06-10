@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3176 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752753AbZFABhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2009 21:37:37 -0400
-Subject: Re: [Announce] Intel Wireless Multicomm 3200 WiFi driver
-From: Zhu Yi <yi.zhu@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243771847.5248.10.camel@maxim-laptop>
-References: <1242872340-27417-1-git-send-email-yi.zhu@intel.com>
-	 <20090526222433.GA23972@bombadil.infradead.org>
-	 <1243736227.3623.180.camel@debian>
-	 <43e72e890905302327x23d0479bkb825ea05832c5ffd@mail.gmail.com>
-	 <1243752126.3623.375.camel@debian>  <1243771847.5248.10.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Mon, 01 Jun 2009 09:29:28 +0800
-Message-Id: <1243819768.3623.438.camel@debian>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:37428 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756458AbZFJITp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 18/18] ath9k: remove rate control wraper
+Date: Wed, 10 Jun 2009 04:19:35 -0400
+Message-Id: <1244621975-1238-19-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-05-31 at 20:10 +0800, Maxim Levitsky wrote:
-> This is a fullmac driver, thus if I understand correctly, it behaves
-> on the outside more like an Ethernet adapter.
+After the cleanup we just use get_rate as a wrapper, skip
+the wrapper.
 
-Depends on how you define "outside". From the user point of view: yes;
-from the firmware point of view: no. Take a look at the new functions
-ieee80211_data_{from|to}_8023 in cfg80211 and their usage in
-iwmc3200wifi.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   23 +++++++----------------
+ 1 files changed, 7 insertions(+), 16 deletions(-)
 
-> This will mean that many things possible with normal softmac card
-> won't be possible, like sending raw packets, etc...
-
-See above.
-
-> (and besides I belive that hardware is more or less the same,
-
-The hardware is different as we mentioned it is a multicomm device.
-
-> but more functionality is pushed down to firmware, and more firmware
-> code equals to bigger probability of bugs that aren't possible to
-> triage and solve easily.
-
-That's the con. The pro is saving more host CPU power and portability.
-
-> Does this device indicate that intel moves away from softmac devices,
-> or this is a device that will mostly be used in some dedicated market
-> sector (embedded devices for example)?
-
-I think it should be capable for embedded devices as well as
-desktop/laptops.
-
-Thanks,
--yi
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 630fcf4..e66734c 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -786,10 +786,11 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	tx_info->control.rts_cts_rate_idx = cix;
+ }
+ 
+-static void ath_rc_ratefind(struct ath_softc *sc,
+-			    struct ath_rate_priv *ath_rc_priv,
+-			    struct ieee80211_tx_rate_control *txrc)
++static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
++			 struct ieee80211_tx_rate_control *txrc)
+ {
++	struct ath_softc *sc = priv;
++	struct ath_rate_priv *ath_rc_priv = priv_sta;
+ 	const struct ath_rate_table *rate_table;
+ 	struct sk_buff *skb = txrc->skb;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+@@ -799,6 +800,9 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	u8 try_per_rate, i = 0, rix, nrix;
+ 	int is_probe = 0;
+ 
++	if (rate_control_send_low(sta, priv_sta, txrc))
++		return;
++
+ 	/*
+ 	 * For Multi Rate Retry we use a different number of
+ 	 * retry attempt counts. This ends up looking like this:
+@@ -1515,19 +1519,6 @@ exit:
+ 	kfree(tx_info_priv);
+ }
+ 
+-static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+-			 struct ieee80211_tx_rate_control *txrc)
+-{
+-	struct ath_softc *sc = priv;
+-	struct ath_rate_priv *ath_rc_priv = priv_sta;
+-
+-	if (rate_control_send_low(sta, priv_sta, txrc))
+-		return;
+-
+-	/* Find tx rate for unicast frames */
+-	ath_rc_ratefind(sc, ath_rc_priv, txrc);
+-}
+-
+ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+                           struct ieee80211_sta *sta, void *priv_sta)
+ {
+-- 
+1.6.0.6
 
