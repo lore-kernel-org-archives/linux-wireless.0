@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:35424 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbZFSRyq (ORCPT
+Received: from mail-qy0-f180.google.com ([209.85.221.180]:59705 "EHLO
+	mail-qy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754967AbZFJMxZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 13:54:46 -0400
-Received: by gxk10 with SMTP id 10so3088552gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 10:54:49 -0700 (PDT)
+	Wed, 10 Jun 2009 08:53:25 -0400
+Received: by qyk10 with SMTP id 10so529973qyk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 05:53:27 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 19 Jun 2009 10:54:49 -0700
-Message-ID: <45e8e6c40906191054k3fce4d27od827bdbf8ed76d09@mail.gmail.com>
-Subject: ar9170usb and module link in sysfs?
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1244621975-1238-2-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+	<1244621975-1238-2-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 10 Jun 2009 05:53:07 -0700
+Message-ID: <43e72e890906100553l4270007ax9e67a92594967229@mail.gmail.com>
+Subject: Re: [PATCH 01/18] mac80211: disable moving between PS modes during
+	scan
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm curious about the ar9170usb driver and its 'module' links (or
-rather, lack there of) in sysfs.  For other drivers, I can look up a
-wlanN interface's module by doing looking at
-device/driver/module/drivers:
+On Wed, Jun 10, 2009 at 1:19 AM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> We don't want to trigger moving between PS mode during
+> scan. With this enabled we sometimes end up sending nullfunc
+> frames during scan. We're supposed to only send one prior to
+> scan and after scan.
+>
+> This fixes an oops which occured due to an assert in ath9k:
+>
+> http://marc.info/?l=linux-wireless&m=124277331319024
+>
+> The assert was happening because the rate control algorithm
+> figures it should find at least one valid dual stream or
+> single stream rate. Since we allow mac80211 to send nullfunc
+> frames during scan and dynamic PS was enabled at times we ended
+> up trying to send nullfunc frames for the target sta on the
+> wrong band for which we have no valid rate to communicate with
+> it. This brakes the assumptions in rate control. We'll handle
+> this sanity check next, but this fix does prevent the
+> spurious nullfunc frames from actually being sent.
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-# ls /sys/class/net/wlan0/device/driver/module/drivers/
-pci:ath5k
-# ls /sys/class/net/wlan1/device/driver/module/drivers/
-usb:zd1211rw
+John, please use v2, sorry but we noticed one missing issue with this patch.
 
-For ar9170usb, the driver directory doesn't have a module subdirectory
-and I can't seem to find a link to /sys/bus/usb/drivers/ar9170usb via
-/sys/class/wlanN like I'd expect to.  Is this normal or does ar9170usb
-do something different with respect to sysfs that I'm missing?
-Thanks,
-
-  -Andrey
+  Luis
