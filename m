@@ -1,129 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42915 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753635AbZFPR5M (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37434 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756862AbZFJITp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 13:57:12 -0400
-Subject: [PATCH] cfg80211: issue netlink notification when scan starts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 16 Jun 2009 19:56:42 +0200
-Message-Id: <1245175002.21287.3.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: [PATCH 16/18] iwlwifi: use ieee80211_is_data(fc)
+Date: Wed, 10 Jun 2009 04:19:33 -0400
+Message-Id: <1244621975-1238-17-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To ease multiple apps working together smoothly,
-send a notification when a scan is started.
+iwl-agn-rs.c already uses this.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/wireless/nl80211.c |   39 ++++++++++++++++++++++++++++++---------
- net/wireless/nl80211.h |    2 ++
- net/wireless/scan.c    |    3 ++-
- 3 files changed, 34 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
---- wireless-testing.orig/net/wireless/nl80211.c	2009-06-16 18:49:13.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-06-16 18:51:27.000000000 +0200
-@@ -2773,6 +2773,9 @@ static int nl80211_trigger_scan(struct s
- 	drv->scan_req = request;
- 	err = drv->ops->scan(&drv->wiphy, dev, request);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index b23fd53..2b77692 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	s8 scale_action = 0;
+ 	unsigned long flags;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	u16 fc;
++	__le16 fc;
+ 	u16 rate_mask = sta ? sta->supp_rates[sband->band] : 0;
+ 	s8 max_rate_idx = -1;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+@@ -682,9 +682,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	IWL_DEBUG_RATE(priv, "enter\n");
  
-+	if (!err)
-+		nl80211_send_scan_start(drv, dev);
-+
-  out_free:
- 	if (err) {
- 		drv->scan_req = NULL;
-@@ -3599,11 +3602,11 @@ static int nl80211_add_scan_req(struct s
- 	return -ENOBUFS;
- }
- 
--static int nl80211_send_scan_donemsg(struct sk_buff *msg,
--				     struct cfg80211_registered_device *rdev,
--				     struct net_device *netdev,
--				     u32 pid, u32 seq, int flags,
--				     u32 cmd)
-+static int nl80211_send_scan_msg(struct sk_buff *msg,
-+				 struct cfg80211_registered_device *rdev,
-+				 struct net_device *netdev,
-+				 u32 pid, u32 seq, int flags,
-+				 u32 cmd)
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+-	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
++	fc = hdr->frame_control;
++	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+ 	    !sta || !priv_sta) {
+ 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+ 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2addf73..afa1633 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
  {
- 	void *hdr;
+ 	int sta_id;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
++	__le16 fc = hdr->frame_control;
  
-@@ -3624,6 +3627,24 @@ static int nl80211_send_scan_donemsg(str
- 	return -EMSGSIZE;
- }
+ 	/* If this frame is broadcast or management, use broadcast station id */
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+-	    is_multicast_ether_addr(hdr->addr1))
++	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+ 		return priv->hw_params.bcast_sta_id;
  
-+void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
-+			     struct net_device *netdev)
-+{
-+	struct sk_buff *msg;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
-+				  NL80211_CMD_TRIGGER_SCAN) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast(msg, 0, nl80211_scan_mcgrp.id, GFP_KERNEL);
-+}
-+
- void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
- 			    struct net_device *netdev)
- {
-@@ -3633,8 +3654,8 @@ void nl80211_send_scan_done(struct cfg80
- 	if (!msg)
- 		return;
- 
--	if (nl80211_send_scan_donemsg(msg, rdev, netdev, 0, 0, 0,
--				      NL80211_CMD_NEW_SCAN_RESULTS) < 0) {
-+	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
-+				  NL80211_CMD_NEW_SCAN_RESULTS) < 0) {
- 		nlmsg_free(msg);
- 		return;
- 	}
-@@ -3651,8 +3672,8 @@ void nl80211_send_scan_aborted(struct cf
- 	if (!msg)
- 		return;
- 
--	if (nl80211_send_scan_donemsg(msg, rdev, netdev, 0, 0, 0,
--				      NL80211_CMD_SCAN_ABORTED) < 0) {
-+	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
-+				  NL80211_CMD_SCAN_ABORTED) < 0) {
- 		nlmsg_free(msg);
- 		return;
- 	}
---- wireless-testing.orig/net/wireless/nl80211.h	2009-06-16 18:50:32.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.h	2009-06-16 18:50:53.000000000 +0200
-@@ -6,6 +6,8 @@
- extern int nl80211_init(void);
- extern void nl80211_exit(void);
- extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
-+extern void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
-+				    struct net_device *netdev);
- extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
- 				   struct net_device *netdev);
- extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
---- wireless-testing.orig/net/wireless/scan.c	2009-06-16 18:52:00.000000000 +0200
-+++ wireless-testing/net/wireless/scan.c	2009-06-16 18:52:13.000000000 +0200
-@@ -648,7 +648,8 @@ int cfg80211_wext_siwscan(struct net_dev
- 	if (err) {
- 		rdev->scan_req = NULL;
- 		kfree(creq);
--	}
-+	} else
-+		nl80211_send_scan_start(rdev, dev);
-  out:
- 	cfg80211_put_dev(rdev);
- 	return err;
-
+ 	switch (priv->iw_mode) {
+-- 
+1.6.0.6
 
