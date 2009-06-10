@@ -1,147 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50625 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753923AbZFBImM (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:48483 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755092AbZFJTTM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 04:42:12 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Wed, 10 Jun 2009 15:19:12 -0400
+Received: by bwz9 with SMTP id 9so987756bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 12:19:13 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A24E3E4.1050505@tuffmail.co.uk>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
-	 <1243763887.19302.29.camel@johannes.local>
-	 <1243796509.6570.35.camel@localhost.localdomain>
-	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
-	 <1243858256.5299.14.camel@johannes.local>
-	 <1243867620.3015.17.camel@localhost.localdomain>
-	 <4A23FD91.8020200@tuffmail.co.uk>
-	 <1243885494.3015.29.camel@localhost.localdomain>
-	 <4A24559D.7010201@tuffmail.co.uk>
-	 <1243928308.3192.38.camel@localhost.localdomain>
-	 <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk>
-Content-Type: text/plain
-Date: Tue, 02 Jun 2009 10:41:49 +0200
-Message-Id: <1243932109.3192.73.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	=?iso-8859-15?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
+	<f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
+	<3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com>
+	<69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com>
+	<3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com>
+	<1244619027.18481.55.camel@johannes.local>
+	<20090610113158.GA2798@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 10 Jun 2009 22:19:06 +0300
+In-Reply-To: <20090610113158.GA2798@tuxdriver.com> (John W. Linville's message of "Wed\, 10 Jun 2009 07\:31\:59 -0400")
+Message-ID: <87ws7jsxqt.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alan,
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-> >> If you really don't wanna have rfkilld _not_ impose a policy on cold
-> >> boot, then we can certainly add that. However that is part of rfkilld
-> >> and not the kernel.
-> >>
-> >> For global states, I am questioning the platform that actually has
-> >> storage for global states. All platforms that I have seen so far store
-> >> individual per device based states and not the global one.
-> >>     
-> >
-> > Yeah, unfortunately the platform drivers do store/restore global state.
-> > And in a sense that makes (made) sense since the default rfkill-input
-> > policy was to toggle everything based on the platform button. It's icky
-> > though.
-> >
-> > The problem with not telling rfkilld about this though is that the
-> > kernel will suddenly impose a hotplug policy that rfkilld doesn't know
-> > about. This might not even matter though since the _ADD will be sent
-> > with that policy already applied, and if it wants to change the policy
-> > rfkilld will do _CHANGE_ALL.
-> >
-> >   
-> >> If you wanna just accept what the BIOS (or other OS) tells you then that
-> >> is an acceptable policy. So rfkilld will just map key input events in
-> >> that case. Fine by me. Question is if we can't do that right now? I
-> >> think we just can.
-> >>     
-> >
-> > Yes, we probably can do that right now, by making rfkilld start up
-> > without setting a policy (CHANGE_ALL). It just doesn't know what the
-> > policy is, then.
-> >
-> >   
-> >> Question is if we really have a global state here. I doubt it since all
-> >> of these are device specific states. And having the BIOS or ACPI dictate
-> >> what state my external Bluetooth or WiFi device is in is pointless and a
-> >> total broken concept.
-> >>     
-> >
-> > Unfortunately that's how it worked before, it's part of the rfkill
-> > legacy that it seems we'll have to accept. I guess we have only
-> > ourselves to blame for not reviewing Henrique's rfkill implementation...
-> >
-> >   
-> >>> You propose to exclude a feature that currently works, on the grounds 
-> >>> that it is inherently broken.  But you haven't said that this has ever 
-> >>> caused incorrect behavior.  All you have said so far is that it is a hack.
-> >>>       
-> >> This never worked so far. The mac80211 or Bluetooth subsystems have no
-> >> RFKILL state and thus global states are not enforced. An external dongle
-> >> without RFKILL support is not taken into account. You are not talking
-> >> about global states here. They are all device specific. The device just
-> >> happens to be a platform device builtin the system.
-> >>     
-> >
-> > Right, but rfkill does actually have a function to set the global policy
-> > state (rfkill_set_global_sw_state) which some platform drivers insist on
-> > calling.
-> >
-> > The only reason we would need the NVS_REPORT then is to detect whether
-> > or not anything in the kernel called rfkill_set_global_sw_state(). If we
-> > can live with just configuring rfkilld for the (arguably broken) case
-> > where somebody cares about this, I'm happy with removing it.
-> >
-> > Hope that helps clear up your confusion.
-> >   
-> 
-> The reason for drivers doing this is that otherwise, the kernel forces 
-> the new rfkill device to the current global default.  So this API is 
-> used for the device to preserve it's current state - without it, we just 
-> throw the NVS information away and no-one can get at it.
-> 
-> We could switch to using the non-global set_sw_state() after 
-> registration.  But that's pretty nasty because it means most drivers 
-> call set_sw_state() before registration, a few drivers call it 
-> afterwards, and it's not going to be obvious why.  Plus I think it 
-> bypasses EPO.  So I think some sort of separate API is needed.
+> On Wed, Jun 10, 2009 at 09:30:27AM +0200, Johannes Berg wrote:
+>
+>> This means that your sleeping clients will not be receiving multicast,
+>> and as such be invisible to the network once they fall off the ARP/NDP
+>> caches. This is the reason we have said that it will not be possible to
+>> support AP mode with this card. I'm curious how, if at all, the vendor
+>> driver handles that.
+>
+> My completely uninformed guess is that they ignore it.
 
-as I said, we might need to fix drivers that register their RFKILL
-switch with the wrong state to begin with. This is a driver issue and
-that can be easily fixed inside the kernel.
+That's my guess as well.
 
-Forget about this EPO crap. That is just a stupid concept anyway.
+> I will hazard a guess that most scenarios involving "laptop as AP" are
+> for support of devices that don't (or at least didn't) do a lot of
+> sleeping, like other laptops.
+>
+> I'm still a bit "on the fence" regarding this requirement for AP mode.
+> I think there is a reasonable body of users that would prefer a
+> not-quite-right AP mode over no AP mode at all.
 
-> If we can also export this NVS status to userspace somehow, then 
-> userspace can distinguish between
-> 
-> a) rfkill is currently unblocked, because this was the kernel default, 
-> so there's no reason not to override the state
-> b) rfkill is currently unblocked, because this was restored from NVS, 
-> which hopefully reflects the most recent request from the user.  rfkilld 
-> is still able to override this state, but it would also be reasonable 
-> not to.
-> 
-> I take Marcels point, if /dev/rfkill exposes a sub-optimal interface, it 
-> can be very difficult to fix it.  It's probably better to fix the mess 
-> of global states before trying to add NVS information to /dev/rfkill.
-> 
-> Btw, I think there's a third scenario to add to the other OS / BIOS 
-> setup.  Some hardware has a handover mechanism, right?  Where the BIOS 
-> handles rfkill keypresses by default, and toggles the soft rfkill state, 
-> but allows the driver to take over when loaded.  So if the user presses 
-> the key _before_ the driver gets loaded - they will see the wireless LED 
-> change, and they will expect that state change to persist when the 
-> driver is loaded.
+I understand your point, but the problems from this are so severe that
+it would just create a headache for everyone, both for the users and for
+us. Think of what kind of problems randomly loosing broadcast and
+multicast frames would create: random disconnects, not finding hosts
+from the local network etc. How would a normal user realise that this is
+because of broken power save support in the AP?
 
-We should be able to handle this properly without an extra operation in
-the user interface.
+Also deliberately breaking 802.11 specification sounds very wrong to me.
+We can, and should, aim higher than that.
 
-Regards
+Sorry for not being diplomatic here, but hey, I'm a finn. We are born
+to be rude. Heritage from the viking era, I guess :)
 
-Marcel
-
-
+-- 
+Kalle Valo
