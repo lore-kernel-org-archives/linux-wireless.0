@@ -1,77 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46209 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751071AbZFWTFn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37437 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756949AbZFJITp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 15:05:43 -0400
-Date: Tue, 23 Jun 2009 12:04:54 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Krzysztof Halasa <khc@pm.waw.pl>
-cc: Jake Edge <jake@lwn.net>,
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Pavel Machek <pavel@ucw.cz>, Greg KH <greg@kroah.com>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
-Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for
- rc-series and merge window
-In-Reply-To: <m3bpoen5pp.fsf@intrepid.localdomain>
-Message-ID: <alpine.LFD.2.01.0906231156220.3240@localhost.localdomain>
-References: <20090622222217.GH23972@bombadil.infradead.org> <m3fxdqj2bz.fsf@lwn.net> <m3bpoen5pp.fsf@intrepid.localdomain>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 11/18] ath9k: remove ATH9K_MODE_11B
+Date: Wed, 10 Jun 2009 04:19:28 -0400
+Message-Id: <1244621975-1238-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This saves us 2733 bytes.
 
+   text    data     bss     dec     hex filename
+ 252265    3628    1584  257477   3edc5 ath9k-has-b-rate.ko
+ 249905    3628    1584  255117   3e48d ath9k.ko
 
-On Tue, 23 Jun 2009, Krzysztof Halasa wrote:
-> 
-> I would say, to address regressions and fix bugs. Not only those added
-> recently, though obviously older bugs should have already been fixed.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Siged-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    1 -
+ drivers/net/wireless/ath/ath9k/hw.h |    1 -
+ drivers/net/wireless/ath/ath9k/rc.c |   23 -----------------------
+ 3 files changed, 0 insertions(+), 25 deletions(-)
 
-The thing is, I don't take bug fixes late in the -rc just because they are 
-bug fixes.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1579c94..de2c000 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3294,7 +3294,6 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ 
+ 	if (eeval & AR5416_OPFLAGS_11G) {
+-		set_bit(ATH9K_MODE_11B, pCap->wireless_modes);
+ 		set_bit(ATH9K_MODE_11G, pCap->wireless_modes);
+ 		if (ah->config.ht_enable) {
+ 			if (!(eeval & AR5416_OPFLAGS_N_2G_HT20))
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index dd8508e..73d859e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -113,7 +113,6 @@
+ 
+ enum wireless_mode {
+ 	ATH9K_MODE_11A = 0,
+-	ATH9K_MODE_11B = 2,
+ 	ATH9K_MODE_11G = 3,
+ 	ATH9K_MODE_11NA_HT20 = 6,
+ 	ATH9K_MODE_11NG_HT20 = 7,
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index b0e3702..112a0ec 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -380,27 +380,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+ 	0,   /* Phy rates allowed initially */
+ };
+ 
+-static const struct ath_rate_table ar5416_11b_ratetable = {
+-	4,
+-	{
+-		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
+-			900, 0x1b,  0x00, (0x80|2),
+-			0, 0, 1, 0, 0 },
+-		{ VALID, VALID, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
+-			1800, 0x1a, 0x04, (0x80|4),
+-			1, 1, 1, 1, 0 },
+-		{ VALID, VALID, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
+-			4300, 0x19, 0x04, (0x80|11),
+-			1, 2, 2, 2, 0 },
+-		{ VALID, VALID, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
+-			7100, 0x18, 0x04, (0x80|22),
+-			1, 4, 100, 3, 0 },
+-	},
+-	100, /* probe interval */
+-	100, /* rssi reduce interval */
+-	0,   /* Phy rates allowed initially */
+-};
+-
+ static inline int8_t median(int8_t a, int8_t b, int8_t c)
+ {
+ 	if (a >= b) {
+@@ -1702,8 +1681,6 @@ static struct rate_control_ops ath_rate_ops = {
+ 
+ void ath_rate_attach(struct ath_softc *sc)
+ {
+-	sc->hw_rate_table[ATH9K_MODE_11B] =
+-		&ar5416_11b_ratetable;
+ 	sc->hw_rate_table[ATH9K_MODE_11A] =
+ 		&ar5416_11a_ratetable;
+ 	sc->hw_rate_table[ATH9K_MODE_11G] =
+-- 
+1.6.0.6
 
-And I really shouldn't.
-
-If it's an old bug, and doesn't cause an oops or a security issue, it had 
-damn well better wait for the next merge window. There is absolutely _no_ 
-reason to just blindly "fix bugs" at the end of the rc stage, because 
-quite frankly, the risks coming from fixing a bug is often bigger than the 
-advantage.
-
-Even "obvious bugs" may be things that people depend on, or that other 
-parts of the kernel simply rely on indirectly. For a recent example of 
-this, see what happened when we fixed an obvious bug on x86-64 to check 
-user space addresses properly: it turns out that 'strnlen_user()' depended 
-on the bug ("misfeature"), and had to be fixed when the bug was fixed.
-
-So no. Regressions really are _different_ from "fixing bugs".
-
-Regressions need to be fixed even if it may even re-introduce another 
-long-time bug - simply because we're much better off with a _consistent_ 
-set of bugs where people can depend on their machine either working or 
-not, than with some kind of unstable situation that never gets anywhere 
-(we found that out the hard way with both ACPI and power management).
-
-So the end result is:
-
- - we always want to fix bugs
-
- - but the primary time to fix bugs is during the merge window
-
- - after the merge window closes, the effort should be on _regressions_, 
-   nothing else.
-
- - security issues and oopses etc catastrophic bugs obviously need to be 
-   handled at any stage.
-
-IOW, "it fixes a bug" is _not_ sufficient. The real issue is "it _really_ 
-can't wait to the next merge window", not "bug or not".
-
-				Linus
