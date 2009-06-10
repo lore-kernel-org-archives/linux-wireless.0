@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:39346 "EHLO
-	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756706AbZFKPWH (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37440 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757213AbZFJITp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 11:22:07 -0400
-Subject: RFC: cross-building crda
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 11 Jun 2009 10:21:35 -0500
-Message-Id: <1244733695.14768.22.camel@jdl-desktop>
-Mime-Version: 1.0
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 14/18] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
+Date: Wed, 10 Jun 2009 04:19:31 -0400
+Message-Id: <1244621975-1238-15-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+We check for this condition early on in our mac80211 get_rate()
+callback ath_get_rate(), so remove this check later down the path.
 
-I'd like to propose a few changes to the CRDA Makefile
-to allow better cross compilation support, and would
-like to get your suggestion/approval/recommendation on
-an overall approach before I get to far into it.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-First, the easy change would be to allow some local
-customization by adding "-include .config" as the first
-line of the Makefile in the same style as the iw Makefile.
-
-Second, in CRDA's Makefile, the "verify" step that builds
-and uses regdbdump is really a host build and operation.
-The regdbdump tool might then also be (re-)built as a target
-tool and installed on the target as well.
-
-So I'm proposing to introduce a two-layer build where the
-top-level Makefile will introduce a "host/" and a "target/"
-sub-directory build for each environment.  If the build
-is not a cross-build, no "target/" build happens and it
-all gets built in "host/" only.  The C files and sources
-all stay in the current top-level directory, and will be
-referenced and built into the host/ and target/ through
-Makefile fidgery sub-directories.
-
-Things like the CFLAGS and LDLIBS will have dual host
-and target specific variants built-up and used in their
-respective sub-driectories, all driven by the top-level
-Makefile still.
-
-Stylistically, would folks prefer
-    1) three separate Makefiles in the top-, host/ and
-       target/ directories, non-inclusively doing sub-make
-       requests (ie, "make -C host/ all"),
-    2) three Makefile components that all get "included"
-       into the top-level Makefile without doing sub-make
-       build requests,
-or
-    3) Just one top-level Makefile that hard-codes and
-       builds targets directly into the sub-dirs?
-
-Thoughts?
-
-Thanks,
-jdl
-
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 96d46d6..2c72901 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -777,7 +777,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
+ 	 */
+ 	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
+-	    !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+ 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
+ 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
+ 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+@@ -882,9 +881,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	 *
+ 	 * FIXME: Fix duration
+ 	 */
+-	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+-	    (ieee80211_has_morefrags(fc) ||
+-	     (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
++	if (ieee80211_has_morefrags(fc) ||
++	    (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
+ 		rates[1].count = rates[2].count = rates[3].count = 0;
+ 		rates[1].idx = rates[2].idx = rates[3].idx = 0;
+ 		rates[0].count = ATH_TXMAXTRY;
+-- 
+1.6.0.6
 
