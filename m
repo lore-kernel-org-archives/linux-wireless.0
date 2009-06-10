@@ -1,86 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21391 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752964AbZFXN1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 09:27:25 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2009 06:27:29 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 7/7] ath9k: Handle different TX and RX streams properly.
-Date: Wed, 24 Jun 2009 18:56:42 +0530
-Message-ID: <1245850002-26351-8-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1245850002-26351-7-git-send-email-senthilkumar@atheros.com>
-References: <1245850002-26351-1-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-2-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-3-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-4-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-5-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-6-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-7-git-send-email-senthilkumar@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36867 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761015AbZFJUAf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 16:00:35 -0400
+Date: Wed, 10 Jun 2009 15:55:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+Message-ID: <20090610195527.GE3892@tuxdriver.com>
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com> <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com> <3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com> <69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com> <3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com> <1244619027.18481.55.camel@johannes.local> <20090610113158.GA2798@tuxdriver.com> <87ws7jsxqt.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ws7jsxqt.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an issue when the TX and RX streams are different.
+On Wed, Jun 10, 2009 at 10:19:06PM +0300, Kalle Valo wrote:
+> "John W. Linville" <linville@tuxdriver.com> writes:
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   26 ++++++++++++++------------
- 1 files changed, 14 insertions(+), 12 deletions(-)
+> > I'm still a bit "on the fence" regarding this requirement for AP mode.
+> > I think there is a reasonable body of users that would prefer a
+> > not-quite-right AP mode over no AP mode at all.
+> 
+> I understand your point, but the problems from this are so severe that
+> it would just create a headache for everyone, both for the users and for
+> us. Think of what kind of problems randomly loosing broadcast and
+> multicast frames would create: random disconnects, not finding hosts
+> from the local network etc. How would a normal user realise that this is
+> because of broken power save support in the AP?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b7d5305..c327dc7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -890,6 +890,7 @@ static void setup_ht_cap(struct ath_softc *sc,
- {
- #define	ATH9K_HT_CAP_MAXRXAMPDU_65536 0x3	/* 2 ^ 16 */
- #define	ATH9K_HT_CAP_MPDUDENSITY_8 0x6		/* 8 usec */
-+	u8 tx_streams, rx_streams;
- 
- 	ht_info->ht_supported = true;
- 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-@@ -902,21 +903,22 @@ static void setup_ht_cap(struct ath_softc *sc,
- 
- 	/* set up supported mcs set */
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
-+	tx_streams = !(sc->tx_chainmask & (sc->tx_chainmask - 1)) ? 1 : 2;
-+	rx_streams = !(sc->rx_chainmask & (sc->rx_chainmask - 1)) ? 1 : 2;
- 
--	switch(sc->rx_chainmask) {
--	case 1:
--		ht_info->mcs.rx_mask[0] = 0xff;
--		break;
--	case 3:
--	case 5:
--	case 7:
--	default:
--		ht_info->mcs.rx_mask[0] = 0xff;
--		ht_info->mcs.rx_mask[1] = 0xff;
--		break;
-+	if (tx_streams != rx_streams) {
-+		DPRINTF(sc, ATH_DBG_CONFIG, "TX streams %d, RX streams: %d\n",
-+			tx_streams, rx_streams);
-+		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
-+		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-+				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
- 	}
- 
--	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
-+	ht_info->mcs.rx_mask[0] = 0xff;
-+	if (rx_streams >= 2)
-+		ht_info->mcs.rx_mask[1] = 0xff;
-+
-+	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
- }
- 
- static void ath9k_bss_assoc_info(struct ath_softc *sc,
+I agree that it is a problem -- that is why I'm "on the fence"!
+
+> Also deliberately breaking 802.11 specification sounds very wrong to me.
+> We can, and should, aim higher than that.
+
+> Sorry for not being diplomatic here, but hey, I'm a finn. We are born
+> to be rude. Heritage from the viking era, I guess :)
+
+(Note to the reader, this is an inside joke -- I threatened to run for
+US President and then name Kalle as US Ambassador to the Vikings...have
+you seen him?  The vikings would be scared!)
+
+Finn's aren't rude!  Why Linus is the most diplomatic...hmmm...
+nevermind... :-)
+
+John
 -- 
-1.6.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
