@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:64572 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754684AbZFLLP4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:15:56 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 12/33] wl12xx: add support for new WL1271 chip revision
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:15:33 +0300
-Message-ID: <20090612111533.8877.30215.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
+Received: from mail.atheros.com ([12.36.123.2]:43290 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755571AbZFJQ0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 12:26:20 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 09:26:24 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <jouni.malinen@atheros.com>, <luis.rodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 7/7] ath9k: schedule aggregation regardless of queue depth
+Date: Wed, 10 Jun 2009 21:55:32 +0530
+Message-ID: <1244651133-6537-8-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1244651133-6537-7-git-send-email-senthilkumar@atheros.com>
+References: <1244651133-6537-1-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-2-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-3-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-4-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-5-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-6-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-7-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@nokia.com>
+schedule aggregation regardless of queue depth. Also we shouldn't
+remove holding descriptor from AC queue if it happens to be the
+only descriptor.
 
-This patch adds the code that recognizes the new WL1271 chip revision (PG 2.0).
-Full support for this chip is not yet implemented and support for WL1271 PG 1.0
-is not guaranteed anymore.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/xmit.c |   15 +--------------
+ 1 files changed, 1 insertions(+), 14 deletions(-)
 
- drivers/net/wireless/wl12xx/main.c   |    7 +++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 2 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 950c425..73232db 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -196,6 +196,13 @@ static int wl12xx_chip_wakeup(struct wl12xx *wl)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 328391e..eda2458 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1113,8 +1113,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 		if (tid->paused)
+ 			continue;
  
- 		break;
- 	case CHIP_ID_1271_PG10:
-+		wl12xx_warning("chip id 0x%x (1271 PG10) support is obsolete",
-+			       wl->chip.id);
-+		break;
-+	case CHIP_ID_1271_PG20:
-+		wl12xx_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
-+			     wl->chip.id);
-+		break;
- 	case CHIP_ID_1251_PG10:
- 	case CHIP_ID_1251_PG11:
- 	default:
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 32f62a6..c1d00c0 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -412,5 +412,6 @@ int wl12xx_plt_stop(struct wl12xx *wl);
- #define CHIP_ID_1251_PG11	           (0x7020101)
- #define CHIP_ID_1251_PG12	           (0x7030101)
- #define CHIP_ID_1271_PG10	           (0x4030101)
-+#define CHIP_ID_1271_PG20	           (0x4030111)
+-		if ((txq->axq_depth % 2) == 0)
+-			ath_tx_sched_aggr(sc, txq, tid);
++		ath_tx_sched_aggr(sc, txq, tid);
  
- #endif
+ 		/*
+ 		 * add tid to round-robin queue if more frames
+@@ -1957,19 +1956,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 		if (bf->bf_stale) {
+ 			bf_held = bf;
+ 			if (list_is_last(&bf_held->list, &txq->axq_q)) {
+-				txq->axq_link = NULL;
+-				txq->axq_linkbuf = NULL;
+ 				spin_unlock_bh(&txq->axq_lock);
+-
+-				/*
+-				 * The holding descriptor is the last
+-				 * descriptor in queue. It's safe to remove
+-				 * the last holding descriptor in BH context.
+-				 */
+-				spin_lock_bh(&sc->tx.txbuflock);
+-				list_move_tail(&bf_held->list, &sc->tx.txbuf);
+-				spin_unlock_bh(&sc->tx.txbuflock);
+-
+ 				break;
+ 			} else {
+ 				bf = list_entry(bf_held->list.next,
+-- 
+1.6.0.4
 
