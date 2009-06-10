@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:45863 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:28524 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757413AbZFPTki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 15:40:38 -0400
-Subject: Re: [PATCH v2] net/libertas: don't recursive spin lock in
- if_spi_e2h()
-From: Dan Williams <dcbw@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-wireless@vger.kernel.org, andrey@cozybit.com,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <20090612193731.GA21528@Chamillionaire.breakpoint.cc>
-References: <20090612094710.GA28098@www.tglx.de>
-	 <20090612193731.GA21528@Chamillionaire.breakpoint.cc>
+	id S1756024AbZFJM0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 08:26:24 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 05:26:27 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 3/3] ath9k: downgrade ASSERT() in ath_clone_txbuf()
+Date: Wed, 10 Jun 2009 17:50:09 +0530
+Message-ID: <1244636409-9946-4-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1244636409-9946-3-git-send-email-vasanth@atheros.com>
+References: <1244636409-9946-1-git-send-email-vasanth@atheros.com>
+ <1244636409-9946-2-git-send-email-vasanth@atheros.com>
+ <1244636409-9946-3-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 16 Jun 2009 15:40:01 -0400
-Message-Id: <1245181201.28992.7.camel@130.81.190.10.in-addr.arpa>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-06-12 at 21:37 +0200, Sebastian Andrzej Siewior wrote:
-> |BUG: spinlock recursion on CPU#0, lbs_spi_thread/1030
-> | lock: dee9a1bc, .magic: dead4ead, .owner: lbs_spi_thread/1030, .owner_cpu: 0
-> |Call Trace:
-> |[deec3eb0] [c0007220] show_stack+0x4c/0x15c (unreliable)
-> |[deec3ef0] [c0187720] spin_bug+0x9c/0xb0
-> |[deec3f10] [c0187890] _raw_spin_lock+0x54/0x148
-> |[deec3f40] [c02d260c] _spin_lock_irqsave+0x2c/0x44
-> |[deec3f60] [e8671800] lbs_queue_event+0x7c/0x130 [libertas]
-> |[deec3f80] [e8725f04] lbs_spi_thread+0x538/0x58c [libertas_spi]
-> |[deec3fe0] [c004f270] kthread+0x4c/0x88
-> |[deec3ff0] [c000f33c] kernel_thread+0x4c/0x68
-> 
-> if_spi_e2h() is grabbing ->driver_lock just while calling
-> lbs_queue_event() which is grabbing the same lock.
-> 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+We can easily run out of tx buf if there is any stuck in
+transmission, so downgrade it to WARN_ON().
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-> ---
-> v1..v2: remove flags
-> 
->  drivers/net/wireless/libertas/if_spi.c |    4 ----
->  1 files changed, 0 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-> index f8c2898..583162c 100644
-> --- a/drivers/net/wireless/libertas/if_spi.c
-> +++ b/drivers/net/wireless/libertas/if_spi.c
-> @@ -812,7 +812,6 @@ out:
->  static void if_spi_e2h(struct if_spi_card *card)
->  {
->  	int err = 0;
-> -	unsigned long flags;
->  	u32 cause;
->  	struct lbs_private *priv = card->priv;
->  
-> @@ -827,10 +826,7 @@ static void if_spi_e2h(struct if_spi_card *card)
->  	/* generate a card interrupt */
->  	spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
->  
-> -	spin_lock_irqsave(&priv->driver_lock, flags);
->  	lbs_queue_event(priv, cause & 0xff);
-> -	spin_unlock_irqrestore(&priv->driver_lock, flags);
-> -
->  out:
->  	if (err)
->  		lbs_pr_err("%s: error %d\n", __func__, err);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index e074e6f..c140f81 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -238,6 +238,10 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 	struct ath_buf *tbf;
+ 
+ 	spin_lock_bh(&sc->tx.txbuflock);
++	if (WARN_ON(list_empty(&sc->tx.txbuf))) {
++		spin_unlock_bh(&sc->tx.txbuflock);
++		return NULL;
++	}
+ 	ASSERT(!list_empty((&sc->tx.txbuf)));
+ 	tbf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
+ 	list_del(&tbf->list);
+@@ -372,6 +376,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				struct ath_buf *tbf;
+ 
+ 				tbf = ath_clone_txbuf(sc, bf_last);
++				if (!tbf)
++					break;
+ 				ath9k_hw_cleartxdesc(sc->sc_ah, tbf->bf_desc);
+ 				list_add_tail(&tbf->list, &bf_head);
+ 			} else {
+-- 
+1.5.5.1
 
