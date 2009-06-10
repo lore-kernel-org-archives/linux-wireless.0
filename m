@@ -1,106 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46467 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753180AbZFWLTI (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37429 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756818AbZFJITp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 07:19:08 -0400
-Subject: Re: [PATCH 2/2 RFC] mac80211: connect API port
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <20090622175154.GC30147@sortiz.org>
-References: <20090622170409.GB30147@sortiz.org>
-	 <20090622175154.GC30147@sortiz.org>
-Content-Type: text/plain
-Date: Tue, 23 Jun 2009 13:19:07 +0200
-Message-Id: <1245755947.4184.42.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 17/18] mac80211: add helper for management / no-ack frame rate decision
+Date: Wed, 10 Jun 2009 04:19:34 -0400
+Message-Id: <1244621975-1238-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-22 at 19:51 +0200, Samuel Ortiz wrote:
-> With the connect()/disconnect() API, some of the mac80211 STA wext
-> hooks can now move to cfg80211.
-> 
-> Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-> ---
->  net/mac80211/cfg.c  |   40 +++++++++++++++++----------
->  net/mac80211/mlme.c |   15 ----------
+All current rate control algorithms agree to send management and no-ack
+frames at the lowest rate. They also agree to do this when sta
+and the private rate control data is NULL. We add a hlper to mac80211
+for this and simplify the rate control algorithm code.
 
+Developers wishing to make enhancements to rate control algorithms
+are for broadcast/multicast can opt to not use this in their
+gate_rate() mac80211 callback.
+
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net
+Cc: Gabor Juhos <juhosg@openwrt.org>
+Cc: Felix Fietkau <nbd@openwrt.org>
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/mlme.c |   54 ----------------------------------------------------
- 1 file changed, 54 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   13 ++---------
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    7 +-----
+ include/net/mac80211.h                     |   23 ++++++++++++++++++++++
+ net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
+ net/mac80211/rc80211_minstrel.c            |   22 +--------------------
+ net/mac80211/rc80211_pid_algo.c            |   11 +---------
+ 7 files changed, 59 insertions(+), 60 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-23 13:18:25.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-23 13:18:37.000000000 +0200
-@@ -868,59 +868,6 @@ static u32 ieee80211_handle_bss_capabili
- 	return changed;
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 2c72901..630fcf4 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1518,23 +1518,11 @@ exit:
+ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 			 struct ieee80211_tx_rate_control *txrc)
+ {
+-	struct ieee80211_supported_band *sband = txrc->sband;
+-	struct sk_buff *skb = txrc->skb;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ath_softc *sc = priv;
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+-	__le16 fc = hdr->frame_control;
+ 
+-	/* lowest rate for management and NO_ACK frames */
+-	if (!ieee80211_is_data(fc) ||
+-	    tx_info->flags & IEEE80211_TX_CTL_NO_ACK || !sta) {
+-		tx_info->control.rates[0].idx = rate_lowest_index(sband, sta);
+-		tx_info->control.rates[0].count =
+-			(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) ?
+-				1 : ATH_MGT_TXMAXTRY;
++	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+-	}
+ 
+ 	/* Find tx rate for unicast frames */
+ 	ath_rc_ratefind(sc, ath_rc_priv, txrc);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index 2b77692..a16bd41 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -673,7 +673,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	s8 scale_action = 0;
+ 	unsigned long flags;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	__le16 fc;
+ 	u16 rate_mask = sta ? sta->supp_rates[sband->band] : 0;
+ 	s8 max_rate_idx = -1;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+@@ -681,16 +680,10 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 
+ 	IWL_DEBUG_RATE(priv, "enter\n");
+ 
+-	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = hdr->frame_control;
+-	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+-	    !sta || !priv_sta) {
+-		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+-		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+-		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-			info->control.rates[0].count = 1;
++	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+-	}
++
++	rate_mask = sta->supp_rates[sband->band];
+ 
+ 	/* get user max rate if set */
+ 	max_rate_idx = txrc->max_rate_idx;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 3fea027..695a841 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2481,13 +2481,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+ 	}
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	if (!ieee80211_is_data(hdr->frame_control) ||
+-	    info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
+-		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+-		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-			info->control.rates[0].count = 1;
++	if (rate_control_send_low(sta, priv_r, txrc))
+ 		return;
+-	}
+ 
+ 	rate_idx  = lq_sta->last_txrate_idx;
+ 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9559efa..cf04a74 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2087,6 +2087,29 @@ static inline int rate_supported(struct ieee80211_sta *sta,
+ 	return (sta == NULL || sta->supp_rates[band] & BIT(index));
  }
  
--static void ieee80211_sta_send_associnfo(struct ieee80211_sub_if_data *sdata)
++/**
++ * rate_control_send_low - helper for drivers for management/no-ack frames
++ *
++ * Rate control algorithms that agree to use the lowest rate to
++ * send management frames and NO_ACK data with the respective hw
++ * retries should use this in the beginning of their mac80211 get_rate
++ * callback. If true is returned the rate control can simply return.
++ * If false is returned we guarantee that sta and sta and priv_sta is
++ * not null.
++ *
++ * Rate control algorithms wishing to do more intelligent selection of
++ * rate for multicast/broadcast frames may choose to not use this.
++ *
++ * @sta: &struct ieee80211_sta pointer to the target destination. Note
++ * 	that this may be null.
++ * @priv_sta: private rate control structure. This may be null.
++ * @txrc: rate control information we sholud populate for mac80211.
++ */
++bool rate_control_send_low(struct ieee80211_sta *sta,
++			   void *priv_sta,
++			   struct ieee80211_tx_rate_control *txrc);
++
++
+ static inline s8
+ rate_lowest_index(struct ieee80211_supported_band *sband,
+ 		  struct ieee80211_sta *sta)
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 4641f00..8ac7a98 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -198,6 +198,35 @@ static void rate_control_release(struct kref *kref)
+ 	kfree(ctrl_ref);
+ }
+ 
++static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
++{
++	struct sk_buff *skb = txrc->skb;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	__le16 fc;
++
++	fc = hdr->frame_control;
++
++	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
++}
++
++bool rate_control_send_low(struct ieee80211_sta *sta,
++			   void *priv_sta,
++			   struct ieee80211_tx_rate_control *txrc)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
++
++	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
++		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
++		info->control.rates[0].count =
++			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
++			1 : txrc->hw->max_rate_tries;
++		return true;
++	}
++	return false;
++}
++EXPORT_SYMBOL(rate_control_send_low);
++
+ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 			   struct sta_info *sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index f5ccb89..eb93c00 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -70,19 +70,6 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+ 	return i;
+ }
+ 
+-static inline bool
+-use_low_rate(struct sk_buff *skb)
 -{
--	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	char *buf;
--	size_t len;
--	int i;
--	union iwreq_data wrqu;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	__le16 fc;
 -
--	if (!ifmgd->assocreq_ies && !ifmgd->assocresp_ies)
--		return;
+-	fc = hdr->frame_control;
 -
--	buf = kmalloc(50 + 2 * (ifmgd->assocreq_ies_len +
--				ifmgd->assocresp_ies_len), GFP_KERNEL);
--	if (!buf)
--		return;
--
--	len = sprintf(buf, "ASSOCINFO(");
--	if (ifmgd->assocreq_ies) {
--		len += sprintf(buf + len, "ReqIEs=");
--		for (i = 0; i < ifmgd->assocreq_ies_len; i++) {
--			len += sprintf(buf + len, "%02x",
--				       ifmgd->assocreq_ies[i]);
--		}
--	}
--	if (ifmgd->assocresp_ies) {
--		if (ifmgd->assocreq_ies)
--			len += sprintf(buf + len, " ");
--		len += sprintf(buf + len, "RespIEs=");
--		for (i = 0; i < ifmgd->assocresp_ies_len; i++) {
--			len += sprintf(buf + len, "%02x",
--				       ifmgd->assocresp_ies[i]);
--		}
--	}
--	len += sprintf(buf + len, ")");
--
--	if (len > IW_CUSTOM_MAX) {
--		len = sprintf(buf, "ASSOCRESPIE=");
--		for (i = 0; i < ifmgd->assocresp_ies_len; i++) {
--			len += sprintf(buf + len, "%02x",
--				       ifmgd->assocresp_ies[i]);
--		}
--	}
--
--	if (len <= IW_CUSTOM_MAX) {
--		memset(&wrqu, 0, sizeof(wrqu));
--		wrqu.data.length = len;
--		wireless_send_event(sdata->dev, IWEVCUSTOM, &wrqu, buf);
--	}
--
--	kfree(buf);
+-	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
 -}
 -
 -
- static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 				     u32 bss_info_changed)
+ static void
+ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
  {
-@@ -953,7 +900,6 @@ static void ieee80211_set_associated(str
+@@ -228,7 +215,6 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		  void *priv_sta, struct ieee80211_tx_rate_control *txrc)
+ {
+ 	struct sk_buff *skb = txrc->skb;
+-	struct ieee80211_supported_band *sband = txrc->sband;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct minstrel_sta_info *mi = priv_sta;
+ 	struct minstrel_priv *mp = priv;
+@@ -241,14 +227,8 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	int mrr_ndx[3];
+ 	int sample_rate;
  
- 	ifmgd->flags |= IEEE80211_STA_PREV_BSSID_SET;
- 	memcpy(ifmgd->prev_bssid, sdata->u.mgd.bssid, ETH_ALEN);
--	ieee80211_sta_send_associnfo(sdata);
+-	if (!sta || !mi || use_low_rate(skb)) {
+-		ar[0].idx = rate_lowest_index(sband, sta);
+-		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-			ar[0].count = 1;
+-		else
+-			ar[0].count = mp->max_retry;
++	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+-	}
  
- 	ifmgd->last_probe = jiffies;
- 	ieee80211_led_assoc(local, 1);
-
+ 	mrr = mp->has_mrr && !txrc->rts && !txrc->bss_conf->use_cts_prot;
+ 
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index 5496077..8c053be 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -276,11 +276,9 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ {
+ 	struct sk_buff *skb = txrc->skb;
+ 	struct ieee80211_supported_band *sband = txrc->sband;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct rc_pid_sta_info *spinfo = priv_sta;
+ 	int rateidx;
+-	__le16 fc;
+ 
+ 	if (txrc->rts)
+ 		info->control.rates[0].count =
+@@ -290,15 +288,8 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 			txrc->hw->conf.short_frame_max_tx_count;
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = hdr->frame_control;
+-	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
+-	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
+-		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+-		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-			info->control.rates[0].count = 1;
+-
++	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+-	}
+ 
+ 	rateidx = spinfo->txrate_idx;
+ 
+-- 
+1.6.0.6
 
