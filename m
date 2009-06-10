@@ -1,76 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35528 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754639AbZFEFlx (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:24341 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbZFJWow convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 01:41:53 -0400
+	Wed, 10 Jun 2009 18:44:52 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so765667qwd.37
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 15:44:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com>
+References: <1244666131-20031-1-git-send-email-lrodriguez@atheros.com>
+	<1244666973.20900.399.camel@rc-desk> <43e72e890906101349t502e9022h16fa79ea512f8b4d@mail.gmail.com>
+	<1244667817.20900.402.camel@rc-desk> <43e72e890906101404l6a8bee67r560f7c8a1c5f8c36@mail.gmail.com>
+	<1244668077.4706.4.camel@johannes.local> <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: [PATCH 13/15] iwlwifi: use ieee80211_is_data(fc)
-Date: Fri,  5 Jun 2009 01:41:40 -0400
-Message-Id: <1244180502-4323-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+Date: Wed, 10 Jun 2009 15:44:34 -0700
+Message-ID: <43e72e890906101544i22bacc8fxa0a7d045eea50280@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH] mac80211: disassociate when switching bands
+	and not scanning
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@nokia.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
- 2 files changed, 5 insertions(+), 7 deletions(-)
+On Wed, Jun 10, 2009 at 3:42 PM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> On Wed, Jun 10, 2009 at 2:07 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+>> On Wed, 2009-06-10 at 14:04 -0700, Luis R. Rodriguez wrote:
+>>> On Wed, Jun 10, 2009 at 2:03 PM, reinette
+>>> chatre<reinette.chatre@intel.com> wrote:
+>>>
+>>> >> > This touches code targeted for removal in recent "mac80211: disconnect
+>>> >> > when user changes channel" patch.
+>>> >>
+>>> >> Heh I don't see that patch yet but if it exists that should fix this
+>>> >> too unless that patch didn't deauth/disassoc. Did you try with it
+>>> >> applied by any chance? I can't seem to find that patch on the list.
+>>> >
+>>> > That patch does seem to have same intention as yours. It is still RFC so
+>>> > I am not sure about its status. I did not test with it, but will do so.
+>>> > The patch can be found at
+>>> > http://marc.info/?l=linux-wireless&m=124458448631186&w=2
+>>>
+>>> Thanks yes, I see, yup I think that should fix it, we need a fix for
+>>> stable though. Not sure how John or Johannes want to handle this.
+>>
+>> *scratches head*
+>> are you advocating those rate cleanups for stable?
+>
+> No, a few fixes are needed for stable (now 2.6.30) though. For example
+> the assert downgrade patch can be used but most likely that'll just be
+> doing something completely wrong, so we do need to ensure the dynamic
+> ps stuff does not trigger when scanning and I do consider that a
+> proper fix for stable. I forget when ps stuff when in.
+>
+> The issue here is this *is* a bug not only for iwlwifi. iwlwifi
+> currently gets no warning because of a work around in the driver's
+> rate control algorithm as it is in stable. I haven't tried running
+> this band change with ath9k
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 5eb538d..bd2f709 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	s8 scale_action = 0;
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	u16 fc;
-+	__le16 fc;
- 	u16 rate_mask = 0;
- 	s8 max_rate_idx = -1;
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
-@@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 		rate_mask = sta->supp_rates[sband->band];
- 
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = le16_to_cpu(hdr->frame_control);
--	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
-+	fc = hdr->frame_control;
-+	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
- 	    !sta || !priv_sta) {
- 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
- 		if (!rate_mask)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 2addf73..afa1633 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
- int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
- {
- 	int sta_id;
--	u16 fc = le16_to_cpu(hdr->frame_control);
-+	__le16 fc = hdr->frame_control;
- 
- 	/* If this frame is broadcast or management, use broadcast station id */
--	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
--	    is_multicast_ether_addr(hdr->addr1))
-+	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
- 		return priv->hw_params.bcast_sta_id;
- 
- 	switch (priv->iw_mode) {
--- 
-1.6.0.6
+Just to clarify -- I did run this with the patches I posted and I did
+hit the warning, but I did not try this without the patches I posted.
+Chances that will cause the kernel to commit suicide and oops.
 
+> but I might bet here that we'll hit the
+> same assert, in that case (which is very likely) we'll need a proper
+> respective fix for stable for this issue as not all drivers have a
+> rate control algorithm work around for this condition.
+>
+>  Luis
+>
