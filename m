@@ -1,45 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f216.google.com ([209.85.220.216]:55125 "EHLO
-	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751878AbZFKPHF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 11:07:05 -0400
-Received: by fxm12 with SMTP id 12so35859fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 08:07:05 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:43270 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754177AbZFJQZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 12:25:49 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 09:25:52 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <jouni.malinen@atheros.com>, <luis.rodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 2/7] ath9k: AR9285 & AR9280 INI update and minor bug fixes.
+Date: Wed, 10 Jun 2009 21:55:27 +0530
+Message-ID: <1244651133-6537-3-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1244651133-6537-2-git-send-email-senthilkumar@atheros.com>
+References: <1244651133-6537-1-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-2-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <550180.37228.qm@web51410.mail.re2.yahoo.com>
-References: <550180.37228.qm@web51410.mail.re2.yahoo.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 11 Jun 2009 17:06:45 +0200
-Message-ID: <69e28c910906110806l1061c3cdvbdebb97d899a0b1f@mail.gmail.com>
-Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2009 at 4:58 PM, Joerg Pommnitz<pommnitz@yahoo.com> wrote:
->
->> Finn's aren't rude!  Why Linus is the most diplomatic...hmmm...
->> nevermind... :-)
->
-> Linus is an ethnic Swede born in Finland...
->
-> --
-> Regards
-> Joerg
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+INI Update for AR9285 & AR9280 chipsets.
 
-cat /dev/racism > /dev/null, please... :-)
+Also set the margin and db values of chain1(block1) to chain0(block0)
 
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c   |   20 +++++++++++-
+ drivers/net/wireless/ath/ath9k/initvals.h |   47 +++++++++++++++-------------
+ 2 files changed, 44 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a2fda70..5035420 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -1208,6 +1208,19 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 			      pModal->xatten2Margin[0]);
+ 		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
+ 			      AR_PHY_GAIN_2GHZ_XATTEN2_DB, pModal->xatten2Db[0]);
++
++		/* Set the block 1 value to block 0 value */
++		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
++			      AR_PHY_GAIN_2GHZ_XATTEN1_MARGIN,
++			      pModal->bswMargin[0]);
++		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
++			      AR_PHY_GAIN_2GHZ_XATTEN1_DB, pModal->bswAtten[0]);
++		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
++			      AR_PHY_GAIN_2GHZ_XATTEN2_MARGIN,
++			      pModal->xatten2Margin[0]);
++		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
++			      AR_PHY_GAIN_2GHZ_XATTEN2_DB,
++			      pModal->xatten2Db[0]);
+ 	}
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + regChainOffset,
+@@ -1215,6 +1228,11 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + regChainOffset,
+ 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
+ 
++	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
++		      AR9280_PHY_RXGAIN_TXRX_ATTEN, txRxAttenLocal);
++	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
++		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
++
+ 	if (AR_SREV_9285_11(ah))
+ 		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
+ }
+@@ -1239,7 +1257,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 	ath9k_hw_4k_set_gain(ah, pModal, eep, txRxAttenLocal, 0);
+ 
+ 	/* Initialize Ant Diversity settings from EEPROM */
+-	if (pModal->version == 3) {
++	if (pModal->version >= 3) {
+ 		ant_div_control1 = ((pModal->ob_234 >> 12) & 0xf);
+ 		ant_div_control2 = ((pModal->db1_234 >> 12) & 0xf);
+ 		regVal = REG_READ(ah, 0x99ac);
+diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
+index e2f0a34..f67a2a9 100644
+--- a/drivers/net/wireless/ath/ath9k/initvals.h
++++ b/drivers/net/wireless/ath/ath9k/initvals.h
+@@ -2782,7 +2782,7 @@ static const u32 ar9280Common_9280_2[][2] = {
+     { 0x00008338, 0x00ff0000 },
+     { 0x0000833c, 0x00000000 },
+     { 0x00008340, 0x000107ff },
+-    { 0x00008344, 0x00581043 },
++    { 0x00008344, 0x00481043 },
+     { 0x00009808, 0x00000000 },
+     { 0x0000980c, 0xafa68e30 },
+     { 0x00009810, 0xfd14e000 },
+@@ -3439,7 +3439,7 @@ static const u32 ar9280PciePhy_clkreq_always_on_L1_9280[][2] = {
+     {0x00004044,  0x00000000 },
+ };
+ 
+-/* AR9285 */
++/* AR9285 Revsion 10*/
+ static const u_int32_t ar9285Modes_9285[][6] = {
+     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
+     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
+@@ -3955,7 +3955,7 @@ static const u_int32_t ar9285Common_9285[][2] = {
+     { 0x00008338, 0x00000000 },
+     { 0x0000833c, 0x00000000 },
+     { 0x00008340, 0x00010380 },
+-    { 0x00008344, 0x00581043 },
++    { 0x00008344, 0x00481043 },
+     { 0x00009808, 0x00000000 },
+     { 0x0000980c, 0xafe68e30 },
+     { 0x00009810, 0xfd14e000 },
+@@ -4121,8 +4121,9 @@ static const u_int32_t ar9285PciePhy_clkreq_off_L1_9285[][2] = {
+     {0x00004044,  0x00000000 },
+ };
+ 
+-/* AR9285 v1_2 PCI Register Writes.  Created: 03/04/09 */
++/* AR9285 v1_2 PCI Register Writes.  Created: 04/13/09 */
+ static const u_int32_t ar9285Modes_9285_1_2[][6] = {
++    /* Address      5G-HT20     5G-HT40     2G-HT40     2G-HT20     Turbo   */
+     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
+     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
+     { 0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38, 0x00001180 },
+@@ -4139,6 +4140,7 @@ static const u_int32_t ar9285Modes_9285_1_2[][6] = {
+     { 0x00009840, 0x206a012e, 0x206a012e, 0x206a012e, 0x206a012e, 0x206a012e },
+     { 0x00009844, 0x0372161e, 0x0372161e, 0x03721620, 0x03721620, 0x037216a0 },
+     { 0x00009848, 0x00001066, 0x00001066, 0x00001053, 0x00001053, 0x00001059 },
++    { 0x0000a848, 0x00001066, 0x00001066, 0x00001053, 0x00001053, 0x00001059 },
+     { 0x00009850, 0x6d4000e2, 0x6d4000e2, 0x6d4000e2, 0x6d4000e2, 0x6d4000e2 },
+     { 0x00009858, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e },
+     { 0x0000985c, 0x3139605e, 0x3139605e, 0x3137605e, 0x3137605e, 0x3139605e },
+@@ -4419,6 +4421,7 @@ static const u_int32_t ar9285Modes_9285_1_2[][6] = {
+     { 0x0000abfc, 0x00000000, 0x00000000, 0x000eb7db, 0x000eb7db, 0x00000000 },
+     { 0x0000a204, 0x00000004, 0x00000004, 0x00000004, 0x00000004, 0x00000004 },
+     { 0x0000a20c, 0x00000014, 0x00000014, 0x0001f000, 0x0001f000, 0x0001f000 },
++    { 0x0000b20c, 0x00000014, 0x00000014, 0x0001f000, 0x0001f000, 0x0001f000 },
+     { 0x0000a21c, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a },
+     { 0x0000a230, 0x00000000, 0x00000000, 0x00000210, 0x00000108, 0x00000000 },
+     { 0x0000a250, 0x0004f000, 0x0004f000, 0x0004a000, 0x0004a000, 0x0004a000 },
+@@ -4618,7 +4621,7 @@ static const u_int32_t ar9285Common_9285_1_2[][2] = {
+     { 0x00008338, 0x00ff0000 },
+     { 0x0000833c, 0x00000000 },
+     { 0x00008340, 0x00010380 },
+-    { 0x00008344, 0x00581043 },
++    { 0x00008344, 0x00481043 },
+     { 0x00009808, 0x00000000 },
+     { 0x0000980c, 0xafe68e30 },
+     { 0x00009810, 0xfd14e000 },
+@@ -4752,18 +4755,18 @@ static const u_int32_t ar9285Common_9285_1_2[][2] = {
+ static const u_int32_t ar9285Modes_high_power_tx_gain_9285_1_2[][6] = {
+     /* Address      5G-HT20     5G-HT40     2G-HT40     2G-HT20     Turbo   */
+     { 0x0000a300, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+-    { 0x0000a304, 0x00000000, 0x00000000, 0x00005200, 0x00005200, 0x00000000 },
+-    { 0x0000a308, 0x00000000, 0x00000000, 0x00007201, 0x00007201, 0x00000000 },
++    { 0x0000a304, 0x00000000, 0x00000000, 0x00006200, 0x00006200, 0x00000000 },
++    { 0x0000a308, 0x00000000, 0x00000000, 0x00008201, 0x00008201, 0x00000000 },
+     { 0x0000a30c, 0x00000000, 0x00000000, 0x0000b240, 0x0000b240, 0x00000000 },
+     { 0x0000a310, 0x00000000, 0x00000000, 0x0000d241, 0x0000d241, 0x00000000 },
+-    { 0x0000a314, 0x00000000, 0x00000000, 0x0000f440, 0x0000f440, 0x00000000 },
+-    { 0x0000a318, 0x00000000, 0x00000000, 0x00014640, 0x00014640, 0x00000000 },
+-    { 0x0000a31c, 0x00000000, 0x00000000, 0x00018680, 0x00018680, 0x00000000 },
+-    { 0x0000a320, 0x00000000, 0x00000000, 0x00019841, 0x00019841, 0x00000000 },
+-    { 0x0000a324, 0x00000000, 0x00000000, 0x0001ca40, 0x0001ca40, 0x00000000 },
+-    { 0x0000a328, 0x00000000, 0x00000000, 0x0001fa80, 0x0001fa80, 0x00000000 },
+-    { 0x0000a32c, 0x00000000, 0x00000000, 0x00023ac0, 0x00023ac0, 0x00000000 },
+-    { 0x0000a330, 0x00000000, 0x00000000, 0x0002ab40, 0x0002ab40, 0x00000000 },
++    { 0x0000a314, 0x00000000, 0x00000000, 0x0000f600, 0x0000f600, 0x00000000 },
++    { 0x0000a318, 0x00000000, 0x00000000, 0x00012800, 0x00012800, 0x00000000 },
++    { 0x0000a31c, 0x00000000, 0x00000000, 0x00016802, 0x00016802, 0x00000000 },
++    { 0x0000a320, 0x00000000, 0x00000000, 0x0001b805, 0x0001b805, 0x00000000 },
++    { 0x0000a324, 0x00000000, 0x00000000, 0x00021a80, 0x00021a80, 0x00000000 },
++    { 0x0000a328, 0x00000000, 0x00000000, 0x00028b00, 0x00028b00, 0x00000000 },
++    { 0x0000a32c, 0x00000000, 0x00000000, 0x0002ab40, 0x0002ab40, 0x00000000 },
++    { 0x0000a330, 0x00000000, 0x00000000, 0x0002cd80, 0x0002cd80, 0x00000000 },
+     { 0x0000a334, 0x00000000, 0x00000000, 0x00033d82, 0x00033d82, 0x00000000 },
+     { 0x0000a338, 0x0003891e, 0x0003891e, 0x0003891e, 0x0003891e, 0x00000000 },
+     { 0x0000a33c, 0x0003a95e, 0x0003a95e, 0x0003a95e, 0x0003a95e, 0x00000000 },
+@@ -4776,13 +4779,13 @@ static const u_int32_t ar9285Modes_high_power_tx_gain_9285_1_2[][6] = {
+     { 0x00007838, 0xfac68803, 0xfac68803, 0xfac68803, 0xfac68803, 0xfac68803 },
+     { 0x0000786c, 0x08609ebe, 0x08609ebe, 0x08609ebe, 0x08609ebe, 0x08609ebe },
+     { 0x00007820, 0x00000c00, 0x00000c00, 0x00000c00, 0x00000c00, 0x00000c00 },
+-    { 0x0000a274, 0x0a22a652, 0x0a22a652, 0x0a21a652, 0x0a21a652, 0x0a22a652 },
+-    { 0x0000a278, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce },
+-    { 0x0000a27c, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce },
+-    { 0x0000a394, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce },
+-    { 0x0000a398, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce },
+-    { 0x0000a3dc, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce },
+-    { 0x0000a3e0, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce },
++    { 0x0000a274, 0x0a22a652, 0x0a22a652, 0x0a216652, 0x0a216652, 0x0a22a652 },
++    { 0x0000a278, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7 },
++    { 0x0000a27c, 0x050380e7, 0x050380e7, 0x050380e7, 0x050380e7, 0x050380e7 },
++    { 0x0000a394, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7 },
++    { 0x0000a398, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7 },
++    { 0x0000a3dc, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7 },
++    { 0x0000a3e0, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7 },
+ };
+ 
+ static const u_int32_t ar9285Modes_original_tx_gain_9285_1_2[][6] = {
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.0.4
+
