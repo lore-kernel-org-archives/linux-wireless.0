@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f216.google.com ([209.85.220.216]:62017 "EHLO
-	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753708AbZFKP1e (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36256 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231AbZFJLpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 11:27:34 -0400
-Received: by fxm12 with SMTP id 12so51262fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 08:27:36 -0700 (PDT)
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 10 Jun 2009 07:45:30 -0400
+Date: Wed, 10 Jun 2009 07:31:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: Do not try to associate with an empty SSID
-References: <20090611105411.GA13825@jm.kir.nu>
-	<20090611151945.GA17284@jm.kir.nu>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 11 Jun 2009 18:27:29 +0300
-In-Reply-To: <20090611151945.GA17284@jm.kir.nu> (Jouni Malinen's message of "Thu\, 11 Jun 2009 18\:19\:45 +0300")
-Message-ID: <878wjyyen2.fsf@litku.valot.fi>
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+Message-ID: <20090610113158.GA2798@tuxdriver.com>
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com> <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com> <3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com> <69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com> <3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com> <1244619027.18481.55.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1244619027.18481.55.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <jouni.malinen@atheros.com> writes:
+On Wed, Jun 10, 2009 at 09:30:27AM +0200, Johannes Berg wrote:
 
-> It looks like some programs (e.g., NM) are setting an empty SSID with
-> SIOCSIWESSID in some cases. This seems to trigger mac80211 to try to
-> associate with an invalid configuration (wildcard SSID) which will
-> result in failing associations (or odd issues, potentially including
-> kernel panic with some drivers) if the AP were to actually accept this
-> anyway).
->
-> Only start association process if the SSID is actually set. This
-> speeds up connection with NM in number of cases and avoids sending out
-> broken association request frames.
->
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> This means that your sleeping clients will not be receiving multicast,
+> and as such be invisible to the network once they fall off the ARP/NDP
+> caches. This is the reason we have said that it will not be possible to
+> support AP mode with this card. I'm curious how, if at all, the vendor
+> driver handles that.
 
-Thanks, I think I have an internal bug report about a similar issue and
-I hope this fixes that as well. But I need to investigate to be sure.
+My completely uninformed guess is that they ignore it.  I will hazard
+a guess that most scenarios involving "laptop as AP" are for support
+of devices that don't (or at least didn't) do a lot of sleeping,
+like other laptops.
 
-> v2: Allow disassociation in ssid_len=0 case and only avoid starting a
-> new association. This function is difficult to understand and for now, I
-> just want to fix the critical issue here. Eventually, this code should
-> be redesigned or at least commented clearly.
+I'm still a bit "on the fence" regarding this requirement for AP mode.
+I think there is a reasonable body of users that would prefer a
+not-quite-right AP mode over no AP mode at all.
 
-Like we have talked earlier in this list, mlme.c requires a rewrite.
-
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
