@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754705AbZFRWVn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:37444 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757406AbZFJITp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 18:21:43 -0400
-Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:21:46 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 02/23] cfg80211: Advertise ciphers via WE according to driver capability
-Date: Thu, 18 Jun 2009 23:21:14 +0100
-Message-Id: <1245363695-8289-3-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 10 Jun 2009 04:19:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 07/18] ath9k: remove unused stepdown when looking for the next rate
+Date: Wed, 10 Jun 2009 04:19:24 -0400
+Message-Id: <1244621975-1238-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext-compat.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
+This is not used, remove this.
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 9e56f35..7dbe6c6 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -204,8 +204,19 @@ int cfg80211_wext_giwrange(struct net_device *dev,
- 	range->avg_qual.noise = range->max_qual.noise / 2;
- 	range->avg_qual.updated = range->max_qual.updated;
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   21 ++++++++-------------
+ 1 files changed, 8 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 7b37b27..64cb697 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -817,19 +817,14 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ static u8 ath_rc_rate_getidx(struct ath_softc *sc,
+ 			     struct ath_rate_priv *ath_rc_priv,
+ 			     const struct ath_rate_table *rate_table,
+-			     u8 rix, u16 stepdown)
++			     u8 rix)
+ {
+-	u32 j;
+ 	u8 nextindex = 0;
+-
+-	for (j = stepdown; j > 0; j--) {
+-		if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-					ath_rc_priv, rix, &nextindex))
+-			rix = nextindex;
+-		else
+-			break;
+-	}
+-	return rix;
++	if (ath_rc_get_nextlowervalid_txrate(rate_table,
++					     ath_rc_priv, rix, &nextindex))
++		return nextindex;
++	else
++		return rix;
+ }
  
--	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
--			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
-+	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
-+
-+	for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
-+		switch (wdev->wiphy->cipher_suites[c]) {
-+		case WLAN_CIPHER_SUITE_TKIP:
-+			range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
-+			break;
-+
-+		case WLAN_CIPHER_SUITE_CCMP:
-+			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
-+			break;
-+		}
-+	}
+ static void ath_rc_ratefind(struct ath_softc *sc,
+@@ -871,7 +866,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		 * after the probe rate
+ 		 */
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix, 1);
++					  rate_table, nrix);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
  
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
- 		int i;
+@@ -889,7 +884,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 			try_per_rate = 4;
+ 
+ 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix, 1);
++					  rate_table, nrix);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
 -- 
 1.6.0.6
 
