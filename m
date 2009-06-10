@@ -1,109 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost06.isp.att.net ([207.115.11.56]:49055 "EHLO
-	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbZFEWiP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49378 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757AbZFJHa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 18:38:15 -0400
-Message-ID: <4A299E57.4020007@lwfinger.net>
-Date: Fri, 05 Jun 2009 17:38:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 10 Jun 2009 03:30:58 -0400
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
-References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052101.47168.mb@bu3sch.de> <4A298C37.9030503@lwfinger.net> <200906052338.05653.mb@bu3sch.de>
-In-Reply-To: <200906052338.05653.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com>
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
+	 <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
+	 <3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com>
+	 <69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com>
+	 <3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FAO70DTvJ5JSDargv8N+"
+Date: Wed, 10 Jun 2009 09:30:27 +0200
+Message-Id: <1244619027.18481.55.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Friday 05 June 2009 23:20:55 Larry Finger wrote:
->> That is what the driver already does.
-> 
-> No. If the device is down, then it _is_ down. There won't be an rfkill thing
-> trying to bring it up again although the interface is down.
 
-But in the current driver, turning the radio switch off only shuts
-down the radio. The rest of the interface is still up.
+--=-FAO70DTvJ5JSDargv8N+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->>> We can't we just accept that the RF-kill status is unknown while the device is down?
->> The problem is that while the interface is down the switch status
->> cannot be interrogated. If you try, you get a fatal SSB error. Thus
->> the only way to bring it back up is to flip the switch, then
->> rmmod/insmod the driver. If you want hardware rfkill to be one-way,
->> then take Johannes's patch. We would save a little power by calling
->> b43_wireless_exit() if we brought it up to test the switch, and the
->> switch was still off. That would leave everything off most of the time.
-> 
-> Yeah well. We cannot read the rfkill status while the device is down. That is
-> a hardware limitation. I think we should _live_ with that limitation instead of
-> working around it by always keeping the device initialized.
-> Can't we teach the rfkill subsystem about an "unknown" state? Because that's what we're in.
+On Wed, 2009-06-10 at 04:18 +0100, Hin-Tak Leung wrote:
 
-An "unknown" state would be OK, but I don't know how to get the state
-of the switch to the rfkill system.
+> But I have been using vendor driver 3.0 for a few weeks in AP mode and
+> I am as happy with it as I could be, I think; I have
+> suspended//resumed clients.  It works adequately.=20
 
-> Yeah. But wasting huge amounts of power to keep polling a bit that's not even used
-> most of the time is not really what I like.
+We're not concerned about suspend/hibernate, we're concerned about
+802.11 power saving, where the AP is required to buffer frames until the
+clients wake up again. This will work adequately, but not perfectly, for
+unicast frames, but we have not found a way of making zd1211 send
+buffered multicast frames after the DTIM beacon as required.
 
+This means that your sleeping clients will not be receiving multicast,
+and as such be invisible to the network once they fall off the ARP/NDP
+caches. This is the reason we have said that it will not be possible to
+support AP mode with this card. I'm curious how, if at all, the vendor
+driver handles that.
 
-> +void b43_rfkill_poll(struct ieee80211_hw *hw)
->  {
-> -       struct b43_wldev *dev = data;
-> -       struct b43_wl *wl = dev->wl;
-> +       struct b43_wl *wl = hw_to_b43_wl(hw);
-> +       struct b43_wldev *dev = wl->current_dev;
->         bool enabled;
->  
->         mutex_lock(&wl->mutex);
->         if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
-> -               mutex_unlock(&wl->mutex);
-> -               return;
-> +               if (b43_wireless_core_init(dev)) {
-> +                       mutex_unlock(&wl->mutex);
-> +                       return;
-> +               }
->         }
-> 
-> This is the part of the code which I really really really dislike.
-> Hell, just return a freaking error from b43_rfkill_poll(), if the interface
-> is down. If rfkill can't handle that, it should probably be taught to handle it.
-> Especially as there can be other errors as well, like memory allocation failures.
+johannes
 
-I understand that this is the part that you do not like. I don't like
-it either, but unless we can read the switch-state bit, the interface
-will never come back up. I do not find rmmod/insmod a suitable
-recovery mechanism.
+--=-FAO70DTvJ5JSDargv8N+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
->> 2. We continue to use the old rfkill mechanism. It works just fine,
->> but this method runs the risk of the old method being deprecated and
->> eliminated.
-> 
-> I agree that this is not really an option.
-> 
->> 3. We get new callbacks that will only power down/up the radio when it
->> is blocked. That saves a little power.
-> 
-> What is wrong with the current mechanism to power up the radio, if the interface is up
-> and powering it down if the interface is down? I think the power of the PHY/Radio should
-> not be affected by rfkill. It should work the other way around instead. Rfkill should
-> be tolerant to a radio that is down and simply live with an unknown switch state.
+-----BEGIN PGP SIGNATURE-----
 
-I don't know what was intended in the new rfkill method. Remember, I
-don't read those E-mails either, but what I observe is that cfg80211
-calls the stop callback when the switch goes from on to off, but the
-start callback is not called when the off to on transition occurs.
-That may be a bug - I don't know. Johannes, is there a simple
-explanation as to why the start routine is not called? If that were to
-happen, the rfkill poll routine would happily exit immediately if the
-interface were down.
+iQIcBAABAgAGBQJKL2EQAAoJEODzc/N7+QmarqkP/2RrkA1QgqfMuuTtP45VqDCJ
+Jfl8SzFAab4FHpuOXanfR+PtWjCTKhcy3Xs1pgSwUa7phaRm/z+0QrIVEAzio+Qk
+XbYjW69FCxbx2PnE1KKsntGMQxoY8eEfbJeH+XBcVeb8+k58Do8bWPYN1yFKTioF
+3aXPjqsJVgb2nCfeBmNEMzWdvRJ+xYq3qjMnGNM+naOyehv8TYDI33Rw55v9yVzr
+sBFfFtJs9111Jx/aDiaSvA0EyrgNdFKtC8S/JGS8ewMvgXJVuUZFiwti9dGyzj0F
+NVt4xldWD5OkPeTEbMs2GT0vFS9Q1G47UDZsm0mmMPNLTWPvflNWDt7IUZf2NzGV
+TcKakHoFNcAWtOtXdrkz19KtAvZrrbog+4kUU0w0ODqG9hGKlbl02xPJsZz8LP7Y
+JRWeZUUY0vBsHZGKkkTI6Ex067tzJZukNLIx5TaawZvLvhfo/uasbPIeG2oaHqCV
+RsP/2OFGFcnsHeXf3rYZPOm0WfIrV4bEH+GlLMO5A96e8vz3PnPsATve2S+AR2+y
+5LbZjHVRzA1hCveQjyMs0IMIszmuRsg+8eQyqLNrIM2PADKlB5iWIL9U/B/xjXUu
+qObzPcQytgP8nNqWZSndoXBMJo0GP0jndL4da8Cn+okNBd5QUoTapBvRPmwuyeRn
+44ubExLsFUQZ1qCgNuye
+=nZ3Y
+-----END PGP SIGNATURE-----
 
-I think rfkill should just be a means of letting drivers know that the
-user wants the radio off, either by turning off a switch, or by
-setting some software flag from userland, and the driver should honor
-those wishes.
-
-Larry
+--=-FAO70DTvJ5JSDargv8N+--
 
