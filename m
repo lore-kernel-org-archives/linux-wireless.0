@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:50543 "HELO foo.birdnet.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755582AbZFRCzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 22:55:10 -0400
-Message-ID: <20090618025511.27364.qmail@stuge.se>
-Date: Thu, 18 Jun 2009 04:55:11 +0200
-From: Peter Stuge <peter@stuge.se>
-To: "Fabio A. Correa" <facorread@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: 4311 not detected at all
-References: <ec2083b20906120654j370e5bdo724a7c3b6d505a6c@mail.gmail.com> <4A326771.6030301@lwfinger.net> <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com> <20090618021017.19879.qmail@stuge.se> <ec2083b20906171932g401fab8fk15531459e1dc4d41@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ec2083b20906171932g401fab8fk15531459e1dc4d41@mail.gmail.com>
+Received: from L01SLCSMTP01.calltower.com ([69.4.184.248]:47244 "EHLO
+	L01SLCSMTP01.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758925AbZFJPAZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 11:00:25 -0400
+Subject: Re: Cross compiling libnl, iw, crda and friends
+From: Jon Loeliger <jdl@bigfootnetworks.com>
+To: Samuel Ortiz <samuel@sortiz.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1244587813.2628.10.camel@sortiz-mobl>
+References: <1244577286.12185.7.camel@jdl-desktop>
+	 <1244587813.2628.10.camel@sortiz-mobl>
+Content-Type: text/plain
+Date: Wed, 10 Jun 2009 09:59:55 -0500
+Message-Id: <1244645995.14768.6.camel@jdl-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fabio A. Correa wrote:
-> > You may be able to use flashrom as developed by the coreboot project
-> > to flash your BIOS. Maybe. If not, come on IRC or the mailing list
-> > and we can try to help you get it to work on your laptop.
+On Wed, 2009-06-10 at 00:50 +0200, Samuel Ortiz wrote:
+> Hi Jon,
 > 
-> Thank you very much. I emerged it on my Gentoo laptop and the BIOS
-> was detected, but:
+> On Tue, 2009-06-09 at 14:54 -0500, Jon Loeliger wrote:
+> > Guys,
+> > 
+> > Am I missing an obvious solution to cross compiling libnl, iw,
+> > the crda and related friends?
+> > 
+> Unless you're looking for a quick and easy fix to build some
+> one-shot demo image for your target, you may want to start looking
+> at cross platform build systems, like openembedded, poky or maybe
+> openwrt.
+> 
+> Cheers,
+> Samuel.
 
-Please let's move this to a better discussion forum. IRC would be best
-for trying to make this work, I think it can work because the BIOS
-flashing protection that can be enabled in your chipset does not seem
-to be active.
+Hi folks,
 
-At the very least we need the full output from a run of flashrom -V,
-but let's continue the discussion either on IRC (would be best) or on
-the coreboot mailing list.
+Thanks for the feedback.   I totally get the cross-compilation
+environment thing, thanks.  I have all that set up.  (PowerPC,
+LTIB, powerpc-e300-linux-gnu-, etc.)
 
-Thanks!
+My questions really pertain to the actual configure and makefile
+mechanisms in these packages themselves.  For example, it seems
+to me that the whole pkg-config mechanism as used in these
+makefiles doesn't distinguish between the build and target include
+directories.
+
+I'll try and work up some patches.
+
+Thanks,
+jdl
 
 
-//Peter
