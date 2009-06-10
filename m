@@ -1,159 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760330AbZFIVyb (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52765 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754730AbZFJMy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 17:54:31 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ME9H6-0000I1-17
-	for linux-wireless@vger.kernel.org; Tue, 09 Jun 2009 23:54:32 +0200
-Subject: [RFC v2] mac80211: disconnect when user changes channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1244583833.18481.44.camel@johannes.local>
-References: <1244583833.18481.44.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 09 Jun 2009 23:54:02 +0200
-Message-Id: <1244584442.18481.51.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 10 Jun 2009 08:54:29 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/18 v2] mac80211: disable moving between PS modes during scan
+Date: Wed, 10 Jun 2009 08:54:28 -0400
+Message-Id: <1244638468-28662-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not disconnect when a channel switch is requested,
-we end up eventually detection beacon loss from the AP and
-then disconnecting, without ever really telling the AP, so
-we might just as well disconnect right away.
+We don't want to trigger moving between PS mode during
+scan. With this enabled we sometimes end up sending nullfunc
+frames during scan. We're supposed to only send one prior to
+scan and after scan.
 
-Additionally, this fixes a problem with iwlwifi where the
-driver will clear some internal state on channel changes
-like this and then get confused when we actually go clear
-that state from mac80211.
+This fixes an oops which occured due to an assert in ath9k:
 
-It may look like this patch drops the no-IBSS check, but
-that is already handled by cfg80211 in the wext handler it
-provides for IBSS (cfg80211_ibss_wext_siwfreq).
+http://marc.info/?l=linux-wireless&m=124277331319024
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The assert was happening because the rate control algorithm
+figures it should find at least one valid dual stream or
+single stream rate. Since we allow mac80211 to send nullfunc
+frames during scan and dynamic PS was enabled at times we ended
+up trying to send nullfunc frames for the target sta on the
+wrong band for which we have no valid rate to communicate with
+it. This brakes the assumptions in rate control. We'll handle
+this sanity check next, but this fix does prevent the
+spurious nullfunc frames from actually being sent.
+
+We determine we also need to disable moving between PS modes
+when not associated so lets just add that now as well.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |    5 ++++-
- net/mac80211/util.c        |   25 -------------------------
- net/mac80211/wext.c        |   31 +++++++++++++++++++++++++++----
- 4 files changed, 31 insertions(+), 31 deletions(-)
 
---- wireless-testing.orig/net/mac80211/util.c	2009-06-09 23:14:10.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-06-09 23:23:04.000000000 +0200
-@@ -774,31 +774,6 @@ void ieee80211_tx_skb(struct ieee80211_s
- 	dev_queue_xmit(skb);
- }
- 
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
--{
--	int ret = -EINVAL;
--	struct ieee80211_channel *chan;
--	struct ieee80211_local *local = sdata->local;
--
--	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
--
--	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
--		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
--		    chan->flags & IEEE80211_CHAN_NO_IBSS)
--			return ret;
--		local->oper_channel = chan;
--		local->oper_channel_type = NL80211_CHAN_NO_HT;
--
--		if (local->sw_scanning || local->hw_scanning)
--			ret = 0;
--		else
--			ret = ieee80211_hw_config(
--				local, IEEE80211_CONF_CHANGE_CHANNEL);
--	}
--
--	return ret;
--}
--
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band)
- {
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-09 23:14:00.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-09 23:52:48.000000000 +0200
-@@ -55,6 +55,8 @@ static int ieee80211_ioctl_siwfreq(struc
- 				   struct iw_freq *freq, char *extra)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel *chan;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 		return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
-@@ -69,17 +71,38 @@ static int ieee80211_ioctl_siwfreq(struc
- 					IEEE80211_STA_AUTO_CHANNEL_SEL;
- 			return 0;
- 		} else
--			return ieee80211_set_freq(sdata,
-+			chan = ieee80211_get_channel(local->hw.wiphy,
- 				ieee80211_channel_to_frequency(freq->m));
- 	} else {
- 		int i, div = 1000000;
- 		for (i = 0; i < freq->e; i++)
- 			div /= 10;
--		if (div > 0)
--			return ieee80211_set_freq(sdata, freq->m / div);
--		else
-+		if (div <= 0)
- 			return -EINVAL;
-+		chan = ieee80211_get_channel(local->hw.wiphy, freq->m / div);
+While testing when I was sleep walking I noticed I couldn't switch
+to a different AP. The new changes here fixed that.
+
+I'm not seeing any more strange deadbeef stuff with this series now.
+
+ net/mac80211/tx.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1aed88d..e0a4e06 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1415,7 +1415,9 @@ int ieee80211_master_start_xmit(struct sk_buff *skb, struct net_device *dev)
  	}
-+
-+	if (!chan)
-+		return -EINVAL;
-+
-+	if (chan->flags & IEEE80211_CHAN_DISABLED)
-+		return -EINVAL;
-+
-+	/*
-+	 * no change except maybe auto -> fixed, ignore the HT
-+	 * setting so you can fix a channel you're on already
-+	 */
-+	if (local->oper_channel == chan)
-+		return 0;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		ieee80211_sta_req_auth(sdata);
-+
-+	local->oper_channel = chan;
-+	local->oper_channel_type = NL80211_CHAN_NO_HT;
-+	ieee80211_hw_config(local, 0);
-+
-+	return 0;
- }
  
- 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-06-09 23:23:09.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-06-09 23:23:13.000000000 +0200
-@@ -1100,7 +1100,6 @@ void ieee802_11_parse_elems(u8 *start, s
- u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band);
- 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-09 23:22:24.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-09 23:22:59.000000000 +0200
-@@ -2204,7 +2204,10 @@ static int ieee80211_sta_config_auth(str
- 				       capa_mask, capa_val);
- 
- 	if (bss) {
--		ieee80211_set_freq(sdata, bss->cbss.channel->center_freq);
-+		local->oper_channel = bss->cbss.channel;
-+		local->oper_channel_type = NL80211_CHAN_NO_HT;
-+		ieee80211_hw_config(local, 0);
-+
- 		if (!(ifmgd->flags & IEEE80211_STA_SSID_SET))
- 			ieee80211_sta_set_ssid(sdata, bss->ssid,
- 					       bss->ssid_len);
-
+ 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+-	    local->hw.conf.dynamic_ps_timeout > 0) {
++	    local->hw.conf.dynamic_ps_timeout > 0 &&
++	    !local->sw_scanning && !local->hw_scanning && local->ps_sdata &&
++	    (local->ps_sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED)) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 			ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_QUEUE_STOP_REASON_PS);
+-- 
+1.5.6.3
 
