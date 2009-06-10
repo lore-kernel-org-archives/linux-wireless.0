@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37162 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754385AbZFGRQM (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:56590 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755379AbZFJT2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 13:16:12 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: alan-jenkins@tuffmail.co.uk, Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090607125715.GC3340@khazad-dum.debian.net>
-References: <1243885494.3015.29.camel@localhost.localdomain>
-	 <4A24559D.7010201@tuffmail.co.uk>
-	 <1243928308.3192.38.camel@localhost.localdomain>
-	 <1243929706.20064.7.camel@johannes.local>
-	 <1243930703.3192.59.camel@localhost.localdomain>
-	 <20090603040315.GA10464@khazad-dum.debian.net>
-	 <1244008652.4145.7.camel@localhost.localdomain>
-	 <20090603213340.GB22809@khazad-dum.debian.net>
-	 <1244088806.4145.24.camel@localhost.localdomain>
-	 <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>
-	 <20090607125715.GC3340@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jfpNmz+z3jiLJt+0X8KZ"
-Date: Sun, 07 Jun 2009 19:16:03 +0200
-Message-Id: <1244394963.12956.1.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 10 Jun 2009 15:28:23 -0400
+Received: by bwz9 with SMTP id 9so994410bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 12:28:24 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?iso-8859-15?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Stefan Steuerwald <salsasepp@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
+References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
+	<f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
+	<3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com>
+	<69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com>
+	<3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com>
+	<1244619027.18481.55.camel@johannes.local>
+	<3ace41890906100639gb800904td06d86efef90e656@mail.gmail.com>
+	<69e28c910906100822q6eae8b29p2381220b23b4f4b1@mail.gmail.com>
+	<1244648968.4178.5.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 10 Jun 2009 22:28:18 +0300
+In-Reply-To: <1244648968.4178.5.camel@johannes.local> (Johannes Berg's message of "Wed\, 10 Jun 2009 17\:49\:28 +0200")
+Message-ID: <87ski7sxbh.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
---=-jfpNmz+z3jiLJt+0X8KZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Wed, 2009-06-10 at 17:22 +0200, Gábor Stefanik wrote:
+>> On Wed, Jun 10, 2009 at 3:39 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+>
+>> (Note that I'm also for allowing such "buggy" AP mode on devices
+>> without a HW multicast buffer, perhaps with hostapd spitting out a
+>> big, fat warning on startup; but Johannes has the final say in
+>> mac80211-related questions.)
+>> 
+>> (To Johannes: exactly why is it required for the multicast buffer to
+>> be in hardware?)
+>
+> It isn't required, ath5k/9k don't have it there, they have the notorious
+> "CAB" queue for sending frames directly after the beacon. So does b43,
+> and probably other designs. The problem really is that powersave mode is
+> very important for small clients like your mobile phone or digital
+> camera, or even bluetooth3 device, and not doing multicast buffering
+> correctly means that either those devices get into weird unreachable
+> states, or you need to turn off powersaving features on them which makes
+> the battery drain unbearable.
 
-On Sun, 2009-06-07 at 09:57 -0300, Henrique de Moraes Holschuh wrote:
+Not only mobile clients, but as we are talking about enabling power save
+by default, also Linux laptops would have problems.
 
-> >  1) remove rfkill_set_global_sw_state()
-> >  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
-> > registration, setting a flag.
-> >  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
-> > events, tho it may as well be set in all events)
-> >  4) rfkill-input preserves existing behaviour - *if enabled* - by
-> > initializing the global state from individual devices which have NVS.
-> > (As before, each _type_ of rfkill device has its own global state).
-> >  5) rfkill devices with NVS will have their current state preserved,
-> > so long as the global state has not yet been set (by userspace or by
-> > rfkill-input).  Of course userspace can change the state in response
-> > to the device being added.
+> Now, it may or may not be possible to work around this in software by
+> sending out the multicast frames on a high-priority queue right after
+> the beacon,
 
-> Let's do it :-)
+And the DTIM beacon should have the broadcast/multicast TIM bit set
+before sending the frames.
 
+> or something like that, but frankly I'm not interested in working on
+> zd1211rw myself, so that will have to be somebody who is (a) familiar
+> with 802.11 powersaving and multicast buffering, (b) wants zd1211rw to
+> work, and finally (c) has a lot of time to play with the device.
 
-Alan, you're right in that we currently overwrite devices with the
-global state upon registration. My suggestion would be to not do that
-when set_sw_state() has been called on the device before it was
-registered, by simply keeping track of that. Anyone want to propose a
-patch?
+If someone really has that much time, I think it's better to spend it on
+more important issues than this.
 
-johannes
-
---=-jfpNmz+z3jiLJt+0X8KZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKK/XNAAoJEODzc/N7+QmaNj8QAKPrDuBh5OhVs11mJaOZsIxj
-Wu6hxoh2/GbFZKu+27LBapCw4mKyT2IAQryWWiNGhcpTcZPTwFiG64Pgv+kc+haV
-0d4PVcgKyXM+0T1ops20xEuMU2nBqdlaKGLmEN5dIOUXfP9c103PmQboZ3K0U9Du
-ChJ4PVPCUH5uDVq7ariYBIYIs+8ev+kPvymBX2FQYtXq8tW+1N41ins6RxMYrbrZ
-+hiy8TFhF/l/XeF9EAamxnDNa3d1i6FfmQ9Jb8ZsGRbsQRX6BMb2LKJ/EQNHMs96
-Y7hsBoAhTRHR2C2cGu0xGEEQoz8KDVLnzIJjuUjJ9i/5Br82Q9qp3tjUCVYltJsT
-JIlZGMO7Yzt43rq7MKxkmHkt5vFXidF4DRWdApQgWhOlgIeRKupbzx67AbDX12Wt
-Dh5ACZmofs3vcWuTnH+e6hD2RBd2CCr8cMSji/i4cTLsJrZqdAjNJZgMkEHvrwSn
-X9IUg2ZKE9e3tJhVoU6vts7RZQnrHWoVC5DAOFHUVAoaNzNlhmDQOXwqJf/XkL3W
-xaRj0h8J12c0mnMBdQGWIBv+fhTScIe0vDUr2MK4V9MSiKLBHJbqxmAKiWdg1+y3
-9bHaSqL8NFuSGeBfEnxRuuNlam8MpEKbSRHnMFd2skyWV6J581vkhmmYL1e5BORx
-uj50VAyP3SZFrOtfXz+x
-=EF3L
------END PGP SIGNATURE-----
-
---=-jfpNmz+z3jiLJt+0X8KZ--
-
+-- 
+Kalle Valo
