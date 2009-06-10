@@ -1,94 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37189 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42964 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755210AbZFJNQx (ORCPT
+	with ESMTP id S1759759AbZFJPcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 09:16:53 -0400
-Subject: [PATCH 1/18 v3] mac80211: disable moving between PS modes during
- scan
+	Wed, 10 Jun 2009 11:32:23 -0400
+Subject: [PATCH] cfg80211: fix rfkill locking problem
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, j@w1.fi, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-In-Reply-To: <1244638468-28662-1-git-send-email-lrodriguez@atheros.com>
-References: <1244638468-28662-1-git-send-email-lrodriguez@atheros.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
 Content-Type: text/plain
-Date: Wed, 10 Jun 2009 15:16:15 +0200
-Message-Id: <1244639775.18481.60.camel@johannes.local>
+Date: Wed, 10 Jun 2009 16:50:29 +0200
+Message-Id: <1244645429.26814.9.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+rfkill currently requires a global lock within the
+rfkill_register() function, and holds that lock over
+calls to the set_block() methods. This means that we
+cannot hold a lock around rfkill_register() that we
+also require in set_block(), directly or indirectly.
+Fix cfg80211 to register rfkill outside the block
+locked by its global lock. Much of what cfg80211 does
+in the locked block doesn't need to be locked anyway.
 
-We don't want to trigger moving between PS mode during scan,
-because then we will sometimes end up sending nullfunc frames
-during scan. We're supposed to only send one prior to scan
-and after scan.
-
-This fixes an oops which occured due to an assert in ath9k:
-
-http://marc.info/?l=linux-wireless&m=124277331319024
-
-The assert was happening because the rate control algorithm
-figures it should find at least one valid dual stream or
-single stream rate. Since we allow mac80211 to send nullfunc
-frames during scan and dynamic PS was enabled at times we ended
-up trying to send nullfunc frames for the target sta on the
-wrong band for which we have no valid rate to communicate with
-it. This breaks the assumptions in rate control.
-
-We determine we also need to disable moving between PS modes
-when not associated so lets just add that now as well, and we
-should not have a ps_sdata when that interface cannot actually
-go into PS because it's not associated.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Reported-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ net/wireless/core.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-While testing when I was sleep walking I noticed I couldn't switch
-to a different AP. The new changes here fixed that.
-
-I'm not seeing any more strange deadbeef stuff with this series now.
-
- net/mac80211/mlme.c |    6 ++----
- net/mac80211/tx.c   |    3 ++-
- 2 files changed, 4 insertions(+), 5 deletions(-)
-
---- wireless-testing.orig/net/mac80211/tx.c	2009-06-09 23:13:34.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-06-10 14:58:32.000000000 +0200
-@@ -1415,7 +1415,8 @@ int ieee80211_master_start_xmit(struct s
- 	}
+--- wireless-testing.orig/net/wireless/core.c	2009-06-10 16:38:54.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-06-10 16:41:48.000000000 +0200
+@@ -395,21 +395,23 @@ int wiphy_register(struct wiphy *wiphy)
+ 	/* check and set up bitrates */
+ 	ieee80211_set_bitrate_flags(wiphy);
  
- 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
--	    local->hw.conf.dynamic_ps_timeout > 0) {
-+	    local->hw.conf.dynamic_ps_timeout > 0 &&
-+	    !local->sw_scanning && !local->hw_scanning && local->ps_sdata) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_PS);
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-10 14:58:36.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-10 15:15:41.000000000 +0200
-@@ -621,9 +621,6 @@ static void ieee80211_change_ps(struct i
- 	struct ieee80211_conf *conf = &local->hw.conf;
- 
- 	if (local->ps_sdata) {
--		if (!(local->ps_sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED))
--			return;
+-	mutex_lock(&cfg80211_mutex);
 -
- 		ieee80211_enable_ps(local, local->ps_sdata);
- 	} else if (conf->flags & IEEE80211_CONF_PS) {
- 		conf->flags &= ~IEEE80211_CONF_PS;
-@@ -653,7 +650,8 @@ void ieee80211_recalc_ps(struct ieee8021
- 		count++;
- 	}
+-	/* set up regulatory info */
+-	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
+-
+ 	res = device_add(&drv->wiphy.dev);
+ 	if (res)
+-		goto out_unlock;
++		return res;
  
--	if (count == 1 && found->u.mgd.powersave) {
-+	if (count == 1 && found->u.mgd.powersave &&
-+	    (found->u.mgd.flags & IEEE80211_STA_ASSOCIATED)) {
- 		s32 beaconint_us;
+ 	res = rfkill_register(drv->rfkill);
+ 	if (res)
+ 		goto out_rm_dev;
  
- 		if (latency < 0)
++	mutex_lock(&cfg80211_mutex);
++
++	/* set up regulatory info */
++	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
++
+ 	list_add(&drv->list, &cfg80211_drv_list);
+ 
++	mutex_unlock(&cfg80211_mutex);
++
+ 	/* add to debugfs */
+ 	drv->wiphy.debugfsdir =
+ 		debugfs_create_dir(wiphy_name(&drv->wiphy),
+@@ -430,13 +432,10 @@ int wiphy_register(struct wiphy *wiphy)
+ 
+ 	cfg80211_debugfs_drv_add(drv);
+ 
+-	res = 0;
+-	goto out_unlock;
++	return 0;
+ 
+  out_rm_dev:
+ 	device_del(&drv->wiphy.dev);
+- out_unlock:
+-	mutex_unlock(&cfg80211_mutex);
+ 	return res;
+ }
+ EXPORT_SYMBOL(wiphy_register);
 
 
