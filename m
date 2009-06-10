@@ -1,105 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52860 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757029AbZFOQOc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 12:14:32 -0400
-Subject: [PATCH 2.6.31 v2] mac80211: fix wext bssid/ssid setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1245082185.23912.6.camel@johannes.local>
-References: <1245082185.23912.6.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 15 Jun 2009 18:13:58 +0200
-Message-Id: <1245082438.23912.7.camel@johannes.local>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48021 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757934AbZFJUBz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 16:01:55 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, julian.calaby@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] [compat-2.6] Update compat.diff
+Date: Wed, 10 Jun 2009 22:01:47 +0200
+Message-Id: <1244664108-3997-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1244664108-3997-1-git-send-email-hauke@hauke-m.de>
+References: <1244664108-3997-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When changing to a new BSSID or SSID, the code in
-ieee80211_set_disassoc() needs to have the old data
-still valid to be able to disconnect and clean up
-properly. Currently, however, the old data is thrown
-away before ieee80211_set_disassoc() is ever called,
-so fix that by calling the function _before_ the old
-data is overwritten.
+requeue was removed out of skbuff.h in wireless-testing.
+Add missing import for b43 with kernel 2.6.28.
 
-This is (one of) the issue(s) causing mac80211 to hold
-cfg80211's BSS structs forever, and them thus being
-returned in scan results after they're long gone.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-I'll be so happy when all this goes away to cfg80211...
+ compat/compat.diff |   66 ++++++++++++---------------------------------------
+ config.mk          |    1 +
+ 2 files changed, 17 insertions(+), 50 deletions(-)
 
-Sorry, the WARN() was for debugging, there are valid code paths where we
-get there (well, they should be cleaned up and made invalid, but anyway)
-
- net/mac80211/mlme.c |   25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
-
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-15 16:40:16.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-15 18:12:47.000000000 +0200
-@@ -1102,14 +1102,6 @@ static void ieee80211_set_disassoc(struc
- 	struct sta_info *sta;
- 	u32 changed = 0, config_changed = 0;
+diff --git a/compat/compat.diff b/compat/compat.diff
+index dec8e91..058a933 100644
+--- a/compat/compat.diff
++++ b/compat/compat.diff
+@@ -195,6 +195,18 @@
+  	if (res != 0)
+  		goto err_kfree_ssb;
+  
++--- a/drivers/net/wireless/b43/phy_common.h
+++++ b/drivers/net/wireless/b43/phy_common.h
++@@ -2,6 +2,9 @@
++ #define LINUX_B43_PHY_COMMON_H_
++ 
++ #include <linux/types.h>
+++#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,28))
+++#include <asm/atomic.h>
+++#endif
++ 
++ struct b43_wldev;
++ 
+ --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+ +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+ @@ -6008,6 +6008,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
+@@ -572,25 +584,9 @@
+  
+  /**
+   * DOC: Key handling basics
+---- a/net/mac80211/main.c	2009-04-28 15:34:50.000000000 -0700
+-+++ b/net/mac80211/main.c	2009-04-28 15:35:06.000000000 -0700
+-@@ -469,6 +469,7 @@
+- 		return;
+- 	}
+- 
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,28))
+- 	if (!test_sta_flags(sta, WLAN_STA_PS) && !skb->requeue) {
+- 		/* Software retry the packet once */
+- 		skb->requeue = 1;
+-@@ -476,6 +477,7 @@
+- 		dev_queue_xmit(skb);
+- 		return;
+- 	}
+-+#endif
+- 
+- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+- 	if (net_ratelimit())
+-@@ -808,6 +810,7 @@
++--- a/net/mac80211/main.c
+++++ b/net/mac80211/main.c
++@@ -759,6 +759,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+  }
+  EXPORT_SYMBOL(ieee80211_alloc_hw);
+  
+@@ -598,7 +594,7 @@
+  static const struct net_device_ops ieee80211_master_ops = {
+  	.ndo_start_xmit = ieee80211_master_start_xmit,
+  	.ndo_open = ieee80211_master_open,
+-@@ -815,12 +818,22 @@
++@@ -766,12 +767,22 @@ static const struct net_device_ops ieee80211_master_ops = {
+  	.ndo_set_multicast_list = ieee80211_master_set_multicast_list,
+  	.ndo_select_queue = ieee80211_select_queue,
+  };
+@@ -643,36 +639,6 @@
+  
+  	return ops;
+  }
+---- a/net/mac80211/rx.c	2009-04-28 15:34:51.000000000 -0700
+-+++ b/net/mac80211/rx.c	2009-04-28 15:35:06.000000000 -0700
+-@@ -815,12 +815,17 @@
+- 
+- 	/* Send all buffered frames to the station */
+- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
+-+#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28))
+-+		dev_kfree_skb(skb);
+-+#else
+- 		sent++;
+- 		skb->requeue = 1;
+- 		dev_queue_xmit(skb);
+-+#endif
+- 	}
+- 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
+- 		local->total_ps_buffered--;
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,28))
+- 		sent++;
+- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+- 		printk(KERN_DEBUG "%s: STA %pM aid %d send PS frame "
+-@@ -829,6 +834,9 @@
+- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+- 		skb->requeue = 1;
+- 		dev_queue_xmit(skb);
+-+#else
+-+		dev_kfree_skb(skb);
+-+#endif
+- 	}
+- 
+- 	return sent;
+ --- a/net/mac80211/wme.c
+ +++ b/net/mac80211/wme.c
+ @@ -97,6 +97,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+diff --git a/config.mk b/config.mk
+index 7de159b..8992f9b 100644
+--- a/config.mk
++++ b/config.mk
+@@ -295,6 +295,7 @@ endif # end of USB driver list
+ ifneq ($(CONFIG_SPI_MASTER),)
  
--	rcu_read_lock();
--
--	sta = sta_info_get(local, ifmgd->bssid);
--	if (!sta) {
--		rcu_read_unlock();
--		return;
--	}
--
- 	if (deauth) {
- 		ifmgd->direct_probe_tries = 0;
- 		ifmgd->auth_tries = 0;
-@@ -1120,7 +1112,11 @@ static void ieee80211_set_disassoc(struc
- 	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
+ CONFIG_WL12XX=m
++CONFIG_P54_SPI=m
+ CONFIG_LIBERTAS_SPI=m
+ NEED_LIBERTAS=y
  
--	ieee80211_sta_tear_down_BA_sessions(sta);
-+	rcu_read_lock();
-+	sta = sta_info_get(local, ifmgd->bssid);
-+	if (sta)
-+		ieee80211_sta_tear_down_BA_sessions(sta);
-+	rcu_read_unlock();
- 
- 	bss = ieee80211_rx_bss_get(local, ifmgd->bssid,
- 				   conf->channel->center_freq,
-@@ -1156,8 +1152,6 @@ static void ieee80211_set_disassoc(struc
- 				ifmgd->ssid, ifmgd->ssid_len);
- 	}
- 
--	rcu_read_unlock();
--
- 	ieee80211_set_wmm_default(sdata);
- 
- 	ieee80211_recalc_idle(local);
-@@ -2479,6 +2473,10 @@ int ieee80211_sta_set_ssid(struct ieee80
- 	ifmgd = &sdata->u.mgd;
- 
- 	if (ifmgd->ssid_len != len || memcmp(ifmgd->ssid, ssid, len) != 0) {
-+		if (ifmgd->state == IEEE80211_STA_MLME_ASSOCIATED)
-+			ieee80211_set_disassoc(sdata, true, true,
-+					       WLAN_REASON_DEAUTH_LEAVING);
-+
- 		/*
- 		 * Do not use reassociation if SSID is changed (different ESS).
- 		 */
-@@ -2503,6 +2501,11 @@ int ieee80211_sta_set_bssid(struct ieee8
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
-+	if (compare_ether_addr(bssid, ifmgd->bssid) != 0 &&
-+	    ifmgd->state == IEEE80211_STA_MLME_ASSOCIATED)
-+		ieee80211_set_disassoc(sdata, true, true,
-+				       WLAN_REASON_DEAUTH_LEAVING);
-+
- 	if (is_valid_ether_addr(bssid)) {
- 		memcpy(ifmgd->bssid, bssid, ETH_ALEN);
- 		ifmgd->flags |= IEEE80211_STA_BSSID_SET;
-
+-- 
+1.6.2.1
 
