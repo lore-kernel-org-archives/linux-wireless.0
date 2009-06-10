@@ -1,88 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40316 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750853AbZFHSQm convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37874 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192AbZFJHXN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 14:16:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: gregor kowski <gregor.kowski@gmail.com>
-Subject: Re: [PATCH] b43 add harware tkip
-Date: Mon, 8 Jun 2009 20:16:29 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com> <200906081720.59594.mb@bu3sch.de> <83a869cd0906081104m2ecdf049rdcc7694f0974ca28@mail.gmail.com>
-In-Reply-To: <83a869cd0906081104m2ecdf049rdcc7694f0974ca28@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200906082016.29793.mb@bu3sch.de>
+	Wed, 10 Jun 2009 03:23:13 -0400
+Subject: Re: [PATCH] rfkill: include err.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, sfr@canb.auug.org.au,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090610013440.GA3523@tuxdriver.com>
+References: <1244555812.4672.9.camel@johannes.local>
+	 <20090609.174952.40068461.davem@davemloft.net>
+	 <20090610013440.GA3523@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KANZ2/5w4teBGQg4AsSc"
+Date: Wed, 10 Jun 2009 09:22:35 +0200
+Message-Id: <1244618555.18481.52.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 June 2009 20:04:33 gregor kowski wrote:
-> >> +     if (algorithm == B43_SEC_ALGO_TKIP) {
-> >> +             /*
-> >> +              * We should provide an initial iv32, phase1key pair.
-> >> +              * We could start with iv32=0 and compute the corresponding
-> >> +              * phase1key, but this mean calling ieee80211_get_tkip_key
-> >> +              * with a fake skb (or export other tkip function).
-> >> +              * Because we are lazy we hope iv32 won't start with
-> >> +              * 0xffff and let's b43_mac_update_tkip_key provide a
-> >> +              * correct pair.
-> >> +              */
-> >> +             rx_tkip_phase1_write(dev, index, 0xffff, (u16*)buf);
-> >> +     } else /* clear it */
-> >> +             rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
-> >
-> > Why do you write phase1, if TKIP is not used?
-> I clear the value in shared memory.
 
-Yeah, that's what I don't understand here. Does buf contain only zero bytes in this case?
+--=-KANZ2/5w4teBGQg4AsSc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> >> +     /* FIXME : for b43_new_kidx_api, there can be 54 key
-> >> +      * instead of 50 in RCMTA and TKIPTSCTTAK.
-> >> +      */
-> >
-> > I don't understand this comment.
-> if  b43_new_kidx_api is true :
-> - we set max_nr_keys to 58
-> - we program B43_MMIO_RCMTA_COUNT to 50
-> - in b43_key_write we can allocate key up to index 58 (4 for default,
-> 54 for sta)
-> 
-> But there is only 50 entries for TKIPTSCTTAK, and a comment on bcm-v4
-> suggest there is 50 entries for RCMTA. So if there more than 50
-> station we will overflow RCMTA and TKIPTSCTTAK.
+On Tue, 2009-06-09 at 21:34 -0400, John W. Linville wrote:
+> On Tue, Jun 09, 2009 at 05:49:52PM -0700, David Miller wrote:
+> > From: Johannes Berg <johannes@sipsolutions.net>
+> > Date: Tue, 09 Jun 2009 15:56:52 +0200
+> >=20
+> > > Since we use ERR_PTR and similar macros, we need to include linux/err=
+.h.
+> > >=20
+> > > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> >=20
+> > I'm applying this directly to net-next-2.6 to fix the -next
+> > build.
+> >=20
+> > Please submit the more critical build fixes for regressions
+> > introduced by the wireless tree direclty to me in the future
+> > thanks.
+>=20
+> That's a fine policy -- no objection.  However, please be aware that
+> Stephen picks-up stuff from the wireless trees even when I haven't
+> yet asked Dave to pull (so Dave might not always have the patch that
+> causes the break).  So, just keep that in mind (and CC me as well,
+> please). :-)
 
-Yeah well. The key handling is pretty weird.
-There are 50 pairwise keys available. max_nr_keys includes pairwise keys, group keys (4)
-and another copy of the group keys (4) used with older firmware. So we end up at 58.
+Alright, I'll do my best to differentiate based on what's in whose
+tree :)
 
-To summarize it, in practice we have 50 pairwise keys and 4 group keys. You can ignore
-the additional 4 "rx keys" as they are not used in recent fw and are just a copy of the
-group keys.
+johannes
 
-> So the fix will be do to something like
-> dev->max_nr_keys = (dev->dev->id.revision >= 5) ? 58 : 20;
-> if (b43_new_kidx_api())
-> dev->max_nr_keys -= 4;
+--=-KANZ2/5w4teBGQg4AsSc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Hm, I don't think this is correct. There are lots of weird assumptions all over the code.
-We should probably remove that new_kidx_api crap alltogether.
+-----BEGIN PGP SIGNATURE-----
 
-> >> -             if (algorithm == B43_SEC_ALGO_TKIP) {
-> >> -                     /* FIXME: No TKIP hardware encryption for now. */
-> >> +             if (algorithm == B43_SEC_ALGO_TKIP &&
-> >> +                             (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
-> >> +                                key->flags & IEEE80211_KEY_FLAG_WMM_STA )) {
-> >> +                     /* We support only one rx queue (no QOS) and pairwise key */
-> >
-> > This comment doesn't really make sense to me, too.
-> > What does QoS have to do with the RX queue?
-> each QOS queue got it's own tkip counters (iv16, iv32) (check tkip.c
-> software implementation for more info).
+iQIcBAABAgAGBQJKL180AAoJEODzc/N7+QmaWQcP/irOJvWBb26u8xgSJJBCSevi
+q8kVazynhptLiR+qb2jnnkaHG6sMtQg6nuT1INSuLeriwCPTyyZTOCAsKFb63anN
+DRxq+spVigXY3hw+w/U0wZNb8B1RVTBwhrpC1ExdcXXAG3Vsw08jPc3kNifFfSvR
+UllE2330R2IKOvZSiSHNTjhMzuaJFbMeuScYpcf3l4sj+s5fR7/FyKeaUmyQpje3
+3wX8DPY0jh2V82ZhI29BVYTQJec2830c4H9uZwGlmVJRnaRrRxuXveGXmrKGFtgt
+CXbmsYSyAY0SyOSd22on8zuGaoFvg0k5+vLZ1jYo1gNb4CfNeAfo8RRhYH4PzRj4
+Yi5mV3iYoPfNCG2hQpzuz9X812Xh/If/A0CjHALssns1afESu9LQeBgyv7r3v2Tl
+yGKPjuOc3PNWXYP7H3wyTfQMlCQZ+IRqlRQhoE///lQkeF0y97irNhTpgPWFlWSa
+X1Uz5sOLBjxXCVota+/tu2aWPNatd+KiXAb1jX4RffZKs+MQosAbu8Oqhf98JTAQ
+DzyOGRTFNUZRr/a6/fmhu9/3jKAHaDHwGeTzgC9Ml7L/84RDI3/ALa7JfVx9dtAj
+MAPzw6b/3CitWWqhkRBe7c/RmTeg3cbf+OPuGgEL5KBzSpzC6GS8BRSribsHkZvm
++QQfXsqBGfpcyloXLkl9
+=KFvf
+-----END PGP SIGNATURE-----
 
-Yeah, but what does --> ___RX___ <-- (receive) have to do with that?
-We do always only have one RX queue.
+--=-KANZ2/5w4teBGQg4AsSc--
 
--- 
-Greetings, Michael.
