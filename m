@@ -1,90 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:51195 "EHLO
-	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754076AbZFLVhr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 17:37:47 -0400
-Subject: Re: RFC: cross-building crda
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1244760685.6544.6.camel@mj>
-References: <1244733695.14768.22.camel@jdl-desktop>
-	 <1244760685.6544.6.camel@mj>
+Received: from mail.atheros.com ([12.36.123.2]:43271 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754177AbZFJQZz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 12:25:55 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 09:25:58 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <jouni.malinen@atheros.com>, <luis.rodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 3/7] ath9k: remove unnecessary STATION mode check.
+Date: Wed, 10 Jun 2009 21:55:28 +0530
+Message-ID: <1244651133-6537-4-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1244651133-6537-3-git-send-email-senthilkumar@atheros.com>
+References: <1244651133-6537-1-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-2-git-send-email-senthilkumar@atheros.com>
+ <1244651133-6537-3-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Fri, 12 Jun 2009 16:37:09 -0500
-Message-Id: <1244842629.18211.429.camel@jdl-desktop>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-06-11 at 18:51 -0400, Pavel Roskin wrote:
-> This sounds too complicated.
+Remove unncessary STATION mode check in ath9k_bss_assoc_info() as
+it is called only for STATION mode.
 
-Hi Pavel,
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
 
-Thanks for your feedback.
-
->   No other popular software does it,
-
-That's just flat not true.  Even Linux itself separates the
-components that need to be built for the host from those that
-need to be built for the target machine.  The Kconfig, dtc and
-other tools in the scripts directory, for example, are host
-tools are built and used during the rest of the target build.
-
->  yet
-> somehow it can be cross-compiled.  I'm not talking about such software
-> as kernels, compilers and other tools that need to know specific
-> characteristics of the target.
-
-Thanks, I get that.
-
-> Please check the sources of buildroot (http://buildroot.uclibc.org/) to
-
-And that.  Really, I get the whole cross compile thing.
-And its environment.  Mine happens to be LTIB for PowerPC
-and I'm using a powerpc-e300-linux-gnu- toolchain to do so.
-
-> see how it manages to cross-compile a lot of programs that don't do
-> anything specific to support cross-compilation.
-
-The bulk of the CRDA correctly cross compiles by simply using
-and setting CC to allow for CROSS_COMPILE like this:
-
-    CC := $(CROSS_COMPILE)gcc
-
-That's not the problem.
-
->   Sometimes minimal
-> patches are needed, but nothing nearly as intrusive as your proposal.
-
-The build of regdbdump needs to be split out as a *host* tool.
-It is used on the *host* to verify the regulatory.bin database.
-It shouldn't need, nor does it use, for example, the libnl that
-is currently supplied on the link line for that executable.
-That libnl is the *target*'s library for target linking.
-
-Furthermore, this same distinction applies to the grcypt/openssl
-library that is selected.  In fact, if regdump is built once
-for the host and once for the target, you may need different
-crypto mechanism selections for each.
-
-You can see the same distinction in kconfig's Makefile where it
-says this around line 95:
-
-    96  # Use recursively expanded variables so we do not call gcc unless
-    97  # we really need to do so. (Do not call gcc as part of make mrproper)
-    98  HOST_EXTRACFLAGS = $(shell $(CONFIG_SHELL) $(check-lxdialog) -ccflags)
-    99  HOST_LOADLIBES   = $(shell $(CONFIG_SHELL) $(check-lxdialog) -ldflags $(HOSTCC))
-   100  
-   101  HOST_EXTRACFLAGS += -DLOCALE
-
-All I'm doing is the same HOST tool separation for CRDA.
-
-RFC patch for comments to follow.
-
-Thanks,
-jdl
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0fd3f25..84fa69d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -905,24 +905,21 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_bss_conf *bss_conf)
+ {
+-	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+ 	if (bss_conf->assoc) {
+ 		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info ASSOC %d, bssid: %pM\n",
+ 			bss_conf->aid, sc->curbssid);
+ 
+ 		/* New association, store aid */
+-		if (avp->av_opmode == NL80211_IFTYPE_STATION) {
+-			sc->curaid = bss_conf->aid;
+-			ath9k_hw_write_associd(sc);
++		sc->curaid = bss_conf->aid;
++		ath9k_hw_write_associd(sc);
+ 
+-			/*
+-			 * Request a re-configuration of Beacon related timers
+-			 * on the receipt of the first Beacon frame (i.e.,
+-			 * after time sync with the AP).
+-			 */
+-			sc->sc_flags |= SC_OP_BEACON_SYNC;
+-		}
++		/*
++		 * Request a re-configuration of Beacon related timers
++		 * on the receipt of the first Beacon frame (i.e.,
++		 * after time sync with the AP).
++		 */
++		sc->sc_flags |= SC_OP_BEACON_SYNC;
+ 
+ 		/* Configure the beacon */
+ 		ath_beacon_config(sc, vif);
+-- 
+1.6.0.4
 
