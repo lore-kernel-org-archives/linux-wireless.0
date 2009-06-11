@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:51823 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754810AbZFGWkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 18:40:03 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1MDR22-0008Et-L0
-	for linux-wireless@vger.kernel.org; Sun, 07 Jun 2009 22:40:03 +0000
-Received: from 175-147-19-190.fibertel.com.ar ([175-147-19-190.fibertel.com.ar])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 22:40:02 +0000
-Received: from agfcpc1 by 175-147-19-190.fibertel.com.ar with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 22:40:02 +0000
+Received: from fmmailgate02.web.de ([217.72.192.227]:47984 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753949AbZFKJ30 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2009 05:29:26 -0400
+Received: from smtp07.web.de (fmsmtp07.dlan.cinetic.de [172.20.5.215])
+	by fmmailgate02.web.de (Postfix) with ESMTP id 2963B102241C7
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 11:29:28 +0200 (CEST)
+Received: from [88.64.26.191] (helo=[192.168.1.10])
+	by smtp07.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #277)
+	id 1MEgbA-0004fW-00
+	for linux-wireless@vger.kernel.org; Thu, 11 Jun 2009 11:29:28 +0200
+Message-ID: <4A30CE70.4050605@web.de>
+Date: Thu, 11 Jun 2009 11:29:20 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-From: Fabian <agfcpc1@hotmail.com>
-Subject: compat-wireless-2009-06-05.tar.bz2 ath9k.h:469: error: the field =?utf-8?b?4oCYb3Bz4oCZ?= have incomplete type
-Date: Sun, 7 Jun 2009 22:33:42 +0000 (UTC)
-Message-ID: <loom.20090607T221436-196@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: compat-wireless: ridiculous build speed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigD2F4AB6670EB7EE5F40FB6CF"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-for http://aircrack-ng.org/doku.php?id=zd1211rw-mac80211
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigD2F4AB6670EB7EE5F40FB6CF
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-I need download:
+Hi,
 
-http://wireless.kernel.org/download/compat-wireless-2.6/
-http://patches.aircrack-ng.org/zd1211rw_inject_2.6.26.patch
-http://patches.aircrack-ng.org/mac80211_2.6.28-rc4-wl_frag+ack_v3.patch
+while watching compat-wireless-2009-06-11 doing baby-steps building all
+its modules, I wonder what slows this down so horribly. No other
+external module build package I know is that slow (I would say *at
+least* one order of magnitude slower than normal). Is this really require=
+d?
 
-but compat-wireless-2009-06-05.tar.bz2
-and
-compat-wireless-old-2009-06-05.tar.bz2
+[ Hurray, it's finished! ]
 
-have error
-ath9k.h:469: error: el campo ‘ops’ tiene tipo de dato incompleto
-ath9k.h:469: error: the field ‘ops’ have incomplete type
+Jan
 
 
-I compiled with ubuntu 9.04
+--------------enigD2F4AB6670EB7EE5F40FB6CF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-But I havent error with
-compat-wireless-2009-05-30.tar.bz2  this work fine
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
 
-Thank you
-Fabian
+iEYEARECAAYFAkowznYACgkQniDOoMHTA+mGrwCfYBfb0XBbKM//M/WgMoe3TDd1
+VX0An2yQgJMK7oyEFYpxhPjUq9gEjE2u
+=0ur2
+-----END PGP SIGNATURE-----
 
+--------------enigD2F4AB6670EB7EE5F40FB6CF--
