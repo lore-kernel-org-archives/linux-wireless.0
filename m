@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:50199 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752214AbZFAMhz (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:64889 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752089AbZFKU42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 08:37:55 -0400
-Date: Mon, 1 Jun 2009 09:37:29 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090601123729.GC11011@khazad-dum.debian.net>
-References: <1243524688.10632.0.camel@johannes.local> <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com> <1243763887.19302.29.camel@johannes.local> <1243796509.6570.35.camel@localhost.localdomain> <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk> <20090601122839.GB11011@khazad-dum.debian.net>
+	Thu, 11 Jun 2009 16:56:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090601122839.GB11011@khazad-dum.debian.net>
+In-Reply-To: <43e72e890906111240x13ee658av6b89268c3950a2c@mail.gmail.com>
+References: <43e72e890906111240x13ee658av6b89268c3950a2c@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Jun 2009 13:56:10 -0700
+Message-ID: <43e72e890906111356h96d12fdr5d0d1f9c73521c92@mail.gmail.com>
+Subject: Re: Stable compat-wireless release for 2.6.30
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm, that came out a lot more acid than normal.  Sorry about that, it is
-just that "let's level it for the lowest common factor" _really_ gets under
-my skin.
+On Thu, Jun 11, 2009 at 12:40 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> Since 2.6.30 is out the respective compat-wireless stable tarball has
+> been updated based on this release and posted on the project page [1].
+> If you just want to test the wireless bits of 2.6.30 you can do so
+> with this release, works on kernels >= 2.6.27. Bugs found here are
+> very likely bugs on 2.6.30 and should be reported on the
+> linux-wireless mailing list [2]. For a summary of the wireless bits
+> that were changed you can refer to our news entry for it [3]. If you
+> have no luck with that please try our bleeding edge releases based on
+> wireless-testing [4]. Issues with bleeding edge should also be
+> reported the linux-wireless mailing list.
+>
+> [1] http://wireless.kernel.org/en/users/Download/stable
+> [2] http://wireless.kernel.org/en/developers/MailingLists
+> [3] http://wireless.kernel.org/News/2009-06-09
+> [4] http://wireless.kernel.org/en/users/Download
 
-My point stands: platforms that are capable of better user experience should
-not get punished because a lot of other stuff out there doesn't.  Especially
-when it is a regression.
+Oh and of course for more one-on-one support our IRC channel, details at:
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+http://wireless.kernel.org/en/users/Support
+
+  Luis
