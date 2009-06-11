@@ -1,112 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:46240 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754136AbZFKO7f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 10:59:35 -0400
-Received: by ewy6 with SMTP id 6so2093861ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 07:59:37 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: Samuel Ortiz <samuel@sortiz.org>
-Subject: Re: [PATCH/RFC 0/7] wl12xx SDIO interface
-Date: Thu, 11 Jun 2009 16:59:26 +0200
-Cc: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, pierre@ossman.eu,
-	kalle.valo@iki.fi, san@google.com
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <69e28c910906110738r54f8cecdv3c5f8dcd58b8b6c8@mail.gmail.com> <1244732120.2465.3.camel@sortiz-mobl>
-In-Reply-To: <1244732120.2465.3.camel@sortiz-mobl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906111659.29575.florian@openwrt.org>
+Received: from mga09.intel.com ([134.134.136.24]:8108 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751426AbZFKUnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2009 16:43:03 -0400
+Subject: Re: [ath9k-devel] [PATCH] mac80211: disassociate when switching
+ bands 	and not scanning
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com>
+References: <1244666131-20031-1-git-send-email-lrodriguez@atheros.com>
+	 <1244666973.20900.399.camel@rc-desk>
+	 <43e72e890906101349t502e9022h16fa79ea512f8b4d@mail.gmail.com>
+	 <1244667817.20900.402.camel@rc-desk>
+	 <43e72e890906101404l6a8bee67r560f7c8a1c5f8c36@mail.gmail.com>
+	 <1244668077.4706.4.camel@johannes.local>
+	 <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com>
+	 <43e72e890906101544i22bacc8fxa0a7d045eea50280@mail.gmail.com>
+	 <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 11 Jun 2009 13:50:07 -0700
+Message-Id: <1244753407.20900.456.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Thursday 11 June 2009 16:55:20 Samuel Ortiz, vous avez écrit :
-> On Thu, 2009-06-11 at 16:38 +0200, Gábor Stefanik wrote:
-> > On Thu, Jun 11, 2009 at 4:02 AM, Bob Copeland<me@bobcopeland.com> wrote:
-> > > Here's v2 of the SDIO interface for wl12xx, still with a FIXME or two.
-> > >
-> > > For my part, this is mainly a port of the Google/TI Android SDIO
-> > > interface logic to the existing SPI driver.  I have confirmed that
-> > > the driver associates and sends some traffic.
-> > >
-> > > Pierre, hoping to get your perspective on the SDIO bits in patch 7,
-> > > since I very likely don't know what I'm doing :)  Especially regarding
-> > > the platform code setup, in which the correct GPIOs have to be written
-> > > to turn on the device before probe will work.  For the SPI interface,
-> > > we use spi_register_board_info() for a similar purpose, but I'm not
-> > > sure if there is a standard way to do that for SDIO.  This copies
-> > > Google's platform driver for now.
-> > >
-> > > Conversion to readl/writel etc where appropriate is TODO.
-> > >
-> > > Bob Copeland (7):
-> > >  wl12xx: separate bus i/o code into io.c
-> > >  wl12xx: use wiphy_dev instead of wl->spi->dev
-> > >  wl12xx: introduce wl12xx_if_operations struct
-> > >  wl12xx: make wl12xx_set_partition bus agnostic
-> > >  wl12xx: move module probe methods into spi.c
-> > >  wl12xx: split spi interface into separate module
-> > >  wl12xx: add sdio support
-> > >
-> > >  drivers/net/wireless/wl12xx/Kconfig  |   24 +++-
-> > >  drivers/net/wireless/wl12xx/Makefile |   10 +-
-> > >  drivers/net/wireless/wl12xx/acx.c    |    3 +-
-> > >  drivers/net/wireless/wl12xx/boot.c   |    3 +-
-> > >  drivers/net/wireless/wl12xx/cmd.c    |   15 +-
-> > >  drivers/net/wireless/wl12xx/event.c  |    6 +-
-> > >  drivers/net/wireless/wl12xx/io.c     |  181 +++++++++++++++++++++
-> > >  drivers/net/wireless/wl12xx/io.h     |   62 +++++++
-> > >  drivers/net/wireless/wl12xx/main.c   |  152 ++++--------------
-> > >  drivers/net/wireless/wl12xx/ps.c     |    3 +-
-> > >  drivers/net/wireless/wl12xx/rx.c     |   10 +-
-> > >  drivers/net/wireless/wl12xx/sdio.c   |  250
-> > > +++++++++++++++++++++++++++++ drivers/net/wireless/wl12xx/spi.c    | 
-> > > 289 ++++++++++++++------------------- drivers/net/wireless/wl12xx/spi.h
-> > >    |   40 -----
-> > >  drivers/net/wireless/wl12xx/tx.c     |   64 ++++----
-> > >  drivers/net/wireless/wl12xx/wl1251.c |    9 +-
-> > >  drivers/net/wireless/wl12xx/wl12xx.h |   14 ++-
-> > >  17 files changed, 752 insertions(+), 383 deletions(-)
-> > >  create mode 100644 drivers/net/wireless/wl12xx/io.c
-> > >  create mode 100644 drivers/net/wireless/wl12xx/io.h
-> > >  create mode 100644 drivers/net/wireless/wl12xx/sdio.c
+Hi Luis,
+
+On Thu, 2009-06-11 at 12:04 -0700, Luis R. Rodriguez wrote:
+> On Wed, Jun 10, 2009 at 3:44 PM, Luis R.
+> Rodriguez<lrodriguez@atheros.com> wrote:
+> > On Wed, Jun 10, 2009 at 3:42 PM, Luis R.
+> > Rodriguez<lrodriguez@atheros.com> wrote:
+> >> On Wed, Jun 10, 2009 at 2:07 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> >>> On Wed, 2009-06-10 at 14:04 -0700, Luis R. Rodriguez wrote:
+> >>>> On Wed, Jun 10, 2009 at 2:03 PM, reinette
+> >>>> chatre<reinette.chatre@intel.com> wrote:
+> >>>>
+> >>>> >> > This touches code targeted for removal in recent "mac80211: disconnect
+> >>>> >> > when user changes channel" patch.
+> >>>> >>
+> >>>> >> Heh I don't see that patch yet but if it exists that should fix this
+> >>>> >> too unless that patch didn't deauth/disassoc. Did you try with it
+> >>>> >> applied by any chance? I can't seem to find that patch on the list.
+> >>>> >
+> >>>> > That patch does seem to have same intention as yours. It is still RFC so
+> >>>> > I am not sure about its status. I did not test with it, but will do so.
+> >>>> > The patch can be found at
+> >>>> > http://marc.info/?l=linux-wireless&m=124458448631186&w=2
+> >>>>
+> >>>> Thanks yes, I see, yup I think that should fix it, we need a fix for
+> >>>> stable though. Not sure how John or Johannes want to handle this.
+> >>>
+> >>> *scratches head*
+> >>> are you advocating those rate cleanups for stable?
+> >>
+> >> No, a few fixes are needed for stable (now 2.6.30) though. For example
+> >> the assert downgrade patch can be used but most likely that'll just be
+> >> doing something completely wrong, so we do need to ensure the dynamic
+> >> ps stuff does not trigger when scanning and I do consider that a
+> >> proper fix for stable. I forget when ps stuff when in.
+> >>
+> >> The issue here is this *is* a bug not only for iwlwifi. iwlwifi
+> >> currently gets no warning because of a work around in the driver's
+> >> rate control algorithm as it is in stable. I haven't tried running
+> >> this band change with ath9k
 > >
-> > Can we expect vlynq any time soon?
->
-> I guess we need:
->
-> 1) A linux vlynq driver for that, and last thing I saw [1], it wasnt
-> really pretty/ready
+> > Just to clarify -- I did run this with the patches I posted and I did
+> > hit the warning, but I did not try this without the patches I posted.
+> > Chances that will cause the kernel to commit suicide and oops.
+> 
+> As expected I was able to reproduce the warning with atht5k and ath9k
+> on 2.6.30. I did not get a crash with ath9k though, which is good. But
+> the warning is still present.
+> 
+> Do we want to fix this for stable? If so is the patch I posted reasonable?
 
-That driver is perfectly functionnal on a TI AR7 and we have used it in 
-OpenWrt for months with the acx100/111 driver. What makes you think it is not 
-yet ready ? There was a couple of suggestions from a TI employee, which are 
-perfectly valid, but I have no hardware to implement what he is suggesting 
-(no daisy chaining ...).
+I ran the steps to reproduce on a kernel that is the latest
+wireless-testing + "mac80211: disconnect when user changes channel" +
+"iwlwifi: remove rs_get_rate workaround". Unfortunately I still get the
+rs_get_rate warning. 
 
-> 2) A device that would have a wl12xx chip connected to the host through
-> vlynq.
->
-> Cheers,
-> Samuel.
->
-> [1] http://lkml.indiana.edu/hypermail/linux/kernel/0906.0/00155.html
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reinette
 
 
-
--- 
-Best regards, Florian Fainelli
-Email : florian@openwrt.org
-http://openwrt.org
--------------------------------
