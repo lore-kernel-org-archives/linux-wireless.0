@@ -1,142 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:28317 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268AbZFECbM (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55582 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752356AbZFKPTv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 22:31:12 -0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, davem@davemloft.net,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Subject: [PATCH 4/5] ieee802154: add documentation about our stack
-Date: Fri,  5 Jun 2009 06:29:49 +0400
-Message-Id: <1244168990-28355-5-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
-References: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
- <1244168990-28355-2-git-send-email-dbaryshkov@gmail.com>
- <1244168990-28355-3-git-send-email-dbaryshkov@gmail.com>
- <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
+	Thu, 11 Jun 2009 11:19:51 -0400
+Date: Thu, 11 Jun 2009 18:19:45 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mac80211: Do not try to associate with an empty SSID
+Message-ID: <20090611151945.GA17284@jm.kir.nu>
+References: <20090611105411.GA13825@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090611105411.GA13825@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add MAINTAINERS entry and a small text describing our stack interfaces,
-how to hook the drivers, etc.
+It looks like some programs (e.g., NM) are setting an empty SSID with
+SIOCSIWESSID in some cases. This seems to trigger mac80211 to try to
+associate with an invalid configuration (wildcard SSID) which will
+result in failing associations (or odd issues, potentially including
+kernel panic with some drivers) if the AP were to actually accept this
+anyway).
 
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
+Only start association process if the SSID is actually set. This
+speeds up connection with NM in number of cases and avoids sending out
+broken association request frames.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- Documentation/networking/ieee802154.txt |   76 +++++++++++++++++++++++++++++++
- MAINTAINERS                             |   12 +++++
- 2 files changed, 88 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/networking/ieee802154.txt
+ net/mac80211/mlme.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/Documentation/networking/ieee802154.txt b/Documentation/networking/ieee802154.txt
-new file mode 100644
-index 0000000..a0280ad
---- /dev/null
-+++ b/Documentation/networking/ieee802154.txt
-@@ -0,0 +1,76 @@
-+
-+		Linux IEEE 802.15.4 implementation
-+
-+
-+Introduction
-+============
-+
-+The Linux-ZigBee project goal is to provide complete implementation
-+of IEEE 802.15.4 / ZigBee / 6LoWPAN protocols. IEEE 802.15.4 is a stack
-+of protocols for organizing Low-Rate Wireless Personal Area Networks.
-+
-+Currently only IEEE 802.15.4 layer is implemented. We have choosen
-+to use plain Berkeley socket API, the generic Linux networking stack
-+to transfer IEEE 802.15.4 messages and a special protocol over genetlink
-+for configuration/management
-+
-+
-+Socket API
-+==========
-+
-+int sd = socket(PF_IEEE802154, SOCK_DGRAM, 0);
-+.....
-+
-+The address family, socket addresses etc. are defined in the
-+include/net/ieee802154/af_ieee802154.h header or in the special header
-+in our userspace package (see either linux-zigbee sourceforge download page
-+or git tree at git://linux-zigbee.git.sourceforge.net/gitroot/linux-zigbee).
-+
-+One can use SOCK_RAW for passing raw data towards device xmit function. YMMV.
-+
-+
-+MLME - MAC Level Management
-+============================
-+
-+Most of IEEE 802.15.4 MLME interfaces are directly mapped on netlink commands.
-+See the include/net/ieee802154/nl802154.h header. Our userspace tools package
-+(see above) provides CLI configuration utility for radio interfaces and simple
-+coordinator for IEEE 802.15.4 networks as an example users of MLME protocol.
-+
-+
-+Kernel side
-+=============
-+
-+Like with WiFi, there are several types of devices implementing IEEE 802.15.4.
-+1) 'HardMAC'. The MAC layer is implemented in the device itself, the device
-+   exports MLME and data API.
-+2) 'SoftMAC' or just radio. These types of devices are just radio transceivers
-+   possibly with some kinds of acceleration like automatic CRC computation and
-+   comparation, automagic ACK handling, address matching, etc.
-+
-+Those types of devices require different approach to be hooked into Linux kernel.
-+
-+
-+HardMAC
-+=======
-+
-+See the header include/net/ieee802154/netdevice.h. You have to implement Linux
-+net_device, with .type = ARPHRD_IEEE802154. Data is exchanged with socket family
-+code via plain sk_buffs. The control block of sk_buffs will contain additional
-+info as described in the struct ieee802154_mac_cb.
-+
-+To hook the MLME interface you have to populate the ml_priv field of your
-+net_device with a pointer to struct ieee802154_mlme_ops instance. All fields are
-+required.
-+
-+We provide an example of simple HardMAC driver at drivers/ieee802154/fakehard.c
-+
-+
-+SoftMAC
-+=======
-+
-+We are going to provide intermediate layer impelementing IEEE 802.15.4 MAC
-+in software. This is currently WIP.
-+
-+See header include/net/ieee802154/mac802154.h and several drivers in
-+drivers/ieee802154/
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cf4abdd..a1bbc8f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2816,6 +2816,18 @@ L:	linux1394-devel@lists.sourceforge.net
- S:	Maintained
- F:	drivers/ieee1394/raw1394*
+v2: Allow disassociation in ssid_len=0 case and only avoid starting a
+new association. This function is difficult to understand and for now, I
+just want to fix the critical issue here. Eventually, this code should
+be redesigned or at least commented clearly.
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-06-11 13:38:01.000000000 +0300
++++ wireless-testing/net/mac80211/mlme.c	2009-06-11 18:08:39.000000000 +0300
+@@ -2445,6 +2445,14 @@ void ieee80211_sta_req_auth(struct ieee8
+ 			ieee80211_set_disassoc(sdata, true, true,
+ 					       WLAN_REASON_DEAUTH_LEAVING);
  
-+IEEE 802.15.4 SUBSYSTEM
-+P:	Dmitry Eremin-Solenikov
-+M:	dbaryshkov@gmail.com
-+P:	Sergey Lapin
-+M:	slapin@ossfans.org
-+L:	linux-zigbee-devel@lists.sourceforge.net
-+W:	http://apps.sourceforge.net/trac/linux-zigbee
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
-+S:	Maintained
-+F:	net/ieee802154/
-+F:	drivers/ieee801254/
++		if (ifmgd->ssid_len == 0) {
++			/*
++			 * Only allow association to be started if a valid SSID
++			 * is configured.
++			 */
++			return;
++		}
 +
- INTEGRITY MEASUREMENT ARCHITECTURE (IMA)
- P:	Mimi Zohar
- M:	zohar@us.ibm.com
+ 		if (!(ifmgd->flags & IEEE80211_STA_EXT_SME) ||
+ 		    ifmgd->state != IEEE80211_STA_MLME_ASSOCIATE)
+ 			set_bit(IEEE80211_STA_REQ_AUTH, &ifmgd->request);
+ 
 -- 
-1.6.3.1
-
+Jouni Malinen                                            PGP id EFC895FA
