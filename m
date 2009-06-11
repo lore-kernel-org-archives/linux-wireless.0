@@ -1,87 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:56668 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbZFTTNp (ORCPT
+Received: from mail-yx0-f201.google.com ([209.85.210.201]:57455 "EHLO
+	mail-yx0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756954AbZFKX7y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jun 2009 15:13:45 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: redo rx_status into skb->cb
-Date: Sat, 20 Jun 2009 21:13:46 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Thu, 11 Jun 2009 19:59:54 -0400
+Received: by yxe39 with SMTP id 39so119716yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 16:59:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200906202113.46470.chunkeey@web.de>
+In-Reply-To: <1244763159.27363.103.camel@violet>
+References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
+	<1244763159.27363.103.camel@violet>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Jun 2009 16:59:36 -0700
+Message-ID: <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
+Subject: Re: rfkill on T61
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch slightly optimizes p54_rx_data's stack and code size.
+On Thu, Jun 11, 2009 at 4:32 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+> Hi Luis,
+>
+>> When I hit rfkill, I get:
+>>
+>> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
+>> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
+>>
+>> When I hit it again I get:
+>>
+>> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
+>> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
+>>
+>> The device that disappears upon rfkill is my bluetooth controller:
+>>
+>> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
+>> --- 1   2009-06-11 15:37:37.000000000 -0700
+>> +++ 2   2009-06-11 15:37:49.000000000 -0700
+>> @@ -6,7 +6,6 @@
+>>  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
+>>  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
+>>  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
+>>  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
+>> Fingerprint Reader
+>>  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>>  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>>
+>> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
+>> I think this is the same behaviour I will get with bleeding edge, will
+>> try now on wireless-testing.
+>
+> what are you trying to tell us.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 47285b3..b2d3d03 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -743,7 +743,7 @@ static int p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct p54_rx_data *hdr = (struct p54_rx_data *) skb->data;
--	struct ieee80211_rx_status rx_status = {0};
-+	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
- 	u16 freq = le16_to_cpu(hdr->freq);
- 	size_t header_len = sizeof(*hdr);
- 	u32 tsf32;
-@@ -762,39 +762,37 @@ static int p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	}
- 
- 	if (hdr->decrypt_status == P54_DECRYPT_OK)
--		rx_status.flag |= RX_FLAG_DECRYPTED;
-+		rx_status->flag |= RX_FLAG_DECRYPTED;
- 	if ((hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL) ||
- 	    (hdr->decrypt_status == P54_DECRYPT_FAIL_TKIP))
--		rx_status.flag |= RX_FLAG_MMIC_ERROR;
-+		rx_status->flag |= RX_FLAG_MMIC_ERROR;
- 
--	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
--	rx_status.noise = priv->noise;
-+	rx_status->signal = p54_rssi_to_dbm(dev, hdr->rssi);
-+	rx_status->noise = priv->noise;
- 	if (hdr->rate & 0x10)
--		rx_status.flag |= RX_FLAG_SHORTPRE;
-+		rx_status->flag |= RX_FLAG_SHORTPRE;
- 	if (dev->conf.channel->band == IEEE80211_BAND_5GHZ)
--		rx_status.rate_idx = (rate < 4) ? 0 : rate - 4;
-+		rx_status->rate_idx = (rate < 4) ? 0 : rate - 4;
- 	else
--		rx_status.rate_idx = rate;
-+		rx_status->rate_idx = rate;
- 
--	rx_status.freq = freq;
--	rx_status.band =  dev->conf.channel->band;
--	rx_status.antenna = hdr->antenna;
-+	rx_status->freq = freq;
-+	rx_status->band =  dev->conf.channel->band;
-+	rx_status->antenna = hdr->antenna;
- 
- 	tsf32 = le32_to_cpu(hdr->tsf32);
- 	if (tsf32 < priv->tsf_low32)
- 		priv->tsf_high32++;
--	rx_status.mactime = ((u64)priv->tsf_high32) << 32 | tsf32;
-+	rx_status->mactime = ((u64)priv->tsf_high32) << 32 | tsf32;
- 	priv->tsf_low32 = tsf32;
- 
--	rx_status.flag |= RX_FLAG_TSFT;
-+	rx_status->flag |= RX_FLAG_TSFT;
- 
- 	if (hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
- 		header_len += hdr->align[0];
- 
- 	skb_pull(skb, header_len);
- 	skb_trim(skb, le16_to_cpu(hdr->len));
--
--	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
- 	ieee80211_rx_irqsafe(dev, skb);
- 
- 	queue_delayed_work(dev->workqueue, &priv->work,
+my 802.11 device is not rfkill'ed on the T61, some patches recently
+went in to add support for rfkill on ath5k. I do have thinkpad_acpi
+loaded on this ancient 2.6.27 kernel.
+
+I'll try on wireless-testing next, build is almost done.
+
+> This is what happens with the Bluetooth
+> devices and the platform RFKILL switch. ACPI takes them off the USB bus.
+
+Thanks.
+
+  Luis
