@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:59767 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756306AbZFKDIV (ORCPT
+Received: from ganesha.gnumonks.org ([213.95.27.120]:33666 "EHLO
+	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382AbZFKQkP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 23:08:21 -0400
-Received: by fxm9 with SMTP id 9so1242922fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 20:08:22 -0700 (PDT)
+	Thu, 11 Jun 2009 12:40:15 -0400
+Date: Fri, 12 Jun 2009 00:30:29 +0800
+From: Harald Welte <HaraldWelte@viatech.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: VT6656 driver source now GPL
+Message-ID: <20090611163029.GF21446@prithivi.gnumonks.org>
+References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network> <20090414000835.GA31504@storm.local.network> <20090611132954.GA20845@prithivi.gnumonks.org> <20090611135041.GE26234@alittletooquiet.net>
 MIME-Version: 1.0
-In-Reply-To: <1244648968.4178.5.camel@johannes.local>
-References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
-	 <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
-	 <3ace41890906081659o23cb9ee1sd82ca4fc28a3793d@mail.gmail.com>
-	 <69e28c910906090426l4c383665rdc4bffc501085661@mail.gmail.com>
-	 <3ace41890906092018o76b0ee62n91819779a8ccd6db@mail.gmail.com>
-	 <1244619027.18481.55.camel@johannes.local>
-	 <3ace41890906100639gb800904td06d86efef90e656@mail.gmail.com>
-	 <69e28c910906100822q6eae8b29p2381220b23b4f4b1@mail.gmail.com>
-	 <1244648968.4178.5.camel@johannes.local>
-Date: Thu, 11 Jun 2009 04:08:22 +0100
-Message-ID: <3ace41890906102008u421f5669m3cf23a437f63d278@mail.gmail.com>
-Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Stefan Steuerwald <salsasepp@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090611135041.GE26234@alittletooquiet.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/10 Johannes Berg <johannes@sipsolutions.net>:
+On Thu, Jun 11, 2009 at 09:50:42AM -0400, Forest Bond wrote:
 
-> Now, it may or may not be possible to work around this in software by
-> sending out the multicast frames on a high-priority queue right after
-> the beacon, or something like that, but frankly I'm not interested in
-> working on zd1211rw myself, so that will have to be somebody who is (a)
-> familiar with 802.11 powersaving and multicast buffering, (b) wants
-> zd1211rw to work, and finally (c) has a lot of time to play with the
-> device.
+> You mention the idea of working on a new driver.  Do you see any value in
+> merging the vendor drivers and cleaning up from there?
 
-For the sake of being pedantic, can I have some reference (if only for
-those sleepless nights for lack of boring reading materials...)? Maybe
- I won't understand it anyway, but maybe somebody else who is
-listening in to this exchange can chip in.
-I have a 1300-page pdf supposedly the  802.11 2007 standard I
-downloaded some months ago through one of the wikipedia links, I think
-(somewhere under http://standards.ieee.org/) ... chapter 11 is MLME
-and section 11.2 is power management, which in turn is split into two
-sub-sections about power management in infrastructure nework and IBSS
-mode. I found a particular sentence in section 11.2.1. which sounds a
-bit like what you are saying (except with some cryptic acronyms!):
+I don't really know.  It makes sense to have some repository somewhere public,
+where the community can put in fixes and support for new kernel versions as
+they come out.  Whether or not that should be part of staging, I can't really
+comment on it, as I have not been involved with that tree.  Also, my opinion
+doesn't matter.  Greg takes everything that is GPL licensed, builds and
+somebody sends to him :)
 
-------
-If any STA in its BSS is in PSmode, the AP shall buffer all broadcast
-and multicast MSDUs and deliver them to all STAs immediately
-following the next Beacon frame containing a DTIM transmission.
-------
+As for actually cleaning up the driver: I suppose you have seen it. Not only
+does it contain its own 802.11 stack, firmware-as-hex-arrays but also its own
+OS abstraction layer - similar to many other drivers like some of the early 8686
+code that marvell released before the new libertas driver was started.
 
-Have I found the right place to read up on such things, or there are
-other documents, etc (more detailed, or more "layman")?
+> BTW, these drivers could certainly use more expert attention than what I can
+> offer.  I'd be interested in working with you to get the vendor drivers in
+> shape, if you think it is worthwhile.  I take it no one at VIA is able to look
+> at the staging drivers in -next?
 
-On the broken-AP mode in the zd1211 vendor driver - presumably Zydas
-did not wrote that specially for linux, but just modified/adapted from
-their windows driver? So I guess windows users of zd1211 (or other USB
-sticks) are used to being able to do such things and assume whatever
-it does is normal? It just crossed my mind that if some off-spec
-behavior is sufficiently popular on windows (e.g. if
-connection-sharing requires AP mode to work and won't take IBSS),
-sometimes the spec gets modified to ratify a formerly barbaric
-off-spec behavior.
+No, nobody at VIA's wireless R&D will be able to look at it.
 
-Hin-Tak
+Starting from scratch with a real 'native' linux driver, using the correct
+coding style and whatever useful bits from the in-mainline 80211 code is
+probably considerably less work than trying to 'clean them up'.
+
+At least we do have some known-working FOSS code that can be used as a reference
+and for debugging.  And if there is some kind of odd behaviour or a specific
+question, I can try to hunt down somebody internally who might have an answer.
+That's more than many other linux mainline/community wifi drivers had ;)
+
+Regards.
+-- 
+- Harald Welte <HaraldWelte@viatech.com>	    http://linux.via.com.tw/
+============================================================================
+VIA Free and Open Source Software Liaison
