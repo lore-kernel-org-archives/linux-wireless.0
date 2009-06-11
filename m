@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([204.127.217.102]:44622 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871AbZFBU7t (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:53784 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963AbZFKPyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:59:49 -0400
-Message-ID: <4A2592C5.10803@lwfinger.net>
-Date: Tue, 02 Jun 2009 15:59:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 11 Jun 2009 11:54:51 -0400
+Received: by bwz9 with SMTP id 9so1553825bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 08:54:52 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, pierre@ossman.eu, san@google.com
+Subject: Re: [PATCH/RFC 0/7] wl12xx SDIO interface
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 11 Jun 2009 18:54:47 +0300
+In-Reply-To: <1244685780-28930-1-git-send-email-me@bobcopeland.com> (Bob Copeland's message of "Wed\, 10 Jun 2009 22\:02\:53 -0400")
+Message-ID: <874oumyddk.fsf@litku.valot.fi>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: [RFT 3/3] b43/legacy: port to cfg80211 rfkill
-References: <20090602111027.460530075@sipsolutions.net>	 <200906021641.11019.mb@bu3sch.de> <1243973079.6461.3.camel@johannes.local>	 <200906022208.46288.mb@bu3sch.de> <1243973487.7176.1.camel@johannes.local>
-In-Reply-To: <1243973487.7176.1.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 
-> Me neither, so I really need somebody to test this... I suspect there
-> will be problems when the device is set down because of rfkill, and then
-> we can no longer poll the rfkill hw state? But that might have been a
-> problem before too, since if my suspicion is right we could never do:
->  * hw rfkill
->  * set if down
->  * hw un-rfkill
->  * set if up
-> 
-> and have it show the events to userspace as expected, or something...
+Bob Copeland <me@bobcopeland.com> writes:
 
-I'm trying to test, but I get an oops on boot. I'm still tracking it
-and I lose the reason off the top of the screen, but the trace is:
+> Here's v2 of the SDIO interface for wl12xx, still with a FIXME or two.
+>
+> For my part, this is mainly a port of the Google/TI Android SDIO
+> interface logic to the existing SPI driver.  I have confirmed that
+> the driver associates and sends some traffic.
 
-queue_work + 0x1a
-schedule_work + 0x16
-rfkill_resume_polling + 0x23
-wiphy_rfkill_start_polling + 0x35 (Line 452 of net/wireless/core.c)
-b43_op_start + 0x172  (Line 4336 of drivers/net/wireless/b43/main.c)
+I quickly read the patches and they look really good. Thanks a lot for
+your work on this, you have done a great job.
 
-The offsets are appropriate for wireless-testing and x86_64. The line
-in b43_op_start is the one just before the mutex_unlock.
+About the plan how to merge these. I have quite a big pile of patches
+pending for submission and I hope to send them either tomorrow or latest
+on Monday. Unfortunately the patches will conflict your patches, but I
+can rebase your sdio patches on top of my patches. It shouldn't take
+that long. Only problem is that I don't have a device to test the SDIO,
+so I might need your help with that.
 
-Is it possible that we reached this point without hw->wiphy being set?
+Sorry about the mess, I have been sitting on top of the wl1251 patches
+way too long.
 
-Larry
-
+-- 
+Kalle Valo
