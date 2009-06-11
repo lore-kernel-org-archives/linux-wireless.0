@@ -1,54 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19176 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751986AbZFBHwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 03:52:24 -0400
-Subject: Re: [PATCH 2/3] iwmc3200wifi: shrink calibration lmac name
-From: Zhu Yi <yi.zhu@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ortiz, Samuel" <samuel.ortiz@intel.com>
-In-Reply-To: <20090601182940.GC3386@tuxdriver.com>
-References: <1243307448-17441-1-git-send-email-yi.zhu@intel.com>
-	 <1243307448-17441-2-git-send-email-yi.zhu@intel.com>
-	 <20090601182940.GC3386@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 02 Jun 2009 15:52:20 +0800
-Message-Id: <1243929140.5799.18.camel@joice>
-Mime-Version: 1.0
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:47251 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754518AbZFKRII (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2009 13:08:08 -0400
+Received: by gxk10 with SMTP id 10so2487756gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 10:08:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <874oumyddk.fsf@litku.valot.fi>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	 <874oumyddk.fsf@litku.valot.fi>
+Date: Thu, 11 Jun 2009 13:08:10 -0400
+Message-ID: <b6c5339f0906111008y6e4cdc2cucf0283deb52ca2a5@mail.gmail.com>
+Subject: Re: [PATCH/RFC 0/7] wl12xx SDIO interface
+From: Bob Copeland <me@bobcopeland.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org, pierre@ossman.eu, san@google.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-01 at 19:29 +0100, John W. Linville wrote:
-> On Tue, May 26, 2009 at 11:10:47AM +0800, Zhu Yi wrote:
-> > From: Samuel Ortiz <samuel.ortiz@intel.com>
-> > 
-> > Firmware names can not be longer than 30 characters, and
-> > iwmc3200wifi-lmac-calib-sdio.bin is too long.
-> > Renaming it to iwmc3200wifi-calib-sdio.bin.
-> > 
-> > Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> 
-> Is this still wanted?
+On Thu, Jun 11, 2009 at 11:54 AM, Kalle Valo<kalle.valo@iki.fi> wrote:
+> Sorry about the mess, I have been sitting on top of the wl1251 patches
+> way too long.
 
-Yes, it is still wanted, but probably with a better description:
+No worries, yeah if you rebase them I'll test the result... patch 7 won't
+compile in a vanilla tree until the platform stuff is straightened out,
+but the rest should be OK for inclusion I think.
 
-
-From: Samuel Ortiz <samuel.ortiz@intel.com>
-
-iwmc3200wifi: trim down calibration firmware name
-
-The patch trims down iwmc3200wifi calibration firmware name from
-iwmc3200wifi-lmac-calib-sdio.bin to iwmc3200wifi-calib-sdio.bin. We can
-shorten the firmware name because all calibration is done by LMAC.
-
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-
-
-Thanks,
--yi
-
-
-
+-- 
+Bob Copeland %% www.bobcopeland.com
