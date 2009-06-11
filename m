@@ -1,66 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53834 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbZFDO1i (ORCPT
+Received: from ganesha.gnumonks.org ([213.95.27.120]:35158 "EHLO
+	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbZFKN6k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 10:27:38 -0400
-Subject: Re: Drivers anyone?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jerry McBride <mcbrides9@comcast.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090604133400.GA2839@tuxdriver.com>
-References: <200906032138.04699.mcbrides9@comcast.net>
-	 <20090604133400.GA2839@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-PHimuWDi1DDuX7N8SNlN"
-Date: Thu, 04 Jun 2009 16:27:32 +0200
-Message-Id: <1244125652.22576.79.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 11 Jun 2009 09:58:40 -0400
+Date: Thu, 11 Jun 2009 21:29:54 +0800
+From: Harald Welte <HaraldWelte@viatech.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: VT6656 driver source now GPL
+Message-ID: <20090611132954.GA20845@prithivi.gnumonks.org>
+References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> <20090320131014.GG25237@storm.local.network> <20090414000835.GA31504@storm.local.network>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090414000835.GA31504@storm.local.network>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
---=-PHimuWDi1DDuX7N8SNlN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, Apr 13, 2009 at 08:08:35PM -0400, Forest Bond wrote:
 
-On Thu, 2009-06-04 at 09:34 -0400, John W. Linville wrote:
-> On Wed, Jun 03, 2009 at 09:38:04PM -0400, Jerry McBride wrote:
-> >=20
-> >=20
-> > Well... I can't quit... so I'll ask... What is the current driver  and =
-where=20
-> > do I find it for my BCM4306 equipped laptop?
->=20
-> What did you try?
+> > > > VIA has released a new version of the VT6656 driver source, and it now has a
+> > > > proper license!
 
-Clearly not a recent kernel:
+Which is what VIA always had intended, but by accident it seemed to go wrong.
+What would be the point of having an open-source driver and then not licensing
+it under the GPL.
 
-> >    21:32:15 up 33 days,  3:01,  3 users,  load average: 0.00, 0.00, 0.0=
-0
+In any case, sorry that it too VIA so long to get to that point.
 
-johannes
+I was also pushing internally for a new mainline driver that would not come with
+its own wifi stack.  Unfortunately there are no resources for that, and that
+department even lost some of their developers, so I doubt there is change any
+time soon.
 
---=-PHimuWDi1DDuX7N8SNlN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+However, for future VIA wifi products I have a committment that their drivers
+will be developed more 'mainline style'.
 
------BEGIN PGP SIGNATURE-----
+As for the VT6656: I have recently also received some hardware for testing +
+development.  I am free to work on a new driver for mainline (I doubt any
+cleaning up would help) as I please - but then my time is severely limited,
+I'm also trying to improve the situation with regard to tons of other VIA
+chips.
 
-iQIcBAABAgAGBQJKJ9nRAAoJEODzc/N7+QmaSgUP+QEpBlc33eSOPmto3AhDABrj
-BfXlomnHV6WVoCrOst7hfbvytV172hQflBIfCFdjRBIFx5WG1twp7JGlDZKUkQ09
-+GnWi+Pax1ENd/NsmvJQxt4cFDHb3FXJlU3fY+wNOUYi5BBpEX94b6NJO6M05mk9
-dOaTq9azAij+xbFlVNUecMAB/z0JlUOJZV4Ne01HcDMsceUqcn3rFry01ngLHNdt
-DkLC8hI4CdRVsmKWRgNKkI56IcXJjRT/e6zemIqamOiLpW0DJczplO3y7FNboc6/
-9E4Q99jExOT9zE9vO+QgMWdPxUO8VIA6ufgfAX5QDKF9ohXxO8J6VZw9XAaMInfZ
-A5grlAqOU589FDc8O2jZAu0aoFqi2X9QbRRRYcrYAemJqCMiRUnMiu62xq6j705p
-qOx2skUZNzFOm/WnTFS+dBm2Q6YXsMixJZa51eMiTCBLwkplXxa+4KagUWkk0y/4
-EtysPNsKc2t9971vqF+U71heks8MwwDi+sEwyKl2x1fDGuG6QG/CiM0Fgbt0Hbq5
-1epjyAVQ9gOyvbHegFZWQvGuAPOLpZmSHlL/utNVnLzqmwK7FuKGBHYzZVCCSPwF
-L2xayV184HxQt6rZzPYelNcjJRvA5QmLwtzP5r98miWH4TXPCIUi8K+erJqTYVJ5
-emtiy4N5xf/FLQCnA7ZM
-=0ohv
------END PGP SIGNATURE-----
+> I'm getting the sense that there is not a lot of developer interest in these
+> drivers.  
 
---=-PHimuWDi1DDuX7N8SNlN--
+I am not surprised.  I personally have not yet seen any remotely popular
+product in the market that uses a VIA wifi chip.  However, this might change
+significantly in Q3/Q4 this year.
 
+If anyone wants to work on a new driver for the vt6656: I am happy to help with
+interfacing VIA's R&D in case there are some specific questions.  I
+unfortunately cannot help with releasing documentation, as there is almost zero
+documentation on that part. (not a big surprise, even Intel has no programming
+manuals for their wifi chips...)
+
+Cheers,
+-- 
+- Harald Welte <HaraldWelte@viatech.com>	    http://linux.via.com.tw/
+============================================================================
+VIA Free and Open Source Software Liaison
