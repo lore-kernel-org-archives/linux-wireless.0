@@ -1,98 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2101 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761092AbZFKCXQ (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:35250 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbZFKPBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 22:23:16 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/2] ath5k: enable hardware LEDs
-Date: Wed, 10 Jun 2009 22:22:21 -0400
-Message-Id: <1244686941-29223-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1244686941-29223-1-git-send-email-me@bobcopeland.com>
-References: <1244686941-29223-1-git-send-email-me@bobcopeland.com>
+	Thu, 11 Jun 2009 11:01:43 -0400
+Subject: Re: [PATCH/RFC 0/7] wl12xx SDIO interface
+From: Samuel Ortiz <samuel@sortiz.org>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	pierre@ossman.eu, kalle.valo@iki.fi, san@google.com
+In-Reply-To: <1244732120.2465.3.camel@sortiz-mobl>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	 <69e28c910906110738r54f8cecdv3c5f8dcd58b8b6c8@mail.gmail.com>
+	 <1244732120.2465.3.camel@sortiz-mobl>
+Content-Type: text/plain; charset=utf-8
+Date: Thu, 11 Jun 2009 17:03:52 +0200
+Message-Id: <1244732632.2465.5.camel@sortiz-mobl>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cardbus and some PCI cards use hardware LEDs rather than software GPIOs.
-Program them with the proper blink patterns when idle, scanning or
-associated.  Fixes http://bugzilla.kernel.org/show_bug.cgi?id=13288.
+On Thu, 2009-06-11 at 16:55 +0200, Samuel Ortiz wrote:
+> On Thu, 2009-06-11 at 16:38 +0200, Gábor Stefanik wrote:
+> > On Thu, Jun 11, 2009 at 4:02 AM, Bob Copeland<me@bobcopeland.com> wrote:
+> > > Here's v2 of the SDIO interface for wl12xx, still with a FIXME or two.
+> > >
+> > > For my part, this is mainly a port of the Google/TI Android SDIO
+> > > interface logic to the existing SPI driver.  I have confirmed that
+> > > the driver associates and sends some traffic.
+> > >
+> > > Pierre, hoping to get your perspective on the SDIO bits in patch 7,
+> > > since I very likely don't know what I'm doing :)  Especially regarding
+> > > the platform code setup, in which the correct GPIOs have to be written
+> > > to turn on the device before probe will work.  For the SPI interface,
+> > > we use spi_register_board_info() for a similar purpose, but I'm not
+> > > sure if there is a standard way to do that for SDIO.  This copies
+> > > Google's platform driver for now.
+> > >
+> > > Conversion to readl/writel etc where appropriate is TODO.
+> > >
+> > > Bob Copeland (7):
+> > >  wl12xx: separate bus i/o code into io.c
+> > >  wl12xx: use wiphy_dev instead of wl->spi->dev
+> > >  wl12xx: introduce wl12xx_if_operations struct
+> > >  wl12xx: make wl12xx_set_partition bus agnostic
+> > >  wl12xx: move module probe methods into spi.c
+> > >  wl12xx: split spi interface into separate module
+> > >  wl12xx: add sdio support
+> > >
+> > >  drivers/net/wireless/wl12xx/Kconfig  |   24 +++-
+> > >  drivers/net/wireless/wl12xx/Makefile |   10 +-
+> > >  drivers/net/wireless/wl12xx/acx.c    |    3 +-
+> > >  drivers/net/wireless/wl12xx/boot.c   |    3 +-
+> > >  drivers/net/wireless/wl12xx/cmd.c    |   15 +-
+> > >  drivers/net/wireless/wl12xx/event.c  |    6 +-
+> > >  drivers/net/wireless/wl12xx/io.c     |  181 +++++++++++++++++++++
+> > >  drivers/net/wireless/wl12xx/io.h     |   62 +++++++
+> > >  drivers/net/wireless/wl12xx/main.c   |  152 ++++--------------
+> > >  drivers/net/wireless/wl12xx/ps.c     |    3 +-
+> > >  drivers/net/wireless/wl12xx/rx.c     |   10 +-
+> > >  drivers/net/wireless/wl12xx/sdio.c   |  250 +++++++++++++++++++++++++++++
+> > >  drivers/net/wireless/wl12xx/spi.c    |  289 ++++++++++++++-------------------
+> > >  drivers/net/wireless/wl12xx/spi.h    |   40 -----
+> > >  drivers/net/wireless/wl12xx/tx.c     |   64 ++++----
+> > >  drivers/net/wireless/wl12xx/wl1251.c |    9 +-
+> > >  drivers/net/wireless/wl12xx/wl12xx.h |   14 ++-
+> > >  17 files changed, 752 insertions(+), 383 deletions(-)
+> > >  create mode 100644 drivers/net/wireless/wl12xx/io.c
+> > >  create mode 100644 drivers/net/wireless/wl12xx/io.h
+> > >  create mode 100644 drivers/net/wireless/wl12xx/sdio.c
+> > 
+> > Can we expect vlynq any time soon?
+> I guess we need:
+> 
+> 1) A linux vlynq driver for that, and last thing I saw [1], it wasnt
+> really pretty/ready
+This: http://lkml.org/lkml/2009/6/4/259 seems to be a bit better...
 
-Tested-by: Frans Pop <elendil@planet.nl>
-Tested-by: Mark Hindley <mark@hindley.org.uk>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/attach.c |    3 +++
- drivers/net/wireless/ath/ath5k/base.c   |   20 ++++++++++++++++++++
- 2 files changed, 23 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index c41ef58..9a84d94 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -319,6 +319,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 
- 	ath5k_hw_rfgain_opt_init(ah);
- 
-+	/* turn on HW LEDs */
-+	ath5k_hw_set_ledstate(ah, AR5K_LED_INIT);
-+
- 	return ah;
- err_free:
- 	kfree(ah);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 55f7de0..1861d3b 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -248,6 +248,8 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		struct ieee80211_vif *vif,
- 		struct ieee80211_bss_conf *bss_conf,
- 		u32 changes);
-+static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
-+static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
- 
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -265,6 +267,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.set_tsf 	= ath5k_set_tsf,
- 	.reset_tsf 	= ath5k_reset_tsf,
- 	.bss_info_changed = ath5k_bss_info_changed,
-+	.sw_scan_start	= ath5k_sw_scan_start,
-+	.sw_scan_complete = ath5k_sw_scan_complete,
- };
- 
- /*
-@@ -3162,6 +3166,8 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		sc->assoc = bss_conf->assoc;
- 		if (sc->opmode == NL80211_IFTYPE_STATION)
- 			set_beacon_filter(hw, sc->assoc);
-+		ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
-+			AR5K_LED_ASSOC : AR5K_LED_INIT);
- 	}
- 
- 	if (changes & BSS_CHANGED_BEACON &&
-@@ -3174,3 +3180,17 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
-  unlock:
- 	mutex_unlock(&sc->lock);
- }
-+
-+static void ath5k_sw_scan_start(struct ieee80211_hw *hw)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+	if (!sc->assoc)
-+		ath5k_hw_set_ledstate(sc->ah, AR5K_LED_SCAN);
-+}
-+
-+static void ath5k_sw_scan_complete(struct ieee80211_hw *hw)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+	ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
-+		AR5K_LED_ASSOC : AR5K_LED_INIT);
-+}
--- 
-1.6.0.6
-
+> 2) A device that would have a wl12xx chip connected to the host through
+> vlynq.
+> 
+> Cheers,
+> Samuel.
+> 
+> [1] http://lkml.indiana.edu/hypermail/linux/kernel/0906.0/00155.html
+> 
+> 
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
