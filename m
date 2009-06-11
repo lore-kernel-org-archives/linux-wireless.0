@@ -1,73 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4741 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752228AbZFCDEJ (ORCPT
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:38982 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754215AbZFKLDY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 23:04:09 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, henk@god.dyndns.org
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH] ath5k: disable beacon interrupt when interface is down
-Date: Tue,  2 Jun 2009 23:03:06 -0400
-Message-Id: <1243998186-9200-1-git-send-email-me@bobcopeland.com>
+	Thu, 11 Jun 2009 07:03:24 -0400
+Message-ID: <4A30E295.6050505@informatik.uni-kl.de>
+Date: Thu, 11 Jun 2009 12:55:17 +0200
+From: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Zhu Yi <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernelnewbies@nl.linux.org" <kernelnewbies@nl.linux.org>,
+	"m_wilhel@informatik.uni-kl.de" <m_wilhel@informatik.uni-kl.de>
+Subject: Re: Sending netlink messages in mac80211 tx handler
+References: <4A2EEA07.1050306@informatik.uni-kl.de>	 <1244596432.5034.27.camel@debian>  <4A30388F.1020701@informatik.uni-kl.de> <1244716215.4706.11.camel@johannes.local>
+In-Reply-To: <1244716215.4706.11.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we remove the active interface, there's no need to continue
-sending beacons; doing so would cause a null pointer deref in
-ieee80211_beacon_get().  Disable the interrupt in remove_interface
-and add a WARN_ON(!vif) in case there are other instances lurking.
+Johannes Berg wrote:
+> On Thu, 2009-06-11 at 00:49 +0200, Reiner Herrmann wrote:
+> 
+>>>>         nla_put_u32(skb, NL80211_ATTR_DISCOSEC_HELO, 42);
+>>>>         genlmsg_end(skb, hdr);
+>>>>         genlmsg_unicast(skb, get_daemon_pid());
+> 
+>> Thank you for your hint! I searched for hours and couldn't
+>> find the problem. It's working great now.
+> 
+> Can I ask what you're trying to achieve? Having local modifications in
+> nl80211 is a very bad thing.
+> 
+> johannes
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index ab2048b..85a00db 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2070,6 +2070,13 @@ err_unmap:
- 	return ret;
- }
- 
-+static void ath5k_beacon_disable(struct ath5k_softc *sc)
-+{
-+	sc->imask &= ~(AR5K_INT_BMISS | AR5K_INT_SWBA);
-+	ath5k_hw_set_imr(sc->ah, sc->imask);
-+	ath5k_hw_stop_tx_dma(sc->ah, sc->bhalq);
-+}
-+
- /*
-  * Transmit a beacon frame at SWBA.  Dynamic updates to the
-  * frame contents are done as needed and the slot time is
-@@ -2757,6 +2764,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
- 		goto end;
- 
- 	ath5k_hw_set_lladdr(sc->ah, mac);
-+	ath5k_beacon_disable(sc);
- 	sc->vif = NULL;
- end:
- 	mutex_unlock(&sc->lock);
-@@ -3060,7 +3068,14 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
- 	int ret;
- 	struct ath5k_softc *sc = hw->priv;
--	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
-+	struct sk_buff *skb;
-+
-+	if (WARN_ON(!vif)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	skb = ieee80211_beacon_get(hw, vif);
- 
- 	if (!skb) {
- 		ret = -ENOMEM;
--- 
-1.6.0.6
+I want to talk to userspace to do some complex calculations. As this
+concerns mac80211 I thought the best way to do that is via nl80211,
+whose task it is to provide easy communication between mac80211 and
+userspace (like with hostapd and iw).
 
 
+  Reiner
