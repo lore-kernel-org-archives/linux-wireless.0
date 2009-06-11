@@ -1,148 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web55306.mail.re4.yahoo.com ([206.190.58.185]:30751 "HELO
-	web55306.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750739AbZFWEUh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 00:20:37 -0400
-Message-ID: <617841.37429.qm@web55306.mail.re4.yahoo.com>
-Date: Mon, 22 Jun 2009 21:20:39 -0700 (PDT)
-From: X Xiao <austinxxh-linux@yahoo.com>
-Reply-To: austinxxh-linux@yahoo.com
-Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dmitri Seletski <drjoms@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:42725 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758882AbZFKK3g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2009 06:29:36 -0400
+Subject: Re: Sending netlink messages in mac80211 tx handler
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernelnewbies@nl.linux.org" <kernelnewbies@nl.linux.org>,
+	"m_wilhel@informatik.uni-kl.de" <m_wilhel@informatik.uni-kl.de>
+In-Reply-To: <4A30388F.1020701@informatik.uni-kl.de>
+References: <4A2EEA07.1050306@informatik.uni-kl.de>
+	 <1244596432.5034.27.camel@debian>  <4A30388F.1020701@informatik.uni-kl.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5T0q5gqTEhHiqnfd7Teu"
+Date: Thu, 11 Jun 2009 12:30:15 +0200
+Message-Id: <1244716215.4706.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-not sure if this helps, compat-wireless-2009-06-20 compiled just fine in openwrt with 2.6.30 kernel.
+--=-5T0q5gqTEhHiqnfd7Teu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-xxiao
+On Thu, 2009-06-11 at 00:49 +0200, Reiner Herrmann wrote:
 
---- On Mon, 6/22/09, Dmitri Seletski <drjoms@gmail.com> wrote:
+> >>         nla_put_u32(skb, NL80211_ATTR_DISCOSEC_HELO, 42);
+> >>         genlmsg_end(skb, hdr);
+> >>         genlmsg_unicast(skb, get_daemon_pid());
 
-> From: Dmitri Seletski <drjoms@gmail.com>
-> Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
-> To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-> Cc: "linux-wireless" <linux-wireless@vger.kernel.org>, gaurav.jauhar@atheros.com, "Senthil Balasubramanian" <senthilkumar@atheros.com>
-> Date: Monday, June 22, 2009, 5:46 PM
-> Luis R. Rodriguez wrote:
-> > On Mon, Jun 22, 2009 at 12:25 PM, Dmitri
-> Seletski<drjoms@gmail.com>
-> wrote:
-> >   
-> >> Luis R. Rodriguez wrote:
-> >>     
-> >>> We're down to 2 kernel.org bug reports for
-> ath9k:
-> >>>
-> >>> http://bugzilla.kernel.org/show_bug.cgi?id=13581
-> >>> "ath9k doesn't work with newer kernels"
-> >>> This is a regression between 2.6.29 and
-> 2.6.30, someone needs to look at this.
-> >>>
-> >>> http://bugzilla.kernel.org/show_bug.cgi?id=13141
-> >>> "AR5008/DWA-552 - Very slow"
-> >>> Patches have been supplied, needs user
-> feedback.
-> >>>
-> >>> If you are aware of any other issues please do
-> report.
-> >>>
-> >>>   Luis
-> >>>
-> _______________________________________________
-> >>> ath9k-devel mailing list
-> >>> ath9k-devel@lists.ath9k.org
-> >>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
-> >>>
-> >>>       
-> >> Hello Luis,
-> >> Was that problem i was bothering you with being
-> solved?
-> >>     
-> >
-> > Oh no, thanks for the reminder, that is another
-> outstanding issue. Can
-> > you provide the pcap output.
-> >
-> >
-> >   
-> >> I have attempted to install fresh drivers, but i
-> get:
-> >>
-> >>  make
-> >> /bin/sh: line 0: test: -ge: unary operator
-> expected
-> >> /bin/sh: line 0: test: -le: unary operator
-> expected
-> >>     
-> >
-> > Hm, some script may not be using /bin/bash
-> appropriately, but you may
-> > just want to rm -f /bin/sh && ln -s /bin/bash
-> /bin/sh for now.
-> >
-> >   Luis
-> >   
-> 
-> rm -f /bin/sh && ln -s /bin/bash /bin/sh
-> make
-> /bin/sh: line 0: test: -ge: unary operator expected
-> /bin/sh: line 0: test: -le: unary operator expected
-> make -C /lib/modules/2.6.30-rc8/build
-> M=/home/dimko/compat-wireless-2009-06-20 modules
-> make[1]: Entering directory `/usr/src/linux-2.6.30-rc8'
-> make[1]: *** No rule to make target `modules'.  Stop.
-> make[1]: Leaving directory `/usr/src/linux-2.6.30-rc8'
-> make: *** [modules] Error 2
-> 
-> 
-> 
-> Make still fails.
-> 
-> About pcap, you probably din't get my last email. I have
-> included log
-> files of tcpdump...
->  I have had no packets going through wireless at all,
-> during n only test.
-> 
-> unfortunately i cant compile anything currently
-> 
-> solution with rm -f /bin/sh && ln -s /bin/bash
-> /bin/sh didnt help
-> 
-> compat-wireless-2009-06-20 # make
-> /bin/sh: line 0: test: -ge: unary operator expected
-> /bin/sh: line 0: test: -le: unary operator expected
-> make -C /lib/modules/2.6.30-rc8/build
-> M=/home/dimko/compat-wireless-2009-06-20 modules
-> make[1]: Entering directory `/usr/src/linux-2.6.30-rc8'
-> make[1]: *** No rule to make target `modules'.  Stop.
-> make[1]: Leaving directory `/usr/src/linux-2.6.30-rc8'
-> make: *** [modules] Error 2
-> 
-> If you want i can of course can  resubmit 
-> tcpdump test, but i cant
-> install no ath9k drivers, as such test is pointless, as i
-> only have
-> built in drivers left...
-> 
-> Sorry for replying to private email.
-> 
-> just to clarify, by all i mean, i cant compile ath9k
-> drivers.
-> i could compile kernel for example
-> 
-> Regards
-> Dmitri
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Thank you for your hint! I searched for hours and couldn't
+> find the problem. It's working great now.
+
+Can I ask what you're trying to achieve? Having local modifications in
+nl80211 is a very bad thing.
+
+johannes
+
+--=-5T0q5gqTEhHiqnfd7Teu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKMNyzAAoJEODzc/N7+QmaFgEP/jYCuDzdwpQhyDX/XVMqF9Mm
+5FZFWaiUf0GkK9msjSZ88HdlKgtlY38rsdQgvwDeKO6wQfWW9F6Xc/sFSXKKf3Pv
+A+FWtWi26KTGCpRXwutvVitAf9Y8Gluc7sTDP21q3SP489kyN0g8jnLsMzKGUU8u
+rjGcrRQgmISWmjG1ahvSwl/8Fynq958oyH6BQhMehD9CK8BdDKJ8pdIImg5x05pR
+de+6PelmCXSeODKmojBmpfuQCwRIJlff+fVBDrVYdQvrKWm15J7OhDUh5xFqDyqz
+fncMLiVh8xDDpPsIVPhPa5T82BrIltSdbbCVUT5XHhBwpyKeenCQOpZ9HCkfyXqR
+3lewFCRetQwDDlxbvbDg1x3cA/36+CBfvFyayXL3ioL/s87gQcPyLd+6e8oNzaRI
+yv3szVSVljV2TYfuNXKqrCSqh06JXP5lgvssW9AQwx5fh432/zctFW58dR2KBsWQ
+GyT4KOh9rq0q1eUfif3nCr04pJxW2yd4dgMKf1sngED2lINlOIySSqA+/xxFdRwj
+wrlB7CRfJueR6K5+MqqOAWxDFZhcgFNGKT+G5Ixcxc7ubr3UTNzplxe8ENv0Gk+O
+Itbzsz8NPB1C3EttMQ3K9kUq/lXBp2wT2W0bTHdF4t9mjU2X2zIT0g86Zv7fFY19
+r8sHxYzBmcOw2HBCGgGU
+=3rKa
+-----END PGP SIGNATURE-----
+
+--=-5T0q5gqTEhHiqnfd7Teu--
+
