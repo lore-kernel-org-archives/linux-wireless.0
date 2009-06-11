@@ -1,89 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:42260 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752867AbZFFR6m (ORCPT
+Received: from mail-yx0-f201.google.com ([209.85.210.201]:60603 "EHLO
+	mail-yx0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943AbZFKVoP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:58:42 -0400
-Message-ID: <4A2AAE4A.6060100@web.de>
-Date: Sat, 06 Jun 2009 19:58:34 +0200
-From: Jan Kiszka <jan.kiszka@web.de>
+	Thu, 11 Jun 2009 17:44:15 -0400
+Received: by yxe39 with SMTP id 39so62207yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 14:44:16 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
+In-Reply-To: <69e28c910906111439o798b3298p63bd44e88358ea8a@mail.gmail.com>
+References: <4A30CE70.4050605@web.de> <200906112305.33675.mb@bu3sch.de>
+	<43e72e890906111410n3766ceb7t4b4efda05730c693@mail.gmail.com>
+	<200906112314.29464.mb@bu3sch.de> <69e28c910906111439o798b3298p63bd44e88358ea8a@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Jun 2009 14:43:55 -0700
+Message-ID: <43e72e890906111443h5758b74dk6f788b327b1cfe4c@mail.gmail.com>
+Subject: Re: compat-wireless: ridiculous build speed
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Jan Kiszka <jan.kiszka@web.de>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-References: <4A2AA395.3060406@web.de>	 <1244308808.15640.4.camel@johannes.local>  <4A2AA6BC.5040004@web.de>	 <1244309333.17485.0.camel@johannes.local>  <4A2AA94E.3050700@web.de> <1244310329.17485.15.camel@johannes.local>
-In-Reply-To: <1244310329.17485.15.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig5D6026CDA63B0EC57E27F302"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig5D6026CDA63B0EC57E27F302
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+2009/6/11 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Thu, Jun 11, 2009 at 11:14 PM, Michael Buesch<mb@bu3sch.de> wrote:
+>> On Thursday 11 June 2009 23:10:52 Luis R. Rodriguez wrote:
+>>> On Thu, Jun 11, 2009 at 2:05 PM, Michael Buesch<mb@bu3sch.de> wrote:
+>>> > On Thursday 11 June 2009 20:48:13 Luis R. Rodriguez wrote:
+>>> >> On Thu, Jun 11, 2009 at 2:29 AM, Jan Kiszka<jan.kiszka@web.de> wrote:
+>>> >> > Hi,
+>>> >> >
+>>> >> > while watching compat-wireless-2009-06-11 doing baby-steps building all
+>>> >> > its modules, I wonder what slows this down so horribly. No other
+>>> >> > external module build package I know is that slow (I would say *at
+>>> >> > least* one order of magnitude slower than normal). Is this really required?
+>>> >> >
+>>> >> > [ Hurray, it's finished! ]
+>>> >>
+>>> >> I think the many depmod -ae are the culprit. This is in place to
+>>> >> account for all the crap of madwifi which may be present or older
+>>> >> drivers which have been renamed.
+>>> >>
+>>> >> This could be improved. Patches are welcomed.
+>>> >>
+>>> >> Ps. Try building with make -j 2, etc.
+>>> >
+>>> > -j does not help. It will hardly build in parallel then.
+>>>
+>>> It works swell for me. The only thing that does not build in parellel
+>>> is the autoconf stuff but after its done with that step everything
+>>> builds as expected with -j 2.
+>>>
+>>> > There's something
+>>> > that serializes most of it (implicitly).
+>>>
+>>> You certain its just not the first part? I had written some patches to
+>>> make the first autoconf step into another step to then allow make -j
+>>> foo to work without a warning but that would involve another step. The
+>>> -j option does work for me though.
+>>
+>> Well, I never measured it, but I don't see any advantage when using -jX. Maybe
+>> that is because forever equals forever+1.
+>>
+>> What I do see, though, is that the per-cpu load is much higher when building the
+>> kernel itself with the same -j parameter.
+>
+> Actually, most of the slowness comes from stage 2 of the module build.
+> For me, stage 1 runs through rather fast (and -jX accelerates it quite
+> well), but stage 2 is serialized, and there is a long wait between
+> individual files. This wait is about a second on 2.6.28 for me in
+> vmware, but over 5 seconds (!!!) on 2.6.29. I've tried multiple
+> distros, and the time difference is consistent. (BTW stage 2 is
+> serialized in a full kernel build as well, though there is no reason
+> why it should be so; but no "wait" between steps is observed - in
+> fact, the second stage of a full 2.6.29 kernel build completes faster
+> for me than the second stage of compat-wireless on 2.6.29!)
 
-Johannes Berg wrote:
-> On Sat, 2009-06-06 at 19:37 +0200, Jan Kiszka wrote:
->=20
->>> Yes. With the AP firmware, that is. I don't care about that firmware =
-at
->>> all.
->> I do as it shall upgrade my soft-AP from an oldish rt2500 to this
->> dwa-160 stick.
->=20
-> No, you don't actually need AP software for that. The STA software
-> supports most of AP already.
+Heh yeah we need to fix this, patches are welcomed, I'll treat a beer sometime.
 
-The last statement I read was: "haven't found a way to properly transmit
-multicast frames after DTIM". Does this still apply on the new STA
-firmware? What is the state of AP mode in the driver source? Just
-disabled, some bits missing - or even ready to work?
-
->=20
->> Are you at least interested in porting the missing AP bits into the ST=
-A
->> version (likely the best long-term approach anyway)? And do you have a=
-
->> rough idea which bits are missing / where to look at?
->=20
-> Yes, that would be the plan. No, I have no idea what's missing. There
-> are tools like diff though :)
-
-Yeah:
-# diff -up nice-code-1.c nice-code-2.c | manual-filter
-=2E..
--rxBBReg =3D reg_read_PHY(0x1c5960); //*(volatile u32_t*)(0x1c5960); /* 0=
-x1c8960 write only */
-+rxBBReg =3D *(volatile u32_t*)(0x1c5960); /* 0x1c8960 write only */
-=2E..
-
-That will be a "nice" job... :)
-
-
-Another silly question: You wrote that 802.11n works with the firmware,
-and I blindly assumed that this of course includes a/b/g. I was right?
-My current AP works in g-mode when association with the ar9170 fails...
-
-Thanks so far,
-Jan
-
-
---------------enig5D6026CDA63B0EC57E27F302
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkoqrlIACgkQniDOoMHTA+nE/gCeLCI9xHUaeyQVBgG2ol9FeXhC
-i3sAn3YgenE3npQPMCJhczy7RB/jpXgg
-=obmz
------END PGP SIGNATURE-----
-
---------------enig5D6026CDA63B0EC57E27F302--
+  Luis
