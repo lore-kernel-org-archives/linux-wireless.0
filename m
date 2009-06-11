@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jessica.hrz.tu-chemnitz.de ([134.109.132.47]:54412 "EHLO
-	jessica.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755185AbZFIVbB (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49046 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932417AbZFKKyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 17:31:01 -0400
-From: Tobias Doerffel <tobias.doerffel@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH] ath5k: added cfg80211 based rfkill support
-Date: Tue, 9 Jun 2009 23:31:00 +0200
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-References: <20090607150755.GA19635@hash.localnet> <1244561607-6304-1-git-send-email-tobias.doerffel@gmail.com> <b6c5339f0906091126k573b8725hf623367abcdcdf1f@mail.gmail.com>
-In-Reply-To: <b6c5339f0906091126k573b8725hf623367abcdcdf1f@mail.gmail.com>
+	Thu, 11 Jun 2009 06:54:25 -0400
+Date: Thu, 11 Jun 2009 13:54:11 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Do not try to associate with an empty SSID
+Message-ID: <20090611105411.GA13825@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart95741141.FDORy51out";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200906092331.01072.tobias.doerffel@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart95741141.FDORy51out
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+It looks like some programs (e.g., NM) are setting an empty SSID with
+SIOCSIWESSID in some cases. This seems to trigger mac80211 to try to
+associate with an invalid configuration (wildcard SSID) which will
+result in failing associations (or odd issues, potentially including
+kernel panic with some drivers) if the AP were to actually accept this
+anyway).
 
-Hi,
+Only start association process if the SSID is actually set. This
+speeds up connection with NM in number of cases and avoids sending out
+broken association request frames.
 
-Am Dienstag, 9. Juni 2009 20:26:12 schrieb Bob Copeland:
-> > +       /* enable RFKILL when stopping HW so Wifi LED is turned off */
-> > +       ath5k_rfkill_enable(sc);
->
-> Odd, but ok :)
-Why odd? As a user if I disable Wifi (i.e. enable rfkill, be it via softwar=
-e=20
-or rfkill switch), I do not want the LED to be active anymore. It also migh=
-t=20
-have minimal influence on power consumption ;-)
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Regarding the other changes I'd agree on an additional patch made up by you.
+---
+ net/mac80211/mlme.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Toby
+It is unclear when this was broken, but I think we need to get this into
+2.6.31. The kernel panic (hopefully due to cleanup changes after 2.6.30)
+can be worked around in the driver, I would assume, but it would be
+better if we do not get into this odd state with associations since it
+is not clear what various drivers will do with this kind of
+configuration.
 
---nextPart95741141.FDORy51out
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-06-11 13:38:01.000000000 +0300
++++ wireless-testing/net/mac80211/mlme.c	2009-06-11 13:45:44.000000000 +0300
+@@ -2436,6 +2436,14 @@ void ieee80211_sta_req_auth(struct ieee8
+ 	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
+ 		return;
+ 
++	if (ifmgd->ssid_len == 0) {
++		/*
++		 * Only allow association to be started if a valid SSID is
++		 * configured.
++		 */
++		return;
++	}
++
+ 	if ((ifmgd->flags & (IEEE80211_STA_BSSID_SET |
+ 			     IEEE80211_STA_AUTO_BSSID_SEL)) &&
+ 	    (ifmgd->flags & (IEEE80211_STA_SSID_SET |
 
-iEYEABECAAYFAkou1JUACgkQHsjdpw2OaadH7ACdFzIWpBOslxL/Ov9KI3zkjI72
-makAn3MedoFXSOQ0iYGFeZvaev3mnciG
-=I1cu
------END PGP SIGNATURE-----
-
---nextPart95741141.FDORy51out--
+-- 
+Jouni Malinen                                            PGP id EFC895FA
