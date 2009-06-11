@@ -1,86 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:46953 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbZFAQwn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758195AbZFKUKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 12:52:43 -0400
-Date: Mon, 1 Jun 2009 12:52:07 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Greg KH <greg@kroah.com>, Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-Message-ID: <20090601165207.GA12481@alittletooquiet.net>
-References: <20090414105200.GE25746@storm.local.network> <69e28c910906010935n28f69921xd589a945e982ca1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZPt4rx8FFjLCG7dd"
-In-Reply-To: <69e28c910906010935n28f69921xd589a945e982ca1@mail.gmail.com>
+	Thu, 11 Jun 2009 16:10:39 -0400
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: gregor kowski <gregor.kowski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <83a869cd0906101517k5897f1b8i19a8c840c6312d1d@mail.gmail.com>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
+	 <1244442549.11006.2.camel@johannes.local>
+	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
+	 <1244556179.4672.11.camel@johannes.local>
+	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
+	 <1244569926.18481.27.camel@johannes.local>
+	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
+	 <83a869cd0906101517k5897f1b8i19a8c840c6312d1d@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FxBNq4sgMAFXHfjbe2Ol"
+Date: Thu, 11 Jun 2009 22:11:22 +0200
+Message-Id: <1244751082.29447.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---ZPt4rx8FFjLCG7dd
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+--=-FxBNq4sgMAFXHfjbe2Ol
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Thu, 2009-06-11 at 00:17 +0200, gregor kowski wrote:
 
-On Mon, Jun 01, 2009 at 06:35:35PM +0200, G=E1bor Stefanik wrote:
-> On Tue, Apr 14, 2009 at 12:52 PM, Forest Bond
-> <forest@alittletooquiet.net> wrote:
-> > This patch adds the vt6656 driver to drivers/staging. =A0This code was =
-literally
-> > copied from the upstream source archive, available here:
+> >> Might depend on something else? Anyhow I don't see the point of
+> >> continuing to call the callback. Maybe it should just be part of the k=
+ey
+> >> todo instead when the key is initially uploaded to the hw.
 > >
-> > =A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
-> >
-> > Copyright: VIA Networking Technologies, Inc.
-> > License: GPL
-> > Authors: Jerry Chen, Kyle Hsu, Lucas Lin, Lyndon Chen, Tevin Chen, Warr=
-en Hsu,
-> > =A0 =A0 =A0 =A0 Yiching Chen
-> > Signed-off-by: Forest Bond <forest@alittletooquiet.net>
-> >
-> > Patch: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driver=
--to-drivers-staging.patch.gz
-> > Signature: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-dr=
-iver-to-drivers-staging.patch.gz.sig
+> > Or what do you think about this. This will call the callback only once =
+per wrap.
+
+> But this won't work if you want to support QOS.
+> So how update_tkip_key is supposed to work with QOS (ie different
+> rx->queue value) and multiple tkip IV ?
 >=20
-> Did this patch (along with the vt6655 one) somehow get lost? I can't
-> see it in drivers/staging.
+> BTW did you know why there only one tkip IV on tx and not one per qos que=
+ue ?
 
-vt6655 is in drivers/staging on linux-next, although I have three more patc=
-hes
-that I'll be sending to Greg sometime tonight.  He has been applying them f=
-or
-me.
+Umm, have you read the standard? This is correct behaviour and works as
+specified with QoS.
 
-vt6656 is currently delayed a bit.  I may be able to get a start on that
-tonight, as well, but there is likelihood of further delay.
+johannes
 
-Hope this is helpful.
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---ZPt4rx8FFjLCG7dd
+--=-FxBNq4sgMAFXHfjbe2Ol
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQFKJAc3RO4fQQdv5AwRAhgOAKCTjzOQYuTaAK4ALhht0sMx21C9OgCgvwLe
-qHO82H6Vyir/vY7MIyJDy9A=
-=Cs9N
+iQIcBAABAgAGBQJKMWTnAAoJEODzc/N7+QmamMAP/Ry/kmEVMcujk+LFVRexnBzD
+sQVCGPaA/4i4DAhAXJpyu7XQK0mUfn7gqnUbfUPW2BP45SnpzUs+l0BtFu+beugW
+XjA4j6CiYz3T2tyrk0nF8NAY/AJW3yCm3UPvW4xbjv/NfbPG23LZSI7HTr7e7/Cl
+wrmw7tZnNK3SQFPm0IIa/ZlYLpRw5Q9jjkRUPLl1dxMgV6Byz6fPjwxFEJ50Nhil
+K1AYtfWcurVHczDGxzR+LKAne4u2MCaDyA/2tM2d2PJ6XBUy0HkfRsm8xYAWwXKH
+c7mX/UydCoSgIt1u9r5q1QmyqK3Nbki2lq85TnZtrJziXSSCFjYGklJ6WUglyyQu
+XivUiTO9g7DQpe1ucxV8zQZhBrBeKLAPVz+13OjLohfOj2SINXec0S1cdlZLS/dc
+szzyMOVD2G4yThGGggsDarZW1qFAGVm40xAZsVusUrCpY+k3leyrGENmNnBQ5mvZ
+isSkVnpu2w/ylczv968+n4yL2c8SZ5Yah4raqOESlUS7kakp/k6BpkNlFRw+hpvh
+So+IudWGONwDgDKUlikrnRuePHjjasMtL6J7XCQyNJi1fDRAfZf44chySxl6uOuU
+rEs5wQkN/z1/p/YzIS4tEfa2qpLfxkpsxj6jtrC+FpabQalFDWp+4AeSBfg5lZwh
+UmPeIYgJB4K7OaQ41Lqi
+=RotE
 -----END PGP SIGNATURE-----
 
---ZPt4rx8FFjLCG7dd--
+--=-FxBNq4sgMAFXHfjbe2Ol--
+
