@@ -1,32 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:53108 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758990AbZFPTJ1 convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1639 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757820AbZFKCDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 15:09:27 -0400
-Received: by pxi27 with SMTP id 27so1149829pxi.33
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 12:09:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910906130644i1b0cf636w4a912bbb5ae78d5@mail.gmail.com>
-References: <ec2083b20906120654j370e5bdo724a7c3b6d505a6c@mail.gmail.com>
-	 <4A326771.6030301@lwfinger.net>
-	 <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com>
-	 <4A32E645.1040002@lwfinger.net>
-	 <69e28c910906130644i1b0cf636w4a912bbb5ae78d5@mail.gmail.com>
-Date: Tue, 16 Jun 2009 14:09:29 -0500
-Message-ID: <ec2083b20906161209i5318b104w2796915059bd0a08@mail.gmail.com>
-Subject: Re: 4311 not detected at all
-From: "Fabio A. Correa" <facorread@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=ISO-8859-1
-To: unlisted-recipients:; (no To-header on input)
+	Wed, 10 Jun 2009 22:03:45 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org, pierre@ossman.eu
+Cc: kalle.valo@iki.fi, san@google.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH/RFC 0/7] wl12xx SDIO interface
+Date: Wed, 10 Jun 2009 22:02:53 -0400
+Message-Id: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After days of failure, I resorted to ndiswrapper-1.54, which installed
-without trouble.
+Here's v2 of the SDIO interface for wl12xx, still with a FIXME or two.
 
---
-Fabio Andrés Correa Durán
+For my part, this is mainly a port of the Google/TI Android SDIO
+interface logic to the existing SPI driver.  I have confirmed that
+the driver associates and sends some traffic.
+
+Pierre, hoping to get your perspective on the SDIO bits in patch 7,
+since I very likely don't know what I'm doing :)  Especially regarding
+the platform code setup, in which the correct GPIOs have to be written
+to turn on the device before probe will work.  For the SPI interface,
+we use spi_register_board_info() for a similar purpose, but I'm not
+sure if there is a standard way to do that for SDIO.  This copies
+Google's platform driver for now.
+
+Conversion to readl/writel etc where appropriate is TODO.
+
+Bob Copeland (7):
+  wl12xx: separate bus i/o code into io.c
+  wl12xx: use wiphy_dev instead of wl->spi->dev
+  wl12xx: introduce wl12xx_if_operations struct
+  wl12xx: make wl12xx_set_partition bus agnostic
+  wl12xx: move module probe methods into spi.c
+  wl12xx: split spi interface into separate module
+  wl12xx: add sdio support
+
+ drivers/net/wireless/wl12xx/Kconfig  |   24 +++-
+ drivers/net/wireless/wl12xx/Makefile |   10 +-
+ drivers/net/wireless/wl12xx/acx.c    |    3 +-
+ drivers/net/wireless/wl12xx/boot.c   |    3 +-
+ drivers/net/wireless/wl12xx/cmd.c    |   15 +-
+ drivers/net/wireless/wl12xx/event.c  |    6 +-
+ drivers/net/wireless/wl12xx/io.c     |  181 +++++++++++++++++++++
+ drivers/net/wireless/wl12xx/io.h     |   62 +++++++
+ drivers/net/wireless/wl12xx/main.c   |  152 ++++--------------
+ drivers/net/wireless/wl12xx/ps.c     |    3 +-
+ drivers/net/wireless/wl12xx/rx.c     |   10 +-
+ drivers/net/wireless/wl12xx/sdio.c   |  250 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/spi.c    |  289 ++++++++++++++-------------------
+ drivers/net/wireless/wl12xx/spi.h    |   40 -----
+ drivers/net/wireless/wl12xx/tx.c     |   64 ++++----
+ drivers/net/wireless/wl12xx/wl1251.c |    9 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |   14 ++-
+ 17 files changed, 752 insertions(+), 383 deletions(-)
+ create mode 100644 drivers/net/wireless/wl12xx/io.c
+ create mode 100644 drivers/net/wireless/wl12xx/io.h
+ create mode 100644 drivers/net/wireless/wl12xx/sdio.c
+
+
