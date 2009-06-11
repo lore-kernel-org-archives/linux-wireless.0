@@ -1,325 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33025 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752230AbZFWRzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 13:55:31 -0400
-Date: Tue, 23 Jun 2009 10:55:33 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Jake Edge <jake@lwn.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	Pavel Machek <pavel@ucw.cz>, Greg KH <greg@kroah.com>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
-Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for
- rc-series and merge window
-Message-ID: <20090623175533.GK5305@mosca>
-References: <20090622222217.GH23972@bombadil.infradead.org>
- <m3fxdqj2bz.fsf@lwn.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <m3fxdqj2bz.fsf@lwn.net>
+Received: from mail.deathmatch.net ([72.66.92.28]:1646 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761479AbZFKCDq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2009 22:03:46 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org, pierre@ossman.eu
+Cc: kalle.valo@iki.fi, san@google.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH/RFC 6/7] wl12xx: split spi interface into separate module
+Date: Wed, 10 Jun 2009 22:02:59 -0400
+Message-Id: <1244685780-28930-7-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 10:18:40AM -0700, Jake Edge wrote:
-> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
-> 
-> Hi Luis,
-> 
-> A few comments:
-> 
-> > +2.0:SUMMARY
-> > +
-> > +This section provides a brief summary of the kernel release rules.
-> 
-> Is there a reason not to renumber this whole file, making this section
-> 2.1 and incrementing everything else further down?  It just stands out
-> from the rest of the document by having a 2.0 section, as well as having
-> all of the 2.0.x subsections.  It's probably fairly minor, but it does
-> make this chunk look very different than the rest of the
-> development-process document ...
+This creates a module called wl12xx_spi.ko which contains just the
+SPI-specific code.  The core remains in the module wl12xx.ko.
 
-Yeah.. to be honest I was just being lazy. But you're right. I'll take another
-stab at it but will probably need to then start touching other parts of the
-current doc I was trying to avoid editing as I think Jonathan already did
-a great job on.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig  |   13 ++++++++++++-
+ drivers/net/wireless/wl12xx/Makefile |    6 +++++-
+ drivers/net/wireless/wl12xx/main.c   |    9 +++++++++
+ drivers/net/wireless/wl12xx/spi.c    |   15 ++++++++++-----
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 5 files changed, 37 insertions(+), 8 deletions(-)
 
-> > +
-> > +2.0.0: KERNEL RELEASE RULES
-> > +
-> > +Stable kernels are released when they are ready! This means there are
-> > +absolutely no strict guidelines for sticking to specific dates for a
-> > +kernel release.
-> 
-> The bang (!) seems unneeded.
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index a82c4cd..9575d16 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -1,6 +1,6 @@
+ config WL12XX
+ 	tristate "TI wl1251/wl1271 support"
+-	depends on MAC80211 && WLAN_80211 && SPI_MASTER && GENERIC_HARDIRQS && EXPERIMENTAL
++	depends on MAC80211 && WLAN_80211 && GENERIC_HARDIRQS && EXPERIMENTAL
+ 	select FW_LOADER
+ 	select CRC7
+ 	---help---
+@@ -9,3 +9,14 @@ config WL12XX
+ 
+ 	  If you choose to build a module, it'll be called wl12xx. Say N if
+ 	  unsure.
++
++config WL12XX_SPI
++	tristate "TI wl1251/wl1271 SPI support"
++	depends on WL12XX && SPI_MASTER
++	---help---
++	  This module adds support for the SPI interface of adapters using
++	  TI wl1251/wl1271 chipsets.  Select this if your platform is using
++	  the SPI bus.
++
++	  If you choose to build a module, it'll be called wl12xx_spi. Say N if
++	  unsure.
+diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+index c1281fc..ffd5664 100644
+--- a/drivers/net/wireless/wl12xx/Makefile
++++ b/drivers/net/wireless/wl12xx/Makefile
+@@ -1,4 +1,8 @@
+-wl12xx-objs		= main.o spi.o event.o tx.o rx.o \
++wl12xx-objs		= main.o event.o tx.o rx.o \
+ 			  ps.o cmd.o acx.o boot.o init.o wl1251.o \
+ 			  debugfs.o io.o
++
++wl12xx_spi-objs		+= spi.o
++
+ obj-$(CONFIG_WL12XX)	+= wl12xx.o
++obj-$(CONFIG_WL12XX_SPI)	+= wl12xx_spi.o
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 06c1973..d5faaa1 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -69,6 +69,7 @@ irqreturn_t wl12xx_irq(int irq, void *cookie)
+ 
+ 	return IRQ_HANDLED;
+ }
++EXPORT_SYMBOL_GPL(wl12xx_irq);
+ 
+ static int wl12xx_fetch_firmware(struct wl12xx *wl)
+ {
+@@ -1179,6 +1180,7 @@ int wl12xx_init_ieee80211(struct wl12xx *wl)
+ out:
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(wl12xx_init_ieee80211);
+ 
+ #define WL12XX_DEFAULT_CHANNEL 1
+ struct ieee80211_hw *wl12xx_alloc_hw(void)
+@@ -1245,6 +1247,7 @@ struct ieee80211_hw *wl12xx_alloc_hw(void)
+ 
+ 	return hw;
+ }
++EXPORT_SYMBOL_GPL(wl12xx_alloc_hw);
+ 
+ int wl12xx_free_hw(struct wl12xx *wl)
+ {
+@@ -1263,3 +1266,9 @@ int wl12xx_free_hw(struct wl12xx *wl)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(wl12xx_free_hw);
++
++MODULE_DESCRIPTION("TI 12xx Wireles LAN Driver Core");
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
++MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 852c990..6b453e2 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -32,6 +32,11 @@
+ #include "spi.h"
+ #include "ps.h"
+ 
++static struct spi_device *wl_to_spi(struct wl12xx *wl)
++{
++	return wl->if_priv;
++}
++
+ static void wl12xx_spi_reset(struct wl12xx *wl)
+ {
+ 	u8 *cmd;
+@@ -53,7 +58,7 @@ static void wl12xx_spi_reset(struct wl12xx *wl)
+ 	t.len = WSPI_INIT_CMD_LEN;
+ 	spi_message_add_tail(&t, &m);
+ 
+-	spi_sync(wl->spi, &m);
++	spi_sync(wl_to_spi(wl), &m);
+ 
+ 	wl12xx_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
+ }
+@@ -107,7 +112,7 @@ static void wl12xx_spi_wake(struct wl12xx *wl)
+ 	t.len = WSPI_INIT_CMD_LEN;
+ 	spi_message_add_tail(&t, &m);
+ 
+-	spi_sync(wl->spi, &m);
++	spi_sync(wl_to_spi(wl), &m);
+ 
+ 	wl12xx_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
+ }
+@@ -147,7 +152,7 @@ static void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
+ 	t[2].len = len;
+ 	spi_message_add_tail(&t[2], &m);
+ 
+-	spi_sync(wl->spi, &m);
++	spi_sync(wl_to_spi(wl), &m);
+ 
+ 	/* FIXME: check busy words */
+ 
+@@ -178,7 +183,7 @@ static void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf,
+ 	t[1].len = len;
+ 	spi_message_add_tail(&t[1], &m);
+ 
+-	spi_sync(wl->spi, &m);
++	spi_sync(wl_to_spi(wl), &m);
+ 
+ 	wl12xx_dump(DEBUG_SPI, "spi_write cmd -> ", &cmd, sizeof(cmd));
+ 	wl12xx_dump(DEBUG_SPI, "spi_write buf -> ", buf, len);
+@@ -211,7 +216,7 @@ static int __devinit wl12xx_spi_probe(struct spi_device *spi)
+ 
+ 	SET_IEEE80211_DEV(hw, &spi->dev);
+ 	dev_set_drvdata(&spi->dev, wl);
+-	wl->spi = spi;
++	wl->if_priv = spi;
+ 	wl->if_ops = &wl12xx_spi_ops;
+ 
+ 	/* This is the only SPI value that we need to set here, the rest
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 46d3bc1..d8bc4c6 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -286,7 +286,7 @@ struct wl12xx {
+ 	struct ieee80211_hw *hw;
+ 	bool mac80211_registered;
+ 
+-	struct spi_device *spi;
++	void *if_priv;
+ 	const struct wl12xx_if_operations *if_ops;
+ 
+ 	void (*set_power)(bool enable);
+-- 
+1.6.0.6
 
-Heh ok.
 
-> The second sentence seems to have an overabundance of modifiers, perhaps
-> something like: This means there are no strict guidelines, in terms of
-> specific dates, for a kernel release.
-
-OK thanks.
-
-> > +
-> > +2.0.1: PATCH QUEUING FOR THE NEXT KERNEL RELEASE
-> > +
-> > +Linus maintains the development kernel, this means he accepts new
-> > +features and drivers for the next kernel release. He however does not
-> > +maintain every single line of the kernel. The kernel is broken down by
-> > +different subsystems and each subsystem has its own maintainer. In order
-> > +to aid the development of Linux maintainers subsystem have trees where
-> > +they queue patches for the next kernel release. This is typically done
-> > +with a foo-next-2.6.git tree where foo would be an arbitrary subsystem
-> > +name. These trees typically are designed to have a clean git history
-> > +to make pulling for Linus easier and as clean as possible.
-> 
-> I don't quite follow: In order to aid the development of Linux
-> maintainers subsystem have trees ...
-> 
-> is there a missing comma and/or some missing words?
-
-Heh I meant subsystem maintainers, will fix.
-
-> Is the "foo-next-2.6.git" convention that widespread?  It just seems
-> like subsystem maintainers have various ways they track things for the
-> next development release, but maybe I am wrong.  If not, though, perhaps
-> toning "typically done" down some, and using it as an example of how it
-> *might* be done, would be better.
-
-You're right, thanks, will add that. Since you bring this up, are there
-a lot of trees not using the foo-next-2.6.git convention?
-
-> > +Subsystem maintainers can typically have their own development git trees
-> > +apart from the foo-next-2.6.git trees as a breeding ground and test ground
-> > +for bleeding edge patches. Subsystem maintainers are at complete freedom to
-> > +maintain these trees however they see fit. Once patches have been proven
-> > +stable enough in a development tree they tend to be moved to their
-> > +respective foo-next-2.6.git tree.
-> 
-> as a breeding and testing ground for bleeding edge patches. (sounds
-> better i think)
-
-OK great.
-
-> > +Subsystem development trees are *always* open for development and new patches
-> > +are always accepted. After a new kernel is released subsystem maintainers
-> > +tend to slow down in accepting patches into their development trees though
-> > +so that the new development can eventually be rebased easily ontop of the
-> > +next kernel rc1 release.
-> 
-> The first sentence seems to overstate the case somewhat ... new patches
-> are welcome most any time, not necessarily accepted ... I suspect (but
-> don't know for sure) that there are times when subsystem trees are
-> "closed" as well, but maybe not officially
-
-Thanks for pointing this out, any particular example in mind? But anyway, will
-change to account for that.
-
-> > +If your patch is adding a new feature or changing a lot of code and you send
-> > +it between a stable kernel release and prior to the rc1 kernel release it will
-> > +likely be a while before it is merged into a development tree, so be patient
-> > +during this time.
-> 
-> "between a stable kernel release and prior to the rc1 kernel release"
-> sounds like "during the merge window"
-
-You're right, that would make it more consistent.
-
-> > +After the merge window the kernel is worked on through the rc-series of the
-> > +kernel release. The rc-series focus is to address regressions. The merge window
-> > +closes upon the first rc-series release, rc1.
-> 
-> to address regressions and fix bugs introduced by the new features added
-> during the merge window.
-
-Nice.
-
-> > +After a subsystem maintainer has sent his pull request to Linus during the merge
-> > +window no further new development will be accepted for that foo-next-2.6.git
-> > +tree and as such it marks the closure of development for that subsystem for that
-> > +kernel cycle.
-> 
-> and, as such, it marks
-> 
-> > +Developers wishing to target deadlines should simply work on their development
-> > +without regards or consideration for inclusion to a specific kernel
-> > +release.
-> 
-> That seems a little strange to say ... if they wish to target deadlines,
-> they can't work without consideration for inclusion into a specific
-> kernel, can they?
-
-Its possible, I tend to use wireless-testing for example, whether that is
-on 2.6.30 or soon 2.6.31, either way I just use John's wireless development
-tree and when code is ready its ready.
-
-> I think you are trying to suggest that they *not* target deadlines, but
-> that if they must ...
-
-Oh I see, yeah you're right. This could use some more clarification.
-What I was trying to say is it is hard to make a judgement call of
-when you're work will get merged with certainty, prior to submission
-to the development trees and review from the community, and recommending
-that work be done on the development trees.
-
-> > +A good indication of when the next stable kernel release will be made is when
-> > +Linus notes the last rc cycle released may be the last. By this time you
-> > +should already have all your development done and merged in the respective
-> > +development tree. If your code is not ready and merged into the respective
-> > +maintainers development tree prior to the announced last potential rc kernel
-> > +release chances are you missed getting your code in for the next kernel merge
-> > +window. Exemptions here are new drivers, covered below.
-> 
-> prior to the last rc kernel release, chances are ...
-> 
-> (Li Zefan had some corrections in here, that I won't repeat)
-> 
-> > +This section summarizes what kind of patches are accepted after a new stable kernel is
-> > +released, before the merge window closes and after it closes. These patches are targeted
-> > +for the kernel prior to its final release.
-> 
-> before and after the merge window closes.
-> 
-> These patches are targeted for the new kernel currently under
-> development. (or something like that, "targeted for the kernel prior to
-> its final release" doesn't make sense, at least to me)
-
-Will change.
-
-> > +Before the merge window closes, prior to the rc1 release, Linus accepts pull requests
-> > +from different subsystem maintainers, with it go all the queued up material for the
-> > +next kernel release for each respective subsystem, on all foo-next-2.6.git trees.
-> 
-> This could be simplified substantially: Before the merge window closes,
-> Linus accepts pull requests from the subsystem maintainers; these
-> contain all of the queued up patches for that subsystem that are bound
-> for the next kernel release.
-
-:D
-
-> > +After subsystem maintainers have sent their pull requests there are strict rules
-> > +for new patches prior to the close of the merge window, marked by the
-> > +rc1 release:
-> 
-> It doesn't seem like you need to keep stressing that the merge window
-> closes with -rc1 ... but maybe that's just me ...
-
-Point taken.
-
-> > +
-> > + - patches must fix a regression
-> > + - patches must fix a security hole
-> > + - patches must fix a oops/kernel hang
-> > +
-> > +Non-intrusive bug fixes fixes will very likely not be accepted. Some maintainers
-> > +may choose to accept some non-intrusive patches, depending on their work load.
-> > +You should however not take it for granted such patches will get accepted. You
-> > +should always just target the development kernel and provide a good commit to
-> > +help with review.
-> 
-> I think you mean "intrusive bug fixes", but maybe not 
-
-Nope, I meant non-intrusive bug fixes. Intrusive bug fixes won't get accepted.
-
-> ... maybe the
-> distinction isn't on the intrusiveness, so much as how
-> critical/important the fix is ... this also seems overly concrete, in
-> that various maintainers have their own style which may or may not
-> conform to this ...
-
-I am under the impression that during the merge window maintainers generally
-won't accept non-intrusive bug fixes. That is, bug fixes which are simple but
-yet do not address a specific existing regression, security hole, or kernel
-oops/hang.
-
-I suppose this could use some more elaboration since it seems it may not have
-been clear what I meant to write.
-
-> > +When in doubt consult with your subsystem maintainer or just allow him to
-> > +do the judging of where the patches deserves to go to, an excellent commit log
-> > +should help with this effort.
-> 
-> When in doubt, consult with the subsystem maintainer to determine
-> when the patch should be merged.  A well-written, concise commit log
-> message will help here.
-
-:D
-
-> > +Linus does not accept more pull requests from subsystem maintainers after the
-> > +rc1 release. This means you can expect no new features or new development after
-> > +rc1.
-> 
-> Again, seemingly too rigid based on what really happens ... but maybe
-> this is documenting the "ideal"
-
-Well I take it that the maintainers who know they can get away with some excemptions
-here don't need to read this to figure that out. But I suppose it may be worth
-mentioning excemptions do exist, for the record. BTW, just curious, are there any
-examples of this?
-
-> > +The same type of patches are accepted after the rc1 release with the addition
-> > +of a slight warmer welcome for non-intrusive bug fix patches. Non-intrusive
-> > +bug fixes must be important and address very clearly the bug they are fixing.
-> > +Non-intrusive bug fixes can fix issues which are not a regression, security
-> > +hole or a kernel oops/hang.
-> > +
-> > +Linus will not accept non-intrusive bug fix patches late in the rc-series, after
-> > +the rc5, for example.
-> 
-> Again, maybe it's just me, but this 'non-intrusive' distinction doesn't
-> read quite right ... I guess the problem is that non-intrusive and
-> regression/security/oops fixes are not mutually exclusive but this
-> document sometimes reads that way ... there are critical bug fixes that
-> will be accepted pretty much any time, no matter how intrusive they
-> are.  There are less critical bug fixes that will be accepted based on
-> how intrusive they are and where in the cycle the patch is proposed.
-
-Right so I don't think I was conveying what I meant appropriately
-and I think this could use some more clarification. The point here was
-that patches which do not address a regression, kernel oops/hang, or
-security issue but yet are non so intrusive, and may fix something small
-may very well likely not get accepted late in the rc series.
-
-> > +You should never take it for granted non-intrusive bug fixes will be accepted.
-> 
-> so, when do these non-intrusive bug fixes get accepted?  only pre-merge window?
-
-Heh yeah, that should be clarified, I thought it was based on the text that
-outlined the development trees and queing patches.
-
-But if you are asking me, yes, non-intrusive changes should ideally go in
-the development trees prior to the merge window. And I thought the documention
-patch was highlighting that there is also a chance of getting some of these
-important non-intrusive changes accepted circa rc1-rc5.
-
-> > +The very first release a new driver or filesystem is special. New drivers
-> > +are accepted during the rc-series! Patches for the same driver then are
-> > +also accepted during the same rc-series of a kernel as well as fixes for it
-> > +cannot regress as no previous kernels exists with it.
-> 
-> No ! needed I don't think ....
-
-OK.
-
-> > +After a driver has been present for one kernel release the relaxed rules for
-> > +it during the rc-series are no longer applicable.
-> 
-> except staging drivers?
-
-Hm, I consider staging a different chapter.
-
-> > +     2.6.20  February 4, 2007 - 68
-> 
-> 68 days I presume
-
-Yes, thanks. BTW are you up for taking a stab at this yourself? I'm not sure
-when I'll be able to again.
-
-   Luis
