@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41163 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945AbZFIRnL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 13:43:11 -0400
-Subject: [PATCH] mac80211: clean up return value of
- __ieee80211_parse_tx_radiotap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:38534 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763124AbZFLQsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2009 12:48:53 -0400
+Subject: Re: [Ilw] iwlagn crash on 2.6.29.4
+From: reinette chatre <reinette.chatre@intel.com>
+To: Robby Workman <rworkman@slackware.com>
+Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com>
+References: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com>
 Content-Type: text/plain
-Date: Tue, 09 Jun 2009 19:42:38 +0200
-Message-Id: <1244569358.18481.24.camel@johannes.local>
+Date: Fri, 12 Jun 2009 09:55:49 -0700
+Message-Id: <1244825750.20900.468.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return type has more than two values, but it can validly
-only ever return TX_DROP and TX_CONTINUE, so use a bool
-instead of ieee80211_tx_result.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+On Thu, 2009-06-11 at 22:51 -0700, Robby Workman wrote:
+> On 2.6.29.4, I just got a crash in iwlagn under heavy network
+> throughput.  I was transferring a dvd iso from one box in my
+> lan to another, and the following occurred:
+> 
+>    http://slackware.com/~rworkman/OOPS
+> 
+> It didn't bring the entire system to a halt (thankfully);
+> removing and reloading the iwlagn module made everything
+> just fine. :-)
+> 
+> If any more information is needed, let me know.  I'm more than
+> willing to test patches and such...
 
---- wireless-testing.orig/net/mac80211/tx.c	2009-06-09 19:39:55.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-06-09 19:40:39.000000000 +0200
-@@ -908,9 +908,8 @@ ieee80211_tx_h_stats(struct ieee80211_tx
-  * deal with packet injection down monitor interface
-  * with Radiotap Header -- only called for monitor mode interface
-  */
--static ieee80211_tx_result
--__ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
--			      struct sk_buff *skb)
-+static bool __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
-+					  struct sk_buff *skb)
- {
- 	/*
- 	 * this is the moment to interpret and discard the radiotap header that
-@@ -983,7 +982,7 @@ __ieee80211_parse_tx_radiotap(struct iee
- 	}
- 
- 	if (ret != -ENOENT) /* ie, if we didn't simply run out of fields */
--		return TX_DROP;
-+		return false;
- 
- 	/*
- 	 * remove the radiotap header
-@@ -992,7 +991,7 @@ __ieee80211_parse_tx_radiotap(struct iee
- 	 */
- 	skb_pull(skb, iterator.max_length);
- 
--	return TX_CONTINUE;
-+	return true;
- }
- 
- /*
-@@ -1026,7 +1025,7 @@ __ieee80211_tx_prepare(struct ieee80211_
- 	/* process and remove the injection radiotap header */
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED)) {
--		if (__ieee80211_parse_tx_radiotap(tx, skb) == TX_DROP)
-+		if (!__ieee80211_parse_tx_radiotap(tx, skb))
- 			return TX_DROP;
- 
- 		/*
+Which hardware are you using?
 
+We released new ucode for 4965, 5100, 5300, and 5350 that address this
+issue. The new 4965 ucode should work fine with your driver. If you are
+using later hardware then you need a more recent driver to be able to
+use its new ucode.
+
+You can download the new ucode from:
+http://intellinuxwireless.org/?n=Downloads
+
+Reinette
 
