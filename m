@@ -1,99 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37724 "EHLO vs166246.vserver.de"
+Received: from mga02.intel.com ([134.134.136.20]:42648 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753024AbZFEViQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 17:38:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC V2] b43/legacy: port to cfg80211 rfkill
-Date: Fri, 5 Jun 2009 23:38:05 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <4a2961a7.RxVbjEA4JdOf01BF%Larry.Finger@lwfinger.net> <200906052101.47168.mb@bu3sch.de> <4A298C37.9030503@lwfinger.net>
-In-Reply-To: <4A298C37.9030503@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200906052338.05653.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	id S1756831AbZFLUPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2009 16:15:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/8 v2.6.31 and w-t ] iwlwifi: revamp bss_info_changed
+Date: Fri, 12 Jun 2009 13:22:48 -0700
+Message-Id: <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
+References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 05 June 2009 23:20:55 Larry Finger wrote:
-> Michael Buesch wrote:
-> > 
-> > This is pretty silly behavior IMO. Just to bring it to the point:
-> > We initialize a huge wireless MAC, PHY and Radio that consume several watts of power
-> > just to poll a silly RF-kill bit.
-> 
-> That is what the driver already does.
+From: Johannes Berg <johannes@sipsolutions.net>
 
-No. If the device is down, then it _is_ down. There won't be an rfkill thing
-trying to bring it up again although the interface is down.
+My earlier patch,
+	"mac80211: unify config_interface and bss_info_changed"
+introduced a bug in iwlwifi where it will do some things
+incorrectly now when reassociating.
 
-> > We can't we just accept that the RF-kill status is unknown while the device is down?
-> 
-> The problem is that while the interface is down the switch status
-> cannot be interrogated. If you try, you get a fatal SSB error. Thus
-> the only way to bring it back up is to flip the switch, then
-> rmmod/insmod the driver. If you want hardware rfkill to be one-way,
-> then take Johannes's patch. We would save a little power by calling
-> b43_wireless_exit() if we brought it up to test the switch, and the
-> switch was still off. That would leave everything off most of the time.
+Revamp iwl_bss_info_changed to fix that issue and make it
+easier to read. Also, while at it, add comments about things
+that it should do but currently doesn't.
 
-Yeah well. We cannot read the rfkill status while the device is down. That is
-a hardware limitation. I think we should _live_ with that limitation instead of
-working around it by always keeping the device initialized.
-Can't we teach the rfkill subsystem about an "unknown" state? Because that's what we're in.
+Finally, also improve the locking in the function.
 
-> > I really do hate all that rfkill crap and I'm still refusing to sign off on anything that's
-> > related to rfkill (like I did for the past year or so). If people want this merged,
-> > somebody else maintain and sign it off, please.
-> 
-> I'm sick of rfkill as well and really detest the endless discussions
-> that have taken place; however, I do want the stuff to work.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |  114 +++++++++++++++++++------------
+ 1 files changed, 70 insertions(+), 44 deletions(-)
 
-Yeah. But wasting huge amounts of power to keep polling a bit that's not even used
-most of the time is not really what I like.
-
-> 1. We switch to the cfg80211 rfkill and use this patch modified to
-> turn the interface back off if the switch is still off.
-
-+void b43_rfkill_poll(struct ieee80211_hw *hw)
- {
--       struct b43_wldev *dev = data;
--       struct b43_wl *wl = dev->wl;
-+       struct b43_wl *wl = hw_to_b43_wl(hw);
-+       struct b43_wldev *dev = wl->current_dev;
-        bool enabled;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index f9d16ca..e05faa0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2390,39 +2390,46 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
+ 	}
  
-        mutex_lock(&wl->mutex);
-        if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
--               mutex_unlock(&wl->mutex);
--               return;
-+               if (b43_wireless_core_init(dev)) {
-+                       mutex_unlock(&wl->mutex);
-+                       return;
-+               }
-        }
-
-This is the part of the code which I really really really dislike.
-Hell, just return a freaking error from b43_rfkill_poll(), if the interface
-is down. If rfkill can't handle that, it should probably be taught to handle it.
-Especially as there can be other errors as well, like memory allocation failures.
-
-> 2. We continue to use the old rfkill mechanism. It works just fine,
-> but this method runs the risk of the old method being deprecated and
-> eliminated.
-
-I agree that this is not really an option.
-
-> 3. We get new callbacks that will only power down/up the radio when it
-> is blocked. That saves a little power.
-
-What is wrong with the current mechanism to power up the radio, if the interface is up
-and powering it down if the interface is down? I think the power of the PHY/Radio should
-not be affected by rfkill. It should work the other way around instead. Rfkill should
-be tolerant to a radio that is down and simply live with an unknown switch state.
-
+-	if ((changes & BSS_CHANGED_BSSID) && !iwl_is_rfkill(priv)) {
+-		/* If there is currently a HW scan going on in the background
+-		 * then we need to cancel it else the RXON below will fail. */
++	if (changes & BSS_CHANGED_BEACON_INT) {
++		priv->beacon_int = bss_conf->beacon_int;
++		/* TODO: in AP mode, do something to make this take effect */
++	}
++
++	if (changes & BSS_CHANGED_BSSID) {
++		IWL_DEBUG_MAC80211(priv, "BSSID %pM\n", bss_conf->bssid);
++
++		/*
++		 * If there is currently a HW scan going on in the
++		 * background then we need to cancel it else the RXON
++		 * below/in post_associate will fail.
++		 */
+ 		if (iwl_scan_cancel_timeout(priv, 100)) {
+-			IWL_WARN(priv, "Aborted scan still in progress "
+-				    "after 100ms\n");
++			IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+ 			IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+ 			mutex_unlock(&priv->mutex);
+ 			return;
+ 		}
+-		memcpy(priv->staging_rxon.bssid_addr,
+-		       bss_conf->bssid, ETH_ALEN);
+ 
+-		/* TODO: Audit driver for usage of these members and see
+-		 * if mac80211 deprecates them (priv->bssid looks like it
+-		 * shouldn't be there, but I haven't scanned the IBSS code
+-		 * to verify) - jpk */
+-		memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
++		/* mac80211 only sets assoc when in STATION mode */
++		if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
++		    bss_conf->assoc) {
++			memcpy(priv->staging_rxon.bssid_addr,
++			       bss_conf->bssid, ETH_ALEN);
+ 
+-		if (priv->iw_mode == NL80211_IFTYPE_AP)
+-			iwlcore_config_ap(priv);
+-		else {
+-			int rc = iwlcore_commit_rxon(priv);
+-			if ((priv->iw_mode == NL80211_IFTYPE_STATION) && rc)
+-				iwl_rxon_add_station(
+-					priv, priv->active_rxon.bssid_addr, 1);
++			/* currently needed in a few places */
++			memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
++		} else {
++			priv->staging_rxon.filter_flags &=
++				~RXON_FILTER_ASSOC_MSK;
+ 		}
+-	} else if (!iwl_is_rfkill(priv)) {
+-		iwl_scan_cancel_timeout(priv, 100);
+-		priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+-		iwlcore_commit_rxon(priv);
++
+ 	}
+ 
++	/*
++	 * This needs to be after setting the BSSID in case
++	 * mac80211 decides to do both changes at once because
++	 * it will invoke post_associate.
++	 */
+ 	if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
+ 	    changes & BSS_CHANGED_BEACON) {
+ 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
+@@ -2431,8 +2438,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 			iwl_mac_beacon_update(hw, beacon);
+ 	}
+ 
+-	mutex_unlock(&priv->mutex);
+-
+ 	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
+ 		IWL_DEBUG_MAC80211(priv, "ERP_PREAMBLE %d\n",
+ 				   bss_conf->use_short_preamble);
+@@ -2450,6 +2455,23 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 			priv->staging_rxon.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
+ 	}
+ 
++	if (changes & BSS_CHANGED_BASIC_RATES) {
++		/* XXX use this information
++		 *
++		 * To do that, remove code from iwl_set_rate() and put something
++		 * like this here:
++		 *
++		if (A-band)
++			priv->staging_rxon.ofdm_basic_rates =
++				bss_conf->basic_rates;
++		else
++			priv->staging_rxon.ofdm_basic_rates =
++				bss_conf->basic_rates >> 4;
++			priv->staging_rxon.cck_basic_rates =
++				bss_conf->basic_rates & 0xF;
++		 */
++	}
++
+ 	if (changes & BSS_CHANGED_HT) {
+ 		iwl_ht_conf(priv, bss_conf);
+ 
+@@ -2459,10 +2481,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changes & BSS_CHANGED_ASSOC) {
+ 		IWL_DEBUG_MAC80211(priv, "ASSOC %d\n", bss_conf->assoc);
+-		/* This should never happen as this function should
+-		 * never be called from interrupt context. */
+-		if (WARN_ON_ONCE(in_interrupt()))
+-			return;
+ 		if (bss_conf->assoc) {
+ 			priv->assoc_id = bss_conf->aid;
+ 			priv->beacon_int = bss_conf->beacon_int;
+@@ -2470,27 +2488,35 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 			priv->timestamp = bss_conf->timestamp;
+ 			priv->assoc_capability = bss_conf->assoc_capability;
+ 
+-			/* we have just associated, don't start scan too early
+-			 * leave time for EAPOL exchange to complete
++			/*
++			 * We have just associated, don't start scan too early
++			 * leave time for EAPOL exchange to complete.
++			 *
++			 * XXX: do this in mac80211
+ 			 */
+ 			priv->next_scan_jiffies = jiffies +
+ 					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
+-			mutex_lock(&priv->mutex);
+-			priv->cfg->ops->lib->post_associate(priv);
+-			mutex_unlock(&priv->mutex);
+-		} else {
++			if (!iwl_is_rfkill(priv))
++				priv->cfg->ops->lib->post_associate(priv);
++		} else
+ 			priv->assoc_id = 0;
+-			IWL_DEBUG_MAC80211(priv, "DISASSOC %d\n", bss_conf->assoc);
++
++	}
++
++	if (changes && iwl_is_associated(priv) && priv->assoc_id) {
++		IWL_DEBUG_MAC80211(priv, "Changes (%#x) while associated\n",
++				   changes);
++		ret = iwl_send_rxon_assoc(priv);
++		if (!ret) {
++			/* Sync active_rxon with latest change. */
++			memcpy((void *)&priv->active_rxon,
++				&priv->staging_rxon,
++				sizeof(struct iwl_rxon_cmd));
+ 		}
+-	} else if (changes && iwl_is_associated(priv) && priv->assoc_id) {
+-			IWL_DEBUG_MAC80211(priv, "Associated Changes %d\n", changes);
+-			ret = iwl_send_rxon_assoc(priv);
+-			if (!ret)
+-				/* Sync active_rxon with latest change. */
+-				memcpy((void *)&priv->active_rxon,
+-					&priv->staging_rxon,
+-					sizeof(struct iwl_rxon_cmd));
+ 	}
++
++	mutex_unlock(&priv->mutex);
++
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+ EXPORT_SYMBOL(iwl_bss_info_changed);
 -- 
-Greetings, Michael.
+1.5.6.3
+
