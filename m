@@ -1,84 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:46936 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754295AbZFCRSE (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:64392 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991AbZFLLPD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 13:18:04 -0400
-Message-ID: <4A26B0D2.3090207@oracle.com>
-Date: Wed, 03 Jun 2009 10:20:18 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Fri, 12 Jun 2009 07:15:03 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 04/33] wl12xx: reserve buffer for partition command in struct
+	wl12xx
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:14:41 +0300
+Message-ID: <20090612111441.8877.77502.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
 MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	johannes@sipsolutions.net,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-wimax@intel.com, wimax@linuxwimax.org
-Subject: Re: linux-next: Tree for June 3 (rfkill)
-References: <20090603190952.2dd0cc70.sfr@canb.auug.org.au> <4A269539.8020607@oracle.com>
-In-Reply-To: <4A269539.8020607@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap wrote:
-> Stephen Rothwell wrote:
->> Hi all,
->>
->> Looks like a real rush since -rc7 ...
-> 
-> 
-> CFG80211=y
-> MAC80211=y
-> RFKILL=m
-> 
-> net/built-in.o: In function `cfg80211_netdev_notifier_call':
-> core.c:(.text+0xa678b): undefined reference to `rfkill_blocked'
-> net/built-in.o: In function `cfg80211_dev_free':
-> (.text+0xa67e2): undefined reference to `rfkill_destroy'
-> net/built-in.o: In function `cfg80211_rfkill_sync_work':
-> core.c:(.text+0xa686e): undefined reference to `rfkill_blocked'
-> net/built-in.o: In function `wiphy_new':
-> (.text+0xa69f2): undefined reference to `rfkill_alloc'
-> net/built-in.o: In function `wiphy_rfkill_start_polling':
-> (.text+0xa6bd2): undefined reference to `rfkill_resume_polling'
-> net/built-in.o: In function `wiphy_rfkill_stop_polling':
-> (.text+0xa6bdf): undefined reference to `rfkill_pause_polling'
-> net/built-in.o: In function `wiphy_unregister':
-> (.text+0xa6bf4): undefined reference to `rfkill_unregister'
-> net/built-in.o: In function `wiphy_rfkill_set_hw_state':
-> (.text+0xa6c64): undefined reference to `rfkill_set_hw_state'
-> net/built-in.o: In function `wiphy_register':
-> (.text+0xa6db4): undefined reference to `rfkill_register'
-> net/built-in.o: In function `cfg80211_wext_giwtxpower':
-> (.text+0xb01e9): undefined reference to `rfkill_blocked'
-> net/built-in.o: In function `cfg80211_wext_siwtxpower':
-> (.text+0xb0cf3): undefined reference to `rfkill_set_sw_state'
-> net/built-in.o: In function `cfg80211_wext_siwtxpower':
-> (.text+0xb0d1f): undefined reference to `rfkill_set_sw_state'
+From: Kalle Valo <kalle.valo@nokia.com>
 
+This is now DMA safe.
 
-Ugh, there are similar errors in the wimax area, which doesn't
-seem to mention RFKILL in its Kconfig file at all.  :(
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-net/built-in.o: In function `wimax_rfkill':
-(.text+0x81996): undefined reference to `rfkill_set_sw_state'
-net/built-in.o: In function `wimax_report_rfkill_sw':
-(.text+0x81ac0): undefined reference to `rfkill_set_sw_state'
-net/built-in.o: In function `wimax_report_rfkill_hw':
-(.text+0x81bd3): undefined reference to `rfkill_set_hw_state'
-net/built-in.o: In function `wimax_rfkill_rm':
-(.text+0x81c8f): undefined reference to `rfkill_unregister'
-net/built-in.o: In function `wimax_rfkill_rm':
-(.text+0x81c9a): undefined reference to `rfkill_destroy'
-net/built-in.o: In function `wimax_rfkill_add':
-(.text+0x81d52): undefined reference to `rfkill_alloc'
-net/built-in.o: In function `wimax_rfkill_add':
-(.text+0x81db3): undefined reference to `rfkill_register'
-net/built-in.o: In function `wimax_rfkill_add':
-(.text+0x81e2d): undefined reference to `rfkill_destroy'
+ drivers/net/wireless/wl12xx/spi.c |   22 ++++++++++++++--------
+ drivers/net/wireless/wl12xx/spi.h |    6 +++---
+ 2 files changed, 17 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index abdf171..fb7c52c 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -167,24 +167,26 @@ void wl12xx_spi_init(struct wl12xx *wl)
+  *                                    |    |
+  *
+  */
+-void wl12xx_set_partition(struct wl12xx *wl,
++int wl12xx_set_partition(struct wl12xx *wl,
+ 			  u32 mem_start, u32 mem_size,
+ 			  u32 reg_start, u32 reg_size)
+ {
+-	u8 tx_buf[sizeof(u32) + 2 * sizeof(struct wl12xx_partition)];
+ 	struct wl12xx_partition *partition;
+ 	struct spi_transfer t;
+ 	struct spi_message m;
++	size_t len, cmd_len;
+ 	u32 *cmd;
+-	size_t len;
+ 	int addr;
+ 
++	cmd_len = sizeof(u32) + 2 * sizeof(struct wl12xx_partition);
++	cmd = kzalloc(cmd_len, GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
+ 	spi_message_init(&m);
+ 	memset(&t, 0, sizeof(t));
+-	memset(tx_buf, 0, sizeof(tx_buf));
+ 
+-	cmd = (u32 *) tx_buf;
+-	partition = (struct wl12xx_partition *) (tx_buf + sizeof(u32));
++	partition = (struct wl12xx_partition *) (cmd + 1);
+ 	addr = HW_ACCESS_PART0_SIZE_ADDR;
+ 	len = 2 * sizeof(struct wl12xx_partition);
+ 
+@@ -244,11 +246,15 @@ void wl12xx_set_partition(struct wl12xx *wl,
+ 	wl->virtual_mem_addr = 0;
+ 	wl->virtual_reg_addr = mem_size;
+ 
+-	t.tx_buf = tx_buf;
+-	t.len = sizeof(tx_buf);
++	t.tx_buf = cmd;
++	t.len = cmd_len;
+ 	spi_message_add_tail(&t, &m);
+ 
+ 	spi_sync(wl->spi, &m);
++
++	kfree(cmd);
++
++	return 0;
+ }
+ 
+ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
+diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
+index f3f1895..7edb218 100644
+--- a/drivers/net/wireless/wl12xx/spi.h
++++ b/drivers/net/wireless/wl12xx/spi.h
+@@ -88,9 +88,9 @@ void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
+ /* INIT and RESET words */
+ void wl12xx_spi_reset(struct wl12xx *wl);
+ void wl12xx_spi_init(struct wl12xx *wl);
+-void wl12xx_set_partition(struct wl12xx *wl,
+-			  u32 part_start, u32 part_size,
+-			  u32 reg_start,  u32 reg_size);
++int wl12xx_set_partition(struct wl12xx *wl,
++			 u32 part_start, u32 part_size,
++			 u32 reg_start,  u32 reg_size);
+ 
+ static inline u32 wl12xx_read32(struct wl12xx *wl, int addr)
+ {
 
--- 
-~Randy
-LPC 2009, Sept. 23-25, Portland, Oregon
-http://linuxplumbersconf.org/2009/
