@@ -1,80 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47261 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401AbZFFAEB (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:14379 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848AbZFLUla (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 20:04:01 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH v2 04/15] ath9k: remove unused stepdown when looking for the next rate
-Date: Fri,  5 Jun 2009 20:03:38 -0400
-Message-Id: <1244246629-28179-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 12 Jun 2009 16:41:30 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so930579wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2009 13:41:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1244750836.29447.5.camel@johannes.local>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
+	 <1244442549.11006.2.camel@johannes.local>
+	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
+	 <1244556179.4672.11.camel@johannes.local>
+	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
+	 <1244569926.18481.27.camel@johannes.local>
+	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
+	 <1244750836.29447.5.camel@johannes.local>
+Date: Fri, 12 Jun 2009 22:41:33 +0200
+Message-ID: <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary=00504502c3d2e035e5046c2cbb7f
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used, remove this.
+--00504502c3d2e035e5046c2cbb7f
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   21 ++++++++-------------
- 1 files changed, 8 insertions(+), 13 deletions(-)
+Here is a patch that should fix all issue :
+The mac80211 tkip code won't call update_tkip_key, if some rx packets
+get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
+first packet because the hardware key stuff is called asynchronously with
+todo workqueue.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 93e480c..4427094 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -823,19 +823,14 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- static u8 ath_rc_rate_getidx(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
- 			     const struct ath_rate_table *rate_table,
--			     u8 rix, u16 stepdown)
-+			     u8 rix)
- {
--	u32 j;
- 	u8 nextindex = 0;
--
--	for (j = stepdown; j > 0; j--) {
--		if (ath_rc_get_nextlowervalid_txrate(rate_table,
--					ath_rc_priv, rix, &nextindex))
--			rix = nextindex;
--		else
--			break;
--	}
--	return rix;
-+	if (ath_rc_get_nextlowervalid_txrate(rate_table,
-+					     ath_rc_priv, rix, &nextindex))
-+		return nextindex;
-+	else
-+		return rix;
- }
- 
- static void ath_rc_ratefind(struct ath_softc *sc,
-@@ -879,7 +874,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		 * after the probe rate
- 		 */
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1);
-+					  rate_table, nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -897,7 +892,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 			try_per_rate = 4;
- 
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1);
-+					  rate_table, nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
--- 
-1.6.0.6
+This patch workaround that by always calling once update_tkip_key if
+the packet wasn't decrypted by the hardware.
 
+--00504502c3d2e035e5046c2cbb7f
+Content-Type: text/x-diff; charset=US-ASCII; name="tkip_corev2.diff"
+Content-Disposition: attachment; filename="tkip_corev2.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fvvd1r7c1
+
+VGhlIG1hYzgwMjExIHRraXAgY29kZSB3b24ndCBjYWxsIHVwZGF0ZV90a2lwX2tleSwgaWYgc29t
+ZSByeCBwYWNrZXRzCmdldCByZWNlaXZlZCB3aXRob3V0IEtFWV9GTEFHX1VQTE9BREVEX1RPX0hB
+UkRXQVJFLiBUaGlzIGNhbiBoYXBwZW4gb24KZmlyc3QgcGFja2V0IGJlY2F1c2UgdGhlIGhhcmR3
+YXJlIGtleSBzdHVmZiBpcyBjYWxsZWQgYXN5bmNocm9ub3VzbHkgd2l0aCAKdG9kbyB3b3JrcXVl
+dWUuCgpUaGlzIHBhdGNoIHdvcmthcm91bmQgdGhhdCBieSBhbHdheXMgY2FsbGluZyBvbmNlIHVw
+ZGF0ZV90a2lwX2tleSBpZgp0aGUgcGFja2V0IHdhc24ndCBkZWNyeXB0ZWQgYnkgdGhlIGhhcmR3
+YXJlLgoKU2lnbmVkLW9mZi1ieTogR3JlZ29yIEtvd3NraSA8Z3JlZ29yLmtvd3NraUBnbWFpbC5j
+b20+CkluZGV4OiBsaW51eC0yLjYvbmV0L21hYzgwMjExL3RraXAuYwo9PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBs
+aW51eC0yLjYub3JpZy9uZXQvbWFjODAyMTEvdGtpcC5jCTIwMDktMDYtMTAgMjA6MTI6MzIuMDAw
+MDAwMDAwICswMDAwCisrKyBsaW51eC0yLjYvbmV0L21hYzgwMjExL3RraXAuYwkyMDA5LTA2LTEy
+IDIwOjMxOjM1LjAwMDAwMDAwMCArMDAwMApAQCAtMTksNiArMTksMTIgQEAKIAogI2RlZmluZSBQ
+SEFTRTFfTE9PUF9DT1VOVCA4CiAKK2VudW0geworCUlOSVRJQUxJWkVEX05PTkUsCisJSU5JVElB
+TElaRURfUEhBU0UxLAorCUlOSVRJQUxJWkVEX1VQREFURV9LRVksCit9OworCiAvKgogICogMi1i
+eXRlIGJ5IDItYnl0ZSBzdWJzZXQgb2YgdGhlIGZ1bGwgQUVTIFMtYm94IHRhYmxlOyBzZWNvbmQg
+cGFydCBvZiB0aGlzCiAgKiB0YWJsZSBpcyBpZGVudGljYWwgdG8gZmlyc3QgcGFydCBidXQgYnl0
+ZS1zd2FwcGVkCkBAIC05OSw3ICsxMDUsNyBAQAogCQlwMWtbM10gKz0gdGtpcFMocDFrWzJdIF4g
+Z2V0X3VuYWxpZ25lZF9sZTE2KHRrICsgMTIgKyBqKSk7CiAJCXAxa1s0XSArPSB0a2lwUyhwMWtb
+M10gXiBnZXRfdW5hbGlnbmVkX2xlMTYodGsgKyAwICsgaikpICsgaTsKIAl9Ci0JY3R4LT5pbml0
+aWFsaXplZCA9IDE7CisJY3R4LT5pbml0aWFsaXplZCA9IElOSVRJQUxJWkVEX1BIQVNFMTsKIH0K
+IAogc3RhdGljIHZvaWQgdGtpcF9taXhpbmdfcGhhc2UyKGNvbnN0IHU4ICp0aywgc3RydWN0IHRr
+aXBfY3R4ICpjdHgsCkBAIC0xODIsNyArMTg4LDcgQEAKIAkvKiBVcGRhdGUgdGhlIHAxayBvbmx5
+IHdoZW4gdGhlIGl2MTYgaW4gdGhlIHBhY2tldCB3cmFwcyBhcm91bmQsIHRoaXMKIAkgKiBtaWdo
+dCBvY2N1ciBhZnRlciB0aGUgd3JhcCBhcm91bmQgb2YgaXYxNiBpbiB0aGUga2V5IGluIGNhc2Ug
+b2YKIAkgKiBmcmFnbWVudGVkIHBhY2tldHMuICovCi0JaWYgKGl2MTYgPT0gMCB8fCAhY3R4LT5p
+bml0aWFsaXplZCkKKwlpZiAoaXYxNiA9PSAwIHx8IGN0eC0+aW5pdGlhbGl6ZWQgPT0gSU5JVElB
+TElaRURfTk9ORSkKIAkJdGtpcF9taXhpbmdfcGhhc2UxKHRrLCBjdHgsIGhkci0+YWRkcjIsIGl2
+MzIpOwogCiAJaWYgKHR5cGUgPT0gSUVFRTgwMjExX1RLSVBfUDFfS0VZKSB7CkBAIC0yMDgsNyAr
+MjE0LDcgQEAKIAljb25zdCB1OCAqdGsgPSAma2V5LT5jb25mLmtleVtOTDgwMjExX1RLSVBfREFU
+QV9PRkZTRVRfRU5DUl9LRVldOwogCiAJLyogQ2FsY3VsYXRlIHBlci1wYWNrZXQga2V5ICovCi0J
+aWYgKGN0eC0+aXYxNiA9PSAwIHx8ICFjdHgtPmluaXRpYWxpemVkKQorCWlmIChjdHgtPml2MTYg
+PT0gMCB8fCBjdHgtPmluaXRpYWxpemVkID09IElOSVRJQUxJWkVEX05PTkUpCiAJCXRraXBfbWl4
+aW5nX3BoYXNlMSh0aywgY3R4LCB0YSwgY3R4LT5pdjMyKTsKIAogCXRraXBfbWl4aW5nX3BoYXNl
+Mih0aywgY3R4LCBjdHgtPml2MTYsIHJjNGtleSk7CkBAIC0yNTgsNyArMjY0LDcgQEAKIAlpZiAo
+KGtleWlkID4+IDYpICE9IGtleS0+Y29uZi5rZXlpZHgpCiAJCXJldHVybiBUS0lQX0RFQ1JZUFRf
+SU5WQUxJRF9LRVlJRFg7CiAKLQlpZiAoa2V5LT51LnRraXAucnhbcXVldWVdLmluaXRpYWxpemVk
+ICYmCisJaWYgKGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5pbml0aWFsaXplZCAhPSBJTklUSUFMSVpF
+RF9OT05FICYmCiAJICAgIChpdjMyIDwga2V5LT51LnRraXAucnhbcXVldWVdLml2MzIgfHwKIAkg
+ICAgIChpdjMyID09IGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5pdjMyICYmCiAJICAgICAgaXYxNiA8
+PSBrZXktPnUudGtpcC5yeFtxdWV1ZV0uaXYxNikpKSB7CkBAIC0yNzQsMTEgKzI4MCwxMSBAQAog
+CiAJaWYgKG9ubHlfaXYpIHsKIAkJcmVzID0gVEtJUF9ERUNSWVBUX09LOwotCQlrZXktPnUudGtp
+cC5yeFtxdWV1ZV0uaW5pdGlhbGl6ZWQgPSAxOworCQlrZXktPnUudGtpcC5yeFtxdWV1ZV0uaW5p
+dGlhbGl6ZWQgPSBJTklUSUFMSVpFRF9VUERBVEVfS0VZOwogCQlnb3RvIGRvbmU7CiAJfQogCi0J
+aWYgKCFrZXktPnUudGtpcC5yeFtxdWV1ZV0uaW5pdGlhbGl6ZWQgfHwKKwlpZiAoa2V5LT51LnRr
+aXAucnhbcXVldWVdLmluaXRpYWxpemVkID09IElOSVRJQUxJWkVEX05PTkUgfHwKIAkgICAga2V5
+LT51LnRraXAucnhbcXVldWVdLml2MzIgIT0gaXYzMikgewogCQkvKiBJVjE2IHdyYXBwZWQgYXJv
+dW5kIC0gcGVyZm9ybSBUS0lQIHBoYXNlIDEgKi8KIAkJdGtpcF9taXhpbmdfcGhhc2UxKHRrLCAm
+a2V5LT51LnRraXAucnhbcXVldWVdLCB0YSwgaXYzMik7CkBAIC0yOTgsMTkgKzMwNCwyMSBAQAog
+CQkJcHJpbnRrKCJcbiIpOwogCQl9CiAjZW5kaWYKLQkJaWYgKGtleS0+bG9jYWwtPm9wcy0+dXBk
+YXRlX3RraXBfa2V5ICYmCi0JCQlrZXktPmZsYWdzICYgS0VZX0ZMQUdfVVBMT0FERURfVE9fSEFS
+RFdBUkUpIHsKLQkJCXU4IGJjYXN0W0VUSF9BTEVOXSA9Ci0JCQkJezB4ZmYsIDB4ZmYsIDB4ZmYs
+IDB4ZmYsIDB4ZmYsIDB4ZmZ9OwotCQkJdTggKnN0YV9hZGRyID0ga2V5LT5zdGEtPnN0YS5hZGRy
+OwotCi0JCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIocmEpKQotCQkJCXN0YV9hZGRyID0g
+YmNhc3Q7Ci0KLQkJCWtleS0+bG9jYWwtPm9wcy0+dXBkYXRlX3RraXBfa2V5KAotCQkJCWxvY2Fs
+X3RvX2h3KGtleS0+bG9jYWwpLCAma2V5LT5jb25mLAotCQkJCXN0YV9hZGRyLCBpdjMyLCBrZXkt
+PnUudGtpcC5yeFtxdWV1ZV0ucDFrKTsKLQkJfQorCX0KKwlpZiAoa2V5LT5sb2NhbC0+b3BzLT51
+cGRhdGVfdGtpcF9rZXkgJiYKKwkgICAga2V5LT5mbGFncyAmIEtFWV9GTEFHX1VQTE9BREVEX1RP
+X0hBUkRXQVJFICYmCisJICAgIGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5pbml0aWFsaXplZCAhPSBJ
+TklUSUFMSVpFRF9VUERBVEVfS0VZKSB7CisJCXU4IGJjYXN0W0VUSF9BTEVOXSA9CisJCQl7MHhm
+ZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZn07CisJCXU4ICpzdGFfYWRkciA9IGtleS0+
+c3RhLT5zdGEuYWRkcjsKKworCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIocmEpKQorCQkJ
+c3RhX2FkZHIgPSBiY2FzdDsKKworCQlrZXktPmxvY2FsLT5vcHMtPnVwZGF0ZV90a2lwX2tleSgK
+KwkJCWxvY2FsX3RvX2h3KGtleS0+bG9jYWwpLCAma2V5LT5jb25mLAorCQkJc3RhX2FkZHIsIGl2
+MzIsIGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5wMWspOworCQlrZXktPnUudGtpcC5yeFtxdWV1ZV0u
+aW5pdGlhbGl6ZWQgPSBJTklUSUFMSVpFRF9VUERBVEVfS0VZOwogCX0KIAogCXRraXBfbWl4aW5n
+X3BoYXNlMih0aywgJmtleS0+dS50a2lwLnJ4W3F1ZXVlXSwgaXYxNiwgcmM0a2V5KTsK
+--00504502c3d2e035e5046c2cbb7f--
