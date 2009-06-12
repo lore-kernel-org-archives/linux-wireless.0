@@ -1,78 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47276 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752764AbZFFAEC (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:63891 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753642AbZFLLQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 20:04:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH v2 12/15] mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
-Date: Fri,  5 Jun 2009 20:03:46 -0400
-Message-Id: <1244246629-28179-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 12 Jun 2009 07:16:01 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 13/33] wl12xx: add support for fixed address in wl12xx_spi_read
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:15:41 +0300
+Message-ID: <20090612111540.8877.71432.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/rc80211_minstrel.c |    7 +++----
- net/mac80211/rc80211_pid_algo.c |    7 +++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 0a11515..0e1db92 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -75,12 +75,11 @@ use_low_rate(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	u16 fc;
-+	__le16 fc;
- 
--	fc = le16_to_cpu(hdr->frame_control);
-+	fc = hdr->frame_control;
- 
--	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) ||
--		(fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA);
-+	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
+In the wl1271 implementation, we need to read memory from the register
+partition using fixed addresses.  This change adds the possibility to request
+fixed address when calling wl12xx_spi_read() or wl12xx_spi_reg_read().
+
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+
+ drivers/net/wireless/wl12xx/spi.c |   12 ++++++++----
+ drivers/net/wireless/wl12xx/spi.h |    9 ++++++---
+ 2 files changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 0d2b13a..c3d5b73 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -258,7 +258,7 @@ int wl12xx_set_partition(struct wl12xx *wl,
  }
  
+ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
+-		     size_t len)
++		     size_t len, bool fixed)
+ {
+ 	struct spi_transfer t[3];
+ 	struct spi_message m;
+@@ -273,6 +273,9 @@ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
+ 	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+ 	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
  
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index a0bef76..5496077 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -280,7 +280,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct rc_pid_sta_info *spinfo = priv_sta;
- 	int rateidx;
--	u16 fc;
-+	__le16 fc;
++	if (fixed)
++		*cmd |= WSPI_CMD_FIXED;
++
+ 	spi_message_init(&m);
+ 	memset(t, 0, sizeof(t));
  
- 	if (txrc->rts)
- 		info->control.rates[0].count =
-@@ -290,9 +290,8 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- 			txrc->hw->conf.short_frame_max_tx_count;
+@@ -335,7 +338,7 @@ void wl12xx_spi_mem_read(struct wl12xx *wl, int addr, void *buf,
  
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = le16_to_cpu(hdr->frame_control);
--	if (!sta || !spinfo ||
--	    (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
-+	fc = hdr->frame_control;
-+	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
- 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
- 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
--- 
-1.6.0.6
+ 	physical = wl12xx_translate_mem_addr(wl, addr);
+ 
+-	wl12xx_spi_read(wl, physical, buf, len);
++	wl12xx_spi_read(wl, physical, buf, len, false);
+ }
+ 
+ void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf,
+@@ -348,13 +351,14 @@ void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf,
+ 	wl12xx_spi_write(wl, physical, buf, len);
+ }
+ 
+-void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len)
++void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len,
++			 bool fixed)
+ {
+ 	int physical;
+ 
+ 	physical = wl12xx_translate_reg_addr(wl, addr);
+ 
+-	wl12xx_spi_read(wl, physical, buf, len);
++	wl12xx_spi_read(wl, physical, buf, len, fixed);
+ }
+ 
+ void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf, size_t len)
+diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
+index 0996e48..30f9098 100644
+--- a/drivers/net/wireless/wl12xx/spi.h
++++ b/drivers/net/wireless/wl12xx/spi.h
+@@ -71,8 +71,9 @@
+ 
+ 
+ /* Raw target IO, address is not translated */
+-void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf, size_t len);
+ void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf, size_t len);
++void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
++		     size_t len, bool fixed);
+ 
+ /* Memory target IO, address is tranlated to partition 0 */
+ void wl12xx_spi_mem_read(struct wl12xx *wl, int addr, void *buf, size_t len);
+@@ -81,7 +82,8 @@ u32 wl12xx_mem_read32(struct wl12xx *wl, int addr);
+ void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val);
+ 
+ /* Registers IO */
+-void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len);
++void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len,
++			 bool fixed);
+ void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf,size_t len);
+ u32 wl12xx_reg_read32(struct wl12xx *wl, int addr);
+ void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
+@@ -95,7 +97,8 @@ int wl12xx_set_partition(struct wl12xx *wl,
+ 
+ static inline u32 wl12xx_read32(struct wl12xx *wl, int addr)
+ {
+-	wl12xx_spi_read(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
++	wl12xx_spi_read(wl, addr, &wl->buffer_32,
++			sizeof(wl->buffer_32), false);
+ 
+ 	return wl->buffer_32;
+ }
 
