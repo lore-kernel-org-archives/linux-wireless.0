@@ -1,72 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33852 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755918AbZFBOEx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 10:04:53 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 07:04:55 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Fix write callback of 'debug' which configures debug mask
-Date: Tue, 2 Jun 2009 19:28:55 +0530
-Message-ID: <1243951136-4033-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from wf-out-1314.google.com ([209.85.200.174]:37916 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669AbZFLCDg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2009 22:03:36 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so725179wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 19:03:38 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: dcbw@redhat.com, Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] libertas: remove ps_supported flag, use fwcapinfo
+Date: Thu, 11 Jun 2009 18:40:12 -0700
+Message-Id: <1244770812-14947-1-git-send-email-andrey@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle error condition on copy_from_user() properly and
-make sure a NUL terminated char[] is sent to strict_strtoul()
-for proper conversion.
+Power save support depends on the firmware capabilities rather than the
+card's hardware interface.  Use the FW_CAPINFO_PS bit in the firmware
+capabilities mask throughout the driver in place of the redundant
+ps_supported flag and don't make decisions about PS support in the
+interface drivers (with the exception of a special case in the USB
+driver).
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |   22 ++++++++++++++--------
- 1 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/net/wireless/libertas/dev.h     |    1 -
+ drivers/net/wireless/libertas/if_cs.c   |    3 ---
+ drivers/net/wireless/libertas/if_sdio.c |    3 ---
+ drivers/net/wireless/libertas/if_spi.c  |    1 -
+ drivers/net/wireless/libertas/if_usb.c  |    2 +-
+ drivers/net/wireless/libertas/wext.c    |    2 +-
+ 6 files changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index a42d631..6d20725 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -49,8 +49,9 @@ static ssize_t read_file_debug(struct file *file, char __user *user_buf,
- {
- 	struct ath_softc *sc = file->private_data;
- 	char buf[32];
--	unsigned int len = 0;
--	len += snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.debug_mask);
-+	unsigned int len;
-+
-+	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.debug_mask);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index f9ec69e..578c697 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -260,7 +260,6 @@ struct lbs_private {
+ 	u16 psmode;		/* Wlan802_11PowermodeCAM=disable
+ 				   Wlan802_11PowermodeMAX_PSP=enable */
+ 	u32 psstate;
+-	char ps_supported;
+ 	u8 needtowakeup;
  
-@@ -60,12 +61,17 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
- 	struct ath_softc *sc = file->private_data;
- 	unsigned long mask;
- 	char buf[32];
--	if (copy_from_user(buf, user_buf, (sizeof(buf) - 1) < count ?
--		(sizeof(buf) - 1) : count))
--		return 0;
--	buf[sizeof(buf)-1] = 0;
--	if (strict_strtoul(buf, 0, &mask) == 0)
--		sc->debug.debug_mask = mask;
-+	ssize_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EINVAL;
-+
-+	buf[len] = '\0';
-+	if (strict_strtoul(buf, 0, &mask))
-+		return -EINVAL;
-+
-+	sc->debug.debug_mask = mask;
- 	return count;
- }
+ 	struct assoc_request * pending_assoc_req;
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 2a5b083..f658fd6 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -933,9 +933,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 		goto out3;
+ 	}
  
+-	/* The firmware for the CF card supports powersave */
+-	priv->ps_supported = 1;
+-
+ 	ret = 0;
+ 	goto out;
+ 
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 8cdb88c..89396a7 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -1039,9 +1039,6 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	if (ret)
+ 		goto err_activate_card;
+ 
+-	if (priv->fwcapinfo & FW_CAPINFO_PS)
+-		priv->ps_supported = 1;
+-
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
+ 
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index f8c2898..2045ac3 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1117,7 +1117,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	priv->card = card;
+ 	priv->hw_host_to_card = if_spi_host_to_card;
+ 	priv->fw_ready = 1;
+-	priv->ps_supported = 1;
+ 
+ 	/* Initialize interrupt handling stuff. */
+ 	card->run_thread = 1;
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index ea3dc03..04da68e 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -188,7 +188,7 @@ static void if_usb_setup_firmware(struct lbs_private *priv)
+ 	} else {
+ 		if (le16_to_cpu(wake_method.method) == CMD_WAKE_METHOD_COMMAND_INT) {
+ 			lbs_deb_usb("Firmware seems to support PS with wake-via-command\n");
+-			priv->ps_supported = 1;
++			priv->fwcapinfo &= ~FW_CAPINFO_PS;
+ 		} else {
+ 			/* The versions which boot up this way don't seem to
+ 			   work even if we set it to the command interrupt */
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index 8bc1907..e96451c 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -712,7 +712,7 @@ static int lbs_set_power(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!priv->ps_supported) {
++	if (!(priv->fwcapinfo & FW_CAPINFO_PS)) {
+ 		if (vwrq->disabled)
+ 			return 0;
+ 		else
 -- 
-1.5.5.1
+1.5.6.3
 
