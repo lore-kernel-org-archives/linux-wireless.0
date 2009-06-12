@@ -1,112 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:59555 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335AbZFGMit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:63947 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbZFLLQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 08:38:49 -0400
-Received: by bwz9 with SMTP id 9so2475228bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 05:38:50 -0700 (PDT)
+	Fri, 12 Jun 2009 07:16:34 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 16/33] wl12xx: Add support for block reading from a fixed
+	register address
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:16:00 +0300
+Message-ID: <20090612111559.8877.68284.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
 MIME-Version: 1.0
-Reply-To: alan-jenkins@tuffmail.co.uk
-In-Reply-To: <1244088806.4145.24.camel@localhost.localdomain>
-References: <1243858256.5299.14.camel@johannes.local>
-	 <1243885494.3015.29.camel@localhost.localdomain>
-	 <4A24559D.7010201@tuffmail.co.uk>
-	 <1243928308.3192.38.camel@localhost.localdomain>
-	 <1243929706.20064.7.camel@johannes.local>
-	 <1243930703.3192.59.camel@localhost.localdomain>
-	 <20090603040315.GA10464@khazad-dum.debian.net>
-	 <1244008652.4145.7.camel@localhost.localdomain>
-	 <20090603213340.GB22809@khazad-dum.debian.net>
-	 <1244088806.4145.24.camel@localhost.localdomain>
-Date: Sun, 7 Jun 2009 13:38:50 +0100
-Message-ID: <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/4/09, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Henrique,
->
->> > > > We just need to fix the platform drivers then. They should not set
->> > > > global states since that is not what they are controlling. They
->> > > > control
->> > >
->> > > We should change things, yes.  So that the platform stores the global
->> > > state.  That was half-broken on the old core (the platform stored the
->> > > state of its own device, which could be out of sync with the global
->> > > state), but the part of it setting the global state is correct.
->> > >
->> > > That needs a new in-kernel API to tie the core to platform drivers
->> > > capable of storing global states without causing problems when drivers
->> > > are unloaded, but it is not hard.
->> > >
->> > > As for NVS events, they have a clear use case: to let rfkilld know
->> > > which
->> > > global states it could leave alone the first time it loads, and which
->> > > ones have to be restored...
->> >
->> > show me an example of a platform device that stores the global state. I
->> > think you are confusing the word platform as in system with a platform
->> > device. The ThinkPad Bluetooth and WWAN switches are platform devices
->> > and control each one specific device. Same goes for the EeePC. They are
->> > not controlling a global state.
->>
->> I don't know what big difference you see between the two uses of
->> "platform",
->> but I will just work around it to get something useful out of this mail.
->>
->> The laptop stores in NVS the state of its 'switches'.  This is as close as
->> one gets from 'storing the global state'.   When the laptop boots,
->> these devices get set by the firware to the state in NVS.  It is the best
->> place to store global state, because these devices will be in their proper
->> state (i.e. matching what will be the global state when the rfkill core
->> loads) all the time.  It also gives you for free multi-OS/multi-kernel
->> state
->> storage for these devices, and compatibility with BIOSes that let you
->> define
->> the initial state for the devices in the firmware configuration, etc.
->
-> it stores the state of its switches and why should these be enforced as
-> a global state? Who says that this is a global state? For me that sounds
-> like policy.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-We don't seem to be getting very far :-(.  I agree that these do not
-appear to be global states, just the states of individual rfkill
-devices.
+Add support for block reading (multiple bytes) from a fixed chipset
+register address. This is required for the wl1271 TX data path.
 
-So I would propose the following changes.  (I'm happy to write the
-code as well, but I think it's easier to read English).
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
- 1) remove rfkill_set_global_sw_state()
- 2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
-registration, setting a flag.
- 3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
-events, tho it may as well be set in all events)
- 4) rfkill-input preserves existing behaviour - *if enabled* - by
-initializing the global state from individual devices which have NVS.
-(As before, each _type_ of rfkill device has its own global state).
- 5) rfkill devices with NVS will have their current state preserved,
-so long as the global state has not yet been set (by userspace or by
-rfkill-input).  Of course userspace can change the state in response
-to the device being added.
+ drivers/net/wireless/wl12xx/spi.c |   12 ++++++++----
+ drivers/net/wireless/wl12xx/spi.h |    9 ++++++---
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
- => rfkilld then has the information required to implement the same
-policy as rfkill-input.  Furthermore, it will have enough information
-that it could implement file-based storage as a fallback, and still
-support NVS where available.
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index c3d5b73..9c9943f 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -301,7 +301,7 @@ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
+ }
+ 
+ void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf,
+-		      size_t len)
++		      size_t len, bool fixed)
+ {
+ 	struct spi_transfer t[2];
+ 	struct spi_message m;
+@@ -314,6 +314,9 @@ void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf,
+ 	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+ 	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
+ 
++	if (fixed)
++		*cmd |= WSPI_CMD_FIXED;
++
+ 	spi_message_init(&m);
+ 	memset(t, 0, sizeof(t));
+ 
+@@ -348,7 +351,7 @@ void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf,
+ 
+ 	physical = wl12xx_translate_mem_addr(wl, addr);
+ 
+-	wl12xx_spi_write(wl, physical, buf, len);
++	wl12xx_spi_write(wl, physical, buf, len, false);
+ }
+ 
+ void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len,
+@@ -361,13 +364,14 @@ void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len,
+ 	wl12xx_spi_read(wl, physical, buf, len, fixed);
+ }
+ 
+-void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf, size_t len)
++void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf, size_t len,
++			  bool fixed)
+ {
+ 	int physical;
+ 
+ 	physical = wl12xx_translate_reg_addr(wl, addr);
+ 
+-	wl12xx_spi_write(wl, physical, buf, len);
++	wl12xx_spi_write(wl, physical, buf, len, fixed);
+ }
+ 
+ u32 wl12xx_mem_read32(struct wl12xx *wl, int addr)
+diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
+index 30f9098..e48a552 100644
+--- a/drivers/net/wireless/wl12xx/spi.h
++++ b/drivers/net/wireless/wl12xx/spi.h
+@@ -71,7 +71,8 @@
+ 
+ 
+ /* Raw target IO, address is not translated */
+-void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf, size_t len);
++void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf,
++		      size_t len, bool fixed);
+ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
+ 		     size_t len, bool fixed);
+ 
+@@ -84,7 +85,8 @@ void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val);
+ /* Registers IO */
+ void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len,
+ 			 bool fixed);
+-void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf,size_t len);
++void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf, size_t len,
++			  bool fixed);
+ u32 wl12xx_reg_read32(struct wl12xx *wl, int addr);
+ void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
+ 
+@@ -106,7 +108,8 @@ static inline u32 wl12xx_read32(struct wl12xx *wl, int addr)
+ static inline void wl12xx_write32(struct wl12xx *wl, int addr, u32 val)
+ {
+ 	wl->buffer_32 = val;
+-	wl12xx_spi_write(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
++	wl12xx_spi_write(wl, addr, &wl->buffer_32,
++			 sizeof(wl->buffer_32), false);
+ }
+ 
+ #endif /* __WL12XX_SPI_H__ */
 
-It will also allow implementation (or configuration) of completely
-different policy to rfkill-input.  E.g. if your internal wireless
-w/NVS is broken and should be disabled, that can be done independently
-of your replacement USB wireless adaptor.
-
-Comments?
-Alan
