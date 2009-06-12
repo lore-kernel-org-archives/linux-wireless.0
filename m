@@ -1,43 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:64323 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994AbZFLHvn convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:64794 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752758AbZFLLQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 03:51:43 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1376096ywb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2009 00:51:45 -0700 (PDT)
+	Fri, 12 Jun 2009 07:16:34 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 18/33] wl12xx: Fix CMD_TEST regression via netlink.
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:16:13 +0300
+Message-ID: <20090612111612.8877.71819.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <200906112127.53124.keaneyw@gmail.com>
-References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-	<43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
-	<43e72e890906111722h678221dfrf2d4d7e082a0cd16@mail.gmail.com>
-	<200906112127.53124.keaneyw@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 12 Jun 2009 00:51:25 -0700
-Message-ID: <43e72e890906120051r63569011k1ffb10410e7ebcb6@mail.gmail.com>
-Subject: Re: rfkill on T61
-To: William Keaney <keaneyw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2009 at 6:27 PM, William Keaney<keaneyw@gmail.com> wrote:
-> On Thursday 11 June 2009 20:22:54 Luis R. Rodriguez wrote:
-> <--snip-->
->> Heh nevermind me, the 802.11 rfkill button is in a different place. Doh!
->
-> Is it? I have a T61p, which seems to have 2 switches - one master on the front
-> left side, which slides left and right; and one that toggles Bluetooth only,
-> with a combination of Fn + F5.  The Bluetooth toggle doesn't do anything
-> unless the main switch has been turned on.
+From: Ari Kauppi <Ext-Ari.Kauppi@nokia.com>
 
-Not for me, the switch in front of the laptop kills 802.11 and only
-802.11. The Fn + F5 key kills bluetooth.
+CMD_TEST via netlink API has been broken since
+e29c3f59cfbc38c3b481a2694b08962da19c4664: cmd and acx interface rework.
 
-> I don't see an independent rfkill
-> switch for the 802.11.
+The user of the interface sends the request in a buffer without the
+wl12xx_command header but expects the response to have the wl12xx_command
+header (with id and status).
 
-Strange, thinkpadisms I guess.
+This patch reverts the e29c3f5 commit for cmd.c:wl12xx_cmd_test
+and implements the needed wrapper functionality in netlink.c. Now the
+API of wl12xx_cmd_test and rest of wl12xx_cmd_* commands in cmd.c are
+similar.
 
-  Luis
+Signed-off-by: Ari Kauppi <Ext-Ari.Kauppi@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+
+ drivers/net/wireless/wl12xx/cmd.c |   35 +++++++++++------------------------
+ 1 files changed, 11 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index d98941a..04e8401 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -66,38 +66,26 @@ out:
+  * send test command to firmware
+  *
+  * @wl: wl struct
+- * @buf: buffer containing the command, without headers, no dma requirements
++ * @buf: buffer containing the command, with all headers, must work with dma
+  * @len: length of the buffer
+  * @answer: is answer needed
+- *
+- * FIXME: cmd_test users need to be converted to the new interface
+  */
+ int wl12xx_cmd_test(struct wl12xx *wl, void *buf, size_t buf_len, u8 answer)
+ {
+-	struct wl12xx_command *cmd;
+-	size_t cmd_len;
+ 	int ret;
+ 
+ 	wl12xx_debug(DEBUG_CMD, "cmd test");
+ 
+-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+-	if (!cmd) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	memcpy(cmd->parameters, buf, buf_len);
+-
+-	/* FIXME: ugly */
+-	cmd_len = sizeof(struct wl12xx_cmd_header) + buf_len;
++	ret = wl12xx_cmd_send(wl, CMD_TEST, buf, buf_len);
+ 
+-	ret = wl12xx_cmd_send(wl, CMD_TEST, cmd, cmd_len);
+ 	if (ret < 0) {
+ 		wl12xx_warning("TEST command failed");
+-		goto out;
++		return ret;
+ 	}
+ 
+ 	if (answer) {
++		struct wl12xx_command *cmd_answer;
++
+ 		/*
+ 		 * The test command got in, we can read the answer.
+ 		 * The answer would be a wl12xx_command, where the
+@@ -106,19 +94,18 @@ int wl12xx_cmd_test(struct wl12xx *wl, void *buf, size_t buf_len, u8 answer)
+ 
+ 		wl12xx_ps_elp_wakeup(wl);
+ 
+-		wl12xx_spi_mem_read(wl, wl->cmd_box_addr, cmd, cmd_len);
++		wl12xx_spi_mem_read(wl, wl->cmd_box_addr, buf, buf_len);
+ 
+ 		wl12xx_ps_elp_sleep(wl);
+ 
+-		if (cmd->header.status != CMD_STATUS_SUCCESS)
++		cmd_answer = buf;
++
++		if (cmd_answer->header.status != CMD_STATUS_SUCCESS)
+ 			wl12xx_error("TEST command answer error: %d",
+-				     cmd->header.status);
+-		memcpy(buf, cmd->parameters, buf_len);
++				     cmd_answer->header.status);
+ 	}
+ 
+-out:
+-	kfree(cmd);
+-	return ret;
++	return 0;
+ }
+ 
+ /**
+
