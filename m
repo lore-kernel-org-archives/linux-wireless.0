@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:54150 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758285AbZFRXHd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 19:07:33 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/1] ath5k: fix beacon_int handling
-Date: Fri, 19 Jun 2009 01:06:45 +0200
-Message-Id: <1245366405-27426-1-git-send-email-jirislaby@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:42648 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753397AbZFLUPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2009 16:15:52 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/8 v2.6.31 and w-t ] iwlwifi: checking for 40MHz mode
+Date: Fri, 12 Jun 2009 13:22:49 -0700
+Message-Id: <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
+References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-73ca5203366235f8a43e490767284ba8cfd8c479
-(ath5k: remove conf->beacon_int usage)
-removed bintval setting from ath5k_config. We need to init the
-interval earlier and don't touch it in add_interface anymore.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Otherwise it will be set only once by upper layer through
-bss_info_changed but not on second and further hostap executions.
+when checking for 40MHz, compare ht_protection to
+IEEE80211_HT_OP_MODE_PROTECTION_20MHZ. ht_protection is not a bit-mask
+field
 
-We ended up having bintval 1000 which rendered the AP useless on
-many clients.
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-Cc: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 55f7de0..70ba861 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -538,6 +538,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 	sc->iobase = mem; /* So we can unmap it on detach */
- 	sc->cachelsz = csz * sizeof(u32); /* convert to bytes */
- 	sc->opmode = NL80211_IFTYPE_STATION;
-+	sc->bintval = 1000;
- 	mutex_init(&sc->lock);
- 	spin_lock_init(&sc->rxbuflock);
- 	spin_lock_init(&sc->txbuflock);
-@@ -2748,9 +2749,6 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 		goto end;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index e05faa0..b2875fe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -630,7 +630,7 @@ u8 iwl_is_fat_tx_allowed(struct iwl_priv *priv,
+ 			return 0;
  	}
  
--	/* Set to a reasonable value. Note that this will
--	 * be set to mac80211's value at ath5k_config(). */
--	sc->bintval = 1000;
- 	ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
- 
- 	ret = 0;
+-	if (iwl_ht_conf->ht_protection & IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
++	if (iwl_ht_conf->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
+ 		return 1;
+ 	else
+ 		return iwl_is_channel_extension(priv, priv->band,
+@@ -826,7 +826,7 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+ 			 RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK);
+ 	if (iwl_is_fat_tx_allowed(priv, NULL)) {
+ 		/* pure 40 fat */
+-		if (rxon->flags & RXON_FLG_FAT_PROT_MSK)
++		if (ht_info->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
+ 			rxon->flags |= RXON_FLG_CHANNEL_MODE_PURE_40;
+ 		else {
+ 			/* Note: control channel is opposite of extension channel */
 -- 
-1.6.3.2
+1.5.6.3
 
