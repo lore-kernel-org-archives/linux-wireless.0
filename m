@@ -1,48 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:53705 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763485AbZFQXZC (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:63922 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757462AbZFLLQZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 19:25:02 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-References: <1245263058.31588.38.camel@johannes.local>
-	<m1y6rqwpur.fsf@fess.ebiederm.org>
-	<1245276899.31588.57.camel@johannes.local>
-From: ebiederm@xmission.com (Eric W. Biederman)
-Date: Wed, 17 Jun 2009 16:24:58 -0700
-In-Reply-To: <1245276899.31588.57.camel@johannes.local> (Johannes Berg's message of "Thu\, 18 Jun 2009 00\:14\:59 +0200")
-Message-ID: <m1r5xitpdh.fsf@fess.ebiederm.org>
+	Fri, 12 Jun 2009 07:16:25 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 10/33] wl12xx: add wl12xx_spi_reg_read() and
+	wl12xx_spi_reg_write() functions
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:15:22 +0300
+Message-ID: <20090612111521.8877.50373.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Subject: Re: [PATCH] wireless extensions: play with netns
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-> On Wed, 2009-06-17 at 13:46 -0700, Eric W. Biederman wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->> 
->> > This makes wireless extensions netns aware.
->> >
->> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> > ---
->> > Is this ok, or is this racy? I guess what I'm asking is -- will
->> > for_each_net() stop iterating over a netns that is going away before the
->> > pernet exit op is called? If yes, this should be fine.
->> 
->> for_each_net requires the rtnl_lock or the net_mutex to be safe.
->> You aren't taking either so your code is racy.
->
-> So it looks like I can also use rcu_read_lock(), but there's no
-> for_each_net_rcu(), should there be?
+In some cases we need to read more than 32 bits from the register area.
+These functions were added to support that, like the existing
+wl12xx_spi_mem_read() and wl12xx_spi_mem_write() already do for large blocks
+in the memory area.
 
-I'm not using rcu safe list manipulation.  What makes it look like
-rcu_read_lock() is safe?
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-Eric
+ drivers/net/wireless/wl12xx/spi.c |   18 ++++++++++++++++++
+ drivers/net/wireless/wl12xx/spi.h |    2 ++
+ 2 files changed, 20 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index bcdcfbc..0d2b13a 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -348,6 +348,24 @@ void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf,
+ 	wl12xx_spi_write(wl, physical, buf, len);
+ }
+ 
++void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len)
++{
++	int physical;
++
++	physical = wl12xx_translate_reg_addr(wl, addr);
++
++	wl12xx_spi_read(wl, physical, buf, len);
++}
++
++void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf, size_t len)
++{
++	int physical;
++
++	physical = wl12xx_translate_reg_addr(wl, addr);
++
++	wl12xx_spi_write(wl, physical, buf, len);
++}
++
+ u32 wl12xx_mem_read32(struct wl12xx *wl, int addr)
+ {
+ 	return wl12xx_read32(wl, wl12xx_translate_mem_addr(wl, addr));
+diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
+index 1a19557..0996e48 100644
+--- a/drivers/net/wireless/wl12xx/spi.h
++++ b/drivers/net/wireless/wl12xx/spi.h
+@@ -81,6 +81,8 @@ u32 wl12xx_mem_read32(struct wl12xx *wl, int addr);
+ void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val);
+ 
+ /* Registers IO */
++void wl12xx_spi_reg_read(struct wl12xx *wl, int addr, void *buf, size_t len);
++void wl12xx_spi_reg_write(struct wl12xx *wl, int addr, void *buf,size_t len);
+ u32 wl12xx_reg_read32(struct wl12xx *wl, int addr);
+ void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
+ 
+
