@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39830 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462AbZFGKYO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:63977 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758812AbZFLLQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 06:24:14 -0400
-Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1244368455.22643.4.camel@localhost>
-References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-	 <1244326943.12159.5.camel@localhost>  <1244334102.16810.3.camel@localhost>
-	 <1244367815.26071.4.camel@johannes.local>
-	 <1244368455.22643.4.camel@localhost>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dA85OnZ+aOc51V5Kly+z"
-Date: Sun, 07 Jun 2009 12:24:10 +0200
-Message-Id: <1244370250.2907.1.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 12 Jun 2009 07:16:44 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 19/33] wl12xx: protect wl12xx_op_set_rts_threshold()
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:16:20 +0300
+Message-ID: <20090612111620.8877.30839.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Kalle Valo <kalle.valo@nokia.com>
 
---=-dA85OnZ+aOc51V5Kly+z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The function doesn't lock the mutex before sending the acx.
 
-On Sun, 2009-06-07 at 12:54 +0300, Maxim Levitsky wrote:
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
 
-> Fine, like I expected, but still, I guess there is some 'loader' in
-> eeprom?
+ drivers/net/wireless/wl12xx/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Yes.
-
-> If there were a documentation too.
-> Isn't it possible to publish it?
->=20
-> This firmware contains so many 'magic' registers.
-
-There is some, but it's not public. We can try to document some when we
-replace the magic values by constants.
-
-johannes
-
---=-dA85OnZ+aOc51V5Kly+z
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKK5VGAAoJEODzc/N7+Qma/dYP/iUfOkbf6yuFwWLdlATdHqNp
-HvP/So597y9PjpzKpYvJQEnQJyiccWeMcJIRkeltJWc8Cel0+6zmiyjZ+LUzN4Nl
-qcZi7wm2tXC7tVa1+FRNxpOlX5/fgErkSMOmt5P09+icufXF4SR2aCHp8YAOJcGX
-TcibdA0RPQo538bbxJMdj24FKqjS+BFP2nGR72qhTeD91brhvs+aAGUVY4qaUkEg
-7qrexLxWYL21sVDkASkENsco27tHqx3xWL9qCoetScSi5OokXFxui8FUIlcXe8ke
-U9dkSTR2w5PUnFqRQE0y2SuIhTwCfQ1N4680cF54w0zIVmrJni5G5mIA9BmjxU3C
-sesPBrbcsd5ghZmtFmfG7dPQxSiNkcHHOUUXGfkYh27NpuPppSK1uOL4e3j/NbcQ
-1OyXrWDR2LWl6WwPV7NNzDAs0a/dh4atja/D/iiv2YU+typZQREQCwjJ/mKwKa9p
-2JyZjHwMLsy9SZgPRxNBzi5oZwnnZwSXu8Dj7v+G5myUI8PNdi+BiJ9dHGZQuSC4
-XTJbgPrQehaOYWB3PSCgnS+E0n0KQMVVWqLUi3vmnUlP/VdL/ZqhVurv2iqwsKq3
-0yxcqbnZ9a57m3T9OIUXxtsUj2vr28i5QzDDi6MlxEw8jGnjD7u4K1OY0o0frgoD
-JTYnLHfojEwpUTYpKfyM
-=y589
------END PGP SIGNATURE-----
-
---=-dA85OnZ+aOc51V5Kly+z--
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8feba36..7ec1749 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -957,11 +957,15 @@ static int wl12xx_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	struct wl12xx *wl = hw->priv;
+ 	int ret;
+ 
++	mutex_lock(&wl->mutex);
++
+ 	ret = wl12xx_acx_rts_threshold(wl, (u16) value);
+ 
+ 	if (ret < 0)
+ 		wl12xx_warning("wl12xx_op_set_rts_threshold failed: %d", ret);
+ 
++	mutex_unlock(&wl->mutex);
++
+ 	return ret;
+ }
+ 
 
