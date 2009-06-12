@@ -1,55 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:62050 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbZFVNlq (ORCPT
+Received: from mail-yx0-f201.google.com ([209.85.210.201]:38661 "EHLO
+	mail-yx0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbZFLAXP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 09:41:46 -0400
-Received: by ewy6 with SMTP id 6so4707761ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 06:41:48 -0700 (PDT)
-Message-ID: <4A3FA65D.5030107@gmail.com>
-Date: Mon, 22 Jun 2009 17:42:21 +0200
-From: Roel Kluin <roel.kluin@gmail.com>
+	Thu, 11 Jun 2009 20:23:15 -0400
+Received: by yxe39 with SMTP id 39so128531yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 17:23:16 -0700 (PDT)
 MIME-Version: 1.0
-To: proski@gnu.org, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] wireless: remove redundant tests on unsigned
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
+References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
+	<1244763159.27363.103.camel@violet> <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
+	<1244765167.27395.1.camel@violet> <43e72e890906111713q338c178ah34d263db43693c58@mail.gmail.com>
+	<43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Jun 2009 17:22:54 -0700
+Message-ID: <43e72e890906111722h678221dfrf2d4d7e082a0cd16@mail.gmail.com>
+Subject: Re: rfkill on T61
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bufsize and remainder are unsigned. When negative they are wrapped and caught by
-the other test.
+On Thu, Jun 11, 2009 at 5:20 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Thu, Jun 11, 2009 at 5:13 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+>> On Thu, Jun 11, 2009 at 5:06 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+>>> Hi Luis,
+>>>
+>>>> >> When I hit rfkill, I get:
+>>>> >>
+>>>> >> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
+>>>> >> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
+>>>> >>
+>>>> >> When I hit it again I get:
+>>>> >>
+>>>> >> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
+>>>> >> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
+>>>> >>
+>>>> >> The device that disappears upon rfkill is my bluetooth controller:
+>>>> >>
+>>>> >> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
+>>>> >> --- 1   2009-06-11 15:37:37.000000000 -0700
+>>>> >> +++ 2   2009-06-11 15:37:49.000000000 -0700
+>>>> >> @@ -6,7 +6,6 @@
+>>>> >>  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
+>>>> >>  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
+>>>> >>  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>>>> >> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
+>>>> >>  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
+>>>> >> Fingerprint Reader
+>>>> >>  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>>>> >>  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>>>> >>
+>>>> >> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
+>>>> >> I think this is the same behaviour I will get with bleeding edge, will
+>>>> >> try now on wireless-testing.
+>>>> >
+>>>> > what are you trying to tell us.
+>>>>
+>>>> my 802.11 device is not rfkill'ed on the T61, some patches recently
+>>>> went in to add support for rfkill on ath5k. I do have thinkpad_acpi
+>>>> loaded on this ancient 2.6.27 kernel.
+>>>>
+>>>> I'll try on wireless-testing next, build is almost done.
+>>>
+>>> still are not getting what you wanna tell us. What has Bluetooh RFKILL
+>>> switch to do with WiFi.
+>>
+>> Nothing, I really was just unaware we rfkilled bluetooth as well. Plus
+>> like I said my 802.11 device is not being rfkilled, which is what I
+>> actually did expect.
+>
+> Yeah same thing with wireless-testing.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
- drivers/net/wireless/orinoco/hermes.c      |    2 +-
- drivers/net/wireless/rtl818x/rtl8180_dev.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Heh nevermind me, the 802.11 rfkill button is in a different place. Doh!
 
-diff --git a/drivers/net/wireless/orinoco/hermes.c b/drivers/net/wireless/orinoco/hermes.c
-index f2c918c..1a2fca7 100644
---- a/drivers/net/wireless/orinoco/hermes.c
-+++ b/drivers/net/wireless/orinoco/hermes.c
-@@ -469,7 +469,7 @@ int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned bufsize,
- 	u16 rlength, rtype;
- 	unsigned nwords;
- 
--	if ((bufsize < 0) || (bufsize % 2))
-+	if (bufsize % 2)
- 		return -EINVAL;
- 
- 	err = hermes_docmd_wait(hw, HERMES_CMD_ACCESS, rid, NULL);
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index 7e65d7c..870fb98 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -280,7 +280,7 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 				(ieee80211_get_tx_rate(dev, info)->bitrate * 2) / 10);
- 		remainder = (16 * (skb->len + 4)) %
- 			    ((ieee80211_get_tx_rate(dev, info)->bitrate * 2) / 10);
--		if (remainder > 0 && remainder <= 6)
-+		if (remainder <= 6)
- 			plcp_len |= 1 << 15;
- 	}
- 
+  Luis
