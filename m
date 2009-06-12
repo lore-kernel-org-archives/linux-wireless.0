@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:42138 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757988AbZFRWE3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 18:04:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <1245361694.6495.2.camel@johannes.local>
-References: <1245328543.13790.31.camel@johannes.local> <1245329713.13790.37.camel@johannes.local>
-	<40f31dec0906181016nffa031flac8f464c929f1bc9@mail.gmail.com>
-	<43e72e890906181443g54269d1bm7ce24dcb46e7e921@mail.gmail.com>
-	<1245361694.6495.2.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 18 Jun 2009 15:04:11 -0700
-Message-ID: <43e72e890906181504i3b48b1fbj88fe485890e5f1a0@mail.gmail.com>
-Subject: Re: wireless netns work
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Georgy Berdyshev <codingmaster@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from www.tglx.de ([62.245.132.106]:48869 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753905AbZFLJrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2009 05:47:37 -0400
+Date: Fri, 12 Jun 2009 11:47:10 +0200
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-wireless@vger.kernel.org
+Cc: dcbw@redhat.com, libertas-dev@lists.infradead.org,
+	andrey@cozybit.com
+Subject: [PATCH] net/libertas: don't recursive spin lock in if_spi_e2h()
+Message-ID: <20090612094710.GA28098@www.tglx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 18, 2009 at 2:48 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-06-18 at 14:43 -0700, Luis R. Rodriguez wrote:
->
->> For example, I see you used mac80211_hwsim and was able to use two
->> wlan interfaces to talk to each other. This seems great for testing
->> purposes but it remains unclear to me the advantage of testing with
->> separate namespaces vs creating two wlan interfaces on one namespace
->> with mac80211_hwsim.
->
-> You cannot ping within one namespace and have the packets actually flow
-> over the virtual 'air'.
+|BUG: spinlock recursion on CPU#0, lbs_spi_thread/1030
+| lock: dee9a1bc, .magic: dead4ead, .owner: lbs_spi_thread/1030, .owner_cpu: 0
+|Call Trace:
+|[deec3eb0] [c0007220] show_stack+0x4c/0x15c (unreliable)
+|[deec3ef0] [c0187720] spin_bug+0x9c/0xb0
+|[deec3f10] [c0187890] _raw_spin_lock+0x54/0x148
+|[deec3f40] [c02d260c] _spin_lock_irqsave+0x2c/0x44
+|[deec3f60] [e8671800] lbs_queue_event+0x7c/0x130 [libertas]
+|[deec3f80] [e8725f04] lbs_spi_thread+0x538/0x58c [libertas_spi]
+|[deec3fe0] [c004f270] kthread+0x4c/0x88
+|[deec3ff0] [c000f33c] kernel_thread+0x4c/0x68
 
-I see, thanks! How does using a separate namespace fix this limitation?
+if_spi_e2h() is grabbing ->driver_lock just while calling
+lbs_queue_event() which is grabbing the same lock.
 
-  Luis
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ drivers/net/wireless/libertas/if_spi.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index f8c2898..b3be25b 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -827,10 +827,7 @@ static void if_spi_e2h(struct if_spi_card *card)
+ 	/* generate a card interrupt */
+ 	spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
+ 
+-	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	lbs_queue_event(priv, cause & 0xff);
+-	spin_unlock_irqrestore(&priv->driver_lock, flags);
+-
+ out:
+ 	if (err)
+ 		lbs_pr_err("%s: error %d\n", __func__, err);
+-- 
+1.6.0.6
+
