@@ -1,102 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42648 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755780AbZFLUPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:15:51 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/8] iwlwifi: modify sensitivity value for 5150
-Date: Fri, 12 Jun 2009 13:22:53 -0700
-Message-Id: <1244838175-15491-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244838175-15491-6-git-send-email-reinette.chatre@intel.com>
-References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-4-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-5-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-6-git-send-email-reinette.chatre@intel.com>
+Received: from an-out-0708.google.com ([209.85.132.242]:31378 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756442AbZFLAUt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2009 20:20:49 -0400
+Received: by an-out-0708.google.com with SMTP id d40so3536748and.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 17:20:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890906111713q338c178ah34d263db43693c58@mail.gmail.com>
+References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
+	<1244763159.27363.103.camel@violet> <43e72e890906111659h7649529dobf20b937661da8aa@mail.gmail.com>
+	<1244765167.27395.1.camel@violet> <43e72e890906111713q338c178ah34d263db43693c58@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Jun 2009 17:20:31 -0700
+Message-ID: <43e72e890906111720g314c433djee8eb03d1307cb4b@mail.gmail.com>
+Subject: Re: rfkill on T61
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Thu, Jun 11, 2009 at 5:13 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Thu, Jun 11, 2009 at 5:06 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+>> Hi Luis,
+>>
+>>> >> When I hit rfkill, I get:
+>>> >>
+>>> >> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
+>>> >> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
+>>> >>
+>>> >> When I hit it again I get:
+>>> >>
+>>> >> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
+>>> >> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
+>>> >>
+>>> >> The device that disappears upon rfkill is my bluetooth controller:
+>>> >>
+>>> >> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
+>>> >> --- 1   2009-06-11 15:37:37.000000000 -0700
+>>> >> +++ 2   2009-06-11 15:37:49.000000000 -0700
+>>> >> @@ -6,7 +6,6 @@
+>>> >>  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
+>>> >>  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
+>>> >>  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>>> >> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
+>>> >>  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
+>>> >> Fingerprint Reader
+>>> >>  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>>> >>  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+>>> >>
+>>> >> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
+>>> >> I think this is the same behaviour I will get with bleeding edge, will
+>>> >> try now on wireless-testing.
+>>> >
+>>> > what are you trying to tell us.
+>>>
+>>> my 802.11 device is not rfkill'ed on the T61, some patches recently
+>>> went in to add support for rfkill on ath5k. I do have thinkpad_acpi
+>>> loaded on this ancient 2.6.27 kernel.
+>>>
+>>> I'll try on wireless-testing next, build is almost done.
+>>
+>> still are not getting what you wanna tell us. What has Bluetooh RFKILL
+>> switch to do with WiFi.
+>
+> Nothing, I really was just unaware we rfkilled bluetooth as well. Plus
+> like I said my 802.11 device is not being rfkilled, which is what I
+> actually did expect.
 
-In 5150 there is a long delay between the AGC(Automatic Gain Control) command
-till the RF is stabilized causing us to miss detections when there was
-adjacent channel noise, so we need to adjusted the Sensitivity calibration
-for 5150 differently.
+Yeah same thing with wireless-testing.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |   27 +++++++++++++++++++++++++--
- 1 files changed, 25 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index b3c648c..0e445a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -407,6 +407,28 @@ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
- 	.nrg_th_ofdm = 95,
- };
- 
-+static struct iwl_sensitivity_ranges iwl5150_sensitivity = {
-+	.min_nrg_cck = 95,
-+	.max_nrg_cck = 0, /* not used, set to 0 */
-+	.auto_corr_min_ofdm = 90,
-+	.auto_corr_min_ofdm_mrc = 170,
-+	.auto_corr_min_ofdm_x1 = 105,
-+	.auto_corr_min_ofdm_mrc_x1 = 220,
-+
-+	.auto_corr_max_ofdm = 120,
-+	.auto_corr_max_ofdm_mrc = 210,
-+	/* max = min for performance bug in 5150 DSP */
-+	.auto_corr_max_ofdm_x1 = 105,
-+	.auto_corr_max_ofdm_mrc_x1 = 220,
-+
-+	.auto_corr_min_cck = 125,
-+	.auto_corr_max_cck = 200,
-+	.auto_corr_min_cck_mrc = 170,
-+	.auto_corr_max_cck_mrc = 400,
-+	.nrg_th_cck = 95,
-+	.nrg_th_ofdm = 95,
-+};
-+
- static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- 					   size_t offset)
- {
-@@ -826,8 +848,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 					BIT(IEEE80211_BAND_5GHZ);
- 	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
- 
--	priv->hw_params.sens = &iwl5000_sensitivity;
--
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
- 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
-@@ -836,9 +856,11 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
- 		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
- 
-+	/* Set initial sensitivity parameters */
- 	/* Set initial calibration set */
- 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
- 	case CSR_HW_REV_TYPE_5150:
-+		priv->hw_params.sens = &iwl5150_sensitivity;
- 		priv->hw_params.calib_init_cfg =
- 			BIT(IWL_CALIB_DC)		|
- 			BIT(IWL_CALIB_LO)		|
-@@ -847,6 +869,7 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 		break;
- 	default:
-+		priv->hw_params.sens = &iwl5000_sensitivity;
- 		priv->hw_params.calib_init_cfg =
- 			BIT(IWL_CALIB_XTAL)		|
- 			BIT(IWL_CALIB_LO)		|
--- 
-1.5.6.3
-
+  Luis
