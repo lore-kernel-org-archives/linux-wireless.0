@@ -1,39 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:33063 "EHLO
-	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905AbZFGGX1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 02:23:27 -0400
-Date: Sun, 7 Jun 2009 08:25:43 +0200
-From: Sam Ravnborg <sam@ravnborg.org>
-To: Sergey Lapin <slapin@ossfans.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 2/5] net: add IEEE 802.15.4 socket family implementation
-Message-ID: <20090607062543.GA10730@uranus.ravnborg.org>
-References: <cover.1244337432.git.slapin@ossfans.org> <47c250c4bb2069d4faa2d6c5217d1aae15a5bc34.1244337432.git.slapin@ossfans.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47c250c4bb2069d4faa2d6c5217d1aae15a5bc34.1244337432.git.slapin@ossfans.org>
+Received: from mga02.intel.com ([134.134.136.20]:6527 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756740AbZFLUPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2009 16:15:52 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 7/8] iwlwifi: no need to refer to max_nrg_cck range value
+Date: Fri, 12 Jun 2009 13:22:54 -0700
+Message-Id: <1244838175-15491-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1244838175-15491-7-git-send-email-reinette.chatre@intel.com>
+References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-4-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-5-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-6-git-send-email-reinette.chatre@intel.com>
+ <1244838175-15491-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> --- /dev/null
-> +++ b/net/ieee802154/Makefile
-> @@ -0,0 +1,4 @@
-> +obj-$(CONFIG_IEEE802154) +=	af_802154.o
-> +af_802154-objs		:= af_ieee802154.o raw.o dgram.o
-> +
-> +EXTRA_CFLAGS += -Wall -DDEBUG
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Please change this to following style:
-> +obj-$(CONFIG_IEEE802154) +=  af_802154.o
-> +af_802154-y               := af_ieee802154.o raw.o dgram.o
-> +
-> +ccflags-y += -Wall -DDEBUG
+max_nrg_cck value inside the sensitivity range structure is not needed
+for sensitivity calibration.
+Keep the parameter in sensitivity structure but set the value to "0" in case
+needed in the future implementation.
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-calib.c |    7 +------
+ 3 files changed, 3 insertions(+), 8 deletions(-)
 
-	Sam
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 8f3d4bc..edbb0bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -728,7 +728,7 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
+ 
+ static struct iwl_sensitivity_ranges iwl4965_sensitivity = {
+ 	.min_nrg_cck = 97,
+-	.max_nrg_cck = 0,
++	.max_nrg_cck = 0, /* not used, set to 0 */
+ 
+ 	.auto_corr_min_ofdm = 85,
+ 	.auto_corr_min_ofdm_mrc = 170,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 0e445a9..85e8bac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -388,7 +388,7 @@ void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
+ 
+ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
+ 	.min_nrg_cck = 95,
+-	.max_nrg_cck = 0,
++	.max_nrg_cck = 0, /* not used, set to 0 */
+ 	.auto_corr_min_ofdm = 90,
+ 	.auto_corr_min_ofdm_mrc = 170,
+ 	.auto_corr_min_ofdm_x1 = 120,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
+index a5d6367..f8bf592 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
+@@ -251,12 +251,7 @@ static int iwl_sens_energy_cck(struct iwl_priv *priv,
+ 
+ 		/* increase energy threshold (reduce nrg value)
+ 		 *   to decrease sensitivity */
+-		if (data->nrg_th_cck >
+-			(ranges->max_nrg_cck + NRG_STEP_CCK))
+-			data->nrg_th_cck = data->nrg_th_cck
+-						 - NRG_STEP_CCK;
+-		else
+-			data->nrg_th_cck = ranges->max_nrg_cck;
++		data->nrg_th_cck = data->nrg_th_cck - NRG_STEP_CCK;
+ 	/* Else if we got fewer than desired, increase sensitivity */
+ 	} else if (false_alarms < min_false_alarms) {
+ 		data->nrg_curr_state = IWL_FA_TOO_FEW;
+-- 
+1.5.6.3
+
