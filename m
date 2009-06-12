@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:42364 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725AbZFHRLR convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:64714 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756096AbZFLLQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 13:11:17 -0400
-Received: by bwz9 with SMTP id 9so3224100bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 10:11:18 -0700 (PDT)
+	Fri, 12 Jun 2009 07:16:21 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 07/33] wl12xx: use wl12xx_mem_read32() to read the rx counter
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Jun 2009 14:15:00 +0300
+Message-ID: <20090612111500.8877.4147.stgit@tikku>
+In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
+References: <20090612110225.8877.92418.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
-References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com>
-Date: Mon, 8 Jun 2009 19:11:18 +0200
-Message-ID: <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com>
-Subject: Testing AP mode with WLAN-USB-Stick: How to obtain?
-From: Stefan Steuerwald <salsasepp@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+From: Kalle Valo <kalle.valo@nokia.com>
 
-I have tried unsuccessfully to obtain any WLAN USB stick with a
-chipset that supports AP mode.
-This is for testing a mobile device that is supposed to work as an AP
-with iPod/iPhone life forms.
+As a side effect the transfer is now DMA safe.
 
-There only seem to be two choices: p54usb-based (preferred) and
-rt2500-based devices. No luck in buying any of the listed devices
-(they seem obsolete).
-Turns out that anything current I can buy probably has RTL8187, RT73
-or RT2800, and anything used I get from ebay is not what it seems
-("Netgear WG111 v2" can mean at least two different things I know of,
-both unsuitable).
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-Any pointers on
-a) where to click-and-buy a stick that supports AP mode, or
-b) whom to send money in exchange for a used stick are VERY much appreciated.
+ drivers/net/wireless/wl12xx/wl1251.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Thank you,
-  Stefan.
+diff --git a/drivers/net/wireless/wl12xx/wl1251.c b/drivers/net/wireless/wl12xx/wl1251.c
+index 1a352cf..e484a23 100644
+--- a/drivers/net/wireless/wl12xx/wl1251.c
++++ b/drivers/net/wireless/wl12xx/wl1251.c
+@@ -415,8 +415,8 @@ static void wl1251_irq_work(struct work_struct *work)
+ 	wl12xx_debug(DEBUG_IRQ, "intr: 0x%x", intr);
+ 
+ 	if (wl->data_path) {
+-		wl12xx_spi_mem_read(wl, wl->data_path->rx_control_addr,
+-				    &wl->rx_counter, sizeof(u32));
++		wl->rx_counter =
++			wl12xx_mem_read32(wl, wl->data_path->rx_control_addr);
+ 
+ 		/* We handle a frmware bug here */
+ 		switch ((wl->rx_counter - wl->rx_handled) & 0xf) {
+
