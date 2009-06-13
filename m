@@ -1,104 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web55301.mail.re4.yahoo.com ([206.190.58.180]:47197 "HELO
-	web55301.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755650AbZFBDtk (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2518 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbZFMU6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 23:49:40 -0400
-Message-ID: <837634.89083.qm@web55301.mail.re4.yahoo.com>
-Date: Mon, 1 Jun 2009 20:43:01 -0700 (PDT)
-From: austinxxh-ath9k@yahoo.com
-Reply-To: austinxxh-ath9k@yahoo.com
-Subject: ath9k/ath5k + 80211s crash
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@lists.open80211s.org
+	Sat, 13 Jun 2009 16:58:17 -0400
+Date: Sat, 13 Jun 2009 16:57:37 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Pierre Ossman <pierre@ossman.eu>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+Message-ID: <20090613205737.GA30439@hash.localnet>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <1244685780-28930-8-git-send-email-me@bobcopeland.com> <20090613132144.6c7783bc@mjolnir.ossman.eu> <87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090613220908.271865cd@mjolnir.ossman.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Jun 13, 2009 at 10:09:08PM +0200, Pierre Ossman wrote:
+> On Sat, 13 Jun 2009 19:00:41 +0300
+> Kalle Valo <kalle.valo@iki.fi> wrote:
+> 
+> That doesn't make sense. If the card doesn't have power then there will
+> be no device and no interface to bring up.
 
-Below is what I saw today(compat-wireless 2009-05-21), I have both an ath9k and an ath5k card. ath9k crashes (see below), ath5k will just reboot the board after "ifconfig mesh up", any idea?
-thanks,
-X Xiao
+For SPI, you would register the platform driver with the SPI subsystem,
+which gives you the ability to call the set_power callback at any time.
+There's not a problem starting the driver if there is no device (as I
+understand it, SPI is so simple there's no way to probe the bus anyway).
 
+It would be nice to allow the SDIO driver to similarly invoke the
+platform->set_power() callback at interface up/down time (that's why
+there's wl12xx_sdio_set_power() which does nothing right now).  However,
+then the device will disappear from the bus...
 
-BusyBox v1.13.4 (2009-06-01 21:18:32 CDT) built-in shell (ash)
-Enter 'help' for a list of built-in commands.
+> +	wifi_ctrl->set_power(1);	/* Power On */
 
-  _______                     ________        __
- |       |.-----.-----.-----.|  |  |  |.----.|  |_
- |   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
- |_______||   __|_____|__|__||________||__|  |____|
-          |__| W I R E L E S S   F R E E D O M
- KAMIKAZE (bleeding edge, r16290) -------------------
-  * 10 oz Vodka       Shake well with ice and strain
-  * 10 oz Triple sec  mixture into 10 shot glasses.
-  * 10 oz lime juice  Salute!
- ---------------------------------------------------
-root@OpenWrt:/# iw dev wlan0 interface add mesh type mp mesh_id mesh
-root@OpenWrt:/# ifconfig -a | grep mesh
-mesh      Link encap:Ethernet  HWaddr 00:0B:6B:57:09:37  
-root@OpenWrt:/# ifconfig mesh up
-PCI error 1 at PCI addr 0x100109dc
-Data bus error, epc == c024f12c, ra == c024f128
-Oops[#1]:
-Cpu 0
-$ 0   : 00000000 00000000 deadc0de 000ffc00
-$ 4   : b00109dc b0010000 b0010000 0000000a
-$ 8   : 80170000 83aeaed0 00080000 00000000
-$12   : 00000000 839f04a8 802a0818 00000000
-$16   : 000009dc 8016b710 83aea000 000003ff
-$20   : 83aeaea8 8016b6bc 0000001c 00000007
-$24   : 00000000 80070000                  
-$28   : 82c5c000 82c5dc90 7fb0d068 c024f128
-Hi    : 000000d8
-Lo    : 00000144
-epc   : c024f12c 0xc024f12c
-    Not tainted
-ra    : c024f128 0xc024f128
-Status: 1000f403    KERNEL EXL IE 
-Cause : 1080001c
-PrId  : 00019374 (MIPS 24Kc)
-Modules linked in: nf_nat_tftp nf_conntrack_tftp nf_nat_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp i
-Process ifconfig (pid: 896, threadinfo=82c5c000, task=839f0000, tls=00000000)
-Stack : 83aea000 83a9d680 00000000 00000018 83aea000 83b109a0 83aea000 83aea000
-        00000300 83b101e0 82cddeb8 83b109a8 c025977c c0259700 ffffffff 00000000
-        00000002 00000000 00000003 00000000 00080000 00000000 00000000 00000000
-        00000000 00000000 00000000 00000000 00000001 83b109a0 82cddec0 c02599e0
-        00000000 c025a164 00000001 8009525c 82cddb80 00000300 83b101e0 82cdd800
-        ...
-Call Trace:[<c025977c>] 0xc025977c
-[<c0259700>] 0xc0259700
-[<c02599e0>] 0xc02599e0
-[<c025a164>] 0xc025a164
-[<8009525c>] 0x8009525c
-[<c01dcb64>] 0xc01dcb64
-[<c01ff3b8>] 0xc01ff3b8
-[<800dc19c>] 0x800dc19c
-[<c01eb4b0>] 0xc01eb4b0
-[<800b4040>] 0x800b4040
-[<801b85e8>] 0x801b85e8
-[<801b4454>] 0x801b4454
-[<800bdc94>] 0x800bdc94
-[<800bdc94>] 0x800bdc94
-[<801b632c>] 0x801b632c
-[<801b6b80>] 0x801b6b80
-[<801ffbf8>] 0x801ffbf8
-[<801ff9c8>] 0x801ff9c8
-[<801b75f8>] 0x801b75f8
-[<801b75ec>] 0x801b75ec
-[<801a75b8>] 0x801a75b8
-[<800e0890>] 0x800e0890
-[<800e0db0>] 0x800e0db0
-[<801a7e30>] 0x801a7e30
-[<800d5344>] 0x800d5344
-[<800d51c0>] 0x800d51c0
-[<801a7ebc>] 0x801a7ebc
-[<800e0e64>] 0x800e0e64
-[<80062504>] 0x80062504
-[<80062504>] 0x80062504
+Except for the problems outlined above, this would be invoked from
+wl12xx_sdio_set_power().  But without it being up at start, probe()
+won't work anyway.  So it sounds like wl12xx_sdio_set_power() will
+have to be a no-op for sdio devices unless there's some register
+we can poke on the chip to put it to sleep.
 
+> I think this should be somewhere under arch/ in the board setup code,
+> where currently you have some code adding the "msm_wifi" platform
+> device.
 
-Code: 02a0f809  02042021  8e450008 <34440800> 0220f809  02052821  8e440008  26c21100  3053fffc 
-Segmentation fault
+Yeah, in fact I tried that a while ago but something didn't work right,
+some ordering issue perhaps.  I'll try again.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
