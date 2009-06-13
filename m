@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755070AbZFRWVy (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:1833 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbZFMMji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 18:21:54 -0400
-Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:21:56 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 05/23] cfg80211: infer WPA and WPA2 support from TKIP and CCMP
-Date: Thu, 18 Jun 2009 23:21:17 +0100
-Message-Id: <1245363695-8289-6-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+	Sat, 13 Jun 2009 08:39:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <6097c490906122237l2be1836dsd30c3160f1a15ae8@mail.gmail.com>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+	 <9e4733910906122021k4568df6rd80fb915b64ac12@mail.gmail.com>
+	 <6097c490906122237l2be1836dsd30c3160f1a15ae8@mail.gmail.com>
+Date: Sat, 13 Jun 2009 08:39:39 -0400
+Message-ID: <9e4733910906130539k4af2dde3k1fe85e8932ef563e@mail.gmail.com>
+Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
+From: Jon Smirl <jonsmirl@gmail.com>
+To: maxim@mox.ru
+Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext-compat.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+On Sat, Jun 13, 2009 at 1:37 AM, Maxim Osipov<maxim.osipov@gmail.com> wrote:
+> On Sat, Jun 13, 2009 at 7:21 AM, Jon Smirl<jonsmirl@gmail.com> wrote:
+>> On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
+>> Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
+>>> Hi,
+>>>
+>>> As a part of research activities the Embedded Systems - Open Platform Group
+>>> from Siemens Corporate Technology we are working on adding support for
+>>> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
+>>> implementation is neither certified nor even feature complete. However
+>>> we'd like to present current state of our patchset to the Linux developers
+>>> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
+>>> but more like an RFC.
+>>>
+>>
+>> The Zigbee alliance requires a minimum of $3,500/yr from any company
+>> making a product based on the spec. How are you going to reconcile
+>> this requirement with the GPL? They exempt non-commercial users but
+>> the GPL doesn't allow code to be free for one purpose and pay for
+>> another.
+>>
+>
+> For now, we do not release any ZigBee implementation. BTW - could you
+> refer to particular clause of GPL, which doesn't allow user to pay for
+> code?
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 2f7e776..cae3b52 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -201,16 +201,16 @@ int cfg80211_wext_giwrange(struct net_device *dev,
- 	range->avg_qual.noise = range->max_qual.noise / 2;
- 	range->avg_qual.updated = range->max_qual.updated;
- 
--	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
--
- 	for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
- 		switch (wdev->wiphy->cipher_suites[c]) {
- 		case WLAN_CIPHER_SUITE_TKIP:
--			range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
-+			range->enc_capa |= (IW_ENC_CAPA_CIPHER_TKIP |
-+					    IW_ENC_CAPA_WPA);
- 			break;
- 
- 		case WLAN_CIPHER_SUITE_CCMP:
--			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
-+			range->enc_capa |= (IW_ENC_CAPA_CIPHER_CCMP |
-+					    IW_ENC_CAPA_WPA2);
- 			break;
- 
- 		case WLAN_CIPHER_SUITE_WEP40:
+    b) You must cause any work that you distribute or publish, that in
+    whole or in part contains or is derived from the Program or any
+    part thereof, to be licensed as a whole at no charge to all third
+    parties under the terms of this License.
+
+You can charge a duplication fee when you do the copying. It is fine
+to charge for things like support or the hardware that comes with the
+software.
+
+
+>
+> Regards,
+> Maxim
+>
+
+
+
 -- 
-1.6.0.6
-
+Jon Smirl
+jonsmirl@gmail.com
