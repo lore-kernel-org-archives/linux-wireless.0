@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2518 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbZFMU6R (ORCPT
+Received: from mail-fx0-f206.google.com ([209.85.220.206]:54141 "EHLO
+	mail-fx0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958AbZFMUvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2009 16:58:17 -0400
-Date: Sat, 13 Jun 2009 16:57:37 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Pierre Ossman <pierre@ossman.eu>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	san@google.com
+	Sat, 13 Jun 2009 16:51:42 -0400
+Received: by fxm2 with SMTP id 2so109717fxm.37
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2009 13:51:43 -0700 (PDT)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Pierre Ossman <pierre@ossman.eu>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, san@google.com
 Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
-Message-ID: <20090613205737.GA30439@hash.localnet>
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <1244685780-28930-8-git-send-email-me@bobcopeland.com> <20090613132144.6c7783bc@mjolnir.ossman.eu> <87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	<20090613132144.6c7783bc@mjolnir.ossman.eu>
+	<87bposnmxi.fsf@litku.valot.fi> <1244922097.1852.4.camel@violet>
+	<873aa3opsr.fsf@litku.valot.fi> <1244924647.1852.10.camel@violet>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 13 Jun 2009 23:44:57 +0300
+In-Reply-To: <1244924647.1852.10.camel@violet> (Marcel Holtmann's message of "Sat\, 13 Jun 2009 22\:24\:07 +0200")
+Message-ID: <87y6rvn9rq.fsf@litku.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090613220908.271865cd@mjolnir.ossman.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 13, 2009 at 10:09:08PM +0200, Pierre Ossman wrote:
-> On Sat, 13 Jun 2009 19:00:41 +0300
-> Kalle Valo <kalle.valo@iki.fi> wrote:
-> 
-> That doesn't make sense. If the card doesn't have power then there will
-> be no device and no interface to bring up.
+Marcel Holtmann <marcel@holtmann.org> writes:
 
-For SPI, you would register the platform driver with the SPI subsystem,
-which gives you the ability to call the set_power callback at any time.
-There's not a problem starting the driver if there is no device (as I
-understand it, SPI is so simple there's no way to probe the bus anyway).
+>> So rfkill is on the opposite side of wl12xx compared to the actual hw
+>> power line.
+>
+> we do have the RFKILL (aka soft killswitch) that is now integrated with
+> mac80211 and we do have separate RFKILL hardware killswitches.
+>
+> For example the Bluetooth pieces inside a laptop now have a Bluetooth
+> hardware killswitch (behind a platform device) and the soft killswitch
+> from the Bluetooth subsystem. They are two independent pieces.
 
-It would be nice to allow the SDIO driver to similarly invoke the
-platform->set_power() callback at interface up/down time (that's why
-there's wl12xx_sdio_set_power() which does nothing right now).  However,
-then the device will disappear from the bus...
+Oh, I didn't know that. I need to some studying now. Thanks.
 
-> +	wifi_ctrl->set_power(1);	/* Power On */
+> RFKILL is a confusing beast ;)
 
-Except for the problems outlined above, this would be invoked from
-wl12xx_sdio_set_power().  But without it being up at start, probe()
-won't work anyway.  So it sounds like wl12xx_sdio_set_power() will
-have to be a no-op for sdio devices unless there's some register
-we can poke on the chip to put it to sleep.
-
-> I think this should be somewhere under arch/ in the board setup code,
-> where currently you have some code adding the "msm_wifi" platform
-> device.
-
-Yeah, in fact I tried that a while ago but something didn't work right,
-some ordering issue perhaps.  I'll try again.
+That's what everyone seem to say :)
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Kalle Valo
