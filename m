@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f187.google.com ([209.85.222.187]:50506 "EHLO
-	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437AbZFOUAl (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:35565 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761984AbZFMQAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 16:00:41 -0400
-Received: by pzk17 with SMTP id 17so2163931pzk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2009 13:00:43 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org, dcbw@redhat.com,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] libertas: Fix re-enabling IEEE PS with WPA/WPA2
-Date: Mon, 15 Jun 2009 13:01:51 -0700
-Message-Id: <1245096111-20884-1-git-send-email-andrey@cozybit.com>
+	Sat, 13 Jun 2009 12:00:42 -0400
+Received: by bwz9 with SMTP id 9so2586118bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2009 09:00:44 -0700 (PDT)
+To: Pierre Ossman <pierre@ossman.eu>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	<20090613132144.6c7783bc@mjolnir.ossman.eu>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 13 Jun 2009 19:00:41 +0300
+In-Reply-To: <20090613132144.6c7783bc@mjolnir.ossman.eu> (Pierre Ossman's message of "Sat\, 13 Jun 2009 13\:21\:44 +0200")
+Message-ID: <87bposnmxi.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With IEEE PS enabled, the driver will temporarily take the device out of
-PS mode to issue commands and then re-enable PS once the commands have
-completed.  With WPA or WPA2 security, the driver fails to re-enable PS
-mode because of a check for key lengths that are always zero.
+Pierre Ossman <pierre@ossman.eu> writes:
 
-This patch removes the key lengths check (the local copy of the keys is
-not maintained) and fixes IEEE PS mode with WPA or WPA2 security.
-Tested on GSPI and SDIO interfaces with V9 firmware.
+> On Wed, 10 Jun 2009 22:03:00 -0400
+> Bob Copeland <me@bobcopeland.com> wrote:
+>
+>> This adds the wl12xx_sdio module, enabling the SDIO interface for
+>> wl12xx, as used by the Google G1 phone and others.
+>> 
+>> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+>> ---
+>
+> I think the drivers looks quite ok. There are really just a few things
+> I'm concerned about:
+>
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- drivers/net/wireless/libertas/cmd.c |   29 +++++++----------------------
- 1 files changed, 7 insertions(+), 22 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 01db705..5825396 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1782,32 +1782,17 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 		lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
- 			    le16_to_cpu(cmd->command));
- 		lbs_submit_command(priv, cmdnode);
--	} else {
-+	} else if ((priv->psmode != LBS802_11POWERMODECAM) &&
-+		   (priv->psstate == PS_STATE_FULL_POWER) &&
-+		   ((priv->connect_status == LBS_CONNECTED) ||
-+		   (priv->mesh_connect_status == LBS_CONNECTED))) {
- 		/*
- 		 * check if in power save mode, if yes, put the device back
- 		 * to PS mode
- 		 */
--		if ((priv->psmode != LBS802_11POWERMODECAM) &&
--		    (priv->psstate == PS_STATE_FULL_POWER) &&
--		    ((priv->connect_status == LBS_CONNECTED) ||
--		    (priv->mesh_connect_status == LBS_CONNECTED))) {
--			if (priv->secinfo.WPAenabled ||
--			    priv->secinfo.WPA2enabled) {
--				/* check for valid WPA group keys */
--				if (priv->wpa_mcast_key.len ||
--				    priv->wpa_unicast_key.len) {
--					lbs_deb_host(
--					       "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
--					       " go back to PS_SLEEP");
--					lbs_ps_sleep(priv, 0);
--				}
--			} else {
--				lbs_deb_host(
--				       "EXEC_NEXT_CMD: cmdpendingq empty, "
--				       "go back to PS_SLEEP");
--				lbs_ps_sleep(priv, 0);
--			}
--		}
-+		lbs_deb_host("EXEC_NEXT_CMD: cmdpendingq empty, "
-+				"go back to PS_SLEEP");
-+		lbs_ps_sleep(priv, 0);
- 	}
- 
- 	ret = 0;
+> - Why do you have a platform device with the sole purpose of enabling
+> power to the SDIO card? Shouldn't this be handled in the arch code?
+
+wl1251 has these lines to the host:
+
+o four lines for SDIO or SPI, configured to SDIO by default
+o power line
+o interrupt line
+
+When the power line is pulled up, the chip will power on itself.
+Whenever the power line goes down, the chip will power off. For example,
+the power line can be controlled with a GPIO pin from the host. But how
+the power line is really controlled, is board specific and should be
+handled in the board file. And here comes the set_power() function to
+the picture. The wl1251 driver will call set_power() function every time
+user space calls wlan interface up or down.
+
+Pierre, how do you propose we should do this? I understood based on
+discussions from linux-omap that this is a common way.
+
 -- 
-1.5.6.3
-
+Kalle Valo
