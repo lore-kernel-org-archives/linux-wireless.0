@@ -1,158 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:25727 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239AbZFCXPv (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.26]:41386 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238AbZFMDVc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 19:15:51 -0400
-Date: Thu, 4 Jun 2009 03:15:37 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au,
-	slapin@ossfans.org
-Subject: Re: [PATCH 2/6] Add constants for the ieee 802.15.4/ZigBee stack
-Message-ID: <20090603231537.GB32561@doriath.ww600.siemens.net>
-References: <1244021629-18409-3-git-send-email-dbaryshkov@gmail.com> <20090603.030826.03512651.davem@davemloft.net> <20090603105151.GA20508@doriath.ww600.siemens.net> <20090603.141919.261921857.davem@davemloft.net>
+	Fri, 12 Jun 2009 23:21:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090603.141919.261921857.davem@davemloft.net>
+In-Reply-To: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+Date: Fri, 12 Jun 2009 23:21:34 -0400
+Message-ID: <9e4733910906122021k4568df6rd80fb915b64ac12@mail.gmail.com>
+Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
+From: Jon Smirl <jonsmirl@gmail.com>
+To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 03, 2009 at 02:19:19PM -0700, David Miller wrote:
-> From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-> Date: Wed, 3 Jun 2009 14:51:51 +0400
-> 
-> > Please check the updated patch. We do request several unused in this
-> > serie value (like AF_ZIGBEE), but we'd like for them to be merged ASAP
-> > as their are a part of ABI.
-> 
-> I don't allow anyone else to do this, and neither will I
-> allow it for you either.
+On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
+Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
+> Hi,
+>
+> As a part of research activities the Embedded Systems - Open Platform Group
+> from Siemens Corporate Technology we are working on adding support for
+> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
+> implementation is neither certified nor even feature complete. However
+> we'd like to present current state of our patchset to the Linux developers
+> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
+> but more like an RFC.
+>
+> The project page is available at http://apps.sourceforge.net/trac/linux-zigbee
+> with source code of kernel part available from git at
+> http://zigbee-linux.git.sourceforge.net, mirrored for convenience at
+> git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
+>
+> The source code for userspace utils is available from git at
+> http://linux-zigbee.git.sourceforge.net/
 
-Sorry, we didn't know about this policy. No need to be that harsh!
-Here is the cleaned up version.
+The Zigbee alliance requires a minimum of $3,500/yr from any company
+making a product based on the spec. How are you going to reconcile
+this requirement with the GPL? They exempt non-commercial users but
+the GPL doesn't allow code to be free for one purpose and pay for
+another.
 
->From d1e359b7f66a4acc8b41bbeaeeeee4c81501e4bc Mon Sep 17 00:00:00 2001
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Date: Thu, 4 Jun 2009 03:09:40 +0400
-Subject: [PATCH 2/6] Add constants for the ieee 802.15.4/ZigBee stack
-
-IEEE 802.15.4/ZigBee stack requires several constants to be defined/adjusted.
-
-Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Sergey Lapin <slapin@ossfans.org>
----
- include/linux/if_arp.h   |    2 ++
- include/linux/if_ether.h |    1 +
- include/linux/socket.h   |    4 +++-
- net/core/dev.c           |    6 ++++--
- net/core/sock.c          |    3 +++
- 5 files changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/if_arp.h b/include/linux/if_arp.h
-index 5ff8980..b554300 100644
---- a/include/linux/if_arp.h
-+++ b/include/linux/if_arp.h
-@@ -86,6 +86,8 @@
- #define ARPHRD_IEEE80211 801		/* IEEE 802.11			*/
- #define ARPHRD_IEEE80211_PRISM 802	/* IEEE 802.11 + Prism2 header  */
- #define ARPHRD_IEEE80211_RADIOTAP 803	/* IEEE 802.11 + radiotap header */
-+#define ARPHRD_IEEE802154	  804
-+#define ARPHRD_IEEE802154_PHY	  805
- 
- #define ARPHRD_PHONET	820		/* PhoNet media type		*/
- #define ARPHRD_PHONET_PIPE 821		/* PhoNet pipe header		*/
-diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
-index cfe4fe1..11a60e4 100644
---- a/include/linux/if_ether.h
-+++ b/include/linux/if_ether.h
-@@ -106,6 +106,7 @@
- #define ETH_P_DSA	0x001B		/* Distributed Switch Arch.	*/
- #define ETH_P_TRAILER	0x001C		/* Trailer switch tagging	*/
- #define ETH_P_PHONET	0x00F5		/* Nokia Phonet frames          */
-+#define ETH_P_IEEE802154 0x00F6		/* IEEE802.15.4 frame		*/
- 
- /*
-  *	This is an Ethernet frame header.
-diff --git a/include/linux/socket.h b/include/linux/socket.h
-index 421afb4..642d1f1 100644
---- a/include/linux/socket.h
-+++ b/include/linux/socket.h
-@@ -194,7 +194,8 @@ struct ucred {
- #define AF_RXRPC	33	/* RxRPC sockets 		*/
- #define AF_ISDN		34	/* mISDN sockets 		*/
- #define AF_PHONET	35	/* Phonet sockets		*/
--#define AF_MAX		36	/* For now.. */
-+#define AF_IEEE802154	36	/* IEEE802154 sockets		*/
-+#define AF_MAX		37	/* For now.. */
- 
- /* Protocol families, same as address families. */
- #define PF_UNSPEC	AF_UNSPEC
-@@ -233,6 +234,7 @@ struct ucred {
- #define PF_RXRPC	AF_RXRPC
- #define PF_ISDN		AF_ISDN
- #define PF_PHONET	AF_PHONET
-+#define PF_IEEE802154	AF_IEEE802154
- #define PF_MAX		AF_MAX
- 
- /* Maximum queue length specifiable by listen.  */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index e2e9e4a..4119dfc 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -268,7 +268,8 @@ static const unsigned short netdev_lock_type[] =
- 	 ARPHRD_IRDA, ARPHRD_FCPP, ARPHRD_FCAL, ARPHRD_FCPL,
- 	 ARPHRD_FCFABRIC, ARPHRD_IEEE802_TR, ARPHRD_IEEE80211,
- 	 ARPHRD_IEEE80211_PRISM, ARPHRD_IEEE80211_RADIOTAP, ARPHRD_PHONET,
--	 ARPHRD_PHONET_PIPE, ARPHRD_VOID, ARPHRD_NONE};
-+	 ARPHRD_PHONET_PIPE, ARPHRD_IEEE802154, ARPHRD_IEEE802154_PHY,
-+	 ARPHRD_VOID, ARPHRD_NONE};
- 
- static const char *netdev_lock_name[] =
- 	{"_xmit_NETROM", "_xmit_ETHER", "_xmit_EETHER", "_xmit_AX25",
-@@ -285,7 +286,8 @@ static const char *netdev_lock_name[] =
- 	 "_xmit_IRDA", "_xmit_FCPP", "_xmit_FCAL", "_xmit_FCPL",
- 	 "_xmit_FCFABRIC", "_xmit_IEEE802_TR", "_xmit_IEEE80211",
- 	 "_xmit_IEEE80211_PRISM", "_xmit_IEEE80211_RADIOTAP", "_xmit_PHONET",
--	 "_xmit_PHONET_PIPE", "_xmit_VOID", "_xmit_NONE"};
-+	 "_xmit_PHONET_PIPE", "_xmit_IEEE802154", "_xmit_IEEE802154_PHY",
-+	 "_xmit_VOID", "_xmit_NONE"};
- 
- static struct lock_class_key netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
- static struct lock_class_key netdev_addr_lock_key[ARRAY_SIZE(netdev_lock_type)];
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 7dbf3ff..8a1644c 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -155,6 +155,7 @@ static const char *af_family_key_strings[AF_MAX+1] = {
-   "sk_lock-27"       , "sk_lock-28"          , "sk_lock-AF_CAN"      ,
-   "sk_lock-AF_TIPC"  , "sk_lock-AF_BLUETOOTH", "sk_lock-IUCV"        ,
-   "sk_lock-AF_RXRPC" , "sk_lock-AF_ISDN"     , "sk_lock-AF_PHONET"   ,
-+  "sk_lock-AF_IEEE802154",
-   "sk_lock-AF_MAX"
- };
- static const char *af_family_slock_key_strings[AF_MAX+1] = {
-@@ -170,6 +171,7 @@ static const char *af_family_slock_key_strings[AF_MAX+1] = {
-   "slock-27"       , "slock-28"          , "slock-AF_CAN"      ,
-   "slock-AF_TIPC"  , "slock-AF_BLUETOOTH", "slock-AF_IUCV"     ,
-   "slock-AF_RXRPC" , "slock-AF_ISDN"     , "slock-AF_PHONET"   ,
-+  "slock-AF_IEEE802154",
-   "slock-AF_MAX"
- };
- static const char *af_family_clock_key_strings[AF_MAX+1] = {
-@@ -185,6 +187,7 @@ static const char *af_family_clock_key_strings[AF_MAX+1] = {
-   "clock-27"       , "clock-28"          , "clock-AF_CAN"      ,
-   "clock-AF_TIPC"  , "clock-AF_BLUETOOTH", "clock-AF_IUCV"     ,
-   "clock-AF_RXRPC" , "clock-AF_ISDN"     , "clock-AF_PHONET"   ,
-+  "clock-AF_IEEE802154",
-   "clock-AF_MAX"
- };
- 
--- 
-1.6.3.1
+"The ZigBee Specification is available to individuals, companies and
+institutions free of charge for all non-commercial purposes (including
+university research, technical evaluation, and development of
+non-commercial software, tools, or documentation). For ease of use,
+clearly marked errata have been incorporated into this document. These
+errata may not have been subjected to an Intellectual Property review,
+and as such, may contain undeclared Necessary Claims. No part of this
+specification may be used in development of a product for sale without
+becoming a member of ZigBee Alliance. Copyright © ZigBee Alliance,
+Inc. (2005). All rights Reserved. This information within this
+document is the property of the ZigBee Alliance and its use and
+disclosure are restricted.Elements of ZigBee Alliance specifications
+may be subject to third party intellectual property rights, including
+without limitation, patent, copyright or trademark rights (such a
+third party may or may not be a member of ZigBee). ZigBee is not
+responsible and shall not be held responsible in any manner for
+identifying or failing to identify any or all such third party
+intellectual property rights. This document and the information
+contained herein are provided on an “AS IS” basis and ZigBee DISCLAIMS
+ALL WARRANTIES EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO (A)
+ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE
+ANY RIGHTS OF THIRD PARTIES (INCLUDING WITH-OUT LIMITATION ANY
+INTELLECTUAL PROPERTY RIGHTS INCLUDING PATENT, COPYRIGHT OR TRADEMARK
+RIGHTS) OR (B) ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+A PARTICULAR PURPOSE, TITLE OR NON-INFRINGEMENT. IN NO EVENT WILL
+ZIGBEE BE LIABLE FOR ANY LOSS OF PROF-ITS, LOSS OF BUSINESS, LOSS OF
+USE OF DATA, INTERRUPTION OF BUSINESS, OR FOR ANY OTHER DIRECT,
+INDIRECT, SPECIAL OR EXEMPLARY, INCIDENTIAL, PUNITIVE OR CONSEQUENTIAL
+DAMAGES OF ANY KIND, IN CONTRACT OR IN TORT, IN CONNECTION WITH THIS
+DOCUMENT OR THE INFORMATION CONTAINED HEREIN, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH LOSS OR DAMAGE. All Company, brand and product
+names may be trademarks that are the sole property of their respective
+owners. <P>The above notice and this paragraph must be included on all
+copies of this document that are made. ZigBee Alliance, Inc.2400
+Camino Ramon, Suite 375San Ramon, CA 94583"
 
 -- 
-With best wishes
-Dmitry
-
+Jon Smirl
+jonsmirl@gmail.com
