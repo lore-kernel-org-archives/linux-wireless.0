@@ -1,44 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754903AbZFRPZt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 11:25:49 -0400
-Subject: [PATCH -testing] mac80211: fix ieee80211_xmit call context
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 18 Jun 2009 17:25:11 +0200
-Message-Id: <1245338711.13790.83.camel@johannes.local>
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:45070 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751004AbZFMLVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Jun 2009 07:21:48 -0400
+Date: Sat, 13 Jun 2009 13:21:44 +0200
+From: Pierre Ossman <pierre@ossman.eu>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, kalle.valo@iki.fi, san@google.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+Message-ID: <20090613132144.6c7783bc@mjolnir.ossman.eu>
+In-Reply-To: <1244685780-28930-8-git-send-email-me@bobcopeland.com>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-25049-1244892108-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_xmit() cannot be called with tasklets enabled
-because it is normally called from within a tasklet.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Fixes a problem with the mdev removal.
+--=_freyr.ossman.eu-25049-1244892108-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
- net/mac80211/tx.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+On Wed, 10 Jun 2009 22:03:00 -0400
+Bob Copeland <me@bobcopeland.com> wrote:
 
---- wireless-testing.orig/net/mac80211/tx.c	2009-06-18 17:21:45.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-06-18 17:23:49.000000000 +0200
-@@ -2221,5 +2221,12 @@ void ieee80211_tx_skb(struct ieee80211_s
- 	if (!encrypt)
- 		info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 
-+	/*
-+	 * The other path calling ieee80211_xmit is from the tasklet,
-+	 * and while we can handle concurrent transmissions locking
-+	 * requirements are that we do not come into tx with bhs on.
-+	 */
-+	local_bh_disable();
- 	ieee80211_xmit(sdata, skb);
-+	local_bh_enable();
- }
+> This adds the wl12xx_sdio module, enabling the SDIO interface for
+> wl12xx, as used by the Google G1 phone and others.
+>=20
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
 
+I think the drivers looks quite ok. There are really just a few things
+I'm concerned about:
 
+- Please put the device id:s in sdio_ids.h. There is no pci-ids
+equivalent for SDIO so I'd like to fill up the kernel header with
+device ids as much as possible.
+
+- Why do you have a platform device with the sole purpose of enabling
+power to the SDIO card? Shouldn't this be handled in the arch code?
+
+> +	sdio_set_block_size(func, 512);
+
+Since you do not actually rely on this, why not leave it at the default
+value?
+
+> +static void __devexit wl12xx_sdio_remove(struct sdio_func *func)
+> +{
+> +	struct wl12xx *wl =3D sdio_get_drvdata(func);
+> +
+> +	sdio_claim_host(func);
+> +	sdio_release_irq(func);
+> +	sdio_disable_func(func);
+> +	sdio_release_host(func);
+> +
+> +	wl12xx_free_hw(wl);
+> +}
+
+This seems wrong. Shouldn't you unregister the device with the upper
+layers first?
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.ossman.eu-25049-1244892108-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkozi8sACgkQ7b8eESbyJLiEQgCZAWMHLtGcHhc6UxgUgSwPAefP
+nrUAnjMY//Xpm0Ny9eikanpf6WN6EyCk
+=YMlv
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-25049-1244892108-0001-2--
