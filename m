@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45389 "EHLO coco.kroah.org"
+Received: from mail.atheros.com ([12.36.123.2]:45035 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751556AbZFOUXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 16:23:32 -0400
-Date: Mon, 15 Jun 2009 13:19:34 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	tshibata@ab.jp.nec.com
-Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
-	window
-Message-ID: <20090615201934.GA12685@kroah.com>
-References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
+	id S1754460AbZFMJ0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Jun 2009 05:26:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2009 02:26:47 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/3] ath9k: Make sure we have current channel in ah_curchan before rf disable/enable
+Date: Sat, 13 Jun 2009 14:50:25 +0530
+Message-ID: <1244884826-3009-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1244884826-3009-2-git-send-email-vasanth@atheros.com>
+References: <1244884826-3009-1-git-send-email-vasanth@atheros.com>
+ <1244884826-3009-2-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 15, 2009 at 04:12:51PM -0400, Luis R. Rodriguez wrote:
-> This is losely based on previous discussions on linux-kernel [1][2].
-> 
-> [1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
-> [2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> 
-> I have run into issues when trying to explain this and policies
-> for the rc-series, it seems there is no place that documents this
-> clearly so here is an attempt based on some previous discussions.
-> Not sure if I got it all correct, so feedback is welcomed. I do think
-> clarifying this a little should help.
-> 
-> I was also not sure if Documentation/stable_kernel_rules.txt is the best
-> splace for this as well, please let me know.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-I don't think this is the best place for it, as the stable_* file is for
-describing the rules for the 2.6.x.y releases, not the main 2.6.x
-releases.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5fd17a4..48b117d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1125,6 +1125,9 @@ void ath_radio_enable(struct ath_softc *sc)
+ 	ath9k_ps_wakeup(sc);
+ 	ath9k_hw_configpcipowersave(ah, 0);
+ 
++	if (!ah->curchan)
++		ah->curchan = ath_get_curchannel(sc, sc->hw);
++
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, false);
+ 	if (r) {
+@@ -1177,6 +1180,9 @@ void ath_radio_disable(struct ath_softc *sc)
+ 	ath_stoprecv(sc);		/* turn off frame recv */
+ 	ath_flushrecv(sc);		/* flush recv queue */
+ 
++	if (!ah->curchan)
++		ah->curchan = ath_get_curchannel(sc, sc->hw);
++
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, false);
+ 	if (r) {
+-- 
+1.5.5.1
 
-A new file perhaps?  Or an addition to the
-Documentation/development-process/ book?
-
-thanks,
-
-greg k-h
