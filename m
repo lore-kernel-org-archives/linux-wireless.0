@@ -1,115 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:14379 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753848AbZFLUla (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:41:30 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so930579wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2009 13:41:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1244750836.29447.5.camel@johannes.local>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
-	 <1244442549.11006.2.camel@johannes.local>
-	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
-	 <1244556179.4672.11.camel@johannes.local>
-	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
-	 <1244569926.18481.27.camel@johannes.local>
-	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-	 <1244750836.29447.5.camel@johannes.local>
-Date: Fri, 12 Jun 2009 22:41:33 +0200
-Message-ID: <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=00504502c3d2e035e5046c2cbb7f
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:41122 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753654AbZFMUJM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Jun 2009 16:09:12 -0400
+Date: Sat, 13 Jun 2009 22:09:08 +0200
+From: Pierre Ossman <pierre@ossman.eu>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+Message-ID: <20090613220908.271865cd@mjolnir.ossman.eu>
+In-Reply-To: <87bposnmxi.fsf@litku.valot.fi>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	<20090613132144.6c7783bc@mjolnir.ossman.eu>
+	<87bposnmxi.fsf@litku.valot.fi>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-29230-1244923753-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---00504502c3d2e035e5046c2cbb7f
-Content-Type: text/plain; charset=ISO-8859-1
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
+
+--=_freyr.ossman.eu-29230-1244923753-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Sat, 13 Jun 2009 19:00:41 +0300
+Kalle Valo <kalle.valo@iki.fi> wrote:
+
+>=20
+> When the power line is pulled up, the chip will power on itself.
+> Whenever the power line goes down, the chip will power off. For example,
+> the power line can be controlled with a GPIO pin from the host. But how
+> the power line is really controlled, is board specific and should be
+> handled in the board file. And here comes the set_power() function to
+> the picture. The wl1251 driver will call set_power() function every time
+> user space calls wlan interface up or down.
+>=20
+
+That doesn't make sense. If the card doesn't have power then there will
+be no device and no interface to bring up.
+
+I suspect we're not talking about the same thing. I'm referring to this:
+
++static int wifi_probe(struct platform_device *pdev)
++{
++	struct wifi_platform_data *wifi_ctrl =3D
++		(struct wifi_platform_data *)(pdev->dev.platform_data);
++
++	if (!wifi_ctrl)
++		return -ENODEV;
++
++	wifi_ctrl->set_power(1);	/* Power On */
++	wifi_ctrl->set_reset(0);	/* Reset clear */
++	wifi_ctrl->set_carddetect(1);	/* CardDetect (0->1) */
++
++	return 0;
++}
+
+This seems very board specific and not something that should be in the
+chip driver.
+
+> Pierre, how do you propose we should do this? I understood based on
+> discussions from linux-omap that this is a common way.
+
+I haven't seen anything like this before, but it might just be that
+I've looked in the wrong places.
+
+I think this should be somewhere under arch/ in the board setup code,
+where currently you have some code adding the "msm_wifi" platform
+device.
+
+(I also agree with Marcel that this looks like RFKILL material)
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.ossman.eu-29230-1244923753-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
 
-Here is a patch that should fix all issue :
-The mac80211 tkip code won't call update_tkip_key, if some rx packets
-get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-first packet because the hardware key stuff is called asynchronously with
-todo workqueue.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-This patch workaround that by always calling once update_tkip_key if
-the packet wasn't decrypted by the hardware.
+iEYEARECAAYFAko0B2gACgkQ7b8eESbyJLik1wCg++EOdQ92y8c47QTCNiSdl5wh
+/8YAoLohTU52Nckm7jVoMIE5MPF18GyC
+=Ixeq
+-----END PGP SIGNATURE-----
 
---00504502c3d2e035e5046c2cbb7f
-Content-Type: text/x-diff; charset=US-ASCII; name="tkip_corev2.diff"
-Content-Disposition: attachment; filename="tkip_corev2.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fvvd1r7c1
-
-VGhlIG1hYzgwMjExIHRraXAgY29kZSB3b24ndCBjYWxsIHVwZGF0ZV90a2lwX2tleSwgaWYgc29t
-ZSByeCBwYWNrZXRzCmdldCByZWNlaXZlZCB3aXRob3V0IEtFWV9GTEFHX1VQTE9BREVEX1RPX0hB
-UkRXQVJFLiBUaGlzIGNhbiBoYXBwZW4gb24KZmlyc3QgcGFja2V0IGJlY2F1c2UgdGhlIGhhcmR3
-YXJlIGtleSBzdHVmZiBpcyBjYWxsZWQgYXN5bmNocm9ub3VzbHkgd2l0aCAKdG9kbyB3b3JrcXVl
-dWUuCgpUaGlzIHBhdGNoIHdvcmthcm91bmQgdGhhdCBieSBhbHdheXMgY2FsbGluZyBvbmNlIHVw
-ZGF0ZV90a2lwX2tleSBpZgp0aGUgcGFja2V0IHdhc24ndCBkZWNyeXB0ZWQgYnkgdGhlIGhhcmR3
-YXJlLgoKU2lnbmVkLW9mZi1ieTogR3JlZ29yIEtvd3NraSA8Z3JlZ29yLmtvd3NraUBnbWFpbC5j
-b20+CkluZGV4OiBsaW51eC0yLjYvbmV0L21hYzgwMjExL3RraXAuYwo9PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBs
-aW51eC0yLjYub3JpZy9uZXQvbWFjODAyMTEvdGtpcC5jCTIwMDktMDYtMTAgMjA6MTI6MzIuMDAw
-MDAwMDAwICswMDAwCisrKyBsaW51eC0yLjYvbmV0L21hYzgwMjExL3RraXAuYwkyMDA5LTA2LTEy
-IDIwOjMxOjM1LjAwMDAwMDAwMCArMDAwMApAQCAtMTksNiArMTksMTIgQEAKIAogI2RlZmluZSBQ
-SEFTRTFfTE9PUF9DT1VOVCA4CiAKK2VudW0geworCUlOSVRJQUxJWkVEX05PTkUsCisJSU5JVElB
-TElaRURfUEhBU0UxLAorCUlOSVRJQUxJWkVEX1VQREFURV9LRVksCit9OworCiAvKgogICogMi1i
-eXRlIGJ5IDItYnl0ZSBzdWJzZXQgb2YgdGhlIGZ1bGwgQUVTIFMtYm94IHRhYmxlOyBzZWNvbmQg
-cGFydCBvZiB0aGlzCiAgKiB0YWJsZSBpcyBpZGVudGljYWwgdG8gZmlyc3QgcGFydCBidXQgYnl0
-ZS1zd2FwcGVkCkBAIC05OSw3ICsxMDUsNyBAQAogCQlwMWtbM10gKz0gdGtpcFMocDFrWzJdIF4g
-Z2V0X3VuYWxpZ25lZF9sZTE2KHRrICsgMTIgKyBqKSk7CiAJCXAxa1s0XSArPSB0a2lwUyhwMWtb
-M10gXiBnZXRfdW5hbGlnbmVkX2xlMTYodGsgKyAwICsgaikpICsgaTsKIAl9Ci0JY3R4LT5pbml0
-aWFsaXplZCA9IDE7CisJY3R4LT5pbml0aWFsaXplZCA9IElOSVRJQUxJWkVEX1BIQVNFMTsKIH0K
-IAogc3RhdGljIHZvaWQgdGtpcF9taXhpbmdfcGhhc2UyKGNvbnN0IHU4ICp0aywgc3RydWN0IHRr
-aXBfY3R4ICpjdHgsCkBAIC0xODIsNyArMTg4LDcgQEAKIAkvKiBVcGRhdGUgdGhlIHAxayBvbmx5
-IHdoZW4gdGhlIGl2MTYgaW4gdGhlIHBhY2tldCB3cmFwcyBhcm91bmQsIHRoaXMKIAkgKiBtaWdo
-dCBvY2N1ciBhZnRlciB0aGUgd3JhcCBhcm91bmQgb2YgaXYxNiBpbiB0aGUga2V5IGluIGNhc2Ug
-b2YKIAkgKiBmcmFnbWVudGVkIHBhY2tldHMuICovCi0JaWYgKGl2MTYgPT0gMCB8fCAhY3R4LT5p
-bml0aWFsaXplZCkKKwlpZiAoaXYxNiA9PSAwIHx8IGN0eC0+aW5pdGlhbGl6ZWQgPT0gSU5JVElB
-TElaRURfTk9ORSkKIAkJdGtpcF9taXhpbmdfcGhhc2UxKHRrLCBjdHgsIGhkci0+YWRkcjIsIGl2
-MzIpOwogCiAJaWYgKHR5cGUgPT0gSUVFRTgwMjExX1RLSVBfUDFfS0VZKSB7CkBAIC0yMDgsNyAr
-MjE0LDcgQEAKIAljb25zdCB1OCAqdGsgPSAma2V5LT5jb25mLmtleVtOTDgwMjExX1RLSVBfREFU
-QV9PRkZTRVRfRU5DUl9LRVldOwogCiAJLyogQ2FsY3VsYXRlIHBlci1wYWNrZXQga2V5ICovCi0J
-aWYgKGN0eC0+aXYxNiA9PSAwIHx8ICFjdHgtPmluaXRpYWxpemVkKQorCWlmIChjdHgtPml2MTYg
-PT0gMCB8fCBjdHgtPmluaXRpYWxpemVkID09IElOSVRJQUxJWkVEX05PTkUpCiAJCXRraXBfbWl4
-aW5nX3BoYXNlMSh0aywgY3R4LCB0YSwgY3R4LT5pdjMyKTsKIAogCXRraXBfbWl4aW5nX3BoYXNl
-Mih0aywgY3R4LCBjdHgtPml2MTYsIHJjNGtleSk7CkBAIC0yNTgsNyArMjY0LDcgQEAKIAlpZiAo
-KGtleWlkID4+IDYpICE9IGtleS0+Y29uZi5rZXlpZHgpCiAJCXJldHVybiBUS0lQX0RFQ1JZUFRf
-SU5WQUxJRF9LRVlJRFg7CiAKLQlpZiAoa2V5LT51LnRraXAucnhbcXVldWVdLmluaXRpYWxpemVk
-ICYmCisJaWYgKGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5pbml0aWFsaXplZCAhPSBJTklUSUFMSVpF
-RF9OT05FICYmCiAJICAgIChpdjMyIDwga2V5LT51LnRraXAucnhbcXVldWVdLml2MzIgfHwKIAkg
-ICAgIChpdjMyID09IGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5pdjMyICYmCiAJICAgICAgaXYxNiA8
-PSBrZXktPnUudGtpcC5yeFtxdWV1ZV0uaXYxNikpKSB7CkBAIC0yNzQsMTEgKzI4MCwxMSBAQAog
-CiAJaWYgKG9ubHlfaXYpIHsKIAkJcmVzID0gVEtJUF9ERUNSWVBUX09LOwotCQlrZXktPnUudGtp
-cC5yeFtxdWV1ZV0uaW5pdGlhbGl6ZWQgPSAxOworCQlrZXktPnUudGtpcC5yeFtxdWV1ZV0uaW5p
-dGlhbGl6ZWQgPSBJTklUSUFMSVpFRF9VUERBVEVfS0VZOwogCQlnb3RvIGRvbmU7CiAJfQogCi0J
-aWYgKCFrZXktPnUudGtpcC5yeFtxdWV1ZV0uaW5pdGlhbGl6ZWQgfHwKKwlpZiAoa2V5LT51LnRr
-aXAucnhbcXVldWVdLmluaXRpYWxpemVkID09IElOSVRJQUxJWkVEX05PTkUgfHwKIAkgICAga2V5
-LT51LnRraXAucnhbcXVldWVdLml2MzIgIT0gaXYzMikgewogCQkvKiBJVjE2IHdyYXBwZWQgYXJv
-dW5kIC0gcGVyZm9ybSBUS0lQIHBoYXNlIDEgKi8KIAkJdGtpcF9taXhpbmdfcGhhc2UxKHRrLCAm
-a2V5LT51LnRraXAucnhbcXVldWVdLCB0YSwgaXYzMik7CkBAIC0yOTgsMTkgKzMwNCwyMSBAQAog
-CQkJcHJpbnRrKCJcbiIpOwogCQl9CiAjZW5kaWYKLQkJaWYgKGtleS0+bG9jYWwtPm9wcy0+dXBk
-YXRlX3RraXBfa2V5ICYmCi0JCQlrZXktPmZsYWdzICYgS0VZX0ZMQUdfVVBMT0FERURfVE9fSEFS
-RFdBUkUpIHsKLQkJCXU4IGJjYXN0W0VUSF9BTEVOXSA9Ci0JCQkJezB4ZmYsIDB4ZmYsIDB4ZmYs
-IDB4ZmYsIDB4ZmYsIDB4ZmZ9OwotCQkJdTggKnN0YV9hZGRyID0ga2V5LT5zdGEtPnN0YS5hZGRy
-OwotCi0JCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIocmEpKQotCQkJCXN0YV9hZGRyID0g
-YmNhc3Q7Ci0KLQkJCWtleS0+bG9jYWwtPm9wcy0+dXBkYXRlX3RraXBfa2V5KAotCQkJCWxvY2Fs
-X3RvX2h3KGtleS0+bG9jYWwpLCAma2V5LT5jb25mLAotCQkJCXN0YV9hZGRyLCBpdjMyLCBrZXkt
-PnUudGtpcC5yeFtxdWV1ZV0ucDFrKTsKLQkJfQorCX0KKwlpZiAoa2V5LT5sb2NhbC0+b3BzLT51
-cGRhdGVfdGtpcF9rZXkgJiYKKwkgICAga2V5LT5mbGFncyAmIEtFWV9GTEFHX1VQTE9BREVEX1RP
-X0hBUkRXQVJFICYmCisJICAgIGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5pbml0aWFsaXplZCAhPSBJ
-TklUSUFMSVpFRF9VUERBVEVfS0VZKSB7CisJCXU4IGJjYXN0W0VUSF9BTEVOXSA9CisJCQl7MHhm
-ZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZiwgMHhmZn07CisJCXU4ICpzdGFfYWRkciA9IGtleS0+
-c3RhLT5zdGEuYWRkcjsKKworCQlpZiAoaXNfbXVsdGljYXN0X2V0aGVyX2FkZHIocmEpKQorCQkJ
-c3RhX2FkZHIgPSBiY2FzdDsKKworCQlrZXktPmxvY2FsLT5vcHMtPnVwZGF0ZV90a2lwX2tleSgK
-KwkJCWxvY2FsX3RvX2h3KGtleS0+bG9jYWwpLCAma2V5LT5jb25mLAorCQkJc3RhX2FkZHIsIGl2
-MzIsIGtleS0+dS50a2lwLnJ4W3F1ZXVlXS5wMWspOworCQlrZXktPnUudGtpcC5yeFtxdWV1ZV0u
-aW5pdGlhbGl6ZWQgPSBJTklUSUFMSVpFRF9VUERBVEVfS0VZOwogCX0KIAogCXRraXBfbWl4aW5n
-X3BoYXNlMih0aywgJmtleS0+dS50a2lwLnJ4W3F1ZXVlXSwgaXYxNiwgcmM0a2V5KTsK
---00504502c3d2e035e5046c2cbb7f--
+--=_freyr.ossman.eu-29230-1244923753-0001-2--
