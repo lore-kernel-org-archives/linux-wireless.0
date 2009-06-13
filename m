@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52710 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759461AbZFPSbR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 14:31:17 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] [compat-2.6] Do not build backported rfkill module on new kernels.
-Date: Tue, 16 Jun 2009 20:31:10 +0200
-Message-Id: <1245177070-13290-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1245177070-13290-1-git-send-email-hauke@hauke-m.de>
-References: <1245177070-13290-1-git-send-email-hauke@hauke-m.de>
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:42556 "EHLO
+	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753648AbZFMCGx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2009 22:06:53 -0400
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Reply-To: tfjellstrom@shaw.ca
+To: linux-wireless@vger.kernel.org
+Subject: AR2424 speed issue.
+Date: Fri, 12 Jun 2009 20:06:55 -0600
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200906122006.55492.tfjellstrom@shaw.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I just got a new laptop with an Atheros 2424 based wifi card (lspci says 
+AR242x, but the pci device id is: 0035).
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+While it seems to be stable, it is quite slow for 802.11g. The maximum speed I 
+can get out of the ath5k driver is the speed it auto connects at: 36Mb/s. If I 
+force it to anything higher, nothing can get through (the actual connection 
+seems to stay up till some form of very long time out happens).
 
-diff --git a/config.mk b/config.mk
-index c06c9c2..55d5627 100644
---- a/config.mk
-+++ b/config.mk
-@@ -353,7 +353,11 @@ CONFIG_LIBERTAS=m
- # CONFIG_LIBERTAS_DEBUG=y
- endif
- 
-+# We need the backported rfkill module on kernel < 2.6.31.
-+# In more recent kernel versions use the in kernel rfkill module.
-+ifeq ($(shell test $(KERNEL_SUBLEVEL) -le 30 && echo yes),yes)
- CONFIG_RFKILL_BACKPORT=m
- CONFIG_RFKILL_BACKPORT_LEDS=y
- CONFIG_RFKILL_BACKPORT_INPUT=y
-+endif
- 
+I just tried the madwifi drivers on madwifi's website (latest trunk snapshot, 
+and svn trunk itself) and It auto connects at 18Mb/s. If I up the rate to 
+54Mb/s the connection stays up, but it doesn't really seem to be transferring 
+any faster.
+
+For comparison's sake I tried it out in Windows 7. It auto connects at 54Mb/s 
+and can stream 1080p h264 without stuttering. In linux however, many SD or 
+lower res Xvid won't play without stuttering. 720p and 1080p are unwatchable.
+
+What can be done about this? Is there some setting I'm overlooking? Its quite 
+annoying to have to reboot into windows to watch some videos.
+
 -- 
-1.6.2.1
-
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
