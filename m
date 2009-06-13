@@ -1,98 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37431 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756689AbZFJITp (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:43026 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbZFMUYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:19:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 02/18] mac80211: drop frames for sta with no valid rate
-Date: Wed, 10 Jun 2009 04:19:19 -0400
-Message-Id: <1244621975-1238-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
-References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 13 Jun 2009 16:24:07 -0400
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Pierre Ossman <pierre@ossman.eu>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, san@google.com
+In-Reply-To: <873aa3opsr.fsf@litku.valot.fi>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	 <1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	 <20090613132144.6c7783bc@mjolnir.ossman.eu> <87bposnmxi.fsf@litku.valot.fi>
+	 <1244922097.1852.4.camel@violet>  <873aa3opsr.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Sat, 13 Jun 2009 22:24:07 +0200
+Message-Id: <1244924647.1852.10.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we're associated we should be able to send data to
-target sta. If we cannot we may be trying to use the incorrect
-band to talk to the sta. Lets catch any such cases, warn, and
-drop the frames to not invalidate assumptions being made on
-rate control algorithms when they have a valid sta to
-communicate with. Any such cases should be handled and fixed.
+Hi Kalle,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/mac80211.h |   11 +++++++++++
- net/mac80211/tx.c      |   23 +++++++++++++++++++++++
- 2 files changed, 34 insertions(+), 0 deletions(-)
+> >> wl1251 has these lines to the host:
+> >> 
+> >> o four lines for SDIO or SPI, configured to SDIO by default
+> >> o power line
+> >> o interrupt line
+> >> 
+> >> When the power line is pulled up, the chip will power on itself.
+> >> Whenever the power line goes down, the chip will power off. For example,
+> >> the power line can be controlled with a GPIO pin from the host. But how
+> >> the power line is really controlled, is board specific and should be
+> >> handled in the board file. And here comes the set_power() function to
+> >> the picture. The wl1251 driver will call set_power() function every time
+> >> user space calls wlan interface up or down.
+> >> 
+> >> Pierre, how do you propose we should do this? I understood based on
+> >> discussions from linux-omap that this is a common way.
+> >
+> > actually this looks like a RFKILL hard switch to me.
+> 
+> I have my doubts. For example, when you turn off and on the power from
+> the wl1251 chip you have to reupload the firmware and boot it again,
+> which is slow. I have been thinking more like turning off the radios
+> when rfkill is enabled, which is significantly faster. But I haven't
+> looked at rfkill yet, and I'm not planning to do it until the dust has
+> settled within the next few months :)
+> 
+> > Why don't we just integrate it with RFKILL and this way have a common
+> > interface to handle all of these.
+> 
+> But rfkill won't solve the problem under discussion. rfkill is the
+> interface between wl12xx driver and higher levels, but the problem here
+> is the lower level interface, that is how does wl12xx driver shall
+> control the actual hw line. We need to have a generic way to control the
+> hw line so that driver works in TI's OMAP architecture, whatever Google
+> is using and all the other possible (embedded) combination where Linux
+> can run.
+> 
+> Because I know that my english sucks, I'll draw an architecture diagram
+> to show what I'm trying to say here:
+> 
+> ---------- ------------
+> | rfkill | | mac80211 |
+> ---------- ------------
+> 
+> -----------------------
+> |       wl12xx        |
+> -----------------------
+> 
+> -----------------------
+> |    hw power line    |
+> -----------------------
+> 
+> So rfkill is on the opposite side of wl12xx compared to the actual hw
+> power line.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 17d61d1..9559efa 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2103,6 +2103,17 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
- 	return 0;
- }
- 
-+static inline
-+bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
-+			      struct ieee80211_sta *sta)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++)
-+		if (rate_supported(sta, sband->band, i))
-+			return true;
-+	return false;
-+}
- 
- int ieee80211_rate_control_register(struct rate_control_ops *ops);
- void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e43fbb9..915c8a3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -511,6 +511,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	int i, len;
- 	bool inval = false, rts = false, short_preamble = false;
- 	struct ieee80211_tx_rate_control txrc;
-+	u32 sta_flags;
- 
- 	memset(&txrc, 0, sizeof(txrc));
- 
-@@ -543,7 +544,29 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	     (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
- 		txrc.short_preamble = short_preamble = true;
- 
-+	sta_flags = tx->sta ? get_sta_flags(tx->sta) : 0;
-+
-+	/*
-+	 * Lets not bother rate control if we're associated and cannot
-+	 * talk to the sta. This should not happen.
-+	 */
-+	if (unlikely((tx->local->sw_scanning) &&
-+	    (sta_flags & WLAN_STA_ASSOC) &&
-+	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+		printk(KERN_DEBUG "%s: dropped data frame -- no "
-+		       "supported rate for station %pM on %c GHz band\n",
-+		       tx->dev->name, hdr->addr1,
-+		       tx->channel->band ? '5' : '2');
-+#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
-+		WARN_ON(1);
-+		return TX_DROP;
-+	}
- 
-+	/*
-+	 * If we're associated point with the sta we know we can at
-+	 * least send the frame at the lowest bit rate.
-+	 */
- 	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
- 
- 	if (unlikely(info->control.rates[0].idx < 0))
--- 
-1.6.0.6
+we do have the RFKILL (aka soft killswitch) that is now integrated with
+mac80211 and we do have separate RFKILL hardware killswitches.
+
+For example the Bluetooth pieces inside a laptop now have a Bluetooth
+hardware killswitch (behind a platform device) and the soft killswitch
+from the Bluetooth subsystem. They are two independent pieces.
+
+RFKILL is a confusing beast ;)
+
+Regards
+
+Marcel
+
 
