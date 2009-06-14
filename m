@@ -1,45 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:43088 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751983AbZFZRxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2009 13:53:47 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/3] iwlagn: re-enable PS support for iwlagn
-Date: Fri, 26 Jun 2009 11:00:53 -0700
-Message-Id: <1246039255-2195-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1246039255-2195-1-git-send-email-reinette.chatre@intel.com>
-References: <1246039255-2195-1-git-send-email-reinette.chatre@intel.com>
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:44064 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750837AbZFNIyT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jun 2009 04:54:19 -0400
+Message-ID: <4A34BAB9.9000104@hartkopp.net>
+Date: Sun, 14 Jun 2009 10:54:17 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: rfkill regression in net-next-2.6
+References: <20090604152011.GC2839@tuxdriver.com>	 <20090607.033751.191866033.davem@davemloft.net>	 <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>	 <4A2BD8A5.4040302@hartkopp.net> <1244388583.23850.87.camel@localhost.localdomain>
+In-Reply-To: <1244388583.23850.87.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Marcel Holtmann wrote:
 
-The register locking rework addressed the problem where nic
-access was obtained incorrectly when PS is enabled.
+> 
+> compiling RFKILL itself as a module is still working perfectly fine. It
+> is just the RFKILL_INPUT that can't be built as a module anymore. That
+> part was pointless anyway. And in the future RFKILL_INPUT will go away
+> and be replaced by a userspace implementation with proper support for
+> platform specific policies.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Hi all,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6ab0716..88135f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1325,7 +1325,8 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM |
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
--		    IEEE80211_HW_SPECTRUM_MGMT;
-+		    IEEE80211_HW_SPECTRUM_MGMT |
-+		    IEEE80211_HW_SUPPORTS_PS;
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
--- 
-1.5.6.3
+i have a Dell Lattitude 830 with Bluetooh and b43 WLAN and my RFKILL-switch is
+set to ON.
+
+On power on the BT LED is on and when booting with 2.6.30 or with 2.6.30-git5
+the WLAN LED becomes illuminated within the boot process after b43 pulled his
+firmware.
+
+With net-next-2.6 the BT LED is switched OFF(!) during the boot process and
+the Kernel log says:
+
+[   15.276568] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+[   15.423540] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+[   15.545096] b43-phy0 debug: Chip initialized
+[   15.545317] b43-phy0 debug: 32-bit DMA initialized
+[   15.566383] b43-phy0 debug: Wireless interface started
+[   15.566394] b43-phy0 debug: Adding Interface type 2
+[   15.566670] b43-phy0: Radio hardware status changed to DISABLED
+[   15.633069] b43-phy0: Radio turned on by software
+[   15.647094] b43-phy0: The hardware RF-kill button still turns the radio
+physically off. Press the button to turn it on.
+[   15.673598] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   15.721053] b43-phy0 debug: Removing Interface type 2
+[   15.733877] b43-phy0 debug: Wireless interface stopped
+
+The WLAN LED is never illuminated with net-next-2.6.
+
+The BT LED is switched off something around this time in the log:
+
+[    7.639047] NET: Registered protocol family 31
+[    7.651562] Bluetooth: HCI device and connection manager initialized
+[    7.664155] Bluetooth: HCI socket layer initialized
+[    7.756113] b43-pci-bridge 0000:0c:00.0: PCI INT A -> GSI 17 (level, low)
+-> IRQ 17
+[    7.769117] b43-pci-bridge 0000:0c:00.0: setting latency timer to 64
+[    7.828160] yenta_cardbus 0000:03:01.0: CardBus bridge found [1028:01fe]
+[    7.841107] yenta_cardbus 0000:03:01.0: O2: res at 0x94/0xD4: 00/ea
+[    7.853830] yenta_cardbus 0000:03:01.0: O2: enabling read prefetch/write burst
+[    7.867428] i801_smbus 0000:00:1f.3: PCI INT B -> GSI 17 (level, low) -> IRQ 17
+[    7.881369] ssb: Sonics Silicon Backplane found on PCI device 0000:0c:00.0
+[    7.897694] Bluetooth: Generic Bluetooth USB driver ver 0.5
+[    7.910910] usbcore: registered new interface driver btusb
+
+
+When i see the BT LED switching to off, i can manually switch the RFKILL
+switch to OFF and ON, and then both LEDs get illuminated and WLAN is
+successfully initialized by the boot process.
+
+As we discussed about RFKILL and modules, i set CONFIG_RFKILL=y in my
+net-netx-2.6 tree with no change of the behaviour.
+
+Any idea what changed in net-next-2.6 that could produce this behaviour?
+
+Regards,
+Oliver
 
