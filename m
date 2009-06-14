@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:15176 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387AbZFEDjk convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55491 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473AbZFNPLt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 23:39:40 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so738985ywb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2009 20:39:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <45e8e6c40906041042p7e9986fauf993fed27e95e2c5@mail.gmail.com>
-References: <661650.46971.qm@web55304.mail.re4.yahoo.com>
-	 <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
-	 <40f31dec0906031121xfb76641h3137f53ed5c8a792@mail.gmail.com>
-	 <45e8e6c40906031252x7f22a1c1mf4fb4a9612eb5ce0@mail.gmail.com>
-	 <40f31dec0906031259u1a9c4b0dh977cade85bded168@mail.gmail.com>
-	 <45e8e6c40906041042p7e9986fauf993fed27e95e2c5@mail.gmail.com>
-Date: Fri, 5 Jun 2009 06:39:42 +0300
-Message-ID: <40f31dec0906042039w44d9165cx87d86fef17900881@mail.gmail.com>
-Subject: Re: ath9k/ath5k + 80211s crash
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: austinxxh-ath9k@yahoo.com, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 14 Jun 2009 11:11:49 -0400
+Subject: Re: [PATCH 0/2] ar9170: 1-stage firmware support / AVM fritz
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, chunkeey@web.de,
+	linux-wireless@vger.kernel.org, jal2@gmx.de,
+	Peter.Grabienski@Atheros.com, Stephen.Chen@Atheros.com,
+	Michael.Fortin@Atheros.com, Johnny.Cheng@Atheros.com,
+	Yuan-Gu.Wei@atheros.com, otus-devel@lists.madwifi-project.org
+In-Reply-To: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
+References: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Sun, 14 Jun 2009 17:11:48 +0200
+Message-Id: <1244992308.15367.3.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/4 Andrey Yurovsky <andrey@cozybit.com>:
-> On Wed, Jun 3, 2009 at 12:59 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->> 2009/6/3 Andrey Yurovsky <andrey@cozybit.com>:
->>> On Wed, Jun 3, 2009 at 11:21 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->>>> 2009/6/2 Andrey Yurovsky <andrey@cozybit.com>:
->>>>> With wireless-testing from a couple of days ago, an X86 system, and this patch:
->>>>> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
->>>>> ath9k can bring up a mesh point interface and doesn't crash for me,
->>>>> but there are no mesh beacons, so mesh isn't working.  On ath5k, there
->>>>> are also no beacons and mesh doesn't work, but there's no crash.
->>>>>
->>>>
->>>>
->>>> Hmm, try adding NL80211_IFTYPE_MESH_POINT here ->
->>>>
->>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/pcu.c;h=ec35503f6a40e6b6a1cc4323287b31e7cdd3a428;hb=HEAD#l733
->>>
->>> It's already there, in ath5k_hw_set_opmode.  We'll need to trace
->>> what's going on and see why we don't get beacons.  Last night I had an
->>> ath5k MP suddenly start beaconing but I haven't been able to reproduce
->>> that yet.
->>
->> 736         /* When in AP mode zero timer0 to start TSF */
->> 737         if (ah->ah_op_mode == NL80211_IFTYPE_AP)
->> 738                 ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
->>
->> We need to do this for NL80211_IFTYPE_MESH_POINT or DBA won't fire up
->> and beacon queue wont start...
->
-> Thanks Nik, that gets beaconing going but only after a issuing a scan
-> (we have the same problem on rt2x00).
->
+Hi Luis,
 
-Cool, i'll send a patch for this asap ;-)
+> This series now works for me on my WNDA31000, it took a newer shiny
+> 1-stage firmware to work. I'll push the firmware into linux-firmware
+> next.
+> 
+> Should work with the AVM Fritz devices now, haven't tested it but
+> I think it should work.
 
-Thanks for testing !
+I happened to have one of these AVM devices. With ar9170.fw firmware it
+does work fine with the other ones it doesn't.
+
+The ar9170.fw is still not in linux-firmware.git, any reason for that?
+
+Also since ar9170-1.fw and ar9170-2.fw are not working at all, we better
+not even try and give the user a crypted error message that the device
+is in a bad state. Just printk that the firmware might be too old.
+
+Regards
+
+Marcel
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
