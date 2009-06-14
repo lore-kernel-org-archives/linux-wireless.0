@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:34237 "EHLO coco.kroah.org"
+Received: from mga11.intel.com ([192.55.52.93]:49504 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750798AbZFPFVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 01:21:45 -0400
-Date: Mon, 15 Jun 2009 22:16:12 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>
-Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
-	window
-Message-ID: <20090616051612.GA30768@kroah.com>
-References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com> <20090615201934.GA12685@kroah.com> <20090615214735.GE23972@bombadil.infradead.org> <20090615223206.GA4966@kroah.com> <20090616004122.GC5492@tesla> <20090616021011.GF23972@bombadil.infradead.org> <20090616032034.GA17932@kroah.com> <20090616042113.GA5680@tesla>
+	id S1751764AbZFNSD7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jun 2009 14:03:59 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Kalle Valo <kalle.valo@iki.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 14 Jun 2009 11:03:43 -0700
+Subject: RE: [PATCH] mac80211: add queue debugfs file
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3556EE5633@orsmsx506.amr.corp.intel.com>
+References: <1244993859.13033.22.camel@johannes.local>
+ <87tz2in1qj.fsf@litku.valot.fi>
+In-Reply-To: <87tz2in1qj.fsf@litku.valot.fi>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090616042113.GA5680@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 15, 2009 at 09:21:14PM -0700, Luis R. Rodriguez wrote:
-> So it could have told 42 for all answers I suppose and I wouldn't have known
-> the difference. BTW does your list count the ending date? That is from say
-> 01-01-2009 to 01-02-2009 does it count 2 or 1? I set it to not count it.
+Same for iwlwifi, it is a very helpful debugging aid.
 
-I don't know, but at least it is consistant :)
+Wey-Yi Guy
+Intel Corporation
+2111 N.E. 25th Avenue  M/S JF3-308                 
+Hillsboro OR 97124-5961
+USA
+Work Phone: 503-264-6023 (OR)
+Cell Phone: 503-329-8410
+Email: wey-yi.w.guy@intel.com
+ 
 
-It is whatever openoffice uses when calculating dates subtracted from
-each other.
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Kalle Valo
+Sent: Sunday, June 14, 2009 10:51 AM
+To: Johannes Berg
+Cc: John Linville; linux-wireless
+Subject: Re: [PATCH] mac80211: add queue debugfs file
 
-thanks,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-greg k-h
+> I suspect that some driver bugs can cause queues to be
+> stopped while they shouldn't be, but it's hard to find
+> out whether that is the case or not without having any
+> visible information about the queues. This adds a file
+> to debugfs that allows us to see the queues' statuses.
+
+I have to admit that I have managed to do that sometimes with wl12xx, so
+this is a welcomed debugging aid :)
+
+-- 
+Kalle Valo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
