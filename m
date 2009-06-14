@@ -1,47 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:36875 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753706AbZFCVig (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:57888 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753138AbZFNJRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 17:38:36 -0400
-Date: Wed, 3 Jun 2009 18:38:35 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090603213835.GC22809@khazad-dum.debian.net>
-References: <1243867620.3015.17.camel@localhost.localdomain> <4A23FD91.8020200@tuffmail.co.uk> <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk> <1243932109.3192.73.camel@localhost.localdomain> <20090603041030.GB10464@khazad-dum.debian.net> <1244008862.4145.10.camel@localhost.localdomain>
+	Sun, 14 Jun 2009 05:17:50 -0400
+Message-ID: <4A34C03B.4030909@hartkopp.net>
+Date: Sun, 14 Jun 2009 11:17:47 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244008862.4145.10.camel@localhost.localdomain>
+To: Marcel Holtmann <marcel@holtmann.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: rfkill regression in net-next-2.6
+References: <20090604152011.GC2839@tuxdriver.com>	 <20090607.033751.191866033.davem@davemloft.net>	 <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>	 <4A2BD8A5.4040302@hartkopp.net> <1244388583.23850.87.camel@localhost.localdomain> <4A34BAB9.9000104@hartkopp.net>
+In-Reply-To: <4A34BAB9.9000104@hartkopp.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 03 Jun 2009, Marcel Holtmann wrote:
-> any user program with proper rights (remember that /dev/rfkill can now
-> be controlled by Unix permissions and SELinux) can bring up a specific
-> device. That is policy and it belongs in userspace.
+I missed the Dell dcdbas log output that seems to kill the LED ...
+see below.
 
-If I hardkill (EPO) the devices, I want them to stay hardkilled, and only a
-system daemon (if that) should be able to mess with that.
+Oliver Hartkopp wrote:
+> Marcel Holtmann wrote:
+> 
+>> compiling RFKILL itself as a module is still working perfectly fine. It
+>> is just the RFKILL_INPUT that can't be built as a module anymore. That
+>> part was pointless anyway. And in the future RFKILL_INPUT will go away
+>> and be replaced by a userspace implementation with proper support for
+>> platform specific policies.
+> 
+> Hi all,
+> 
+> i have a Dell Lattitude 830 with Bluetooh and b43 WLAN and my RFKILL-switch is
+> set to ON.
+> 
+> On power on the BT LED is on and when booting with 2.6.30 or with 2.6.30-git5
+> the WLAN LED becomes illuminated within the boot process after b43 pulled his
+> firmware.
+> 
+> With net-next-2.6 the BT LED is switched OFF(!) during the boot process and
+> the Kernel log says:
+> 
+> [   15.276568] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
+> [   15.423540] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+> [   15.545096] b43-phy0 debug: Chip initialized
+> [   15.545317] b43-phy0 debug: 32-bit DMA initialized
+> [   15.566383] b43-phy0 debug: Wireless interface started
+> [   15.566394] b43-phy0 debug: Adding Interface type 2
+> [   15.566670] b43-phy0: Radio hardware status changed to DISABLED
+> [   15.633069] b43-phy0: Radio turned on by software
+> [   15.647094] b43-phy0: The hardware RF-kill button still turns the radio
+> physically off. Press the button to turn it on.
+> [   15.673598] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [   15.721053] b43-phy0 debug: Removing Interface type 2
+> [   15.733877] b43-phy0 debug: Wireless interface stopped
+> 
+> The WLAN LED is never illuminated with net-next-2.6.
+> 
+> The BT LED is switched off something around this time in the log:
 
-I very much doubt I am the only one who see things that way :-)
 
-I'd like to keep working towards that goal (no, we're not there yet), and
-not away from it.
+[    4.079342] usb 7-1.2: configuration #1 chosen from 1 choice
+[    6.663535] dcdbas dcdbas: Dell Systems Management Base Driver (version
+5.6.0-3.2)
+[    7.097116] usb 3-2: USB disconnect, address 2
+[    7.623369] Bluetooth: Core ver 2.15
+[    7.639047] NET: Registered protocol family 31
 
-> This of course only works on soft blocked devices. The hard blocked
-> devices stay off. And in case of ThinkPads where the button does the
-> hard block, you can't bring it back from software.
-
-Yes.  But the rfkill core is also meant to bring some band-aid help to the
-devices that the hardware can't kill by itself.  That's good usability.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+> 
+> [    7.639047] NET: Registered protocol family 31
+> [    7.651562] Bluetooth: HCI device and connection manager initialized
+> [    7.664155] Bluetooth: HCI socket layer initialized
+> [    7.756113] b43-pci-bridge 0000:0c:00.0: PCI INT A -> GSI 17 (level, low)
+> -> IRQ 17
+> [    7.769117] b43-pci-bridge 0000:0c:00.0: setting latency timer to 64
+> [    7.828160] yenta_cardbus 0000:03:01.0: CardBus bridge found [1028:01fe]
+> [    7.841107] yenta_cardbus 0000:03:01.0: O2: res at 0x94/0xD4: 00/ea
+> [    7.853830] yenta_cardbus 0000:03:01.0: O2: enabling read prefetch/write burst
+> [    7.867428] i801_smbus 0000:00:1f.3: PCI INT B -> GSI 17 (level, low) -> IRQ 17
+> [    7.881369] ssb: Sonics Silicon Backplane found on PCI device 0000:0c:00.0
+> [    7.897694] Bluetooth: Generic Bluetooth USB driver ver 0.5
+> [    7.910910] usbcore: registered new interface driver btusb
+> 
+> 
+> When i see the BT LED switching to off, i can manually switch the RFKILL
+> switch to OFF and ON, and then both LEDs get illuminated and WLAN is
+> successfully initialized by the boot process.
+> 
+> As we discussed about RFKILL and modules, i set CONFIG_RFKILL=y in my
+> net-netx-2.6 tree with no change of the behaviour.
+> 
+> Any idea what changed in net-next-2.6 that could produce this behaviour?
+> 
+> Regards,
+> Oliver
