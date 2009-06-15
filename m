@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35530 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbZFZGAv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2009 02:00:51 -0400
-Date: Fri, 26 Jun 2009 07:46:43 +0200
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] wireless extensions improvements
-Message-ID: <20090626054642.GA4911@tuxdriver.com>
-References: <20090624113447.441667549@sipsolutions.net> <20090625.161817.112930127.davem@davemloft.net>
+Received: from kroah.org ([198.145.64.141]:45389 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751556AbZFOUXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2009 16:23:32 -0400
+Date: Mon, 15 Jun 2009 13:19:34 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	tshibata@ab.jp.nec.com
+Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
+	window
+Message-ID: <20090615201934.GA12685@kroah.com>
+References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090625.161817.112930127.davem@davemloft.net>
+In-Reply-To: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 25, 2009 at 04:18:17PM -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Wed, 24 Jun 2009 13:34:47 +0200
+On Mon, Jun 15, 2009 at 04:12:51PM -0400, Luis R. Rodriguez wrote:
+> This is losely based on previous discussions on linux-kernel [1][2].
 > 
-> > This series contains three improvements to wireless
-> > extensions:
-> >  1) make them network namespace aware, as discussed
-> >     previously
-> >  2) optimise the event sending code and fix a small
-> >     heap information leak
-> >  3) do some generic work and make it possible to send
-> >     compat netlink events, and make wext do this
-> > 
-> > Because the third patch depends on the first two (it
-> > could be made not to, if you wish) but touches generic
-> > networking stuff, I'd like to have all of these included
-> > in net-next instead of John's wireless tree, all the
-> > other wireless work can be done independently of these.
+> [1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
+> [2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
 > 
-> These changes look fine to me, so I'll likely put them into
-> net-next-2.6 as soon as I open that up.
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+> 
+> I have run into issues when trying to explain this and policies
+> for the rc-series, it seems there is no place that documents this
+> clearly so here is an attempt based on some previous discussions.
+> Not sure if I got it all correct, so feedback is welcomed. I do think
+> clarifying this a little should help.
+> 
+> I was also not sure if Documentation/stable_kernel_rules.txt is the best
+> splace for this as well, please let me know.
 
-ACK
+I don't think this is the best place for it, as the stable_* file is for
+describing the rules for the 2.6.x.y releases, not the main 2.6.x
+releases.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+A new file perhaps?  Or an addition to the
+Documentation/development-process/ book?
+
+thanks,
+
+greg k-h
