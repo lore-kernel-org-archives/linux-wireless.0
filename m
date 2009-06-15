@@ -1,68 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47014 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52860 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbZFEJro (ORCPT
+	with ESMTP id S1757029AbZFOQOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 05:47:44 -0400
-Subject: [PATCH] ar9170: interpret firmware debug commands
+	Mon, 15 Jun 2009 12:14:32 -0400
+Subject: [PATCH 2.6.31 v2] mac80211: fix wext bssid/ssid setting
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1245082185.23912.6.camel@johannes.local>
+References: <1245082185.23912.6.camel@johannes.local>
 Content-Type: text/plain
-Date: Fri, 05 Jun 2009 11:47:43 +0200
-Message-Id: <1244195263.22576.96.camel@johannes.local>
+Date: Mon, 15 Jun 2009 18:13:58 +0200
+Message-Id: <1245082438.23912.7.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds new commands that the original firmware will not send
-but we can use them to debug firmware.
+When changing to a new BSSID or SSID, the code in
+ieee80211_set_disassoc() needs to have the old data
+still valid to be able to disconnect and clean up
+properly. Currently, however, the old data is thrown
+away before ieee80211_set_disassoc() is ever called,
+so fix that by calling the function _before_ the old
+data is overwritten.
+
+This is (one of) the issue(s) causing mac80211 to hold
+cfg80211's BSS structs forever, and them thus being
+returned in scan results after they're long gone.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ar9170/main.c |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+I'll be so happy when all this goes away to cfg80211...
 
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2009-06-05 09:28:48.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2009-06-05 09:46:38.000000000 +0200
-@@ -442,6 +442,38 @@ void ar9170_handle_command_response(stru
- 		/* retransmission issue / SIFS/EIFS collision ?! */
- 		break;
+Sorry, the WARN() was for debugging, there are valid code paths where we
+get there (well, they should be cleaned up and made invalid, but anyway)
+
+ net/mac80211/mlme.c |   25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-06-15 16:40:16.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-06-15 18:12:47.000000000 +0200
+@@ -1102,14 +1102,6 @@ static void ieee80211_set_disassoc(struc
+ 	struct sta_info *sta;
+ 	u32 changed = 0, config_changed = 0;
  
-+	/* firmware debug */
-+	case 0xca:
-+		printk(KERN_DEBUG "ar9170 FW: %.*s\n", len - 4, (char *)buf + 4);
-+		break;
-+	case 0xcb:
-+		len -= 4;
+-	rcu_read_lock();
+-
+-	sta = sta_info_get(local, ifmgd->bssid);
+-	if (!sta) {
+-		rcu_read_unlock();
+-		return;
+-	}
+-
+ 	if (deauth) {
+ 		ifmgd->direct_probe_tries = 0;
+ 		ifmgd->auth_tries = 0;
+@@ -1120,7 +1112,11 @@ static void ieee80211_set_disassoc(struc
+ 	netif_tx_stop_all_queues(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
+ 
+-	ieee80211_sta_tear_down_BA_sessions(sta);
++	rcu_read_lock();
++	sta = sta_info_get(local, ifmgd->bssid);
++	if (sta)
++		ieee80211_sta_tear_down_BA_sessions(sta);
++	rcu_read_unlock();
+ 
+ 	bss = ieee80211_rx_bss_get(local, ifmgd->bssid,
+ 				   conf->channel->center_freq,
+@@ -1156,8 +1152,6 @@ static void ieee80211_set_disassoc(struc
+ 				ifmgd->ssid, ifmgd->ssid_len);
+ 	}
+ 
+-	rcu_read_unlock();
+-
+ 	ieee80211_set_wmm_default(sdata);
+ 
+ 	ieee80211_recalc_idle(local);
+@@ -2479,6 +2473,10 @@ int ieee80211_sta_set_ssid(struct ieee80
+ 	ifmgd = &sdata->u.mgd;
+ 
+ 	if (ifmgd->ssid_len != len || memcmp(ifmgd->ssid, ssid, len) != 0) {
++		if (ifmgd->state == IEEE80211_STA_MLME_ASSOCIATED)
++			ieee80211_set_disassoc(sdata, true, true,
++					       WLAN_REASON_DEAUTH_LEAVING);
 +
-+		switch (len) {
-+		case 1:
-+			printk(KERN_DEBUG "ar9170 FW: u8: %#.2x\n",
-+				*((char *)buf + 4));
-+			break;
-+		case 2:
-+			printk(KERN_DEBUG "ar9170 FW: u8: %#.4x\n",
-+				le16_to_cpup((__le16 *)((char *)buf + 4)));
-+			break;
-+		case 4:
-+			printk(KERN_DEBUG "ar9170 FW: u8: %#.8x\n",
-+				le32_to_cpup((__le32 *)((char *)buf + 4)));
-+			break;
-+		case 8:
-+			printk(KERN_DEBUG "ar9170 FW: u8: %#.16lx\n",
-+				(unsigned long)le64_to_cpup(
-+						(__le64 *)((char *)buf + 4)));
-+			break;
-+		}
-+		break;
-+	case 0xcc:
-+		print_hex_dump_bytes("ar9170 FW:", DUMP_PREFIX_NONE,
-+				     (char *)buf + 4, len - 4);
-+		break;
+ 		/*
+ 		 * Do not use reassociation if SSID is changed (different ESS).
+ 		 */
+@@ -2503,6 +2501,11 @@ int ieee80211_sta_set_bssid(struct ieee8
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
++	if (compare_ether_addr(bssid, ifmgd->bssid) != 0 &&
++	    ifmgd->state == IEEE80211_STA_MLME_ASSOCIATED)
++		ieee80211_set_disassoc(sdata, true, true,
++				       WLAN_REASON_DEAUTH_LEAVING);
 +
- 	default:
- 		printk(KERN_INFO "received unhandled event %x\n", cmd->type);
- 		print_hex_dump_bytes("dump:", DUMP_PREFIX_NONE, buf, len);
+ 	if (is_valid_ether_addr(bssid)) {
+ 		memcpy(ifmgd->bssid, bssid, ETH_ALEN);
+ 		ifmgd->flags |= IEEE80211_STA_BSSID_SET;
 
 
