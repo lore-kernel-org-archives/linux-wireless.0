@@ -1,30 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slackware.com ([64.57.102.34]:48756 "EHLO bob.slackware.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753835AbZFLGo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 02:44:29 -0400
-Date: Thu, 11 Jun 2009 22:51:24 -0700 (PDT)
-From: Robby Workman <rworkman@slackware.com>
-To: ilw@linux.intel.com
-cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: iwlagn crash on 2.6.29.4
-Message-ID: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com>
+Received: from mga05.intel.com ([192.55.52.89]:35242 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1764944AbZFORuT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2009 13:50:19 -0400
+Date: Mon, 15 Jun 2009 19:52:26 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>
+Subject: Re: [PATCH 01/12][2.6.31 and w-t] iwmc3200wifi: fix sdio
+	initialisation race
+Message-ID: <20090615175225.GF4094@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org> <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org> <1245080647.23912.3.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1245080647.23912.3.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2.6.29.4, I just got a crash in iwlagn under heavy network
-throughput.  I was transferring a dvd iso from one box in my
-lan to another, and the following occurred:
+On Mon, Jun 15, 2009 at 05:44:07PM +0200, Johannes Berg wrote:
+> On Mon, 2009-06-15 at 17:39 +0200, Samuel Ortiz wrote:
+> > From: Samuel Ortiz <samuel.ortiz@intel.com>
+> > 
+> > When modprobing this driver, the netdev interface is ready before the SDIO
+> > function is correctly set.
+> > This can lead to userspace calling ndo_open() before the SDIO bus is ready.
+> > We fix that by returning an error from ndo_open() when the
+> > IWM_STATUS_BUS_READY bit is not set yet.
+> 
+> Can't you wait for it to be set instead?
+I thought about it, but I didnt want to add one more completion/wait_queue
+pointer to our already crowded iwm structures.
+But if you or John insist on it, I can definitely do it.
 
-   http://slackware.com/~rworkman/OOPS
+Cheers,
+Samuel.
+ 
+> johannes
+> 
+> > Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+> > ---
+> >  drivers/net/wireless/iwmc3200wifi/iwm.h    |   11 ++++++-----
+> >  drivers/net/wireless/iwmc3200wifi/main.c   |    6 +++++-
+> >  drivers/net/wireless/iwmc3200wifi/netdev.c |   10 ++++++----
+> >  drivers/net/wireless/iwmc3200wifi/sdio.c   |    4 ++++
+> >  4 files changed, 21 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
+> > index 635c16e..3cc4e91 100644
+> > --- a/drivers/net/wireless/iwmc3200wifi/iwm.h
+> > +++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
+> > @@ -180,11 +180,12 @@ struct iwm_key {
+> >  
+> >  #define IWM_SCAN_ID_MAX 0xff
+> >  
+> > -#define IWM_STATUS_READY		0
+> > -#define IWM_STATUS_SCANNING		1
+> > -#define IWM_STATUS_SCAN_ABORTING	2
+> > -#define IWM_STATUS_ASSOCIATING		3
+> > -#define IWM_STATUS_ASSOCIATED		4
+> > +#define IWM_STATUS_BUS_READY		0
+> > +#define IWM_STATUS_READY		1
+> > +#define IWM_STATUS_SCANNING		2
+> > +#define IWM_STATUS_SCAN_ABORTING	3
+> > +#define IWM_STATUS_ASSOCIATING		4
+> > +#define IWM_STATUS_ASSOCIATED		5
+> >  
+> >  #define IWM_RADIO_RFKILL_OFF		0
+> >  #define IWM_RADIO_RFKILL_HW		1
+> > diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
+> > index 6a2640f..09ed247 100644
+> > --- a/drivers/net/wireless/iwmc3200wifi/main.c
+> > +++ b/drivers/net/wireless/iwmc3200wifi/main.c
+> > @@ -227,11 +227,15 @@ int iwm_priv_init(struct iwm_priv *iwm)
+> >  void iwm_reset(struct iwm_priv *iwm)
+> >  {
+> >  	struct iwm_notif *notif, *next;
+> > +	unsigned long status = 0;
+> >  
+> >  	if (test_bit(IWM_STATUS_READY, &iwm->status))
+> >  		iwm_target_reset(iwm);
+> >  
+> > -	iwm->status = 0;
+> > +	if (test_bit(IWM_STATUS_BUS_READY, &iwm->status))
+> > +		set_bit(IWM_STATUS_BUS_READY, &status);
+> > +
+> > +	iwm->status = status;
+> >  	iwm->scan_id = 1;
+> >  
+> >  	list_for_each_entry_safe(notif, next, &iwm->pending_notif, pending) {
+> > diff --git a/drivers/net/wireless/iwmc3200wifi/netdev.c b/drivers/net/wireless/iwmc3200wifi/netdev.c
+> > index 68e2c3b..5b7aa34 100644
+> > --- a/drivers/net/wireless/iwmc3200wifi/netdev.c
+> > +++ b/drivers/net/wireless/iwmc3200wifi/netdev.c
+> > @@ -54,9 +54,10 @@
+> >  static int iwm_open(struct net_device *ndev)
+> >  {
+> >  	struct iwm_priv *iwm = ndev_to_iwm(ndev);
+> > -	int ret = 0;
+> > +	int ret = -ENODEV;
+> >  
+> > -	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio))
+> > +	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio)
+> > +	    && test_bit(IWM_STATUS_BUS_READY, &iwm->status))
+> >  		ret = iwm_up(iwm);
+> >  
+> >  	return ret;
+> > @@ -65,9 +66,10 @@ static int iwm_open(struct net_device *ndev)
+> >  static int iwm_stop(struct net_device *ndev)
+> >  {
+> >  	struct iwm_priv *iwm = ndev_to_iwm(ndev);
+> > -	int ret = 0;
+> > +	int ret = -ENODEV;
+> >  
+> > -	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio))
+> > +	if (!test_bit(IWM_RADIO_RFKILL_SW, &iwm->radio)
+> > +	    && test_bit(IWM_STATUS_BUS_READY, &iwm->status))
+> >  		ret = iwm_down(iwm);
+> >  
+> >  	return ret;
+> > diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.c b/drivers/net/wireless/iwmc3200wifi/sdio.c
+> > index b54da67..97e7da3 100644
+> > --- a/drivers/net/wireless/iwmc3200wifi/sdio.c
+> > +++ b/drivers/net/wireless/iwmc3200wifi/sdio.c
+> > @@ -454,6 +454,9 @@ static int iwm_sdio_probe(struct sdio_func *func,
+> >  
+> >  	INIT_WORK(&hw->isr_worker, iwm_sdio_isr_worker);
+> >  
+> > +	/* The SDIO bus is set and ready to be enabled */
+> > +	set_bit(IWM_STATUS_BUS_READY, &iwm->status);
+> > +
+> >  	dev_info(dev, "IWM SDIO probe\n");
+> >  
+> >  	return 0;
+> > @@ -476,6 +479,7 @@ static void iwm_sdio_remove(struct sdio_func *func)
+> >  	destroy_workqueue(hw->isr_wq);
+> >  
+> >  	sdio_set_drvdata(func, NULL);
+> > +	clear_bit(IWM_STATUS_BUS_READY, &iwm->status);
+> >  
+> >  	dev_info(dev, "IWM SDIO remove\n");
+> >  
 
-It didn't bring the entire system to a halt (thankfully);
-removing and reloading the iwlagn module made everything
-just fine. :-)
 
-If any more information is needed, let me know.  I'm more than
-willing to test patches and such...
 
--RW
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
