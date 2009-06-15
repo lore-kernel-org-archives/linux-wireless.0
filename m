@@ -1,82 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:47592 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751497AbZFVVS5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 17:18:57 -0400
-MIME-Version: 1.0
-In-Reply-To: <20090622211540.GD24236@elf.ucw.cz>
-References: <20090622180438.GG23972@bombadil.infradead.org>
-	<20090622204500.GB24236@elf.ucw.cz> <43e72e890906221411od16be51k2fc811dbf223ed9f@mail.gmail.com>
-	<20090622211540.GD24236@elf.ucw.cz>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 22 Jun 2009 14:18:39 -0700
-Message-ID: <43e72e890906221418i328df5c7v2f795235b41d0d97@mail.gmail.com>
-Subject: Re: [PATCH] Documentation: add documentation summary for rc-series
-	and merge window
-To: Pavel Machek <pavel@ucw.cz>
-Cc: torvalds@linux-foundation.org, Greg KH <greg@kroah.com>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+Received: from slackware.com ([64.57.102.34]:41853 "EHLO bob.slackware.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751863AbZFOD2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jun 2009 23:28:49 -0400
+Date: Sun, 14 Jun 2009 20:28:46 -0700 (PDT)
+From: Robby Workman <rworkman@slackware.com>
+To: reinette chatre <reinette.chatre@intel.com>
+cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
-Content-Type: text/plain; charset=UTF-8
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [Ilw] iwlagn crash on 2.6.29.4
+In-Reply-To: <1244825750.20900.468.camel@rc-desk>
+Message-ID: <alpine.LNX.1.10.0906142015390.21143@bob.slackware.com>
+References: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com> <1244825750.20900.468.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 22, 2009 at 2:15 PM, Pavel Machek<pavel@ucw.cz> wrote:
-> On Mon 2009-06-22 14:11:45, Luis R. Rodriguez wrote:
->> On Mon, Jun 22, 2009 at 1:45 PM, Pavel Machek<pavel@ucw.cz> wrote:
->> > On Mon 2009-06-22 14:04:38, Luis R. Rodriguez wrote:
->> >> This is losely based on previous discussions on linux-kernel [1][2][3].
->> >> Lets also refer people reading the stable rules to
->> >> Documentation/development-process/.
->> >>
->> >> Also add the number of days it has taken between releases,
->> >> and provide the average for the last 10 releases: 86.0 days.
->> >>
->> >> [1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
->> >> [2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
->> >> [3] http://marc.info/?l=linux-kernel&m=124515657407679&w=2
->> >>
->> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> > NAK.
->> >
->> >> +2.0.2: RC-SERIES RULES
->> >> +
->> >> +This section summarizes what kind of patches are accepted before the merge
->> >> +window closes and after it closes. These patches are targeted for the kernel
->> >> +prior to its final release.
->> >> +
->> >> +The rc-series focus should really be to address regressions.
->> >> +
->> >> +2.0.2.0: RC-SERIES RULES PRIOR TO THE RC1 RELEASE
->> >> +
->> >> +These are the types of patches that will get accepted prior to a kernel rc1 release,
->> >> +during the merge window:
->> >> +
->> >> + - it must fix a regression
->> >> + - it must fix a security hole
->> >> + - it must fix a oops/kernel hang
->> >> +
->> >> +Non-intrusive bug fixes or small fixes will not be accepted. If the
->> >> patch in
->> >
->> > What? Prior to rc1, new features are accepted.
+On Fri, 12 Jun 2009, reinette chatre wrote:
+
+> On Thu, 2009-06-11 at 22:51 -0700, Robby Workman wrote:
+>> On 2.6.29.4, I just got a crash in iwlagn under heavy network
+>> throughput.  I was transferring a dvd iso from one box in my
+>> lan to another, and the following occurred:
 >>
->> For maintainers yes, for developers sending to the subsystem
->> maintainer no, at least not for that kernel release being worked on. I
->> can try to make this a little clearer.
+>>    http://slackware.com/~rworkman/OOPS
+>>
+>> It didn't bring the entire system to a halt (thankfully);
+>> removing and reloading the iwlagn module made everything
+>> just fine. :-)
+>>
+>> If any more information is needed, let me know.  I'm more than
+>> willing to test patches and such...
 >
-> Yes, it would be good if it was clearer.
+> Which hardware are you using?
+
+3:00.0 Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network Connection
+ 	Subsystem: Intel Corporation Device 1211
+ 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+ 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+ 	Latency: 0, Cache Line Size: 64 bytes
+ 	Interrupt: pin A routed to IRQ 30
+ 	Region 0: Memory at f4300000 (64-bit, non-prefetchable) [size=8K]
+ 	Capabilities: [c8] Power Management version 3
+ 		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+ 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+ 	Capabilities: [d0] MSI: Mask- 64bit+ Count=1/1 Enable+
+ 		Address: 00000000fee0300c  Data: 41e1
+ 	Capabilities: [e0] Express (v1) Endpoint, MSI 00
+ 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
+ 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+ 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+ 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+ 			MaxPayload 128 bytes, MaxReadReq 128 bytes
+ 		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+ 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <32us
+ 			ClockPM+ Surprise- LLActRep- BwNot-
+ 		LnkCtl:	ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+ 			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+ 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+ 	Capabilities: [100] Advanced Error Reporting
+ 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+ 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+ 		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+ 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+ 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+ 		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+ 	Capabilities: [140] Device Serial Number 78-31-d5-ff-ff-fa-22-00
+ 	Kernel driver in use: iwlagn
+ 	Kernel modules: iwlagn
+
+
+> We released new ucode for 4965, 5100, 5300, and 5350 that address this
+> issue. The new 4965 ucode should work fine with your driver. If you are
+> using later hardware then you need a more recent driver to be able to
+> use its new ucode.
 >
-> If maintainer accepts non-intrusive bugfixes during merge window is
-> pretty much his decision, I'd say. I'd expect him to take them if he
-> has bandwidth available.
+> You can download the new ucode from:
+> http://intellinuxwireless.org/?n=Downloads
 
-OK thanks I'll add that as well.
 
-  Luis
+Best I can tell, I'll need 2.6.30 for the new 5100 firmware, as 2.6.29.4
+doesn't seem to care that the newer firmware is present:
+
+   root@liberty:~# ls /lib/firmware/iwlwifi-5000-*
+   /lib/firmware/iwlwifi-5000-1.ucode  /lib/firmware/iwlwifi-5000-2.ucode
+
+   ... and from dmesg:
+   iwlagn 0000:03:00.0: firmware: requesting iwlwifi-5000-1.ucode
+   iwlagn loaded firmware version 5.4.1.16
+
+I guess I'll have to wait a bit, as 2.6.30 is off the table for now.
+No big deal - at least it's fixed, even if not for me yet.
+
+Thanks!
+
+-RW
+
