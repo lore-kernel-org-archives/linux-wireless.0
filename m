@@ -1,36 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:43366 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756972AbZFANa2 (ORCPT
+Received: from mga12.intel.com ([143.182.124.36]:24290 "EHLO
+	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758547AbZFOPip (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 09:30:28 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so569513fga.17
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2009 06:30:29 -0700 (PDT)
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Add sanity check for beacon_int in adhoc/mesh case
-References: <20090528162528.GA8117@jm.kir.nu>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 01 Jun 2009 16:30:27 +0300
-In-Reply-To: <20090528162528.GA8117@jm.kir.nu> (Jouni Malinen's message of "Thu\, 28 May 2009 19\:25\:28 +0300")
-Message-ID: <87skikt72k.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 15 Jun 2009 11:38:45 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>
+Subject: [PATCH 05/12][2.6.31 and w-t] iwmc3200wifi: add a mutex to protect iwm_reset_worker
+Date: Mon, 15 Jun 2009 17:39:21 +0200
+Message-Id: <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
+In-Reply-To: <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org>
+ <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org>
+ <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
+ <9b2b9b463d1313b871f56ad77b48b4960653b766.1245076752.git.samuel@sortiz.org>
+ <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
+In-Reply-To: <cover.1245076752.git.samuel@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <jouni.malinen@atheros.com> writes:
+From: Zhu Yi <yi.zhu@intel.com>
 
-> +	/*
-> +	 * It looks like mac80211 may end up using beacon interval of zero in
-> +	 * some cases (at least for mesh point). Avoid getting into an
-> +	 * infinite loop by using a bit safer value instead..
-> +	 */
-> +	if (intval == 0)
-> +		intval = 100;
+The patch adds a mutex to protect the iwm_reset_worker against netdev
+ndo_open and ndo_stop because all of them call iwm_up and iwm_down in
+the implementation. Note the latter two are already protected by
+rtnl. So if iwm_reset_worker is not required in the future, the mutex
+can also be removed.
 
-Maybe a big fat warning here would help with debugging the issue?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/iwm.h  |    1 +
+ drivers/net/wireless/iwmc3200wifi/main.c |   54 ++++++++++++++++++++++++++---
+ 2 files changed, 49 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
+index 73c1011..8b22df3 100644
+--- a/drivers/net/wireless/iwmc3200wifi/iwm.h
++++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
+@@ -289,6 +289,7 @@ struct iwm_priv {
+ 	u8 *eeprom;
+ 	struct timer_list watchdog;
+ 	struct work_struct reset_worker;
++	struct mutex mutex;
+ 	struct rfkill *rfkill;
+ 
+ 	char private[0] __attribute__((__aligned__(NETDEV_ALIGN)));
+diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
+index cfe1890..fdac13a 100644
+--- a/drivers/net/wireless/iwmc3200wifi/main.c
++++ b/drivers/net/wireless/iwmc3200wifi/main.c
+@@ -112,6 +112,9 @@ static void iwm_statistics_request(struct work_struct *work)
+ 	iwm_send_umac_stats_req(iwm, 0);
+ }
+ 
++int __iwm_up(struct iwm_priv *iwm);
++int __iwm_down(struct iwm_priv *iwm);
++
+ static void iwm_reset_worker(struct work_struct *work)
+ {
+ 	struct iwm_priv *iwm;
+@@ -120,6 +123,19 @@ static void iwm_reset_worker(struct work_struct *work)
+ 
+ 	iwm = container_of(work, struct iwm_priv, reset_worker);
+ 
++	/*
++	 * XXX: The iwm->mutex is introduced purely for this reset work,
++	 * because the other users for iwm_up and iwm_down are only netdev
++	 * ndo_open and ndo_stop which are already protected by rtnl.
++	 * Please remove iwm->mutex together if iwm_reset_worker() is not
++	 * required in the future.
++	 */
++	if (!mutex_trylock(&iwm->mutex)) {
++		IWM_WARN(iwm, "We are in the middle of interface bringing "
++			 "UP/DOWN. Skip driver resetting.\n");
++		return;
++	}
++
+ 	if (iwm->umac_profile_active) {
+ 		profile = kmalloc(sizeof(struct iwm_umac_profile), GFP_KERNEL);
+ 		if (profile)
+@@ -128,10 +144,10 @@ static void iwm_reset_worker(struct work_struct *work)
+ 			IWM_ERR(iwm, "Couldn't alloc memory for profile\n");
+ 	}
+ 
+-	iwm_down(iwm);
++	__iwm_down(iwm);
+ 
+ 	while (retry++ < 3) {
+-		ret = iwm_up(iwm);
++		ret = __iwm_up(iwm);
+ 		if (!ret)
+ 			break;
+ 
+@@ -142,7 +158,7 @@ static void iwm_reset_worker(struct work_struct *work)
+ 		IWM_WARN(iwm, "iwm_up() failed: %d\n", ret);
+ 
+ 		kfree(profile);
+-		return;
++		goto out;
+ 	}
+ 
+ 	if (profile) {
+@@ -151,6 +167,9 @@ static void iwm_reset_worker(struct work_struct *work)
+ 		iwm_send_mlme_profile(iwm);
+ 		kfree(profile);
+ 	}
++
++ out:
++	mutex_unlock(&iwm->mutex);
+ }
+ 
+ static void iwm_watchdog(unsigned long data)
+@@ -215,6 +234,7 @@ int iwm_priv_init(struct iwm_priv *iwm)
+ 	init_timer(&iwm->watchdog);
+ 	iwm->watchdog.function = iwm_watchdog;
+ 	iwm->watchdog.data = (unsigned long)iwm;
++	mutex_init(&iwm->mutex);
+ 
+ 	return 0;
+ }
+@@ -480,7 +500,7 @@ void iwm_link_off(struct iwm_priv *iwm)
+ 
+ 	iwm_rx_free(iwm);
+ 
+-	cancel_delayed_work(&iwm->stats_request);
++	cancel_delayed_work_sync(&iwm->stats_request);
+ 	memset(wstats, 0, sizeof(struct iw_statistics));
+ 	wstats->qual.updated = IW_QUAL_ALL_INVALID;
+ 
+@@ -525,7 +545,7 @@ static int iwm_channels_init(struct iwm_priv *iwm)
+ 	return 0;
+ }
+ 
+-int iwm_up(struct iwm_priv *iwm)
++int __iwm_up(struct iwm_priv *iwm)
+ {
+ 	int ret;
+ 	struct iwm_notif *notif_reboot, *notif_ack = NULL;
+@@ -661,7 +681,18 @@ int iwm_up(struct iwm_priv *iwm)
+ 	return -EIO;
+ }
+ 
+-int iwm_down(struct iwm_priv *iwm)
++int iwm_up(struct iwm_priv *iwm)
++{
++	int ret;
++
++	mutex_lock(&iwm->mutex);
++	ret = __iwm_up(iwm);
++	mutex_unlock(&iwm->mutex);
++
++	return ret;
++}
++
++int __iwm_down(struct iwm_priv *iwm)
+ {
+ 	int ret;
+ 
+@@ -692,3 +723,14 @@ int iwm_down(struct iwm_priv *iwm)
+ 
+ 	return 0;
+ }
++
++int iwm_down(struct iwm_priv *iwm)
++{
++	int ret;
++
++	mutex_lock(&iwm->mutex);
++	ret = __iwm_down(iwm);
++	mutex_unlock(&iwm->mutex);
++
++	return ret;
++}
 -- 
-Kalle Valo
+1.6.3.1
+
