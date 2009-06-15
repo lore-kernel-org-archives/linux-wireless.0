@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:57363 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242AbZF3LJ0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43456 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259AbZFOUae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 07:09:26 -0400
-Received: by fxm18 with SMTP id 18so49944fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 04:09:27 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: mac80211 sw scan: passive dwell time
-Date: Tue, 30 Jun 2009 13:09:30 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 15 Jun 2009 16:30:34 -0400
+Date: Mon, 15 Jun 2009 16:18:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	greg@kroah.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, tshibata@ab.jp.nec.com
+Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
+	window
+Message-ID: <20090615201830.GI2729@tuxdriver.com>
+References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200906301309.30630.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Jun 15, 2009 at 04:12:51PM -0400, Luis R. Rodriguez wrote:
 
-in mac80211's software scan implementation the passive dwell time
-IEEE80211_PASSIVE_CHANNEL_TIME is set to (HZ / 5) which means we
-stay 200ms on each passive channel. Compared to iwlwifi's hw scan
-and the old ipw* drivers which use values around 120ms this is quite
-long.
+> I was also not sure if Documentation/stable_kernel_rules.txt is the best
+> splace for this as well, please let me know.
 
-Reducing the passive dwell time from 200ms to 120ms could save us
-something around a second on cards capable of 11a and we would be still
-able to catch beacons from most access points (assuming a ~100ms beacon
-interval).
+I'm pretty sure it needs to be somewhere else.  The -stable release
+timing is basically unrelated to what your text discusses.
 
-Objections?
-
-Thanks,
-Helmut
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
