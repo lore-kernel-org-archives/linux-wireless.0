@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:57639 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbZFOODS (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:36618 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbZFONVB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 10:03:18 -0400
-Message-ID: <4A3654A4.1070700@tuffmail.co.uk>
-Date: Mon, 15 Jun 2009 15:03:16 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Mon, 15 Jun 2009 09:21:01 -0400
+Message-ID: <4A364ABB.6040704@hartkopp.net>
+Date: Mon, 15 Jun 2009 15:20:59 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: linux-pm@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [linux-pm] PCI hotplug v.s. suspend
-References: <Pine.LNX.4.44L0.0906150956360.2928-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.0906150956360.2928-100000@iolanthe.rowland.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: rfkill regression in net-next-2.6
+References: <20090604152011.GC2839@tuxdriver.com>	 <20090607.033751.191866033.davem@davemloft.net>	 <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>	 <4A2BD8A5.4040302@hartkopp.net>	 <1244388583.23850.87.camel@localhost.localdomain>	 <4A34BAB9.9000104@hartkopp.net>  <20090615120422.GA2729@tuxdriver.com> <1245068686.23912.0.camel@johannes.local>
+In-Reply-To: <1245068686.23912.0.camel@johannes.local>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Stern wrote:
-> On Mon, 15 Jun 2009, Alan Jenkins wrote:
->
->   
->> Hi,
+Johannes Berg wrote:
+> On Mon, 2009-06-15 at 08:04 -0400, John W. Linville wrote:
+>> On Sun, Jun 14, 2009 at 10:54:17AM +0200, Oliver Hartkopp wrote:
 >>
->> I triggered a WARNING while hacking on eeepc-laptop's 
->> rfkill-by-pci-hotplug.  I saw "Trying to free already-free IRQ" in 
->> ath5k_pci_remove(), because the IRQ was already freed by 
->> ath5k_pci_suspend().  My changes to eeepc-laptop had allowed the PCI 
->> device to be removed while suspended.
->>
->> Are PCI drivers supposed to handle remove() while suspended?
->>     
->
-> Yes.  You found a bug in the driver.  However it's not clear (to me at
-> least) whether the bug is that the IRQ is freed in the suspend method
-> or that there's no check for already-freed in the remove method.  My 
-> guess is the latter.
->
-> Alan Stern
->   
+>>> Any idea what changed in net-next-2.6 that could produce this behaviour?
+>> The rfkill subsystem rewrite would seem suspect... :-)
+> 
+> Maybe this fixes it?
 
-The example in Documentation/power/pci.txt shows free_irq() being called
-in suspend (and request_irq() in resume).  So the problem is in remove().
+Yes, that made it!
 
-Perhaps I will try hacking fakephp to simulate this case, and see if I
-can find bugs in any other drivers :-).
+I booted with the RFKILL switch ON and OFF and the system and the LEDs are
+working as one would expect it.
 
-Thanks!
-Alan
+Thanks Johannes.
+
+Tested-by: Oliver Hartkopp <oliver@hartkopp.net>
+
+
+> 
+> johannes
+> 
+> --- wireless-testing.orig/drivers/platform/x86/dell-laptop.c	2009-06-15 14:23:25.000000000 +0200
+> +++ wireless-testing/drivers/platform/x86/dell-laptop.c	2009-06-15 14:23:35.000000000 +0200
+> @@ -177,7 +177,7 @@ dell_send_request(struct calling_interfa
+>  static int dell_rfkill_set(void *data, bool blocked)
+>  {
+>  	struct calling_interface_buffer buffer;
+> -	int disable = blocked ? 0 : 1;
+> +	int disable = blocked ? 1 : 0;
+>  	unsigned long radio = (unsigned long)data;
+>  
+>  	memset(&buffer, 0, sizeof(struct calling_interface_buffer));
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
