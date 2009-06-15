@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57807 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759951AbZFBIdc (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:3151 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751083AbZFOPhU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 04:33:32 -0400
-Subject: Re: [PATCH v5] rfkill: create useful userspace interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243930133.20064.8.camel@johannes.local>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <1243930133.20064.8.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 02 Jun 2009 10:33:09 +0200
-Message-Id: <1243931589.3192.66.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Mon, 15 Jun 2009 11:37:20 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 00/12] iwmc3200wifi updates
+Date: Mon, 15 Jun 2009 17:39:16 +0200
+Message-Id: <cover.1245076752.git.samuel@sortiz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi John,
 
-> The new code added by this patch will make rfkill create
-> a misc character device /dev/rfkill that userspace can use
-> to control rfkill soft blocks and get status of devices as
-> well as events when the status changes.
-> 
-> Using it is very simple -- when you open it you can read
-> a number of times to get the initial state, and every
-> further read blocks (you can poll) on getting the next
-> event from the kernel. The same structure you read is
-> also used when writing to it to change the soft block of
-> a given device, all devices of a given type, or all
-> devices.
-> 
-> This also makes CONFIG_RFKILL_INPUT selectable again in
-> order to be able to test without it present since its
-> functionality can now be replaced by userspace entirely
-> and distros and users may not want the input part of
-> rfkill interfering with their userspace code. We will
-> also write a userspace daemon to handle all that and
-> consequently add the input code to the feature removal
-> schedule.
-> 
-> In order to have rfkilld support both kernels with and
-> without CONFIG_RFKILL_INPUT (or new kernels after its
-> eventual removal) we also add an ioctl (that only exists
-> if rfkill-input is present) to disable rfkill-input.
-> It is not very efficient, but at least gives the correct
-> behaviour in all cases.
+Here go some updates for the iwmc3200wifi driver.
+Some of those patches are bug fixes and we'd like them to eventually make it
+to 2.6.31. The rest are targeted at wireless-testing inclusion.
+I tried to set an explicit subject line to let you clearly understand where
+we'd like each of them to land, please let me know if that's not the case.
 
-looks all good to me. As I said, before this makes sense and now we have
-to start working on creating rfkilld for RFKILL policy and input
-handling.
+Samuel Ortiz (5):
+  iwmc3200wifi: fix sdio initialisation race
+  iwmc3200wifi: invalidate keys when changing the BSSID
+  iwmc3200wifi: handling wifi_if_ntfy responses
+  iwmc3200wifi: cfg80211 key hooks implemetation
+  iwmc3200wifi: cache keys when interface is down
 
-John, I would prefer if we start merging this into wireless-testing to
-get proper user exposure and so we can start fixing fallouts (if there
-are any). We then should merge this into 2.6.31 quickly to finally have
-a proper RFKILL subsystem.
+Zhu Yi (7):
+  iwmc3200wifi: check for iwm_priv_init error
+  iwmc3200wifi: add iwm_if_add and iwm_if_remove
+  iwmc3200wifi: fix potential kernel oops on module removal
+  iwmc3200wifi: add a mutex to protect iwm_reset_worker
+  iwmc3200wifi: change coexist periodic calibration flag
+  iwmc3200wifi: remove select LIB80211 from Kconfig
+  iwmc3200wifi: rfkill cleanup
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-
-Regards
-
-Marcel
-
+ drivers/net/wireless/iwmc3200wifi/Kconfig    |    1 -
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |  204 +++++++++++++++++
+ drivers/net/wireless/iwmc3200wifi/commands.c |  116 +++++------
+ drivers/net/wireless/iwmc3200wifi/commands.h |    7 +-
+ drivers/net/wireless/iwmc3200wifi/iwm.h      |   39 ++--
+ drivers/net/wireless/iwmc3200wifi/main.c     |   95 ++++++---
+ drivers/net/wireless/iwmc3200wifi/netdev.c   |   68 ++++--
+ drivers/net/wireless/iwmc3200wifi/rx.c       |   27 ++-
+ drivers/net/wireless/iwmc3200wifi/sdio.c     |   21 ++-
+ drivers/net/wireless/iwmc3200wifi/umac.h     |    2 +
+ drivers/net/wireless/iwmc3200wifi/wext.c     |  305 +++-----------------------
+ 11 files changed, 460 insertions(+), 425 deletions(-)
 
