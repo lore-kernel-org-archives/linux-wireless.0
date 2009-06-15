@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([93.163.65.50]:54784 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752931AbZFXGmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 02:42:35 -0400
-Date: Wed, 24 Jun 2009 08:42:37 +0200
-From: Jens Axboe <jens.axboe@oracle.com>
-To: Jesper Dangaard Brouer <hawk@comx.dk>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Subject: Re: [PATCH 09/10] cfq-iosched: Uses its own open-coded rcu_barrier.
-Message-ID: <20090624064236.GE31415@kernel.dk>
-References: <20090623150330.22490.87327.stgit@localhost> <20090623150439.22490.14657.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090623150439.22490.14657.stgit@localhost>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35740 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756874AbZFOQMF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2009 12:12:05 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linwille <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] ath9k: process rx packet if we are waiting for CAB
+Date: Mon, 15 Jun 2009 17:49:11 +0200
+Message-Id: <1245080951-24804-3-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <1245080951-24804-1-git-send-email-juhosg@openwrt.org>
+References: <1245080951-24804-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23 2009, Jesper Dangaard Brouer wrote:
-> This module cfq-iosched, has discovered the value of waiting for
-> call_rcu() completion, but its has its own open-coded implementation
-> of rcu_barrier(), which I don't think is 'strong' enough.
-> 
-> This patch only leaves a comment for the maintainers to consider.
+If we are in PS mode, we have to process the received frame if
+the SC_OP_WAIT_FOR_CAB bit is set.
 
-We need a stronger primitive and rcu_barrier(), since we also need to
-wait for the rcu calls to even be scheduled. So I don't think the below
-can be improved, it's already fine.
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> 
-> Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
-> ---
-> 
->  block/cfq-iosched.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-> index 833ec18..c15555b 100644
-> --- a/block/cfq-iosched.c
-> +++ b/block/cfq-iosched.c
-> @@ -2657,6 +2657,12 @@ static void __exit cfq_exit(void)
->  	/*
->  	 * this also protects us from entering cfq_slab_kill() with
->  	 * pending RCU callbacks
-> +	 *
-> +	 * hawk@comx.dk 2009-06-18: Maintainer please consider using
-> +	 *  rcu_barrier() instead of this open-coded wait for
-> +	 *  completion implementation.  I think it provides a better
-> +	 *  guarantee that all CPUs are finished, although
-> +	 *  elv_ioc_count_read() do consider all CPUs.
->  	 */
->  	if (elv_ioc_count_read(ioc_count))
->  		wait_for_completion(&all_gone);
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5014a19..f99f3a7 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -817,6 +817,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		}
+ 
+ 		if (unlikely(sc->sc_flags & (SC_OP_WAIT_FOR_BEACON |
++					     SC_OP_WAIT_FOR_CAB |
+ 					     SC_OP_WAIT_FOR_PSPOLL_DATA)))
+ 			ath_rx_ps(sc, skb);
+ 
 -- 
-Jens Axboe
+1.5.3.2
 
