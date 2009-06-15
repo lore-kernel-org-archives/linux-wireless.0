@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22975 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:10925 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752798AbZFCSfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 14:35:53 -0400
+	id S932173AbZFOSNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2009 14:13:02 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 11:35:56 -0700
-Date: Wed, 3 Jun 2009 11:36:02 -0700
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2009 11:13:05 -0700
+Date: Mon, 15 Jun 2009 11:13:08 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
 CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
 	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: check for existance sta before adding it
-Message-ID: <20090603183602.GD13156@tesla>
-References: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com> <1243974947.7176.9.camel@johannes.local> <43e72e890906021401r2200bad9n1ffbe2c56c3a2c22@mail.gmail.com> <1244012450.7176.15.camel@johannes.local> <20090603180830.GA13156@tesla> <1244053423.22576.2.camel@johannes.local>
+	"chunkeey@web.de" <chunkeey@web.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"jal2@gmx.de" <jal2@gmx.de>,
+	Peter Grabienski <Peter.Grabienski@Atheros.com>,
+	Stephen Chen <Stephen.Chen@Atheros.com>,
+	Michael Fortin <Michael.Fortin@Atheros.com>,
+	Johnny Cheng <Johnny.Cheng@Atheros.com>,
+	Yuan-Gu Wei <Yuan-Gu.Wei@Atheros.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>, <dwmw2@infradead.org>
+Subject: Re: [PATCH 0/2] ar9170: 1-stage firmware support / AVM fritz
+Message-ID: <20090615181308.GC22922@tesla>
+References: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com> <1244992308.15367.3.camel@violet>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1244053423.22576.2.camel@johannes.local>
+In-Reply-To: <1244992308.15367.3.camel@violet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 03, 2009 at 11:23:43AM -0700, Johannes Berg wrote:
-> On Wed, 2009-06-03 at 11:08 -0700, Luis R. Rodriguez wrote:
-> > On Wed, Jun 03, 2009 at 12:00:50AM -0700, Johannes Berg wrote:
-> > > On Tue, 2009-06-02 at 14:01 -0700, Luis R. Rodriguez wrote:
-> > > 
-> > > > Thanks, yeah I see where I was making an incorrect assumption here.
-> > > > 
-> > > > There still is a case here where userpsace can try to add a sta twice
-> > > > and the second parameters passed would be ignored.
-> > > 
-> > > Don't we show that -EEXIST to userspace then? I thought we did.
-> > 
-> > We do, but why don't we *first* try to check for its existence?
+On Sun, Jun 14, 2009 at 08:11:48AM -0700, Marcel Holtmann wrote:
+> Hi Luis,
 > 
-> Because that's racy -- after the check completes and before we go try to
-> insert a station might have come to life. Well, it might actually be ok
-> due to external factors (AP mode _only_ gets stations from userspace)
-> but it seems better to not rely on that.
+> > This series now works for me on my WNDA31000, it took a newer shiny
+> > 1-stage firmware to work. I'll push the firmware into linux-firmware
+> > next.
+> >
+> > Should work with the AVM Fritz devices now, haven't tested it but
+> > I think it should work.
+> 
+> I happened to have one of these AVM devices. With ar9170.fw firmware it
+> does work fine with the other ones it doesn't.
 
-I see.
+Excellent, that was the idea behind the patch, to enable these
+devices. Thanks for testing.
 
-> What problem were you trying to solve btw?
+> The ar9170.fw is still not in linux-firmware.git, any reason for that?
 
-Nothing in particular, I was just reviewing sta code path.
+Yes, the patch I sent to David has some funk as objcopy to ihex seems
+to have some trailing white space. I sent a new patch to him without
+the ihex file though.
+
+> Also since ar9170-1.fw and ar9170-2.fw are not working at all,
+
+They work, they won't work for the AVM device though.
+
+> we better
+> not even try and give the user a crypted error message that the device
+> is in a bad state. Just printk that the firmware might be too old.
+
+Agreed, but as I sent the patch in we *require* the 1-stage firmware
+for the AVM devices, if that is not present we should be bailing out.
+Is that not what happens?
 
   Luis
