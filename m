@@ -1,118 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:44070 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759720AbZF2OQf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 10:16:35 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [PATCH] eeepc-laptop: fix hot-unplug on resume
-Date: Mon, 29 Jun 2009 16:16:56 +0200
-Cc: Corentin Chary <corentincj@iksaif.net>,
-	linux acpi <linux-acpi@vger.kernel.org>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4A48A196.3060409@tuffmail.co.uk>
-In-Reply-To: <4A48A196.3060409@tuffmail.co.uk>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200906291616.57440.rjw@sisk.pl>
+Received: from senator.holtmann.net ([87.106.208.187]:40835 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091AbZFOS5H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2009 14:57:07 -0400
+Subject: Re: [PATCH 0/2] ar9170: 1-stage firmware support / AVM fritz
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"chunkeey@web.de" <chunkeey@web.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"jal2@gmx.de" <jal2@gmx.de>,
+	Peter Grabienski <Peter.Grabienski@Atheros.com>,
+	Stephen Chen <Stephen.Chen@Atheros.com>,
+	Michael Fortin <Michael.Fortin@Atheros.com>,
+	Johnny Cheng <Johnny.Cheng@Atheros.com>,
+	Yuan-Gu Wei <Yuan-Gu.Wei@Atheros.com>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>, dwmw2@infradead.org
+In-Reply-To: <20090615181308.GC22922@tesla>
+References: <1243546565-19404-1-git-send-email-lrodriguez@atheros.com>
+	 <1244992308.15367.3.camel@violet>  <20090615181308.GC22922@tesla>
+Content-Type: text/plain
+Date: Mon, 15 Jun 2009 20:57:03 +0200
+Message-Id: <1245092223.15367.9.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 June 2009, Alan Jenkins wrote:
-> The patch below fixes a regression introduced by the rfkill rewrite. 
-> Please consider it for inclusion in 2.6.31 via the ACPI tree.
+Hi Luis,
 
-Is there a Bugzilla # for this regression?
+> > > This series now works for me on my WNDA31000, it took a newer shiny
+> > > 1-stage firmware to work. I'll push the firmware into linux-firmware
+> > > next.
+> > >
+> > > Should work with the AVM Fritz devices now, haven't tested it but
+> > > I think it should work.
+> > 
+> > I happened to have one of these AVM devices. With ar9170.fw firmware it
+> > does work fine with the other ones it doesn't.
+> 
+> Excellent, that was the idea behind the patch, to enable these
+> devices. Thanks for testing.
+> 
+> > The ar9170.fw is still not in linux-firmware.git, any reason for that?
+> 
+> Yes, the patch I sent to David has some funk as objcopy to ihex seems
+> to have some trailing white space. I sent a new patch to him without
+> the ihex file though.
+> 
+> > Also since ar9170-1.fw and ar9170-2.fw are not working at all,
+> 
+> They work, they won't work for the AVM device though.
+> 
+> > we better
+> > not even try and give the user a crypted error message that the device
+> > is in a bad state. Just printk that the firmware might be too old.
+> 
+> Agreed, but as I sent the patch in we *require* the 1-stage firmware
+> for the AVM devices, if that is not present we should be bailing out.
+> Is that not what happens?
 
-Rafael
+nope, it tries ar9170-1.fw and then tries to load that and fails with a
+timeout (-110) and a weird message that the device might be in a bad
+state.
 
-> -------------------->
-> 
-> From d0265f0bfe63086816d61c69ee4b2dc4cb491d06 Mon Sep 17 00:00:00 2001
-> From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Date: Mon, 29 Jun 2009 09:40:07 +0100
-> Subject: [PATCH] eeepc-laptop: fix hot-unplug on resume
-> 
-> OOPS on resume when the wireless adaptor is disabled during suspend was
-> introduced by "eeepc-laptop: read rfkill soft-blocked state on resume".
-> 
-> Unable to handle kernel NULL pointer dereference
-> 
-> Process s2disk
-> Tainted: G W
-> IP: klist_put
-> 
-> Call trace:
-> ? klist_del
-> ? device_del
-> ? device_unregister
-> ? pci_stop_dev
-> ? pci_stop_bus
-> ? pci_remove_device
-> ? eeepc_rfkill_hotplug [eeepc_laptop]
-> ? eeepc_hotk_resume [eeepc_laptop]
-> ? acpi_device_resume
-> ? device_resume
-> ? hibernation_snapshot
-> 
-> It appears the PCI device is removed twice.  The eeepc_rfkill_hotplug()
-> call from the resume handler is racing against the call from the ACPI
-> notifier callback.  The ACPI notification is triggered by the resume
-> handler when it refreshes the value of CM_ASL_WLAN.
-> 
-> The fix is to serialize hotplug calls using a workqueue.
-> 
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> ---
->  drivers/platform/x86/eeepc-laptop.c |    9 ++++++---
->  1 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
-> index ec560f1..222ffb8 100644
-> --- a/drivers/platform/x86/eeepc-laptop.c
-> +++ b/drivers/platform/x86/eeepc-laptop.c
-> @@ -143,6 +143,7 @@ struct eeepc_hotk {
->  	struct rfkill *bluetooth_rfkill;
->  	struct rfkill *wwan3g_rfkill;
->  	struct hotplug_slot *hotplug_slot;
-> +	struct work_struct hotplug_work;
->  };
->  
->  /* The actual device the driver binds to */
-> @@ -660,7 +661,7 @@ static int eeepc_get_adapter_status(struct hotplug_slot *hotplug_slot,
->  	return 0;
->  }
->  
-> -static void eeepc_rfkill_hotplug(void)
-> +static void eeepc_hotplug_work(struct work_struct *work)
->  {
->  	struct pci_dev *dev;
->  	struct pci_bus *bus = pci_find_bus(0, 1);
-> @@ -701,7 +702,7 @@ static void eeepc_rfkill_notify(acpi_handle handle, u32 event, void *data)
->  	if (event != ACPI_NOTIFY_BUS_CHECK)
->  		return;
->  
-> -	eeepc_rfkill_hotplug();
-> +	schedule_work(&ehotk->hotplug_work);
->  }
->  
->  static void eeepc_hotk_notify(struct acpi_device *device, u32 event)
-> @@ -892,7 +893,7 @@ static int eeepc_hotk_resume(struct acpi_device *device)
->  
->  		rfkill_set_sw_state(ehotk->wlan_rfkill, wlan != 1);
->  
-> -		eeepc_rfkill_hotplug();
-> +		schedule_work(&ehotk->hotplug_work);
->  	}
->  
->  	if (ehotk->bluetooth_rfkill)
-> @@ -1093,6 +1094,8 @@ static int eeepc_rfkill_init(struct device *dev)
->  {
->  	int result = 0;
->  
-> +	INIT_WORK(&ehotk->hotplug_work, eeepc_hotplug_work);
-> +
->  	eeepc_register_rfkill_notifier("\\_SB.PCI0.P0P6");
->  	eeepc_register_rfkill_notifier("\\_SB.PCI0.P0P7");
+Regards
+
+Marcel
+
+
