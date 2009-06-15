@@ -1,252 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21385 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756725AbZFXN0z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 09:26:55 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2009 06:26:59 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 2/7] ath9k: RX stucks during heavy traffic in HT40 mode.
-Date: Wed, 24 Jun 2009 18:56:37 +0530
-Message-ID: <1245850002-26351-3-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1245850002-26351-2-git-send-email-senthilkumar@atheros.com>
-References: <1245850002-26351-1-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-2-git-send-email-senthilkumar@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga07.intel.com ([143.182.124.22]:9993 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752674AbZFOPil (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2009 11:38:41 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>
+Subject: [PATCH 07/12][w-t] iwmc3200wifi: handling wifi_if_ntfy responses
+Date: Mon, 15 Jun 2009 17:39:23 +0200
+Message-Id: <87c8d2a38226859644cfd3217366a4e42d9e7d81.1245076752.git.samuel@sortiz.org>
+In-Reply-To: <f3d3b8fac2046f9c26773232c585b4c688b8df03.1245076752.git.samuel@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org>
+ <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org>
+ <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
+ <9b2b9b463d1313b871f56ad77b48b4960653b766.1245076752.git.samuel@sortiz.org>
+ <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
+ <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
+ <f3d3b8fac2046f9c26773232c585b4c688b8df03.1245076752.git.samuel@sortiz.org>
+In-Reply-To: <cover.1245076752.git.samuel@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Running iperf along with p2p traffic on both TX and RX side then
-stop one side, then stop the other side, then start it up again,
-eventually the STA gets into a mode that it can not pass data at
-all.
+From: Samuel Ortiz <samuel.ortiz@intel.com>
 
-A hardware workaround for invalid RSSI can make FIFO write pointer
-to jump over read pointer, causing RX data corruption and repeated
-DMA. Both TX and RX works fine when the workaround is disabled.
+When we're calling iwm_send_wifi_if_cmd() with the resp flag set, we're
+currently waiting on the mlme queue, waiting for some flags here and there to
+show up.
+This patch adds a wifi_ntfy bitmap, and when we're sending a wifi_if command
+expecting an answers, we wait synchronously for it to show up, on a dedicated
+queue. The wifi_ntfy bit is set when we receive the corresponding answer.
 
-To replace the original hardware work around, software looks for
-frames with post delimiter CRC error and mark the RSSI invalid so
-that the upperlayer will not use the RSSI associated with this
-frame. So disable the hardware workaround by updating the appropriate
-registers.
-
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom.c   |   20 +++++++++++-
- drivers/net/wireless/ath/ath9k/initvals.h |   47 +++++++++++++++-------------
- drivers/net/wireless/ath/ath9k/mac.c      |   30 ++++++++++++++----
- 3 files changed, 67 insertions(+), 30 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/commands.c |   31 +++++++++++++++-----------
+ drivers/net/wireless/iwmc3200wifi/iwm.h      |    3 ++
+ drivers/net/wireless/iwmc3200wifi/main.c     |    1 +
+ drivers/net/wireless/iwmc3200wifi/rx.c       |    9 ++++++-
+ drivers/net/wireless/iwmc3200wifi/umac.h     |    2 +
+ 5 files changed, 31 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index a2fda70..5035420 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -1208,6 +1208,19 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- 			      pModal->xatten2Margin[0]);
- 		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
- 			      AR_PHY_GAIN_2GHZ_XATTEN2_DB, pModal->xatten2Db[0]);
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 834a7f5..337a884 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -70,14 +70,28 @@ static int iwm_send_lmac_ptrough_cmd(struct iwm_priv *iwm,
+ int iwm_send_wifi_if_cmd(struct iwm_priv *iwm, void *payload, u16 payload_size,
+ 			 bool resp)
+ {
++	struct iwm_umac_wifi_if *hdr = (struct iwm_umac_wifi_if *)payload;
+ 	struct iwm_udma_wifi_cmd udma_cmd = UDMA_UMAC_INIT;
+ 	struct iwm_umac_cmd umac_cmd;
++	int ret;
++	u8 oid = hdr->oid;
+ 
+ 	umac_cmd.id = UMAC_CMD_OPCODE_WIFI_IF_WRAPPER;
+ 	umac_cmd.resp = resp;
+ 
+-	return iwm_hal_send_umac_cmd(iwm, &udma_cmd, &umac_cmd,
+-				     payload, payload_size);
++	ret = iwm_hal_send_umac_cmd(iwm, &udma_cmd, &umac_cmd,
++				    payload, payload_size);
 +
-+		/* Set the block 1 value to block 0 value */
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
-+			      AR_PHY_GAIN_2GHZ_XATTEN1_MARGIN,
-+			      pModal->bswMargin[0]);
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
-+			      AR_PHY_GAIN_2GHZ_XATTEN1_DB, pModal->bswAtten[0]);
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
-+			      AR_PHY_GAIN_2GHZ_XATTEN2_MARGIN,
-+			      pModal->xatten2Margin[0]);
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + 0x1000,
-+			      AR_PHY_GAIN_2GHZ_XATTEN2_DB,
-+			      pModal->xatten2Db[0]);
++	if (resp) {
++		ret = wait_event_interruptible_timeout(iwm->wifi_ntfy_queue,
++				   test_and_clear_bit(oid, &iwm->wifi_ntfy[0]),
++				   3 * HZ);
++
++		if (!ret)
++			ret = -EBUSY;
++	}
++
++	return ret;
+ }
+ 
+ static struct coex_event iwm_sta_xor_prio_tbl[COEX_EVENTS_NUM] =
+@@ -746,14 +760,6 @@ int iwm_send_mlme_profile(struct iwm_priv *iwm)
+ 		return ret;
  	}
  
- 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + regChainOffset,
-@@ -1215,6 +1228,11 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + regChainOffset,
- 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
+-	/* Wait for the profile to be active */
+-	ret = wait_event_interruptible_timeout(iwm->mlme_queue,
+-					       iwm->umac_profile_active == 1,
+-					       3 * HZ);
+-	if (!ret)
+-		return -EBUSY;
+-
+-
+ 	for (i = 0; i < IWM_NUM_KEYS; i++)
+ 		if (iwm->keys[i].in_use) {
+ 			int default_key = 0;
+@@ -778,8 +784,8 @@ int iwm_send_mlme_profile(struct iwm_priv *iwm)
  
-+	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
-+		      AR9280_PHY_RXGAIN_TXRX_ATTEN, txRxAttenLocal);
-+	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
-+		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
+ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm)
+ {
+-	int ret;
+ 	struct iwm_umac_invalidate_profile invalid;
++	int ret;
+ 
+ 	invalid.hdr.oid = UMAC_WIFI_IF_CMD_INVALIDATE_PROFILE;
+ 	invalid.hdr.buf_size =
+@@ -793,8 +799,7 @@ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm)
+ 		return ret;
+ 
+ 	ret = wait_event_interruptible_timeout(iwm->mlme_queue,
+-				 (iwm->umac_profile_active == 0),
+-					       2 * HZ);
++				(iwm->umac_profile_active == 0), 2 * HZ);
+ 	if (!ret)
+ 		return -EBUSY;
+ 
+diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
+index 8b22df3..af11ea2 100644
+--- a/drivers/net/wireless/iwmc3200wifi/iwm.h
++++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
+@@ -279,6 +279,9 @@ struct iwm_priv {
+ 	struct iwm_key keys[IWM_NUM_KEYS];
+ 	struct iwm_key *default_key;
+ 
++	DECLARE_BITMAP(wifi_ntfy, WIFI_IF_NTFY_MAX);
++	wait_queue_head_t wifi_ntfy_queue;
 +
- 	if (AR_SREV_9285_11(ah))
- 		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
- }
-@@ -1239,7 +1257,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 	ath9k_hw_4k_set_gain(ah, pModal, eep, txRxAttenLocal, 0);
+ 	wait_queue_head_t mlme_queue;
  
- 	/* Initialize Ant Diversity settings from EEPROM */
--	if (pModal->version == 3) {
-+	if (pModal->version >= 3) {
- 		ant_div_control1 = ((pModal->ob_234 >> 12) & 0xf);
- 		ant_div_control2 = ((pModal->db1_234 >> 12) & 0xf);
- 		regVal = REG_READ(ah, 0x99ac);
-diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
-index e2f0a34..f67a2a9 100644
---- a/drivers/net/wireless/ath/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/initvals.h
-@@ -2782,7 +2782,7 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x00008338, 0x00ff0000 },
-     { 0x0000833c, 0x00000000 },
-     { 0x00008340, 0x000107ff },
--    { 0x00008344, 0x00581043 },
-+    { 0x00008344, 0x00481043 },
-     { 0x00009808, 0x00000000 },
-     { 0x0000980c, 0xafa68e30 },
-     { 0x00009810, 0xfd14e000 },
-@@ -3439,7 +3439,7 @@ static const u32 ar9280PciePhy_clkreq_always_on_L1_9280[][2] = {
-     {0x00004044,  0x00000000 },
- };
+ 	struct iw_statistics wstats;
+diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
+index fdac13a..f8e5d1b 100644
+--- a/drivers/net/wireless/iwmc3200wifi/main.c
++++ b/drivers/net/wireless/iwmc3200wifi/main.c
+@@ -191,6 +191,7 @@ int iwm_priv_init(struct iwm_priv *iwm)
+ 	INIT_LIST_HEAD(&iwm->pending_notif);
+ 	init_waitqueue_head(&iwm->notif_queue);
+ 	init_waitqueue_head(&iwm->nonwifi_queue);
++	init_waitqueue_head(&iwm->wifi_ntfy_queue);
+ 	init_waitqueue_head(&iwm->mlme_queue);
+ 	memcpy(&iwm->conf, &def_iwm_conf, sizeof(struct iwm_conf));
+ 	spin_lock_init(&iwm->tx_credit.lock);
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index d73cf96..49a8be7 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -993,12 +993,17 @@ static int iwm_ntf_wifi_if_wrapper(struct iwm_priv *iwm, u8 *buf,
+ 			(struct iwm_umac_wifi_if *)cmd->buf.payload;
  
--/* AR9285 */
-+/* AR9285 Revsion 10*/
- static const u_int32_t ar9285Modes_9285[][6] = {
-     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
-     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
-@@ -3955,7 +3955,7 @@ static const u_int32_t ar9285Common_9285[][2] = {
-     { 0x00008338, 0x00000000 },
-     { 0x0000833c, 0x00000000 },
-     { 0x00008340, 0x00010380 },
--    { 0x00008344, 0x00581043 },
-+    { 0x00008344, 0x00481043 },
-     { 0x00009808, 0x00000000 },
-     { 0x0000980c, 0xafe68e30 },
-     { 0x00009810, 0xfd14e000 },
-@@ -4121,8 +4121,9 @@ static const u_int32_t ar9285PciePhy_clkreq_off_L1_9285[][2] = {
-     {0x00004044,  0x00000000 },
- };
+ 	IWM_DBG_NTF(iwm, DBG, "WIFI_IF_WRAPPER cmd is delivered to UMAC: "
+-		    "oid is %d\n", hdr->oid);
++		    "oid is 0x%x\n", hdr->oid);
++
++	if (hdr->oid <= WIFI_IF_NTFY_MAX) {
++		set_bit(hdr->oid, &iwm->wifi_ntfy[0]);
++		wake_up_interruptible(&iwm->wifi_ntfy_queue);
++	} else
++		return -EINVAL;
  
--/* AR9285 v1_2 PCI Register Writes.  Created: 03/04/09 */
-+/* AR9285 v1_2 PCI Register Writes.  Created: 04/13/09 */
- static const u_int32_t ar9285Modes_9285_1_2[][6] = {
-+    /* Address      5G-HT20     5G-HT40     2G-HT40     2G-HT20     Turbo   */
-     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
-     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
-     { 0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38, 0x00001180 },
-@@ -4139,6 +4140,7 @@ static const u_int32_t ar9285Modes_9285_1_2[][6] = {
-     { 0x00009840, 0x206a012e, 0x206a012e, 0x206a012e, 0x206a012e, 0x206a012e },
-     { 0x00009844, 0x0372161e, 0x0372161e, 0x03721620, 0x03721620, 0x037216a0 },
-     { 0x00009848, 0x00001066, 0x00001066, 0x00001053, 0x00001053, 0x00001059 },
-+    { 0x0000a848, 0x00001066, 0x00001066, 0x00001053, 0x00001053, 0x00001059 },
-     { 0x00009850, 0x6d4000e2, 0x6d4000e2, 0x6d4000e2, 0x6d4000e2, 0x6d4000e2 },
-     { 0x00009858, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e },
-     { 0x0000985c, 0x3139605e, 0x3139605e, 0x3137605e, 0x3137605e, 0x3139605e },
-@@ -4419,6 +4421,7 @@ static const u_int32_t ar9285Modes_9285_1_2[][6] = {
-     { 0x0000abfc, 0x00000000, 0x00000000, 0x000eb7db, 0x000eb7db, 0x00000000 },
-     { 0x0000a204, 0x00000004, 0x00000004, 0x00000004, 0x00000004, 0x00000004 },
-     { 0x0000a20c, 0x00000014, 0x00000014, 0x0001f000, 0x0001f000, 0x0001f000 },
-+    { 0x0000b20c, 0x00000014, 0x00000014, 0x0001f000, 0x0001f000, 0x0001f000 },
-     { 0x0000a21c, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a },
-     { 0x0000a230, 0x00000000, 0x00000000, 0x00000210, 0x00000108, 0x00000000 },
-     { 0x0000a250, 0x0004f000, 0x0004f000, 0x0004a000, 0x0004a000, 0x0004a000 },
-@@ -4618,7 +4621,7 @@ static const u_int32_t ar9285Common_9285_1_2[][2] = {
-     { 0x00008338, 0x00ff0000 },
-     { 0x0000833c, 0x00000000 },
-     { 0x00008340, 0x00010380 },
--    { 0x00008344, 0x00581043 },
-+    { 0x00008344, 0x00481043 },
-     { 0x00009808, 0x00000000 },
-     { 0x0000980c, 0xafe68e30 },
-     { 0x00009810, 0xfd14e000 },
-@@ -4752,18 +4755,18 @@ static const u_int32_t ar9285Common_9285_1_2[][2] = {
- static const u_int32_t ar9285Modes_high_power_tx_gain_9285_1_2[][6] = {
-     /* Address      5G-HT20     5G-HT40     2G-HT40     2G-HT20     Turbo   */
-     { 0x0000a300, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
--    { 0x0000a304, 0x00000000, 0x00000000, 0x00005200, 0x00005200, 0x00000000 },
--    { 0x0000a308, 0x00000000, 0x00000000, 0x00007201, 0x00007201, 0x00000000 },
-+    { 0x0000a304, 0x00000000, 0x00000000, 0x00006200, 0x00006200, 0x00000000 },
-+    { 0x0000a308, 0x00000000, 0x00000000, 0x00008201, 0x00008201, 0x00000000 },
-     { 0x0000a30c, 0x00000000, 0x00000000, 0x0000b240, 0x0000b240, 0x00000000 },
-     { 0x0000a310, 0x00000000, 0x00000000, 0x0000d241, 0x0000d241, 0x00000000 },
--    { 0x0000a314, 0x00000000, 0x00000000, 0x0000f440, 0x0000f440, 0x00000000 },
--    { 0x0000a318, 0x00000000, 0x00000000, 0x00014640, 0x00014640, 0x00000000 },
--    { 0x0000a31c, 0x00000000, 0x00000000, 0x00018680, 0x00018680, 0x00000000 },
--    { 0x0000a320, 0x00000000, 0x00000000, 0x00019841, 0x00019841, 0x00000000 },
--    { 0x0000a324, 0x00000000, 0x00000000, 0x0001ca40, 0x0001ca40, 0x00000000 },
--    { 0x0000a328, 0x00000000, 0x00000000, 0x0001fa80, 0x0001fa80, 0x00000000 },
--    { 0x0000a32c, 0x00000000, 0x00000000, 0x00023ac0, 0x00023ac0, 0x00000000 },
--    { 0x0000a330, 0x00000000, 0x00000000, 0x0002ab40, 0x0002ab40, 0x00000000 },
-+    { 0x0000a314, 0x00000000, 0x00000000, 0x0000f600, 0x0000f600, 0x00000000 },
-+    { 0x0000a318, 0x00000000, 0x00000000, 0x00012800, 0x00012800, 0x00000000 },
-+    { 0x0000a31c, 0x00000000, 0x00000000, 0x00016802, 0x00016802, 0x00000000 },
-+    { 0x0000a320, 0x00000000, 0x00000000, 0x0001b805, 0x0001b805, 0x00000000 },
-+    { 0x0000a324, 0x00000000, 0x00000000, 0x00021a80, 0x00021a80, 0x00000000 },
-+    { 0x0000a328, 0x00000000, 0x00000000, 0x00028b00, 0x00028b00, 0x00000000 },
-+    { 0x0000a32c, 0x00000000, 0x00000000, 0x0002ab40, 0x0002ab40, 0x00000000 },
-+    { 0x0000a330, 0x00000000, 0x00000000, 0x0002cd80, 0x0002cd80, 0x00000000 },
-     { 0x0000a334, 0x00000000, 0x00000000, 0x00033d82, 0x00033d82, 0x00000000 },
-     { 0x0000a338, 0x0003891e, 0x0003891e, 0x0003891e, 0x0003891e, 0x00000000 },
-     { 0x0000a33c, 0x0003a95e, 0x0003a95e, 0x0003a95e, 0x0003a95e, 0x00000000 },
-@@ -4776,13 +4779,13 @@ static const u_int32_t ar9285Modes_high_power_tx_gain_9285_1_2[][6] = {
-     { 0x00007838, 0xfac68803, 0xfac68803, 0xfac68803, 0xfac68803, 0xfac68803 },
-     { 0x0000786c, 0x08609ebe, 0x08609ebe, 0x08609ebe, 0x08609ebe, 0x08609ebe },
-     { 0x00007820, 0x00000c00, 0x00000c00, 0x00000c00, 0x00000c00, 0x00000c00 },
--    { 0x0000a274, 0x0a22a652, 0x0a22a652, 0x0a21a652, 0x0a21a652, 0x0a22a652 },
--    { 0x0000a278, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce },
--    { 0x0000a27c, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce },
--    { 0x0000a394, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce },
--    { 0x0000a398, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce },
--    { 0x0000a3dc, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce },
--    { 0x0000a3e0, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce },
-+    { 0x0000a274, 0x0a22a652, 0x0a22a652, 0x0a216652, 0x0a216652, 0x0a22a652 },
-+    { 0x0000a278, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7 },
-+    { 0x0000a27c, 0x050380e7, 0x050380e7, 0x050380e7, 0x050380e7, 0x050380e7 },
-+    { 0x0000a394, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7 },
-+    { 0x0000a398, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7 },
-+    { 0x0000a3dc, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7, 0x0e739ce7 },
-+    { 0x0000a3e0, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7, 0x000000e7 },
- };
+ 	switch (hdr->oid) {
+ 	case UMAC_WIFI_IF_CMD_SET_PROFILE:
+ 		iwm->umac_profile_active = 1;
+-		wake_up_interruptible(&iwm->mlme_queue);
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/iwmc3200wifi/umac.h b/drivers/net/wireless/iwmc3200wifi/umac.h
+index 4a95cce..0af2a3c 100644
+--- a/drivers/net/wireless/iwmc3200wifi/umac.h
++++ b/drivers/net/wireless/iwmc3200wifi/umac.h
+@@ -495,6 +495,8 @@ struct iwm_fw_alive_hdr {
+ #define WIFI_DBG_IF_NTFY_COEX_HANDLE_ENVELOP		0xE8
+ #define WIFI_DBG_IF_NTFY_COEX_HANDLE_RELEASE_ENVELOP	0xE9
  
- static const u_int32_t ar9285Modes_original_tx_gain_9285_1_2[][6] = {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 8ae4ec2..6f923e3 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -825,13 +825,29 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 	ds->ds_rxstat.rs_datalen = ads.ds_rxstatus1 & AR_DataLen;
- 	ds->ds_rxstat.rs_tstamp = ads.AR_RcvTimestamp;
- 
--	ds->ds_rxstat.rs_rssi = MS(ads.ds_rxstatus4, AR_RxRSSICombined);
--	ds->ds_rxstat.rs_rssi_ctl0 = MS(ads.ds_rxstatus0, AR_RxRSSIAnt00);
--	ds->ds_rxstat.rs_rssi_ctl1 = MS(ads.ds_rxstatus0, AR_RxRSSIAnt01);
--	ds->ds_rxstat.rs_rssi_ctl2 = MS(ads.ds_rxstatus0, AR_RxRSSIAnt02);
--	ds->ds_rxstat.rs_rssi_ext0 = MS(ads.ds_rxstatus4, AR_RxRSSIAnt10);
--	ds->ds_rxstat.rs_rssi_ext1 = MS(ads.ds_rxstatus4, AR_RxRSSIAnt11);
--	ds->ds_rxstat.rs_rssi_ext2 = MS(ads.ds_rxstatus4, AR_RxRSSIAnt12);
-+	if (ads.ds_rxstatus8 & AR_PostDelimCRCErr) {
-+		ds->ds_rxstat.rs_rssi = ATH9K_RSSI_BAD;
-+		ds->ds_rxstat.rs_rssi_ctl0 = ATH9K_RSSI_BAD;
-+		ds->ds_rxstat.rs_rssi_ctl1 = ATH9K_RSSI_BAD;
-+		ds->ds_rxstat.rs_rssi_ctl2 = ATH9K_RSSI_BAD;
-+		ds->ds_rxstat.rs_rssi_ext0 = ATH9K_RSSI_BAD;
-+		ds->ds_rxstat.rs_rssi_ext1 = ATH9K_RSSI_BAD;
-+		ds->ds_rxstat.rs_rssi_ext2 = ATH9K_RSSI_BAD;
-+	} else {
-+		ds->ds_rxstat.rs_rssi = MS(ads.ds_rxstatus4, AR_RxRSSICombined);
-+		ds->ds_rxstat.rs_rssi_ctl0 = MS(ads.ds_rxstatus0,
-+						AR_RxRSSIAnt00);
-+		ds->ds_rxstat.rs_rssi_ctl1 = MS(ads.ds_rxstatus0,
-+						AR_RxRSSIAnt01);
-+		ds->ds_rxstat.rs_rssi_ctl2 = MS(ads.ds_rxstatus0,
-+						AR_RxRSSIAnt02);
-+		ds->ds_rxstat.rs_rssi_ext0 = MS(ads.ds_rxstatus4,
-+						AR_RxRSSIAnt10);
-+		ds->ds_rxstat.rs_rssi_ext1 = MS(ads.ds_rxstatus4,
-+						AR_RxRSSIAnt11);
-+		ds->ds_rxstat.rs_rssi_ext2 = MS(ads.ds_rxstatus4,
-+						AR_RxRSSIAnt12);
-+	}
- 	if (ads.ds_rxstatus8 & AR_RxKeyIdxValid)
- 		ds->ds_rxstat.rs_keyix = MS(ads.ds_rxstatus8, AR_KeyIdx);
- 	else
++#define WIFI_IF_NTFY_MAX 0xff
++
+ /* Notification structures */
+ struct iwm_umac_notif_wifi_if {
+ 	struct iwm_umac_wifi_in_hdr hdr;
 -- 
-1.6.0.4
+1.6.3.1
 
