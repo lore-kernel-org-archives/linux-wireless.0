@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:45770 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbZFRAal (ORCPT
+Received: from mga05.intel.com ([192.55.52.89]:43893 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756983AbZFOPig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 20:30:41 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-References: <1245263058.31588.38.camel@johannes.local>
-	<m1y6rqwpur.fsf@fess.ebiederm.org>
-	<1245276899.31588.57.camel@johannes.local>
-	<m1r5xitpdh.fsf@fess.ebiederm.org>
-	<1245282099.31588.69.camel@johannes.local>
-	<m17hzato0r.fsf@fess.ebiederm.org>
-	<1245283327.31588.74.camel@johannes.local>
-From: ebiederm@xmission.com (Eric W. Biederman)
-Date: Wed, 17 Jun 2009 17:30:40 -0700
-In-Reply-To: <1245283327.31588.74.camel@johannes.local> (Johannes Berg's message of "Thu\, 18 Jun 2009 02\:02\:06 +0200")
-Message-ID: <m1my86qt73.fsf@fess.ebiederm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Subject: Re: [PATCH] wireless extensions: play with netns
+	Mon, 15 Jun 2009 11:38:36 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>
+Subject: [PATCH 06/12][w-t] iwmc3200wifi: invalidate keys when changing the BSSID
+Date: Mon, 15 Jun 2009 17:39:22 +0200
+Message-Id: <f3d3b8fac2046f9c26773232c585b4c688b8df03.1245076752.git.samuel@sortiz.org>
+In-Reply-To: <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org>
+ <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org>
+ <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
+ <9b2b9b463d1313b871f56ad77b48b4960653b766.1245076752.git.samuel@sortiz.org>
+ <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
+ <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
+In-Reply-To: <cover.1245076752.git.samuel@sortiz.org>
+References: <cover.1245076752.git.samuel@sortiz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Samuel Ortiz <samuel.ortiz@intel.com>
 
-> On Wed, 2009-06-17 at 16:54 -0700, Eric W. Biederman wrote:
->
->> > Subject: net: make namespace iteration possible under RCU
->> >
->> > We already call rcu_barrier(), so all we need to take
->> > care of is using proper RCU list add/del primitives.
->> 
->> This of course gives you a network namespace that can be found by for_each_net rcu
->> while the per net exit functions are running.  I think that opens up to races
->> that I don't want to think about.
->
-> Indeed. Can we move the rcu_barrier() up? Or we could insert a
-> synchronize_rcu() (which is sufficient for rcu_read_lock) before the
-> exit functions are run?
+While associated, we have to invalidate our key cache if we clear our BSSID
+through siwap.
 
-I don't think we can move the barrier.   But adding an extra synchronize_rcu
-should be fine.  We are talking about the slowest of the slow paths here.
-It is so slow it even gets it's own kernel thread.
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/wext.c |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
 
-Eric
+diff --git a/drivers/net/wireless/iwmc3200wifi/wext.c b/drivers/net/wireless/iwmc3200wifi/wext.c
+index 584c94d..8891949 100644
+--- a/drivers/net/wireless/iwmc3200wifi/wext.c
++++ b/drivers/net/wireless/iwmc3200wifi/wext.c
+@@ -82,6 +82,7 @@ static int iwm_wext_siwap(struct net_device *dev, struct iw_request_info *info,
+ 			  struct sockaddr *ap_addr, char *extra)
+ {
+ 	struct iwm_priv *iwm = ndev_to_iwm(dev);
++	int ret;
+ 
+ 	if (iwm->conf.mode == UMAC_MODE_IBSS)
+ 		return cfg80211_ibss_wext_siwap(dev, info, ap_addr, extra);
+@@ -104,10 +105,26 @@ static int iwm_wext_siwap(struct net_device *dev, struct iw_request_info *info,
+ 	}
+ 
+ 	if (iwm->umac_profile_active) {
++		int i;
++
+ 		if (!memcmp(&iwm->umac_profile->bssid[0], iwm->bssid, ETH_ALEN))
+ 			return 0;
+ 
+-		iwm_invalidate_mlme_profile(iwm);
++		/*
++		 * If we're clearing the BSSID, and we're associated,
++		 * we have to clear the keys as they're no longer valid.
++		 */
++		if (is_zero_ether_addr(ap_addr->sa_data)) {
++			for (i = 0; i < IWM_NUM_KEYS; i++)
++				iwm->keys[i].in_use = 0;
++
++		}
++
++		ret = iwm_invalidate_mlme_profile(iwm);
++		if (ret < 0) {
++			IWM_ERR(iwm, "Couldn't invalidate profile\n");
++			return ret;
++		}
+ 	}
+ 
+ 	if (iwm->umac_profile->ssid.ssid_len)
+-- 
+1.6.3.1
+
