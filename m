@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:46957 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752867AbZFFRN3 (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:37753 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751408AbZFOOh1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:13:29 -0400
-Message-ID: <4A2AA3BA.4050200@web.de>
-Date: Sat, 06 Jun 2009 19:13:30 +0200
-From: Jan Kiszka <jan.kiszka@web.de>
+	Mon, 15 Jun 2009 10:37:27 -0400
+Date: Mon, 15 Jun 2009 10:37:30 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+cc: linux-pm@lists.linux-foundation.org, <linux-pci@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<ath5k-devel@venema.h4ckr.net>
+Subject: Re: [linux-pm] PCI hotplug v.s. suspend
+In-Reply-To: <4A3654A4.1070700@tuffmail.co.uk>
+Message-ID: <Pine.LNX.4.44L0.0906151035560.5057-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] ar9170-fw: Use self-built toolchain by default
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigD7BB77DA530CBB447F5B61F7"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigD7BB77DA530CBB447F5B61F7
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+On Mon, 15 Jun 2009, Alan Jenkins wrote:
 
-Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
----
+> Alan Stern wrote:
+> > On Mon, 15 Jun 2009, Alan Jenkins wrote:
+> >
+> >   
+> >> Hi,
+> >>
+> >> I triggered a WARNING while hacking on eeepc-laptop's 
+> >> rfkill-by-pci-hotplug.  I saw "Trying to free already-free IRQ" in 
+> >> ath5k_pci_remove(), because the IRQ was already freed by 
+> >> ath5k_pci_suspend().  My changes to eeepc-laptop had allowed the PCI 
+> >> device to be removed while suspended.
+> >>
+> >> Are PCI drivers supposed to handle remove() while suspended?
+> >>     
+> >
+> > Yes.  You found a bug in the driver.  However it's not clear (to me at
+> > least) whether the bug is that the IRQ is freed in the suspend method
+> > or that there's no check for already-freed in the remove method.  My 
+> > guess is the latter.
+> >
+> > Alan Stern
+> >   
+> 
+> The example in Documentation/power/pci.txt shows free_irq() being called
+> in suspend (and request_irq() in resume).  So the problem is in remove().
 
- Makefile |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I'm not sure whether the example is trustworthy.  There was some
+discussion quite a while ago regarding whether drivers should free
+their IRQs during suspend, but I don't remember what the outcome was.
 
-diff --git a/Makefile b/Makefile
-index e0113d6..5fc0868 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1,7 +1,7 @@
- # Type is AP or STA
- TYPE ?=3D STA
-=20
--PFX ?=3D /usr/share/gnush_v0901_elf-1/bin/sh-elf-
-+PFX ?=3D $(shell pwd)/toolchain/inst/bin/sh-elf-
- CC =3D $(PFX)gcc
- LD =3D $(PFX)ld
- AS =3D $(PFX)as
+Alan Stern
 
-
-
---------------enigD7BB77DA530CBB447F5B61F7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkoqo7oACgkQniDOoMHTA+l2qQCfWnWZBq1RXRfgN1bzN620A66P
-FzgAn30tMdPzmtpvT56uCP7MK6LQt/Jd
-=dmb1
------END PGP SIGNATURE-----
-
---------------enigD7BB77DA530CBB447F5B61F7--
