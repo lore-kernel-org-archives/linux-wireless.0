@@ -1,108 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:38408 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbZFFSdF (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35650 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754303AbZFOQME (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 14:33:05 -0400
-Message-ID: <4A2AB634.9020904@web.de>
-Date: Sat, 06 Jun 2009 20:32:20 +0200
-From: Jan Kiszka <jan.kiszka@web.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ar9170-fw: Use self-built toolchain by default
-References: <4A2AA3BA.4050200@web.de> <1244311169.17485.16.camel@johannes.local>
-In-Reply-To: <1244311169.17485.16.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig37E4E8BF5FA8BDBB89A9D2DD"
+	Mon, 15 Jun 2009 12:12:04 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linwille <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] ath9k: restore power mode on error path
+Date: Mon, 15 Jun 2009 17:49:09 +0200
+Message-Id: <1245080951-24804-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig37E4E8BF5FA8BDBB89A9D2DD
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+The ath9k_ps_{wakeup,restore} calls must be in balance.
 
-Johannes Berg wrote:
-> On Sat, 2009-06-06 at 19:13 +0200, Jan Kiszka wrote:
->> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
->> ---
->>
->>  Makefile |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/Makefile b/Makefile
->> index e0113d6..5fc0868 100644
->> --- a/Makefile
->> +++ b/Makefile
->> @@ -1,7 +1,7 @@
->>  # Type is AP or STA
->>  TYPE ?=3D STA
->> =20
->> -PFX ?=3D /usr/share/gnush_v0901_elf-1/bin/sh-elf-
->> +PFX ?=3D $(shell pwd)/toolchain/inst/bin/sh-elf-
->=20
-> This will fail in strange ways if the user doesn't first manually build=
-
-> the toolchain... It does that if you don't have it installed, but it
-> would be nice to tell them to build it?
->=20
-
-What about this? There are probably smarter ways to achieve this, but
-I'm not speaking fluently 'make'.
-
----------->
-
-Switch the default to our own toolchain and provide a hint in case it's
-missing or the provided PFX does not point to a gcc.
-
-Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
+ drivers/net/wireless/ath/ath9k/main.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
- Makefile |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f7baa40..af39143 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -283,7 +283,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 			"reset status %d\n",
+ 			channel->center_freq, r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
+-		return r;
++		goto ps_restore;
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+ 
+@@ -292,14 +292,17 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (ath_startrecv(sc) != 0) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to restart recv logic\n");
+-		return -EIO;
++		r = -EIO;
++		goto ps_restore;
+ 	}
+ 
+ 	ath_cache_conf_rate(sc, &hw->conf);
+ 	ath_update_txpow(sc);
+ 	ath9k_hw_set_interrupts(ah, sc->imask);
++
++ ps_restore:
+ 	ath9k_ps_restore(sc);
+-	return 0;
++	return r;
+ }
+ 
+ /*
+-- 
+1.5.3.2
 
-diff --git a/Makefile b/Makefile
-index e0113d6..6316f62 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1,11 +1,13 @@
- # Type is AP or STA
- TYPE ?=3D STA
-=20
--PFX ?=3D /usr/share/gnush_v0901_elf-1/bin/sh-elf-
--CC =3D $(PFX)gcc
--LD =3D $(PFX)ld
--AS =3D $(PFX)as
--OBJCOPY =3D $(PFX)objcopy
-+PFX ?=3D $(shell pwd)/toolchain/inst/bin/sh-elf-
-+VALID_PFX =3D $(if $(wildcard $(PFX)gcc), $(PFX), \
-+	$(error Error: sh2 gcc not found. To build your own, invoke 'make -C to=
-olchain'.))
-+CC =3D $(VALID_PFX)gcc
-+LD =3D $(VALID_PFX)ld
-+AS =3D $(VALID_PFX)as
-+OBJCOPY =3D $(VALID_PFX)objcopy
-=20
- # CPU is a Little endian sh2a-nofpu-or-sh3-nommu
- CPU =3D -m2
-
-
---------------enig37E4E8BF5FA8BDBB89A9D2DD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkoqtjgACgkQniDOoMHTA+nC/QCeJPtpGu1QRUhdAhlc1fI9lnZr
-xu4An1v3utD2I/jntlZLyD4qM2A/okKb
-=Jq1j
------END PGP SIGNATURE-----
-
---------------enig37E4E8BF5FA8BDBB89A9D2DD--
