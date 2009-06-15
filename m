@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:46459 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752650AbZFRCN7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35702 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077AbZFOMYB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 22:13:59 -0400
-Received: by pxi27 with SMTP id 27so743973pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 19:14:02 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] libertas: fix card cleanup order in SDIO driver
-Date: Wed, 17 Jun 2009 19:15:19 -0700
-Message-Id: <1245291319-26118-1-git-send-email-andrey@cozybit.com>
+	Mon, 15 Jun 2009 08:24:01 -0400
+Subject: Re: rfkill regression in net-next-2.6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Oliver Hartkopp <socketcan@hartkopp.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20090615120422.GA2729@tuxdriver.com>
+References: <20090604152011.GC2839@tuxdriver.com>
+	 <20090607.033751.191866033.davem@davemloft.net>
+	 <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>
+	 <4A2BD8A5.4040302@hartkopp.net>
+	 <1244388583.23850.87.camel@localhost.localdomain>
+	 <4A34BAB9.9000104@hartkopp.net>  <20090615120422.GA2729@tuxdriver.com>
+Content-Type: text/plain
+Date: Mon, 15 Jun 2009 14:24:46 +0200
+Message-Id: <1245068686.23912.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SDIO driver sets the surpriseremoved flag before calling
-lbs_remove_card.  With IEEE PS enabled, lbs_remove_card must issue a
-command to exit IEEE PS mode, however with that flag set the command
-path is blocked and the card is never taken out of IEEE PS mode.  This
-step is required to ensure that the driver can be reloaded.  This patch
-moves the setting of surpriseremoved after lbs_remove_card is called.
+On Mon, 2009-06-15 at 08:04 -0400, John W. Linville wrote:
+> On Sun, Jun 14, 2009 at 10:54:17AM +0200, Oliver Hartkopp wrote:
+> 
+> > Any idea what changed in net-next-2.6 that could produce this behaviour?
+> 
+> The rfkill subsystem rewrite would seem suspect... :-)
 
-Tested with V9 firmware by ensuring that IEEE PS is disabled when the
-driver is removed.  Reloading the driver is not fully tested due to a
-separate issue with module reload in the SDIO driver, however this
-patch at least leaves the card in a better state when we bring the
-driver down.
+Maybe this fixes it?
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- drivers/net/wireless/libertas/if_sdio.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 8cdb88c..d48ed62 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -1096,11 +1096,11 @@ static void if_sdio_remove(struct sdio_func *func)
- 			lbs_pr_alert("CMD_FUNC_SHUTDOWN cmd failed\n");
- 	}
+--- wireless-testing.orig/drivers/platform/x86/dell-laptop.c	2009-06-15 14:23:25.000000000 +0200
++++ wireless-testing/drivers/platform/x86/dell-laptop.c	2009-06-15 14:23:35.000000000 +0200
+@@ -177,7 +177,7 @@ dell_send_request(struct calling_interfa
+ static int dell_rfkill_set(void *data, bool blocked)
+ {
+ 	struct calling_interface_buffer buffer;
+-	int disable = blocked ? 0 : 1;
++	int disable = blocked ? 1 : 0;
+ 	unsigned long radio = (unsigned long)data;
  
--	card->priv->surpriseremoved = 1;
- 
- 	lbs_deb_sdio("call remove card\n");
- 	lbs_stop_card(card->priv);
- 	lbs_remove_card(card->priv);
-+	card->priv->surpriseremoved = 1;
- 
- 	flush_workqueue(card->workqueue);
- 	destroy_workqueue(card->workqueue);
--- 
-1.5.6.3
+ 	memset(&buffer, 0, sizeof(struct calling_interface_buffer));
+
 
