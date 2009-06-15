@@ -1,153 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59209 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946AbZFOLle (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45317 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbZFOMPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 07:41:34 -0400
-Subject: [PATCH] mac80211: disconnect when user changes channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 15 Jun 2009 13:42:25 +0200
-Message-Id: <1245066145.11084.23.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 15 Jun 2009 08:15:32 -0400
+Date: Mon, 15 Jun 2009 08:04:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: rfkill regression in net-next-2.6
+Message-ID: <20090615120422.GA2729@tuxdriver.com>
+References: <20090604152011.GC2839@tuxdriver.com> <20090607.033751.191866033.davem@davemloft.net> <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com> <4A2BD8A5.4040302@hartkopp.net> <1244388583.23850.87.camel@localhost.localdomain> <4A34BAB9.9000104@hartkopp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A34BAB9.9000104@hartkopp.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not disconnect when a channel switch is requested,
-we end up eventually detection beacon loss from the AP and
-then disconnecting, without ever really telling the AP, so
-we might just as well disconnect right away.
+On Sun, Jun 14, 2009 at 10:54:17AM +0200, Oliver Hartkopp wrote:
 
-Additionally, this fixes a problem with iwlwifi where the
-driver will clear some internal state on channel changes
-like this and then get confused when we actually go clear
-that state from mac80211.
+> Any idea what changed in net-next-2.6 that could produce this behaviour?
 
-It may look like this patch drops the no-IBSS check, but
-that is already handled by cfg80211 in the wext handler it
-provides for IBSS (cfg80211_ibss_wext_siwfreq).
+The rfkill subsystem rewrite would seem suspect... :-)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |    5 ++++-
- net/mac80211/util.c        |   25 -------------------------
- net/mac80211/wext.c        |   31 +++++++++++++++++++++++++++----
- 4 files changed, 31 insertions(+), 31 deletions(-)
-
---- wireless-testing.orig/net/mac80211/util.c	2009-06-11 11:00:41.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-06-11 11:33:08.000000000 +0200
-@@ -774,31 +774,6 @@ void ieee80211_tx_skb(struct ieee80211_s
- 	dev_queue_xmit(skb);
- }
- 
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
--{
--	int ret = -EINVAL;
--	struct ieee80211_channel *chan;
--	struct ieee80211_local *local = sdata->local;
--
--	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
--
--	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
--		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
--		    chan->flags & IEEE80211_CHAN_NO_IBSS)
--			return ret;
--		local->oper_channel = chan;
--		local->oper_channel_type = NL80211_CHAN_NO_HT;
--
--		if (local->sw_scanning || local->hw_scanning)
--			ret = 0;
--		else
--			ret = ieee80211_hw_config(
--				local, IEEE80211_CONF_CHANGE_CHANNEL);
--	}
--
--	return ret;
--}
--
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band)
- {
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-11 11:00:41.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-11 11:33:08.000000000 +0200
-@@ -55,6 +55,8 @@ static int ieee80211_ioctl_siwfreq(struc
- 				   struct iw_freq *freq, char *extra)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel *chan;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 		return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
-@@ -69,17 +71,38 @@ static int ieee80211_ioctl_siwfreq(struc
- 					IEEE80211_STA_AUTO_CHANNEL_SEL;
- 			return 0;
- 		} else
--			return ieee80211_set_freq(sdata,
-+			chan = ieee80211_get_channel(local->hw.wiphy,
- 				ieee80211_channel_to_frequency(freq->m));
- 	} else {
- 		int i, div = 1000000;
- 		for (i = 0; i < freq->e; i++)
- 			div /= 10;
--		if (div > 0)
--			return ieee80211_set_freq(sdata, freq->m / div);
--		else
-+		if (div <= 0)
- 			return -EINVAL;
-+		chan = ieee80211_get_channel(local->hw.wiphy, freq->m / div);
- 	}
-+
-+	if (!chan)
-+		return -EINVAL;
-+
-+	if (chan->flags & IEEE80211_CHAN_DISABLED)
-+		return -EINVAL;
-+
-+	/*
-+	 * no change except maybe auto -> fixed, ignore the HT
-+	 * setting so you can fix a channel you're on already
-+	 */
-+	if (local->oper_channel == chan)
-+		return 0;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		ieee80211_sta_req_auth(sdata);
-+
-+	local->oper_channel = chan;
-+	local->oper_channel_type = NL80211_CHAN_NO_HT;
-+	ieee80211_hw_config(local, 0);
-+
-+	return 0;
- }
- 
- 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-06-11 11:00:41.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-06-11 11:33:08.000000000 +0200
-@@ -1100,7 +1100,6 @@ void ieee802_11_parse_elems(u8 *start, s
- u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band);
- 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-11 11:04:47.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-11 11:33:08.000000000 +0200
-@@ -2223,7 +2223,10 @@ static int ieee80211_sta_config_auth(str
- 				       capa_mask, capa_val);
- 
- 	if (bss) {
--		ieee80211_set_freq(sdata, bss->cbss.channel->center_freq);
-+		local->oper_channel = bss->cbss.channel;
-+		local->oper_channel_type = NL80211_CHAN_NO_HT;
-+		ieee80211_hw_config(local, 0);
-+
- 		if (!(ifmgd->flags & IEEE80211_STA_SSID_SET))
- 			ieee80211_sta_set_ssid(sdata, bss->ssid,
- 					       bss->ssid_len);
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
