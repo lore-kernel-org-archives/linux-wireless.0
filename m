@@ -1,459 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35388 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbZFXMJr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 08:09:47 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MJRIS-0002yg-Cv
-	for linux-wireless@vger.kernel.org; Wed, 24 Jun 2009 14:09:49 +0200
-Message-Id: <20090624120809.017056633@sipsolutions.net>
-References: <20090624120745.239294066@sipsolutions.net>
-Date: Wed, 24 Jun 2009 14:07:49 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 04/11] cfg80211: implement iwpower
+Received: from mx2.redhat.com ([66.187.237.31]:44591 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751078AbZFPVHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 17:07:18 -0400
+Subject: Re: [PATCH] libertas: Fix re-enabling IEEE PS with WPA/WPA2
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <45e8e6c40906161303y7be52452vf4cd16bbc3cc7e43@mail.gmail.com>
+References: <1245096111-20884-1-git-send-email-andrey@cozybit.com>
+	 <1245182004.28992.18.camel@130.81.190.10.in-addr.arpa>
+	 <45e8e6c40906161303y7be52452vf4cd16bbc3cc7e43@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 16 Jun 2009 17:06:47 -0400
+Message-Id: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just on/off and timeout, and with a hacky cfg80211 method
-until we figure out what we want, though this is probably
-sufficient as we want to use pm_qos for wifi everywhere.
+On Tue, 2009-06-16 at 13:03 -0700, Andrey Yurovsky wrote:
+> On Tue, Jun 16, 2009 at 12:53 PM, Dan Williams<dcbw@redhat.com> wrote:
+> > On Mon, 2009-06-15 at 13:01 -0700, Andrey Yurovsky wrote:
+> >> With IEEE PS enabled, the driver will temporarily take the device out of
+> >> PS mode to issue commands and then re-enable PS once the commands have
+> >> completed.  With WPA or WPA2 security, the driver fails to re-enable PS
+> >> mode because of a check for key lengths that are always zero.
+> >>
+> >> This patch removes the key lengths check (the local copy of the keys is
+> >> not maintained) and fixes IEEE PS mode with WPA or WPA2 security.
+> >> Tested on GSPI and SDIO interfaces with V9 firmware.
+> >
+> > I have no idea what this code was trying to do originally (I'm pretty
+> > sure it's a left-over from the vendor driver), but it seems like maybe
+> > it was ensuring that the adapter did *not* return to power-save mode
+> > until the supplicant had set the GTK?  There's a window where the GTK
+> > won't be set, and we probably shouldn't be entering PS mode until that
+> > window is closed.  Old sd8385 code from a Motorola phone has:
+> >
+> >        if ((Adapter->PSMode != Wlan802_11PowerModeCAM) &&
+> >                        (Adapter->PSState == PS_STATE_FULL_POWER) &&
+> >                        (Adapter->MediaConnectStatus ==
+> >                         WlanMediaStateConnected)) {
+> >                if(Adapter->SecInfo.WPAEnabled
+> >                        || Adapter->SecInfo.WPA2Enabled
+> >                ) {
+> >                        if(Adapter->IsGTK_SET == TRUE) {
+> >                                PRINTM(INFO, "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
+> >                                        " go back to PS_SLEEP");
+> >                                PSSleep(priv, 0);
+> >                        }
+> >                } else
+> >                {
+> >                        PRINTM(INFO, "EXEC_NEXT_CMD: Command PendQ is empty,"
+> >                                " go back to PS_SLEEP");
+> >                        PSSleep(priv, 0);
+> >                }
+> >        }
+> >
+> > Says to me, "if WPA is enabled but the GTK hasn't been set yet, don't go
+> > to sleep".
+> >
+> > Does that sound like a plausible explanation of what the original bits
+> > intended to do?  Like I said, it was inherited, but there might have
+> > been a good reason for it.
+> 
+> That might be the original intention, but assoc_helper_wpa_keys() sets
+> both and lbs_cmd_802_11_key_material() then clears out the driver's
+> copy, which is then (incorrectly) checked when deciding whether to go
+> back to sleep.  As I understand it, the execution path for WPA/WPA2
+> association shouldn't cause this situation where WPA is enabled but
+> the GTK isn't set yet and we're deciding to go back to sleep.  Do you
+> agree?  Should we even be keeping the 'driver copy' of the keys?  I
+> don't see why we want to do that.  Thanks,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   22 ++++++++
- drivers/net/wireless/iwmc3200wifi/wext.c     |   47 ------------------
- include/net/cfg80211.h                       |   13 +++++
- net/mac80211/Kconfig                         |   16 ------
- net/mac80211/cfg.c                           |   26 ++++++++++
- net/mac80211/mlme.c                          |    5 -
- net/mac80211/wext.c                          |   70 ---------------------------
- net/wireless/Kconfig                         |   16 ++++++
- net/wireless/core.c                          |   11 +++-
- net/wireless/wext-compat.c                   |   60 +++++++++++++++++++++++
- 10 files changed, 151 insertions(+), 135 deletions(-)
+It might be possible to remove the priv->... bits; but here's why they
+exist.
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-06-24 13:54:06.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-06-24 13:54:07.000000000 +0200
-@@ -999,6 +999,10 @@ struct cfg80211_ops {
- 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
- 
- 	void	(*rfkill_poll)(struct wiphy *wiphy);
-+
-+	/* some temporary stuff to finish wext */
-+	int	(*set_power_mgmt)(struct wiphy *wiphy, struct net_device *dev,
-+				  bool enabled, int timeout);
- };
- 
- /*
-@@ -1249,6 +1253,8 @@ struct wireless_dev {
- 		u8 bssid[ETH_ALEN];
- 		u8 ssid[IEEE80211_MAX_SSID_LEN];
- 		s8 default_key, default_mgmt_key;
-+		bool ps;
-+		int ps_timeout;
- 	} wext;
- #endif
- };
-@@ -1593,6 +1599,13 @@ int cfg80211_wext_giwtxpower(struct net_
- 			     struct iw_request_info *info,
- 			     union iwreq_data *data, char *keybuf);
- 
-+int cfg80211_wext_siwpower(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_param *wrq, char *extra);
-+int cfg80211_wext_giwpower(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_param *wrq, char *extra);
-+
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-  * functions and BSS handling helpers
---- wireless-testing.orig/net/mac80211/Kconfig	2009-06-24 13:53:12.000000000 +0200
-+++ wireless-testing/net/mac80211/Kconfig	2009-06-24 13:54:07.000000000 +0200
-@@ -14,22 +14,6 @@ config MAC80211
- comment "CFG80211 needs to be enabled for MAC80211"
- 	depends on CFG80211=n
- 
--config MAC80211_DEFAULT_PS
--	bool "enable powersave by default"
--	depends on MAC80211
--	default y
--	help
--	  This option enables powersave mode by default.
--
--	  If this causes your applications to misbehave you should fix your
--	  applications instead -- they need to register their network
--	  latency requirement, see Documentation/power/pm_qos_interface.txt.
--
--config MAC80211_DEFAULT_PS_VALUE
--	int
--	default 1 if MAC80211_DEFAULT_PS
--	default 0
--
- menu "Rate control algorithm selection"
- 	depends on MAC80211 != n
- 
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-24 13:54:06.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-24 13:54:07.000000000 +0200
-@@ -258,72 +258,6 @@ static int ieee80211_ioctl_giwrate(struc
- 	return 0;
- }
- 
--static int ieee80211_ioctl_siwpower(struct net_device *dev,
--				    struct iw_request_info *info,
--				    struct iw_param *wrq,
--				    char *extra)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_conf *conf = &local->hw.conf;
--	int timeout = 0;
--	bool ps;
--
--	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
--		return -EOPNOTSUPP;
--
--	if (sdata->vif.type != NL80211_IFTYPE_STATION)
--		return -EINVAL;
--
--	if (wrq->disabled) {
--		ps = false;
--		timeout = 0;
--		goto set;
--	}
--
--	switch (wrq->flags & IW_POWER_MODE) {
--	case IW_POWER_ON:       /* If not specified */
--	case IW_POWER_MODE:     /* If set all mask */
--	case IW_POWER_ALL_R:    /* If explicitely state all */
--		ps = true;
--		break;
--	default:                /* Otherwise we ignore */
--		return -EINVAL;
--	}
--
--	if (wrq->flags & ~(IW_POWER_MODE | IW_POWER_TIMEOUT))
--		return -EINVAL;
--
--	if (wrq->flags & IW_POWER_TIMEOUT)
--		timeout = wrq->value / 1000;
--
-- set:
--	if (ps == sdata->u.mgd.powersave && timeout == conf->dynamic_ps_timeout)
--		return 0;
--
--	sdata->u.mgd.powersave = ps;
--	conf->dynamic_ps_timeout = timeout;
--
--	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
--
--	ieee80211_recalc_ps(local, -1);
--
--	return 0;
--}
--
--static int ieee80211_ioctl_giwpower(struct net_device *dev,
--				    struct iw_request_info *info,
--				    union iwreq_data *wrqu,
--				    char *extra)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	wrqu->power.disabled = !sdata->u.mgd.powersave;
--
--	return 0;
--}
--
- /* Get wireless statistics.  Called by /proc/net/wireless and by SIOCGIWSTATS */
- static struct iw_statistics *ieee80211_get_wireless_stats(struct net_device *dev)
- {
-@@ -439,8 +373,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) cfg80211_wext_giwretry,		/* SIOCGIWRETRY */
- 	(iw_handler) cfg80211_wext_siwencode,		/* SIOCSIWENCODE */
- 	(iw_handler) cfg80211_wext_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
--	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
-+	(iw_handler) cfg80211_wext_siwpower,		/* SIOCSIWPOWER */
-+	(iw_handler) cfg80211_wext_giwpower,		/* SIOCGIWPOWER */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) cfg80211_wext_siwgenie,		/* SIOCSIWGENIE */
---- wireless-testing.orig/net/wireless/Kconfig	2009-06-24 13:54:03.000000000 +0200
-+++ wireless-testing/net/wireless/Kconfig	2009-06-24 13:54:07.000000000 +0200
-@@ -11,6 +11,22 @@ config CFG80211_REG_DEBUG
- 
- 	  If unsure, say N.
- 
-+config CFG80211_DEFAULT_PS
-+	bool "enable powersave by default"
-+	depends on CFG80211
-+	default y
-+	help
-+	  This option enables powersave mode by default.
-+
-+	  If this causes your applications to misbehave you should fix your
-+	  applications instead -- they need to register their network
-+	  latency requirement, see Documentation/power/pm_qos_interface.txt.
-+
-+config CFG80211_DEFAULT_PS_VALUE
-+	int
-+	default 1 if CFG80211_DEFAULT_PS
-+	default 0
-+
- config CFG80211_DEBUGFS
- 	bool "cfg80211 DebugFS entries"
- 	depends on CFG80211 && DEBUG_FS
---- wireless-testing.orig/net/wireless/core.c	2009-06-24 13:54:06.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2009-06-24 13:54:07.000000000 +0200
-@@ -550,11 +550,20 @@ static int cfg80211_netdev_notifier_call
- 		}
- 		wdev->netdev = dev;
- 		wdev->sme_state = CFG80211_SME_IDLE;
-+		mutex_unlock(&rdev->devlist_mtx);
- #ifdef CONFIG_WIRELESS_EXT
- 		wdev->wext.default_key = -1;
- 		wdev->wext.default_mgmt_key = -1;
-+		wdev->wext.ps = CONFIG_CFG80211_DEFAULT_PS_VALUE;
-+		wdev->wext.ps_timeout = 500;
-+		if (rdev->ops->set_power_mgmt)
-+			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
-+						      wdev->wext.ps,
-+						      wdev->wext.ps_timeout)) {
-+				/* assume this means it's off */
-+				wdev->wext.ps = false;
-+			}
- #endif
--		mutex_unlock(&rdev->devlist_mtx);
- 		break;
- 	case NETDEV_GOING_DOWN:
- 		if (!wdev->ssid_len)
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-24 13:54:06.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-06-24 13:54:07.000000000 +0200
-@@ -848,3 +848,63 @@ int cfg80211_wext_giwauth(struct net_dev
- 	return -EOPNOTSUPP;
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwauth);
-+
-+int cfg80211_wext_siwpower(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_param *wrq, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	bool ps = wdev->wext.ps;
-+	int timeout = wdev->wext.ps_timeout;
-+	int err;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION)
-+		return -EINVAL;
-+
-+	if (!rdev->ops->set_power_mgmt)
-+		return -EOPNOTSUPP;
-+
-+	if (wrq->disabled) {
-+		ps = false;
-+	} else {
-+		switch (wrq->flags & IW_POWER_MODE) {
-+		case IW_POWER_ON:       /* If not specified */
-+		case IW_POWER_MODE:     /* If set all mask */
-+		case IW_POWER_ALL_R:    /* If explicitely state all */
-+			ps = true;
-+			break;
-+		default:                /* Otherwise we ignore */
-+			return -EINVAL;
-+		}
-+
-+		if (wrq->flags & ~(IW_POWER_MODE | IW_POWER_TIMEOUT))
-+			return -EINVAL;
-+
-+		if (wrq->flags & IW_POWER_TIMEOUT)
-+			timeout = wrq->value / 1000;
-+	}
-+
-+	err = rdev->ops->set_power_mgmt(wdev->wiphy, dev, ps, timeout);
-+	if (err)
-+		return err;
-+
-+	wdev->wext.ps = ps;
-+	wdev->wext.ps_timeout = timeout;
-+
-+	return 0;
-+
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wext_siwpower);
-+
-+int cfg80211_wext_giwpower(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_param *wrq, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	wrq->disabled = !wdev->wext.ps;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wext_giwpower);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-06-24 13:53:12.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-06-24 13:54:07.000000000 +0200
-@@ -1376,6 +1376,31 @@ static void ieee80211_rfkill_poll(struct
- 	drv_rfkill_poll(local);
- }
- 
-+static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
-+				    bool enabled, int timeout)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf = &local->hw.conf;
-+
-+	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
-+		return -EOPNOTSUPP;
-+
-+	if (enabled == sdata->u.mgd.powersave &&
-+	    timeout == conf->dynamic_ps_timeout)
-+		return 0;
-+
-+	sdata->u.mgd.powersave = enabled;
-+	conf->dynamic_ps_timeout = timeout;
-+
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+
-+	ieee80211_recalc_ps(local, -1);
-+
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -1418,4 +1443,5 @@ struct cfg80211_ops mac80211_config_ops 
- 	.set_tx_power = ieee80211_set_tx_power,
- 	.get_tx_power = ieee80211_get_tx_power,
- 	.rfkill_poll = ieee80211_rfkill_poll,
-+	.set_power_mgmt = ieee80211_set_power_mgmt,
- };
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-24 13:54:06.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-24 13:54:07.000000000 +0200
-@@ -2354,11 +2354,6 @@ void ieee80211_sta_setup_sdata(struct ie
- 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
- 
- 	hw_flags = sdata->local->hw.flags;
--
--	if (hw_flags & IEEE80211_HW_SUPPORTS_PS) {
--		ifmgd->powersave = CONFIG_MAC80211_DEFAULT_PS_VALUE;
--		sdata->local->hw.conf.dynamic_ps_timeout = 500;
--	}
- }
- 
- /* configuration hooks */
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/cfg80211.c	2009-06-24 13:53:12.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/cfg80211.c	2009-06-24 13:54:07.000000000 +0200
-@@ -522,6 +522,27 @@ static int iwm_cfg80211_get_txpower(stru
- 	return 0;
- }
- 
-+static int iwm_cfg80211_set_power_mgmt(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       bool enabled, int timeout)
-+{
-+	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
-+	u32 power_index;
-+
-+	if (enabled)
-+		power_index = IWM_POWER_INDEX_DEFAULT;
-+	else
-+		power_index = IWM_POWER_INDEX_MIN;
-+
-+	if (power_index == iwm->conf.power_index)
-+		return 0;
-+
-+	iwm->conf.power_index = power_index;
-+
-+	return iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
-+				       CFG_POWER_INDEX, iwm->conf.power_index);
-+}
-+
- static struct cfg80211_ops iwm_cfg80211_ops = {
- 	.change_virtual_intf = iwm_cfg80211_change_iface,
- 	.add_key = iwm_cfg80211_add_key,
-@@ -534,6 +555,7 @@ static struct cfg80211_ops iwm_cfg80211_
- 	.leave_ibss = iwm_cfg80211_leave_ibss,
- 	.set_tx_power = iwm_cfg80211_set_txpower,
- 	.get_tx_power = iwm_cfg80211_get_txpower,
-+	.set_power_mgmt = iwm_cfg80211_set_power_mgmt,
- };
- 
- struct wireless_dev *iwm_wdev_alloc(int sizeof_bus, struct device *dev)
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/wext.c	2009-06-24 13:53:12.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/wext.c	2009-06-24 13:54:07.000000000 +0200
-@@ -238,49 +238,6 @@ static int iwm_set_wpa_version(struct iw
- 	return 0;
- }
- 
--static int iwm_wext_siwpower(struct net_device *dev,
--			     struct iw_request_info *info,
--			     struct iw_param *wrq, char *extra)
--{
--	struct iwm_priv *iwm = ndev_to_iwm(dev);
--	u32 power_index;
--
--	if (wrq->disabled) {
--		power_index = IWM_POWER_INDEX_MIN;
--		goto set;
--	} else
--		power_index = IWM_POWER_INDEX_DEFAULT;
--
--	switch (wrq->flags & IW_POWER_MODE) {
--	case IW_POWER_ON:
--	case IW_POWER_MODE:
--	case IW_POWER_ALL_R:
--		break;
--	default:
--		return -EINVAL;
--	}
--
-- set:
--	if (power_index == iwm->conf.power_index)
--		return 0;
--
--	iwm->conf.power_index = power_index;
--
--	return iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
--				       CFG_POWER_INDEX, iwm->conf.power_index);
--}
--
--static int iwm_wext_giwpower(struct net_device *dev,
--			     struct iw_request_info *info,
--			     union iwreq_data *wrqu, char *extra)
--{
--	struct iwm_priv *iwm = ndev_to_iwm(dev);
--
--	wrqu->power.disabled = (iwm->conf.power_index == IWM_POWER_INDEX_MIN);
--
--	return 0;
--}
--
- static int iwm_set_key_mgt(struct iwm_priv *iwm, u8 key_mgt)
- {
- 	u8 *auth_type = &iwm->umac_profile->sec.auth_type;
-@@ -458,8 +415,8 @@ static const iw_handler iwm_handlers[] =
- 	(iw_handler) NULL,				/* SIOCGIWRETRY */
- 	(iw_handler) cfg80211_wext_siwencode,		/* SIOCSIWENCODE */
- 	(iw_handler) cfg80211_wext_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) iwm_wext_siwpower,			/* SIOCSIWPOWER */
--	(iw_handler) iwm_wext_giwpower,			/* SIOCGIWPOWER */
-+	(iw_handler) cfg80211_wext_siwpower,		/* SIOCSIWPOWER */
-+	(iw_handler) cfg80211_wext_giwpower,		/* SIOCGIWPOWER */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,                              /* SIOCSIWGENIE */
+We keep shadow copies of the WEP & WPA keys in the priv structure to
+represent the "current" values there, so that we don't have to hit the
+hardware up every time somebody does an iwconfig.  That's somewhat bogus
+because drivers don't actually guarantee that the current key will be
+returned, but it's nice to have.
 
--- 
+Second, we need to populate a new assoc_request with the "current" state
+of the card when building up a change request.  That involves copying
+that current state into the new association request, same as all the
+other "current" values get stuffed into the request.  There are other
+ways to do the association request stuff than this, like a list of
+"change events", but some commands require more state than just the
+particular thing to be changed, thus the assoc_request is trying to be a
+picture of the adapter at the time it's created.
+
+If we wanted to just hit the hardware up for the WEP & WPA keys when
+doing 'iwconfig' then we could certainly just split up
+lbs_cmd_802_11_key_material() into a getter and setter, which should
+probably be done anway.
+
+But that doesn't fix the issue of building up the assoc_request.  This
+*could* all go away if/when we convert to cfg80211's WEXT compat stuff.
+At that point we ditch the assoc_request junk (which was only there to
+ensure 'iwconfig key xxxxx; iwconfig essid foobar' and the supplicant's
+WEXT driver worked correctly) and maybe the private key copies in the
+driver.
+
+I think the bug here is actually that the driver isn't copying the keys
+from the assoc_req to priv in assoc_helper_wpa_keys().  Thus the only
+way the priv->wpa* get set is by getting them explicitly.
+
+Dan
+
+>   -Andrey
+> 
+> >> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> >> ---
+> >>  drivers/net/wireless/libertas/cmd.c |   29 +++++++----------------------
+> >>  1 files changed, 7 insertions(+), 22 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> >> index 01db705..5825396 100644
+> >> --- a/drivers/net/wireless/libertas/cmd.c
+> >> +++ b/drivers/net/wireless/libertas/cmd.c
+> >> @@ -1782,32 +1782,17 @@ int lbs_execute_next_command(struct lbs_private *priv)
+> >>               lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
+> >>                           le16_to_cpu(cmd->command));
+> >>               lbs_submit_command(priv, cmdnode);
+> >> -     } else {
+> >> +     } else if ((priv->psmode != LBS802_11POWERMODECAM) &&
+> >> +                (priv->psstate == PS_STATE_FULL_POWER) &&
+> >> +                ((priv->connect_status == LBS_CONNECTED) ||
+> >> +                (priv->mesh_connect_status == LBS_CONNECTED))) {
+> >>               /*
+> >>                * check if in power save mode, if yes, put the device back
+> >>                * to PS mode
+> >>                */
+> >> -             if ((priv->psmode != LBS802_11POWERMODECAM) &&
+> >> -                 (priv->psstate == PS_STATE_FULL_POWER) &&
+> >> -                 ((priv->connect_status == LBS_CONNECTED) ||
+> >> -                 (priv->mesh_connect_status == LBS_CONNECTED))) {
+> >> -                     if (priv->secinfo.WPAenabled ||
+> >> -                         priv->secinfo.WPA2enabled) {
+> >> -                             /* check for valid WPA group keys */
+> >> -                             if (priv->wpa_mcast_key.len ||
+> >> -                                 priv->wpa_unicast_key.len) {
+> >> -                                     lbs_deb_host(
+> >> -                                            "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
+> >> -                                            " go back to PS_SLEEP");
+> >> -                                     lbs_ps_sleep(priv, 0);
+> >> -                             }
+> >> -                     } else {
+> >> -                             lbs_deb_host(
+> >> -                                    "EXEC_NEXT_CMD: cmdpendingq empty, "
+> >> -                                    "go back to PS_SLEEP");
+> >> -                             lbs_ps_sleep(priv, 0);
+> >> -                     }
+> >> -             }
+> >> +             lbs_deb_host("EXEC_NEXT_CMD: cmdpendingq empty, "
+> >> +                             "go back to PS_SLEEP");
+> >> +             lbs_ps_sleep(priv, 0);
+> >>       }
+> >>
+> >>       ret = 0;
+> >
+> >
 
