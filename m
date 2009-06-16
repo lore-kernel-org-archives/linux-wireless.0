@@ -1,62 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56733 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52895 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753336AbZFGM22 (ORCPT
+	with ESMTP id S1751596AbZFPSff (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 08:28:28 -0400
-Subject: Re: [PATCH] ath5k: added cfg80211 based rfkill support
+	Tue, 16 Jun 2009 14:35:35 -0400
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tobias Doerffel <tobias.doerffel@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1244374833-11987-1-git-send-email-tobias.doerffel@gmail.com>
-References: <1244374833-11987-1-git-send-email-tobias.doerffel@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hVZFKh8Tgo4LvW2cLvoC"
-Date: Sun, 07 Jun 2009 14:28:24 +0200
-Message-Id: <1244377705.2907.4.camel@johannes.local>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0y/gxLZ/w35qJOavAFmu"
+Date: Tue, 16 Jun 2009 20:35:07 +0200
+Message-Id: <1245177307.21287.34.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-hVZFKh8Tgo4LvW2cLvoC
+--=-0y/gxLZ/w35qJOavAFmu
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-06-07 at 13:40 +0200, Tobias Doerffel wrote:
+On Tue, 2009-06-16 at 11:31 -0700, Andrey Yurovsky wrote:
+> Commit b2a151a288 added a check that prevents adding or deleting
+> stations on non-AP interfaces.  Adding and deleting stations is
+> supported for Mesh Point interfaces, so add Mesh Point to that check as
+> well.
 
-> +config ATH5K_RFKILL
-> +	bool "Atheros 5xxx rfkill support"
-> +	depends on RFKILL
-> +	depends on ATH5K
-> +	default y
-> +	---help---
-> +	  Include support for enabling/disabling WiFi via rfkill switch
-> +	  with Atheros 5xxx cards
-
-This shouldn't be necessary. All APIs are always present.
+Why? Aren't those automatically discovered like IBSS peers?
 
 johannes
 
---=-hVZFKh8Tgo4LvW2cLvoC
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> ---
+>  net/wireless/nl80211.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index e18856c..b28c641 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -1763,7 +1763,8 @@ static int nl80211_new_station(struct sk_buff *skb,=
+ struct genl_info *info)
+>  		goto out_rtnl;
+> =20
+>  	if (dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_AP &&
+> -	    dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_AP_VLAN) {
+> +	    dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_AP_VLAN &&
+> +	    dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_MESH_POINT) {
+>  		err =3D -EINVAL;
+>  		goto out;
+>  	}
+> @@ -1812,7 +1813,8 @@ static int nl80211_del_station(struct sk_buff *skb,=
+ struct genl_info *info)
+>  		goto out_rtnl;
+> =20
+>  	if (dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_AP &&
+> -	    dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_AP_VLAN) {
+> +	    dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_AP_VLAN &&
+> +	    dev->ieee80211_ptr->iftype !=3D NL80211_IFTYPE_MESH_POINT) {
+>  		err =3D -EINVAL;
+>  		goto out;
+>  	}
+
+--=-0y/gxLZ/w35qJOavAFmu
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKK7JlAAoJEODzc/N7+QmaUHQP/2Qy3GGE4YWm138scf0Yo0yg
-W6oIuPfn150JNjUmJ3QFnpcHFgbzV9BwpwyjtwWcf9+hKFQpLECnZSoHBQZ/qfTb
-8hCEyyB1Nxoc01iFRNGXxbnHTMLZOheYypES8eTM0myZEdfItrUGVgtsPBlYE67G
-vIW+vvIg9euyUatSSkAQlntP1C/D7uDF18gmf6qMxq8vZPMEGQdJwkrso3D4+RcJ
-PbCK1e96QhHkRCaSIl7D/p79wPJKbyBuLIz3usg8QX5yKDiqGfYkQoK0j+eZao2i
-Cxp1yJPKkXXvaVgm1W/2Sjzn54OPdB1sZIuFR7DBjL8ajwtb6VCRA4x1VqJ5XvZn
-sil5hNbpBj/xLSVbI0KjEWOqc1x4Oi8vrgsMZpClN2yeCgVHLA3XlFbzrHGmz34A
-S6EyEXhKu/nJHUC1OGkLnBQakIBl0zLo4lh7YNuV9KXeuiD5ul0yTKaG1fAUD/jv
-aUkAj8LOlYNBOuVJgSgU6JIIEiKlJcZnfbIQ3lQHy4dRJHvcsRlz5Zl/ZMHFGQnj
-HMCRy0rH/9oUoPGKCJzXRr6beHQG1V/DTJ7bioKKmzzhqBX9wED87x1FKD1g1srL
-TWm8Ti3CerJUWk4dG0oZi0xDS4Vi9tIr+ovUuTKAcSlbSoz1Ub3GYK2+kyuH0Db0
-exaBIoPIqwKFnCpboD+r
-=H5QT
+iQIcBAABAgAGBQJKN+XYAAoJEODzc/N7+QmalBoQAMTf6bIvKcLf0+eoYFmMkfgF
+tAY5kx3n8/TmLffN9VaZAr7Q3QR2LYh541dEyWTHZZx2gHcMa1O9tBMUT3ImCz8V
+h4KEE9t7kjDf9lnVamk7jurjSI+/RGMEx71bs5YIZSQ+ORQL63Lby9bExeVN+Xp8
+UsO0Ypgw+JrfewPmHOLvzEy9iIU5GduOEc6BNWPSh9ArFfb0YVH1GfL9Chv+bW1o
+LAseZcPyTCOguNTS2EamD3Ci3kAhtQJDUNA5eS6h76SFE9KhRQocyEAJmzVjCnUr
+tnDjHG/qPLsyIX9M+SZb8NwYpMXPWA6xcU4tjKeMwhpWoBUyb6qM36yB/Yu3RR1f
+8j1+tcWeK3aBdg919geDfr8sWwoUPuqYhmJw3LOFMHasO1rUliu7eC3F6KHj9xvb
+0Bv7JGOf81EASZlvSrIy9kxF/i7yO8L2O4/yFi6DtIIyXikJAtwYdh3+Ks20Lc9z
+HDbr134hq1YzyTLshmEHSw+PEJv0Ug7b+RPoPPezhyQRme+UNgYLZOsrNKJmRKoI
+ViJzcqYOoQlqlLtG+GciqSJ6wK851WC2iBZ61FhUeWx3IBc7zqn8fccDwsKV+TOu
+DdNhFqs/d3VHZm2wOE7urKWWK0LnsKdE+iMtitsebXPEOydbC896AswlQy2FAOL5
+nfjGIJrviPA23EWDSALu
+=46oO
 -----END PGP SIGNATURE-----
 
---=-hVZFKh8Tgo4LvW2cLvoC--
+--=-0y/gxLZ/w35qJOavAFmu--
 
