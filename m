@@ -1,53 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:61882 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754951AbZFJWRR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 18:17:17 -0400
-Received: by gxk10 with SMTP id 10so1499054gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 15:17:19 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59852 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752424AbZFPSj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 14:39:58 -0400
+Message-ID: <4A37E6F1.4080003@hauke-m.de>
+Date: Tue, 16 Jun 2009 20:39:45 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
-	 <1244442549.11006.2.camel@johannes.local>
-	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
-	 <1244556179.4672.11.camel@johannes.local>
-	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
-	 <1244569926.18481.27.camel@johannes.local>
-	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-Date: Thu, 11 Jun 2009 00:17:19 +0200
-Message-ID: <83a869cd0906101517k5897f1b8i19a8c840c6312d1d@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jan Kiszka <jan.kiszka@web.de>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Warp speed building
+References: <4A30CE70.4050605@web.de> <200906112305.33675.mb@bu3sch.de> 	<43e72e890906111410n3766ceb7t4b4efda05730c693@mail.gmail.com> 	<200906112314.29464.mb@bu3sch.de> <69e28c910906111439o798b3298p63bd44e88358ea8a@mail.gmail.com> <43e72e890906111443h5758b74dk6f788b327b1cfe4c@mail.gmail.com> <4A3368F9.6060509@web.de>
+In-Reply-To: <4A3368F9.6060509@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig3F2ECBD8DEEA777D4CAD2771"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 10, 2009 at 9:42 PM, gregor kowski<gregor.kowski@gmail.com> wrote:
-> On Tue, Jun 9, 2009 at 7:52 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
->> On Tue, 2009-06-09 at 19:48 +0200, gregor kowski wrote:
->>
->>> > Right. But drivers are free to even only _encrypt_ tkip frames and never
->>> > _decrypt_ them after having accepted a hardware key, iow that is
->>> > perfectly valid behaviour and I don't think we should keep uploading the
->>> > key to the driver. Worst case is that the proper upload fails and we
->>> > decrypt all frames in software until the next rollover.
->>> >
->>> What's the point of setting the tkip callback if we aren't interested
->>> in decrypting data by hardware ?
->>
->> Might depend on something else? Anyhow I don't see the point of
->> continuing to call the callback. Maybe it should just be part of the key
->> todo instead when the key is initially uploaded to the hw.
->
-> Or what do you think about this. This will call the callback only once per wrap.
-But this won't work if you want to support QOS.
-So how update_tkip_key is supposed to work with QOS (ie different
-rx->queue value) and multiple tkip IV ?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig3F2ECBD8DEEA777D4CAD2771
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-BTW did you know why there only one tkip IV on tx and not one per qos queue ?
+Jan Kiszka wrote:
+> Including config.mk again when kbuild called into the top level Makefil=
+e
+> slowed down the build process awfully. The reason for this were all the=
 
-Gregor
+> dynamic, shell-based variable evaluations that were called over and ove=
+r
+> again. Fortunately, including config.mk only in the outer Makefile run
+> appears to be enough. So let's remove this warp speed blocker.
+>=20
+> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+> ---
+>  Makefile |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/Makefile b/Makefile
+> index 0ab7d27..49a786a 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -13,8 +13,6 @@ OLD_IWL=3D$(shell $(MODPROBE) -l iwl4965)
+> =20
+>  ifneq ($(KERNELRELEASE),)
+> =20
+> -include $(M)/$(COMPAT_CONFIG)
+> -
+>  NOSTDINC_FLAGS :=3D -I$(M)/include/ -include $(M)/include/net/compat.h=
+ $(CFLAGS)
+> =20
+>  obj-y :=3D net/wireless/ net/mac80211/ net/rfkill/
+
+Hi Jan,
+
+I have tested this patch and it reduced the build time for me from 3:30
+to 2:40 minutes on a dual core system. I can not see any changes, expect
+the reduced build time on my system. The resulting modules are still the
+same.
+
+Hauke
+
+
+--------------enig3F2ECBD8DEEA777D4CAD2771
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iQIcBAEBAgAGBQJKN+b1AAoJEIZ0px9YPRMypIEP+wVNguVEookLr+bM2IYCJs+o
+0rikhpL4r2H8TsCWjg5tJ30k4tsC9opRaxomMHMLms/pJ3SZ3X/gUOSv1x/WFNrV
+eQIw/70xIe8K3uDnWaSw3nR4oSpHqauZyMNIhNOsrOqNjqU3BTAkRhrliP+T8hz9
+Qh724HS+TNTogscu//1IwIpmsNOw7iPYdKfblYu2kT61/et0/7M384wjr+dld+bW
+hTJtJSvVu+jKAURU+HqRuJ5RxpMWeHWS636ZtLHG1Jw5Su+zGZep9h91mL65BrQV
+DVOaK8Js23JNPKz7r4HT73mnyVQTWOzwZfGSKzeSxIG2nQYS7lCk7KvkXan2nkcI
+v/i0kJd2zTLw96Y3GLVRqDUrHayNpvQHYkyiGAkvg/vqCm8MRO0MmZ34I0d0/vW7
+nWcUqZJGzBkpdThfZT/VbQ1/0RAQlvxDASWZKJGXz4xHEdBNLjQBPLjzVr5GzUuv
+br5dkDScL/G7jBHi/IURW6G4y0TMehLuS5Y3ODo3uRBRiy5u944FCTdEWZj5+T5I
+1PoSAmcyMqQ7KA3HcZIJa8kyHEfwTQOjJWGAJuEd9dsOA59nhdaPr8XCMRnz7VAz
+q5vj6NLC2YjcEGIHX42z0J89CYxgDDUebzIJXfROd0rpQfccObJUmNo0chiEbEqC
+jbkfmPkwnN+Wce6zkK9h
+=+qK5
+-----END PGP SIGNATURE-----
+
+--------------enig3F2ECBD8DEEA777D4CAD2771--
