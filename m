@@ -1,79 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32790 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758882AbZFKTJh (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:44335 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbZFPRsH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 15:09:37 -0400
-Subject: Re: [ath9k-devel] [PATCH] mac80211: disassociate when switching
- bands  and not scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>, "j@w1.fi" <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-In-Reply-To: <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com>
-References: <1244666131-20031-1-git-send-email-lrodriguez@atheros.com>
-	 <1244666973.20900.399.camel@rc-desk>
-	 <43e72e890906101349t502e9022h16fa79ea512f8b4d@mail.gmail.com>
-	 <1244667817.20900.402.camel@rc-desk>
-	 <43e72e890906101404l6a8bee67r560f7c8a1c5f8c36@mail.gmail.com>
-	 <1244668077.4706.4.camel@johannes.local>
-	 <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com>
-	 <43e72e890906101544i22bacc8fxa0a7d045eea50280@mail.gmail.com>
-	 <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eBniXGOS4yVWvsS0u2jG"
-Date: Thu, 11 Jun 2009 21:10:16 +0200
-Message-Id: <1244747416.29447.2.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 16 Jun 2009 13:48:07 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so2791751qwd.37
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 10:48:09 -0700 (PDT)
+MIME-Version: 1.0
+From: suvayu ali <fatkasuvayu+linux@gmail.com>
+Date: Tue, 16 Jun 2009 10:47:48 -0700
+Message-ID: <fe3123490906161047n11043d63y94166a03815cff47@mail.gmail.com>
+Subject: Prism54 driver not working on 2.6.29 kernel
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-eBniXGOS4yVWvsS0u2jG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am a user who is having trouble getting Prism54 to work. The
+webpage[1]  for Linux wireless said to ask on this list so here I am.
 
-On Thu, 2009-06-11 at 12:04 -0700, Luis R. Rodriguez wrote:
+Hardware:   D-Link DWL-G122 rev. A1
+OS:              Fedora 11 x86_64
+Kernel:         2.6.29.4-167.fc11.x86_64
 
-> As expected I was able to reproduce the warning with atht5k and ath9k
-> on 2.6.30. I did not get a crash with ath9k though, which is good. But
-> the warning is still present.
->=20
-> Do we want to fix this for stable? If so is the patch I posted reasonable=
-?
+I had this working under F10 flawlessly with kernel 2.6.27. But since
+I have upgraded to F11 it has stopped working. I have used the
+appropriate firmware as mentioned in [1]. After I put the firmware in
+/lib/firmware, modprobe prism54 and reboot, I get this.
 
-Which patch are you talking about now? This disassociate one? If yes, I
-think I'd prefer to have mine so we don't diverge much and I can still
-remember what's going on where :)
+$ dmesg|grepp 54
+phy0: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2392
+p54usb: probe of 2-1:1.0 failed with error -16
+usbcore: registered new interface driver p54usb
 
-johannes
+$ dmesg |grep prism
+Loaded prism54 driver, version 1.2
 
---=-eBniXGOS4yVWvsS0u2jG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+$ lsmod |grep p54
+p54usb                 14624  0
+p54common              20820  1 p54usb
+mac80211              199552  2 p54usb,p54common
 
------BEGIN PGP SIGNATURE-----
+$ dmesg |grep isl
+usb 2-1: firmware: requesting isl3886usb
 
-iQIcBAABAgAGBQJKMVaUAAoJEODzc/N7+QmaXdQQAMMWzOg9UhYvDiDGFlZNkK/a
-y6LyHjssVuQjzAOoBhhUtjd00GqDR5yrNsyFxSnSDnt1dqujZ13tK7c3rOrUbxLX
-1TiET2B4MWG0y5zviDJqoYgO77oL3PMg/1wud0ajg6GhW4xvw7LtKsPa2KkCtIud
-XU72ikxmzQOAKzBX263mYGy1vh57WU1pPUdgIUzknJMolN9iYfiudXVKMdJ5qZIW
-DQJ9TFeYDuR6cInvjfnTuLRPgz3r4sWiF29JDziFuGuCpuOmikw2mOQrGi6nJaji
-dd+bdtcIF88dQsKlIeWJQuGkrAae1r0YJqaW1i9tBCkVVqaENZbjWNwL1ER8uAOt
-bIeRAnACDC+muCLo8epXok5yOWqE4YwJEeBtgZPARN/M33AHT+xBaOyyyFq7qR21
-U9SOKk9NBirYskQH07TxtDjcjH1XWPW2wx8Ct5VlHAU1FEsUuRXPAifbvmYSPCAp
-0uC70qjEur3CUhA8QiHEdfKGKYOsZr8GdT+VwmHUP8pe0UamQ3/kf92DRn6NoJWH
-iNn8J9CnyW59r5L0AEhLHFPVURgg0AgkTMDiGuzUsUsJqQvnAQwGoF8pIFkmv/3F
-mwNebhLqd6UXStymjW+gXW+AlRdnHaeZ9abPUqF5dckz+O5X93dl/Ya7xPlT57x0
-EZy3U928rabNwJcAvx0L
-=5Inc
------END PGP SIGNATURE-----
+My kernel is configured like this,
 
---=-eBniXGOS4yVWvsS0u2jG--
+prism54:
+   Symbol: PRISM54 [=m]
+   Prompt: Intersil Prism GT/Duette/Indigo PCI/Cardbus
+     Defined at drivers/net/wireless/Kconfig:375
+     Depends on: NETDEVICES && !S390 && PCI && EXPERIMENTAL && WLAN_80211
+     Location:
+       -> Device Drivers
+         -> Network device support (NETDEVICES [=y])
+           -> Wireless LAN
+             -> Wireless LAN (IEEE 802.11) (WLAN_80211 [=y])
+     Selects: WIRELESS_EXT && FW_LOADER
 
+p54:
+   Symbol: P54_USB [=m]
+   Prompt: Prism54 USB support
+     Defined at drivers/net/wireless/p54/Kconfig:14
+     Depends on: NETDEVICES && !S390 && P54_COMMON && USB
+     Location:
+       -> Device Drivers
+         -> Network device support (NETDEVICES [=y])
+           -> Wireless LAN
+             -> Wireless LAN (IEEE 802.11) (WLAN_80211 [=y])
+               -> Softmac Prism54 support (P54_COMMON [=m])
+     Selects: CRC32
+
+   Symbol: P54_COMMON [=m]
+   Prompt: Softmac Prism54 support
+     Defined at drivers/net/wireless/p54/Kconfig:1
+     Depends on: NETDEVICES && !S390 && MAC80211 && WLAN_80211 && FW_LOADE
+     Location:
+       -> Device Drivers
+         -> Network device support (NETDEVICES [=y])
+           -> Wireless LAN
+             -> Wireless LAN (IEEE 802.11) (WLAN_80211 [=y])
+
+   Symbol: P54_PCI [=m]
+   Prompt: Prism54 PCI support
+     Defined at drivers/net/wireless/p54/Kconfig:51
+     Depends on: NETDEVICES && !S390 && P54_COMMON && PCI
+     Location:
+       -> Device Drivers
+         -> Network device support (NETDEVICES [=y])
+           -> Wireless LAN
+             -> Wireless LAN (IEEE 802.11) (WLAN_80211 [=y])
+               -> Softmac Prism54 support (P54_COMMON [=m])
+
+Now when I use the _old_ _firmware_ (the firmware I used with F10 and
+kernel 2.6.27) and rename it from isl3890usb to isl3886usb, I am able
+to connect to but only for less than a minute. This Is what I get when
+using the firmware for 2.6.27.
+
+$ dmesg |grep p54
+phy0: p54 detected a LM86 firmware
+phy0: you are using an obsolete firmware. visit
+http://wireless.kernel.org/en/users/Drivers/p54 and grab one for
+"kernel >= 2.6.28"!
+wmaster0 (p54usb): not using net_device_ops yet
+wlan0 (p54usb): not using net_device_ops yet
+usbcore: registered new interface driver p54usb
+
+$ lsmod |grep prism
+prism54                53352  0
+
+The other messages are same as above.
+
+Am I doing something wrong? Thanks for any help on this.
+
+[1] http://wireless.kernel.org/en/users/Drivers/p54
+-- 
+Suvayu
+
+Open source is the future. It sets us free.
