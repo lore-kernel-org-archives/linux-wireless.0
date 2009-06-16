@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14814 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860AbZFKQIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 12:08:40 -0400
-Subject: Re: [PATCH v2] mac80211: Do not try to associate with an empty SSID
-From: reinette chatre <reinette.chatre@intel.com>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090611151945.GA17284@jm.kir.nu>
-References: <20090611105411.GA13825@jm.kir.nu>
-	 <20090611151945.GA17284@jm.kir.nu>
-Content-Type: text/plain
-Date: Thu, 11 Jun 2009 09:15:30 -0700
-Message-Id: <1244736930.20900.431.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:39297 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000AbZFPKy6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 06:54:58 -0400
+Received: by bwz9 with SMTP id 9so3942518bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 03:55:00 -0700 (PDT)
+From: Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
+To: linux-wireless@vger.kernel.org
+Cc: Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
+Subject: [PATCH] wireless: Compare ethernet addresses by unaligned safe way
+Date: Tue, 16 Jun 2009 13:54:32 +0300
+Message-Id: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-06-11 at 08:19 -0700, Jouni Malinen wrote:
-> It looks like some programs (e.g., NM) are setting an empty SSID with
-> SIOCSIWESSID in some cases. This seems to trigger mac80211 to try to
-> associate with an invalid configuration (wildcard SSID) which will
-> result in failing associations (or odd issues, potentially including
-> kernel panic with some drivers) if the AP were to actually accept this
-> anyway).
+When we try to run RTL8187 driver on AD BlackFin platform, we got
+messages from kernel about unaligned memory access at
+compare_ether_addr() calls.
 
-I think this behavior was recently changed in NM. See
-http://cgit.freedesktop.org/NetworkManager/NetworkManager/commit/?id=01a1bafc1d8abee153a8aca0495c77292f4f07e3
+Replacing of compare_ether_addr() by memcmp() fixes this problem.
 
-This is just fyi as this change is still needed for all the other NM
-versions out there.
+Signed-off-by: Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
+---
+ net/mac80211/ibss.c |    2 +-
+ net/wireless/scan.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Reinette
-
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0b30277..bcbb1ae 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -395,7 +395,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 		return NULL;
+ 	}
+ 
+-	if (compare_ether_addr(bssid, sdata->u.ibss.bssid))
++	if (memcmp(bssid, sdata->u.ibss.bssid, ETH_ALEN))
+ 		return NULL;
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index e95b638..6ad9b59 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -134,7 +134,7 @@ static bool is_bss(struct cfg80211_bss *a,
+ {
+ 	const u8 *ssidie;
+ 
+-	if (bssid && compare_ether_addr(a->bssid, bssid))
++	if (bssid && memcmp(a->bssid, bssid, ETH_ALEN))
+ 		return false;
+ 
+ 	if (!ssid)
+-- 
+1.6.3.1
 
