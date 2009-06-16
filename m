@@ -1,118 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755495AbZFRAjb (ORCPT
+Received: from mail-pz0-f187.google.com ([209.85.222.187]:44820 "EHLO
+	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763697AbZFPUSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 20:39:31 -0400
-Subject: Re: [PATCH] wireless extensions: play with netns
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-In-Reply-To: <m1my86qt73.fsf@fess.ebiederm.org>
-References: <1245263058.31588.38.camel@johannes.local>
-	 <m1y6rqwpur.fsf@fess.ebiederm.org>
-	 <1245276899.31588.57.camel@johannes.local>
-	 <m1r5xitpdh.fsf@fess.ebiederm.org>
-	 <1245282099.31588.69.camel@johannes.local>
-	 <m17hzato0r.fsf@fess.ebiederm.org>
-	 <1245283327.31588.74.camel@johannes.local>
-	 <m1my86qt73.fsf@fess.ebiederm.org>
-Content-Type: text/plain
-Date: Thu, 18 Jun 2009 02:39:01 +0200
-Message-Id: <1245285541.31588.79.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 16 Jun 2009 16:18:47 -0400
+Received: by pzk17 with SMTP id 17so2910233pzk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 13:18:49 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: dcbw@redhat.com, libertas-dev@lists.infradead.org,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH v2] libertas: remove ps_supported flag, use fwcapinfo
+Date: Tue, 16 Jun 2009 13:20:01 -0700
+Message-Id: <1245183601-5214-1-git-send-email-andrey@cozybit.com>
+In-Reply-To: <1245182438.28992.21.camel@130.81.190.10.in-addr.arpa>
+References: <1245182438.28992.21.camel@130.81.190.10.in-addr.arpa>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-06-17 at 17:30 -0700, Eric W. Biederman wrote:
+Power save support depends on the firmware capabilities rather than the
+card's hardware interface.  Use the FW_CAPINFO_PS bit in the firmware
+capabilities mask throughout the driver in place of the redundant
+ps_supported flag and don't make decisions about PS support in the
+interface drivers (with the exception of a special case in the USB
+driver).
 
-> >> This of course gives you a network namespace that can be found by for_each_net rcu
-> >> while the per net exit functions are running.  I think that opens up to races
-> >> that I don't want to think about.
-> >
-> > Indeed. Can we move the rcu_barrier() up? Or we could insert a
-> > synchronize_rcu() (which is sufficient for rcu_read_lock) before the
-> > exit functions are run?
-> 
-> I don't think we can move the barrier.   But adding an extra synchronize_rcu
-> should be fine.  We are talking about the slowest of the slow paths here.
-> It is so slow it even gets it's own kernel thread.
+V2: put the USB special case in the right place.
 
-Ok :) New patch below.
-
-Yes, you're right, we can't move it, it might still be used from exit
-for net_assign_generic or so.
-
-johannes
-
-Subject: net: make namespace iteration possible under RCU
-
-We already call rcu_barrier(), so all we need to take
-care of is using proper RCU list add/del primitives.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 ---
- include/net/net_namespace.h |    3 +++
- net/core/net_namespace.c    |   10 +++++++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/net/wireless/libertas/dev.h     |    1 -
+ drivers/net/wireless/libertas/if_cs.c   |    3 ---
+ drivers/net/wireless/libertas/if_sdio.c |    3 ---
+ drivers/net/wireless/libertas/if_spi.c  |    1 -
+ drivers/net/wireless/libertas/if_usb.c  |    3 ++-
+ drivers/net/wireless/libertas/wext.c    |    2 +-
+ 6 files changed, 3 insertions(+), 10 deletions(-)
 
---- wireless-testing.orig/include/net/net_namespace.h	2009-06-18 01:36:26.000000000 +0200
-+++ wireless-testing/include/net/net_namespace.h	2009-06-18 02:17:14.000000000 +0200
-@@ -211,6 +211,9 @@ static inline struct net *read_pnet(stru
- #define for_each_net(VAR)				\
- 	list_for_each_entry(VAR, &net_namespace_list, list)
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index f9ec69e..578c697 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -260,7 +260,6 @@ struct lbs_private {
+ 	u16 psmode;		/* Wlan802_11PowermodeCAM=disable
+ 				   Wlan802_11PowermodeMAX_PSP=enable */
+ 	u32 psstate;
+-	char ps_supported;
+ 	u8 needtowakeup;
  
-+#define for_each_net_rcu(VAR)				\
-+	list_for_each_entry_rcu(VAR, &net_namespace_list, list)
-+
- #ifdef CONFIG_NET_NS
- #define __net_init
- #define __net_exit
---- wireless-testing.orig/net/core/net_namespace.c	2009-06-18 01:36:39.000000000 +0200
-+++ wireless-testing/net/core/net_namespace.c	2009-06-18 02:03:06.000000000 +0200
-@@ -6,6 +6,7 @@
- #include <linux/delay.h>
- #include <linux/sched.h>
- #include <linux/idr.h>
-+#include <linux/rculist.h>
- #include <net/net_namespace.h>
- #include <net/netns/generic.h>
- 
-@@ -134,7 +135,7 @@ struct net *copy_net_ns(unsigned long fl
- 	err = setup_net(new_net);
- 	if (!err) {
- 		rtnl_lock();
--		list_add_tail(&new_net->list, &net_namespace_list);
-+		list_add_tail_rcu(&new_net->list, &net_namespace_list);
- 		rtnl_unlock();
+ 	struct assoc_request * pending_assoc_req;
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 2a5b083..f658fd6 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -933,9 +933,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 		goto out3;
  	}
- 	mutex_unlock(&net_mutex);
-@@ -163,9 +164,12 @@ static void cleanup_net(struct work_stru
  
- 	/* Don't let anyone else find us. */
- 	rtnl_lock();
--	list_del(&net->list);
-+	list_del_rcu(&net->list);
- 	rtnl_unlock();
+-	/* The firmware for the CF card supports powersave */
+-	priv->ps_supported = 1;
+-
+ 	ret = 0;
+ 	goto out;
  
-+	/* if somebody is rcu-iterating the list, wait */
-+	synchronize_rcu();
-+
- 	/* Run all of the network namespace exit methods */
- 	list_for_each_entry_reverse(ops, &pernet_list, list) {
- 		if (ops->exit)
-@@ -227,7 +231,7 @@ static int __init net_ns_init(void)
- 	err = setup_net(&init_net);
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 8cdb88c..89396a7 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -1039,9 +1039,6 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	if (ret)
+ 		goto err_activate_card;
  
- 	rtnl_lock();
--	list_add_tail(&init_net.list, &net_namespace_list);
-+	list_add_tail_rcu(&init_net.list, &net_namespace_list);
- 	rtnl_unlock();
+-	if (priv->fwcapinfo & FW_CAPINFO_PS)
+-		priv->ps_supported = 1;
+-
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
  
- 	mutex_unlock(&net_mutex);
-
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 923ed58..956566b 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1118,7 +1118,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	priv->card = card;
+ 	priv->hw_host_to_card = if_spi_host_to_card;
+ 	priv->fw_ready = 1;
+-	priv->ps_supported = 1;
+ 
+ 	/* Initialize interrupt handling stuff. */
+ 	card->run_thread = 1;
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index ea3dc03..16653c1 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -185,13 +185,14 @@ static void if_usb_setup_firmware(struct lbs_private *priv)
+ 	wake_method.action = cpu_to_le16(CMD_ACT_GET);
+ 	if (lbs_cmd_with_response(priv, CMD_802_11_FW_WAKE_METHOD, &wake_method)) {
+ 		lbs_pr_info("Firmware does not seem to support PS mode\n");
++		priv->fwcapinfo &= ~FW_CAPINFO_PS;
+ 	} else {
+ 		if (le16_to_cpu(wake_method.method) == CMD_WAKE_METHOD_COMMAND_INT) {
+ 			lbs_deb_usb("Firmware seems to support PS with wake-via-command\n");
+-			priv->ps_supported = 1;
+ 		} else {
+ 			/* The versions which boot up this way don't seem to
+ 			   work even if we set it to the command interrupt */
++			priv->fwcapinfo &= ~FW_CAPINFO_PS;
+ 			lbs_pr_info("Firmware doesn't wake via command interrupt; disabling PS mode\n");
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index 8bc1907..e96451c 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -712,7 +712,7 @@ static int lbs_set_power(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!priv->ps_supported) {
++	if (!(priv->fwcapinfo & FW_CAPINFO_PS)) {
+ 		if (vwrq->disabled)
+ 			return 0;
+ 		else
+-- 
+1.5.6.3
 
