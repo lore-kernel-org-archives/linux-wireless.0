@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59720 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57170 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbZFAMUW (ORCPT
+	with ESMTP id S1755583AbZFPLP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 08:20:22 -0400
-Subject: Re: [GSoC 2009] Automation of testing using mac80211_hwsim and
- Orbit -  status report 01
+	Tue, 16 Jun 2009 07:15:26 -0400
+Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
+ way
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Georgy Berdyshev <codingmaster@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
-References: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5ztXBkINlwhm9oHP4tUC"
-Date: Mon, 01 Jun 2009 14:20:09 +0200
-Message-Id: <1243858809.5299.15.camel@johannes.local>
+To: Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
+References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YmH8ip3r1UezH6as3k1d"
+Date: Tue, 16 Jun 2009 13:14:55 +0200
+Message-Id: <1245150895.8623.3.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-5ztXBkINlwhm9oHP4tUC
+--=-YmH8ip3r1UezH6as3k1d
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2009-06-16 at 13:54 +0300, Yauhen Kharuzhy wrote:
+> When we try to run RTL8187 driver on AD BlackFin platform, we got
+> messages from kernel about unaligned memory access at
+> compare_ether_addr() calls.
+>=20
+> Replacing of compare_ether_addr() by memcmp() fixes this problem.
 
-> By the end of the week, I did start to have some strange problems with
-> running hostapd (via nl80211) and using the
-> mac80211_hwsim kernel driver.
+This shouldn't be necessary. Which operand is unaligned?
 
-It seems it would help if you explained what the strange problems are :)
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -395,7 +395,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80=
+211_sub_if_data *sdata,
+>  		return NULL;
+>  	}
+> =20
+> -	if (compare_ether_addr(bssid, sdata->u.ibss.bssid))
+> +	if (memcmp(bssid, sdata->u.ibss.bssid, ETH_ALEN))
+>  		return NULL;
+
+So in this case it seems that it is possible that u.ibss.bssid is not
+aligned, consider fixing by doing
+
+--- ieee80211_i.h
++++ ieee80211_i.h
+-	u8 bssid[ETH_ALEN];
++	u8 bssid[ETH_ALEN] __align(2);
+
+or so instead.
+=20
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -134,7 +134,7 @@ static bool is_bss(struct cfg80211_bss *a,
+>  {
+>  	const u8 *ssidie;
+> =20
+> -	if (bssid && compare_ether_addr(a->bssid, bssid))
+> +	if (bssid && memcmp(a->bssid, bssid, ETH_ALEN))
+
+Since a->bssid is after a pointer I can't see how it would be unaligned,
+and bssid should be unaligned only if the call trace shows it's coming
+from the above u.ibss.bssid.
 
 johannes
 
---=-5ztXBkINlwhm9oHP4tUC
+--=-YmH8ip3r1UezH6as3k1d
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKI8d2AAoJEODzc/N7+QmaDh0P/2uB8jUTkuUftMXhTn6oFmuX
-nj8jUJXkRjTl0pf/6chn7vRdprgrmQl9mUL1G3oXdxhcbhOUemx2EItotyNM2q+y
-Jy0EfrCZRdgk7M4nsnBd6FAFDOhdwqKYApu+uiQrrbwlZT7kjKxXUAiwc6lCJ6fw
-51F7vfaJjPXGV/w9bCW0CR1ANQeHB59X+qF+szx9np0CM++yhbbuk1ayGzIu/e/2
-CM21hI329DH6LeDN4nHiJc0Lt/0TmYJk6Kb5ASXAF2+8DbFTb+5WSPohp17QG1sn
-0gE8n3YLZvzJ/k0MoZrg1lnH+XgUTczNDy5ajdsLKta54ldaa7EbXGIEUnmKXooM
-KN1RSFoxk+OX8PTQMYchlPZKLUUBpUbeHEuIgifMESUnymZR2ldZxTDWMXjK2MWH
-oR39jkCTgp4jpK/98MdZ1pS9jDz9N2efMPOeDBK+kQZJgxD4DdE43YkPxIs+NaU6
-UWjSWntLN+2PtuvPFmdV0fsAXV3Y255egykhFN44Pzq7/NVNjHZOA6s25dmifGXW
-A8+Y6CnYdGCfGSGt+R1XihhB24DBsBLht8o1pSMre6KHWgiclf/FT4aj0dtQ27NS
-E/XFSLE0Iu65zqdDbUNfnIXVBI8/yTTnxY9fQxELKemoIuJzro056lSuqkLDSnHj
-n3OSwEnUd2hbZQsTbVJS
-=RsaQ
+iQIcBAABAgAGBQJKN36sAAoJEODzc/N7+QmaajAP/AuLGlHfA1jx/2ydokA4wioW
+yuJpRI/6e+FpXeGZ5g9O/AX3tfwaC4VIeQBnR4RWDx0/p0wcSl4r8NqGww6LcP8S
+2IXbeAunhpvgpXfno8q4DDw6wbbdJpBMTX0FfTV2G15dTN7eHdLyj7uUSXRbzdjS
+oZOn8qO46v8E4+WwbZKlPRAsvu7K8GHQoQycWZFvegNDm/nE+dlfmGBC0AoSr//5
+q4K6EjUHar9+bPXi88Kbgcmma9TK+zEfFLtY4TkMxaKVYrc7qOYEc0AFwAGV65DF
+Lcj4gy8waPnfL0QrE/zpPg14gb8OLSt2O75mgtCHJwz53EFBsdLdad5Be++al3Rk
+lc6Hxn6NTVXoxCqsbJos3meSzh+tqeAiP3Hsx6FMtCbqrKXRMMU2gj0pxwxvuok5
+YJUMpLBLzv4LaG2ygXXLQxil50iV62k+nyJqdNsva6HtWkE9DGTHy4YiqT1Q4s6r
+JYXKkoa3LeZ9oAp5495MMyWrcGSHNYGHmHtOeXRZyWnOq3i3bM8P80v3uhHd3I6k
+B5si23zTbUU/B2YljaAT8r9GYNbusmuOpJwgdXRBqQdhyYUgYEMHivCttzqEcNC+
++Q15KeBEQUI6A1FKbD8E2SYV6ozD/OWw/4VepsAUSF8nIo/F1fe8dF0cXDD1Vfo9
+SyhO5MwoiRNeGqyjUKnU
+=YeH2
 -----END PGP SIGNATURE-----
 
---=-5ztXBkINlwhm9oHP4tUC--
+--=-YmH8ip3r1UezH6as3k1d--
 
