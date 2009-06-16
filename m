@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:1833 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbZFMMji (ORCPT
+Received: from mail-fx0-f211.google.com ([209.85.220.211]:33173 "EHLO
+	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754843AbZFPQ2H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2009 08:39:38 -0400
+	Tue, 16 Jun 2009 12:28:07 -0400
+Received: by fxm7 with SMTP id 7so789660fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 09:28:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <6097c490906122237l2be1836dsd30c3160f1a15ae8@mail.gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-	 <9e4733910906122021k4568df6rd80fb915b64ac12@mail.gmail.com>
-	 <6097c490906122237l2be1836dsd30c3160f1a15ae8@mail.gmail.com>
-Date: Sat, 13 Jun 2009 08:39:39 -0400
-Message-ID: <9e4733910906130539k4af2dde3k1fe85e8932ef563e@mail.gmail.com>
-Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
-From: Jon Smirl <jonsmirl@gmail.com>
-To: maxim@mox.ru
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
+In-Reply-To: <43e72e890906152133x49e8a072hfce9e48f82094f35@mail.gmail.com>
+References: <3ace41890906151936s3f0d70fcx6f42bfddf07dd70e@mail.gmail.com>
+	 <43e72e890906152133x49e8a072hfce9e48f82094f35@mail.gmail.com>
+Date: Tue, 16 Jun 2009 17:28:07 +0100
+Message-ID: <3ace41890906160928y8c43fe2m96844c7361174a89@mail.gmail.com>
+Subject: Re: vid/pid sorting patch? (Re: [PATCH] zd1211rw: adding 083a:e503 as
+	a ZD1211B device)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 13, 2009 at 1:37 AM, Maxim Osipov<maxim.osipov@gmail.com> wrote:
-> On Sat, Jun 13, 2009 at 7:21 AM, Jon Smirl<jonsmirl@gmail.com> wrote:
->> On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
->> Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
->>> Hi,
->>>
->>> As a part of research activities the Embedded Systems - Open Platform Group
->>> from Siemens Corporate Technology we are working on adding support for
->>> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
->>> implementation is neither certified nor even feature complete. However
->>> we'd like to present current state of our patchset to the Linux developers
->>> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
->>> but more like an RFC.
->>>
+On Tue, Jun 16, 2009 at 5:33 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Mon, Jun 15, 2009 at 7:36 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+>> Hiya,
 >>
->> The Zigbee alliance requires a minimum of $3,500/yr from any company
->> making a product based on the spec. How are you going to reconcile
->> this requirement with the GPL? They exempt non-commercial users but
->> the GPL doesn't allow code to be free for one purpose and pay for
->> another.
->>
+>> The zd1211rw vid/pid list is getting a bit unruly - would it be
+>> acceptable to submit a non-code-changing patch just to sort the ids?
+>> It would just be tidier and make it easier to see what id is already
+>> in and what is not, and also make it obvious where new changes should
+>> be inserted. I know this affects git blame and other log searching
+>> usage so may not be entirely desirable.
 >
-> For now, we do not release any ZigBee implementation. BTW - could you
-> refer to particular clause of GPL, which doesn't allow user to pay for
-> code?
-
-    b) You must cause any work that you distribute or publish, that in
-    whole or in part contains or is derived from the Program or any
-    part thereof, to be licensed as a whole at no charge to all third
-    parties under the terms of this License.
-
-You can charge a duplication fee when you do the copying. It is fine
-to charge for things like support or the hardware that comes with the
-software.
-
-
+> Development on wireless-testing is always open, just send what you
+> have and don't worry about where it can get applied.
 >
-> Regards,
-> Maxim
->
+>  Luis
 
+Okay - I'll submit a patch to sort the vid/pid's in zd1211rw in hex
+order soon then.
 
-
--- 
-Jon Smirl
-jonsmirl@gmail.com
+Hin-Tak
