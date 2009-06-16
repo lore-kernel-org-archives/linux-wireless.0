@@ -1,127 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:65407 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988AbZFCTsH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52427 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbZFPSqP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 15:48:07 -0400
-Received: by bwz9 with SMTP id 9so240616bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 12:48:08 -0700 (PDT)
-Message-ID: <4A26CBD3.8050009@gmail.com>
-Date: Wed, 03 Jun 2009 20:15:31 +0100
-From: Dave <kilroyd@googlemail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [PATCH] cfg80211: fix Kconfig for users of cfg80211
-References: <1244046631.4862.34.camel@johannes.local>
-In-Reply-To: <1244046631.4862.34.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Jun 2009 14:46:15 -0400
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+	 <1245177307.21287.34.camel@johannes.local>
+	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KtP/lwhasjRAhJXwoUGY"
+Date: Tue, 16 Jun 2009 20:45:46 +0200
+Message-Id: <1245177946.21287.42.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->  * iwm doesn't depend on cfg80211 or wireless extensions
->  * rndis wlan selects cfg80211 - needs to depend
->  * mac80211 selects cfg80211 - needs to depend
 
-Hmm. Consider:
+--=-KtP/lwhasjRAhJXwoUGY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-1. User using a rndis_wlan device on old kernel with cfg80211 unselected.
-2. Upgrades kernel with make old_config
+On Tue, 2009-06-16 at 11:42 -0700, Andrey Yurovsky wrote:
+> On Tue, Jun 16, 2009 at 11:35 AM, Johannes
+> Berg<johannes@sipsolutions.net> wrote:
+> > On Tue, 2009-06-16 at 11:31 -0700, Andrey Yurovsky wrote:
+> >> Commit b2a151a288 added a check that prevents adding or deleting
+> >> stations on non-AP interfaces.  Adding and deleting stations is
+> >> supported for Mesh Point interfaces, so add Mesh Point to that check a=
+s
+> >> well.
+> >
+> > Why? Aren't those automatically discovered like IBSS peers?
+>=20
+> Yes, they normally are, however it's possible to turn that off from
+> user space (via iw).
+>=20
+> The reason for this is that it's useful to manually create mesh
+> topologies.  This is mostly for testing, verification, and
+> experimentation.  For example, you can manually create a topology
+> where you have two paths and you know one path is better than another
+> and then run a test script that verifies that the right path was
+> taken.  It could presumably also be used by some user-space "mesh
+> manager" similar to hostapd for APs.
 
-Result: the rndis_wlan driver is no longer configured to build.
+Ok, fair enough. There are a lot of quirks in the mesh API, one of these
+days I'd like to make it less like wext and have you join/leave like the
+ibss commands instead of setting each parameter one by one...
 
-I don't think it's a big issue, as you can reconfigure and rebuild as
-soon as you realise. But you may have to 'realise' without google access.
+johannes
 
-The only reason I'm thinking of this is because orinoco may be in the
-same boat shortly. Ditto other wireless drivers as they get converted.
-So I had a play with Kconfig. How about something like the patch below
-instead?
+--=-KtP/lwhasjRAhJXwoUGY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-cfg80211 should just get autoselected in the most appropriate mode, and
-drivers get the same restrictions as cfg80211. The option setting
-appears to work fine, but I haven't done any build testing.
+-----BEGIN PGP SIGNATURE-----
 
-It might be possible to chain things like this, so mac80211 could be
-done in the same way. But I guess we wouldn't want too much of this
-going on...
+iQIcBAABAgAGBQJKN+hWAAoJEODzc/N7+QmaW4QP/iG9HrCuQ4oZOLZSDza/jEcv
+l6238Ca7IoD0ijZMWsHS5tbL/JsyVPnVUGlN7e7Zvyi4NkIOMPfuECfe7kS6iJ3l
+TXRk7lWpPkUKFOrBg/ZfV4Sq+XQb/nBiHdG4qFzJQwu8uNPjW40uHiQraCSB5dZn
++J6LUAUboAH7t8gI9ohO0U5cvEAQ9aMUrGXc/1Aw/hgUgrEnM7w6nvl0Sgh93vtO
+OYVnJojP0bED5OiYnDITjLfsC32G/wX37PyrZJ2omNzUII1SVLmPheysn8kDxg32
+DOAFNQG/9e7r024o6L0qWKAHjoFBEXervclkzEPDFr/PfalnMYahnZxuPmW0P8Sj
+GzP5KGEHDmZXyTc8X16a/ue+rE7QmXK4nLL22O56Zorb17NqWWqAux4pRI79Zmj1
+UebHFEBYM7b/U/q7mNOHV4hiTwbFhrnX7a11/fPlhbOAICiLCoWeNEJblgXLYzCV
+AZ0yhilnqKSVzjM0NoqOsLqTi+YF+GxffM4sRxc21WJNerp3nqPqdcV/LApAb5Xs
+42QCDcpsNrb4Ce/nou/Kjlo8aByWmEyFu2d0o+i78dEIK/T3RiVA8xmF4r3lft9S
+SRFD1p+GIy9wJyt+upq9iBYKwlBntoaPT4bwNsROsH7GRuIYYlGSSSJNbYrXqiVQ
+k6unhRWaXUJUWebAXwBm
+=PrFS
+-----END PGP SIGNATURE-----
 
-
-
-Dave.
-
----
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index a67d292..9038bd6 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -333,11 +333,12 @@ config USB_ZD1201
- config USB_NET_RNDIS_WLAN
-        tristate "Wireless RNDIS USB support"
-        depends on USB && WLAN_80211 && EXPERIMENTAL
-+       depends on CFG80211_AS_MODULE
-        select USB_USBNET
-        select USB_NET_CDCETHER
-        select USB_NET_RNDIS_HOST
-        select WIRELESS_EXT
--       select CFG80211
-+       select CFG80211_USED
-        ---help---
-          This is a driver for wireless RNDIS devices.
-          These are USB based adapters found in devices such as:
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 9cbf545..2de2bd8 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -1,12 +1,14 @@
-+# If cfg80211 has to be configured as a module, so do we
- config MAC80211
-        tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
-+       depends on CFG80211_AS_MODULE
-        select CRYPTO
-        select CRYPTO_ECB
-        select CRYPTO_ARC4
-        select CRYPTO_AES
-        select CRC32
-        select WIRELESS_EXT
--       select CFG80211
-+       select CFG80211_USED
-        ---help---
-          This option enables the hardware independent IEEE 802.11
-          networking stack.
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 4428dd5..d3f08c4 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -1,6 +1,23 @@
--config CFG80211
--       tristate "Improved wireless configuration API"
-+# Selected by drivers which use cfg80211
-+config CFG80211_USED
-+       tristate
-+
-+# Is cfg80211 restricted to being a module by its dependencies?
-+# Drivers must depend on this so they inherit the restriction.
-+#
-+# Careful: m means that CFG80211 is restricted to being a module
-+#          Both n and y mean there is no restriction
-+config CFG80211_AS_MODULE
-+       tristate
-        depends on RFKILL || !RFKILL
-+       default y
-+
-+# Avoid presenting a UI option so we inherit the value of CFG80211_USED
-+# If one driver is set to m, and another to y, CFG80211_USED will be y.
-+config CFG80211
-+       tristate
-+       depends on CFG80211_AS_MODULE
-+       default CFG80211_USED
-
- config CFG80211_REG_DEBUG
-        bool "cfg80211 regulatory debugging"
+--=-KtP/lwhasjRAhJXwoUGY--
 
