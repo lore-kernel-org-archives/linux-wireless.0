@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:39536 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbZFFRNL (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49067 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751843AbZFPQYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:13:11 -0400
-Message-ID: <4A2AA395.3060406@web.de>
-Date: Sat, 06 Jun 2009 19:12:53 +0200
-From: Jan Kiszka <jan.kiszka@web.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigFCCF9C13039894E0F073A01D"
+	Tue, 16 Jun 2009 12:24:16 -0400
+Subject: Re: [PATCH 4/4] rfkill: export persistent attribute in sysfs
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A37A3FC.9060206@tuffmail.co.uk>
+References: <4A37A3FC.9060206@tuffmail.co.uk>
+Content-Type: text/plain
+Date: Tue, 16 Jun 2009 18:24:14 +0200
+Message-Id: <1245169454.15367.25.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigFCCF9C13039894E0F073A01D
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+Hi Alan,
 
-Hi,
+> This information allows userspace to implement a hybrid policy where
+> it can store the rfkill soft-blocked state in platform non-volatile
+> storage if available, and if not then file-based storage can be used.
+> 
+> Some users prefer platform non-volatile storage because of the behaviour
+> when dual-booting multiple versions of Linux, or if the rfkill setting
+> is changed in the BIOS setting screens, or if the BIOS responds to
+> wireless-toggle hotkeys itself before the relevant platform driver has
+> been loaded.
+> 
+> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 
-excited about the announcement of a free ar9170 firmware and
-specifically the chance to get AP mode working with my DWA-160a, I
-wanted to give this a try ASAP. As I'm somehow allergic when I have to
-register for downloading Open Source, I hacked up a Makefile that
-retrieves and builds a home-brewed m2-capable toolchain (the advertised
-rpms only support m3 or even just m4).
+as I mentioned before, I agree with doing it this way.
 
-The toolchain consists of latest binutils (2.19.1) and newlib (1.17.0),
-but "only" gcc 4.3.3 as 4.4.0 drove the AP build into troubles: the
-=2Edata segment was reported to exceed the available space by a hundred
-bytes. So I switched one version back for now.
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
 
-On the other hand, the AP firmware doesn't work on my DWA-160a anyway
-("device is in a bad state"), only the STA version (but that one
-dislikes my access point, just like the original firmware, though).
-Guess there is still enough room for improvements...
+Regards
 
-Jan
+Marcel
 
 
-
---------------enigFCCF9C13039894E0F073A01D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkoqo6cACgkQniDOoMHTA+nzQACdGn0He11PuW7KooGYYmFOqKhH
-pasAnRb+6qtaDslOE+orIVCdbhlgR3b7
-=Dqkz
------END PGP SIGNATURE-----
-
---------------enigFCCF9C13039894E0F073A01D--
