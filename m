@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:50693 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754977AbZFXJfe convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f189.google.com ([209.85.216.189]:53108 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758990AbZFPTJ1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 05:35:34 -0400
-Message-ID: <4A41F35F.4070001@openwrt.org>
-Date: Wed, 24 Jun 2009 11:35:27 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+	Tue, 16 Jun 2009 15:09:27 -0400
+Received: by pxi27 with SMTP id 27so1149829pxi.33
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 12:09:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Bob Copeland <me@bobcopeland.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] mac80211: fix todo lock
-References: <1245751007.4184.17.camel@johannes.local>	 <1245766038.21314.24.camel@johannes.local> <4A40F856.2010501@openwrt.org>	 <b6c5339f0906230951v9766914vdc1d76f85eb62feb@mail.gmail.com>	 <1245776114.21314.41.camel@johannes.local>	 <20090623183126.GA3337@hash.localnet> <1245783408.21314.43.camel@johannes.local>
-In-Reply-To: <1245783408.21314.43.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-2
+In-Reply-To: <69e28c910906130644i1b0cf636w4a912bbb5ae78d5@mail.gmail.com>
+References: <ec2083b20906120654j370e5bdo724a7c3b6d505a6c@mail.gmail.com>
+	 <4A326771.6030301@lwfinger.net>
+	 <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com>
+	 <4A32E645.1040002@lwfinger.net>
+	 <69e28c910906130644i1b0cf636w4a912bbb5ae78d5@mail.gmail.com>
+Date: Tue, 16 Jun 2009 14:09:29 -0500
+Message-ID: <ec2083b20906161209i5318b104w2796915059bd0a08@mail.gmail.com>
+Subject: Re: 4311 not detected at all
+From: "Fabio A. Correa" <facorread@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg írta:
-> Subject: mac80211: fix todo lock
-> 
-> The key todo lock can be taken from different locks
-> that require it to be _bh to avoid lock inversion
-> due to (soft)irqs.
-> 
-> This should fix the two problems reported by Bob and
-> Gabor:
-> http://mid.gmane.org/20090619113049.GB18956@hash.localnet
-> http://mid.gmane.org/4A3FA376.8020307@openwrt.org
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Bob Copeland <me@bobcopeland.com>
-> Cc: Gabor Juhos <juhosg@openwrt.org>
-> ---
->  net/mac80211/key.c |   28 +++++++++++++++-------------
->  1 file changed, 15 insertions(+), 13 deletions(-)
+After days of failure, I resorted to ndiswrapper-1.54, which installed
+without trouble.
 
-Yeah, this works. Thanks!
-
--Gabor
-
-
+--
+Fabio Andrés Correa Durán
