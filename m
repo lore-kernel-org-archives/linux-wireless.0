@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f201.google.com ([209.85.221.201]:55309 "EHLO
-	mail-qy0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756925AbZFQRc5 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54339 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbZFPT33 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 13:32:57 -0400
-Received: by qyk39 with SMTP id 39so636076qyk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 10:33:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <cdc21430906171031o3091a099ubf9c042bb90777d7@mail.gmail.com>
-References: <cdc21430906171031o3091a099ubf9c042bb90777d7@mail.gmail.com>
-Date: Wed, 17 Jun 2009 12:32:59 -0500
-Message-ID: <cdc21430906171032gf4f4d0byd0c7e9396206d11f@mail.gmail.com>
-Subject: Newbie: Need help with ath9k module compilation. (CONFIG_MODVERSIONS)
-From: Rakesh Kumar <gopchandani@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 16 Jun 2009 15:29:29 -0400
+Subject: Re: [PATCH] cfg80211: issue netlink notification when scan starts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1245180177.28992.6.camel@130.81.190.10.in-addr.arpa>
+References: <1245175002.21287.3.camel@johannes.local>
+	 <1245180177.28992.6.camel@130.81.190.10.in-addr.arpa>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-egC78GVcd0THP04hQaOY"
+Date: Tue, 16 Jun 2009 21:28:42 +0200
+Message-Id: <1245180522.21287.50.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All,
 
-So, I pulled kernel source from the git (correspondes to 2.6.30 and
-also other dev patches happening) and executed make in the folder
-which resulted in compilation of the whole kernel and also modules in
-the source I downloaded. I am particular interested in ath9k wireless
-drivers. My machine has  kernel version  2.6.27-14 (Ubuntu 8.10) and
-it also already contains ath9k module. What I wanted to do was to
-download latest code for ath9k and replace/temporarily load the new
-module instead of one I have currently. I rmmod ath9k and tried to:
+--=-egC78GVcd0THP04hQaOY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-rakesh@pineapple:~/wireless-testing/drivers/net/wireless/ath/ath9k$
-sudo insmod ath9k.ko
+On Tue, 2009-06-16 at 15:22 -0400, Dan Williams wrote:
+> On Tue, 2009-06-16 at 19:56 +0200, Johannes Berg wrote:
+> > To ease multiple apps working together smoothly,
+> > send a notification when a scan is started.
+>=20
+> Yay.  I like this.  As long as we can guarantee that it will always be
+> followed by a scan-done message of course.
 
-which results in:
+Yes, it will. Unless allocation fails or something stupid like that.
 
-insmod: error inserting 'ath9k.ko': -1 Invalid module format
+johannes
 
-and dmesg says:
+--=-egC78GVcd0THP04hQaOY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-[82375.379869] ath9k: no symbol version for struct_module
+-----BEGIN PGP SIGNATURE-----
 
-I looked up for this error: http://lkml.org/lkml/2005/6/22/1
+iQIcBAABAgAGBQJKN/JnAAoJEODzc/N7+QmakqgP/A2mX5+o/k3vcn1mqiSbprLE
+d7SJpI+Zki2Hk28lY5m2mFcahA3l+IocEm2wOt7tQtB1VmBw5F8R5pCS9eNB6V5z
+pbG96uAh68HFaZV6a7aWId9xQe6wyZ1t8P72VNH9sBNxqs0ZDsGqOhRh5CGdzSN7
+LF0io8rAyF1pdeGvwYZGylarR+txRsfrlaUdHheljombeKbNkmvcyUdPw917d4JY
+5/x3OfJ/eeOqQrpQjca6U+1Qz9EvYbQSuWkN/GX1hB6LidRjIewMJJuiiOdPu1A7
+PCox1tQFRoUsCRH1b7LIxzKU0HBCtAXafeSGxnDWUdLt76FY+w2VCWZH65QUJ0qf
+r0bhjFWzVz9WMvhIkcSeur3aX31zhOylaJk+HdtWtXbd5gRuJZsyPxgEXvFIP2Vp
+vT6C0BUcijFVD7EnLoE8NYrku4+eT3RVcya1JNfdKuFIQmHj1irhTDV40X3xyYvL
+FetG3ojhm23BI1uHJ4Fxm7s7V+z+w40tf2+8j8XB6Q+TdZRKe4TBDJ0o+1mfyV8l
+mXi3tgLR+Ohtv1cE2+Acc3r8+lPKBi09B0LjTOTuriH1K6PW1CBk3IjVa9R6LH2v
+IeNpcUW3l9WpcDkE63Kvga/amIoxxlilCSwXsR1lvkEU/2p6aS8NjVlDoQ6ls58T
+/eGCZVPOTciFqWpiYUEU
+=phLK
+-----END PGP SIGNATURE-----
 
-It says that I am supposed to have compiled the kernel being used and
-the module in question both with CONFIG_MODVERSIONS=Y
+--=-egC78GVcd0THP04hQaOY--
 
-I do know that my .config file has CONFIG_MODVERSIONS=Y and I also
-verified it by checking the CRC tags which are generated as a result
-such configuration during compilation according to this:
-http://www.skynet.ie/~mark/home/kernel/symbols.html
-
-But what I am stuck on is how to compile a kernel module with
-CONFIG_MODVERSIONS=Y, I suppose when I run make for the pulled code,
-it uses this tag inherently for modules also but I am not sure about
-that.
-
-So what am I missing her which would compile the module right to be
-plugged into a slightly older kernel version?
-
---
-Rakesh
