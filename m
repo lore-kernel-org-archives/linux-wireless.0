@@ -1,90 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13190 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754644AbZFIA6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 20:58:19 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 17:58:22 -0700
-Date: Mon, 8 Jun 2009 17:58:21 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
-Message-ID: <20090609005821.GD380@tesla>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com> <1244180502-4323-2-git-send-email-lrodriguez@atheros.com> <20090605063059.GF17632@vasanth-laptop> <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com> <20090605075252.GG17632@vasanth-laptop> <20090605182944.GD30211@tesla> <44EE5C37ADC36343B0625A05DD408C485068DEBF69@CHEXMB-01.global.atheros.com> <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com>
+Received: from yw-out-2324.google.com ([74.125.46.31]:1272 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbZFPSzF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 14:55:05 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so3077067ywb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 11:55:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com>
+In-Reply-To: <1245177946.21287.42.camel@johannes.local>
+References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+	 <1245177307.21287.34.camel@johannes.local>
+	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+	 <1245177946.21287.42.camel@johannes.local>
+Date: Tue, 16 Jun 2009 11:55:07 -0700
+Message-ID: <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 08, 2009 at 05:26:41PM -0700, Luis R. Rodriguez wrote:
-> On Fri, Jun 5, 2009 at 11:55 PM, Vasanth
-> Thiagarajan<Vasanth.Thiagarajan@atheros.com> wrote:
-> >
-> > ________________________________________
-> >
-> >> > >> +       /*
-> >> > >> +        * Fine tuning for when no decent rate was found, the
-> >> > >> +        * lowest should *not* be used under normal circumstances.
-> >> > >> +        */
-> >> > >> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
-> >> > >> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
-> >> > >> +                       "disabling MRR\n");
-> >> > >> +               rates[0].idx = rate_lowest_index(sband, sta);
-> >> > >> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
-> >> > >> +               rates[1].idx = -1;
-> >> > >> +       }
-> >> > >
-> >> > > I think we can still fill other rates (1..3) with the lowest rate
-> >> > > index as we dont differentiate the situation where the lowest rate
-> >> > > is chosen truely by the algorithm from this particular case.
-> >> >
-> >> > I thought about that as well, but does it really make sense for us to
-> >> > use MRR with the same lowest rate? That's why I just used one segment.
-> >> > Thoughts?
-> >>
-> >> or we can try for max_retry (4) times. In that case the rate indices of
-> >> other rates (just not 1) should be made -1 or this segment should
-> >> moved just below the rate find.
-> >
-> > and the next segment [1]
-> > is set to -1. Please let me know if there is anything else you see needs
-> > change.
-> >
-> > Setting rate index of the rate series[1] is not enough as you are still filling the others rate
-> > segments(2 and 3) by ath_rc_rate_getidx() in the for..loop, so other segments are also be
-> > set to -1, but it looks hacky, one clean way of doing this can be, moving you code segment to
-> > just below ath_rc_ratefind_ht(), like the following diff.
-> >
-> >
-> >        rate_table = sc->cur_rate_table;
-> >        rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
-> > +
-> > +       if (rix == ath_rc_priv->valid_rate_index[0]) {
-> > +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
-> > +                               "disabling MRR\n");
-> > +
-> > +               ath_rc_rate_set_series(rate_table, &rates[0], txrc,
-> > +                                      4, rix, 0);
-> 
-> The above sets the rate[0].idx to rix
-> 
-> > +               rates[0].idx = rate_lowest_index(sband, sta);
-> 
-> and then here we set it to rate_lowest_index(sband, sta) comes up
-> with. They should be the same, but this just goes to show we need to
-> clean this better.
+On Tue, Jun 16, 2009 at 11:45 AM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-06-16 at 11:42 -0700, Andrey Yurovsky wrote:
+>> On Tue, Jun 16, 2009 at 11:35 AM, Johannes
+>> Berg<johannes@sipsolutions.net> wrote:
+>> > On Tue, 2009-06-16 at 11:31 -0700, Andrey Yurovsky wrote:
+>> >> Commit b2a151a288 added a check that prevents adding or deleting
+>> >> stations on non-AP interfaces.  Adding and deleting stations is
+>> >> supported for Mesh Point interfaces, so add Mesh Point to that check as
+>> >> well.
+>> >
+>> > Why? Aren't those automatically discovered like IBSS peers?
+>>
+>> Yes, they normally are, however it's possible to turn that off from
+>> user space (via iw).
+>>
+>> The reason for this is that it's useful to manually create mesh
+>> topologies.  This is mostly for testing, verification, and
+>> experimentation.  For example, you can manually create a topology
+>> where you have two paths and you know one path is better than another
+>> and then run a test script that verifies that the right path was
+>> taken.  It could presumably also be used by some user-space "mesh
+>> manager" similar to hostapd for APs.
+>
+> Ok, fair enough. There are a lot of quirks in the mesh API, one of these
+> days I'd like to make it less like wext and have you join/leave like the
+> ibss commands instead of setting each parameter one by one...
 
-I just found this is wrong too.. the rate table used to find
-rix is different than the rate table for the mode. ie, in 5ghz
-when associated to an 11n station this could not include any
-legacy rates.
+Thanks.  We'd like to hear about any quirks/issues as we have some
+bandwidth to work on mesh again and we would like to address the
+configuration/API issues.
 
-  Luis
+  -Andrey
