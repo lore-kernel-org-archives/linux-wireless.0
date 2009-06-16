@@ -1,87 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6527 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756740AbZFLUPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:15:52 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 7/8] iwlwifi: no need to refer to max_nrg_cck range value
-Date: Fri, 12 Jun 2009 13:22:54 -0700
-Message-Id: <1244838175-15491-8-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244838175-15491-7-git-send-email-reinette.chatre@intel.com>
-References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-4-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-5-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-6-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-7-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48102 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758035AbZFPS5V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 14:57:21 -0400
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
+References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+	 <1245177307.21287.34.camel@johannes.local>
+	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+	 <1245177946.21287.42.camel@johannes.local>
+	 <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fEtC82lV3obby0+Jw05k"
+Date: Tue, 16 Jun 2009 20:56:53 +0200
+Message-Id: <1245178613.21287.45.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-max_nrg_cck value inside the sensitivity range structure is not needed
-for sensitivity calibration.
-Keep the parameter in sensitivity structure but set the value to "0" in case
-needed in the future implementation.
+--=-fEtC82lV3obby0+Jw05k
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c |    7 +------
- 3 files changed, 3 insertions(+), 8 deletions(-)
+On Tue, 2009-06-16 at 11:55 -0700, Andrey Yurovsky wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 8f3d4bc..edbb0bf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -728,7 +728,7 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 
- static struct iwl_sensitivity_ranges iwl4965_sensitivity = {
- 	.min_nrg_cck = 97,
--	.max_nrg_cck = 0,
-+	.max_nrg_cck = 0, /* not used, set to 0 */
- 
- 	.auto_corr_min_ofdm = 85,
- 	.auto_corr_min_ofdm_mrc = 170,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 0e445a9..85e8bac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -388,7 +388,7 @@ void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
- 
- static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
- 	.min_nrg_cck = 95,
--	.max_nrg_cck = 0,
-+	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 90,
- 	.auto_corr_min_ofdm_mrc = 170,
- 	.auto_corr_min_ofdm_x1 = 120,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index a5d6367..f8bf592 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -251,12 +251,7 @@ static int iwl_sens_energy_cck(struct iwl_priv *priv,
- 
- 		/* increase energy threshold (reduce nrg value)
- 		 *   to decrease sensitivity */
--		if (data->nrg_th_cck >
--			(ranges->max_nrg_cck + NRG_STEP_CCK))
--			data->nrg_th_cck = data->nrg_th_cck
--						 - NRG_STEP_CCK;
--		else
--			data->nrg_th_cck = ranges->max_nrg_cck;
-+		data->nrg_th_cck = data->nrg_th_cck - NRG_STEP_CCK;
- 	/* Else if we got fewer than desired, increase sensitivity */
- 	} else if (false_alarms < min_false_alarms) {
- 		data->nrg_curr_state = IWL_FA_TOO_FEW;
--- 
-1.5.6.3
+> > Ok, fair enough. There are a lot of quirks in the mesh API, one of thes=
+e
+> > days I'd like to make it less like wext and have you join/leave like th=
+e
+> > ibss commands instead of setting each parameter one by one...
+>=20
+> Thanks.  We'd like to hear about any quirks/issues as we have some
+> bandwidth to work on mesh again and we would like to address the
+> configuration/API issues.
+
+Well mostly it's the thing with configuration parameters affecting the
+interface "on the fly". But I'm not familiar enough with all of the
+parameters to actually know which ones _can_ change on the fly, and
+which ones change and thereby make you part of a different mesh.
+
+johannes
+
+--=-fEtC82lV3obby0+Jw05k
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKN+ryAAoJEODzc/N7+QmaqfsP/0fi96leiBRJh0PPRKWpPwwX
+bgcF1Ar0vN3d3h9XHvJinTomhkSpxxZAOEktIQTMeQnrA0Wpa9qd0iJ6J1t8dKdW
+K0iX0vot8I0nl8hgnwffP2kfRJNJCq8Mcr+rizMTwc3DRC3jYbwvQb4w2KCpyXjb
+olGYcTJmVRGv0NuA6H0yEFu/KgGSZcqOMutDDErhImU4F4PCgLuFKINxahg2Ni4L
+08D9fJ8WLkT23uVlDZJBaPgkY9JoGldVVI9L2XwyAQwx7YQ2kOoCiDzXeX/Swwka
+ZIXa7nExSAgt/QgJh9NigbOqcXYVIJJFNW9xrChs/znmwBiqqxREYnmugd8wYX/+
+cYatjGQvsFkakY2WSalNnG2oidOxpkchJBSw8jk3D445abX4o5qZbNQvjCI6NYi/
+XnzvJw7N+1VpBtMlTRTCOny6LRS5WAwmY2xR+8l6aRLrq9lV+GZweutMEmUK7DaT
+84YSeg1ywtxS/F8OntVhW0mQTX7rZ+aw0wNERDpZTPmJsyaNBWY15uc9Tz7S8zaZ
+g6g7rwtaDhHZMjzeAUm03eAJCh69GH21Zq2yxTUeRcK6VtglTJo7KLuxCWlDr5mL
+LBAW9BPIJFF0mFPkxAxFwYRKp49eBpcHMPfIV7GK6qJI4+3av8s5RctOHZ58v+IM
+6aYTEZ6+Rp/Z64qH15n0
+=WYOC
+-----END PGP SIGNATURE-----
+
+--=-fEtC82lV3obby0+Jw05k--
 
