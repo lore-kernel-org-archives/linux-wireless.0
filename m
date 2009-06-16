@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37430 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756856AbZFJITp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:19:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 09/18] ath9k: rename ath_rc_get_nextlowervalid_txrate()
-Date: Wed, 10 Jun 2009 04:19:26 -0400
-Message-Id: <1244621975-1238-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
-References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+Received: from kroah.org ([198.145.64.141]:34237 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750798AbZFPFVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 01:21:45 -0400
+Date: Mon, 15 Jun 2009 22:16:12 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>
+Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
+	window
+Message-ID: <20090616051612.GA30768@kroah.com>
+References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com> <20090615201934.GA12685@kroah.com> <20090615214735.GE23972@bombadil.infradead.org> <20090615223206.GA4966@kroah.com> <20090616004122.GC5492@tesla> <20090616021011.GF23972@bombadil.infradead.org> <20090616032034.GA17932@kroah.com> <20090616042113.GA5680@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090616042113.GA5680@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What this does is get us our next lower rate so call it that,
-ath_rc_get_lower_rix().
+On Mon, Jun 15, 2009 at 09:21:14PM -0700, Luis R. Rodriguez wrote:
+> So it could have told 42 for all answers I suppose and I wouldn't have known
+> the difference. BTW does your list count the ending date? That is from say
+> 01-01-2009 to 01-02-2009 does it count 2 or 1? I set it to not count it.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+I don't know, but at least it is consistant :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 03e7df4..c8f800e 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -501,9 +501,9 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
- }
- 
- static inline int
--ath_rc_get_nextlowervalid_txrate(const struct ath_rate_table *rate_table,
--				 struct ath_rate_priv *ath_rc_priv,
--				 u8 cur_valid_txrate, u8 *next_idx)
-+ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
-+		     struct ath_rate_priv *ath_rc_priv,
-+		     u8 cur_valid_txrate, u8 *next_idx)
- {
- 	int8_t i;
- 
-@@ -852,8 +852,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		/* Get the next tried/allowed rate. No RTS for the next series
- 		 * after the probe rate
- 		 */
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--						 rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -870,8 +869,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--						 rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
-@@ -1156,8 +1154,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	if (ath_rc_priv->state[tx_rate].per >= 55 && tx_rate > 0 &&
- 	    rate_table->info[tx_rate].ratekbps <=
- 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--				 (u8)tx_rate, &ath_rc_priv->rate_max_phy);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
-+				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
- 
- 		/* Don't probe for a little while. */
- 		ath_rc_priv->probe_time = now_msec;
--- 
-1.6.0.6
+It is whatever openoffice uses when calculating dates subtracted from
+each other.
 
+thanks,
+
+greg k-h
