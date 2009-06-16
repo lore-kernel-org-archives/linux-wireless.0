@@ -1,70 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2294 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951AbZFEMWv (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:57763 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754763AbZFPPhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 08:22:51 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	nbd@openwrt.org, rathamahata@gmail.com, ognjen.maric@gmail.com,
-	rjw@sisk.pl, Bob Copeland <me@bobcopeland.com>, stable@kernel.org
-Subject: [PATCH] mac80211: fix minstrel single-rate memory corruption
-Date: Fri,  5 Jun 2009 08:21:50 -0400
-Message-Id: <1244204510-14007-1-git-send-email-me@bobcopeland.com>
+	Tue, 16 Jun 2009 11:37:14 -0400
+Subject: Re: [PATCHv2 2/4] rfkill: don't restore software blocked state on
+ persistent devices
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A37AEB7.6060405@tuffmail.co.uk>
+References: <4A37A3E1.8060606@tuffmail.co.uk>
+	 <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
+Content-Type: text/plain
+Date: Tue, 16 Jun 2009 17:37:04 +0200
+Message-Id: <1245166624.15367.24.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The minstrel rate controller periodically looks up rate indexes in
-a sampling table.  When accessing a specific row and column, minstrel
-correctly does a bounds check which, on the surface, appears to handle
-the case where mi->n_rates < 2.  However, mi->sample_idx is actually
-defined as an unsigned, so the right hand side is taken to be a huge
-positive number when negative, and the check will always fail.
+Hi Alan,
 
-Consequently, the RC will overrun the array and cause random memory
-corruption when communicating with a peer that has only a single rate.
-The max value of mi->sample_idx is around 25 so casting to int should
-have no ill effects.
+> The setting of the "persistent" flag is also made more explicit using
+> a new rfkill_init_sw_state() function, instead of special-casing
+> rfkill_set_sw_state() when it is called before registration.
+> 
+> Suspend is a bit of a corner case so we try to get away without adding
+> another hack to rfkill-input - it's going to be removed soon.
+> If the state does change over suspend, users will simply have to prod
+> rfkill-input twice in order to toggle the state.
+> 
+> Userspace policy agents will be able to implement a more consistent user
+> experience.  For example, they can avoid the above problem if they
+> toggle devices individually.  Then there would be no "global state"
+> to get out of sync.
+> 
+> Currently there are only two rfkill drivers with persistent soft-blocked
+> state.  thinkpad-acpi already checks the software state on resume.
+> eeepc-laptop will require modification.
+> 
+> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> CC: Marcel Holtmann <marcel@holtmann.org>
 
-Without the change, uptime is a few minutes under load with an AP
-that has a single hard-coded rate, and both the AP and STA could
-potentially crash.  With the change, both lasted 12 hours with a
-steady load.
+looks good to me and is way better than using a complicated API for this
+non-volatile storage details.
 
-Thanks to Ognjen Maric for providing the single-rate clue so I could
-reproduce this.
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
 
-This fixes http://bugzilla.kernel.org/show_bug.cgi?id=12490 on the
-regression list (also http://bugzilla.kernel.org/show_bug.cgi?id=13000).
+Regards
 
-Cc: stable@kernel.org
-Reported-by: Sergey S. Kostyliov <rathamahata@gmail.com>
-Reported-by: Ognjen Maric <ognjen.maric@gmail.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
-
-John & Felix, the patch itself may be too subtle so feel free to do it a
-different way.  However this is as minimal as it gets so I hope it can
-be applied quickly to stable, and mainline if not too late.
-
- net/mac80211/rc80211_minstrel.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index d9233ec..2681dfa 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -216,7 +216,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
- 	unsigned int sample_ndx;
- 	sample_ndx = SAMPLE_TBL(mi, mi->sample_idx, mi->sample_column);
- 	mi->sample_idx++;
--	if (mi->sample_idx > (mi->n_rates - 2)) {
-+	if ((int) mi->sample_idx > (mi->n_rates - 2)) {
- 		mi->sample_idx = 0;
- 		mi->sample_column++;
- 		if (mi->sample_column >= SAMPLE_COLUMNS)
--- 
-1.5.4.1
+Marcel
 
 
