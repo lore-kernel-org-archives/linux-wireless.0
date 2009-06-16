@@ -1,94 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38933 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556AbZFLLPE (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:63371 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466AbZFPWRy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:15:04 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 06/33] wl12xx: allocate buffer the spi busy word from struct
-	wl12xx
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:14:55 +0300
-Message-ID: <20090612111454.8877.38762.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
+	Tue, 16 Jun 2009 18:17:54 -0400
+Received: by gxk10 with SMTP id 10so8287362gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 15:17:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1245177070-13290-2-git-send-email-hauke@hauke-m.de>
+References: <1245177070-13290-1-git-send-email-hauke@hauke-m.de>
+	<1245177070-13290-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 16 Jun 2009 15:17:36 -0700
+Message-ID: <43e72e890906161517r704f50adm952eae291953279f@mail.gmail.com>
+Subject: Re: [PATCH 2/2] [compat-2.6] Do not build backported rfkill module on
+	new kernels.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Tue, Jun 16, 2009 at 11:31 AM, Hauke Mehrtens<hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
 
-Needed for DMA transfers.
+Thanks! New tarball pushed out.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+v2.6.30-26761-gd1a6d5c
+wireless-testing latest tag:
+master-2009-06-15
+This is compat-release:
+master-2009-06-15
 
- drivers/net/wireless/wl12xx/spi.c    |    5 +++--
- drivers/net/wireless/wl12xx/spi.h    |    3 +--
- drivers/net/wireless/wl12xx/wl12xx.h |    2 ++
- 3 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 9392742..bcdcfbc 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -262,10 +262,11 @@ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
- {
- 	struct spi_transfer t[3];
- 	struct spi_message m;
--	char busy_buf[TNETWIF_READ_OFFSET_BYTES];
-+	u8 *busy_buf;
- 	u32 *cmd;
- 
- 	cmd = &wl->buffer_cmd;
-+	busy_buf = wl->buffer_busyword;
- 
- 	*cmd = 0;
- 	*cmd |= WSPI_CMD_READ;
-@@ -281,7 +282,7 @@ void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf,
- 
- 	/* Busy and non busy words read */
- 	t[1].rx_buf = busy_buf;
--	t[1].len = TNETWIF_READ_OFFSET_BYTES;
-+	t[1].len = WL12XX_BUSY_WORD_LEN;
- 	spi_message_add_tail(&t[1], &m);
- 
- 	t[2].rx_buf = buf;
-diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
-index 7edb218..1a19557 100644
---- a/drivers/net/wireless/wl12xx/spi.h
-+++ b/drivers/net/wireless/wl12xx/spi.h
-@@ -65,9 +65,8 @@
- 
- #define WSPI_INIT_CMD_LEN           8
- 
--#define TNETWIF_READ_OFFSET_BYTES  8
- #define HW_ACCESS_WSPI_FIXED_BUSY_LEN \
--		((TNETWIF_READ_OFFSET_BYTES - 4) / sizeof(u32))
-+		((WL12XX_BUSY_WORD_LEN - 4) / sizeof(u32))
- #define HW_ACCESS_WSPI_INIT_CMD_MASK  0
- 
- 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 5865935..b811020 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -105,6 +105,7 @@ enum {
- 				  CFG_RX_AUTH_EN |  \
- 				  CFG_RX_ASSOC_EN)
- 
-+#define WL12XX_BUSY_WORD_LEN 8
- 
- struct boot_attr {
- 	u32 radio_type;
-@@ -385,6 +386,7 @@ struct wl12xx {
- 
- 	u32 buffer_32;
- 	u32 buffer_cmd;
-+	u8 buffer_busyword[WL12XX_BUSY_WORD_LEN];
- };
- 
- int wl12xx_plt_start(struct wl12xx *wl);
-
+  Luis
