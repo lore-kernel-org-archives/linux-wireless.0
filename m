@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:55314 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750775AbZFWFgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 01:36:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 22:36:36 -0700
-Date: Tue, 23 Jun 2009 11:05:02 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k: ath9k_ps_restore used after ath9k_hw_detach
-Message-ID: <20090623053500.GA32640@vasanth-laptop>
-References: <4A3FB00F.1020104@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4A3FB00F.1020104@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:53046 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752961AbZFPTiS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 15:38:18 -0400
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+In-Reply-To: <445f43ac0906161232x743d7ab9u2f36a5893240b789@mail.gmail.com>
+References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+	 <1245177307.21287.34.camel@johannes.local>
+	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+	 <1245177946.21287.42.camel@johannes.local>
+	 <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
+	 <1245178613.21287.45.camel@johannes.local>
+	 <445f43ac0906161232x743d7ab9u2f36a5893240b789@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5vB3lVtSuIs6rxVrrBSL"
+Date: Tue, 16 Jun 2009 21:37:49 +0200
+Message-Id: <1245181069.21287.53.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 22, 2009 at 09:53:43PM +0530, Jiri Slaby wrote:
-> Hi,
-> 
-> In ath_detach, there is:
-> ath9k_hw_detach(sc->sc_ah);
-> ath9k_exit_debug(sc);
-> ath9k_ps_restore(sc);
-> which is obviously wrong. sc->ah is dereferenced in restore, but it's
-> already freed since detach.
 
-Yes, this is wrong.
-> 
-> I don't quite understand why you try to set power while it's being
-> already set to full sleep in ath9k_hw_detach.
->So I think the fix is to
-> remove the restore call.
+--=-5vB3lVtSuIs6rxVrrBSL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yes, restoring the power state in ath_detach() is pointless.
+On Tue, 2009-06-16 at 12:32 -0700, Javier Cardona wrote:
 
-I'll fix it,Thanks!.
+> There are some mesh parameters that you would probably want to be
+> uniform across the mesh network (timeouts, number of retries, etc).
+> But the only mesh parameter that would result in a different mesh
+> network is the mesh_id, and that's only settable when the mesh
+> interface is created.
+>=20
+> Do you have a specific configuration parameter in mind?
 
-Vasanth
+No, I don't have any in mind. I wasn't aware that only the mesh_id
+defines the mesh, I was under the impression that more needs to match,
+as codified in mesh_matches_local().
+
+johannes
+
+--=-5vB3lVtSuIs6rxVrrBSL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKN/SHAAoJEODzc/N7+Qma89gQAMid/Ljigw0VWRaCMKbH6ji/
+fYPygf/frtiVaYnXhpVzfBE88dO6pLsSQ/fCpnp7NPUmnMr6YfyPIqOZIG7d9Mks
+bbAOfZJhtR6xmM3DiVHrtaNMHPnntHJ3RX8WY0SmIgFUNNJ2CEe5/flGemXPyKef
+/smpMm+wLIYHbZMTvo7F9LX3Bzzkswmvm7uXVMX0wQOzmra5CVO0gKevn2oEx6zJ
+IwdEBv/7IXVFD+cgwl6Q+27+A9hGJXilWjJz1TqLFfhaX5C8OlHrFuL/gd31vz6e
+qWHPla8FxRXD/NkcvGJTHHhvtW/EBGJIJV5lD+mbrcIqCs7vOHDM0o+/R4HMokvI
+Zlpcj2fOCuTEGcOcZ1IH64nAJuxPveaBMq8KXVgSFAIWw57BBzDNj5lnmFuKhvPu
+AAF9yGCpl9VFSlyhcAI1anFviR4LG9l7Hbd7vTPhMs0ZfR6BqPOw3a6eGNzMtloZ
+CTZHzpu/6AKKPBA5v1Lk1OyXzKne78KTJKzfIXeUtWRv/M26Rsv3CcUfbk/OxEcF
+K4BkvDJ1G974NApJMvs5mjwerD4BC2kM+YQYQvN/NnoxCwcN4QNLuGC2ZAT/if2y
+qUjf5CYXEbIwcqLmdq8DRuemy7H6wacXnP8iMkbHBQmzWiSN9K4x9cH7rcOYa3r2
+k0OlXGEzdff5T1v7OLRy
+=yzl2
+-----END PGP SIGNATURE-----
+
+--=-5vB3lVtSuIs6rxVrrBSL--
 
