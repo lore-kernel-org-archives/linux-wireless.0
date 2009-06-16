@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50235 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51189 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbZFDQ5W (ORCPT
+	with ESMTP id S1761983AbZFPT7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 12:57:22 -0400
-Subject: Re: [PATCH] rfkill: always init poll delayed work
+	Tue, 16 Jun 2009 15:59:41 -0400
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
+To: Javier Cardona <javier@cozybit.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <4A27FB8D.5000605@lwfinger.net>
-References: <1244015729.7176.28.camel@johannes.local>
-	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>
-	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>
-	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>
-	 <4A27F649.9080203@lwfinger.net> <1244133087.22576.86.camel@johannes.local>
-	 <4A27FB8D.5000605@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oYlVyOoJ0aaQXmeHM9Ge"
-Date: Thu, 04 Jun 2009 18:57:15 +0200
-Message-Id: <1244134635.22576.88.camel@johannes.local>
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org
+In-Reply-To: <445f43ac0906161251v63d59cc1jd72bade62910d086@mail.gmail.com>
+References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
+	 <1245177307.21287.34.camel@johannes.local>
+	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+	 <1245177946.21287.42.camel@johannes.local>
+	 <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
+	 <1245178613.21287.45.camel@johannes.local>
+	 <445f43ac0906161232x743d7ab9u2f36a5893240b789@mail.gmail.com>
+	 <1245181069.21287.53.camel@johannes.local>
+	 <445f43ac0906161251v63d59cc1jd72bade62910d086@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Pk2NbRafD9in9fSdqGZ/"
+Date: Tue, 16 Jun 2009 21:59:13 +0200
+Message-Id: <1245182353.21287.58.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-oYlVyOoJ0aaQXmeHM9Ge
+--=-Pk2NbRafD9in9fSdqGZ/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-06-04 at 11:51 -0500, Larry Finger wrote:
-> Johannes Berg wrote:
-> >=20
-> > Would you do the same test with the uevents w/o the patch? I suspect
-> > that you won't get the event at the right spot.
+On Tue, 2009-06-16 at 12:51 -0700, Javier Cardona wrote:
+
+> > No, I don't have any in mind. I wasn't aware that only the mesh_id
+> > defines the mesh, I was under the impression that more needs to match,
+> > as codified in mesh_matches_local().
 >=20
-> Yes. Without the patch and the interface UP or DOWN,
-> /sys/class/rfkill/rfkill0/uevent always shows RFKILL_STATE=3D1, no
-> matter what state the switch is in.
+> In addition to the mesh id, a successful peering requires that peer
+> candidates use the same methods for path selection, congestion
+> control, synchronization and authentication.  None of these are
+> configurable via iw (essentially because only one single option for
+> each method is implemented).
 
-Right. So we already have the problem in the old code, we just don't
-notice much... can we take the core up, check, and put it down again? Or
-I think it's GPIOs, can we query those via chipcommon when the 802.11
-core is down?
-
-> FYI, my switch is a slider with off to the left and on to the right.
-
-ok.
+Ahh! Ok, goes to show how little I understand the mesh code. IIRC
+somebody had a patch to make those configurable though. I guess as long
+as those need to be configured while creating the interface the API is
+actually very good and much better than I thought :)
 
 johannes
 
---=-oYlVyOoJ0aaQXmeHM9Ge
+--=-Pk2NbRafD9in9fSdqGZ/
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKJ/zoAAoJEODzc/N7+QmaapsQAJKHOqUHLEnyczGKMYq6z9hT
-fgkJrNTzp7K4UvXfKIWHcdHYjp+9+GMpK0hNVSS05qC7km/+gp+puY7V9vs8phPE
-8zg4caQxMi17pMh6bbOq3OY8vZcjBgkeIIG0vXml1cnPicoCmTPdIJzlo1kV0oBD
-7an8ojoBfzve5c1m+Ci2b3CVbmqk2wevRXqfMpiAULRGhCu7M0NWkjv4U6kJ6Fa2
-7l8+CYb3B1dXdIxsB6/EpVSKYwK788isSHPQOBckE+/rXDUSi5zPaaKuwkuyPIdY
-fe+YaOm1ekkemaCYZ4JF4FZU76Cm/uVpnBk4I0BEqjlZiuuyQR//3Cr/IDA4Vdgs
-gv/8QnWaMzRuf22YegeYiT7FVBabEQswaqg+AnV1tqT3XjmkFRmETo+/VOZ/dYo6
-vjcMsN1h3FIzDmbpknpqkIvvtBwLflJynvgc/PyZ2e7ESHCldwn4NxNbxpsaesOZ
-Ewyy6KanE7EOiQNp7/darIyFneBaEfaWO83J1hvBXzbH3wfKbNw6tzyi3S2D22Xj
-SSxNqqc1MbsWEZqdNsJlnPgqCxz7krvQMw94Y/lwpkMHrH90N2WoaRkOOkytpfSP
-1vMk8il9WWR75hIz89gYZF5nxlh437sERlxbmMvNnUpuLKo12UywSt3Gz23qcFPB
-hhgO21BXdNS2yeuBerta
-=uWOU
+iQIcBAABAgAGBQJKN/mOAAoJEODzc/N7+QmaEVsP/0t8y1Ttj5E/bGs+UCeE7Gw5
+knZ5nYviGcxND2jUh2ITi7LCMIPkAFrhFoBlVhz+gZ6GFutksm24NrZiG6dKVIZj
+EKeQSrZvPV2+HuB5PqW+m68lKeMjb20DXDi1dcdhW95AQSDGxPdJhly+ouImXFxx
+GEpBsYzPvj9C3uHFp9tjhC3ykHyD+LUw7zMBwN7maFjI5yNtvWd6fpA8HVz8D5XS
+2fmEPUqSuoSSVs8k8jsTdt6DP1vB/LQANW2ghlgA2OolSkYG7TGrtNxmtdsXO2Kz
+HZ1XzovD435HnVtWa6HlL5xmoTDJYF81nlBrNvfFCSp0bK6rPoAqlRVqnC/jWwmo
+s5ogPZaC98wjxyR0rT7t05dxdrNkM5+hY345I0Oowdgd16F5WmkhqoHfqMX93eH7
+VDPpEFh5sNzKCziRF8HTNQDgyw3eCJOSkbMFYa6racIxEI7Xrxcaow6WL/8eEdxw
+8g+8uWFhaXYpOgBKENAj5K5LeMou5Ws3bsD3jaa/wx4tYHZpEZDzxZdN7qIhZ7Pp
+JDoThQm50nzJSa273Yv7cHoC8whD/jVOqmQy6MJNISO/gB1JEINtt4Gk4SYfcz8L
+nv1x5jRx7gu3nfh16xVNZyEqHvjWpaSLp/Gf0rBhYJXAr3ULkA7XNid61uZhcrsu
+mPq0SosrO3t1vD/aAAmS
+=NxQi
 -----END PGP SIGNATURE-----
 
---=-oYlVyOoJ0aaQXmeHM9Ge--
+--=-Pk2NbRafD9in9fSdqGZ/--
 
