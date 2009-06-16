@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1928 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754279AbZFVAFx (ORCPT
+Received: from mail-yx0-f173.google.com ([209.85.210.173]:40384 "EHLO
+	mail-yx0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbZFPUHl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2009 20:05:53 -0400
-Date: Sun, 21 Jun 2009 20:05:12 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Pierre Ossman <pierre@ossman.eu>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	san@google.com
-Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
-Message-ID: <20090622000512.GA30186@hash.localnet>
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <1244685780-28930-8-git-send-email-me@bobcopeland.com> <20090613132144.6c7783bc@mjolnir.ossman.eu> <87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu> <20090613205737.GA30439@hash.localnet> <20090618022524.GC10014@hash.localnet> <20090619212419.2f3626d7@mjolnir.ossman.eu> <b6c5339f0906191331x6c360d63wec431fc9d35b38c0@mail.gmail.com> <20090621203800.08cb4a2d@mjolnir.ossman.eu>
+	Tue, 16 Jun 2009 16:07:41 -0400
+Received: by yxe3 with SMTP id 3so177770yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 13:07:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090621203800.08cb4a2d@mjolnir.ossman.eu>
+In-Reply-To: <4A37E6F1.4080003@hauke-m.de>
+References: <4A30CE70.4050605@web.de> <200906112305.33675.mb@bu3sch.de>
+	<43e72e890906111410n3766ceb7t4b4efda05730c693@mail.gmail.com>
+	<200906112314.29464.mb@bu3sch.de> <69e28c910906111439o798b3298p63bd44e88358ea8a@mail.gmail.com>
+	<43e72e890906111443h5758b74dk6f788b327b1cfe4c@mail.gmail.com>
+	<4A3368F9.6060509@web.de> <4A37E6F1.4080003@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 16 Jun 2009 13:07:23 -0700
+Message-ID: <43e72e890906161307w1441e26dnec48bbb1f88c38fd@mail.gmail.com>
+Subject: Re: [PATCH] Warp speed building
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Jan Kiszka <jan.kiszka@web.de>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 21, 2009 at 08:38:00PM +0200, Pierre Ossman wrote:
-> This does not sound very Linux:y. Module loading order should not foul
-> up things. If it does, then there is some missing dependency somewhere.
+On Tue, Jun 16, 2009 at 11:39 AM, Hauke Mehrtens<hauke@hauke-m.de> wrote:
+> Jan Kiszka wrote:
+>> Including config.mk again when kbuild called into the top level Makefile
+>> slowed down the build process awfully. The reason for this were all the
+>> dynamic, shell-based variable evaluations that were called over and over
+>> again. Fortunately, including config.mk only in the outer Makefile run
+>> appears to be enough. So let's remove this warp speed blocker.
+>>
+>> Signed-off-by: Jan Kiszka <jan.kiszka@web.de>
+>> ---
+>>  Makefile |    2 --
+>>  1 files changed, 0 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Makefile b/Makefile
+>> index 0ab7d27..49a786a 100644
+>> --- a/Makefile
+>> +++ b/Makefile
+>> @@ -13,8 +13,6 @@ OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
+>>
+>>  ifneq ($(KERNELRELEASE),)
+>>
+>> -include $(M)/$(COMPAT_CONFIG)
+>> -
+>>  NOSTDINC_FLAGS := -I$(M)/include/ -include $(M)/include/net/compat.h $(CFLAGS)
+>>
+>>  obj-y := net/wireless/ net/mac80211/ net/rfkill/
+>
+> Hi Jan,
+>
+> I have tested this patch and it reduced the build time for me from 3:30
+> to 2:40 minutes on a dual core system. I can not see any changes, expect
+> the reduced build time on my system. The resulting modules are still the
+> same.
 
-Agreed.
+Reason for including the config.mk is if your current kernel config
+differs the makefiles won't pick up the new stuff.
 
-> I noticed one more thing though. You call wl12xx_irq() on interrupts,
-> and that's all you do. So I have to assume that calls back to
-> wl12xx_sdio_read().
-
-It schedules a workqueue, so it shouldn't be a problem.
-
-> Has this code actually been tested? It doesn't seem like it can work to
-> me.
-
-Only very basic testing but yeah, it works.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
