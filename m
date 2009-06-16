@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:36519 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751594AbZFBAth convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35270 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbZFPOOi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 20:49:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	Tue, 16 Jun 2009 10:14:38 -0400
+Subject: Re: [PATCH 2/4] rfkill: don't restore software blocked state on
+ persistent devices
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 1 Jun 2009 17:47:31 -0700
-Subject: RE: [PATCH 3/4 v2] libertas: implement function init/shutdown
-	commands for SD8688
-Message-ID: <477F20668A386D41ADCC57781B1F704301E90675ED@SC-VEXCH1.marvell.com>
-References: <1243465413-4997-1-git-send-email-bzhao@marvell.com>
- <20090601183453.GD3386@tuxdriver.com>
-In-Reply-To: <20090601183453.GD3386@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+In-Reply-To: <4A37A3E1.8060606@tuffmail.co.uk>
+References: <4A37A3E1.8060606@tuffmail.co.uk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7nbtJnXpNbs7xCIgZmLH"
+Date: Tue, 16 Jun 2009 16:14:05 +0200
+Message-Id: <1245161645.13461.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-The new patch against "master-2009-06-01" has been submitted to the lists:
+--=-7nbtJnXpNbs7xCIgZmLH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[PATCH] libertas: improve function init/shutdown handling for SD8688
+On Tue, 2009-06-16 at 14:53 +0100, Alan Jenkins wrote:
 
-Thanks,
+>  /**
+> + * rfkill_init_sw_state - Initialize persistent software block state
+> + * @rfkill: pointer to the rfkill class to modify.
+> + * @state: the current software block state to set
+> + *
+> + * rfkill drivers that preserve their software block state over power of=
+f
+> + * use this function to notify the rfkill core (and through that also
+> + * userspace) of their initial state.  It should only be used before
+> + * registration.
+> + *
+> + * In addition, it marks the device as "persistent".  Persistent devices
+> + * are expected to preserve preserve their own state when suspended.
+> + */
+> +void rfkill_init_sw_state(struct rfkill *rfkill, bool blocked);
+> +
+> +/**
+>   * rfkill_set_states - Set the internal rfkill block states
+>   * @rfkill: pointer to the rfkill class to modify.
+>   * @sw: the current software block state to set
 
-Bing
+You forgot the inline for !RFKILL.
 
-> -----Original Message-----
-> From: John W. Linville [mailto:linville@tuxdriver.com]
-> Sent: Monday, June 01, 2009 11:35 AM
-> To: Bing Zhao
-> Cc: libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 3/4 v2] libertas: implement function init/shutdown commands for SD8688
-> 
-> On Wed, May 27, 2009 at 04:03:33PM -0700, Bing Zhao wrote:
-> > SD8688 is a WLAN/Bluetooth combo chip and both functions are supported
-> > in a single firmware image. FUNC_INIT and FUNC_SHUTDOWN commands are
-> > implemented to utilize the multiple function feature.
-> >
-> > When SD8688 card is inserted, the firmware image should be downloaded
-> > only once through either WLAN function (Libertas driver) or Bluetooth
-> > function (Bluetooth driver).
-> >
-> > This patch adds function init/shutdown for SD8688 WLAN function only.
-> >
-> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> 
-> I already merged the 5/19 version.  Could you send a patch rebased
-> on wireless-testing?
-> 
-> John
-> --
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+Otherwise looks good.
+
+johannes
+
+--=-7nbtJnXpNbs7xCIgZmLH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKN6ipAAoJEODzc/N7+QmaQgcP/3S7OWfhc2Ik64T2vCl1YEpK
+85l9Ly2mhlj2eZjYQGqfyu0KzSTXAgIqSHYsi+Yo+ukSSJs7sEQJhwErGE40/53I
+WztnlLqqlugpoT6xibHv8K2GD/0wKUAFuLjiFJU563hiyHVz/+pybCJdMtmu7nmk
+Fhk1k17Lw7Fytx8JObj15hUXg9ODl6Zd3TGW2qvtXsqPqG1K2ke4MW8ymTdCYoLT
+S5SOuevubgEZ2d1Lup4BZ/j4SlhXiZAsceJqBVdxYcjs1zY+IJGajy05g9DNjC80
+dl1yIV142Rdl0ZDOcsz9SlpjGRHI4YkV5HNCgS+AFBHvl74eUhReFHlAtN/rPUsC
+5tkTYDBQjk1DNiT9wrG2U9JNMTk1uFk3vaJqYvSQoWx+1InkLgk35G5IvdeY1EWB
+SSDjcCj3OFCgSJ2GWCAGqmfkV64pJfx5sbF0YQeFpaBjBK2UJ4uf795O4svgpPQh
+CYe04ccIWWl8EILC0E+f8VNcLxU0FftBLpkjAin4+j9WufPI0zq+jAaSuMrsnZfF
+6h1mvUHNGSElkuHbOojuE+hN9kiL8ula5JAUAeLgw/k91FRntMpw+JU7VV3ijsiv
+sPcnOJQUdCApI165UkKGDu47h0MXtc8SSeiwg4ZT9nIQqpDIg6iCKbJ+YY7AeTxJ
+F0xZyoGNpeT6aTQlK8/X
+=WGf3
+-----END PGP SIGNATURE-----
+
+--=-7nbtJnXpNbs7xCIgZmLH--
+
