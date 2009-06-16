@@ -1,35 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:61727 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:43806 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751228AbZFBWaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 18:30:08 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 15:30:11 -0700
-Date: Tue, 2 Jun 2009 15:30:16 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	id S1751957AbZFPT5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 15:57:13 -0400
+Subject: Re: [PATCH] libertas: Fix interface driver unload with PS mode
+From: Dan Williams <dcbw@redhat.com>
 To: Andrey Yurovsky <andrey@cozybit.com>
-CC: "austinxxh-ath9k@yahoo.com" <austinxxh-ath9k@yahoo.com>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
-Message-ID: <20090602223016.GF11052@tesla>
-References: <661650.46971.qm@web55304.mail.re4.yahoo.com> <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <1245104960-2199-1-git-send-email-andrey@cozybit.com>
+References: <1245104960-2199-1-git-send-email-andrey@cozybit.com>
+Content-Type: text/plain
+Date: Tue, 16 Jun 2009 15:57:02 -0400
+Message-Id: <1245182222.28992.19.camel@130.81.190.10.in-addr.arpa>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 02, 2009 at 09:58:59AM -0700, Andrey Yurovsky wrote:
-> With wireless-testing from a couple of days ago, an X86 system, and this patch:
-> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
-> ath9k can bring up a mesh point interface and doesn't crash for me,
-> but there are no mesh beacons, so mesh isn't working.  On ath5k, there
-> are also no beacons and mesh doesn't work, but there's no crash.
+On Mon, 2009-06-15 at 15:29 -0700, Andrey Yurovsky wrote:
+> When IEEE PS mode is enabled, lbs_remove_card needs to exit PS mode
+> before returning.  It will then set surpriseremoved=1, which blocks any
+> further attempts to issue commands.  In the SDIO, SPI, and USB drivers,
+> lbs_remove_card is called with surpriseremoved already set, which makes
+> it impossible to exit PS mode.  As a result, reloading the driver while
+> PS mode is enabled does not work.
+> 
+> This patch removes the setting of surpriseremoved in the interface
+> drivers and corrects the order in which lbs_stop_card and
+> lbs_remove_card are called.  Tested on SPI with V9 firmware.
 
-If no one is really interested in fixing we should just disable mesh
-for both ath5k and ath9k.
+Makes me a bit nervious; any chance you can test with usb8388 or SDIO
+firmware and hot-unplug or rmmod?
 
-  Luis
+Dan
+
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |    2 --
+>  drivers/net/wireless/libertas/if_spi.c  |    4 ++--
+>  drivers/net/wireless/libertas/if_usb.c  |    1 -
+>  3 files changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 8cdb88c..6bb95ce 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -1096,8 +1096,6 @@ static void if_sdio_remove(struct sdio_func *func)
+>  			lbs_pr_alert("CMD_FUNC_SHUTDOWN cmd failed\n");
+>  	}
+>  
+> -	card->priv->surpriseremoved = 1;
+> -
+>  	lbs_deb_sdio("call remove card\n");
+>  	lbs_stop_card(card->priv);
+>  	lbs_remove_card(card->priv);
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 923ed58..757352c 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -1171,12 +1171,12 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+>  
+>  	lbs_deb_spi("libertas_spi_remove\n");
+>  	lbs_deb_enter(LBS_DEB_SPI);
+> -	priv->surpriseremoved = 1;
+>  
+>  	lbs_stop_card(priv);
+> +	lbs_remove_card(priv); /* will call free_netdev */
+> +
+>  	free_irq(spi->irq, card);
+>  	if_spi_terminate_spi_thread(card);
+> -	lbs_remove_card(priv); /* will call free_netdev */
+>  	if (card->pdata->teardown)
+>  		card->pdata->teardown(spi);
+>  	free_if_spi_card(card);
+> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> index ea3dc03..7e03f0e 100644
+> --- a/drivers/net/wireless/libertas/if_usb.c
+> +++ b/drivers/net/wireless/libertas/if_usb.c
+> @@ -357,7 +357,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
+>  	cardp->surprise_removed = 1;
+>  
+>  	if (priv) {
+> -		priv->surpriseremoved = 1;
+>  		lbs_stop_card(priv);
+>  		lbs_remove_card(priv);
+>  	}
+
