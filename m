@@ -1,77 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51189 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761983AbZFPT7l (ORCPT
+Received: from mail-yx0-f173.google.com ([209.85.210.173]:63110 "EHLO
+	mail-yx0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754209AbZFPSt5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 15:59:41 -0400
-Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org
-In-Reply-To: <445f43ac0906161251v63d59cc1jd72bade62910d086@mail.gmail.com>
+	Tue, 16 Jun 2009 14:49:57 -0400
+Received: by yxe3 with SMTP id 3so95745yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 11:49:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1245177307.21287.34.camel@johannes.local>
 References: <1245177064-31861-1-git-send-email-andrey@cozybit.com>
 	 <1245177307.21287.34.camel@johannes.local>
-	 <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
-	 <1245177946.21287.42.camel@johannes.local>
-	 <45e8e6c40906161155i1e5dc5bag114dea7a8c6caa66@mail.gmail.com>
-	 <1245178613.21287.45.camel@johannes.local>
-	 <445f43ac0906161232x743d7ab9u2f36a5893240b789@mail.gmail.com>
-	 <1245181069.21287.53.camel@johannes.local>
-	 <445f43ac0906161251v63d59cc1jd72bade62910d086@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Pk2NbRafD9in9fSdqGZ/"
-Date: Tue, 16 Jun 2009 21:59:13 +0200
-Message-Id: <1245182353.21287.58.camel@johannes.local>
-Mime-Version: 1.0
+Date: Tue, 16 Jun 2009 11:42:10 -0700
+Message-ID: <45e8e6c40906161142m759e6ecdgc6765333a4cced01@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: allow adding/deleting stations on mesh
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 16, 2009 at 11:35 AM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-06-16 at 11:31 -0700, Andrey Yurovsky wrote:
+>> Commit b2a151a288 added a check that prevents adding or deleting
+>> stations on non-AP interfaces.  Adding and deleting stations is
+>> supported for Mesh Point interfaces, so add Mesh Point to that check as
+>> well.
+>
+> Why? Aren't those automatically discovered like IBSS peers?
 
---=-Pk2NbRafD9in9fSdqGZ/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, they normally are, however it's possible to turn that off from
+user space (via iw).
 
-On Tue, 2009-06-16 at 12:51 -0700, Javier Cardona wrote:
+The reason for this is that it's useful to manually create mesh
+topologies.  This is mostly for testing, verification, and
+experimentation.  For example, you can manually create a topology
+where you have two paths and you know one path is better than another
+and then run a test script that verifies that the right path was
+taken.  It could presumably also be used by some user-space "mesh
+manager" similar to hostapd for APs.
 
-> > No, I don't have any in mind. I wasn't aware that only the mesh_id
-> > defines the mesh, I was under the impression that more needs to match,
-> > as codified in mesh_matches_local().
->=20
-> In addition to the mesh id, a successful peering requires that peer
-> candidates use the same methods for path selection, congestion
-> control, synchronization and authentication.  None of these are
-> configurable via iw (essentially because only one single option for
-> each method is implemented).
+  -Andrey
 
-Ahh! Ok, goes to show how little I understand the mesh code. IIRC
-somebody had a patch to make those configurable though. I guess as long
-as those need to be configured while creating the interface the API is
-actually very good and much better than I thought :)
-
-johannes
-
---=-Pk2NbRafD9in9fSdqGZ/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKN/mOAAoJEODzc/N7+QmaEVsP/0t8y1Ttj5E/bGs+UCeE7Gw5
-knZ5nYviGcxND2jUh2ITi7LCMIPkAFrhFoBlVhz+gZ6GFutksm24NrZiG6dKVIZj
-EKeQSrZvPV2+HuB5PqW+m68lKeMjb20DXDi1dcdhW95AQSDGxPdJhly+ouImXFxx
-GEpBsYzPvj9C3uHFp9tjhC3ykHyD+LUw7zMBwN7maFjI5yNtvWd6fpA8HVz8D5XS
-2fmEPUqSuoSSVs8k8jsTdt6DP1vB/LQANW2ghlgA2OolSkYG7TGrtNxmtdsXO2Kz
-HZ1XzovD435HnVtWa6HlL5xmoTDJYF81nlBrNvfFCSp0bK6rPoAqlRVqnC/jWwmo
-s5ogPZaC98wjxyR0rT7t05dxdrNkM5+hY345I0Oowdgd16F5WmkhqoHfqMX93eH7
-VDPpEFh5sNzKCziRF8HTNQDgyw3eCJOSkbMFYa6racIxEI7Xrxcaow6WL/8eEdxw
-8g+8uWFhaXYpOgBKENAj5K5LeMou5Ws3bsD3jaa/wx4tYHZpEZDzxZdN7qIhZ7Pp
-JDoThQm50nzJSa273Yv7cHoC8whD/jVOqmQy6MJNISO/gB1JEINtt4Gk4SYfcz8L
-nv1x5jRx7gu3nfh16xVNZyEqHvjWpaSLp/Gf0rBhYJXAr3ULkA7XNid61uZhcrsu
-mPq0SosrO3t1vD/aAAmS
-=NxQi
------END PGP SIGNATURE-----
-
---=-Pk2NbRafD9in9fSdqGZ/--
-
+>> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+>> ---
+>>  net/wireless/nl80211.c |    6 ++++--
+>>  1 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> index e18856c..b28c641 100644
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+>> @@ -1763,7 +1763,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+>>               goto out_rtnl;
+>>
+>>       if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>> -         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
+>> +         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
+>> +         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT) {
+>>               err = -EINVAL;
+>>               goto out;
+>>       }
+>> @@ -1812,7 +1813,8 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+>>               goto out_rtnl;
+>>
+>>       if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>> -         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
+>> +         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
+>> +         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT) {
+>>               err = -EINVAL;
+>>               goto out;
+>>       }
+>
