@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:55660 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754843AbZFCPsg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 11:48:36 -0400
-Received: by bwz9 with SMTP id 9so76515bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 08:48:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1244027298.2650.0.camel@johannes.local>
-References: <4A26593B.6050704@tls-tautenburg.de>
-	 <1244027298.2650.0.camel@johannes.local>
-Date: Wed, 3 Jun 2009 16:17:04 +0100
-Message-ID: <3ace41890906030817q5143d028lc933dbbb5efd1507@mail.gmail.com>
-Subject: Re: compile error: compat-wireless-2009-06-03
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bringfried Stecklum <stecklum@tls-tautenburg.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Received: from mx2.redhat.com ([66.187.237.31]:45863 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757413AbZFPTki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 15:40:38 -0400
+Subject: Re: [PATCH v2] net/libertas: don't recursive spin lock in
+ if_spi_e2h()
+From: Dan Williams <dcbw@redhat.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-wireless@vger.kernel.org, andrey@cozybit.com,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <20090612193731.GA21528@Chamillionaire.breakpoint.cc>
+References: <20090612094710.GA28098@www.tglx.de>
+	 <20090612193731.GA21528@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain
+Date: Tue, 16 Jun 2009 15:40:01 -0400
+Message-Id: <1245181201.28992.7.camel@130.81.190.10.in-addr.arpa>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 3, 2009 at 12:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-06-03 at 13:06 +0200, Bringfried Stecklum wrote:
->> When trying to compile the latest compat-wireless package on an Ubuntu 8.10
->> 64bit system running linux kernel 2.6.27-12 I get the following error
->>
->> stecklum@extragalactix:~/System/src/compat-wireless-2009-06-03$ make
->> make -C /lib/modules/2.6.27-12-mygeneric/build
->> M=/home/stecklum/System/src/compat-wireless-2009-06-03 modules
->> make[1]: Entering directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
->>    CC [M]
->> /home/stecklum/System/src/compat-wireless-2009-06-03/drivers/net/wireless/ath/ath9k/hw.o
->> In file included from
->> /home/stecklum/System/src/compat-wireless-2009-06-03/drivers/net/wireless/ath/ath9k/hw.c:20:
->> /home/stecklum/System/src/compat-wireless-2009-06-03/drivers/net/wireless/ath/ath9k/ath9k.h:469:
->> error: field ‘ops’ has incomplete type
->
-> That's rfkill, not sure what to do about it.
->
-> johannes
+On Fri, 2009-06-12 at 21:37 +0200, Sebastian Andrzej Siewior wrote:
+> |BUG: spinlock recursion on CPU#0, lbs_spi_thread/1030
+> | lock: dee9a1bc, .magic: dead4ead, .owner: lbs_spi_thread/1030, .owner_cpu: 0
+> |Call Trace:
+> |[deec3eb0] [c0007220] show_stack+0x4c/0x15c (unreliable)
+> |[deec3ef0] [c0187720] spin_bug+0x9c/0xb0
+> |[deec3f10] [c0187890] _raw_spin_lock+0x54/0x148
+> |[deec3f40] [c02d260c] _spin_lock_irqsave+0x2c/0x44
+> |[deec3f60] [e8671800] lbs_queue_event+0x7c/0x130 [libertas]
+> |[deec3f80] [e8725f04] lbs_spi_thread+0x538/0x58c [libertas_spi]
+> |[deec3fe0] [c004f270] kthread+0x4c/0x88
+> |[deec3ff0] [c000f33c] kernel_thread+0x4c/0x68
+> 
+> if_spi_e2h() is grabbing ->driver_lock just while calling
+> lbs_queue_event() which is grabbing the same lock.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-Yes, i saw the error too - I just git-format-patch'ed the rfkill
-commit from wireless-testing and reverted it in compat-wireless.  Then
-compat-wireless built and worked ok.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-The rfkill commit changed a two files (an include/net/* and an
-Kconfig) which doesn't exist in compat-wireless (I just press return
-to skip during the revert). I suppose the include will need to go to
-the top of whatever files needing it, the Kconfig part will need to go
-to config.mk ... but I haven't looked in detail and other change may
-be needed.
+> ---
+> v1..v2: remove flags
+> 
+>  drivers/net/wireless/libertas/if_spi.c |    4 ----
+>  1 files changed, 0 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index f8c2898..583162c 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -812,7 +812,6 @@ out:
+>  static void if_spi_e2h(struct if_spi_card *card)
+>  {
+>  	int err = 0;
+> -	unsigned long flags;
+>  	u32 cause;
+>  	struct lbs_private *priv = card->priv;
+>  
+> @@ -827,10 +826,7 @@ static void if_spi_e2h(struct if_spi_card *card)
+>  	/* generate a card interrupt */
+>  	spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
+>  
+> -	spin_lock_irqsave(&priv->driver_lock, flags);
+>  	lbs_queue_event(priv, cause & 0xff);
+> -	spin_unlock_irqrestore(&priv->driver_lock, flags);
+> -
+>  out:
+>  	if (err)
+>  		lbs_pr_err("%s: error %d\n", __func__, err);
 
-The commit is this:
->From df1937eaa2b4f60ba9d8aedea1bd2e069ea31aae Mon Sep 17 00:00:00 2001
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 2 Jun 2009 13:01:41 +0200
-Subject: [PATCH] cfg80211: add rfkill support
-
-
-Hin-Tak
