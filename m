@@ -1,145 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60478 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754332AbZFIIyr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 04:54:47 -0400
-Subject: Re: [PATCH 1/3] mac80211: fix - drop frames for sta with no valid
- rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, j@w1.fi, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-In-Reply-To: <1244536211-22535-2-git-send-email-lrodriguez@atheros.com>
-References: <1244536211-22535-1-git-send-email-lrodriguez@atheros.com>
-	 <1244536211-22535-2-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cjs2sTXif+oXdu/JfkTW"
-Date: Tue, 09 Jun 2009 10:54:11 +0200
-Message-Id: <1244537651.4672.0.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:40910 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751363AbZFPSRA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2009 14:17:00 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 11:17:03 -0700
+Date: Tue, 16 Jun 2009 11:17:05 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Jouni Malinen <j@w1.fi>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Greg KH <greg@kroah.com>, "corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>
+Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
+	window
+Message-ID: <20090616181705.GB31506@tesla>
+References: <1245096771-3966-1-git-send-email-lrodriguez@atheros.com> <20090615201934.GA12685@kroah.com> <20090615214735.GE23972@bombadil.infradead.org> <20090615223206.GA4966@kroah.com> <20090616004122.GC5492@tesla> <20090616021011.GF23972@bombadil.infradead.org> <20090616032034.GA17932@kroah.com> <20090616042113.GA5680@tesla> <20090616093401.GA11602@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090616093401.GA11602@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 16, 2009 at 02:34:01AM -0700, Jouni Malinen wrote:
+> On Mon, Jun 15, 2009 at 09:21:14PM -0700, Luis R. Rodriguez wrote:
+> 
+> > +2.0.2: RC-SERIES RULES
+> > +
+> > +Rules on what kind of patches are accepted after the merge window closes.
+> > +These are patches targeted for the kernel rc-series of a kernel prior
+> > +to its release.
+> > +
+> > + - it must fix a reported regression
+> > + - if must fix a reported security hole
+> > + - if must fix a reported oops/kernel hang
+> 
+> 
+> s/if/it/ twice..
 
---=-cjs2sTXif+oXdu/JfkTW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks, fixed.
 
-On Tue, 2009-06-09 at 04:30 -0400, Luis R. Rodriguez wrote:
-> If we're associated and scanning mac80211 will allow through
-> nullfunc and probe request frames. When we're scanning on a
-> different band than the one we're associated on we should
-> not send nullfunc frames to the sta on that band as it would
-> be the incorrect band.
->=20
-> Lets catch the case where no valid rate is usable when associated
-> and discard those frames and warn only for the case the frame is
-> not a nullfunc or probe request as those are the only accounted
-> for frames mac80211 should allow through while scanning.
->=20
-> This fixes an oops which occured due to an assert in ath9k:
->=20
-> http://marc.info/?l=3Dlinux-wireless&m=3D124277331319024
->=20
-> The assert was happening because the rate control algorithm
-> figures it should find at least one valid dual stream or
-> single stream rate. Since we allow mac80211 to send get_rate
-> callback for drivers for a sta on invalid band no valid will
-> actually have been found and hence the assert.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  include/net/mac80211.h |   11 +++++++++++
->  net/mac80211/tx.c      |   38 ++++++++++++++++++++++++++++++++++++++
->  2 files changed, 49 insertions(+), 0 deletions(-)
->=20
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 17d61d1..9559efa 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -2103,6 +2103,17 @@ rate_lowest_index(struct ieee80211_supported_band =
-*sband,
->  	return 0;
->  }
-> =20
-> +static inline
-> +bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
-> +			      struct ieee80211_sta *sta)
-> +{
-> +	unsigned int i;
-> +
-> +	for (i =3D 0; i < sband->n_bitrates; i++)
-> +		if (rate_supported(sta, sband->band, i))
-> +			return true;
-> +	return false;
-> +}
-> =20
->  int ieee80211_rate_control_register(struct rate_control_ops *ops);
->  void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 1436f74..03f9a4e 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -511,6 +511,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx=
-)
->  	int i, len;
->  	bool inval =3D false, rts =3D false, short_preamble =3D false;
->  	struct ieee80211_tx_rate_control txrc;
-> +	u32 sta_flags;
-> =20
->  	memset(&txrc, 0, sizeof(txrc));
-> =20
-> @@ -543,7 +544,44 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *t=
-x)
->  	     (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
->  		txrc.short_preamble =3D short_preamble =3D true;
-> =20
-> +	sta_flags =3D tx->sta ? get_sta_flags(tx->sta) : 0;
-> +
-> +	/*
-> +	 * Lets not bother rate control if we're associated and cannot
-> +	 * talk to the sta. It makes little since for this to happen,
-> +	 * it should mean we're scanning on another band somehow some frames
-> +	 * got through the TX queue -- these should have been not been added
-> +	 * to our TX queue. There is one excemption to this, but we handle
-> +	 * these below.
-> +	 */
-> +
-> +	if (unlikely((tx->local->sw_scanning) &&
-> +	    (sta_flags & WLAN_STA_ASSOC) &&
-> +	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
-> +		/*
-> +		 *  The only accounted for frames of this type in
-> +		 *  mac80211 are probe requests and null func frames,
-> +		 *  so just warn for other drop of frames. Drop the
-> +		 *  frames anyway as we have no usable bit rate.
-> +		 */
+> Is there a good reason for documenting different rules for rc-series and
+> -stable releases? These three rules look stricter than the ones
+> described in stable_kernel_rules.txt:
+> 
+>  - It must fix a problem that causes a build error (but not for things
+>    marked CONFIG_BROKEN), an oops, a hang, data corruption, a real
+>    security issue, or some "oh, that's not good" issue.  In short, something
+>    critical.
 
-Can we not avoid this situation to start with by flushing the master
-device queues before we go scan?
+The rc-series rules this patch adds are a summary, so they do indeed appear to be
+stricter but I do think new vendor/device ids should be welcomed as well AFAICT,
+for instance.
 
-johannes
+What may be best is to merge these two somehow and refer to the common rules for
+both and try to differentiate between them in their respective documentation
+section.
 
---=-cjs2sTXif+oXdu/JfkTW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+But I also think good judgement can be applied, good judgement being defined as
+that of a subsystem maintainer, which allows us to simply tell developers to
+focus on development and send patches up and the respective maintainer routes
+the fixes accordingly.
 
------BEGIN PGP SIGNATURE-----
+The spirit of writig this summary is to be clear that rules do exist and that
+we cannot simply suggest to read stable_kernel_rules.txt as there are items there
+which do not apply.
 
-iQIcBAABAgAGBQJKLiMsAAoJEODzc/N7+Qma3VAQAJZelhyRwrGBHULeMo56lcR6
-kv4fLDF+ymSViLMUzSAs190yJXdqGqQL7IBF6mLBPEpBMB2ENVX7qrKNHoL4IXlA
-/vCOaY7y4xP58h5DXCZGHiJN0KOH9XOAo3gmwbPGFM8xOjxUDUisevckp09VD9Px
-3DSll8OR7J+MEZ/Fop+rD90CqfyaguA+cLn4D8KJy/ulfE1WJsVS+CAFC+CxTXOS
-FdnV9no7dqp7ZMdPwV2TlbJ5yn3WoNr+XM8LQPCj0scSpeT42xhREX1j81sDU70I
-9siymvyriH8IakrOZKozqfYTnNdfqgTxHRrfRkWIMVS8/UcGkt3u3oFssbfrYhFH
-Lhw8b7qOvFL9EkMj+n3fVeCV1uWZfL9r6052GhDpzfsX5qRQILzQo+OuePbKn8Su
-arIFMatFpxuXpZuPVY0fOnpy/y+fuxZvRfWKAT3buMTxLdcZrkzBsVNq2SYXQfC7
-CZalA26N/GsxwzB3FdJkSOGnPPKFIpDkAg18tXkknS+jMzlbqPBCoVQKbF3Tu9Ry
-ebZdqvluJevB2k1lgnZ7Zzx92ZIZpJ87cQYxk/HmE6R7tlvZDQsss/W//rp74ek6
-Dqm6Lmb8+GNl2zr8msyODXs1eix0i10hi+Z+RGRHrLUBBNj9HhP+nL+uAEs+HgCK
-OsU3I5tDqNac095GJQ9s
-=NpOw
------END PGP SIGNATURE-----
+Reason for trying to add more documentation for this is today there are a lot
+companies are working upstream and a better sense of what can get into specific
+kernel releases becomes more important and you also have more responsible
+developers looking out to ensure their fixes get propagated to the right trees.
+So leaving some of these things undocumented, implied or in the dark can turn
+out to not be as healthy and IMHO is what lead to the original issue from which
+I extracted information to create this summary.
 
---=-cjs2sTXif+oXdu/JfkTW--
+> For example, a fix for data corruption that users can hit relatively
+> easily sounds like a good example of something that should really be
+> accepted during the rc-phase even if it is not really a regression or
+> does not cause a kernel oops/hang.
+
+Agreed.
+
+> "oh, that's not good" issue is somewhat more difficult to comment on,
+> but I would expect that there could be some critical issues that really
+> would benefit from an exception. What exactly would qualify is something
+> that may be not be easily described in a sentence or two, though.
+> 
+> 
+> The main problem I see with having a very hard line on not allowing
+> critical fixes (however that would be defined) during the rc-phase is
+> that it will take quite a long time to get the fix eventually out. As an
+> example, a driver could have a bug that prevents it from working with
+> certain subset of devices, but this is noticed only couple of kernel
+> releases after the initial driver merge (e.g., for hardware that was not
+> yet available for end users at the time the driver was initially
+> submitted).
+
+I believe it makes sense to send fixes for new hardware on an old
+driver if it is known the fix cannot regress as it does not affect older
+hardware.
+
+> In other words, the issue would not be a regression, not a
+> security hole, and not an oops/kernel hang. However, it could make the
+> driver unusable to large number of users (once the affected hardware
+> model becomes available; say in a new laptop).
+
+Agreed. But I think that would fall under the new driver category.
+
+> If an issue is fixed just before a start of the next merge window the
+> patch may not have had enough time to go through the maintainers and end
+> up in linux-2.6.git in time before the merge window closes. If it
+> weren't now allowed in during the rc-phase, it may not go into a stable
+> release either (assuming the rc/stable rules are more or less the same)
+> and we would be looking something like five month time until the fix
+> would actually be released in a proper kernel release. Sure,
+> users/distros could take in some additional patches to fix issues they
+> care about, but worst case scenarios of close to half a year to fix an
+> issue in a kernel release does not sound quite ideal.
+
+Agreed. In the end it seems to come down to the specifics of the patch and
+only the maintainer can really be a good judge of whether it should go in
+or not. Of course properly documenting each patch helps, and I believe that
+in itself may be good enough to address the grey areas.
+
+Here's a new patch with the fix you noted. Also added a little stub about
+maintainers judgement, etc.
+
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
+Subject: [PATCH] Documentation: add documentation summary for rc-series and merge window
+
+This is losely based on previous discussions on linux-kernel [1][2].
+Lets also refer people reading the stable rules to
+Documentation/development-process/.
+
+Also add the number of days it has taken between releases,
+and provide the average for the last 10 releases: 86.0 days.
+
+[1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
+[2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ Documentation/development-process/2.Process |   96 ++++++++++++++++++++++++---
+ Documentation/stable_kernel_rules.txt       |    5 ++
+ 2 files changed, 91 insertions(+), 10 deletions(-)
+
+diff --git a/Documentation/development-process/2.Process b/Documentation/development-process/2.Process
+index d750321..c220646 100644
+--- a/Documentation/development-process/2.Process
++++ b/Documentation/development-process/2.Process
+@@ -7,20 +7,96 @@ course of one year, the kernel has since had to evolve a number of
+ processes to keep development happening smoothly.  A solid understanding of
+ how the process works is required in order to be an effective part of it.
+ 
++2.0:SUMMARY
++
++This section provides a brief summary of the kernel release rules.
++
++2.0.0: KERNEL RELEASE RULES
++
++Stable kernels are released when they are ready! This means there are
++absolutely no strict guidelines for sticking to specific dates for a
++kernel release.
++
++2.0.1: MERGE WINDOW
++
++The merge window opens up after the next stable kernel is released.
++The merge window is when maintainers of different subsystem send pull
++requests to Linus for code they have been queuing up for the next
++stable kernel. This is typically now done through respective
++foo-next-2.6.git trees where foo is your subsystem. Each maintainer
++queues up patches for the next kernel cycle in this foo-next-2.6.git
++tree. After the merge window the kernel is worked on through the
++rc-series of the kernel release. The merge window closes at the first
++rc-series release.
++
++After a maintainer has sent his pull request to Linus during the merge
++window no further new development will be accepted for that tree and
++as such it marks the closure of development for that subsystem for that
++kernel cycle. Developers wishing to target deadlines should simply work
++on their development without regards or consideration for inclusion to
++a specific kernel release. Once development is done it should simply be
++posted. If you insist on targeting a kernel release for deadlines you can
++try to be aware of the current rc cycle development and how soon it seems
++the next stable kernel release will be made. When Linus notes the last rc
++cycle released may be the last -- that is a good sign you should already
++have all your development done and merged in the respective development
++tree. If your code is not ready and merged into the respective maintainers
++tree prior to the announced last potential rc kernel release chances are
++you missed getting your code in for the next kernel merge window.
++Exemptions here are new drivers, covered below.
++
++2.0.2: RC-SERIES RULES
++
++Rules on what kind of patches are accepted after the merge window closes.
++These are patches targeted for the kernel rc-series of a kernel prior
++to its release.
++
++ - it must fix a reported regression
++ - it must fix a reported security hole
++ - it must fix a reported oops/kernel hang
++
++This means any small-non-fix code changes, although they might fix an issue,
++will not be accepted. If the patch in question is for a driver that has been
++around for more than a kernel release, then "small fixes" really can't be
++worth all that much. And "small fixes" may be small and "obvious" they
++definitely can regress.
++
++When in doubt consult with your subsystem maintainer or just allow him to
++do the judging of where the patches deserves to go to, a proper commit log
++should help with this effort.
++
++2.0.3 RC-SERIES NEW DRIVER EXEMPTION RULE
++
++The very first release a new driver (or filesystem) is special. New drivers
++are accepted during the rc series. Patches for the same driver then are
++also accepted during the same rc series of a kernel as well as fixes as it
++cannot regress as no previous kernels exists with it.
++
++Once drivers are upstream for one kernel release (say on 2.6.29) the target
++*goal* after the merge window of the next kernel (respectively this would be
++the 2.6.30 rc-series) is to address regressions. Kernel oops/hangs and security
++issues are obviously accepted but the point is these should have also been
++caught earlier as a general development goal. The rc-series focus should really
++be to address regressions.
+ 
+ 2.1: THE BIG PICTURE
+ 
+ The kernel developers use a loosely time-based release process, with a new
+-major kernel release happening every two or three months.  The recent
+-release history looks like this:
+-
+-	2.6.26	July 13, 2008
+-	2.6.25	April 16, 2008
+-	2.6.24	January 24, 2008
+-	2.6.23	October 9, 2007
+-	2.6.22	July 8, 2007
+-	2.6.21	April 25, 2007
+-	2.6.20	February 4, 2007
++major kernel release happening about every two or three months. The current
++average time based on the last 10 releases is 86.0 days. The recent release
++history along with the number of days between each release looks like this:
++
++	2.6.30	June 10, 2009 - 78 days
++	2.6.29  March 23, 2009 - 89 days
++	2.6.28	December 29, 2008 - 76 days
++	2.6.27	October 8, 2008 - 88 days
++	2.6.26	July 13, 2008 - 88 days
++	2.6.25	April 16, 2008 - 83 days
++	2.6.24	January 24, 2008 - 108 days
++	2.6.23	October 9, 2007 - 94 days
++	2.6.22	July 8, 2007 - 75 days
++	2.6.21	April 25, 2007 - 81 days
++	2.6.20	February 4, 2007 - 68
+ 
+ Every 2.6.x release is a major kernel release with new features, internal
+ API changes, and more.  A typical 2.6 release can contain over 10,000
+diff --git a/Documentation/stable_kernel_rules.txt b/Documentation/stable_kernel_rules.txt
+index a452227..113e8c8 100644
+--- a/Documentation/stable_kernel_rules.txt
++++ b/Documentation/stable_kernel_rules.txt
+@@ -1,5 +1,10 @@
+ Everything you ever wanted to know about Linux 2.6 -stable releases.
+ 
++For further details, such as stable kernel release schedules, rc-series
++policies and process of development please refer to:
++
++Documentation/development-process/
++
+ Rules on what kind of patches are accepted, and which ones are not, into the
+ "-stable" tree:
+ 
+-- 
+1.6.2.2.446.gfbdc0
 
