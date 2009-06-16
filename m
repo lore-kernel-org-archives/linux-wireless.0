@@ -1,84 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([204.127.217.101]:62083 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661AbZFDP7j (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:33315 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759066AbZFPO00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 11:59:39 -0400
-Message-ID: <4A27EF6C.8000208@lwfinger.net>
-Date: Thu, 04 Jun 2009 10:59:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 16 Jun 2009 10:26:26 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 2/3] usbnet: Add stop function pointer to 'struct rndis_data'.
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	David Brownell <dbrownell@users.sourceforge.net>
+Date: Tue, 16 Jun 2009 17:17:27 +0300
+Message-ID: <20090616141727.23639.22861.stgit@fate.lan>
+In-Reply-To: <20090616141721.23639.15379.stgit@fate.lan>
+References: <20090616141721.23639.15379.stgit@fate.lan>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rfkill: always init poll delayed work
-References: <1244015729.7176.28.camel@johannes.local>	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>
-In-Reply-To: <1244128337.22576.81.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 
-> Could you try, without the patch in question, what happens in terms of
-> uevents
->  * have everything on
->  * press rfkill button (expect -> hw_blocked transition)
->  * put interface down
->  * press rfkill button (expect -> unblocked transition)
->  * put interface up
+Allow minidriver to know that netdev has stopped. This is to let
+wireless turn off radio when usbnet dev is stopped.
 
-I'm running v2.6.30-rc8-25743-g3b2029b from wireless-testing.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+CC: David Brownell <dbrownell@users.sourceforge.net>
+---
 
-This is with interface UP and switch off:
+ drivers/net/usb/usbnet.c   |   14 ++++++++++++++
+ include/linux/usb/usbnet.h |    3 +++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
 
-larrylap:/etc/sysconfig/network # cat /sys/class/rfkill/rfkill0/uevent
-PHYSDEVPATH=/devices/pci0000:00/0000:00:0d.0/0000:04:00.0/ssb0:0
-PHYSDEVBUS=ssb
-PHYSDEVDRIVER=b43
-RFKILL_NAME=phy0
-RFKILL_TYPE=wlan
-RFKILL_STATE=2
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index f3a2fce..80251f0 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -544,7 +544,9 @@ EXPORT_SYMBOL_GPL(usbnet_unlink_rx_urbs);
+ int usbnet_stop (struct net_device *net)
+ {
+ 	struct usbnet		*dev = netdev_priv(net);
++	struct driver_info	*info = dev->driver_info;
+ 	int			temp;
++	int			retval;
+ 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK (unlink_wakeup);
+ 	DECLARE_WAITQUEUE (wait, current);
+ 
+@@ -556,6 +558,18 @@ int usbnet_stop (struct net_device *net)
+ 			dev->stats.rx_errors, dev->stats.tx_errors
+ 			);
+ 
++	/* allow minidriver to stop correctly (wireless devices to turn off
++	 * radio etc) */
++	if (info->stop) {
++		retval = info->stop(dev);
++		if (retval < 0 && netif_msg_ifdown(dev))
++			devinfo(dev,
++				"stop fail (%d) usbnet usb-%s-%s, %s",
++				retval,
++				dev->udev->bus->bus_name, dev->udev->devpath,
++				info->description);
++	}
++
+ 	// ensure there are no more active urbs
+ 	add_wait_queue (&unlink_wakeup, &wait);
+ 	dev->wait = &unlink_wakeup;
+diff --git a/include/linux/usb/usbnet.h b/include/linux/usb/usbnet.h
+index 36fabb9..e219fa2 100644
+--- a/include/linux/usb/usbnet.h
++++ b/include/linux/usb/usbnet.h
+@@ -98,6 +98,9 @@ struct driver_info {
+ 	/* reset device ... can sleep */
+ 	int	(*reset)(struct usbnet *);
+ 
++	/* stop device ... can sleep */
++	int	(*stop)(struct usbnet *);
++
+ 	/* see if peer is connected ... can sleep */
+ 	int	(*check_connect)(struct usbnet *);
+ 
 
-
-larrylap:/etc/sysconfig/network # ifdown eth1
-    eth1      name: BCM4312 802.11a/b/g
-larrylap:/etc/sysconfig/network # cat /sys/class/rfkill/rfkill0/uevent
-PHYSDEVPATH=/devices/pci0000:00/0000:00:0d.0/0000:04:00.0/ssb0:0
-PHYSDEVBUS=ssb
-PHYSDEVDRIVER=b43
-RFKILL_NAME=phy0
-RFKILL_TYPE=wlan
-RFKILL_STATE=2
-
-At this point, radio kill switch turned on:
-
-larrylap:/etc/sysconfig/network # ifup eth1
-    eth1      name: BCM4312 802.11a/b/g
-    eth1      warning: WPA configured but may be unsupported
-    eth1      warning: by this device
-    eth1      starting wpa_supplicant
-SIOCSIFFLAGS: Unknown error 132
-Could not set interface 'eth1' UP
-RTNETLINK answers: Unknown error 132
-Starting DHCP4 client on eth1. . . .
-    eth1      DHCP4 client NOT running
-RTNETLINK answers: Unknown error 132
-Cannot enable interface eth1.
-interface eth1 is not up
-
-larrylap:/etc/sysconfig/network # cat /sys/class/rfkill/rfkill0/uevent
-PHYSDEVPATH=/devices/pci0000:00/0000:00:0d.0/0000:04:00.0/ssb0:0
-PHYSDEVBUS=ssb
-PHYSDEVDRIVER=b43
-RFKILL_NAME=phy0
-RFKILL_TYPE=wlan
-RFKILL_STATE=2
-
-The ERFKILL (132) prevents it from coming up. Again, the switch was on
-at this point.
-
-I could not restore service until rmmod/insmod of b43.
-
-Larry
