@@ -1,75 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43290 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755571AbZFJQ0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 12:26:20 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 09:26:24 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <jouni.malinen@atheros.com>, <luis.rodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 7/7] ath9k: schedule aggregation regardless of queue depth
-Date: Wed, 10 Jun 2009 21:55:32 +0530
-Message-ID: <1244651133-6537-8-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1244651133-6537-7-git-send-email-senthilkumar@atheros.com>
-References: <1244651133-6537-1-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-2-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-3-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-4-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-5-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-6-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-7-git-send-email-senthilkumar@atheros.com>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:63936 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbZFQG35 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 02:29:57 -0400
+Received: by bwz9 with SMTP id 9so82079bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 23:29:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <d618c7af0906161532y40d039c6xa69333c6a5461f2b@mail.gmail.com>
+References: <d618c7af0906161532y40d039c6xa69333c6a5461f2b@mail.gmail.com>
+Date: Wed, 17 Jun 2009 07:29:58 +0100
+Message-ID: <3ace41890906162329i52b5547ag9e06afaf93e2dc4d@mail.gmail.com>
+Subject: Re: Support for TrendNET TEW-509UB in zd1211rw
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Jordan Naas <jordan.matthew02@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-schedule aggregation regardless of queue depth. Also we shouldn't
-remove holding descriptor from AC queue if it happens to be the
-only descriptor.
+On Tue, Jun 16, 2009 at 11:32 PM, Jordan Naas<jordan.matthew02@gmail.com> wrote:
+> I have a TrendNet TEW-509UB wifi adapter from trendnet with USB id
+> 157e:3207.  I have added it manually and recompiled the driver and it
+> functions correctly.  If the ID could be added to the supported
+> devices I would greatly appreciate it.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   15 +--------------
- 1 files changed, 1 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 328391e..eda2458 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1113,8 +1113,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 		if (tid->paused)
- 			continue;
- 
--		if ((txq->axq_depth % 2) == 0)
--			ath_tx_sched_aggr(sc, txq, tid);
-+		ath_tx_sched_aggr(sc, txq, tid);
- 
- 		/*
- 		 * add tid to round-robin queue if more frames
-@@ -1957,19 +1956,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		if (bf->bf_stale) {
- 			bf_held = bf;
- 			if (list_is_last(&bf_held->list, &txq->axq_q)) {
--				txq->axq_link = NULL;
--				txq->axq_linkbuf = NULL;
- 				spin_unlock_bh(&txq->axq_lock);
--
--				/*
--				 * The holding descriptor is the last
--				 * descriptor in queue. It's safe to remove
--				 * the last holding descriptor in BH context.
--				 */
--				spin_lock_bh(&sc->tx.txbuflock);
--				list_move_tail(&bf_held->list, &sc->tx.txbuf);
--				spin_unlock_bh(&sc->tx.txbuflock);
--
- 				break;
- 			} else {
- 				bf = list_entry(bf_held->list.next,
--- 
-1.6.0.4
-
+Is it a B or a non-B device? Ideally we'll need the couple of id lines
+from your dmesg
+just for the record. (the one which says what RF it has).
