@@ -1,56 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:50596 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751882AbZF3S1A (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60911 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759607AbZFQTPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 14:27:00 -0400
-Date: Tue, 30 Jun 2009 08:25:34 -1000
-From: Joel Roth <joelz@pobox.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k and Atheros AR242x - No scan results
-Message-ID: <20090630182534.GA5758@sprite>
-Reply-To: Joel Roth <joelz@pobox.com>
-References: <20090630170916.GB5137@sprite>
- <43e72e890906301052l5a0b8984od8437fefa38e0dff@mail.gmail.com>
+	Wed, 17 Jun 2009 15:15:31 -0400
+Date: Wed, 17 Jun 2009 15:00:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: Jouni.Malinen@Atheros.com, Luis.Rodriguez@Atheros.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: ATH9K Bug fixes
+Message-ID: <20090617190025.GE2791@tuxdriver.com>
+References: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890906301052l5a0b8984od8437fefa38e0dff@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 30, 2009 at 10:52:09AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jun 30, 2009 at 10:09 AM, Joel Roth<joelz@pobox.com> wrote:
-> 
-> sudo ip link set dev wlan0 up
+On Wed, Jun 17, 2009 at 09:57:06AM +0530, Senthil Balasubramanian wrote:
+> This series address issues with Atheros hardware that supports different
+> TX and RX streams and also bogus RSSI report from hardware.
 
-Hi Luis,
+Just as the other series, these changelog entries are too terse
+and vague.  They are particularly terse and vague for consideration
+as bugfixes for 2.6.31.
 
-I've tried this, with no obvious change.
-
-I've not used the 'ip' command before in my networking
-explorations, always relying on ifconfig to bring up
-devices.
-
-Ifconfig reports that wlan0 is UP. Is there any other
-kind of UP that I need to understand?
-
-Another question: From the point of view of setting up
-wireless, if the wlan0 device is UP, should
-'iwlist scan' return a list of access points? 
-
-Or are there any other conditions to be met?
-
-Thanks.
-
-> 
-> > $ iwlist wlan0 scan
-> >
-> > wlan0     No scan results
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+John
 -- 
-Joel Roth
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
