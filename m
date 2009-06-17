@@ -1,96 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:60259 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754387AbZF2J2E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 05:28:04 -0400
-From: Frans Pop <elendil@planet.nl>
-To: linux-wireless@vger.kernel.org
-Subject: [2.6.31-rc1] iwlagn (4965): regression when hardware rf switch is used
-Date: Mon, 29 Jun 2009 11:28:04 +0200
-Cc: Netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906291128.05639.elendil@planet.nl>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33488 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752989AbZFQM6w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 08:58:52 -0400
+Subject: Re: [RFC] net: refactor multicast/unicast address list
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Pirko <jpirko@redhat.com>, Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	davem <davem@davemloft.net>
+In-Reply-To: <20090617122616.GB2791@tuxdriver.com>
+References: <1244889678.13033.6.camel@johannes.local>
+	 <1244896094.13033.8.camel@johannes.local>
+	 <20090616111842.GG3521@psychotron.englab.brq.redhat.com>
+	 <1245151771.9256.3.camel@johannes.local>
+	 <20090616123808.GK3521@psychotron.englab.brq.redhat.com>
+	 <1245193788.21287.66.camel@johannes.local>
+	 <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
+	 <1245231024.19769.0.camel@johannes.local>
+	 <20090617122616.GB2791@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2IiJcVAdmPXEmDS8SIyd"
+Date: Wed, 17 Jun 2009 14:58:18 +0200
+Message-Id: <1245243498.31588.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Reported earlier in 'no wireless due to RFKILL problem' thread, but
-Johannes suggested opening a new thread as it is a separate issue.)
 
-I've tried .31-rc1 on my HP 2510p notebook and noticed a problem when
-using the hardware rf kill switch.
+--=-2IiJcVAdmPXEmDS8SIyd
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-If disable wireless using the hardware switch and the enable it again
-almost immediately after on 2.6.30, I get:
-[disable]
-iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
-Kill switch must be turned off for wireless networking to work.
-usb 3-1: USB disconnect, address 2
-[enable]
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-usb 3-1: new full speed USB device using uhci_hcd and address 3
-usb 3-1: configuration #1 chosen from 1 choice
-wlan0: no probe response from AP 00:14:c1:38:e5:15 - disassociating
-iwlagn 0000:10:00.0: index 0 not used in uCode key table.
-wlan0: authenticate with AP 00:14:c1:38:e5:15
-wlan0: authenticate with AP 00:14:c1:38:e5:15
-wlan0: authenticated
-wlan0: associate with AP 00:14:c1:38:e5:15
-wlan0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
-wlan0: associated
+On Wed, 2009-06-17 at 08:26 -0400, John W. Linville wrote:
+> On Wed, Jun 17, 2009 at 11:30:24AM +0200, Johannes Berg wrote:
+> > On Wed, 2009-06-17 at 09:21 +0200, Jiri Pirko wrote:
+> >=20
+> > > >I guess we could stick this one into wireless-testing, and then take=
+ it
+> > > >out again once your patch hits the tree and offers me similar API fo=
+r
+> > > >list_head based multicast lists?
+> > >=20
+> > > Or wait, I hope the patch will be ready in week tops.
+> >=20
+> > Yeah, that's fine, I'll ask people to throw in the simple export patch
+> > for testing. Thanks for considering! Please disregard my work on
+> > mac80211, I'll rebase over your work.
+>=20
+> If you need Jiri's patch in wireless-testing I can make arrangements
+> to cherry-pick it.
 
-And without any other action networking is up again.
+Not the one he just sent, that one's concerned with unicast address
+lists. We'll see. The mdev removal still had a bunch of issues anyway.
 
+johannes
 
-But with 2.6.31 I get this:
-[disable]
-wlan0: deauthenticating by local choice (reason=3)
-iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
-mac80211-phy0: failed to remove key (0, 00:14:c1:38:e5:15) from hardware (-5)
-iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
-mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-5)
-usb 3-1: USB disconnect, address 2
-[enable]
-usb 3-1: new full speed USB device using uhci_hcd and address 3
-usb 3-1: configuration #1 chosen from 1 choice
+--=-2IiJcVAdmPXEmDS8SIyd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-A lot uglier with those errors. And after that I have to run ifdown/ifup
-before networking is up again (ifup only does not work as it will complain
-"interface already configured"):
+-----BEGIN PGP SIGNATURE-----
 
-[ifdown wlan0]
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[ifup wlan 0]
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-wlan0: authenticate with AP 00:14:c1:38:e5:15
-wlan0: authenticated
-wlan0: associate with AP 00:14:c1:38:e5:15
-wlan0: RX AssocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
-wlan0: associated
-ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+iQIcBAABAgAGBQJKOOhlAAoJEODzc/N7+QmaAWMP/A1L5cKHWTRiWJrzfvOoctK8
+YRT0y/0fHE0X82sToBk+rnXe8f4MY0amFn6Gyi02ZazrdHwYcBpogicnGj40o3vw
+PYyQ4X3nsee4iY+D8bZ5863jYFeBHDXnfOPkfwmJuRW0EGftx+u5yugtrIsneete
+DlqX65z8tJwHc8zHTaXAVZJ7c6dGVEOUSyUvLI1Zl3upQmANtKSv8XfX/fMNGKx1
+MMyQF0Ma0+aguEwdtaRs/5/t+V3hxuuNeXSKVGre8e3FK5GliPem0bni8gBoDQTB
+wRLTwP0cd2Ad4PJaaEjVzY1ZG2/gNJnR9vgljQmoQwlmra2W9XdIjddsooOsY0I1
+c4aYkp/2REIY7nEid0+vjpU2f5fDU5SeHhXboTAxupWh+Ht93y7BQAyNx7xIGu2p
+YHxAD+ugNDJ+HYDmXG7Qd4P1dGIHQoJfXsG9Xd84VMhE0hcUnLqop5nTJxrMs9g7
+pwtbT37nKrgvz0Dt7njY0KKZG5CitXeO+rTjUSEAoGc+sMXPIEmZHH5bHTCUAQWj
+jwA8MyVLudnVAiFp2E8j7v+gi8zIzSxYo4g04bPbz9G5kbksqroXYGHmNcGG1Viu
+4EIY/gVrheQG6DObUMyqlRybPmPdap4eeBIRzxcyB3iVvhx80cnUptkqurRC0Y9Z
+Sw4lnpXlo7I4ir7L5ra3
+=hWxz
+-----END PGP SIGNATURE-----
 
-BTW, would it make sense to bring back the first two lines shown with .30
-(or at least the first one):
-   iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
-   Kill switch must be turned off for wireless networking to work.
-IMHO it's good to register the reason for the disconnect.
+--=-2IiJcVAdmPXEmDS8SIyd--
 
->From lspci:
-10:00.0 Network controller [0280]: Intel Corporation PRO/Wireless
-        4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
-
-Cheers,
-FJP
