@@ -1,80 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44408 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34851 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbZFAO3O (ORCPT
+	with ESMTP id S1751293AbZFQSYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 10:29:14 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
+	Wed, 17 Jun 2009 14:24:49 -0400
+Subject: [PATCH] wireless extensions: play with netns
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090601133351.GI11011@khazad-dum.debian.net>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
-	 <1243763887.19302.29.camel@johannes.local>
-	 <1243796509.6570.35.camel@localhost.localdomain>
-	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
-	 <20090601122839.GB11011@khazad-dum.debian.net>
-	 <1243859931.5299.17.camel@johannes.local>
-	 <20090601124553.GE11011@khazad-dum.debian.net>
-	 <1243860606.5299.21.camel@johannes.local>
-	 <20090601133351.GI11011@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-h/NS3tgleZ9xZ99LeNO/"
-Date: Mon, 01 Jun 2009 16:29:05 +0200
-Message-Id: <1243866545.5299.25.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>
+Content-Type: text/plain
+Date: Wed, 17 Jun 2009 20:24:18 +0200
+Message-Id: <1245263058.31588.38.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This makes wireless extensions netns aware.
 
---=-h/NS3tgleZ9xZ99LeNO/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Is this ok, or is this racy? I guess what I'm asking is -- will
+for_each_net() stop iterating over a netns that is going away before the
+pernet exit op is called? If yes, this should be fine.
 
-On Mon, 2009-06-01 at 10:33 -0300, Henrique de Moraes Holschuh wrote:
+ include/net/net_namespace.h |    3 +++
+ net/wireless/wext.c         |   30 ++++++++++++++++++++++--------
+ 2 files changed, 25 insertions(+), 8 deletions(-)
 
-> I don't know if I have any gripes with your latest patch ;)  Can't test i=
-t
-> right now.  I was reacting to the comments in the thread.
+--- wireless-testing.orig/include/net/net_namespace.h	2009-06-17 20:20:47.000000000 +0200
++++ wireless-testing/include/net/net_namespace.h	2009-06-17 20:20:51.000000000 +0200
+@@ -78,6 +78,9 @@ struct net {
+ #ifdef CONFIG_XFRM
+ 	struct netns_xfrm	xfrm;
+ #endif
++#ifdef CONFIG_WIRELESS_EXT
++	struct sk_buff_head	wext_nlevents;
++#endif
+ 	struct net_generic	*gen;
+ };
+ 
+--- wireless-testing.orig/net/wireless/wext.c	2009-06-17 20:20:47.000000000 +0200
++++ wireless-testing/net/wireless/wext.c	2009-06-17 20:20:51.000000000 +0200
+@@ -1273,11 +1273,25 @@ int compat_wext_handle_ioctl(struct net 
+  * Jean II
+  */
+ 
+-static struct sk_buff_head wireless_nlevent_queue;
++static int __net_init wext_pernet_init(struct net *net)
++{
++	skb_queue_head_init(&net->wext_nlevents);
++	return 0;
++}
++
++static void __net_exit wext_pernet_exit(struct net *net)
++{
++	skb_queue_purge(&net->wext_nlevents);
++}
++
++static struct pernet_operations wext_pernet_ops = {
++	.init = wext_pernet_init,
++	.exit = wext_pernet_exit,
++};
+ 
+ static int __init wireless_nlevent_init(void)
+ {
+-	skb_queue_head_init(&wireless_nlevent_queue);
++	return register_pernet_subsys(&wext_pernet_ops);
+ 	return 0;
+ }
+ 
+@@ -1286,9 +1300,12 @@ subsys_initcall(wireless_nlevent_init);
+ static void wireless_nlevent_process(unsigned long data)
+ {
+ 	struct sk_buff *skb;
++	struct net *net;
+ 
+-	while ((skb = skb_dequeue(&wireless_nlevent_queue)))
+-		rtnl_notify(skb, &init_net, 0, RTNLGRP_LINK, NULL, GFP_ATOMIC);
++	for_each_net(net)
++		while ((skb = skb_dequeue(&net->wext_nlevents)))
++			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
++				    GFP_ATOMIC);
+ }
+ 
+ static DECLARE_TASKLET(wireless_nlevent_tasklet, wireless_nlevent_process, 0);
+@@ -1341,9 +1358,6 @@ static void rtmsg_iwinfo(struct net_devi
+ 	struct sk_buff *skb;
+ 	int err;
+ 
+-	if (!net_eq(dev_net(dev), &init_net))
+-		return;
+-
+ 	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
+ 	if (!skb)
+ 		return;
+@@ -1356,7 +1370,7 @@ static void rtmsg_iwinfo(struct net_devi
+ 	}
+ 
+ 	NETLINK_CB(skb).dst_group = RTNLGRP_LINK;
+-	skb_queue_tail(&wireless_nlevent_queue, skb);
++	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
+ 	tasklet_schedule(&wireless_nlevent_tasklet);
+ }
+ 
 
-Well could you read it and see if the API does what you require? A
-discussion about that would be so much more useful than handwaving about
-LED blinking and security issues...
-
-> On a related note, Johannes, would you be opposed to exporting something =
-I
-> could call from thinkpad-acpi to request a radio state change on a rfkill
-> struct?   This would allow me to remove some of the mess in thinkpad-acpi=
-.
-
-I don't think I understand what you want? What do you mean by "request a
-radio state change"?
-
-johannes
-
---=-h/NS3tgleZ9xZ99LeNO/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKI+WpAAoJEODzc/N7+QmaySsQANOHt/THOlboWhffHyynucmm
-tZsAOq1YhxliutH5guNegN/tWodqPEp191gwy4MH3qmWMLy8k8EmjMrrxFux4e1i
-9x3nPk105X4thL7UjCgIKKVO+iDotW3YiEfz9x9bzOOegnejundGdkezHe88Jp5x
-pMwQAHStOhUgZpqJmISYN/W3h25fpTPY1er0W9cmFCNvAntVh+vvkJBw/LbzI4Xt
-QXNXltquI2fnUBPTeb8OANKQbFou5V4CMpzwrErzlyXeBXiM9m892HPs9apWS6hy
-/S4iu51HykM1JYFWJ7oEGt0Vd+FDJz48mgpej9z0PHnyD0V4qlXCCD/ccLbgKpZQ
-E5NnZHuO5dUV9Hj8iUIg7aO3lgRme/R3W9/gyO1FEOj/C3unkB46WsxY+f0IBggb
-YJkNZa7OWpqJJZqDniFqOuTq1FMS+xdbyDD7z0Mc1Njl73/27QkMuRpOIakeU0Wy
-Wo2ilBoI0mSi1QFJjieIabui4z3kumEpcjubolypAAp2lX1JHqP0GDt8l5EJqPFe
-RfnbEuAtzGuJFWWLfVyV+iccTpBT0S3NOxjNEpfg3P2mpCa9NR/qOjxb21F/FKTo
-RoEFzePXJN4/+Oc1y4u5K5qvs8GcCIYg2YhDH84utCQx/R8+KbXprrbZsGgvJkNg
-KPhirplFB/09WNLBaIV+
-=X8xa
------END PGP SIGNATURE-----
-
---=-h/NS3tgleZ9xZ99LeNO/--
 
