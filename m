@@ -1,74 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:32960 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751021AbZFYUhb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60865 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235AbZFQUvZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 16:37:31 -0400
-Received: by ewy6 with SMTP id 6so2694489ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 13:37:32 -0700 (PDT)
-Message-ID: <4A43E002.2060309@gmail.com>
-Date: Thu, 25 Jun 2009 21:37:22 +0100
-From: Dave <kilroyd@googlemail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
-References: <20090624120745.239294066@sipsolutions.net> <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
-In-Reply-To: <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Jun 2009 16:51:25 -0400
+Subject: Re: [PATCH] wireless extensions: play with netns
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>
+In-Reply-To: <m1y6rqwpur.fsf@fess.ebiederm.org>
+References: <1245263058.31588.38.camel@johannes.local>
+	 <m1y6rqwpur.fsf@fess.ebiederm.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i+vqvb8oWSzhodAPGO/4"
+Date: Wed, 17 Jun 2009 22:50:54 +0200
+Message-Id: <1245271854.31588.44.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Wed, Jun 24, 2009 at 5:07 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> 
->>  Maybe we even decide to
->> not internalise it this way because orinoco wants to keep
->> some ioctls that we'll not offer in cfg80211, not sure yet.
 
-Do we need to maintain these interfaces? I think allowing the same
-functionality via other means should be acceptable (since any software
-using these interfaces clearly doesn't work with any other hardware).
+--=-i+vqvb8oWSzhodAPGO/4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Hm, which ones?
+On Wed, 2009-06-17 at 13:46 -0700, Eric W. Biederman wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> > This makes wireless extensions netns aware.
+> >
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+> > Is this ok, or is this racy? I guess what I'm asking is -- will
+> > for_each_net() stop iterating over a netns that is going away before th=
+e
+> > pernet exit op is called? If yes, this should be fine.
+>=20
+> for_each_net requires the rtnl_lock or the net_mutex to be safe.
+> You aren't taking either so your code is racy.
 
-orinoco has the following private wext handlers:
+Ah ok!
 
-reset firmware
-reset card
-get/set adhoc port
-get/set short preamble
-get/set ibss port
-get rid
+> A dying network namespace will be removed from the net_namespace_list
+> (aka for_each_net) before the per net exit methods are called.
+>=20
+> Is grabbing the rtnl_lock safe in your workqueue and is that something
+> we want to do?
 
-I've only ever had occasion to use the reset ioctls recently, when my
-card started seriously misbehaving (I suspect it's about to fail).
-debugfs or something?
+Ok, thanks. Well, it's a tasklet currently, but can easily be converted
+to a work struct and then take the rtnl.
 
-The get/set things could be done as module parameters. Preferred values
-will be model/fw specific - though I expect we have reasonable defaults
-picked during initialisation.
+johannes
 
-Get RID reads settings off the card. Useful for debugging or reverse
-engineering, but I hope no-one uses it for anything else. Remove completely?
+--=-i+vqvb8oWSzhodAPGO/4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
-Regarding patch 11 (the internalise one), would it be better to:
- * continue to export cfg80211_wext_* for now
- * set mac80211s dev->wireless_handler to &cfg80211_wext_handler in
-iface.c (via a #define that's NULL if !CONFIG_WEXT)
- * specify a release when we expect all drivers, or at least those
-anyone cares about, to have converted?
+iQIcBAABAgAGBQJKOVcqAAoJEODzc/N7+QmaIysQALIRH7ilmjqP4lCFy2dAnmJY
+9VGIWRadwpPunBQ2zsXPhLzzcLuzmpd6dQ92d2yIpmUIXWtJOjjl3KCx+zpSMuWv
+/oRP8gmMm1gDzXmGU4UKLYgW1ptn5mDbtVBFqMWEABCczoYkafT612/lac5GfNV/
+J4YDMV4vRNwoB7sit56+fVYL2vw0xw4MOsznx6BpsxluUr73jGq9JDeiemSPQkSt
+sqs0sOcxWBvfe3Vocy248LyXBUg4iYKHdJfovtHTPSXrvptV3/VWe2GynaMx1Q0U
+Hx9gtTm2ffXr+WxTQ3euA+5AbaF5oxv58wf1crOky4wZ72BExQyldRI7kO714sr1
+wT4uce9rp0AcGm7V59WIedsZCxm9dB4TwsKO/tS6FcpjuIfLnBkHm6odRVdExCfP
+t3ep0s+53SEIhlfJl5rRKRonNGm3Hk5S5iX1N+4DBfz+fBKh5MD2bGhK9NTouXvI
+/xmOMJvvBVbG5n/ncpwvVChEQ3FrPYyvjmy7YFkut7HyRCHE8QymL99b+708G2lR
+2QSR+SlpsAijrbEo/CAUnRvMFKJWx/GXFwbmoK6sqbxr1JZRr4tMhTuuHdil+LhV
+d8H+ZTqabwPseA6N/OqQxG5PHaGA+OF3lSOthTMO9FmBQRSdqBDKokBU+nNzaVrK
+LXQPfXXRBNofFTVAHVmk
+=HAN8
+-----END PGP SIGNATURE-----
 
-That removes the WE dependency from mac80211 but allows drivers to
-gradually implement cfg80211 support. I originally attempted doing it in
-one hit - that sucked, but may have been due to not having a clear idea
-of how cfg80211 is supposed to work.
+--=-i+vqvb8oWSzhodAPGO/4--
 
-It also means orinoco can keep its wext private functions for a bit longer.
-
-
-Thanks,
-
-Dave.
