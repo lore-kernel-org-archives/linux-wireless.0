@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60417 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752363AbZFAPdK (ORCPT
+Received: from mail-qy0-f201.google.com ([209.85.221.201]:55309 "EHLO
+	mail-qy0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756925AbZFQRc5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 11:33:10 -0400
-Date: Mon, 1 Jun 2009 16:34:18 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Subject: Re: [PATCH 08/10] tty_io: export tty_class
-Message-ID: <20090601163418.465be751@lxorguk.ukuu.org.uk>
-In-Reply-To: <bc64b4640906010810l8ace77byfbd650b549f9b5c3@mail.gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-5-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-6-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
-	<1243868091-5315-9-git-send-email-dbaryshkov@gmail.com>
-	<20090601160721.7b262469@lxorguk.ukuu.org.uk>
-	<bc64b4640906010810l8ace77byfbd650b549f9b5c3@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 17 Jun 2009 13:32:57 -0400
+Received: by qyk39 with SMTP id 39so636076qyk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 10:33:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <cdc21430906171031o3091a099ubf9c042bb90777d7@mail.gmail.com>
+References: <cdc21430906171031o3091a099ubf9c042bb90777d7@mail.gmail.com>
+Date: Wed, 17 Jun 2009 12:32:59 -0500
+Message-ID: <cdc21430906171032gf4f4d0byd0c7e9396206d11f@mail.gmail.com>
+Subject: Newbie: Need help with ath9k module compilation. (CONFIG_MODVERSIONS)
+From: Rakesh Kumar <gopchandani@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I used class_find_device finding the device with matching minor. Will it be
-> acceptable, if I just move this code into tty_* file and export it as
-> to modules?
+Hello All,
 
-Yes - create a proper tty helper function for doing the job and document
-what it does. That way if the tty layer is changed it is obvious that
-this code also needs considering.
+So, I pulled kernel source from the git (correspondes to 2.6.30 and
+also other dev patches happening) and executed make in the folder
+which resulted in compilation of the whole kernel and also modules in
+the source I downloaded. I am particular interested in ath9k wireless
+drivers. My machine has  kernel version  2.6.27-14 (Ubuntu 8.10) and
+it also already contains ath9k module. What I wanted to do was to
+download latest code for ath9k and replace/temporarily load the new
+module instead of one I have currently. I rmmod ath9k and tried to:
 
-Alan
+rakesh@pineapple:~/wireless-testing/drivers/net/wireless/ath/ath9k$
+sudo insmod ath9k.ko
+
+which results in:
+
+insmod: error inserting 'ath9k.ko': -1 Invalid module format
+
+and dmesg says:
+
+[82375.379869] ath9k: no symbol version for struct_module
+
+I looked up for this error: http://lkml.org/lkml/2005/6/22/1
+
+It says that I am supposed to have compiled the kernel being used and
+the module in question both with CONFIG_MODVERSIONS=Y
+
+I do know that my .config file has CONFIG_MODVERSIONS=Y and I also
+verified it by checking the CRC tags which are generated as a result
+such configuration during compilation according to this:
+http://www.skynet.ie/~mark/home/kernel/symbols.html
+
+But what I am stuck on is how to compile a kernel module with
+CONFIG_MODVERSIONS=Y, I suppose when I run make for the pulled code,
+it uses this tag inherently for modules also but I am not sure about
+that.
+
+So what am I missing her which would compile the module right to be
+plugged into a slightly older kernel version?
+
+--
+Rakesh
