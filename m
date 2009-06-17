@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60267 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbZFYIij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 04:38:39 -0400
-Date: Thu, 25 Jun 2009 10:37:38 +0200
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless mini-summit in Berlin -- [mspevack@redhat.com:
-	LinuxTag & FUDCon Berlin 2009]
-Message-ID: <20090625083737.GB2765@tuxdriver.com>
-References: <20090621144752.GA14349@redhat.com> <20090625071421.GA4632@tuxdriver.com> <efe7343f0906250111v4d02a77ci6d474abb63ff2940@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:11329 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751253AbZFQE1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 00:27:18 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 21:27:21 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 1/1] ath9k: Handle different TX and RX streams properly.
+Date: Wed, 17 Jun 2009 09:57:07 +0530
+Message-ID: <1245212828-7342-2-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
+References: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efe7343f0906250111v4d02a77ci6d474abb63ff2940@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 25, 2009 at 09:11:16AM +0100, Luis Correia wrote:
-> Hi all,
-> 
-> On Thu, Jun 25, 2009 at 08:14, John W. Linville <linville@tuxdriver.com>wrote:
-> 
-> > More information:
-> >
-> >        http://spevack.livejournal.com/84441.html
-> >
-> > It seems that the FUDCon events will be in the Marshall Haus.
-> > I have not located this yet myself, but I understand it to be in the
-> > Sommergarten area near Messe Sud in the vicinity of LinuxTag.
+This patch fixes an issue when the TX and RX streams are different.
+
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   26 ++++++++++++++------------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2ebd0ed..ebe559c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -874,6 +874,7 @@ static void setup_ht_cap(struct ath_softc *sc,
+ {
+ #define	ATH9K_HT_CAP_MAXRXAMPDU_65536 0x3	/* 2 ^ 16 */
+ #define	ATH9K_HT_CAP_MPDUDENSITY_8 0x6		/* 8 usec */
++	u8 tx_streams, rx_streams;
  
-> this is the location of the mentioned building, it is the one with a
-> circular ending :)
-> 
-> http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q=kaiserdamm,+berlin+germany&sll=52.525961,13.255348&sspn=0.017859,0.055747&ie=UTF8&ll=52.503448,13.273383&spn=0.00463,0.013937&t=h&z=17
-
-Yes, that is it! :-)
-
-LinuxTag is in building 7 of the Berlin Messe (also marked Messegelande
-on my map).  There are some signs in the LinuxTag area to direct you
-to FUDCon as well.
-
-Hth!
-
-John
+ 	ht_info->ht_supported = true;
+ 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+@@ -886,21 +887,22 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
++	tx_streams = !(sc->tx_chainmask & (sc->tx_chainmask - 1)) ? 1 : 2;
++	rx_streams = !(sc->rx_chainmask & (sc->rx_chainmask - 1)) ? 1 : 2;
+ 
+-	switch(sc->rx_chainmask) {
+-	case 1:
+-		ht_info->mcs.rx_mask[0] = 0xff;
+-		break;
+-	case 3:
+-	case 5:
+-	case 7:
+-	default:
+-		ht_info->mcs.rx_mask[0] = 0xff;
+-		ht_info->mcs.rx_mask[1] = 0xff;
+-		break;
++	if (tx_streams != rx_streams) {
++		DPRINTF(sc, ATH_DBG_CONFIG, "TX streams %d, RX streams: %d\n",
++			tx_streams, rx_streams);
++		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
++		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
++				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
+ 	}
+ 
+-	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
++	ht_info->mcs.rx_mask[0] = 0xff;
++	if (rx_streams >= 2)
++		ht_info->mcs.rx_mask[1] = 0xff;
++
++	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
+ }
+ 
+ static void ath9k_bss_assoc_info(struct ath_softc *sc,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.0.4
+
