@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.89]:43893 "EHLO
-	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756983AbZFOPig (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37838 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754922AbZFQSxW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 11:38:36 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
+	Wed, 17 Jun 2009 14:53:22 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 06/12][w-t] iwmc3200wifi: invalidate keys when changing the BSSID
-Date: Mon, 15 Jun 2009 17:39:22 +0200
-Message-Id: <f3d3b8fac2046f9c26773232c585b4c688b8df03.1245076752.git.samuel@sortiz.org>
-In-Reply-To: <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org>
- <8843005a4ec0cad33483426a4ecc7656bce24243.1245076752.git.samuel@sortiz.org>
- <afbb543a0654cc171faa882457cc603d3f038d27.1245076752.git.samuel@sortiz.org>
- <9b2b9b463d1313b871f56ad77b48b4960653b766.1245076752.git.samuel@sortiz.org>
- <ed1078e3b1524ac3bf3888b0881e40bddc8fb690.1245076752.git.samuel@sortiz.org>
- <99a6f971c65b2fb751206cff9e428eb60037629b.1245076752.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245076752.git.samuel@sortiz.org>
-References: <cover.1245076752.git.samuel@sortiz.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] ath9k: wait for beacon frame along with CAB
+Date: Wed, 17 Jun 2009 20:53:20 +0200
+Message-Id: <1245264801-26959-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <samuel.ortiz@intel.com>
-
-While associated, we have to invalidate our key cache if we clear our BSSID
-through siwap.
-
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/iwmc3200wifi/wext.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/wext.c b/drivers/net/wireless/iwmc3200wifi/wext.c
-index 584c94d..8891949 100644
---- a/drivers/net/wireless/iwmc3200wifi/wext.c
-+++ b/drivers/net/wireless/iwmc3200wifi/wext.c
-@@ -82,6 +82,7 @@ static int iwm_wext_siwap(struct net_device *dev, struct iw_request_info *info,
- 			  struct sockaddr *ap_addr, char *extra)
- {
- 	struct iwm_priv *iwm = ndev_to_iwm(dev);
-+	int ret;
- 
- 	if (iwm->conf.mode == UMAC_MODE_IBSS)
- 		return cfg80211_ibss_wext_siwap(dev, info, ap_addr, extra);
-@@ -104,10 +105,26 @@ static int iwm_wext_siwap(struct net_device *dev, struct iw_request_info *info,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index f99f3a7..cece1c4 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -539,11 +539,14 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
+ 	if (ath_beacon_dtim_pending_cab(skb)) {
+ 		/*
+ 		 * Remain awake waiting for buffered broadcast/multicast
+-		 * frames.
++		 * frames. If the last broadcast/multicast frame is not
++		 * received properly, the next beacon frame will work as
++		 * a backup trigger for returning into NETWORK SLEEP state,
++		 * so we are waiting for it as well.
+ 		 */
+ 		DPRINTF(sc, ATH_DBG_PS, "Received DTIM beacon indicating "
+ 			"buffered broadcast/multicast frame(s)\n");
+-		sc->sc_flags |= SC_OP_WAIT_FOR_CAB;
++		sc->sc_flags |= SC_OP_WAIT_FOR_CAB | SC_OP_WAIT_FOR_BEACON;
+ 		return;
  	}
  
- 	if (iwm->umac_profile_active) {
-+		int i;
-+
- 		if (!memcmp(&iwm->umac_profile->bssid[0], iwm->bssid, ETH_ALEN))
- 			return 0;
- 
--		iwm_invalidate_mlme_profile(iwm);
-+		/*
-+		 * If we're clearing the BSSID, and we're associated,
-+		 * we have to clear the keys as they're no longer valid.
-+		 */
-+		if (is_zero_ether_addr(ap_addr->sa_data)) {
-+			for (i = 0; i < IWM_NUM_KEYS; i++)
-+				iwm->keys[i].in_use = 0;
-+
-+		}
-+
-+		ret = iwm_invalidate_mlme_profile(iwm);
-+		if (ret < 0) {
-+			IWM_ERR(iwm, "Couldn't invalidate profile\n");
-+			return ret;
-+		}
- 	}
- 
- 	if (iwm->umac_profile->ssid.ssid_len)
 -- 
-1.6.3.1
+1.5.3.2
 
