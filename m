@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35665 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146AbZFEG2K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 02:28:10 -0400
-Subject: Re: [PATCH 14/15] mac80211: move management / no-ack frame rate
- decision to mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-In-Reply-To: <1244180502-4323-15-git-send-email-lrodriguez@atheros.com>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
-	 <1244180502-4323-15-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-n0t9yNFQHqZj4Te/pIzp"
-Date: Fri, 05 Jun 2009 08:28:08 +0200
-Message-Id: <1244183288.22576.93.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mx2.redhat.com ([66.187.237.31]:59108 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752905AbZFQHVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 03:21:25 -0400
+Date: Wed, 17 Jun 2009 09:21:01 +0200
+From: Jiri Pirko <jpirko@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Netdev <netdev@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	davem <davem@davemloft.net>
+Subject: Re: [RFC] net: refactor multicast/unicast address list
+Message-ID: <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
+References: <1244889678.13033.6.camel@johannes.local> <1244896094.13033.8.camel@johannes.local> <20090616111842.GG3521@psychotron.englab.brq.redhat.com> <1245151771.9256.3.camel@johannes.local> <20090616123808.GK3521@psychotron.englab.brq.redhat.com> <1245193788.21287.66.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1245193788.21287.66.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Wed, Jun 17, 2009 at 01:09:48AM CEST, johannes@sipsolutions.net wrote:
+>On Tue, 2009-06-16 at 14:38 +0200, Jiri Pirko wrote:
+>
+>> >> Yes, I've already converted unicast lists to use list_head there. I'm sending
+>> >> the patch doing the same for multicast lists soon.
+>> >
+>> >Very nice! After that maybe I'll take a look again at moving things into
+>> >a common structure -- I ultimately want to use a multicast list without
+>> >a netdev to sync multiple netdevs onto a common multicast list that is
+>> >not part of a netdev.
+>> 
+>> I see, hmm, I think I can do this change with my conversion... I was thinking
+>> about similar thing as you suggest before...
+>
+>I don't think the patch for converting the multicast lists will hit .31,
+>I take it?
 
---=-n0t9yNFQHqZj4Te/pIzp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm preparing the patch right now. It's most likely it will hit .32.
 
-On Fri, 2009-06-05 at 01:41 -0400, Luis R. Rodriguez wrote:
-> All rate control algorithms agree to send management and no-ack
-> frames at the lowest rate. They also agree to do this when sta
-> and the private rate control data is NULL. We move this to mac80211
-> and simplify the rate control algorithm code.
+>
+>I'd like to get this patch into the .32 tree once it opens
+>http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-net-core-mc-sync-list.patch
+>
+>but I don't know how to handle that wrt. your patch, which will clearly
+>conflict with mein. Will you be sending that soon?
 
-We previously thought this would constrain our rate control algorithms
-more than we would like for future experimentation with higher multicast
-rates. Has that changed?
+I see your need. I'll think about it and try to prepare the lists for this use.
+>
+>I guess we could stick this one into wireless-testing, and then take it
+>out again once your patch hits the tree and offers me similar API for
+>list_head based multicast lists?
 
-johannes
+Or wait, I hope the patch will be ready in week tops.
 
---=-n0t9yNFQHqZj4Te/pIzp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Jirka
+>
+>johannes
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKLryAAoJEODzc/N7+QmaPTMQAJ50APIEP8eojKqwzU4WAUWz
-cQpGatuE6WmyBgA8Om5N0376OUd7awjh4aVg4kC4FGxPsnxD47AC+Pl0RkxpphCy
-V7tRkEVrHKFFyE8Al5PEhPD5IKJD+94oAlxIYzzehx9PyC1ZSRHh4JeJeyOPRhsN
-cnNBGAp5KuerA9Lgd7ElF3KdkoVX+3S9PM/CFhlUNK6IPBT1bAzxVpSBrvCAH8Pz
-X4mk43k8EVKug5aaMiWlEUplfSidezvBwW87mzP7VxxA3FhlSKt0yUaXAWoFes+X
-oP/Z0nDwbfIuGYx5kTRFcL1H19ia2xWELNUh2BVkxnwTmKKBH7M+ScVI+jcl+x8n
-Xi89D9xcFFp/RvIXifOpsAPN40s777+tt4NzH6UecpdBtZxR27kI4ypIwfohHFwY
-XmRxde16U7EAHPpRRWh8aNvu3KhSShchR9+LhgAITt0jjkHHhUfN2ivY2MFrtMN8
-UjwdfsMdoUXXQYMdommqMi8G5/Lwr+0+smry+X0xW0phQ7Znr7efxqa6bpjQKmpX
-0ZLLvvwne6csNyj+8LwGLllu+6N/gTeh+YuKHwecJfz8FnTMAjBUhITgnJBtAhrX
-bCYS8z97cHDAblAGDzVjGaZ7hbFYBTnJzEfdsF2FfiJMhpCST8ceQ6Ux3ull3eCN
-JqKYZZLeN4HuSTVj+OxT
-=opo4
------END PGP SIGNATURE-----
-
---=-n0t9yNFQHqZj4Te/pIzp--
 
