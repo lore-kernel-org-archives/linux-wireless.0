@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47443 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751975AbZFLFcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 01:32:07 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 22:32:10 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Make sure we configure a non-zero beacon interval
-Date: Fri, 12 Jun 2009 10:55:55 +0530
-Message-ID: <1244784355-4157-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:41958 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754461AbZFQWPa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 18:15:30 -0400
+Subject: Re: [PATCH] wireless extensions: play with netns
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>
+In-Reply-To: <m1y6rqwpur.fsf@fess.ebiederm.org>
+References: <1245263058.31588.38.camel@johannes.local>
+	 <m1y6rqwpur.fsf@fess.ebiederm.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-u4KbMmBmHXOWUKtj1UXC"
+Date: Thu, 18 Jun 2009 00:14:59 +0200
+Message-Id: <1245276899.31588.57.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves the sanity check on beacon interval
-which was done only for mesh mode to all operating
-modes just to be safe.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+--=-u4KbMmBmHXOWUKtj1UXC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 3639a2e..45c4ea5 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -674,13 +674,6 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 
- 	intval = conf->beacon_interval & ATH9K_BEACON_PERIOD;
- 
--	/*
--	 * It looks like mac80211 may end up using beacon interval of zero in
--	 * some cases (at least for mesh point). Avoid getting into an
--	 * infinite loop by using a bit safer value instead..
--	 */
--	if (intval == 0)
--		intval = 100;
- 
- 	/* Pull nexttbtt forward to reflect the current TSF */
- 
-@@ -745,6 +738,14 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
- 		iftype = sc->sc_ah->opmode;
- 	}
- 
-+	/*
-+	 * It looks like mac80211 may end up using beacon interval of zero in
-+	 * some cases (at least for mesh point). Avoid getting into an
-+	 * infinite loop by using a bit safer value instead. To be safe,
-+	 * do sanity check on beacon interval for all operating modes.
-+	 */
-+	if (cur_conf->beacon_interval == 0)
-+		cur_conf->beacon_interval = 100;
- 
- 	switch (iftype) {
- 	case NL80211_IFTYPE_AP:
--- 
-1.5.5.1
+On Wed, 2009-06-17 at 13:46 -0700, Eric W. Biederman wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>=20
+> > This makes wireless extensions netns aware.
+> >
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+> > Is this ok, or is this racy? I guess what I'm asking is -- will
+> > for_each_net() stop iterating over a netns that is going away before th=
+e
+> > pernet exit op is called? If yes, this should be fine.
+>=20
+> for_each_net requires the rtnl_lock or the net_mutex to be safe.
+> You aren't taking either so your code is racy.
+
+So it looks like I can also use rcu_read_lock(), but there's no
+for_each_net_rcu(), should there be?
+
+johannes
+
+--=-u4KbMmBmHXOWUKtj1UXC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKOWrgAAoJEODzc/N7+QmafsYP/2CLgeOFbLQhLLzOoVeF6je7
+GN9/2w5Z20Dq8I8YsZY82r7qDrJd8fZyvjnw0ZqgmkZ0ebdYr2YSPqrNBnJr3CLm
+1Abz5ddgVJ3T8P4EMqcZtfCjg/WoYDmbipjlAGCbWYFXGRcPf15qjrE71kkqPAKY
+Rsy+0aSQ+27PJ7nPK/8GsSExpFmpSL/oiLELiZRwx7K1YAfE1IV3mkpwMaUXGoep
+fo/srbkcwiaH+sESdOdRXkdXGj+08yFqn+BSBJSrYcFcryab0i1X47BJx1DUt51h
+W7N0t5Jpb1lyVeOQtbMJ8OJ9YhMm0s40z08z2ie6R7nxmJeL2TGlQ+wYSCW5J+lk
+vgPZ9fmW13xRjK0+Zm7quF4Lyb9ss4oAuDh/sVb1ro7WOb9mqmh0lrnJX9+P3pfQ
+lpFrjt5d2s7nuE81u+sE131lwhROLBgsZ+XhZR3rrm/hr7dmMkTH9oD6czPoYI1r
+6s2O2f8vT6qHf7ikvzbPVCrMQL+Z0N5JpllsOj/JSWNRD3jZO6p/HjJ5sIrGF6zz
+cjx7up6Bkqe4z72hr3UHo8WKf6Zj7T3rrPvyp718W89q72IeGmTWw48BwgMsTf+q
+Nm00//wwpnU/42ugdGHf6jAMOcBCGZAUZrfNdgHNQ54h7VCzqxd8yiE6l/S2des5
+WvCfojdlyJmlqiR86M10
+=HlDa
+-----END PGP SIGNATURE-----
+
+--=-u4KbMmBmHXOWUKtj1UXC--
 
