@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-gw51.mailanyone.net ([208.70.128.77]:39021 "EHLO
-	smtp-gw51.mailanyone.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbZFVXaZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41442 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413AbZFQJa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 19:30:25 -0400
-Message-ID: <4A4013FD.7030004@cheek.com>
-Date: Mon, 22 Jun 2009 19:30:05 -0400
-From: Joseph Cheek <joseph@cheek.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	parag.warudkar@gmail.com, gaurav.jauhar@atheros.com,
-	rootkit85@yahoo.it, ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
-References: <43e72e890906220847u4faaeb2paa15365360c3c080@mail.gmail.com> <4A3FD26C.4070503@cheek.com>
-In-Reply-To: <4A3FD26C.4070503@cheek.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 17 Jun 2009 05:30:59 -0400
+Subject: Re: [RFC] net: refactor multicast/unicast address list
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Pirko <jpirko@redhat.com>
+Cc: Netdev <netdev@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	davem <davem@davemloft.net>
+In-Reply-To: <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
+References: <1244889678.13033.6.camel@johannes.local>
+	 <1244896094.13033.8.camel@johannes.local>
+	 <20090616111842.GG3521@psychotron.englab.brq.redhat.com>
+	 <1245151771.9256.3.camel@johannes.local>
+	 <20090616123808.GK3521@psychotron.englab.brq.redhat.com>
+	 <1245193788.21287.66.camel@johannes.local>
+	 <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dnQ+/1+qJHfXXfhoj60i"
+Date: Wed, 17 Jun 2009 11:30:24 +0200
+Message-Id: <1245231024.19769.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ok, today's git tip is significantly better!  I get failed pings about
-once every hour, down from several times an hour with the last stable
-wireless-testing I could boot.  I'll get a log with modprobe ath9k
-debug=0xfffffffff and send the log again.
 
-Thanks!
+--=-dnQ+/1+qJHfXXfhoj60i
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Joseph
+On Wed, 2009-06-17 at 09:21 +0200, Jiri Pirko wrote:
 
-Joseph Cheek wrote:
-> I will attempt to repro my xmit hangs bugs on today's wireless testing. 
-> I haven't submitted a kernel.org bug on it, just mentioned it on the
-> ath9k list several times.  I can submit a kernel.org bug for it tho,
-> assuming it repros (I've had it ever since Christmas, but who knows?).
->
-> Joseph Cheek
->
-> Luis R. Rodriguez wrote:
->   
->> We're down to 2 kernel.org bug reports for ath9k:
->>
->> http://bugzilla.kernel.org/show_bug.cgi?id=13581
->> "ath9k doesn't work with newer kernels"
->> This is a regression between 2.6.29 and 2.6.30, someone needs to look at this.
->>
->> http://bugzilla.kernel.org/show_bug.cgi?id=13141
->> "AR5008/DWA-552 - Very slow"
->> Patches have been supplied, needs user feedback.
->>
->> If you are aware of any other issues please do report.
->>
->>   Luis
->> _______________________________________________
->> ath9k-devel mailing list
->> ath9k-devel@lists.ath9k.org
->> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->>
->>   
->>     
->
->   
+> >I guess we could stick this one into wireless-testing, and then take it
+> >out again once your patch hits the tree and offers me similar API for
+> >list_head based multicast lists?
+>=20
+> Or wait, I hope the patch will be ready in week tops.
+
+Yeah, that's fine, I'll ask people to throw in the simple export patch
+for testing. Thanks for considering! Please disregard my work on
+mac80211, I'll rebase over your work.
+
+johannes
+
+--=-dnQ+/1+qJHfXXfhoj60i
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKOLerAAoJEODzc/N7+Qma3PsQAI4I17KgsAViE89GdHtsAjPW
+lNLvCqooQFQn3otyhJ4eQn+jNF/c83Vjz3m7KfTjQG8hC3I5vum8akEld5+eunPN
+MT8GdLokKC7kpWLx7WyJYLiF1Puf9amUXsl/+HWUFG0wc9e/4pMIGe8OaDrEaAzW
+hwBfpDp84Fm18+74QkjnPdumGuc+mG4m8TrETBXuPl+chb9Cnq007ObGqaAwPV7O
+dIg1pTU8onPjmR/iryFw7Sn+jpHqQab9xqeSkwZFHR90o1OxARljkMOgjR49k8Mk
+26lgzN4T6132SGQL7WlpUJ9JUkR+1xdZdZp9JPYMPP+PraPCJL3BoOMZiErRMRT/
+qhMXmWo4QbpUm++ytAfdQDsByyBdbz1zLvrvnmBd7vnsT9sk5y74JUxt2BZg7b7D
+jF8pHs3vJmqh/61tyBkcwXVMChBhu5TFdyykJUwXHk7wlyRlbQiZXchrZyl7+z0i
+w72qwseisAk2MquQOQ00UYtP/90t2VANqQMoBdGg/W/GYwPy1p/s/UfHWKaGcTjG
+zDnLhgsKYhR6LxlbgVlNGim0xXb6r0Il5b6v1NKDjAkjaVcA54dBK7CRA3Ecgs9T
+Y54bFuKckvUeQQfpmhf5NVptFJ8JpdhAtlneZRgw9WGhuPdB9Hsf3Loeewl5D9cj
+Qjd2r5ErfU6jkVscanlj
+=oU1G
+-----END PGP SIGNATURE-----
+
+--=-dnQ+/1+qJHfXXfhoj60i--
+
