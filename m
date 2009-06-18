@@ -1,67 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:44555 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368AbZFRXjL convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f212.google.com ([209.85.220.212]:34918 "EHLO
+	mail-fx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417AbZFRVSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 19:39:11 -0400
-Received: by gxk10 with SMTP id 10so2296899gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 16:39:13 -0700 (PDT)
+	Thu, 18 Jun 2009 17:18:05 -0400
+Message-ID: <4A3AAF0A.9020707@tuffmail.co.uk>
+Date: Thu, 18 Jun 2009 22:18:02 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <1245363695-8289-3-git-send-email-kilroyd@googlemail.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-	<1245363695-8289-3-git-send-email-kilroyd@googlemail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 19 Jun 2009 09:38:53 +1000
-Message-ID: <646765f40906181638j39d8e8eex8ead9d856b5f2548@mail.gmail.com>
-Subject: Re: [PATCH 02/23] cfg80211: Advertise ciphers via WE according to
-	driver capability
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: Bob Copeland <me@bobcopeland.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pm@lists.linux-foundation.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@venema.h4ckr.net, linux-pci@vger.kernel.org
+Subject: Re: [ath5k-devel] [linux-pm] PCI hotplug v.s. suspend
+References: <Pine.LNX.4.44L0.0906181437090.3129-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.0906181437090.3129-100000@netrider.rowland.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 19, 2009 at 08:21, David Kilroy<kilroyd@googlemail.com> wrote:
-> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/wireless/wext-compat.c |   15 +++++++++++++--
->  1 files changed, 13 insertions(+), 2 deletions(-)
+Alan Stern wrote:
+> On Thu, 18 Jun 2009, Alan Jenkins wrote:
 >
-> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-> index 9e56f35..7dbe6c6 100644
-> --- a/net/wireless/wext-compat.c
-> +++ b/net/wireless/wext-compat.c
-> @@ -204,8 +204,19 @@ int cfg80211_wext_giwrange(struct net_device *dev,
->        range->avg_qual.noise = range->max_qual.noise / 2;
->        range->avg_qual.updated = range->max_qual.updated;
+>   
+>> Unfortunately this makes it worse.  My eeepc-laptop hacks are now in
+>> wireless-testing.  If I apply the above patch to wireless-testing and
+>> "remove" the device while suspended, I get a soft hang on resume. 
+>>     
 >
-> -       range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
-> -                         IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
-> +       range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
+> Is this different from the behavior without the patch?  (I don't see 
+> how it could be.)
+>   
 
-Should this should go into the for loop too, like how patch 5 works?
+Ow.  No, the free_irq patch doesn't cause this bug.  I missed testing
+this case after adding a workaround for an even more obscure issue :-(.
 
-> +       for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
-> +               switch (wdev->wiphy->cipher_suites[c]) {
-> +               case WLAN_CIPHER_SUITE_TKIP:
-> +                       range->enc_capa |= IW_ENC_CAPA_CIPHER_TKIP;
-> +                       break;
-> +
-> +               case WLAN_CIPHER_SUITE_CCMP:
-> +                       range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
-> +                       break;
-> +               }
-> +       }
+I have a good idea how eeepc-laptop could cause a double-free error.  I
+suspect we originally got away with trying to call pci_remove_device()
+twice, but it's not actually legal, and my workaround caused two
+attempts to happen much closer together.
+
+I'll fix it tomorrow and re-test.  With _both_ of my nasty scenarios
+this time (and the normal ones) - I should really make a checklist :-).
+
+>> Suspending without removal works fine.
+>>
+>> I can see a BUG if I boot with no_console_suspend
+>>
+>> Unable to handle kernel NULL pointer dereference
+>> IP: klist_put
+>> Tainted: G W
+>> Process s2disk
+>>
+>> Call trace:
+>> ? klist_del
+>> ? device_del
+>> ? device_unregister
+>> ? pci_stop_dev
+>> ? pci_stop_bus
+>> ? pci_remove_device
+>> ? eeepc_rfkill_hotplug [eeepc_laptop]
+>> ? eeepc_hotk_resume [eeepc_laptop]
+>> ? acpi_device_resume
+>> ? device_resume
+>> ? hibernation_snapshot
+>>     
 >
->        for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
->                int i;
+> This should be doing more or less the same thing as if you removed the 
+> device while the system was running.  Or is it not hot-unpluggable?
+>
+> Alan Stern
+>   
 
-Thanks,
+Outside of suspend, I can hot-unplug the device alright.  I'm blaming my
+hotplug driver resume handler.
 
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+Thanks
+Alan
