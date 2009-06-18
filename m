@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:44273 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755591AbZFCT76 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754656AbZFRWVu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 15:59:58 -0400
-Received: by pxi12 with SMTP id 12so270496pxi.33
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 12:59:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <45e8e6c40906031252x7f22a1c1mf4fb4a9612eb5ce0@mail.gmail.com>
-References: <661650.46971.qm@web55304.mail.re4.yahoo.com>
-	 <45e8e6c40906020958x3de155acx1011452051c9e96@mail.gmail.com>
-	 <40f31dec0906031121xfb76641h3137f53ed5c8a792@mail.gmail.com>
-	 <45e8e6c40906031252x7f22a1c1mf4fb4a9612eb5ce0@mail.gmail.com>
-Date: Wed, 3 Jun 2009 22:59:58 +0300
-Message-ID: <40f31dec0906031259u1a9c4b0dh977cade85bded168@mail.gmail.com>
-Subject: Re: ath9k/ath5k + 80211s crash
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: austinxxh-ath9k@yahoo.com, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Jun 2009 18:21:50 -0400
+Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:21:53 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 04/23] cfg80211: set WE encoding size based on available ciphers
+Date: Thu, 18 Jun 2009 23:21:16 +0100
+Message-Id: <1245363695-8289-5-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/3 Andrey Yurovsky <andrey@cozybit.com>:
-> On Wed, Jun 3, 2009 at 11:21 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->> 2009/6/2 Andrey Yurovsky <andrey@cozybit.com>:
->>> With wireless-testing from a couple of days ago, an X86 system, and this patch:
->>> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
->>> ath9k can bring up a mesh point interface and doesn't crash for me,
->>> but there are no mesh beacons, so mesh isn't working.  On ath5k, there
->>> are also no beacons and mesh doesn't work, but there's no crash.
->>>
->>
->>
->> Hmm, try adding NL80211_IFTYPE_MESH_POINT here ->
->>
->> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/ath/ath5k/pcu.c;h=ec35503f6a40e6b6a1cc4323287b31e7cdd3a428;hb=HEAD#l733
->
-> It's already there, in ath5k_hw_set_opmode.  We'll need to trace
-> what's going on and see why we don't get beacons.  Last night I had an
-> ath5k MP suddenly start beaconing but I haven't been able to reproduce
-> that yet.
+Only set the sizes for WEP40 and WEP104.
 
-736         /* When in AP mode zero timer0 to start TSF */
-737         if (ah->ah_op_mode == NL80211_IFTYPE_AP)
-738                 ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/wext-compat.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
 
-We need to do this for NL80211_IFTYPE_MESH_POINT or DBA won't fire up
-and beacon queue wont start...
-
-
-
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index bb97061..2f7e776 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -173,9 +173,6 @@ int cfg80211_wext_giwrange(struct net_device *dev,
+ 	range->min_frag = 256;
+ 	range->max_frag = 2346;
+ 
+-	range->encoding_size[0] = 5;
+-	range->encoding_size[1] = 13;
+-	range->num_encoding_sizes = 2;
+ 	range->max_encoding_tokens = 4;
+ 
+ 	range->max_qual.updated = IW_QUAL_NOISE_INVALID;
+@@ -215,6 +212,16 @@ int cfg80211_wext_giwrange(struct net_device *dev,
+ 		case WLAN_CIPHER_SUITE_CCMP:
+ 			range->enc_capa |= IW_ENC_CAPA_CIPHER_CCMP;
+ 			break;
++
++		case WLAN_CIPHER_SUITE_WEP40:
++			range->encoding_size[range->num_encoding_sizes++] =
++				WLAN_KEY_LEN_WEP40;
++			break;
++
++		case WLAN_CIPHER_SUITE_WEP104:
++			range->encoding_size[range->num_encoding_sizes++] =
++				WLAN_KEY_LEN_WEP104;
++			break;
+ 		}
+ 	}
+ 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.0.6
+
