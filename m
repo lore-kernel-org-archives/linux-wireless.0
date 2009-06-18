@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([207.115.11.51]:58513 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752915AbZFGNQH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 09:16:07 -0400
-Message-ID: <4A2BBD98.4040708@lwfinger.net>
-Date: Sun, 07 Jun 2009 08:16:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:32495 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751041AbZFRS20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2009 14:28:26 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 11:28:30 -0700
+Date: Thu, 18 Jun 2009 11:28:31 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: reinette chatre <reinette.chatre@intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [ath9k-devel] [PATCH] mac80211: disassociate when switching
+	bands  and not scanning
+Message-ID: <20090618182831.GA2028@tesla>
+References: <43e72e890906101349t502e9022h16fa79ea512f8b4d@mail.gmail.com> <1244667817.20900.402.camel@rc-desk> <43e72e890906101404l6a8bee67r560f7c8a1c5f8c36@mail.gmail.com> <1244668077.4706.4.camel@johannes.local> <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com> <43e72e890906101544i22bacc8fxa0a7d045eea50280@mail.gmail.com> <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com> <1244753407.20900.456.camel@rc-desk> <20090618150119.GD2738@tuxdriver.com> <1245340021.24303.302.camel@rc-desk>
 MIME-Version: 1.0
-To: Markus <sparcoular@t-online.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: bcm43xx 5.10.38.35 firmware
-References: <loom.20090607T124008-575@post.gmane.org>
-In-Reply-To: <loom.20090607T124008-575@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1245340021.24303.302.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Markus wrote:
-> Hello,
+On Thu, Jun 18, 2009 at 08:47:01AM -0700, reinette chatre wrote:
+> Hi John,
 > 
+> On Thu, 2009-06-18 at 08:01 -0700, John W. Linville wrote:
+> > On Thu, Jun 11, 2009 at 01:50:07PM -0700, reinette chatre wrote:
+> >
+> > > I ran the steps to reproduce on a kernel that is the latest
+> > > wireless-testing + "mac80211: disconnect when user changes channel" +
+> > > "iwlwifi: remove rs_get_rate workaround". Unfortunately I still get the
+> > > rs_get_rate warning.
+> >
+> > Should I merge the ath9k rate series w/o "iwlwifi: remove rs_get_rate
+> > workaround"?
 > 
-> after MacOSX Airport firmware update 5.10.38.35
+> The later patch "mac80211: add helper for management / no-ack frame rate
+> decision" also touches iwlwifi and assumes that "iwlwifi: remove
+> rs_get_rate workaround" has been applied.
 > 
-> (bcm43xx/ Macbook Core2Duo SR)
-> 
-> I cannot connect to my Wlan-Router anymore.
-> 
-> 
-> The b43-module gets modprobed without errors
-> 
-> and nm-applet shows my Access-Points SSID.
-> 
-> Alas, it won't establish a connection to it.
-> 
-> 
-> Any clues?
+> I do not know if Luis would want that patch to go in because the warning
+> we get may not be specific to iwlwifi. If you do want that to go in then
+> please remove the iwlwifi bits.
 
-Please post all items in dmesg that pertain to ssb or b43 using
+I don't believe the warning you got were iwlwifi specific, I confirmed it and
+I was able to reproduce with ath9k and I also sent a patch to correct it. I'd hate
+to see a work around be kept for them and the issue not addressed properly,
+which is what this has been trying to address.
 
-dmesg | egrep "ssb|b43"
+Mind you the patch I sent conflicts with johills patch but I figured we can
+just implement a proper patch to fix that warning afterwards.
 
-
-Larry
+  Luis
