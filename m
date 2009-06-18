@@ -1,25 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:43088 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751910AbZFZRxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2009 13:53:46 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/3] iwlwifi driver updates 06/26/2009
-Date: Fri, 26 Jun 2009 11:00:52 -0700
-Message-Id: <1246039255-2195-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-px0-f189.google.com ([209.85.216.189]:35167 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012AbZFRB3H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 21:29:07 -0400
+Received: by pxi27 with SMTP id 27so723569pxi.33
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 18:29:09 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] libertas: copy WPA keys to priv when associating
+Date: Wed, 17 Jun 2009 18:30:27 -0700
+Message-Id: <1245288627-21442-1-git-send-email-andrey@cozybit.com>
+In-Reply-To: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
+References: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We re-enable indication that iwlwifi supports PS. The rest is just
-debugging help.
+Libertas currently maintains a copy of the WPA unicast and group keys
+when using WPA or WPA2.  This copy is checked when deciding whether or
+not to return to sleep in IEEE PS mode but the actual copying back to
+priv was omitted, which breaks IEEE PS mode with WPA/WPA2 when one
+issues commands that require temporarily keeping the device awake.
 
-[PATCH 1/3] iwlagn: re-enable PS support for iwlagn
-[PATCH 2/3] iwlwifi: add utility to print buffer when error occurs
-[PATCH 3/3] iwlwifi: always print buffer when error condition occurs
+This patch introduces the omitted copy-back of the keys so that IEEE PS
+functions correctly in WPA/WPA2 mode.  Thanks to Dan Williams for
+clearing up the issue.
 
-Reinette
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ drivers/net/wireless/libertas/assoc.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index b9b3741..b7c7cb0 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -1368,11 +1368,17 @@ static int assoc_helper_wpa_keys(struct lbs_private *priv,
+ 	if (ret)
+ 		goto out;
+ 
++	memcpy(&priv->wpa_unicast_key, &assoc_req->wpa_mcast_key,
++			sizeof(struct enc_key));
++
+ 	if (test_bit(ASSOC_FLAG_WPA_MCAST_KEY, &assoc_req->flags)) {
+ 		clear_bit(ASSOC_FLAG_WPA_UCAST_KEY, &assoc_req->flags);
+ 
+ 		ret = lbs_cmd_802_11_key_material(priv, CMD_ACT_SET, assoc_req);
+ 		assoc_req->flags = flags;
++
++		memcpy(&priv->wpa_mcast_key, &assoc_req->wpa_mcast_key,
++				sizeof(struct enc_key));
+ 	}
+ 
+ out:
+-- 
+1.5.6.3
 
