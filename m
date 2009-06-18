@@ -1,139 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f202.google.com ([209.85.216.202]:57831 "EHLO
-	mail-px0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756241AbZFSTdB (ORCPT
+Received: from out02.mta.xmission.com ([166.70.13.232]:59917 "EHLO
+	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752518AbZFRBMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 15:33:01 -0400
-Received: by pxi40 with SMTP id 40so158563pxi.33
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 12:33:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1244839645.11782.5.camel@johannes.local>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <1244442549.11006.2.camel@johannes.local>
-	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
-	 <1244556179.4672.11.camel@johannes.local>
-	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
-	 <1244569926.18481.27.camel@johannes.local>
-	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-	 <1244750836.29447.5.camel@johannes.local>
-	 <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
-	 <1244839645.11782.5.camel@johannes.local>
-Date: Fri, 19 Jun 2009 21:33:03 +0200
-Message-ID: <83a869cd0906191233g507fea1cg238d14b57ace0466@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
+	Wed, 17 Jun 2009 21:12:31 -0400
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: John Linville <linville@tuxdriver.com>,
+	Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>
+References: <1245263058.31588.38.camel@johannes.local>
+	<m1y6rqwpur.fsf@fess.ebiederm.org>
+	<1245276899.31588.57.camel@johannes.local>
+	<m1r5xitpdh.fsf@fess.ebiederm.org>
+	<1245282099.31588.69.camel@johannes.local>
+	<m17hzato0r.fsf@fess.ebiederm.org>
+	<1245283327.31588.74.camel@johannes.local>
+	<m1my86qt73.fsf@fess.ebiederm.org>
+	<1245285541.31588.79.camel@johannes.local>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Date: Wed, 17 Jun 2009 18:12:29 -0700
+In-Reply-To: <1245285541.31588.79.camel@johannes.local> (Johannes Berg's message of "Thu\, 18 Jun 2009 02\:39\:01 +0200")
+Message-ID: <m18wjqqr9e.fsf@fess.ebiederm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Subject: Re: [PATCH] wireless extensions: play with netns
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update : I changed the logic. There is a single flag per key, tracking
-if we send the key instead of a flag per rx queue.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-The mac80211 tkip code won't call update_tkip_key, if some rx packets
-get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-first packet because the hardware key stuff is called asynchronously with
-todo workqueue.
+> On Wed, 2009-06-17 at 17:30 -0700, Eric W. Biederman wrote:
+>
+>> >> This of course gives you a network namespace that can be found by for_each_net rcu
+>> >> while the per net exit functions are running.  I think that opens up to races
+>> >> that I don't want to think about.
+>> >
+>> > Indeed. Can we move the rcu_barrier() up? Or we could insert a
+>> > synchronize_rcu() (which is sufficient for rcu_read_lock) before the
+>> > exit functions are run?
+>> 
+>> I don't think we can move the barrier.   But adding an extra synchronize_rcu
+>> should be fine.  We are talking about the slowest of the slow paths here.
+>> It is so slow it even gets it's own kernel thread.
+>
+> Ok :) New patch below.
+>
+> Yes, you're right, we can't move it, it might still be used from exit
+> for net_assign_generic or so.
 
-This patch workaround that by tracking if we send the key to hardware.
+Except for the changelog which is wrong about not needing any rcu
+primitives I can't spot any bugs.
 
-
-Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-Index: linux-2.6/net/mac80211/tkip.c
-===================================================================
---- linux-2.6.orig/net/mac80211/tkip.c	2009-06-19 19:13:47.000000000 +0000
-+++ linux-2.6/net/mac80211/tkip.c	2009-06-19 19:21:50.000000000 +0000
-@@ -282,6 +282,7 @@
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
-+		key->u.tkip.rx_tkip_key_sent = 0;
- #ifdef CONFIG_MAC80211_TKIP_DEBUG
- 		{
- 			int i;
-@@ -298,19 +299,21 @@
- 			printk("\n");
- 		}
- #endif
--		if (key->local->ops->update_tkip_key &&
--			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--			u8 bcast[ETH_ALEN] =
--				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--			u8 *sta_addr = key->sta->sta.addr;
-+	}
-+	if (key->local->ops->update_tkip_key &&
-+	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-+	    !key->u.tkip.rx_tkip_key_sent) {
-+		u8 bcast[ETH_ALEN] =
-+			{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+		u8 *sta_addr = key->sta->sta.addr;
-
--			if (is_multicast_ether_addr(ra))
--				sta_addr = bcast;
-+		if (is_multicast_ether_addr(ra))
-+			sta_addr = bcast;
-
--			key->local->ops->update_tkip_key(
--				local_to_hw(key->local), &key->conf,
--				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
--		}
-+		key->local->ops->update_tkip_key(
-+			local_to_hw(key->local), &key->conf,
-+			sta_addr, iv32, key->u.tkip.rx[queue].p1k);
-+		key->u.tkip.rx_tkip_key_sent = 1;
- 	}
-
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
-Index: linux-2.6/net/mac80211/key.h
-===================================================================
---- linux-2.6.orig/net/mac80211/key.h	2009-06-19 19:22:20.000000000 +0000
-+++ linux-2.6/net/mac80211/key.h	2009-06-19 19:22:31.000000000 +0000
-@@ -86,6 +86,7 @@
-
- 			/* last received RSC */
- 			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
-+			int rx_tkip_key_sent;
- 		} tkip;
- 		struct {
- 			u8 tx_pn[6];
-
-On 6/12/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2009-06-12 at 22:41 +0200, gregor kowski wrote:
->
->
-> Please try using a proper email client that can inline patches, as
-> outlined in
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/email-clients.txt;hb=HEAD
->
-> Due to you not doing that, I now have to copy/paste from your attachment
-> rather than being able to simply reply.
->
->> Here is a patch that should fix all issue :
->
-> Remove that sentence?
->
->> The mac80211 tkip code won't call update_tkip_key, if some rx packets
->> get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
->> first packet because the hardware key stuff is called asynchronously with
->> todo workqueue.
->
-> That seems fine.
->
->> This patch workaround that by always calling once update_tkip_key if
->> the packet wasn't decrypted by the hardware.
->
-> But I don't think this is actually true?
->
->> +enum {
->> +       INITIALIZED_NONE,
->> +       INITIALIZED_PHASE1,
->> +       INITIALIZED_UPDATE_KEY,
->> +};
->
-> Please declare this in a header file and use the proper enum type for
-> the variable as well so the compiler knows what you're doing. You should
-> also prefix it then.
->
 > johannes
 >
+> Subject: net: make namespace iteration possible under RCU
+>
+> We already call rcu_barrier(), so all we need to take
+> care of is using proper RCU list add/del primitives.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  include/net/net_namespace.h |    3 +++
+>  net/core/net_namespace.c    |   10 +++++++---
+>  2 files changed, 10 insertions(+), 3 deletions(-)
+>
+> --- wireless-testing.orig/include/net/net_namespace.h	2009-06-18 01:36:26.000000000 +0200
+> +++ wireless-testing/include/net/net_namespace.h	2009-06-18 02:17:14.000000000 +0200
+> @@ -211,6 +211,9 @@ static inline struct net *read_pnet(stru
+>  #define for_each_net(VAR)				\
+>  	list_for_each_entry(VAR, &net_namespace_list, list)
+>  
+> +#define for_each_net_rcu(VAR)				\
+> +	list_for_each_entry_rcu(VAR, &net_namespace_list, list)
+> +
+>  #ifdef CONFIG_NET_NS
+>  #define __net_init
+>  #define __net_exit
+> --- wireless-testing.orig/net/core/net_namespace.c	2009-06-18 01:36:39.000000000 +0200
+> +++ wireless-testing/net/core/net_namespace.c	2009-06-18 02:03:06.000000000 +0200
+> @@ -6,6 +6,7 @@
+>  #include <linux/delay.h>
+>  #include <linux/sched.h>
+>  #include <linux/idr.h>
+> +#include <linux/rculist.h>
+>  #include <net/net_namespace.h>
+>  #include <net/netns/generic.h>
+>  
+> @@ -134,7 +135,7 @@ struct net *copy_net_ns(unsigned long fl
+>  	err = setup_net(new_net);
+>  	if (!err) {
+>  		rtnl_lock();
+> -		list_add_tail(&new_net->list, &net_namespace_list);
+> +		list_add_tail_rcu(&new_net->list, &net_namespace_list);
+>  		rtnl_unlock();
+>  	}
+>  	mutex_unlock(&net_mutex);
+> @@ -163,9 +164,12 @@ static void cleanup_net(struct work_stru
+>  
+>  	/* Don't let anyone else find us. */
+>  	rtnl_lock();
+> -	list_del(&net->list);
+> +	list_del_rcu(&net->list);
+>  	rtnl_unlock();
+>  
+> +	/* if somebody is rcu-iterating the list, wait */
+> +	synchronize_rcu();
+> +
+>  	/* Run all of the network namespace exit methods */
+>  	list_for_each_entry_reverse(ops, &pernet_list, list) {
+>  		if (ops->exit)
+> @@ -227,7 +231,7 @@ static int __init net_ns_init(void)
+>  	err = setup_net(&init_net);
+>  
+>  	rtnl_lock();
+> -	list_add_tail(&init_net.list, &net_namespace_list);
+> +	list_add_tail_rcu(&init_net.list, &net_namespace_list);
+>  	rtnl_unlock();
+>  
+>  	mutex_unlock(&net_mutex);
