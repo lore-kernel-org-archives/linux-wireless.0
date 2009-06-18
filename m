@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:61821 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887AbZFRRQj (ORCPT
+Received: from mail-fx0-f212.google.com ([209.85.220.212]:45619 "EHLO
+	mail-fx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbZFRXeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 13:16:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <1245329713.13790.37.camel@johannes.local>
-References: <1245328543.13790.31.camel@johannes.local>
-	 <1245329713.13790.37.camel@johannes.local>
-Date: Thu, 18 Jun 2009 20:16:40 +0300
-Message-ID: <40f31dec0906181016nffa031flac8f464c929f1bc9@mail.gmail.com>
-Subject: Re: wireless netns work
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Jun 2009 19:34:12 -0400
+Received: by fxm8 with SMTP id 8so1431882fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 16:34:14 -0700 (PDT)
+Subject: Re: AR2424 speed issue.
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: tfjellstrom@shaw.ca
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200906122006.55492.tfjellstrom@shaw.ca>
+References: <200906122006.55492.tfjellstrom@shaw.ca>
+Content-Type: text/plain
+Date: Fri, 19 Jun 2009 02:34:04 +0300
+Message-Id: <1245368044.6830.18.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/18 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2009-06-18 at 14:35 +0200, Johannes Berg wrote:
->
->> Oddly, the link works unidirectionally in both directions, if I ping
->> from either side tcpdump shows the echo requests on the other side, but
->> no echo reply is being generated. Still investigating why this is, since
->> it works fine with veth. Ideas why this is broken would be
->> appreciated :)
->
-> Ok, the missing piece of the puzzle is this patch:
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-hwsim-skb-cleanup.patch
->
-> root@(none):~# ping -Q 0x80 10.0.0.1
-> PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
-> Warning: time of day goes back (-311263us), taking countermeasures.
-> 64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.487 ms
-> 64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.122 ms
-> 64 bytes from 10.0.0.1: icmp_seq=3 ttl=64 time=0.121 ms
-> 64 bytes from 10.0.0.1: icmp_seq=4 ttl=64 time=0.130 ms
->
+On Fri, 2009-06-12 at 20:06 -0600, Thomas Fjellstrom wrote:
+> I just got a new laptop with an Atheros 2424 based wifi card (lspci says 
+> AR242x, but the pci device id is: 0035).
+> 
+> While it seems to be stable, it is quite slow for 802.11g. The maximum speed I 
+> can get out of the ath5k driver is the speed it auto connects at: 36Mb/s. If I 
+> force it to anything higher, nothing can get through (the actual connection 
+> seems to stay up till some form of very long time out happens).
+> 
+> I just tried the madwifi drivers on madwifi's website (latest trunk snapshot, 
+> and svn trunk itself) and It auto connects at 18Mb/s. If I up the rate to 
+> 54Mb/s the connection stays up, but it doesn't really seem to be transferring 
+> any faster.
+> 
+> For comparison's sake I tried it out in Windows 7. It auto connects at 54Mb/s 
+> and can stream 1080p h264 without stuttering. In linux however, many SD or 
+> lower res Xvid won't play without stuttering. 720p and 1080p are unwatchable.
+> 
+> What can be done about this? Is there some setting I'm overlooking? Its quite 
+> annoying to have to reboot into windows to watch some videos.
+> 
 
-Well done !!!
+You probably have AR2425. Aspire one?
 
-Don't you think it's time we create a mac80211 test suite based on hwsim ?
-I think it's an interesting project...
+I have tried madwifi too (and unfortunaly found out that this driver
+isn't any better in regard to transfer speeds) and stability.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Bob Copeland, recently, wrote patches that make the card set TX power
+properly, maybe you need to update kernel to take advantage of that?
+
+But here on my aspire one ath5k gives 54M speeds, but very often
+transfers stall, I will attempt soon to figure out what is wrong.
+
+Best regards,
+	Maxim Levitsky 
+
+
+
