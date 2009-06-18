@@ -1,80 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:33315 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759066AbZFPO00 (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:54150 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758285AbZFRXHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 10:26:26 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 2/3] usbnet: Add stop function pointer to 'struct rndis_data'.
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	David Brownell <dbrownell@users.sourceforge.net>
-Date: Tue, 16 Jun 2009 17:17:27 +0300
-Message-ID: <20090616141727.23639.22861.stgit@fate.lan>
-In-Reply-To: <20090616141721.23639.15379.stgit@fate.lan>
-References: <20090616141721.23639.15379.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 18 Jun 2009 19:07:33 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/1] ath5k: fix beacon_int handling
+Date: Fri, 19 Jun 2009 01:06:45 +0200
+Message-Id: <1245366405-27426-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow minidriver to know that netdev has stopped. This is to let
-wireless turn off radio when usbnet dev is stopped.
+73ca5203366235f8a43e490767284ba8cfd8c479
+(ath5k: remove conf->beacon_int usage)
+removed bintval setting from ath5k_config. We need to init the
+interval earlier and don't touch it in add_interface anymore.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-CC: David Brownell <dbrownell@users.sourceforge.net>
+Otherwise it will be set only once by upper layer through
+bss_info_changed but not on second and further hostap executions.
+
+We ended up having bintval 1000 which rendered the AP useless on
+many clients.
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+Cc: Bob Copeland <me@bobcopeland.com>
 ---
+ drivers/net/wireless/ath/ath5k/base.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
- drivers/net/usb/usbnet.c   |   14 ++++++++++++++
- include/linux/usb/usbnet.h |    3 +++
- 2 files changed, 17 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
-index f3a2fce..80251f0 100644
---- a/drivers/net/usb/usbnet.c
-+++ b/drivers/net/usb/usbnet.c
-@@ -544,7 +544,9 @@ EXPORT_SYMBOL_GPL(usbnet_unlink_rx_urbs);
- int usbnet_stop (struct net_device *net)
- {
- 	struct usbnet		*dev = netdev_priv(net);
-+	struct driver_info	*info = dev->driver_info;
- 	int			temp;
-+	int			retval;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK (unlink_wakeup);
- 	DECLARE_WAITQUEUE (wait, current);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 55f7de0..70ba861 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -538,6 +538,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	sc->iobase = mem; /* So we can unmap it on detach */
+ 	sc->cachelsz = csz * sizeof(u32); /* convert to bytes */
+ 	sc->opmode = NL80211_IFTYPE_STATION;
++	sc->bintval = 1000;
+ 	mutex_init(&sc->lock);
+ 	spin_lock_init(&sc->rxbuflock);
+ 	spin_lock_init(&sc->txbuflock);
+@@ -2748,9 +2749,6 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
+ 		goto end;
+ 	}
  
-@@ -556,6 +558,18 @@ int usbnet_stop (struct net_device *net)
- 			dev->stats.rx_errors, dev->stats.tx_errors
- 			);
+-	/* Set to a reasonable value. Note that this will
+-	 * be set to mac80211's value at ath5k_config(). */
+-	sc->bintval = 1000;
+ 	ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
  
-+	/* allow minidriver to stop correctly (wireless devices to turn off
-+	 * radio etc) */
-+	if (info->stop) {
-+		retval = info->stop(dev);
-+		if (retval < 0 && netif_msg_ifdown(dev))
-+			devinfo(dev,
-+				"stop fail (%d) usbnet usb-%s-%s, %s",
-+				retval,
-+				dev->udev->bus->bus_name, dev->udev->devpath,
-+				info->description);
-+	}
-+
- 	// ensure there are no more active urbs
- 	add_wait_queue (&unlink_wakeup, &wait);
- 	dev->wait = &unlink_wakeup;
-diff --git a/include/linux/usb/usbnet.h b/include/linux/usb/usbnet.h
-index 36fabb9..e219fa2 100644
---- a/include/linux/usb/usbnet.h
-+++ b/include/linux/usb/usbnet.h
-@@ -98,6 +98,9 @@ struct driver_info {
- 	/* reset device ... can sleep */
- 	int	(*reset)(struct usbnet *);
- 
-+	/* stop device ... can sleep */
-+	int	(*stop)(struct usbnet *);
-+
- 	/* see if peer is connected ... can sleep */
- 	int	(*check_connect)(struct usbnet *);
- 
+ 	ret = 0;
+-- 
+1.6.3.2
 
