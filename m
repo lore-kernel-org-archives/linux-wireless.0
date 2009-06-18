@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f168.google.com ([209.85.220.168]:56015 "EHLO
-	mail-fx0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216AbZFAPKL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 11:10:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <20090601160721.7b262469@lxorguk.ukuu.org.uk>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-5-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-6-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-7-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-8-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-9-git-send-email-dbaryshkov@gmail.com>
-	 <20090601160721.7b262469@lxorguk.ukuu.org.uk>
-Date: Mon, 1 Jun 2009 19:10:11 +0400
-Message-ID: <bc64b4640906010810l8ace77byfbd650b549f9b5c3@mail.gmail.com>
-Subject: Re: [PATCH 08/10] tty_io: export tty_class
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51474 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752801AbZFRTim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2009 15:38:42 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] [compat-2.6] Update conpat.diff remove last skb->requeue part
+Date: Thu, 18 Jun 2009 21:38:34 +0200
+Message-Id: <1245353915-30400-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/1 Alan Cox <alan@lxorguk.ukuu.org.uk>:
-> On Mon,  1 Jun 2009 18:54:49 +0400
-> Dmitry Eremin-Solenikov <dbaryshkov@gmail.com> wrote:
->
->> Currently tty_class in a public variable in the tty_io.c
->> Export it to the modules to allow some usefull tricks.
->
-> Thats exactly why it isn't exported. We don't want "tricks".
+This was needed as long as skb->requeue was accessed in this part.
 
-I'd like to find a struct device corresponding to the struct tty_struct
-from the ldisc .open call. What would be the best way for me to do this?
-I used class_find_device finding the device with matching minor. Will it be
-acceptable, if I just move this code into tty_* file and export it as
-to modules?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat.diff |   18 ------------------
+ 1 files changed, 0 insertions(+), 18 deletions(-)
 
-
+diff --git a/compat/compat.diff b/compat/compat.diff
+index c309732..fe99dec 100644
+--- a/compat/compat.diff
++++ b/compat/compat.diff
+@@ -858,24 +858,6 @@
+  
+  	return ops;
+  }
+---- a/net/mac80211/wme.c
+-+++ b/net/mac80211/wme.c
+-@@ -97,6 +97,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+- 	if (unlikely(queue >= local->hw.queues))
+- 		queue = local->hw.queues - 1;
+- 
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,28))
+- 	/*
+- 	 * Now we know the 1d priority, fill in the QoS header if
+- 	 * there is one (and we haven't done this before).
+-@@ -112,6 +113,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
+- 		*p++ = ack_policy | tid;
+- 		*p = 0;
+- 	}
+-+#endif
+- 
+- 	return queue;
+- }
+ --- a/net/rfkill/Makefile
+ +++ b/net/rfkill/Makefile
+ @@ -2,6 +2,6 @@
 -- 
-With best wishes
-Dmitry
+1.6.2.1
+
