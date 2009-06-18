@@ -1,56 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41635 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754748AbZFPPQz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40540 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752220AbZFRACh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 11:16:55 -0400
-Date: Tue, 16 Jun 2009 18:12:58 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] ath9k: Fix PCI FATAL interrupts by restoring
-	RETRY_TIMEOUT disabling
-Message-ID: <20090616151258.GA22849@jm.kir.nu>
-References: <20090616085922.GA10176@jm.kir.nu> <b6c5339f0906160733l2ec28563h60145254855c3472@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6c5339f0906160733l2ec28563h60145254855c3472@mail.gmail.com>
+	Wed, 17 Jun 2009 20:02:37 -0400
+Subject: Re: [PATCH] wireless extensions: play with netns
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>
+In-Reply-To: <m17hzato0r.fsf@fess.ebiederm.org>
+References: <1245263058.31588.38.camel@johannes.local>
+	 <m1y6rqwpur.fsf@fess.ebiederm.org>
+	 <1245276899.31588.57.camel@johannes.local>
+	 <m1r5xitpdh.fsf@fess.ebiederm.org>
+	 <1245282099.31588.69.camel@johannes.local>
+	 <m17hzato0r.fsf@fess.ebiederm.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-r63WaNt1gsUUaBg4KPBB"
+Date: Thu, 18 Jun 2009 02:02:06 +0200
+Message-Id: <1245283327.31588.74.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 16, 2009 at 10:33:29AM -0400, Bob Copeland wrote:
-> > An earlier commit, b572b24c578ab1be9d1fcb11d2d8244878757a66, removed
-> > code that was documented to disable RETRY_TIMEOUT register (PCI reg
-> > 0x41) since it was claimed to be a no-op.
-> 
-> Jouni, can you confirm that e23a9014... also needs reverting?
-> (In this case only affects resume path).
 
-I wish I could, but I can only guess that it probably should be
-reverted.
+--=-r63WaNt1gsUUaBg4KPBB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I seem to remember the provenance of this code was copy-paste from
-> an intel driver, so while it does "something," the comment may not
-> match the code, 0x41 being vendor-defined.
+On Wed, 2009-06-17 at 16:54 -0700, Eric W. Biederman wrote:
 
-The exact story behind this has been a bit more than trivial task to
-figure out ;-). I would assume this comment is referring to a madwifi
-changeset: http://madwifi-project.org/changeset/584
+> > Subject: net: make namespace iteration possible under RCU
+> >
+> > We already call rcu_barrier(), so all we need to take
+> > care of is using proper RCU list add/del primitives.
+>=20
+> This of course gives you a network namespace that can be found by for_eac=
+h_net rcu
+> while the per net exit functions are running.  I think that opens up to r=
+aces
+> that I don't want to think about.
 
-I've yet to find documentation that would explain the exact meaning of
-PCI register 0x41 in case of ath9k/ath5k-supported devices, but maybe I
-will some day ;-). Or well, I've seen documentation for said register,
-but that does not match with the comment (but seems to indicate that 0
-is a reasonable value to write there).
+Indeed. Can we move the rcu_barrier() up? Or we could insert a
+synchronize_rcu() (which is sufficient for rcu_read_lock) before the
+exit functions are run?
 
-At this point, I can really only say that I can now easily reproduce
-this with ath9k and AR5416 and zeroing the 0x41 value does make the
-problem disappear. Since that code has been in use for five years, I do
-not expect problems with it and we can just eventually fix the comment
-if somebody actually find out what that register is supposed to control
-;-).
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> I still haven't tracked down how I am occasionally getting time wait sock=
+ets
+> with an invalid network namespace.
+
+Ouch.
+
+johannes
+
+--=-r63WaNt1gsUUaBg4KPBB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKOYP6AAoJEODzc/N7+QmaX2AQAL1fupDuQBJQV+iCimB+r8Ek
+V9Bzl15XtroN6Rqd6wwTxLQLKzJS4ifwfRSjLTofgeXEKV9hxBuyDp+ZZEa2A/FB
+a9RKZZ0tsf4+lhT1AzXl+tWl8bXGFvPTz1Fo7Rx5i/b5JkRQrVJgwF6K6DP14yTj
+aZb+2n1ttbdH1bcmL+teaRZH7GOFaNbKaav/ryu3RWuAa6mVAS/TrO3gKfVb2s6I
+yBNp7qN7bfbX3d8HbTFsvhmK/ZrOad4+kxh/YJdA2DUHywD8SkH2x9j+Br6zG6Vg
+frUprJK9bpE3uC/4n1JbkLKlO5OGyeulqWgtipnM/imG8hcXkipBrxPb/lSMuRzB
+0LCXOlOdBDEKYw4J5qug+lUaIvsQNm/jSyCk82ihViiWfe/4WODH78uTahyrw45R
+g5fInk5c/pWHJowBEsGSdZv9OFuFZHZYXdjm/HfbyYEat/Boi1GpzsA/CMqHvpSv
++SySw0NX8TDWgSjd9epIIsJoasQ8KsB3vYSsAKOHIioycwa32DBEHsFfaeEzi4qq
+/t/3Wh8+KXb5Y/DMqDVwjLqxPYfF6COkNRZP/XbhQrQEXC986miiRml05bdexKQv
+Gyvz2Xy/SQbS3mXi/rFn04wJ0DdZLuwHR6JOGvHRdXraZp0soCJC85wtnIPzPC+Q
+l9OccWf08uafbvWOpUqN
+=Lbm6
+-----END PGP SIGNATURE-----
+
+--=-r63WaNt1gsUUaBg4KPBB--
+
