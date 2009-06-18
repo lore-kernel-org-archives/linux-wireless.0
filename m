@@ -1,95 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58431 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44943 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754524AbZFLUqi (ORCPT
+	with ESMTP id S1759191AbZFRWxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:46:38 -0400
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+	Thu, 18 Jun 2009 18:53:12 -0400
+Subject: Re: [PATCH 00/23] orinoco: initiate cfg80211 conversion
 From: Johannes Berg <johannes@sipsolutions.net>
-To: gregor kowski <gregor.kowski@gmail.com>
+To: David Kilroy <kilroyd@googlemail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
-	 <1244442549.11006.2.camel@johannes.local>
-	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
-	 <1244556179.4672.11.camel@johannes.local>
-	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
-	 <1244569926.18481.27.camel@johannes.local>
-	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-	 <1244750836.29447.5.camel@johannes.local>
-	 <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-18WdrP/I+1PC31uhfMlN"
-Date: Fri, 12 Jun 2009 22:47:25 +0200
-Message-Id: <1244839645.11782.5.camel@johannes.local>
+In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6+WLBMjsqeOX89y+wrDr"
+Date: Fri, 19 Jun 2009 00:52:44 +0200
+Message-Id: <1245365564.16399.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-18WdrP/I+1PC31uhfMlN
+--=-6+WLBMjsqeOX89y+wrDr
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-06-12 at 22:41 +0200, gregor kowski wrote:
 
+>  drivers/net/wireless/orinoco/Kconfig          |    1 +
+>  drivers/net/wireless/orinoco/Makefile         |    2 +-
+>  drivers/net/wireless/orinoco/airport.c        |   98 +--
+>  drivers/net/wireless/orinoco/cfg.c            |  162 ++++
+>  drivers/net/wireless/orinoco/cfg.h            |   15 +
+>  drivers/net/wireless/orinoco/fw.c             |   41 +-
+>  drivers/net/wireless/orinoco/hermes.h         |    2 +-
+>  drivers/net/wireless/orinoco/hermes_dld.c     |   50 +-
+>  drivers/net/wireless/orinoco/hw.c             |  668 +++++++++++++++-
+>  drivers/net/wireless/orinoco/hw.h             |   11 +-
+>  drivers/net/wireless/orinoco/main.c           | 1133 +++++++++----------=
+------
+>  drivers/net/wireless/orinoco/main.h           |    3 +-
+>  drivers/net/wireless/orinoco/orinoco.h        |   49 +-
+>  drivers/net/wireless/orinoco/orinoco_cs.c     |   96 +--
+>  drivers/net/wireless/orinoco/orinoco_nortel.c |   38 +-
+>  drivers/net/wireless/orinoco/orinoco_pci.c    |   38 +-
+>  drivers/net/wireless/orinoco/orinoco_pci.h    |   57 +--
+>  drivers/net/wireless/orinoco/orinoco_plx.c    |   38 +-
+>  drivers/net/wireless/orinoco/orinoco_tmd.c    |   38 +-
+>  drivers/net/wireless/orinoco/scan.c           |  285 +++----
+>  drivers/net/wireless/orinoco/scan.h           |   21 +-
+>  drivers/net/wireless/orinoco/spectrum_cs.c    |   96 +--
+>  drivers/net/wireless/orinoco/wext.c           |  878 ++-----------------=
+-
+>  include/net/cfg80211.h                        |   11 +
+>  net/wireless/core.c                           |    3 -
+>  net/wireless/wext-compat.c                    |   31 +-
+>  26 files changed, 1748 insertions(+), 2117 deletions(-)
+>  create mode 100644 drivers/net/wireless/orinoco/cfg.c
+>  create mode 100644 drivers/net/wireless/orinoco/cfg.h
 
-Please try using a proper email client that can inline patches, as
-outlined in
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dblob=
-;f=3DDocumentation/email-clients.txt;hb=3DHEAD
-
-Due to you not doing that, I now have to copy/paste from your attachment
-rather than being able to simply reply.
-
-> Here is a patch that should fix all issue :
-
-Remove that sentence?
-
-> The mac80211 tkip code won't call update_tkip_key, if some rx packets
-> get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-> first packet because the hardware key stuff is called asynchronously with
-> todo workqueue.
-
-That seems fine.
-
-> This patch workaround that by always calling once update_tkip_key if
-> the packet wasn't decrypted by the hardware.
-
-But I don't think this is actually true?
-
-> +enum {
-> +       INITIALIZED_NONE,
-> +       INITIALIZED_PHASE1,
-> +       INITIALIZED_UPDATE_KEY,
-> +};
-
-Please declare this in a header file and use the proper enum type for
-the variable as well so the compiler knows what you're doing. You should
-also prefix it then.
+Amazing. Very cool!
 
 johannes
 
---=-18WdrP/I+1PC31uhfMlN
+--=-6+WLBMjsqeOX89y+wrDr
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKMr7aAAoJEODzc/N7+QmaiWcQAMQjFNFuczJFWJaYqGIxwg6Q
-PmxT9AXtCu+0+jOqsObLPzLbhHFxvPkqpjFQUhmdAZLEj2hDNQ5UjUIM2fuCmkqm
-WPuNXZml9U+SNMBYjrkpLvdderRMrPf5/B14MZZASiEJAOk6sYcPOcnMpQQCLTmy
-QWupWM+ryHBVje6+O3scDngKl90GTtb62IJHcV7vcLo4krIf0pkNifSvzUTfq4JN
-awrFeVTNEGoelWNWuKXfX9e2CtJRcx6wGeGcrc+0RbX8WAKqRZUgbhcnVMu4SRHs
-CzzJ1F0ehx/SMqnhHorSmrWWExLOdD34cGgxG3ku0aNCIPqcx9wgz810zBfI5gVr
-57RAdpJP+Bqmsk+X9pSwSGbu/OmWh+RJA8+oPFCohFD+Da3lrXnjlLpWcYG8hCBF
-kymhsC3kkWO9ERcjZrKbRM7anq7uUaY8YaKCU66/2k9A4FRdBu2Nbj/PXF59V8b5
-QJ0khiFUq4Qt/Yv/YNyqsVr0pO8xDCickmRQY5uJ0tvVc6lG4wblM/cXYIdB4n4l
-k1mICm4oONXM0iYEf1+oHC9tdu+w7hfqYJtM2oeO7/aE+fanRIMwciEqKPF3kITG
-yz2n/Yv7l6qEDZf559J784JBy05CdiKke5eq3oKD+4eJCwcVlPfyhocr9Ub06d1z
-oytTtYf4sO2/NuD89UOP
-=mO2k
+iQIcBAABAgAGBQJKOsU5AAoJEODzc/N7+Qma8xcQAIdWvDK8TsxNw11kKdscHKEK
+VTiLhOBrtQX17yFk69LVnY/DviPtX5hmDyF+XUn0npc+KttFK4mMwQMHGz2CT0gH
+Xln5HO7mJWlbooD/BIkqgLFdQX51AavjTWjwW1qbZoZ0cArgbJ5EXHatLIWwBWxy
+u/hUuVXe8qUfYib+RDeNMb2ojcZfJgPE+Yvtvy4bnsQ790jXWFOKy8GeGniSGzwl
+C8HIcY/vJovC7qQEvCS3aATp+G5wzgSxwoQuQ6v+bcrMzo7yuWW0DBAKOQN6uOBr
+e9fxaodJN0V6EiQcwz9Un9X3zYpQZ+CLoFD+zpbPzSXJ+1QMGZdAjsXpPsiqjXjs
+V4XK3O9NeUEAjyjKN8wnEVtypFrH45GR+zk7D9t4r30POqCVQF8fKcvynnuLlED9
+WbefqSUAZie+k2AeToF9Ra7sogSzCPwxjXd0CNJym+i19n+I9QwE50YxZ+aE27Xs
+yhhZDZkUvn1ftplETzERgy1+s+QAP+YFufhKtjO/kLb7pW9MGpbxEwhXLaszO96V
+anIfT900RB+joE2xEfBUn91QTc5oiSOyXzZw3s6h1KnaI6FFxiamJbXanpplAyJ8
+k4j85Bq2TfA1He9bubUHgnvUpGvbRLCVpfJcXzm+eAFyS1dzapKtvuk7d8tIMz7q
+HEi6d6j2NsWEztFf0NUn
+=sTN3
 -----END PGP SIGNATURE-----
 
---=-18WdrP/I+1PC31uhfMlN--
+--=-6+WLBMjsqeOX89y+wrDr--
 
