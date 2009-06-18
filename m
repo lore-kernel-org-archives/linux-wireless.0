@@ -1,154 +1,693 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756008AbZFIVoW (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756729AbZFRWWo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 17:44:22 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ME97G-0000Ad-Ne
-	for linux-wireless@vger.kernel.org; Tue, 09 Jun 2009 23:44:22 +0200
-Subject: [RFC] mac80211: disconnect when user changes channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 09 Jun 2009 23:43:53 +0200
-Message-Id: <1244583833.18481.44.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 18 Jun 2009 18:22:44 -0400
+Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:22:46 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 19/23] orinoco: provide generic commit function
+Date: Thu, 18 Jun 2009 23:21:31 +0100
+Message-Id: <1245363695-8289-20-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not disconnect when a channel switch is requested,
-we end up eventually detection beacon loss from the AP and
-then disconnecting, without ever really telling the AP, so
-we might just as well disconnect right away.
+This allows changes to be commited from cfg80211 functions.
 
-Additionally, this fixes a problem with iwlwifi where the
-driver will clear some internal state on channel changes
-like this and then get confused when we actually go clear
-that state from mac80211.
-
-It may look like this patch drops the no-IBSS check, but
-that is already handled by cfg80211 in the wext handler it
-provides for IBSS (cfg80211_ibss_wext_siwfreq).
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |    5 ++++-
- net/mac80211/util.c        |   25 -------------------------
- net/mac80211/wext.c        |   28 ++++++++++++++++++++++++----
- 4 files changed, 28 insertions(+), 31 deletions(-)
+ drivers/net/wireless/orinoco/hw.c   |  227 ++++++++++++++++++++++++++
+ drivers/net/wireless/orinoco/hw.h   |    1 +
+ drivers/net/wireless/orinoco/main.c |  297 ++++++++---------------------------
+ drivers/net/wireless/orinoco/main.h |    3 +-
+ drivers/net/wireless/orinoco/wext.c |   35 +----
+ 5 files changed, 294 insertions(+), 269 deletions(-)
 
---- wireless-testing.orig/net/mac80211/util.c	2009-06-09 23:14:10.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-06-09 23:23:04.000000000 +0200
-@@ -774,31 +774,6 @@ void ieee80211_tx_skb(struct ieee80211_s
- 	dev_queue_xmit(skb);
+diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
+index eaa89d3..56627d9 100644
+--- a/drivers/net/wireless/orinoco/hw.c
++++ b/drivers/net/wireless/orinoco/hw.c
+@@ -406,6 +406,233 @@ void orinoco_get_ratemode_cfg(int ratemode, int *bitrate, int *automatic)
+ 	*automatic = bitrate_table[ratemode].automatic;
  }
  
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
--{
--	int ret = -EINVAL;
--	struct ieee80211_channel *chan;
--	struct ieee80211_local *local = sdata->local;
--
--	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
--
--	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
--		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
--		    chan->flags & IEEE80211_CHAN_NO_IBSS)
--			return ret;
--		local->oper_channel = chan;
--		local->oper_channel_type = NL80211_CHAN_NO_HT;
--
--		if (local->sw_scanning || local->hw_scanning)
--			ret = 0;
--		else
--			ret = ieee80211_hw_config(
--				local, IEEE80211_CONF_CHANGE_CHANNEL);
--	}
--
--	return ret;
--}
--
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band)
- {
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-09 23:14:00.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-09 23:42:11.000000000 +0200
-@@ -55,6 +55,8 @@ static int ieee80211_ioctl_siwfreq(struc
- 				   struct iw_freq *freq, char *extra)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel *chan;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 		return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
-@@ -69,17 +71,35 @@ static int ieee80211_ioctl_siwfreq(struc
- 					IEEE80211_STA_AUTO_CHANNEL_SEL;
- 			return 0;
- 		} else
--			return ieee80211_set_freq(sdata,
-+			chan = ieee80211_get_channel(local->hw.wiphy,
- 				ieee80211_channel_to_frequency(freq->m));
- 	} else {
- 		int i, div = 1000000;
- 		for (i = 0; i < freq->e; i++)
- 			div /= 10;
--		if (div > 0)
--			return ieee80211_set_freq(sdata, freq->m / div);
--		else
-+		if (div <= 0)
- 			return -EINVAL;
-+		chan = ieee80211_get_channel(local->hw.wiphy, freq->m / div);
- 	}
++int orinoco_hw_program_rids(struct orinoco_private *priv)
++{
++	struct net_device *dev = priv->ndev;
++	hermes_t *hw = &priv->hw;
++	int err;
++	struct hermes_idstring idbuf;
 +
-+	if (chan->flags & IEEE80211_CHAN_DISABLED)
-+		return -EINVAL;
++	/* Set the MAC address */
++	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
++			       HERMES_BYTES_TO_RECLEN(ETH_ALEN), dev->dev_addr);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting MAC address\n",
++		       dev->name, err);
++		return err;
++	}
 +
-+	/*
-+	 * no change except maybe auto -> fixed, ignore the HT
-+	 * setting so you can fix a channel you're on already
-+	 */
-+	if (local->oper_channel == chan)
-+		return 0;
++	/* Set up the link mode */
++	err = hermes_write_wordrec(hw, USER_BAP, HERMES_RID_CNFPORTTYPE,
++				   priv->port_type);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting port type\n",
++		       dev->name, err);
++		return err;
++	}
++	/* Set the channel/frequency */
++	if (priv->channel != 0 && priv->iw_mode != IW_MODE_INFRA) {
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFOWNCHANNEL,
++					   priv->channel);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting channel %d\n",
++			       dev->name, err, priv->channel);
++			return err;
++		}
++	}
 +
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		ieee80211_sta_req_auth(sdata);
++	if (priv->has_ibss) {
++		u16 createibss;
 +
-+	local->oper_channel = chan;
-+	local->oper_channel_type = NL80211_CHAN_NO_HT;
-+	ieee80211_hw_config(local, 0);
++		if ((strlen(priv->desired_essid) == 0) && (priv->createibss)) {
++			printk(KERN_WARNING "%s: This firmware requires an "
++			       "ESSID in IBSS-Ad-Hoc mode.\n", dev->name);
++			/* With wvlan_cs, in this case, we would crash.
++			 * hopefully, this driver will behave better...
++			 * Jean II */
++			createibss = 0;
++		} else {
++			createibss = priv->createibss;
++		}
++
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFCREATEIBSS,
++					   createibss);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting CREATEIBSS\n",
++			       dev->name, err);
++			return err;
++		}
++	}
++
++	/* Set the desired BSSID */
++	err = __orinoco_hw_set_wap(priv);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting AP address\n",
++		       dev->name, err);
++		return err;
++	}
++
++	/* Set the desired ESSID */
++	idbuf.len = cpu_to_le16(strlen(priv->desired_essid));
++	memcpy(&idbuf.val, priv->desired_essid, sizeof(idbuf.val));
++	/* WinXP wants partner to configure OWNSSID even in IBSS mode. (jimc) */
++	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNSSID,
++			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
++			&idbuf);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting OWNSSID\n",
++		       dev->name, err);
++		return err;
++	}
++	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFDESIREDSSID,
++			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
++			&idbuf);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting DESIREDSSID\n",
++		       dev->name, err);
++		return err;
++	}
++
++	/* Set the station name */
++	idbuf.len = cpu_to_le16(strlen(priv->nick));
++	memcpy(&idbuf.val, priv->nick, sizeof(idbuf.val));
++	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNNAME,
++			       HERMES_BYTES_TO_RECLEN(strlen(priv->nick)+2),
++			       &idbuf);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting nickname\n",
++		       dev->name, err);
++		return err;
++	}
++
++	/* Set AP density */
++	if (priv->has_sensitivity) {
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFSYSTEMSCALE,
++					   priv->ap_density);
++		if (err) {
++			printk(KERN_WARNING "%s: Error %d setting SYSTEMSCALE. "
++			       "Disabling sensitivity control\n",
++			       dev->name, err);
++
++			priv->has_sensitivity = 0;
++		}
++	}
++
++	/* Set RTS threshold */
++	err = hermes_write_wordrec(hw, USER_BAP, HERMES_RID_CNFRTSTHRESHOLD,
++				   priv->rts_thresh);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting RTS threshold\n",
++		       dev->name, err);
++		return err;
++	}
++
++	/* Set fragmentation threshold or MWO robustness */
++	if (priv->has_mwo)
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFMWOROBUST_AGERE,
++					   priv->mwo_robust);
++	else
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFFRAGMENTATIONTHRESHOLD,
++					   priv->frag_thresh);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting fragmentation\n",
++		       dev->name, err);
++		return err;
++	}
++
++	/* Set bitrate */
++	err = __orinoco_hw_set_bitrate(priv);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d setting bitrate\n",
++		       dev->name, err);
++		return err;
++	}
++
++	/* Set power management */
++	if (priv->has_pm) {
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFPMENABLED,
++					   priv->pm_on);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting up PM\n",
++			       dev->name, err);
++			return err;
++		}
++
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFMULTICASTRECEIVE,
++					   priv->pm_mcast);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting up PM\n",
++			       dev->name, err);
++			return err;
++		}
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFMAXSLEEPDURATION,
++					   priv->pm_period);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting up PM\n",
++			       dev->name, err);
++			return err;
++		}
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFPMHOLDOVERDURATION,
++					   priv->pm_timeout);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting up PM\n",
++			       dev->name, err);
++			return err;
++		}
++	}
++
++	/* Set preamble - only for Symbol so far... */
++	if (priv->has_preamble) {
++		err = hermes_write_wordrec(hw, USER_BAP,
++					   HERMES_RID_CNFPREAMBLE_SYMBOL,
++					   priv->preamble);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d setting preamble\n",
++			       dev->name, err);
++			return err;
++		}
++	}
++
++	/* Set up encryption */
++	if (priv->has_wep || priv->has_wpa) {
++		err = __orinoco_hw_setup_enc(priv);
++		if (err) {
++			printk(KERN_ERR "%s: Error %d activating encryption\n",
++			       dev->name, err);
++			return err;
++		}
++	}
++
++	if (priv->iw_mode == IW_MODE_MONITOR) {
++		/* Enable monitor mode */
++		dev->type = ARPHRD_IEEE80211;
++		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
++					    HERMES_TEST_MONITOR, 0, NULL);
++	} else {
++		/* Disable monitor mode */
++		dev->type = ARPHRD_ETHER;
++		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
++					    HERMES_TEST_STOP, 0, NULL);
++	}
++	if (err)
++		return err;
++
++	/* Reset promiscuity / multicast*/
++	priv->promiscuous = 0;
++	priv->mc_count = 0;
 +
 +	return 0;
++}
++
+ /* Get tsc from the firmware */
+ int orinoco_hw_get_tkip_iv(struct orinoco_private *priv, int key, u8 *tsc)
+ {
+diff --git a/drivers/net/wireless/orinoco/hw.h b/drivers/net/wireless/orinoco/hw.h
+index 84c108c..210c2b1 100644
+--- a/drivers/net/wireless/orinoco/hw.h
++++ b/drivers/net/wireless/orinoco/hw.h
+@@ -29,6 +29,7 @@ int orinoco_hw_allocate_fid(struct orinoco_private *priv);
+ int orinoco_get_bitratemode(int bitrate, int automatic);
+ void orinoco_get_ratemode_cfg(int ratemode, int *bitrate, int *automatic);
+ 
++int orinoco_hw_program_rids(struct orinoco_private *priv);
+ int orinoco_hw_get_tkip_iv(struct orinoco_private *priv, int key, u8 *tsc);
+ int __orinoco_hw_set_bitrate(struct orinoco_private *priv);
+ int orinoco_hw_get_act_bitrate(struct orinoco_private *priv, int *bitrate);
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index 0727b41..dab6649 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -210,9 +210,10 @@ struct orinoco_rx_data {
+ /* Function prototypes                                              */
+ /********************************************************************/
+ 
+-static void __orinoco_set_multicast_list(struct net_device *dev);
++static int __orinoco_set_multicast_list(struct net_device *dev);
+ static int __orinoco_up(struct orinoco_private *priv);
+ static int __orinoco_down(struct orinoco_private *priv);
++static int __orinoco_commit(struct orinoco_private *priv);
+ 
+ /********************************************************************/
+ /* Internal helper functions                                        */
+@@ -1524,7 +1525,7 @@ static int __orinoco_up(struct orinoco_private *priv)
+ 
+ 	netif_carrier_off(dev); /* just to make sure */
+ 
+-	err = __orinoco_program_rids(dev);
++	err = __orinoco_commit(priv);
+ 	if (err) {
+ 		printk(KERN_ERR "%s: Error %d configuring card\n",
+ 		       dev->name, err);
+@@ -1593,237 +1594,7 @@ static int orinoco_reinit_firmware(struct orinoco_private *priv)
+ 	return err;
  }
  
+-int __orinoco_program_rids(struct net_device *dev)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	hermes_t *hw = &priv->hw;
+-	int err;
+-	struct hermes_idstring idbuf;
+-
+-	/* Set the MAC address */
+-	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
+-			       HERMES_BYTES_TO_RECLEN(ETH_ALEN), dev->dev_addr);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting MAC address\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-
+-	/* Set up the link mode */
+-	err = hermes_write_wordrec(hw, USER_BAP, HERMES_RID_CNFPORTTYPE,
+-				   priv->port_type);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting port type\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-	/* Set the channel/frequency */
+-	if (priv->channel != 0 && priv->iw_mode != IW_MODE_INFRA) {
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFOWNCHANNEL,
+-					   priv->channel);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting channel %d\n",
+-			       dev->name, err, priv->channel);
+-			return err;
+-		}
+-	}
+-
+-	if (priv->has_ibss) {
+-		u16 createibss;
+-
+-		if ((strlen(priv->desired_essid) == 0) && (priv->createibss)) {
+-			printk(KERN_WARNING "%s: This firmware requires an "
+-			       "ESSID in IBSS-Ad-Hoc mode.\n", dev->name);
+-			/* With wvlan_cs, in this case, we would crash.
+-			 * hopefully, this driver will behave better...
+-			 * Jean II */
+-			createibss = 0;
+-		} else {
+-			createibss = priv->createibss;
+-		}
+-
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFCREATEIBSS,
+-					   createibss);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting CREATEIBSS\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-	}
+-
+-	/* Set the desired BSSID */
+-	err = __orinoco_hw_set_wap(priv);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting AP address\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-	/* Set the desired ESSID */
+-	idbuf.len = cpu_to_le16(strlen(priv->desired_essid));
+-	memcpy(&idbuf.val, priv->desired_essid, sizeof(idbuf.val));
+-	/* WinXP wants partner to configure OWNSSID even in IBSS mode. (jimc) */
+-	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNSSID,
+-			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
+-			&idbuf);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting OWNSSID\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFDESIREDSSID,
+-			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
+-			&idbuf);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting DESIREDSSID\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-
+-	/* Set the station name */
+-	idbuf.len = cpu_to_le16(strlen(priv->nick));
+-	memcpy(&idbuf.val, priv->nick, sizeof(idbuf.val));
+-	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNNAME,
+-			       HERMES_BYTES_TO_RECLEN(strlen(priv->nick)+2),
+-			       &idbuf);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting nickname\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-
+-	/* Set AP density */
+-	if (priv->has_sensitivity) {
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFSYSTEMSCALE,
+-					   priv->ap_density);
+-		if (err) {
+-			printk(KERN_WARNING "%s: Error %d setting SYSTEMSCALE. "
+-			       "Disabling sensitivity control\n",
+-			       dev->name, err);
+-
+-			priv->has_sensitivity = 0;
+-		}
+-	}
+-
+-	/* Set RTS threshold */
+-	err = hermes_write_wordrec(hw, USER_BAP, HERMES_RID_CNFRTSTHRESHOLD,
+-				   priv->rts_thresh);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting RTS threshold\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-
+-	/* Set fragmentation threshold or MWO robustness */
+-	if (priv->has_mwo)
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFMWOROBUST_AGERE,
+-					   priv->mwo_robust);
+-	else
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFFRAGMENTATIONTHRESHOLD,
+-					   priv->frag_thresh);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting fragmentation\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-
+-	/* Set bitrate */
+-	err = __orinoco_hw_set_bitrate(priv);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d setting bitrate\n",
+-		       dev->name, err);
+-		return err;
+-	}
+-
+-	/* Set power management */
+-	if (priv->has_pm) {
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFPMENABLED,
+-					   priv->pm_on);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting up PM\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFMULTICASTRECEIVE,
+-					   priv->pm_mcast);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting up PM\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFMAXSLEEPDURATION,
+-					   priv->pm_period);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting up PM\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFPMHOLDOVERDURATION,
+-					   priv->pm_timeout);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting up PM\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-	}
+-
+-	/* Set preamble - only for Symbol so far... */
+-	if (priv->has_preamble) {
+-		err = hermes_write_wordrec(hw, USER_BAP,
+-					   HERMES_RID_CNFPREAMBLE_SYMBOL,
+-					   priv->preamble);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d setting preamble\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-	}
+-
+-	/* Set up encryption */
+-	if (priv->has_wep || priv->has_wpa) {
+-		err = __orinoco_hw_setup_enc(priv);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d activating encryption\n",
+-			       dev->name, err);
+-			return err;
+-		}
+-	}
+-
+-	if (priv->iw_mode == IW_MODE_MONITOR) {
+-		/* Enable monitor mode */
+-		dev->type = ARPHRD_IEEE80211;
+-		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
+-					    HERMES_TEST_MONITOR, 0, NULL);
+-	} else {
+-		/* Disable monitor mode */
+-		dev->type = ARPHRD_ETHER;
+-		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
+-					    HERMES_TEST_STOP, 0, NULL);
+-	}
+-	if (err)
+-		return err;
+-
+-	/* Set promiscuity / multicast*/
+-	priv->promiscuous = 0;
+-	priv->mc_count = 0;
+-
+-	/* FIXME: what about netif_tx_lock */
+-	__orinoco_set_multicast_list(dev);
+-
+-	return 0;
+-}
+-
+-/* FIXME: return int? */
+-static void
++static int
+ __orinoco_set_multicast_list(struct net_device *dev)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+@@ -1843,6 +1614,8 @@ __orinoco_set_multicast_list(struct net_device *dev)
  
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-06-09 23:23:09.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-06-09 23:23:13.000000000 +0200
-@@ -1100,7 +1100,6 @@ void ieee802_11_parse_elems(u8 *start, s
- u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
--int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band);
- 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-09 23:22:24.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-09 23:22:59.000000000 +0200
-@@ -2204,7 +2204,10 @@ static int ieee80211_sta_config_auth(str
- 				       capa_mask, capa_val);
- 
- 	if (bss) {
--		ieee80211_set_freq(sdata, bss->cbss.channel->center_freq);
-+		local->oper_channel = bss->cbss.channel;
-+		local->oper_channel_type = NL80211_CHAN_NO_HT;
-+		ieee80211_hw_config(local, 0);
+ 	err = __orinoco_hw_set_multicast_list(priv, dev->mc_list, mc_count,
+ 					      promisc);
 +
- 		if (!(ifmgd->flags & IEEE80211_STA_SSID_SET))
- 			ieee80211_sta_set_ssid(sdata, bss->ssid,
- 					       bss->ssid_len);
-
++	return err;
+ }
+ 
+ /* This must be called from user context, without locks held - use
+@@ -1920,6 +1693,64 @@ void orinoco_reset(struct work_struct *work)
+ 	printk(KERN_ERR "%s: Device has been disabled!\n", dev->name);
+ }
+ 
++static int __orinoco_commit(struct orinoco_private *priv)
++{
++	struct net_device *dev = priv->ndev;
++	int err = 0;
++
++	err = orinoco_hw_program_rids(priv);
++
++	/* FIXME: what about netif_tx_lock */
++	(void) __orinoco_set_multicast_list(dev);
++
++	return err;
++}
++
++/* Ensures configuration changes are applied. May result in a reset.
++ * The caller should hold priv->lock
++ */
++int orinoco_commit(struct orinoco_private *priv)
++{
++	struct net_device *dev = priv->ndev;
++	hermes_t *hw = &priv->hw;
++	int err;
++
++	if (priv->broken_disableport) {
++		schedule_work(&priv->reset_work);
++		return 0;
++	}
++
++	err = hermes_disable_port(hw, 0);
++	if (err) {
++		printk(KERN_WARNING "%s: Unable to disable port "
++		       "while reconfiguring card\n", dev->name);
++		priv->broken_disableport = 1;
++		goto out;
++	}
++
++	err = __orinoco_commit(priv);
++	if (err) {
++		printk(KERN_WARNING "%s: Unable to reconfigure card\n",
++		       dev->name);
++		goto out;
++	}
++
++	err = hermes_enable_port(hw, 0);
++	if (err) {
++		printk(KERN_WARNING "%s: Unable to enable port while reconfiguring card\n",
++		       dev->name);
++		goto out;
++	}
++
++ out:
++	if (err) {
++		printk(KERN_WARNING "%s: Resetting instead...\n", dev->name);
++		schedule_work(&priv->reset_work);
++		err = 0;
++	}
++	return err;
++}
++
+ /********************************************************************/
+ /* Interrupt handler                                                */
+ /********************************************************************/
+diff --git a/drivers/net/wireless/orinoco/main.h b/drivers/net/wireless/orinoco/main.h
+index af2bae4..21ab36c 100644
+--- a/drivers/net/wireless/orinoco/main.h
++++ b/drivers/net/wireless/orinoco/main.h
+@@ -29,10 +29,9 @@ struct net_device;
+ struct work_struct;
+ 
+ void set_port_type(struct orinoco_private *priv);
+-int __orinoco_program_rids(struct net_device *dev);
++int orinoco_commit(struct orinoco_private *priv);
+ void orinoco_reset(struct work_struct *work);
+ 
+-
+ /* Information element helpers - find a home for these... */
+ static inline u8 *orinoco_get_ie(u8 *data, size_t len,
+ 				 enum ieee80211_eid eid)
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 74892e1..4c20b1d 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -2163,49 +2163,16 @@ static int orinoco_ioctl_commit(struct net_device *dev,
+ 				char *extra)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+-	struct hermes *hw = &priv->hw;
+ 	unsigned long flags;
+ 	int err = 0;
+ 
+ 	if (!priv->open)
+ 		return 0;
+ 
+-	if (priv->broken_disableport) {
+-		orinoco_reset(&priv->reset_work);
+-		return 0;
+-	}
+-
+ 	if (orinoco_lock(priv, &flags) != 0)
+ 		return err;
+ 
+-	err = hermes_disable_port(hw, 0);
+-	if (err) {
+-		printk(KERN_WARNING "%s: Unable to disable port "
+-		       "while reconfiguring card\n", dev->name);
+-		priv->broken_disableport = 1;
+-		goto out;
+-	}
+-
+-	err = __orinoco_program_rids(dev);
+-	if (err) {
+-		printk(KERN_WARNING "%s: Unable to reconfigure card\n",
+-		       dev->name);
+-		goto out;
+-	}
+-
+-	err = hermes_enable_port(hw, 0);
+-	if (err) {
+-		printk(KERN_WARNING "%s: Unable to enable port while reconfiguring card\n",
+-		       dev->name);
+-		goto out;
+-	}
+-
+- out:
+-	if (err) {
+-		printk(KERN_WARNING "%s: Resetting instead...\n", dev->name);
+-		schedule_work(&priv->reset_work);
+-		err = 0;
+-	}
++	err = orinoco_commit(priv);
+ 
+ 	orinoco_unlock(priv, &flags);
+ 	return err;
+-- 
+1.6.0.6
 
