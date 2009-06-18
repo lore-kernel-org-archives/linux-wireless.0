@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:58347 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbZFDOKm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 10:10:42 -0400
+Received: from foo.birdnet.se ([213.88.146.6]:50543 "HELO foo.birdnet.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755582AbZFRCzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 22:55:10 -0400
+Message-ID: <20090618025511.27364.qmail@stuge.se>
+Date: Thu, 18 Jun 2009 04:55:11 +0200
+From: Peter Stuge <peter@stuge.se>
+To: "Fabio A. Correa" <facorread@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: 4311 not detected at all
+References: <ec2083b20906120654j370e5bdo724a7c3b6d505a6c@mail.gmail.com> <4A326771.6030301@lwfinger.net> <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com> <20090618021017.19879.qmail@stuge.se> <ec2083b20906171932g401fab8fk15531459e1dc4d41@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20090604134455.GB2839@tuxdriver.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
-	 <1243868091-5315-4-git-send-email-dbaryshkov@gmail.com>
-	 <20090603173214.6d3997f7.akpm@linux-foundation.org>
-	 <20090604111634.GA28064@doriath.ww600.siemens.net>
-	 <20090604134455.GB2839@tuxdriver.com>
-Date: Thu, 4 Jun 2009 18:10:41 +0400
-Message-ID: <bc64b4640906040710p5c7c941fi3341599bc3157b79@mail.gmail.com>
-Subject: Re: [PATCH 03/10] net: add IEEE 802.15.4 socket family implementation
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ec2083b20906171932g401fab8fk15531459e1dc4d41@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/4 John W. Linville <linville@tuxdriver.com>:
-> On Thu, Jun 04, 2009 at 03:16:34PM +0400, Dmitry Eremin-Solenikov wrote:
->> On Wed, Jun 03, 2009 at 05:32:14PM -0700, Andrew Morton wrote:
->> > On Mon,  1 Jun 2009 18:54:44 +0400
->> > Dmitry Eremin-Solenikov <dbaryshkov@gmail.com> wrote:
->
->> > > + switch (addr->addr_type) {
->> > > + case IEEE802154_ADDR_LONG:
->> > > +         rtnl_lock();
->> > > +         dev = dev_getbyhwaddr(net, ARPHRD_IEEE802154, addr->hwaddr);
->> > > +         if (dev)
->> > > +                 dev_hold(dev);
->> > > +         rtnl_unlock();
->> > > +         break;
->> > > + case IEEE802154_ADDR_SHORT:
->> > > +         if (addr->pan_id != 0xffff && addr->short_addr != IEEE802154_ADDR_UNDEF && addr->short_addr != 0xffff) {
->> > > +                 struct net_device *tmp;
->> > > +
->> > > +                 rtnl_lock();
->> > > +
->> > > +                 for_each_netdev(net, tmp) {
->> > > +                         if (tmp->type == ARPHRD_IEEE802154) {
->> > > +                                 if (IEEE802154_MLME_OPS(tmp)->get_pan_id(tmp) == addr->pan_id
->> > > +                                   && IEEE802154_MLME_OPS(tmp)->get_short_addr(tmp) == addr->short_addr) {
->> >
->> > You must use very wide xterms :(
->>
->> ~120 chars in width :)  We prefer to have a single code line split between
->> several screen lines, rather than split it manually in some weird places
->> just to justify width of 80 chars.
->
-> Hopefully you realize that many find this difficult to read -- I just
-> can't spread my eyes far enough to comprehend the lines.
->
-> 80 chars is not a hard limit, but it is a good goal.  120 is too wide.
+Fabio A. Correa wrote:
+> > You may be able to use flashrom as developed by the coreboot project
+> > to flash your BIOS. Maybe. If not, come on IRC or the mailing list
+> > and we can try to help you get it to work on your laptop.
+> 
+> Thank you very much. I emerged it on my Gentoo laptop and the BIOS
+> was detected, but:
 
-We do try to fit the lines into 80 chars, but when that seems logical.
-I strongly dislike breaking comparations between lines.
+Please let's move this to a better discussion forum. IRC would be best
+for trying to make this work, I think it can work because the BIOS
+flashing protection that can be enabled in your chipset does not seem
+to be active.
 
--- 
-With best wishes
-Dmitry
+At the very least we need the full output from a run of flashrom -V,
+but let's continue the discussion either on IRC (would be best) or on
+the coreboot mailing list.
+
+Thanks!
+
+
+//Peter
