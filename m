@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:63079 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753526AbZFITTq convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:40212 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752876AbZFRMdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 15:19:46 -0400
-Received: by gxk10 with SMTP id 10so259607gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 12:19:47 -0700 (PDT)
+	Thu, 18 Jun 2009 08:33:43 -0400
+Received: by bwz9 with SMTP id 9so1022422bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 05:33:45 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ramesh R <rramesh_1@yahoo.com>, linux-wireless@vger.kernel.org
+Subject: Re: Power save / 11v support feature
+References: <933839.92475.qm@web54506.mail.re2.yahoo.com>
+	<1245257582.31588.34.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 18 Jun 2009 15:33:42 +0300
+In-Reply-To: <1245257582.31588.34.camel@johannes.local> (Johannes Berg's message of "Wed\, 17 Jun 2009 18\:53\:02 +0200")
+Message-ID: <877hz990wp.fsf@litku.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <20090609190026.GA3910@tuxdriver.com>
-References: <20090607150755.GA19635@hash.localnet>
-	 <1244561607-6304-1-git-send-email-tobias.doerffel@gmail.com>
-	 <b6c5339f0906091126k573b8725hf623367abcdcdf1f@mail.gmail.com>
-	 <20090609190026.GA3910@tuxdriver.com>
-Date: Tue, 9 Jun 2009 15:19:47 -0400
-Message-ID: <b6c5339f0906091219t68c7690emb898b5dd80791339@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: added cfg80211 based rfkill support
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Tobias Doerffel <tobias.doerffel@gmail.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 9, 2009 at 3:00 PM, John W. Linville<linville@tuxdriver.com> wrote:
->>
->> This looks really close and the remaining changes are pretty small.  If
->> you want, I can take care of the above and resubmit it with your s-o-b
->> so you don't have to go through another respin.
->
-> If that is your offer, maybe you could just do your own patch on top?
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Sure, works for me.
+> On Wed, 2009-06-17 at 09:09 -0700, Ramesh R wrote:
+>> Hello,
+>> 
+>> I am interested to work on the power save /  11v support. Is someone already working on this?
+>
+> In what sense would you want to work on it? I mean, on what in
+> particular? 11v support probably needs firmware support first so unless
+> you have a device you can hack for that you're not going to be able to
+> do much ... ar9170 comes to mind, but doesn't really have powersaving
+> anyway.
+>
+> And just general powersaving, what actually remains to be done? Could
+> look into supporting uAPSD on station side, I guess?
+
+Yes, at least client mode U-APSD is needed. And I'm sure there's room
+for improvements.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Kalle Valo
