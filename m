@@ -1,99 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f202.google.com ([209.85.216.202]:63285 "EHLO
-	mail-px0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbZFSThJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 15:37:09 -0400
-Received: by pxi40 with SMTP id 40so160323pxi.33
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 12:37:11 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:61644 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754069AbZFRF34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2009 01:29:56 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 22:29:59 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 3/4] ath9k: Use probe interval instead of rssi reduce interval
+Date: Thu, 18 Jun 2009 10:53:31 +0530
+Message-ID: <1245302612-18112-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1245302612-18112-2-git-send-email-vasanth@atheros.com>
+References: <1245302612-18112-1-git-send-email-vasanth@atheros.com>
+ <1245302612-18112-2-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <83a869cd0906191233g507fea1cg238d14b57ace0466@mail.gmail.com>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
-	 <1244556179.4672.11.camel@johannes.local>
-	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
-	 <1244569926.18481.27.camel@johannes.local>
-	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-	 <1244750836.29447.5.camel@johannes.local>
-	 <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
-	 <1244839645.11782.5.camel@johannes.local>
-	 <83a869cd0906191233g507fea1cg238d14b57ace0466@mail.gmail.com>
-Date: Fri, 19 Jun 2009 21:37:11 +0200
-Message-ID: <83a869cd0906191237j7d727a4ekd6dbb9fc35d60b78@mail.gmail.com>
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update : I changed the logic. There is a single flag per key, tracking
-if we send the key instead of a flag per rx queue.
+Get rid of rssi reduce interval.
 
-The mac80211 tkip code won't call update_tkip_key, if some rx packets
-get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-first packet because the hardware key stuff is called asynchronously with
-todo workqueue.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    6 +-----
+ drivers/net/wireless/ath/ath9k/rc.h |    1 -
+ 2 files changed, 1 insertions(+), 6 deletions(-)
 
-This patch workaround that by tracking if we send the key to hardware.
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 731967c..a97dd7b 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -148,7 +148,6 @@ static const struct ath_rate_table ar5416_11na_ratetable = {
+ 			4,  23, 40, 41, 41, 148400 },
+ 	},
+ 	50,  /* probe interval */
+-	50,  /* rssi reduce interval */
+ 	WLAN_RC_HT_FLAG,  /* Phy rates allowed initially */
+ };
+ 
+@@ -298,7 +297,6 @@ static const struct ath_rate_table ar5416_11ng_ratetable = {
+ 			8,  27, 44, 45, 45, 148400 },
+ 		},
+ 	50,  /* probe interval */
+-	50,  /* rssi reduce interval */
+ 	WLAN_RC_HT_FLAG,  /* Phy rates allowed initially */
+ };
+ 
+@@ -331,7 +329,6 @@ static const struct ath_rate_table ar5416_11a_ratetable = {
+ 			4,  7, 0 },
+ 	},
+ 	50,  /* probe interval */
+-	50,  /* rssi reduce interval */
+ 	0,   /* Phy rates allowed initially */
+ };
+ 
+@@ -376,7 +373,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+ 			8,  11, 0 },
+ 	},
+ 	50,  /* probe interval */
+-	50,  /* rssi reduce interval */
+ 	0,   /* Phy rates allowed initially */
+ };
+ 
+@@ -1070,7 +1066,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	/* Every so often, we reduce the thresholds
+ 	 * and PER (different for CCK and OFDM). */
+ 	if (now_msec - ath_rc_priv->per_down_time >=
+-	    rate_table->rssi_reduce_interval) {
++	    rate_table->probe_interval) {
+ 		for (rate = 0; rate < size; rate++) {
+ 			ath_rc_priv->state[rate].per =
+ 				7 * ath_rc_priv->state[rate].per / 8;
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index 6797df0..c794d6c 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -119,7 +119,6 @@ struct ath_rate_table {
+ 		u32 max_4ms_framelen;
+ 	} info[RATE_TABLE_SIZE];
+ 	u32 probe_interval;
+-	u32 rssi_reduce_interval;
+ 	u8 initial_ratemax;
+ };
+ 
+-- 
+1.5.5.1
 
-
-Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-Index: linux-2.6/net/mac80211/tkip.c
-===================================================================
---- linux-2.6.orig/net/mac80211/tkip.c	2009-06-19 19:13:47.000000000 +0000
-+++ linux-2.6/net/mac80211/tkip.c	2009-06-19 19:21:50.000000000 +0000
-@@ -282,6 +282,7 @@
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
-+		key->u.tkip.rx_tkip_key_sent = 0;
- #ifdef CONFIG_MAC80211_TKIP_DEBUG
- 		{
- 			int i;
-@@ -298,19 +299,21 @@
- 			printk("\n");
- 		}
- #endif
--		if (key->local->ops->update_tkip_key &&
--			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--			u8 bcast[ETH_ALEN] =
--				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--			u8 *sta_addr = key->sta->sta.addr;
-+	}
-+	if (key->local->ops->update_tkip_key &&
-+	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-+	    !key->u.tkip.rx_tkip_key_sent) {
-+		u8 bcast[ETH_ALEN] =
-+			{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+		u8 *sta_addr = key->sta->sta.addr;
-
--			if (is_multicast_ether_addr(ra))
--				sta_addr = bcast;
-+		if (is_multicast_ether_addr(ra))
-+			sta_addr = bcast;
-
--			key->local->ops->update_tkip_key(
--				local_to_hw(key->local), &key->conf,
--				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
--		}
-+		key->local->ops->update_tkip_key(
-+			local_to_hw(key->local), &key->conf,
-+			sta_addr, iv32, key->u.tkip.rx[queue].p1k);
-+		key->u.tkip.rx_tkip_key_sent = 1;
- 	}
-
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
-Index: linux-2.6/net/mac80211/key.h
-===================================================================
---- linux-2.6.orig/net/mac80211/key.h	2009-06-19 19:22:20.000000000 +0000
-+++ linux-2.6/net/mac80211/key.h	2009-06-19 19:22:31.000000000 +0000
-@@ -86,6 +86,7 @@
-
- 			/* last received RSC */
- 			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
-+			int rx_tkip_key_sent;
- 		} tkip;
- 		struct {
- 			u8 tx_pn[6];
