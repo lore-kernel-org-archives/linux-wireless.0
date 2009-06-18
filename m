@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58497 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbZFIPko (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39292 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754903AbZFRPZt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 11:40:44 -0400
-Subject: Re: [PATCH] mac80211: don't use master netdev name
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1244558970.4672.26.camel@johannes.local>
-References: <1244557112.4672.20.camel@johannes.local>
-	 <1244558869.895.7.camel@mj>  <1244558970.4672.26.camel@johannes.local>
+	Thu, 18 Jun 2009 11:25:49 -0400
+Subject: [PATCH -testing] mac80211: fix ieee80211_xmit call context
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Tue, 09 Jun 2009 17:40:44 +0200
-Message-Id: <1244562044.3068.19.camel@localhost.localdomain>
+Date: Thu, 18 Jun 2009 17:25:11 +0200
+Message-Id: <1245338711.13790.83.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+ieee80211_xmit() cannot be called with tasklets enabled
+because it is normally called from within a tasklet.
 
-> > > Always use the wiphy name instead.
-> > 
-> > No objections against the patch.
-> > 
-> > Maybe we could use wiphy names for the network devices?  That is,
-> > wmaster0 would become phy0 and so on.  Using two names for the same
-> > thing is confusing.  What's better is that we won't have wmaster0
-> > corresponding to phy1 after the driver is reloaded.  We'll have "phy1"
-> > in both namespaces.
-> > 
-> > I wish we could hide those master devices using some "hidden network
-> > device" attribute, but it's not happening.
-> 
-> Actually, the reason I'm posting this patch is that I'm killing the
-> mdev.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Fixes a problem with the mdev removal.
 
-/me making a happy dance ;)
+ net/mac80211/tx.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Regards
-
-Marcel
+--- wireless-testing.orig/net/mac80211/tx.c	2009-06-18 17:21:45.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-06-18 17:23:49.000000000 +0200
+@@ -2221,5 +2221,12 @@ void ieee80211_tx_skb(struct ieee80211_s
+ 	if (!encrypt)
+ 		info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 
++	/*
++	 * The other path calling ieee80211_xmit is from the tasklet,
++	 * and while we can handle concurrent transmissions locking
++	 * requirements are that we do not come into tx with bhs on.
++	 */
++	local_bh_disable();
+ 	ieee80211_xmit(sdata, skb);
++	local_bh_enable();
+ }
 
 
