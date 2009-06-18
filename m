@@ -1,141 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11404 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:61646 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191AbZFYK2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 06:28:36 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/4] iwmc3200wifi: simplify calibration map
-Date: Thu, 25 Jun 2009 18:28:31 +0800
-Message-Id: <1245925713-14908-3-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1245925713-14908-2-git-send-email-yi.zhu@intel.com>
-References: <1245925713-14908-1-git-send-email-yi.zhu@intel.com>
- <1245925713-14908-2-git-send-email-yi.zhu@intel.com>
+	id S1754330AbZFRF36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2009 01:29:58 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 22:30:01 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 4/4] ath9k: Nuke struct ath_tx_ratectrl_state
+Date: Thu, 18 Jun 2009 10:53:32 +0530
+Message-ID: <1245302612-18112-4-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1245302612-18112-3-git-send-email-vasanth@atheros.com>
+References: <1245302612-18112-1-git-send-email-vasanth@atheros.com>
+ <1245302612-18112-2-git-send-email-vasanth@atheros.com>
+ <1245302612-18112-3-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch simplifies calibration map by combining the init_calib_map
-and periodic_calib_map into one calib_map in struct iwm_conf. Now the
-initial calibration map is stored in the lower 16 bits of calib_map
-and the periodic calibration map is stored in the higher 16 bits.
+Move its only member (u8 per) to struct ath_rate_priv.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/iwmc3200wifi/fw.c   |   19 +++++++++++--------
- drivers/net/wireless/iwmc3200wifi/iwm.h  |    3 +--
- drivers/net/wireless/iwmc3200wifi/lmac.h |    4 ++++
- drivers/net/wireless/iwmc3200wifi/main.c |    6 +-----
- 4 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |   50 +++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath9k/rc.h |    7 +---
+ 2 files changed, 27 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/fw.c b/drivers/net/wireless/iwmc3200wifi/fw.c
-index ec1a15a..c58f614 100644
---- a/drivers/net/wireless/iwmc3200wifi/fw.c
-+++ b/drivers/net/wireless/iwmc3200wifi/fw.c
-@@ -275,6 +275,7 @@ static int iwm_load_lmac(struct iwm_priv *iwm, const char *img_name)
-  */
- int iwm_load_fw(struct iwm_priv *iwm)
- {
-+	unsigned long init_calib_map, periodic_calib_map;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index a97dd7b..a07efa2 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -636,7 +636,7 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
+ 		 * 10-15 and we would be worse off then staying
+ 		 * at the current rate.
+ 		 */
+-		per_thres = ath_rc_priv->state[rate].per;
++		per_thres = ath_rc_priv->per[rate];
+ 		if (per_thres < 12)
+ 			per_thres = 12;
  
- 	/* We first start downloading the UMAC */
-@@ -315,23 +316,25 @@ int iwm_load_fw(struct iwm_priv *iwm)
- 		return ret;
- 	}
+@@ -881,13 +881,13 @@ static bool ath_rc_update_per(struct ath_softc *sc,
+ 		100 * 9 / 10
+ 	};
  
-+	init_calib_map = iwm->conf.calib_map & IWM_CALIB_MAP_INIT_MSK;
-+	periodic_calib_map = IWM_CALIB_MAP_PER_LMAC(iwm->conf.calib_map);
-+
- #ifdef CONFIG_IWM_B0_HW_SUPPORT
- 	if (iwm->conf.hw_b0) {
--		clear_bit(PHY_CALIBRATE_RX_IQ_CMD, &iwm->conf.init_calib_map);
--		clear_bit(PHY_CALIBRATE_RX_IQ_CMD,
--			  &iwm->conf.periodic_calib_map);
-+		clear_bit(PHY_CALIBRATE_RX_IQ_CMD, &init_calib_map);
-+		clear_bit(PHY_CALIBRATE_RX_IQ_CMD, &periodic_calib_map);
- 	}
- #endif
- 	/* Read RX IQ calibration result from EEPROM */
--	if (test_bit(PHY_CALIBRATE_RX_IQ_CMD, &iwm->conf.init_calib_map)) {
-+	if (test_bit(PHY_CALIBRATE_RX_IQ_CMD, &init_calib_map)) {
- 		iwm_store_rxiq_calib_result(iwm);
- 		set_bit(PHY_CALIBRATE_RX_IQ_CMD, &iwm->calib_done_map);
- 	}
+-	last_per = ath_rc_priv->state[tx_rate].per;
++	last_per = ath_rc_priv->per[tx_rate];
  
- 	iwm_send_prio_table(iwm);
--	iwm_send_init_calib_cfg(iwm, iwm->conf.init_calib_map);
-+	iwm_send_init_calib_cfg(iwm, init_calib_map);
+ 	if (xretries) {
+ 		if (xretries == 1) {
+-			ath_rc_priv->state[tx_rate].per += 30;
+-			if (ath_rc_priv->state[tx_rate].per > 100)
+-				ath_rc_priv->state[tx_rate].per = 100;
++			ath_rc_priv->per[tx_rate] += 30;
++			if (ath_rc_priv->per[tx_rate] > 100)
++				ath_rc_priv->per[tx_rate] = 100;
+ 		} else {
+ 			/* xretries == 2 */
+ 			count = ARRAY_SIZE(nretry_to_per_lookup);
+@@ -895,7 +895,7 @@ static bool ath_rc_update_per(struct ath_softc *sc,
+ 				retries = count - 1;
  
--	while (iwm->calib_done_map != iwm->conf.init_calib_map) {
-+	while (iwm->calib_done_map != init_calib_map) {
- 		ret = iwm_notif_handle(iwm, CALIBRATION_RES_NOTIFICATION,
- 				       IWM_SRC_LMAC, WAIT_NOTIF_TIMEOUT);
- 		if (ret) {
-@@ -340,7 +343,7 @@ int iwm_load_fw(struct iwm_priv *iwm)
+ 			/* new_PER = 7/8*old_PER + 1/8*(currentPER) */
+-			ath_rc_priv->state[tx_rate].per =
++			ath_rc_priv->per[tx_rate] =
+ 				(u8)(last_per - (last_per >> 3) + (100 >> 3));
  		}
- 		IWM_DBG_FW(iwm, DBG, "Got calibration result. calib_done_map: "
- 			   "0x%lx, requested calibrations: 0x%lx\n",
--			   iwm->calib_done_map, iwm->conf.init_calib_map);
-+			   iwm->calib_done_map, init_calib_map);
+ 
+@@ -931,10 +931,10 @@ static bool ath_rc_update_per(struct ath_softc *sc,
+ 				n_frames = tx_info_priv->n_frames * (retries + 1);
+ 				cur_per = (100 * n_bad_frames / n_frames) >> 3;
+ 				new_per = (u8)(last_per - (last_per >> 3) + cur_per);
+-				ath_rc_priv->state[tx_rate].per = new_per;
++				ath_rc_priv->per[tx_rate] = new_per;
+ 			}
+ 		} else {
+-			ath_rc_priv->state[tx_rate].per =
++			ath_rc_priv->per[tx_rate] =
+ 				(u8)(last_per - (last_per >> 3) +
+ 				     (nretry_to_per_lookup[retries] >> 3));
+ 		}
+@@ -962,8 +962,8 @@ static bool ath_rc_update_per(struct ath_softc *sc,
+ 					ath_rc_priv->probe_rate;
+ 				probe_rate = ath_rc_priv->probe_rate;
+ 
+-				if (ath_rc_priv->state[probe_rate].per > 30)
+-					ath_rc_priv->state[probe_rate].per = 20;
++				if (ath_rc_priv->per[probe_rate] > 30)
++					ath_rc_priv->per[probe_rate] = 20;
+ 
+ 				ath_rc_priv->probe_rate = 0;
+ 
+@@ -1018,7 +1018,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	if ((tx_rate < 0) || (tx_rate > rate_table->rate_cnt))
+ 		return;
+ 
+-	last_per = ath_rc_priv->state[tx_rate].per;
++	last_per = ath_rc_priv->per[tx_rate];
+ 
+ 	/* Update PER first */
+ 	state_change = ath_rc_update_per(sc, rate_table, ath_rc_priv,
+@@ -1029,7 +1029,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	 * If this rate looks bad (high PER) then stop using it for
+ 	 * a while (except if we are probing).
+ 	 */
+-	if (ath_rc_priv->state[tx_rate].per >= 55 && tx_rate > 0 &&
++	if (ath_rc_priv->per[tx_rate] >= 55 && tx_rate > 0 &&
+ 	    rate_table->info[tx_rate].ratekbps <=
+ 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
+ 		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
+@@ -1041,26 +1041,26 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 
+ 	/* Make sure the rates below this have lower PER */
+ 	/* Monotonicity is kept only for rates below the current rate. */
+-	if (ath_rc_priv->state[tx_rate].per < last_per) {
++	if (ath_rc_priv->per[tx_rate] < last_per) {
+ 		for (rate = tx_rate - 1; rate >= 0; rate--) {
+ 			if (rate_table->info[rate].phy !=
+ 			    rate_table->info[tx_rate].phy)
+ 				break;
+ 
+-			if (ath_rc_priv->state[rate].per >
+-			    ath_rc_priv->state[rate+1].per) {
+-				ath_rc_priv->state[rate].per =
+-					ath_rc_priv->state[rate+1].per;
++			if (ath_rc_priv->per[rate] >
++			    ath_rc_priv->per[rate+1]) {
++				ath_rc_priv->per[rate] =
++					ath_rc_priv->per[rate+1];
+ 			}
+ 		}
  	}
  
- 	/* Handle LMAC CALIBRATION_COMPLETE notification */
-@@ -378,7 +381,7 @@ int iwm_load_fw(struct iwm_priv *iwm)
+ 	/* Maintain monotonicity for rates above the current rate */
+ 	for (rate = tx_rate; rate < size - 1; rate++) {
+-		if (ath_rc_priv->state[rate+1].per <
+-		    ath_rc_priv->state[rate].per)
+-			ath_rc_priv->state[rate+1].per =
+-				ath_rc_priv->state[rate].per;
++		if (ath_rc_priv->per[rate+1] <
++		    ath_rc_priv->per[rate])
++			ath_rc_priv->per[rate+1] =
++				ath_rc_priv->per[rate];
+ 	}
  
- 	iwm_send_prio_table(iwm);
- 	iwm_send_calib_results(iwm);
--	iwm_send_periodic_calib_cfg(iwm, iwm->conf.periodic_calib_map);
-+	iwm_send_periodic_calib_cfg(iwm, periodic_calib_map);
+ 	/* Every so often, we reduce the thresholds
+@@ -1068,15 +1068,15 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	if (now_msec - ath_rc_priv->per_down_time >=
+ 	    rate_table->probe_interval) {
+ 		for (rate = 0; rate < size; rate++) {
+-			ath_rc_priv->state[rate].per =
+-				7 * ath_rc_priv->state[rate].per / 8;
++			ath_rc_priv->per[rate] =
++				7 * ath_rc_priv->per[rate] / 8;
+ 		}
  
- 	return 0;
+ 		ath_rc_priv->per_down_time = now_msec;
+ 	}
  
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index 4da57f7..1bad78f 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -65,8 +65,7 @@
+ 	ath_debug_stat_retries(sc, tx_rate, xretries, retries,
+-			       ath_rc_priv->state[tx_rate].per);
++			       ath_rc_priv->per[tx_rate]);
  
- struct iwm_conf {
- 	u32 sdio_ior_timeout;
--	unsigned long init_calib_map;
--	unsigned long periodic_calib_map;
-+	unsigned long calib_map;
- 	bool reset_on_fatal_err;
- 	bool auto_connect;
- 	bool wimax_not_present;
-diff --git a/drivers/net/wireless/iwmc3200wifi/lmac.h b/drivers/net/wireless/iwmc3200wifi/lmac.h
-index db2e5ee..19213e1 100644
---- a/drivers/net/wireless/iwmc3200wifi/lmac.h
-+++ b/drivers/net/wireless/iwmc3200wifi/lmac.h
-@@ -396,6 +396,10 @@ enum {
- 	CALIBRATION_CMD_NUM,
+ }
+ 
+@@ -1213,7 +1213,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 
+ 	/* Initialize thresholds according to the global rate table */
+ 	for (i = 0 ; i < ath_rc_priv->rate_table_size; i++) {
+-		ath_rc_priv->state[i].per = 0;
++		ath_rc_priv->per[i] = 0;
+ 	}
+ 
+ 	/* Determine the valid rates */
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index c794d6c..fa21a62 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -122,10 +122,6 @@ struct ath_rate_table {
+ 	u8 initial_ratemax;
  };
  
-+#define IWM_CALIB_MAP_INIT_MSK		0xFFFF
-+#define IWM_CALIB_MAP_PER_LMAC(m)	((m & 0xFF0000) >> 16)
-+#define IWM_CALIB_MAP_PER_UMAC(m)	((m & 0xFF000000) >> 24)
-+
- struct iwm_lmac_calib_hdr {
- 	u8 opcode;
- 	u8 first_grp;
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index 930056b..4fedb45 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -53,11 +53,7 @@
- static struct iwm_conf def_iwm_conf = {
- 
- 	.sdio_ior_timeout	= 5000,
--	.init_calib_map		= BIT(PHY_CALIBRATE_DC_CMD)	|
--				  BIT(PHY_CALIBRATE_LO_CMD)	|
--				  BIT(PHY_CALIBRATE_TX_IQ_CMD)	|
--				  BIT(PHY_CALIBRATE_RX_IQ_CMD),
--	.periodic_calib_map	= BIT(PHY_CALIBRATE_DC_CMD)	|
-+	.calib_map		= BIT(PHY_CALIBRATE_DC_CMD)	|
- 				  BIT(PHY_CALIBRATE_LO_CMD)	|
- 				  BIT(PHY_CALIBRATE_TX_IQ_CMD)	|
- 				  BIT(PHY_CALIBRATE_RX_IQ_CMD)	|
+-struct ath_tx_ratectrl_state {
+-	u8 per;			/* recent estimate of packet error rate (%) */
+-};
+-
+ struct ath_rateset {
+ 	u8 rs_nrates;
+ 	u8 rs_rates[ATH_RATE_MAX];
+@@ -141,6 +137,7 @@ struct ath_rateset {
+  * @per_down_time: msec timestamp for last PER down step
+  * @valid_phy_ratecnt: valid rate count
+  * @rate_max_phy: phy index for the max rate
++ * @per: PER for every valid rate in %
+  * @probe_interval: interval for ratectrl to probe for other rates
+  * @prev_data_rix: rate idx of last data frame
+  * @ht_cap: HT capabilities
+@@ -157,12 +154,12 @@ struct ath_rate_priv {
+ 	u8 valid_phy_ratecnt[WLAN_RC_PHY_MAX];
+ 	u8 valid_phy_rateidx[WLAN_RC_PHY_MAX][RATE_TABLE_SIZE];
+ 	u8 rate_max_phy;
++	u8 per[RATE_TABLE_SIZE];
+ 	u32 probe_time;
+ 	u32 per_down_time;
+ 	u32 probe_interval;
+ 	u32 prev_data_rix;
+ 	u32 tx_triglevel_max;
+-	struct ath_tx_ratectrl_state state[RATE_TABLE_SIZE];
+ 	struct ath_rateset neg_rates;
+ 	struct ath_rateset neg_ht_rates;
+ 	struct ath_rate_softc *asc;
 -- 
-1.6.0.4
+1.5.5.1
 
