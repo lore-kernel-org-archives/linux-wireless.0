@@ -1,291 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:2685 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbZFVU60 (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755515AbZFRWWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 16:58:26 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so2028212ywb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 13:58:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <83a869cd0906091101p26887a9fx3a6e65f700eac631@mail.gmail.com>
-References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
-	 <200906081720.59594.mb@bu3sch.de>
-	 <83a869cd0906081104m2ecdf049rdcc7694f0974ca28@mail.gmail.com>
-	 <200906082016.29793.mb@bu3sch.de>
-	 <83a869cd0906091101p26887a9fx3a6e65f700eac631@mail.gmail.com>
-Date: Mon, 22 Jun 2009 22:58:28 +0200
-Message-ID: <83a869cd0906221358t62334e9bi957a75f0bd568c3d@mail.gmail.com>
-Subject: Re: [PATCH] b43 add harware tkip
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 18 Jun 2009 18:22:12 -0400
+Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:22:14 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 10/23] orinoco: firmware helpers should use dev_err and friends
+Date: Thu, 18 Jun 2009 23:21:22 +0100
+Message-Id: <1245363695-8289-11-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update : work with qos, implement dump key, fix an issue with setting
-random value on tkip key clear.
-PS : this depends on "b43 : remove old kidx API"
+We should be able to call these routines before we register with
+netdev, so avoid printks using the netdev name.
 
-This add hardware tkip for b43.
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/fw.c |   41 +++++++++++++++---------------------
+ 1 files changed, 17 insertions(+), 24 deletions(-)
 
-It uncovered a bug in b43_write_probe_resp_template : it is writing at the
-wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This patch
-comments these writes.
-
-Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-Index: linux-2.6/drivers/net/wireless/b43/dma.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/dma.c	2009-06-19
-20:31:33.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/dma.c	2009-06-20 18:34:23.000000000 +0000
-@@ -1188,7 +1188,7 @@
- 	header = &(ring->txhdr_cache[(slot / TX_SLOTS_PER_FRAME) * hdrsize]);
- 	cookie = generate_cookie(ring, slot);
- 	err = b43_generate_txhdr(ring->dev, header,
--				 skb->data, skb->len, info, cookie);
-+				 skb, info, cookie);
- 	if (unlikely(err)) {
- 		ring->current_slot = old_top_slot;
- 		ring->used_slots = old_used_slots;
-Index: linux-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/main.c	2009-06-19
-20:31:33.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/main.c	2009-06-22
-20:50:37.000000000 +0000
-@@ -855,6 +855,64 @@
- 	}
- }
-
-+/* The ucode will use this with key to decrypt rx packets.
-+ * It will first check if the iv32 match,
-+ * - if they don't it returns the packet without decryption (and software
-+ *   decryption can be done). That's what happen when iv16 wrap.
-+ * - if they do, the rc4 key is computed with tkip phase2, and
-+ *   the wep decryption is tried on the packet. Either it will
-+ *   success and B43_RX_MAC_DEC is returned, either it fails
-+ *   and B43_RX_MAC_DEC|B43_RX_MAC_DECERR is returned and the packet
-+ *   is not usable (wrong key used on it).
-+ * So in order to never have B43_RX_MAC_DECERR, we should provide
-+ * a iv32 and phase1key that match. Because we drop packets in case of
-+ * B43_RX_MAC_DECERR, if we have a correct iv32 but a wrong phase1key, all
-+ * packets will be lost without higher layer knowing (ie no resync possible
-+ * until next wrap).
-+ *
-+ * NOTE : this should support 50 key like RCMTA because
-+ * (B43_SHM_SH_KEYIDXBLOCK - B43_SHM_SH_TKIPTSCTTAK)/14 = 50
-+ */
-+static void rx_tkip_phase1_write(struct b43_wldev *dev, u8 index, u32 iv32,
-+		u16 *phase1key)
-+{
-+	unsigned int i;
-+	u32 offset;
-+	const u8 per_sta_keys_start = 4;
-+
-+	B43_WARN_ON(index < per_sta_keys_start);
-+	/* We have two default TX keys and possibly two default RX keys.
-+	 * Physical mac 0 is mapped to physical key 4 or 8, depending
-+	 * on the firmware version.
-+	 * So we must adjust the index here.
-+	 */
-+	index -= per_sta_keys_start;
-+
-+	if (b43_debug(dev, B43_DBG_KEYS))
-+		b43dbg(dev->wl, "rx_tkip_phase1_write : idx 0x%x, iv32 0x%x\n",
-+				index, iv32);
-+	/* Write the key to the  RX tkip shared mem */
-+	offset = B43_SHM_SH_TKIPTSCTTAK + index * (10 + 4);
-+	for (i = 0; i < 10; i += 2) {
-+		b43_shm_write16(dev, B43_SHM_SHARED, offset + i, phase1key[i/2]);
-+	}
-+	b43_shm_write16(dev, B43_SHM_SHARED, offset + i, iv32);
-+	b43_shm_write16(dev, B43_SHM_SHARED, offset + i + 2, iv32>>16);
-+}
-+
-+static void b43_mac_update_tkip_key(struct ieee80211_hw *hw,
-+			struct ieee80211_key_conf *keyconf, const u8 *addr,
-+			u32 iv32, u16 *phase1key)
-+{
-+	struct b43_wl *wl = hw_to_b43_wl(hw);
-+	struct b43_wldev *dev = wl->current_dev;
-+	int index = keyconf->hw_key_idx;
-+	keymac_write(dev, index, NULL);	/* First zero out mac to avoid race */
-+
-+	rx_tkip_phase1_write(dev, index, iv32, phase1key);
-+	keymac_write(dev, index, addr);
-+}
-+
- static void do_key_write(struct b43_wldev *dev,
- 			 u8 index, u8 algorithm,
- 			 const u8 *key, size_t key_len, const u8 *mac_addr)
-@@ -867,6 +925,19 @@
-
- 	if (index >= per_sta_keys_start)
- 		keymac_write(dev, index, NULL);	/* First zero out mac. */
-+	if (algorithm == B43_SEC_ALGO_TKIP) {
-+		/*
-+		 * We should provide an initial iv32, phase1key pair.
-+		 * We could start with iv32=0 and compute the corresponding
-+		 * phase1key, but this mean calling ieee80211_get_tkip_key
-+		 * with a fake skb (or export other tkip function).
-+		 * Because we are lazy we hope iv32 won't start with
-+		 * 0xffffffff and let's b43_mac_update_tkip_key provide a
-+		 * correct pair.
-+		 */
-+		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16*)buf);
-+	} else if (index >= per_sta_keys_start) /* clear it */
-+		rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
- 	if (key)
- 		memcpy(buf, key, key_len);
- 	key_write(dev, index, algorithm, buf);
-@@ -884,6 +955,8 @@
- {
- 	int i;
-
-+	if (algorithm == B43_SEC_ALGO_TKIP && key_len == 32)
-+		key_len = 16;
- 	if (key_len > B43_SEC_KEYSIZE)
- 		return -EINVAL;
- 	for (i = 0; i < dev->max_nr_keys; i++) {
-@@ -965,6 +1038,14 @@
- 		printk("   Algo: %04X/%02X", algo, key->algorithm);
-
- 		if (index >= 4) {
-+			if (key->algorithm == B43_SEC_ALGO_TKIP) {
-+				printk("   TKIP: ");
-+				offset = B43_SHM_SH_TKIPTSCTTAK + (index - 4) * (10 + 4);
-+				for (i = 0; i < 14; i+=2) {
-+					u16 tmp = b43_shm_read16(dev, B43_SHM_SHARED, offset + i);
-+					printk("%02X%02X", (tmp & 0xFF), ((tmp >> 8) & 0xFF));
-+				}
-+			}
- 			rcmta0 = b43_shm_read32(dev, B43_SHM_RCMTA,
- 						((index - 4) * 2) + 0);
- 			rcmta1 = b43_shm_read16(dev, B43_SHM_RCMTA,
-@@ -1524,10 +1605,13 @@
- 	/* Looks like PLCP headers plus packet timings are stored for
- 	 * all possible basic rates
- 	 */
-+	/* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
-+#if 0
- 	b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
- 	b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
- 	b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
- 	b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
-+#endif
-
- 	size = min((size_t) size, 0x200 - sizeof(struct b43_plcp_hdr6));
- 	b43_write_template_common(dev, probe_resp_data,
-@@ -3631,8 +3715,9 @@
-
- 	switch (cmd) {
- 	case SET_KEY:
--		if (algorithm == B43_SEC_ALGO_TKIP) {
--			/* FIXME: No TKIP hardware encryption for now. */
-+		if (algorithm == B43_SEC_ALGO_TKIP &&
-+		    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+			/* We support only pairwise key */
- 			err = -EOPNOTSUPP;
- 			goto out_unlock;
- 		}
-@@ -3662,6 +3747,8 @@
- 				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
- 		}
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+		if (algorithm == B43_SEC_ALGO_TKIP)
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
- 		break;
- 	case DISABLE_KEY: {
- 		err = b43_key_clear(dev, key->hw_key_idx);
-@@ -4432,6 +4519,7 @@
- 	.config_interface	= b43_op_config_interface,
- 	.configure_filter	= b43_op_configure_filter,
- 	.set_key		= b43_op_set_key,
-+	.update_tkip_key	= b43_mac_update_tkip_key,
- 	.get_stats		= b43_op_get_stats,
- 	.get_tx_stats		= b43_op_get_tx_stats,
- 	.get_tsf		= b43_op_get_tsf,
-Index: linux-2.6/drivers/net/wireless/b43/pio.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/pio.c	2009-06-19
-20:31:33.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/pio.c	2009-06-20 18:34:23.000000000 +0000
-@@ -461,8 +461,8 @@
-
- 	cookie = generate_cookie(q, pack);
- 	hdrlen = b43_txhdr_size(q->dev);
--	err = b43_generate_txhdr(q->dev, (u8 *)&txhdr, skb->data,
--				 skb->len, info, cookie);
-+	err = b43_generate_txhdr(q->dev, (u8 *)&txhdr, skb,
-+				 info, cookie);
+diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
+index 1084b43..1257250 100644
+--- a/drivers/net/wireless/orinoco/fw.c
++++ b/drivers/net/wireless/orinoco/fw.c
+@@ -4,6 +4,7 @@
+  */
+ #include <linux/kernel.h>
+ #include <linux/firmware.h>
++#include <linux/device.h>
+ 
+ #include "hermes.h"
+ #include "hermes_dld.h"
+@@ -99,7 +100,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	const void *end;
+ 	const char *firmware;
+ 	const char *fw_err;
+-	struct net_device *dev = priv->ndev;
++	struct device *dev = priv->dev;
+ 	int err = 0;
+ 
+ 	pda = kzalloc(fw->pda_size, GFP_KERNEL);
+@@ -111,12 +112,11 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	else
+ 		firmware = fw->sta_fw;
+ 
+-	printk(KERN_DEBUG "%s: Attempting to download firmware %s\n",
+-	       dev->name, firmware);
++	dev_dbg(dev, "Attempting to download firmware %s\n", firmware);
+ 
+ 	/* Read current plug data */
+ 	err = hermes_read_pda(hw, pda, fw->pda_addr, fw->pda_size, 0);
+-	printk(KERN_DEBUG "%s: Read PDA returned %d\n", dev->name, err);
++	dev_dbg(dev, "Read PDA returned %d\n", err);
  	if (err)
- 		return err;
-
-Index: linux-2.6/drivers/net/wireless/b43/xmit.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/xmit.c	2009-06-19
-20:31:33.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/xmit.c	2009-06-20
-18:34:23.000000000 +0000
-@@ -181,11 +181,12 @@
- /* Generate a TX data header. */
- int b43_generate_txhdr(struct b43_wldev *dev,
- 		       u8 *_txhdr,
--		       const unsigned char *fragment_data,
--		       unsigned int fragment_len,
-+		       struct sk_buff *skb_frag,
- 		       struct ieee80211_tx_info *info,
- 		       u16 cookie)
- {
-+	const unsigned char *fragment_data = skb_frag->data;
-+	unsigned int fragment_len = skb_frag->len;
- 	struct b43_txhdr *txhdr = (struct b43_txhdr *)_txhdr;
- 	const struct b43_phy *phy = &dev->phy;
- 	const struct ieee80211_hdr *wlhdr =
-@@ -258,9 +259,25 @@
- 		mac_ctl |= (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
- 			   B43_TXH_MAC_KEYALG;
- 		wlhdr_len = ieee80211_hdrlen(fctl);
--		iv_len = min((size_t) info->control.hw_key->iv_len,
--			     ARRAY_SIZE(txhdr->iv));
--		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
-+		if (key->algorithm == B43_SEC_ALGO_TKIP) {
-+			u16 phase1key[5];
-+			int i;
-+			/* we give the phase1key and iv16 here, the key is stored in
-+			 * shm. With that the hardware can do phase 2 and encryption.
-+			 */
-+			ieee80211_get_tkip_key(info->control.hw_key, skb_frag,
-IEEE80211_TKIP_P1_KEY, (u8*)phase1key);
-+			/* phase1key is in host endian */
-+			for (i = 0; i < 5; i++)
-+				phase1key[i] = cpu_to_le16(phase1key[i]);
-+
-+			memcpy(txhdr->iv, phase1key, 10);
-+			/* iv16 */
-+			memcpy(txhdr->iv+10, ((u8 *) wlhdr) + wlhdr_len, 3);
-+		} else {
-+			iv_len = min((size_t) info->control.hw_key->iv_len,
-+				     ARRAY_SIZE(txhdr->iv));
-+			memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
-+		}
+ 		goto free;
+ 
+@@ -124,8 +124,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 		err = request_firmware(&fw_entry, firmware, priv->dev);
+ 
+ 		if (err) {
+-			printk(KERN_ERR "%s: Cannot find firmware %s\n",
+-			       dev->name, firmware);
++			dev_err(dev, "Cannot find firmware %s\n", firmware);
+ 			err = -ENOENT;
+ 			goto free;
+ 		}
+@@ -136,16 +135,15 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 
+ 	fw_err = validate_fw(hdr, fw_entry->size);
+ 	if (fw_err) {
+-		printk(KERN_WARNING "%s: Invalid firmware image detected (%s). "
+-		       "Aborting download\n",
+-		       dev->name, fw_err);
++		dev_warn(dev, "Invalid firmware image detected (%s). "
++			 "Aborting download\n", fw_err);
+ 		err = -EINVAL;
+ 		goto abort;
  	}
- 	if (b43_is_old_txhdr_format(dev)) {
- 		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->old_format.plcp),
-Index: linux-2.6/drivers/net/wireless/b43/xmit.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/xmit.h	2009-06-19
-20:31:33.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/xmit.h	2009-06-20
-18:34:23.000000000 +0000
-@@ -176,8 +176,7 @@
+ 
+ 	/* Enable aux port to allow programming */
+ 	err = hermesi_program_init(hw, le32_to_cpu(hdr->entry_point));
+-	printk(KERN_DEBUG "%s: Program init returned %d\n", dev->name, err);
++	dev_dbg(dev, "Program init returned %d\n", err);
+ 	if (err != 0)
+ 		goto abort;
+ 
+@@ -156,7 +154,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	end = fw_entry->data + fw_entry->size;
+ 
+ 	err = hermes_program(hw, first_block, end);
+-	printk(KERN_DEBUG "%s: Program returned %d\n", dev->name, err);
++	dev_dbg(dev, "Program returned %d\n", err);
+ 	if (err != 0)
+ 		goto abort;
+ 
+@@ -167,19 +165,18 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 
+ 	err = hermes_apply_pda_with_defaults(hw, first_block, end, pda,
+ 					     &pda[fw->pda_size / sizeof(*pda)]);
+-	printk(KERN_DEBUG "%s: Apply PDA returned %d\n", dev->name, err);
++	dev_dbg(dev, "Apply PDA returned %d\n", err);
+ 	if (err)
+ 		goto abort;
+ 
+ 	/* Tell card we've finished */
+ 	err = hermesi_program_end(hw);
+-	printk(KERN_DEBUG "%s: Program end returned %d\n", dev->name, err);
++	dev_dbg(dev, "Program end returned %d\n", err);
+ 	if (err != 0)
+ 		goto abort;
+ 
+ 	/* Check if we're running */
+-	printk(KERN_DEBUG "%s: hermes_present returned %d\n",
+-	       dev->name, hermes_present(hw));
++	dev_dbg(dev, "hermes_present returned %d\n", hermes_present(hw));
+ 
+ abort:
+ 	/* If we requested the firmware, release it. */
+@@ -282,14 +279,13 @@ static int
+ symbol_dl_firmware(struct orinoco_private *priv,
+ 		   const struct fw_info *fw)
+ {
+-	struct net_device *dev = priv->ndev;
++	struct device *dev = priv->dev;
+ 	int ret;
+ 	const struct firmware *fw_entry;
+ 
+ 	if (!orinoco_cached_fw_get(priv, true)) {
+ 		if (request_firmware(&fw_entry, fw->pri_fw, priv->dev) != 0) {
+-			printk(KERN_ERR "%s: Cannot find firmware: %s\n",
+-			       dev->name, fw->pri_fw);
++			dev_err(dev, "Cannot find firmware: %s\n", fw->pri_fw);
+ 			return -ENOENT;
+ 		}
+ 	} else
+@@ -302,15 +298,13 @@ symbol_dl_firmware(struct orinoco_private *priv,
+ 	if (!orinoco_cached_fw_get(priv, true))
+ 		release_firmware(fw_entry);
+ 	if (ret) {
+-		printk(KERN_ERR "%s: Primary firmware download failed\n",
+-		       dev->name);
++		dev_err(dev, "Primary firmware download failed\n");
+ 		return ret;
+ 	}
+ 
+ 	if (!orinoco_cached_fw_get(priv, false)) {
+ 		if (request_firmware(&fw_entry, fw->sta_fw, priv->dev) != 0) {
+-			printk(KERN_ERR "%s: Cannot find firmware: %s\n",
+-			       dev->name, fw->sta_fw);
++			dev_err(dev, "Cannot find firmware: %s\n", fw->sta_fw);
+ 			return -ENOENT;
+ 		}
+ 	} else
+@@ -322,8 +316,7 @@ symbol_dl_firmware(struct orinoco_private *priv,
+ 	if (!orinoco_cached_fw_get(priv, false))
+ 		release_firmware(fw_entry);
+ 	if (ret) {
+-		printk(KERN_ERR "%s: Secondary firmware download failed\n",
+-		       dev->name);
++		dev_err(dev, "Secondary firmware download failed\n");
+ 	}
+ 
+ 	return ret;
+-- 
+1.6.0.6
 
- int b43_generate_txhdr(struct b43_wldev *dev,
- 		       u8 * txhdr,
--		       const unsigned char *fragment_data,
--		       unsigned int fragment_len,
-+		       struct sk_buff *skb_frag,
- 		       struct ieee80211_tx_info *txctl, u16 cookie);
-
- /* Transmit Status */
