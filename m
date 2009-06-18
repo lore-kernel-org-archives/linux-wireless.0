@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:63160 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690AbZFGJ4e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 05:56:34 -0400
-Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1244367815.26071.4.camel@johannes.local>
-References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-	 <1244326943.12159.5.camel@localhost>  <1244334102.16810.3.camel@localhost>
-	 <1244367815.26071.4.camel@johannes.local>
+Received: from mga14.intel.com ([143.182.124.37]:37757 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752629AbZFRShF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2009 14:37:05 -0400
+Subject: Re: [ath9k-devel] [PATCH] mac80211: disassociate when switching
+ bands  and not scanning
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <20090618182831.GA2028@tesla>
+References: <43e72e890906101349t502e9022h16fa79ea512f8b4d@mail.gmail.com>
+	 <1244667817.20900.402.camel@rc-desk>
+	 <43e72e890906101404l6a8bee67r560f7c8a1c5f8c36@mail.gmail.com>
+	 <1244668077.4706.4.camel@johannes.local>
+	 <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com>
+	 <43e72e890906101544i22bacc8fxa0a7d045eea50280@mail.gmail.com>
+	 <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com>
+	 <1244753407.20900.456.camel@rc-desk> <20090618150119.GD2738@tuxdriver.com>
+	 <1245340021.24303.302.camel@rc-desk>  <20090618182831.GA2028@tesla>
 Content-Type: text/plain
-Date: Sun, 07 Jun 2009 12:54:15 +0300
-Message-Id: <1244368455.22643.4.camel@localhost>
+Date: Thu, 18 Jun 2009 11:44:15 -0700
+Message-Id: <1245350655.24303.318.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-06-07 at 11:43 +0200, Johannes Berg wrote:
-> On Sun, 2009-06-07 at 03:21 +0300, Maxim Levitsky wrote:
-> 
-> > > Is this source for same firmware that was closed?
-> 
-> Yes, but it was compiled differently afaik so you won't arrive at the
-> same binary.
-> 
-> > > Will AP mode work in future?
-> 
-> Well, not TYPE=AP, but we'll integrate whatever is necessary into one
-> firmware, I expect. It shouldn't be very hard given that AP mode really
-> works with the TYPE=STA firmware already, almost.
-> 
-> > What does this mean:
+Hi Luis,
+
+On Thu, 2009-06-18 at 11:28 -0700, Luis R. Rodriguez wrote:
+> On Thu, Jun 18, 2009 at 08:47:01AM -0700, reinette chatre wrote:
+> > Hi John,
 > > 
-> > eeprom   : ORIGIN = 0x000000, LENGTH = 1024k
+> > On Thu, 2009-06-18 at 08:01 -0700, John W. Linville wrote:
+> > > On Thu, Jun 11, 2009 at 01:50:07PM -0700, reinette chatre wrote:
+> > >
+> > > > I ran the steps to reproduce on a kernel that is the latest
+> > > > wireless-testing + "mac80211: disconnect when user changes channel" +
+> > > > "iwlwifi: remove rs_get_rate workaround". Unfortunately I still get the
+> > > > rs_get_rate warning.
+> > >
+> > > Should I merge the ath9k rate series w/o "iwlwifi: remove rs_get_rate
+> > > workaround"?
 > > 
+> > The later patch "mac80211: add helper for management / no-ack frame rate
+> > decision" also touches iwlwifi and assumes that "iwlwifi: remove
+> > rs_get_rate workaround" has been applied.
 > > 
-> > Does the device have whole 1M of eeprom?
-> > What is there?
+> > I do not know if Luis would want that patch to go in because the warning
+> > we get may not be specific to iwlwifi. If you do want that to go in then
+> > please remove the iwlwifi bits.
 > 
-> The eeprom is mapped there, but I don't think it's 1M, it's just the max
-> size of the mapping to the CPUs address space.
-Fine, like I expected, but still, I guess there is some 'loader' in
-eeprom?
+> I don't believe the warning you got were iwlwifi specific, I confirmed it and
+> I was able to reproduce with ath9k and I also sent a patch to correct it. I'd hate
+> to see a work around be kept for them and the issue not addressed properly,
+> which is what this has been trying to address.
 
-
-
-> 
-> > Also what is this:
-> > 
-> > sram     : ORIGIN = 0x100000, LENGTH = 64k
-> 
-> This is just memory. It's used for buffering frames and dma descriptors
-> etc. internally. I want to change the code to do this with the linker
-> script rather than manually assigning addresses in the source. But if
-> you grep for this address you'll find how it's used.
-Great.
-
+I assumed that your fix had the same intention as the patch from
+Johannes that I tested. This did not resolve the problem. 
 
 > 
-> > Description says that pram is 32K, but:
-> >  
-> > pram     : ORIGIN = 0x200000, LENGTH = 16k
-> 
-> Yeah, we're not exactly sure about this yet, but using 32k definitely
-> crashes the device.
-Thats fine too.
+> Mind you the patch I sent conflicts with johills patch but I figured we can
+> just implement a proper patch to fix that warning afterwards.
 
 
-If there were a documentation too.
-Isn't it possible to publish it?
 
-This firmware contains so many 'magic' registers.
-
-Best regards,
-	Maxim Levitsky
+Reinette
 
