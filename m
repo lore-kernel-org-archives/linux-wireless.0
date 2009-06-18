@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:39498 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794AbZFHRob convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43708 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757643AbZFRPPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 13:44:31 -0400
-Received: by qw-out-2122.google.com with SMTP id 5so2096655qwd.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 10:44:33 -0700 (PDT)
+	Thu, 18 Jun 2009 11:15:44 -0400
+Date: Thu, 18 Jun 2009 11:01:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "j@w1.fi" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [ath9k-devel] [PATCH] mac80211: disassociate when switching
+	bands  and not scanning
+Message-ID: <20090618150119.GD2738@tuxdriver.com>
+References: <1244666131-20031-1-git-send-email-lrodriguez@atheros.com> <1244666973.20900.399.camel@rc-desk> <43e72e890906101349t502e9022h16fa79ea512f8b4d@mail.gmail.com> <1244667817.20900.402.camel@rc-desk> <43e72e890906101404l6a8bee67r560f7c8a1c5f8c36@mail.gmail.com> <1244668077.4706.4.camel@johannes.local> <43e72e890906101542l5064384auf027267a3d19f3ee@mail.gmail.com> <43e72e890906101544i22bacc8fxa0a7d045eea50280@mail.gmail.com> <43e72e890906111204g18e71720w97cb2ea346e5d663@mail.gmail.com> <1244753407.20900.456.camel@rc-desk>
 MIME-Version: 1.0
-In-Reply-To: <646765f40906072312y5043ac12rd6d756230e98b746@mail.gmail.com>
-References: <4A2CA986.3070500@gmail.com> <646765f40906072312y5043ac12rd6d756230e98b746@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Mon, 8 Jun 2009 10:44:12 -0700
-Message-ID: <43e72e890906081044x566514c5mc02299282e9c9ff2@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat-wireless: update for 2009-06-08
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1244753407.20900.456.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 7, 2009 at 11:12 PM, Julian Calaby<julian.calaby@gmail.com> wrote:
-> On Mon, Jun 8, 2009 at 16:02, Julian Calaby<julian.calaby@gmail.com> wrote:
->> Update to match wireless-testing v2.6.30-rc8-25759-g00f7164
->>
->> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
->> ---
->>  compat/compat.diff |   42 +++++++++++++++++++++++-------------------
->>  1 files changed, 23 insertions(+), 19 deletions(-)
->>
->> diff --git a/compat/compat.diff b/compat/compat.diff
->> index d89ea98..846e8f5 100644
->> --- a/compat/compat.diff
->> +++ b/compat/compat.diff
->> @@ -181,6 +181,12 @@
->>  obj-$(CONFIG_LIBERTAS)                += libertas/
->>
->>  obj-$(CONFIG_LIBERTAS_THINFIRM)       += libertas_tf/
->> +@@ -60,5 +34,3 @@
->> + obj-$(CONFIG_MAC80211_HWSIM)  += mac80211_hwsim.o
->> +
->> + obj-$(CONFIG_WL12XX)  += wl12xx/
->> +-
->> +-obj-$(CONFIG_IWM)     += iwmc3200wifi/
->
-> Sigh.
->
-> Of course, I forgot to describe the changes in this patch.
->
-> compat.diff has been updated to apply cleanly over the
-> wireless-testing.git version specified above with no fuzz.
->
-> iwmc3200wifi, as I don't know if it compiles on anything but
-> wireless-testing.git, has been disabled by editing it out of the
-> Makefile as it's directory isn't actually copied from
-> wireless-testing. -- I'm not sure that this is the correct way to do
-> this as it's hiding the problem away in compat.diff - not obviously
-> fixing it by, e.g. copying the directory from wireless-testing.git or
-> making it compile on older kernels.
+On Thu, Jun 11, 2009 at 01:50:07PM -0700, reinette chatre wrote:
 
-This is fine for now.
+> I ran the steps to reproduce on a kernel that is the latest
+> wireless-testing + "mac80211: disconnect when user changes channel" +
+> "iwlwifi: remove rs_get_rate workaround". Unfortunately I still get the
+> rs_get_rate warning. 
 
-> I must note that even after these changes, this still doesn't actually
-> compile for me, as ath9k uses the rfkill_ops structure which isn't
-> present in my 2.6.29 kernel.
+Should I merge the ath9k rate series w/o "iwlwifi: remove rs_get_rate
+workaround"?
 
-Thanks for the note, both patches applied. For rfkill we'll need
-someone brave and with time to backport it... as rfkill has been
-re-written. The easiest solution is to revert the patches for older
-kernels through compat.diff. That is add #ifdefs and for old kernel
-revisions use the old stuff, for new kernels (as of 2.6.31) leave the
-code in place.
-
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
