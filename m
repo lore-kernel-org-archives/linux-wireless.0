@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752632AbZFFR24 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:37376 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751306AbZFRDII (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 13:28:56 -0400
-Subject: Re: [PATCH 0/2] ar9170-fw: Roll-your-own toolchain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	otus-devel@lists.madwifi-project.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A2AA6BC.5040004@web.de>
-References: <4A2AA395.3060406@web.de>
-	 <1244308808.15640.4.camel@johannes.local>  <4A2AA6BC.5040004@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BR3Vu7lGs6OGVrdZfAjW"
-Date: Sat, 06 Jun 2009 19:28:53 +0200
-Message-Id: <1244309333.17485.0.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 17 Jun 2009 23:08:08 -0400
+Date: Thu, 18 Jun 2009 00:08:06 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 2/4] rfkill: don't restore software blocked state on
+	persistent devices
+Message-ID: <20090618030806.GE29569@khazad-dum.debian.net>
+References: <4A37A3E1.8060606@tuffmail.co.uk> <1245161645.13461.3.camel@johannes.local> <4A37AEB7.6060405@tuffmail.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A37AEB7.6060405@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 16 Jun 2009, Alan Jenkins wrote:
+> The setting of the "persistent" flag is also made more explicit using
+> a new rfkill_init_sw_state() function, instead of special-casing
+> rfkill_set_sw_state() when it is called before registration.
+> 
+> Suspend is a bit of a corner case so we try to get away without adding
+> another hack to rfkill-input - it's going to be removed soon.
+> If the state does change over suspend, users will simply have to prod
+> rfkill-input twice in order to toggle the state.
+> 
+> Userspace policy agents will be able to implement a more consistent user
+> experience.  For example, they can avoid the above problem if they
+> toggle devices individually.  Then there would be no "global state"
+> to get out of sync.
+> 
+> Currently there are only two rfkill drivers with persistent soft-blocked
+> state.  thinkpad-acpi already checks the software state on resume.
+> eeepc-laptop will require modification.
+> 
+> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> CC: Marcel Holtmann <marcel@holtmann.org>
 
---=-BR3Vu7lGs6OGVrdZfAjW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 
-On Sat, 2009-06-06 at 19:26 +0200, Jan Kiszka wrote:
-
-> But does you device enter an endless reset loop?
->=20
-> [ 5337.468082] usb 2-2: new high speed USB device using ehci_hcd and addr=
-ess 30
-> [ 5337.648024] usb 2-2: New USB device found, idVendor=3D07d1, idProduct=
-=3D3c10
-> [ 5337.648032] usb 2-2: New USB device strings: Mfr=3D16, Product=3D32, S=
-erialNumber=3D48
-> [ 5337.648038] usb 2-2: Product: USB2.0 WLAN
-> [ 5337.648042] usb 2-2: Manufacturer: ATHER
-> [ 5337.648046] usb 2-2: SerialNumber: 12345
-> [ 5337.648235] usb 2-2: configuration #1 chosen from 1 choice
-> [ 5337.764060] usb 2-2: reset high speed USB device using ehci_hcd and ad=
-dress 30
-> [ 5338.940054] usb 2-2: firmware: requesting ar9170.fw
-> [ 5340.552081] usb 2-2: device is in a bad state. please reconnect it!
-> [ 5341.552118] ar9170usb: probe of 2-2:1.0 failed with error -110
-> [ 5341.556838] usb 2-2: USB disconnect, address 30
-> [ 5341.800076] usb 2-2: new high speed USB device using ehci_hcd and addr=
-ess 31
-> ...
-
-Yes. With the AP firmware, that is. I don't care about that firmware at
-all.
-
-johannes
-
---=-BR3Vu7lGs6OGVrdZfAjW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKqdSAAoJEODzc/N7+Qmau2wP/jybgOYUjEaRr/XtoLCPWXXH
-bJV1fKESZFreXOWhzx6MQrQmrm8j4S2g/4Z7sYfuOk08nqbUcWHfn+3vDyAmgCXr
-LPhIVstqptsrt9J0CmMXw5OQ2EUEXiVM5BYeWNBZ7SkCqiyc0qiS2unK6nPuWxoH
-KFpA5Q518aVMJaCbv033tFGJrqKcluGVjM9s2KVGEZPTFECv98Xc4DDuHMpNbkJo
-+HWffuGr7eqPTqgRCA7dF5XYEHbToAL/9O9SJ4xLTBtRW0QLK5hZ9szPocx4Bd4N
-BFU9Gb5Z4PFEeWbdOmUYYbPI8SPOqhdNpxEIhq9UHcHHeZJfd6rmTsepYApo5QDf
-7/o9/UadibwLGv2nc7BLiPdGXPYYDU41GmNFLI0glqGLSQu3uXXzAhSPT6v1qUcg
-7+XTQy0PeZVfi6ojA/gVon9xupWe0dBRl0XMjl4mbkvN+IWqf4whw6nHOaRRSzcK
-GjxVyUDbdEGiMC0oX0PcCSxWmO0n37IyWyXIMB1t7zzq8WV62Nox4RQoPdKOQh+w
-mK9hWo1Pycg9O09tIPQfdBvlhKl+asLp/YOCObgT3FbkX7UzG1+Wn02usBq/3bW5
-z4hE4bFDvzeqVzMiEGcz5DIVnQ2D82Z1IPMi9S42MfAd/TZm5nXtJUBEEVc4TPK0
-iCfzW8u/zMcu2WxudbAs
-=GUvO
------END PGP SIGNATURE-----
-
---=-BR3Vu7lGs6OGVrdZfAjW--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
