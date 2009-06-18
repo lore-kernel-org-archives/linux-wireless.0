@@ -1,100 +1,421 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55958 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758241AbZFWN6G (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:24203 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756210AbZFRWWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 09:58:06 -0400
-Subject: [PATCH] nl80211: clean up function definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 23 Jun 2009 15:57:09 +0200
-Message-Id: <1245765429.21314.9.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 18 Jun 2009 18:22:41 -0400
+Received: by ey-out-2122.google.com with SMTP id d26so208409eyd.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:22:42 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 18/23] orinoco: Handle suspend/restore in core driver
+Date: Thu, 18 Jun 2009 23:21:30 +0100
+Message-Id: <1245363695-8289-19-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't like the 'extern' keyword much when it's not
-necessary, it makes lines rather long.
+Each device does almost exactly the same things on suspend and resume
+when upping and downing the interface. So move this logic into a common
+routine.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- net/wireless/nl80211.h |   58 ++++++++++++++++++++++++-------------------------
- 1 file changed, 29 insertions(+), 29 deletions(-)
+ drivers/net/wireless/orinoco/airport.c     |   33 +--------------
+ drivers/net/wireless/orinoco/main.c        |   61 +++++++++++++++++++++++++---
+ drivers/net/wireless/orinoco/orinoco.h     |    5 +-
+ drivers/net/wireless/orinoco/orinoco_cs.c  |   44 ++------------------
+ drivers/net/wireless/orinoco/orinoco_pci.h |   47 +--------------------
+ drivers/net/wireless/orinoco/spectrum_cs.c |   41 +-----------------
+ 6 files changed, 70 insertions(+), 161 deletions(-)
 
---- wireless-testing.orig/net/wireless/nl80211.h	2009-06-23 15:33:37.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.h	2009-06-23 15:34:18.000000000 +0200
-@@ -3,41 +3,41 @@
+diff --git a/drivers/net/wireless/orinoco/airport.c b/drivers/net/wireless/orinoco/airport.c
+index 70f1331..c60df2c 100644
+--- a/drivers/net/wireless/orinoco/airport.c
++++ b/drivers/net/wireless/orinoco/airport.c
+@@ -50,15 +50,7 @@ airport_suspend(struct macio_dev *mdev, pm_message_t state)
+ 		return 0;
+ 	}
  
- #include "core.h"
+-	err = __orinoco_down(priv);
+-	if (err)
+-		printk(KERN_WARNING "%s: PBOOK_SLEEP_NOW: Error %d downing interface\n",
+-		       dev->name, err);
+-
+-	netif_device_detach(dev);
+-
+-	priv->hw_unavailable++;
+-
++	orinoco_down(priv);
+ 	orinoco_unlock(priv, &flags);
  
--extern int nl80211_init(void);
--extern void nl80211_exit(void);
--extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
--extern void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
--				    struct net_device *netdev);
--extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
--				   struct net_device *netdev);
--extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
--				      struct net_device *netdev);
--extern void nl80211_send_reg_change_event(struct regulatory_request *request);
--extern void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
--				 struct net_device *netdev,
--				 const u8 *buf, size_t len);
--extern void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
--				  struct net_device *netdev,
--				  const u8 *buf, size_t len);
--extern void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
-+int nl80211_init(void);
-+void nl80211_exit(void);
-+void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
-+void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
-+			     struct net_device *netdev);
-+void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
-+			    struct net_device *netdev);
-+void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
-+			       struct net_device *netdev);
-+void nl80211_send_reg_change_event(struct regulatory_request *request);
-+void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
-+			  struct net_device *netdev,
-+			  const u8 *buf, size_t len);
-+void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
-+			   struct net_device *netdev,
-+			   const u8 *buf, size_t len);
-+void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
-+			 struct net_device *netdev,
-+			 const u8 *buf, size_t len);
-+void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
-+			   struct net_device *netdev,
-+			   const u8 *buf, size_t len);
-+void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
-+			       struct net_device *netdev,
-+			       const u8 *addr);
-+void nl80211_send_assoc_timeout(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev,
--				const u8 *buf, size_t len);
--extern void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
--				  struct net_device *netdev,
--				  const u8 *buf, size_t len);
--extern void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
--				      struct net_device *netdev,
--				      const u8 *addr);
--extern void nl80211_send_assoc_timeout(struct cfg80211_registered_device *rdev,
--				       struct net_device *netdev,
--				       const u8 *addr);
--extern void
-+				const u8 *addr);
-+void
- nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
- 			    struct net_device *netdev, const u8 *addr,
- 			    enum nl80211_key_type key_type,
- 			    int key_id, const u8 *tsc);
+ 	disable_irq(card->irq);
+@@ -85,30 +77,11 @@ airport_resume(struct macio_dev *mdev)
  
--extern void
-+void
- nl80211_send_beacon_hint_event(struct wiphy *wiphy,
- 			       struct ieee80211_channel *channel_before,
- 			       struct ieee80211_channel *channel_after);
-
+ 	enable_irq(card->irq);
+ 
+-	err = orinoco_reinit_firmware(priv);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d re-initializing firmware on PBOOK_WAKE\n",
+-		       dev->name, err);
+-		return 0;
+-	}
+-
+ 	spin_lock_irqsave(&priv->lock, flags);
+-
+-	netif_device_attach(dev);
+-
+-	priv->hw_unavailable--;
+-
+-	if (priv->open && (!priv->hw_unavailable)) {
+-		err = __orinoco_up(priv);
+-		if (err)
+-			printk(KERN_ERR "%s: Error %d restarting card on PBOOK_WAKE\n",
+-			       dev->name, err);
+-	}
+-
+-
++	err = orinoco_up(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-	return 0;
++	return err;
+ }
+ 
+ static int
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index 361cf09..0727b41 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -211,6 +211,8 @@ struct orinoco_rx_data {
+ /********************************************************************/
+ 
+ static void __orinoco_set_multicast_list(struct net_device *dev);
++static int __orinoco_up(struct orinoco_private *priv);
++static int __orinoco_down(struct orinoco_private *priv);
+ 
+ /********************************************************************/
+ /* Internal helper functions                                        */
+@@ -1514,7 +1516,7 @@ static void __orinoco_ev_infdrop(struct net_device *dev, hermes_t *hw)
+ /* Internal hardware control routines                               */
+ /********************************************************************/
+ 
+-int __orinoco_up(struct orinoco_private *priv)
++static int __orinoco_up(struct orinoco_private *priv)
+ {
+ 	struct net_device *dev = priv->ndev;
+ 	struct hermes *hw = &priv->hw;
+@@ -1542,9 +1544,8 @@ int __orinoco_up(struct orinoco_private *priv)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(__orinoco_up);
+ 
+-int __orinoco_down(struct orinoco_private *priv)
++static int __orinoco_down(struct orinoco_private *priv)
+ {
+ 	struct net_device *dev = priv->ndev;
+ 	struct hermes *hw = &priv->hw;
+@@ -1574,9 +1575,8 @@ int __orinoco_down(struct orinoco_private *priv)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(__orinoco_down);
+ 
+-int orinoco_reinit_firmware(struct orinoco_private *priv)
++static int orinoco_reinit_firmware(struct orinoco_private *priv)
+ {
+ 	struct hermes *hw = &priv->hw;
+ 	int err;
+@@ -1592,7 +1592,6 @@ int orinoco_reinit_firmware(struct orinoco_private *priv)
+ 
+ 	return err;
+ }
+-EXPORT_SYMBOL(orinoco_reinit_firmware);
+ 
+ int __orinoco_program_rids(struct net_device *dev)
+ {
+@@ -2389,6 +2388,56 @@ void free_orinocodev(struct orinoco_private *priv)
+ }
+ EXPORT_SYMBOL(free_orinocodev);
+ 
++int orinoco_up(struct orinoco_private *priv)
++{
++	struct net_device *dev = priv->ndev;
++	unsigned long flags;
++	int err;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	err = orinoco_reinit_firmware(priv);
++	if (err) {
++		printk(KERN_ERR "%s: Error %d re-initializing firmware\n",
++		       dev->name, err);
++		goto exit;
++	}
++
++	netif_device_attach(dev);
++	priv->hw_unavailable--;
++
++	if (priv->open && !priv->hw_unavailable) {
++		err = __orinoco_up(priv);
++		if (err)
++			printk(KERN_ERR "%s: Error %d restarting card\n",
++			       dev->name, err);
++	}
++
++exit:
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++EXPORT_SYMBOL(orinoco_up);
++
++void orinoco_down(struct orinoco_private *priv)
++{
++	struct net_device *dev = priv->ndev;
++	unsigned long flags;
++	int err;
++
++	spin_lock_irqsave(&priv->lock, flags);
++	err = __orinoco_down(priv);
++	if (err)
++		printk(KERN_WARNING "%s: Error %d downing interface\n",
++		       dev->name, err);
++
++	netif_device_detach(dev);
++	priv->hw_unavailable++;
++	spin_unlock_irqrestore(&priv->lock, flags);
++}
++EXPORT_SYMBOL(orinoco_down);
++
+ static void orinoco_get_drvinfo(struct net_device *dev,
+ 				struct ethtool_drvinfo *info)
+ {
+diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
+index 45aa616..4ee85f8 100644
+--- a/drivers/net/wireless/orinoco/orinoco.h
++++ b/drivers/net/wireless/orinoco/orinoco.h
+@@ -197,9 +197,8 @@ extern int orinoco_if_add(struct orinoco_private *priv,
+ 			  unsigned long base_addr,
+ 			  unsigned int irq);
+ extern void orinoco_if_del(struct orinoco_private *priv);
+-extern int __orinoco_up(struct orinoco_private *priv);
+-extern int __orinoco_down(struct orinoco_private *priv);
+-extern int orinoco_reinit_firmware(struct orinoco_private *priv);
++extern int orinoco_up(struct orinoco_private *priv);
++extern void orinoco_down(struct orinoco_private *priv);
+ extern irqreturn_t orinoco_interrupt(int irq, void *dev_id);
+ 
+ /********************************************************************/
+diff --git a/drivers/net/wireless/orinoco/orinoco_cs.c b/drivers/net/wireless/orinoco/orinoco_cs.c
+index 4c29d36..38c1c9d 100644
+--- a/drivers/net/wireless/orinoco/orinoco_cs.c
++++ b/drivers/net/wireless/orinoco/orinoco_cs.c
+@@ -349,26 +349,12 @@ static int orinoco_cs_suspend(struct pcmcia_device *link)
+ {
+ 	struct orinoco_private *priv = link->priv;
+ 	struct orinoco_pccard *card = priv->card;
+-	struct net_device *dev = priv->ndev;
+-	int err = 0;
+-	unsigned long flags;
+ 
+ 	/* This is probably racy, but I can't think of
+ 	   a better way, short of rewriting the PCMCIA
+ 	   layer to not suck :-( */
+-	if (!test_bit(0, &card->hard_reset_in_progress)) {
+-		spin_lock_irqsave(&priv->lock, flags);
+-
+-		err = __orinoco_down(priv);
+-		if (err)
+-			printk(KERN_WARNING "%s: Error %d downing interface\n",
+-			       dev->name, err);
+-
+-		netif_device_detach(dev);
+-		priv->hw_unavailable++;
+-
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-	}
++	if (!test_bit(0, &card->hard_reset_in_progress))
++		orinoco_down(priv);
+ 
+ 	return 0;
+ }
+@@ -377,32 +363,10 @@ static int orinoco_cs_resume(struct pcmcia_device *link)
+ {
+ 	struct orinoco_private *priv = link->priv;
+ 	struct orinoco_pccard *card = priv->card;
+-	struct net_device *dev = priv->ndev;
+ 	int err = 0;
+-	unsigned long flags;
+ 
+-	if (!test_bit(0, &card->hard_reset_in_progress)) {
+-		err = orinoco_reinit_firmware(priv);
+-		if (err) {
+-			printk(KERN_ERR "%s: Error %d re-initializing firmware\n",
+-			       dev->name, err);
+-			return -EIO;
+-		}
+-
+-		spin_lock_irqsave(&priv->lock, flags);
+-
+-		netif_device_attach(dev);
+-		priv->hw_unavailable--;
+-
+-		if (priv->open && !priv->hw_unavailable) {
+-			err = __orinoco_up(priv);
+-			if (err)
+-				printk(KERN_ERR "%s: Error %d restarting card\n",
+-				       dev->name, err);
+-		}
+-
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-	}
++	if (!test_bit(0, &card->hard_reset_in_progress))
++		err = orinoco_up(priv);
+ 
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/orinoco/orinoco_pci.h b/drivers/net/wireless/orinoco/orinoco_pci.h
+index 22aa630..ea7231a 100644
+--- a/drivers/net/wireless/orinoco/orinoco_pci.h
++++ b/drivers/net/wireless/orinoco/orinoco_pci.h
+@@ -22,28 +22,8 @@ struct orinoco_pci_card {
+ static int orinoco_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct orinoco_private *priv = pci_get_drvdata(pdev);
+-	struct net_device *dev = priv->ndev;
+-	unsigned long flags;
+-	int err;
+-
+-	err = orinoco_lock(priv, &flags);
+-	if (err) {
+-		printk(KERN_ERR "%s: cannot lock hardware for suspend\n",
+-		       dev->name);
+-		return err;
+-	}
+-
+-	err = __orinoco_down(priv);
+-	if (err)
+-		printk(KERN_WARNING "%s: error %d bringing interface down "
+-		       "for suspend\n", dev->name, err);
+-
+-	netif_device_detach(dev);
+-
+-	priv->hw_unavailable++;
+-
+-	orinoco_unlock(priv, &flags);
+ 
++	orinoco_down(priv);
+ 	free_irq(pdev->irq, priv);
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+@@ -56,7 +36,6 @@ static int orinoco_pci_resume(struct pci_dev *pdev)
+ {
+ 	struct orinoco_private *priv = pci_get_drvdata(pdev);
+ 	struct net_device *dev = priv->ndev;
+-	unsigned long flags;
+ 	int err;
+ 
+ 	pci_set_power_state(pdev, 0);
+@@ -77,29 +56,9 @@ static int orinoco_pci_resume(struct pci_dev *pdev)
+ 		return -EBUSY;
+ 	}
+ 
+-	err = orinoco_reinit_firmware(priv);
+-	if (err) {
+-		printk(KERN_ERR "%s: error %d re-initializing firmware "
+-		       "on resume\n", dev->name, err);
+-		return err;
+-	}
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	netif_device_attach(dev);
++	err = orinoco_up(priv);
+ 
+-	priv->hw_unavailable--;
+-
+-	if (priv->open && (!priv->hw_unavailable)) {
+-		err = __orinoco_up(priv);
+-		if (err)
+-			printk(KERN_ERR "%s: Error %d restarting card on resume\n",
+-			       dev->name, err);
+-	}
+-
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	return 0;
++	return err;
+ }
+ #else
+ #define orinoco_pci_suspend NULL
+diff --git a/drivers/net/wireless/orinoco/spectrum_cs.c b/drivers/net/wireless/orinoco/spectrum_cs.c
+index 7b4a7e4..c361310 100644
+--- a/drivers/net/wireless/orinoco/spectrum_cs.c
++++ b/drivers/net/wireless/orinoco/spectrum_cs.c
+@@ -421,22 +421,10 @@ static int
+ spectrum_cs_suspend(struct pcmcia_device *link)
+ {
+ 	struct orinoco_private *priv = link->priv;
+-	struct net_device *dev = priv->ndev;
+-	unsigned long flags;
+ 	int err = 0;
+ 
+ 	/* Mark the device as stopped, to block IO until later */
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	err = __orinoco_down(priv);
+-	if (err)
+-		printk(KERN_WARNING "%s: Error %d downing interface\n",
+-		       dev->name, err);
+-
+-	netif_device_detach(dev);
+-	priv->hw_unavailable++;
+-
+-	spin_unlock_irqrestore(&priv->lock, flags);
++	orinoco_down(priv);
+ 
+ 	return err;
+ }
+@@ -445,32 +433,9 @@ static int
+ spectrum_cs_resume(struct pcmcia_device *link)
+ {
+ 	struct orinoco_private *priv = link->priv;
+-	struct net_device *dev = priv->ndev;
+-	unsigned long flags;
+-	int err;
+-
+-	err = orinoco_reinit_firmware(priv);
+-	if (err) {
+-		printk(KERN_ERR "%s: Error %d re-initializing firmware\n",
+-		       dev->name, err);
+-		return -EIO;
+-	}
++	int err = orinoco_up(priv);
+ 
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	netif_device_attach(dev);
+-	priv->hw_unavailable--;
+-
+-	if (priv->open && !priv->hw_unavailable) {
+-		err = __orinoco_up(priv);
+-		if (err)
+-			printk(KERN_ERR "%s: Error %d restarting card\n",
+-			       dev->name, err);
+-	}
+-
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	return 0;
++	return err;
+ }
+ 
+ 
+-- 
+1.6.0.6
 
