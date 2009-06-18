@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45250 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753669AbZFIIr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 04:47:59 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2009 01:48:02 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH] mac80211: Fix the way ADDBA request count being modified
-Date: Tue, 9 Jun 2009 14:11:46 +0530
-Message-ID: <1244536906-22335-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:46201 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbZFRAfw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 20:35:52 -0400
+Subject: Re: [PATCH] wireless extensions: play with netns
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>
+In-Reply-To: <m18wjqs7x4.fsf@fess.ebiederm.org>
+References: <1245263058.31588.38.camel@johannes.local>
+	 <m1y6rqwpur.fsf@fess.ebiederm.org>
+	 <1245276899.31588.57.camel@johannes.local>
+	 <m1r5xitpdh.fsf@fess.ebiederm.org>
+	 <1245282099.31588.69.camel@johannes.local>
+	 <1245282315.31588.71.camel@johannes.local>
+	 <m18wjqs7x4.fsf@fess.ebiederm.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-o/b8sLPUEjy3s79FMXvp"
+Date: Thu, 18 Jun 2009 02:35:21 +0200
+Message-Id: <1245285321.31588.75.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-addba_req_num[tid] is supposed to have the count of consecutive
-addba request attempts on 'tid' which failed. This count is checked
-against a retry threshold (3 times) before starting the addba negotiation.
-This patch fixes the way this addba count is incremented/reset and thereby
-avoids indefinite addba attempts.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- net/mac80211/agg-tx.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+--=-o/b8sLPUEjy3s79FMXvp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 43d00ff..9e5762a 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -132,6 +132,9 @@ static int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 
- 	state = &sta->ampdu_mlme.tid_state_tx[tid];
- 
-+	if (*state == HT_AGG_STATE_OPERATIONAL)
-+		sta->ampdu_mlme.addba_req_num[tid] = 0;
-+
- 	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
- 		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
- 
-@@ -337,6 +340,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
- 			 sta->ampdu_mlme.tid_tx[tid]->dialog_token,
- 			 sta->ampdu_mlme.tid_tx[tid]->ssn,
- 			 0x40, 5000);
-+	sta->ampdu_mlme.addba_req_num[tid]++;
- 	/* activate the timer for the recipient's addBA response */
- 	sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer.expires =
- 				jiffies + ADDBA_RESP_INTERVAL;
-@@ -606,7 +610,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
- 
- 	*state = HT_AGG_STATE_IDLE;
- 	/* from now on packets are no longer put onto sta->pending */
--	sta->ampdu_mlme.addba_req_num[tid] = 0;
- 	kfree(sta->ampdu_mlme.tid_tx[tid]);
- 	sta->ampdu_mlme.tid_tx[tid] = NULL;
- 
-@@ -689,7 +692,6 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 
- 		sta->ampdu_mlme.addba_req_num[tid] = 0;
- 	} else {
--		sta->ampdu_mlme.addba_req_num[tid]++;
- 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
- 	}
- 	spin_unlock_bh(&sta->lock);
--- 
-1.5.5.1
+On Wed, 2009-06-17 at 17:27 -0700, Eric W. Biederman wrote:
+
+> > Subject: genetlink: make netns aware
+> >
+> > This makes generic netlink network namespace aware.
+> > No actual generic netlink families are made namespace
+> > aware, they need to be checked one by one and then
+> > set the family->netnsok member to true.
+>=20
+> Are skb_clone and nlmsg_multicast really guaranteed not to sleep?
+
+Yes, definitely, we call them in atomic callbacks already in various
+places. There are many callers that use the existing genlmsg_multicast()
+in atomic contexts.
+
+johannes
+
+--=-o/b8sLPUEjy3s79FMXvp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKOYu7AAoJEODzc/N7+QmadTQQAI2yvGnGUpHXL9118eqUVBTq
+rGXHTB1IVHQEF2CynksnSQ9MvjhkaDVHsWxteERvKKo9oWmPFaL7idMBE0INoyWg
+Q5yOXN8O1em5tm7bs9qaSLoh+9IhaC3eO7gz6xyoSMzez7XhcFBsd9a9EYsEJL+E
+3f5V6t3sL7pEy3T8RxvbAv3XvRJWWNJwh514AaTwLQ1HWEWjgYkwTJt5h1Rklkzf
+XuzrBkgg9ub7gkXfLgxK+nAYGz4ROvNi84vpB1oLWr5LvQ8JgzJXl3/16QN0TvSz
+hLCJUS63CSWB8ZmUpitUK3/k5RgiJ/lVR1f0jh+JPXKICEbcGARfx5KlD4B+E3LQ
+tZqy2OGtrXpGkuZUJpaUdiWcjPSLNOKCyGKXiHbhsdS/uHGiIAOshgOFdidrAXBh
+0NYnP5zFabJR3zyCz6TslKZdy/irw/WgwTX8VBxuO7/FxKIXhO3WJBeNDn9kMyGC
+2zlYAG+pFv+JN3tuWabeWXU4yV8ui8Mv1dqp8SoxO3Kixqq8FvUMElN2UHrBlJJx
+Hvi0uTYWp3zQBa6P5eZ0Rg7JG5p984HNFJwpJuPOkltTOszSK44wvw8LUKto33ww
+XxuPkyN1ZO13+Ju8iXJADqZr9YyskG3snUUDOnYyjXmUF42Nwx38yLOKralto0Zx
+iDnpuShE/vcwDaCbv8TD
+=tK3N
+-----END PGP SIGNATURE-----
+
+--=-o/b8sLPUEjy3s79FMXvp--
 
