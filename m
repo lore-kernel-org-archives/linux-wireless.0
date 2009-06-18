@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53000 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756879AbZFQMab (ORCPT
+Received: from mx03.syneticon.net ([78.111.66.105]:55576 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbZFRUW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 08:30:31 -0400
-Date: Wed, 17 Jun 2009 08:26:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Pirko <jpirko@redhat.com>, Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	davem <davem@davemloft.net>
-Subject: Re: [RFC] net: refactor multicast/unicast address list
-Message-ID: <20090617122616.GB2791@tuxdriver.com>
-References: <1244889678.13033.6.camel@johannes.local> <1244896094.13033.8.camel@johannes.local> <20090616111842.GG3521@psychotron.englab.brq.redhat.com> <1245151771.9256.3.camel@johannes.local> <20090616123808.GK3521@psychotron.englab.brq.redhat.com> <1245193788.21287.66.camel@johannes.local> <20090617072100.GA3492@psychotron.englab.brq.redhat.com> <1245231024.19769.0.camel@johannes.local>
+	Thu, 18 Jun 2009 16:22:26 -0400
+Message-ID: <4A3AA20C.6020908@wpkg.org>
+Date: Thu, 18 Jun 2009 22:22:36 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245231024.19769.0.camel@johannes.local>
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath5k AP support?
+References: <4A381159.70301@wpkg.org> <b6c5339f0906161454tbdaf382k654450a9f1cf8ae7@mail.gmail.com> <4A3AA08E.4050400@wpkg.org>
+In-Reply-To: <4A3AA08E.4050400@wpkg.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 17, 2009 at 11:30:24AM +0200, Johannes Berg wrote:
-> On Wed, 2009-06-17 at 09:21 +0200, Jiri Pirko wrote:
+Tomasz Chmielewski wrote:
+> Bob Copeland wrote:
+>> On Tue, Jun 16, 2009 at 5:40 PM, Tomasz Chmielewski<mangoo@wpkg.org> 
+>> wrote:
+>>> According to http://linuxwireless.org/en/users/Drivers/ath5k, AP mode is
+>>> "reported to work, we just need some further tests on all cards to be 
+>>> sure".
+>>>
+>>> I just tried it with 2.6.30 kernel with this card:
+>>
+>> 2.6.30 does not enable AP mode, you should try the wireless-testing
+>> tree instead.
+>>
+>> There is at least one known bug (the patch at the end is broken but
+>> close):  http://bugzilla.kernel.org/show_bug.cgi?id=13237
 > 
-> > >I guess we could stick this one into wireless-testing, and then take it
-> > >out again once your patch hits the tree and offers me similar API for
-> > >list_head based multicast lists?
-> > 
-> > Or wait, I hope the patch will be ready in week tops.
+> I tried compat-wireless-2009-06-17, but I can't connect:
 > 
-> Yeah, that's fine, I'll ask people to throw in the simple export patch
-> for testing. Thanks for considering! Please disregard my work on
-> mac80211, I'll rebase over your work.
+> Jun 18 22:12:31 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
+> 802.11: authenticated
+> Jun 18 22:12:31 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
+> 802.11: associated (aid 1)
+> Jun 18 22:12:34 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
+> 802.11: deauthenticated due to local deauth request
+> Jun 18 22:12:40 mangoo hostapd: wlan1: STA 00:23:08:78:d4:5f IEEE 
+> 802.11: authenticated
+> (...)
 
-If you need Jiri's patch in wireless-testing I can make arrangements
-to cherry-pick it.
+Oh well.
+The above is with hostapd 0.7.0 snapshot.
+With 0.6.9 I can connect and the connection works fine
 
-John
+Is it normal?
+
+hostapd 0.7.0 snapshot worked with a b43 card (but my b43 card doesn't 
+work well on my ASUS router, and hence I'm trying a different card, ath5k).
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Tomasz Chmielewski
+http://wpkg.org
