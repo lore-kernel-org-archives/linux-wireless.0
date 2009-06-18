@@ -1,91 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:59072 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751673AbZFAM2w (ORCPT
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:45887 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752696AbZFRX4N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 08:28:52 -0400
-Date: Mon, 1 Jun 2009 09:28:39 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090601122839.GB11011@khazad-dum.debian.net>
-References: <1243524688.10632.0.camel@johannes.local> <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com> <1243763887.19302.29.camel@johannes.local> <1243796509.6570.35.camel@localhost.localdomain> <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
+	Thu, 18 Jun 2009 19:56:13 -0400
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Reply-To: tfjellstrom@shaw.ca
+To: linux-wireless@vger.kernel.org
+Subject: Re: AR2424 speed issue.
+Date: Thu, 18 Jun 2009 17:46:27 -0600
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>
+References: <200906122006.55492.tfjellstrom@shaw.ca> <1245368044.6830.18.camel@localhost>
+In-Reply-To: <1245368044.6830.18.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A238EA2.4040106@tuffmail.co.uk>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <200906181746.28434.tfjellstrom@shaw.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 01 Jun 2009, Alan Jenkins wrote:
->> See, Henrique says that the use case is Thinkpads which store the
->> previous state in the BIOS. But that matters to you only if you use a
->> mixture of operation systems, which we don't have to support.
+On Thu June 18 2009, Maxim Levitsky wrote:
+> On Fri, 2009-06-12 at 20:06 -0600, Thomas Fjellstrom wrote:
+> > I just got a new laptop with an Atheros 2424 based wifi card (lspci says
+> > AR242x, but the pci device id is: 0035).
+> >
+> > While it seems to be stable, it is quite slow for 802.11g. The maximum
+> > speed I can get out of the ath5k driver is the speed it auto connects at:
+> > 36Mb/s. If I force it to anything higher, nothing can get through (the
+> > actual connection seems to stay up till some form of very long time out
+> > happens).
+> >
+> > I just tried the madwifi drivers on madwifi's website (latest trunk
+> > snapshot, and svn trunk itself) and It auto connects at 18Mb/s. If I up
+> > the rate to 54Mb/s the connection stays up, but it doesn't really seem to
+> > be transferring any faster.
+> >
+> > For comparison's sake I tried it out in Windows 7. It auto connects at
+> > 54Mb/s and can stream 1080p h264 without stuttering. In linux however,
+> > many SD or lower res Xvid won't play without stuttering. 720p and 1080p
+> > are unwatchable.
+> >
+> > What can be done about this? Is there some setting I'm overlooking? Its
+> > quite annoying to have to reboot into windows to watch some videos.
+>
+> You probably have AR2425. Aspire one?
 
-Well, if you do all in userspace, how do you propose to avoid the usual race
-conditions of the sort "radio starts on, but it should have started off",
-etc?  You'd have to kick the radios off on rfkill module load for safety,
-and that will also cause nastyness (it kicks my built-in wlan
-(eeepcargh)/bluetooth(most)/wwan(most) off bus, then hotplugs it again!).
+It is an AR2425, but its a Lenovo "ThinkPad" SL500 (based on the IdeaPad stuff 
+it seems :()
 
-That is just nasty for no good reason.  Just have this thing be read/write.
-You will have to sync states at every device open otherwise, in the end it
-is just plain more useful to have it read/write to begin with.
+> I have tried madwifi too (and unfortunaly found out that this driver
+> isn't any better in regard to transfer speeds) and stability.
+>
+> Bob Copeland, recently, wrote patches that make the card set TX power
+> properly, maybe you need to update kernel to take advantage of that?
+>
+> But here on my aspire one ath5k gives 54M speeds, but very often
+> transfers stall, I will attempt soon to figure out what is wrong.
 
-> "Other OS's" also includes the BIOS.  My BIOS setup screen has an option  
-> to toggle the wireless state.  It's great to have this just work, and  
-> annoying to have regressions.
+For some reason things seem to have automagically fixed themselves. After a 
+little while it started to connect at 54Mb all by itself, and things are 
+working.
 
-Well, thinkpads don't let you toggle anything on BIOS.  They allow you to
-outright lock down things in BIOS, and in that case, the radio becomes
-hardware-locked and cannot be turned on no matter what you do, or just plain
-doesn't show up anywhere...
+Initially it didn't want to work right with any driver, but now it does, at 
+least with ath5k (not sure if its git or from 2.6.29 tbh, I had git installed 
+at one point, but I have absolutely no idea if apt has overwritten it or not 
+by now).
 
->> On the other hand, people on machines that don't store the rfkill state
->> in the BIOS might care about having their machine boot up with the same
->> rfkill state(s) as they shut down with, so the sane thing to do would be
+> Best regards,
+> 	Maxim Levitsky
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Supporting this kind of hardware is fine.  Lowering the bar to support them,
-isn't.
-
->> to have rfkilld store the state persistently, and then recover it at
->> boot. At which point the BIOS state becomes irrelevant and a detail we
-
-And have the lights flicker?  Not nice.
-
-Just give us the full interface.  Don't do things half-way, it is much worse
-on the long road.  And it is a LOT easier on the users of your subsystem as
-well.
-
->> actually end up not even _wanting_ to support because it means we need
->> to be aware of machine differences in userspace.
-
-Expect resistence down this path.  I, for one, won't agree with that.
-Others might not as well.  I am open to ideas on how to make functionality
-generic, and I am not even putting much of a fuss over the total disregard
-of the stable ABI rules shown here, but I will _not_ stand for reduced
-functionality.
-
-> I like one of the solutions Marcels suggested, that /dev/rfkill should  
-> report the "global default values" only when they have been set - either  
-> by userspace or by a platform driver.
-
-It can have default values just fine.  And you can't wait for userspace or
-platform drivers to register a default, it just doesn't work, you cannot
-expect that all relevant drivers are loaded before "rfkilld".
-
-Just don't expose a rfkill type until the first rfkill structure of that
-type gets registered.  THAT closes all holes in a sensible,
-principle-of-least-suprise way.  The current code (including the rewrite)
-already deals with defaults and firmware-backed state storage just fine in
-that case.   All you need is a full interface that deals with global state
-hotplug (which ain't difficult, that's one or two more notifications only).
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
