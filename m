@@ -1,62 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:42064 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753332AbZFCMna (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:64299 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069AbZFRDEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 08:43:30 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, davem@davemloft.net,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Sergey Lapin <slapin@ossfans.org>,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>
-In-Reply-To: <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
-References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com>
-	 <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EmZRZA+LukKqUoaZJojX"
-Date: Wed, 03 Jun 2009 13:43:24 +0100
-Message-Id: <1244033004.21215.4.camel@deadeye>
-Mime-Version: 1.0
-Subject: Re: [PATCH 1/6] crc-itu-t: add bit-reversed calculation
+	Wed, 17 Jun 2009 23:04:49 -0400
+Received: by ewy6 with SMTP id 6so1114675ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2009 20:04:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1245293606-2101-1-git-send-email-HinTak.Leung@gmail.com>
+References: <1245293606-2101-1-git-send-email-HinTak.Leung@gmail.com>
+Date: Thu, 18 Jun 2009 04:04:50 +0100
+Message-ID: <3ace41890906172004r6574e4fet4b797669e92cad1b@mail.gmail.com>
+Subject: Re: [PATCH 1/2] zd1211rw: sort vid/pid pairs by numerical value
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 18, 2009 at 3:53 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+> In the past ids were inserted in no particular order and it has
+> become hard to see what ids are already included or not. This
+> patch sorts the ids by numerical value and has no functional effect.
+>
+> Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
---=-EmZRZA+LukKqUoaZJojX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-06-03 at 13:33 +0400, Dmitry Eremin-Solenikov wrote:
-[...]=20
-> +/**
-> + * crc_itu_t_bitreversed - Compute the CRC-ITU-T for the data buffer;
-> + * the buffer content is assumed to be bit-reversed
-[...]
-
-This short description spills onto two lines which is invalid and breaks
-the generation of docs.  Sorry to point this out after recommending the
-patch to you.
-
-I've changed the description to "crc_itu_t_bitreversed - Compute the
-CRC-ITU-T for a bit-reversed data buffer" all on one line.
-
-Ben.
-=20
---=20
-Ben Hutchings
-Logic doesn't apply to the real world. - Marvin Minsky
-
---=-EmZRZA+LukKqUoaZJojX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iD8DBQBKJm/i79ZNCRIGYgcRAuH+AJ0R1XimrXgIoZRiTPJhce06vouOmwCfaMi/
-PHrKQyUstX71t14CbcFoZB8=
-=rl3w
------END PGP SIGNATURE-----
-
---=-EmZRZA+LukKqUoaZJojX--
+There is no [PATCH 2/2] - sorry - Please treat "[PATCH 1/2]" as standalone.
