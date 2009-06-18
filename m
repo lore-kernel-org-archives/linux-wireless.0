@@ -1,44 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:48929 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbZFHSbz convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:43061 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761189AbZFRLva (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 14:31:55 -0400
-Received: by bwz9 with SMTP id 9so3284107bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 11:31:56 -0700 (PDT)
+	Thu, 18 Jun 2009 07:51:30 -0400
+Message-ID: <4A3A2A3E.7090300@tuffmail.co.uk>
+Date: Thu, 18 Jun 2009 12:51:26 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <1244442240.11006.0.camel@johannes.local>
-References: <83a869cd0906071450h24ed4119s44d00db0d97d59e2@mail.gmail.com>
-	<69e28c910906071534n7f2f3e66r34ac76f503c96fcb@mail.gmail.com>
-	<1244442240.11006.0.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 8 Jun 2009 20:31:29 +0200
-Message-ID: <69e28c910906081131q32c43346r7b4bf15d70ee2813@mail.gmail.com>
-Subject: Re: [PATCH] b43 add harware tkip
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: gregor kowski <gregor.kowski@gmail.com>,
-	linux-wireless@vger.kernel.org
+To: Bob Copeland <me@bobcopeland.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pm@lists.linux-foundation.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@venema.h4ckr.net,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-pci@vger.kernel.org
+Subject: Re: [ath5k-devel] [linux-pm] PCI hotplug v.s. suspend
+References: <Pine.LNX.4.44L0.0906151035560.5057-100000@iolanthe.rowland.org> <200906152158.30989.rjw@sisk.pl> <20090616010101.GA11412@hash.localnet>
+In-Reply-To: <20090616010101.GA11412@hash.localnet>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/8 Johannes Berg <johannes@sipsolutions.net>:
-> On Mon, 2009-06-08 at 00:34 +0200, Gábor Stefanik wrote:
->> On Sun, Jun 7, 2009 at 11:50 PM, gregor kowski<gregor.kowski@gmail.com> wrote:
+Bob Copeland wrote:
+> On Mon, Jun 15, 2009 at 09:58:30PM +0200, Rafael J. Wysocki wrote:
+>   
+>> On Monday 15 June 2009, Alan Stern wrote:
+>>     
+>>> I'm not sure whether the example is trustworthy.  There was some
+>>> discussion quite a while ago regarding whether drivers should free
+>>> their IRQs during suspend, but I don't remember what the outcome was.
+>>>       
+>> No, they shouldn't.
+>>
+>> That's why we do the entire suspend_device_irqs() thing etc.
+>>     
 >
->> This is your entire mail body.
->> Please inline the patch, or at least include a description.
+> So, ath5k needs something like the following?
 >
-> This is ridiculous, you've never managed to do that correctly yourself.
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 55f7de0..0107cd6 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -665,7 +665,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  
+>  	ath5k_led_off(sc);
+>  
+> -	free_irq(pdev->irq, sc);
+>  	pci_save_state(pdev);
+>  	pci_disable_device(pdev);
+>  	pci_set_power_state(pdev, PCI_D3hot);
+> @@ -686,18 +685,8 @@ ath5k_pci_resume(struct pci_dev *pdev)
+>  	if (err)
+>  		return err;
+>  
+> -	err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+> -	if (err) {
+> -		ATH5K_ERR(sc, "request_irq failed\n");
+> -		goto err_no_irq;
+> -	}
+> -
+>  	ath5k_led_enable(sc);
+>  	return 0;
+> -
+> -err_no_irq:
+> -	pci_disable_device(pdev);
+> -	return err;
+>  }
+>  #endif /* CONFIG_PM */
+>  
+>   
 
-Well, I never sent an empty mail with only an attachment and nothing
-in the body...
+Unfortunately this makes it worse.  My eeepc-laptop hacks are now in
+wireless-testing.  If I apply the above patch to wireless-testing and
+"remove" the device while suspended, I get a soft hang on resume. 
+Suspending without removal works fine.
 
->
-> johannes
->
+I can see a BUG if I boot with no_console_suspend
+
+Unable to handle kernel NULL pointer dereference
+IP: klist_put
+Tainted: G W
+Process s2disk
+
+Call trace:
+? klist_del
+? device_del
+? device_unregister
+? pci_stop_dev
+? pci_stop_bus
+? pci_remove_device
+? eeepc_rfkill_hotplug [eeepc_laptop]
+? eeepc_hotk_resume [eeepc_laptop]
+? acpi_device_resume
+? device_resume
+? hibernation_snapshot
+? release_console_sem
+? snapshot_ioctl
+? snapshot_ioctl
+? vfs_ioctl
+? do_vfs_ioctl
+? n_tty_write
+? vfs_write
+? sys_ioctl
+? syscall_call
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
