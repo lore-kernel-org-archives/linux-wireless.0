@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47421 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751297AbZFBUes (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:29963 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756444AbZFRVnp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:34:48 -0400
-Subject: Re: [PATCH] mac80211: add missing RCU lock/unlock on
- ieee80211_rx_bss_info()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1243974537-12774-1-git-send-email-lrodriguez@atheros.com>
-References: <1243974537-12774-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9VvtgU2ERCvDbprqCQ27"
-Date: Tue, 02 Jun 2009 22:34:46 +0200
-Message-Id: <1243974886.7176.8.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 18 Jun 2009 17:43:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <40f31dec0906181016nffa031flac8f464c929f1bc9@mail.gmail.com>
+References: <1245328543.13790.31.camel@johannes.local> <1245329713.13790.37.camel@johannes.local>
+	<40f31dec0906181016nffa031flac8f464c929f1bc9@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 18 Jun 2009 14:43:27 -0700
+Message-ID: <43e72e890906181443g54269d1bm7ce24dcb46e7e921@mail.gmail.com>
+Subject: Re: wireless netns work
+To: Nick Kossifidis <mickflemm@gmail.com>,
+	Georgy Berdyshev <codingmaster@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 18, 2009 at 10:16 AM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+> 2009/6/18 Johannes Berg <johannes@sipsolutions.net>:
+>> On Thu, 2009-06-18 at 14:35 +0200, Johannes Berg wrote:
+>>
+>>> Oddly, the link works unidirectionally in both directions, if I ping
+>>> from either side tcpdump shows the echo requests on the other side, but
+>>> no echo reply is being generated. Still investigating why this is, since
+>>> it works fine with veth. Ideas why this is broken would be
+>>> appreciated :)
+>>
+>> Ok, the missing piece of the puzzle is this patch:
+>> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-hwsim-skb-cleanup.patch
+>>
+>> root@(none):~# ping -Q 0x80 10.0.0.1
+>> PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
+>> Warning: time of day goes back (-311263us), taking countermeasures.
+>> 64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.487 ms
+>> 64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.122 ms
+>> 64 bytes from 10.0.0.1: icmp_seq=3 ttl=64 time=0.121 ms
+>> 64 bytes from 10.0.0.1: icmp_seq=4 ttl=64 time=0.130 ms
+>>
+>
+> Well done !!!
+>
+> Don't you think it's time we create a mac80211 test suite based on hwsim ?
+> I think it's an interesting project...
 
---=-9VvtgU2ERCvDbprqCQ27
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Certainly, there's a GSOC project going on for exactly this purpose:
 
-On Tue, 2009-06-02 at 16:28 -0400, Luis R. Rodriguez wrote:
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/mac80211/ibss.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index 0b30277..446cada 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -365,7 +365,9 @@ static void ieee80211_rx_bss_info(struct ieee80211_su=
-b_if_data *sdata,
->  		       sdata->dev->name, mgmt->bssid);
->  #endif
->  		ieee80211_sta_join_ibss(sdata, bss);
-> +		rcu_read_lock();
->  		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
-> +		rcu_read_unlock();
->  	}
+http://wireless.kernel.org/en/developers/GSoC/2009/Automation_of_testing
 
-I see no reason for this to be necessary.
+Cc'ing the student working on it, Georgy.
 
-johannes
+BTW : a good review of when namespace stuff started to get merged:
 
---=-9VvtgU2ERCvDbprqCQ27
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+http://lwn.net/Articles/219794/
 
------BEGIN PGP SIGNATURE-----
+By reading this still I am still unclear what to cheer for with my pom
+poms. Can you clarify a little what this means for wireless? Let me
+explain a little where I am confused
 
-iQIcBAABAgAGBQJKJYzjAAoJEODzc/N7+QmaGeIP/AtR1fgusP2BA7oKTxsGvVLu
-z7O07Qw7o3+Qmi36qwpqhqgfWBHFnyJdD29eodOH5xHwjNmGGo5s2/lLhcX7KGAU
-zz95Hii5WhWnJn4ehU25RAfZteKTrvbP5ZTe1Fvv+xL3qX/rCRoU+dogEjNdPl65
-hUG6KflNEn7GO7LQ6JxnFhoOS8w+64k2NtKro9InhWJ2yPyoTaZADCA2m7WtS33e
-67InoZXhP1ndUBxj5LOF5cfGl+pw9ZelLhCXDBFx1fTpkmDiGHakiAmBiep3U3hR
-LKDOK8QIQx4vlRz0lP5ih1AQtqFQCgMVGY0wRK+Wy4Nns7BLco8MjdrNOs0dBQkO
-XVXXHBTexeatr1LzFCV+RgP2GzYQUtXC57ymhE0puoTn58iDpApY6Z1Pac9fYMtY
-J4nBJS1ZyLGVE1Wf2ziOkzvaxTiQYq1jN5SdjkNzalrJYe59CCEOvswGLT/LO2Ex
-ZlM+wxZVESdBi/KnwcDl4T/PahVA/46O7qsfHL6bjVOMEtaLwCLyozNobT7V6lMu
-rnfD78B8OwrT0kEJUnEqRrICh92HuBDRXCa+0qsXze8lZii5v91luJ7Tdpat3lC8
-R6QPATTf+FDAhZ05nXqO5Phu/blt+WdktEmDHy/Qfh1GEUt6tZZuUkYyWFBreFSR
-pJRJM1kD1EqUDWEAMaD6
-=TAIX
------END PGP SIGNATURE-----
+For example, I see you used mac80211_hwsim and was able to use two
+wlan interfaces to talk to each other. This seems great for testing
+purposes but it remains unclear to me the advantage of testing with
+separate namespaces vs creating two wlan interfaces on one namespace
+with mac80211_hwsim.
 
---=-9VvtgU2ERCvDbprqCQ27--
+Also, it remains unclear to me what the implications for real device
+usage though. So for example ath9k has support creating multiple
+wiphys and it uses its own schedular to also support communication on
+two separate channels. Does supporting different namespaces have
+implication on how we can support multiple wiphys in the future? Mind
+you I have yet to review all the patches, but if you create a
+secondary namespace and have a mac80211 wireless driver loaded how
+does sharing the device work?
 
+  Luis
