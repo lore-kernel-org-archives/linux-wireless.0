@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50055
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753044AbZFFBDO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 21:03:14 -0400
-Date: Fri, 05 Jun 2009 18:03:15 -0700 (PDT)
-Message-Id: <20090605.180315.214694902.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: mb@bu3sch.de, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, castet.matthieu@free.fr
-Subject: Re: [PATCH] b43: Fix possible unaligned u32 access
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090605185047.GA7361@tuxdriver.com>
-References: <20090605122503.GA2791@tuxdriver.com>
-	<200906051929.07714.mb@bu3sch.de>
-	<20090605185047.GA7361@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from foo.birdnet.se ([213.88.146.6]:59945 "HELO foo.birdnet.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754305AbZFRCQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2009 22:16:57 -0400
+Message-ID: <20090618021017.19879.qmail@stuge.se>
+Date: Thu, 18 Jun 2009 04:10:17 +0200
+From: Peter Stuge <peter@stuge.se>
+To: "Fabio A. Correa" <facorread@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: 4311 not detected at all
+References: <ec2083b20906120654j370e5bdo724a7c3b6d505a6c@mail.gmail.com> <4A326771.6030301@lwfinger.net> <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ec2083b20906120759x4a8c247eh61d1f6bdb6f194f6@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 5 Jun 2009 14:50:48 -0400
-
-> On Fri, Jun 05, 2009 at 07:29:07PM +0200, Michael Buesch wrote:
->> On Friday 05 June 2009 14:25:03 John W. Linville wrote:
->> > On Thu, Jun 04, 2009 at 11:18:33PM +0200, Michael Buesch wrote:
->> > > From: Matthieu CASTET <castet.matthieu@free.fr>
->> > > 
->> > > Fix possible unaligned u32 access in b43_generate_plcp_hdr().
->> > > Unaligned data is read/write with a u32 pointer instead of using the
->> > > packed structure. Some versions of gcc ignore the "packed" attribute, if the
->> > > structure element is accessed through a local pointer.
->> > > 
->> > > Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
->> > > Signed-off-by: Michael Buesch <mb@bu3sch.de>
->> > 
->> > That seems pretty brain-dead...can you cite a source for this
->> > information?  The patch seems like a no-op...
->> > 
->> > John
->> 
->> struct foo {
->> 	int data;
->> } __attribute__((packed));
->> 
->> struct foo foo;
->> int *d = &foo->data;
->> foo->data = x;	/* Works for unaligned */
->> *d = y;		/* Does not work for unaligned */
+Fabio A. Correa wrote:
+> > The bottom line is that a BIOS error is likely the problem with
+> > BAR allocation on your machine. Have you checked to see if an
+> > updated one is available?
 > 
-> Why not?
+> Hey, I found an updated BIOS available in the HP site, obviously
+> requiring Windows. I had deleted those partitions, so I will get a
+> Windows hard disk/CD and try to flash it.
 
-Because "int *" does not have the packed attribute.
+You may be able to use flashrom as developed by the coreboot project
+to flash your BIOS. Maybe. If not, come on IRC or the mailing list
+and we can try to help you get it to work on your laptop.
+
+http://coreboot.org/Flashrom
+http://coreboot.org/IRC
+http://coreboot.org/Mailinglist
+
+
+> By the way, what is BAR?
+
+The boot firmware (usually BIOS) assigns PCI devices an address range
+through which software can exchange data with the device. Each device
+specifies the size for it's address ranges, the firmware calculates
+how all ranges fit together, and then writes the start, or base,
+address to the respective BAR in each device.
+
+The addresses are the same as RAM addresses, which is why 32-bit
+systems can not use full 4GB of RAM. The PCI device address ranges
+will occupy the last part of memory space.
+
+Better BAR allocation algorithms could allow more usable RAM, but it
+also depends on chipset limitations.
+
+
+//Peter
