@@ -1,80 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35529 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754643AbZFEFlx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47275 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755551AbZFRNpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 01:41:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 05/15] ath9k: remove pointless wrapper ath_rc_rate_getidx()
-Date: Fri,  5 Jun 2009 01:41:32 -0400
-Message-Id: <1244180502-4323-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 18 Jun 2009 09:45:33 -0400
+Date: Thu, 18 Jun 2009 09:30:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: push rx status into skb->cb
+Message-ID: <20090618133055.GB2738@tuxdriver.com>
+References: <1245237180.20613.4.camel@johannes.local> <87d491n3bi.fsf@litku.valot.fi> <1245327565.13790.20.camel@johannes.local> <873a9x90u0.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <873a9x90u0.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is just calling another helper, so just use the other
-helper directly. This should make it clear that when do not
-find the next rate we stick to the current one.
+On Thu, Jun 18, 2009 at 03:35:19PM +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> >> [...]
+> >> 
+> >> >  drivers/net/wireless/wl12xx/rx.c           |    3 -
+> >> 
+> >> Last night John applied a patch which renamed this to wl1251_rx.c.
+> >
+> > He actually applied both patches so I'll assume git resolved this.
+> 
+> Nice. I just love git :)
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   21 ++++-----------------
- 1 files changed, 4 insertions(+), 17 deletions(-)
+I do too -- but I resolved this one by hand... :-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 557f054..6ccd565 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -820,19 +820,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	tx_info->control.rts_cts_rate_idx = cix;
- }
- 
--static u8 ath_rc_rate_getidx(struct ath_softc *sc,
--			     struct ath_rate_priv *ath_rc_priv,
--			     const struct ath_rate_table *rate_table,
--			     u8 rix)
--{
--	u8 nextindex = 0;
--	if (ath_rc_get_nextlowervalid_txrate(rate_table,
--					     ath_rc_priv, rix, &nextindex))
--		return nextindex;
--	else
--		return rix;
--}
--
- static void ath_rc_ratefind(struct ath_softc *sc,
- 			    struct ath_rate_priv *ath_rc_priv,
- 			    struct ieee80211_tx_rate_control *txrc,
-@@ -873,8 +860,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		/* Get the next tried/allowed rate. No RTS for the next series
- 		 * after the probe rate
- 		 */
--		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix);
-+		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
-+						 rix, &nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -891,8 +878,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix);
-+		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
-+						 rix, &nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
+John
 -- 
-1.6.0.6
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
