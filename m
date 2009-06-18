@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2207 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466AbZFWTSb (ORCPT
+Received: from mail-px0-f189.google.com ([209.85.216.189]:62309 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989AbZFRQui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 15:18:31 -0400
-Date: Tue, 23 Jun 2009 15:16:10 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] mac80211: fix todo lock
-Message-ID: <20090623191610.GA3571@hash.localnet>
-References: <1245751007.4184.17.camel@johannes.local> <1245766038.21314.24.camel@johannes.local> <4A40F856.2010501@openwrt.org> <b6c5339f0906230951v9766914vdc1d76f85eb62feb@mail.gmail.com> <1245776114.21314.41.camel@johannes.local> <20090623183126.GA3337@hash.localnet> <1245783408.21314.43.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245783408.21314.43.camel@johannes.local>
+	Thu, 18 Jun 2009 12:50:38 -0400
+Received: by pxi27 with SMTP id 27so1214937pxi.33
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 09:50:40 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] libertas: correct card cleanup order in SPI driver
+Date: Thu, 18 Jun 2009 09:51:57 -0700
+Message-Id: <1245343917-15534-1-git-send-email-andrey@cozybit.com>
+In-Reply-To: <20090618081206.GB2770@Chamillionaire.breakpoint.cc>
+References: <20090618081206.GB2770@Chamillionaire.breakpoint.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 08:56:47PM +0200, Johannes Berg wrote:
-> Subject: mac80211: fix todo lock
-> 
-> The key todo lock can be taken from different locks
-> that require it to be _bh to avoid lock inversion
-> due to (soft)irqs.
+The SPI driver does a couple of card cleanup steps in the wrong order on
+module removal.  If IEEE PS is enabled, this results in the card being
+left in IEEE PS mode and subsequent failures to reload the module.  The
+problem is that the surpriseremoved flag is set before calling
+lbs_remove_card, but that function needs to issue a command to exit IEEE
+PS mode (the flag blocks the command path).  In addition, lbs_stop_card
+should be called first because it clears out any pending commands.
 
-v3 works great!  Feel free to add
+Tested on a GSPI device with V9 firmware by confirming that we can
+reload the module with or without IEEE PS enabled.
 
-Tested-by: Bob Copeland <me@bobcopeland.com>
+Also fix a warning from the wrong uint format in a printk.
 
+V2: use z modifier, thanks Sebastian.
+
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ drivers/net/wireless/libertas/if_spi.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 923ed58..8d8bc0b 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -737,7 +737,7 @@ static int if_spi_c2h_data(struct if_spi_card *card)
+ 		goto out;
+ 	} else if (len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
+ 		lbs_pr_err("%s: error: card has %d bytes of data, but "
+-			   "our maximum skb size is %lu\n",
++			   "our maximum skb size is %zu\n",
+ 			   __func__, len, MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
+ 		err = -EINVAL;
+ 		goto out;
+@@ -1171,12 +1171,13 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+ 
+ 	lbs_deb_spi("libertas_spi_remove\n");
+ 	lbs_deb_enter(LBS_DEB_SPI);
+-	priv->surpriseremoved = 1;
+ 
+ 	lbs_stop_card(priv);
++	lbs_remove_card(priv); /* will call free_netdev */
++
++	priv->surpriseremoved = 1;
+ 	free_irq(spi->irq, card);
+ 	if_spi_terminate_spi_thread(card);
+-	lbs_remove_card(priv); /* will call free_netdev */
+ 	if (card->pdata->teardown)
+ 		card->pdata->teardown(spi);
+ 	free_if_spi_card(card);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
