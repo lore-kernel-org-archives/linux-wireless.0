@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36657
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752681AbZFGKhu (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:59336 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753294AbZFRSxU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 06:37:50 -0400
-Date: Sun, 07 Jun 2009 03:37:51 -0700 (PDT)
-Message-Id: <20090607.033751.191866033.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-06-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090604152011.GC2839@tuxdriver.com>
-References: <20090604152011.GC2839@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 18 Jun 2009 14:53:20 -0400
+Received: by gxk10 with SMTP id 10so2013213gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 11:53:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <COL104-W23908C8F381DFDE2C0C67DE13D0@phx.gbl>
+References: <COL104-W23908C8F381DFDE2C0C67DE13D0@phx.gbl>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Thu, 18 Jun 2009 11:45:10 -0700
+Message-ID: <43e72e890906181145v30134c65nec4493d53211ab98@mail.gmail.com>
+Subject: Re: [PATCH] compat-2.6: fix foo
+To: OMarOMio antar <goldenomarom655@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 4 Jun 2009 11:20:11 -0400
+2009/6/18 OMarOMio antar <goldenomarom655@hotmail.com>:
+> I have Intel WiFi Link 4965AGN and I need an injection patch for
+> this driver.
 
-> Hopefully this is (almost?) the last wireless pull request for
-> non-bugfix patches intended for 2.6.31...
-> 
-> Included are the usual round of driver updates, mac80211 updates, etc.
-> Also included is the long-awaited and slightly controversial rfkill
-> rewrite.  The userland guys (i.e. Dan and Marcel) are happy with it,
-> and it can clean-up a lot of driver code for wireless.  Henrique has
-> some lingering concerns about some corner cases for platform drivers,
-> but I think they are relatively minor and will be resolved amicably
-> soon.
-> 
-> Please let me know if there are problems!
+Huh? [PATCH] subjects tend to have an inline patch, this e-mail
+requests a patch instead?
 
-Pulled into net-next-2.6 and I'll push it back out to kernel.org
-after some build testing.
+> My KDE version: 3.5.10
+> User:root
+> Hostname:bt
+> System:linux
+> Realase:2.6.28.1
+> Machine:i686
+>
+>
+> And tell me how to install the patches for my driver.
 
-Thanks!
+What patches?
+_______________________________
+> What can you do with the new Windows Live? Find out
+
+HTML e-mails are not welcomed, so your e-mail to linux-wireless
+probably didn't make it.
+
+ Luis
