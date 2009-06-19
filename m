@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47088 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752268AbZFDVka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 17:40:30 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Georgy Berdyshev <codingmaster@gmail.com>
-Subject: Re: mac80211 : fix unaligned rx skb
-Date: Thu, 4 Jun 2009 23:40:23 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	matthieu castet <castet.matthieu@free.fr>,
-	linux-wireless@vger.kernel.org
-References: <4A282B92.70609@free.fr> <43e72e890906041353y98a3a13s2b8d60328a9c0c6d@mail.gmail.com> <ee8eb53d0906041416q52812277x7061070d1d9a683c@mail.gmail.com>
-In-Reply-To: <ee8eb53d0906041416q52812277x7061070d1d9a683c@mail.gmail.com>
+Received: from ey-out-2122.google.com ([74.125.78.24]:28117 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908AbZFSVZ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 17:25:57 -0400
+Received: by ey-out-2122.google.com with SMTP id d26so293106eyd.37
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 14:25:58 -0700 (PDT)
+Message-ID: <4A3C0265.4050902@gmail.com>
+Date: Fri, 19 Jun 2009 22:25:57 +0100
+From: Dave <kilroyd@googlemail.com>
 MIME-Version: 1.0
-Message-Id: <200906042340.23997.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="utf-8"
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 21/23] orinoco: convert scanning to cfg80211
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com> <1245363695-8289-22-git-send-email-kilroyd@googlemail.com> <20090619173541.GC2753@tuxdriver.com> <4A3BD06D.7080702@gmail.com> <20090619180233.GD2753@tuxdriver.com>
+In-Reply-To: <20090619180233.GD2753@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 04 June 2009 23:16:13 Georgy Berdyshev wrote:
-> Hi,
-> 
-> that's the inline version:
-> -------
-> mac80211 is checking is the skb is aligned on 32 bit boundary.
-> But it is checking against ethernet header, whereas Linux expect IP
-> header aligned.
-> And ethernet ether size is 6*2+2=14, so aligning ethernet header make
-> IP header unaligned.
-> 
-> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 9776f73..0845fb3 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1397,7 +1397,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
->  		 * mac80211. That also explains the __skb_push()
->  		 * below.
->  		 */
-> -		align = (unsigned long)skb->data & 3;
-> +		align = ((unsigned long)(skb->data + sizeof(struct ethhdr))) & 3;
->  		if (align) {
->  			if (WARN_ON(skb_headroom(skb) < 3)) {
->  				dev_kfree_skb(skb);
+John W. Linville wrote:
+> On Fri, Jun 19, 2009 at 06:52:45PM +0100, Dave wrote:
+>> John W. Linville wrote:
+>>> Hmmm...please do try to compile test patches before posting! :-)
 
-Uhm, can you give a more verbose explanation? Without that I'd say this patch is plain wrong.
-What the hell does struct ethhdr have to do with wireless?
-This is not ethernet. It's 802.11. There is no such thing as an ethernet header in a 802.11 packet.
+>> Compile? I'm running it! (and sparse didn't complain either)
+>>
+>> I'll go have a look see what's special on my end. I'm guessing no SMP or
+>> something.
+> 
+> Haha...yeah, that's probably it...
+> 
+>> Would you like the series/patch reposted including this fix?
+> 
+> No, I've got it fixed.
 
--- 
-Greetings, Michael.
+Thanks.
+
+It looks like I can enable DEBUG_SPINLOCKS to highlight this - but it's
+expensive to keep turning that on and off.
+
+Alternatively I could submit a patch to either add typechecks to
+spinlock_api_up.h or convert the #defines to inlines.
+
+Sounds a bit too controversial for me, so I'll just try to be vigilant
+for now.
+
+
+Regards,
+
+Dave.
