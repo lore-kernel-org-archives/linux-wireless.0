@@ -1,142 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56375 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995AbZFPTXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 15:23:11 -0400
-Subject: Re: [PATCH] cfg80211: issue netlink notification when scan starts
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1245175002.21287.3.camel@johannes.local>
-References: <1245175002.21287.3.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 16 Jun 2009 15:22:57 -0400
-Message-Id: <1245180177.28992.6.camel@130.81.190.10.in-addr.arpa>
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:2996 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732AbZFSLKT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 07:10:19 -0400
+Date: Fri, 19 Jun 2009 07:08:53 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pm@lists.linux-foundation.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@venema.h4ckr.net, linux-pci@vger.kernel.org
+Subject: Re: [ath5k-devel] [linux-pm] PCI hotplug v.s. suspend
+Message-ID: <20090619110853.GA18956@hash.localnet>
+References: <Pine.LNX.4.44L0.0906181437090.3129-100000@netrider.rowland.org> <4A3AAF0A.9020707@tuffmail.co.uk> <4A3B4D8C.6010002@tuffmail.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A3B4D8C.6010002@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-06-16 at 19:56 +0200, Johannes Berg wrote:
-> To ease multiple apps working together smoothly,
-> send a notification when a scan is started.
+On Fri, Jun 19, 2009 at 09:34:20AM +0100, Alan Jenkins wrote:
+> I tried an earlier version without the problem workaround.  Bob's
+> suggested patch to remove the free_irq() on suspend works fine.  It
+> fixes the WARNING when the device is removed during suspend, and it
+> still works if the device is not removed during suspend.
 
-Yay.  I like this.  As long as we can guarantee that it will always be
-followed by a scan-done message of course.
+Okay thanks for finding it and testing.  I'll send a version with my
+s-o-b later today.
 
-Dan
-
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/wireless/nl80211.c |   39 ++++++++++++++++++++++++++++++---------
->  net/wireless/nl80211.h |    2 ++
->  net/wireless/scan.c    |    3 ++-
->  3 files changed, 34 insertions(+), 10 deletions(-)
-> 
-> --- wireless-testing.orig/net/wireless/nl80211.c	2009-06-16 18:49:13.000000000 +0200
-> +++ wireless-testing/net/wireless/nl80211.c	2009-06-16 18:51:27.000000000 +0200
-> @@ -2773,6 +2773,9 @@ static int nl80211_trigger_scan(struct s
->  	drv->scan_req = request;
->  	err = drv->ops->scan(&drv->wiphy, dev, request);
->  
-> +	if (!err)
-> +		nl80211_send_scan_start(drv, dev);
-> +
->   out_free:
->  	if (err) {
->  		drv->scan_req = NULL;
-> @@ -3599,11 +3602,11 @@ static int nl80211_add_scan_req(struct s
->  	return -ENOBUFS;
->  }
->  
-> -static int nl80211_send_scan_donemsg(struct sk_buff *msg,
-> -				     struct cfg80211_registered_device *rdev,
-> -				     struct net_device *netdev,
-> -				     u32 pid, u32 seq, int flags,
-> -				     u32 cmd)
-> +static int nl80211_send_scan_msg(struct sk_buff *msg,
-> +				 struct cfg80211_registered_device *rdev,
-> +				 struct net_device *netdev,
-> +				 u32 pid, u32 seq, int flags,
-> +				 u32 cmd)
->  {
->  	void *hdr;
->  
-> @@ -3624,6 +3627,24 @@ static int nl80211_send_scan_donemsg(str
->  	return -EMSGSIZE;
->  }
->  
-> +void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
-> +			     struct net_device *netdev)
-> +{
-> +	struct sk_buff *msg;
-> +
-> +	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-> +	if (!msg)
-> +		return;
-> +
-> +	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
-> +				  NL80211_CMD_TRIGGER_SCAN) < 0) {
-> +		nlmsg_free(msg);
-> +		return;
-> +	}
-> +
-> +	genlmsg_multicast(msg, 0, nl80211_scan_mcgrp.id, GFP_KERNEL);
-> +}
-> +
->  void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
->  			    struct net_device *netdev)
->  {
-> @@ -3633,8 +3654,8 @@ void nl80211_send_scan_done(struct cfg80
->  	if (!msg)
->  		return;
->  
-> -	if (nl80211_send_scan_donemsg(msg, rdev, netdev, 0, 0, 0,
-> -				      NL80211_CMD_NEW_SCAN_RESULTS) < 0) {
-> +	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
-> +				  NL80211_CMD_NEW_SCAN_RESULTS) < 0) {
->  		nlmsg_free(msg);
->  		return;
->  	}
-> @@ -3651,8 +3672,8 @@ void nl80211_send_scan_aborted(struct cf
->  	if (!msg)
->  		return;
->  
-> -	if (nl80211_send_scan_donemsg(msg, rdev, netdev, 0, 0, 0,
-> -				      NL80211_CMD_SCAN_ABORTED) < 0) {
-> +	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
-> +				  NL80211_CMD_SCAN_ABORTED) < 0) {
->  		nlmsg_free(msg);
->  		return;
->  	}
-> --- wireless-testing.orig/net/wireless/nl80211.h	2009-06-16 18:50:32.000000000 +0200
-> +++ wireless-testing/net/wireless/nl80211.h	2009-06-16 18:50:53.000000000 +0200
-> @@ -6,6 +6,8 @@
->  extern int nl80211_init(void);
->  extern void nl80211_exit(void);
->  extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
-> +extern void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
-> +				    struct net_device *netdev);
->  extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
->  				   struct net_device *netdev);
->  extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
-> --- wireless-testing.orig/net/wireless/scan.c	2009-06-16 18:52:00.000000000 +0200
-> +++ wireless-testing/net/wireless/scan.c	2009-06-16 18:52:13.000000000 +0200
-> @@ -648,7 +648,8 @@ int cfg80211_wext_siwscan(struct net_dev
->  	if (err) {
->  		rdev->scan_req = NULL;
->  		kfree(creq);
-> -	}
-> +	} else
-> +		nl80211_send_scan_start(rdev, dev);
->   out:
->  	cfg80211_put_dev(rdev);
->  	return err;
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Bob Copeland %% www.bobcopeland.com
 
