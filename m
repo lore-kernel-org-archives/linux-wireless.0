@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web55304.mail.re4.yahoo.com ([206.190.58.183]:35477 "HELO
-	web55304.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752621AbZFCAzT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 20:55:19 -0400
-Message-ID: <434964.30813.qm@web55304.mail.re4.yahoo.com>
-Date: Tue, 2 Jun 2009 17:55:20 -0700 (PDT)
-From: austinxxh-ath9k@yahoo.com
-Reply-To: austinxxh-ath9k@yahoo.com
-Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
-To: Andrey Yurovsky <andrey@cozybit.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Received: from yw-out-2324.google.com ([74.125.46.31]:46478 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753147AbZFSRAz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 13:00:55 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1043453ywb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 10:00:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4A3B5B11.7060103@bitnet.be>
+References: <4A3B5B11.7060103@bitnet.be>
+Date: Fri, 19 Jun 2009 10:00:57 -0700
+Message-ID: <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
+Subject: Re: current status of 802.11s mesh in ath5k ?
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Hans Maes <Hans@bitnet.be>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jun 19, 2009 at 2:32 AM, Hans Maes<Hans@bitnet.be> wrote:
+> What is the status of 802.11s mesh support in ath5k in the 2.6.30 kernel, in
+> the current wireless-compat, and in the current wireless-testing ?
+> Does it work, or is it broken ?
 
-Not good, I definitely like to use 80211s with ath9k, though I'm not familiar enough to fix anything related to them yet. Say, I don't know what's the relationship between 80211s and ath9k/ath5k at this point. Trying 0602 release now and see if it improves anything. 
+You'll want wireless-testing (or the latest compat), after commit
+41ba08509.  However ath5k will not beacon until you issue a scan due
+to a bug.  You can bring up an ath5k node like this:
 
-I was told b43 runs well with 80211s, hope ath5k/ath9k will do the same someday.
+# iw phy phy0 interface add mesh type mp mesh_id mymesh
+# ifconfig mesh up
+# iwlist mesh scan
 
-X Xiao
+> Can/should it be used in a production environment ?
 
---- On Tue, 6/2/09, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+Things seem to work well aside from the scan issue, however I haven't
+fully verified multi-hop yet.  802.11s is currently a draft and the
+mac80211 implementation does not implement the full draft at this
+time.
 
-> From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Subject: Re: [ath9k-devel] ath9k/ath5k + 80211s crash
-> To: "Andrey Yurovsky" <andrey@cozybit.com>
-> Cc: "austinxxh-ath9k@yahoo.com" <austinxxh-ath9k@yahoo.com>, "devel@lists.open80211s.org" <devel@lists.open80211s.org>, "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-> Date: Tuesday, June 2, 2009, 5:30 PM
-> On Tue, Jun 02, 2009 at 09:58:59AM
-> -0700, Andrey Yurovsky wrote:
-> > With wireless-testing from a couple of days ago, an
-> X86 system, and this patch:
-> > http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
-> > ath9k can bring up a mesh point interface and doesn't
-> crash for me,
-> > but there are no mesh beacons, so mesh isn't
-> working.  On ath5k, there
-> > are also no beacons and mesh doesn't work, but there's
-> no crash.
-> 
-> If no one is really interested in fixing we should just
-> disable mesh
-> for both ath5k and ath9k.
-> 
->   Luis
-> 
+> Also, what is the best place to track the status/progress on 802.11s mesh in
+> ath5k ?
+
+We're keeping the mesh-specific drivers list up to date here:
+http://o11s.org/trac
+...however you may also be interested in the ath5k mailing list or the
+open80211s mailing list.  Debugging effort and patches to resolve the
+scan issue or any other ath5k issues are very much welcome!  Thanks,
+
+  -Andrey
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
