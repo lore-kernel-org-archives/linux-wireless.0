@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from build.ossfans.org ([67.223.233.67]:51028 "EHLO
-	build.ossfans.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753211AbZFGCXa (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:45308 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbZFSBOw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2009 22:23:30 -0400
-Date: Sun, 7 Jun 2009 06:23:23 +0400
-From: Sergey Lapin <slapin@ossfans.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [PULL REQUEST] IEEE 802.15.4 stack: generic parts v3
-Message-ID: <20090607022323.GE576@build.ossfans.org>
-References: <cover.1244337432.git.slapin@ossfans.org>
+	Thu, 18 Jun 2009 21:14:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1244337432.git.slapin@ossfans.org>
+In-Reply-To: <1245366405-27426-1-git-send-email-jirislaby@gmail.com>
+References: <1245366405-27426-1-git-send-email-jirislaby@gmail.com>
+Date: Thu, 18 Jun 2009 21:14:54 -0400
+Message-ID: <b6c5339f0906181814p7f052822je8903629445c8a30@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix beacon_int handling
+From: Bob Copeland <bcopeland@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 07, 2009 at 05:18:29AM +0400, Sergey Lapin wrote:
-> Hello,
-> 
-> This is a third version of pull/merge request for IEEE 802.15.4 stack.
-> 
-> As per Dmitry request I'm taking over passing this patchset through
-> review. This is my first pull request through mail lists, so I might
-> do some mistakes, but I hope I did not miss any.
-> 
-> Major changes from previous post:
->  * Fixed email addresses for Sergey Lapin.
-  * removed code, whic depends on __KERNEL__ preprocessor macro part
-    from netlink code
+On Thu, Jun 18, 2009 at 7:06 PM, Jiri Slaby<jirislaby@gmail.com> wrote:
+> 73ca5203366235f8a43e490767284ba8cfd8c479
+> (ath5k: remove conf->beacon_int usage)
+> removed bintval setting from ath5k_config. We need to init the
+> interval earlier and don't touch it in add_interface anymore.
+>
+> Otherwise it will be set only once by upper layer through
+> bss_info_changed but not on second and further hostap executions.
 
-I've forgot to note, __KERNEL__ handling part is present in this patch
-set too. Sorry, that's what happens because of takeover business.
-Hope, I don't need to resubmit the whole thing because of that.
+Shouldn't we just not destroy the value in add_interface?
 
+I thought conf->beacon_int was deprecated.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
