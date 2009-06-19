@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:42891 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876AbZFETMW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 15:12:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 5 Jun 2009 21:12:03 +0200
-Message-ID: <69e28c910906051212l6f6548bflf7d83c4eccf80fad@mail.gmail.com>
-Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:33976 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750960AbZFSTY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 15:24:27 -0400
+Date: Fri, 19 Jun 2009 21:24:19 +0200
+From: Pierre Ossman <pierre@ossman.eu>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+Message-ID: <20090619212419.2f3626d7@mjolnir.ossman.eu>
+In-Reply-To: <20090618022524.GC10014@hash.localnet>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	<20090613132144.6c7783bc@mjolnir.ossman.eu>
+	<87bposnmxi.fsf@litku.valot.fi>
+	<20090613220908.271865cd@mjolnir.ossman.eu>
+	<20090613205737.GA30439@hash.localnet>
+	<20090618022524.GC10014@hash.localnet>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-10991-1245439468-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 5, 2009 at 9:04 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> I'm pleased to announce we have released the source code to our
-> Atheros 802.11n USB Otus/ar9170 device under the GPL. You can grab the
-> source, compile and use it with the upstream ar9170 device driver.
-> Patches are welcomed. The git tree available for this is at:
->
-> http://git.sipsolutions.net/ar9170-fw.git
->
-> For more information please visit the home page for this project is on
-> our Linux wireless wiki:
->
-> http://wireless.kernel.org/en/users/Drivers/ar9170.fw
->
-> The ar9170 device driver home page is at:
->
-> http://wireless.kernel.org/en/users/Drivers/ar9170
->
-> I'd like to thank Johannes Berg and Christian Lamparter for their
-> incredible contributions to the project both firmware and ar9170
-> driver so far without which this would not have been possible.
->
->  Luis
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Great! That's a first for any wireless chip...
+--=_freyr.ossman.eu-10991-1245439468-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-BTW can we expect a similar firmware source release for ar2524/zd1211?
+On Wed, 17 Jun 2009 22:25:24 -0400
+Bob Copeland <me@bobcopeland.com> wrote:
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>=20
+> Just to follow up now that I've tested that again: the issue is msm_wifi
+> setup loads before the mmc host driver, which interferes with mounting the
+> sdcard in the other slot.  There's also some platform code in the host
+> driver that registers callbacks when the wifi driver is loaded, presumably
+> to avoid using a timer for card detect.
+>=20
 
+I'm afraid I don't understand the problem. If you power up the card
+before the MMC system has started, it should still properly find the
+card and activate the wl12xx driver once things are in sync.
 
+> Anyway, this is only compile tested but should work when we get all that
+> sorted...
+>=20
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Do you want me to merge it?
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.ossman.eu-10991-1245439468-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAko75ecACgkQ7b8eESbyJLigIgCgl4J32tb+w6McFY73TD03ndEF
+7WQAnicYgddi9s608wR0AiFcZBkl5fTi
+=/fxr
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-10991-1245439468-0001-2--
