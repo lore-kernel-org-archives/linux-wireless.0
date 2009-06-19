@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43280 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755337AbZFJQ0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 12:26:02 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2009 09:26:05 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <jouni.malinen@atheros.com>, <luis.rodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 4/7] ath9k: stop ani when the STA gets disconnected.
-Date: Wed, 10 Jun 2009 21:55:29 +0530
-Message-ID: <1244651133-6537-5-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1244651133-6537-4-git-send-email-senthilkumar@atheros.com>
-References: <1244651133-6537-1-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-2-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-3-git-send-email-senthilkumar@atheros.com>
- <1244651133-6537-4-git-send-email-senthilkumar@atheros.com>
+Received: from n16b.bullet.mail.mud.yahoo.com ([68.142.207.237]:44345 "HELO
+	n16b.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751123AbZFSFXX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 01:23:23 -0400
+From: David Brownell <david-b@pacbell.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>, linville@tuxdriver.com
+Subject: Re: [PATCH 2/3] usbnet: Add stop function pointer to 'struct rndis_data'.
+Date: Thu, 18 Jun 2009 22:17:37 -0700
+Cc: linux-wireless@vger.kernel.org, davem@davemloft.net
+References: <20090616141721.23639.15379.stgit@fate.lan> <20090616141727.23639.22861.stgit@fate.lan>
+In-Reply-To: <20090616141727.23639.22861.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200906182217.38049.david-b@pacbell.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ANI is not required when the STA is disconnected. So stop it and enable
-ANI for adhoc and monitor mode.
+On Tuesday 16 June 2009, Jussi Kivilinna wrote:
+> Allow minidriver to know that netdev has stopped. This is to let
+> wireless turn off radio when usbnet dev is stopped.
+> 
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> CC: David Brownell <dbrownell@users.sourceforge.net>
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Acked-by: David Brownell <dbrownell@users.sourceforge.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 84fa69d..10dc7d1 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -934,6 +934,8 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 	} else {
- 		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info DISASSOC\n");
- 		sc->curaid = 0;
-+		/* Stop ANI */
-+		del_timer_sync(&sc->ani.timer);
- 	}
- }
- 
-@@ -2243,7 +2245,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
- 
--	if (conf->type == NL80211_IFTYPE_AP)
-+	if (conf->type == NL80211_IFTYPE_AP    ||
-+	    conf->type == NL80211_IFTYPE_ADHOC ||
-+	    conf->type == NL80211_IFTYPE_MONITOR)
- 		ath_start_ani(sc);
- 
- out:
--- 
-1.6.0.4
+
+> ---
+> 
+>  drivers/net/usb/usbnet.c   |   14 ++++++++++++++
+>  include/linux/usb/usbnet.h |    3 +++
+>  2 files changed, 17 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+> index f3a2fce..80251f0 100644
+> --- a/drivers/net/usb/usbnet.c
+> +++ b/drivers/net/usb/usbnet.c
+> @@ -544,7 +544,9 @@ EXPORT_SYMBOL_GPL(usbnet_unlink_rx_urbs);
+>  int usbnet_stop (struct net_device *net)
+>  {
+>  	struct usbnet		*dev = netdev_priv(net);
+> +	struct driver_info	*info = dev->driver_info;
+>  	int			temp;
+> +	int			retval;
+>  	DECLARE_WAIT_QUEUE_HEAD_ONSTACK (unlink_wakeup);
+>  	DECLARE_WAITQUEUE (wait, current);
+>  
+> @@ -556,6 +558,18 @@ int usbnet_stop (struct net_device *net)
+>  			dev->stats.rx_errors, dev->stats.tx_errors
+>  			);
+>  
+> +	/* allow minidriver to stop correctly (wireless devices to turn off
+> +	 * radio etc) */
+> +	if (info->stop) {
+> +		retval = info->stop(dev);
+> +		if (retval < 0 && netif_msg_ifdown(dev))
+> +			devinfo(dev,
+> +				"stop fail (%d) usbnet usb-%s-%s, %s",
+> +				retval,
+> +				dev->udev->bus->bus_name, dev->udev->devpath,
+> +				info->description);
+> +	}
+> +
+>  	// ensure there are no more active urbs
+>  	add_wait_queue (&unlink_wakeup, &wait);
+>  	dev->wait = &unlink_wakeup;
+> diff --git a/include/linux/usb/usbnet.h b/include/linux/usb/usbnet.h
+> index 36fabb9..e219fa2 100644
+> --- a/include/linux/usb/usbnet.h
+> +++ b/include/linux/usb/usbnet.h
+> @@ -98,6 +98,9 @@ struct driver_info {
+>  	/* reset device ... can sleep */
+>  	int	(*reset)(struct usbnet *);
+>  
+> +	/* stop device ... can sleep */
+> +	int	(*stop)(struct usbnet *);
+> +
+>  	/* see if peer is connected ... can sleep */
+>  	int	(*check_connect)(struct usbnet *);
+>  
+> 
+> 
+
+
 
