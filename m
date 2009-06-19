@@ -1,609 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49442 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38364 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbZFWKWK (ORCPT
+	with ESMTP id S1750928AbZFSO3a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 06:22:10 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MJ38k-0007Wg-5a
-	for linux-wireless@vger.kernel.org; Tue, 23 Jun 2009 12:22:11 +0200
-Subject: mac80211 & interrupts
+	Fri, 19 Jun 2009 10:29:30 -0400
+Subject: [PATCH] wext: optimise, comment and fix event sending
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Tue, 23 Jun 2009 12:22:08 +0200
-Message-Id: <1245752528.4184.40.camel@johannes.local>
+Date: Fri, 19 Jun 2009 16:28:59 +0200
+Message-Id: <1245421739.16399.22.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+The current function for sending events first allocates the
+event stream buffer, and then an skb to copy the event stream
+into. This can be done in one go. Also, the current function
+leaks kernel data to userspace in a 4 uninitialised bytes,
+initialise those explicitly. Finally also add a few useful
+comments, as opposed to the current comments.
 
-I've been wondering what functions people call from interrupts, in order
-to improve locking in mac80211.
-
-Quite obviously, it is valid to call
- * _irqsafe
- * stop/wake queue(s)
-from interrupts.
-
-Basically, it seems to me we should be able to convert all but the skb
-queue and queue locks from _irqsafe to _bh like the patch below.
-
-johannes
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/key.c                 |   33 +++++++++---------------
- net/mac80211/pm.c                  |    5 +--
- net/mac80211/rc80211_pid_debugfs.c |   15 ++++-------
- net/mac80211/sta_info.c            |   49 ++++++++++++++-----------------------
- net/mac80211/sta_info.h            |   33 +++++++++---------------
- net/mac80211/tx.c                  |   11 +++-----
- net/mac80211/util.c                |    9 +++---
- 7 files changed, 59 insertions(+), 96 deletions(-)
+ net/wireless/wext.c |  114 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 57 insertions(+), 57 deletions(-)
 
---- wireless-testing.orig/net/mac80211/key.c	2009-06-23 11:52:53.000000000 +0200
-+++ wireless-testing/net/mac80211/key.c	2009-06-23 12:07:53.000000000 +0200
-@@ -209,11 +209,9 @@ static void __ieee80211_set_default_key(
+--- wireless-testing.orig/net/wireless/wext.c	2009-06-19 08:01:29.000000000 +0200
++++ wireless-testing/net/wireless/wext.c	2009-06-19 16:27:57.000000000 +0200
+@@ -1300,22 +1300,15 @@ static void wireless_nlevent_process(str
  
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx)
+ static DECLARE_WORK(wireless_nlevent_work, wireless_nlevent_process);
+ 
+-/* ---------------------------------------------------------------- */
+-/*
+- * Fill a rtnetlink message with our event data.
+- * Note that we propage only the specified event and don't dump the
+- * current wireless config. Dumping the wireless config is far too
+- * expensive (for each parameter, the driver need to query the hardware).
+- */
+-static int rtnetlink_fill_iwinfo(struct sk_buff *skb, struct net_device *dev,
+-				 int type, char *event, int event_len)
++static struct nlmsghdr *rtnetlink_ifinfo_prep(struct net_device *dev,
++					      struct sk_buff *skb)
  {
--	unsigned long flags;
+ 	struct ifinfomsg *r;
+ 	struct nlmsghdr  *nlh;
+ 
+-	nlh = nlmsg_put(skb, 0, 0, type, sizeof(*r), 0);
+-	if (nlh == NULL)
+-		return -EMSGSIZE;
++	nlh = nlmsg_put(skb, 0, 0, RTM_NEWLINK, sizeof(*r), 0);
++	if (!nlh)
++		return NULL;
+ 
+ 	r = nlmsg_data(nlh);
+ 	r->ifi_family = AF_UNSPEC;
+@@ -1326,45 +1319,14 @@ static int rtnetlink_fill_iwinfo(struct 
+ 	r->ifi_change = 0;	/* Wireless changes don't affect those flags */
+ 
+ 	NLA_PUT_STRING(skb, IFLA_IFNAME, dev->name);
+-	/* Add the wireless events in the netlink packet */
+-	NLA_PUT(skb, IFLA_WIRELESS, event_len, event);
 -
--	spin_lock_irqsave(&sdata->local->key_lock, flags);
-+	spin_lock_bh(&sdata->local->key_lock);
- 	__ieee80211_set_default_key(sdata, idx);
--	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
-+	spin_unlock_bh(&sdata->local->key_lock);
+-	return nlmsg_end(skb, nlh);
+ 
+-nla_put_failure:
++	return nlh;
++ nla_put_failure:
+ 	nlmsg_cancel(skb, nlh);
+-	return -EMSGSIZE;
++	return NULL;
  }
  
- static void
-@@ -234,11 +232,9 @@ __ieee80211_set_default_mgmt_key(struct 
- void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 				    int idx)
- {
--	unsigned long flags;
+-/* ---------------------------------------------------------------- */
+-/*
+- * Create and broadcast and send it on the standard rtnetlink socket
+- * This is a pure clone rtmsg_ifinfo() in net/core/rtnetlink.c
+- * Andrzej Krzysztofowicz mandated that I used a IFLA_XXX field
+- * within a RTM_NEWLINK event.
+- */
+-static void rtmsg_iwinfo(struct net_device *dev, char *event, int event_len)
+-{
+-	struct sk_buff *skb;
+-	int err;
 -
--	spin_lock_irqsave(&sdata->local->key_lock, flags);
-+	spin_lock_bh(&sdata->local->key_lock);
- 	__ieee80211_set_default_mgmt_key(sdata, idx);
--	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
-+	spin_unlock_bh(&sdata->local->key_lock);
- }
- 
- 
-@@ -384,7 +380,6 @@ void ieee80211_key_link(struct ieee80211
- 			struct sta_info *sta)
- {
- 	struct ieee80211_key *old_key;
--	unsigned long flags;
- 	int idx;
- 
- 	BUG_ON(!sdata);
-@@ -428,7 +423,7 @@ void ieee80211_key_link(struct ieee80211
- 		}
- 	}
- 
--	spin_lock_irqsave(&sdata->local->key_lock, flags);
-+	spin_lock_bh(&sdata->local->key_lock);
- 
- 	if (sta)
- 		old_key = sta->key;
-@@ -437,7 +432,7 @@ void ieee80211_key_link(struct ieee80211
- 
- 	__ieee80211_key_replace(sdata, sta, old_key, key);
- 
--	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
-+	spin_unlock_bh(&sdata->local->key_lock);
- 
- 	/* free old key later */
- 	add_todo(old_key, KEY_FLAG_TODO_DELETE);
-@@ -461,8 +456,6 @@ static void __ieee80211_key_free(struct 
- 
- void ieee80211_key_free(struct ieee80211_key *key)
- {
--	unsigned long flags;
+-	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
+-	if (!skb)
+-		return;
 -
- 	if (!key)
- 		return;
+-	err = rtnetlink_fill_iwinfo(skb, dev, RTM_NEWLINK, event, event_len);
+-	if (err < 0) {
+-		WARN_ON(err == -EMSGSIZE);
+-		kfree_skb(skb);
+-		return;
+-	}
+-
+-	NETLINK_CB(skb).dst_group = RTNLGRP_LINK;
+-	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
+-	schedule_work(&wireless_nlevent_work);
+-}
  
-@@ -475,9 +468,9 @@ void ieee80211_key_free(struct ieee80211
- 		return;
- 	}
- 
--	spin_lock_irqsave(&key->sdata->local->key_lock, flags);
-+	spin_lock_bh(&key->sdata->local->key_lock);
- 	__ieee80211_key_free(key);
--	spin_unlock_irqrestore(&key->sdata->local->key_lock, flags);
-+	spin_unlock_bh(&key->sdata->local->key_lock);
- }
- 
+-/* ---------------------------------------------------------------- */
  /*
-@@ -491,14 +484,13 @@ static void ieee80211_todo_for_each_key(
- 					u32 todo_flags)
- {
- 	struct ieee80211_key *key;
--	unsigned long flags;
+  * Main event dispatcher. Called from other parts and drivers.
+  * Send the event on the appropriate channels.
+@@ -1383,6 +1345,9 @@ void wireless_send_event(struct net_devi
+ 	int wrqu_off = 0;			/* Offset in wrqu */
+ 	/* Don't "optimise" the following variable, it will crash */
+ 	unsigned	cmd_index;		/* *MUST* be unsigned */
++	struct sk_buff *skb;
++	struct nlmsghdr *nlh;
++	struct nlattr *nla;
  
- 	might_sleep();
+ 	/* Get the description of the Event */
+ 	if (cmd <= SIOCIWLAST) {
+@@ -1430,25 +1395,60 @@ void wireless_send_event(struct net_devi
+ 	hdr_len = event_type_size[descr->header_type];
+ 	event_len = hdr_len + extra_len;
  
--	spin_lock_irqsave(&sdata->local->key_lock, flags);
-+	spin_lock_bh(&sdata->local->key_lock);
- 	list_for_each_entry(key, &sdata->key_list, list)
- 		add_todo(key, todo_flags);
--	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
-+	spin_unlock_bh(&sdata->local->key_lock);
- 
- 	ieee80211_key_todo();
- }
-@@ -606,17 +598,16 @@ void ieee80211_key_todo(void)
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_key *key, *tmp;
--	unsigned long flags;
- 
- 	ieee80211_key_lock();
- 
- 	ieee80211_debugfs_key_remove_default(sdata);
- 	ieee80211_debugfs_key_remove_mgmt_default(sdata);
- 
--	spin_lock_irqsave(&sdata->local->key_lock, flags);
-+	spin_lock_bh(&sdata->local->key_lock);
- 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
- 		__ieee80211_key_free(key);
--	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
-+	spin_unlock_bh(&sdata->local->key_lock);
- 
- 	__ieee80211_key_todo();
- 
---- wireless-testing.orig/net/mac80211/pm.c	2009-06-23 11:48:10.000000000 +0200
-+++ wireless-testing/net/mac80211/pm.c	2009-06-23 12:07:53.000000000 +0200
-@@ -12,7 +12,6 @@ int __ieee80211_suspend(struct ieee80211
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_init_conf conf;
- 	struct sta_info *sta;
--	unsigned long flags;
- 
- 	ieee80211_scan_cancel(local);
- 
-@@ -65,7 +64,7 @@ int __ieee80211_suspend(struct ieee80211
- 	}
- 
- 	/* remove STAs */
--	spin_lock_irqsave(&local->sta_lock, flags);
-+	spin_lock_bh(&local->sta_lock);
- 	list_for_each_entry(sta, &local->sta_list, list) {
- 		if (local->ops->sta_notify) {
- 			sdata = sta->sdata;
-@@ -80,7 +79,7 @@ int __ieee80211_suspend(struct ieee80211
- 
- 		mesh_plink_quiesce(sta);
- 	}
--	spin_unlock_irqrestore(&local->sta_lock, flags);
-+	spin_unlock_bh(&local->sta_lock);
- 
- 	/* remove all interfaces */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
---- wireless-testing.orig/net/mac80211/rc80211_pid_debugfs.c	2009-06-23 11:48:10.000000000 +0200
-+++ wireless-testing/net/mac80211/rc80211_pid_debugfs.c	2009-06-23 12:07:53.000000000 +0200
-@@ -22,9 +22,8 @@ static void rate_control_pid_event(struc
- 				   union rc_pid_event_data *data)
- {
- 	struct rc_pid_event *ev;
--	unsigned long status;
- 
--	spin_lock_irqsave(&buf->lock, status);
-+	spin_lock_bh(&buf->lock);
- 	ev = &(buf->ring[buf->next_entry]);
- 	buf->next_entry = (buf->next_entry + 1) % RC_PID_EVENT_RING_SIZE;
- 
-@@ -33,7 +32,7 @@ static void rate_control_pid_event(struc
- 	ev->type = type;
- 	ev->data = *data;
- 
--	spin_unlock_irqrestore(&buf->lock, status);
-+	spin_unlock_bh(&buf->lock);
- 
- 	wake_up_all(&buf->waitqueue);
- }
-@@ -86,19 +85,18 @@ static int rate_control_pid_events_open(
- 	struct rc_pid_sta_info *sinfo = inode->i_private;
- 	struct rc_pid_event_buffer *events = &sinfo->events;
- 	struct rc_pid_events_file_info *file_info;
--	unsigned long status;
- 
- 	/* Allocate a state struct */
- 	file_info = kmalloc(sizeof(*file_info), GFP_KERNEL);
- 	if (file_info == NULL)
- 		return -ENOMEM;
- 
--	spin_lock_irqsave(&events->lock, status);
-+	spin_lock_bh(&events->lock);
- 
- 	file_info->next_entry = events->next_entry;
- 	file_info->events = events;
- 
--	spin_unlock_irqrestore(&events->lock, status);
-+	spin_unlock_bh(&events->lock);
- 
- 	file->private_data = file_info;
- 
-@@ -136,7 +134,6 @@ static ssize_t rate_control_pid_events_r
- 	char pb[RC_PID_PRINT_BUF_SIZE];
- 	int ret;
- 	int p;
--	unsigned long status;
- 
- 	/* Check if there is something to read. */
- 	if (events->next_entry == file_info->next_entry) {
-@@ -153,7 +150,7 @@ static ssize_t rate_control_pid_events_r
- 
- 	/* Write out one event per call. I don't care whether it's a little
- 	 * inefficient, this is debugging code anyway. */
--	spin_lock_irqsave(&events->lock, status);
-+	spin_lock_bh(&events->lock);
- 
- 	/* Get an event */
- 	ev = &(events->ring[file_info->next_entry]);
-@@ -188,7 +185,7 @@ static ssize_t rate_control_pid_events_r
- 	}
- 	p += snprintf(pb + p, length - p, "\n");
- 
--	spin_unlock_irqrestore(&events->lock, status);
-+	spin_unlock_bh(&events->lock);
- 
- 	if (copy_to_user(buf, pb, p))
- 		return -EFAULT;
---- wireless-testing.orig/net/mac80211/sta_info.c	2009-06-23 11:48:10.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.c	2009-06-23 12:07:53.000000000 +0200
-@@ -322,7 +322,6 @@ int sta_info_insert(struct sta_info *sta
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	unsigned long flags;
- 	int err = 0;
- 
- 	/*
-@@ -341,10 +340,10 @@ int sta_info_insert(struct sta_info *sta
- 		goto out_free;
- 	}
- 
--	spin_lock_irqsave(&local->sta_lock, flags);
-+	spin_lock_bh(&local->sta_lock);
- 	/* check if STA exists already */
- 	if (sta_info_get(local, sta->sta.addr)) {
--		spin_unlock_irqrestore(&local->sta_lock, flags);
-+		spin_unlock_bh(&local->sta_lock);
- 		err = -EEXIST;
- 		goto out_free;
- 	}
-@@ -367,7 +366,7 @@ int sta_info_insert(struct sta_info *sta
- 	       wiphy_name(local->hw.wiphy), sta->sta.addr);
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 
--	spin_unlock_irqrestore(&local->sta_lock, flags);
-+	spin_unlock_bh(&local->sta_lock);
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/*
-@@ -424,13 +423,11 @@ static void __sta_info_set_tim_bit(struc
- 
- void sta_info_set_tim_bit(struct sta_info *sta)
- {
--	unsigned long flags;
--
- 	BUG_ON(!sta->sdata->bss);
- 
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
-+	spin_lock_bh(&sta->local->sta_lock);
- 	__sta_info_set_tim_bit(sta->sdata->bss, sta);
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+	spin_unlock_bh(&sta->local->sta_lock);
- }
- 
- static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
-@@ -449,13 +446,11 @@ static void __sta_info_clear_tim_bit(str
- 
- void sta_info_clear_tim_bit(struct sta_info *sta)
- {
--	unsigned long flags;
--
- 	BUG_ON(!sta->sdata->bss);
- 
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
-+	spin_lock_bh(&sta->local->sta_lock);
- 	__sta_info_clear_tim_bit(sta->sdata->bss, sta);
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+	spin_unlock_bh(&sta->local->sta_lock);
- }
- 
- static void __sta_info_unlink(struct sta_info **sta)
-@@ -546,11 +541,10 @@ static void __sta_info_unlink(struct sta
- void sta_info_unlink(struct sta_info **sta)
- {
- 	struct ieee80211_local *local = (*sta)->local;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&local->sta_lock, flags);
-+	spin_lock_bh(&local->sta_lock);
- 	__sta_info_unlink(sta);
--	spin_unlock_irqrestore(&local->sta_lock, flags);
-+	spin_unlock_bh(&local->sta_lock);
- }
- 
- static int sta_info_buffer_expired(struct sta_info *sta,
-@@ -577,7 +571,6 @@ static int sta_info_buffer_expired(struc
- static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
- 					     struct sta_info *sta)
- {
--	unsigned long flags;
- 	struct sk_buff *skb;
- 	struct ieee80211_sub_if_data *sdata;
- 
-@@ -585,13 +578,13 @@ static void sta_info_cleanup_expire_buff
+-	/* Create temporary buffer to hold the event */
+-	event = kmalloc(event_len, GFP_ATOMIC);
+-	if (event == NULL)
++	/*
++	 * The problem for 64/32 bit.
++	 *
++	 * On 64-bit, a regular event is laid out as follows:
++	 *      |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
++	 *      | event.len | event.cmd |     p a d d i n g     |
++	 *      | wrqu data ... (with the correct size)         |
++	 *
++	 * This padding exists because we manipulate event->u,
++	 * and 'event' is not packed.
++	 *
++	 * An iw_point event is laid out like this instead:
++	 *      |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
++	 *      | event.len | event.cmd |     p a d d i n g     |
++	 *      | iwpnt.len | iwpnt.flg |     p a d d i n g     |
++	 *      | extra data  ...
++	 *
++	 * The second padding exists because struct iw_point is extended,
++	 * but this depends on the platform...
++	 *
++	 * On 32-bit, all the padding shouldn't be there.
++	 */
++
++	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
++	if (!skb)
  		return;
  
- 	for (;;) {
--		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
-+		spin_lock_bh(&sta->ps_tx_buf.lock);
- 		skb = skb_peek(&sta->ps_tx_buf);
- 		if (sta_info_buffer_expired(sta, skb))
- 			skb = __skb_dequeue(&sta->ps_tx_buf);
- 		else
- 			skb = NULL;
--		spin_unlock_irqrestore(&sta->ps_tx_buf.lock, flags);
-+		spin_unlock_bh(&sta->ps_tx_buf.lock);
+-	/* Fill event */
++	/* Send via the RtNetlink event channel */
++	nlh = rtnetlink_ifinfo_prep(dev, skb);
++	if (WARN_ON(!nlh)) {
++		kfree_skb(skb);
++		return;
++	}
++
++	/* Add the wireless events in the netlink packet */
++	nla = nla_reserve(skb, IFLA_WIRELESS, event_len);
++	if (!nla) {
++		kfree_skb(skb);
++		return;
++	}
++	event = nla_data(nla);
++
++	/* Fill event - first clear to avoid data leaking */
++	memset(event, 0, hdr_len);
+ 	event->len = event_len;
+ 	event->cmd = cmd;
+ 	memcpy(&event->u, ((char *) wrqu) + wrqu_off, hdr_len - IW_EV_LCP_LEN);
+-	if (extra)
++	if (extra_len)
+ 		memcpy(((char *) event) + hdr_len, extra, extra_len);
  
- 		if (!skb)
- 			break;
-@@ -646,15 +639,14 @@ static void __sta_info_pin(struct sta_in
- static struct sta_info *__sta_info_unpin(struct sta_info *sta)
- {
- 	struct sta_info *ret = NULL;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&sta->local->sta_lock, flags);
-+	spin_lock_bh(&sta->local->sta_lock);
- 	WARN_ON(sta->pin_status != STA_INFO_PIN_STAT_DESTROY &&
- 		sta->pin_status != STA_INFO_PIN_STAT_PINNED);
- 	if (sta->pin_status == STA_INFO_PIN_STAT_DESTROY)
- 		ret = sta;
- 	sta->pin_status = STA_INFO_PIN_STAT_NORMAL;
--	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+	spin_unlock_bh(&sta->local->sta_lock);
- 
- 	return ret;
- }
-@@ -664,14 +656,13 @@ static void sta_info_debugfs_add_work(st
- 	struct ieee80211_local *local =
- 		container_of(work, struct ieee80211_local, sta_debugfs_add);
- 	struct sta_info *sta, *tmp;
--	unsigned long flags;
- 
- 	/* We need to keep the RTNL across the whole pinned status. */
- 	rtnl_lock();
- 	while (1) {
- 		sta = NULL;
- 
--		spin_lock_irqsave(&local->sta_lock, flags);
-+		spin_lock_bh(&local->sta_lock);
- 		list_for_each_entry(tmp, &local->sta_list, list) {
- 			/*
- 			 * debugfs.add_has_run will be set by
-@@ -684,7 +675,7 @@ static void sta_info_debugfs_add_work(st
- 				break;
- 			}
- 		}
--		spin_unlock_irqrestore(&local->sta_lock, flags);
-+		spin_unlock_bh(&local->sta_lock);
- 
- 		if (!sta)
- 			break;
-@@ -750,11 +741,10 @@ int sta_info_flush(struct ieee80211_loca
- 	struct sta_info *sta, *tmp;
- 	LIST_HEAD(tmp_list);
- 	int ret = 0;
--	unsigned long flags;
- 
- 	might_sleep();
- 
--	spin_lock_irqsave(&local->sta_lock, flags);
-+	spin_lock_bh(&local->sta_lock);
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
- 		if (!sdata || sdata == sta->sdata) {
- 			__sta_info_unlink(&sta);
-@@ -764,7 +754,7 @@ int sta_info_flush(struct ieee80211_loca
- 			}
- 		}
- 	}
--	spin_unlock_irqrestore(&local->sta_lock, flags);
-+	spin_unlock_bh(&local->sta_lock);
- 
- 	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
- 		sta_info_destroy(sta);
-@@ -778,9 +768,8 @@ void ieee80211_sta_expire(struct ieee802
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta, *tmp;
- 	LIST_HEAD(tmp_list);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&local->sta_lock, flags);
-+	spin_lock_bh(&local->sta_lock);
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list)
- 		if (time_after(jiffies, sta->last_rx + exp_time)) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
-@@ -791,7 +780,7 @@ void ieee80211_sta_expire(struct ieee802
- 			if (sta)
- 				list_add(&sta->list, &tmp_list);
- 		}
--	spin_unlock_irqrestore(&local->sta_lock, flags);
-+	spin_unlock_bh(&local->sta_lock);
- 
- 	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
- 		sta_info_destroy(sta);
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-06-23 11:48:10.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2009-06-23 12:07:53.000000000 +0200
-@@ -343,41 +343,34 @@ static inline enum plink_state sta_plink
- 
- static inline void set_sta_flags(struct sta_info *sta, const u32 flags)
- {
--	unsigned long irqfl;
+-	/* Send via the RtNetlink event channel */
+-	rtmsg_iwinfo(dev, (char *) event, event_len);
 -
--	spin_lock_irqsave(&sta->flaglock, irqfl);
-+	spin_lock_bh(&sta->flaglock);
- 	sta->flags |= flags;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-+	spin_unlock_bh(&sta->flaglock);
+-	/* Cleanup */
+-	kfree(event);
++	nlmsg_end(skb, nlh);
+ 
+-	return;		/* Always success, I guess ;-) */
++	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
++	schedule_work(&wireless_nlevent_work);
  }
+ EXPORT_SYMBOL(wireless_send_event);
  
- static inline void clear_sta_flags(struct sta_info *sta, const u32 flags)
- {
--	unsigned long irqfl;
--
--	spin_lock_irqsave(&sta->flaglock, irqfl);
-+	spin_lock_bh(&sta->flaglock);
- 	sta->flags &= ~flags;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-+	spin_unlock_bh(&sta->flaglock);
- }
- 
- static inline void set_and_clear_sta_flags(struct sta_info *sta,
- 					   const u32 set, const u32 clear)
- {
--	unsigned long irqfl;
--
--	spin_lock_irqsave(&sta->flaglock, irqfl);
-+	spin_lock_bh(&sta->flaglock);
- 	sta->flags |= set;
- 	sta->flags &= ~clear;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-+	spin_unlock_bh(&sta->flaglock);
- }
- 
- static inline u32 test_sta_flags(struct sta_info *sta, const u32 flags)
- {
- 	u32 ret;
--	unsigned long irqfl;
- 
--	spin_lock_irqsave(&sta->flaglock, irqfl);
-+	spin_lock_bh(&sta->flaglock);
- 	ret = sta->flags & flags;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-+	spin_unlock_bh(&sta->flaglock);
- 
- 	return ret;
- }
-@@ -386,12 +379,11 @@ static inline u32 test_and_clear_sta_fla
- 					   const u32 flags)
- {
- 	u32 ret;
--	unsigned long irqfl;
- 
--	spin_lock_irqsave(&sta->flaglock, irqfl);
-+	spin_lock_bh(&sta->flaglock);
- 	ret = sta->flags & flags;
- 	sta->flags &= ~flags;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-+	spin_unlock_bh(&sta->flaglock);
- 
- 	return ret;
- }
-@@ -399,11 +391,10 @@ static inline u32 test_and_clear_sta_fla
- static inline u32 get_sta_flags(struct sta_info *sta)
- {
- 	u32 ret;
--	unsigned long irqfl;
- 
--	spin_lock_irqsave(&sta->flaglock, irqfl);
-+	spin_lock_bh(&sta->flaglock);
- 	ret = sta->flags;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-+	spin_unlock_bh(&sta->flaglock);
- 
- 	return ret;
- }
---- wireless-testing.orig/net/mac80211/tx.c	2009-06-23 11:48:12.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-06-23 12:07:53.000000000 +0200
-@@ -1046,13 +1046,12 @@ ieee80211_tx_prepare(struct ieee80211_su
- 
- 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
- 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
--		unsigned long flags;
- 		struct tid_ampdu_tx *tid_tx;
- 
- 		qc = ieee80211_get_qos_ctl(hdr);
- 		tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
- 
--		spin_lock_irqsave(&tx->sta->lock, flags);
-+		spin_lock_bh(&tx->sta->lock);
- 		/*
- 		 * XXX: This spinlock could be fairly expensive, but see the
- 		 *	comment in agg-tx.c:ieee80211_agg_tx_operational().
-@@ -1077,7 +1076,7 @@ ieee80211_tx_prepare(struct ieee80211_su
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			__skb_queue_tail(&tid_tx->pending, skb);
- 		}
--		spin_unlock_irqrestore(&tx->sta->lock, flags);
-+		spin_unlock_bh(&tx->sta->lock);
- 
- 		if (unlikely(queued))
- 			return TX_QUEUED;
-@@ -2017,11 +2016,9 @@ struct sk_buff *ieee80211_beacon_get(str
- 			if (local->tim_in_locked_section) {
- 				ieee80211_beacon_add_tim(ap, skb, beacon);
- 			} else {
--				unsigned long flags;
--
--				spin_lock_irqsave(&local->sta_lock, flags);
-+				spin_lock_bh(&local->sta_lock);
- 				ieee80211_beacon_add_tim(ap, skb, beacon);
--				spin_unlock_irqrestore(&local->sta_lock, flags);
-+				spin_unlock_bh(&local->sta_lock);
- 			}
- 
- 			if (beacon->tail)
---- wireless-testing.orig/net/mac80211/util.c	2009-06-23 11:48:10.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-06-23 12:07:53.000000000 +0200
-@@ -954,7 +954,6 @@ int ieee80211_reconfig(struct ieee80211_
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_init_conf conf;
- 	struct sta_info *sta;
--	unsigned long flags;
- 	int res;
- 	bool from_suspend = local->suspended;
- 
-@@ -985,7 +984,7 @@ int ieee80211_reconfig(struct ieee80211_
- 
- 	/* add STAs back */
- 	if (local->ops->sta_notify) {
--		spin_lock_irqsave(&local->sta_lock, flags);
-+		spin_lock_bh(&local->sta_lock);
- 		list_for_each_entry(sta, &local->sta_list, list) {
- 			sdata = sta->sdata;
- 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-@@ -996,7 +995,7 @@ int ieee80211_reconfig(struct ieee80211_
- 			drv_sta_notify(local, &sdata->vif, STA_NOTIFY_ADD,
- 				       &sta->sta);
- 		}
--		spin_unlock_irqrestore(&local->sta_lock, flags);
-+		spin_unlock_bh(&local->sta_lock);
- 	}
- 
- 	/* Clear Suspend state so that ADDBA requests can be processed */
-@@ -1086,10 +1085,10 @@ int ieee80211_reconfig(struct ieee80211_
- 
- 	add_timer(&local->sta_cleanup);
- 
--	spin_lock_irqsave(&local->sta_lock, flags);
-+	spin_lock_bh(&local->sta_lock);
- 	list_for_each_entry(sta, &local->sta_list, list)
- 		mesh_plink_restart(sta);
--	spin_unlock_irqrestore(&local->sta_lock, flags);
-+	spin_unlock_bh(&local->sta_lock);
- #else
- 	WARN_ON(1);
- #endif
 
 
