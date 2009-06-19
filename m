@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([207.115.11.54]:57709 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760097AbZFDQ25 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52448 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952AbZFSSPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 12:28:57 -0400
-Message-ID: <4A27F649.9080203@lwfinger.net>
-Date: Thu, 04 Jun 2009 11:28:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 19 Jun 2009 14:15:31 -0400
+Date: Fri, 19 Jun 2009 14:02:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 21/23] orinoco: convert scanning to cfg80211
+Message-ID: <20090619180233.GD2753@tuxdriver.com>
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com> <1245363695-8289-22-git-send-email-kilroyd@googlemail.com> <20090619173541.GC2753@tuxdriver.com> <4A3BD06D.7080702@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] rfkill: always init poll delayed work
-References: <1244015729.7176.28.camel@johannes.local>	 <4A268DAC.4010805@lwfinger.net> <1244040913.4862.8.camel@johannes.local>	 <4A27DF95.50603@lwfinger.net> <1244128337.22576.81.camel@johannes.local>	 <4A27EF6C.8000208@lwfinger.net> <1244132396.22576.82.camel@johannes.local>
-In-Reply-To: <1244132396.22576.82.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A3BD06D.7080702@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
+On Fri, Jun 19, 2009 at 06:52:45PM +0100, Dave wrote:
+> John W. Linville wrote:
+> > On Thu, Jun 18, 2009 at 11:21:33PM +0100, David Kilroy wrote:
+> >> This removes the custom scan cache used by orinoco.
+> >>
+> >> We also have to avoid calling cfg80211_scan_done from the hard
+> >> interrupt, so we offload the entirety of scan processing to a workqueue.
+> >>
+> >> This may behave strangely if you start scanning just prior to
+> >> suspending...
+> >>
+> >> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+> > 
+> > Hmmm...please do try to compile test patches before posting! :-)
+> > 
+> > John
+> 
+> Compile? I'm running it! (and sparse didn't complain either)
+> 
+> I'll go have a look see what's special on my end. I'm guessing no SMP or
+> something.
 
-> But this is without the patch?! If yes that would confuse me.
+Haha...yeah, that's probably it...
 
-My bad. That test was with the patch "[RFT 3/3] b43/legacy: port to
-cfg80211 rfkill". Without it, everything works just fine. The LED
-works and the radio follows the switch.
+> Would you like the series/patch reposted including this fix?
 
-Sorry for the noise.
+No, I've got it fixed.
 
-Now that I know the problem is in the patch, it should be easier to debug.
-
-Larry
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
