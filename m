@@ -1,96 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:64854 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757722AbZFWQ3w (ORCPT
+Received: from mail-yx0-f177.google.com ([209.85.210.177]:64472 "EHLO
+	mail-yx0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbZFSBQE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 12:29:52 -0400
-Message-ID: <4A410300.6040804@gmail.com>
-Date: Tue, 23 Jun 2009 18:29:52 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Thu, 18 Jun 2009 21:16:04 -0400
 MIME-Version: 1.0
-To: ath9k-devel@lists.ath9k.org
-CC: Linux kernel mailing list <linux-kernel@vger.kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel@vger.kernel.org,
-	Linux kernel mailing list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: debugfs related oops in mac80211/ath9k
+In-Reply-To: <b6c5339f0906181814p7f052822je8903629445c8a30@mail.gmail.com>
+References: <1245366405-27426-1-git-send-email-jirislaby@gmail.com>
+	 <b6c5339f0906181814p7f052822je8903629445c8a30@mail.gmail.com>
+Date: Thu, 18 Jun 2009 21:16:05 -0400
+Message-ID: <b6c5339f0906181816m15e2a348s3df43602278c22b8@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix beacon_int handling
+From: Bob Copeland <bcopeland@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Jun 18, 2009 at 9:14 PM, Bob Copeland<bcopeland@gmail.com> wrote:
+>> Otherwise it will be set only once by upper layer through
+>> bss_info_changed but not on second and further hostap executions.
+>
+> Shouldn't we just not destroy the value in add_interface?
 
-I got the oops attached below while running 2 threads:
-cat /sys/kernel/debug/ieee80211/phy*/*
-while :; do echo '0000:02:00.0' > unbind ; echo '0000:02:00.0' > bind; done
-note that the oops is from suse kernel-of-the-day kernel. Happens with
-vanilla 2.6.30 too.
+Err, nevermind, that's exactly what your patch does.
 
-sc->ah is NULL in ath9k_hw_gettsf64. Not good. file->private_data points
-to freed memory (which is allocated by the same buddy a bit later in
-this case). I got also another oopses in mac80211 layer, like in
-frequency_read function. It has the same root cause.
-
-The reading process still holds a reference to the node, so it's not
-deleted. fops->read is called from vfs_read, but memory pointed by
-file->private_data might be freed already.
-
-We need some kind of barrier in debugfs_remove, so that all processes
-with that file opened finishes first. Any ideas?
-
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000068
-IP: [<ffffffffa08704a0>] ath9k_ioread32+0x22/0x94 [ath9k]
-PGD 8df2067 PUD 7dd28067 PMD 0
-Oops: 0000 [#3] SMP
-last sysfs file: /sys/bus/pci/drivers/ath9k/bind
-CPU 1
-Modules linked in: ath9k snd_seq_dummy btusb cryptd aes_x86_64
-aes_generic cpufreq_stats tun radeon drm nfs lockd fscache(N) nfs_acl
-auth_rpcgss sunrpc af_packet bridge stp llc(N) bnep sco rfcomm l2cap
-bluetooth snd_pcm_oss snd_mixer_oss snd_seq ipv6 snd_seq_device
-cpufreq_conservative cpufreq_userspace cpufreq_powersave acpi_cpufreq
-fuse loop snd_hda_codec_si3054(N) snd_hda_codec_realtek(N) arc4 ecb
-snd_hda_intel snd_hda_codec(N) snd_hwdep snd_pcm mac80211 snd_timer
-rfkill iTCO_wdt stkwebcam snd iTCO_vendor_support processor video
-thermal videodev soundcore tpm_infineon i2c_i801 cfg80211 thermal_sys
-v4l1_compat sr_mod asus_laptop kvm_intel tpm r8169 snd_page_alloc
-intel_agp pcspkr i2c_core button battery ac output serio_raw cdrom
-v4l2_compat_ioctl32(N) hwmon joydev tpm_bios led_class kvm sg uinput
-usbhid hid uhci_hcd ata_piix ehci_hcd dm_mod [last unloaded: ath9k]
-Supported: Yes
-Pid: 25328, comm: cat Tainted: G      D   N
-2.6.30-master_20090610141226_1b1ebc88-default #1 F2JE
-RIP: 0010:[<ffffffffa08704a0>]  [<ffffffffa08704a0>]
-ath9k_ioread32+0x22/0x94 [ath9k]
-RSP: 0018:ffff880074687d88  EFLAGS: 00010246
-RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff880074687f50
-RDX: ffffffffa0884016 RSI: 0000000000008050 RDI: 0000000000000000
-RBP: ffff880074687dc8 R08: ffffffffa0261769 R09: 00007f5be6f09665
-R10: 0000000000001fff R11: 0000000000000246 R12: 0000000000008050
-R13: 0000000000001000 R14: 000000000060d000 R15: 0000000000000000
-FS:  00007f5be6ed76f0(0000) GS:ffff88000104c000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000068 CR3: 000000001339c000 CR4: 00000000000026e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process cat (pid: 25328, threadinfo ffff880074686000, task ffff88005a0fa680)
-Stack:
- ffff880076c96cb8 ffffffff809221f8 ffff880074687dd8 0000000012d27d63
- ffff880074687dd8 0000000000000000 ffff88003fb71100 0000000000001000
- ffff880074687df8 ffffffffa0870539 ffffffff802449b7 0000000012d27d63
-Call Trace:
- [<ffffffffa0870539>] ath9k_hw_gettsf64+0x27/0x5b [ath9k]
- [<ffffffffa0884054>] ath9k_get_tsf+0x3e/0x6b [ath9k]
- [<ffffffffa02617ab>] tsf_read+0x42/0x9b [mac80211]
- [<ffffffff80303f18>] vfs_read+0xb5/0x126
- [<ffffffff80304071>] sys_read+0x54/0x8c
- [<ffffffff8020c142>] system_call_fastpath+0x16/0x1b
- [<00007f5be6a617c0>] 0x7f5be6a617c0
-Code: 74 05 e8 51 4b 9e df c9 c3 55 48 89 e5 41 55 41 54 41 89 f4 53 48
-89 fb 48 83 ec 28 65 48 8b 04 25 28 00 00 00 48 89 45 d8 31 c0 <83> 7f
-68 01 48 8b 3f 75 3b 48 81 c7 58 01 00 00 e8 7a c3 d7 df
-RIP  [<ffffffffa08704a0>] ath9k_ioread32+0x22/0x94 [ath9k]
- RSP <ffff880074687d88>
-CR2: 0000000000000068
----[ end trace b782e2e515247664 ]---
+-- 
+Bob Copeland %% www.bobcopeland.com
