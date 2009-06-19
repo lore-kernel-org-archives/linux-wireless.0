@@ -1,97 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:53085 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718AbZFYKC5 (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:43892 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbZFSIeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 06:02:57 -0400
-Subject: [PATCH v3 10/10] nf_conntrack: Use rcu_barrier()
-From: Jesper Dangaard Brouer <jdb@comx.dk>
-Reply-To: jdb@comx.dk
-To: Patrick McHardy <kaber@trash.net>
-Cc: Christoph Lameter <cl@linux-foundation.org>, linux-mm@kvack.org,
-	"David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, christine.caulfield@googlemail.com,
-	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
-	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
-	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
-	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
-In-Reply-To: <1245922153.24921.56.camel@localhost.localdomain>
-References: <20090623150330.22490.87327.stgit@localhost>
-	 <20090623150444.22490.27931.stgit@localhost>  <4A410185.3090706@trash.net>
-	 <1245834139.6695.31.camel@localhost.localdomain>
-	 <1245836409.6695.35.camel@localhost.localdomain> <4A423108.60109@trash.net>
-	 <1245922153.24921.56.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 25 Jun 2009 12:02:58 +0200
-Message-Id: <1245924178.24921.61.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Fri, 19 Jun 2009 04:34:23 -0400
+Message-ID: <4A3B4D8C.6010002@tuffmail.co.uk>
+Date: Fri, 19 Jun 2009 09:34:20 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Alan Stern <stern@rowland.harvard.edu>
+CC: Bob Copeland <me@bobcopeland.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pm@lists.linux-foundation.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@venema.h4ckr.net, linux-pci@vger.kernel.org
+Subject: Re: [ath5k-devel] [linux-pm] PCI hotplug v.s. suspend
+References: <Pine.LNX.4.44L0.0906181437090.3129-100000@netrider.rowland.org> <4A3AAF0A.9020707@tuffmail.co.uk>
+In-Reply-To: <4A3AAF0A.9020707@tuffmail.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-06-25 at 11:29 +0200, Jesper Dangaard Brouer wrote:
-> Should I make two different patchs?
+Alan Jenkins wrote:
+> Alan Stern wrote:
+>   
+>> On Thu, 18 Jun 2009, Alan Jenkins wrote:
+>>
+>>   
+>>     
+>>> Unfortunately this makes it worse.  My eeepc-laptop hacks are now in
+>>> wireless-testing.  If I apply the above patch to wireless-testing and
+>>> "remove" the device while suspended, I get a soft hang on resume. 
+>>>     
+>>>       
+>> Is this different from the behavior without the patch?  (I don't see 
+>> how it could be.)
+>>   
+>>     
+>
+> Ow.  No, the free_irq patch doesn't cause this bug.  I missed testing
+> this case after adding a workaround for an even more obscure issue :-(.
+>   
 
-Here is the single patch... Patrick tell me if you want it split up?
+I tried an earlier version without the problem workaround.  Bob's
+suggested patch to remove the free_irq() on suspend works fine.  It
+fixes the WARNING when the device is removed during suspend, and it
+still works if the device is not removed during suspend.
 
-
-[PATCH v3 10/10] nf_conntrack: Use rcu_barrier()
-
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-
-RCU barriers, rcu_barrier(), is inserted two places.
-
- In nf_conntrack_expect.c nf_conntrack_expect_fini() before the
- kmem_cache_destroy().  Firstly to make sure the callback to the
- nf_ct_expect_free_rcu() code is still around.  Secondly because I'm
- unsure about the consequence of having in flight
- nf_ct_expect_free_rcu/kmem_cache_free() calls while doing a
- kmem_cache_destroy() slab destroy.
-
- And in nf_conntrack_extend.c nf_ct_extend_unregister(), inorder to
- wait for completion of callbacks to __nf_ct_ext_free_rcu(), which is
- invoked by __nf_ct_ext_add().  It might be more efficient to call
- rcu_barrier() in nf_conntrack_core.c nf_conntrack_cleanup_net(), but
- thats make it more difficult to read the code (as the callback code
- in located in nf_conntrack_extend.c).
-
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
-
- net/netfilter/nf_conntrack_expect.c |    4 +++-
- net/netfilter/nf_conntrack_extend.c |    2 +-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-
-diff --git a/net/netfilter/nf_conntrack_expect.c b/net/netfilter/nf_conntrack_expect.c
-index afde8f9..2032dfe 100644
---- a/net/netfilter/nf_conntrack_expect.c
-+++ b/net/netfilter/nf_conntrack_expect.c
-@@ -617,8 +617,10 @@ err1:
- void nf_conntrack_expect_fini(struct net *net)
- {
- 	exp_proc_remove(net);
--	if (net_eq(net, &init_net))
-+	if (net_eq(net, &init_net)) {
-+		rcu_barrier(); /* Wait for call_rcu() before destroy */
- 		kmem_cache_destroy(nf_ct_expect_cachep);
-+	}
- 	nf_ct_free_hashtable(net->ct.expect_hash, net->ct.expect_vmalloc,
- 			     nf_ct_expect_hsize);
- }
-diff --git a/net/netfilter/nf_conntrack_extend.c b/net/netfilter/nf_conntrack_extend.c
-index 4b2c769..fef95be 100644
---- a/net/netfilter/nf_conntrack_extend.c
-+++ b/net/netfilter/nf_conntrack_extend.c
-@@ -186,6 +186,6 @@ void nf_ct_extend_unregister(struct nf_ct_ext_type *type)
- 	rcu_assign_pointer(nf_ct_ext_types[type->id], NULL);
- 	update_alloc_size(type);
- 	mutex_unlock(&nf_ct_ext_type_mutex);
--	synchronize_rcu();
-+	rcu_barrier(); /* Wait for completion of call_rcu()'s */
- }
- EXPORT_SYMBOL_GPL(nf_ct_extend_unregister);
-
+Alan
