@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38068 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754299AbZF2IXd (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:60833 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989AbZFSRUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 04:23:33 -0400
-Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
- way
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ivan.kuten@promwad.com
-Cc: linux-wireless@vger.kernel.org,
-	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
-In-Reply-To: <4A475F82.9040007@promwad.com>
-References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
-	 <1245150895.8623.3.camel@johannes.local>  <4A475F82.9040007@promwad.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-q6iWv6ZJmSVIN2Wgm871"
-Date: Mon, 29 Jun 2009 10:23:28 +0200
-Message-Id: <1246263808.5947.4.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 19 Jun 2009 13:20:51 -0400
+Received: by ewy6 with SMTP id 6so2741869ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 10:20:53 -0700 (PDT)
+Message-ID: <4A3BC8EC.6040801@gmail.com>
+Date: Fri, 19 Jun 2009 18:20:44 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 02/23] cfg80211: Advertise ciphers via WE according to
+ driver capability
+References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com> 	<1245363695-8289-3-git-send-email-kilroyd@googlemail.com> <646765f40906181638j39d8e8eex8ead9d856b5f2548@mail.gmail.com>
+In-Reply-To: <646765f40906181638j39d8e8eex8ead9d856b5f2548@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Julian Calaby wrote:
+> On Fri, Jun 19, 2009 at 08:21, David Kilroy<kilroyd@googlemail.com> wrote:
+>> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+>> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>> ---
+>>  net/wireless/wext-compat.c |   15 +++++++++++++--
+>>  1 files changed, 13 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+>> index 9e56f35..7dbe6c6 100644
+>> --- a/net/wireless/wext-compat.c
+>> +++ b/net/wireless/wext-compat.c
+>> @@ -204,8 +204,19 @@ int cfg80211_wext_giwrange(struct net_device *dev,
+>>        range->avg_qual.noise = range->max_qual.noise / 2;
+>>        range->avg_qual.updated = range->max_qual.updated;
+>>
+>> -       range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+>> -                         IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+>> +       range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2;
+> 
+> Should this should go into the for loop too, like how patch 5 works?
 
---=-q6iWv6ZJmSVIN2Wgm871
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Err... patch 5 moves this line into the for loop. I moved these in
+separate patches because:
 
-On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
-> Hello,
->=20
-> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unaligned=
- allocations
-> for creq->ssids and creq->channels. Should it be something like that?
->=20
-> Modified: trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wi=
-reless/scan.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D
-> --- trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless=
-/scan.c (original)
-> +++ trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless=
-/scan.c Fri Jun 26 14:00:52 2009
-> @@ -619,7 +619,7 @@
->  		if (wiphy->bands[band])
->  			n_channels +=3D wiphy->bands[band]->n_channels;
->=20
-> -	creq =3D kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
-> +	creq =3D kzalloc(roundup(sizeof(*creq), 4) + roundup(sizeof(struct cfg8=
-0211_ssid), 4) +
->  		       n_channels * sizeof(void *),
->  		       GFP_ATOMIC);
+* Indicating available ciphers based on cipher capability is obviously
+correct.
+* Indicating WPA/WPA2 based on cipher capability is not obviously
+correct - and we might want the drivers to indicate this explicitly.
+* The latter patch can be NACK'd without affecting the former, or the
+rest of the series (well, apart from patch 22).
 
-Also, that should be sizeof(void *) instead of "4".
+As it happens, no-one has objected (yet).
 
-johannes
+Apologies if I've completely misunderstood you.
 
---=-q6iWv6ZJmSVIN2Wgm871
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
+Thanks,
 
-iQIcBAABAgAGBQJKSHn9AAoJEODzc/N7+QmasUoP/iVM1Odub8xVq5aWvFutZwMp
-bj0N9C3TlnDaOYjseVt7wi/4EeWc0fXTn377RzLr4zW20eYwOfhrIIuqCLzGSTMr
-LUXRX/dj5b9IQRw0WFJrW8CqP8zNZA+pnK3CfFT4l2GNsy+MuSkhYlT4ZVMAlske
-0/3dRIxzPK5NMLjn8tYoyQS0vGHQQqgEfsFZH2/tq776lUESSjNItjVeR9wnaja2
-ZMSlCNCgfDn3lXE8kjpUr9oc2qjaOXM66XJt+7k8f0GLa07SRtxx1Y7zSIvNKBry
-zE3/NSWHjpUjvNTfE4O7dVMWGTemx09aMiwv+l8m8huAfPMqQReqZ4/4paO1jcoz
-FvRv3/DHDw51RQlvEQelvkvdYNzR6kNQ8j5Mscg7+9EKxdoh8H/cRPr0Cv39aFxs
-taaVKz4hU4CqzTIvkT6MlqYp9W9IOraNjo8+jf9MsZuo+u6ZzfBbDe7K+T4rOY4L
-M1ZIfefFsUX2ajawRB/carkU24H4I9I4Pcqf3cMNHF+IzIBzrRxI8EMYfiRZ9ZiY
-ZKSa94S5SLFGEk3uBTjWIonheL/mLba8/GjmHmAmQyaWCXwfvNudSLqbBCt5Iyjf
-H6jD07pPXy+J2l8/+8gH0FVSn6NHgh2FtvJzdqJHFnSC6nfO1z4iLJ4sQ6M5QdCr
-wc7fLKwS8sb5nZGnBDl5
-=bM6g
------END PGP SIGNATURE-----
-
---=-q6iWv6ZJmSVIN2Wgm871--
-
+Dave.
