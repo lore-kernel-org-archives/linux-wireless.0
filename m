@@ -1,178 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:26444 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739AbZFEEK1 convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:34096 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbZFSXfU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 00:10:27 -0400
+	Fri, 19 Jun 2009 19:35:20 -0400
+Received: by gxk10 with SMTP id 10so3403565gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 16:35:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-Date: Fri, 5 Jun 2009 00:03:30 -0400
-Message-ID: <9e4733910906042103q6c21886cia02d33cb278cef1e@mail.gmail.com>
-Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
-From: Jon Smirl <jonsmirl@gmail.com>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, slapin@ossfans.org,
-	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
-	oliver.fendt@siemens.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <COL104-W4938CF2A62C61D3AE427C2E13A0@phx.gbl>
+References: <COL104-W4938CF2A62C61D3AE427C2E13A0@phx.gbl>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Fri, 19 Jun 2009 16:35:02 -0700
+Message-ID: <43e72e890906191635k4d123f1bmc58713c33bebb280@mail.gmail.com>
+Subject: Re: [PATCH] compat-2.6: fix foo
+To: OMarOMio antar <goldenomarom655@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
-Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
-> Hi,
+2009/6/19 OMarOMio antar <goldenomarom655@hotmail.com>:
+> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
 >
-> As a part of research activities the Embedded Systems - Open Platform Group
-> from Siemens Corporate Technology we are working on adding support for
-> the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
-> implementation is neither certified nor even feature complete. However
-> we'd like to present current state of our patchset to the Linux developers
-> community to gain comments, fixes, ideas, etc. This is not yet a pull request,
-> but more like an RFC.
+> ________________________________
+> What can you do with the new Windows Live? Find out
 
-Does this stack work with the Atmel USB version of at86rf230?
-ATAVRRZUSBSTICK, http://www.atmel.com/dyn/products/tools_card.asp?tool_id=4396
-
-It's not so simple to plug in the at86rf230 using SPI. Supporting USB
-sticks lets you develop on a desktop PC.
-
-freaklabs.org is using ATAVRRZUSBSTICK
-
-
->
-> The project page is available at http://apps.sourceforge.net/trac/linux-zigbee
-> with source code of kernel part available from git at
-> http://zigbee-linux.git.sourceforge.net, mirrored for convenience at
-> git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
->
-> The source code for userspace utils is available from git at
-> http://linux-zigbee.git.sourceforge.net/
->
-> Changes since previous RFC:
->  * Split the code into socket family, netlink interface and separate
->    MAC 802.15.4 implementation.
->  * Add a sample driver for devices implementing mac level of IEEE 802.15.4
->    on their own.
->  * Major cleanup of public interfaces.
->  * Drop our CRC implementation and use a variant of CRC-ITU-T one
->  * Add preliminary version of AT86RF231 Atmel chip driver
->
-> The following changes since commit 59a3759d0fe8d969888c741bb33f4946e4d3750d:
->  Linus Torvalds (1):
->        Linux 2.6.30-rc7
->
-> are available in the git repository at:
->
->  git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git for-review-v1
->
-> Darren Salt (1):
->      crc-itu-t: add bit-reversed calculation
->
-> Dmitry Eremin-Solenikov (9):
->      Add constants for the ieee 802.15.4/ZigBee stack
->      net: add IEEE 802.15.4 socket family implementation
->      net: add NL802154 interface for configuration of 802.15.4 devices
->      ieee802154: add simple HardMAC driver sample
->      mac802154: add a software MAC 802.15.4 implementation
->      ieee802154: add virtual loopback driver
->      tty_io: export tty_class
->      ieee802154: add serial dongle driver
->      ieee802154: add at86rf230/rf231 spi driver
->
->  drivers/Makefile                       |    1 +
->  drivers/char/tty_io.c                  |    1 +
->  drivers/ieee802154/Kconfig             |   42 ++
->  drivers/ieee802154/Makefile            |    6 +
->  drivers/ieee802154/at86rf230.c         |  971 +++++++++++++++++++++++++++++++
->  drivers/ieee802154/fakehard.c          |  253 ++++++++
->  drivers/ieee802154/fakelb.c            |  335 +++++++++++
->  drivers/ieee802154/serial.c            |  999 ++++++++++++++++++++++++++++++++
->  drivers/net/Kconfig                    |    2 +
->  include/linux/crc-itu-t.h              |   10 +
->  include/linux/if.h                     |    2 +
->  include/linux/if_arp.h                 |    2 +
->  include/linux/if_ether.h               |    2 +
->  include/linux/socket.h                 |    6 +-
->  include/linux/spi/at86rf230.h          |   32 +
->  include/linux/tty.h                    |    3 +-
->  include/net/ieee802154/af_ieee802154.h |   60 ++
->  include/net/ieee802154/mac802154.h     |   79 +++
->  include/net/ieee802154/mac_def.h       |  158 +++++
->  include/net/ieee802154/netdevice.h     |   84 +++
->  include/net/ieee802154/nl802154.h      |  165 ++++++
->  lib/crc-itu-t.c                        |   18 +
->  net/Kconfig                            |    2 +
->  net/Makefile                           |    2 +
->  net/core/dev.c                         |    6 +-
->  net/core/sock.c                        |    3 +
->  net/ieee802154/Kconfig                 |   12 +
->  net/ieee802154/Makefile                |    5 +
->  net/ieee802154/af802154.h              |   35 ++
->  net/ieee802154/af_ieee802154.c         |  356 ++++++++++++
->  net/ieee802154/dgram.c                 |  373 ++++++++++++
->  net/ieee802154/netlink.c               |  485 ++++++++++++++++
->  net/ieee802154/raw.c                   |  250 ++++++++
->  net/mac802154/Kconfig                  |   13 +
->  net/mac802154/Makefile                 |    5 +
->  net/mac802154/beacon.c                 |  242 ++++++++
->  net/mac802154/beacon.h                 |   48 ++
->  net/mac802154/beacon_hash.c            |  103 ++++
->  net/mac802154/beacon_hash.h            |   40 ++
->  net/mac802154/dev.c                    |  843 +++++++++++++++++++++++++++
->  net/mac802154/mac802154.h              |   64 ++
->  net/mac802154/mac_cmd.c                |  325 +++++++++++
->  net/mac802154/main.c                   |   96 +++
->  net/mac802154/mdev.c                   |  283 +++++++++
->  net/mac802154/mib.h                    |   32 +
->  net/mac802154/pib.c                    |   87 +++
->  net/mac802154/pib.h                    |   35 ++
->  net/mac802154/scan.c                   |  215 +++++++
->  48 files changed, 7187 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/ieee802154/Kconfig
->  create mode 100644 drivers/ieee802154/Makefile
->  create mode 100644 drivers/ieee802154/at86rf230.c
->  create mode 100644 drivers/ieee802154/fakehard.c
->  create mode 100644 drivers/ieee802154/fakelb.c
->  create mode 100644 drivers/ieee802154/serial.c
->  create mode 100644 include/linux/spi/at86rf230.h
->  create mode 100644 include/net/ieee802154/af_ieee802154.h
->  create mode 100644 include/net/ieee802154/mac802154.h
->  create mode 100644 include/net/ieee802154/mac_def.h
->  create mode 100644 include/net/ieee802154/netdevice.h
->  create mode 100644 include/net/ieee802154/nl802154.h
->  create mode 100644 net/ieee802154/Kconfig
->  create mode 100644 net/ieee802154/Makefile
->  create mode 100644 net/ieee802154/af802154.h
->  create mode 100644 net/ieee802154/af_ieee802154.c
->  create mode 100644 net/ieee802154/dgram.c
->  create mode 100644 net/ieee802154/netlink.c
->  create mode 100644 net/ieee802154/raw.c
->  create mode 100644 net/mac802154/Kconfig
->  create mode 100644 net/mac802154/Makefile
->  create mode 100644 net/mac802154/beacon.c
->  create mode 100644 net/mac802154/beacon.h
->  create mode 100644 net/mac802154/beacon_hash.c
->  create mode 100644 net/mac802154/beacon_hash.h
->  create mode 100644 net/mac802154/dev.c
->  create mode 100644 net/mac802154/mac802154.h
->  create mode 100644 net/mac802154/mac_cmd.c
->  create mode 100644 net/mac802154/main.c
->  create mode 100644 net/mac802154/mdev.c
->  create mode 100644 net/mac802154/mib.h
->  create mode 100644 net/mac802154/pib.c
->  create mode 100644 net/mac802154/pib.h
->  create mode 100644 net/mac802154/scan.c
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
-
-
-
--- 
-Jon Smirl
-jonsmirl@gmail.com
+WTF?
