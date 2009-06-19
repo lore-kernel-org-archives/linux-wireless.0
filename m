@@ -1,194 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web55303.mail.re4.yahoo.com ([206.190.58.182]:39860 "HELO
-	web55303.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755856AbZFBSE6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 14:04:58 -0400
-Message-ID: <357626.6954.qm@web55303.mail.re4.yahoo.com>
-Date: Tue, 2 Jun 2009 11:04:59 -0700 (PDT)
-From: austinxxh-ath9k@yahoo.com
-Reply-To: austinxxh-ath9k@yahoo.com
-Subject: Re: ath9k/ath5k + 80211s crash
-To: devel@lists.open80211s.org, Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:58529 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758509AbZFSUbj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 16:31:39 -0400
+Received: by gxk10 with SMTP id 10so3248457gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 13:31:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20090619212419.2f3626d7@mjolnir.ossman.eu>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	 <1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	 <20090613132144.6c7783bc@mjolnir.ossman.eu>
+	 <87bposnmxi.fsf@litku.valot.fi>
+	 <20090613220908.271865cd@mjolnir.ossman.eu>
+	 <20090613205737.GA30439@hash.localnet>
+	 <20090618022524.GC10014@hash.localnet>
+	 <20090619212419.2f3626d7@mjolnir.ossman.eu>
+Date: Fri, 19 Jun 2009 16:31:41 -0400
+Message-ID: <b6c5339f0906191331x6c360d63wec431fc9d35b38c0@mail.gmail.com>
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+From: Bob Copeland <me@bobcopeland.com>
+To: Pierre Ossman <pierre@ossman.eu>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	san@google.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jun 19, 2009 at 3:24 PM, Pierre Ossman<pierre@ossman.eu> wrote:
+> I'm afraid I don't understand the problem. If you power up the card
+> before the MMC system has started, it should still properly find the
+> card and activate the wl12xx driver once things are in sync.
 
-I was using compat-wireless-0521. the reboot of ath9k/80211s could be a soft-watchdog reset caused by the lockup you mentioned. thanks. going to try a new wireless release.
+Okay a little more background:
 
-ath5k does not look good to me, going back to madwifi for a typical b/g AP setting instead.
+This is with the out-of-tree Android msm_sdcc host driver.  There are
+various implicit assumptions in module ordering.  For example, one of
+the platform callbacks sets a "virtual card select" flag, and then
+tries to notify the MMC host via another callback to do
+mmc_detect_change().  But that code runs before the MMC driver is
+loaded so the callback isn't yet registered and no one gets the
+notification.
 
-80211s looks neat to me, though it's still not well tested in the field. tried olsrd with ath9k it seems working fine.
+The Android loads the TI wifi module whenever someone uses it and
+then unloads it afterwards, so the current use of the msm_wifi platform
+driver is always after MMC is running.  And that's why the set_power()
+callbacks exist in the first place: they enable the phone to turn off
+the module via gpios, disconnect external oscillators, etc. when the
+person isn't actively using the wifi (i.e. module is unloaded).  A
+separate platform driver could still manage all of that.
 
-xxiao
+(The above is just from my reading the source, San can correct any
+errors.)
 
---- On Tue, 6/2/09, Andrey Yurovsky <andrey@cozybit.com> wrote:
+IOW, this particular issue isn't related to the core in-tree code, I
+was just describing why my first try failed.  I believe you that it will
+work fine once the Android specifics are worked out.
 
-> From: Andrey Yurovsky <andrey@cozybit.com>
-> Subject: Re: ath9k/ath5k + 80211s crash
-> To: austinxxh-ath9k@yahoo.com, devel@lists.open80211s.org
-> Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-> Date: Tuesday, June 2, 2009, 11:58 AM
-> With wireless-testing from a couple
-> of days ago, an X86 system, and this patch:
-> http://osdir.com/ml/linux-wireless/2009-05/msg01241.html
-> ath9k can bring up a mesh point interface and doesn't crash
-> for me,
-> but there are no mesh beacons, so mesh isn't working. 
-> On ath5k, there
-> are also no beacons and mesh doesn't work, but there's no
-> crash.
-> 
-> On Mon, Jun 1, 2009 at 8:52 PM,  <austinxxh-ath9k@yahoo.com>
-> wrote:
-> >
-> > Sorry, it should be "ath9k reboots, ath5k crashes, the
-> dump log is for ath5k, while ath9k displayed nothing".
-> >
-> > --- On Mon, 6/1/09, austinxxh-ath9k@yahoo.com
-> <austinxxh-ath9k@yahoo.com>
-> wrote:
-> >
-> >> From: austinxxh-ath9k@yahoo.com
-> <austinxxh-ath9k@yahoo.com>
-> >> Subject: ath9k/ath5k + 80211s crash
-> >> To: linux-wireless@vger.kernel.org,
-> ath9k-devel@lists.ath9k.org,
-> devel@lists.open80211s.org
-> >> Date: Monday, June 1, 2009, 10:43 PM
-> >>
-> >> Below is what I saw today(compat-wireless
-> 2009-05-21), I
-> >> have both an ath9k and an ath5k card. ath9k
-> crashes (see
-> >> below), ath5k will just reboot the board after
-> "ifconfig
-> >> mesh up", any idea?
-> >> thanks,
-> >> X Xiao
-> >>
-> >>
-> >> BusyBox v1.13.4 (2009-06-01 21:18:32 CDT) built-in
-> shell
-> >> (ash)
-> >> Enter 'help' for a list of built-in commands.
-> >>
-> >>   _______
-> >>          ________
-> >>     __
-> >>  |
-> >>    |.-----.-----.-----.|  |
-> >> |  |.----.|  |_
-> >>  |   -   ||  _
-> >> |  -__|     ||  |
-> >> |  ||   _||   _|
-> >>
-> >> |_______||   __|_____|__|__||________||__|
-> >> |____|
-> >>           |__| W I R E L E S
-> >> S   F R E E D O M
-> >>  KAMIKAZE (bleeding edge, r16290)
-> -------------------
-> >>   * 10 oz Vodka       Shake
-> >> well with ice and strain
-> >>   * 10 oz Triple sec  mixture into 10 shot
-> >> glasses.
-> >>   * 10 oz lime juice  Salute!
-> >>
->  ---------------------------------------------------
-> >> root@OpenWrt:/# iw dev wlan0 interface add mesh
-> type mp
-> >> mesh_id mesh
-> >> root@OpenWrt:/# ifconfig -a | grep mesh
-> >> mesh      Link encap:Ethernet  HWaddr
-> >> 00:0B:6B:57:09:37
-> >> root@OpenWrt:/# ifconfig mesh up
-> >> PCI error 1 at PCI addr 0x100109dc
-> >> Data bus error, epc == c024f12c, ra == c024f128
-> >> Oops[#1]:
-> >> Cpu 0
-> >> $ 0   : 00000000 00000000 deadc0de 000ffc00
-> >> $ 4   : b00109dc b0010000 b0010000 0000000a
-> >> $ 8   : 80170000 83aeaed0 00080000 00000000
-> >> $12   : 00000000 839f04a8 802a0818 00000000
-> >> $16   : 000009dc 8016b710 83aea000 000003ff
-> >> $20   : 83aeaea8 8016b6bc 0000001c 00000007
-> >> $24   : 00000000 80070000
-> >>
-> >> $28   : 82c5c000 82c5dc90 7fb0d068 c024f128
-> >> Hi    : 000000d8
-> >> Lo    : 00000144
-> >> epc   : c024f12c 0xc024f12c
-> >>     Not tainted
-> >> ra    : c024f128 0xc024f128
-> >> Status: 1000f403    KERNEL EXL IE
-> >> Cause : 1080001c
-> >> PrId  : 00019374 (MIPS 24Kc)
-> >> Modules linked in: nf_nat_tftp nf_conntrack_tftp
-> nf_nat_irc
-> >> nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp i
-> >> Process ifconfig (pid: 896, threadinfo=82c5c000,
-> >> task=839f0000, tls=00000000)
-> >> Stack : 83aea000 83a9d680 00000000 00000018
-> 83aea000
-> >> 83b109a0 83aea000 83aea000
-> >>         00000300 83b101e0 82cddeb8
-> >> 83b109a8 c025977c c0259700 ffffffff 00000000
-> >>         00000002 00000000 00000003
-> >> 00000000 00080000 00000000 00000000 00000000
-> >>         00000000 00000000 00000000
-> >> 00000000 00000001 83b109a0 82cddec0 c02599e0
-> >>         00000000 c025a164 00000001
-> >> 8009525c 82cddb80 00000300 83b101e0 82cdd800
-> >>         ...
-> >> Call Trace:[<c025977c>] 0xc025977c
-> >> [<c0259700>] 0xc0259700
-> >> [<c02599e0>] 0xc02599e0
-> >> [<c025a164>] 0xc025a164
-> >> [<8009525c>] 0x8009525c
-> >> [<c01dcb64>] 0xc01dcb64
-> >> [<c01ff3b8>] 0xc01ff3b8
-> >> [<800dc19c>] 0x800dc19c
-> >> [<c01eb4b0>] 0xc01eb4b0
-> >> [<800b4040>] 0x800b4040
-> >> [<801b85e8>] 0x801b85e8
-> >> [<801b4454>] 0x801b4454
-> >> [<800bdc94>] 0x800bdc94
-> >> [<800bdc94>] 0x800bdc94
-> >> [<801b632c>] 0x801b632c
-> >> [<801b6b80>] 0x801b6b80
-> >> [<801ffbf8>] 0x801ffbf8
-> >> [<801ff9c8>] 0x801ff9c8
-> >> [<801b75f8>] 0x801b75f8
-> >> [<801b75ec>] 0x801b75ec
-> >> [<801a75b8>] 0x801a75b8
-> >> [<800e0890>] 0x800e0890
-> >> [<800e0db0>] 0x800e0db0
-> >> [<801a7e30>] 0x801a7e30
-> >> [<800d5344>] 0x800d5344
-> >> [<800d51c0>] 0x800d51c0
-> >> [<801a7ebc>] 0x801a7ebc
-> >> [<800e0e64>] 0x800e0e64
-> >> [<80062504>] 0x80062504
-> >> [<80062504>] 0x80062504
-> >>
-> >>
-> >> Code: 02a0f809  02042021  8e450008
-> >> <34440800> 0220f809  02052821
-> >> 8e440008  26c21100  3053fffc
-> >> Segmentation fault
-> >>
-> >> _______________________________________________
-> >> Devel mailing list
-> >> Devel@lists.open80211s.org
-> >> http://open80211s.com/mailman/listinfo/devel
-> >>
-> > _______________________________________________
-> > Devel mailing list
-> > Devel@lists.open80211s.org
-> > http://open80211s.com/mailman/listinfo/devel
-> >
-> 
+> Do you want me to merge it?
+
+It can go via the wireless tree if that's ok with you, since the
+SPI driver already lives there and this all needs to be rebased
+on Kalle Valo's latest changes anyway.
+
+It'd be nice to get msm_sdcc upstream though.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
