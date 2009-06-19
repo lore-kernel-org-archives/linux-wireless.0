@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:23293 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbZFUI32 (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:52127 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752552AbZFSWTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2009 04:29:28 -0400
-Date: Sun, 21 Jun 2009 12:29:21 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, davem@davemloft.net,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Sergey Lapin <slapin@ossfans.org>,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>
-Subject: Re: [PATCH 1/6] crc-itu-t: add bit-reversed calculation
-Message-ID: <20090621082921.GA12749@doriath.ww600.siemens.net>
-References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com> <1244021629-18409-2-git-send-email-dbaryshkov@gmail.com> <1244033004.21215.4.camel@deadeye>
+	Fri, 19 Jun 2009 18:19:14 -0400
+Date: Sat, 20 Jun 2009 00:19:09 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Greg KH <greg@kroah.com>, "corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
+	window
+Message-ID: <20090619221909.GC2229@elf.ucw.cz>
+References: <20090615214735.GE23972@bombadil.infradead.org> <20090615223206.GA4966@kroah.com> <20090616004122.GC5492@tesla> <20090616021011.GF23972@bombadil.infradead.org> <20090616032034.GA17932@kroah.com> <20090616042113.GA5680@tesla> <20090616093401.GA11602@jm.kir.nu> <20090616181705.GB31506@tesla> <20090619150015.GC1389@ucw.cz> <43e72e890906191010v4b2e79a5x2c7b722b8209933c@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244033004.21215.4.camel@deadeye>
+In-Reply-To: <43e72e890906191010v4b2e79a5x2c7b722b8209933c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-
-On Wed, Jun 03, 2009 at 01:43:24PM +0100, Ben Hutchings wrote:
-> On Wed, 2009-06-03 at 13:33 +0400, Dmitry Eremin-Solenikov wrote:
-> [...] 
-> > +/**
-> > + * crc_itu_t_bitreversed - Compute the CRC-ITU-T for the data buffer;
-> > + * the buffer content is assumed to be bit-reversed
-> [...]
+> >> +2.0.2: RC-SERIES RULES
+> >> +
+> >> +Rules on what kind of patches are accepted after the merge window closes.
+> >> +These are patches targeted for the kernel rc-series of a kernel prior
+> >> +to its release.
+> >> +
+> >> + - it must fix a reported regression
+> >> + - it must fix a reported security hole
+> >> + - it must fix a reported oops/kernel hang
+> >
+> > - it must fix a bug.
 > 
-> This short description spills onto two lines which is invalid and breaks
-> the generation of docs.  Sorry to point this out after recommending the
-> patch to you.
+> Well that's for certain, but there is a difference between a general
+> notion of a bug and the type of bug fixes that should go in during the
+> rc-series. This documentation patch highlights the difference.
+
+Yes, and I'm trying to tell you that this documentation patch is
+wrong.
+
+Non-intrusive bugfixes _are_ welcome after -rc1.
+
+> > I do not think the 'reported' requirement is there in -rc,
 > 
-> I've changed the description to "crc_itu_t_bitreversed - Compute the
-> CRC-ITU-T for a bit-reversed data buffer" all on one line.
+> Well if its not reported how else would you find out about it during
+> the rc-series? And if its something easily triggerable that should
+> have been fixed earlier, not late in the rc-series.
 
-Just another not w.r.t. this patch: one should add 'select BITREVERSE'
-to this Kconfig entry, as it depends on bitreversing stuff.
+'reported' means 'someone is hitting that bug' in that context. If you
+do code inspection on drivers/foo/bar.c and find that it will hang on
+may 13, 2017; then that's a bug but not "reported" one -- users are
+not hitting it. Such bug may be uninteresting for -stable, but would
+probably be ok for -rc.
 
+> > and yes,
+> > compile-fixes etc are welcome.
+> 
+> Sure, but what are these doing so late in the rc-series?
+
+Bugs happen :-).
+
+> > Non-intrusive bugfixes too, afaict.
+> 
+> It really depends on what you mean but generally no, and this is why I
+> think this clarification is important.
+
+I believe you are wrong.
+									Pavel
 -- 
-With best wishes
-Dmitry
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
