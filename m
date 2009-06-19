@@ -1,44 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60872 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbZFASa1 (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:45549 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbZFSR22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 14:30:27 -0400
-Date: Mon, 1 Jun 2009 14:26:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] ar9170: use bitop macros for tx filter flags
-Message-ID: <20090601182641.GB3386@tuxdriver.com>
-References: <200905232028.21844.chunkeey@web.de>
+	Fri, 19 Jun 2009 13:28:28 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2.6.31] p54: band-aid to restore driver functionality
+Date: Fri, 19 Jun 2009 19:28:27 +0200
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200905232028.21844.chunkeey@web.de>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200906191928.28386.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 23, 2009 at 08:28:21PM +0200, Christian Lamparter wrote:
-> This patch fixes a bug in configure_filter's (sub-)routines.
-> We never really cleared the flags once we updated the hardware state,
-> so we wasted our resources by applying already active settings.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> John,
-> 
-> please apply these together with the bits from the last series
-> 
-> [PATCH 1/6] ar9170: fix beacon plcp settings
-> [PATCH 2/6] ar9170: update hardware definitions
-> [PATCH 3/6] ar9170: 40MHz fixes
-> [PATCH 4/6] ar9170: introduce functions for MAC programming
-> 
-> to wireless-2.6 when you're back from Spain.
+This patch is the trade-off between size vs. time vs. functionality.
+Unfortunately, It reverts some portions of
+"[PATCH 3/10]: p54: Use SKB list handling helpers instead of by-hand code."
+as rewriting the mm code to only rely on the available helper functions
+in include/linux/skbuff.h is beyond scope of -rcX patches.
 
-Ugh...of course, I just deleted these from my mailbox...  Could you
-repost these?
+in p54_assign_address:
+target_skb is used as a mere "pointer" after which the next element
+will be queued. It's perfectly _legal_ if this pointer points to 
+priv->tx_queue's head/tail.
+Also ieee80211_stop_queue(s) must not be called during initialisation.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+in p54_free_skb: 
+Nearly ;-)... Actually, the skb->prev || skb->next check was once very
+useful for finding double frees in the back-end driver code.
+However, it is dead code now and can be removed.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+--- a/drivers/net/wireless/p54/p54common.c	2009-06-19 17:02:53.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2009-06-19 18:17:16.000000000 +0200
+@@ -823,14 +823,8 @@ void p54_free_skb(struct ieee80211_hw *d
+ 	struct p54_tx_info *range;
+ 	unsigned long flags;
+ 
+-	if (unlikely(!skb || !dev || skb_queue_empty(&priv->tx_queue)))
+-		return;
+-
+-	/* There used to be a check here to see if the SKB was on the
+-	 * TX queue or not.  This can never happen because all SKBs we
+-	 * see here successfully went through p54_assign_address()
+-	 * which means the SKB is on the ->tx_queue.
+-	 */
++	if (unlikely(!skb || WARN_ON(!dev)))
++		return ;
+ 
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+ 	info = IEEE80211_SKB_CB(skb);
+@@ -1149,7 +1143,8 @@ static int p54_assign_address(struct iee
+ 		 * We have throttle normal data traffic, because we must
+ 		 * have a few spare slots for control frames left.
+ 		 */
+-		ieee80211_stop_queues(dev);
++		if (likely(priv->mode != NL80211_IFTYPE_UNSPECIFIED))
++			ieee80211_stop_queues(dev);
+ 		queue_delayed_work(dev->workqueue, &priv->work,
+ 				   msecs_to_jiffies(P54_TX_TIMEOUT));
+ 
+@@ -1170,7 +1165,7 @@ static int p54_assign_address(struct iee
+ 		range = (void *)info->rate_driver_data;
+ 		hole_size = range->start_addr - last_addr;
+ 		if (!target_skb && hole_size >= len) {
+-			target_skb = skb_queue_prev(&priv->tx_queue, entry);
++			target_skb = entry->prev;
+ 			hole_size -= len;
+ 			target_addr = last_addr;
+ 		}
+@@ -1178,7 +1173,7 @@ static int p54_assign_address(struct iee
+ 		last_addr = range->end_addr;
+ 	}
+ 	if (!target_skb && priv->rx_end - last_addr >= len) {
+-		target_skb = skb_peek_tail(&priv->tx_queue);
++		target_skb = priv->tx_queue.prev;
+ 		largest_hole = max(largest_hole, priv->rx_end - last_addr - len);
+ 		if (!skb_queue_empty(&priv->tx_queue)) {
+ 			info = IEEE80211_SKB_CB(target_skb);
+@@ -1190,7 +1185,8 @@ static int p54_assign_address(struct iee
+ 
+ 	if (!target_skb) {
+ 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+-		ieee80211_stop_queues(dev);
++		if (likely(priv->mode != NL80211_IFTYPE_UNSPECIFIED))
++			ieee80211_stop_queues(dev);
+ 		return -ENOSPC;
+ 	}
+ 
+@@ -1201,8 +1197,9 @@ static int p54_assign_address(struct iee
+ 	__skb_queue_after(&priv->tx_queue, target_skb, skb);
+ 	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+-	if (largest_hole < priv->headroom + sizeof(struct p54_hdr) +
+-			   48 + IEEE80211_MAX_RTS_THRESHOLD + priv->tailroom)
++	if ((largest_hole < priv->headroom + sizeof(struct p54_hdr) +
++			   48 + IEEE80211_MAX_RTS_THRESHOLD + priv->tailroom) &&
++		(priv->mode != NL80211_IFTYPE_UNSPECIFIED))
+ 		ieee80211_stop_queues(dev);
+ 
+ 	data->req_id = cpu_to_le32(target_addr + priv->headroom);
