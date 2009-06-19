@@ -1,73 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43488 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751259AbZFVOs1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 10:48:27 -0400
-Subject: Re: [PATCH] libertas: correct card cleanup order in SPI driver
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1245343917-15534-1-git-send-email-andrey@cozybit.com>
-References: <20090618081206.GB2770@Chamillionaire.breakpoint.cc>
-	 <1245343917-15534-1-git-send-email-andrey@cozybit.com>
-Content-Type: text/plain
-Date: Mon, 22 Jun 2009 10:48:13 -0400
-Message-Id: <1245682093.4338.26.camel@dhcp-100-3-98.bos.redhat.com>
-Mime-Version: 1.0
+Received: from mail-px0-f202.google.com ([209.85.216.202]:63285 "EHLO
+	mail-px0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbZFSThJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 15:37:09 -0400
+Received: by pxi40 with SMTP id 40so160323pxi.33
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 12:37:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <83a869cd0906191233g507fea1cg238d14b57ace0466@mail.gmail.com>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
+	 <1244556179.4672.11.camel@johannes.local>
+	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
+	 <1244569926.18481.27.camel@johannes.local>
+	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
+	 <1244750836.29447.5.camel@johannes.local>
+	 <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
+	 <1244839645.11782.5.camel@johannes.local>
+	 <83a869cd0906191233g507fea1cg238d14b57ace0466@mail.gmail.com>
+Date: Fri, 19 Jun 2009 21:37:11 +0200
+Message-ID: <83a869cd0906191237j7d727a4ekd6dbb9fc35d60b78@mail.gmail.com>
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-06-18 at 09:51 -0700, Andrey Yurovsky wrote:
-> The SPI driver does a couple of card cleanup steps in the wrong order on
-> module removal.  If IEEE PS is enabled, this results in the card being
-> left in IEEE PS mode and subsequent failures to reload the module.  The
-> problem is that the surpriseremoved flag is set before calling
-> lbs_remove_card, but that function needs to issue a command to exit IEEE
-> PS mode (the flag blocks the command path).  In addition, lbs_stop_card
-> should be called first because it clears out any pending commands.
-> 
-> Tested on a GSPI device with V9 firmware by confirming that we can
-> reload the module with or without IEEE PS enabled.
-> 
-> Also fix a warning from the wrong uint format in a printk.
-> 
-> V2: use z modifier, thanks Sebastian.
-> 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+Update : I changed the logic. There is a single flag per key, tracking
+if we send the key instead of a flag per rx queue.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+The mac80211 tkip code won't call update_tkip_key, if some rx packets
+get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
+first packet because the hardware key stuff is called asynchronously with
+todo workqueue.
 
-> ---
->  drivers/net/wireless/libertas/if_spi.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-> index 923ed58..8d8bc0b 100644
-> --- a/drivers/net/wireless/libertas/if_spi.c
-> +++ b/drivers/net/wireless/libertas/if_spi.c
-> @@ -737,7 +737,7 @@ static int if_spi_c2h_data(struct if_spi_card *card)
->  		goto out;
->  	} else if (len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
->  		lbs_pr_err("%s: error: card has %d bytes of data, but "
-> -			   "our maximum skb size is %lu\n",
-> +			   "our maximum skb size is %zu\n",
->  			   __func__, len, MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
->  		err = -EINVAL;
->  		goto out;
-> @@ -1171,12 +1171,13 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
->  
->  	lbs_deb_spi("libertas_spi_remove\n");
->  	lbs_deb_enter(LBS_DEB_SPI);
-> -	priv->surpriseremoved = 1;
->  
->  	lbs_stop_card(priv);
-> +	lbs_remove_card(priv); /* will call free_netdev */
-> +
-> +	priv->surpriseremoved = 1;
->  	free_irq(spi->irq, card);
->  	if_spi_terminate_spi_thread(card);
-> -	lbs_remove_card(priv); /* will call free_netdev */
->  	if (card->pdata->teardown)
->  		card->pdata->teardown(spi);
->  	free_if_spi_card(card);
+This patch workaround that by tracking if we send the key to hardware.
 
+
+Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+Index: linux-2.6/net/mac80211/tkip.c
+===================================================================
+--- linux-2.6.orig/net/mac80211/tkip.c	2009-06-19 19:13:47.000000000 +0000
++++ linux-2.6/net/mac80211/tkip.c	2009-06-19 19:21:50.000000000 +0000
+@@ -282,6 +282,7 @@
+ 	    key->u.tkip.rx[queue].iv32 != iv32) {
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
++		key->u.tkip.rx_tkip_key_sent = 0;
+ #ifdef CONFIG_MAC80211_TKIP_DEBUG
+ 		{
+ 			int i;
+@@ -298,19 +299,21 @@
+ 			printk("\n");
+ 		}
+ #endif
+-		if (key->local->ops->update_tkip_key &&
+-			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-			u8 bcast[ETH_ALEN] =
+-				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+-			u8 *sta_addr = key->sta->sta.addr;
++	}
++	if (key->local->ops->update_tkip_key &&
++	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
++	    !key->u.tkip.rx_tkip_key_sent) {
++		u8 bcast[ETH_ALEN] =
++			{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++		u8 *sta_addr = key->sta->sta.addr;
+
+-			if (is_multicast_ether_addr(ra))
+-				sta_addr = bcast;
++		if (is_multicast_ether_addr(ra))
++			sta_addr = bcast;
+
+-			key->local->ops->update_tkip_key(
+-				local_to_hw(key->local), &key->conf,
+-				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
+-		}
++		key->local->ops->update_tkip_key(
++			local_to_hw(key->local), &key->conf,
++			sta_addr, iv32, key->u.tkip.rx[queue].p1k);
++		key->u.tkip.rx_tkip_key_sent = 1;
+ 	}
+
+ 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
+Index: linux-2.6/net/mac80211/key.h
+===================================================================
+--- linux-2.6.orig/net/mac80211/key.h	2009-06-19 19:22:20.000000000 +0000
++++ linux-2.6/net/mac80211/key.h	2009-06-19 19:22:31.000000000 +0000
+@@ -86,6 +86,7 @@
+
+ 			/* last received RSC */
+ 			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
++			int rx_tkip_key_sent;
+ 		} tkip;
+ 		struct {
+ 			u8 tx_pn[6];
