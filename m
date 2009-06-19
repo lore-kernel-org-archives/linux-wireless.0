@@ -1,96 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33680 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:1336 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829AbZFIFgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 01:36:41 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 22:36:44 -0700
-Date: Tue, 9 Jun 2009 11:05:20 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <Luis.Rodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 01/15] ath9k: fix oops by downgrading assert in rc.c
-Message-ID: <20090609053520.GD22194@vasanth-laptop>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com> <1244180502-4323-2-git-send-email-lrodriguez@atheros.com> <20090605063059.GF17632@vasanth-laptop> <43e72e890906050047w71f8e691g479797a54f5fb9a0@mail.gmail.com> <20090605075252.GG17632@vasanth-laptop> <20090605182944.GD30211@tesla> <44EE5C37ADC36343B0625A05DD408C485068DEBF69@CHEXMB-01.global.atheros.com> <43e72e890906081726m764f891mc0a46a46b5bc3ac9@mail.gmail.com> <20090609005821.GD380@tesla> <20090609052400.GB22194@vasanth-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090609052400.GB22194@vasanth-laptop>
+	id S1755776AbZFSUpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 16:45:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/5] iwlwifi: unify iwl_setup_rxon_timing
+Date: Fri, 19 Jun 2009 13:52:45 -0700
+Message-Id: <1245444765-29079-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1245444765-29079-5-git-send-email-reinette.chatre@intel.com>
+References: <1245444765-29079-1-git-send-email-reinette.chatre@intel.com>
+ <1245444765-29079-2-git-send-email-reinette.chatre@intel.com>
+ <1245444765-29079-3-git-send-email-reinette.chatre@intel.com>
+ <1245444765-29079-4-git-send-email-reinette.chatre@intel.com>
+ <1245444765-29079-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 09, 2009 at 10:54:00AM +0530, Vasanth Thiagarajan wrote:
-> On Tue, Jun 09, 2009 at 06:28:21AM +0530, Luis Rodriguez wrote:
-> > On Mon, Jun 08, 2009 at 05:26:41PM -0700, Luis R. Rodriguez wrote:
-> > > On Fri, Jun 5, 2009 at 11:55 PM, Vasanth
-> > > Thiagarajan<Vasanth.Thiagarajan@atheros.com> wrote:
-> > > >
-> > > > ________________________________________
-> > > >
-> > > >> > >> +       /*
-> > > >> > >> +        * Fine tuning for when no decent rate was found, the
-> > > >> > >> +        * lowest should *not* be used under normal circumstances.
-> > > >> > >> +        */
-> > > >> > >> +       if (rix == ath_rc_priv->valid_rate_index[0]) {
-> > > >> > >> +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
-> > > >> > >> +                       "disabling MRR\n");
-> > > >> > >> +               rates[0].idx = rate_lowest_index(sband, sta);
-> > > >> > >> +               /* Disable MRR when ath_rc_ratefind_ht() found rate 0 */
-> > > >> > >> +               rates[1].idx = -1;
-> > > >> > >> +       }
-> > > >> > >
-> > > >> > > I think we can still fill other rates (1..3) with the lowest rate
-> > > >> > > index as we dont differentiate the situation where the lowest rate
-> > > >> > > is chosen truely by the algorithm from this particular case.
-> > > >> >
-> > > >> > I thought about that as well, but does it really make sense for us to
-> > > >> > use MRR with the same lowest rate? That's why I just used one segment.
-> > > >> > Thoughts?
-> > > >>
-> > > >> or we can try for max_retry (4) times. In that case the rate indices of
-> > > >> other rates (just not 1) should be made -1 or this segment should
-> > > >> moved just below the rate find.
-> > > >
-> > > > and the next segment [1]
-> > > > is set to -1. Please let me know if there is anything else you see needs
-> > > > change.
-> > > >
-> > > > Setting rate index of the rate series[1] is not enough as you are still filling the others rate
-> > > > segments(2 and 3) by ath_rc_rate_getidx() in the for..loop, so other segments are also be
-> > > > set to -1, but it looks hacky, one clean way of doing this can be, moving you code segment to
-> > > > just below ath_rc_ratefind_ht(), like the following diff.
-> > > >
-> > > >
-> > > >        rate_table = sc->cur_rate_table;
-> > > >        rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
-> > > > +
-> > > > +       if (rix == ath_rc_priv->valid_rate_index[0]) {
-> > > > +               DPRINTF(sc, ATH_DBG_RATE, "lowest rate being used, "
-> > > > +                               "disabling MRR\n");
-> > > > +
-> > > > +               ath_rc_rate_set_series(rate_table, &rates[0], txrc,
-> > > > +                                      4, rix, 0);
-> > >
-> > > The above sets the rate[0].idx to rix
-> > >
-> > > > +               rates[0].idx = rate_lowest_index(sband, sta);
-> > >
-> > > and then here we set it to rate_lowest_index(sband, sta) comes up
-> > > with. They should be the same, but this just goes to show we need to
-> > > clean this better.
-> >
-> > I just found this is wrong too.. the rate table used to find
-> > rix is different than the rate table for the mode. ie, in 5ghz
-> > when associated to an 11n station this could not include any
-> > legacy rates.
-> 
-> This is wrong. All basci rates still be used in 11n mode.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Never mind, this is only for 11ng.
-> 
-> Vasanth
+This patch unifies setup_rxon_timing funcions
+of AGN and 3945. HWs differ only in supported maximal
+beacon interval. This is reflected in hw_paras.max_beacon_itrvl
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   64 -----------------------
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   59 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   74 +--------------------------
+ 7 files changed, 66 insertions(+), 136 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 8cfc830..b0246db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2563,6 +2563,7 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.bcast_sta_id = IWL3945_BROADCAST_ID;
+ 
+ 	priv->hw_params.rx_wrt_ptr_reg = FH39_RSCSR_CHNL0_WPTR;
++	priv->hw_params.max_beacon_itrvl = IWL39_MAX_UCODE_BEACON_INTERVAL;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d928561..1d4e9ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -512,70 +512,6 @@ int iwl_hw_tx_queue_init(struct iwl_priv *priv,
+ 	return 0;
+ }
+ 
+-
+-/******************************************************************************
+- *
+- * Misc. internal state and helper functions
+- *
+- ******************************************************************************/
+-
+-#define MAX_UCODE_BEACON_INTERVAL	4096
+-
+-static u16 iwl_adjust_beacon_interval(u16 beacon_val)
+-{
+-	u16 new_val = 0;
+-	u16 beacon_factor = 0;
+-
+-	beacon_factor = (beacon_val + MAX_UCODE_BEACON_INTERVAL)
+-					/ MAX_UCODE_BEACON_INTERVAL;
+-	new_val = beacon_val / beacon_factor;
+-
+-	if (!new_val)
+-		new_val = MAX_UCODE_BEACON_INTERVAL;
+-
+-	return new_val;
+-}
+-
+-static void iwl_setup_rxon_timing(struct iwl_priv *priv)
+-{
+-	u64 tsf;
+-	s32 interval_tm, rem;
+-	unsigned long flags;
+-	struct ieee80211_conf *conf = NULL;
+-	u16 beacon_int = 0;
+-
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
+-	priv->rxon_timing.listen_interval = cpu_to_le16(conf->listen_interval);
+-
+-	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
+-		beacon_int = iwl_adjust_beacon_interval(priv->beacon_int);
+-		priv->rxon_timing.atim_window = 0;
+-	} else {
+-		beacon_int = iwl_adjust_beacon_interval(
+-			priv->vif->bss_conf.beacon_int);
+-
+-		/* TODO: we need to get atim_window from upper stack
+-		 * for now we set to 0 */
+-		priv->rxon_timing.atim_window = 0;
+-	}
+-
+-	priv->rxon_timing.beacon_interval = cpu_to_le16(beacon_int);
+-
+-	tsf = priv->timestamp; /* tsf is modifed by do_div: copy it */
+-	interval_tm = beacon_int * 1024;
+-	rem = do_div(tsf, interval_tm);
+-	priv->rxon_timing.beacon_init_val = cpu_to_le32(interval_tm - rem);
+-
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-	IWL_DEBUG_ASSOC(priv, "beacon interval %d beacon timer %d beacon tim %d\n",
+-			le16_to_cpu(priv->rxon_timing.beacon_interval),
+-			le32_to_cpu(priv->rxon_timing.beacon_init_val),
+-			le16_to_cpu(priv->rxon_timing.atim_window));
+-}
+-
+ /******************************************************************************
+  *
+  * Generic RX handler implementations
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index c87033b..6e9b8a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -765,6 +765,8 @@ struct iwl5000_rxon_assoc_cmd {
+ } __attribute__ ((packed));
+ 
+ #define IWL_CONN_MAX_LISTEN_INTERVAL	10
++#define IWL_MAX_UCODE_BEACON_INTERVAL	4 /* 4096 */
++#define IWL39_MAX_UCODE_BEACON_INTERVAL	1 /* 1024 */
+ 
+ /*
+  * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 11a1969..7e528a0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -635,6 +635,63 @@ u8 iwl_is_fat_tx_allowed(struct iwl_priv *priv,
+ }
+ EXPORT_SYMBOL(iwl_is_fat_tx_allowed);
+ 
++static u16 iwl_adjust_beacon_interval(u16 beacon_val, u16 max_beacon_val)
++{
++	u16 new_val = 0;
++	u16 beacon_factor = 0;
++
++	beacon_factor = (beacon_val + max_beacon_val) / max_beacon_val;
++	new_val = beacon_val / beacon_factor;
++
++	if (!new_val)
++		new_val = max_beacon_val;
++
++	return new_val;
++}
++
++void iwl_setup_rxon_timing(struct iwl_priv *priv)
++{
++	u64 tsf;
++	s32 interval_tm, rem;
++	unsigned long flags;
++	struct ieee80211_conf *conf = NULL;
++	u16 beacon_int;
++
++	conf = ieee80211_get_hw_conf(priv->hw);
++
++	spin_lock_irqsave(&priv->lock, flags);
++	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
++	priv->rxon_timing.listen_interval = cpu_to_le16(conf->listen_interval);
++
++	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
++		beacon_int = priv->beacon_int;
++		priv->rxon_timing.atim_window = 0;
++	} else {
++		beacon_int = priv->vif->bss_conf.beacon_int;
++
++		/* TODO: we need to get atim_window from upper stack
++		 * for now we set to 0 */
++		priv->rxon_timing.atim_window = 0;
++	}
++
++	beacon_int = iwl_adjust_beacon_interval(beacon_int,
++				priv->hw_params.max_beacon_itrvl * 1024);
++	priv->rxon_timing.beacon_interval = cpu_to_le16(beacon_int);
++
++	tsf = priv->timestamp; /* tsf is modifed by do_div: copy it */
++	interval_tm = beacon_int * 1024;
++	rem = do_div(tsf, interval_tm);
++	priv->rxon_timing.beacon_init_val = cpu_to_le32(interval_tm - rem);
++
++	spin_unlock_irqrestore(&priv->lock, flags);
++	IWL_DEBUG_ASSOC(priv,
++			"beacon interval %d beacon timer %d beacon tim %d\n",
++			le16_to_cpu(priv->rxon_timing.beacon_interval),
++			le32_to_cpu(priv->rxon_timing.beacon_init_val),
++			le16_to_cpu(priv->rxon_timing.atim_window));
++}
++EXPORT_SYMBOL(iwl_setup_rxon_timing);
++
+ void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, int hw_decrypt)
+ {
+ 	struct iwl_rxon_cmd *rxon = &priv->staging_rxon;
+@@ -1369,6 +1426,8 @@ int iwl_set_hw_params(struct iwl_priv *priv)
+ 		priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE_4K;
+ 	priv->hw_params.max_pkt_size = priv->hw_params.rx_buf_size - 256;
+ 
++	priv->hw_params.max_beacon_itrvl = IWL_MAX_UCODE_BEACON_INTERVAL;
++
+ 	if (priv->cfg->mod_params->disable_11n)
+ 		priv->cfg->sku &= ~IWL_SKU_N;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 356d4e3..a658410 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -554,6 +554,7 @@ extern void iwl_rx_reply_rx_phy(struct iwl_priv *priv,
+ void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 					   struct iwl_rx_mem_buffer *rxb);
+ 
++void iwl_setup_rxon_timing(struct iwl_priv *priv);
+ static inline int iwl_send_rxon_assoc(struct iwl_priv *priv)
+ {
+ 	return priv->cfg->ops->hcmd->rxon_assoc(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 5da60e4..1a2fe37 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -608,6 +608,7 @@ struct iwl_hw_params {
+ 	u8  max_stations;
+ 	u8  bcast_sta_id;
+ 	u8 fat_channel;
++	u8  max_beacon_itrvl;	/* in 1024 ms */
+ 	u32 max_inst_size;
+ 	u32 max_data_size;
+ 	u32 max_bsm_size;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 016567f..303c4b4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -361,76 +361,6 @@ static void iwl3945_unset_hw_params(struct iwl_priv *priv)
+ 				    priv->shared_phys);
+ }
+ 
+-#define MAX_UCODE_BEACON_INTERVAL	1024
+-#define INTEL_CONN_LISTEN_INTERVAL	cpu_to_le16(0xA)
+-
+-static __le16 iwl3945_adjust_beacon_interval(u16 beacon_val)
+-{
+-	u16 new_val = 0;
+-	u16 beacon_factor = 0;
+-
+-	beacon_factor =
+-	    (beacon_val + MAX_UCODE_BEACON_INTERVAL)
+-		/ MAX_UCODE_BEACON_INTERVAL;
+-	new_val = beacon_val / beacon_factor;
+-
+-	return cpu_to_le16(new_val);
+-}
+-
+-static void iwl3945_setup_rxon_timing(struct iwl_priv *priv)
+-{
+-	u64 interval_tm_unit;
+-	u64 tsf, result;
+-	unsigned long flags;
+-	struct ieee80211_conf *conf = NULL;
+-	u16 beacon_int = 0;
+-
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
+-	priv->rxon_timing.listen_interval = INTEL_CONN_LISTEN_INTERVAL;
+-
+-	tsf = priv->timestamp;
+-
+-	beacon_int = priv->beacon_int;
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
+-		if (beacon_int == 0) {
+-			priv->rxon_timing.beacon_interval = cpu_to_le16(100);
+-			priv->rxon_timing.beacon_init_val = cpu_to_le32(102400);
+-		} else {
+-			priv->rxon_timing.beacon_interval =
+-				cpu_to_le16(beacon_int);
+-			priv->rxon_timing.beacon_interval =
+-			    iwl3945_adjust_beacon_interval(
+-				le16_to_cpu(priv->rxon_timing.beacon_interval));
+-		}
+-
+-		priv->rxon_timing.atim_window = 0;
+-	} else {
+-		priv->rxon_timing.beacon_interval =
+-			iwl3945_adjust_beacon_interval(
+-				priv->vif->bss_conf.beacon_int);
+-		/* TODO: we need to get atim_window from upper stack
+-		 * for now we set to 0 */
+-		priv->rxon_timing.atim_window = 0;
+-	}
+-
+-	interval_tm_unit =
+-		(le16_to_cpu(priv->rxon_timing.beacon_interval) * 1024);
+-	result = do_div(tsf, interval_tm_unit);
+-	priv->rxon_timing.beacon_init_val =
+-	    cpu_to_le32((u32) ((u64) interval_tm_unit - result));
+-
+-	IWL_DEBUG_ASSOC(priv,
+-		"beacon interval %d beacon timer %d beacon tim %d\n",
+-		le16_to_cpu(priv->rxon_timing.beacon_interval),
+-		le32_to_cpu(priv->rxon_timing.beacon_init_val),
+-		le16_to_cpu(priv->rxon_timing.atim_window));
+-}
+-
+ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
+ 				      struct ieee80211_tx_info *info,
+ 				      struct iwl_cmd *cmd,
+@@ -3066,7 +2996,7 @@ void iwl3945_post_associate(struct iwl_priv *priv)
+ 	iwlcore_commit_rxon(priv);
+ 
+ 	memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
+-	iwl3945_setup_rxon_timing(priv);
++	iwl_setup_rxon_timing(priv);
+ 	rc = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
+ 			      sizeof(priv->rxon_timing), &priv->rxon_timing);
+ 	if (rc)
+@@ -3261,7 +3191,7 @@ void iwl3945_config_ap(struct iwl_priv *priv)
+ 
+ 		/* RXON Timing */
+ 		memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
+-		iwl3945_setup_rxon_timing(priv);
++		iwl_setup_rxon_timing(priv);
+ 		rc = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
+ 				      sizeof(priv->rxon_timing),
+ 				      &priv->rxon_timing);
+-- 
+1.5.6.3
+
