@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36225 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753248AbZF2LBp (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:60190 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbZFTJcM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 07:01:45 -0400
-Subject: Re: [PATCH] p54: re-enable power save feature
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200906280232.45959.chunkeey@web.de>
-References: <200906280232.45959.chunkeey@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5d/UQAhYVOgtb81Ey1nA"
-Date: Mon, 29 Jun 2009 13:01:45 +0200
-Message-Id: <1246273306.7775.42.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 20 Jun 2009 05:32:12 -0400
+Received: by ewy6 with SMTP id 6so3254387ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Jun 2009 02:32:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A3C3423.2060007@bitnet.be>
+References: <4A3B5B11.7060103@bitnet.be>
+	 <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
+	 <4A3C3423.2060007@bitnet.be>
+Date: Sat, 20 Jun 2009 12:32:14 +0300
+Message-ID: <40f31dec0906200232j531d5804g283a3d93401652a@mail.gmail.com>
+Subject: Re: current status of 802.11s mesh in ath5k ?
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Hans Maes <Hans@bitnet.be>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/6/20 Hans Maes <Hans@bitnet.be>:
+> Andrey Yurovsky wrote:
+>>
+>>  However ath5k will not beacon until you issue a scan due
+>> to a bug.  You can bring up an ath5k node like this:
+>>
+>> # iw phy phy0 interface add mesh type mp mesh_id mymesh
+>> # ifconfig mesh up
+>> # iwlist mesh scan
+>>
+>>
+>
+> So, once the first scan triggers the beaconing, everything should keep
+> working ok ?
+> Or should I throw together a small script that triggers a scan once every
+> 10minutes until this bug is fixed ?
+> (In my case the mesh nodes should stay online 24/7 without user interaction)
+>>
+>> Things seem to work well aside from the scan issue, however I haven't
+>> fully verified multi-hop yet.
+>
+> I have a semi production setup with about 10 mesh nodes, in a building where
+> multihop is required due to the extensive use of metal plating and therefore
+> 'poor' wireless performance. In a typical scenario I need about 4 to 5 hops
+> to reach the nodes at the other end of the building.
+>
+> The nodes only have a single antenna connected, so I need to change some
+> code to disable antenna switching, but I'm not a C expert/module developer
+> at all so that might take a while to figure out...
 
---=-5d/UQAhYVOgtb81Ey1nA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Antenna controls are there, we just don't have a user interface yet
+(configfs/debugfs)
+Check out  ath5k_hw_set_antenna_mode inside phy.c, available modes are
+on enum ath5k_ant_mode inside ath5k.h and we call it on ath5k_config
+inside base.c ;-)
 
-On Sun, 2009-06-28 at 02:32 +0200, Christian Lamparter wrote:
-> This patch re-enables p54's power save features and adds a workaround
-> which temporarily alters the device's power state in order to allow
-> ps-polls to be sent and buffered data to be retrieved during psm.
->=20
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> Johannes,
->=20
-> can you please give this patch a go with your cisco ap?
+> I thought I managed to do it about 2 months ago but broke something since
+> the nodes seemed to work perfectly after updating the wireless modules but
+> they all went offline 3 to 5 days later and only came back online after
+> reverting to the stable 2.6.29 wireless modules.
+>
+> Anyway, when I get that issue worked out without breaking anything else I'll
+> see how the multihop performs and report back in a few days.
+>
+> Thanks!
 
-No, the patch doesn't (currently) apply.
 
-johannes
 
---=-5d/UQAhYVOgtb81Ey1nA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKSJ8WAAoJEODzc/N7+QmawQMP/3YquNV1oLE40sBEgEZS9Lt6
-f9kMiDlkdsABqlthzRs/NHMTjO1FYJUXktANpezp5udTQy5b3vz5HLlM4PEP4MH8
-k8deKJiyCKcNcDfaMrfsV9fKPnFCJ3PTmMz6rIm/XpNWGCw4+2eloWVLwDw6zwkg
-jp9jhKsTGy7z7YCtRpHtaLg9wCz9XXy2bmtIGFIB/5jL6kQEMl8mSDQk8fYKsSZk
-9eWbLfgxpRsKE/yjF9n9IeyKUoXkx7///dPJzYOluiQXTWOdOp839dR4/XWgC+JE
-t4x04Gf3kSxu4yL/CoEA755NKdp9NzinL2p/DXlfCnDn89C+nYPtJ6AYqyXOx77M
-G0K3uM/WQctmjHwGJ21vngUUwzyGxb4eSPECRCmQ3FKYH/Szqfi/v4s4nXVerBCD
-bOrS4HL1HanvDkv6dRlB+U4V6sGPIaMRxTlk++7nwjjZebuRkwVZUAYBestbPEc9
-m4T9aHWTZN3z7Uuhmkt/AXXCDh8azfVH4OWOiOhZ86ghXSOJIG456GhEDRHP+be/
-RNVRX66U18FlPRb4IIbLiyRuPI97f55jX/lDnad94SOLMBMUYzOfjXoO9jHsWbZ2
-LEH8plEUjh79couSeNprjWKMztfNcB3/XQG6WflQCrAbmrlUqq351e9t884uE9MI
-jGCDZPEBJufuQ4sCgNIQ
-=x5ol
------END PGP SIGNATURE-----
-
---=-5d/UQAhYVOgtb81Ey1nA--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
