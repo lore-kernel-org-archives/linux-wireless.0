@@ -1,39 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:43443 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800AbZFWTnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 15:43:25 -0400
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jake Edge <jake@lwn.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Pavel Machek <pavel@ucw.cz>, Greg KH <greg@kroah.com>,
-	"corbet\@lwn.net" <corbet@lwn.net>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan\@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata\@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
-Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for rc-series and merge window
-References: <20090622222217.GH23972@bombadil.infradead.org>
-	<m3fxdqj2bz.fsf@lwn.net> <m3bpoen5pp.fsf@intrepid.localdomain>
-	<20090623130602.6cd6b713@chukar>
-	<alpine.LFD.2.01.0906231210040.3240@localhost.localdomain>
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Date: Tue, 23 Jun 2009 21:43:24 +0200
-In-Reply-To: <alpine.LFD.2.01.0906231210040.3240@localhost.localdomain> (Linus Torvalds's message of "Tue\, 23 Jun 2009 12\:11\:52 -0700 \(PDT\)")
-Message-ID: <m3y6rilorn.fsf@intrepid.localdomain>
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:34297 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbZFTDxi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 23:53:38 -0400
+Message-ID: <4A3C5D49.2000106@lwfinger.net>
+Date: Fri, 19 Jun 2009 22:53:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Question about rfkill
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
+Johannes,
 
-> In fact, this whole discussion has shown one thing: people still think 
-> that "bug fix" somehow automatically means that it's appropriate after the 
-> merge window. That's simply not so. 
+What is the reason that rfkill_get_global_sw_state() is not exported?
+A call to this routine seems to be the ideal replacement for the
+deprecated radio_enabled.
 
-That's why i wrote: gain vs risk.
--- 
-Krzysztof Halasa
+Larry
