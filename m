@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f224.google.com ([209.85.220.224]:54927 "EHLO
-	mail-fx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802AbZFVQXl (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:11745 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbZFTEdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 12:23:41 -0400
-Received: by fxm24 with SMTP id 24so829985fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 09:23:42 -0700 (PDT)
-Message-ID: <4A3FB00F.1020104@gmail.com>
-Date: Mon, 22 Jun 2009 18:23:43 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Sat, 20 Jun 2009 00:33:37 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so699017fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 21:33:39 -0700 (PDT)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Darren Blaber <dmbtech@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 not working after recent commits
+References: <4A3C2036.6060506@gmail.com>
+	<43e72e890906191642kbcca090we1b03db19bf0e2c8@mail.gmail.com>
+	<4A3C4593.6050707@gmail.com>
+	<43e72e890906191915g2c9736f2i4633c8ed3766fe3b@mail.gmail.com>
+	<4A3C4745.7000706@gmail.com>
+	<43e72e890906191924m2f83815fp860c0a277e44d2e1@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 20 Jun 2009 07:33:37 +0300
+In-Reply-To: <43e72e890906191924m2f83815fp860c0a277e44d2e1@mail.gmail.com> (Luis R. Rodriguez's message of "Fri\, 19 Jun 2009 19\:24\:33 -0700")
+Message-ID: <87ws77o76m.fsf@litku.valot.fi>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: jmalinen@atheros.com, Sujith.Manoharan@atheros.com,
-	vasanth@atheros.com, senthilkumar@atheros.com,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: ath9k: ath9k_ps_restore used after ath9k_hw_detach
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 
-In ath_detach, there is:
-ath9k_hw_detach(sc->sc_ah);
-ath9k_exit_debug(sc);
-ath9k_ps_restore(sc);
-which is obviously wrong. sc->ah is dereferenced in restore, but it's
-already freed since detach.
+>> I'm using 2.6.30 with the KMS radeon patches, don't know if that is
+>> interfering. I'll try wireless-testing directly.
+>
+> Yeah this is odd, 2.6.30 shouldn't have an issue with backport unless
+> I'm missing something. Let us know how it goes with wireless-testing.
 
-I don't quite understand why you try to set power while it's being
-already set to full sleep in ath9k_hw_detach. So I think the fix is to
-remove the restore call, but dunno. So please fix it anyhow :).
+I'm using latest wireles-testing and I have iwl3945 on my X60s. iwl3945
+is working fine for me.
+
+-- 
+Kalle Valo
