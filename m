@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58415 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbZFGPaP (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:18307 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbZFTE3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 11:30:15 -0400
-Subject: Re: pull request: wireless-next-2.6 2009-06-04
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Oliver Hartkopp <socketcan@hartkopp.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <4A2BD8A5.4040302@hartkopp.net>
-References: <20090604152011.GC2839@tuxdriver.com>
-	 <20090607.033751.191866033.davem@davemloft.net>
-	 <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>
-	 <4A2BD8A5.4040302@hartkopp.net>
-Content-Type: text/plain
-Date: Sun, 07 Jun 2009 17:29:43 +0200
-Message-Id: <1244388583.23850.87.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Sat, 20 Jun 2009 00:29:41 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so698838fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 21:29:43 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Pierre Ossman <pierre@ossman.eu>, linux-wireless@vger.kernel.org,
+	san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	<20090613132144.6c7783bc@mjolnir.ossman.eu>
+	<87bposnmxi.fsf@litku.valot.fi>
+	<20090613220908.271865cd@mjolnir.ossman.eu>
+	<20090613205737.GA30439@hash.localnet>
+	<20090618022524.GC10014@hash.localnet>
+	<20090619212419.2f3626d7@mjolnir.ossman.eu>
+	<b6c5339f0906191331x6c360d63wec431fc9d35b38c0@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 20 Jun 2009 07:29:40 +0300
+In-Reply-To: <b6c5339f0906191331x6c360d63wec431fc9d35b38c0@mail.gmail.com> (Bob Copeland's message of "Fri\, 19 Jun 2009 16\:31\:41 -0400")
+Message-ID: <871vpfplxn.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Oliver,
+Bob Copeland <me@bobcopeland.com> writes:
 
-> >>>> Hopefully this is (almost?) the last wireless pull request for
-> >>>> non-bugfix patches intended for 2.6.31...
-> >>>>
-> >> (..)
-> >>
-> >>>> Please let me know if there are problems!
-> >>> Pulled into net-next-2.6 and I'll push it back out to kernel.org
-> >>> after some build testing.
-> >> Hi John,
-> >>
-> >> after pulling the latest net-next-2.6 i got this warning which is probably
-> >> caused by CONFIG_RFKILL=m in my config:
-> >>
-> >> hartko@vwagwolkf320:~/net-next-2.6$ make oldconfig
-> >> scripts/kconfig/conf -o arch/x86/Kconfig
-> >> .config:614:warning: symbol value 'm' invalid for RFKILL_INPUT
-> > 
-> > That functionality is no longer available as a module.  If you need
-> > it, then select Y.
-> 
-> Just some additional nitpicking:
-> 
-> You should update net/rfkill/Kconfig as it still allows a tristate selection
-> for RFKILL and the comment "To compile this driver as a module ..." should be
-> removed also.
+>> Do you want me to merge it?
+>
+> It can go via the wireless tree if that's ok with you, since the
+> SPI driver already lives there and this all needs to be rebased
+> on Kalle Valo's latest changes anyway.
 
-compiling RFKILL itself as a module is still working perfectly fine. It
-is just the RFKILL_INPUT that can't be built as a module anymore. That
-part was pointless anyway. And in the future RFKILL_INPUT will go away
-and be replaced by a userspace implementation with proper support for
-platform specific policies.
+I agree, better to merge all wl12xx patches through John. Otherwise we
+start to get conflicts, and that's pain.
 
-Regards
-
-Marcel
-
-
+-- 
+Kalle Valo
