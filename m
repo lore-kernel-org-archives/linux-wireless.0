@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:52000 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbZFVRUk (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:33327 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732AbZFTDKX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 13:20:40 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so1950282ywb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 10:20:43 -0700 (PDT)
+	Fri, 19 Jun 2009 23:10:23 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] ar9170usb: module link in sysfs
+Date: Sat, 20 Jun 2009 05:10:24 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <45e8e6c40906191054k3fce4d27od827bdbf8ed76d09@mail.gmail.com>
+In-Reply-To: <45e8e6c40906191054k3fce4d27od827bdbf8ed76d09@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0906200232j531d5804g283a3d93401652a@mail.gmail.com>
-References: <4A3B5B11.7060103@bitnet.be>
-	 <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
-	 <4A3C3423.2060007@bitnet.be>
-	 <40f31dec0906200232j531d5804g283a3d93401652a@mail.gmail.com>
-Date: Mon, 22 Jun 2009 12:59:40 -0400
-Message-ID: <5ce4c42d0906220959g6435cd8cg1db12487730c4729@mail.gmail.com>
-Subject: Re: current status of 802.11s mesh in ath5k ?
-From: Stephane Davy <davystephane@gmail.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Hans Maes <Hans@bitnet.be>, Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200906200510.24606.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Andrey Yurovsky reported that the driver forwarded erroneously the
+parent device structure instead of the real thing, which of course
+led to some dodgy sysfs links (at least?).
 
-I am using and testing the Open 80211s project with the ath5k driver.
-I have an atheros AR2413 chipset and an atheros AR5212/AR5213 chipset.
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+your usb(core) subsystem is probably built-in (rather than a module?),
+so you won't have a "module" entry there.
 
-I installed my mesh network using this command lines on both devices:
-# iw phy phy0 interface add mesh0 type mp mesh_id mesh
-# ifconfig mesh0 192.168.1.1 (192.168.1.2 on the other device)
-# iw dev mesh0 scan
+BTW: currently, I don't have a device, please test!
+---
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index 754b1f8..1aec7af 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -779,7 +779,7 @@ static int ar9170_usb_probe(struct usb_interface *intf,
+ 	aru->req_one_stage_fw = ar9170_requires_one_stage(id);
+ 
+ 	usb_set_intfdata(intf, aru);
+-	SET_IEEE80211_DEV(ar->hw, &udev->dev);
++	SET_IEEE80211_DEV(ar->hw, &intf->dev);
+ 
+ 	init_usb_anchor(&aru->rx_submitted);
+ 	init_usb_anchor(&aru->tx_pending);
 
-The mesh network is unstable. I always get this warning messages:
-ath5k phy0: unsupported jumbo
-
-When I check on wireshark, it's look like some messages are lost on
-the radio media.
-
-What can I do to solve this problems ? And get my mesh network stable ?
-
-Thanks,
-Stephane.
