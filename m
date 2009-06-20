@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:4207 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932154AbZFOT6R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 15:58:17 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 10/11 v2][w-t] iwmc3200wifi: remove select LIB80211 from Kconfig
-Date: Mon, 15 Jun 2009 21:59:55 +0200
-Message-Id: <0a6dc6dcf80f7c911f3b720e36afd6df293c81f1.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <152420b3b2ccbe623cb80cd3cc37d4ced05e470b.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
- <7413d2605b449b8e43bcfe61719ee30fccb592b7.1245091931.git.samuel@sortiz.org>
- <e72e3c0d6b16655fdf4da5dcabc6349be7b5c0a2.1245091931.git.samuel@sortiz.org>
- <4fa0241c41670096a2933b81c7bd32e6a5551faa.1245091931.git.samuel@sortiz.org>
- <445a117dd08007f653105f41f36f9bbf2ed1e4c6.1245091931.git.samuel@sortiz.org>
- <3e375906194bc0105dd43d39260e2a826bf5b557.1245091931.git.samuel@sortiz.org>
- <ef2fab83a02bac39c9547326d419f51789659161.1245091931.git.samuel@sortiz.org>
- <152420b3b2ccbe623cb80cd3cc37d4ced05e470b.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
+Received: from c.6b.1343.static.theplanet.com ([67.19.107.12]:53689 "EHLO
+	mail.bitnet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751081AbZFTA6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Jun 2009 20:58:11 -0400
+Message-ID: <4A3C3423.2060007@bitnet.be>
+Date: Sat, 20 Jun 2009 02:58:11 +0200
+From: Hans Maes <Hans@bitnet.be>
+MIME-Version: 1.0
+To: Andrey Yurovsky <andrey@cozybit.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: current status of 802.11s mesh in ath5k ?
+References: <4A3B5B11.7060103@bitnet.be> <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
+In-Reply-To: <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+Andrey Yurovsky wrote:
+>
+>  However ath5k will not beacon until you issue a scan due
+> to a bug.  You can bring up an ath5k node like this:
+>
+> # iw phy phy0 interface add mesh type mp mesh_id mymesh
+> # ifconfig mesh up
+> # iwlist mesh scan
+>
+>   
+So, once the first scan triggers the beaconing, everything should keep 
+working ok ?
+Or should I throw together a small script that triggers a scan once 
+every 10minutes until this bug is fixed ?
+(In my case the mesh nodes should stay online 24/7 without user interaction)
+> Things seem to work well aside from the scan issue, however I haven't
+> fully verified multi-hop yet.  
+>   
+I have a semi production setup with about 10 mesh nodes, in a building 
+where multihop is required due to the extensive use of metal plating and 
+therefore 'poor' wireless performance. In a typical scenario I need 
+about 4 to 5 hops to reach the nodes at the other end of the building.
 
-iwmc3200wifi currently doesn't link with lib80211. So remove
-the Kconfig selection.
+The nodes only have a single antenna connected, so I need to change some 
+code to disable antenna switching, but I'm not a C expert/module 
+developer at all so that might take a while to figure out...
+I thought I managed to do it about 2 months ago but broke something 
+since the nodes seemed to work perfectly after updating the wireless 
+modules but they all went offline 3 to 5 days later and only came back 
+online after reverting to the stable 2.6.29 wireless modules.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/Kconfig |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Anyway, when I get that issue worked out without breaking anything else 
+I'll see how the multihop performs and report back in a few days.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
-index 651c0f6..1eccb6d 100644
---- a/drivers/net/wireless/iwmc3200wifi/Kconfig
-+++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
-@@ -3,7 +3,6 @@ config IWM
- 	depends on MMC && WLAN_80211 && EXPERIMENTAL
- 	depends on CFG80211
- 	select WIRELESS_EXT
--	select LIB80211
- 	select FW_LOADER
- 
- config IWM_DEBUG
--- 
-1.6.3.1
+Thanks!
 
+Hans
