@@ -1,97 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f176.google.com ([209.85.219.176]:41670 "EHLO
-	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041AbZFAOzN (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:52243 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbZFUPrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 10:55:13 -0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>
-Subject: [PATCH 01/10] crc-itu-t: add bit-reversed calculation
-Date: Mon,  1 Jun 2009 18:54:42 +0400
-Message-Id: <1243868091-5315-2-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
-References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com>
+	Sun, 21 Jun 2009 11:47:48 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 3/3] ath9k: serialize ath9k_ps_{wakeup,restore} calls
+Date: Sun, 21 Jun 2009 17:47:48 +0200
+Message-Id: <1245599268-2441-3-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <1245599268-2441-1-git-send-email-juhosg@openwrt.org>
+References: <1245599268-2441-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Darren Salt <linux@youmustbejoking.demon.co.uk>
+These functions are changing the power mode of the chip, but this may
+have unpredictable effects, if another code are trying to set the power
+mode via 'ath9k_hw_setpower' in the same time from another context.
 
-Signed-off-by: Darren Salt <linux@youmustbejoking.demon.co.uk>
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- include/linux/crc-itu-t.h |   10 ++++++++++
- lib/crc-itu-t.c           |   18 ++++++++++++++++++
- 2 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.c    |   42 ++++++++++++++++++++++----------
+ 2 files changed, 30 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/crc-itu-t.h b/include/linux/crc-itu-t.h
-index 84920f3..7b2b7ba 100644
---- a/include/linux/crc-itu-t.h
-+++ b/include/linux/crc-itu-t.h
-@@ -6,6 +6,9 @@
-  *   Poly  0x0x1021 (x^16 + x^12 + x^15 + 1)
-  *   Init  0
-  *
-+ * The bit-reversed buffer variants may be non-standard, but some firmware
-+ * loaders require them.
-+ *
-  * This source code is licensed under the GNU General Public License,
-  * Version 2. See the file COPYING for more details.
-  */
-@@ -14,15 +17,22 @@
- #define CRC_ITU_T_H
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9865452..23b5586 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -561,7 +561,7 @@ struct ath_softc {
+ 	u32 keymax;
+ 	DECLARE_BITMAP(keymap, ATH_KEYMAX);
+ 	u8 splitmic;
+-	atomic_t ps_usecount;
++	unsigned long ps_usecount;
+ 	enum ath9k_int imask;
+ 	enum ath9k_ht_extprotspacing ht_extprotspacing;
+ 	enum ath9k_ht_macmode tx_chan_width;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index acf5256..b321209 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2777,23 +2777,39 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
  
- #include <linux/types.h>
-+#include <linux/bitrev.h>
- 
- extern u16 const crc_itu_t_table[256];
- 
- extern u16 crc_itu_t(u16 crc, const u8 *buffer, size_t len);
-+extern u16 crc_itu_t_bitreversed(u16 crc, const u8 *buffer, size_t len);
- 
- static inline u16 crc_itu_t_byte(u16 crc, const u8 data)
+ void ath9k_ps_wakeup(struct ath_softc *sc)
  {
- 	return (crc << 8) ^ crc_itu_t_table[((crc >> 8) ^ data) & 0xff];
+-	if (atomic_inc_return(&sc->ps_usecount) == 1)
+-		if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
+-			sc->sc_ah->restore_mode = sc->sc_ah->power_mode;
+-			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
+-		}
++	unsigned long flags;
++
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	if (++sc->ps_usecount != 1)
++		goto unlock;
++
++	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
++		sc->sc_ah->restore_mode = sc->sc_ah->power_mode;
++		ath9k_hw_setpower_nolock(sc->sc_ah, ATH9K_PM_AWAKE);
++	}
++
++ unlock:
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  }
  
-+static inline u16 crc_itu_t_bitreversed_byte(u16 crc, const u8 data)
-+{
-+	return (crc << 8) ^ crc_itu_t_table[((crc >> 8) ^ bitrev8(data)) & 0xff];
-+}
+ void ath9k_ps_restore(struct ath_softc *sc)
+ {
+-	if (atomic_dec_and_test(&sc->ps_usecount))
+-		if ((sc->hw->conf.flags & IEEE80211_CONF_PS) &&
+-		    !(sc->sc_flags & (SC_OP_WAIT_FOR_BEACON |
+-				      SC_OP_WAIT_FOR_CAB |
+-				      SC_OP_WAIT_FOR_PSPOLL_DATA |
+-				      SC_OP_WAIT_FOR_TX_ACK)))
+-			ath9k_hw_setpower(sc->sc_ah,
+-					  sc->sc_ah->restore_mode);
++	unsigned long flags;
 +
- #endif /* CRC_ITU_T_H */
- 
-diff --git a/lib/crc-itu-t.c b/lib/crc-itu-t.c
-index a63472b..5562fdd 100644
---- a/lib/crc-itu-t.c
-+++ b/lib/crc-itu-t.c
-@@ -64,6 +64,24 @@ u16 crc_itu_t(u16 crc, const u8 *buffer, size_t len)
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	if (--sc->ps_usecount != 0)
++		goto unlock;
++
++	if ((sc->hw->conf.flags & IEEE80211_CONF_PS) &&
++		!(sc->sc_flags & (SC_OP_WAIT_FOR_BEACON |
++				SC_OP_WAIT_FOR_CAB |
++				SC_OP_WAIT_FOR_PSPOLL_DATA |
++				SC_OP_WAIT_FOR_TX_ACK)))
++		ath9k_hw_setpower_nolock(sc->sc_ah,
++				      sc->sc_ah->restore_mode);
++
++ unlock:
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  }
- EXPORT_SYMBOL(crc_itu_t);
  
-+/**
-+ * crc_itu_t_bitreversed - Compute the CRC-ITU-T for the data buffer;
-+ * the buffer content is assumed to be bit-reversed
-+ *
-+ * @crc:     previous CRC value
-+ * @buffer:  data pointer
-+ * @len:     number of bytes in the buffer
-+ *
-+ * Returns the updated CRC value
-+ */
-+u16 crc_itu_t_bitreversed(u16 crc, const u8 *buffer, size_t len)
-+{
-+	while (len--)
-+		crc = crc_itu_t_bitreversed_byte(crc, *buffer++);
-+	return crc;
-+}
-+EXPORT_SYMBOL(crc_itu_t_bitreversed);
-+
- MODULE_DESCRIPTION("CRC ITU-T V.41 calculations");
- MODULE_LICENSE("GPL");
- 
+ /*
 -- 
-1.6.2.4
+1.5.3.2
 
