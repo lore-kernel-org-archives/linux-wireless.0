@@ -1,178 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:26305 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752553AbZFOT5w (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:61398 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239AbZFUKS0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 15:57:52 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 04/11 v2][2.6.31 and w-t] iwmc3200wifi: add a mutex to protect iwm_reset_worker
-Date: Mon, 15 Jun 2009 21:59:49 +0200
-Message-Id: <e72e3c0d6b16655fdf4da5dcabc6349be7b5c0a2.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <7413d2605b449b8e43bcfe61719ee30fccb592b7.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
- <7413d2605b449b8e43bcfe61719ee30fccb592b7.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
+	Sun, 21 Jun 2009 06:18:26 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Dmitry Eremin-Solenikov" <dbaryshkov@gmail.com>
+Subject: Re: [PATCH 1/6] crc-itu-t: add bit-reversed calculation
+Date: Sun, 21 Jun 2009 12:18:25 +0200
+Cc: Ben Hutchings <ben@decadent.org.uk>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, Stephen Rothwell <sfr@canb.auug.org.au>,
+	Sergey Lapin <slapin@ossfans.org>,
+	Darren Salt <linux@youmustbejoking.demon.co.uk>
+References: <1244021629-18409-1-git-send-email-dbaryshkov@gmail.com> <1244033004.21215.4.camel@deadeye> <20090621082921.GA12749@doriath.ww600.siemens.net>
+In-Reply-To: <20090621082921.GA12749@doriath.ww600.siemens.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200906211218.25709.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+[non-HTML reply, sorry about that]
 
-The patch adds a mutex to protect the iwm_reset_worker against netdev
-ndo_open and ndo_stop because all of them call iwm_up and iwm_down in
-the implementation. Note the latter two are already protected by
-rtnl. So if iwm_reset_worker is not required in the future, the mutex
-can also be removed.
+On Sunday 21 June 2009, Dmitry Eremin-Solenikov wrote:
+> Hi,
+> 
+> 
+> On Wed, Jun 03, 2009 at 01:43:24PM +0100, Ben Hutchings wrote:
+> > On Wed, 2009-06-03 at 13:33 +0400, Dmitry Eremin-Solenikov wrote:
+> > [...] 
+> > > +/**
+> > > + * crc_itu_t_bitreversed - Compute the CRC-ITU-T for the data buffer;
+> > > + * the buffer content is assumed to be bit-reversed
+> > [...]
+> > 
+> > This short description spills onto two lines which is invalid and breaks
+> > the generation of docs.  Sorry to point this out after recommending the
+> > patch to you.
+> > 
+> > I've changed the description to "crc_itu_t_bitreversed - Compute the
+> > CRC-ITU-T for a bit-reversed data buffer" all on one line.
+> 
+> Just another not w.r.t. this patch: one should add 'select BITREVERSE'
+> to this Kconfig entry, as it depends on bitreversing stuff.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/iwm.h  |    1 +
- drivers/net/wireless/iwmc3200wifi/main.c |   54 ++++++++++++++++++++++++++---
- 2 files changed, 49 insertions(+), 6 deletions(-)
+What also might be interesting,  have you checked the crc-ccitt algorithm?
+I had come across a crc_itu_t with bitreverse implementation in the past as
+well, and I could simplify the implementation by using crc-ccit and only call
+bitreverse on the last output. So something like:
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index 4aa0ad1..77c339f 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -288,6 +288,7 @@ struct iwm_priv {
- 	u8 *eeprom;
- 	struct timer_list watchdog;
- 	struct work_struct reset_worker;
-+	struct mutex mutex;
- 	struct rfkill *rfkill;
- 
- 	char private[0] __attribute__((__aligned__(NETDEV_ALIGN)));
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index 4d3c423..8be206d 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -112,6 +112,9 @@ static void iwm_statistics_request(struct work_struct *work)
- 	iwm_send_umac_stats_req(iwm, 0);
- }
- 
-+int __iwm_up(struct iwm_priv *iwm);
-+int __iwm_down(struct iwm_priv *iwm);
-+
- static void iwm_reset_worker(struct work_struct *work)
- {
- 	struct iwm_priv *iwm;
-@@ -120,6 +123,19 @@ static void iwm_reset_worker(struct work_struct *work)
- 
- 	iwm = container_of(work, struct iwm_priv, reset_worker);
- 
-+	/*
-+	 * XXX: The iwm->mutex is introduced purely for this reset work,
-+	 * because the other users for iwm_up and iwm_down are only netdev
-+	 * ndo_open and ndo_stop which are already protected by rtnl.
-+	 * Please remove iwm->mutex together if iwm_reset_worker() is not
-+	 * required in the future.
-+	 */
-+	if (!mutex_trylock(&iwm->mutex)) {
-+		IWM_WARN(iwm, "We are in the middle of interface bringing "
-+			 "UP/DOWN. Skip driver resetting.\n");
-+		return;
-+	}
-+
- 	if (iwm->umac_profile_active) {
- 		profile = kmalloc(sizeof(struct iwm_umac_profile), GFP_KERNEL);
- 		if (profile)
-@@ -128,10 +144,10 @@ static void iwm_reset_worker(struct work_struct *work)
- 			IWM_ERR(iwm, "Couldn't alloc memory for profile\n");
- 	}
- 
--	iwm_down(iwm);
-+	__iwm_down(iwm);
- 
- 	while (retry++ < 3) {
--		ret = iwm_up(iwm);
-+		ret = __iwm_up(iwm);
- 		if (!ret)
- 			break;
- 
-@@ -142,7 +158,7 @@ static void iwm_reset_worker(struct work_struct *work)
- 		IWM_WARN(iwm, "iwm_up() failed: %d\n", ret);
- 
- 		kfree(profile);
--		return;
-+		goto out;
- 	}
- 
- 	if (profile) {
-@@ -151,6 +167,9 @@ static void iwm_reset_worker(struct work_struct *work)
- 		iwm_send_mlme_profile(iwm);
- 		kfree(profile);
- 	}
-+
-+ out:
-+	mutex_unlock(&iwm->mutex);
- }
- 
- static void iwm_watchdog(unsigned long data)
-@@ -215,6 +234,7 @@ int iwm_priv_init(struct iwm_priv *iwm)
- 	init_timer(&iwm->watchdog);
- 	iwm->watchdog.function = iwm_watchdog;
- 	iwm->watchdog.data = (unsigned long)iwm;
-+	mutex_init(&iwm->mutex);
- 
- 	return 0;
- }
-@@ -476,7 +496,7 @@ void iwm_link_off(struct iwm_priv *iwm)
- 
- 	iwm_rx_free(iwm);
- 
--	cancel_delayed_work(&iwm->stats_request);
-+	cancel_delayed_work_sync(&iwm->stats_request);
- 	memset(wstats, 0, sizeof(struct iw_statistics));
- 	wstats->qual.updated = IW_QUAL_ALL_INVALID;
- 
-@@ -521,7 +541,7 @@ static int iwm_channels_init(struct iwm_priv *iwm)
- 	return 0;
- }
- 
--int iwm_up(struct iwm_priv *iwm)
-+int __iwm_up(struct iwm_priv *iwm)
- {
- 	int ret;
- 	struct iwm_notif *notif_reboot, *notif_ack = NULL;
-@@ -657,7 +677,18 @@ int iwm_up(struct iwm_priv *iwm)
- 	return -EIO;
- }
- 
--int iwm_down(struct iwm_priv *iwm)
-+int iwm_up(struct iwm_priv *iwm)
-+{
-+	int ret;
-+
-+	mutex_lock(&iwm->mutex);
-+	ret = __iwm_up(iwm);
-+	mutex_unlock(&iwm->mutex);
-+
-+	return ret;
-+}
-+
-+int __iwm_down(struct iwm_priv *iwm)
- {
- 	int ret;
- 
-@@ -688,3 +719,14 @@ int iwm_down(struct iwm_priv *iwm)
- 
- 	return 0;
- }
-+
-+int iwm_down(struct iwm_priv *iwm)
-+{
-+	int ret;
-+
-+	mutex_lock(&iwm->mutex);
-+	ret = __iwm_down(iwm);
-+	mutex_unlock(&iwm->mutex);
-+
-+	return ret;
-+}
--- 
-1.6.3.1
+u16 crc = crc_ccitt(~0, data, len);
+u16 crc_itu_t = swab16(crc);
 
+Instead of bitreverse for every step, only a single  byteswap was needed.
+You need to check if this indeed works for your driver, but this would
+reduce the number of times bitrev is called, and also prevents the BITREV
+dependency for the crc implementation.
+
+Ivo
