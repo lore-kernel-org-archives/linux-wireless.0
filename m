@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752235AbZFQUvZ (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:41570 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753006AbZFUGpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 16:51:25 -0400
-Subject: Re: [PATCH] wireless extensions: play with netns
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@aristanetworks.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>
-In-Reply-To: <m1y6rqwpur.fsf@fess.ebiederm.org>
-References: <1245263058.31588.38.camel@johannes.local>
-	 <m1y6rqwpur.fsf@fess.ebiederm.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i+vqvb8oWSzhodAPGO/4"
-Date: Wed, 17 Jun 2009 22:50:54 +0200
-Message-Id: <1245271854.31588.44.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 21 Jun 2009 02:45:25 -0400
+Date: Sun, 21 Jun 2009 08:40:19 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Jon Smirl <jonsmirl@gmail.com>
+Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, slapin@ossfans.org,
+	maxim.osipov@siemens.com, dmitry.baryshkov@siemens.com,
+	oliver.fendt@siemens.com
+Subject: Re: [RFC][WIP] IEEE 802.15.4 implementation for Linux v1
+Message-ID: <20090621064018.GB1656@ucw.cz>
+References: <1243868091-5315-1-git-send-email-dbaryshkov@gmail.com> <9e4733910906122021k4568df6rd80fb915b64ac12@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9e4733910906122021k4568df6rd80fb915b64ac12@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-i+vqvb8oWSzhodAPGO/4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2009-06-17 at 13:46 -0700, Eric W. Biederman wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->=20
-> > This makes wireless extensions netns aware.
+On Fri 2009-06-12 23:21:34, Jon Smirl wrote:
+> On Mon, Jun 1, 2009 at 10:54 AM, Dmitry
+> Eremin-Solenikov<dbaryshkov@gmail.com> wrote:
+> > Hi,
 > >
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > Is this ok, or is this racy? I guess what I'm asking is -- will
-> > for_each_net() stop iterating over a netns that is going away before th=
-e
-> > pernet exit op is called? If yes, this should be fine.
->=20
-> for_each_net requires the rtnl_lock or the net_mutex to be safe.
-> You aren't taking either so your code is racy.
+> > As a part of research activities the Embedded Systems - Open Platform Group
+> > from Siemens Corporate Technology we are working on adding support for
+> > the IEEE 802.15.4 Wireless Personal Area Networks to the Linux. Our current
+> > implementation is neither certified nor even feature complete. However
+> > we'd like to present current state of our patchset to the Linux developers
+> > community to gain comments, fixes, ideas, etc. This is not yet a pull request,
+> > but more like an RFC.
+> >
+> > The project page is available at http://apps.sourceforge.net/trac/linux-zigbee
+> > with source code of kernel part available from git at
+> > http://zigbee-linux.git.sourceforge.net, mirrored for convenience at
+> > git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git
+> >
+> > The source code for userspace utils is available from git at
+> > http://linux-zigbee.git.sourceforge.net/
+> 
+> The Zigbee alliance requires a minimum of $3,500/yr from any company
+> making a product based on the spec. How are you going to reconcile
+> this requirement with the GPL? They exempt non-commercial users but
+> the GPL doesn't allow code to be free for one purpose and pay for
+> another.
+> 
+> "The ZigBee Specification is available to individuals, companies and
+> institutions free of charge for all non-commercial purposes (including
+> university research, technical evaluation, and development of
+> non-commercial software, tools, or documentation). For ease of use,
+> clearly marked errata have been incorporated into this document. These
+> errata may not have been subjected to an Intellectual Property review,
+> and as such, may contain undeclared Necessary Claims. No part of this
+> specification may be used in development of a product for sale without
+> becoming a member of ZigBee Alliance. Copyright ? ZigBee Alliance,
 
-Ah ok!
-
-> A dying network namespace will be removed from the net_namespace_list
-> (aka for_each_net) before the per net exit methods are called.
->=20
-> Is grabbing the rtnl_lock safe in your workqueue and is that something
-> we want to do?
-
-Ok, thanks. Well, it's a tasklet currently, but can easily be converted
-to a work struct and then take the rtnl.
-
-johannes
-
---=-i+vqvb8oWSzhodAPGO/4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKOVcqAAoJEODzc/N7+QmaIysQALIRH7ilmjqP4lCFy2dAnmJY
-9VGIWRadwpPunBQ2zsXPhLzzcLuzmpd6dQ92d2yIpmUIXWtJOjjl3KCx+zpSMuWv
-/oRP8gmMm1gDzXmGU4UKLYgW1ptn5mDbtVBFqMWEABCczoYkafT612/lac5GfNV/
-J4YDMV4vRNwoB7sit56+fVYL2vw0xw4MOsznx6BpsxluUr73jGq9JDeiemSPQkSt
-sqs0sOcxWBvfe3Vocy248LyXBUg4iYKHdJfovtHTPSXrvptV3/VWe2GynaMx1Q0U
-Hx9gtTm2ffXr+WxTQ3euA+5AbaF5oxv58wf1crOky4wZ72BExQyldRI7kO714sr1
-wT4uce9rp0AcGm7V59WIedsZCxm9dB4TwsKO/tS6FcpjuIfLnBkHm6odRVdExCfP
-t3ep0s+53SEIhlfJl5rRKRonNGm3Hk5S5iX1N+4DBfz+fBKh5MD2bGhK9NTouXvI
-/xmOMJvvBVbG5n/ncpwvVChEQ3FrPYyvjmy7YFkut7HyRCHE8QymL99b+708G2lR
-2QSR+SlpsAijrbEo/CAUnRvMFKJWx/GXFwbmoK6sqbxr1JZRr4tMhTuuHdil+LhV
-d8H+ZTqabwPseA6N/OqQxG5PHaGA+OF3lSOthTMO9FmBQRSdqBDKokBU+nNzaVrK
-LXQPfXXRBNofFTVAHVmk
-=HAN8
------END PGP SIGNATURE-----
-
---=-i+vqvb8oWSzhodAPGO/4--
-
+Confusing legaleese, and probably void, too. If you can get hard copy
+of that book, and make sure your implementation is not derived work of
+that book, you are safe -- w.r.t. copyright. Someone would have to
+research the patents, or just move out of US.
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
