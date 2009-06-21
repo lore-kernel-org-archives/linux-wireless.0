@@ -1,92 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56711 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093AbZFKUGd (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33111 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656AbZFUGaC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 16:06:33 -0400
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: gregor kowski <gregor.kowski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
-	 <1244442549.11006.2.camel@johannes.local>
-	 <83a869cd0906081051h2e82bba2q731be9f84bc1846a@mail.gmail.com>
-	 <1244556179.4672.11.camel@johannes.local>
-	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
-	 <1244569926.18481.27.camel@johannes.local>
-	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sCV90nbmKy31LLyW/qsP"
-Date: Thu, 11 Jun 2009 22:07:16 +0200
-Message-Id: <1244750836.29447.5.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 21 Jun 2009 02:30:02 -0400
+Date: Sun, 21 Jun 2009 08:24:58 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Greg KH <greg@kroah.com>, "corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
+	window
+Message-ID: <20090621062458.GC1474@ucw.cz>
+References: <20090616004122.GC5492@tesla> <20090616021011.GF23972@bombadil.infradead.org> <20090616032034.GA17932@kroah.com> <20090616042113.GA5680@tesla> <20090616093401.GA11602@jm.kir.nu> <20090616181705.GB31506@tesla> <20090619150015.GC1389@ucw.cz> <43e72e890906191010v4b2e79a5x2c7b722b8209933c@mail.gmail.com> <20090619221909.GC2229@elf.ucw.cz> <43e72e890906191551j1a201a87u4fcccb15ec961762@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890906191551j1a201a87u4fcccb15ec961762@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > Non-intrusive bugfixes _are_ welcome after -rc1.
+> 
+> That's great news to me.
+> 
+> I think it would really help to get a clarification on what is meant
+> by "non-intrusive bugfixes" though. Can you elaborate on that?
 
---=-sCV90nbmKy31LLyW/qsP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Typo fix in printk() is non-intrusive, 'apply this series' is
+borderline; if issue is bad enough it may be ok. I guess only Linus
+can clarify more.
 
-On Wed, 2009-06-10 at 21:42 +0200, gregor kowski wrote:
+> >> > Non-intrusive bugfixes too, afaict.
+> >>
+> >> It really depends on what you mean but generally no, and this is why I
+> >> think this clarification is important.
+> >
+> > I believe you are wrong.
+> 
+> I was actually hoping I would be. But I'd like some confirmation that I am.
+> 
+> For example, based on your feedback we have a series of fixes we'd
+> like to try to get merged for 2.6.31-rc2 for ath9k. I have been under
+> the impression that since those fixes do not meet the criteria
+> clarified by my original patch on documentation for the rc-series that
+> they would not get merged and our only option to get users to get
+> these patches is to wait for 2.6.32 or use some sort of bleeding edge
+> backport package. We try hard to get out our patches in time prior
 
->  	if (only_iv) {
->  		res =3D TKIP_DECRYPT_OK;
-> -		key->u.tkip.rx[queue].initialized =3D 1;
-> +		key->u.tkip.rx[queue].initialized =3D 2;
->  		goto done;
+I believe 'no git merges after rc1' is one of rules.
+									Pavel
 
-Please change this variable to an enum with proper states.
-
-> -		if (key->local->ops->update_tkip_key &&
-> -			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
-> -			u8 bcast[ETH_ALEN] =3D
-> -				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-> -			u8 *sta_addr =3D key->sta->sta.addr;
-> -
-> -			if (is_multicast_ether_addr(ra))
-> -				sta_addr =3D bcast;
-> -
-> -			key->local->ops->update_tkip_key(
-> -				local_to_hw(key->local), &key->conf,
-> -				sta_addr, iv32, key->u.tkip.rx[queue].p1k);
-> -		}
-> +	}
-> +	/* initialized =3D=3D 2 means we already call update_tkip_key */
-> +	if (key->local->ops->update_tkip_key &&
-> +		key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-> +		key->u.tkip.rx[queue].initialized !=3D 2) {
-
-and please indent only to after if ( here, like this:
-
-	if (key->... &&
-	    key->flags & ...
-	    key->...) {
-		u8 bcast[...]...
-
-johannes
-
---=-sCV90nbmKy31LLyW/qsP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKMWPxAAoJEODzc/N7+Qmay5UQAMNgqcy1rNa0Qj9U8GmxkdxU
-kjP19GCduKxP0LX7Xs9uQsKTFlu63DKTZF9OXi+XvsyEcWoEVI38fwiTES6sWhrt
-FWSysgPrixNszpjhnO6DKWb+bOMDYOh1UN+AMXpULX3KlAoMaxZQ0rMiBuk9B06q
-edFv+U/QbXC50sMzgbeZPuKuPi3+04xpLXym0uqIDBorzaSshMDs7Su1ryjeGa+U
-qPAZfngueR1VVNOywh8DQfarsOa7WVFbFsneMAvzSoXW8ux5hy/UCJQSsrXbKjHh
-H/O1NI/ohzYT6zfxG79bIyRPVCyUlDuy05NQxHBcZ81HrLvbKcO04yWWXKknhd8W
-OpLNstjmSb9wNuPf/eNg9SyunMBXeRBDwBxFwA7H3Ac4eEZn3f2yVKTIWZ4nqP14
-9cmUkvipPBThUG/evLITxNDLtne3WsGnxtzzuQU1g0llaZNeLf6BIazMpDR64Nnt
-jFhBFwsjAb/uOZlDr9F2fOxq89EwEQRarPCqYehslghr7cxCjlwuUj5wdcVuQuwL
-jgh7frsyeptqf8xU6443XIfthKm7QcE7JIj9DQLotLZ4bVC6rn+3DrTrBwBZ/Br4
-qpq7GIZKOJyh97coKYdz2WGcV9rMx3KYH4/sRaOF5ZdqFdAje8mgFURs5zIZ5GcP
-HYHkOC9eiOHYdW2l0awv
-=tsYa
------END PGP SIGNATURE-----
-
---=-sCV90nbmKy31LLyW/qsP--
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
