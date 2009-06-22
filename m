@@ -1,124 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:55530 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751259AbZFOTfc (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:50827 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbZFVRkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2009 15:35:32 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>
-Subject: [PATCH 01/11 v2][2.6.31 and w-t] iwmc3200wifi: check for iwm_priv_init error
-Date: Mon, 15 Jun 2009 21:36:13 +0200
-Message-Id: <24c3a0b2dfd0fa45cca006d0ac8d80ccabd80646.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
-In-Reply-To: <cover.1245091931.git.samuel@sortiz.org>
-References: <cover.1245091931.git.samuel@sortiz.org>
+	Mon, 22 Jun 2009 13:40:06 -0400
+Date: Mon, 22 Jun 2009 19:40:02 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	kernel list <linux-kernel@vger.kernel.org>
+Subject: Re: iwl3945 in 2.6.31-rc0: ad-hoc mode broken?
+Message-ID: <20090622174002.GD21299@elf.ucw.cz>
+References: <20090619222431.GA2398@elf.ucw.cz> <1245692380.24303.494.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1245692380.24303.494.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+On Mon 2009-06-22 10:39:40, reinette chatre wrote:
+> Hi Pavel,
+> 
+> On Fri, 2009-06-19 at 15:24 -0700, Pavel Machek wrote:
+> > Hi!
+> > 
+> > I tried using ad-hoc mode (against t-mobile G1) on -rc0, and was
+> > unsuccessful -- never got dhcp. I had to reboot back to
+> > 2.6.30... Should I try it few more times or is something broken?
+> > 
+> > (Also wifi LED stopped working on x60, but that's older issue).
+> > 
+> 
+> Are you testing Linus's repo here? Should we not maybe wait with testing
+> until -rc1 is released?
 
-We need to check for iwm_priv_init() errors and do proper cleanups.
-Otherwise we may fail to catch the create_singlethread_workqueue()
-error which will cause a kernel oops when destroy_workqueue() later.
+WTF? Yes, I am testing Linus' tree (hence 2.6.31-rc0). I thought
+2.6. stable series is expected to work at all times, and it is bug if
+it does not (otherwise git bisect is useless). Did you intentionally
+break the tree or what? Or do you have fixes pending?
+									Pavel
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/iwm.h    |    1 +
- drivers/net/wireless/iwmc3200wifi/main.c   |   10 ++++++++++
- drivers/net/wireless/iwmc3200wifi/netdev.c |   19 ++++++++++++-------
- 3 files changed, 23 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index 635c16e..2237448 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -317,6 +317,7 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- void iwm_if_free(struct iwm_priv *iwm);
- int iwm_mode_to_nl80211_iftype(int mode);
- int iwm_priv_init(struct iwm_priv *iwm);
-+void iwm_priv_deinit(struct iwm_priv *iwm);
- void iwm_reset(struct iwm_priv *iwm);
- void iwm_tx_credit_init_pools(struct iwm_priv *iwm,
- 			      struct iwm_umac_notif_alive *alive);
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index 6a2640f..4d3c423 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -219,6 +219,16 @@ int iwm_priv_init(struct iwm_priv *iwm)
- 	return 0;
- }
- 
-+void iwm_priv_deinit(struct iwm_priv *iwm)
-+{
-+	int i;
-+
-+	for (i = 0; i < IWM_TX_QUEUES; i++)
-+		destroy_workqueue(iwm->txq[i].wq);
-+
-+	destroy_workqueue(iwm->rx_wq);
-+}
-+
- /*
-  * We reset all the structures, and we reset the UMAC.
-  * After calling this routine, you're expected to reload
-diff --git a/drivers/net/wireless/iwmc3200wifi/netdev.c b/drivers/net/wireless/iwmc3200wifi/netdev.c
-index 68e2c3b..88dd826 100644
---- a/drivers/net/wireless/iwmc3200wifi/netdev.c
-+++ b/drivers/net/wireless/iwmc3200wifi/netdev.c
-@@ -114,14 +114,20 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- 	iwm = wdev_to_iwm(wdev);
- 	iwm->bus_ops = if_ops;
- 	iwm->wdev = wdev;
--	iwm_priv_init(iwm);
-+
-+	ret = iwm_priv_init(iwm);
-+	if (ret) {
-+		dev_err(dev, "failed to init iwm_priv\n");
-+		goto out_wdev;
-+	}
-+
- 	wdev->iftype = iwm_mode_to_nl80211_iftype(iwm->conf.mode);
- 
- 	ndev = alloc_netdev_mq(0, "wlan%d", ether_setup,
- 			       IWM_TX_QUEUES);
- 	if (!ndev) {
- 		dev_err(dev, "no memory for network device instance\n");
--		goto out_wdev;
-+		goto out_priv;
- 	}
- 
- 	ndev->netdev_ops = &iwm_netdev_ops;
-@@ -141,6 +147,9 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
-  out_ndev:
- 	free_netdev(ndev);
- 
-+ out_priv:
-+	iwm_priv_deinit(iwm);
-+
-  out_wdev:
- 	iwm_wdev_free(iwm);
- 	return ERR_PTR(ret);
-@@ -148,15 +157,11 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- 
- void iwm_if_free(struct iwm_priv *iwm)
- {
--	int i;
--
- 	if (!iwm_to_ndev(iwm))
- 		return;
- 
- 	unregister_netdev(iwm_to_ndev(iwm));
- 	free_netdev(iwm_to_ndev(iwm));
- 	iwm_wdev_free(iwm);
--	destroy_workqueue(iwm->rx_wq);
--	for (i = 0; i < IWM_TX_QUEUES; i++)
--		destroy_workqueue(iwm->txq[i].wq);
-+	iwm_priv_deinit(iwm);
- }
 -- 
-1.6.3.1
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
