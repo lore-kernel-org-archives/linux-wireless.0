@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59108 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752905AbZFQHVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 03:21:25 -0400
-Date: Wed, 17 Jun 2009 09:21:01 +0200
-From: Jiri Pirko <jpirko@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Netdev <netdev@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	davem <davem@davemloft.net>
-Subject: Re: [RFC] net: refactor multicast/unicast address list
-Message-ID: <20090617072100.GA3492@psychotron.englab.brq.redhat.com>
-References: <1244889678.13033.6.camel@johannes.local> <1244896094.13033.8.camel@johannes.local> <20090616111842.GG3521@psychotron.englab.brq.redhat.com> <1245151771.9256.3.camel@johannes.local> <20090616123808.GK3521@psychotron.englab.brq.redhat.com> <1245193788.21287.66.camel@johannes.local>
+Received: from fg-out-1718.google.com ([72.14.220.154]:48652 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbZFVOve (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2009 10:51:34 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so574610fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 07:51:36 -0700 (PDT)
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Balaji Ravindran <b@w1an.in>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mircea Gherzan <mgherzan@gmail.com>
+Subject: Re: Proposal enquiry for Wireless Roaming feature enhancement
+References: <4A38672F.9090904@w1an.in> <87hbyfmlds.fsf@litku.valot.fi>
+	<1245231411.20613.3.camel@johannes.local>
+	<87bpol90z5.fsf@litku.valot.fi>
+	<1245681796.4338.24.camel@dhcp-100-3-98.bos.redhat.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 22 Jun 2009 17:51:32 +0300
+In-Reply-To: <1245681796.4338.24.camel@dhcp-100-3-98.bos.redhat.com> (Dan Williams's message of "Mon\, 22 Jun 2009 10\:43\:16 -0400")
+Message-ID: <87k534nwy3.fsf@litku.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245193788.21287.66.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Jun 17, 2009 at 01:09:48AM CEST, johannes@sipsolutions.net wrote:
->On Tue, 2009-06-16 at 14:38 +0200, Jiri Pirko wrote:
->
->> >> Yes, I've already converted unicast lists to use list_head there. I'm sending
->> >> the patch doing the same for multicast lists soon.
->> >
->> >Very nice! After that maybe I'll take a look again at moving things into
->> >a common structure -- I ultimately want to use a multicast list without
->> >a netdev to sync multiple netdevs onto a common multicast list that is
->> >not part of a netdev.
+Dan Williams <dcbw@redhat.com> writes:
+
+>> >  2) a way of telling userspace whether or not it has to handle
+>> >  roaming, now that new cards are showing up (iwm) that can handle it
+>> >  themselves
 >> 
->> I see, hmm, I think I can do this change with my conversion... I was thinking
->> about similar thing as you suggest before...
+>> What about older fullmac cards, do they support roaming in hardware?
 >
->I don't think the patch for converting the multicast lists will hit .31,
->I take it?
+> Yes.  airo at least, and I think also atmel, orinoco, but not Libertas.
+> Most of the fullmac cards do handle roaming between BSSIDs in the same
+> SSID transparently.  Libertas on the other hand pushes that control to
+> the driver.
 
-I'm preparing the patch right now. It's most likely it will hit .32.
+Can you tell anything about the configuration parameters available? For
+example, can the driver configure an rssi threshold for enabling
+background scanning[1]?
 
->
->I'd like to get this patch into the .32 tree once it opens
->http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-net-core-mc-sync-list.patch
->
->but I don't know how to handle that wrt. your patch, which will clearly
->conflict with mein. Will you be sending that soon?
+[1] I'm sure there are N+1 different names for this
 
-I see your need. I'll think about it and try to prepare the lists for this use.
->
->I guess we could stick this one into wireless-testing, and then take it
->out again once your patch hits the tree and offers me similar API for
->list_head based multicast lists?
-
-Or wait, I hope the patch will be ready in week tops.
-
-Jirka
->
->johannes
-
-
+-- 
+Kalle Valo
