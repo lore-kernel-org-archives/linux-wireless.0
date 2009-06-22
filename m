@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49565 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354AbZFWP3s (ORCPT
+Received: from mta3.srv.hcvlny.cv.net ([167.206.4.198]:55855 "EHLO
+	mta3.srv.hcvlny.cv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbZFVUS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:48 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 08/10] edac_core: Uses call_rcu() and its own
-	wait_for_completion scheme.
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:04:34 +0200
-Message-ID: <20090623150434.22490.18824.stgit@localhost>
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 22 Jun 2009 16:18:28 -0400
+Received: from [10.0.0.2] (ool-4573a3fb.dyn.optonline.net [69.115.163.251])
+ by mta3.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0KLN00LQHPQOEYL0@mta3.srv.hcvlny.cv.net> for
+ linux-wireless@vger.kernel.org; Mon, 22 Jun 2009 16:18:25 -0400 (EDT)
+Date: Mon, 22 Jun 2009 16:18:24 -0400
+From: Darren Blaber <dmbtech@gmail.com>
+Subject: Re: iwl3945 not working after recent commits
+In-reply-to: <1245690182.24303.488.camel@rc-desk>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Message-id: <4A3FE710.7090408@gmail.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <4A3C2036.6060506@gmail.com>
+ <43e72e890906191642kbcca090we1b03db19bf0e2c8@mail.gmail.com>
+ <4A3C4593.6050707@gmail.com>
+ <43e72e890906191915g2c9736f2i4633c8ed3766fe3b@mail.gmail.com>
+ <4A3C4745.7000706@gmail.com>
+ <43e72e890906191924m2f83815fp860c0a277e44d2e1@mail.gmail.com>
+ <87ws77o76m.fsf@litku.valot.fi>
+ <43e72e890906192221p5cc67d28gb14b214bbf252ad@mail.gmail.com>
+ <1245690182.24303.488.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Module edac_core.ko uses call_rcu() callbacks in edac_device.c, edac_mc.c
-and edac_pci.c.
-
-They all uses a wait_for_completion scheme, but this scheme it not 100%
-safe on multiple CPUs.  See the _rcu_barrier() implementation which explains
-why extra precausion is needed.
-
-The patch adds a comment about rcu_barrier() and as a precausion calls
-rcu_barrier().  A maintainer needs to look at removing the wait_for_completion
-code.
-
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
-
- drivers/edac/edac_device.c |    5 +++++
- drivers/edac/edac_mc.c     |    5 +++++
- drivers/edac/edac_pci.c    |    5 +++++
- 3 files changed, 15 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/edac/edac_device.c b/drivers/edac/edac_device.c
-index b02a6a6..5e831c9 100644
---- a/drivers/edac/edac_device.c
-+++ b/drivers/edac/edac_device.c
-@@ -373,6 +373,11 @@ static void del_edac_device_from_global_list(struct edac_device_ctl_info
- 	init_completion(&edac_device->removal_complete);
- 	call_rcu(&edac_device->rcu, complete_edac_device_list_del);
- 	wait_for_completion(&edac_device->removal_complete);
-+
-+	/* hawk@comx.dk 2009-06-22: I think that rcu_barrier() should
-+	 *  be used instead of wait_for_completion, because
-+	 *  rcu_barrier() take multiple CPUs into account */
-+	rcu_barrier();
- }
- 
- /*
-diff --git a/drivers/edac/edac_mc.c b/drivers/edac/edac_mc.c
-index 335b7eb..edcce41 100644
---- a/drivers/edac/edac_mc.c
-+++ b/drivers/edac/edac_mc.c
-@@ -428,6 +428,11 @@ static void del_mc_from_global_list(struct mem_ctl_info *mci)
- 	init_completion(&mci->complete);
- 	call_rcu(&mci->rcu, complete_mc_list_del);
- 	wait_for_completion(&mci->complete);
-+
-+	/* hawk@comx.dk 2009-06-22: I think that rcu_barrier() should
-+	 *  be used instead of wait_for_completion, because
-+	 *  rcu_barrier() take multiple CPUs into account */
-+	rcu_barrier();
- }
- 
- /**
-diff --git a/drivers/edac/edac_pci.c b/drivers/edac/edac_pci.c
-index 30b585b..d0eb8c9 100644
---- a/drivers/edac/edac_pci.c
-+++ b/drivers/edac/edac_pci.c
-@@ -188,6 +188,11 @@ static void del_edac_pci_from_global_list(struct edac_pci_ctl_info *pci)
- 	init_completion(&pci->complete);
- 	call_rcu(&pci->rcu, complete_edac_pci_list_del);
- 	wait_for_completion(&pci->complete);
-+
-+	/* hawk@comx.dk 2009-06-22: I think that rcu_barrier() should
-+	 *  be used instead of wait_for_completion, because
-+	 *  rcu_barrier() take multiple CPUs into account */
-+	rcu_barrier();
- }
- 
- #if 0
-
+reinette chatre wrote:
+> On Fri, 2009-06-19 at 22:21 -0700, Luis R. Rodriguez wrote:
+>   
+>> On Fri, Jun 19, 2009 at 9:33 PM, Kalle Valo<kalle.valo@iki.fi> wrote:
+>>     
+>>> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+>>>
+>>>       
+>>>>> I'm using 2.6.30 with the KMS radeon patches, don't know if that is
+>>>>> interfering. I'll try wireless-testing directly.
+>>>>>           
+>>>> Yeah this is odd, 2.6.30 shouldn't have an issue with backport unless
+>>>> I'm missing something. Let us know how it goes with wireless-testing.
+>>>>         
+>>> I'm using latest wireles-testing and I have iwl3945 on my X60s. iwl3945
+>>> is working fine for me.
+>>>       
+>> Yeah the user tried a vanilla 2.6.30 and it seems to be working fine
+>> now, it seems related to kms somehow.
+>>     
+>
+> Darren also submitted a kernel.org (#13585) bug which was closed by
+> himself with reason "Turns out it was a bad development kernel from
+> ubuntu.".
+>
+> Reinette
+>
+>
+>   
+Yes, sorry, I should of commented on this list also. Turns out the 
+reason it wasn't detecting was do due a bad kernel package.
