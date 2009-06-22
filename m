@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:63856 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753533AbZFLLPl (ORCPT
+Received: from mail-gx0-f214.google.com ([209.85.217.214]:55382 "EHLO
+	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753104AbZFVU6y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:15:41 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 09/33] wl12xx: removed chipset interrupt source configuration
-	from fw wakeup
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:15:13 +0300
-Message-ID: <20090612111513.8877.35317.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
+	Mon, 22 Jun 2009 16:58:54 -0400
+Received: by gxk10 with SMTP id 10so5785608gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 13:58:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4A3FDAC2.7020209@gmail.com>
+References: <43e72e890906220847u4faaeb2paa15365360c3c080@mail.gmail.com>
+	<4A3FDAC2.7020209@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Jun 2009 13:58:37 -0700
+Message-ID: <43e72e890906221358m4a32d747ge67a5af2f74841e0@mail.gmail.com>
+Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
+To: Dmitri Seletski <drjoms@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	gaurav.jauhar@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Mon, Jun 22, 2009 at 12:25 PM, Dmitri Seletski<drjoms@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>> We're down to 2 kernel.org bug reports for ath9k:
+>>
+>> http://bugzilla.kernel.org/show_bug.cgi?id=13581
+>> "ath9k doesn't work with newer kernels"
+>> This is a regression between 2.6.29 and 2.6.30, someone needs to look at this.
+>>
+>> http://bugzilla.kernel.org/show_bug.cgi?id=13141
+>> "AR5008/DWA-552 - Very slow"
+>> Patches have been supplied, needs user feedback.
+>>
+>> If you are aware of any other issues please do report.
+>>
+>>   Luis
+>> _______________________________________________
+>> ath9k-devel mailing list
+>> ath9k-devel@lists.ath9k.org
+>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>>
+> Hello Luis,
+> Was that problem i was bothering you with being solved?
 
-The chipset source interrupt source configuration during fw wakeup was
-blocking interrupts on the wl1271. The configuration is effectively
-unused here as it is used to trigger an interrupt for the chipset
-wake-up event, which is not handled, or waited for, in the fw wakeup
-anyway on either wl1251 or wl1271.
+Oh no, thanks for the reminder, that is another outstanding issue. Can
+you provide the pcap output.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
 
- drivers/net/wireless/wl12xx/main.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+> I have attempted to install fresh drivers, but i get:
+>
+>  make
+> /bin/sh: line 0: test: -ge: unary operator expected
+> /bin/sh: line 0: test: -le: unary operator expected
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 3c6cd77..950c425 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -157,8 +157,6 @@ static void wl12xx_fw_wakeup(struct wl12xx *wl)
- 
- 	if (!(elp_reg & ELPCTRL_WLAN_READY)) {
- 		wl12xx_warning("WLAN not ready");
--		elp_reg = ELPCTRL_WAKE_UP_WLAN_READY;
--		wl12xx_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, elp_reg);
- 	}
- }
- 
+Hm, some script may not be using /bin/bash appropriately, but you may
+just want to rm -f /bin/sh && ln -s /bin/bash /bin/sh for now.
 
+  Luis
