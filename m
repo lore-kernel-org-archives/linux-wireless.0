@@ -1,192 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbZFSO3a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 10:29:30 -0400
-Subject: [PATCH] wext: optimise, comment and fix event sending
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mx2.redhat.com ([66.187.237.31]:43488 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751259AbZFVOs1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2009 10:48:27 -0400
+Subject: Re: [PATCH] libertas: correct card cleanup order in SPI driver
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <1245343917-15534-1-git-send-email-andrey@cozybit.com>
+References: <20090618081206.GB2770@Chamillionaire.breakpoint.cc>
+	 <1245343917-15534-1-git-send-email-andrey@cozybit.com>
 Content-Type: text/plain
-Date: Fri, 19 Jun 2009 16:28:59 +0200
-Message-Id: <1245421739.16399.22.camel@johannes.local>
+Date: Mon, 22 Jun 2009 10:48:13 -0400
+Message-Id: <1245682093.4338.26.camel@dhcp-100-3-98.bos.redhat.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current function for sending events first allocates the
-event stream buffer, and then an skb to copy the event stream
-into. This can be done in one go. Also, the current function
-leaks kernel data to userspace in a 4 uninitialised bytes,
-initialise those explicitly. Finally also add a few useful
-comments, as opposed to the current comments.
+On Thu, 2009-06-18 at 09:51 -0700, Andrey Yurovsky wrote:
+> The SPI driver does a couple of card cleanup steps in the wrong order on
+> module removal.  If IEEE PS is enabled, this results in the card being
+> left in IEEE PS mode and subsequent failures to reload the module.  The
+> problem is that the surpriseremoved flag is set before calling
+> lbs_remove_card, but that function needs to issue a command to exit IEEE
+> PS mode (the flag blocks the command path).  In addition, lbs_stop_card
+> should be called first because it clears out any pending commands.
+> 
+> Tested on a GSPI device with V9 firmware by confirming that we can
+> reload the module with or without IEEE PS enabled.
+> 
+> Also fix a warning from the wrong uint format in a printk.
+> 
+> V2: use z modifier, thanks Sebastian.
+> 
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext.c |  114 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 57 insertions(+), 57 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
---- wireless-testing.orig/net/wireless/wext.c	2009-06-19 08:01:29.000000000 +0200
-+++ wireless-testing/net/wireless/wext.c	2009-06-19 16:27:57.000000000 +0200
-@@ -1300,22 +1300,15 @@ static void wireless_nlevent_process(str
- 
- static DECLARE_WORK(wireless_nlevent_work, wireless_nlevent_process);
- 
--/* ---------------------------------------------------------------- */
--/*
-- * Fill a rtnetlink message with our event data.
-- * Note that we propage only the specified event and don't dump the
-- * current wireless config. Dumping the wireless config is far too
-- * expensive (for each parameter, the driver need to query the hardware).
-- */
--static int rtnetlink_fill_iwinfo(struct sk_buff *skb, struct net_device *dev,
--				 int type, char *event, int event_len)
-+static struct nlmsghdr *rtnetlink_ifinfo_prep(struct net_device *dev,
-+					      struct sk_buff *skb)
- {
- 	struct ifinfomsg *r;
- 	struct nlmsghdr  *nlh;
- 
--	nlh = nlmsg_put(skb, 0, 0, type, sizeof(*r), 0);
--	if (nlh == NULL)
--		return -EMSGSIZE;
-+	nlh = nlmsg_put(skb, 0, 0, RTM_NEWLINK, sizeof(*r), 0);
-+	if (!nlh)
-+		return NULL;
- 
- 	r = nlmsg_data(nlh);
- 	r->ifi_family = AF_UNSPEC;
-@@ -1326,45 +1319,14 @@ static int rtnetlink_fill_iwinfo(struct 
- 	r->ifi_change = 0;	/* Wireless changes don't affect those flags */
- 
- 	NLA_PUT_STRING(skb, IFLA_IFNAME, dev->name);
--	/* Add the wireless events in the netlink packet */
--	NLA_PUT(skb, IFLA_WIRELESS, event_len, event);
--
--	return nlmsg_end(skb, nlh);
- 
--nla_put_failure:
-+	return nlh;
-+ nla_put_failure:
- 	nlmsg_cancel(skb, nlh);
--	return -EMSGSIZE;
-+	return NULL;
- }
- 
--/* ---------------------------------------------------------------- */
--/*
-- * Create and broadcast and send it on the standard rtnetlink socket
-- * This is a pure clone rtmsg_ifinfo() in net/core/rtnetlink.c
-- * Andrzej Krzysztofowicz mandated that I used a IFLA_XXX field
-- * within a RTM_NEWLINK event.
-- */
--static void rtmsg_iwinfo(struct net_device *dev, char *event, int event_len)
--{
--	struct sk_buff *skb;
--	int err;
--
--	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
--	if (!skb)
--		return;
--
--	err = rtnetlink_fill_iwinfo(skb, dev, RTM_NEWLINK, event, event_len);
--	if (err < 0) {
--		WARN_ON(err == -EMSGSIZE);
--		kfree_skb(skb);
--		return;
--	}
--
--	NETLINK_CB(skb).dst_group = RTNLGRP_LINK;
--	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
--	schedule_work(&wireless_nlevent_work);
--}
- 
--/* ---------------------------------------------------------------- */
- /*
-  * Main event dispatcher. Called from other parts and drivers.
-  * Send the event on the appropriate channels.
-@@ -1383,6 +1345,9 @@ void wireless_send_event(struct net_devi
- 	int wrqu_off = 0;			/* Offset in wrqu */
- 	/* Don't "optimise" the following variable, it will crash */
- 	unsigned	cmd_index;		/* *MUST* be unsigned */
-+	struct sk_buff *skb;
-+	struct nlmsghdr *nlh;
-+	struct nlattr *nla;
- 
- 	/* Get the description of the Event */
- 	if (cmd <= SIOCIWLAST) {
-@@ -1430,25 +1395,60 @@ void wireless_send_event(struct net_devi
- 	hdr_len = event_type_size[descr->header_type];
- 	event_len = hdr_len + extra_len;
- 
--	/* Create temporary buffer to hold the event */
--	event = kmalloc(event_len, GFP_ATOMIC);
--	if (event == NULL)
-+	/*
-+	 * The problem for 64/32 bit.
-+	 *
-+	 * On 64-bit, a regular event is laid out as follows:
-+	 *      |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
-+	 *      | event.len | event.cmd |     p a d d i n g     |
-+	 *      | wrqu data ... (with the correct size)         |
-+	 *
-+	 * This padding exists because we manipulate event->u,
-+	 * and 'event' is not packed.
-+	 *
-+	 * An iw_point event is laid out like this instead:
-+	 *      |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
-+	 *      | event.len | event.cmd |     p a d d i n g     |
-+	 *      | iwpnt.len | iwpnt.flg |     p a d d i n g     |
-+	 *      | extra data  ...
-+	 *
-+	 * The second padding exists because struct iw_point is extended,
-+	 * but this depends on the platform...
-+	 *
-+	 * On 32-bit, all the padding shouldn't be there.
-+	 */
-+
-+	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
-+	if (!skb)
- 		return;
- 
--	/* Fill event */
-+	/* Send via the RtNetlink event channel */
-+	nlh = rtnetlink_ifinfo_prep(dev, skb);
-+	if (WARN_ON(!nlh)) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+
-+	/* Add the wireless events in the netlink packet */
-+	nla = nla_reserve(skb, IFLA_WIRELESS, event_len);
-+	if (!nla) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+	event = nla_data(nla);
-+
-+	/* Fill event - first clear to avoid data leaking */
-+	memset(event, 0, hdr_len);
- 	event->len = event_len;
- 	event->cmd = cmd;
- 	memcpy(&event->u, ((char *) wrqu) + wrqu_off, hdr_len - IW_EV_LCP_LEN);
--	if (extra)
-+	if (extra_len)
- 		memcpy(((char *) event) + hdr_len, extra, extra_len);
- 
--	/* Send via the RtNetlink event channel */
--	rtmsg_iwinfo(dev, (char *) event, event_len);
--
--	/* Cleanup */
--	kfree(event);
-+	nlmsg_end(skb, nlh);
- 
--	return;		/* Always success, I guess ;-) */
-+	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
-+	schedule_work(&wireless_nlevent_work);
- }
- EXPORT_SYMBOL(wireless_send_event);
- 
-
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 923ed58..8d8bc0b 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -737,7 +737,7 @@ static int if_spi_c2h_data(struct if_spi_card *card)
+>  		goto out;
+>  	} else if (len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
+>  		lbs_pr_err("%s: error: card has %d bytes of data, but "
+> -			   "our maximum skb size is %lu\n",
+> +			   "our maximum skb size is %zu\n",
+>  			   __func__, len, MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
+>  		err = -EINVAL;
+>  		goto out;
+> @@ -1171,12 +1171,13 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+>  
+>  	lbs_deb_spi("libertas_spi_remove\n");
+>  	lbs_deb_enter(LBS_DEB_SPI);
+> -	priv->surpriseremoved = 1;
+>  
+>  	lbs_stop_card(priv);
+> +	lbs_remove_card(priv); /* will call free_netdev */
+> +
+> +	priv->surpriseremoved = 1;
+>  	free_irq(spi->irq, card);
+>  	if_spi_terminate_spi_thread(card);
+> -	lbs_remove_card(priv); /* will call free_netdev */
+>  	if (card->pdata->teardown)
+>  		card->pdata->teardown(spi);
+>  	free_if_spi_card(card);
 
