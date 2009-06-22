@@ -1,69 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:19035 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753873AbZFXP2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 11:28:48 -0400
-Date: Wed, 24 Jun 2009 17:30:52 +0200
-From: Samuel Ortiz <samuel.ortiz@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 01/11] cfg80211: connect/disconnect API
-Message-ID: <20090624153048.GA11241@sortiz.org>
-References: <20090624120745.239294066@sipsolutions.net> <20090624120808.469913150@sipsolutions.net>
-MIME-Version: 1.0
-In-Reply-To: <20090624120808.469913150@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:47331 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751660AbZFVGOj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2009 02:14:39 -0400
+Date: Mon, 22 Jun 2009 08:14:36 +0200
+From: Pierre Ossman <pierre@ossman.eu>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+Message-ID: <20090622081436.24c78984@mjolnir.ossman.eu>
+In-Reply-To: <20090622080931.66aa51fa@mjolnir.ossman.eu>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com>
+	<20090613132144.6c7783bc@mjolnir.ossman.eu>
+	<87bposnmxi.fsf@litku.valot.fi>
+	<20090613220908.271865cd@mjolnir.ossman.eu>
+	<20090613205737.GA30439@hash.localnet>
+	<20090618022524.GC10014@hash.localnet>
+	<20090619212419.2f3626d7@mjolnir.ossman.eu>
+	<b6c5339f0906191331x6c360d63wec431fc9d35b38c0@mail.gmail.com>
+	<20090621203800.08cb4a2d@mjolnir.ossman.eu>
+	<20090622000512.GA30186@hash.localnet>
+	<20090622080931.66aa51fa@mjolnir.ossman.eu>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-19497-1245651280-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-On Wed, Jun 24, 2009 at 05:07:46AM -0700, Johannes Berg wrote:
-> From: Samuel Ortiz <sameo@linux.intel.com>
-> 
-> This patch introduces the cfg80211 connect/disconnect API.
-> The goal here is to run the AUTH and ASSOC steps in one call.
-> This is needed for some fullmac cards that run both steps
-> directly from the target, after the host driver sends a
-> connect command.
-With this API, we should now be able to support the iwconfig key restricted
-stuff, with a patch like that:
+--=_freyr.ossman.eu-19497-1245651280-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
----
- net/wireless/wext-compat.c |    5 +++++
- 1 file changed, 5 insertions(+)
+On Mon, 22 Jun 2009 08:09:31 +0200
+Pierre Ossman <pierre@ossman.eu> wrote:
 
-Index: iwm-2.6/net/wireless/wext-compat.c
-===================================================================
---- iwm-2.6.orig/net/wireless/wext-compat.c	2009-06-24 17:25:37.000000000 +0200
-+++ iwm-2.6/net/wireless/wext-compat.c	2009-06-24 17:25:41.000000000 +0200
-@@ -555,6 +555,11 @@ int cfg80211_wext_siwencode(struct net_d
- 		return err;
- 	}
- 
-+	if (erq->flags & IW_ENCODE_RESTRICTED)
-+		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_SHARED_KEY;
-+	else
-+		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_OPEN_SYSTEM;
-+
- 	memset(&params, 0, sizeof(params));
- 	params.key = keybuf;
- 	params.key_len = erq->length;
+> On Sun, 21 Jun 2009 20:05:12 -0400
+> Bob Copeland <me@bobcopeland.com> wrote:
+>=20
+> > On Sun, Jun 21, 2009 at 08:38:00PM +0200, Pierre Ossman wrote:
+> > > I noticed one more thing though. You call wl12xx_irq() on interrupts,
+> > > and that's all you do. So I have to assume that calls back to
+> > > wl12xx_sdio_read().
+> >=20
+> > It schedules a workqueue, so it shouldn't be a problem.
+> >=20
+>=20
+> Ah, I see. In that case you can add:
+>=20
+> Acked-by: Pierre Ossman <pierre@ossman.eu>
+>=20
 
+And just as I hit send I realised another problem...
 
+SDIO interrupts are level interrupts, not edge. That means that the
+interrupt source needs to be handled before the interrupt routine
+returns or the system will get stuck in a fairly tight loop, rehandling
+the same interrupt over and over again.
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
----------------------------------------------------------------------
-Intel Corporation SAS (French simplified joint stock company)
-Registered headquarters: "Les Montalets"- 2, rue de Paris, 
-92196 Meudon Cedex, France
-Registration Number:  302 456 199 R.C.S. NANTERRE
-Capital: 4,572,000 Euros
+Has the testing been performed on a host that has proper SDIO interrupt
+support, or one that polls? If it's the latter, then you probably have
+latent issues that just haven't been noticed yet.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Rgds
+--=20
+     -- Pierre Ossman
 
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.ossman.eu-19497-1245651280-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAko/IU8ACgkQ7b8eESbyJLjK+ACgsuffz1QDW7N5XVOEZZJmH99y
+RF4AoMNacEORsXQD+vn+ceydKHetfb0N
+=hTaS
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-19497-1245651280-0001-2--
