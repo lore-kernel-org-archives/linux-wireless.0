@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:58720 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760035AbZFKXck (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:52000 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbZFVRUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 19:32:40 -0400
-Subject: Re: rfkill on T61
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-References: <43e72e890906111559p614e83fdnec245fb806e01fc3@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 12 Jun 2009 01:32:39 +0200
-Message-Id: <1244763159.27363.103.camel@violet>
-Mime-Version: 1.0
+	Mon, 22 Jun 2009 13:20:40 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so1950282ywb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 10:20:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <40f31dec0906200232j531d5804g283a3d93401652a@mail.gmail.com>
+References: <4A3B5B11.7060103@bitnet.be>
+	 <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
+	 <4A3C3423.2060007@bitnet.be>
+	 <40f31dec0906200232j531d5804g283a3d93401652a@mail.gmail.com>
+Date: Mon, 22 Jun 2009 12:59:40 -0400
+Message-ID: <5ce4c42d0906220959g6435cd8cg1db12487730c4729@mail.gmail.com>
+Subject: Re: current status of 802.11s mesh in ath5k ?
+From: Stephane Davy <davystephane@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Hans Maes <Hans@bitnet.be>, Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Hi all,
 
-> When I hit rfkill, I get:
-> 
-> [18493.777231] btusb_intr_complete: hci0 urb cbe20000 failed to resubmit (19)
-> [18493.777553] btusb_send_frame: hci0 urb f7d3c700 submission failed
-> 
-> When I hit it again I get:
-> 
-> [18531.488091] usb 1-1: new full speed USB device using uhci_hcd and address 7
-> [18531.651409] usb 1-1: configuration #1 chosen from 1 choice
-> 
-> The device that disappears upon rfkill is my bluetooth controller:
-> 
-> mcgrof@tesla ~ $ diff -u before-rfkill after-rfkill
-> --- 1   2009-06-11 15:37:37.000000000 -0700
-> +++ 2   2009-06-11 15:37:49.000000000 -0700
-> @@ -6,7 +6,6 @@
->  Bus 003 Device 004: ID 046d:c040 Logitech, Inc. Corded Tilt-Wheel Mouse
->  Bus 003 Device 003: ID 04b3:4485 IBM Corp.
->  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> -Bus 001 Device 006: ID 0a5c:2110 Broadcom Corp. Bluetooth Controller
->  Bus 001 Device 004: ID 0483:2016 SGS Thomson Microelectronics
-> Fingerprint Reader
->  Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
->  Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> 
-> Granted I tested this on 2.6.27 with bleeding edge compat-wireless but
-> I think this is the same behaviour I will get with bleeding edge, will
-> try now on wireless-testing.
+I am using and testing the Open 80211s project with the ath5k driver.
+I have an atheros AR2413 chipset and an atheros AR5212/AR5213 chipset.
 
-what are you trying to tell us. This is what happens with the Bluetooth
-devices and the platform RFKILL switch. ACPI takes them off the USB bus.
+I installed my mesh network using this command lines on both devices:
+# iw phy phy0 interface add mesh0 type mp mesh_id mesh
+# ifconfig mesh0 192.168.1.1 (192.168.1.2 on the other device)
+# iw dev mesh0 scan
 
-Regards
+The mesh network is unstable. I always get this warning messages:
+ath5k phy0: unsupported jumbo
 
-Marcel
+When I check on wireshark, it's look like some messages are lost on
+the radio media.
 
+What can I do to solve this problems ? And get my mesh network stable ?
 
+Thanks,
+Stephane.
