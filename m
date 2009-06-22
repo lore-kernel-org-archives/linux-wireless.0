@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:34076 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754542AbZFLTha (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:1048 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752584AbZFVUzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 15:37:30 -0400
-Date: Fri, 12 Jun 2009 21:37:31 +0200
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-wireless@vger.kernel.org
-Cc: dcbw@redhat.com, andrey@cozybit.com,
-	libertas-dev@lists.infradead.org
-Subject: [PATCH v2] net/libertas: don't recursive spin lock in if_spi_e2h()
-Message-ID: <20090612193731.GA21528@Chamillionaire.breakpoint.cc>
-References: <20090612094710.GA28098@www.tglx.de>
+	Mon, 22 Jun 2009 16:55:42 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so2027128ywb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 13:55:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20090612094710.GA28098@www.tglx.de>
+In-Reply-To: <1245576079.16399.31.camel@johannes.local>
+References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
+	 <83a869cd0906091048k68616c11k16fa98403aa770b@mail.gmail.com>
+	 <1244569926.18481.27.camel@johannes.local>
+	 <83a869cd0906101242w2ae8480cle69abd19a9d87112@mail.gmail.com>
+	 <1244750836.29447.5.camel@johannes.local>
+	 <83a869cd0906121341k3b58b80fvefdb74c2fca9449d@mail.gmail.com>
+	 <1244839645.11782.5.camel@johannes.local>
+	 <83a869cd0906191233g507fea1cg238d14b57ace0466@mail.gmail.com>
+	 <83a869cd0906191237j7d727a4ekd6dbb9fc35d60b78@mail.gmail.com>
+	 <1245576079.16399.31.camel@johannes.local>
+Date: Mon, 22 Jun 2009 22:48:42 +0200
+Message-ID: <83a869cd0906221348k4ed42ccbr6721c8bb020c4de5@mail.gmail.com>
+Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-|BUG: spinlock recursion on CPU#0, lbs_spi_thread/1030
-| lock: dee9a1bc, .magic: dead4ead, .owner: lbs_spi_thread/1030, .owner_cpu: 0
-|Call Trace:
-|[deec3eb0] [c0007220] show_stack+0x4c/0x15c (unreliable)
-|[deec3ef0] [c0187720] spin_bug+0x9c/0xb0
-|[deec3f10] [c0187890] _raw_spin_lock+0x54/0x148
-|[deec3f40] [c02d260c] _spin_lock_irqsave+0x2c/0x44
-|[deec3f60] [e8671800] lbs_queue_event+0x7c/0x130 [libertas]
-|[deec3f80] [e8725f04] lbs_spi_thread+0x538/0x58c [libertas_spi]
-|[deec3fe0] [c004f270] kthread+0x4c/0x88
-|[deec3ff0] [c000f33c] kernel_thread+0x4c/0x68
+Race could happen with QOS :
+let's consider queue 0 low prio and queue 1 high prio
 
-if_spi_e2h() is grabbing ->driver_lock just while calling
-lbs_queue_event() which is grabbing the same lock.
+- queue 1 send packet lot's of packet (iv32 = 0, iv32=1, iv32=2)
+- queue 0 send a packet with iv32=1 and iv16=0xffff (or near wrap)
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
-v1..v2: remove flags
+If queue 0 packet with iv32=1 is received after queue 1 with iv32=2, we will
+- send tkip key for iv32=2 to hardware
+- send tkip key for iv32=1 to hardware
+and then we should wait wrap to iv32=3 to have a chance to send
+correct key to hardware.
 
- drivers/net/wireless/libertas/if_spi.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index f8c2898..583162c 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -812,7 +812,6 @@ out:
- static void if_spi_e2h(struct if_spi_card *card)
- {
- 	int err = 0;
--	unsigned long flags;
- 	u32 cause;
- 	struct lbs_private *priv = card->priv;
- 
-@@ -827,10 +826,7 @@ static void if_spi_e2h(struct if_spi_card *card)
- 	/* generate a card interrupt */
- 	spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG, IF_SPI_CIC_HOST_EVENT);
- 
--	spin_lock_irqsave(&priv->driver_lock, flags);
- 	lbs_queue_event(priv, cause & 0xff);
--	spin_unlock_irqrestore(&priv->driver_lock, flags);
--
- out:
- 	if (err)
- 		lbs_pr_err("%s: error %d\n", __func__, err);
--- 
-1.6.0.6
+With this patch, we only send tkip key to hardware on the first wrap of a queue.
+With the previous example, we will only send  tkip key for iv32=2 to hardware.
 
+Gregor
