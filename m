@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f213.google.com ([209.85.220.213]:58666 "EHLO
-	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815AbZFEKpG convert rfc822-to-8bit (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49574 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756737AbZFWP3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 06:45:06 -0400
+	Tue, 23 Jun 2009 11:29:50 -0400
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: [PATCH 09/10] cfq-iosched: Uses its own open-coded rcu_barrier.
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Date: Tue, 23 Jun 2009 17:04:39 +0200
+Message-ID: <20090623150439.22490.14657.stgit@localhost>
+In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
+References: <20090623150330.22490.87327.stgit@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20090605094619.GB23085@build.ossfans.org>
-References: <1244168990-28355-4-git-send-email-dbaryshkov@gmail.com>
-	 <1244184737.22576.94.camel@johannes.local>
-	 <20090605071529.GA7064@doriath.ww600.siemens.net>
-	 <20090605.005418.07362083.davem@davemloft.net>
-	 <20090605091229.GA25280@doriath.ww600.siemens.net>
-	 <20090605094619.GB23085@build.ossfans.org>
-Date: Fri, 5 Jun 2009 14:45:06 +0400
-Message-ID: <bc64b4640906050345t5ed23d7bxc8a777a4a0ada147@mail.gmail.com>
-Subject: Re: [PATCH 3/5] net: add NL802154 interface for configuration of
-	802.15.4 devices
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Sergey Lapin <slapin@ossfans.org>
-Cc: David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/5 Sergey Lapin <slapin@ossfans.org>:
->> @@ -0,0 +1,523 @@
->> +/*
->> + * Netlink inteface for IEEE 802.15.4 stack
->> + *
->> + * Copyright 2007, 2008 Siemens AG
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2
->> + * as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + *
->> + * You should have received a copy of the GNU General Public License along
->> + * with this program; if not, write to the Free Software Foundation, Inc.,
->> + * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
->> + *
->> + * Written by:
->> + * Sergey Lapin <sergey.lapin@siemens.com>
-> Dmitry, please toss all my @siemens.com addresses from all patches, since my
-> access is already disabled and it's pointless to have invalid emails
-> in source tree. Please replace them with @ossfans.org ones.
+This module cfq-iosched, has discovered the value of waiting for
+call_rcu() completion, but its has its own open-coded implementation
+of rcu_barrier(), which I don't think is 'strong' enough.
 
-Could you please send an incremental patch on top of this serie? I
-hope that my last
-push can be pulled/merged and I don't want to redo all commits.
+This patch only leaves a comment for the maintainers to consider.
 
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+---
 
--- 
-With best wishes
-Dmitry
+ block/cfq-iosched.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 833ec18..c15555b 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -2657,6 +2657,12 @@ static void __exit cfq_exit(void)
+ 	/*
+ 	 * this also protects us from entering cfq_slab_kill() with
+ 	 * pending RCU callbacks
++	 *
++	 * hawk@comx.dk 2009-06-18: Maintainer please consider using
++	 *  rcu_barrier() instead of this open-coded wait for
++	 *  completion implementation.  I think it provides a better
++	 *  guarantee that all CPUs are finished, although
++	 *  elv_ioc_count_read() do consider all CPUs.
+ 	 */
+ 	if (elv_ioc_count_read(ioc_count))
+ 		wait_for_completion(&all_gone);
+
