@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f211.google.com ([209.85.220.211]:33173 "EHLO
-	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754843AbZFPQ2H (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49573 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756269AbZFWP3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 12:28:07 -0400
-Received: by fxm7 with SMTP id 7so789660fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2009 09:28:08 -0700 (PDT)
+	Tue, 23 Jun 2009 11:29:49 -0400
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: [PATCH 01/10] ext4: Use rcu_barrier() on module unload.
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Date: Tue, 23 Jun 2009 17:03:59 +0200
+Message-ID: <20090623150358.22490.24818.stgit@localhost>
+In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
+References: <20090623150330.22490.87327.stgit@localhost>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890906152133x49e8a072hfce9e48f82094f35@mail.gmail.com>
-References: <3ace41890906151936s3f0d70fcx6f42bfddf07dd70e@mail.gmail.com>
-	 <43e72e890906152133x49e8a072hfce9e48f82094f35@mail.gmail.com>
-Date: Tue, 16 Jun 2009 17:28:07 +0100
-Message-ID: <3ace41890906160928y8c43fe2m96844c7361174a89@mail.gmail.com>
-Subject: Re: vid/pid sorting patch? (Re: [PATCH] zd1211rw: adding 083a:e503 as
-	a ZD1211B device)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 16, 2009 at 5:33 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Mon, Jun 15, 2009 at 7:36 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
->> Hiya,
->>
->> The zd1211rw vid/pid list is getting a bit unruly - would it be
->> acceptable to submit a non-code-changing patch just to sort the ids?
->> It would just be tidier and make it easier to see what id is already
->> in and what is not, and also make it obvious where new changes should
->> be inserted. I know this affects git blame and other log searching
->> usage so may not be entirely desirable.
->
-> Development on wireless-testing is always open, just send what you
-> have and don't worry about where it can get applied.
->
->  Luis
+The ext4 module uses rcu_call() thus it should use rcu_barrier()on
+module unload.
 
-Okay - I'll submit a patch to sort the vid/pid's in zd1211rw in hex
-order soon then.
+The kmem cache ext4_pspace_cachep is sometimes free'ed using
+call_rcu() callbacks.  Thus, we must wait for completion of call_rcu()
+before doing kmem_cache_destroy().
 
-Hin-Tak
+I have difficult determining if no new call_rcu() callbacks can be envoked.
+Would the maintainer please verify this?
+
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+---
+
+ fs/ext4/mballoc.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index 519a0a6..e271a9e 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -2902,8 +2902,10 @@ int __init init_ext4_mballoc(void)
+ 
+ void exit_ext4_mballoc(void)
+ {
+-	/* XXX: synchronize_rcu(); */
++	/* Wait for completion of call_rcu()'s on ext4_pspace_cachep */
++	rcu_barrier();
+ 	kmem_cache_destroy(ext4_pspace_cachep);
++
+ 	kmem_cache_destroy(ext4_ac_cachep);
+ 	kmem_cache_destroy(ext4_free_ext_cachep);
+ }
+
