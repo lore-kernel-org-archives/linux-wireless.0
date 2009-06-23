@@ -1,125 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:34790 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757015AbZFWUBK (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:62834 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777AbZFWPjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 16:01:10 -0400
-Received: by bwz9 with SMTP id 9so316401bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 13:01:11 -0700 (PDT)
-Received: from rz by localhost.localdomain with local (Exim 4.69)
-	(envelope-from <rz@linux-m68k.org>)
-	id 1MJAKN-0001AZ-Lf
-	for linux-wireless@vger.kernel.org; Tue, 23 Jun 2009 20:02:39 +0200
-Date: Tue, 23 Jun 2009 20:02:39 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: linux-wireless@vger.kernel.org
-Subject: rt2x00 / rt73usb kernel crashes, memory corruption?
-Message-ID: <20090623180239.GB3914@linux-m68k.org>
+	Tue, 23 Jun 2009 11:39:37 -0400
+Date: Tue, 23 Jun 2009 10:39:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 8/8] p54: Modify p54 files for new organization
+Message-ID: <4a40f741.0qPsXxY4NQ0toaFq%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Christian Lamparter <chunkeey@web.de>
 
-More testing revealed that rt73usb has some other quite serious problem that appears
-completely independent of the previous rate related problem - happens both with automatic
-and fixed rates.
+Modify the remaining p54 files to account for the new file organization.
 
-After enabling "onboot" for the rt73usb driver the kernel crashes about 1 in 5 times 
-during boot - apparently after something tries to send out some kind of router queries. 
-Logs show very often "wlan0: no ipv6 routers" or somesuch after the Ooops, however
-sometimes it also crashes way later during the boot.
-Once it survives the boot it seems to run very stable.
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-So far seen roughly 3 kinds of ooopses which make not much sense for me, other than memory
-corruption. 
-The value "000d5a0b" appears in a prominent place in almost all of these oopses somewhere - might 
-be some value that the driver wanted to store to a specific location but ended up corrupting
-random memory?
-Any idea where in the wlan code this value comes from/belongs to?
+John,
 
-$ lsusb 
-Bus 005 Device 002: ID 148f:2573 Ralink Technology, Corp. RT2501USB Wireless Adapter
+This patch should also include the following git statements:
 
-$ dmesg
-[   29.478747] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
-[   29.478750] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
-[   29.478752] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET A: 0x0000
-[   29.479125] phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, rev: 0002573a.
-[   29.479267] PM: Adding info for No Bus:phy0
-[   29.770912] phy0: Selected rate control algorithm 'minstrel'
-[   29.771130] PM: Adding info for No Bus:wlan0
-[   29.771435] PM: Adding info for No Bus:rt73usb-phy0::radio
-[   29.771515] Registered led device: rt73usb-phy0::radio
-[   29.771531] PM: Adding info for No Bus:rt73usb-phy0::assoc
-[   29.771546] Registered led device: rt73usb-phy0::assoc
-[   29.771564] PM: Adding info for No Bus:rt73usb-phy0::quality
-[   29.771580] Registered led device: rt73usb-phy0::quality
-[   29.772219] usbcore: registered new interface driver rt73usb
-[   29.905175] usbcore: registered new interface driver rt2500usb
-[   42.956365] rt73usb 5-3:1.0: firmware: requesting rt73.bin
-[   42.981638] phy0 -> rt2x00lib_request_firmware: Info - Firmware detected - version: 1.7.
-[   43.056513] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-[   43.058510] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-[   43.060510] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
-[   43.062510] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+git rm drivers/net/wireless/p54/p54common.c
+git rm drivers/net/wireless/p54/p54common.h
 
-ifcfg-wlan0:
-# Please read /usr/share/doc/initscripts-*/sysconfig.txt
-# for the documentation of these parameters.
-USERCTL=yes
-PEERDNS=yes
-IPV6INIT=no
-GATEWAY=10.42.44.1
-TYPE=Wireless
-DEVICE=wlan0
-BOOTPROTO=none
-NETMASK=255.255.255.0
-IPADDR=10.42.44.1
-ESSID=xxx-xxx
-MODE=Ad-Hoc
-RATE=18M
-NM_CONTROLLED=yes          ## thats a lie because I killed network manager completely
-HWADDR=00:23:cd:c0:5d:4c
-ONBOOT=yes
-CHANNEL=1
+Larry
+---
+
+diff --git a/drivers/net/wireless/p54/Makefile b/drivers/net/wireless/p54/Makefile
+index c2050de..b542e68 100644
+--- a/drivers/net/wireless/p54/Makefile
++++ b/drivers/net/wireless/p54/Makefile
+@@ -1,3 +1,6 @@
++p54common-objs			:= eeprom.o fwio.o txrx.o main.o
++p54common-$(CONFIG_P54_LEDS)	+= led.o
++
+ obj-$(CONFIG_P54_COMMON)	+= p54common.o
+ obj-$(CONFIG_P54_USB)		+= p54usb.o
+ obj-$(CONFIG_P54_PCI)		+= p54pci.o
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+index db3df94..19d085c 100644
+--- a/drivers/net/wireless/p54/p54.h
++++ b/drivers/net/wireless/p54/p54.h
+@@ -1,6 +1,3 @@
+-#ifndef P54_H
+-#define P54_H
+-
+ /*
+  * Shared defines for all mac80211 Prism54 code
+  *
+@@ -14,39 +11,78 @@
+  * published by the Free Software Foundation.
+  */
+ 
++#ifndef P54_H
++#define P54_H
++
+ #ifdef CONFIG_P54_LEDS
+ #include <linux/leds.h>
+ #endif /* CONFIG_P54_LEDS */
+ 
+-enum p54_control_frame_types {
+-	P54_CONTROL_TYPE_SETUP = 0,
+-	P54_CONTROL_TYPE_SCAN,
+-	P54_CONTROL_TYPE_TRAP,
+-	P54_CONTROL_TYPE_DCFINIT,
+-	P54_CONTROL_TYPE_RX_KEYCACHE,
+-	P54_CONTROL_TYPE_TIM,
+-	P54_CONTROL_TYPE_PSM,
+-	P54_CONTROL_TYPE_TXCANCEL,
+-	P54_CONTROL_TYPE_TXDONE,
+-	P54_CONTROL_TYPE_BURST,
+-	P54_CONTROL_TYPE_STAT_READBACK,
+-	P54_CONTROL_TYPE_BBP,
+-	P54_CONTROL_TYPE_EEPROM_READBACK,
+-	P54_CONTROL_TYPE_LED,
+-	P54_CONTROL_TYPE_GPIO,
+-	P54_CONTROL_TYPE_TIMER,
+-	P54_CONTROL_TYPE_MODULATION,
+-	P54_CONTROL_TYPE_SYNTH_CONFIG,
+-	P54_CONTROL_TYPE_DETECTOR_VALUE,
+-	P54_CONTROL_TYPE_XBOW_SYNTH_CFG,
+-	P54_CONTROL_TYPE_CCE_QUIET,
+-	P54_CONTROL_TYPE_PSM_STA_UNLOCK,
+-	P54_CONTROL_TYPE_PCS,
+-	P54_CONTROL_TYPE_BT_BALANCER = 28,
+-	P54_CONTROL_TYPE_GROUP_ADDRESS_TABLE = 30,
+-	P54_CONTROL_TYPE_ARPTABLE = 31,
+-	P54_CONTROL_TYPE_BT_OPTIONS = 35
+-};
++#define ISL38XX_DEV_FIRMWARE_ADDR 0x20000
++
++#define BR_CODE_MIN			0x80000000
++#define BR_CODE_COMPONENT_ID		0x80000001
++#define BR_CODE_COMPONENT_VERSION	0x80000002
++#define BR_CODE_DEPENDENT_IF		0x80000003
++#define BR_CODE_EXPOSED_IF		0x80000004
++#define BR_CODE_DESCR			0x80000101
++#define BR_CODE_MAX			0x8FFFFFFF
++#define BR_CODE_END_OF_BRA		0xFF0000FF
++#define LEGACY_BR_CODE_END_OF_BRA	0xFFFFFFFF
++
++struct bootrec {
++	__le32 code;
++	__le32 len;
++	u32 data[10];
++} __packed;
++
++/* Interface role definitions */
++#define BR_INTERFACE_ROLE_SERVER	0x0000
++#define BR_INTERFACE_ROLE_CLIENT	0x8000
++
++#define BR_DESC_PRIV_CAP_WEP		BIT(0)
++#define BR_DESC_PRIV_CAP_TKIP		BIT(1)
++#define BR_DESC_PRIV_CAP_MICHAEL	BIT(2)
++#define BR_DESC_PRIV_CAP_CCX_CP		BIT(3)
++#define BR_DESC_PRIV_CAP_CCX_MIC	BIT(4)
++#define BR_DESC_PRIV_CAP_AESCCMP	BIT(5)
++
++struct bootrec_desc {
++	__le16 modes;
++	__le16 flags;
++	__le32 rx_start;
++	__le32 rx_end;
++	u8 headroom;
++	u8 tailroom;
++	u8 tx_queues;
++	u8 tx_depth;
++	u8 privacy_caps;
++	u8 rx_keycache_size;
++	u8 time_size;
++	u8 padding;
++	u8 rates[16];
++	u8 padding2[4];
++	__le16 rx_mtu;
++} __packed;
++
++#define FW_FMAC 0x464d4143
++#define FW_LM86 0x4c4d3836
++#define FW_LM87 0x4c4d3837
++#define FW_LM20 0x4c4d3230
++
++struct bootrec_comp_id {
++	__le32 fw_variant;
++} __packed;
++
++struct bootrec_comp_ver {
++	char fw_version[24];
++} __packed;
++
++struct bootrec_end {
++	__le16 crc;
++	u8 padding[2];
++	u8 md5[16];
++} __packed;
+ 
+ /* provide 16 bytes for the transport back-end */
+ #define P54_TX_INFO_DATA_SIZE		16
+@@ -55,34 +91,30 @@ enum p54_control_frame_types {
+ struct p54_tx_info {
+ 	u32 start_addr;
+ 	u32 end_addr;
+-	void *data[P54_TX_INFO_DATA_SIZE / sizeof(void *)];
++	union {
++		void *data[P54_TX_INFO_DATA_SIZE / sizeof(void *)];
++		struct {
++			u32 extra_len;
++		};
++	};
+ };
+ 
+ #define P54_MAX_CTRL_FRAME_LEN		0x1000
+ 
+-#define P54_HDR_FLAG_CONTROL		BIT(15)
+-#define P54_HDR_FLAG_CONTROL_OPSET	(BIT(15) + BIT(0))
+-
+-struct p54_hdr {
+-	__le16 flags;
+-	__le16 len;
+-	__le32 req_id;
+-	__le16 type;	/* enum p54_control_frame_types */
+-	u8 rts_tries;
+-	u8 tries;
+-	u8 data[0];
+-} __attribute__ ((packed));
+-
+-#define FREE_AFTER_TX(skb)						\
+-	((((struct p54_hdr *) ((struct sk_buff *) skb)->data)->		\
+-	flags) == cpu_to_le16(P54_HDR_FLAG_CONTROL_OPSET))
++#define P54_SET_QUEUE(queue, ai_fs, cw_min, cw_max, _txop)	\
++do {								\
++	queue.aifs = cpu_to_le16(ai_fs);			\
++	queue.cwmin = cpu_to_le16(cw_min);			\
++	queue.cwmax = cpu_to_le16(cw_max);			\
++	queue.txop = cpu_to_le16(_txop);			\
++} while (0)
+ 
+ struct p54_edcf_queue_param {
+ 	__le16 aifs;
+ 	__le16 cwmin;
+ 	__le16 cwmax;
+ 	__le16 txop;
+-} __attribute__ ((packed));
++} __packed;
+ 
+ struct p54_rssi_linear_approximation {
+ 	s16 mul;
+@@ -101,13 +133,6 @@ struct p54_cal_database {
+ 
+ #define EEPROM_READBACK_LEN 0x3fc
+ 
+-#define ISL38XX_DEV_FIRMWARE_ADDR 0x20000
+-
+-#define FW_FMAC 0x464d4143
+-#define FW_LM86 0x4c4d3836
+-#define FW_LM87 0x4c4d3837
+-#define FW_LM20 0x4c4d3230
+-
+ enum fw_state {
+ 	FW_STATE_OFF,
+ 	FW_STATE_BOOTING,
+@@ -138,6 +163,7 @@ struct p54_common {
+ 	void (*tx)(struct ieee80211_hw *dev, struct sk_buff *skb);
+ 	int (*open)(struct ieee80211_hw *dev);
+ 	void (*stop)(struct ieee80211_hw *dev);
++	struct sk_buff_head tx_pending;
+ 	struct sk_buff_head tx_queue;
+ 	struct mutex conf_mutex;
+ 
+@@ -156,6 +182,7 @@ struct p54_common {
+ 
+ 	/* (e)DCF / QOS state */
+ 	bool use_short_slot;
++	spinlock_t tx_stats_lock;
+ 	struct ieee80211_tx_queue_stats tx_stats[8];
+ 	struct p54_edcf_queue_param qos_params[8];
+ 
+@@ -181,7 +208,7 @@ struct p54_common {
+ 	u32 tsf_low32, tsf_high32;
+ 	u32 basic_rate_mask;
+ 	u16 aid;
+-	struct sk_buff *cached_beacon;
++	__le32 beacon_req_id;
+ 
+ 	/* cryptographic engine information */
+ 	u8 privacy_caps;
+@@ -202,15 +229,20 @@ struct p54_common {
+ 	/* eeprom handling */
+ 	void *eeprom;
+ 	struct completion eeprom_comp;
++	struct mutex eeprom_mutex;
+ };
+ 
++/* interfaces for the drivers */
+ int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
+ void p54_free_skb(struct ieee80211_hw *dev, struct sk_buff *skb);
+ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw);
+ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len);
+ int p54_read_eeprom(struct ieee80211_hw *dev);
++
+ struct ieee80211_hw *p54_init_common(size_t priv_data_len);
+ int p54_register_common(struct ieee80211_hw *dev, struct device *pdev);
+ void p54_free_common(struct ieee80211_hw *dev);
+ 
++void p54_unregister_common(struct ieee80211_hw *dev);
++
+ #endif /* P54_H */
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index b1610ea..d348c26 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -22,6 +22,7 @@
+ #include <net/mac80211.h>
+ 
+ #include "p54.h"
++#include "lmac.h"
+ #include "p54pci.h"
+ 
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+@@ -564,7 +565,6 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 
+  err_free_common:
+ 	release_firmware(priv->firmware);
+-	p54_free_common(dev);
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
+@@ -573,7 +573,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 
+  err_free_dev:
+ 	pci_set_drvdata(pdev, NULL);
+-	ieee80211_free_hw(dev);
++	p54_free_common(dev);
+ 
+  err_free_reg:
+ 	pci_release_regions(pdev);
+@@ -590,16 +590,15 @@ static void __devexit p54p_remove(struct pci_dev *pdev)
+ 	if (!dev)
+ 		return;
+ 
+-	ieee80211_unregister_hw(dev);
++	p54_unregister_common(dev);
+ 	priv = dev->priv;
+ 	release_firmware(priv->firmware);
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+-	p54_free_common(dev);
+ 	iounmap(priv->map);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+-	ieee80211_free_hw(dev);
++	p54_free_common(dev);
+ }
+ 
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 83116ba..7ef191a 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -34,7 +34,7 @@
+ #include "p54spi_eeprom.h"
+ #include "p54.h"
+ 
+-#include "p54common.h"
++#include "lmac.h"
+ 
+ MODULE_FIRMWARE("3826.arm");
+ MODULE_ALIAS("stlc45xx");
+@@ -713,7 +713,7 @@ static int __devexit p54spi_remove(struct spi_device *spi)
+ {
+ 	struct p54s_priv *priv = dev_get_drvdata(&spi->dev);
+ 
+-	ieee80211_unregister_hw(priv->hw);
++	p54_unregister_common(priv->hw);
+ 
+ 	free_irq(gpio_to_irq(p54spi_gpio_irq), spi);
+ 
+@@ -724,7 +724,6 @@ static int __devexit p54spi_remove(struct spi_device *spi)
+ 	mutex_destroy(&priv->mutex);
+ 
+ 	p54_free_common(priv->hw);
+-	ieee80211_free_hw(priv->hw);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 0e877a1..461d88f 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -22,6 +22,7 @@
+ #include <net/mac80211.h>
+ 
+ #include "p54.h"
++#include "lmac.h"
+ #include "p54usb.h"
+ 
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+@@ -961,7 +962,7 @@ err_free_fw:
+ 	release_firmware(priv->fw);
+ 
+ err_free_dev:
+-	ieee80211_free_hw(dev);
++	p54_free_common(dev);
+ 	usb_set_intfdata(intf, NULL);
+ 	usb_put_dev(udev);
+ 	return err;
+@@ -975,13 +976,12 @@ static void __devexit p54u_disconnect(struct usb_interface *intf)
+ 	if (!dev)
+ 		return;
+ 
+-	ieee80211_unregister_hw(dev);
++	p54_unregister_common(dev);
+ 
+ 	priv = dev->priv;
+ 	usb_put_dev(interface_to_usbdev(intf));
+ 	release_firmware(priv->fw);
+ 	p54_free_common(dev);
+-	ieee80211_free_hw(dev);
+ }
+ 
+ static int p54u_pre_reset(struct usb_interface *intf)
 
 
-
-Example ooops bellow.
-
-Richard
-
-
-Jun 23 16:19:49 localhost rpc.statd[2457]: Version 1.1.4 Starting
-Jun 23 16:19:49 localhost kernel: [   41.617557] BUG: unable to handle kernel paging request at 000d5a0b
-Jun 23 16:19:49 localhost kernel: [   41.617690] IP: [<c0452d72>] m_show+0x78/0x122
-Jun 23 16:19:49 localhost kernel: [   41.617772] *pde = 00000000 
-Jun 23 16:19:49 localhost kernel: [   41.617845] Oops: 0000 [#1] SMP 
-Jun 23 16:19:49 localhost kernel: [   41.617942] last sysfs file: /sys/devices/system/cpu/cpu1/cache/index2/shared_cpu_map
-Jun 23 16:19:49 localhost kernel: [   41.618003] Modules linked in: ipv6 binfmt_misc nls_utf8 isofs loop dm_multipath uinput rt2500usb arc4 ecb snd_hda_codec_realtek xt_multiport snd_hda_intel nf_conntrack_ipv4 snd_hda_codec rt73usb nf_defrag_ipv4 crc_itu_t snd_hwdep snd_seq_dummy xt_state rt2x00usb snd_seq_oss rt2x00lib nf_conntrack snd_seq_midi_event snd_seq xt_tcpudp led_class snd_seq_device ipt_LOG input_polldev xt_limit mac80211 snd_pcm_oss snd_mixer_oss iptable_filter ip_tables snd_pcm x_tables snd_timer ppdev snd parport_pc cfg80211 iTCO_wdt intel_agp parport r8169 soundcore iTCO_vendor_support snd_page_alloc mii rtc_cmos i2c_i801 thermal agpgart pcspkr button i2c_core ata_generic pata_acpi sha256_generic cbc aes_i586 aes_generic dm_crypt dm_snapshot dm_zero dm_mirror dm_region_hash dm_log dm_mod ehci_hcd [last unloaded: processor]
-Jun 23 16:19:49 localhost kernel: [   41.618003] 
-Jun 23 16:19:49 localhost kernel: [   41.618003] Pid: 2478, comm: lsmod Not tainted (2.6.30v2 #3) To Be Filled By O.E.M.
-Jun 23 16:19:49 localhost kernel: [   41.618003] EIP: 0060:[<c0452d72>] EFLAGS: 00010282 CPU: 0
-Jun 23 16:19:49 localhost kernel: [   41.618003] EIP is at m_show+0x78/0x122
-Jun 23 16:19:49 localhost kernel: [   41.618003] EAX: 00000000 EBX: 000d5a0b ECX: f6188000 EDX: 00000001
-Jun 23 16:19:49 localhost kernel: [   41.618003] ESI: f8b9bb7c EDI: f6a61300 EBP: f61b3f08 ESP: f61b3eec
-Jun 23 16:19:49 localhost kernel: [   41.618003]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Jun 23 16:19:49 localhost kernel: [   41.618003] Process lsmod (pid: 2478, ti=f61b2000 task=f61511b0 task.ti=f61b2000)
-Jun 23 16:19:49 localhost kernel: [   41.618003] Stack:
-Jun 23 16:19:49 localhost kernel: [   41.618003]  f8b9bb80 f8b9bcb4 f6a61300 f6187000 c0707e90 f6a61300 000003dc f61b3f48
-Jun 23 16:19:49 localhost kernel: [   41.618003]  c04bcb96 00000400 b7f26000 f6b75f00 f6a61328 00000000 f8b9bb80 00001000
-Jun 23 16:19:49 localhost kernel: [   41.618003]  00000018 00000000 00000017 00000000 fffffffb f708e580 c04bc90c f61b3f6c
-Jun 23 16:19:49 localhost kernel: [   41.618003] Call Trace:
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04bcb96>] ? seq_read+0x28a/0x356
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04bc90c>] ? seq_read+0x0/0x356
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04dbbf5>] ? proc_reg_read+0x60/0x74
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04dbb95>] ? proc_reg_read+0x0/0x74
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04a8665>] ? vfs_read+0x87/0x12b
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04a87a2>] ? sys_read+0x3b/0x60
-Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04031dd>] ? syscall_call+0x7/0xb
-Jun 23 16:19:49 localhost kernel: [   41.618003] Code: 00 00 05 34 01 00 00 89 45 e8 83 c4 1c eb 1c 8b 43 08 83 c0 0c 50 68 74 8d 7f c0 57 e8 30 9a 06 00 8b 1b ba 01 00 00 00 83 c4 0c <8b> 03 0f 18 00 90 3b 5d e8 75 d9 83 be d4 00 00 00 00 74 10 83 
-Jun 23 16:19:49 localhost kernel: [   41.618003] EIP: [<c0452d72>] m_show+0x78/0x122 SS:ESP 0068:f61b3eec
-Jun 23 16:19:49 localhost kernel: [   41.618003] CR2: 00000000000d5a0b
-Jun 23 16:19:49 localhost kernel: [   41.623658] ---[ end trace af974b5571f7be2d ]---
