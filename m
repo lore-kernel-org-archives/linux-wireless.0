@@ -1,209 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:57257 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758991AbZFPO0Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 10:26:25 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 1/3] rndis_wlan: convert get/set frag/rts to cfg80211
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date: Tue, 16 Jun 2009 17:17:21 +0300
-Message-ID: <20090616141721.23639.15379.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:46560 "EHLO e9.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755095AbZFWO44 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 10:56:56 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e9.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n5NEiYhV017057
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 10:44:34 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n5NEuw5h240610
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 10:56:58 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n5NEuvrZ020245
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 10:56:58 -0400
+Subject: Re: [LTP] Support of WIFI and W-LAN test cases in LTP
+From: Subrata Modak <subrata@linux.vnet.ibm.com>
+Reply-To: subrata@linux.vnet.ibm.com
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: ltp-list@lists.sf.net, Luis Carlos Cobo <luisca@cozybit.com>,
+	Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rahul Baliyan <rahul.lpt@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+In-Reply-To: <1237446038.5260.9.camel@subratamodak.linux.ibm.com>
+References: <9a14a0630903130632s36a7f059hd093d30e97f894eb@mail.gmail.com>
+	 <1236962876.7439.3.camel@subratamodak.linux.ibm.com>
+	 <1237272937.5622.11.camel@subratamodak.linux.ibm.com>
+	 <43e72e890903181242i1be5818et8afd1157cff8af83@mail.gmail.com>
+	 <1237446038.5260.9.camel@subratamodak.linux.ibm.com>
+Content-Type: text/plain
+Date: Tue, 23 Jun 2009 20:18:49 +0530
+Message-Id: <1245768529.4860.61.camel@subratamodak.linux.ibm.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+On Thu, 2009-03-19 at 12:30 +0530, Subrata Modak wrote: 
+> On Wed, 2009-03-18 at 12:42 -0700, Luis R. Rodriguez wrote:
+> > On Mon, Mar 16, 2009 at 11:55 PM, Subrata Modak
+> > <subrata@linux.vnet.ibm.com> wrote:
+> > > Hi Rahul,
+> > >
+> > > On Fri, 2009-03-13 at 22:17 +0530, Subrata Modak wrote:
+> > >> Hi,
+> > >>
+> > >> On Fri, 2009-03-13 at 19:02 +0530, rahul Baliyan wrote:
+> > >> > Hi,
+> > >> >
+> > >> > Pl.  confirm if LTP contains the test cases of W-LAN and WI-FI.
+> > >>
+> > >> Nope. We do not have till now. However, we initiated some discussion
+> > >> some 6 months back in the same mailing list regarding Wireless Mesh
+> > >> Netwoking tests. Please follow the following thread:
+> > >>
+> > >> http://marc.info/?t=121969812900007&r=1&w=2&n=4,
+> > >>
+> > >> There are some tests already avilable. We need somebody to volunteer to
+> > >> bring them to some shape so that they can be automated and then
+> > >> integrated inside LTP. Would you be ready to do that ?
+> > >
+> > > Would you like to take up my proposal ?
+> > 
+> > BTW I've stashed a Linux wireless testing entry in the Linux
+> > Foundation GSoC, hopefully that can be merged back into LTP.
+> > 
+> > https://www.linuxfoundation.org/en/Google_Summer_of_Code_2009#Automation_of_testing_using_mac80211_hwsim_and_Orbit
+> 
 
- drivers/net/wireless/rndis_wlan.c |  135 +++++++++++++++++--------------------
- 1 files changed, 63 insertions(+), 72 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 7441d55..323dd29 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -427,9 +427,12 @@ static int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
- static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_scan_request *request);
- 
-+static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed);
-+
- static struct cfg80211_ops rndis_config_ops = {
- 	.change_virtual_intf = rndis_change_virtual_intf,
- 	.scan = rndis_scan,
-+	.set_wiphy_params = rndis_set_wiphy_params,
- };
- 
- static void *rndis_wiphy_privid = &rndis_wiphy_privid;
-@@ -968,6 +971,36 @@ static int set_infra_mode(struct usbnet *usbdev, int mode)
- }
- 
- 
-+static int set_rts_threshold(struct usbnet *usbdev, u32 rts_threshold)
-+{
-+	__le32 tmp;
-+
-+	devdbg(usbdev, "set_rts_threshold %i", rts_threshold);
-+
-+	if (rts_threshold < 0 || rts_threshold > 2347)
-+		rts_threshold = 2347;
-+
-+	tmp = cpu_to_le32(rts_threshold);
-+	return rndis_set_oid(usbdev, OID_802_11_RTS_THRESHOLD, &tmp,
-+								sizeof(tmp));
-+}
-+
-+
-+static int set_frag_threshold(struct usbnet *usbdev, u32 frag_threshold)
-+{
-+	__le32 tmp;
-+
-+	devdbg(usbdev, "set_frag_threshold %i", frag_threshold);
-+
-+	if (frag_threshold < 256 || frag_threshold > 2346)
-+		frag_threshold = 2346;
-+
-+	tmp = cpu_to_le32(frag_threshold);
-+	return rndis_set_oid(usbdev, OID_802_11_FRAGMENTATION_THRESHOLD, &tmp,
-+								sizeof(tmp));
-+}
-+
-+
- static void set_default_iw_params(struct usbnet *usbdev)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-@@ -1251,6 +1284,28 @@ static int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
- }
- 
- 
-+static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed)
-+{
-+	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
-+	struct usbnet *usbdev = priv->usbdev;
-+	int err;
-+
-+	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
-+		err = set_frag_threshold(usbdev, wiphy->frag_threshold);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
-+		err = set_rts_threshold(usbdev, wiphy->rts_threshold);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	return 0;
-+}
-+
-+
- #define SCAN_DELAY_JIFFIES (HZ)
- static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_scan_request *request)
-@@ -1766,74 +1821,6 @@ static int rndis_iw_get_genie(struct net_device *dev,
- }
- 
- 
--static int rndis_iw_set_rts(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct usbnet *usbdev = netdev_priv(dev);
--	__le32 tmp;
--	devdbg(usbdev, "SIOCSIWRTS");
--
--	tmp = cpu_to_le32(wrqu->rts.value);
--	return rndis_set_oid(usbdev, OID_802_11_RTS_THRESHOLD, &tmp,
--								sizeof(tmp));
--}
--
--
--static int rndis_iw_get_rts(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct usbnet *usbdev = netdev_priv(dev);
--	__le32 tmp;
--	int len, ret;
--
--	len = sizeof(tmp);
--	ret = rndis_query_oid(usbdev, OID_802_11_RTS_THRESHOLD, &tmp, &len);
--	if (ret == 0) {
--		wrqu->rts.value = le32_to_cpu(tmp);
--		wrqu->rts.flags = 1;
--		wrqu->rts.disabled = 0;
--	}
--
--	devdbg(usbdev, "SIOCGIWRTS: %d", wrqu->rts.value);
--
--	return ret;
--}
--
--
--static int rndis_iw_set_frag(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct usbnet *usbdev = netdev_priv(dev);
--	__le32 tmp;
--
--	devdbg(usbdev, "SIOCSIWFRAG");
--
--	tmp = cpu_to_le32(wrqu->frag.value);
--	return rndis_set_oid(usbdev, OID_802_11_FRAGMENTATION_THRESHOLD, &tmp,
--								sizeof(tmp));
--}
--
--
--static int rndis_iw_get_frag(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct usbnet *usbdev = netdev_priv(dev);
--	__le32 tmp;
--	int len, ret;
--
--	len = sizeof(tmp);
--	ret = rndis_query_oid(usbdev, OID_802_11_FRAGMENTATION_THRESHOLD, &tmp,
--									&len);
--	if (ret == 0) {
--		wrqu->frag.value = le32_to_cpu(tmp);
--		wrqu->frag.flags = 1;
--		wrqu->frag.disabled = 0;
--	}
--	devdbg(usbdev, "SIOCGIWFRAG: %d", wrqu->frag.value);
--	return ret;
--}
--
--
- static int rndis_iw_set_freq(struct net_device *dev,
-     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
- {
-@@ -2022,10 +2009,10 @@ static const iw_handler rndis_iw_handler[] =
- 	IW_IOCTL(SIOCSIWESSID)     = rndis_iw_set_essid,
- 	IW_IOCTL(SIOCGIWESSID)     = rndis_iw_get_essid,
- 	IW_IOCTL(SIOCGIWRATE)      = rndis_iw_get_rate,
--	IW_IOCTL(SIOCSIWRTS)       = rndis_iw_set_rts,
--	IW_IOCTL(SIOCGIWRTS)       = rndis_iw_get_rts,
--	IW_IOCTL(SIOCSIWFRAG)      = rndis_iw_set_frag,
--	IW_IOCTL(SIOCGIWFRAG)      = rndis_iw_get_frag,
-+	IW_IOCTL(SIOCSIWRTS)       = (iw_handler) cfg80211_wext_siwrts,
-+	IW_IOCTL(SIOCGIWRTS)       = (iw_handler) cfg80211_wext_giwrts,
-+	IW_IOCTL(SIOCSIWFRAG)      = (iw_handler) cfg80211_wext_siwfrag,
-+	IW_IOCTL(SIOCGIWFRAG)      = (iw_handler) cfg80211_wext_giwfrag,
- 	IW_IOCTL(SIOCSIWTXPOW)     = rndis_iw_set_txpower,
- 	IW_IOCTL(SIOCGIWTXPOW)     = rndis_iw_get_txpower,
- 	IW_IOCTL(SIOCSIWENCODE)    = rndis_iw_set_encode,
-@@ -2475,6 +2462,10 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 
- 	set_default_iw_params(usbdev);
- 
-+	/* set default rts/frag */
-+	rndis_set_wiphy_params(wiphy,
-+			WIPHY_PARAM_FRAG_THRESHOLD | WIPHY_PARAM_RTS_THRESHOLD);
-+
- 	/* turn radio on */
- 	priv->radio_on = 1;
- 	disassociate(usbdev, 1);
+Is somebody working on this, and still interested to contribute the same
+to LTP ?
+
+Regards--
+Subrata
+
+> Thanks. That would be really great. Send me the automation test patch
+> when it is ready with some results, etc.
+> 
+> Regards--
+> Subrata
+> 
+> > 
+> >   Luis
+> 
+> 
+> ------------------------------------------------------------------------------
+> Apps built with the Adobe(R) Flex(R) framework and Flex Builder(TM) are
+> powering Web 2.0 with engaging, cross-platform capabilities. Quickly and
+> easily build your RIAs with Flex Builder, the Eclipse(TM)based development
+> software that enables intelligent coding and step-through debugging.
+> Download the free 60 day trial. http://p.sf.net/sfu/www-adobe-com
+> _______________________________________________
+> Ltp-list mailing list
+> Ltp-list@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ltp-list
 
