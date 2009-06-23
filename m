@@ -1,134 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f187.google.com ([209.85.222.187]:62856 "EHLO
-	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752885AbZFLU00 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54792 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752326AbZFWTMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:26:26 -0400
-Received: by pzk17 with SMTP id 17so777625pzk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2009 13:26:28 -0700 (PDT)
+	Tue, 23 Jun 2009 15:12:06 -0400
+Date: Tue, 23 Jun 2009 12:11:52 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Jake Edge <jake@lwn.net>
+cc: Krzysztof Halasa <khc@pm.waw.pl>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Pavel Machek <pavel@ucw.cz>, Greg KH <greg@kroah.com>,
+	"corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for
+ rc-series and merge window
+In-Reply-To: <20090623130602.6cd6b713@chukar>
+Message-ID: <alpine.LFD.2.01.0906231210040.3240@localhost.localdomain>
+References: <20090622222217.GH23972@bombadil.infradead.org> <m3fxdqj2bz.fsf@lwn.net> <m3bpoen5pp.fsf@intrepid.localdomain> <20090623130602.6cd6b713@chukar>
 MIME-Version: 1.0
-Date: Fri, 12 Jun 2009 22:26:28 +0200
-Message-ID: <83a869cd0906121326r554e6930td9f42d51c2ff4e22@mail.gmail.com>
-Subject: [PATCH] b43 : remove old kidx API
-From: gregor kowski <gregor.kowski@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=000e0cd28cf0f40bba046c2c85ad
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---000e0cd28cf0f40bba046c2c85ad
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Remove old kidx API.
-This simplify the code, and fix a potential key overflow.
 
---000e0cd28cf0f40bba046c2c85ad
-Content-Type: text/x-diff; charset=US-ASCII; name="b43_remove_old_kidx_api.diff"
-Content-Disposition: attachment; filename="b43_remove_old_kidx_api.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fvvclsf40
+On Tue, 23 Jun 2009, Jake Edge wrote:
 
-UmVtb3ZlIG9sZCBraWR4IEFQSS4KVGhpcyBzaW1wbGlmeSB0aGUgY29kZSwgYW5kIGZpeCBhIHBv
-dGVudGlhbCBrZXkgb3ZlcmZsb3cuCgpTaWduZWQtb2ZmLWJ5OiBHcmVnb3IgS293c2tpIDxncmVn
-b3Iua293c2tpQGdtYWlsLmNvbT4KSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9iNDMvbWFpbi5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL2I0My9tYWluLmMJMjAwOS0wNi0xMiAxOToxNTo0MS4wMDAwMDAwMDAgKzAwMDAKKysr
-IGxpbnV4LTIuNi9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvbWFpbi5jCTIwMDktMDYtMTIgMTk6
-MjY6NDIuMDAwMDAwMDAwICswMDAwCkBAIC03OTUsMTMgKzc5NSwxMSBAQAogCXVuc2lnbmVkIGlu
-dCBpOwogCXUzMiBvZmZzZXQ7CiAJdTE2IHZhbHVlOwotCXUxNiBraWR4OwogCiAJLyogS2V5IGlu
-ZGV4L2FsZ28gYmxvY2sgKi8KLQlraWR4ID0gYjQzX2tpZHhfdG9fZncoZGV2LCBpbmRleCk7Ci0J
-dmFsdWUgPSAoKGtpZHggPDwgNCkgfCBhbGdvcml0aG0pOworCXZhbHVlID0gKChpbmRleCA8PCA0
-KSB8IGFsZ29yaXRobSk7CiAJYjQzX3NobV93cml0ZTE2KGRldiwgQjQzX1NITV9TSEFSRUQsCi0J
-CQlCNDNfU0hNX1NIX0tFWUlEWEJMT0NLICsgKGtpZHggKiAyKSwgdmFsdWUpOworCQkJQjQzX1NI
-TV9TSF9LRVlJRFhCTE9DSyArIChpbmRleCAqIDIpLCB2YWx1ZSk7CiAKIAkvKiBXcml0ZSB0aGUg
-a2V5IHRvIHRoZSBLZXkgVGFibGUgUG9pbnRlciBvZmZzZXQgKi8KIAlvZmZzZXQgPSBkZXYtPmt0
-cCArIChpbmRleCAqIEI0M19TRUNfS0VZU0laRSk7CkBAIC04MTUsMTAgKzgxMyw3IEBACiBzdGF0
-aWMgdm9pZCBrZXltYWNfd3JpdGUoc3RydWN0IGI0M193bGRldiAqZGV2LCB1OCBpbmRleCwgY29u
-c3QgdTggKmFkZHIpCiB7CiAJdTMyIGFkZHJ0bXBbMl0gPSB7IDAsIDAsIH07Ci0JdTggcGVyX3N0
-YV9rZXlzX3N0YXJ0ID0gODsKLQotCWlmIChiNDNfbmV3X2tpZHhfYXBpKGRldikpCi0JCXBlcl9z
-dGFfa2V5c19zdGFydCA9IDQ7CisJY29uc3QgdTggcGVyX3N0YV9rZXlzX3N0YXJ0ID0gNDsKIAog
-CUI0M19XQVJOX09OKGluZGV4IDwgcGVyX3N0YV9rZXlzX3N0YXJ0KTsKIAkvKiBXZSBoYXZlIHR3
-byBkZWZhdWx0IFRYIGtleXMgYW5kIHBvc3NpYmx5IHR3byBkZWZhdWx0IFJYIGtleXMuCkBAIC04
-NjUsMTAgKzg2MCw3IEBACiAJCQkgY29uc3QgdTggKmtleSwgc2l6ZV90IGtleV9sZW4sIGNvbnN0
-IHU4ICptYWNfYWRkcikKIHsKIAl1OCBidWZbQjQzX1NFQ19LRVlTSVpFXSA9IHsgMCwgfTsKLQl1
-OCBwZXJfc3RhX2tleXNfc3RhcnQgPSA4OwotCi0JaWYgKGI0M19uZXdfa2lkeF9hcGkoZGV2KSkK
-LQkJcGVyX3N0YV9rZXlzX3N0YXJ0ID0gNDsKKwljb25zdCB1OCBwZXJfc3RhX2tleXNfc3RhcnQg
-PSA0OwogCiAJQjQzX1dBUk5fT04oaW5kZXggPj0gZGV2LT5tYXhfbnJfa2V5cyk7CiAJQjQzX1dB
-Uk5fT04oa2V5X2xlbiA+IEI0M19TRUNfS0VZU0laRSk7CkBAIC04OTEsNyArODgzLDYgQEAKIAkJ
-CSBzdHJ1Y3QgaWVlZTgwMjExX2tleV9jb25mICprZXljb25mKQogewogCWludCBpOwotCWludCBz
-dGFfa2V5c19zdGFydDsKIAogCWlmIChrZXlfbGVuID4gQjQzX1NFQ19LRVlTSVpFKQogCQlyZXR1
-cm4gLUVJTlZBTDsKQEAgLTkwMCwxMiArODkxLDkgQEAKIAkJQjQzX1dBUk5fT04oZGV2LT5rZXlb
-aV0ua2V5Y29uZiA9PSBrZXljb25mKTsKIAl9CiAJaWYgKGluZGV4IDwgMCkgeworCQljb25zdCBp
-bnQgcGVyX3N0YV9rZXlzX3N0YXJ0ID0gNDsKIAkJLyogUGFpcndpc2Uga2V5LiBHZXQgYW4gZW1w
-dHkgc2xvdCBmb3IgdGhlIGtleS4gKi8KLQkJaWYgKGI0M19uZXdfa2lkeF9hcGkoZGV2KSkKLQkJ
-CXN0YV9rZXlzX3N0YXJ0ID0gNDsKLQkJZWxzZQotCQkJc3RhX2tleXNfc3RhcnQgPSA4OwotCQlm
-b3IgKGkgPSBzdGFfa2V5c19zdGFydDsgaSA8IGRldi0+bWF4X25yX2tleXM7IGkrKykgeworCQlm
-b3IgKGkgPSBwZXJfc3RhX2tleXNfc3RhcnQ7IGkgPCBkZXYtPm1heF9ucl9rZXlzOyBpKyspIHsK
-IAkJCWlmICghZGV2LT5rZXlbaV0ua2V5Y29uZikgewogCQkJCS8qIGZvdW5kIGVtcHR5ICovCiAJ
-CQkJaW5kZXggPSBpOwpAQCAtOTIwLDExICs5MDgsNiBAQAogCQlCNDNfV0FSTl9PTihpbmRleCA+
-IDMpOwogCiAJZG9fa2V5X3dyaXRlKGRldiwgaW5kZXgsIGFsZ29yaXRobSwga2V5LCBrZXlfbGVu
-LCBtYWNfYWRkcik7Ci0JaWYgKChpbmRleCA8PSAzKSAmJiAhYjQzX25ld19raWR4X2FwaShkZXYp
-KSB7Ci0JCS8qIERlZmF1bHQgUlgga2V5ICovCi0JCUI0M19XQVJOX09OKG1hY19hZGRyKTsKLQkJ
-ZG9fa2V5X3dyaXRlKGRldiwgaW5kZXggKyA0LCBhbGdvcml0aG0sIGtleSwga2V5X2xlbiwgTlVM
-TCk7Ci0JfQogCWtleWNvbmYtPmh3X2tleV9pZHggPSBpbmRleDsKIAlkZXYtPmtleVtpbmRleF0u
-a2V5Y29uZiA9IGtleWNvbmY7CiAKQEAgLTkzNywxMCArOTIwLDYgQEAKIAkJcmV0dXJuIC1FSU5W
-QUw7CiAJZG9fa2V5X3dyaXRlKGRldiwgaW5kZXgsIEI0M19TRUNfQUxHT19OT05FLAogCQkgICAg
-IE5VTEwsIEI0M19TRUNfS0VZU0laRSwgTlVMTCk7Ci0JaWYgKChpbmRleCA8PSAzKSAmJiAhYjQz
-X25ld19raWR4X2FwaShkZXYpKSB7Ci0JCWRvX2tleV93cml0ZShkZXYsIGluZGV4ICsgNCwgQjQz
-X1NFQ19BTEdPX05PTkUsCi0JCQkgICAgIE5VTEwsIEI0M19TRUNfS0VZU0laRSwgTlVMTCk7Ci0J
-fQogCWRldi0+a2V5W2luZGV4XS5rZXljb25mID0gTlVMTDsKIAogCXJldHVybiAwOwpAQCAtMjk2
-Niw3ICsyOTQ1LDggQEAKIAogc3RhdGljIHZvaWQgYjQzX3NlY3VyaXR5X2luaXQoc3RydWN0IGI0
-M193bGRldiAqZGV2KQogewotCWRldi0+bWF4X25yX2tleXMgPSAoZGV2LT5kZXYtPmlkLnJldmlz
-aW9uID49IDUpID8gNTggOiAyMDsKKwlkZXYtPm1heF9ucl9rZXlzID0gKGRldi0+ZGV2LT5pZC5y
-ZXZpc2lvbiA+PSA1KSA/IDU0IDogMjA7CisJQjQzX1dBUk5fT04oZGV2LT5mdy5yZXYgPCAzNTEp
-OwogCUI0M19XQVJOX09OKGRldi0+bWF4X25yX2tleXMgPiBBUlJBWV9TSVpFKGRldi0+a2V5KSk7
-CiAJZGV2LT5rdHAgPSBiNDNfc2htX3JlYWQxNihkZXYsIEI0M19TSE1fU0hBUkVELCBCNDNfU0hN
-X1NIX0tUUCk7CiAJLyogS1RQIGlzIGEgd29yZCBhZGRyZXNzLCBidXQgd2UgYWRkcmVzcyBTSE0g
-Ynl0ZXdpc2UuCkBAIC0yOTc1LDcgKzI5NTUsNyBAQAogCWRldi0+a3RwICo9IDI7CiAJaWYgKGRl
-di0+ZGV2LT5pZC5yZXZpc2lvbiA+PSA1KSB7CiAJCS8qIE51bWJlciBvZiBSQ01UQSBhZGRyZXNz
-IHNsb3RzICovCi0JCWI0M193cml0ZTE2KGRldiwgQjQzX01NSU9fUkNNVEFfQ09VTlQsIGRldi0+
-bWF4X25yX2tleXMgLSA4KTsKKwkJYjQzX3dyaXRlMTYoZGV2LCBCNDNfTU1JT19SQ01UQV9DT1VO
-VCwgZGV2LT5tYXhfbnJfa2V5cyAtIDQpOwogCX0KIAliNDNfY2xlYXJfa2V5cyhkZXYpOwogfQpJ
-bmRleDogbGludXgtMi42L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My94bWl0LmMKPT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3htaXQuYwkyMDA5
-LTA2LTEyIDE5OjE1OjQxLjAwMDAwMDAwMCArMDAwMAorKysgbGludXgtMi42L2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2I0My94bWl0LmMJMjAwOS0wNi0xMiAxOToyNjo0Mi4wMDAwMDAwMDAgKzAwMDAK
-QEAgLTI1Myw3ICsyNTMsNiBAQAogCQkvKiBIYXJkd2FyZSBhcHBlbmRzIElDVi4gKi8KIAkJcGxj
-cF9mcmFnbWVudF9sZW4gKz0gaW5mby0+Y29udHJvbC5od19rZXktPmljdl9sZW47CiAKLQkJa2V5
-X2lkeCA9IGI0M19raWR4X3RvX2Z3KGRldiwga2V5X2lkeCk7CiAJCW1hY19jdGwgfD0gKGtleV9p
-ZHggPDwgQjQzX1RYSF9NQUNfS0VZSURYX1NISUZUKSAmCiAJCQkgICBCNDNfVFhIX01BQ19LRVlJ
-RFg7CiAJCW1hY19jdGwgfD0gKGtleS0+YWxnb3JpdGhtIDw8IEI0M19UWEhfTUFDX0tFWUFMR19T
-SElGVCkgJgpAQCAtNTc4LDcgKzU3Nyw2IEBACiAJCS8qIFdlIG11c3QgYWRqdXN0IHRoZSBrZXkg
-aW5kZXggaGVyZS4gV2Ugd2FudCB0aGUgInBoeXNpY2FsIgogCQkgKiBrZXkgaW5kZXgsIGJ1dCB0
-aGUgdWNvZGUgcGFzc2VkIGl0IHNsaWdodGx5IGRpZmZlcmVudC4KIAkJICovCi0JCWtleWlkeCA9
-IGI0M19raWR4X3RvX3JhdyhkZXYsIGtleWlkeCk7CiAJCUI0M19XQVJOX09OKGtleWlkeCA+PSBk
-ZXYtPm1heF9ucl9rZXlzKTsKIAogCQlpZiAoZGV2LT5rZXlba2V5aWR4XS5hbGdvcml0aG0gIT0g
-QjQzX1NFQ19BTEdPX05PTkUpIHsKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9iNDMveG1pdC5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL2I0My94bWl0LmgJMjAwOS0wNi0xMiAxOToxNTo0MS4wMDAwMDAwMDAgKzAwMDAKKysr
-IGxpbnV4LTIuNi9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMveG1pdC5oCTIwMDktMDYtMTIgMTk6
-MjY6NDIuMDAwMDAwMDAwICswMDAwCkBAIC0zMDEsMzYgKzMwMSw0IEBACiB2b2lkIGI0M190eF9z
-dXNwZW5kKHN0cnVjdCBiNDNfd2xkZXYgKmRldik7CiB2b2lkIGI0M190eF9yZXN1bWUoc3RydWN0
-IGI0M193bGRldiAqZGV2KTsKIAotCi0vKiBIZWxwZXIgZnVuY3Rpb25zIGZvciBjb252ZXJ0aW5n
-IHRoZSBrZXktdGFibGUgaW5kZXggZnJvbSAiZmlybXdhcmUtZm9ybWF0IgotICogdG8gInJhdy1m
-b3JtYXQiIGFuZCBiYWNrLiBUaGUgZmlybXdhcmUgQVBJIGNoYW5nZWQgZm9yIHRoaXMgYXQgc29t
-ZSByZXZpc2lvbi4KLSAqIFdlIG5lZWQgdG8gYWNjb3VudCBmb3IgdGhhdCBoZXJlLiAqLwotc3Rh
-dGljIGlubGluZSBpbnQgYjQzX25ld19raWR4X2FwaShzdHJ1Y3QgYjQzX3dsZGV2ICpkZXYpCi17
-Ci0JLyogRklYTUU6IE5vdCBzdXJlIHRoZSBjaGFuZ2Ugd2FzIGF0IHJldiAzNTEgKi8KLQlyZXR1
-cm4gKGRldi0+ZncucmV2ID49IDM1MSk7Ci19Ci1zdGF0aWMgaW5saW5lIHU4IGI0M19raWR4X3Rv
-X2Z3KHN0cnVjdCBiNDNfd2xkZXYgKmRldiwgdTggcmF3X2tpZHgpCi17Ci0JdTggZmlybXdhcmVf
-a2lkeDsKLQlpZiAoYjQzX25ld19raWR4X2FwaShkZXYpKSB7Ci0JCWZpcm13YXJlX2tpZHggPSBy
-YXdfa2lkeDsKLQl9IGVsc2UgewotCQlpZiAocmF3X2tpZHggPj0gNCkJLyogSXMgcGVyIFNUQSBr
-ZXk/ICovCi0JCQlmaXJtd2FyZV9raWR4ID0gcmF3X2tpZHggLSA0OwotCQllbHNlCi0JCQlmaXJt
-d2FyZV9raWR4ID0gcmF3X2tpZHg7CS8qIFRYIGRlZmF1bHQga2V5ICovCi0JfQotCXJldHVybiBm
-aXJtd2FyZV9raWR4OwotfQotc3RhdGljIGlubGluZSB1OCBiNDNfa2lkeF90b19yYXcoc3RydWN0
-IGI0M193bGRldiAqZGV2LCB1OCBmaXJtd2FyZV9raWR4KQotewotCXU4IHJhd19raWR4OwotCWlm
-IChiNDNfbmV3X2tpZHhfYXBpKGRldikpCi0JCXJhd19raWR4ID0gZmlybXdhcmVfa2lkeDsKLQll
-bHNlCi0JCXJhd19raWR4ID0gZmlybXdhcmVfa2lkeCArIDQ7CS8qIFJYIGRlZmF1bHQga2V5cyBv
-ciBwZXIgU1RBIGtleXMgKi8KLQlyZXR1cm4gcmF3X2tpZHg7Ci19Ci0KICNlbmRpZiAvKiBCNDNf
-WE1JVF9IXyAqLwo=
---000e0cd28cf0f40bba046c2c85ad--
+> On Tue, 23 Jun 2009 20:52:02 +0200 Krzysztof Halasa wrote:
+> 
+> > Perhaps it's just me :-) but I think we're trying to codify the rules
+> > way too much. The general rules (merge window = new features etc) are
+> > obviously ok but why do we need strict details like intrusive vs
+> > non-intrusive etc? People should just use a common sense and good
+> > judgement and, if in doubt in some particular case, ask. We are unable
+> > to describe all situations in a single text file.
+> 
+> Me2 :)
+
+Well, I do agree that documenting the rules and making them inflexible 
+shouldn't be the primary goal.
+
+But the fact is, "common sense" hasn't worked very well. I consistently 
+get pull requests from maintainers that have well-meaning "fix bugs" in 
+them, and that cause a lot of totally pointless churn.
+
+In fact, this whole discussion has shown one thing: people still think 
+that "bug fix" somehow automatically means that it's appropriate after the 
+merge window. That's simply not so. 
+
+			Linus
