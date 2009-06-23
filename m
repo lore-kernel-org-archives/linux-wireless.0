@@ -1,64 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1639 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757820AbZFKCDp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759023AbZFWLZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 22:03:45 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org, pierre@ossman.eu
-Cc: kalle.valo@iki.fi, san@google.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH/RFC 0/7] wl12xx SDIO interface
-Date: Wed, 10 Jun 2009 22:02:53 -0400
-Message-Id: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	Tue, 23 Jun 2009 07:25:32 -0400
+Subject: Re: [PATCH 1/2 RFC] cfg80211: connect/disconnect API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <20090622170409.GB30147@sortiz.org>
+References: <20090622170409.GB30147@sortiz.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-k5d+B7NZHiUmJTCxJZ16"
+Date: Tue, 23 Jun 2009 13:25:33 +0200
+Message-Id: <1245756333.4184.44.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's v2 of the SDIO interface for wl12xx, still with a FIXME or two.
 
-For my part, this is mainly a port of the Google/TI Android SDIO
-interface logic to the existing SPI driver.  I have confirmed that
-the driver associates and sends some traffic.
+--=-k5d+B7NZHiUmJTCxJZ16
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Pierre, hoping to get your perspective on the SDIO bits in patch 7,
-since I very likely don't know what I'm doing :)  Especially regarding
-the platform code setup, in which the correct GPIOs have to be written
-to turn on the device before probe will work.  For the SPI interface,
-we use spi_register_board_info() for a similar purpose, but I'm not
-sure if there is a standard way to do that for SDIO.  This copies
-Google's platform driver for now.
+And this, symmetric to the first one:
 
-Conversion to readl/writel etc where appropriate is TODO.
+[  302.975063] WARNING: at /home/johannes/sys/wireless-testing/net/wireless=
+/sme.c:95 cfg80211_disconnected+0x9d/0xc0()
+[  302.976435] Hardware name:=20
+[  302.976869] Pid: 1321, comm: wpa_supplicant Tainted: G        W  2.6.30-=
+wl #71
+[  302.977819] Call Trace:
+[  302.980113]  [<ffffffff8024ae93>] warn_slowpath_common+0x73/0xc0
+[  302.981529]  [<ffffffff8024aeef>] warn_slowpath_null+0xf/0x20
+[  302.982356]  [<ffffffff805a578d>] cfg80211_disconnected+0x9d/0xc0
+[  302.983205]  [<ffffffff805a5092>] cfg80211_send_deauth+0x72/0x80
+[  302.995239]  [<ffffffff805af634>] ieee80211_send_deauth_disassoc+0x144/0=
+x160
+[  303.005284]  [<ffffffff805af7e5>] ieee80211_set_disassoc+0x195/0x3d0
+[  303.023982]  [<ffffffff805afac2>] ieee80211_sta_deauthenticate+0x42/0x50
+[  303.027995]  [<ffffffff805b6ef7>] ieee80211_deauth+0x17/0x20
+[  303.028830]  [<ffffffff8059dd7b>] nl80211_deauthenticate+0x14b/0x160
 
-Bob Copeland (7):
-  wl12xx: separate bus i/o code into io.c
-  wl12xx: use wiphy_dev instead of wl->spi->dev
-  wl12xx: introduce wl12xx_if_operations struct
-  wl12xx: make wl12xx_set_partition bus agnostic
-  wl12xx: move module probe methods into spi.c
-  wl12xx: split spi interface into separate module
-  wl12xx: add sdio support
+johannes
 
- drivers/net/wireless/wl12xx/Kconfig  |   24 +++-
- drivers/net/wireless/wl12xx/Makefile |   10 +-
- drivers/net/wireless/wl12xx/acx.c    |    3 +-
- drivers/net/wireless/wl12xx/boot.c   |    3 +-
- drivers/net/wireless/wl12xx/cmd.c    |   15 +-
- drivers/net/wireless/wl12xx/event.c  |    6 +-
- drivers/net/wireless/wl12xx/io.c     |  181 +++++++++++++++++++++
- drivers/net/wireless/wl12xx/io.h     |   62 +++++++
- drivers/net/wireless/wl12xx/main.c   |  152 ++++--------------
- drivers/net/wireless/wl12xx/ps.c     |    3 +-
- drivers/net/wireless/wl12xx/rx.c     |   10 +-
- drivers/net/wireless/wl12xx/sdio.c   |  250 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/spi.c    |  289 ++++++++++++++-------------------
- drivers/net/wireless/wl12xx/spi.h    |   40 -----
- drivers/net/wireless/wl12xx/tx.c     |   64 ++++----
- drivers/net/wireless/wl12xx/wl1251.c |    9 +-
- drivers/net/wireless/wl12xx/wl12xx.h |   14 ++-
- 17 files changed, 752 insertions(+), 383 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/io.c
- create mode 100644 drivers/net/wireless/wl12xx/io.h
- create mode 100644 drivers/net/wireless/wl12xx/sdio.c
+--=-k5d+B7NZHiUmJTCxJZ16
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKQLuqAAoJEODzc/N7+QmatAQQAIE5FeIPIU1rkWqnKjz+OYJJ
+CJn15dqU4amiRjvjNkMp4TXvQ1a6S8EY5hOn8OgfEO6MIFafPrYpxUZReNUIy88M
+yzMM5vE/Jodk5bEU1kYNU6rcVGUURgtXZXLnZQGc27soe9WZRKczfl1ia+ugStfq
+DDKrae8aqXAmzdjrEjdCZd41Ie3MT2QO0jvRGoP2+B+CyAveqellsNl1ju2pRd3a
+ekPcfdfczKWDJ2WhPUWucJdlOxP307pOCvhHcoZLENW5r5zo5FRQCPgMAEEH/x8T
+X4HhltVHiUE8VM4gwPFjVa7TS+LcRit0tRu0SF1865HesTHLbzM3sy86UlF4qptA
+qcHsB6Ee4tFISZqiAH6X7JH5iHmbc80mflNmXDpqAvMXrxxjZ215SQ1ldT8szoaP
+Um7GwlB0KZXmF7vna4FdO/+7xeso2ui0V7MBSwMiadbnwrXL7XIoBwWrkET9DhyJ
+A16O2/ZhON9IfTqFIQA0Bprn0t4z8YKNbiEFDIQedMiBVeev836v8DbkTsEg8VFB
+Zhc2+gJOBcody5dtHM0VgdQbZ6gVtCd/Y8dMG5NFa6n1Gf3nb9Gjjromf09mOil+
+rlqnuhNzJvnXBs8cKMqyLA/dgekgL41mnp+HXvHIr1XAyQu7DQCAeEPyytU5negv
+w6tiNjnm0fiLMpE1olAK
+=Oi4I
+-----END PGP SIGNATURE-----
+
+--=-k5d+B7NZHiUmJTCxJZ16--
 
