@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.162]:24598 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754194AbZFGPLc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 11:11:32 -0400
-Message-ID: <4A2BD8A5.4040302@hartkopp.net>
-Date: Sun, 07 Jun 2009 17:11:33 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-06-04
-References: <20090604152011.GC2839@tuxdriver.com> <20090607.033751.191866033.davem@davemloft.net> <4A2BCC41.1060508@hartkopp.net> <20090607145830.GA2736@tuxdriver.com>
-In-Reply-To: <20090607145830.GA2736@tuxdriver.com>
-Content-Type: text/plain; charset=us-ascii
+Received: from vena.lwn.net ([206.168.112.25]:48427 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753932AbZFWTGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 15:06:03 -0400
+Date: Tue, 23 Jun 2009 13:06:02 -0600
+From: Jake Edge <jake@lwn.net>
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	torvalds@linux-foundation.org, Pavel Machek <pavel@ucw.cz>,
+	Greg KH <greg@kroah.com>, "corbet\@lwn.net" <corbet@lwn.net>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan\@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata\@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for
+ rc-series and merge window
+Message-ID: <20090623130602.6cd6b713@chukar>
+In-Reply-To: <m3bpoen5pp.fsf@intrepid.localdomain>
+References: <20090622222217.GH23972@bombadil.infradead.org>
+	<m3fxdqj2bz.fsf@lwn.net>
+	<m3bpoen5pp.fsf@intrepid.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sun, Jun 07, 2009 at 04:18:41PM +0200, Oliver Hartkopp wrote:
->> David Miller wrote:
->>> From: "John W. Linville" <linville@tuxdriver.com>
->>> Date: Thu, 4 Jun 2009 11:20:11 -0400
->>>
->>>> Hopefully this is (almost?) the last wireless pull request for
->>>> non-bugfix patches intended for 2.6.31...
->>>>
->> (..)
->>
->>>> Please let me know if there are problems!
->>> Pulled into net-next-2.6 and I'll push it back out to kernel.org
->>> after some build testing.
->> Hi John,
->>
->> after pulling the latest net-next-2.6 i got this warning which is probably
->> caused by CONFIG_RFKILL=m in my config:
->>
->> hartko@vwagwolkf320:~/net-next-2.6$ make oldconfig
->> scripts/kconfig/conf -o arch/x86/Kconfig
->> .config:614:warning: symbol value 'm' invalid for RFKILL_INPUT
-> 
-> That functionality is no longer available as a module.  If you need
-> it, then select Y.
+On Tue, 23 Jun 2009 20:52:02 +0200 Krzysztof Halasa wrote:
 
-Just some additional nitpicking:
+> Perhaps it's just me :-) but I think we're trying to codify the rules
+> way too much. The general rules (merge window = new features etc) are
+> obviously ok but why do we need strict details like intrusive vs
+> non-intrusive etc? People should just use a common sense and good
+> judgement and, if in doubt in some particular case, ask. We are unable
+> to describe all situations in a single text file.
 
-You should update net/rfkill/Kconfig as it still allows a tristate selection
-for RFKILL and the comment "To compile this driver as a module ..." should be
-removed also.
+Me2 :)
 
-Regards,
-Oliver
+That may be a flaw in some parts of this doc is that it tries to
+get too detailed, too rigid, etc. for a process that is more fluid and
+has lots of independent parts each working in its own slightly
+different way.  It does seem like there is value in much of what's
+here, but there just aren't any black-and-white rules for exactly how
+patches are handled.
 
+jake
+
+-- 
+Jake Edge - LWN - jake@lwn.net - http://lwn.net
