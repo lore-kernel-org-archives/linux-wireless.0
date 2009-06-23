@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35531 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754651AbZFEFlx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46463 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbZFWLSD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 01:41:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 15/15] ath9k: remove rate control wraper
-Date: Fri,  5 Jun 2009 01:41:42 -0400
-Message-Id: <1244180502-4323-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 23 Jun 2009 07:18:03 -0400
+Subject: [PATCH] wext: default to y
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 23 Jun 2009 13:18:01 +0200
+Message-Id: <1245755881.4184.41.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the cleanup we just use get_rate as a wrapper, skip
-the wrapper.
+The way I initially thought we could do wireless extensions
+is by making all the compat code in cfg80211 be independent
+of CONFIG_WIRELESS_EXT, but this is turning out to not be
+feasible. Therefore, fix the Kconfig help text and make the
+option default to yes, so people won't get a nasty surprise
+when mac80211 will get rid of its 'select WIRELESS_EXT' any
+time now.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/rc.c |   18 ++++--------------
- 1 files changed, 4 insertions(+), 14 deletions(-)
+ net/wireless/Kconfig |   12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 2180180..3b9b819 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -792,11 +792,11 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	tx_info->control.rts_cts_rate_idx = cix;
- }
+--- wireless-testing.orig/net/wireless/Kconfig	2009-06-23 13:11:05.000000000 +0200
++++ wireless-testing/net/wireless/Kconfig	2009-06-23 13:15:02.000000000 +0200
+@@ -51,19 +51,13 @@ config WIRELESS_OLD_REGULATORY
  
--static void ath_rc_ratefind(struct ath_softc *sc,
--			    struct ath_rate_priv *ath_rc_priv,
--			    struct ieee80211_tx_rate_control *txrc,
--			    struct ieee80211_sta *sta)
-+static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
-+			 struct ieee80211_tx_rate_control *txrc)
- {
-+	struct ath_softc *sc = priv;
-+	struct ath_rate_priv *ath_rc_priv = priv_sta;
- 	const struct ath_rate_table *rate_table;
- 	struct sk_buff *skb = txrc->skb;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -1535,16 +1535,6 @@ exit:
- 	kfree(tx_info_priv);
- }
+ config WIRELESS_EXT
+ 	bool "Wireless extensions"
+-	default n
++	default y
+ 	---help---
+ 	  This option enables the legacy wireless extensions
+ 	  (wireless network interface configuration via ioctls.)
  
--static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
--			 struct ieee80211_tx_rate_control *txrc)
--{
--	struct ath_softc *sc = priv;
--	struct ath_rate_priv *ath_rc_priv = priv_sta;
+-	  Wireless extensions will be replaced by cfg80211 and
+-	  will be required only by legacy drivers that implement
+-	  wireless extension handlers. This option does not
+-	  affect the wireless-extension backward compatibility
+-	  code in cfg80211.
 -
--	/* Find tx rate for unicast frames */
--	ath_rc_ratefind(sc, ath_rc_priv, txrc, sta);
--}
--
- static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
-                           struct ieee80211_sta *sta, void *priv_sta)
- {
--- 
-1.6.0.6
+-	  Say N (if you can) unless you know you need wireless
+-	  extensions for external modules.
++	  Say Y unless you've upgraded all your userspace to use
++	  nl80211 instead of wireless extensions.
+ 
+ config WIRELESS_EXT_SYSFS
+ 	bool "Wireless extensions sysfs files"
+
 
