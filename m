@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gut75-1-81-57-27-189.fbx.proxad.net ([81.57.27.189]:39817 "EHLO
-	n4.mandriva.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753803AbZFRQDm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 12:03:42 -0400
-From: Pascal Terjan <pterjan@mandriva.com>
-To: Daniel Drake <dsd@gentoo.org>, kune@deine-taler.de
-Cc: linux-wireless@vger.kernel.org,
-	Pascal Terjan <pterjan@mandriva.com>
-Subject: [PATCH] 07b8:6001 is a ZD1211B
-Date: Thu, 18 Jun 2009 17:54:03 +0200
-Message-Id: <1245340443-13214-1-git-send-email-pterjan@mandriva.com>
+Received: from mail.atheros.com ([12.36.123.2]:55314 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750775AbZFWFgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 01:36:33 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 22:36:36 -0700
+Date: Tue, 23 Jun 2009 11:05:02 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k: ath9k_ps_restore used after ath9k_hw_detach
+Message-ID: <20090623053500.GA32640@vasanth-laptop>
+References: <4A3FB00F.1020104@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A3FB00F.1020104@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On a shuttle machine here we got 07b8:6001 device, handled by zd1211rw, which does not work.
-Scanning is OK but association does not work, we get "direct probe to AP xxx timed out"
+On Mon, Jun 22, 2009 at 09:53:43PM +0530, Jiri Slaby wrote:
+> Hi,
+> 
+> In ath_detach, there is:
+> ath9k_hw_detach(sc->sc_ah);
+> ath9k_exit_debug(sc);
+> ath9k_ps_restore(sc);
+> which is obviously wrong. sc->ah is dereferenced in restore, but it's
+> already freed since detach.
 
-It appears that this simple patch makes the device work perfectly.
+Yes, this is wrong.
+> 
+> I don't quite understand why you try to set power while it's being
+> already set to full sleep in ath9k_hw_detach.
+>So I think the fix is to
+> remove the restore call.
 
-This id was already there in initial import of the driver so I don't know if it has ever been
-working as ZD1211 (which would mean they changed it and kept the id :( ).
+Yes, restoring the power state in ath_detach() is pointless.
 
-Signed-off-by: Pascal Terjan <pterjan@mandriva.com>
----
- drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I'll fix it,Thanks!.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index f0e5e94..d04a69d 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -38,7 +38,6 @@ static struct usb_device_id usb_ids[] = {
- 	/* ZD1211 */
- 	{ USB_DEVICE(0x0ace, 0x1211), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0ace, 0xa211), .driver_info = DEVICE_ZD1211 },
--	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0df6, 0x9071), .driver_info = DEVICE_ZD1211 },
-@@ -86,6 +85,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x0471, 0x1237), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x07fa, 0x1196), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0df6, 0x0036), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
--- 
-1.6.2.4
+Vasanth
 
