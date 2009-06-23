@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759032AbZFIJbI (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49564 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504AbZFWP3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 05:31:08 -0400
-Subject: Re: [PATCH] sony-laptop: no need to unblock rfkill on load
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mattia Dongili <malattia@linux.it>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux acpi <linux-acpi@vger.kernel.org>
-In-Reply-To: <20090609092112.GE7682@kamineko.org>
-References: <4A2CE86F.9040209@tuffmail.co.uk>
-	 <1244457418.18863.8.camel@johannes.local>
-	 <20090608224915.GA4583@kamineko.org> <4A2E1DE3.4020509@tuffmail.co.uk>
-	 <20090609092112.GE7682@kamineko.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NlYtVYRFLe8IqeYQ4aWp"
-Date: Tue, 09 Jun 2009 11:30:34 +0200
-Message-Id: <1244539834.4672.6.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 23 Jun 2009 11:29:47 -0400
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: [PATCH 05/10] nfs: Use rcu_barrier() on module unload.
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Date: Tue, 23 Jun 2009 17:04:19 +0200
+Message-ID: <20090623150419.22490.94087.stgit@localhost>
+In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
+References: <20090623150330.22490.87327.stgit@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The exit path unregister and destroys a lot of stuff, but I have not
+verified that nfs_free_delegation() cannot start new call_rcu() callbacks.
 
---=-NlYtVYRFLe8IqeYQ4aWp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+---
 
-On Tue, 2009-06-09 at 18:21 +0900, Mattia Dongili wrote:
+ fs/nfs/inode.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> > It just bothered me because I was effectively reverting a recent commit=
-. =20
-> > I figuired I should let you know.  In case it didn't work, when it was=20
-> > merged you'd know why I did it and who to blame.  But there is always G=
-it=20
-> > history for that :-).
->=20
-> Errm... now that I look at that patch more closely, the code you're
-> modifying is not upstream either.
-> Anyway thanks for the ping, I'll take a look at what's going on in the
-> wireless-testing tree ;)
-
-Sorry, I guess I forgot to copy you on the rfkill rewrite. Basically
-I've rewritten the rfkill APIs and ported sony. Bug
-http://bugzilla.kernel.org/show_bug.cgi?id=3D13458 is related to that too.
-
-johannes
-
---=-NlYtVYRFLe8IqeYQ4aWp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKLiu3AAoJEODzc/N7+Qma9f8QALSo7jV5bLOworPnSP8+vaVM
-y+VtSv5USPstYTaI+J4tictJfAQbZOQmekWhE+sklq5BclfXYt/6pkVtBkm74F9C
-ll2SRBoDb6Kw1PGfSt3Wflcq5aU5WiMWkRWzzn6pDj1QiI28Des3jffLFj4/hAZl
-9fBgyFdI+V8j3zkBBgFcNx2wkTJIp9gUG3J8dzXvY6+AdkzjHKPcaIxu3VPwMajy
-XEAPX4T6Ga6KxsTc91EIdgrnn3sdG+9w9j0ddeNg+mdDFo5tcG+qTNwIvEhAoAFE
-nqjQwCF6VVm1sM+faEqtgNWsLQ7SySAuuFaQ+DbgpbmEoi9Y1mIkxlzT1B2Uc5p5
-jnTdCNDcUt6fMdSYpAw9D1E22aTcENu0FheuZZ0v4NTQvMM13DIOaiL4K+CJ3DBa
-kj/+8MeWoO7kGI/bIK+iO/td+SRt91bnPkumqH5kpab2nrbmAci5ON6araxCktiZ
-VQtHgBs18okYSh21ewOU2FvhmOYG9FIco4cqg+o8WukYobBeT8RxY1L1W01n5Qg8
-o4DBhS2CKQg4Ea/Jbr9rkYtazQ6axU/JoGDQqsk13ODHfX+4ysxbhr8qDzhmnZma
-te6QeVjodRTPg/Tiz8/0W+RDdoedirdO/dkUm2NoUT9L0II8zlKP8Rio25jUcGkF
-AL8OmP09ReXRLrCmtAKI
-=rVdO
------END PGP SIGNATURE-----
-
---=-NlYtVYRFLe8IqeYQ4aWp--
+diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+index 64f8719..40bf2b7 100644
+--- a/fs/nfs/inode.c
++++ b/fs/nfs/inode.c
+@@ -1518,6 +1518,7 @@ static void __exit exit_nfs_fs(void)
+ 	unregister_nfs_fs();
+ 	nfs_fs_proc_exit();
+ 	nfsiod_stop();
++	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+ }
+ 
+ /* Not quite true; I just maintain it */
 
