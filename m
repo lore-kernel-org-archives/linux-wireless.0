@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43402 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751729AbZFVOsB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 10:48:01 -0400
-Subject: Re: [PATCH] libertas: fix card cleanup order in SDIO driver
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1245291319-26118-1-git-send-email-andrey@cozybit.com>
-References: <1245291319-26118-1-git-send-email-andrey@cozybit.com>
-Content-Type: text/plain
-Date: Mon, 22 Jun 2009 10:48:02 -0400
-Message-Id: <1245682082.4338.25.camel@dhcp-100-3-98.bos.redhat.com>
-Mime-Version: 1.0
+Received: from mail-yx0-f196.google.com ([209.85.210.196]:59133 "EHLO
+	mail-yx0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753219AbZFWGLM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 02:11:12 -0400
+Received: by yxe34 with SMTP id 34so355403yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 23:11:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A4009C6.8020208@gmail.com>
+References: <43e72e890906220847u4faaeb2paa15365360c3c080@mail.gmail.com>
+	<4A3FDAC2.7020209@gmail.com> <43e72e890906221358m4a32d747ge67a5af2f74841e0@mail.gmail.com>
+	<4A4009C6.8020208@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Jun 2009 22:28:14 -0700
+Message-ID: <43e72e890906222228qc131509j48d1946eb58db6b0@mail.gmail.com>
+Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
+To: Dmitri Seletski <drjoms@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	gaurav.jauhar@atheros.com,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-06-17 at 19:15 -0700, Andrey Yurovsky wrote:
-> The SDIO driver sets the surpriseremoved flag before calling
-> lbs_remove_card.  With IEEE PS enabled, lbs_remove_card must issue a
-> command to exit IEEE PS mode, however with that flag set the command
-> path is blocked and the card is never taken out of IEEE PS mode.  This
-> step is required to ensure that the driver can be reloaded.  This patch
-> moves the setting of surpriseremoved after lbs_remove_card is called.
-> 
-> Tested with V9 firmware by ensuring that IEEE PS is disabled when the
-> driver is removed.  Reloading the driver is not fully tested due to a
-> separate issue with module reload in the SDIO driver, however this
-> patch at least leaves the card in a better state when we bring the
-> driver down.
-> 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+On Mon, Jun 22, 2009 at 3:46 PM, Dmitri Seletski<drjoms@gmail.com> wrote:
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+>>> Hello Luis,
+>>> Was that problem i was bothering you with being solved?
 
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 8cdb88c..d48ed62 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -1096,11 +1096,11 @@ static void if_sdio_remove(struct sdio_func *func)
->  			lbs_pr_alert("CMD_FUNC_SHUTDOWN cmd failed\n");
->  	}
->  
-> -	card->priv->surpriseremoved = 1;
->  
->  	lbs_deb_sdio("call remove card\n");
->  	lbs_stop_card(card->priv);
->  	lbs_remove_card(card->priv);
-> +	card->priv->surpriseremoved = 1;
->  
->  	flush_workqueue(card->workqueue);
->  	destroy_workqueue(card->workqueue);
+Dmitry, by any chance, do you know if your AP has a new firmware release?
 
+  Luis
