@@ -1,65 +1,83 @@
-Return-path: <joseluisvargasaraoz@hotmail.com>
-Message-ID: <SNT117-W29906DB70F06BAA727E2B7A8480@phx.gbl>
-Content-Type: multipart/alternative;
-	boundary="_b343d78d-058a-4942-871e-5f70ae775f68_"
-From: =?iso-8859-1?Q?Jos=E9_Luis_Vargas_Araoz?=
-	<joseluisvargasaraoz@hotmail.com>
-To: <lrodriguez@atheros.com>, <linville@tuxdriver.com>,
-	<johannes@sipsolutions.net>
-CC: lista linux wireless <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@lists.ath9k.org>, <yi.zhu@intel.com>,
-	<reinette.chatre@intel.com>, <ipw3945-devel@lists.sourceforge.net>
-Subject: Help ath5k
-Date: Fri, 5 Jun 2009 09:56:01 -0500
-In-Reply-To: <1244180502-4323-14-git-send-email-lrodriguez@atheros.com>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
- <1244180502-4323-14-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Return-path: <linux-wireless-owner@vger.kernel.org>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753838AbZFWPmV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 11:42:21 -0400
+Subject: [PATCH] cfg80211: remove wireless_dev->bssid
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 23 Jun 2009 17:42:21 +0200
+Message-Id: <1245771741.21314.39.camel@johannes.local>
+Mime-Version: 1.0
+Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_b343d78d-058a-4942-871e-5f70ae775f68_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+This variable isn't necessary -- the wext code keeps
+track of the BSSID itself, and otherwise we have
+current_bss.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |    1 -
+ net/wireless/ibss.c    |   13 +++----------
+ 2 files changed, 3 insertions(+), 11 deletions(-)
+
+--- wireless-testing.orig/net/wireless/ibss.c	2009-06-23 17:27:00.000000000 +0200
++++ wireless-testing/net/wireless/ibss.c	2009-06-23 17:41:07.000000000 +0200
+@@ -24,9 +24,6 @@ void cfg80211_ibss_joined(struct net_dev
+ 	if (WARN_ON(!wdev->ssid_len))
+ 		return;
+ 
+-	if (memcmp(bssid, wdev->bssid, ETH_ALEN) == 0)
+-		return;
+-
+ 	bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
+ 			       wdev->ssid, wdev->ssid_len,
+ 			       WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
+@@ -41,7 +38,6 @@ void cfg80211_ibss_joined(struct net_dev
+ 
+ 	cfg80211_hold_bss(bss);
+ 	wdev->current_bss = bss;
+-	memcpy(wdev->bssid, bssid, ETH_ALEN);
+ 
+ 	nl80211_send_ibss_bssid(wiphy_to_dev(wdev->wiphy), dev, bssid, gfp);
+ #ifdef CONFIG_WIRELESS_EXT
+@@ -87,7 +83,6 @@ void cfg80211_clear_ibss(struct net_devi
+ 
+ 	wdev->current_bss = NULL;
+ 	wdev->ssid_len = 0;
+-	memset(wdev->bssid, 0, ETH_ALEN);
+ #ifdef CONFIG_WIRELESS_EXT
+ 	if (!nowext)
+ 		wdev->wext.ibss.ssid_len = 0;
+@@ -356,12 +351,10 @@ int cfg80211_ibss_wext_giwap(struct net_
+ 
+ 	ap_addr->sa_family = ARPHRD_ETHER;
+ 
+-	if (wdev->wext.ibss.bssid) {
++	if (wdev->current_bss)
++		memcpy(ap_addr->sa_data, wdev->current_bss->bssid, ETH_ALEN);
++	else
+ 		memcpy(ap_addr->sa_data, wdev->wext.ibss.bssid, ETH_ALEN);
+-		return 0;
+-	}
+-
+-	memcpy(ap_addr->sa_data, wdev->bssid, ETH_ALEN);
+ 	return 0;
+ }
+ /* temporary symbol - mark GPL - in the future the handler won't be */
+--- wireless-testing.orig/include/net/cfg80211.h	2009-06-23 17:27:14.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-06-23 17:39:16.000000000 +0200
+@@ -1170,7 +1170,6 @@ struct wireless_dev {
+ 
+ 	/* currently used for IBSS - might be rearranged in the future */
+ 	struct cfg80211_bss *current_bss;
+-	u8 bssid[ETH_ALEN];
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	u8 ssid_len;
+ 
 
 
-Good morning all.
-I wanna configured LinuxVoyage (Debian distro kernel 2.6.26) in 802.11a wit=
-h Ath5k.
-How i've to modify /etc/network/interfaces?
-
-Thanks for your time.
-
-
-_________________________________________________________________
-News=2C entertainment and everything you care about at Live.com. Get it now=
-!
-http://www.live.com/getstarted.aspx=
-
---_b343d78d-058a-4942-871e-5f70ae775f68_
-Content-Type: text/html; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-<html>
-<head>
-<style>
-.hmmessage P
-{
-margin:0px=3B
-padding:0px
-}
-body.hmmessage
-{
-font-size: 10pt=3B
-font-family:Verdana
-}
-</style>
-</head>
-<body class=3D'hmmessage'>
-Good morning all.<br>I wanna configured LinuxVoyage (Debian distro kernel 2=
-.6.26) in 802.11a with Ath5k.<br>How i've to modify /etc/network/interfaces=
-?<br><br>Thanks for your time.<br><br><br /><hr />Get news=2C entertainment=
- and everything you care about at Live.com. <a href=3D'http://www.live.com/=
-getstarted.aspx ' target=3D'_new'>Check it out!</a></body>
-</html>=
-
---_b343d78d-058a-4942-871e-5f70ae775f68_--
