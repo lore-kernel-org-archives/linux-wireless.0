@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbZFIOTC (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:48003 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756958AbZFWQXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 10:19:02 -0400
-Subject: [PATCH] mac80211: don't use master netdev name
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 09 Jun 2009 16:18:32 +0200
-Message-Id: <1244557112.4672.20.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 23 Jun 2009 12:23:33 -0400
+Message-ID: <4A410185.3090706@trash.net>
+Date: Tue, 23 Jun 2009 18:23:33 +0200
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: Jesper Dangaard Brouer <hawk@comx.dk>
+CC: "David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, christine.caulfield@googlemail.com,
+	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+Subject: Re: [PATCH 10/10] nf_conntrack: Use rcu_barrier().
+References: <20090623150330.22490.87327.stgit@localhost> <20090623150444.22490.27931.stgit@localhost>
+In-Reply-To: <20090623150444.22490.27931.stgit@localhost>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Always use the wiphy name instead.
+Jesper Dangaard Brouer wrote:
+> I'm not sure which is are most optimal place to call rcu_barrier().
+> The patch probably calls rcu_barrier() too much, but its a better
+> safe than sorry approach.
+> 
+> There is embedded some comments that I would like Patrick McHardy
+> to look at.
+> 
+> diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+> index 5f72b94..cea4537 100644
+> --- a/net/netfilter/nf_conntrack_core.c
+> +++ b/net/netfilter/nf_conntrack_core.c
+> @@ -1084,6 +1084,8 @@ static void nf_conntrack_cleanup_init_net(void)
+>  {
+>  	nf_conntrack_helper_fini();
+>  	nf_conntrack_proto_fini();
+> +	rcu_barrier();
+> +	/* Need to wait for call_rcu() before dealloc the kmem_cache */
+>  	kmem_cache_destroy(nf_conntrack_cachep);
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c  |    4 ++--
- net/mac80211/mlme.c |    8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Which call_rcu() is this referring to? If its the conntrack destruction,
+that one is gone in the current kernel and I think destruction is
+handled properly by the sl*b-allocators (SLAB_DESTROY_BY_RCU).
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-06-09 16:17:44.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-06-09 16:17:47.000000000 +0200
-@@ -793,13 +793,13 @@ static void ieee80211_sta_wmm_params(str
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 		printk(KERN_DEBUG "%s: WMM queue=%d aci=%d acm=%d aifs=%d "
- 		       "cWmin=%d cWmax=%d txop=%d\n",
--		       local->mdev->name, queue, aci, acm, params.aifs, params.cw_min,
--		       params.cw_max, params.txop);
-+		       wiphy_name(local->hw.wiphy), queue, aci, acm,
-+		       params.aifs, params.cw_min, params.cw_max, params.txop);
- #endif
- 		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
- 			printk(KERN_DEBUG "%s: failed to set TX queue "
--			       "parameters for queue %d\n", local->mdev->name,
--			       queue);
-+			       "parameters for queue %d\n",
-+			       wiphy_name(local->hw.wiphy), queue);
- 	}
- }
- 
---- wireless-testing.orig/net/mac80211/cfg.c	2009-06-09 16:17:44.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-06-09 16:17:47.000000000 +0200
-@@ -1122,8 +1122,8 @@ static int ieee80211_set_txq_params(stru
- 	p.txop = params->txop;
- 	if (drv_conf_tx(local, params->queue, &p)) {
- 		printk(KERN_DEBUG "%s: failed to set TX queue "
--		       "parameters for queue %d\n", local->mdev->name,
--		       params->queue);
-+		       "parameters for queue %d\n",
-+		       wiphy_name(local->hw.wiphy), params->queue);
- 		return -EINVAL;
- 	}
- 
+> @@ -1118,6 +1120,9 @@ void nf_conntrack_cleanup(struct net *net)
+>  	/* This makes sure all current packets have passed through
+>  	   netfilter framework.  Roll on, two-stage module
+>  	   delete... */
+> +	/* hawk@comx.dk 2009-06-20: Think this should be replaced by a
+> +          rcu_barrier() ???
+> +	*/
+>  	synchronize_net();
 
+AFAICT this one is used to make sure the old value of the ip_ct_attach
+hook is not visible anymore before beginning cleanup and is not needed
+for anything else.
 
+>  	nf_conntrack_cleanup_net(net);
+> diff --git a/net/netfilter/nf_conntrack_standalone.c b/net/netfilter/nf_conntrack_standalone.c
+> index 1935153..29c6cd0 100644
+> --- a/net/netfilter/nf_conntrack_standalone.c
+> +++ b/net/netfilter/nf_conntrack_standalone.c
+> @@ -500,6 +500,8 @@ static void nf_conntrack_net_exit(struct net *net)
+>  	nf_conntrack_standalone_fini_sysctl(net);
+>  	nf_conntrack_standalone_fini_proc(net);
+>  	nf_conntrack_cleanup(net);
+> +	/* hawk@comx.dk: Think rcu_barrier() should to be called earlier? */
+> +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+>  }
+
+Which call_rcu() is this referring to? We should place them in
+the cleanup sub-functions to make this clearly visible.
