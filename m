@@ -1,72 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35368 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752847AbZF3Pd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 11:33:26 -0400
-Date: Tue, 30 Jun 2009 17:35:26 +0200
-From: Samuel Ortiz <samuel.ortiz@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: set conn.state properly in the connect() case
-Message-ID: <20090630153522.GA28206@sortiz.org>
-References: <20090630115245.675553951@sipsolutions.net> <20090630115301.625487032@sipsolutions.net>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46209 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751071AbZFWTFn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 15:05:43 -0400
+Date: Tue, 23 Jun 2009 12:04:54 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Krzysztof Halasa <khc@pm.waw.pl>
+cc: Jake Edge <jake@lwn.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Pavel Machek <pavel@ucw.cz>, Greg KH <greg@kroah.com>,
+	"corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for
+ rc-series and merge window
+In-Reply-To: <m3bpoen5pp.fsf@intrepid.localdomain>
+Message-ID: <alpine.LFD.2.01.0906231156220.3240@localhost.localdomain>
+References: <20090622222217.GH23972@bombadil.infradead.org> <m3fxdqj2bz.fsf@lwn.net> <m3bpoen5pp.fsf@intrepid.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20090630115301.625487032@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-We need to set the conn.state to ASSOCIATING for the ->connect() path. By
-default, it is set to 0, i.e. SCANNING, which causes sme_scan_done() to
-eventually call conn_do_work(), which then would call assoc() and auth()
-blindly. That's why we also bug on those hooks not being defined there.
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
----
- net/wireless/sme.c |    3 +++
- 1 file changed, 3 insertions(+)
+On Tue, 23 Jun 2009, Krzysztof Halasa wrote:
+> 
+> I would say, to address regressions and fix bugs. Not only those added
+> recently, though obviously older bugs should have already been fixed.
 
-Index: iwm-2.6/net/wireless/sme.c
-===================================================================
---- iwm-2.6.orig/net/wireless/sme.c	2009-06-30 16:39:58.000000000 +0200
-+++ iwm-2.6/net/wireless/sme.c	2009-06-30 17:17:14.000000000 +0200
-@@ -103,6 +103,7 @@ static int cfg80211_conn_do_work(struct 
- 		u.auth_req.ie = NULL;
- 		u.auth_req.ie_len = 0;
- 		wdev->conn.state = CFG80211_CONN_AUTHENTICATING;
-+		BUG_ON(!drv->ops->auth);
- 		return drv->ops->auth(wdev->wiphy, wdev->netdev, &u.auth_req);
- 	case CFG80211_CONN_ASSOCIATE_NEXT:
- 		u.assoc_req.chan = wdev->conn.params.channel;
-@@ -115,6 +116,7 @@ static int cfg80211_conn_do_work(struct 
- 		memcpy(&u.assoc_req.crypto, &wdev->conn.params.crypto,
- 			sizeof(u.assoc_req.crypto));
- 		wdev->conn.state = CFG80211_CONN_ASSOCIATING;
-+		BUG_ON(!drv->ops->assoc);
- 		return drv->ops->assoc(wdev->wiphy, wdev->netdev,
- 					&u.assoc_req);
- 	default:
-@@ -455,6 +457,7 @@ int cfg80211_connect(struct cfg80211_reg
- 		return err;
- 	} else {
- 		wdev->sme_state = CFG80211_SME_CONNECTING;
-+		wdev->conn.state = CFG80211_CONN_ASSOCIATING;
- 		err = rdev->ops->connect(&rdev->wiphy, dev, connect);
- 		if (err) {
- 			wdev->sme_state = CFG80211_SME_IDLE;
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
----------------------------------------------------------------------
-Intel Corporation SAS (French simplified joint stock company)
-Registered headquarters: "Les Montalets"- 2, rue de Paris, 
-92196 Meudon Cedex, France
-Registration Number:  302 456 199 R.C.S. NANTERRE
-Capital: 4,572,000 Euros
+The thing is, I don't take bug fixes late in the -rc just because they are 
+bug fixes.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+And I really shouldn't.
 
+If it's an old bug, and doesn't cause an oops or a security issue, it had 
+damn well better wait for the next merge window. There is absolutely _no_ 
+reason to just blindly "fix bugs" at the end of the rc stage, because 
+quite frankly, the risks coming from fixing a bug is often bigger than the 
+advantage.
+
+Even "obvious bugs" may be things that people depend on, or that other 
+parts of the kernel simply rely on indirectly. For a recent example of 
+this, see what happened when we fixed an obvious bug on x86-64 to check 
+user space addresses properly: it turns out that 'strnlen_user()' depended 
+on the bug ("misfeature"), and had to be fixed when the bug was fixed.
+
+So no. Regressions really are _different_ from "fixing bugs".
+
+Regressions need to be fixed even if it may even re-introduce another 
+long-time bug - simply because we're much better off with a _consistent_ 
+set of bugs where people can depend on their machine either working or 
+not, than with some kind of unstable situation that never gets anywhere 
+(we found that out the hard way with both ACPI and power management).
+
+So the end result is:
+
+ - we always want to fix bugs
+
+ - but the primary time to fix bugs is during the merge window
+
+ - after the merge window closes, the effort should be on _regressions_, 
+   nothing else.
+
+ - security issues and oopses etc catastrophic bugs obviously need to be 
+   handled at any stage.
+
+IOW, "it fixes a bug" is _not_ sufficient. The real issue is "it _really_ 
+can't wait to the next merge window", not "bug or not".
+
+				Linus
