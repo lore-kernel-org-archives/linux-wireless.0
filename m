@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:63177 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373AbZF2MoC (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:42313 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451AbZFWICH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 08:44:02 -0400
+	Tue, 23 Jun 2009 04:02:07 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Proposal enquiry for Wireless Roaming feature enhancement
+Date: Tue, 23 Jun 2009 10:01:29 +0200
+Cc: Kalle Valo <kalle.valo@iki.fi>, Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Balaji Ravindran <b@w1an.in>,
+	Mircea Gherzan <mgherzan@gmail.com>
+References: <4A38672F.9090904@w1an.in> <1245681796.4338.24.camel@dhcp-100-3-98.bos.redhat.com> <87k534nwy3.fsf@litku.valot.fi>
+In-Reply-To: <87k534nwy3.fsf@litku.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <4A48A196.3060409@tuffmail.co.uk>
-References: <4A48A196.3060409@tuffmail.co.uk>
-Date: Mon, 29 Jun 2009 14:44:02 +0200
-Message-ID: <71cd59b00906290544y71061c31p597efcb6c8ceeabd@mail.gmail.com>
-Subject: Re: [PATCH] eeepc-laptop: fix hot-unplug on resume
-From: Corentin Chary <corentin.chary@gmail.com>
-To: Len Brown <lenb@kernel.org>
-Cc: linux acpi <linux-acpi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200906231001.29728.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 29, 2009 at 1:12 PM, Alan
-Jenkins<alan-jenkins@tuffmail.co.uk> wrote:
-> The patch below fixes a regression introduced by the rfkill rewrite.
-> Please consider it for inclusion in 2.6.31 via the ACPI tree.
->
-> Thanks
-> Alan
+> Can you tell anything about the configuration parameters
+> available? For example, can the driver configure an rssi
+> threshold for enabling background scanning[1]?
 
-Hi Len,
+Orinoco and WLAGS Hermes1 and Hermes2 has some "sensitivy" 
+setting, from 1..3:
 
-Please merge this patch in ACPI tree.
-Thanks,
+$ iwconfig eth1 sens 3
 
--- 
-Corentin Chary
-http://xf.iksaif.net - http://uffs.org
+What exactly this does is a bit opaque and handled by the 
+firmware.
+
+
+
+
+Madwifi does roaming OK, here we have many iwpriv settings that 
+can be used to fine-tune this:
+
+$ iwpriv eth1 bgscan 0
+$ pre-up iwpriv eth1 rssi11g 26
+$ pre-up iwpriv eth1 rssi11b 26
+
+But this isn't exactly the driver, but their own 802.11 
+implementation.
