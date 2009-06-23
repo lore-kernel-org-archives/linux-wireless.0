@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.infomaniak.ch ([84.16.68.89]:46061 "EHLO
-	smtp1.infomaniak.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752356AbZFIJQH (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:45554 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752375AbZFWT6P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 05:16:07 -0400
-Message-ID: <4A2E2851.9080103@shockfish.com>
-Date: Tue, 09 Jun 2009 11:16:01 +0200
-From: Alexandre Becholey - s h o c k f i s h / <alexandre@shockfish.com>
+	Tue, 23 Jun 2009 15:58:15 -0400
+Received: by bwz9 with SMTP id 9so314797bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 12:58:17 -0700 (PDT)
+Date: Tue, 23 Jun 2009 19:46:16 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: kernel crashes, 2.6.30, rt2x00, ath5k, ieee80211_get_*_rate,
+	automatic rate control
+Message-ID: <20090623174616.GA3914@linux-m68k.org>
+References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet>
 MIME-Version: 1.0
-To: salsasepp@googlemail.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Testing AP mode with WLAN-USB-Stick: How to obtain?
-References: <f76a32050906081007q19e9361w8c1fad6fc73c47e7@mail.gmail.com> <f76a32050906081011o589474f2geba321c58c0872c2@mail.gmail.com> <wfd49d7ra8.fsf@calligramme.charmers>
-In-Reply-To: <wfd49d7ra8.fsf@calligramme.charmers>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20090621180447.GA29469@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jon Fairbairn wrote:
-> Stefan Steuerwald <salsasepp@googlemail.com> writes:
-> 
->> Dear all,
->>
->> I have tried unsuccessfully to obtain any WLAN USB stick with a
->> chipset that supports AP mode.
-> 
-> [...]
-> 
->> Turns out that anything current I can buy probably has RTL8187, RT73
-> 
-> There's been recent work on getting rt73 to work as an AP.
-> Search the list archive for the subject "rt73usb Access
-> point status" and then "rt73usb: fix for master mode"
-> 
-> 
 
-But There is still a communication problem when the wireless interface 
-is bridged with an Ethernet one.
+Got the confirmation that the patch for minstrel indeed does something good to me,
+both on the ath5k and rt73usb side. The code path seems to be trigered only in 
+special circumstances in my configuration but the printk did fire on both ends
+after a while.
 
-Alexandre
+Richard
+
