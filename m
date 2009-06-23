@@ -1,95 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:57569 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784AbZFHSaT convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55958 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758241AbZFWN6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 14:30:19 -0400
-Received: by bwz9 with SMTP id 9so3282920bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 11:30:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-	<1244246629-28179-14-git-send-email-lrodriguez@atheros.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 8 Jun 2009 20:30:00 +0200
-Message-ID: <69e28c910906081130q3f8363c2i64e05d61812e7be3@mail.gmail.com>
-Subject: Re: [PATCH v2 13/15] iwlwifi: use ieee80211_is_data(fc)
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 23 Jun 2009 09:58:06 -0400
+Subject: [PATCH] nl80211: clean up function definitions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 23 Jun 2009 15:57:09 +0200
+Message-Id: <1245765429.21314.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 6, 2009 at 2:03 AM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: ipw3945-devel@lists.sourceforge.net
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
->  drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
->  2 files changed, 5 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-> index 5eb538d..bd2f709 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-> @@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
->        s8 scale_action = 0;
->        unsigned long flags;
->        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> -       u16 fc;
-> +       __le16 fc;
->        u16 rate_mask = 0;
->        s8 max_rate_idx = -1;
->        struct iwl_priv *priv = (struct iwl_priv *)priv_r;
-> @@ -685,9 +685,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
->                rate_mask = sta->supp_rates[sband->band];
->
->        /* Send management frames and NO_ACK data using lowest rate. */
-> -       fc = le16_to_cpu(hdr->frame_control);
-> -       if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
-> -           info->flags & IEEE80211_TX_CTL_NO_ACK ||
-> +       fc = hdr->frame_control;
-> +       if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+I don't like the 'extern' keyword much when it's not
+necessary, it makes lines rather long.
 
-iwl-agn-rs.c also needs this change I think...
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/nl80211.h |   58 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 29 insertions(+), 29 deletions(-)
 
->            !sta || !priv_sta) {
->                IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
->                if (!rate_mask)
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> index 2addf73..afa1633 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> @@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
->  int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
->  {
->        int sta_id;
-> -       u16 fc = le16_to_cpu(hdr->frame_control);
-> +       __le16 fc = hdr->frame_control;
->
->        /* If this frame is broadcast or management, use broadcast station id */
-> -       if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
-> -           is_multicast_ether_addr(hdr->addr1))
-> +       if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
->                return priv->hw_params.bcast_sta_id;
->
->        switch (priv->iw_mode) {
-> --
-> 1.6.0.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--- wireless-testing.orig/net/wireless/nl80211.h	2009-06-23 15:33:37.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.h	2009-06-23 15:34:18.000000000 +0200
+@@ -3,41 +3,41 @@
+ 
+ #include "core.h"
+ 
+-extern int nl80211_init(void);
+-extern void nl80211_exit(void);
+-extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
+-extern void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+-				    struct net_device *netdev);
+-extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+-				   struct net_device *netdev);
+-extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+-				      struct net_device *netdev);
+-extern void nl80211_send_reg_change_event(struct regulatory_request *request);
+-extern void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
+-				 struct net_device *netdev,
+-				 const u8 *buf, size_t len);
+-extern void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
+-				  struct net_device *netdev,
+-				  const u8 *buf, size_t len);
+-extern void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
++int nl80211_init(void);
++void nl80211_exit(void);
++void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
++void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
++			     struct net_device *netdev);
++void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
++			    struct net_device *netdev);
++void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
++			       struct net_device *netdev);
++void nl80211_send_reg_change_event(struct regulatory_request *request);
++void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
++			  struct net_device *netdev,
++			  const u8 *buf, size_t len);
++void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
++			   struct net_device *netdev,
++			   const u8 *buf, size_t len);
++void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
++			 struct net_device *netdev,
++			 const u8 *buf, size_t len);
++void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
++			   struct net_device *netdev,
++			   const u8 *buf, size_t len);
++void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
++			       struct net_device *netdev,
++			       const u8 *addr);
++void nl80211_send_assoc_timeout(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev,
+-				const u8 *buf, size_t len);
+-extern void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
+-				  struct net_device *netdev,
+-				  const u8 *buf, size_t len);
+-extern void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
+-				      struct net_device *netdev,
+-				      const u8 *addr);
+-extern void nl80211_send_assoc_timeout(struct cfg80211_registered_device *rdev,
+-				       struct net_device *netdev,
+-				       const u8 *addr);
+-extern void
++				const u8 *addr);
++void
+ nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
+ 			    struct net_device *netdev, const u8 *addr,
+ 			    enum nl80211_key_type key_type,
+ 			    int key_id, const u8 *tsc);
+ 
+-extern void
++void
+ nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ 			       struct ieee80211_channel *channel_before,
+ 			       struct ieee80211_channel *channel_after);
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
