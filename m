@@ -1,165 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44591 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbZFPVHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2009 17:07:18 -0400
-Subject: Re: [PATCH] libertas: Fix re-enabling IEEE PS with WPA/WPA2
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <45e8e6c40906161303y7be52452vf4cd16bbc3cc7e43@mail.gmail.com>
-References: <1245096111-20884-1-git-send-email-andrey@cozybit.com>
-	 <1245182004.28992.18.camel@130.81.190.10.in-addr.arpa>
-	 <45e8e6c40906161303y7be52452vf4cd16bbc3cc7e43@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 16 Jun 2009 17:06:47 -0400
-Message-Id: <1245186407.28992.59.camel@130.81.190.10.in-addr.arpa>
-Mime-Version: 1.0
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:34790 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757015AbZFWUBK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 16:01:10 -0400
+Received: by bwz9 with SMTP id 9so316401bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 13:01:11 -0700 (PDT)
+Received: from rz by localhost.localdomain with local (Exim 4.69)
+	(envelope-from <rz@linux-m68k.org>)
+	id 1MJAKN-0001AZ-Lf
+	for linux-wireless@vger.kernel.org; Tue, 23 Jun 2009 20:02:39 +0200
+Date: Tue, 23 Jun 2009 20:02:39 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: linux-wireless@vger.kernel.org
+Subject: rt2x00 / rt73usb kernel crashes, memory corruption?
+Message-ID: <20090623180239.GB3914@linux-m68k.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-06-16 at 13:03 -0700, Andrey Yurovsky wrote:
-> On Tue, Jun 16, 2009 at 12:53 PM, Dan Williams<dcbw@redhat.com> wrote:
-> > On Mon, 2009-06-15 at 13:01 -0700, Andrey Yurovsky wrote:
-> >> With IEEE PS enabled, the driver will temporarily take the device out of
-> >> PS mode to issue commands and then re-enable PS once the commands have
-> >> completed.  With WPA or WPA2 security, the driver fails to re-enable PS
-> >> mode because of a check for key lengths that are always zero.
-> >>
-> >> This patch removes the key lengths check (the local copy of the keys is
-> >> not maintained) and fixes IEEE PS mode with WPA or WPA2 security.
-> >> Tested on GSPI and SDIO interfaces with V9 firmware.
-> >
-> > I have no idea what this code was trying to do originally (I'm pretty
-> > sure it's a left-over from the vendor driver), but it seems like maybe
-> > it was ensuring that the adapter did *not* return to power-save mode
-> > until the supplicant had set the GTK?  There's a window where the GTK
-> > won't be set, and we probably shouldn't be entering PS mode until that
-> > window is closed.  Old sd8385 code from a Motorola phone has:
-> >
-> >        if ((Adapter->PSMode != Wlan802_11PowerModeCAM) &&
-> >                        (Adapter->PSState == PS_STATE_FULL_POWER) &&
-> >                        (Adapter->MediaConnectStatus ==
-> >                         WlanMediaStateConnected)) {
-> >                if(Adapter->SecInfo.WPAEnabled
-> >                        || Adapter->SecInfo.WPA2Enabled
-> >                ) {
-> >                        if(Adapter->IsGTK_SET == TRUE) {
-> >                                PRINTM(INFO, "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
-> >                                        " go back to PS_SLEEP");
-> >                                PSSleep(priv, 0);
-> >                        }
-> >                } else
-> >                {
-> >                        PRINTM(INFO, "EXEC_NEXT_CMD: Command PendQ is empty,"
-> >                                " go back to PS_SLEEP");
-> >                        PSSleep(priv, 0);
-> >                }
-> >        }
-> >
-> > Says to me, "if WPA is enabled but the GTK hasn't been set yet, don't go
-> > to sleep".
-> >
-> > Does that sound like a plausible explanation of what the original bits
-> > intended to do?  Like I said, it was inherited, but there might have
-> > been a good reason for it.
-> 
-> That might be the original intention, but assoc_helper_wpa_keys() sets
-> both and lbs_cmd_802_11_key_material() then clears out the driver's
-> copy, which is then (incorrectly) checked when deciding whether to go
-> back to sleep.  As I understand it, the execution path for WPA/WPA2
-> association shouldn't cause this situation where WPA is enabled but
-> the GTK isn't set yet and we're deciding to go back to sleep.  Do you
-> agree?  Should we even be keeping the 'driver copy' of the keys?  I
-> don't see why we want to do that.  Thanks,
+Hi,
 
-It might be possible to remove the priv->... bits; but here's why they
-exist.
+More testing revealed that rt73usb has some other quite serious problem that appears
+completely independent of the previous rate related problem - happens both with automatic
+and fixed rates.
 
-We keep shadow copies of the WEP & WPA keys in the priv structure to
-represent the "current" values there, so that we don't have to hit the
-hardware up every time somebody does an iwconfig.  That's somewhat bogus
-because drivers don't actually guarantee that the current key will be
-returned, but it's nice to have.
+After enabling "onboot" for the rt73usb driver the kernel crashes about 1 in 5 times 
+during boot - apparently after something tries to send out some kind of router queries. 
+Logs show very often "wlan0: no ipv6 routers" or somesuch after the Ooops, however
+sometimes it also crashes way later during the boot.
+Once it survives the boot it seems to run very stable.
 
-Second, we need to populate a new assoc_request with the "current" state
-of the card when building up a change request.  That involves copying
-that current state into the new association request, same as all the
-other "current" values get stuffed into the request.  There are other
-ways to do the association request stuff than this, like a list of
-"change events", but some commands require more state than just the
-particular thing to be changed, thus the assoc_request is trying to be a
-picture of the adapter at the time it's created.
+So far seen roughly 3 kinds of ooopses which make not much sense for me, other than memory
+corruption. 
+The value "000d5a0b" appears in a prominent place in almost all of these oopses somewhere - might 
+be some value that the driver wanted to store to a specific location but ended up corrupting
+random memory?
+Any idea where in the wlan code this value comes from/belongs to?
 
-If we wanted to just hit the hardware up for the WEP & WPA keys when
-doing 'iwconfig' then we could certainly just split up
-lbs_cmd_802_11_key_material() into a getter and setter, which should
-probably be done anway.
+$ lsusb 
+Bus 005 Device 002: ID 148f:2573 Ralink Technology, Corp. RT2501USB Wireless Adapter
 
-But that doesn't fix the issue of building up the assoc_request.  This
-*could* all go away if/when we convert to cfg80211's WEXT compat stuff.
-At that point we ditch the assoc_request junk (which was only there to
-ensure 'iwconfig key xxxxx; iwconfig essid foobar' and the supplicant's
-WEXT driver worked correctly) and maybe the private key copies in the
-driver.
+$ dmesg
+[   29.478747] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
+[   29.478750] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
+[   29.478752] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET A: 0x0000
+[   29.479125] phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002, rev: 0002573a.
+[   29.479267] PM: Adding info for No Bus:phy0
+[   29.770912] phy0: Selected rate control algorithm 'minstrel'
+[   29.771130] PM: Adding info for No Bus:wlan0
+[   29.771435] PM: Adding info for No Bus:rt73usb-phy0::radio
+[   29.771515] Registered led device: rt73usb-phy0::radio
+[   29.771531] PM: Adding info for No Bus:rt73usb-phy0::assoc
+[   29.771546] Registered led device: rt73usb-phy0::assoc
+[   29.771564] PM: Adding info for No Bus:rt73usb-phy0::quality
+[   29.771580] Registered led device: rt73usb-phy0::quality
+[   29.772219] usbcore: registered new interface driver rt73usb
+[   29.905175] usbcore: registered new interface driver rt2500usb
+[   42.956365] rt73usb 5-3:1.0: firmware: requesting rt73.bin
+[   42.981638] phy0 -> rt2x00lib_request_firmware: Info - Firmware detected - version: 1.7.
+[   43.056513] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+[   43.058510] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+[   43.060510] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
+[   43.062510] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - CWmin: 5, CWmax: 10, Aifs: 2, TXop: 0.
 
-I think the bug here is actually that the driver isn't copying the keys
-from the assoc_req to priv in assoc_helper_wpa_keys().  Thus the only
-way the priv->wpa* get set is by getting them explicitly.
+ifcfg-wlan0:
+# Please read /usr/share/doc/initscripts-*/sysconfig.txt
+# for the documentation of these parameters.
+USERCTL=yes
+PEERDNS=yes
+IPV6INIT=no
+GATEWAY=10.42.44.1
+TYPE=Wireless
+DEVICE=wlan0
+BOOTPROTO=none
+NETMASK=255.255.255.0
+IPADDR=10.42.44.1
+ESSID=xxx-xxx
+MODE=Ad-Hoc
+RATE=18M
+NM_CONTROLLED=yes          ## thats a lie because I killed network manager completely
+HWADDR=00:23:cd:c0:5d:4c
+ONBOOT=yes
+CHANNEL=1
 
-Dan
 
->   -Andrey
-> 
-> >> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> >> ---
-> >>  drivers/net/wireless/libertas/cmd.c |   29 +++++++----------------------
-> >>  1 files changed, 7 insertions(+), 22 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> >> index 01db705..5825396 100644
-> >> --- a/drivers/net/wireless/libertas/cmd.c
-> >> +++ b/drivers/net/wireless/libertas/cmd.c
-> >> @@ -1782,32 +1782,17 @@ int lbs_execute_next_command(struct lbs_private *priv)
-> >>               lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
-> >>                           le16_to_cpu(cmd->command));
-> >>               lbs_submit_command(priv, cmdnode);
-> >> -     } else {
-> >> +     } else if ((priv->psmode != LBS802_11POWERMODECAM) &&
-> >> +                (priv->psstate == PS_STATE_FULL_POWER) &&
-> >> +                ((priv->connect_status == LBS_CONNECTED) ||
-> >> +                (priv->mesh_connect_status == LBS_CONNECTED))) {
-> >>               /*
-> >>                * check if in power save mode, if yes, put the device back
-> >>                * to PS mode
-> >>                */
-> >> -             if ((priv->psmode != LBS802_11POWERMODECAM) &&
-> >> -                 (priv->psstate == PS_STATE_FULL_POWER) &&
-> >> -                 ((priv->connect_status == LBS_CONNECTED) ||
-> >> -                 (priv->mesh_connect_status == LBS_CONNECTED))) {
-> >> -                     if (priv->secinfo.WPAenabled ||
-> >> -                         priv->secinfo.WPA2enabled) {
-> >> -                             /* check for valid WPA group keys */
-> >> -                             if (priv->wpa_mcast_key.len ||
-> >> -                                 priv->wpa_unicast_key.len) {
-> >> -                                     lbs_deb_host(
-> >> -                                            "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
-> >> -                                            " go back to PS_SLEEP");
-> >> -                                     lbs_ps_sleep(priv, 0);
-> >> -                             }
-> >> -                     } else {
-> >> -                             lbs_deb_host(
-> >> -                                    "EXEC_NEXT_CMD: cmdpendingq empty, "
-> >> -                                    "go back to PS_SLEEP");
-> >> -                             lbs_ps_sleep(priv, 0);
-> >> -                     }
-> >> -             }
-> >> +             lbs_deb_host("EXEC_NEXT_CMD: cmdpendingq empty, "
-> >> +                             "go back to PS_SLEEP");
-> >> +             lbs_ps_sleep(priv, 0);
-> >>       }
-> >>
-> >>       ret = 0;
-> >
-> >
 
+Example ooops bellow.
+
+Richard
+
+
+Jun 23 16:19:49 localhost rpc.statd[2457]: Version 1.1.4 Starting
+Jun 23 16:19:49 localhost kernel: [   41.617557] BUG: unable to handle kernel paging request at 000d5a0b
+Jun 23 16:19:49 localhost kernel: [   41.617690] IP: [<c0452d72>] m_show+0x78/0x122
+Jun 23 16:19:49 localhost kernel: [   41.617772] *pde = 00000000 
+Jun 23 16:19:49 localhost kernel: [   41.617845] Oops: 0000 [#1] SMP 
+Jun 23 16:19:49 localhost kernel: [   41.617942] last sysfs file: /sys/devices/system/cpu/cpu1/cache/index2/shared_cpu_map
+Jun 23 16:19:49 localhost kernel: [   41.618003] Modules linked in: ipv6 binfmt_misc nls_utf8 isofs loop dm_multipath uinput rt2500usb arc4 ecb snd_hda_codec_realtek xt_multiport snd_hda_intel nf_conntrack_ipv4 snd_hda_codec rt73usb nf_defrag_ipv4 crc_itu_t snd_hwdep snd_seq_dummy xt_state rt2x00usb snd_seq_oss rt2x00lib nf_conntrack snd_seq_midi_event snd_seq xt_tcpudp led_class snd_seq_device ipt_LOG input_polldev xt_limit mac80211 snd_pcm_oss snd_mixer_oss iptable_filter ip_tables snd_pcm x_tables snd_timer ppdev snd parport_pc cfg80211 iTCO_wdt intel_agp parport r8169 soundcore iTCO_vendor_support snd_page_alloc mii rtc_cmos i2c_i801 thermal agpgart pcspkr button i2c_core ata_generic pata_acpi sha256_generic cbc aes_i586 aes_generic dm_crypt dm_snapshot dm_zero dm_mirror dm_region_hash dm_log dm_mod ehci_hcd [last unloaded: processor]
+Jun 23 16:19:49 localhost kernel: [   41.618003] 
+Jun 23 16:19:49 localhost kernel: [   41.618003] Pid: 2478, comm: lsmod Not tainted (2.6.30v2 #3) To Be Filled By O.E.M.
+Jun 23 16:19:49 localhost kernel: [   41.618003] EIP: 0060:[<c0452d72>] EFLAGS: 00010282 CPU: 0
+Jun 23 16:19:49 localhost kernel: [   41.618003] EIP is at m_show+0x78/0x122
+Jun 23 16:19:49 localhost kernel: [   41.618003] EAX: 00000000 EBX: 000d5a0b ECX: f6188000 EDX: 00000001
+Jun 23 16:19:49 localhost kernel: [   41.618003] ESI: f8b9bb7c EDI: f6a61300 EBP: f61b3f08 ESP: f61b3eec
+Jun 23 16:19:49 localhost kernel: [   41.618003]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Jun 23 16:19:49 localhost kernel: [   41.618003] Process lsmod (pid: 2478, ti=f61b2000 task=f61511b0 task.ti=f61b2000)
+Jun 23 16:19:49 localhost kernel: [   41.618003] Stack:
+Jun 23 16:19:49 localhost kernel: [   41.618003]  f8b9bb80 f8b9bcb4 f6a61300 f6187000 c0707e90 f6a61300 000003dc f61b3f48
+Jun 23 16:19:49 localhost kernel: [   41.618003]  c04bcb96 00000400 b7f26000 f6b75f00 f6a61328 00000000 f8b9bb80 00001000
+Jun 23 16:19:49 localhost kernel: [   41.618003]  00000018 00000000 00000017 00000000 fffffffb f708e580 c04bc90c f61b3f6c
+Jun 23 16:19:49 localhost kernel: [   41.618003] Call Trace:
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04bcb96>] ? seq_read+0x28a/0x356
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04bc90c>] ? seq_read+0x0/0x356
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04dbbf5>] ? proc_reg_read+0x60/0x74
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04dbb95>] ? proc_reg_read+0x0/0x74
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04a8665>] ? vfs_read+0x87/0x12b
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04a87a2>] ? sys_read+0x3b/0x60
+Jun 23 16:19:49 localhost kernel: [   41.618003]  [<c04031dd>] ? syscall_call+0x7/0xb
+Jun 23 16:19:49 localhost kernel: [   41.618003] Code: 00 00 05 34 01 00 00 89 45 e8 83 c4 1c eb 1c 8b 43 08 83 c0 0c 50 68 74 8d 7f c0 57 e8 30 9a 06 00 8b 1b ba 01 00 00 00 83 c4 0c <8b> 03 0f 18 00 90 3b 5d e8 75 d9 83 be d4 00 00 00 00 74 10 83 
+Jun 23 16:19:49 localhost kernel: [   41.618003] EIP: [<c0452d72>] m_show+0x78/0x122 SS:ESP 0068:f61b3eec
+Jun 23 16:19:49 localhost kernel: [   41.618003] CR2: 00000000000d5a0b
+Jun 23 16:19:49 localhost kernel: [   41.623658] ---[ end trace af974b5571f7be2d ]---
