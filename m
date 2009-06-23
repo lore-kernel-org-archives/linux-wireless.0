@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42648 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753397AbZFLUPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 16:15:52 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/8 v2.6.31 and w-t ] iwlwifi: checking for 40MHz mode
-Date: Fri, 12 Jun 2009 13:22:49 -0700
-Message-Id: <1244838175-15491-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
-References: <1244838175-15491-1-git-send-email-reinette.chatre@intel.com>
- <1244838175-15491-2-git-send-email-reinette.chatre@intel.com>
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49576 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756653AbZFWP3u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 11:29:50 -0400
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: [PATCH 04/10] sunrpc: Use rcu_barrier() on unload.
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Date: Tue, 23 Jun 2009 17:04:14 +0200
+Message-ID: <20090623150414.22490.14888.stgit@localhost>
+In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
+References: <20090623150330.22490.87327.stgit@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+The sunrpc module uses rcu_call() thus it should use rcu_barrier() on
+module unload.
 
-when checking for 40MHz, compare ht_protection to
-IEEE80211_HT_OP_MODE_PROTECTION_20MHZ. ht_protection is not a bit-mask
-field
+Have not verified that the possibility for new call_rcu() callbacks
+has been disabled.  As a hint for checking, the functions calling
+call_rcu() (unx_destroy_cred and generic_destroy_cred) are
+registered as crdestroy function pointer in struct rpc_credops.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index e05faa0..b2875fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -630,7 +630,7 @@ u8 iwl_is_fat_tx_allowed(struct iwl_priv *priv,
- 			return 0;
- 	}
- 
--	if (iwl_ht_conf->ht_protection & IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
-+	if (iwl_ht_conf->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
- 		return 1;
- 	else
- 		return iwl_is_channel_extension(priv, priv->band,
-@@ -826,7 +826,7 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
- 			 RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK);
- 	if (iwl_is_fat_tx_allowed(priv, NULL)) {
- 		/* pure 40 fat */
--		if (rxon->flags & RXON_FLG_FAT_PROT_MSK)
-+		if (ht_info->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ)
- 			rxon->flags |= RXON_FLG_CHANNEL_MODE_PURE_40;
- 		else {
- 			/* Note: control channel is opposite of extension channel */
--- 
-1.5.6.3
+ net/sunrpc/sunrpc_syms.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/net/sunrpc/sunrpc_syms.c b/net/sunrpc/sunrpc_syms.c
+index 843629f..adaa819 100644
+--- a/net/sunrpc/sunrpc_syms.c
++++ b/net/sunrpc/sunrpc_syms.c
+@@ -66,6 +66,7 @@ cleanup_sunrpc(void)
+ #ifdef CONFIG_PROC_FS
+ 	rpc_proc_exit();
+ #endif
++	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+ }
+ MODULE_LICENSE("GPL");
+ module_init(init_sunrpc);
 
