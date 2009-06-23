@@ -1,83 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753838AbZFWPmV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:42:21 -0400
-Subject: [PATCH] cfg80211: remove wireless_dev->bssid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mx2.netapp.com ([216.240.18.37]:14719 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755524AbZFWRAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 13:00:16 -0400
+Subject: Re: [PATCH 04/10] sunrpc: Use rcu_barrier() on unload.
+From: Trond Myklebust <Trond.Myklebust@netapp.com>
+To: Jesper Dangaard Brouer <hawk@comx.dk>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
+	christine.caulfield@googlemail.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+In-Reply-To: <20090623150414.22490.14888.stgit@localhost>
+References: <20090623150330.22490.87327.stgit@localhost>
+	 <20090623150414.22490.14888.stgit@localhost>
 Content-Type: text/plain
-Date: Tue, 23 Jun 2009 17:42:21 +0200
-Message-Id: <1245771741.21314.39.camel@johannes.local>
+Date: Tue, 23 Jun 2009 12:59:13 -0400
+Message-Id: <1245776353.9586.1.camel@heimdal.trondhjem.org>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This variable isn't necessary -- the wext code keeps
-track of the BSSID itself, and otherwise we have
-current_bss.
+On Tue, 2009-06-23 at 17:04 +0200, Jesper Dangaard Brouer wrote:
+> The sunrpc module uses rcu_call() thus it should use rcu_barrier() on
+> module unload.
+> 
+> Have not verified that the possibility for new call_rcu() callbacks
+> has been disabled.  As a hint for checking, the functions calling
+> call_rcu() (unx_destroy_cred and generic_destroy_cred) are
+> registered as crdestroy function pointer in struct rpc_credops.
+> 
+> Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+> ---
+> 
+>  net/sunrpc/sunrpc_syms.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/sunrpc/sunrpc_syms.c b/net/sunrpc/sunrpc_syms.c
+> index 843629f..adaa819 100644
+> --- a/net/sunrpc/sunrpc_syms.c
+> +++ b/net/sunrpc/sunrpc_syms.c
+> @@ -66,6 +66,7 @@ cleanup_sunrpc(void)
+>  #ifdef CONFIG_PROC_FS
+>  	rpc_proc_exit();
+>  #endif
+> +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+>  }
+>  MODULE_LICENSE("GPL");
+>  module_init(init_sunrpc);
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h |    1 -
- net/wireless/ibss.c    |   13 +++----------
- 2 files changed, 3 insertions(+), 11 deletions(-)
+Acked-by: Trond Myklebust <Trond.Myklebust@netapp.com>
+-- 
+Trond Myklebust
+Linux NFS client maintainer
 
---- wireless-testing.orig/net/wireless/ibss.c	2009-06-23 17:27:00.000000000 +0200
-+++ wireless-testing/net/wireless/ibss.c	2009-06-23 17:41:07.000000000 +0200
-@@ -24,9 +24,6 @@ void cfg80211_ibss_joined(struct net_dev
- 	if (WARN_ON(!wdev->ssid_len))
- 		return;
- 
--	if (memcmp(bssid, wdev->bssid, ETH_ALEN) == 0)
--		return;
--
- 	bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
- 			       wdev->ssid, wdev->ssid_len,
- 			       WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
-@@ -41,7 +38,6 @@ void cfg80211_ibss_joined(struct net_dev
- 
- 	cfg80211_hold_bss(bss);
- 	wdev->current_bss = bss;
--	memcpy(wdev->bssid, bssid, ETH_ALEN);
- 
- 	nl80211_send_ibss_bssid(wiphy_to_dev(wdev->wiphy), dev, bssid, gfp);
- #ifdef CONFIG_WIRELESS_EXT
-@@ -87,7 +83,6 @@ void cfg80211_clear_ibss(struct net_devi
- 
- 	wdev->current_bss = NULL;
- 	wdev->ssid_len = 0;
--	memset(wdev->bssid, 0, ETH_ALEN);
- #ifdef CONFIG_WIRELESS_EXT
- 	if (!nowext)
- 		wdev->wext.ibss.ssid_len = 0;
-@@ -356,12 +351,10 @@ int cfg80211_ibss_wext_giwap(struct net_
- 
- 	ap_addr->sa_family = ARPHRD_ETHER;
- 
--	if (wdev->wext.ibss.bssid) {
-+	if (wdev->current_bss)
-+		memcpy(ap_addr->sa_data, wdev->current_bss->bssid, ETH_ALEN);
-+	else
- 		memcpy(ap_addr->sa_data, wdev->wext.ibss.bssid, ETH_ALEN);
--		return 0;
--	}
--
--	memcpy(ap_addr->sa_data, wdev->bssid, ETH_ALEN);
- 	return 0;
- }
- /* temporary symbol - mark GPL - in the future the handler won't be */
---- wireless-testing.orig/include/net/cfg80211.h	2009-06-23 17:27:14.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-06-23 17:39:16.000000000 +0200
-@@ -1170,7 +1170,6 @@ struct wireless_dev {
- 
- 	/* currently used for IBSS - might be rearranged in the future */
- 	struct cfg80211_bss *current_bss;
--	u8 bssid[ETH_ALEN];
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	u8 ssid_len;
- 
-
-
+NetApp
+Trond.Myklebust@netapp.com
+www.netapp.com
