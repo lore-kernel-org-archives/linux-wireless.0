@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f214.google.com ([209.85.217.214]:59336 "EHLO
-	mail-gx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753294AbZFRSxU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 14:53:20 -0400
-Received: by gxk10 with SMTP id 10so2013213gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 11:53:23 -0700 (PDT)
+Received: from khc.piap.pl ([195.187.100.11]:43443 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750800AbZFWTnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 15:43:25 -0400
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jake Edge <jake@lwn.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Pavel Machek <pavel@ucw.cz>, Greg KH <greg@kroah.com>,
+	"corbet\@lwn.net" <corbet@lwn.net>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan\@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata\@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for rc-series and merge window
+References: <20090622222217.GH23972@bombadil.infradead.org>
+	<m3fxdqj2bz.fsf@lwn.net> <m3bpoen5pp.fsf@intrepid.localdomain>
+	<20090623130602.6cd6b713@chukar>
+	<alpine.LFD.2.01.0906231210040.3240@localhost.localdomain>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Tue, 23 Jun 2009 21:43:24 +0200
+In-Reply-To: <alpine.LFD.2.01.0906231210040.3240@localhost.localdomain> (Linus Torvalds's message of "Tue\, 23 Jun 2009 12\:11\:52 -0700 \(PDT\)")
+Message-ID: <m3y6rilorn.fsf@intrepid.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <COL104-W23908C8F381DFDE2C0C67DE13D0@phx.gbl>
-References: <COL104-W23908C8F381DFDE2C0C67DE13D0@phx.gbl>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Thu, 18 Jun 2009 11:45:10 -0700
-Message-ID: <43e72e890906181145v30134c65nec4493d53211ab98@mail.gmail.com>
-Subject: Re: [PATCH] compat-2.6: fix foo
-To: OMarOMio antar <goldenomarom655@hotmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/18 OMarOMio antar <goldenomarom655@hotmail.com>:
-> I have Intel WiFi Link 4965AGN and I need an injection patch for
-> this driver.
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-Huh? [PATCH] subjects tend to have an inline patch, this e-mail
-requests a patch instead?
+> In fact, this whole discussion has shown one thing: people still think 
+> that "bug fix" somehow automatically means that it's appropriate after the 
+> merge window. That's simply not so. 
 
-> My KDE version: 3.5.10
-> User:root
-> Hostname:bt
-> System:linux
-> Realase:2.6.28.1
-> Machine:i686
->
->
-> And tell me how to install the patches for my driver.
-
-What patches?
-_______________________________
-> What can you do with the new Windows Live? Find out
-
-HTML e-mails are not welcomed, so your e-mail to linux-wireless
-probably didn't make it.
-
- Luis
+That's why i wrote: gain vs risk.
+-- 
+Krzysztof Halasa
