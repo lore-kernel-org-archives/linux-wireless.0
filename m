@@ -1,78 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53368 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59660 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732AbZFAOdJ (ORCPT
+	with ESMTP id S1752627AbZFWS5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 10:33:09 -0400
-Subject: Re: [PATCH] ath9k: Add sanity check for beacon_int in adhoc/mesh
- case
+	Tue, 23 Jun 2009 14:57:00 -0400
+Subject: [PATCH v3] mac80211: fix todo lock
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1243865135.1930.2.camel@jm-desktop>
-References: <20090528162528.GA8117@jm.kir.nu>
-	 <87skikt72k.fsf@litku.valot.fi>  <1243865135.1930.2.camel@jm-desktop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8NRFY6xj1yQSjZG7vey/"
-Date: Mon, 01 Jun 2009 16:33:05 +0200
-Message-Id: <1243866785.5299.26.camel@johannes.local>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090623183126.GA3337@hash.localnet>
+References: <1245751007.4184.17.camel@johannes.local>
+	 <1245766038.21314.24.camel@johannes.local> <4A40F856.2010501@openwrt.org>
+	 <b6c5339f0906230951v9766914vdc1d76f85eb62feb@mail.gmail.com>
+	 <1245776114.21314.41.camel@johannes.local>
+	 <20090623183126.GA3337@hash.localnet>
+Content-Type: text/plain
+Date: Tue, 23 Jun 2009 20:56:47 +0200
+Message-Id: <1245783408.21314.43.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Subject: mac80211: fix todo lock
 
---=-8NRFY6xj1yQSjZG7vey/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The key todo lock can be taken from different locks
+that require it to be _bh to avoid lock inversion
+due to (soft)irqs.
 
-On Mon, 2009-06-01 at 17:05 +0300, Jouni Malinen wrote:
-> On Mon, 2009-06-01 at 06:30 -0700, Kalle Valo wrote:
-> > Jouni Malinen <jouni.malinen@atheros.com> writes:
-> >=20
-> > > +     /*
-> > > +      * It looks like mac80211 may end up using beacon interval of z=
-ero in
-> > > +      * some cases (at least for mesh point). Avoid getting into an
-> > > +      * infinite loop by using a bit safer value instead..
-> > > +      */
-> > > +     if (intval =3D=3D 0)
-> > > +             intval =3D 100;
-> >=20
-> > Maybe a big fat warning here would help with debugging the issue?
->=20
-> If we agree that this should never happen, such a thing could be added.
-> Though, it would probably be better to place that in mac80211 so that it
-> would catch the issue with any driver. The beacon_int=3D0 notification is
-> not really in any way specific to ath9k; only this workaround for driver
-> behavior is.
+This should fix the two problems reported by Bob and
+Gabor:
+http://mid.gmane.org/20090619113049.GB18956@hash.localnet
+http://mid.gmane.org/4A3FA376.8020307@openwrt.org
 
-Has anyone identified why this happens? :) I'm not particularly happy
-with the mesh configuration code anyway, but this is a stupid thing that
-should be trivial to fix.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>
+---
+ net/mac80211/key.c |   28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-johannes
+--- wireless-testing.orig/net/mac80211/key.c	2009-06-23 11:48:12.000000000 +0200
++++ wireless-testing/net/mac80211/key.c	2009-06-23 20:56:02.000000000 +0200
+@@ -67,6 +67,8 @@ static DECLARE_WORK(todo_work, key_todo)
+  *
+  * @key: key to add to do item for
+  * @flag: todo flag(s)
++ *
++ * Must be called with IRQs or softirqs disabled.
+  */
+ static void add_todo(struct ieee80211_key *key, u32 flag)
+ {
+@@ -140,9 +142,9 @@ static void ieee80211_key_enable_hw_acce
+ 	ret = drv_set_key(key->local, SET_KEY, &sdata->vif, sta, &key->conf);
+ 
+ 	if (!ret) {
+-		spin_lock(&todo_lock);
++		spin_lock_bh(&todo_lock);
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 	}
+ 
+ 	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
+@@ -164,12 +166,12 @@ static void ieee80211_key_disable_hw_acc
+ 	if (!key || !key->local->ops->set_key)
+ 		return;
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 		return;
+ 	}
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ 
+ 	sta = get_sta_for_key(key);
+ 	sdata = key->sdata;
+@@ -188,9 +190,9 @@ static void ieee80211_key_disable_hw_acc
+ 		       wiphy_name(key->local->hw.wiphy),
+ 		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ }
+ 
+ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+@@ -437,14 +439,14 @@ void ieee80211_key_link(struct ieee80211
+ 
+ 	__ieee80211_key_replace(sdata, sta, old_key, key);
+ 
+-	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+-
+ 	/* free old key later */
+ 	add_todo(old_key, KEY_FLAG_TODO_DELETE);
+ 
+ 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
+ 	if (netif_running(sdata->dev))
+ 		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
++
++	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+ }
+ 
+ static void __ieee80211_key_free(struct ieee80211_key *key)
+@@ -547,7 +549,7 @@ static void __ieee80211_key_todo(void)
+ 	 */
+ 	synchronize_rcu();
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	while (!list_empty(&todo_list)) {
+ 		key = list_first_entry(&todo_list, struct ieee80211_key, todo);
+ 		list_del_init(&key->todo);
+@@ -558,7 +560,7 @@ static void __ieee80211_key_todo(void)
+ 					  KEY_FLAG_TODO_HWACCEL_REMOVE |
+ 					  KEY_FLAG_TODO_DELETE);
+ 		key->flags &= ~todoflags;
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 
+ 		work_done = false;
+ 
+@@ -591,9 +593,9 @@ static void __ieee80211_key_todo(void)
+ 
+ 		WARN_ON(!work_done);
+ 
+-		spin_lock(&todo_lock);
++		spin_lock_bh(&todo_lock);
+ 	}
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ }
+ 
+ void ieee80211_key_todo(void)
 
---=-8NRFY6xj1yQSjZG7vey/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKI+aeAAoJEODzc/N7+QmaAhEQANON42pOV0QficzJWAtg78Fp
-8K+swEvjLjxWVU3XReTq/XvKdAo9tPnbIPLpcIXJin6pJKEQ5GqhykpUhJY4m18T
-HAfAnxM8AA5B4O3yeKXPrAaxXaVgNOwY+p/WTQFGpLfNjazRC+rV+80zWKk4gCJk
-qXLjv/Ds4vjFPiH3ueGCC/b+rffxYYOR3bOaydSLCX9DzZ2Mw4j/GxZ0s0r8dHJi
-S9feobtet+Kh7469ryj2rV5lw/OPpcDFqtFWkBjsDXV/VCQjb9uEXzmeeqoZ9gNC
-CiXVZAvOwykRM9SZsDQ1xQ+HiAzvtgOQoacth6UWrI+tix+bGeQVHXyJCW8kFy/I
-ucV18NkesmLoB5P8L7gUR4ZbiJppAKzMhWyqELrCUlZJ+ex7skLCHqy4Rv3XzC4F
-HdzoB4nU6mVt3yrr9uD7FWizg1n23iypA9cyS0dY4UKGo+7sIpJkd/wmkR5PnWQg
-Z4DAt3OYdOUtHB48BlZfkSsVTCzuKFFeY3PBcjJSA/DDOW8+n+y7VHycGkN76lJz
-eApKah/kESPmSeqaPt+uhMOy7Q0PxINmnrjPrfE7L9iaZ6PDpZFsSxwG5140z9Gw
-GjUTpO2+3OwAb/C81tGV/Y9DQaByPyV0EBQaUrKoeLcXkZ11yZoLaNYZpJaVj7cD
-VcXYAQ6gTqsBORGH6Kv7
-=CIuO
------END PGP SIGNATURE-----
-
---=-8NRFY6xj1yQSjZG7vey/--
 
