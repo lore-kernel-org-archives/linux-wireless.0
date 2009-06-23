@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:40147 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758231AbZF2MJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 08:09:51 -0400
-Subject: Re: Using a Debian box as an AP with wireless testing and hostapd
-From: Pavel Roskin <proski@gnu.org>
-To: javier.galvez@entel.upc.edu
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <145d4e1a0906290200v4a45d83esf8eab021f6d094f9@mail.gmail.com>
-References: <145d4e1a0906290158y4710d68ej270907f297335d42@mail.gmail.com>
-	 <145d4e1a0906290200v4a45d83esf8eab021f6d094f9@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Date: Mon, 29 Jun 2009 08:09:52 -0400
-Message-Id: <1246277392.21239.6.camel@mj>
-Mime-Version: 1.0
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49575 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756870AbZFWP3v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 11:29:51 -0400
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: [PATCH 07/10] decnet: Use rcu_barrier() on module unload.
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Date: Tue, 23 Jun 2009 17:04:29 +0200
+Message-ID: <20090623150429.22490.15113.stgit@localhost>
+In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
+References: <20090623150330.22490.87327.stgit@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-29 at 11:00 +0200, Javier Gálvez Guerrero wrote:
-> Hi all,
-> 
-> I'm trying to use my Debian box as an AP using the latest wireless
-> testing kernel (2.6.30-wl) and a WiFi card Asus WL-138G v2 PCI but I'm
-> experiencing a weird problem, hope you can guide me through it.
-> 
-> First, I'll tell what and how I setup it. I downloaded the wireless
-> testing kernel and installed it (make && make modules && make
-> modules_install && make install), prepared the boot images and updated
-> the grub; fine. Next I installed compat-wireless, wireless regdb,
-> crda, libnl, hostapd and iw following this tutorial
-> (http://acx100.erley.org/git.html), with slight modifications: install
-> some missing packages (m2crypto, libgcrypt-dev and libssl-dev) and,
-> after installing compat-wireless, 'make unload' as suggested by the
-> 'make install' output.
+The decnet module unloading as been disabled with a '#if 0' statement,
+because it have had issues.  Perhaps using rcu_barrier() will fix
+these issues?
 
-You don't need compat-wireless with 2.6.30-wl.  The whole point of
-compat-wireless is to backport the latest drivers from the "-wl" kernel
-to older kernels.
+Any maintainers with input?
 
-Please remove /lib/modules/2.6.30-wl and reinstall the kernel by running
-"make modules_install install".
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+---
 
--- 
-Regards,
-Pavel Roskin
+ net/decnet/af_decnet.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/net/decnet/af_decnet.c b/net/decnet/af_decnet.c
+index d351b8d..bff12da 100644
+--- a/net/decnet/af_decnet.c
++++ b/net/decnet/af_decnet.c
+@@ -2393,6 +2393,10 @@ module_init(decnet_init);
+  * Prevent DECnet module unloading until its fixed properly.
+  * Requires an audit of the code to check for memory leaks and
+  * initialisation problems etc.
++ *
++ * hawk@comx.dk 2009-06-19:
++ *  I have added a rcu_barrier() which should plug some of your
++ *  module unload issues.  Maintainers please try it out...
+  */
+ #if 0
+ static void __exit decnet_exit(void)
+@@ -2413,6 +2417,8 @@ static void __exit decnet_exit(void)
+ 	proc_net_remove(&init_net, "decnet");
+ 
+ 	proto_unregister(&dn_proto);
++
++	rcu_barrier_bh(); /* Wait for completion of call_rcu_bh()'s */
+ }
+ module_exit(decnet_exit);
+ #endif
+
