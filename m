@@ -1,181 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35389 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754982AbZFXMJu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 08:09:50 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MJRIV-0002yr-Ca
-	for linux-wireless@vger.kernel.org; Wed, 24 Jun 2009 14:09:52 +0200
-Message-Id: <20090624120809.283728061@sipsolutions.net>
-References: <20090624120745.239294066@sipsolutions.net>
-Date: Wed, 24 Jun 2009 14:07:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 05/11] cfg80211: implement IWAP for WDS
-Mime-Version: 1.0
+Received: from cn.fujitsu.com ([222.73.24.84]:64926 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751577AbZFWA5E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2009 20:57:04 -0400
+Message-ID: <4A4028CE.1030005@cn.fujitsu.com>
+Date: Tue, 23 Jun 2009 08:58:54 +0800
+From: Li Zefan <lizf@cn.fujitsu.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: torvalds@linux-foundation.org, Pavel Machek <pavel@ucw.cz>,
+	Greg KH <greg@kroah.com>, "corbet@lwn.net" <corbet@lwn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>
+Subject: Re: [PATCH v3.1415] Documentation: add documentation summary for
+ rc-series and merge window
+References: <20090622222217.GH23972@bombadil.infradead.org>
+In-Reply-To: <20090622222217.GH23972@bombadil.infradead.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements siocsiwap/giwap for WDS mode.
+Luis R. Rodriguez wrote:
+> This is losely based on previous discussions on linux-kernel [1][2][3].
+> Lets also refer people reading the stable rules to
+> Documentation/development-process/.
+> 
+> Also add the number of days it has taken between releases,
+> and provide the average for the last 10 releases: 86.0 days.
+> 
+> [1] http://marc.info/?l=linux-kernel&m=122048427801324&w=2
+> [2] http://marc.info/?l=linux-netdev&m=122048757705315&w=2
+> [3] http://marc.info/?l=linux-kernel&m=124515657407679&w=2
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |   10 +++++++++
- net/mac80211/cfg.c         |   11 ++++++++++
- net/mac80211/wext.c        |   26 +++----------------------
- net/wireless/wext-compat.c |   46 +++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 71 insertions(+), 22 deletions(-)
+I've gone through the patch, and found some typos.
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-06-24 13:54:07.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-06-24 13:54:08.000000000 +0200
-@@ -998,6 +998,9 @@ struct cfg80211_ops {
- 				enum tx_power_setting type, int dbm);
- 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
- 
-+	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
-+				u8 *addr);
-+
- 	void	(*rfkill_poll)(struct wiphy *wiphy);
- 
- 	/* some temporary stuff to finish wext */
-@@ -1606,6 +1609,13 @@ int cfg80211_wext_giwpower(struct net_de
- 			   struct iw_request_info *info,
- 			   struct iw_param *wrq, char *extra);
- 
-+int cfg80211_wds_wext_siwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra);
-+int cfg80211_wds_wext_giwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra);
-+
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-  * functions and BSS handling helpers
---- wireless-testing.orig/net/mac80211/wext.c	2009-06-24 13:54:07.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-06-24 13:54:08.000000000 +0200
-@@ -143,23 +143,8 @@ static int ieee80211_ioctl_siwap(struct 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		return cfg80211_mgd_wext_siwap(dev, info, ap_addr, extra);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
--		/*
--		 * If it is necessary to update the WDS peer address
--		 * while the interface is running, then we need to do
--		 * more work here, namely if it is running we need to
--		 * add a new and remove the old STA entry, this is
--		 * normally handled by _open() and _stop().
--		 */
--		if (netif_running(dev))
--			return -EBUSY;
--
--		memcpy(&sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
--		       ETH_ALEN);
--
--		return 0;
--	}
--
-+	if (sdata->vif.type == NL80211_IFTYPE_WDS)
-+		return cfg80211_wds_wext_siwap(dev, info, ap_addr, extra);
- 	return -EOPNOTSUPP;
- }
- 
-@@ -176,11 +161,8 @@ static int ieee80211_ioctl_giwap(struct 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		return cfg80211_mgd_wext_giwap(dev, info, ap_addr, extra);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
--		ap_addr->sa_family = ARPHRD_ETHER;
--		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
--		return 0;
--	}
-+	if (sdata->vif.type == NL80211_IFTYPE_WDS)
-+		return cfg80211_wds_wext_giwap(dev, info, ap_addr, extra);
- 
- 	return -EOPNOTSUPP;
- }
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-24 13:54:07.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-06-24 13:54:08.000000000 +0200
-@@ -908,3 +908,49 @@ int cfg80211_wext_giwpower(struct net_de
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwpower);
-+
-+int cfg80211_wds_wext_siwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	int err;
-+
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WDS))
-+		return -EINVAL;
-+
-+	if (addr->sa_family != ARPHRD_ETHER)
-+		return -EINVAL;
-+
-+	if (netif_running(dev))
-+		return -EBUSY;
-+
-+	if (!rdev->ops->set_wds_peer)
-+		return -EOPNOTSUPP;
-+
-+	err = rdev->ops->set_wds_peer(wdev->wiphy, dev, (u8 *) &addr->sa_data);
-+	if (err)
-+		return err;
-+
-+	memcpy(&wdev->wext.bssid, (u8 *) &addr->sa_data, ETH_ALEN);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wds_wext_siwap);
-+
-+int cfg80211_wds_wext_giwap(struct net_device *dev,
-+			    struct iw_request_info *info,
-+			    struct sockaddr *addr, char *extra)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WDS))
-+		return -EINVAL;
-+
-+	addr->sa_family = ARPHRD_ETHER;
-+	memcpy(&addr->sa_data, wdev->wext.bssid, ETH_ALEN);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wds_wext_giwap);
---- wireless-testing.orig/net/mac80211/cfg.c	2009-06-24 13:54:07.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-06-24 13:54:08.000000000 +0200
-@@ -1369,6 +1369,16 @@ static int ieee80211_get_tx_power(struct
- 	return 0;
- }
- 
-+static int ieee80211_set_wds_peer(struct wiphy *wiphy, struct net_device *dev,
-+				  u8 *addr)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	memcpy(&sdata->u.wds.remote_addr, addr, ETH_ALEN);
-+
-+	return 0;
-+}
-+
- static void ieee80211_rfkill_poll(struct wiphy *wiphy)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-@@ -1442,6 +1452,7 @@ struct cfg80211_ops mac80211_config_ops 
- 	.set_wiphy_params = ieee80211_set_wiphy_params,
- 	.set_tx_power = ieee80211_set_tx_power,
- 	.get_tx_power = ieee80211_get_tx_power,
-+	.set_wds_peer = ieee80211_set_wds_peer,
- 	.rfkill_poll = ieee80211_rfkill_poll,
- 	.set_power_mgmt = ieee80211_set_power_mgmt,
- };
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  Documentation/development-process/2.Process |  158 +++++++++++++++++++++++++--
+>  Documentation/stable_kernel_rules.txt       |    5 +
+>  2 files changed, 153 insertions(+), 10 deletions(-)
+> 
+> diff --git a/Documentation/development-process/2.Process b/Documentation/development-process/2.Process
+> index d750321..d4ca05d 100644
+> --- a/Documentation/development-process/2.Process
+> +++ b/Documentation/development-process/2.Process
+> @@ -7,20 +7,158 @@ course of one year, the kernel has since had to evolve a number of
+>  processes to keep development happening smoothly.  A solid understanding of
+>  how the process works is required in order to be an effective part of it.
+>  
+> +2.0:SUMMARY
+> +
+> +This section provides a brief summary of the kernel release rules.
+> +
+> +2.0.0: KERNEL RELEASE RULES
+> +
+> +Stable kernels are released when they are ready! This means there are
+> +absolutely no strict guidelines for sticking to specific dates for a
+> +kernel release.
+> +
+> +2.0.1: PATCH QUEUING FOR THE NEXT KERNEL RELEASE
+> +
+> +Linus maintains the development kernel, this means he accepts new
+> +features and drivers for the next kernel release. He however does not
+> +maintain every single line of the kernel. The kernel is broken down by
+> +different subsystems and each subsystem has its own maintainer. In order
 
--- 
+Maybe maintainer(s) ?
 
+> +to aid the development of Linux maintainers subsystem have trees where
+> +they queue patches for the next kernel release. This is typically done
+> +with a foo-next-2.6.git tree where foo would be an arbitrary subsystem
+> +name. These trees typically are designed to have a clean git history
+> +to make pulling for Linus easier and as clean as possible.
+> +
+> +Subsystem maintainers can typically have their own development git trees
+> +apart from the foo-next-2.6.git trees as a breeding ground and test ground
+> +for bleeding edge patches. Subsystem maintainers are at complete freedom to
+> +maintain these trees however they see fit. Once patches have been proven
+> +stable enough in a development tree they tend to be moved to their
+> +respective foo-next-2.6.git tree.
+> +
+> +Subsystem development trees are *always* open for development and new patches
+> +are always accepted. After a new kernel is released subsystem maintainers
+> +tend to slow down in accepting patches into their development trees though
+> +so that the new development can eventually be rebased easily ontop of the
+
+on top?
+
+> +next kernel rc1 release.
+> +
+> +If your patch is adding a new feature or changing a lot of code and you send
+> +it between a stable kernel release and prior to the rc1 kernel release it will
+> +likely be a while before it is merged into a development tree, so be patient
+> +during this time.
+> +
+> +2.0.1: MERGE WINDOW
+
+2.0.2
+
+> +
+> +The merge window opens up after the next stable kernel is released and takes
+> +two weeks. The merge window is when maintainers of different subsystems send
+> +pull requests to Linus for code they have been queuing up for the next stable
+> +kernel. These are the foo-next-2.6.git trees.
+> +
+> +After the merge window the kernel is worked on through the rc-series of the
+> +kernel release. The rc-series focus is to address regressions. The merge window
+> +closes upon the first rc-series release, rc1.
+> +
+> +After a subsystem maintainer has sent his pull request to Linus during the merge
+> +window no further new development will be accepted for that foo-next-2.6.git
+> +tree and as such it marks the closure of development for that subsystem for that
+> +kernel cycle.
+> +
+> +2.0.2: MEETING DEADLINES FOR KERNEL RELEASES
+> +
+> +Developers wishing to target deadlines should simply work on their development
+> +without regards or consideration for inclusion to a specific kernel release.
+> +Once development is done it should simply be posted so the community can review it
+> +and it can eventually be merged into the appropriate development subsystem tree.
+> +
+> +If you insist on targeting a kernel release for deadlines you can try to be aware
+> +of the current rc cycle development and how soon it seems the next stable kernel
+> +release will be made.
+> +
+> +A good indication of when the next stable kernel release will be made is when
+> +Linus notes the last rc cycle released may be the last. By this time you
+> +should already have all your development done and merged in the respective
+> +development tree. If your code is not ready and merged into the respective
+> +maintainers development tree prior to the announced last potential rc kernel
+
+maintainer's?
+
+> +release chances are you missed getting your code in for the next kernel merge
+> +window. Exemptions here are new drivers, covered below.
+
+Exceptions
+
+> +
+> +2.0.3: RC-SERIES RULES
+> +
+> +This section summarizes what kind of patches are accepted after a new stable kernel is
+> +released, before the merge window closes and after it closes. These patches are targeted
+> +for the kernel prior to its final release.
+> +
+> +2.0.3.0: RC-SERIES RULES PRIOR TO THE RC1 RELEASE
+> +
+> +Before the merge window closes, prior to the rc1 release, Linus accepts pull requests
+> +from different subsystem maintainers, with it go all the queued up material for the
+> +next kernel release for each respective subsystem, on all foo-next-2.6.git trees.
+> +After subsystem maintainers have sent their pull requests there are strict rules
+> +for new patches prior to the close of the merge window, marked by the rc1 release:
+> +
+> + - patches must fix a regression
+> + - patches must fix a security hole
+> + - patches must fix a oops/kernel hang
+> +
+> +Non-intrusive bug fixes fixes will very likely not be accepted. Some maintainers
+
+2 "fixes"
+
+> +may choose to accept some non-intrusive patches, depending on their work load.
+> +You should however not take it for granted such patches will get accepted. You
+> +should always just target the development kernel and provide a good commit to
+> +help with review.
+> +
+> +When in doubt consult with your subsystem maintainer or just allow him to
+> +do the judging of where the patches deserves to go to, an excellent commit log
+> +should help with this effort.
+> +
+> +2.0.3.1: RC-SERIES RULES AFTER THE RC1 RELEASE
+> +
+> +Linus does not accept more pull requests from subsystem maintainers after the
+> +rc1 release. This means you can expect no new features or new development after
+> +rc1.
+> +
+> +The same type of patches are accepted after the rc1 release with the addition
+> +of a slight warmer welcome for non-intrusive bug fix patches. Non-intrusive
+> +bug fixes must be important and address very clearly the bug they are fixing.
+> +Non-intrusive bug fixes can fix issues which are not a regression, security
+> +hole or a kernel oops/hang.
+> +
+> +Linus will not accept non-intrusive bug fix patches late in the rc-series, after
+> +the rc5, for example.
+> +
+> +You should never take it for granted non-intrusive bug fixes will be accepted.
+> +Ultimately it is up to the subsystem maintainers to decide whether to accept
+> +such a fix or not, which is why your commit log entry is critically important.
+> +You want to provide as much detail as is posisible in order to help maintainers
+
+You need to? Your should?
+
+> +make the right call.
+> +
+> +2.0.4 RC-SERIES NEW DRIVER EXEMPTION RULE
+
+EXCEPTION
+
+> +
+> +The very first release a new driver or filesystem is special. New drivers
+> +are accepted during the rc-series! Patches for the same driver then are
+> +also accepted during the same rc-series of a kernel as well as fixes for it
+> +cannot regress as no previous kernels exists with it.
+
+s/exists/exist
+
+> +
+> +After a driver has been present for one kernel release the relaxed rules for
+> +it during the rc-series are no longer applicable.
+>  
+>  2.1: THE BIG PICTURE
+>  
+>  The kernel developers use a loosely time-based release process, with a new
+> -major kernel release happening every two or three months.  The recent
+> -release history looks like this:
+> -
+> -	2.6.26	July 13, 2008
+> -	2.6.25	April 16, 2008
+> -	2.6.24	January 24, 2008
+> -	2.6.23	October 9, 2007
+> -	2.6.22	July 8, 2007
+> -	2.6.21	April 25, 2007
+> -	2.6.20	February 4, 2007
+> +major kernel release happening about every two or three months. The current
+> +average time based on the last 10 releases is 86.0 days. The recent release
+> +history along with the number of days between each release looks like this:
+> +
+> +	2.6.30	June 10, 2009 - 78 days
+> +	2.6.29  March 23, 2009 - 89 days
+> +	2.6.28	December 29, 2008 - 76 days
+> +	2.6.27	October 8, 2008 - 88 days
+> +	2.6.26	July 13, 2008 - 88 days
+> +	2.6.25	April 16, 2008 - 83 days
+> +	2.6.24	January 24, 2008 - 108 days
+> +	2.6.23	October 9, 2007 - 94 days
+> +	2.6.22	July 8, 2007 - 75 days
+> +	2.6.21	April 25, 2007 - 81 days
+> +	2.6.20	February 4, 2007 - 68
+>  
+>  Every 2.6.x release is a major kernel release with new features, internal
+>  API changes, and more.  A typical 2.6 release can contain over 10,000
+> diff --git a/Documentation/stable_kernel_rules.txt b/Documentation/stable_kernel_rules.txt
+> index a452227..113e8c8 100644
+> --- a/Documentation/stable_kernel_rules.txt
+> +++ b/Documentation/stable_kernel_rules.txt
+> @@ -1,5 +1,10 @@
+>  Everything you ever wanted to know about Linux 2.6 -stable releases.
+>  
+> +For further details, such as stable kernel release schedules, rc-series
+> +policies and process of development please refer to:
+> +
+> +Documentation/development-process/
+> +
+>  Rules on what kind of patches are accepted, and which ones are not, into the
+>  "-stable" tree:
+>  
