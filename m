@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ppsw-5.csi.cam.ac.uk ([131.111.8.135]:34536 "EHLO
-	ppsw-5.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753882AbZFBJ3g (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36054 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752367AbZFWLYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 05:29:36 -0400
-Message-ID: <4A24F106.5040704@cam.ac.uk>
-Date: Tue, 02 Jun 2009 09:29:42 +0000
-From: Jonathan Cameron <jic23@cam.ac.uk>
-MIME-Version: 1.0
-To: maxim@mox.ru
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	=?windows-1252?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
-Subject: Re: =?windows-1252?Q?=3F=3F=3F=3F=3F=3A_=5BPATCH_10/10=5D_?=
- =?windows-1252?Q?ieee802154=3A_add_at86rf230/rf231_spi_driver?=
-References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>	 <69e28c910906010921r56cf7017gc858cb7ba819c385@mail.gmail.com>	 <20090601203348.GC7143@doriath.ww600.siemens.net>	 <200906021010.49613.hs4233@mail.mn-solutions.de>	 <1243930893.3192.62.camel@localhost.localdomain>	 <bc64b4640906020129x4fe15e5en9d8e2cad1d86b236@mail.gmail.com>	 <1243931809.3192.68.camel@localhost.localdomain> <6097c490906020149j5d614064ied2a4bfebd13ddb0@mail.gmail.com>
-In-Reply-To: <6097c490906020149j5d614064ied2a4bfebd13ddb0@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+	Tue, 23 Jun 2009 07:24:31 -0400
+Subject: Re: [PATCH 1/2 RFC] cfg80211: connect/disconnect API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <20090622170409.GB30147@sortiz.org>
+References: <20090622170409.GB30147@sortiz.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ioaJZeyJ7U4Qo3kuTp/e"
+Date: Tue, 23 Jun 2009 13:24:32 +0200
+Message-Id: <1245756272.4184.43.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Osipov wrote:
-> Hi Marcel,
-> 
-> On Tue, Jun 2, 2009 at 12:36 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
->>> For Bluetooth naming directories 'bluetooth' is logical, as 802.15.1
->>> standard is a less known name, doesn't incorporate latest changes
->>> from Bluetooth, etc.
->> and so is IEEE 802.15.4 hence we propose using "zigbee" here. Using the
->> mac80211 has historical reasons and 802.11 is a known name and even used
->> on product marketing material. IEEE 802.15.4 is not. We are also using
->> the term "wimax" and not its IEEE numbering.
-> 
-> Actually, ieee802154 is better in this case, because as Dmitry
-> mentioned, an entire family of standards is implemented on the top of
-> it, including:
-> 
-> - ZigBee
-> - 6LoWPAN
-> - ISA100.11a
-> - WirelessHART
->  - and probably something I don't know about
-I'll tack on tosmac (the tinyos protocol).
-The platforms I support have out of kernel support for a cc2420 (802.15.4) radio
-using that protocol. In the embedded sensors field it seems to be
-pretty common to use linux nodes as gateways to systems running various realtime
-/ light weight OSes.
 
-As Maxim stated there are a lot of protocols out there.
+--=-ioaJZeyJ7U4Qo3kuTp/e
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thank you to Dmitry and co for your work on this project, I'll be following
-your progress with interest (and when I have a sec adding support for the cc2420
-if no one else does it first ;)
+[  176.185771] WARNING: at /home/johannes/sys/wireless-testing/net/wireless=
+/sme.c:46 cfg80211_connected+0x149/0x150()
+[  176.197900] Hardware name:=20
+[  176.202752] Pid: 468, comm: phy1 Tainted: G        W  2.6.30-wl #71
+[  176.209012] Call Trace:
+[  176.218526]  [<ffffffff8024ae93>] warn_slowpath_common+0x73/0xc0
+[  176.219258]  [<ffffffff8024aeef>] warn_slowpath_null+0xf/0x20
+[  176.219966]  [<ffffffff805a58f9>] cfg80211_connected+0x149/0x150
+[  176.221854]  [<ffffffff805a5136>] cfg80211_send_rx_assoc+0x96/0xa0
+[  176.226272]  [<ffffffff805b28ec>] ieee80211_rx_mgmt_assoc_resp+0x71c/0x8=
+a0
 
----
-Jonathan Cameron
+johannes
 
- 
+--=-ioaJZeyJ7U4Qo3kuTp/e
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKQLtsAAoJEODzc/N7+QmaH/0QAIHIZQdKstHSZip5hndN60GM
+Q5s8Hy13ZuNb6ZIOuFck7zEKiEn3GBVe+qJ8MhqixL7oB8fgF+uc3euwdK9EhCpI
+R4t4lT+TNsIcxFX+zDSn3JFd+ppQrJV/t0jsyQooDrlP60u5XUghZVrl7bThqHL4
+JHn82h3uhAtlTT+tGgtPkRrIVU5ZwsVWblX+eer4gWsWvjWlJHNPCM8T79QEkLDl
+6kQP9sJEoJEdhY6tk38olcO99kG6hFKoJPxog97s1ezyOLvaa2IP3eUd0MMsI7Ar
+fp62ljR6XGuGBzMspYRuWDCZsFR+cXYnq2T1V3/88GrDdFQK6mvBP/84oDxa44A1
+pc75ULBmJeyhJag7rHwoPj76blGXSpeiHsD7yFSNKDnRgRiAy5dNnLaPaJPXGwSL
+I+8pNzYQ6/nrxA/ciWEgduUGH4k/AbUAeJ/zDinn2dorBSn6VjkVd6JhQXHOtDrC
+JjAn6Md4whMntWitBi2z8J3dAwejNtDLoYfOw/gg089B+d4lTeM+y7/XsXM5PWVb
+QNqcRXgMVxYC/Vej9rz2hpdjQDfanxx3gFiDIKIbg9VWqCDE7/KMS0wZzjlpPlf4
+C4pSmE01euJqjo0JGxSj3EctOAp/NWa2l2ZPgvrJjCZJX0P58nsILQd9FolEuvNl
+t40Di5vyx9ww7DBEtOeY
+=0V5F
+-----END PGP SIGNATURE-----
+
+--=-ioaJZeyJ7U4Qo3kuTp/e--
+
