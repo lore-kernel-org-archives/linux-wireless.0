@@ -1,106 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:53385 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559AbZFKPIc convert rfc822-to-8bit (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49572 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756259AbZFWP3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2009 11:08:32 -0400
-Received: by ewy6 with SMTP id 6so2101065ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2009 08:08:33 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH/RFC 0/7] wl12xx SDIO interface
-Date: Thu, 11 Jun 2009 17:08:28 +0200
-Cc: Samuel Ortiz <samuel@sortiz.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, pierre@ossman.eu,
-	kalle.valo@iki.fi, san@google.com
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <200906111659.29575.florian@openwrt.org> <69e28c910906110804t23c50bdbs7e23f6dd604e977e@mail.gmail.com>
-In-Reply-To: <69e28c910906110804t23c50bdbs7e23f6dd604e977e@mail.gmail.com>
+	Tue, 23 Jun 2009 11:29:49 -0400
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: [PATCH 00/10] We must use rcu_barrier() on module unload
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Date: Tue, 23 Jun 2009 17:03:53 +0200
+Message-ID: <20090623150330.22490.87327.stgit@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200906111708.30481.florian@openwrt.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Thursday 11 June 2009 17:04:01 Gábor Stefanik, vous avez écrit :
-> On Thu, Jun 11, 2009 at 4:59 PM, Florian Fainelli<florian@openwrt.org> 
-wrote:
-> > Le Thursday 11 June 2009 16:55:20 Samuel Ortiz, vous avez écrit :
-> >> On Thu, 2009-06-11 at 16:38 +0200, Gábor Stefanik wrote:
-> >> > On Thu, Jun 11, 2009 at 4:02 AM, Bob Copeland<me@bobcopeland.com> 
-wrote:
-> >> > > Here's v2 of the SDIO interface for wl12xx, still with a FIXME or
-> >> > > two.
-> >> > >
-> >> > > For my part, this is mainly a port of the Google/TI Android SDIO
-> >> > > interface logic to the existing SPI driver.  I have confirmed that
-> >> > > the driver associates and sends some traffic.
-> >> > >
-> >> > > Pierre, hoping to get your perspective on the SDIO bits in patch 7,
-> >> > > since I very likely don't know what I'm doing :)  Especially
-> >> > > regarding the platform code setup, in which the correct GPIOs have
-> >> > > to be written to turn on the device before probe will work.  For the
-> >> > > SPI interface, we use spi_register_board_info() for a similar
-> >> > > purpose, but I'm not sure if there is a standard way to do that for
-> >> > > SDIO.  This copies Google's platform driver for now.
-> >> > >
-> >> > > Conversion to readl/writel etc where appropriate is TODO.
-> >> > >
-> >> > > Bob Copeland (7):
-> >> > >  wl12xx: separate bus i/o code into io.c
-> >> > >  wl12xx: use wiphy_dev instead of wl->spi->dev
-> >> > >  wl12xx: introduce wl12xx_if_operations struct
-> >> > >  wl12xx: make wl12xx_set_partition bus agnostic
-> >> > >  wl12xx: move module probe methods into spi.c
-> >> > >  wl12xx: split spi interface into separate module
-> >> > >  wl12xx: add sdio support
-> >> > >
-> >> > >  drivers/net/wireless/wl12xx/Kconfig  |   24 +++-
-> >> > >  drivers/net/wireless/wl12xx/Makefile |   10 +-
-> >> > >  drivers/net/wireless/wl12xx/acx.c    |    3 +-
-> >> > >  drivers/net/wireless/wl12xx/boot.c   |    3 +-
-> >> > >  drivers/net/wireless/wl12xx/cmd.c    |   15 +-
-> >> > >  drivers/net/wireless/wl12xx/event.c  |    6 +-
-> >> > >  drivers/net/wireless/wl12xx/io.c     |  181 +++++++++++++++++++++
-> >> > >  drivers/net/wireless/wl12xx/io.h     |   62 +++++++
-> >> > >  drivers/net/wireless/wl12xx/main.c   |  152 ++++--------------
-> >> > >  drivers/net/wireless/wl12xx/ps.c     |    3 +-
-> >> > >  drivers/net/wireless/wl12xx/rx.c     |   10 +-
-> >> > >  drivers/net/wireless/wl12xx/sdio.c   |  250
-> >> > > +++++++++++++++++++++++++++++ drivers/net/wireless/wl12xx/spi.c    |
-> >> > > 289 ++++++++++++++-------------------
-> >> > > drivers/net/wireless/wl12xx/spi.h |   40 -----
-> >> > >  drivers/net/wireless/wl12xx/tx.c     |   64 ++++----
-> >> > >  drivers/net/wireless/wl12xx/wl1251.c |    9 +-
-> >> > >  drivers/net/wireless/wl12xx/wl12xx.h |   14 ++-
-> >> > >  17 files changed, 752 insertions(+), 383 deletions(-)
-> >> > >  create mode 100644 drivers/net/wireless/wl12xx/io.c
-> >> > >  create mode 100644 drivers/net/wireless/wl12xx/io.h
-> >> > >  create mode 100644 drivers/net/wireless/wl12xx/sdio.c
-> >> >
-> >> > Can we expect vlynq any time soon?
-> >>
-> >> I guess we need:
-> >>
-> >> 1) A linux vlynq driver for that, and last thing I saw [1], it wasnt
-> >> really pretty/ready
-> >
-> > That driver is perfectly functionnal on a TI AR7 and we have used it in
-> > OpenWrt for months with the acx100/111 driver. What makes you think it is
-> > not yet ready ? There was a couple of suggestions from a TI employee,
-> > which are perfectly valid, but I have no hardware to implement what he is
-> > suggesting (no daisy chaining ...).
->
-> Better forget the acx1xx driver. There is legal controversy around it
-> - the devs never released any documentation during the reverse
-> engineering process, and development was quite slow until TI's
-> copyrighted ti_ap.o driver's source code leaked...
+This patch series is an attempt to cleanup the entire tree, for
+potential oops'es during module unload, due to outstanding RCU
+callbacks. (My last rcu_barrier patch series only addressed net/).
 
-This is why I ask if wl12xx can actually drive an acx111 chipset or the HW is 
-completely different.
--- 
-Best regards, Florian Fainelli
-Email : florian@openwrt.org
-http://openwrt.org
--------------------------------
+If an unloadable module uses RCU callbacks, it need to use
+rcu_barrier() so that the module may be safely unloaded.
+
+For documentation see:
+
+ Paul E. McKenney's Blog
+ http://paulmck.livejournal.com/7314.html
+
+ http://lwn.net/Articles/217484/
+
+ Documentation/RCU/rcubarrier.txt
+
+
+Looking through the Linux kernel for call_rcu() users and unloadable
+modules I found 10 modules that didn't behave correctly.
+
+Please: MAINTAINERS needs to verify that the module exit code prevent
+any new RCU callbacks from being posted (before rcu_barrier() is
+called). (I have tried to do this verification, but most of these
+module are simply too large and complex for me to verify this within
+reasonable time)
+
+[Overview description, following patch ordering]
+
+The modules ext4, bridge, mac80211, sunrpc, nfs and ipv6 are fairly
+straight forward (maintainers still needs to check for prevent of new
+RCU callbacks).
+
+The module decnet, has disabled its module_exit() (since ^1da177e) but
+it still seems relevant to keep the code updated.
+
+The modules edac_core and cfq-iosched, has implemented their own
+open-coded wait_for_completion() scheme, in order to wait for
+call_rcu() calls.  Maintainers needs to look into removing this code
+and using rcu_barrier() instead.
+
+The module nf_conntrack, has embedded some comments that I would like
+Patrick McHardy to look at.  As I'm not sure which is are most optimal
+place to call rcu_barrier().  The patch probably calls rcu_barrier()
+too much, but its a better safe than sorry approach.
+
+
+I have made a patch for each individual module, so objections can be
+made on a per module basis.  I have Cc'ed all of the patches to the
+maintainers of each module (according to the MAINTAINERS file).
+
+
+The patchset is made on top of Linus Torvalds tree (starting on top of
+commit f234012f52a3).
+
+Who wants to pickup these patches? (I usually go through DaveM, but
+this also touches subsystems that are not (yet?) under DaveM's
+maintainer ship)
+
+
+---
+Jesper Dangaard Brouer (10):
+      nf_conntrack: Use rcu_barrier().
+      cfq-iosched: Uses its own open-coded rcu_barrier.
+      edac_core: Uses call_rcu() and its own wait_for_completion scheme.
+      decnet: Use rcu_barrier() on module unload.
+      ipv6: Use rcu_barrier() on module unload.
+      nfs: Use rcu_barrier() on module unload.
+      sunrpc: Use rcu_barrier() on unload.
+      mac80211: Use rcu_barrier() on unload.
+      bridge: Use rcu_barrier() instead of syncronize_net() on unload.
+      ext4: Use rcu_barrier() on module unload.
+
+
+ block/cfq-iosched.c                     |    6 ++++++
+ drivers/edac/edac_device.c              |    5 +++++
+ drivers/edac/edac_mc.c                  |    5 +++++
+ drivers/edac/edac_pci.c                 |    5 +++++
+ fs/ext4/mballoc.c                       |    4 +++-
+ fs/nfs/inode.c                          |    1 +
+ net/bridge/br.c                         |    2 +-
+ net/decnet/af_decnet.c                  |    6 ++++++
+ net/ipv6/af_inet6.c                     |    2 ++
+ net/mac80211/main.c                     |    2 ++
+ net/netfilter/nf_conntrack_core.c       |    5 +++++
+ net/netfilter/nf_conntrack_standalone.c |    2 ++
+ net/sunrpc/sunrpc_syms.c                |    1 +
+ 13 files changed, 44 insertions(+), 2 deletions(-)
+
+
+--
+Best regards,
+  Jesper Brouer
+  ComX Networks A/S
+  Linux Network developer
+  Cand. Scient Datalog / MSc.
+  Author of http://adsl-optimizer.dk
+  LinkedIn: http://www.linkedin.com/in/brouer
+
