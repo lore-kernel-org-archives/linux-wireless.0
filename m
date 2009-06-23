@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:27539 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbZFUUlH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34292 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752475AbZFWL2M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2009 16:41:07 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so912082fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2009 13:41:08 -0700 (PDT)
-Date: Sun, 21 Jun 2009 22:38:39 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: kernel crashes, 2.6.30, rt2x00, ath5k, ieee80211_get_*_rate,
-	automatic rate control
-Message-ID: <20090621203839.GA6887@linux-m68k.org>
-References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20090621180447.GA29469@hash.localnet>
+	Tue, 23 Jun 2009 07:28:12 -0400
+Subject: Re: [PATCH 1/2 RFC] cfg80211: connect/disconnect API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <20090622170409.GB30147@sortiz.org>
+References: <20090622170409.GB30147@sortiz.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VWN3zrFqW3jihtLuO67Y"
+Date: Tue, 23 Jun 2009 13:28:12 +0200
+Message-Id: <1245756492.4184.45.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 21, 2009 at 02:04:47PM -0400, Bob Copeland wrote:
-> On Sun, Jun 21, 2009 at 03:49:54PM +0200, Richard Zidlicky wrote:
-> > 
-> > The good news - setting a fixed rate appears to prevent all crashes. This is
-> > perhaps the reason why wireless developers never see this crashes?
-> 
-> Sounds like the rate controller.  Does this patch help?
-> 
-> http://lkml.org/lkml/2009/6/5/269
 
-will try ASAP, should have results on Monday
+--=-VWN3zrFqW3jihtLuO67Y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Richard
+Also, something seems to be wrong with the IEs:
+
+hostapd says:
+STA 02:00:00:00:01:00: No WPA/RSN IE in association request
+
+and the client gets:
+[  469.426983] wlan1: RX AssocResp from 00:11:24:91:07:4d (capab=3D0x411 st=
+atus=3D40 aid=3D0)
+[  469.428119] wlan1: AP denied association (code=3D40)
+
+johannes
+
+--=-VWN3zrFqW3jihtLuO67Y
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKQLxIAAoJEODzc/N7+QmaXQ0QANFnp3UcfLz9YuTf8KTb2bDc
+HcCJ5zeiw3Bp/XpdBs/PD9SIp654p9+Nwu1a3/h3Bsd/fsZxsdbMqfN1K3ra1tkG
+C4XrcTgQgPNXBdJ1AdOGBLHLNhV8VsaBPteY3dIyWaFp/YUpRBpwMsg6l6l51mPK
+lvQoc0f8uEc+n/Dv7AlTKSDvJ6mtS+EjTKuNNhavs/DghymqdSLEVkVl68PBxcQC
+5JPuTWJN0Y4gPF+J9LWBiao3YO12alSJM6ZjVG51tRBc8eSzPBfXULAo2FSItvtL
+WE/oxZeAChh78r04hn+AXbFCs8hv4s4iRU5UJsiv356+teUqbjuqmACxF81r2AnJ
+ODCXbZFxkxBcwu4HoFvUy2494DVlv9IhoPZibhSj+qyHSzgK2T2JQOCtFYrY8G1X
+QyWoWBa8wyGhrcT6/oRi0UcUbaXFzAEQd+9P1enyb4s5Mv5L4Bz7iHWK71hIVJYd
+hAnbbIkW7t3CN5JNbl6wIvCxhhhds1OOkxXo3vkraTTMfocH2JULDP0R5vGTeoLY
+TDFcBsS04UpFsHQLft/M1dhiMXXyO1aXDB0M9f0prv2idlLuUcSAFncgOklHL6Z/
+CjsrMczy5xiHMCGrROy8m9C4ZMbQTRaYulZA8JXmFpQtaHuVKXvRZyGLhP/sttLB
+IcAM02sUTPkZSDUzpamB
+=MUDo
+-----END PGP SIGNATURE-----
+
+--=-VWN3zrFqW3jihtLuO67Y--
+
