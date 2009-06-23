@@ -1,96 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.moondrake.net ([212.85.150.166]:54510 "EHLO
-	mx1.mandriva.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753303AbZFHRjc convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:61010 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbZFWPhv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 13:39:32 -0400
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Greg KH <greg@kroah.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] Add vt6656 driver to drivers/staging.
-References: <20090414105200.GE25746@storm.local.network>
-	<69e28c910906010935n28f69921xd589a945e982ca1@mail.gmail.com>
-	<20090601165207.GA12481@alittletooquiet.net>
-From: Olivier Blin <blino@mandriva.com>
-Date: Mon, 08 Jun 2009 19:08:14 +0200
-In-Reply-To: <20090601165207.GA12481@alittletooquiet.net> (Forest Bond's message of "Mon\, 1 Jun 2009 12\:52\:07 -0400")
-Message-ID: <m3prdeac1t.fsf@dynamo.mandriva.com>
+	Tue, 23 Jun 2009 11:37:51 -0400
+Date: Tue, 23 Jun 2009 10:37:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/8] p54: Move LED code
+Message-ID: <4a40f6d7.O9KreZzbF9bctSfd%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forest Bond <forest@alittletooquiet.net> writes:
+From: Christian Lamparter <chunkeey@web.de>
 
-> Hi,
->
-> On Mon, Jun 01, 2009 at 06:35:35PM +0200, Gábor Stefanik wrote:
->> On Tue, Apr 14, 2009 at 12:52 PM, Forest Bond
->> <forest@alittletooquiet.net> wrote:
->> > This patch adds the vt6656 driver to drivers/staging.  This code was literally
->> > copied from the upstream source archive, available here:
->> >
->> >  http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
->> >
->> > Copyright: VIA Networking Technologies, Inc.
->> > License: GPL
->> > Authors: Jerry Chen, Kyle Hsu, Lucas Lin, Lyndon Chen, Tevin Chen, Warren Hsu,
->> >         Yiching Chen
->> > Signed-off-by: Forest Bond <forest@alittletooquiet.net>
->> >
->> > Patch: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driver-to-drivers-staging.patch.gz
->> > Signature: http://www.alittletooquiet.net/media/code/0002-Add-vt6656-driver-to-drivers-staging.patch.gz.sig
->> 
->> Did this patch (along with the vt6655 one) somehow get lost? I can't
->> see it in drivers/staging.
->
-> vt6655 is in drivers/staging on linux-next, although I have three more patches
-> that I'll be sending to Greg sometime tonight.  He has been applying them for
-> me.
->
-> vt6656 is currently delayed a bit.  I may be able to get a start on that
-> tonight, as well, but there is likelihood of further delay.
+Copy the LED code from p54common.c into a new file led.c
 
-By the way, are you sure about the hook below about wpactl.c in commit
-8f2c32b86b3ac16ba4c93bf0c2b766089644d9d1 ?
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-If I do the same in vt6656, it is freezing the kernel, or causing random
-crashes. Removing the netdev priv assignation makes the driver ok.
-I don't think the wpa priv was really useful, but I fail to see where it
-was used, and why it caused the hang.
-
-Don't you have the same issue with vt6655?
-
-BTW, I have some patches to send for vt6656, what is the proper place to
-submit them since vt6656 is not in staging for now?
-
-diff --git a/drivers/staging/vt6655/wpactl.c b/drivers/staging/vt6655/wpactl.c
-index ee7109d..cc4f0ad 100644 (file)
---- a/drivers/staging/vt6655/wpactl.c
-+++ b/drivers/staging/vt6655/wpactl.c
-@@ -112,14 +112,17 @@ static void wpadev_setup(struct net_device *dev)
- 
- static int wpa_init_wpadev(PSDevice pDevice)
- {
-+    PSDevice wpadev_priv;
-        struct net_device *dev = pDevice->dev;
-          int ret=0;
- 
--       pDevice->wpadev = alloc_netdev(0, "vntwpa", wpadev_setup);
-+       pDevice->wpadev = alloc_netdev(sizeof(PSDevice), "vntwpa", wpadev_setup);
-        if (pDevice->wpadev == NULL)
-                return -ENOMEM;
- 
--       pDevice->wpadev->priv = pDevice;
-+    wpadev_priv = netdev_priv(pDevice->wpadev);
-+    *wpadev_priv = *pDevice;
+diff --git a/drivers/net/wireless/p54/led.c b/drivers/net/wireless/p54/led.c
+new file mode 100644
+index 0000000..c00115b
+--- /dev/null
++++ b/drivers/net/wireless/p54/led.c
+@@ -0,0 +1,163 @@
++/*
++ * Common code for mac80211 Prism54 drivers
++ *
++ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
++ * Copyright (c) 2007-2009, Christian Lamparter <chunkeey@web.de>
++ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ *
++ * Based on:
++ * - the islsm (softmac prism54) driver, which is:
++ *   Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
++ * - stlc45xx driver
++ *   Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
-        memcpy(pDevice->wpadev->dev_addr, dev->dev_addr, U_ETHER_ADDR_LEN);
-          pDevice->wpadev->base_addr = dev->base_addr;
-        pDevice->wpadev->irq = dev->irq;
++#include <linux/init.h>
++#include <linux/firmware.h>
++#include <linux/etherdevice.h>
++
++#include <net/mac80211.h>
++#ifdef CONFIG_P54_LEDS
++#include <linux/leds.h>
++#endif /* CONFIG_P54_LEDS */
++
++#include "p54.h"
++#include "lmac.h"
++
++static void p54_update_leds(struct work_struct *work)
++{
++	struct p54_common *priv = container_of(work, struct p54_common,
++					       led_work.work);
++	int err, i, tmp, blink_delay = 400;
++	bool rerun = false;
++
++	/* Don't toggle the LED, when the device is down. */
++	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
++		return ;
++
++	for (i = 0; i < ARRAY_SIZE(priv->leds); i++)
++		if (priv->leds[i].toggled) {
++			priv->softled_state |= BIT(i);
++
++			tmp = 70 + 200 / (priv->leds[i].toggled);
++			if (tmp < blink_delay)
++				blink_delay = tmp;
++
++			if (priv->leds[i].led_dev.brightness == LED_OFF)
++				rerun = true;
++
++			priv->leds[i].toggled =
++				!!priv->leds[i].led_dev.brightness;
++		} else
++			priv->softled_state &= ~BIT(i);
++
++	err = p54_set_leds(priv);
++	if (err && net_ratelimit())
++		printk(KERN_ERR "%s: failed to update LEDs (%d).\n",
++			wiphy_name(priv->hw->wiphy), err);
++
++	if (rerun)
++		queue_delayed_work(priv->hw->workqueue, &priv->led_work,
++			msecs_to_jiffies(blink_delay));
++}
++
++static void p54_led_brightness_set(struct led_classdev *led_dev,
++				   enum led_brightness brightness)
++{
++	struct p54_led_dev *led = container_of(led_dev, struct p54_led_dev,
++					       led_dev);
++	struct ieee80211_hw *dev = led->hw_dev;
++	struct p54_common *priv = dev->priv;
++
++	if (priv->mode == NL80211_IFTYPE_UNSPECIFIED)
++		return ;
++
++	if ((brightness) && (led->registered)) {
++		led->toggled++;
++		queue_delayed_work(priv->hw->workqueue, &priv->led_work,
++				   HZ/10);
++	}
++}
++
++static int p54_register_led(struct p54_common *priv,
++			    unsigned int led_index,
++			    char *name, char *trigger)
++{
++	struct p54_led_dev *led = &priv->leds[led_index];
++	int err;
++
++	if (led->registered)
++		return -EEXIST;
++
++	snprintf(led->name, sizeof(led->name), "p54-%s::%s",
++		 wiphy_name(priv->hw->wiphy), name);
++	led->hw_dev = priv->hw;
++	led->index = led_index;
++	led->led_dev.name = led->name;
++	led->led_dev.default_trigger = trigger;
++	led->led_dev.brightness_set = p54_led_brightness_set;
++
++	err = led_classdev_register(wiphy_dev(priv->hw->wiphy), &led->led_dev);
++	if (err)
++		printk(KERN_ERR "%s: Failed to register %s LED.\n",
++			wiphy_name(priv->hw->wiphy), name);
++	else
++		led->registered = 1;
++
++	return err;
++}
++
++int p54_init_leds(struct p54_common *priv)
++{
++	int err;
++
++	/*
++	 * TODO:
++	 * Figure out if the EEPROM contains some hints about the number
++	 * of available/programmable LEDs of the device.
++	 */
++
++	INIT_DELAYED_WORK(&priv->led_work, p54_update_leds);
++
++	err = p54_register_led(priv, 0, "assoc",
++			       ieee80211_get_assoc_led_name(priv->hw));
++	if (err)
++		return err;
++
++	err = p54_register_led(priv, 1, "tx",
++			       ieee80211_get_tx_led_name(priv->hw));
++	if (err)
++		return err;
++
++	err = p54_register_led(priv, 2, "rx",
++			       ieee80211_get_rx_led_name(priv->hw));
++	if (err)
++		return err;
++
++	err = p54_register_led(priv, 3, "radio",
++			       ieee80211_get_radio_led_name(priv->hw));
++	if (err)
++		return err;
++
++	err = p54_set_leds(priv);
++	return err;
++}
++
++void p54_unregister_leds(struct p54_common *priv)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(priv->leds); i++) {
++		if (priv->leds[i].registered) {
++			priv->leds[i].registered = false;
++			priv->leds[i].toggled = 0;
++			led_classdev_unregister(&priv->leds[i].led_dev);
++		}
++	}
++
++	cancel_delayed_work_sync(&priv->led_work);
++}
 
--- 
-Olivier Blin (blino) - Mandriva
