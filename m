@@ -1,193 +1,583 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52162 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759451AbZFXLje (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:35535 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757169AbZFWPiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 07:39:34 -0400
-Message-Id: <20090624113731.764420902@sipsolutions.net>
-References: <20090624113447.441667549@sipsolutions.net>
-Date: Wed, 24 Jun 2009 13:34:49 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
+	Tue, 23 Jun 2009 11:38:16 -0400
+Date: Tue, 23 Jun 2009 10:38:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] wext: optimise, comment and fix event sending
-Mime-Version: 1.0
+Subject: [PATCH 5/8] p54: Move LMAC interface definitions
+Message-ID: <4a40f6f0.CjiFNALLGuWavjuG%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current function for sending events first allocates the
-event stream buffer, and then an skb to copy the event stream
-into. This can be done in one go. Also, the current function
-leaks kernel data to userspace in a 4 uninitialised bytes,
-initialise those explicitly. Finally also add a few useful
-comments, as opposed to the current comments.
+From: Christian Lamparter <chunkeey@web.de>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Copy the LMAC Interface specific definitions from p54common.h into a new file lmac.h
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- net/wireless/wext.c |  114 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 57 insertions(+), 57 deletions(-)
 
---- wireless-testing.orig/net/wireless/wext.c	2009-06-24 13:31:15.000000000 +0200
-+++ wireless-testing/net/wireless/wext.c	2009-06-24 13:31:17.000000000 +0200
-@@ -1293,22 +1293,15 @@ static void wireless_nlevent_process(str
- 
- static DECLARE_WORK(wireless_nlevent_work, wireless_nlevent_process);
- 
--/* ---------------------------------------------------------------- */
--/*
-- * Fill a rtnetlink message with our event data.
-- * Note that we propage only the specified event and don't dump the
-- * current wireless config. Dumping the wireless config is far too
-- * expensive (for each parameter, the driver need to query the hardware).
-- */
--static int rtnetlink_fill_iwinfo(struct sk_buff *skb, struct net_device *dev,
--				 int type, char *event, int event_len)
-+static struct nlmsghdr *rtnetlink_ifinfo_prep(struct net_device *dev,
-+					      struct sk_buff *skb)
- {
- 	struct ifinfomsg *r;
- 	struct nlmsghdr  *nlh;
- 
--	nlh = nlmsg_put(skb, 0, 0, type, sizeof(*r), 0);
--	if (nlh == NULL)
--		return -EMSGSIZE;
-+	nlh = nlmsg_put(skb, 0, 0, RTM_NEWLINK, sizeof(*r), 0);
-+	if (!nlh)
-+		return NULL;
- 
- 	r = nlmsg_data(nlh);
- 	r->ifi_family = AF_UNSPEC;
-@@ -1319,45 +1312,14 @@ static int rtnetlink_fill_iwinfo(struct 
- 	r->ifi_change = 0;	/* Wireless changes don't affect those flags */
- 
- 	NLA_PUT_STRING(skb, IFLA_IFNAME, dev->name);
--	/* Add the wireless events in the netlink packet */
--	NLA_PUT(skb, IFLA_WIRELESS, event_len, event);
--
--	return nlmsg_end(skb, nlh);
- 
--nla_put_failure:
-+	return nlh;
-+ nla_put_failure:
- 	nlmsg_cancel(skb, nlh);
--	return -EMSGSIZE;
-+	return NULL;
- }
- 
--/* ---------------------------------------------------------------- */
--/*
-- * Create and broadcast and send it on the standard rtnetlink socket
-- * This is a pure clone rtmsg_ifinfo() in net/core/rtnetlink.c
-- * Andrzej Krzysztofowicz mandated that I used a IFLA_XXX field
-- * within a RTM_NEWLINK event.
-- */
--static void rtmsg_iwinfo(struct net_device *dev, char *event, int event_len)
--{
--	struct sk_buff *skb;
--	int err;
--
--	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
--	if (!skb)
--		return;
--
--	err = rtnetlink_fill_iwinfo(skb, dev, RTM_NEWLINK, event, event_len);
--	if (err < 0) {
--		WARN_ON(err == -EMSGSIZE);
--		kfree_skb(skb);
--		return;
--	}
--
--	NETLINK_CB(skb).dst_group = RTNLGRP_LINK;
--	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
--	schedule_work(&wireless_nlevent_work);
--}
- 
--/* ---------------------------------------------------------------- */
- /*
-  * Main event dispatcher. Called from other parts and drivers.
-  * Send the event on the appropriate channels.
-@@ -1376,6 +1338,9 @@ void wireless_send_event(struct net_devi
- 	int wrqu_off = 0;			/* Offset in wrqu */
- 	/* Don't "optimise" the following variable, it will crash */
- 	unsigned	cmd_index;		/* *MUST* be unsigned */
-+	struct sk_buff *skb;
-+	struct nlmsghdr *nlh;
-+	struct nlattr *nla;
- 
- 	/* Get the description of the Event */
- 	if (cmd <= SIOCIWLAST) {
-@@ -1423,25 +1388,60 @@ void wireless_send_event(struct net_devi
- 	hdr_len = event_type_size[descr->header_type];
- 	event_len = hdr_len + extra_len;
- 
--	/* Create temporary buffer to hold the event */
--	event = kmalloc(event_len, GFP_ATOMIC);
--	if (event == NULL)
-+	/*
-+	 * The problem for 64/32 bit.
-+	 *
-+	 * On 64-bit, a regular event is laid out as follows:
-+	 *      |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
-+	 *      | event.len | event.cmd |     p a d d i n g     |
-+	 *      | wrqu data ... (with the correct size)         |
-+	 *
-+	 * This padding exists because we manipulate event->u,
-+	 * and 'event' is not packed.
-+	 *
-+	 * An iw_point event is laid out like this instead:
-+	 *      |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
-+	 *      | event.len | event.cmd |     p a d d i n g     |
-+	 *      | iwpnt.len | iwpnt.flg |     p a d d i n g     |
-+	 *      | extra data  ...
-+	 *
-+	 * The second padding exists because struct iw_point is extended,
-+	 * but this depends on the platform...
-+	 *
-+	 * On 32-bit, all the padding shouldn't be there.
-+	 */
+diff --git a/drivers/net/wireless/p54/lmac.h b/drivers/net/wireless/p54/lmac.h
+new file mode 100644
+index 0000000..0496cff
+--- /dev/null
++++ b/drivers/net/wireless/p54/lmac.h
+@@ -0,0 +1,551 @@
++/*
++ * LMAC Interface specific definitions for mac80211 Prism54 drivers
++ *
++ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
++ * Copyright (c) 2007 - 2009, Christian Lamparter <chunkeey@web.de>
++ *
++ * Based on:
++ * - the islsm (softmac prism54) driver, which is:
++ *   Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
++ *
++ * - LMAC API interface header file for STLC4560 (lmac_longbow.h)
++ *   Copyright (C) 2007 Conexant Systems, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
-+	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
-+	if (!skb)
- 		return;
- 
--	/* Fill event */
-+	/* Send via the RtNetlink event channel */
-+	nlh = rtnetlink_ifinfo_prep(dev, skb);
-+	if (WARN_ON(!nlh)) {
-+		kfree_skb(skb);
-+		return;
-+	}
++#ifndef LMAC_H
++#define LMAC_H
 +
-+	/* Add the wireless events in the netlink packet */
-+	nla = nla_reserve(skb, IFLA_WIRELESS, event_len);
-+	if (!nla) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+	event = nla_data(nla);
++enum p54_control_frame_types {
++	P54_CONTROL_TYPE_SETUP = 0,
++	P54_CONTROL_TYPE_SCAN,
++	P54_CONTROL_TYPE_TRAP,
++	P54_CONTROL_TYPE_DCFINIT,
++	P54_CONTROL_TYPE_RX_KEYCACHE,
++	P54_CONTROL_TYPE_TIM,
++	P54_CONTROL_TYPE_PSM,
++	P54_CONTROL_TYPE_TXCANCEL,
++	P54_CONTROL_TYPE_TXDONE,
++	P54_CONTROL_TYPE_BURST,
++	P54_CONTROL_TYPE_STAT_READBACK,
++	P54_CONTROL_TYPE_BBP,
++	P54_CONTROL_TYPE_EEPROM_READBACK,
++	P54_CONTROL_TYPE_LED,
++	P54_CONTROL_TYPE_GPIO,
++	P54_CONTROL_TYPE_TIMER,
++	P54_CONTROL_TYPE_MODULATION,
++	P54_CONTROL_TYPE_SYNTH_CONFIG,
++	P54_CONTROL_TYPE_DETECTOR_VALUE,
++	P54_CONTROL_TYPE_XBOW_SYNTH_CFG,
++	P54_CONTROL_TYPE_CCE_QUIET,
++	P54_CONTROL_TYPE_PSM_STA_UNLOCK,
++	P54_CONTROL_TYPE_PCS,
++	P54_CONTROL_TYPE_BT_BALANCER = 28,
++	P54_CONTROL_TYPE_GROUP_ADDRESS_TABLE = 30,
++	P54_CONTROL_TYPE_ARPTABLE = 31,
++	P54_CONTROL_TYPE_BT_OPTIONS = 35,
++};
 +
-+	/* Fill event - first clear to avoid data leaking */
-+	memset(event, 0, hdr_len);
- 	event->len = event_len;
- 	event->cmd = cmd;
- 	memcpy(&event->u, ((char *) wrqu) + wrqu_off, hdr_len - IW_EV_LCP_LEN);
--	if (extra)
-+	if (extra_len)
- 		memcpy(((char *) event) + hdr_len, extra, extra_len);
- 
--	/* Send via the RtNetlink event channel */
--	rtmsg_iwinfo(dev, (char *) event, event_len);
--
--	/* Cleanup */
--	kfree(event);
-+	nlmsg_end(skb, nlh);
- 
--	return;		/* Always success, I guess ;-) */
-+	skb_queue_tail(&dev_net(dev)->wext_nlevents, skb);
-+	schedule_work(&wireless_nlevent_work);
- }
- EXPORT_SYMBOL(wireless_send_event);
- 
-
--- 
++#define P54_HDR_FLAG_CONTROL		BIT(15)
++#define P54_HDR_FLAG_CONTROL_OPSET	(BIT(15) + BIT(0))
++#define P54_HDR_FLAG_DATA_ALIGN		BIT(14)
++
++#define P54_HDR_FLAG_DATA_OUT_PROMISC		BIT(0)
++#define P54_HDR_FLAG_DATA_OUT_TIMESTAMP		BIT(1)
++#define P54_HDR_FLAG_DATA_OUT_SEQNR		BIT(2)
++#define P54_HDR_FLAG_DATA_OUT_BIT3		BIT(3)
++#define P54_HDR_FLAG_DATA_OUT_BURST		BIT(4)
++#define P54_HDR_FLAG_DATA_OUT_NOCANCEL		BIT(5)
++#define P54_HDR_FLAG_DATA_OUT_CLEARTIM		BIT(6)
++#define P54_HDR_FLAG_DATA_OUT_HITCHHIKE		BIT(7)
++#define P54_HDR_FLAG_DATA_OUT_COMPRESS		BIT(8)
++#define P54_HDR_FLAG_DATA_OUT_CONCAT		BIT(9)
++#define P54_HDR_FLAG_DATA_OUT_PCS_ACCEPT	BIT(10)
++#define P54_HDR_FLAG_DATA_OUT_WAITEOSP		BIT(11)
++
++#define P54_HDR_FLAG_DATA_IN_FCS_GOOD		BIT(0)
++#define P54_HDR_FLAG_DATA_IN_MATCH_MAC		BIT(1)
++#define P54_HDR_FLAG_DATA_IN_MCBC		BIT(2)
++#define P54_HDR_FLAG_DATA_IN_BEACON		BIT(3)
++#define P54_HDR_FLAG_DATA_IN_MATCH_BSS		BIT(4)
++#define P54_HDR_FLAG_DATA_IN_BCAST_BSS		BIT(5)
++#define P54_HDR_FLAG_DATA_IN_DATA		BIT(6)
++#define P54_HDR_FLAG_DATA_IN_TRUNCATED		BIT(7)
++#define P54_HDR_FLAG_DATA_IN_BIT8		BIT(8)
++#define P54_HDR_FLAG_DATA_IN_TRANSPARENT	BIT(9)
++
++struct p54_hdr {
++	__le16 flags;
++	__le16 len;
++	__le32 req_id;
++	__le16 type;	/* enum p54_control_frame_types */
++	u8 rts_tries;
++	u8 tries;
++	u8 data[0];
++} __packed;
++
++#define GET_REQ_ID(skb)							\
++	(((struct p54_hdr *) ((struct sk_buff *) skb)->data)->req_id)	\
++
++#define FREE_AFTER_TX(skb)						\
++	((((struct p54_hdr *) ((struct sk_buff *) skb)->data)->		\
++	flags) == cpu_to_le16(P54_HDR_FLAG_CONTROL_OPSET))
++
++#define IS_DATA_FRAME(skb)						\
++	(!((((struct p54_hdr *) ((struct sk_buff *) skb)->data)->	\
++	flags) & cpu_to_le16(P54_HDR_FLAG_CONTROL)))
++
++/*
++ * shared interface ID definitions
++ * The interface ID is a unique identification of a specific interface.
++ * The following values are reserved: 0x0000, 0x0002, 0x0012, 0x0014, 0x0015
++ */
++#define IF_ID_ISL36356A			0x0001	/* ISL36356A <-> Firmware */
++#define IF_ID_MVC			0x0003	/* MAC Virtual Coprocessor */
++#define IF_ID_DEBUG			0x0008	/* PolDebug Interface */
++#define IF_ID_PRODUCT			0x0009
++#define IF_ID_OEM			0x000a
++#define IF_ID_PCI3877			0x000b	/* 3877 <-> Host PCI */
++#define IF_ID_ISL37704C			0x000c	/* ISL37704C <-> Fw */
++#define IF_ID_ISL39000			0x000f	/* ISL39000 <-> Fw */
++#define IF_ID_ISL39300A			0x0010	/* ISL39300A <-> Fw */
++#define IF_ID_ISL37700_UAP		0x0016	/* ISL37700 uAP Fw <-> Fw */
++#define IF_ID_ISL39000_UAP		0x0017	/* ISL39000 uAP Fw <-> Fw */
++#define IF_ID_LMAC			0x001a	/* Interface exposed by LMAC */
++
++struct exp_if {
++	__le16 role;
++	__le16 if_id;
++	__le16 variant;
++	__le16 btm_compat;
++	__le16 top_compat;
++} __packed;
++
++struct dep_if {
++	__le16 role;
++	__le16 if_id;
++	__le16 variant;
++} __packed;
++
++/* driver <-> lmac definitions */
++struct p54_eeprom_lm86 {
++	union {
++		struct {
++			__le16 offset;
++			__le16 len;
++			u8 data[0];
++		} __packed v1;
++		struct {
++			__le32 offset;
++			__le16 len;
++			u8 magic2;
++			u8 pad;
++			u8 magic[4];
++			u8 data[0];
++		} __packed v2;
++	}  __packed;
++} __packed;
++
++enum p54_rx_decrypt_status {
++	P54_DECRYPT_NONE = 0,
++	P54_DECRYPT_OK,
++	P54_DECRYPT_NOKEY,
++	P54_DECRYPT_NOMICHAEL,
++	P54_DECRYPT_NOCKIPMIC,
++	P54_DECRYPT_FAIL_WEP,
++	P54_DECRYPT_FAIL_TKIP,
++	P54_DECRYPT_FAIL_MICHAEL,
++	P54_DECRYPT_FAIL_CKIPKP,
++	P54_DECRYPT_FAIL_CKIPMIC,
++	P54_DECRYPT_FAIL_AESCCMP
++};
++
++struct p54_rx_data {
++	__le16 flags;
++	__le16 len;
++	__le16 freq;
++	u8 antenna;
++	u8 rate;
++	u8 rssi;
++	u8 quality;
++	u8 decrypt_status;
++	u8 rssi_raw;
++	__le32 tsf32;
++	__le32 unalloc0;
++	u8 align[0];
++} __packed;
++
++enum p54_trap_type {
++	P54_TRAP_SCAN = 0,
++	P54_TRAP_TIMER,
++	P54_TRAP_BEACON_TX,
++	P54_TRAP_FAA_RADIO_ON,
++	P54_TRAP_FAA_RADIO_OFF,
++	P54_TRAP_RADAR,
++	P54_TRAP_NO_BEACON,
++	P54_TRAP_TBTT,
++	P54_TRAP_SCO_ENTER,
++	P54_TRAP_SCO_EXIT
++};
++
++struct p54_trap {
++	__le16 event;
++	__le16 frequency;
++} __packed;
++
++enum p54_frame_sent_status {
++	P54_TX_OK = 0,
++	P54_TX_FAILED,
++	P54_TX_PSM,
++	P54_TX_PSM_CANCELLED = 4
++};
++
++struct p54_frame_sent {
++	u8 status;
++	u8 tries;
++	u8 ack_rssi;
++	u8 quality;
++	__le16 seq;
++	u8 antenna;
++	u8 padding;
++} __packed;
++
++enum p54_tx_data_crypt {
++	P54_CRYPTO_NONE = 0,
++	P54_CRYPTO_WEP,
++	P54_CRYPTO_TKIP,
++	P54_CRYPTO_TKIPMICHAEL,
++	P54_CRYPTO_CCX_WEPMIC,
++	P54_CRYPTO_CCX_KPMIC,
++	P54_CRYPTO_CCX_KP,
++	P54_CRYPTO_AESCCMP
++};
++
++enum p54_tx_data_queue {
++	P54_QUEUE_BEACON	= 0,
++	P54_QUEUE_FWSCAN	= 1,
++	P54_QUEUE_MGMT		= 2,
++	P54_QUEUE_CAB		= 3,
++	P54_QUEUE_DATA		= 4,
++
++	P54_QUEUE_AC_NUM	= 4,
++	P54_QUEUE_AC_VO		= 4,
++	P54_QUEUE_AC_VI		= 5,
++	P54_QUEUE_AC_BE		= 6,
++	P54_QUEUE_AC_BK		= 7,
++
++	/* keep last */
++	P54_QUEUE_NUM		= 8,
++};
++
++#define IS_QOS_QUEUE(n)	(n >= P54_QUEUE_DATA)
++
++struct p54_tx_data {
++	u8 rateset[8];
++	u8 rts_rate_idx;
++	u8 crypt_offset;
++	u8 key_type;
++	u8 key_len;
++	u8 key[16];
++	u8 hw_queue;
++	u8 backlog;
++	__le16 durations[4];
++	u8 tx_antenna;
++	union {
++		struct {
++			u8 cts_rate;
++			__le16 output_power;
++		} __packed longbow;
++		struct {
++			u8 output_power;
++			u8 cts_rate;
++			u8 unalloc;
++		} __packed normal;
++	} __packed;
++	u8 unalloc2[2];
++	u8 align[0];
++} __packed;
++
++/* unit is ms */
++#define P54_TX_FRAME_LIFETIME 2000
++#define P54_TX_TIMEOUT 4000
++#define P54_STATISTICS_UPDATE 5000
++
++#define P54_FILTER_TYPE_NONE		0
++#define P54_FILTER_TYPE_STATION		BIT(0)
++#define P54_FILTER_TYPE_IBSS		BIT(1)
++#define P54_FILTER_TYPE_AP		BIT(2)
++#define P54_FILTER_TYPE_TRANSPARENT	BIT(3)
++#define P54_FILTER_TYPE_PROMISCUOUS	BIT(4)
++#define P54_FILTER_TYPE_HIBERNATE	BIT(5)
++#define P54_FILTER_TYPE_NOACK		BIT(6)
++#define P54_FILTER_TYPE_RX_DISABLED	BIT(7)
++
++struct p54_setup_mac {
++	__le16 mac_mode;
++	u8 mac_addr[ETH_ALEN];
++	u8 bssid[ETH_ALEN];
++	u8 rx_antenna;
++	u8 rx_align;
++	union {
++		struct {
++			__le32 basic_rate_mask;
++			u8 rts_rates[8];
++			__le32 rx_addr;
++			__le16 max_rx;
++			__le16 rxhw;
++			__le16 wakeup_timer;
++			__le16 unalloc0;
++		} __packed v1;
++		struct {
++			__le32 rx_addr;
++			__le16 max_rx;
++			__le16 rxhw;
++			__le16 timer;
++			__le16 truncate;
++			__le32 basic_rate_mask;
++			u8 sbss_offset;
++			u8 mcast_window;
++			u8 rx_rssi_threshold;
++			u8 rx_ed_threshold;
++			__le32 ref_clock;
++			__le16 lpf_bandwidth;
++			__le16 osc_start_delay;
++		} __packed v2;
++	} __packed;
++} __packed;
++
++#define P54_SETUP_V1_LEN 40
++#define P54_SETUP_V2_LEN (sizeof(struct p54_setup_mac))
++
++#define P54_SCAN_EXIT	BIT(0)
++#define P54_SCAN_TRAP	BIT(1)
++#define P54_SCAN_ACTIVE BIT(2)
++#define P54_SCAN_FILTER BIT(3)
++
++struct p54_scan_head {
++	__le16 mode;
++	__le16 dwell;
++	u8 scan_params[20];
++	__le16 freq;
++} __packed;
++
++struct p54_pa_curve_data_sample {
++	u8 rf_power;
++	u8 pa_detector;
++	u8 data_barker;
++	u8 data_bpsk;
++	u8 data_qpsk;
++	u8 data_16qam;
++	u8 data_64qam;
++	u8 padding;
++} __packed;
++
++struct p54_scan_body {
++	u8 pa_points_per_curve;
++	u8 val_barker;
++	u8 val_bpsk;
++	u8 val_qpsk;
++	u8 val_16qam;
++	u8 val_64qam;
++	struct p54_pa_curve_data_sample curve_data[8];
++	u8 dup_bpsk;
++	u8 dup_qpsk;
++	u8 dup_16qam;
++	u8 dup_64qam;
++} __packed;
++
++/*
++ * Warning: Longbow's structures are bogus.
++ */
++struct p54_channel_output_limit_longbow {
++	__le16 rf_power_points[12];
++} __packed;
++
++struct p54_pa_curve_data_sample_longbow {
++	__le16 rf_power;
++	__le16 pa_detector;
++	struct {
++		__le16 data[4];
++	} points[3] __packed;
++} __packed;
++
++struct p54_scan_body_longbow {
++	struct p54_channel_output_limit_longbow power_limits;
++	struct p54_pa_curve_data_sample_longbow curve_data[8];
++	__le16 unkn[6];		/* maybe more power_limits or rate_mask */
++} __packed;
++
++union p54_scan_body_union {
++	struct p54_scan_body normal;
++	struct p54_scan_body_longbow longbow;
++} __packed;
++
++struct p54_scan_tail_rate {
++	__le32 basic_rate_mask;
++	u8 rts_rates[8];
++} __packed;
++
++struct p54_led {
++	__le16 flags;
++	__le16 mask[2];
++	__le16 delay[2];
++} __packed;
++
++struct p54_edcf {
++	u8 flags;
++	u8 slottime;
++	u8 sifs;
++	u8 eofpad;
++	struct p54_edcf_queue_param queue[8];
++	u8 mapping[4];
++	__le16 frameburst;
++	__le16 round_trip_delay;
++} __packed;
++
++struct p54_statistics {
++	__le32 rx_success;
++	__le32 rx_bad_fcs;
++	__le32 rx_abort;
++	__le32 rx_abort_phy;
++	__le32 rts_success;
++	__le32 rts_fail;
++	__le32 tsf32;
++	__le32 airtime;
++	__le32 noise;
++	__le32 sample_noise[8];
++	__le32 sample_cca;
++	__le32 sample_tx;
++} __packed;
++
++struct p54_xbow_synth {
++	__le16 magic1;
++	__le16 magic2;
++	__le16 freq;
++	u32 padding[5];
++} __packed;
++
++struct p54_timer {
++	__le32 interval;
++} __packed;
++
++struct p54_keycache {
++	u8 entry;
++	u8 key_id;
++	u8 mac[ETH_ALEN];
++	u8 padding[2];
++	u8 key_type;
++	u8 key_len;
++	u8 key[24];
++} __packed;
++
++struct p54_burst {
++	u8 flags;
++	u8 queue;
++	u8 backlog;
++	u8 pad;
++	__le16 durations[32];
++} __packed;
++
++struct p54_psm_interval {
++	__le16 interval;
++	__le16 periods;
++} __packed;
++
++#define P54_PSM_CAM			0
++#define P54_PSM				BIT(0)
++#define P54_PSM_DTIM			BIT(1)
++#define P54_PSM_MCBC			BIT(2)
++#define P54_PSM_CHECKSUM		BIT(3)
++#define P54_PSM_SKIP_MORE_DATA		BIT(4)
++#define P54_PSM_BEACON_TIMEOUT		BIT(5)
++#define P54_PSM_HFOSLEEP		BIT(6)
++#define P54_PSM_AUTOSWITCH_SLEEP	BIT(7)
++#define P54_PSM_LPIT			BIT(8)
++#define P54_PSM_BF_UCAST_SKIP		BIT(9)
++#define P54_PSM_BF_MCAST_SKIP		BIT(10)
++
++struct p54_psm {
++	__le16 mode;
++	__le16 aid;
++	struct p54_psm_interval intervals[4];
++	u8 beacon_rssi_skip_max;
++	u8 rssi_delta_threshold;
++	u8 nr;
++	u8 exclude[1];
++} __packed;
++
++#define MC_FILTER_ADDRESS_NUM 4
++
++struct p54_group_address_table {
++	__le16 filter_enable;
++	__le16 num_address;
++	u8 mac_list[MC_FILTER_ADDRESS_NUM][ETH_ALEN];
++} __packed;
++
++struct p54_txcancel {
++	__le32 req_id;
++} __packed;
++
++struct p54_sta_unlock {
++	u8 addr[ETH_ALEN];
++	u16 padding;
++} __packed;
++
++#define P54_TIM_CLEAR BIT(15)
++struct p54_tim {
++	u8 count;
++	u8 padding[3];
++	__le16 entry[8];
++} __packed;
++
++struct p54_cce_quiet {
++	__le32 period;
++} __packed;
++
++struct p54_bt_balancer {
++	__le16 prio_thresh;
++	__le16 acl_thresh;
++} __packed;
++
++struct p54_arp_table {
++	__le16 filter_enable;
++	u8 ipv4_addr[4];
++} __packed;
++
++/* LED control */
++int p54_set_leds(struct p54_common *priv);
++int p54_init_leds(struct p54_common *priv);
++void p54_unregister_leds(struct p54_common *priv);
++
++/* xmit functions */
++int p54_tx_80211(struct ieee80211_hw *dev, struct sk_buff *skb);
++int p54_tx_cancel(struct p54_common *priv, __le32 req_id);
++void p54_tx(struct p54_common *priv, struct sk_buff *skb);
++
++/* synth/phy configuration */
++int p54_init_xbow_synth(struct p54_common *priv);
++int p54_scan(struct p54_common *priv, u16 mode, u16 dwell);
++
++/* MAC */
++int p54_sta_unlock(struct p54_common *priv, u8 *addr);
++int p54_update_beacon_tim(struct p54_common *priv, u16 aid, bool set);
++int p54_setup_mac(struct p54_common *priv);
++int p54_set_ps(struct p54_common *priv);
++int p54_fetch_statistics(struct p54_common *priv);
++
++/* e/v DCF setup */
++int p54_set_edcf(struct p54_common *priv);
++
++/* cryptographic engine */
++int p54_upload_key(struct p54_common *priv, u8 algo, int slot,
++		   u8 idx, u8 len, u8 *addr, u8* key);
++
++/* eeprom */
++int p54_download_eeprom(struct p54_common *priv, void *buf,
++			u16 offset, u16 len);
++
++#endif /* LMAC_H */
 
