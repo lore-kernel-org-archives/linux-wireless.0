@@ -1,38 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f192.google.com ([209.85.210.192]:53756 "EHLO
-	mail-yx0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751997AbZFSR0K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Jun 2009 13:26:10 -0400
-Received: by yxe30 with SMTP id 30so2663181yxe.4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 10:26:06 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:50162 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751107AbZFWETh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 00:19:37 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 21:19:41 -0700
+Date: Tue, 23 Jun 2009 09:49:34 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Joseph Cheek <joseph@cheek.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"parag.warudkar@gmail.com" <parag.warudkar@gmail.com>,
+	Gaurav Jauhar <Gaurav.Jauhar@Atheros.com>,
+	"rootkit85@yahoo.it" <rootkit85@yahoo.it>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
+Message-ID: <20090623041934.GA5040@senthil-lnx.users.atheros.com>
+References: <43e72e890906220847u4faaeb2paa15365360c3c080@mail.gmail.com> <4A3FD26C.4070503@cheek.com>
 MIME-Version: 1.0
-In-Reply-To: <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
-References: <4A3B5B11.7060103@bitnet.be>
-	 <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
-Date: Fri, 19 Jun 2009 13:19:54 -0400
-Message-ID: <b6c5339f0906191019ve40014dp98af5ada875e2a24@mail.gmail.com>
-Subject: Re: current status of 802.11s mesh in ath5k ?
-From: Bob Copeland <me@bobcopeland.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: Hans Maes <Hans@bitnet.be>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A3FD26C.4070503@cheek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 19, 2009 at 1:00 PM, Andrey Yurovsky<andrey@cozybit.com> wrote:
-> You'll want wireless-testing (or the latest compat), after commit
-> 41ba08509.  However ath5k will not beacon until you issue a scan due
-> to a bug.
+Joseph,
 
-By the way, I imagine this is a side effect of calling ath5k_beacon_config
-inside ath5k_reset().  If so, we probably want to call it at the
-appropriate time when the interface is brought up.
+Not sure what exactly you are tring. However, if you happen to notice the XMIT
+being stuck, then please try the patch titled "Fix TX hang issue with Atheros chipsets"
+and "schedule aggregation regardless of queue depth" (sent to wireless-testing
+mailing list and yet to be merged into tip)
 
-I have been working on a patch to rework the beaconing, namely using
-bss_conf->enable_beacon and calling beacon_config whenever the beacon
-interval or beacon changes, that might fix it but I'm not too familiar
-with mesh details to say.
+Thanks
+Senthil
 
--- 
-Bob Copeland %% www.bobcopeland.com
+On Tue, Jun 23, 2009 at 12:20:20AM +0530, Joseph Cheek wrote:
+> I will attempt to repro my xmit hangs bugs on today's wireless testing.
+> I haven't submitted a kernel.org bug on it, just mentioned it on the
+> ath9k list several times.  I can submit a kernel.org bug for it tho,
+> assuming it repros (I've had it ever since Christmas, but who knows?).
+> 
+> Joseph Cheek
+> 
+> Luis R. Rodriguez wrote:
+> > We're down to 2 kernel.org bug reports for ath9k:
+> >
+> > http://bugzilla.kernel.org/show_bug.cgi?id=13581
+> > "ath9k doesn't work with newer kernels"
+> > This is a regression between 2.6.29 and 2.6.30, someone needs to look at this.
+> >
+> > http://bugzilla.kernel.org/show_bug.cgi?id=13141
+> > "AR5008/DWA-552 - Very slow"
+> > Patches have been supplied, needs user feedback.
+> >
+> > If you are aware of any other issues please do report.
+> >
+> >   Luis
+> > _______________________________________________
+> > ath9k-devel mailing list
+> > ath9k-devel@lists.ath9k.org
+> > https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> >
+> >
