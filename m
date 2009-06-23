@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:50611 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758902AbZFZMLB (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:60341 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbZFWQ4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2009 08:11:01 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Subject: Re: [2.6.31-rc1] iwlagn (4965): no wireless due to RFKILL problem
-Date: Fri, 26 Jun 2009 14:10:57 +0200
-Cc: linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200906261336.29318.elendil@planet.nl> <8db1092f0906260459n308311faweb6d9733cdd1eb13@mail.gmail.com>
-In-Reply-To: <8db1092f0906260459n308311faweb6d9733cdd1eb13@mail.gmail.com>
+	Tue, 23 Jun 2009 12:56:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906261410.58808.elendil@planet.nl>
+In-Reply-To: <1245775609.15367.129.camel@violet>
+References: <1245775609.15367.129.camel@violet>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 23 Jun 2009 09:55:47 -0700
+Message-ID: <43e72e890906230955i4761c1b7q56368afc57cd8cdc@mail.gmail.com>
+Subject: Re: Announcing ConnMan.net
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jukka.rissanen@nokia.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 June 2009, Maciej Rutecki wrote:
-> 2009/6/26 Frans Pop <elendil@planet.nl>:
-> > I've tried .31-rc1 on my HP 2510p notebook and the only problem I
-> > found was that wireless no longer works. The cause looks to be
-> > related to RFKILL.
->
-> Same on HP/Compaq nx6310, caused by hp-wmi module. It's disable
-> bluetooth and wireless. I must turn it on in Windows XP (in HP tools).
-> Workaround: don't load hp-wmi. Already I try find how enable it via
-> /sys like in Windows.
+On Tue, Jun 23, 2009 at 9:46 AM, Marcel
+Holtmann<holtmann@linux.intel.com> wrote:
+> Intel and Nokia are pleased to jointly launch the ConnMan project, an
+> open source project to accelerate and expand development of Internet
+> connection management for Linux Devices. ConnMan will be utilized as a
+> technology within Moblin and Maemo. Connman.net is now the place to
+> bring developers together who are interested in furthering the
+> development of Internet connection management within Linux. Review the
+> source code for more information. ConnMan is licensed under GPLv2, and
+> provides a daemon for managing Internet connections within Linux
+> devices. ConnMan is a fully modular system that can be extended, through
+> plugins, to support all kinds of wired or wireless technologies.
+> Configuration methods, like DHCP and domain name resolving, are
+> implemented using plug-ins as well. The plug-in approach allows for easy
+> adaption and modification for various use cases. Nokia and Intel will
+> jointly maintain the ConnMan project. We'd like to invite all developers
+> to join the connman.net effort and community.
 
-Thanks for narrowing it down.
+Here's a wiki for it:
 
-Well, with 2.6.30 hp-wmi worked together with rfkill without problems.
-Looking at the commit logs, it looks like the rfkill rewrite by Johannes 
-and Alan is the cause here. CCs added.
+http://wireless.kernel.org/en/users/Documentation/connman
+
+Can we get a link to it from the home page?
+
+  Luis
