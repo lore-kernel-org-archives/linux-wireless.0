@@ -1,116 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:64794 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758AbZFLLQe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756711AbZFWOHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2009 07:16:34 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 18/33] wl12xx: Fix CMD_TEST regression via netlink.
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2009 14:16:13 +0300
-Message-ID: <20090612111612.8877.71819.stgit@tikku>
-In-Reply-To: <20090612110225.8877.92418.stgit@tikku>
-References: <20090612110225.8877.92418.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 23 Jun 2009 10:07:34 -0400
+Subject: [PATCH v2] mac80211: fix todo lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1245751007.4184.17.camel@johannes.local>
+References: <1245751007.4184.17.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 23 Jun 2009 16:07:18 +0200
+Message-Id: <1245766038.21314.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ari Kauppi <Ext-Ari.Kauppi@nokia.com>
+The key todo lock can be taken from different locks
+that require it to be _bh to avoid lock inversion
+due to (soft)irqs.
 
-CMD_TEST via netlink API has been broken since
-e29c3f59cfbc38c3b481a2694b08962da19c4664: cmd and acx interface rework.
+This should fix the two problems reported by Bob and
+Gabor:
+http://mid.gmane.org/20090619113049.GB18956@hash.localnet
+http://mid.gmane.org/4A3FA376.8020307@openwrt.org
 
-The user of the interface sends the request in a buffer without the
-wl12xx_command header but expects the response to have the wl12xx_command
-header (with id and status).
-
-This patch reverts the e29c3f5 commit for cmd.c:wl12xx_cmd_test
-and implements the needed wrapper functionality in netlink.c. Now the
-API of wl12xx_cmd_test and rest of wl12xx_cmd_* commands in cmd.c are
-similar.
-
-Signed-off-by: Ari Kauppi <Ext-Ari.Kauppi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>
 ---
+ net/mac80211/key.c |   26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
- drivers/net/wireless/wl12xx/cmd.c |   35 +++++++++++------------------------
- 1 files changed, 11 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index d98941a..04e8401 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -66,38 +66,26 @@ out:
-  * send test command to firmware
+--- wireless-testing.orig/net/mac80211/key.c	2009-06-23 11:48:12.000000000 +0200
++++ wireless-testing/net/mac80211/key.c	2009-06-23 16:06:07.000000000 +0200
+@@ -67,6 +67,8 @@ static DECLARE_WORK(todo_work, key_todo)
   *
-  * @wl: wl struct
-- * @buf: buffer containing the command, without headers, no dma requirements
-+ * @buf: buffer containing the command, with all headers, must work with dma
-  * @len: length of the buffer
-  * @answer: is answer needed
-- *
-- * FIXME: cmd_test users need to be converted to the new interface
+  * @key: key to add to do item for
+  * @flag: todo flag(s)
++ *
++ * Must be called with IRQs or softirqs disabled.
   */
- int wl12xx_cmd_test(struct wl12xx *wl, void *buf, size_t buf_len, u8 answer)
+ static void add_todo(struct ieee80211_key *key, u32 flag)
  {
--	struct wl12xx_command *cmd;
--	size_t cmd_len;
- 	int ret;
+@@ -140,9 +142,9 @@ static void ieee80211_key_enable_hw_acce
+ 	ret = drv_set_key(key->local, SET_KEY, &sdata->vif, sta, &key->conf);
  
- 	wl12xx_debug(DEBUG_CMD, "cmd test");
- 
--	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
--	if (!cmd) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	memcpy(cmd->parameters, buf, buf_len);
--
--	/* FIXME: ugly */
--	cmd_len = sizeof(struct wl12xx_cmd_header) + buf_len;
-+	ret = wl12xx_cmd_send(wl, CMD_TEST, buf, buf_len);
- 
--	ret = wl12xx_cmd_send(wl, CMD_TEST, cmd, cmd_len);
- 	if (ret < 0) {
- 		wl12xx_warning("TEST command failed");
--		goto out;
-+		return ret;
+ 	if (!ret) {
+-		spin_lock(&todo_lock);
++		spin_lock_bh(&todo_lock);
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
  	}
  
- 	if (answer) {
-+		struct wl12xx_command *cmd_answer;
-+
- 		/*
- 		 * The test command got in, we can read the answer.
- 		 * The answer would be a wl12xx_command, where the
-@@ -106,19 +94,18 @@ int wl12xx_cmd_test(struct wl12xx *wl, void *buf, size_t buf_len, u8 answer)
+ 	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
+@@ -164,12 +166,12 @@ static void ieee80211_key_disable_hw_acc
+ 	if (!key || !key->local->ops->set_key)
+ 		return;
  
- 		wl12xx_ps_elp_wakeup(wl);
- 
--		wl12xx_spi_mem_read(wl, wl->cmd_box_addr, cmd, cmd_len);
-+		wl12xx_spi_mem_read(wl, wl->cmd_box_addr, buf, buf_len);
- 
- 		wl12xx_ps_elp_sleep(wl);
- 
--		if (cmd->header.status != CMD_STATUS_SUCCESS)
-+		cmd_answer = buf;
-+
-+		if (cmd_answer->header.status != CMD_STATUS_SUCCESS)
- 			wl12xx_error("TEST command answer error: %d",
--				     cmd->header.status);
--		memcpy(buf, cmd->parameters, buf_len);
-+				     cmd_answer->header.status);
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+ 		spin_unlock(&todo_lock);
+ 		return;
  	}
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
  
--out:
--	kfree(cmd);
--	return ret;
-+	return 0;
+ 	sta = get_sta_for_key(key);
+ 	sdata = key->sdata;
+@@ -188,9 +190,9 @@ static void ieee80211_key_disable_hw_acc
+ 		       wiphy_name(key->local->hw.wiphy),
+ 		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
  }
  
- /**
+ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+@@ -437,14 +439,14 @@ void ieee80211_key_link(struct ieee80211
+ 
+ 	__ieee80211_key_replace(sdata, sta, old_key, key);
+ 
+-	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+-
+ 	/* free old key later */
+ 	add_todo(old_key, KEY_FLAG_TODO_DELETE);
+ 
+ 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
+ 	if (netif_running(sdata->dev))
+ 		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
++
++	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+ }
+ 
+ static void __ieee80211_key_free(struct ieee80211_key *key)
+@@ -547,7 +549,7 @@ static void __ieee80211_key_todo(void)
+ 	 */
+ 	synchronize_rcu();
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	while (!list_empty(&todo_list)) {
+ 		key = list_first_entry(&todo_list, struct ieee80211_key, todo);
+ 		list_del_init(&key->todo);
+@@ -558,7 +560,7 @@ static void __ieee80211_key_todo(void)
+ 					  KEY_FLAG_TODO_HWACCEL_REMOVE |
+ 					  KEY_FLAG_TODO_DELETE);
+ 		key->flags &= ~todoflags;
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 
+ 		work_done = false;
+ 
+@@ -591,9 +593,9 @@ static void __ieee80211_key_todo(void)
+ 
+ 		WARN_ON(!work_done);
+ 
+-		spin_lock(&todo_lock);
++		spin_lock_bh(&todo_lock);
+ 	}
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ }
+ 
+ void ieee80211_key_todo(void)
+
 
