@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20559 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595AbZFCSIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 14:08:21 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2009 11:08:24 -0700
-Date: Wed, 3 Jun 2009 11:08:30 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: check for existance sta before adding it
-Message-ID: <20090603180830.GA13156@tesla>
-References: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com> <1243974947.7176.9.camel@johannes.local> <43e72e890906021401r2200bad9n1ffbe2c56c3a2c22@mail.gmail.com> <1244012450.7176.15.camel@johannes.local>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:60708 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754354AbZFWPo3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2009 11:44:29 -0400
+Message-ID: <4A40F856.2010501@openwrt.org>
+Date: Tue, 23 Jun 2009 17:44:22 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1244012450.7176.15.camel@johannes.local>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: fix todo lock
+References: <1245751007.4184.17.camel@johannes.local> <1245766038.21314.24.camel@johannes.local>
+In-Reply-To: <1245766038.21314.24.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 03, 2009 at 12:00:50AM -0700, Johannes Berg wrote:
-> On Tue, 2009-06-02 at 14:01 -0700, Luis R. Rodriguez wrote:
+Johannes Berg írta:
+> The key todo lock can be taken from different locks
+> that require it to be _bh to avoid lock inversion
+> due to (soft)irqs.
 > 
-> > Thanks, yeah I see where I was making an incorrect assumption here.
-> > 
-> > There still is a case here where userpsace can try to add a sta twice
-> > and the second parameters passed would be ignored.
+> This should fix the two problems reported by Bob and
+> Gabor:
+> http://mid.gmane.org/20090619113049.GB18956@hash.localnet
+> http://mid.gmane.org/4A3FA376.8020307@openwrt.org
 > 
-> Don't we show that -EEXIST to userspace then? I thought we did.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Bob Copeland <me@bobcopeland.com>
+> Cc: Gabor Juhos <juhosg@openwrt.org>
+> ---
+>  net/mac80211/key.c |   26 ++++++++++++++------------
+>  1 file changed, 14 insertions(+), 12 deletions(-)
 
-We do, but why don't we *first* try to check for its existence?
+I will try it ASAP. Thanks!
 
-  Luis
+Gabor
+
