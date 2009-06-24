@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36936 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753493AbZFBQna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 12:43:30 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 09:43:32 -0700
-Date: Tue, 2 Jun 2009 09:43:38 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH] ath9k: Remove modparam 'debug'
-Message-ID: <20090602164338.GA6906@tesla>
-References: <1243951136-4033-1-git-send-email-vasanth@atheros.com> <1243951136-4033-2-git-send-email-vasanth@atheros.com>
+Received: from mga10.intel.com ([192.55.52.92]:49315 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751523AbZFXOFS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jun 2009 10:05:18 -0400
+Date: Wed, 24 Jun 2009 16:07:22 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: linville@tuxdriver.com
+Cc: Matthew Wilcox <matthew@wil.cx>, "Zhu, Yi" <yi.zhu@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] iwmc3200wifi: add Kconfig help
+Message-ID: <20090624140721.GA3427@sortiz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1243951136-4033-2-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 02, 2009 at 06:58:56AM -0700, Vasanth Thiagarajan wrote:
-> -         modprobe ath9k debug=0x00002000
-> +         echo <debug mask> > /<debugfsroot>/ath9k/phyX/debug
 
-This means no debugging available during module init which does seem
-useful to keep.
+We're missing a Kconfig help for the iwmc3200wifi driver.
 
-  Luis
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+-- 
+drivers/net/wireless/iwmc3200wifi/Kconfig |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
+index 1eccb6d..030401d 100644
+--- a/drivers/net/wireless/iwmc3200wifi/Kconfig
++++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
+@@ -4,6 +4,15 @@ config IWM
+ 	depends on CFG80211
+ 	select WIRELESS_EXT
+ 	select FW_LOADER
++	help
++	  The Intel Wireless Multicomm 3200 hardware is a combo
++	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
++	  runs over SDIO and is typically found on Moorestown
++	  based platform. This driver takes care of the 802.11
++	  part, which is a fullmac one.
++
++	  If you choose to build it as a module, it'll be called
++	  iwmc3200wifi.ko.
+ 
+ config IWM_DEBUG
+ 	bool "Enable full debugging output in iwmc3200wifi"
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
