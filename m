@@ -1,53 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:37679 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753689AbZF1VZu (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:41448 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515AbZFXJkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jun 2009 17:25:50 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: ath5k-devel@venema.h4ckr.net, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH 1/2] ath5k: remove permissions from debugfs files
-Date: Sun, 28 Jun 2009 23:25:27 +0200
-Message-Id: <1246224328-11826-1-git-send-email-jirislaby@gmail.com>
+	Wed, 24 Jun 2009 05:40:08 -0400
+Subject: [PATCH v2 10/10] nf_conntrack: Use rcu_barrier() and fix
+	kmem_cache_create flags
+From: Jesper Dangaard Brouer <jdb@comx.dk>
+Reply-To: jdb@comx.dk
+To: Patrick McHardy <kaber@trash.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, christine.caulfield@googlemail.com,
+	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+In-Reply-To: <1245834139.6695.31.camel@localhost.localdomain>
+References: <20090623150330.22490.87327.stgit@localhost>
+	 <20090623150444.22490.27931.stgit@localhost>  <4A410185.3090706@trash.net>
+	 <1245834139.6695.31.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 24 Jun 2009 11:40:09 +0200
+Message-Id: <1245836409.6695.35.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't allow users to open debugfs files, because it can cause oopses.
 
-When a user opens some file, driver unlinks it and frees the
-corresponding structure, we will dereference freed memory.
+Adjusting SLAB_DESTROY_BY_RCU flags.
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+ kmem_cache_create("nf_conntrack", ...) does not need the
+ SLAB_DESTROY_BY_RCU flag.  But the
+ kmem_cache_create("nf_conntrack_expect", ...) should use the
+ SLAB_DESTROY_BY_RCU flag, because it uses a call_rcu() callback to
+ invoke kmem_cache_free().
+
+RCU barriers, rcu_barrier(), is inserted two places.
+
+ In nf_conntrack_expect.c nf_conntrack_expect_fini() before the
+ kmem_cache_destroy(), even though the use of the SLAB_DESTROY_BY_RCU
+ flag, because slub does not (currently) handle rcu sync correctly.
+
+ And in nf_conntrack_extend.c nf_ct_extend_unregister(), inorder to
+ wait for completion of callbacks to __nf_ct_ext_free_rcu(), which is
+ invoked by __nf_ct_ext_add().  It might be more efficient to call
+ rcu_barrier() in nf_conntrack_core.c nf_conntrack_cleanup_net(), but
+ thats make it more difficult to read the code (as the callback code
+ in located in nf_conntrack_extend.c).
+
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
 ---
- drivers/net/wireless/ath/ath5k/debug.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 4904a07..747508c 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -380,13 +380,15 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- 	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
- 				ath5k_global_debugfs);
+ net/netfilter/nf_conntrack_core.c   |    2 +-
+ net/netfilter/nf_conntrack_expect.c |   11 +++++++++--
+ net/netfilter/nf_conntrack_extend.c |    2 +-
+ 3 files changed, 11 insertions(+), 4 deletions(-)
+
+
+diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+index 5f72b94..438ce84 100644
+--- a/net/netfilter/nf_conntrack_core.c
++++ b/net/netfilter/nf_conntrack_core.c
+@@ -1242,7 +1242,7 @@ static int nf_conntrack_init_init_net(void)
  
--	sc->debug.debugfs_debug = debugfs_create_file("debug", S_IWUSR | S_IRUGO,
-+	sc->debug.debugfs_debug = debugfs_create_file("debug",
-+				S_IWUSR | S_IRUSR,
- 				sc->debug.debugfs_phydir, sc, &fops_debug);
- 
--	sc->debug.debugfs_registers = debugfs_create_file("registers", S_IRUGO,
-+	sc->debug.debugfs_registers = debugfs_create_file("registers", S_IRUSR,
- 				sc->debug.debugfs_phydir, sc, &fops_registers);
- 
--	sc->debug.debugfs_beacon = debugfs_create_file("beacon", S_IWUSR | S_IRUGO,
-+	sc->debug.debugfs_beacon = debugfs_create_file("beacon",
-+				S_IWUSR | S_IRUSR,
- 				sc->debug.debugfs_phydir, sc, &fops_beacon);
- 
- 	sc->debug.debugfs_reset = debugfs_create_file("reset", S_IWUSR,
--- 
-1.6.3.2
+ 	nf_conntrack_cachep = kmem_cache_create("nf_conntrack",
+ 						sizeof(struct nf_conn),
+-						0, SLAB_DESTROY_BY_RCU, NULL);
++						0, 0, NULL);
+ 	if (!nf_conntrack_cachep) {
+ 		printk(KERN_ERR "Unable to create nf_conn slab cache\n");
+ 		ret = -ENOMEM;
+diff --git a/net/netfilter/nf_conntrack_expect.c b/net/netfilter/nf_conntrack_expect.c
+index afde8f9..56227c2 100644
+--- a/net/netfilter/nf_conntrack_expect.c
++++ b/net/netfilter/nf_conntrack_expect.c
+@@ -593,7 +593,7 @@ int nf_conntrack_expect_init(struct net *net)
+ 	if (net_eq(net, &init_net)) {
+ 		nf_ct_expect_cachep = kmem_cache_create("nf_conntrack_expect",
+ 					sizeof(struct nf_conntrack_expect),
+-					0, 0, NULL);
++					0, SLAB_DESTROY_BY_RCU, NULL);
+ 		if (!nf_ct_expect_cachep)
+ 			goto err2;
+ 	}
+@@ -617,8 +617,15 @@ err1:
+ void nf_conntrack_expect_fini(struct net *net)
+ {
+ 	exp_proc_remove(net);
+-	if (net_eq(net, &init_net))
++	if (net_eq(net, &init_net)) {
++		/* hawk@comx.dk 2009-06-24: The rcu_barrier() can be
++		 * removed once the sl*b allocators has been fixed
++		 * regarding handling the SLAB_DESTROY_BY_RCU flag
++		 * correctly.
++		 */
++		rcu_barrier(); /* Wait for call_rcu() before destroy */
+ 		kmem_cache_destroy(nf_ct_expect_cachep);
++	}
+ 	nf_ct_free_hashtable(net->ct.expect_hash, net->ct.expect_vmalloc,
+ 			     nf_ct_expect_hsize);
+ }
+diff --git a/net/netfilter/nf_conntrack_extend.c b/net/netfilter/nf_conntrack_extend.c
+index 4b2c769..fef95be 100644
+--- a/net/netfilter/nf_conntrack_extend.c
++++ b/net/netfilter/nf_conntrack_extend.c
+@@ -186,6 +186,6 @@ void nf_ct_extend_unregister(struct nf_ct_ext_type *type)
+ 	rcu_assign_pointer(nf_ct_ext_types[type->id], NULL);
+ 	update_alloc_size(type);
+ 	mutex_unlock(&nf_ct_ext_type_mutex);
+-	synchronize_rcu();
++	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+ }
+ EXPORT_SYMBOL_GPL(nf_ct_extend_unregister);
 
