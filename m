@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49573 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756269AbZFWP3t (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:36549 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077AbZFXOMn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:49 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 01/10] ext4: Use rcu_barrier() on module unload.
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:03:59 +0200
-Message-ID: <20090623150358.22490.24818.stgit@localhost>
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
+	Wed, 24 Jun 2009 10:12:43 -0400
+Date: Wed, 24 Jun 2009 08:12:45 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linville@tuxdriver.com, "Zhu, Yi" <yi.zhu@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwmc3200wifi: add Kconfig help
+Message-ID: <20090624141245.GP19977@parisc-linux.org>
+References: <20090624140721.GA3427@sortiz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090624140721.GA3427@sortiz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ext4 module uses rcu_call() thus it should use rcu_barrier()on
-module unload.
+On Wed, Jun 24, 2009 at 04:07:22PM +0200, Samuel Ortiz wrote:
+> 
+> We're missing a Kconfig help for the iwmc3200wifi driver.
 
-The kmem cache ext4_pspace_cachep is sometimes free'ed using
-call_rcu() callbacks.  Thus, we must wait for completion of call_rcu()
-before doing kmem_cache_destroy().
+Thanks!
 
-I have difficult determining if no new call_rcu() callbacks can be envoked.
-Would the maintainer please verify this?
-
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
-
- fs/ext4/mballoc.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
-index 519a0a6..e271a9e 100644
---- a/fs/ext4/mballoc.c
-+++ b/fs/ext4/mballoc.c
-@@ -2902,8 +2902,10 @@ int __init init_ext4_mballoc(void)
- 
- void exit_ext4_mballoc(void)
- {
--	/* XXX: synchronize_rcu(); */
-+	/* Wait for completion of call_rcu()'s on ext4_pspace_cachep */
-+	rcu_barrier();
- 	kmem_cache_destroy(ext4_pspace_cachep);
-+
- 	kmem_cache_destroy(ext4_ac_cachep);
- 	kmem_cache_destroy(ext4_free_ext_cachep);
- }
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
