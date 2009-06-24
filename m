@@ -1,106 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:43610 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbZFATpR (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:51190 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154AbZFXLcQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 15:45:17 -0400
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A23FD91.8020200@tuffmail.co.uk>
-References: <1243524688.10632.0.camel@johannes.local>
-	 <9b2b86520905310213n7be56260lc0c2cf3c109fe065@mail.gmail.com>
-	 <1243763887.19302.29.camel@johannes.local>
-	 <1243796509.6570.35.camel@localhost.localdomain>
-	 <1243841639.5299.8.camel@johannes.local> <4A238EA2.4040106@tuffmail.co.uk>
-	 <1243858256.5299.14.camel@johannes.local>
-	 <1243867620.3015.17.camel@localhost.localdomain>
-	 <4A23FD91.8020200@tuffmail.co.uk>
+	Wed, 24 Jun 2009 07:32:16 -0400
+Subject: Re: [PATCH 03/10] mac80211: Use rcu_barrier() on unload.
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+In-Reply-To: <1245838862.21314.48.camel@johannes.local>
+References: <20090623150330.22490.87327.stgit@localhost>
+	 <20090623150409.22490.99106.stgit@localhost>
+	 <1245770155.21314.38.camel@johannes.local>
+	 <1245837965.6695.45.camel@localhost.localdomain>
+	 <1245838862.21314.48.camel@johannes.local>
 Content-Type: text/plain
-Date: Mon, 01 Jun 2009 21:44:54 +0200
-Message-Id: <1243885494.3015.29.camel@localhost.localdomain>
+Date: Wed, 24 Jun 2009 13:32:17 +0200
+Message-Id: <1245843137.6695.48.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alan,
-
-> > I really don't understand why this is needed. What benefit does it give
-> > us compared to just sent OP_CHANGE and OP_CHANGE as an update. My X200
-> > for example does this anyway on suspend/resume.
-> >   
+On Wed, 2009-06-24 at 12:21 +0200, Johannes Berg wrote:
+> On Wed, 2009-06-24 at 12:06 +0200, Jesper Dangaard Brouer wrote:
+> > On Tue, 2009-06-23 at 17:15 +0200, Johannes Berg wrote:
+> > > On Tue, 2009-06-23 at 17:04 +0200, Jesper Dangaard Brouer wrote:
+> > > > The mac80211 module uses rcu_call() thus it should use rcu_barrier()
+> > > > on module unload.
+> > > > 
+> > > > I'm having a hardtime verifying that no more call_rcu() callbacks can
+> > > > be schedules in the module unload path.  Could a maintainer please
+> > > > look into this?
+> > > > 
+> > > > Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+> > > > ---
+> > > > 
+> > > >  net/mac80211/main.c |    2 ++
+> > > >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > > > 
+> > > > diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> > > > index 092a017..e9f70ce 100644
+> > > > --- a/net/mac80211/main.c
+> > > > +++ b/net/mac80211/main.c
+> > > > @@ -1100,6 +1100,8 @@ static void __exit ieee80211_exit(void)
+> > > >  		ieee80211s_stop();
+> > > >  
+> > > >  	ieee80211_debugfs_netdev_exit();
+> > > > +
+> > > > +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+> > > >  }
+> > > 
+> > > I don't think this is correct at all -- note that call_rcu() is done in
+> > > some of the mesh code, so I would think you need to do this in
+> > > ieee80211_stop() since the call_rcu() code requires the interface to
+> > > still be around. And when it's stopped everything should be idle.
+> > 
+> > Should it then not be in mesh.c ieee80211_stop_mesh().  We can replace
+> > the synchronize_rcu() in this function with a rcu_barrier().
 > 
-> This is required for boot only.  I have no reason for this event to be 
-> generated on resume.
+> Yes, this seems correct.
 > 
-> The same effect could be had by generating an OP_CHANGE on f_open, 
-> _only_ when a platform driver has provided a value from NVS.  But it 
-> does seem clearer to make it a different type of event.
+> johannes
 
-that is my whole point. If the kernel driver wants to preserve these
-then it can just issue OP_ADD to notify use about the current state of
-the values. The OP_ADD gets send once you open /dev/rfkill and if they
-not match with our policy we have to change them anyway. I really don't
-see the need for an extra operation here. Let me ask this again, how is
-it different from just sending the OP_ADD and then let rfkilld decide to
-either use that value or enforce its own policy. If the wish is to
-enforce policy you can't do anything about it anyway.
+Can I consider this a:
 
-> > So what is rfkilld suppose to be doing when receiving this report? What
-> > is the expected behavior? Why do we bother with multi-OS crap here? I am
-> > really unclear what are we trying to solve here.
-> 
-> In order to replicate the kernel behavior, it is expected that you set 
-> your internal state from this event.  E.g. when the user next presses 
-> the wireless toggle key, you set the inverse of that internal state.
-> 
-> Since this event is generated by a platform driver, you can expect it to 
-> be present following coldplug (the udev initscript).  If the event is 
-> not present after coldplug, you may then issue OP_CHANGE yourself, to 
-> e.g. restore the state from a file.  You would not be expected to handle 
-> OP_NVS_REPORT after startup.  (Unless the daemon is restarted).
-> 
-> Replicating the kernel behavior will allow us to avoid causing a couple 
-> of niggly little regressions on at least two platforms.  It preserves 
-> the behavior when dual-booting (possibly between different linux 
-> distros), and when the BIOS setup screen exposes the NVS state as an 
-> option.  The new behavior you suggest will annoy any users who have 
-> become used to these scenarios "just working". 
-> 
-> You may not use these platforms yourself.  But I'm as annoyed as 
-> Henrique is, we don't want to impose regressions just because other 
-> platforms don't implement the feature.
-> 
-> Why the fuss about implementing this, it seems easy enough?  Start 
-> rfkilld after udev (like everything else).  If you get NVS_REPORT, then 
-> use those states.  Fill in any other states from defaults or state files 
-> and issue OP_CHANGE for them, just as you're already planning.  Ignore 
-> any subsequent NVS_REPORTs.  That should cover it.
-> 
-> It's the cost for starting from a working implementation.  You benefit 
-> from having existing drivers and users, you pay by not breaking them 
-> without good reason.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-I really don't care about current behavior, because that has been just a
-hack anyway. And it happens to work if there is proper BIOS support. We
-are at the point now where we stop working around a complicated and in
-some cases broken implementation. Overloading it with weird special
-cases is just wrong and so far I am not buying into any of the arguments
-here. The point behind the whole effort from Johannes is to finally fix
-RFKILL support. If it breaks current behavior, I couldn't care less in
-some cases.
+???
 
-So Johannes and I talked about it a lot last week. And we will be doing
-rfkilld so finally deprecated the broken idea of rfkill-input and move
-the policy into userspace where it belongs. To make this clear, the
-concept of cross-OS state keeping is broken. Having the BIOS or a
-different OS dictate policy makes no sense.
+DaveM seems to like this as patchwork.ozlabs.org picks up this
+automatically...
 
-Regards
-
-Marcel
-
+-- 
+Med venlig hilsen / Best regards
+  Jesper Brouer
+  ComX Networks A/S
+  Linux Network developer
+  Cand. Scient Datalog / MSc.
+  Author of http://adsl-optimizer.dk
+  LinkedIn: http://www.linkedin.com/in/brouer
 
