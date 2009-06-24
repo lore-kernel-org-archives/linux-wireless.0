@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jenny.ondioline.org ([66.220.1.122]:42137 "EHLO
-	jenny.ondioline.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551AbZF3VxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 17:53:12 -0400
-From: Paul Collins <paul@burly.ondioline.org>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: possible regressions from 2.6.29 in 2.6.30
-References: <874oty9tlf.fsf@bulky.wgtn.ondioline.org>
-	<1246378651.17896.523.camel@rc-desk>
-Date: Wed, 01 Jul 2009 09:53:14 +1200
-In-Reply-To: <1246378651.17896.523.camel@rc-desk> (reinette chatre's message
-	of "Tue, 30 Jun 2009 09:17:31 -0700")
-Message-ID: <87k52t9ynp.fsf@jenny.ondioline.org>
+Received: from mail.atheros.com ([12.36.123.2]:21382 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752741AbZFXN0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jun 2009 09:26:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2009 06:26:47 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 0/7] *** SUBJECT HERE ***
+Date: Wed, 24 Jun 2009 18:56:35 +0530
+Message-ID: <1245850002-26351-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre <reinette.chatre@intel.com> writes:
+John,
 
-> On Mon, 2009-06-29 at 22:30 -0700, Paul Collins wrote:
->> Two things I liked about iwlagn in 2.6.29 no longer happen with 2.6.30:
->> 
->> 1. reassociation following resume from suspend-to-ram
->> 2. transmission of packets > 250 bytes following resume from suspend-to-ram
->> 
->> I can script around the first problem just by doing "iwconfig wlan0 ap
->> auto" on resume, but the second problem requires me to ifdown/ifup wlan0
->> before I can usefully use my network again, so fixing the first problem
->> doesn't get me very far.
->
-> For reliable reassociation you need to use a userspace application like
-> wpa_supplicant.
+I have updated the commit logs as requested by you and also
+rebased & reorganized my earlier series on the TIP of wireless-testing.
 
-I'm using WEP here, though.  And, as I mentioned, 2.6.29 did seem to
-reassociate every time by itself, but maybe I just got lucky.
+It would be great if the following patches can make it for 2.6.31.
 
->> When I say "packets > 250 bytes" I mean 250-byte packets as claimed by
->> "ping -s 222 mygateway":
->> 
->>         PING cornelius.lan (10.2.4.1) 222(250) bytes of data.
->> 
->> The above will work, but "ping -s 223 cornelius" yields no replies.
->
-> Are you saying this works before suspend, but not after resume? What do
-> you usually do to get this working again?
+  ath9k: Manipulate and report the correct RSSI
+  ath9k: RX stucks during heavy traffic in HT40 mode.
+  ath9k: Fix TX hang issue with Atheros chipsets
 
-Yes, normally it works great; I can ping with packet sizes up to the
-MTU.  However, after suspend/resume and reassociation, "ping -s 223" or
-greater does not work.  I get replies with "-s 222" or less,
-i.e. packets of 250 bytes or less.
+Senthil
 
-To get it working again I do "ifdown wlan0" followed by "ifup wlan0",
-which does the equivalent of "ip set link wlan0 down/up" and applying
-the network configuration.
+Senthil Balasubramanian (7):
+  ath9k: Manipulate and report the correct RSSI
+  ath9k: RX stucks during heavy traffic in HT40 mode.
+  ath9k: Fix TX hang issue with Atheros chipsets
+  ath9k: remove unnecessary STATION mode check.
+  ath9k: stop ani when the STA gets disconnected.
+  ath9k: race condition in SCANNING state check during ANI calibration
+  ath9k: Handle different TX and RX streams properly.
 
-I will give the patch a shot when I get home.
+ drivers/net/wireless/ath/ath9k/ath9k.h    |   21 +++++++++
+ drivers/net/wireless/ath/ath9k/calib.c    |   13 ++++-
+ drivers/net/wireless/ath/ath9k/calib.h    |    4 +-
+ drivers/net/wireless/ath/ath9k/eeprom.c   |   20 ++++++++-
+ drivers/net/wireless/ath/ath9k/initvals.h |   47 +++++++++++----------
+ drivers/net/wireless/ath/ath9k/mac.c      |   30 ++++++++++---
+ drivers/net/wireless/ath/ath9k/main.c     |   66 ++++++++++++++++------------
+ drivers/net/wireless/ath/ath9k/recv.c     |   25 ++++++++++-
+ drivers/net/wireless/ath/ath9k/xmit.c     |   57 +++++++++++++++++++------
+ 9 files changed, 206 insertions(+), 77 deletions(-)
 
-Regards,
-
-        Paul
