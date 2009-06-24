@@ -1,162 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41410 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753AbZFBUaD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:30:03 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] mac80211: check for existance sta before adding it
-Date: Tue,  2 Jun 2009 16:30:03 -0400
-Message-Id: <1243974603-15058-1-git-send-email-lrodriguez@atheros.com>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:47826 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751240AbZFXOFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jun 2009 10:05:09 -0400
+Date: Wed, 24 Jun 2009 07:05:05 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dougthompson@xmission.com,
+	bluesmoke-devel@lists.sourceforge.net,
+	Patrick McHardy <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Subject: Re: [PATCH 09/10] cfq-iosched: Uses its own open-coded rcu_barrier.
+Message-ID: <20090624140505.GA6779@linux.vnet.ibm.com>
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <20090623150330.22490.87327.stgit@localhost> <20090623150439.22490.14657.stgit@localhost> <20090624064236.GE31415@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090624064236.GE31415@kernel.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lets just check for the STA before its addition through
-sta_info_insert() and make this mandatory. It simpifies
-code.
+On Wed, Jun 24, 2009 at 08:42:37AM +0200, Jens Axboe wrote:
+> On Tue, Jun 23 2009, Jesper Dangaard Brouer wrote:
+> > This module cfq-iosched, has discovered the value of waiting for
+> > call_rcu() completion, but its has its own open-coded implementation
+> > of rcu_barrier(), which I don't think is 'strong' enough.
+> > 
+> > This patch only leaves a comment for the maintainers to consider.
+> 
+> We need a stronger primitive and rcu_barrier(), since we also need to
+> wait for the rcu calls to even be scheduled. So I don't think the below
+> can be improved, it's already fine.
 
-In our mac80211 cfg80211 callback for device addition we
-also can simplify the code by first checking for the STA
-before trying to add it and then checking for -EEXIST which
-we were not doing. If that actualy would happen we could
-end up potentially with a stale sta and the rate info was
-never updated. We should now be updating accordingly.
+It is indeed important to first prevent new call_rcu() instances from
+being invoked, and only then invoke rcu_barrier().
 
-Since we are making part of the API to check for the STA
-prior to addition lets warn in sta_info_insert() if the
-sta does already exist instead of passing an -EEXIST.
+							Thanx, Paul
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-johill, this is what I meant. Still not the right approach?
-
- net/mac80211/cfg.c      |   33 ++++++++++++++++++---------------
- net/mac80211/mlme.c     |    4 ++++
- net/mac80211/sta_info.c |   18 ++++++++++++++----
- 3 files changed, 36 insertions(+), 19 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 77e9ff5..657e6b4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -717,6 +717,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 	int layer2_update;
-+	bool new_sta = true;
- 
- 	if (params->vlan) {
- 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-@@ -733,9 +734,18 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (is_multicast_ether_addr(mac))
- 		return -EINVAL;
- 
--	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
--	if (!sta)
--		return -ENOMEM;
-+	rcu_read_lock();
-+
-+	sta = sta_info_get(local, mac);
-+
-+	if (!sta) {
-+		sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
-+		if (!sta) {
-+			rcu_read_unlock();
-+			return -ENOMEM;
-+		}
-+	} else
-+		new_sta = false;
- 
- 	sta->flags = WLAN_STA_AUTH | WLAN_STA_ASSOC;
- 
-@@ -746,19 +756,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		sdata->vif.type == NL80211_IFTYPE_AP;
- 
--	rcu_read_lock();
--
--	err = sta_info_insert(sta);
--	if (err) {
--		/* STA has been freed */
--		if (err == -EEXIST && layer2_update) {
--			/* Need to update layer 2 devices on reassociation */
--			sta = sta_info_get(local, mac);
--			if (sta)
--				ieee80211_send_layer2_update(sta);
-+	if (new_sta) {
-+		err = sta_info_insert(sta);
-+		if (err) {
-+			rcu_read_unlock();
-+			return err;
- 		}
--		rcu_read_unlock();
--		return err;
- 	}
- 
- 	if (layer2_update)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 509469c..ef79823 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1782,6 +1782,10 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 
- 	if (newsta) {
- 		int err = sta_info_insert(sta);
-+		/*
-+		 * Since we checked earlier for this STA and we're under RCU
-+		 * this should not happen.
-+		 */
- 		if (err) {
- 			printk(KERN_DEBUG "%s: failed to insert STA entry for"
- 			       " the AP (error %d)\n", sdata->dev->name, err);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index d5611d8..c64a277 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -42,7 +42,9 @@
-  * it may not start any mesh peer link management or add encryption keys.
-  *
-  * When the insertion fails (sta_info_insert()) returns non-zero), the
-- * structure will have been freed by sta_info_insert()!
-+ * structure will have been freed by sta_info_insert()! You _must_
-+ * call sta_info_insert() only prior to first checking if the sta already
-+ * exists with sta_info_get().
-  *
-  * Because there are debugfs entries for each station, and adding those
-  * must be able to sleep, it is also possible to "pin" a station entry,
-@@ -309,6 +311,11 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	return sta;
- }
- 
-+/*
-+ * Must be called with rcu_read_lock() held, you should also
-+ * first check if the STA exists first prior to calling
-+ * this routine to add it.
-+ */
- int sta_info_insert(struct sta_info *sta)
- {
- 	struct ieee80211_local *local = sta->local;
-@@ -333,10 +340,13 @@ int sta_info_insert(struct sta_info *sta)
- 	}
- 
- 	spin_lock_irqsave(&local->sta_lock, flags);
--	/* check if STA exists already */
--	if (sta_info_get(local, sta->sta.addr)) {
-+	/*
-+	 * check if STA exists already - callers should have
-+	 * already done this while holding the RCU lock
-+	 */
-+	if (WARN_ON(sta_info_get(local, sta->sta.addr))) {
- 		spin_unlock_irqrestore(&local->sta_lock, flags);
--		err = -EEXIST;
-+		err = -EIO;
- 		goto out_free;
- 	}
- 	list_add(&sta->list, &local->sta_list);
--- 
-1.6.0.6
-
+> > Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+> > ---
+> > 
+> >  block/cfq-iosched.c |    6 ++++++
+> >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+> > index 833ec18..c15555b 100644
+> > --- a/block/cfq-iosched.c
+> > +++ b/block/cfq-iosched.c
+> > @@ -2657,6 +2657,12 @@ static void __exit cfq_exit(void)
+> >  	/*
+> >  	 * this also protects us from entering cfq_slab_kill() with
+> >  	 * pending RCU callbacks
+> > +	 *
+> > +	 * hawk@comx.dk 2009-06-18: Maintainer please consider using
+> > +	 *  rcu_barrier() instead of this open-coded wait for
+> > +	 *  completion implementation.  I think it provides a better
+> > +	 *  guarantee that all CPUs are finished, although
+> > +	 *  elv_ioc_count_read() do consider all CPUs.
+> >  	 */
+> >  	if (elv_ioc_count_read(ioc_count))
+> >  		wait_for_completion(&all_gone);
+> > 
+> 
+> -- 
+> Jens Axboe
+> 
