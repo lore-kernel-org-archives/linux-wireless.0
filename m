@@ -1,81 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f195.google.com ([209.85.221.195]:58392 "EHLO
-	mail-qy0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbZFHRxK convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37968 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752218AbZFXUGl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 13:53:10 -0400
-Received: by qyk33 with SMTP id 33so225870qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2009 10:53:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890906081044x566514c5mc02299282e9c9ff2@mail.gmail.com>
-References: <4A2CA986.3070500@gmail.com> <646765f40906072312y5043ac12rd6d756230e98b746@mail.gmail.com>
-	<43e72e890906081044x566514c5mc02299282e9c9ff2@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Mon, 8 Jun 2009 10:52:50 -0700
-Message-ID: <43e72e890906081052hc9d14a7l892b2fcbb184c552@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat-wireless: update for 2009-06-08
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 24 Jun 2009 16:06:41 -0400
+Subject: [PATCH] mac80211: tell SME about real auth state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 24 Jun 2009 22:06:43 +0200
+Message-Id: <1245874003.21314.57.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 8, 2009 at 10:44 AM, Luis R.
-Rodriguez<mcgrof@winlab.rutgers.edu> wrote:
-> On Sun, Jun 7, 2009 at 11:12 PM, Julian Calaby<julian.calaby@gmail.com> wrote:
->> On Mon, Jun 8, 2009 at 16:02, Julian Calaby<julian.calaby@gmail.com> wrote:
->>> Update to match wireless-testing v2.6.30-rc8-25759-g00f7164
->>>
->>> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
->>> ---
->>>  compat/compat.diff |   42 +++++++++++++++++++++++-------------------
->>>  1 files changed, 23 insertions(+), 19 deletions(-)
->>>
->>> diff --git a/compat/compat.diff b/compat/compat.diff
->>> index d89ea98..846e8f5 100644
->>> --- a/compat/compat.diff
->>> +++ b/compat/compat.diff
->>> @@ -181,6 +181,12 @@
->>>  obj-$(CONFIG_LIBERTAS)                += libertas/
->>>
->>>  obj-$(CONFIG_LIBERTAS_THINFIRM)       += libertas_tf/
->>> +@@ -60,5 +34,3 @@
->>> + obj-$(CONFIG_MAC80211_HWSIM)  += mac80211_hwsim.o
->>> +
->>> + obj-$(CONFIG_WL12XX)  += wl12xx/
->>> +-
->>> +-obj-$(CONFIG_IWM)     += iwmc3200wifi/
->>
->> Sigh.
->>
->> Of course, I forgot to describe the changes in this patch.
->>
->> compat.diff has been updated to apply cleanly over the
->> wireless-testing.git version specified above with no fuzz.
->>
->> iwmc3200wifi, as I don't know if it compiles on anything but
->> wireless-testing.git, has been disabled by editing it out of the
->> Makefile as it's directory isn't actually copied from
->> wireless-testing. -- I'm not sure that this is the correct way to do
->> this as it's hiding the problem away in compat.diff - not obviously
->> fixing it by, e.g. copying the directory from wireless-testing.git or
->> making it compile on older kernels.
->
-> This is fine for now.
->
->> I must note that even after these changes, this still doesn't actually
->> compile for me, as ath9k uses the rfkill_ops structure which isn't
->> present in my 2.6.29 kernel.
->
-> Thanks for the note, both patches applied. For rfkill we'll need
-> someone brave and with time to backport it... as rfkill has been
-> re-written. The easiest solution is to revert the patches for older
-> kernels through compat.diff. That is add #ifdefs and for old kernel
-> revisions use the old stuff, for new kernels (as of 2.6.31) leave the
-> code in place.
+When the auth algorithm is rejected, but we don't have
+another one to try, we will eventually retry but that
+isn't useful -- we'll then do it again and again until
+we eventually give up. Instead, we should let the SME
+know and go into disabled state. The same applies for
+situations where the AP rejects with any other status
+code.
 
-Or for old kernels to use a new rfkill module which gets added with
-renamed symbols, but not sure if that works, not familiar enough with
-rfkill internals.
+Additionally, when trying the next auth algorithm, we
+should reset the auth_tries so that just a single lost
+frame doesn't lead to us giving up on the third auth
+algorithm.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-06-24 22:03:04.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-06-24 22:03:38.000000000 +0200
+@@ -1511,9 +1511,15 @@ static void ieee80211_rx_mgmt_auth(struc
+ 				    !ieee80211_sta_wep_configured(sdata))
+ 					continue;
+ 				ifmgd->auth_alg = algs[pos];
+-				break;
++				ifmgd->auth_tries = 0;
++				return;
+ 			}
+ 		}
++		/* nothing else to try -- give up */
++		cfg80211_send_rx_auth(sdata->dev, (u8 *) mgmt, len,
++				      GFP_KERNEL);
++		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(sdata->local);
+ 		return;
+ 	}
+ 
+
+
