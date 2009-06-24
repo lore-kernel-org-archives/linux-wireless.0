@@ -1,32 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60911 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759607AbZFQTPb (ORCPT
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:52315 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185AbZFXLrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 15:15:31 -0400
-Date: Wed, 17 Jun 2009 15:00:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: Jouni.Malinen@Atheros.com, Luis.Rodriguez@Atheros.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: ATH9K Bug fixes
-Message-ID: <20090617190025.GE2791@tuxdriver.com>
-References: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
+	Wed, 24 Jun 2009 07:47:07 -0400
+Received: by fxm9 with SMTP id 9so682702fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2009 04:47:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1245212828-7342-1-git-send-email-senthilkumar@atheros.com>
+Date: Wed, 24 Jun 2009 14:47:09 +0300
+Message-ID: <55c333c0906240447l35d1830aq640750618c4c6b0@mail.gmail.com>
+Subject: Linux wireless mini-summit -- Berlin, June 2009
+From: Kevin Wilson <wkevils@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 17, 2009 at 09:57:06AM +0530, Senthil Balasubramanian wrote:
-> This series address issues with Atheros hardware that supports different
-> TX and RX streams and also bogus RSSI report from hardware.
+Hello,
+  Facing the upcoming summit, I want to say here that it would be a
+great idea if some of the  wireless
+summit lectures (or all) will be videoed and put on the web
+afterwards. I think this can be a great idea
+for the benefit of the Linux wireless community.
 
-Just as the other series, these changelog entries are too terse
-and vague.  They are particularly terse and vague for consideration
-as bugfixes for 2.6.31.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rgs,
+Kevin
