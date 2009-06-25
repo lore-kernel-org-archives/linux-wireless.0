@@ -1,232 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38363 "EHLO ogre.sisk.pl"
+Received: from main.gmane.org ([80.91.229.2]:41346 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752745AbZF1Xza convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jun 2009 19:55:30 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.31-rc1-git3: Reported regressions from 2.6.30
-Cc: Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <ij4ZQY4URcP.A.F3B.vIASKB@chimera>
-Date: Mon, 29 Jun 2009 01:51:02 +0200 (CEST)
+	id S1751973AbZFYMZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2009 08:25:00 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1MJo0k-0000vy-8X
+	for linux-wireless@vger.kernel.org; Thu, 25 Jun 2009 12:25:02 +0000
+Received: from d5153017D.access.telenet.be ([81.83.1.125])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 12:25:02 +0000
+Received: from Gert.Boddaert by d5153017D.access.telenet.be with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 12:25:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Gert Boddaert <Gert.Boddaert@Boditec.be>
+Subject: rt73usb (rt2x00) crash bug on (big-endian) ARM
+Date: Thu, 25 Jun 2009 12:18:56 +0000 (UTC)
+Message-ID: <loom.20090625T114232-539@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.30, for which there
-are no fixes in the mainline I know of.  If any of them have been fixed already,
-please let me know.
+Hi,
 
-If you know of any other unresolved regressions from 2.6.30, please let me know
-either and I'll add them to the list.  Also, please let me know if any of the
-entries below are invalid.
+I tested 3 compat-wireless versions:-
 
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
+we intend to use compat-wireless-2008-04-08. 
+For our embedded puposes this is relatively stable (although it contains the
+mentioned bug).
+Also the stable version compat-wireless-2.6.30 kernel was tested, and the latest
+"bleeding edge" compat-wireless-2009-06-25.
 
+The drivers were cross-compiled (after some integration work) with the windriver
+toolchain for the big-endian IXP420 (x-scale). 
+We are using the 2.6.27.18 kernel.
 
-Listed regressions statistics:
+the rt73usb is used in AP mode through hostapd, after some patching in hostapd
+(the TX not acked thing). 
+This works remarkably well, accept for the TX rate bug (low throughput ~800Kb/s
+from AP to client),
+which can be solved in 2008-04-08 by fixing the rate manually (e.g. iwconfig
+wlan0 rate 24M). 
+I am happy to inform, that in the 2009-06-25 version this particular automatic
+rate problem seems solved.
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2009-06-29       22       22          15
+Anyway, the bug I want to post about is presumably somewhere in the RX path of
+the rt73usb driver (or related stacked drivers).
 
+When running iperf (iperf -c 192.168.x.y -u -t 10 -i 1 -b 20M -r ) and
+increasing the load on the AP-RX-side IXP420 to >12 Mb/s, the system crashes.
 
-Unresolved regressions
-----------------------
+We are investigating how to get a decent crash dump from the embedded device,
+but that will take some work.
+ 
+I also tested the same setup on a big-endian powerpc-mac G4 (same 2.6.27.18
+kernel), but it doesn't crash there probably because the rt73usb is connected to
+a USB 1.0/1.1 port and the througput does not rise above 8-9Mb/s.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13667
-Subject		: drm: display arifacts when X.Org is stopped
-Submitter	: Frans Pop <elendil@planet.nl>
-Date		: 2009-06-27 18:52 (2 days old)
-References	: http://lkml.org/lkml/2009/6/27/105
+To summarize...
 
+Problem 1
+The device crashes when the load on its RX side goes higher than ~12Mb/s on all
+tested driver versions. 
+Is this a known big-endian issue or does this also
+happen on low-spec'ed i386 processors?
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13666
-Subject		: WARNING: at mm/page_alloc.c:1743 __alloc_pages_nodemask
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2009-06-27 16:15 (2 days old)
-References	: http://lkml.org/lkml/2009/6/27/75
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13661
-Subject		: warning in smp_call_function_single while S2R
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2009-06-27 17:12 (2 days old)
-References	: http://lkml.org/lkml/2009/6/27/80
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13657
-Subject		: Linux-2.6.31-rc1 Fails To Recognize Some USB Disks
-Submitter	: Tarkan Erimer <tarkan.erimer@turknet.net.tr>
-Date		: 2009-06-26 10:03 (3 days old)
-References	: http://lkml.org/lkml/2009/6/26/34
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13656
-Subject		: 2.6.31-rc1 crashes randomly on my Machine.
-Submitter	: Zeno Davatz <zdavatz@gmail.com>
-Date		: 2009-06-26 08:56 (3 days old)
-References	: http://lkml.org/lkml/2009/6/26/27
+Problem 2, 
+related to compat-wireless-2009-06-25: I can no longer connect from Windows XP
+to our embedded AP when using this driver (alignment or endianess issue),
+although this does work perfectly with the other driver versions.
+Strange thing is, that when booting my test laptop into (ubuntu) linux, 
+I CAN connect to the embedded AP with the compat-wireless-2009-06-25 driver.
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13652
-Subject		: scheduling while atomic: pptpgw
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
-Date		: 2009-06-19 21:15 (10 days old)
-References	: http://lkml.org/lkml/2009/6/19/237
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13650
-Subject		: Problem with alloc_arch_preferred_bootmem() on powerpc
-Submitter	: Sean MacLennan <smaclennan@pikatech.com>
-Date		: 2009-06-20 19:48 (9 days old)
-References	: http://marc.info/?l=linuxppc-embedded&m=124552732411775&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13645
-Subject		: NULL pointer dereference at (null) (level2_spare_pgt)
-Submitter	: poornima nayak <mpnayak@linux.vnet.ibm.com>
-Date		: 2009-06-17 17:56 (12 days old)
-References	: http://lkml.org/lkml/2009/6/17/194
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13643
-Subject		: Touchpad lost synchronization after resume from suspend to RAM
-Submitter	: Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
-Date		: 2009-06-28 10:42 (1 days old)
-References	: http://lkml.org/lkml/2009/6/23/365
-		  http://lkml.org/lkml/2009/6/25/256
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13633
-Subject		: [bisected] No sound on HDA Intel (ALC268)
-Submitter	: Brian Rogers <brian@xyzw.org>
-Date		: 2009-06-27 04:42 (2 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13627
-Subject		: Tunnel device ignores TCP/UDP traffic
-Submitter	: Paul Martin <pm@debian.org>
-Date		: 2009-06-26 14:45 (3 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13610
-Subject		: radeon kms invalid edid data at lvds
-Submitter	: Nicolas Reinecke <pl4nkton@googlemail.com>
-Date		: 2009-06-23 19:53 (6 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13601
-Subject		: Hard crash connecting via Huawei E169 + umtsmon
-Submitter	: Clemens Eisserer <linuxhippy@gmail.com>
-Date		: 2009-06-22 13:58 (7 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13592
-Subject		: Root partition is not found
-Submitter	: François Valenduc <francois.valenduc@tvcablenet.be>
-Date		: 2009-06-21 08:42 (8 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13522
-Subject		: BUG: scheduling while atomic
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
-Date		: 2009-06-12 19:29 (17 days old)
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13665
-Subject		: commit 69c854817566 causes OOMs
-Submitter	: David Howells <dhowells@redhat.com>
-Date		: 2009-06-27 08:12 (2 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=69c854817566db82c362797b4a6521d0b00fe1d8
-References	: http://lkml.org/lkml/2009/6/27/28
-Handled-By	: Wu Fengguang <fengguang.wu@intel.com>
-Patch		: http://patchwork.kernel.org/patch/32740/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13662
-Subject		: broken alpha smp build
-Submitter	: maximilian attems <max@stro.at>
-Date		: 2009-06-25 11:08 (4 days old)
-References	: http://lkml.org/lkml/2009/6/25/108
-Handled-By	: Tejun Heo <tj@kernel.org>
-Patch		: http://patchwork.kernel.org/patch/32714/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13659
-Subject		: iwlagn (4965): no wireless due to RFKILL problem
-Submitter	: Frans Pop <elendil@planet.nl>
-Date		: 2009-06-26 13:36 (3 days old)
-References	: http://lkml.org/lkml/2009/6/26/127
-Handled-By	: Johannes Berg <johannes@sipsolutions.net>
-Patch		: http://lkml.org/lkml/2009/6/27/35
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13658
-Subject		: parisc: multiple PCI BAR collisions
-Submitter	: Alexander Beregalov <a.beregalov@gmail.com>
-Date		: 2009-06-26 12:58 (3 days old)
-References	: http://lkml.org/lkml/2009/6/26/87
-Handled-By	: Matthew Wilcox <matthew@wil.cx>
-Patch		: http://patchwork.kernel.org/patch/32593/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13655
-Subject		: [Oops] 2.6.31-rc1: tun
-Submitter	: Sergei Trofimovich <slyich@gmail.com>
-Date		: 2009-06-25 23:53 (4 days old)
-References	: http://lkml.org/lkml/2009/6/25/435
-Handled-By	: Herbert Xu <herbert@gondor.apana.org.au>
-Patch		: http://patchwork.kernel.org/patch/32672/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13654
-Subject		: possible recursive locking detected at kmem_cache_free
-Submitter	: Pallipadi, Venkatesh <venkatesh.pallipadi@intel.com>
-Date		: 2009-06-25 11:59 (4 days old)
-References	: http://lkml.org/lkml/2009/6/25/373
-Handled-By	: Pekka J Enberg <penberg@cs.helsinki.fi>
-Patch		: http://patchwork.kernel.org/patch/32525/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13653
-Subject		: system hangs after resume from suspend to disk, mce related
-Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
-Date		: 2009-06-21 19:02 (8 days old)
-References	: http://lkml.org/lkml/2009/6/21/86
-Handled-By	: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Patch		: http://patchwork.kernel.org/patch/32062/
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.30,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13615
-
-Please let me know if there are any Bugzilla entries that should be added to
-the list in there.
-
-Thanks,
-Rafael
 
