@@ -1,38 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:64822 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbZFXKTi (ORCPT
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:53085 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718AbZFYKC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 06:19:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <40f31dec0906030535k3af1f6e7u68c82a4f984e7029@mail.gmail.com>
-References: <20090403182724.GA7364@tuxdriver.com>
-	 <40f31dec0906030535k3af1f6e7u68c82a4f984e7029@mail.gmail.com>
-Date: Wed, 24 Jun 2009 13:19:38 +0300
-Message-ID: <40f31dec0906240319q52444a96w32c21b4c9ec461c@mail.gmail.com>
-Subject: Re: Linux wireless mini-summit -- Berlin, June 2009
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 25 Jun 2009 06:02:57 -0400
+Subject: [PATCH v3 10/10] nf_conntrack: Use rcu_barrier()
+From: Jesper Dangaard Brouer <jdb@comx.dk>
+Reply-To: jdb@comx.dk
+To: Patrick McHardy <kaber@trash.net>
+Cc: Christoph Lameter <cl@linux-foundation.org>, linux-mm@kvack.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, christine.caulfield@googlemail.com,
+	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+In-Reply-To: <1245922153.24921.56.camel@localhost.localdomain>
+References: <20090623150330.22490.87327.stgit@localhost>
+	 <20090623150444.22490.27931.stgit@localhost>  <4A410185.3090706@trash.net>
+	 <1245834139.6695.31.camel@localhost.localdomain>
+	 <1245836409.6695.35.camel@localhost.localdomain> <4A423108.60109@trash.net>
+	 <1245922153.24921.56.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 25 Jun 2009 12:02:58 +0200
+Message-Id: <1245924178.24921.61.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/6/3 Nick Kossifidis <mickflemm@gmail.com>:
->
->
-> Can we book a room on Holiday in
-> (http://fedoraproject.org/wiki/FUDCon:Berlin_2009_lodging) or is it
-> only for Fedora people ? What's the process ? I've managed to find
-> some funding for travel expenses but most hotels are really expensive
-> (i plan to come on 24 and leave on 29).
->
+On Thu, 2009-06-25 at 11:29 +0200, Jesper Dangaard Brouer wrote:
+> Should I make two different patchs?
 
-Just arrived, looking forward to see you all ;-)
+Here is the single patch... Patrick tell me if you want it split up?
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+[PATCH v3 10/10] nf_conntrack: Use rcu_barrier()
+
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+
+RCU barriers, rcu_barrier(), is inserted two places.
+
+ In nf_conntrack_expect.c nf_conntrack_expect_fini() before the
+ kmem_cache_destroy().  Firstly to make sure the callback to the
+ nf_ct_expect_free_rcu() code is still around.  Secondly because I'm
+ unsure about the consequence of having in flight
+ nf_ct_expect_free_rcu/kmem_cache_free() calls while doing a
+ kmem_cache_destroy() slab destroy.
+
+ And in nf_conntrack_extend.c nf_ct_extend_unregister(), inorder to
+ wait for completion of callbacks to __nf_ct_ext_free_rcu(), which is
+ invoked by __nf_ct_ext_add().  It might be more efficient to call
+ rcu_barrier() in nf_conntrack_core.c nf_conntrack_cleanup_net(), but
+ thats make it more difficult to read the code (as the callback code
+ in located in nf_conntrack_extend.c).
+
+Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+---
+
+ net/netfilter/nf_conntrack_expect.c |    4 +++-
+ net/netfilter/nf_conntrack_extend.c |    2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+
+diff --git a/net/netfilter/nf_conntrack_expect.c b/net/netfilter/nf_conntrack_expect.c
+index afde8f9..2032dfe 100644
+--- a/net/netfilter/nf_conntrack_expect.c
++++ b/net/netfilter/nf_conntrack_expect.c
+@@ -617,8 +617,10 @@ err1:
+ void nf_conntrack_expect_fini(struct net *net)
+ {
+ 	exp_proc_remove(net);
+-	if (net_eq(net, &init_net))
++	if (net_eq(net, &init_net)) {
++		rcu_barrier(); /* Wait for call_rcu() before destroy */
+ 		kmem_cache_destroy(nf_ct_expect_cachep);
++	}
+ 	nf_ct_free_hashtable(net->ct.expect_hash, net->ct.expect_vmalloc,
+ 			     nf_ct_expect_hsize);
+ }
+diff --git a/net/netfilter/nf_conntrack_extend.c b/net/netfilter/nf_conntrack_extend.c
+index 4b2c769..fef95be 100644
+--- a/net/netfilter/nf_conntrack_extend.c
++++ b/net/netfilter/nf_conntrack_extend.c
+@@ -186,6 +186,6 @@ void nf_ct_extend_unregister(struct nf_ct_ext_type *type)
+ 	rcu_assign_pointer(nf_ct_ext_types[type->id], NULL);
+ 	update_alloc_size(type);
+ 	mutex_unlock(&nf_ct_ext_type_mutex);
+-	synchronize_rcu();
++	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+ }
+ EXPORT_SYMBOL_GPL(nf_ct_extend_unregister);
+
