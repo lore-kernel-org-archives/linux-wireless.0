@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:53049 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752705AbZFDTvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 15:51:25 -0400
-Message-ID: <4A2825B5.3000405@free.fr>
-Date: Thu, 04 Jun 2009 21:51:17 +0200
-From: matthieu castet <castet.matthieu@free.fr>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 : unaligned access on mips
-References: <4A244E19.7090501@free.fr> <200906021720.39080.mb@bu3sch.de> <4A256CCC.5040908@free.fr> <200906022027.35609.mb@bu3sch.de>
-In-Reply-To: <200906022027.35609.mb@bu3sch.de>
-Content-Type: multipart/mixed;
- boundary="------------030403080704020109050209"
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1452 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755656AbZFYFNu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2009 01:13:50 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ipw2100-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 11/19] drivers/net/wireless: Use PCI_VDEVICE
+Date: Wed, 24 Jun 2009 22:13:27 -0700
+Message-Id: <10b896c1a1e1f65a4a342ee5aa3452ab8cb43dfb.1245906152.git.joe@perches.com>
+In-Reply-To: <cover.1245906151.git.joe@perches.com>
+References: <cover.1245906151.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030403080704020109050209
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c        |   10 +++++-----
+ drivers/net/wireless/prism54/islpci_hotplug.c |    4 +---
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-Michael Buesch wrote:
-> On Tuesday 02 June 2009 20:17:48 matthieu castet wrote:
-> Can you send a patch please?
-> I do actually prefer patches anyway instead of verbose explanations. I'd have
-> immediately understood what you were talking about, if you'd just sent a patch. ;)
-> 
-Here you are
-
---------------030403080704020109050209
-Content-Type: text/x-diff;
- name="b43_unaligned.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="b43_unaligned.diff"
-
-Fix an unaligned access on b43.
-unaligned data is read/write with a u32 pointer instead of using the
-packed structure.
-
-Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index a63d888..55f36a7 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -118,7 +118,6 @@ u8 b43_plcp_get_ratecode_ofdm(const u8 bitrate)
- void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
- 			   const u16 octets, const u8 bitrate)
- {
--	__le32 *data = &(plcp->data);
- 	__u8 *raw = plcp->raw;
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 44c29b3..d726b3c 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -11436,11 +11436,11 @@ static struct pci_device_id card_ids[] = {
+ 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2754, 0, 0, 0},
+ 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2761, 0, 0, 0},
+ 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2762, 0, 0, 0},
+-	{PCI_VENDOR_ID_INTEL, 0x104f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{PCI_VENDOR_ID_INTEL, 0x4220, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* BG */
+-	{PCI_VENDOR_ID_INTEL, 0x4221, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* BG */
+-	{PCI_VENDOR_ID_INTEL, 0x4223, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* ABG */
+-	{PCI_VENDOR_ID_INTEL, 0x4224, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* ABG */
++	{PCI_VDEVICE(INTEL, 0x104f), 0},
++	{PCI_VDEVICE(INTEL, 0x4220), 0},	/* BG */
++	{PCI_VDEVICE(INTEL, 0x4221), 0},	/* BG */
++	{PCI_VDEVICE(INTEL, 0x4223), 0},	/* ABG */
++	{PCI_VDEVICE(INTEL, 0x4224), 0},	/* ABG */
  
- 	if (b43_is_ofdm_rate(bitrate)) {
-@@ -127,7 +126,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
- 		d = b43_plcp_get_ratecode_ofdm(bitrate);
- 		B43_WARN_ON(octets & 0xF000);
- 		d |= (octets << 5);
--		*data = cpu_to_le32(d);
-+		plcp->data = cpu_to_le32(d);
- 	} else {
- 		u32 plen;
+ 	/* required last entry */
+ 	{0,}
+diff --git a/drivers/net/wireless/prism54/islpci_hotplug.c b/drivers/net/wireless/prism54/islpci_hotplug.c
+index 3087672..83d3662 100644
+--- a/drivers/net/wireless/prism54/islpci_hotplug.c
++++ b/drivers/net/wireless/prism54/islpci_hotplug.c
+@@ -49,9 +49,7 @@ static const struct pci_device_id prism54_id_tbl[] = {
  
-@@ -141,7 +140,7 @@ void b43_generate_plcp_hdr(struct b43_plcp_hdr4 *plcp,
- 				raw[1] = 0x04;
- 		} else
- 			raw[1] = 0x04;
--		*data |= cpu_to_le32(plen << 16);
-+		plcp->data |= cpu_to_le32(plen << 16);
- 		raw[0] = b43_plcp_get_ratecode_cck(bitrate);
- 	}
- }
+ 	/* 3COM 3CRWE154G72 Wireless LAN adapter */
+ 	{
+-	 0x10b7, 0x6001,
+-	 PCI_ANY_ID, PCI_ANY_ID,
+-	 0, 0, 0
++	 PCI_VDEVICE(3COM, 0x6001), 0
+ 	},
+ 
+ 	/* Intersil PRISM Indigo Wireless LAN adapter */
+-- 
+1.6.3.1.10.g659a0.dirty
 
---------------030403080704020109050209--
