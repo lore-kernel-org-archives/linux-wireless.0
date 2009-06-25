@@ -1,143 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:64563 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373AbZFRWWE (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33600
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757816AbZFYXSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 18:22:04 -0400
-Received: by mail-ew0-f210.google.com with SMTP id 6so1987323ewy.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2009 15:22:07 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 08/23] orinoco: Move FID allocation to hw.c
-Date: Thu, 18 Jun 2009 23:21:20 +0100
-Message-Id: <1245363695-8289-9-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
-References: <1245363695-8289-1-git-send-email-kilroyd@googlemail.com>
+	Thu, 25 Jun 2009 19:18:12 -0400
+Date: Thu, 25 Jun 2009 16:18:17 -0700 (PDT)
+Message-Id: <20090625.161817.112930127.davem@davemloft.net>
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/3] wireless extensions improvements
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090624113447.441667549@sipsolutions.net>
+References: <20090624113447.441667549@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is part of refactorring the initialisation code so that we can
-load the firmware before registerring with netdev.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 24 Jun 2009 13:34:47 +0200
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/hw.c   |   23 +++++++++++++++++++++++
- drivers/net/wireless/orinoco/hw.h   |    1 +
- drivers/net/wireless/orinoco/main.c |   25 ++-----------------------
- 3 files changed, 26 insertions(+), 23 deletions(-)
+> This series contains three improvements to wireless
+> extensions:
+>  1) make them network namespace aware, as discussed
+>     previously
+>  2) optimise the event sending code and fix a small
+>     heap information leak
+>  3) do some generic work and make it possible to send
+>     compat netlink events, and make wext do this
+> 
+> Because the third patch depends on the first two (it
+> could be made not to, if you wish) but touches generic
+> networking stuff, I'd like to have all of these included
+> in net-next instead of John's wireless tree, all the
+> other wireless work can be done independently of these.
 
-diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-index 40dc25c..0f6426d 100644
---- a/drivers/net/wireless/orinoco/hw.c
-+++ b/drivers/net/wireless/orinoco/hw.c
-@@ -15,6 +15,9 @@
- 
- #define SYMBOL_MAX_VER_LEN	(14)
- 
-+/* Symbol firmware has a bug allocating buffers larger than this */
-+#define TX_NICBUF_SIZE_BUG	1585
-+
- /********************************************************************/
- /* Data tables                                                      */
- /********************************************************************/
-@@ -364,6 +367,26 @@ out:
- 	return err;
- }
- 
-+int orinoco_hw_allocate_fid(struct orinoco_private *priv)
-+{
-+	struct net_device *dev = priv->ndev;
-+	struct hermes *hw = &priv->hw;
-+	int err;
-+
-+	err = hermes_allocate(hw, priv->nicbuf_size, &priv->txfid);
-+	if (err == -EIO && priv->nicbuf_size > TX_NICBUF_SIZE_BUG) {
-+		/* Try workaround for old Symbol firmware bug */
-+		priv->nicbuf_size = TX_NICBUF_SIZE_BUG;
-+		err = hermes_allocate(hw, priv->nicbuf_size, &priv->txfid);
-+
-+		printk(KERN_WARNING "%s: firmware ALLOC bug detected "
-+		       "(old Symbol firmware?). Work around %s\n",
-+		       dev->name, err ? "failed!" : "ok.");
-+	}
-+
-+	return err;
-+}
-+
- int orinoco_get_bitratemode(int bitrate, int automatic)
- {
- 	int ratemode = -1;
-diff --git a/drivers/net/wireless/orinoco/hw.h b/drivers/net/wireless/orinoco/hw.h
-index 6186e44..89277de 100644
---- a/drivers/net/wireless/orinoco/hw.h
-+++ b/drivers/net/wireless/orinoco/hw.h
-@@ -25,6 +25,7 @@ struct dev_addr_list;
- 
- int determine_fw_capabilities(struct orinoco_private *priv);
- int orinoco_hw_read_card_settings(struct orinoco_private *priv, u8 *dev_addr);
-+int orinoco_hw_allocate_fid(struct orinoco_private *priv);
- int orinoco_get_bitratemode(int bitrate, int automatic);
- void orinoco_get_ratemode_cfg(int ratemode, int *bitrate, int *automatic);
- 
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index 0fe9420..58a48db 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -147,7 +147,6 @@ static const u8 encaps_hdr[] = {0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00};
- 					    * how many events the
- 					    * device could
- 					    * legitimately generate */
--#define TX_NICBUF_SIZE_BUG	1585		/* Bug in Symbol firmware */
- 
- #define DUMMY_FID		0xFFFF
- 
-@@ -1574,26 +1573,6 @@ int __orinoco_down(struct net_device *dev)
- }
- EXPORT_SYMBOL(__orinoco_down);
- 
--static int orinoco_allocate_fid(struct net_device *dev)
--{
--	struct orinoco_private *priv = netdev_priv(dev);
--	struct hermes *hw = &priv->hw;
--	int err;
--
--	err = hermes_allocate(hw, priv->nicbuf_size, &priv->txfid);
--	if (err == -EIO && priv->nicbuf_size > TX_NICBUF_SIZE_BUG) {
--		/* Try workaround for old Symbol firmware bug */
--		priv->nicbuf_size = TX_NICBUF_SIZE_BUG;
--		err = hermes_allocate(hw, priv->nicbuf_size, &priv->txfid);
--
--		printk(KERN_WARNING "%s: firmware ALLOC bug detected "
--		       "(old Symbol firmware?). Work around %s\n",
--		       dev->name, err ? "failed!" : "ok.");
--	}
--
--	return err;
--}
--
- int orinoco_reinit_firmware(struct net_device *dev)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
-@@ -1607,7 +1586,7 @@ int orinoco_reinit_firmware(struct net_device *dev)
- 			priv->do_fw_download = 0;
- 	}
- 	if (!err)
--		err = orinoco_allocate_fid(dev);
-+		err = orinoco_hw_allocate_fid(priv);
- 
- 	return err;
- }
-@@ -2167,7 +2146,7 @@ static int orinoco_init(struct net_device *dev)
- 	if (err)
- 		goto out;
- 
--	err = orinoco_allocate_fid(dev);
-+	err = orinoco_hw_allocate_fid(priv);
- 	if (err) {
- 		printk(KERN_ERR "%s: failed to allocate NIC buffer!\n",
- 		       dev->name);
--- 
-1.6.0.6
+These changes look fine to me, so I'll likely put them into
+net-next-2.6 as soon as I open that up.
 
+FWIW, I bet we could make read() easily work properly to for the
+compat stuff, and it would be nice to shore up that one minor hole.
