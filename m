@@ -1,115 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34880 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753705AbZFRMgN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 08:36:13 -0400
-Subject: wireless netns work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Netdev <netdev@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HlqO3EB7v0BqmDxVqv5A"
-Date: Thu, 18 Jun 2009 14:35:43 +0200
-Message-Id: <1245328543.13790.31.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:20196 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbZFYK2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2009 06:28:36 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/4] iwmc3200wifi: replace netif_rx with netif_rx_ni
+Date: Thu, 25 Jun 2009 18:28:30 +0800
+Message-Id: <1245925713-14908-2-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1245925713-14908-1-git-send-email-yi.zhu@intel.com>
+References: <1245925713-14908-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The patch uses netif_rx_ni() over netif_rx() to post buffers to
+upper network code because it is always scheduled in a workqueue.
+The problem was first observed from a dynamic ticks warning:
 
---=-HlqO3EB7v0BqmDxVqv5A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+    "NOHZ: local_softirq_pending ..."
 
-Hi,
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-You've all seen the netns patches fly by -- time to explain what I'm
-doing maybe?
-
-First, I've not copied all patches to both lists, please look at
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/ for all the
-patches with netns in their name, as there are:
-
-## netns work [sent]
-006-wext-netns.patch
-007-netns-rcu.patch
-008-genl-netns.patch
-009-mac80211-netns.patch
-010-netns-export-get-by-pid.patch
-
-## netns work [rfc]
-011-cfg80211-netns.patch
-
-## play together
-012-mac80211-allow-netns.patch
-
-## HACK HACK HACK
-013-mac80211-no-netdev-dev.patch
-
-
-Also, to play with it you will need the netns branch of iw, which has
-this simple commit:
-http://git.sipsolutions.net/gitweb.cgi?p=3Diw.git;a=3Dcommitdiff;h=3D518d40=
-92312a8b02bdb49163ae403de7abc9bdee
-
-Also grab ns_exec and compile it:
-http://johannes.sipsolutions.net/files/ns_exec.c.txt
-
-Now compile your kernel with all the above patches (including the HACK
-one) and let's play:
-
-# modprobe mac80211_hsim
-
-open a new terminal, and in it do
-# ns_exec -c -n /bin/bash
-and note the PID. In the new shell, also do
-# ip link set lo up
-
-Then in the old terminal, do
-# iw phy#0 set netns PID-from-above
-
-You'll get a sysfs complaint. Now, in the old terminal:
-# ip addr add 192.168.12.1/24 dev wlan1
-and in the new netns terminal:
-# ip addr add 192.168.12.2/24 dev wlan0
-
-Now you can run hostapd on one of them and connect to the other. This
-bit works fine. Once the link is established, you _should_ also be able
-to ping between the two, but that doesn't work.
-
-Oddly, the link works unidirectionally in both directions, if I ping
-from either side tcpdump shows the echo requests on the other side, but
-no echo reply is being generated. Still investigating why this is, since
-it works fine with veth. Ideas why this is broken would be
-appreciated :)
-
-(and to play with veth, do
-# ip link add type veth
-# ip link set veth0 netns <PID>
-# ip addr add ...
-)
-
-johannes
-
---=-HlqO3EB7v0BqmDxVqv5A
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKOjScAAoJEODzc/N7+QmaC/gQAKsC9/uHH6KxCJ1nsCYuzcUD
-E137VKmbtHcGPxTLsUOp/GxiV3Oz9HrYUX3cKCwm3BdrTHjR8I/tOfdL+hdcETVe
-MDmBIndpo4Oy9v9S1ndlfGt77rek8cIq/1XruvAWldbFOJ7JqBUWKPOG9N15JYoh
-gFBo78MC9h/9W0O/MVpyWiTX4W3w41ncvVbSypqbMr5lRhOLt7jXRY9kKRohGr31
-BS4zi9KKoed3CEwcZ5ksqV1BaTP8HJyhhMEjp14E6YeTNNl82eUa1wBeWFIAGE/4
-wknx6bi3YI2SlaOII5/6nuY0iJHyvIkVC7pzuLZVjzinAYG2JKJzVSLKU6ZRBd6G
-tQmBFBeCxyweNWIuVZODBzYc+8im5K+FM6+gx7RpMv6f/oIec7ajSTzXpQs6+q+G
-Zza2VFbSrOvuyzK1nANxLdqYKZygXkCXhx5qe2L6LI03S5gy5okjJaSXZpuQMH18
-TkZC5HQIhkhjEr9+RXYjdvVPciobVzJd7lH/7ZXQlAJ0ZWrhTPYxphUD5rGUft+v
-887zwbVhCycR1b2rjPXZ/cwyLIWgRU/JTXvfRV21EWswn9pCl5ejl0C8pGK8l2h1
-vKXLS71HdbxIghfpO3ryzB0nL4Xi275+RZ1WhvLhIdqTjWcajj6Aw4wqSqVJ7Rql
-lcMOJNayZzOQRAT75JWy
-=dS6j
------END PGP SIGNATURE-----
-
---=-HlqO3EB7v0BqmDxVqv5A--
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index 55871da..5d2239f 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -1373,7 +1373,7 @@ static void iwm_rx_process_packet(struct iwm_priv *iwm,
+ 		ndev->stats.rx_packets++;
+ 		ndev->stats.rx_bytes += skb->len;
+ 
+-		if (netif_rx(skb) == NET_RX_DROP) {
++		if (netif_rx_ni(skb) == NET_RX_DROP) {
+ 			IWM_ERR(iwm, "Packet dropped\n");
+ 			ndev->stats.rx_dropped++;
+ 		}
+-- 
+1.6.0.4
 
