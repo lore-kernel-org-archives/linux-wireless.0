@@ -1,139 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48021 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757934AbZFJUBz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 16:01:55 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, julian.calaby@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] [compat-2.6] Update compat.diff
-Date: Wed, 10 Jun 2009 22:01:47 +0200
-Message-Id: <1244664108-3997-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1244664108-3997-1-git-send-email-hauke@hauke-m.de>
-References: <1244664108-3997-1-git-send-email-hauke@hauke-m.de>
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:55496 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751AbZFYJ3O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2009 05:29:14 -0400
+Subject: Re: [PATCH v2 10/10] nf_conntrack: Use rcu_barrier() and
+	fix	kmem_cache_create flags
+From: Jesper Dangaard Brouer <jdb@comx.dk>
+Reply-To: jdb@comx.dk
+To: Patrick McHardy <kaber@trash.net>,
+	Christoph Lameter <cl@linux-foundation.org>, linux-mm@kvack.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, christine.caulfield@googlemail.com,
+	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+In-Reply-To: <4A423108.60109@trash.net>
+References: <20090623150330.22490.87327.stgit@localhost>
+	 <20090623150444.22490.27931.stgit@localhost>  <4A410185.3090706@trash.net>
+	 <1245834139.6695.31.camel@localhost.localdomain>
+	 <1245836409.6695.35.camel@localhost.localdomain> <4A423108.60109@trash.net>
+Content-Type: text/plain
+Date: Thu, 25 Jun 2009 11:29:13 +0200
+Message-Id: <1245922153.24921.56.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-requeue was removed out of skbuff.h in wireless-testing.
-Add missing import for b43 with kernel 2.6.28.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat.diff |   66 ++++++++++++---------------------------------------
- config.mk          |    1 +
- 2 files changed, 17 insertions(+), 50 deletions(-)
+On Wed, 2009-06-24 at 15:58 +0200, Patrick McHardy wrote:
+> Jesper Dangaard Brouer wrote:
+> > Adjusting SLAB_DESTROY_BY_RCU flags.
+> > 
+> >  kmem_cache_create("nf_conntrack", ...) does not need the
+> >  SLAB_DESTROY_BY_RCU flag.
+> 
+> It does need it. We're using it instead of call_rcu() for conntracks.
+> 
+> >  But the
+> >  kmem_cache_create("nf_conntrack_expect", ...) should use the
+> >  SLAB_DESTROY_BY_RCU flag, because it uses a call_rcu() callback to
+> >  invoke kmem_cache_free().
+> 
+> No, using call_rcu() means we don't need SLAB_DESTROY_BY_RCU.
+> Please see the note in include/linux/slab.h.
 
-diff --git a/compat/compat.diff b/compat/compat.diff
-index dec8e91..058a933 100644
---- a/compat/compat.diff
-+++ b/compat/compat.diff
-@@ -195,6 +195,18 @@
-  	if (res != 0)
-  		goto err_kfree_ssb;
-  
-+--- a/drivers/net/wireless/b43/phy_common.h
-++++ b/drivers/net/wireless/b43/phy_common.h
-+@@ -2,6 +2,9 @@
-+ #define LINUX_B43_PHY_COMMON_H_
-+ 
-+ #include <linux/types.h>
-++#if (LINUX_VERSION_CODE == KERNEL_VERSION(2,6,28))
-++#include <asm/atomic.h>
-++#endif
-+ 
-+ struct b43_wldev;
-+ 
- --- a/drivers/net/wireless/ipw2x00/ipw2100.c
- +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
- @@ -6008,6 +6008,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
-@@ -572,25 +584,9 @@
-  
-  /**
-   * DOC: Key handling basics
----- a/net/mac80211/main.c	2009-04-28 15:34:50.000000000 -0700
--+++ b/net/mac80211/main.c	2009-04-28 15:35:06.000000000 -0700
--@@ -469,6 +469,7 @@
-- 		return;
-- 	}
-- 
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,28))
-- 	if (!test_sta_flags(sta, WLAN_STA_PS) && !skb->requeue) {
-- 		/* Software retry the packet once */
-- 		skb->requeue = 1;
--@@ -476,6 +477,7 @@
-- 		dev_queue_xmit(skb);
-- 		return;
-- 	}
--+#endif
-- 
-- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-- 	if (net_ratelimit())
--@@ -808,6 +810,7 @@
-+--- a/net/mac80211/main.c
-++++ b/net/mac80211/main.c
-+@@ -759,6 +759,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
-  }
-  EXPORT_SYMBOL(ieee80211_alloc_hw);
-  
-@@ -598,7 +594,7 @@
-  static const struct net_device_ops ieee80211_master_ops = {
-  	.ndo_start_xmit = ieee80211_master_start_xmit,
-  	.ndo_open = ieee80211_master_open,
--@@ -815,12 +818,22 @@
-+@@ -766,12 +767,22 @@ static const struct net_device_ops ieee80211_master_ops = {
-  	.ndo_set_multicast_list = ieee80211_master_set_multicast_list,
-  	.ndo_select_queue = ieee80211_select_queue,
-  };
-@@ -643,36 +639,6 @@
-  
-  	return ops;
-  }
----- a/net/mac80211/rx.c	2009-04-28 15:34:51.000000000 -0700
--+++ b/net/mac80211/rx.c	2009-04-28 15:35:06.000000000 -0700
--@@ -815,12 +815,17 @@
-- 
-- 	/* Send all buffered frames to the station */
-- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
--+#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28))
--+		dev_kfree_skb(skb);
--+#else
-- 		sent++;
-- 		skb->requeue = 1;
-- 		dev_queue_xmit(skb);
--+#endif
-- 	}
-- 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
-- 		local->total_ps_buffered--;
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,28))
-- 		sent++;
-- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-- 		printk(KERN_DEBUG "%s: STA %pM aid %d send PS frame "
--@@ -829,6 +834,9 @@
-- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-- 		skb->requeue = 1;
-- 		dev_queue_xmit(skb);
--+#else
--+		dev_kfree_skb(skb);
--+#endif
-- 	}
-- 
-- 	return sent;
- --- a/net/mac80211/wme.c
- +++ b/net/mac80211/wme.c
- @@ -97,6 +97,7 @@ u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
-diff --git a/config.mk b/config.mk
-index 7de159b..8992f9b 100644
---- a/config.mk
-+++ b/config.mk
-@@ -295,6 +295,7 @@ endif # end of USB driver list
- ifneq ($(CONFIG_SPI_MASTER),)
- 
- CONFIG_WL12XX=m
-+CONFIG_P54_SPI=m
- CONFIG_LIBERTAS_SPI=m
- NEED_LIBERTAS=y
- 
+Oh, I see.  The description is some what cryptic, but I think I got it,
+after reading through the code.
+
+BUT this still means that we need to do rcu_barrier() if the
+SLAB_DESTROY_BY_RCU is NOT set and we do call_rcu() our self.
+
+Look at: slab.c kmem_cache_destroy()
+
+void kmem_cache_destroy(struct kmem_cache *cachep)
+{
+	...<cut>...
+	if (__cache_shrink(cachep)) {
+		slab_error(cachep, "Can't free all objects");
+		...<cut>...
+		return;
+	}
+
+	if (unlikely(cachep->flags & SLAB_DESTROY_BY_RCU))
+		synchronize_rcu();
+
+	__kmem_cache_destroy(cachep);
+	...<cut>...
+}
+
+My understanding for the code is (please feel free to correct me): that
+if SLAB_DESTROY_BY_RCU _is_ set, then the __cache_shrink() call will
+call drain_freelist(), which calls slab_destroy().
+
+If SLAB_DESTROY_BY_RCU _is_ set, then slab_destroy() will then start a
+call_rcu() callback to kmem_rcu_free() which calls kmem_cache_free().
+Given that the callback code kmem_rcu_free() is not removed, we are not
+worried about unloading the module at this point.
+
+I'm a bit worried about what happens if __kmem_cache_destroy() is
+invoked and there is still callbacks for kmem_rcu_free() in flight?
+The synchronize_rcu() between __cache_shrink() and
+__kmem_cache_destroy() should perhaps be changed to rcu_barrier()?
+
+But I'm sure that the SLAB/MM guys will tell me that this case is
+handled (and something about its unlinked from the appropiate
+lists)??? ;-)
+
+
+> > RCU barriers, rcu_barrier(), is inserted two places.
+> > 
+> >  In nf_conntrack_expect.c nf_conntrack_expect_fini() before the
+> >  kmem_cache_destroy(), even though the use of the SLAB_DESTROY_BY_RCU
+> >  flag, because slub does not (currently) handle rcu sync correctly.
+> 
+> I think that should be fixed in slub then.
+
+I don't think so, we/I'm are talking about "nf_conntrack_expect" and not
+"nf_conntrack" slab.  Clearly the slab "nf_conntrack" is handled
+correcly (according to description above). 
+
+We still need to make sure the callbacks for "nf_conntrack_expect", are
+done before unloading/removing the code they are about to call.
+
+
+> >  And in nf_conntrack_extend.c nf_ct_extend_unregister(), inorder to
+> >  wait for completion of callbacks to __nf_ct_ext_free_rcu(), which is
+> >  invoked by __nf_ct_ext_add().  It might be more efficient to call
+> >  rcu_barrier() in nf_conntrack_core.c nf_conntrack_cleanup_net(), but
+> >  thats make it more difficult to read the code (as the callback code
+> >  in located in nf_conntrack_extend.c).
+> 
+> This one looks fine.
+
+Should I make two different patchs?
+
+
+> > diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+> > index 5f72b94..438ce84 100644
+> > --- a/net/netfilter/nf_conntrack_core.c
+> > +++ b/net/netfilter/nf_conntrack_core.c
+> > @@ -1242,7 +1242,7 @@ static int nf_conntrack_init_init_net(void)
+> >  
+> >  	nf_conntrack_cachep = kmem_cache_create("nf_conntrack",
+> >  						sizeof(struct nf_conn),
+> > -						0, SLAB_DESTROY_BY_RCU, NULL);
+> > +						0, 0, NULL);
+> >  	if (!nf_conntrack_cachep) {
+> >  		printk(KERN_ERR "Unable to create nf_conn slab cache\n");
+> >  		ret = -ENOMEM;
+> > diff --git a/net/netfilter/nf_conntrack_expect.c b/net/netfilter/nf_conntrack_expect.c
+> > index afde8f9..56227c2 100644
+> > --- a/net/netfilter/nf_conntrack_expect.c
+> > +++ b/net/netfilter/nf_conntrack_expect.c
+> > @@ -593,7 +593,7 @@ int nf_conntrack_expect_init(struct net *net)
+> >  	if (net_eq(net, &init_net)) {
+> >  		nf_ct_expect_cachep = kmem_cache_create("nf_conntrack_expect",
+> >  					sizeof(struct nf_conntrack_expect),
+> > -					0, 0, NULL);
+> > +					0, SLAB_DESTROY_BY_RCU, NULL);
+> >  		if (!nf_ct_expect_cachep)
+> >  			goto err2;
+> >  	}
+> > @@ -617,8 +617,15 @@ err1:
+> >  void nf_conntrack_expect_fini(struct net *net)
+> >  {
+> >  	exp_proc_remove(net);
+> > -	if (net_eq(net, &init_net))
+> > +	if (net_eq(net, &init_net)) {
+> > +		/* hawk@comx.dk 2009-06-24: The rcu_barrier() can be
+> > +		 * removed once the sl*b allocators has been fixed
+> > +		 * regarding handling the SLAB_DESTROY_BY_RCU flag
+> > +		 * correctly.
+> > +		 */
+> > +		rcu_barrier(); /* Wait for call_rcu() before destroy */
+> >  		kmem_cache_destroy(nf_ct_expect_cachep);
+> > +	}
+> >  	nf_ct_free_hashtable(net->ct.expect_hash, net->ct.expect_vmalloc,
+> >  			     nf_ct_expect_hsize);
+> >  }
+> > diff --git a/net/netfilter/nf_conntrack_extend.c b/net/netfilter/nf_conntrack_extend.c
+> > index 4b2c769..fef95be 100644
+> > --- a/net/netfilter/nf_conntrack_extend.c
+> > +++ b/net/netfilter/nf_conntrack_extend.c
+> > @@ -186,6 +186,6 @@ void nf_ct_extend_unregister(struct nf_ct_ext_type *type)
+> >  	rcu_assign_pointer(nf_ct_ext_types[type->id], NULL);
+> >  	update_alloc_size(type);
+> >  	mutex_unlock(&nf_ct_ext_type_mutex);
+> > -	synchronize_rcu();
+> > +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+> >  }
+> >  EXPORT_SYMBOL_GPL(nf_ct_extend_unregister);
+> > 
+> 
 -- 
-1.6.2.1
-
+Med venlig hilsen / Best regards
+  Jesper Brouer
+  ComX Networks A/S
+  Linux Network developer
+  Cand. Scient Datalog / MSc.
+  Author of http://adsl-optimizer.dk
+  LinkedIn: http://www.linkedin.com/in/brouer
