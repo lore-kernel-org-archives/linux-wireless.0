@@ -1,103 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47270 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701AbZFFAEB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 20:04:01 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH v2 08/15] ath9k: remove ATH9K_MODE_11B
-Date: Fri,  5 Jun 2009 20:03:42 -0400
-Message-Id: <1244246629-28179-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:43813 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758630AbZFYTcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2009 15:32:25 -0400
+Date: Thu, 25 Jun 2009 12:32:24 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Jesper Dangaard Brouer <jdb@comx.dk>
+Cc: Patrick McHardy <kaber@trash.net>,
+	Christoph Lameter <cl@linux-foundation.org>,
+	linux-mm@kvack.org, "David S. Miller" <davem@davemloft.net>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, christine.caulfield@googlemail.com,
+	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
+	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
+	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
+	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
+Subject: Re: [PATCH v2 10/10] nf_conntrack: Use rcu_barrier() and fix
+	kmem_cache_create flags
+Message-ID: <20090625193224.GC8852@linux.vnet.ibm.com>
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <20090623150330.22490.87327.stgit@localhost> <20090623150444.22490.27931.stgit@localhost> <4A410185.3090706@trash.net> <1245834139.6695.31.camel@localhost.localdomain> <1245836409.6695.35.camel@localhost.localdomain> <4A423108.60109@trash.net> <1245922153.24921.56.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1245922153.24921.56.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This saves us 2733 bytes.
+On Thu, Jun 25, 2009 at 11:29:13AM +0200, Jesper Dangaard Brouer wrote:
+> 
+> On Wed, 2009-06-24 at 15:58 +0200, Patrick McHardy wrote:
+> > Jesper Dangaard Brouer wrote:
+> > > Adjusting SLAB_DESTROY_BY_RCU flags.
+> > > 
+> > >  kmem_cache_create("nf_conntrack", ...) does not need the
+> > >  SLAB_DESTROY_BY_RCU flag.
+> > 
+> > It does need it. We're using it instead of call_rcu() for conntracks.
+> > 
+> > >  But the
+> > >  kmem_cache_create("nf_conntrack_expect", ...) should use the
+> > >  SLAB_DESTROY_BY_RCU flag, because it uses a call_rcu() callback to
+> > >  invoke kmem_cache_free().
+> > 
+> > No, using call_rcu() means we don't need SLAB_DESTROY_BY_RCU.
+> > Please see the note in include/linux/slab.h.
+> 
+> Oh, I see.  The description is some what cryptic, but I think I got it,
+> after reading through the code.
+> 
+> BUT this still means that we need to do rcu_barrier() if the
+> SLAB_DESTROY_BY_RCU is NOT set and we do call_rcu() our self.
+> 
+> Look at: slab.c kmem_cache_destroy()
+> 
+> void kmem_cache_destroy(struct kmem_cache *cachep)
+> {
+> 	...<cut>...
+> 	if (__cache_shrink(cachep)) {
+> 		slab_error(cachep, "Can't free all objects");
+> 		...<cut>...
+> 		return;
+> 	}
+> 
+> 	if (unlikely(cachep->flags & SLAB_DESTROY_BY_RCU))
+> 		synchronize_rcu();
+> 
+> 	__kmem_cache_destroy(cachep);
+> 	...<cut>...
+> }
+> 
+> My understanding for the code is (please feel free to correct me): that
+> if SLAB_DESTROY_BY_RCU _is_ set, then the __cache_shrink() call will
+> call drain_freelist(), which calls slab_destroy().
+> 
+> If SLAB_DESTROY_BY_RCU _is_ set, then slab_destroy() will then start a
+> call_rcu() callback to kmem_rcu_free() which calls kmem_cache_free().
+> Given that the callback code kmem_rcu_free() is not removed, we are not
+> worried about unloading the module at this point.
+> 
+> I'm a bit worried about what happens if __kmem_cache_destroy() is
+> invoked and there is still callbacks for kmem_rcu_free() in flight?
+> The synchronize_rcu() between __cache_shrink() and
+> __kmem_cache_destroy() should perhaps be changed to rcu_barrier()?
 
-   text    data     bss     dec     hex filename
- 252265    3628    1584  257477   3edc5 ath9k-has-b-rate.ko
- 249905    3628    1584  255117   3e48d ath9k.ko
+It looks to me like it should, good catch!!!  I sent a proposed patch
+to the maintainers.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Siged-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    1 -
- drivers/net/wireless/ath/ath9k/hw.h |    1 -
- drivers/net/wireless/ath/ath9k/rc.c |   23 -----------------------
- 3 files changed, 0 insertions(+), 25 deletions(-)
+							Thanx, Paul
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1579c94..de2c000 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3294,7 +3294,6 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
- 
- 	if (eeval & AR5416_OPFLAGS_11G) {
--		set_bit(ATH9K_MODE_11B, pCap->wireless_modes);
- 		set_bit(ATH9K_MODE_11G, pCap->wireless_modes);
- 		if (ah->config.ht_enable) {
- 			if (!(eeval & AR5416_OPFLAGS_N_2G_HT20))
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index dd8508e..73d859e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -113,7 +113,6 @@
- 
- enum wireless_mode {
- 	ATH9K_MODE_11A = 0,
--	ATH9K_MODE_11B = 2,
- 	ATH9K_MODE_11G = 3,
- 	ATH9K_MODE_11NA_HT20 = 6,
- 	ATH9K_MODE_11NG_HT20 = 7,
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 01586d2..980040b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -380,27 +380,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
- 	0,   /* Phy rates allowed initially */
- };
- 
--static const struct ath_rate_table ar5416_11b_ratetable = {
--	4,
--	{
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
--			900, 0x1b,  0x00, (0x80|2),
--			0, 0, 1, 0, 0 },
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
--			1800, 0x1a, 0x04, (0x80|4),
--			1, 1, 1, 1, 0 },
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
--			4300, 0x19, 0x04, (0x80|11),
--			1, 2, 2, 2, 0 },
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
--			7100, 0x18, 0x04, (0x80|22),
--			1, 4, 100, 3, 0 },
--	},
--	100, /* probe interval */
--	100, /* rssi reduce interval */
--	0,   /* Phy rates allowed initially */
--};
--
- static inline int8_t median(int8_t a, int8_t b, int8_t c)
- {
- 	if (a >= b) {
-@@ -1723,8 +1702,6 @@ static struct rate_control_ops ath_rate_ops = {
- 
- void ath_rate_attach(struct ath_softc *sc)
- {
--	sc->hw_rate_table[ATH9K_MODE_11B] =
--		&ar5416_11b_ratetable;
- 	sc->hw_rate_table[ATH9K_MODE_11A] =
- 		&ar5416_11a_ratetable;
- 	sc->hw_rate_table[ATH9K_MODE_11G] =
--- 
-1.6.0.6
-
+> But I'm sure that the SLAB/MM guys will tell me that this case is
+> handled (and something about its unlinked from the appropiate
+> lists)??? ;-)
+> 
+> 
+> > > RCU barriers, rcu_barrier(), is inserted two places.
+> > > 
+> > >  In nf_conntrack_expect.c nf_conntrack_expect_fini() before the
+> > >  kmem_cache_destroy(), even though the use of the SLAB_DESTROY_BY_RCU
+> > >  flag, because slub does not (currently) handle rcu sync correctly.
+> > 
+> > I think that should be fixed in slub then.
+> 
+> I don't think so, we/I'm are talking about "nf_conntrack_expect" and not
+> "nf_conntrack" slab.  Clearly the slab "nf_conntrack" is handled
+> correcly (according to description above). 
+> 
+> We still need to make sure the callbacks for "nf_conntrack_expect", are
+> done before unloading/removing the code they are about to call.
+> 
+> 
+> > >  And in nf_conntrack_extend.c nf_ct_extend_unregister(), inorder to
+> > >  wait for completion of callbacks to __nf_ct_ext_free_rcu(), which is
+> > >  invoked by __nf_ct_ext_add().  It might be more efficient to call
+> > >  rcu_barrier() in nf_conntrack_core.c nf_conntrack_cleanup_net(), but
+> > >  thats make it more difficult to read the code (as the callback code
+> > >  in located in nf_conntrack_extend.c).
+> > 
+> > This one looks fine.
+> 
+> Should I make two different patchs?
+> 
+> 
+> > > diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+> > > index 5f72b94..438ce84 100644
+> > > --- a/net/netfilter/nf_conntrack_core.c
+> > > +++ b/net/netfilter/nf_conntrack_core.c
+> > > @@ -1242,7 +1242,7 @@ static int nf_conntrack_init_init_net(void)
+> > >  
+> > >  	nf_conntrack_cachep = kmem_cache_create("nf_conntrack",
+> > >  						sizeof(struct nf_conn),
+> > > -						0, SLAB_DESTROY_BY_RCU, NULL);
+> > > +						0, 0, NULL);
+> > >  	if (!nf_conntrack_cachep) {
+> > >  		printk(KERN_ERR "Unable to create nf_conn slab cache\n");
+> > >  		ret = -ENOMEM;
+> > > diff --git a/net/netfilter/nf_conntrack_expect.c b/net/netfilter/nf_conntrack_expect.c
+> > > index afde8f9..56227c2 100644
+> > > --- a/net/netfilter/nf_conntrack_expect.c
+> > > +++ b/net/netfilter/nf_conntrack_expect.c
+> > > @@ -593,7 +593,7 @@ int nf_conntrack_expect_init(struct net *net)
+> > >  	if (net_eq(net, &init_net)) {
+> > >  		nf_ct_expect_cachep = kmem_cache_create("nf_conntrack_expect",
+> > >  					sizeof(struct nf_conntrack_expect),
+> > > -					0, 0, NULL);
+> > > +					0, SLAB_DESTROY_BY_RCU, NULL);
+> > >  		if (!nf_ct_expect_cachep)
+> > >  			goto err2;
+> > >  	}
+> > > @@ -617,8 +617,15 @@ err1:
+> > >  void nf_conntrack_expect_fini(struct net *net)
+> > >  {
+> > >  	exp_proc_remove(net);
+> > > -	if (net_eq(net, &init_net))
+> > > +	if (net_eq(net, &init_net)) {
+> > > +		/* hawk@comx.dk 2009-06-24: The rcu_barrier() can be
+> > > +		 * removed once the sl*b allocators has been fixed
+> > > +		 * regarding handling the SLAB_DESTROY_BY_RCU flag
+> > > +		 * correctly.
+> > > +		 */
+> > > +		rcu_barrier(); /* Wait for call_rcu() before destroy */
+> > >  		kmem_cache_destroy(nf_ct_expect_cachep);
+> > > +	}
+> > >  	nf_ct_free_hashtable(net->ct.expect_hash, net->ct.expect_vmalloc,
+> > >  			     nf_ct_expect_hsize);
+> > >  }
+> > > diff --git a/net/netfilter/nf_conntrack_extend.c b/net/netfilter/nf_conntrack_extend.c
+> > > index 4b2c769..fef95be 100644
+> > > --- a/net/netfilter/nf_conntrack_extend.c
+> > > +++ b/net/netfilter/nf_conntrack_extend.c
+> > > @@ -186,6 +186,6 @@ void nf_ct_extend_unregister(struct nf_ct_ext_type *type)
+> > >  	rcu_assign_pointer(nf_ct_ext_types[type->id], NULL);
+> > >  	update_alloc_size(type);
+> > >  	mutex_unlock(&nf_ct_ext_type_mutex);
+> > > -	synchronize_rcu();
+> > > +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(nf_ct_extend_unregister);
+> > > 
+> > 
+> -- 
+> Med venlig hilsen / Best regards
+>   Jesper Brouer
+>   ComX Networks A/S
+>   Linux Network developer
+>   Cand. Scient Datalog / MSc.
+>   Author of http://adsl-optimizer.dk
+>   LinkedIn: http://www.linkedin.com/in/brouer
