@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:11745 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbZFTEdh (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:32960 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbZFYUhb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jun 2009 00:33:37 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so699017fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jun 2009 21:33:39 -0700 (PDT)
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Darren Blaber <dmbtech@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 not working after recent commits
-References: <4A3C2036.6060506@gmail.com>
-	<43e72e890906191642kbcca090we1b03db19bf0e2c8@mail.gmail.com>
-	<4A3C4593.6050707@gmail.com>
-	<43e72e890906191915g2c9736f2i4633c8ed3766fe3b@mail.gmail.com>
-	<4A3C4745.7000706@gmail.com>
-	<43e72e890906191924m2f83815fp860c0a277e44d2e1@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 20 Jun 2009 07:33:37 +0300
-In-Reply-To: <43e72e890906191924m2f83815fp860c0a277e44d2e1@mail.gmail.com> (Luis R. Rodriguez's message of "Fri\, 19 Jun 2009 19\:24\:33 -0700")
-Message-ID: <87ws77o76m.fsf@litku.valot.fi>
+	Thu, 25 Jun 2009 16:37:31 -0400
+Received: by ewy6 with SMTP id 6so2694489ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2009 13:37:32 -0700 (PDT)
+Message-ID: <4A43E002.2060309@gmail.com>
+Date: Thu, 25 Jun 2009 21:37:22 +0100
+From: Dave <kilroyd@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
+References: <20090624120745.239294066@sipsolutions.net> <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
+In-Reply-To: <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+Luis R. Rodriguez wrote:
+> On Wed, Jun 24, 2009 at 5:07 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> 
+>>  Maybe we even decide to
+>> not internalise it this way because orinoco wants to keep
+>> some ioctls that we'll not offer in cfg80211, not sure yet.
 
->> I'm using 2.6.30 with the KMS radeon patches, don't know if that is
->> interfering. I'll try wireless-testing directly.
->
-> Yeah this is odd, 2.6.30 shouldn't have an issue with backport unless
-> I'm missing something. Let us know how it goes with wireless-testing.
+Do we need to maintain these interfaces? I think allowing the same
+functionality via other means should be acceptable (since any software
+using these interfaces clearly doesn't work with any other hardware).
 
-I'm using latest wireles-testing and I have iwl3945 on my X60s. iwl3945
-is working fine for me.
+> Hm, which ones?
 
--- 
-Kalle Valo
+orinoco has the following private wext handlers:
+
+reset firmware
+reset card
+get/set adhoc port
+get/set short preamble
+get/set ibss port
+get rid
+
+I've only ever had occasion to use the reset ioctls recently, when my
+card started seriously misbehaving (I suspect it's about to fail).
+debugfs or something?
+
+The get/set things could be done as module parameters. Preferred values
+will be model/fw specific - though I expect we have reasonable defaults
+picked during initialisation.
+
+Get RID reads settings off the card. Useful for debugging or reverse
+engineering, but I hope no-one uses it for anything else. Remove completely?
+
+
+Regarding patch 11 (the internalise one), would it be better to:
+ * continue to export cfg80211_wext_* for now
+ * set mac80211s dev->wireless_handler to &cfg80211_wext_handler in
+iface.c (via a #define that's NULL if !CONFIG_WEXT)
+ * specify a release when we expect all drivers, or at least those
+anyone cares about, to have converted?
+
+That removes the WE dependency from mac80211 but allows drivers to
+gradually implement cfg80211 support. I originally attempted doing it in
+one hit - that sucked, but may have been due to not having a clear idea
+of how cfg80211 is supposed to work.
+
+It also means orinoco can keep its wext private functions for a bit longer.
+
+
+Thanks,
+
+Dave.
