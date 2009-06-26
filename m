@@ -1,187 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44935 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753906AbZFJTA2 (ORCPT
+Received: from Cpsmtpm-eml106.kpnxchange.com ([195.121.3.10]:62317 "EHLO
+	CPSMTPM-EML106.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753561AbZFZLg2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 15:00:28 -0400
-Date: Wed, 10 Jun 2009 14:56:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2009-06-10
-Message-ID: <20090610185639.GC3892@tuxdriver.com>
+	Fri, 26 Jun 2009 07:36:28 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-wireless@vger.kernel.org
+Subject: [2.6.31-rc1] iwlagn (4965): no wireless due to RFKILL problem
+Date: Fri, 26 Jun 2009 13:36:28 +0200
+Cc: Netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200906261336.29318.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+I've tried .31-rc1 on my HP 2510p notebook and the only problem I found 
+was that wireless no longer works. The cause looks to be related to 
+RFKILL.
 
-Despite my previous optimistic prediction, I need to ask for one more
-2.6.31 pull before/during the merge window... :-)
+Initially when I booted all I got in dmesg was:
+cfg80211: Using static regulatory domain info
+cfg80211: Regulatory domain: EU
+        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+        (2402000 KHz - 2482000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+        (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+        (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+        (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+        (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+        (5490000 KHz - 5710000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: EU
+iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27kd
+iwlagn: Copyright(c) 2003-2009 Intel Corporation
+iwlagn 0000:10:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:10:00.0: setting latency timer to 64
+iwlagn 0000:10:00.0: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
+iwlagn 0000:10:00.0: Tunable channels: 11 802.11bg, 13 802.11a channels
+iwlagn 0000:10:00.0: irq 27 for MSI/MSI-X
+phy0: Selected rate control algorithm 'iwl-agn-rs'
 
-This one actually does have a number of bug fixes embedded within, as
-well as some further fleshing-out and usage of the new rfkill
-infrastructure changes that are already queued for 2.6.31.  The other
-bits are more minor, but they have already spent at least a few days in
--next and I believe they are safe for 2.6.31.
+Normally I'd expect to see the following after that (from .30):
+iwlagn 0000:10:00.0: firmware: requesting iwlwifi-4965-2.ucode
+iwlagn 0000:10:00.0: loaded firmware version 228.57.2.23
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+wlan0: authenticate with AP 00:14:c1:38:e5:15
+wlan0: authenticated
+wlan0: associate with AP 00:14:c1:38:e5:15
+wlan0: RX AssocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
+wlan0: associated
 
-Please let me know if there are problems!
+So it did not even try to load the firmware...
 
-Thanks,
 
-John
+After the boot completed I tried unloading and reloading iwlagn, and then 
+I suddenly got:
+iwlagn 0000:10:00.0: PCI INT A disabled
+cfg80211: Using static regulatory domain info
+cfg80211: Regulatory domain: EU
+        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+        (2402000 KHz - 2482000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+        (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+        (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+        (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+        (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+        (5490000 KHz - 5710000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: EU
+iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27kd
+iwlagn: Copyright(c) 2003-2009 Intel Corporation
+iwlagn 0000:10:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:10:00.0: setting latency timer to 64
+iwlagn 0000:10:00.0: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
+iwlagn 0000:10:00.0: Tunable channels: 11 802.11bg, 13 802.11a channels
+iwlagn 0000:10:00.0: irq 27 for MSI/MSI-X
+phy0: Selected rate control algorithm 'iwl-agn-rs'
+iwlagn 0000:10:00.0: firmware: requesting iwlwifi-4965-2.ucode
+iwlagn 0000:10:00.0: loaded firmware version 228.57.2.23
+iwlagn 0000:10:00.0: Radio disabled by HW RF Kill switch
 
-P.S.  For some reason (probably the 2.6.30 release) the public push on
-kernel.org seems to be taking a lot longer than usual.  So you probably
-want to ensure that the wireless-next-2.6 head matches 2f0accc13520 or
-just pull using ssh (or direct file access).
+I then noticed that the wireless led on the notbook was indeed off, but it 
+was totally unresponsive to any attempts to turn it on.
 
----
+I also compared loaded modules; for .30:
+   cfg80211               65944  3 iwlagn,iwlcore,mac80211
+   iwlagn                113236  0 
+   iwlcore               159172  1 iwlagn
+   led_class               5080  3 iwlcore,hp_accel,sdhci
+   lib80211                7520  1 iwlcore
+   mac80211              164744  2 iwlagn,iwlcore
+   rfkill                 12276  5 hp_wmi,iwlcore
+and for .31-rc1:
+   cfg80211               90808  3 iwlagn,iwlcore,mac80211
+   iwlagn                107856  0 
+   iwlcore               167908  1 iwlagn
+   led_class               5064  3 iwlcore,hp_accel,sdhci
+   mac80211              167024  2 iwlagn,iwlcore
+   rfkill                 20640  2 hp_wmi,cfg80211
 
-Individual patches are available here:
+Note that lib80211 no longer gets loaded.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
-	
----
+After rebooting into .30 wireless worked again.
 
-The following changes since commit 1506e30b5f25f6c3357167a18f0e4ae6f5662a28:
-  Johannes Berg (1):
-        rfkill: include err.h
+Cheers,
+FJP
 
-are available in the git repository at:
+Relevant part of config (diff between .30 and .31-rc1):
+ CONFIG_WIRELESS=y
+ CONFIG_CFG80211=m
+ # CONFIG_CFG80211_REG_DEBUG is not set
++# CONFIG_CFG80211_DEBUGFS is not set
+ CONFIG_WIRELESS_OLD_REGULATORY=y
+ CONFIG_WIRELESS_EXT=y
+ CONFIG_WIRELESS_EXT_SYSFS=y
+ CONFIG_LIB80211=m
+ # CONFIG_LIB80211_DEBUG is not set
+ CONFIG_MAC80211=m
++# CONFIG_MAC80211_DEFAULT_PS is not set
++CONFIG_MAC80211_DEFAULT_PS_VALUE=1
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git
-
-Alan Jenkins (3):
-      rfkill: remove set_global_sw_state
-      sony-laptop: no need to unblock rfkill on load
-      rfkill: don't impose global states on resume (just restore the previous states)
-
-Bob Copeland (2):
-      mac80211: fix minstrel single-rate memory corruption
-      ath5k: minor rfkill cleanup
-
-Christian Lamparter (1):
-      ar9170: xmit code revamp
-
-Johannes Berg (11):
-      iwlwifi: port to cfg80211 rfkill
-      ar9170: interpret firmware debug commands
-      rfkill: print events when input handler is disabled/enabled
-      b43/legacy: port to cfg80211 rfkill
-      rfkill: remove input Kconfig
-      sony: fix rfkill code
-      mac80211: do not pass PS frames out of mac80211 again
-      mac80211: don't use master netdev name
-      mac80211: clean up return value of __ieee80211_parse_tx_radiotap
-      mac80211: disable PS while probing AP
-      cfg80211: fix rfkill locking problem
-
-Jussi Kivilinna (2):
-      rndis_wlan: cleanup: capitalize enum labels
-      rndis_wlan: cleanup: rename all rndis_wext* objects to rndis_wlan*
-
-Luis R. Rodriguez (2):
-      cfg80211: fix for duplicate response for driver reg request
-      mac80211: disable moving between PS modes during scan
-
-Matthieu CASTET (2):
-      b43: Fix possible unaligned u32 access
-      mac80211 : fix unaligned rx skb
-
-Michael Buesch (1):
-      b43: Add fw capabilities
-
-Sebastian Andrzej Siewior (1):
-      net/libertas: remove GPIO-CS handling in SPI interface code
-
-Tobias Doerffel (1):
-      ath5k: added cfg80211 based rfkill support
-
-Vasanthakumar Thiagarajan (2):
-      mac80211: Fix the way ADDBA request count being modified
-      ath9k: Fix tx stuck when connected to aggr disabled HT AP
-
- drivers/net/wireless/Kconfig                |    2 +-
- drivers/net/wireless/ath/ar9170/ar9170.h    |   34 +-
- drivers/net/wireless/ath/ar9170/hw.h        |    3 +
- drivers/net/wireless/ath/ar9170/main.c      |  676 ++++++++++++++++++---------
- drivers/net/wireless/ath/ar9170/usb.c       |  122 ++++-
- drivers/net/wireless/ath/ar9170/usb.h       |    7 +-
- drivers/net/wireless/ath/ath5k/Makefile     |    1 +
- drivers/net/wireless/ath/ath5k/ath5k.h      |    4 +
- drivers/net/wireless/ath/ath5k/base.c       |    7 +
- drivers/net/wireless/ath/ath5k/base.h       |   12 +
- drivers/net/wireless/ath/ath5k/reset.c      |   17 -
- drivers/net/wireless/ath/ath5k/rfkill.c     |  121 +++++
- drivers/net/wireless/ath/ath9k/xmit.c       |    1 +
- drivers/net/wireless/b43/Kconfig            |    7 -
- drivers/net/wireless/b43/Makefile           |    2 +-
- drivers/net/wireless/b43/b43.h              |   17 +-
- drivers/net/wireless/b43/dma.c              |    2 +-
- drivers/net/wireless/b43/leds.c             |    7 +-
- drivers/net/wireless/b43/main.c             |   83 +++--
- drivers/net/wireless/b43/main.h             |    1 -
- drivers/net/wireless/b43/phy_common.h       |    2 +-
- drivers/net/wireless/b43/pio.c              |    2 +-
- drivers/net/wireless/b43/rfkill.c           |  113 +----
- drivers/net/wireless/b43/rfkill.h           |   44 +--
- drivers/net/wireless/b43/xmit.c             |    5 +-
- drivers/net/wireless/b43legacy/Kconfig      |    8 -
- drivers/net/wireless/b43legacy/Makefile     |    2 +-
- drivers/net/wireless/b43legacy/b43legacy.h  |    3 -
- drivers/net/wireless/b43legacy/leds.c       |    7 +-
- drivers/net/wireless/b43legacy/main.c       |   17 +-
- drivers/net/wireless/b43legacy/rfkill.c     |  115 +----
- drivers/net/wireless/b43legacy/rfkill.h     |   50 +--
- drivers/net/wireless/iwlwifi/Kconfig        |    4 -
- drivers/net/wireless/iwlwifi/Makefile       |    1 -
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    5 -
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   42 +--
- drivers/net/wireless/iwlwifi/iwl-core.c     |  138 ------
- drivers/net/wireless/iwlwifi/iwl-core.h     |   16 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 -
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    5 -
- drivers/net/wireless/iwlwifi/iwl-rfkill.c   |  131 ------
- drivers/net/wireless/iwlwifi/iwl-rfkill.h   |   48 --
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   41 +--
- drivers/net/wireless/libertas/if_spi.c      |   92 ++--
- drivers/net/wireless/rndis_wlan.c           |  292 ++++++------
- drivers/platform/x86/acer-wmi.c             |    3 -
- drivers/platform/x86/eeepc-laptop.c         |    8 +-
- drivers/platform/x86/hp-wmi.c               |    4 -
- drivers/platform/x86/sony-laptop.c          |    4 +-
- drivers/platform/x86/thinkpad_acpi.c        |   31 +-
- include/linux/rfkill.h                      |   35 +-
- include/linux/skbuff.h                      |    4 -
- include/linux/spi/libertas_spi.h            |    3 -
- include/net/mac80211.h                      |    3 +
- net/core/skbuff.c                           |    1 -
- net/mac80211/agg-tx.c                       |    6 +-
- net/mac80211/cfg.c                          |    4 +-
- net/mac80211/ieee80211_i.h                  |    5 +
- net/mac80211/main.c                         |   61 +---
- net/mac80211/mlme.c                         |   57 ++-
- net/mac80211/rc80211_minstrel.c             |    2 +-
- net/mac80211/rx.c                           |   27 +-
- net/mac80211/tx.c                           |   19 +-
- net/mac80211/util.c                         |   46 ++
- net/mac80211/wme.c                          |    2 +-
- net/rfkill/Kconfig                          |    2 +-
- net/rfkill/core.c                           |   93 ++---
- net/wireless/core.c                         |   19 +-
- net/wireless/reg.c                          |    7 +-
- 69 files changed, 1275 insertions(+), 1482 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath5k/rfkill.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-rfkill.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-rfkill.h
-
-Omnibus patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-06-10.patch.bz2
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ #
+ # Rate control algorithm selection
+ #
+ CONFIG_MAC80211_RC_MINSTREL=y
+ # CONFIG_MAC80211_RC_DEFAULT_PID is not set
+ CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+ CONFIG_MAC80211_RC_DEFAULT="minstrel"
+ CONFIG_MAC80211_MESH=y
+ CONFIG_MAC80211_LEDS=y
+ # CONFIG_MAC80211_DEBUGFS is not set
+ # CONFIG_MAC80211_DEBUG_MENU is not set
+ # CONFIG_WIMAX is not set
+ CONFIG_RFKILL=m
+-CONFIG_RFKILL_INPUT=m
+ CONFIG_RFKILL_LEDS=y
++CONFIG_RFKILL_INPUT=y
+ # CONFIG_NET_9P is not set
+[...]
+ CONFIG_IWLWIFI=m
+ CONFIG_IWLWIFI_LEDS=y
+-CONFIG_IWLWIFI_RFKILL=y
+ # CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT is not set
+ CONFIG_IWLWIFI_DEBUG=y
+ CONFIG_IWLAGN=m
+ CONFIG_IWL4965=y
+ # CONFIG_IWL5000 is not set
+ # CONFIG_IWL3945 is not set
+ # CONFIG_HOSTAP is not set
+ # CONFIG_B43 is not set
+ # CONFIG_B43LEGACY is not set
+ # CONFIG_ZD1211RW is not set
+ # CONFIG_RT2X00 is not set
+ # CONFIG_HERMES is not set
++# CONFIG_IWM is not set
