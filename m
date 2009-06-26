@@ -1,112 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:55898 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbZFXKGE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56097 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388AbZF0IUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 06:06:04 -0400
-Subject: Re: [PATCH 03/10] mac80211: Use rcu_barrier() on unload.
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, yoshfuji@linux-ipv6.org,
-	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
-	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
-	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
-In-Reply-To: <1245770155.21314.38.camel@johannes.local>
-References: <20090623150330.22490.87327.stgit@localhost>
-	 <20090623150409.22490.99106.stgit@localhost>
-	 <1245770155.21314.38.camel@johannes.local>
-Content-Type: text/plain
-Date: Wed, 24 Jun 2009 12:06:05 +0200
-Message-Id: <1245837965.6695.45.camel@localhost.localdomain>
+	Sat, 27 Jun 2009 04:20:07 -0400
+Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A43E002.2060309@gmail.com>
+References: <20090624120745.239294066@sipsolutions.net>
+	 <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
+	 <4A43E002.2060309@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xIqpUvuFXCCZD96ArKPf"
+Date: Fri, 26 Jun 2009 23:01:58 +0200
+Message-Id: <1246050118.21314.82.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-06-23 at 17:15 +0200, Johannes Berg wrote:
-> On Tue, 2009-06-23 at 17:04 +0200, Jesper Dangaard Brouer wrote:
-> > The mac80211 module uses rcu_call() thus it should use rcu_barrier()
-> > on module unload.
-> > 
-> > I'm having a hardtime verifying that no more call_rcu() callbacks can
-> > be schedules in the module unload path.  Could a maintainer please
-> > look into this?
-> > 
-> > Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
-> > ---
-> > 
-> >  net/mac80211/main.c |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> > index 092a017..e9f70ce 100644
-> > --- a/net/mac80211/main.c
-> > +++ b/net/mac80211/main.c
-> > @@ -1100,6 +1100,8 @@ static void __exit ieee80211_exit(void)
-> >  		ieee80211s_stop();
-> >  
-> >  	ieee80211_debugfs_netdev_exit();
-> > +
-> > +	rcu_barrier(); /* Wait for completion of call_rcu()'s */
-> >  }
-> 
-> I don't think this is correct at all -- note that call_rcu() is done in
-> some of the mesh code, so I would think you need to do this in
-> ieee80211_stop() since the call_rcu() code requires the interface to
-> still be around. And when it's stopped everything should be idle.
 
-Should it then not be in mesh.c ieee80211_stop_mesh().  We can replace
-the synchronize_rcu() in this function with a rcu_barrier().
+--=-xIqpUvuFXCCZD96ArKPf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I can fix it later, but I'm deep in some other stuff right now.
+On Thu, 2009-06-25 at 21:37 +0100, Dave wrote:
 
-Yes, I noticed you seem quite active :-)
-I can also do a repost... what about the patch below?
+> Regarding patch 11 (the internalise one), would it be better to:
+>  * continue to export cfg80211_wext_* for now
+>  * set mac80211s dev->wireless_handler to &cfg80211_wext_handler in
+> iface.c (via a #define that's NULL if !CONFIG_WEXT)
+>  * specify a release when we expect all drivers, or at least those
+> anyone cares about, to have converted?
+>=20
+> That removes the WE dependency from mac80211 but allows drivers to
+> gradually implement cfg80211 support. I originally attempted doing it in
+> one hit - that sucked, but may have been due to not having a clear idea
+> of how cfg80211 is supposed to work.
 
--- 
-Med venlig hilsen / Best regards
-  Jesper Brouer
-  ComX Networks A/S
-  Linux Network developer
-  Cand. Scient Datalog / MSc.
-  Author of http://adsl-optimizer.dk
-  LinkedIn: http://www.linkedin.com/in/brouer
+Another idea I just had is that we could do everything like my
+internalise patch, but have an if (!netdev->wireless_handlers) before
+the assignment. That way, people could still have their own wireless
+handlers. Additionally, subject to a Kconfig symbol, we could still
+export the handlers, something like this:
 
+config NEED_CFG80211_WEXT_HANDLERS
+	bool
 
-[PATCH v2 03/10] mac80211: Use rcu_barrier() on unload.
+#ifdef CONFIG_NEED_...
+#define EXPORT_WEXT(sym)		EXPORT_SYMBOL_GPL(sym)
+#define __wext_static
+static inline void cfg80211_assign_wext_handlers(netdev, handlers)
+{
+	if (!dev->wireless_handlers)
+		dev->wireless_handlers =3D h;
+}
+#else
+#warn "Having custom wireless handlers is deprecated!!"
+#define EXPORT_WEXT(sym)
+#define __wext_static		static
+static inline void cfg80211_assign_wext_handlers(netdev, handlers)
+{
+	dev->wireless_handlers =3D h;
+}
+#endif
 
-From: Jesper Dangaard Brouer <hawk@comx.dk>
+or something like that. Then drivers that are in transition could select
+NEED_... and transition call by call even in the future after we switch
+to the central model. Is it worth it? I don't know.
 
-The mac80211 module uses rcu_call() thus it should use rcu_barrier()
-on module unload.
+johannes
 
-The rcu_barrier() is placed in mech.c ieee80211_stop_mesh() which is
-invoked from ieee80211_stop() in case vif.type == NL80211_IFTYPE_MESH_POINT.
+--=-xIqpUvuFXCCZD96ArKPf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
+-----BEGIN PGP SIGNATURE-----
 
- net/mac80211/mesh.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+iQIcBAABAgAGBQJKRTdCAAoJEODzc/N7+QmatH4P/R3Cl3Mq25Yu9Bzu98rpdXk+
+cwQLQYfHFMPO9GDgRm0IyTsU1xekfLXR80TTjHdTHchUck89j2upcTJzBYDDpeuB
+bN7lW/S9svPF2O1ZTrA/oPwXMinkLw0fIRrXzJnTpTSO/NiDVHXmRH4x7/nve7XW
+7q7mtNupXGqhKyu+u/VhfbkAz3pk4ejICzcS+UDkUlSTLJexwu2E+oYAfT5FD2FU
+7sJBZ2Kf+hQi1OrIESwGC9vGfkQHUJ/ng+JCmg268RTyX42S9F819weMjNj+Um7O
+4XeRZO11mUEThTB0x4s/tMrrtuNAr4Pe4STy/toVTfcUtuVlO/pEfiAb5l1itDja
+utZwgJ3959k50DmAx2EA7njHdU3qUimjHWvnT4TE+o6S+H5dysA5wdcGqz0n5c1K
+ee6l6QgtuXOiGvT8R4SEpt2P09UzAah+hBrh9YrRovCuSYZdcD3NLPpZQvtd2AFk
+o8DvsQlthFZb7pjuA9PRfWNBu15ZfSLi9NRz4lDVCQUQDs1tUhPcutRf36jt8BYR
+OpvqihmsofQYjrFIXxZrtWqZb2ON9/rbD0+ZNNQj22F3LxVW4cUAvA61RbcUujJb
+Cb/JvfZQwphlLRDAqVKI0ke10jEBavFkD2uligX7J0L4oD8QdiQdNYi0xktGV/QS
+gijTAA79TKFRfl1/9saO
+=QxrV
+-----END PGP SIGNATURE-----
 
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index fc712e6..11cf45b 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -494,7 +494,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	 * should it be using the interface and enqueuing
- 	 * frames at this very time on another CPU.
- 	 */
--	synchronize_rcu();
-+	rcu_barrier(); /* Wait for RX path and call_rcu()'s */
- 	skb_queue_purge(&sdata->u.mesh.skb_queue);
- }
- 
-
+--=-xIqpUvuFXCCZD96ArKPf--
 
