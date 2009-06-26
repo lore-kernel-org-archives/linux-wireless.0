@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f194.google.com ([209.85.210.194]:56644 "EHLO
-	mail-yx0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955AbZFWUlP convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:34857 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753818AbZFZL7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 16:41:15 -0400
-Received: by yxe32 with SMTP id 32so165165yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2009 13:41:17 -0700 (PDT)
+	Fri, 26 Jun 2009 07:59:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <4A413C1B.2070700@gmail.com>
-References: <43e72e890906220847u4faaeb2paa15365360c3c080@mail.gmail.com>
-	<4A3FDAC2.7020209@gmail.com> <43e72e890906221358m4a32d747ge67a5af2f74841e0@mail.gmail.com>
-	<4A4009C6.8020208@gmail.com> <43e72e890906222228qc131509j48d1946eb58db6b0@mail.gmail.com>
-	<4A413C1B.2070700@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 23 Jun 2009 13:40:57 -0700
-Message-ID: <43e72e890906231340l12a92b32o4fa999a423e1570b@mail.gmail.com>
-Subject: Re: [ath9k-devel] Pending ath9k bugs June, 2009
-To: Dmitri Seletski <drjoms@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	gaurav.jauhar@atheros.com,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
+In-Reply-To: <200906261336.29318.elendil@planet.nl>
+References: <200906261336.29318.elendil@planet.nl>
+Date: Fri, 26 Jun 2009 13:59:10 +0200
+Message-ID: <8db1092f0906260459n308311faweb6d9733cdd1eb13@mail.gmail.com>
+Subject: Re: [2.6.31-rc1] iwlagn (4965): no wireless due to RFKILL problem
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 1:33 PM, Dmitri Seletski<drjoms@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->> On Mon, Jun 22, 2009 at 3:46 PM, Dmitri Seletski<drjoms@gmail.com> wrote:
->>
->>
->>>>> Hello Luis,
->>>>> Was that problem i was bothering you with being solved?
->>>>>
->>
->> Dmitry, by any chance, do you know if your AP has a new firmware release?
->>
->>   Luis
->>
-> Luis, i checked - i have most up to date firmware...
+2009/6/26 Frans Pop <elendil@planet.nl>:
+> I've tried .31-rc1 on my HP 2510p notebook and the only problem I found
+> was that wireless no longer works. The cause looks to be related to
+> RFKILL.
 >
-> what should i do now?
 
-Sit tight, our team is trying trying to get an AP with the same firmware setup.
+Same on HP/Compaq nx6310, caused by hp-wmi module. It's disable
+bluetooth and wireless. I must turn it on in Windows XP (in HP tools).
+Workaround: don't load hp-wmi. Already I try find how enable it via
+/sys like in Windows.
 
-  Luis
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
