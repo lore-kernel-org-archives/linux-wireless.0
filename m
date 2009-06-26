@@ -1,61 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f216.google.com ([209.85.220.216]:44431 "EHLO
-	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754340AbZFBIzb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50323 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752240AbZF0IGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 04:55:31 -0400
-MIME-Version: 1.0
-Reply-To: maxim@mox.ru
-In-Reply-To: <1243931809.3192.68.camel@localhost.localdomain>
-References: <1243868091-5315-3-git-send-email-dbaryshkov@gmail.com>
-	 <69e28c910906010921r56cf7017gc858cb7ba819c385@mail.gmail.com>
-	 <20090601203348.GC7143@doriath.ww600.siemens.net>
-	 <200906021010.49613.hs4233@mail.mn-solutions.de>
-	 <1243930893.3192.62.camel@localhost.localdomain>
-	 <bc64b4640906020129x4fe15e5en9d8e2cad1d86b236@mail.gmail.com>
-	 <1243931809.3192.68.camel@localhost.localdomain>
-Date: Tue, 2 Jun 2009 12:49:36 +0400
-Message-ID: <6097c490906020149j5d614064ied2a4bfebd13ddb0@mail.gmail.com>
-Subject: =?KOI8-R?Q?Re=3A_=EF=D4=D7=C5=D4=3A_=5BPATCH_10=2F10=5D_ieee802154=3A_add_at86rf?=
-	=?KOI8-R?Q?230=2Frf231_spi_driver?=
-From: Maxim Osipov <maxim.osipov@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	slapin@ossfans.org, maxim.osipov@siemens.com,
-	dmitry.baryshkov@siemens.com, oliver.fendt@siemens.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 27 Jun 2009 04:06:46 -0400
+Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A43E002.2060309@gmail.com>
+References: <20090624120745.239294066@sipsolutions.net>
+	 <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
+	 <4A43E002.2060309@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jWuLwbTSXW0/i3n0OspC"
+Date: Fri, 26 Jun 2009 22:18:40 +0200
+Message-Id: <1246047520.21314.67.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
 
-On Tue, Jun 2, 2009 at 12:36 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
->> For Bluetooth naming directories 'bluetooth' is logical, as 802.15.1
->> standard is a less known name, doesn't incorporate latest changes
->> from Bluetooth, etc.
->
-> and so is IEEE 802.15.4 hence we propose using "zigbee" here. Using the
-> mac80211 has historical reasons and 802.11 is a known name and even used
-> on product marketing material. IEEE 802.15.4 is not. We are also using
-> the term "wimax" and not its IEEE numbering.
+--=-jWuLwbTSXW0/i3n0OspC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Actually, ieee802154 is better in this case, because as Dmitry
-mentioned, an entire family of standards is implemented on the top of
-it, including:
+On Thu, 2009-06-25 at 21:37 +0100, Dave wrote:
 
-- ZigBee
-- 6LoWPAN
-- ISA100.11a
-- WirelessHART
- - and probably something I don't know about
+> Do we need to maintain these interfaces? I think allowing the same
+> functionality via other means should be acceptable (since any software
+> using these interfaces clearly doesn't work with any other hardware).
 
-All of them (once implemented) will use ieee802.15.4 drivers. It is
-better to avoid future confusion and use correct terminology from the
-very beginning.
+True.
 
-Kind regards,
-Maxim
+> > Hm, which ones?
+>=20
+> orinoco has the following private wext handlers:
+>=20
+> reset firmware
+> reset card
+> get/set adhoc port
+> get/set short preamble
+> get/set ibss port
+> get rid
+>=20
+> I've only ever had occasion to use the reset ioctls recently, when my
+> card started seriously misbehaving (I suspect it's about to fail).
+> debugfs or something?
+
+Sounds appropriate.
+
+> The get/set things could be done as module parameters. Preferred values
+> will be model/fw specific - though I expect we have reasonable defaults
+> picked during initialisation.
+
+That too.
+
+> Get RID reads settings off the card. Useful for debugging or reverse
+> engineering, but I hope no-one uses it for anything else. Remove complete=
+ly?
+
+I suspect you can get rid of it, yes.
+
+> Regarding patch 11 (the internalise one), would it be better to:
+>  * continue to export cfg80211_wext_* for now
+>  * set mac80211s dev->wireless_handler to &cfg80211_wext_handler in
+> iface.c (via a #define that's NULL if !CONFIG_WEXT)
+>  * specify a release when we expect all drivers, or at least those
+> anyone cares about, to have converted?
+
+Sure. I don't think we need to specify a release since there's only
+three drivers so far -- orinoco, rndis and iwm. The latter is taken care
+of, and the two others shouldn't be much of a problem either.
+
+> That removes the WE dependency from mac80211 but allows drivers to
+> gradually implement cfg80211 support. I originally attempted doing it in
+> one hit - that sucked, but may have been due to not having a clear idea
+> of how cfg80211 is supposed to work.
+
+Yeah, I agree, doing it in one go will probably overwork anyone who
+attempts it, otoh once we actually convert everything in the tree all
+the remaining drivers will have to be done in one go. So I think we
+should just wait until all drivers are converted and then simply swap. I
+can help with rndis/orinoco too.
+
+> It also means orinoco can keep its wext private functions for a bit longe=
+r.
+
+Yes. Mind you, I was not only talking about iwpriv, but also about
+things like orinoco's spy support or get/set sensitivity. The latter we
+don't quite understand -- can you tell us what it actually does? Spy
+support should just be removed, I think.
+
+Additionally, at the wireless summit today (yesterday by the time you
+read this) we decided to allow cfg80211 drivers to continue exporting
+iwpriv handlers, so that existing factory calibration interfaces or
+similar can be maintained going forward even with future drivers.
+However, this is understood to be purely for backward compatibility with
+existing calibration or similar tools.
+
+johannes
+
+--=-jWuLwbTSXW0/i3n0OspC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKRS0dAAoJEODzc/N7+QmaFicQAKVlx2zivqVJ6s00lSbV4lzi
+I2isqoizZOlSfk9bLWHJQ7dZZomGqxvdbL1t1S3TqQwLC4JYdGI0xY35NJ05Q47L
+YdAWWiGFXQHbgmCrL8iS2cw9eNWisUoL4raBZhR2Xj6gDMW78YKyDkWjYD5oci2b
+KdfnMMUkom6+wCUmlWIWoocFqPLNoOrPN7X0OI0shf5djJC9Nhj65z5gPVUdMNYv
+kCm21HWhrYvJG8O5tWUD4FwNUwftvJJLK2DBbD7a5n6wmB1yPD4sw8iWVLs1KueU
+AAjf0qldxyQncogcuOEOjKgngEgmLzDQAGWt3UtLbBVUlqBX0+ZnWVPWalb6u6kv
+QsylvfQQd7w6avR4ewJuLnnKoEas23BMxShUdl4zS8nQDlRNVYZMvCSOtt1e4O26
+7ljQxIv16STzsy4CGfP58sDpzdj64ooziIF4gyq4eAycZ9ewoqyHgkdJ/eMa4POF
+nLSJrq+zGWKUzWozDDNzNyNs2RzPVwRsawHiWLz73j8VzTjL8140QNlM/THTfSDA
+I0ShPG8yI8+UuF/p+qzdZn9PwLd/2JiW38h4hdH5/7uhPYjoMY96JqWkqDh5PPA9
+h1EY6TC4IMpWcPLQuFm5amIrszg6Qw+mnajwdNPJWrTpgpqASXEoopt00UhehqGz
+zXzO4Cls27piJbZeNA3m
+=lP/P
+-----END PGP SIGNATURE-----
+
+--=-jWuLwbTSXW0/i3n0OspC--
+
