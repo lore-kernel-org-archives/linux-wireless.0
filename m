@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751309AbZF3Krm (ORCPT
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:54975 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbZF0J43 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2009 06:47:42 -0400
-Subject: [PATCH] wireless: define AKM suites
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 30 Jun 2009 12:47:42 +0200
-Message-Id: <1246358862.16643.7.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 27 Jun 2009 05:56:29 -0400
+MIME-Version: 1.0
+In-Reply-To: <1246048132.21314.75.camel@johannes.local>
+References: <200906261336.29318.elendil@planet.nl>
+	 <8db1092f0906260459n308311faweb6d9733cdd1eb13@mail.gmail.com>
+	 <200906261410.58808.elendil@planet.nl>
+	 <1246048132.21314.75.camel@johannes.local>
+Date: Sat, 27 Jun 2009 11:49:28 +0200
+Message-ID: <8db1092f0906270249k58b3bd48yc4c93113641cc5ac@mail.gmail.com>
+Subject: Re: [2.6.31-rc1] iwlagn (4965): no wireless due to RFKILL problem
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Frans Pop <elendil@planet.nl>, linux-wireless@vger.kernel.org,
+	Netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We'll need these values for some drivers using connect API
-and for wext compat code, so let's define them.
+2009/6/26 Johannes Berg <johannes@sipsolutions.net>:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/ieee80211.h |    4 ++++
- 1 file changed, 4 insertions(+)
+> Hmm, looks like there might be another polarity error, try this:
+> -       int query = BIT(b + 8) | ((!!blocked) << b);
+> +       int query = BIT(b + 8) | ((!blocked) << b);
+>
 
---- wireless-testing.orig/include/linux/ieee80211.h	2009-06-30 12:46:11.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-06-30 12:46:18.000000000 +0200
-@@ -1196,6 +1196,10 @@ enum ieee80211_sa_query_action {
- #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
- #define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
- 
-+/* AKM suite selectors */
-+#define WLAN_AKM_SUITE_8021X		0x000FAC01
-+#define WLAN_AKM_SUITE_PSK		0x000FAC02
-+
- #define WLAN_MAX_KEY_LEN		32
- 
- /**
+This helps. hp-wmi works without any problems.
 
+Tested-by Maciej Rutecki <maciej.rutecki@gmail.com>
 
+Thanks
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
