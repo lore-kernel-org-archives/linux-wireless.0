@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:64751 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202AbZFVJm1 (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:60378 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbZF1OHQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 05:42:27 -0400
-Received: by bwz9 with SMTP id 9so2984764bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2009 02:42:28 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re: Plan of attack for enhancements for scan while associated
-Date: Mon, 22 Jun 2009 11:42:27 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Aeolus.Yang@atheros.com, Gaurav.Jauhar@atheros.com
-References: <43e72e890905181122w38f83785p2134a5142a9f0905@mail.gmail.com> <200905182107.52613.helmut.schaa@gmail.com>
-In-Reply-To: <200905182107.52613.helmut.schaa@gmail.com>
+	Sun, 28 Jun 2009 10:07:16 -0400
+Received: by ewy6 with SMTP id 6so4844329ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jun 2009 07:07:18 -0700 (PDT)
+Message-ID: <4A47790F.7030401@gmail.com>
+Date: Sun, 28 Jun 2009 15:07:11 +0100
+From: Dave <kilroyd@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200906221142.28202.helmut.schaa@gmail.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Balaji Ravindran <b@w1an.in>,
+	Mircea Gherzan <mgherzan@gmail.com>
+Subject: Re: Proposal enquiry for Wireless Roaming feature enhancement
+References: <4A38672F.9090904@w1an.in> <1245681796.4338.24.camel@dhcp-100-3-98.bos.redhat.com> <87k534nwy3.fsf@litku.valot.fi> <200906231001.29728.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200906231001.29728.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 18. Mai 2009 schrieb Helmut Schaa:
-> Am Montag, 18. Mai 2009 schrieb Luis R. Rodriguez:
-> > Helmut, Senthil has indicated interest in working on this, Johannes
-> > had pointed out you might have some initial work on this already? Can
-> > you post your patch, it might help?
+Holger Schurig wrote:
+>> Can you tell anything about the configuration parameters
+>> available? For example, can the driver configure an rssi
+>> threshold for enabling background scanning[1]?
 > 
-> Sure, see below. However, the patch was against mac80211 in February or
-> so and due to the recent changes in the scan code it won't apply anymore :)
+> Orinoco and WLAGS Hermes1 and Hermes2 has some "sensitivy" 
+> setting, from 1..3:
+> 
+> $ iwconfig eth1 sens 3
+> 
+> What exactly this does is a bit opaque and handled by the 
+> firmware.
 
-Senthil, did you already start to work on that? I've rebased the last
-version of my patch to current wireless testing and it seems to work quite
-well already. However, it still only uses a static time schedule for
-switching back to the operating channel.
+I wasn't paying too much attention to this thread. However as part of a
+separate thread* I had a look into orinoco's sensitivity setting.
 
-Thanks,
-Helmut
+Anyway, see my e-mail earlier today for a description of what the values
+do. The description should be valid for Intersil and Agere firmware
+(including most if not all old versions), and applies to orinoco and
+WL_LKM drivers.
+
+
+Regards,
+
+Dave.
+
+* the thread is titled "[RFC 00/11] cfg80211: connect API + wireless
+extension move"
