@@ -1,78 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37434 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756862AbZFJITp (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:38363 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752745AbZF1Xza convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 04:19:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: [PATCH 16/18] iwlwifi: use ieee80211_is_data(fc)
-Date: Wed, 10 Jun 2009 04:19:33 -0400
-Message-Id: <1244621975-1238-17-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
-References: <1244621975-1238-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 28 Jun 2009 19:55:30 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.31-rc1-git3: Reported regressions from 2.6.30
+Cc: Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <ij4ZQY4URcP.A.F3B.vIASKB@chimera>
+Date: Mon, 29 Jun 2009 01:51:02 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl-agn-rs.c already uses this.
+This message contains a list of some regressions from 2.6.30, for which there
+are no fixes in the mainline I know of.  If any of them have been fixed already,
+please let me know.
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
- 2 files changed, 5 insertions(+), 7 deletions(-)
+If you know of any other unresolved regressions from 2.6.30, please let me know
+either and I'll add them to the list.  Also, please let me know if any of the
+entries below are invalid.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index b23fd53..2b77692 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	s8 scale_action = 0;
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	u16 fc;
-+	__le16 fc;
- 	u16 rate_mask = sta ? sta->supp_rates[sband->band] : 0;
- 	s8 max_rate_idx = -1;
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
-@@ -682,9 +682,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	IWL_DEBUG_RATE(priv, "enter\n");
- 
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = le16_to_cpu(hdr->frame_control);
--	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
-+	fc = hdr->frame_control;
-+	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
- 	    !sta || !priv_sta) {
- 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
- 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 2addf73..afa1633 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
- int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
- {
- 	int sta_id;
--	u16 fc = le16_to_cpu(hdr->frame_control);
-+	__le16 fc = hdr->frame_control;
- 
- 	/* If this frame is broadcast or management, use broadcast station id */
--	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
--	    is_multicast_ether_addr(hdr->addr1))
-+	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
- 		return priv->hw_params.bcast_sta_id;
- 
- 	switch (priv->iw_mode) {
--- 
-1.6.0.6
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
+
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2009-06-29       22       22          15
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13667
+Subject		: drm: display arifacts when X.Org is stopped
+Submitter	: Frans Pop <elendil@planet.nl>
+Date		: 2009-06-27 18:52 (2 days old)
+References	: http://lkml.org/lkml/2009/6/27/105
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13666
+Subject		: WARNING: at mm/page_alloc.c:1743 __alloc_pages_nodemask
+Submitter	: Thomas Meyer <thomas@m3y3r.de>
+Date		: 2009-06-27 16:15 (2 days old)
+References	: http://lkml.org/lkml/2009/6/27/75
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13661
+Subject		: warning in smp_call_function_single while S2R
+Submitter	: Thomas Meyer <thomas@m3y3r.de>
+Date		: 2009-06-27 17:12 (2 days old)
+References	: http://lkml.org/lkml/2009/6/27/80
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13657
+Subject		: Linux-2.6.31-rc1 Fails To Recognize Some USB Disks
+Submitter	: Tarkan Erimer <tarkan.erimer@turknet.net.tr>
+Date		: 2009-06-26 10:03 (3 days old)
+References	: http://lkml.org/lkml/2009/6/26/34
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13656
+Subject		: 2.6.31-rc1 crashes randomly on my Machine.
+Submitter	: Zeno Davatz <zdavatz@gmail.com>
+Date		: 2009-06-26 08:56 (3 days old)
+References	: http://lkml.org/lkml/2009/6/26/27
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13652
+Subject		: scheduling while atomic: pptpgw
+Submitter	: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
+Date		: 2009-06-19 21:15 (10 days old)
+References	: http://lkml.org/lkml/2009/6/19/237
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13650
+Subject		: Problem with alloc_arch_preferred_bootmem() on powerpc
+Submitter	: Sean MacLennan <smaclennan@pikatech.com>
+Date		: 2009-06-20 19:48 (9 days old)
+References	: http://marc.info/?l=linuxppc-embedded&m=124552732411775&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13645
+Subject		: NULL pointer dereference at (null) (level2_spare_pgt)
+Submitter	: poornima nayak <mpnayak@linux.vnet.ibm.com>
+Date		: 2009-06-17 17:56 (12 days old)
+References	: http://lkml.org/lkml/2009/6/17/194
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13643
+Subject		: Touchpad lost synchronization after resume from suspend to RAM
+Submitter	: Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
+Date		: 2009-06-28 10:42 (1 days old)
+References	: http://lkml.org/lkml/2009/6/23/365
+		  http://lkml.org/lkml/2009/6/25/256
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13633
+Subject		: [bisected] No sound on HDA Intel (ALC268)
+Submitter	: Brian Rogers <brian@xyzw.org>
+Date		: 2009-06-27 04:42 (2 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13627
+Subject		: Tunnel device ignores TCP/UDP traffic
+Submitter	: Paul Martin <pm@debian.org>
+Date		: 2009-06-26 14:45 (3 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13610
+Subject		: radeon kms invalid edid data at lvds
+Submitter	: Nicolas Reinecke <pl4nkton@googlemail.com>
+Date		: 2009-06-23 19:53 (6 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13601
+Subject		: Hard crash connecting via Huawei E169 + umtsmon
+Submitter	: Clemens Eisserer <linuxhippy@gmail.com>
+Date		: 2009-06-22 13:58 (7 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13592
+Subject		: Root partition is not found
+Submitter	: François Valenduc <francois.valenduc@tvcablenet.be>
+Date		: 2009-06-21 08:42 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13522
+Subject		: BUG: scheduling while atomic
+Submitter	: Sergey Senozhatsky <sergey.senozhatsky@mail.by>
+Date		: 2009-06-12 19:29 (17 days old)
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13665
+Subject		: commit 69c854817566 causes OOMs
+Submitter	: David Howells <dhowells@redhat.com>
+Date		: 2009-06-27 08:12 (2 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=69c854817566db82c362797b4a6521d0b00fe1d8
+References	: http://lkml.org/lkml/2009/6/27/28
+Handled-By	: Wu Fengguang <fengguang.wu@intel.com>
+Patch		: http://patchwork.kernel.org/patch/32740/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13662
+Subject		: broken alpha smp build
+Submitter	: maximilian attems <max@stro.at>
+Date		: 2009-06-25 11:08 (4 days old)
+References	: http://lkml.org/lkml/2009/6/25/108
+Handled-By	: Tejun Heo <tj@kernel.org>
+Patch		: http://patchwork.kernel.org/patch/32714/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13659
+Subject		: iwlagn (4965): no wireless due to RFKILL problem
+Submitter	: Frans Pop <elendil@planet.nl>
+Date		: 2009-06-26 13:36 (3 days old)
+References	: http://lkml.org/lkml/2009/6/26/127
+Handled-By	: Johannes Berg <johannes@sipsolutions.net>
+Patch		: http://lkml.org/lkml/2009/6/27/35
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13658
+Subject		: parisc: multiple PCI BAR collisions
+Submitter	: Alexander Beregalov <a.beregalov@gmail.com>
+Date		: 2009-06-26 12:58 (3 days old)
+References	: http://lkml.org/lkml/2009/6/26/87
+Handled-By	: Matthew Wilcox <matthew@wil.cx>
+Patch		: http://patchwork.kernel.org/patch/32593/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13655
+Subject		: [Oops] 2.6.31-rc1: tun
+Submitter	: Sergei Trofimovich <slyich@gmail.com>
+Date		: 2009-06-25 23:53 (4 days old)
+References	: http://lkml.org/lkml/2009/6/25/435
+Handled-By	: Herbert Xu <herbert@gondor.apana.org.au>
+Patch		: http://patchwork.kernel.org/patch/32672/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13654
+Subject		: possible recursive locking detected at kmem_cache_free
+Submitter	: Pallipadi, Venkatesh <venkatesh.pallipadi@intel.com>
+Date		: 2009-06-25 11:59 (4 days old)
+References	: http://lkml.org/lkml/2009/6/25/373
+Handled-By	: Pekka J Enberg <penberg@cs.helsinki.fi>
+Patch		: http://patchwork.kernel.org/patch/32525/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13653
+Subject		: system hangs after resume from suspend to disk, mce related
+Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
+Date		: 2009-06-21 19:02 (8 days old)
+References	: http://lkml.org/lkml/2009/6/21/86
+Handled-By	: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+Patch		: http://patchwork.kernel.org/patch/32062/
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.30,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13615
+
+Please let me know if there are any Bugzilla entries that should be added to
+the list in there.
+
+Thanks,
+Rafael
 
