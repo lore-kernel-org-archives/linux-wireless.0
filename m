@@ -1,81 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59967 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbZFBH2z (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:62465 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbZF1Inz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 03:28:55 -0400
-Subject: Re: [RFC] mac80211: handle -EXIST on sta_info_insert()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, Jouni.Malinen@atheros.com,
+	Sun, 28 Jun 2009 04:43:55 -0400
+Received: by ewy6 with SMTP id 6so4700734ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jun 2009 01:43:57 -0700 (PDT)
+Message-ID: <4A472D47.7020906@gmail.com>
+Date: Sun, 28 Jun 2009 09:43:51 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890906011830q2867ed1el7914846c15c8eb3e@mail.gmail.com>
-References: <1243905828-21933-1-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890906011830q2867ed1el7914846c15c8eb3e@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hA1EwI6qy2sjgLlK349R"
-Date: Tue, 02 Jun 2009 09:28:49 +0200
-Message-Id: <1243927729.5299.35.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
+References: <20090624120745.239294066@sipsolutions.net>	 <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>	 <4A43E002.2060309@gmail.com> <1246050118.21314.82.camel@johannes.local>
+In-Reply-To: <1246050118.21314.82.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Thu, 2009-06-25 at 21:37 +0100, Dave wrote:
+> 
+>> That removes the WE dependency from mac80211 but allows drivers to
+>> gradually implement cfg80211 support. I originally attempted doing it in
+>> one hit - that sucked, but may have been due to not having a clear idea
+>> of how cfg80211 is supposed to work.
+> 
+> Another idea I just had is that we could do everything like my
+> internalise patch, but have an if (!netdev->wireless_handlers) before
+> the assignment. That way, people could still have their own wireless
+> handlers.
 
---=-hA1EwI6qy2sjgLlK349R
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I had that same thought...
 
-On Mon, 2009-06-01 at 18:30 -0700, Luis R. Rodriguez wrote:
-> On Mon, Jun 1, 2009 at 6:23 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > There's a few places where we either did not rcu_read_lock()
-> > prior to addition of a a new sta or we allocated it before
-> > checking for its existance. In most places, like device open
-> > and close we should have at least some guarantee the stas are
-> > wiped but in other places this could not be the case.
-> >
-> > Lets protect against RCU in the missing places. The only
-> > place I see is is in ieee80211_rx_bss_info(). Not sure
-> > we are calling ieee80211_ibss_add_sta() twice there though.
-> >
-> > In our mac80211 cfg80211 callback for device addition we
-> > also can simplify the code by first checking for the STA
-> > before trying to add it and then checking for -EEXIST which
-> > we were not doing. If that actualy would happen we could
-> > end up potentially with a stale sta and the rate info was
-> > never updated. It seems cleaner to check for the sta first.
-> >
-> > Lastly, we add a WARN_ON() on the STA mlme path upon call to
-> > ieee80211_rx_mgmt_assoc_resp() for -EEXIST. This should not
-> > happen, we could just return -EIO or simply ignore it.
->=20
-> Hm, actually on second thought what if we simply kdoc that you should
-> check for the sta's existence first prior to addition. Then we can
-> remove the pesky -EEXIST.
+> Additionally, subject to a Kconfig symbol, we could still
+> export the handlers, something like this:
 
-Umm, no? Neither approach is correct.
+<snip>
 
-johannes
+> or something like that. Then drivers that are in transition could select
+> NEED_... and transition call by call even in the future after we switch
+> to the central model. Is it worth it? I don't know.
 
---=-hA1EwI6qy2sjgLlK349R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Neat. I tend to prefer avoiding these indirections and keeping things
+clean. I'd vote (if I had one) to take the NEED_ behaviour now, and
+transition at some point.
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKJNSuAAoJEODzc/N7+Qma6U4P/2+/3pGGFbVgdm409/2PgzIp
-NbgE4YOKq1HnO/Aqzg0Wy7aUC2x6d/K7DGeHWB5x5M5UvxKVYROJNjCadf8jKBll
-LeXgsurBJ0s6xLCXZ6KBr6YvpAOlEZA3hMZsfcErlEcrN+oYlTlUquPR40ONB+jw
-Xb7Y7/juXQeqehVva4cG/IoK1/8Ia2SzJYP+NP9UDZ5ISsRMgcptCj8Fgsu21HO2
-nK0E4G/+PcusqxUD46dDiWG+/nm93mbgeFMZ6rQISyHH0osXTYekESrvMGs8J0kH
-FfwOLSJezS2420PsWLaTBrKMGWGcDfY2zXy800usv4QYugmg8R1i9/b+DQKBkTUN
-p2tbBsAn80hSWcTFnFB3H2m99E/l/RZJPprgElMsqlOe038clQLxuKWsePV77Xp4
-NZLPi+FyxyOsOkQISIm7FnO6jCEW/O5kIZgNcBxOJ67dUksRmno2PMz5U71y00j5
-At+OFrbyX5uDDnxTcHaz4l+x6Jqx2TvHe3kg+e0ZU6BQJvkSKpy7ls3rwrlUNunv
-TYLsyZizna+tmFepdBvH9hUYR5i/mUH67tlEard5kp43jpYp/YJ1M8p4cUico3Us
-WQ3VrIOqW6y+vG5clHTqqlpAl4KlR8B3khqx4F9YxFmk6nfcwFb5sYSyzaenqa3b
-Unv1k+54mqc6Re0ZJpaV
-=t+b3
------END PGP SIGNATURE-----
+Thanks,
 
---=-hA1EwI6qy2sjgLlK349R--
-
+Dave.
