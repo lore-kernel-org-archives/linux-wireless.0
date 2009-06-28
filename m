@@ -1,82 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:45887 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbZFRX4N (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:48959 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228AbZF1J0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2009 19:56:13 -0400
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
-To: linux-wireless@vger.kernel.org
-Subject: Re: AR2424 speed issue.
-Date: Thu, 18 Jun 2009 17:46:27 -0600
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>
-References: <200906122006.55492.tfjellstrom@shaw.ca> <1245368044.6830.18.camel@localhost>
-In-Reply-To: <1245368044.6830.18.camel@localhost>
+	Sun, 28 Jun 2009 05:26:09 -0400
+Received: by ewy6 with SMTP id 6so4718841ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jun 2009 02:26:11 -0700 (PDT)
+Message-ID: <4A473730.3000409@gmail.com>
+Date: Sun, 28 Jun 2009 10:26:08 +0100
+From: Dave <kilroyd@googlemail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200906181746.28434.tfjellstrom@shaw.ca>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
+References: <20090624120745.239294066@sipsolutions.net>	 <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>	 <4A43E002.2060309@gmail.com> <1246047520.21314.67.camel@johannes.local>
+In-Reply-To: <1246047520.21314.67.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu June 18 2009, Maxim Levitsky wrote:
-> On Fri, 2009-06-12 at 20:06 -0600, Thomas Fjellstrom wrote:
-> > I just got a new laptop with an Atheros 2424 based wifi card (lspci says
-> > AR242x, but the pci device id is: 0035).
-> >
-> > While it seems to be stable, it is quite slow for 802.11g. The maximum
-> > speed I can get out of the ath5k driver is the speed it auto connects at:
-> > 36Mb/s. If I force it to anything higher, nothing can get through (the
-> > actual connection seems to stay up till some form of very long time out
-> > happens).
-> >
-> > I just tried the madwifi drivers on madwifi's website (latest trunk
-> > snapshot, and svn trunk itself) and It auto connects at 18Mb/s. If I up
-> > the rate to 54Mb/s the connection stays up, but it doesn't really seem to
-> > be transferring any faster.
-> >
-> > For comparison's sake I tried it out in Windows 7. It auto connects at
-> > 54Mb/s and can stream 1080p h264 without stuttering. In linux however,
-> > many SD or lower res Xvid won't play without stuttering. 720p and 1080p
-> > are unwatchable.
-> >
-> > What can be done about this? Is there some setting I'm overlooking? Its
-> > quite annoying to have to reboot into windows to watch some videos.
->
-> You probably have AR2425. Aspire one?
+Johannes Berg wrote:
+> Yes. Mind you, I was not only talking about iwpriv, but also about
+> things like orinoco's spy support or get/set sensitivity. The latter we
+> don't quite understand -- can you tell us what it actually does? Spy
+> support should just be removed, I think.
 
-It is an AR2425, but its a Lenovo "ThinkPad" SL500 (based on the IdeaPad stuff 
-it seems :()
+I've had a closer look at this.
 
-> I have tried madwifi too (and unfortunaly found out that this driver
-> isn't any better in regard to transfer speeds) and stability.
->
-> Bob Copeland, recently, wrote patches that make the card set TX power
-> properly, maybe you need to update kernel to take advantage of that?
->
-> But here on my aspire one ath5k gives 54M speeds, but very often
-> transfers stall, I will attempt soon to figure out what is wrong.
+The sensitivity basically controls the roaming threshold when handled by
+firmware. It is a firmware setting, though the Agere driver also
+validates the multicast rates based on it. The drivers/firmware use
+terms like system scale, AP density, distance between APs.
 
-For some reason things seem to have automagically fixed themselves. After a 
-little while it started to connect at 54Mb all by itself, and things are 
-working.
+There are 3 valid values:
 
-Initially it didn't want to work right with any driver, but now it does, at 
-least with ath5k (not sure if its git or from 2.6.29 tbh, I had git installed 
-at one point, but I have absolutely no idea if apt has overwritten it or not 
-by now).
+3 - high density of APs. Maintain 11Mbps by roaming.
+2 - medium density of APs. Maintain 2Mbps.
+1 - low density. Maintain 1Mbps.
 
-> Best regards,
-> 	Maxim Levitsky
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Although the values are defined in terms of the usable bitrate, the
+(Intersil) documentation states that the implementation is based on SNR.
 
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+
+Dave.
