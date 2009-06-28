@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40304 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbZFASp1 (ORCPT
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1123 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754595AbZF1Q1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2009 14:45:27 -0400
-Date: Mon, 1 Jun 2009 14:34:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/4 v2] libertas: implement function init/shutdown
-	commands for SD8688
-Message-ID: <20090601183453.GD3386@tuxdriver.com>
-References: <1243465413-4997-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1243465413-4997-1-git-send-email-bzhao@marvell.com>
+	Sun, 28 Jun 2009 12:27:42 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: trivial@kernel.org, Andrew Morton <akpm@linux-foundation.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 27/62] drivers/net/wireless/ath/ath9k: Remove unnecessary semicolons
+Date: Sun, 28 Jun 2009 09:26:32 -0700
+Message-Id: <eea2935af7c3b29549f21b6ed2c5482f84fe0d73.1246173681.git.joe@perches.com>
+In-Reply-To: <cover.1246173664.git.joe@perches.com>
+References: <cover.1246173664.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 27, 2009 at 04:03:33PM -0700, Bing Zhao wrote:
-> SD8688 is a WLAN/Bluetooth combo chip and both functions are supported
-> in a single firmware image. FUNC_INIT and FUNC_SHUTDOWN commands are
-> implemented to utilize the multiple function feature.
-> 
-> When SD8688 card is inserted, the firmware image should be downloaded
-> only once through either WLAN function (Libertas driver) or Bluetooth
-> function (Bluetooth driver).
-> 
-> This patch adds function init/shutdown for SD8688 WLAN function only.
-> 
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c |    2 --
+ drivers/net/wireless/ath/ath9k/hw.c     |    2 +-
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-I already merged the 5/19 version.  Could you send a patch rebased
-on wireless-testing?
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a2fda70..d82a0f9 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -2516,10 +2516,8 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+ 			targetPowerCck.tPow2x[1];
+ 		ratesArray[rate5_5s] = ratesArray[rate5_5l] =
+ 			targetPowerCck.tPow2x[2];
+-		;
+ 		ratesArray[rate11s] = ratesArray[rate11l] =
+ 			targetPowerCck.tPow2x[3];
+-		;
+ 	}
+ 	if (IS_CHAN_HT40(chan)) {
+ 		for (i = 0; i < ARRAY_SIZE(targetPowerHt40.tPow2x); i++) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 34935a8..cffb078 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2345,7 +2345,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_init_bb(ah, chan);
+ 
+ 	if (!ath9k_hw_init_cal(ah, chan))
+-		return -EIO;;
++		return -EIO;
+ 
+ 	rx_chainmask = ah->rxchainmask;
+ 	if ((rx_chainmask == 0x5) || (rx_chainmask == 0x3)) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.1.10.g659a0.dirty
+
