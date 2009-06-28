@@ -1,49 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f104.google.com ([209.85.221.104]:44179 "EHLO
-	mail-qy0-f104.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375AbZFCCRc (ORCPT
+Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:35846 "EHLO
+	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbZF1UX3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 22:17:32 -0400
-Received: by qyk2 with SMTP id 2so1482173qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 19:17:34 -0700 (PDT)
+	Sun, 28 Jun 2009 16:23:29 -0400
+Date: Sun, 28 Jun 2009 21:23:29 +0100
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090628202329.GB1546@sucs.org>
+References: <20090313095213.GA14250@silver.sucs.org> <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org> <20090329151401.GA26510@hash.localnet> <20090331083041.GA19657@sucs.org> <20090513214416.GA4492@sucs.org> <20090515040904.GA32357@hash.localnet> <20090518100540.GB21150@sucs.org> <20090522093930.GA15375@sucs.org> <20090526211029.GA2011@sucs.org>
 MIME-Version: 1.0
-In-Reply-To: <20090601131742.GA3386@tuxdriver.com>
-References: <ee8eb53d0905312008rbd346d8h171fedb96d2a3d96@mail.gmail.com>
-	 <1243858809.5299.15.camel@johannes.local>
-	 <20090601131742.GA3386@tuxdriver.com>
-Date: Tue, 2 Jun 2009 23:17:33 -0300
-Message-ID: <ee8eb53d0906021917q787c160ja3b3a453f09da1d0@mail.gmail.com>
-Subject: Re: [GSoC 2009] Automation of testing using mac80211_hwsim and Orbit
-	- status report 01
-From: Georgy Berdyshev <codingmaster@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090526211029.GA2011@sucs.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, May 26, 2009 at 10:10:30PM +0100, Sitsofe Wheeler wrote:
+> On Fri, May 22, 2009 at 10:39:31AM +0100, Sitsofe Wheeler wrote:
+> > On Mon, May 18, 2009 at 11:05:40AM +0100, Sitsofe Wheeler wrote:
+> > > On Fri, May 15, 2009 at 12:09:04AM -0400, Bob Copeland wrote:
+> > > > 
+> > > > This is too ugly to live, but I'd like to know if you can reproduce
+> > > > with this patch.  If it still happens, then I guess it's back to
+> > 
+> > The poison message has not reappeared but this morning there was a
+> 
+> Yet again, I spoke too soon. This evening the following was in dmesg:
+> 
+> I'm pretty certain this kernel had your previous patch (although the
+> directory that held the kernel has since been cleaned away on the server
+> on which it was compiled).
 
-I had recompiled the kernel and tried to run hostapd again and now it
-is working.
-Still using the same settings. It seems that the problem has been
-solved with the latest git pull.
+OK I'm still trying to follow this. I forwarded your patch to 2.6.31-rc1
+but this time I have kmemleak enabled. I left it streaming radio for the
+past few hours and the following appeared in the logs:
 
-That was the problem before (e.g. running the vlan example
-hostapd.conf within hostap/mac80211_hwsim/tests/0002-vlan)
-/opt/wifi/bin/hostapd hostapd.conf
-Configuration file: hostapd.conf
-nl80211: Failed to set interface wlan0 into AP mode
-nl80211 driver initialization failed.
-ELOOP: remaining socket: sock=3 eloop_data=0x977be10
-user_data=0x977bfa0 handler=0x8076200
+Jun 28 17:01:34 eeepc kernel: [  744.083787] kmemleak: unreferenced object 0xf5845770 (size 64):
+Jun 28 17:01:34 eeepc kernel: [  744.083795] kmemleak:   comm "swapper", pid 1, jiffies 4294673468
+Jun 28 17:01:34 eeepc kernel: [  744.083799] kmemleak:   backtrace:
+Jun 28 17:01:34 eeepc kernel: [  744.083811] kmemleak:     [<c01a749d>] kmemleak_alloc+0x11d/0x2a0
+Jun 28 17:01:34 eeepc kernel: [  744.083818] kmemleak:     [<c01a4376>] __kmalloc+0x136/0x210
+Jun 28 17:01:34 eeepc kernel: [  744.083828] kmemleak:     [<c043f923>] ieee80211_register_hw+0x83/0x4b0
+Jun 28 17:01:34 eeepc kernel: [  744.083837] kmemleak:     [<c04630d5>] ath5k_pci_probe+0xee5/0x1100
+Jun 28 17:01:34 eeepc kernel: [  744.083849] kmemleak:     [<c0279ab3>] local_pci_probe+0x13/0x20
+Jun 28 17:01:34 eeepc kernel: [  744.083856] kmemleak:     [<c027a608>] pci_device_probe+0x68/0x90
+Jun 28 17:01:34 eeepc kernel: [  744.083864] kmemleak:     [<c0312670>] driver_probe_device+0x70/0x140
+Jun 28 17:01:34 eeepc kernel: [  744.083872] kmemleak:     [<c031293a>] __driver_attach+0x7a/0x80
+Jun 28 17:01:34 eeepc kernel: [  744.083881] kmemleak:     [<c0311af9>] bus_for_each_dev+0x49/0x70
+Jun 28 17:01:34 eeepc kernel: [  744.083888] kmemleak:     [<c031250e>] driver_attach+0x1e/0x20
+Jun 28 17:01:34 eeepc kernel: [  744.083896] kmemleak:     [<c0312188>] bus_add_driver+0xd8/0x290
+Jun 28 17:01:34 eeepc kernel: [  744.083904] kmemleak:     [<c0312a6f>] driver_register+0x5f/0x120
+Jun 28 17:01:34 eeepc kernel: [  744.083911] kmemleak:     [<c027a443>] __pci_register_driver+0x53/0xc0
+Jun 28 17:01:34 eeepc kernel: [  744.083922] kmemleak:     [<c061d82d>] init_ath5k_pci+0x1d/0x40
+Jun 28 17:01:34 eeepc kernel: [  744.083929] kmemleak:     [<c0101122>] do_one_initcall+0x32/0x1d0
+Jun 28 17:01:34 eeepc kernel: [  744.083939] kmemleak:     [<c05fe8aa>] kernel_init+0xba/0x110
+Jun 28 17:01:34 eeepc kernel: [  744.084074] kmemleak: unreferenced object 0xf5845b60 (size 64):
+Jun 28 17:01:34 eeepc kernel: [  744.084080] kmemleak:   comm "swapper", pid 1, jiffies 4294683694
+Jun 28 17:01:34 eeepc kernel: [  744.084085] kmemleak:   backtrace:
+Jun 28 17:01:34 eeepc kernel: [  744.084093] kmemleak:     [<c01a749d>] kmemleak_alloc+0x11d/0x2a0
+Jun 28 17:01:34 eeepc kernel: [  744.084100] kmemleak:     [<c01a4376>] __kmalloc+0x136/0x210
+Jun 28 17:01:34 eeepc kernel: [  744.084111] kmemleak:     [<c0239880>] __crypto_alloc_tfm+0x40/0x170
+Jun 28 17:01:34 eeepc kernel: [  744.084120] kmemleak:     [<c0239cbc>] crypto_alloc_base+0x3c/0x80
+Jun 28 17:01:34 eeepc kernel: [  744.084128] kmemleak:     [<c04420ff>] ieee80211_wep_init+0x2f/0x80
+Jun 28 17:01:34 eeepc kernel: [  744.084136] kmemleak:     [<c043fa9d>] ieee80211_register_hw+0x1fd/0x4b0
+Jun 28 17:01:34 eeepc kernel: [  744.084144] kmemleak:     [<c04630d5>] ath5k_pci_probe+0xee5/0x1100
+Jun 28 17:01:34 eeepc kernel: [  744.084153] kmemleak:     [<c0279ab3>] local_pci_probe+0x13/0x20
+Jun 28 17:01:34 eeepc kernel: [  744.084160] kmemleak:     [<c027a608>] pci_device_probe+0x68/0x90
+Jun 28 17:01:34 eeepc kernel: [  744.084168] kmemleak:     [<c0312670>] driver_probe_device+0x70/0x140
+Jun 28 17:01:34 eeepc kernel: [  744.084175] kmemleak:     [<c031293a>] __driver_attach+0x7a/0x80
+Jun 28 17:01:34 eeepc kernel: [  744.084184] kmemleak:     [<c0311af9>] bus_for_each_dev+0x49/0x70
+Jun 28 17:01:34 eeepc kernel: [  744.084191] kmemleak:     [<c031250e>] driver_attach+0x1e/0x20
+Jun 28 17:01:34 eeepc kernel: [  744.084199] kmemleak:     [<c0312188>] bus_add_driver+0xd8/0x290
+Jun 28 17:01:34 eeepc kernel: [  744.084207] kmemleak:     [<c0312a6f>] driver_register+0x5f/0x120
+Jun 28 17:01:34 eeepc kernel: [  744.084214] kmemleak:     [<c027a443>] __pci_register_driver+0x53/0xc0
 
-Thanks, Georgy
+There were quite a few leaks before this. I dunno if kmemleak is
+spurious or not. As always, any ideas?
 
 -- 
-Georgy Berdyshev
-
-GPG key: 830F68C5
-Fingerprint: 0379 ED5A BEE5 65A8 7BD5  31E7 F5B4 1EC7 830F 68C5
+Sitsofe | http://sucs.org/~sits/
