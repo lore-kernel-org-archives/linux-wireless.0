@@ -1,49 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:13558 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbZFBVxr convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44678 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758723AbZF2JxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 17:53:47 -0400
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: alejandro.riveira@gmail.com
-Subject: Re: [2.6.27-rc7 vs 2.6.29 Regresion] Wifi Network Slownes rt2500pci
-Date: Tue, 2 Jun 2009 23:53:43 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linville@tuxdriver.com, Greg KH <greg@kroah.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-References: <1243247687.5322.8.camel@varda> <200906021834.40009.IvDoorn@gmail.com> <1243961465.9894.3.camel@varda>
-In-Reply-To: <1243961465.9894.3.camel@varda>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200906022353.44284.IvDoorn@gmail.com>
+	Mon, 29 Jun 2009 05:53:23 -0400
+Subject: Re: [2.6.31-rc1] iwlagn (4965): regression when hardware rf switch
+ is used
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <200906291148.55386.elendil@planet.nl>
+References: <200906291128.05639.elendil@planet.nl>
+	 <1246268022.7775.24.camel@johannes.local>
+	 <200906291148.55386.elendil@planet.nl>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nR90e+n93M6RcmUjuK9k"
+Date: Mon, 29 Jun 2009 11:53:23 +0200
+Message-Id: <1246269203.7775.26.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 02 June 2009, Alejandro Riveira Fernández wrote:
-> El mar, 02-06-2009 a las 18:34 +0200, Ivo van Doorn escribió:
-> > On Tuesday 02 June 2009, Alejandro Riveira Fernández wrote:
-> 
-> [...]
-> 
-> > > ICMP ECHO REQUEST
-> > > 
-> > > Any advance?
-> > 
-> > Well I checked the dumps from the bugreport, but like I expected
-> > the only difference is that with the slow speed the correct value
-> > is written, and the fast speed the wrong value is written.
-> 
-> So my chip works better with incorrect values written in its registers?
 
-Apparently, probably because some other register is set to an incorrect value,
-but I have no idea which one that would be.
+--=-nR90e+n93M6RcmUjuK9k
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> What about other chips out there do they prefer wrong values too ;)
-> Maybe what we thought wrong values are not that wrong ?
+On Mon, 2009-06-29 at 11:48 +0200, Frans Pop wrote:
+> On Monday 29 June 2009, Johannes Berg wrote:
+> > > [enable]
+> > > usb 3-1: new full speed USB device using uhci_hcd and address 3
+> > > usb 3-1: configuration #1 chosen from 1 choice
+> >
+> > That is completely unrelated. You plugged in a USB device too :)
+>=20
+> No, it's my "bluetooth + wlan" device. Note that disabling wireless with=20
+> the hardware switch also gives 'usb 3-1: USB disconnect, address 2'.
+>=20
+> From lsusb:
+> Bus 003 Device 002: ID 03f0:171d Hewlett-Packard Wireless (Bluetooth +=20
+> WLAN) Interface [Integrated Module]
 
-They are wrong. That exact register initialization is pretty straightforward
-in the original Ralink driver on which rt2x00 is based.
+Ah :) That's just bluetooth then though, not wifi.
 
-Ivo
+> > > A lot uglier with those errors. And after that I have to run
+> > > ifdown/ifup before networking is up again (ifup only does not work as
+> > > it will complain "interface already configured"):
+> >
+> > And that's actually expected, and/or a bug in the debian networking
+> > scripts.
+> > (You can trigger the same problem by doing
+> > ifup wlan0
+> > ip link set wlan0 down
+> > ifup wlan0 -> error)
+>=20
+> OK, I can accept that. Wonder why it does work with 2.6.30 then. But it=20
+> can certainly wait until the driver problem you mentioned is resolved.
+
+2.6.30 didn't have the "ip link set wlan0 down" on rfkill behaviour, but
+overall that makes life for everybody (except people who actually use
+ifup/down) much easier.
+
+johannes
+
+--=-nR90e+n93M6RcmUjuK9k
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKSI8QAAoJEODzc/N7+QmaL6MP/jrTYdIw5OAu+ifhNjD/Qbnt
+edjTTAwnndqMLfh932h7J0K3EgGHdZquAWtWCk+h93vuSg8WeOiCoxtXiPodb3iA
+ICNdLC42JKap9XL6XzGNM0lOgtqnoRMLQa+xDaafmAiYdow3/PNY7pPvwVgy8PDy
+J4FfmVaryaU6Qgj7EboAEN9Xtxbe3bWhcmoH7xwdrXG3CRZ2Vb/xdoBDKQoVhrwY
+9dO6NFG/bj6LP1Ewl1+MW660NxhJgNuU3GE8woYqjnfvYoNMjRWbTmNTi5DhdJRj
+6CT2HcTSRH6GcL+ZB9DSmwEHkJgnQoSyOUioZhjMH1vq6vKL9yxayQeng9sKSUrZ
++19nrAm3KdeMFx1S3fTrjPuIgob5DZq0U3n6BV7wx5dP1uruW68+Yjvu7O4bOR4+
+ydc+ImQd/WBkq3EiGPqu6FmNNe453Lrr8e3oVAOeMQxd15sh82sDRXvxSUpRZWQ5
+YhEc0Lw5yRUU0ffaQ9d+YrpPi/X3RAjvNJY1OsBMONhK1hkRY6WW3p9ucZCyo0ab
+b1NfA+G+ACxUhvwiQTn1CacMjja6N3khRHXlBJ457RnEsoIKNQNzcJ2SzHDIgbTW
+u+mg/KeiLPNdIPYohP1+azrwcHjxcbHudgJjXwIGttY+gpdmkQhffjPkN/X+euEj
+DYuDzLS0nK7Z4bEIzBIv
+=t9de
+-----END PGP SIGNATURE-----
+
+--=-nR90e+n93M6RcmUjuK9k--
+
