@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020AbZF2H6l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 03:58:41 -0400
-Subject: Re: [PATCH 0/3] wireless extensions improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20090625.161817.112930127.davem@davemloft.net>
-References: <20090624113447.441667549@sipsolutions.net>
-	 <20090625.161817.112930127.davem@davemloft.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7+yRh/nD94Y0iQwlgmX0"
-Date: Fri, 26 Jun 2009 22:12:47 +0200
-Message-Id: <1246047167.21314.61.camel@johannes.local>
-Mime-Version: 1.0
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:51148 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751969AbZF2Jsy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 05:48:54 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [2.6.31-rc1] iwlagn (4965): regression when hardware rf switch is used
+Date: Mon, 29 Jun 2009 11:48:54 +0200
+Cc: linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+References: <200906291128.05639.elendil@planet.nl> <1246268022.7775.24.camel@johannes.local>
+In-Reply-To: <1246268022.7775.24.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200906291148.55386.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 29 June 2009, Johannes Berg wrote:
+> > [enable]
+> > usb 3-1: new full speed USB device using uhci_hcd and address 3
+> > usb 3-1: configuration #1 chosen from 1 choice
+>
+> That is completely unrelated. You plugged in a USB device too :)
 
---=-7+yRh/nD94Y0iQwlgmX0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, it's my "bluetooth + wlan" device. Note that disabling wireless with 
+the hardware switch also gives 'usb 3-1: USB disconnect, address 2'.
 
-On Thu, 2009-06-25 at 16:18 -0700, David Miller wrote:
+>From lsusb:
+Bus 003 Device 002: ID 03f0:171d Hewlett-Packard Wireless (Bluetooth + 
+WLAN) Interface [Integrated Module]
 
-> These changes look fine to me, so I'll likely put them into
-> net-next-2.6 as soon as I open that up.
+> > A lot uglier with those errors. And after that I have to run
+> > ifdown/ifup before networking is up again (ifup only does not work as
+> > it will complain "interface already configured"):
+>
+> And that's actually expected, and/or a bug in the debian networking
+> scripts.
+> (You can trigger the same problem by doing
+> ifup wlan0
+> ip link set wlan0 down
+> ifup wlan0 -> error)
 
-Alright, sounds good.
+OK, I can accept that. Wonder why it does work with 2.6.30 then. But it 
+can certainly wait until the driver problem you mentioned is resolved.
 
-> FWIW, I bet we could make read() easily work properly to for the
-> compat stuff, and it would be nice to shore up that one minor hole.
+> To get your network connection back automatically we will require
+> changes to userland tools to listen to rfkill events.
+>
+> > BTW, would it make sense to bring back the first two lines shown with
+> > .30 (or at least the first one):
+> >    iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
+> >    Kill switch must be turned off for wireless networking to work.
+> > IMHO it's good to register the reason for the disconnect.
+>
+> I guess something like that could be added to cfg80211:
+> phy0: taking interfaces down due to rfkill
 
-Yes, but I think that would require introducing compat_sys_read() and
-touching all architectures.
+Yes, that would be nice.
 
-One other thing I just thought about -- the things you were mentioning
-wrt. u64 alignment, is that relevant for sendmsg() as well? This doesn't
-cover that at all, so far, obviously. If that would be needed, we'd also
-need more work there, we can of course do that as we go along and add
-code to deal with just the kernel->userspace messages where necessary.
-
-johannes
-
---=-7+yRh/nD94Y0iQwlgmX0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKRSu8AAoJEODzc/N7+QmaQr0QAKX/TqjXZslAvmhIZYNbf2VM
-zwyEu9/Nii/2WNrbPtSlP3384Fo3OpgvkK2517yGa8yw+S4Fjsv9ypJ3t4tN9WmQ
-NfbUaJE/tOoduYoLvgkc28emmrhzy8d0V+Sde3s1m1SLDnFNGHj18xvc/hdiXsPB
-dBfnt8OCTznlsAbGQqdddQVCikC5txAj1jmkCdug5ZY5+j8QhXyllbPFEjjghhlb
-ZRfpoBOKpgm244gmV/0F5TY7VENlxFA22HsTlBOOSX4DdIc6sANieKYHymxtvX+z
-JTd83bI4+DaI6t2KG6puCKtZE2hL+jZGwPXXsltEppPAskGjcELFb+MW93iJkumE
-NpmYbRdQrF5KlT+xV10BKpYGlJTe3NAqGu0a3+HTeFRHw7/cgo3ZetqL/uhi0GHw
-m9/lfEazHCw2djDrT4AELnyFah7vufLS/qEh3QH1l9Gg9DDAQCpXcFdip2t1gfHQ
-GWfMrpMYZrysWoZlDb8wPNn+8uMN8nWNvUCjWBOprEastgtqfKwy5PUxadqTKCwX
-Mxpf8p7Lj4EmRTx4Lgsq2gf3U+oFZjLkoNdUfU5ovHmC/Jr7e7XDOD5885vAzDgo
-zEn8Jzov96SPu5x7/PK830C5Y93PK6khE8BsBWytTDmpE8VNJ14pGcodalTvqGAY
-lA3fbMKCbJnCSXTsG4zc
-=6wJJ
------END PGP SIGNATURE-----
-
---=-7+yRh/nD94Y0iQwlgmX0--
-
+Thanks,
+FJP
