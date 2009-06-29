@@ -1,60 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:56052 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411AbZFUAsB convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43571 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752867AbZF2Ifs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jun 2009 20:48:01 -0400
-MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.01.0906191555390.16802@localhost.localdomain>
-References: <20090615214735.GE23972@bombadil.infradead.org>
-	<20090616021011.GF23972@bombadil.infradead.org> <20090616032034.GA17932@kroah.com>
-	<20090616042113.GA5680@tesla> <20090616093401.GA11602@jm.kir.nu>
-	<20090616181705.GB31506@tesla> <20090619150015.GC1389@ucw.cz>
-	<43e72e890906191010v4b2e79a5x2c7b722b8209933c@mail.gmail.com>
-	<20090619221909.GC2229@elf.ucw.cz> <alpine.LFD.2.01.0906191555390.16802@localhost.localdomain>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 20 Jun 2009 17:47:43 -0700
-Message-ID: <43e72e890906201747qb409fa7ue1bc84272417e03@mail.gmail.com>
-Subject: Re: [RFC] Documentation: add documentation for rc-series and merge
-	window
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Pavel Machek <pavel@ucw.cz>, Jouni Malinen <j@w1.fi>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Greg KH <greg@kroah.com>, "corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"tshibata@ab.jp.nec.com" <tshibata@ab.jp.nec.com>,
-	Tomas Winkler <tomasw@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 29 Jun 2009 04:35:48 -0400
+Subject: Re: [RFC 00/11] cfg80211 connect API + wireless extension move
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A473730.3000409@gmail.com>
+References: <20090624120745.239294066@sipsolutions.net>
+	 <43e72e890906241324n341f4988wc6e7325ee389e71e@mail.gmail.com>
+	 <4A43E002.2060309@gmail.com> <1246047520.21314.67.camel@johannes.local>
+	 <4A473730.3000409@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2ak1OS88rXZrt71HcrPN"
+Date: Mon, 29 Jun 2009 10:35:47 +0200
+Message-Id: <1246264547.7775.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 19, 2009 at 3:56 PM, Linus
-Torvalds<torvalds@linux-foundation.org> wrote:
->
->
-> On Sat, 20 Jun 2009, Pavel Machek wrote:
->>
->> Non-intrusive bugfixes _are_ welcome after -rc1.
->
-> After -rc1, yes.
->
-> After something like -rc5? No.
->
-> They had better be _really_ important things, and _really_ obvious and
-> non-intrusive.  Not just "any bug".
 
-For the sake of documentation and to help developers better understand
-this it would be nice if we could be a little more clear here. I can
-think of patches which may not be obvious but yet very important, for
-example. Can we simply document that the patches must be important,
-non-intrusive, and must have a very clear commit log entry of what it
-is fixing. Judgment for the degree of importance of the patch can be
-left up to the subsystem maintainer.
+--=-2ak1OS88rXZrt71HcrPN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Is it reasonable to document this as I describe above?
+On Sun, 2009-06-28 at 10:26 +0100, Dave wrote:
+> Johannes Berg wrote:
+> > Yes. Mind you, I was not only talking about iwpriv, but also about
+> > things like orinoco's spy support or get/set sensitivity. The latter we
+> > don't quite understand -- can you tell us what it actually does? Spy
+> > support should just be removed, I think.
+>=20
+> I've had a closer look at this.
 
-  Luis
+Thanks!
+
+> The sensitivity basically controls the roaming threshold when handled by
+> firmware. It is a firmware setting, though the Agere driver also
+> validates the multicast rates based on it. The drivers/firmware use
+> terms like system scale, AP density, distance between APs.
+>=20
+> There are 3 valid values:
+>=20
+> 3 - high density of APs. Maintain 11Mbps by roaming.
+> 2 - medium density of APs. Maintain 2Mbps.
+> 1 - low density. Maintain 1Mbps.
+>=20
+> Although the values are defined in terms of the usable bitrate, the
+> (Intersil) documentation states that the implementation is based on SNR.
+
+That's actually what people suspected when I asked around at the summit,
+and it seemed the general consensus is that we need a proper setting for
+that in nl80211 along with some of the roaming capability exports.
+
+So until that happens, the last patch won't get in anyway, and we'll see
+about the NEED_... stuff later.
+
+johannes
+
+--=-2ak1OS88rXZrt71HcrPN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKSHzgAAoJEODzc/N7+Qmat9QQAMgB5wq0s4gxS7C2auWp8fSy
+QJizex7jDgH1DeFOBTH7E+9ungwGvIKE57AFM//oqzyjcPm+mO37bL3kcce4Ll6V
+QNFr1yIEB8+LtxZKfBNO29X2IQWCn9OFVfw3ASw3h1+lnRIZv8IiJKwyjADtoIL8
+jhAUovT/5m/MuQXoUSNhOmZfLHvV/wrCvBBOkmZBaqrW3CJn4rCDO9AuvXwNZnCW
+wE52qHjidyka5eP/V4ykIXgYQ8lecRrWlY2vXJfwew/DFOuWr4jMSsEmlzu740bd
+RVdvdVFdoWFmokEQBT6pYev+WVLYHcvSfID5ROlEcgnqYKHJihAf2M2zucjt/ZdH
+HQh9F3X402A4CxkiD9EpOW+I2l28EzELNpRBlW49GgGOuozazlwwmW3s0hPDIogz
+JBmG5jOa9FrYYVnDrEEjoaqA448O/O8q3tiDWbrOTuXHQF9/+1NSKjyQHHJUg804
+f6hmBy9hhDbxOW+bBI9V01cP7UIIIKGCt61gQIL2WDPzZ3XqbS9fG+vPdUAEd/vt
+dbzGyHGNbVCt5yTa1nRNn8Y0ZnGIy7BO4D7UdWsXrgbdM6W3Cb10eczXfyK05/kH
+cr9XxRMjlTbXISvgBBoowcvGdEq9pKjQQIeIVFLMfas7QUEhudD9CyxeZWC6bhXx
+GVj5iny9+N+cvN/kHMz9
+=RXFu
+-----END PGP SIGNATURE-----
+
+--=-2ak1OS88rXZrt71HcrPN--
+
