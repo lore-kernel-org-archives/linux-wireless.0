@@ -1,94 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:47724 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753382AbZFXLon (ORCPT
+Received: from mail-ew0-f210.google.com ([209.85.219.210]:55389 "EHLO
+	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601AbZF2LMY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 07:44:43 -0400
-Subject: Re: [PATCH 07/10] decnet: Use rcu_barrier() on module unload.
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-To: Chrissie Caulfield <christine.caulfield@googlemail.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
-	Trond.Myklebust@netapp.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, yoshfuji@linux-ipv6.org,
-	shemminger@linux-foundation.org, linux-nfs@vger.kernel.org,
-	bfields@fieldses.org, neilb@suse.de, linux-ext4@vger.kernel.org,
-	tytso@mit.edu, adilger@sun.com, netfilter-devel@vger.kernel.org
-In-Reply-To: <4A41C67E.8070301@googlemail.com>
-References: <20090623150330.22490.87327.stgit@localhost>
-	 <20090623150429.22490.15113.stgit@localhost>
-	 <4A41C67E.8070301@googlemail.com>
-Content-Type: text/plain
-Date: Wed, 24 Jun 2009 13:44:44 +0200
-Message-Id: <1245843884.6695.54.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Mon, 29 Jun 2009 07:12:24 -0400
+Message-ID: <4A48A196.3060409@tuffmail.co.uk>
+Date: Mon, 29 Jun 2009 12:12:22 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Corentin Chary <corentincj@iksaif.net>
+CC: linux acpi <linux-acpi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] eeepc-laptop: fix hot-unplug on resume
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-06-24 at 07:23 +0100, Chrissie Caulfield wrote:
-> The issues with DECnet module unloading are a little more than just an
-> RCU leak I think!
-> 
-> Though that area does need reviewing ... when I get some time.
+The patch below fixes a regression introduced by the rfkill rewrite. 
+Please consider it for inclusion in 2.6.31 via the ACPI tree.
 
-Fine.  Now you have read my comment in the code, then there is a updated
-patch below.  Will you ack-that?
+Thanks
+Alan
 
--- 
-Med venlig hilsen / Best regards
-  Jesper Brouer
-  ComX Networks A/S
-  Linux Network developer
-  Cand. Scient Datalog / MSc.
-  Author of http://adsl-optimizer.dk
-  LinkedIn: http://www.linkedin.com/in/brouer
+-------------------->
 
+>From d0265f0bfe63086816d61c69ee4b2dc4cb491d06 Mon Sep 17 00:00:00 2001
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Date: Mon, 29 Jun 2009 09:40:07 +0100
+Subject: [PATCH] eeepc-laptop: fix hot-unplug on resume
 
-[PATCH 07/10] decnet: Use rcu_barrier() on module unload.
+OOPS on resume when the wireless adaptor is disabled during suspend was
+introduced by "eeepc-laptop: read rfkill soft-blocked state on resume".
 
-From: Jesper Dangaard Brouer <hawk@comx.dk>
+Unable to handle kernel NULL pointer dereference
 
-The decnet module unloading as been disabled with a '#if 0' statement,
-because it have had issues.
+Process s2disk
+Tainted: G W
+IP: klist_put
 
-We add a rcu_barrier() anyhow for correctness.
+Call trace:
+? klist_del
+? device_del
+? device_unregister
+? pci_stop_dev
+? pci_stop_bus
+? pci_remove_device
+? eeepc_rfkill_hotplug [eeepc_laptop]
+? eeepc_hotk_resume [eeepc_laptop]
+? acpi_device_resume
+? device_resume
+? hibernation_snapshot
 
-The maintainer (Chrissie Caulfield) will look into the unload issue
-when time permits.
+It appears the PCI device is removed twice.  The eeepc_rfkill_hotplug()
+call from the resume handler is racing against the call from the ACPI
+notifier callback.  The ACPI notification is triggered by the resume
+handler when it refreshes the value of CM_ASL_WLAN.
 
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
+The fix is to serialize hotplug calls using a workqueue.
+
+Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 ---
+ drivers/platform/x86/eeepc-laptop.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
- net/decnet/af_decnet.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-
-diff --git a/net/decnet/af_decnet.c b/net/decnet/af_decnet.c
-index d351b8d..bff12da 100644
---- a/net/decnet/af_decnet.c
-+++ b/net/decnet/af_decnet.c
-@@ -2393,6 +2393,10 @@ module_init(decnet_init);
-  * Prevent DECnet module unloading until its fixed properly.
-  * Requires an audit of the code to check for memory leaks and
-  * initialisation problems etc.
-+ *
-+ * hawk@comx.dk 2009-06-19:
-+ *  I have added a rcu_barrier() which should plug some of your
-+ *  module unload issues.  Maintainers please try it out...
-  */
- #if 0
- static void __exit decnet_exit(void)
-@@ -2413,6 +2417,8 @@ static void __exit decnet_exit(void)
- 	proc_net_remove(&init_net, "decnet");
+diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
+index ec560f1..222ffb8 100644
+--- a/drivers/platform/x86/eeepc-laptop.c
++++ b/drivers/platform/x86/eeepc-laptop.c
+@@ -143,6 +143,7 @@ struct eeepc_hotk {
+ 	struct rfkill *bluetooth_rfkill;
+ 	struct rfkill *wwan3g_rfkill;
+ 	struct hotplug_slot *hotplug_slot;
++	struct work_struct hotplug_work;
+ };
  
- 	proto_unregister(&dn_proto);
-+
-+	rcu_barrier_bh(); /* Wait for completion of call_rcu_bh()'s */
+ /* The actual device the driver binds to */
+@@ -660,7 +661,7 @@ static int eeepc_get_adapter_status(struct hotplug_slot *hotplug_slot,
+ 	return 0;
  }
- module_exit(decnet_exit);
- #endif
-
+ 
+-static void eeepc_rfkill_hotplug(void)
++static void eeepc_hotplug_work(struct work_struct *work)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *bus = pci_find_bus(0, 1);
+@@ -701,7 +702,7 @@ static void eeepc_rfkill_notify(acpi_handle handle, u32 event, void *data)
+ 	if (event != ACPI_NOTIFY_BUS_CHECK)
+ 		return;
+ 
+-	eeepc_rfkill_hotplug();
++	schedule_work(&ehotk->hotplug_work);
+ }
+ 
+ static void eeepc_hotk_notify(struct acpi_device *device, u32 event)
+@@ -892,7 +893,7 @@ static int eeepc_hotk_resume(struct acpi_device *device)
+ 
+ 		rfkill_set_sw_state(ehotk->wlan_rfkill, wlan != 1);
+ 
+-		eeepc_rfkill_hotplug();
++		schedule_work(&ehotk->hotplug_work);
+ 	}
+ 
+ 	if (ehotk->bluetooth_rfkill)
+@@ -1093,6 +1094,8 @@ static int eeepc_rfkill_init(struct device *dev)
+ {
+ 	int result = 0;
+ 
++	INIT_WORK(&ehotk->hotplug_work, eeepc_hotplug_work);
++
+ 	eeepc_register_rfkill_notifier("\\_SB.PCI0.P0P6");
+ 	eeepc_register_rfkill_notifier("\\_SB.PCI0.P0P7");
+ 
+-- 
+1.6.3.2
 
