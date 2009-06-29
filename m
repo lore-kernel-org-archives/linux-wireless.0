@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51981 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbZFHG3K (ORCPT
+Received: from mail-qy0-f193.google.com ([209.85.221.193]:45204 "EHLO
+	mail-qy0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbZF2Pmw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 02:29:10 -0400
-Subject: Re: [PATCH] mac80211 : fix a race with update_tkip_key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: gregor kowski <gregor.kowski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
-References: <83a869cd0906071445i13a5398y5e94ea3d91123c3b@mail.gmail.com>
-	 <83a869cd0906071449u4ae8832bu168322ae4a7cd2a3@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ONM7psanqdFObURFsWbO"
-Date: Mon, 08 Jun 2009 08:29:09 +0200
-Message-Id: <1244442549.11006.2.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 29 Jun 2009 11:42:52 -0400
+Received: by qyk31 with SMTP id 31so4724146qyk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2009 08:42:55 -0700 (PDT)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 29 Jun 2009 08:42:35 -0700
+Message-ID: <43e72e890906290842t634b6ee0q24f806a4f7dfe875@mail.gmail.com>
+Subject: Re: GSoC project progress - GeoClue integration
+To: Dan Winship <danw@gnome.org>
+Cc: k roy <kroykroy@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A bit off topic for linux-wireless but since it is a GSoC project for
+it adding it for those interested in following up on this progress.
 
---=-ONM7psanqdFObURFsWbO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+  Luis
 
-On Sun, 2009-06-07 at 21:49 +0000, gregor kowski wrote:
-> The mac80211 tkip code won't call update_tkip_key, if some rx packets
-> get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
-> first packet because the hardware key stuff is called asynchronously
-> with=20
-> todo workqueue.
->=20
-> This patch workaround that by always calling update_tkip_key if
-> the packet wasn't decrypted by the hardware.
->=20
-> Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-> Index: linux-2.6/net/mac80211/tkip.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/net/mac80211/tkip.c  2009-06-07 19:32:26.000000000
-> +0000
-> +++ linux-2.6/net/mac80211/tkip.c       2009-06-07 21:31:31.000000000
-> +0000
-> @@ -298,19 +298,19 @@
->                         printk("\n");
->                 }
->  #endif
-> -               if (key->local->ops->update_tkip_key &&
-> -                       key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
-> -                       u8 bcast[ETH_ALEN] =3D
-> -                               {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-> -                       u8 *sta_addr =3D key->sta->sta.addr;
-> +       }
-> +       if (key->local->ops->update_tkip_key &&
-> +               key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
-> +               u8 bcast[ETH_ALEN] =3D
-> +                       {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-> +               u8 *sta_addr =3D key->sta->sta.addr;
-
-There's a quite obvious disconnect between what your patch does and what
-your description says, please fix one of them. As it is, the patch only
-skips the IV rollover which is *completely* wrong because it will call
-the function for *every* packet.
-
-johannes
-
---=-ONM7psanqdFObURFsWbO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKLK+yAAoJEODzc/N7+QmatOsQAKBzYaDerfwUQ6tf0qjQnxVC
-bmJWpHWUa1//6snO3BUsLbn4a2FD40u4AnZ8HGnBMLhEoAoLDtngPUtsXnH4tvkV
-GV/fk+ck0/cmbl08ry2JCiMmbo/74ahSeDeslCGrEKRWV3khLddUmb0FbE1gvTK8
-v1eNlpijYtnANqUZ4pkcJVY8vskdIdFaxqz84uTMIjb5IFFPtfROPuFHeHuMfvbS
-p/nGz2qmj6ON8cVW8beRlgrtJh2NkOOW7+pSFS47bjmDy75tJT4cxwaD9M8f/OEQ
-gS8mSHwyKfDLfI6cclQRbFqO0/HLmUXNJ+xyTqBOYt8qCFeM2XHXiP+/xA0YXsCa
-VoSN8TGwp8Qs1fdP2J5NSI5H5Qfy1C67PH/a9/MVCNm3qSn/RCURGQGFpW3K1kcW
-qgmicXVbSaJY8Ckkzk4YmzPxF2LfoD6NF+2GNxGCjC1ocNIVSlTkjFaUq8i3VeU9
-GHedZ8JvfV5WFp9tpLXJqnYSAnzgvfWNXcgMH6F0tzcO5LccIQqrU4bNp61O75RW
-YUadMy8INgADl7RJiFSbQ2ytWvgW0gW+Z07jxJl9xV5HhHn29liTw9IUSBJOgLZV
-VbPlOUtwjA+tg/2Y0nGoKrj/ZjvMPK55F2B3y6LyDmeMwvlO4tP9993rl2U8gbRV
-rW8RJj+4tjYB7OK3bl5R
-=kVOA
------END PGP SIGNATURE-----
-
---=-ONM7psanqdFObURFsWbO--
-
+On Mon, Jun 29, 2009 at 7:15 AM, Dan Winship<danw@gnome.org> wrote:
+> On 06/25/2009 06:55 PM, k roy wrote:
+>> I was able to get the
+>> providers Hostip, Plazes, Localnet, Manual working along with Geocoding
+>> using Geonames and Yahoo. I havent got Gypsy and Gpsd working because I
+>> currently dont have a GPS device. I am still figuring how to get Gsmloc
+>> provider as the site is down.
+>
+> OK, but you don't need to test all of the providers; your code will
+> generally just be working with the master provider, so as long as at
+> least one of the other providers works for you, you should be good.
+> (Although if you can find someone to borrow a GPS device from, it might
+> be nice to test using that, since that will give you much finer detail
+> than the other providers...)
+>
+>> I plan to work on creating a Master
+>> provider and a UI for the Manual provider in 1-2 days.
+>
+> The author of libchamplain started working on a UI for the manual provider:
+>
+>  http://blog.pierlux.com/2009/06/08/introducing-geoclue-properties/en/
+>
+> You might want to use that as a starting point, or you might want to
+> just ignore that and write your own. I haven't tried it out at all.
+>
+>> I am planning to work on gnome-clock and
+>> empathy first because some work regarding Geoclue integration has
+>> already been done on these two.
+>
+> I think empathy may be pretty much "done" at this point; the bug you had
+> CC:ed me on before has been closed now. I can definitely answer
+> questions about the clock stuff though.
+>
+> -- Dan
+>
