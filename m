@@ -1,123 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7413 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751721AbZF2WRi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 18:17:38 -0400
-Subject: Re: [PATCH CRDA] Introduce separate HOST and TARGET compilation
- steps.
-From: Pavel Roskin <proski@gnu.org>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753888AbZF2QAp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 12:00:45 -0400
+Subject: Re: Repeater Bridge Mode with ar9170?
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Jon Loeliger <jdl@bigfootnetworks.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1246310952.15012.22.camel@jdl-desktop>
-References: <1246310952.15012.22.camel@jdl-desktop>
-Content-Type: text/plain
-Date: Mon, 29 Jun 2009 18:17:39 -0400
-Message-Id: <1246313859.15956.29.camel@mj>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1246289993.15012.10.camel@jdl-desktop>
+References: <1245861185.13356.2.camel@jdl-desktop>
+	 <1245881310.13356.10.camel@jdl-desktop>
+	 <1246278355.4585.3.camel@johannes.local>
+	 <1246289993.15012.10.camel@jdl-desktop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UBPGXzQLPKPfoyBwJp+1"
+Date: Mon, 29 Jun 2009 18:00:41 +0200
+Message-Id: <1246291242.4585.30.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-06-29 at 16:29 -0500, Jon Loeliger wrote:
-> The regdbdump tool is really a host executable that is used
-> during the build process.  It could also be installed and
-> used on the target, but two separate compilations are needed
-> to achieve that goal.
-> 
-> Currently, regdbdump is only built for the target, and thus
-> cross-compilation of the tool is really feasible without
-> this patch (or one like it).
-> 
-> Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
-> ---
-> 
-> This patch for the CRDA repository was offered on 12-June-2009
-> as an RFC, but received no comments at that time.
 
-I think you'll get more attention if you make your changes simple and
-separate.  Otherwise, it's hard to review.
+--=-UBPGXzQLPKPfoyBwJp+1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> @@ -1,3 +1,5 @@
-> +-include .config
+On Mon, 2009-06-29 at 10:39 -0500, Jon Loeliger wrote:
 
-This shouldn't be needed.  Variables can be set on the make command
-line.
- 
-> +MKDIR ?= mkdir -p
-> +INSTALL ?= install
+> I think I need to do this strictly from a client/station perspective.
+> The only AP in this picture would be the "upstream" AP to which my
+> client is associated.  We shouldn't be changing any code running on
+> those APs at all.
 
-That's unrelated to the purpose of your patch.
+Right. Still though, an AP implementing it wouldn't seem to be
+compliant, so I would have guessed that APs don't implement this.
 
-> +ifeq ($(V),1)
-> +    Q=
-> +    NQ=@true
-> +else
-> +    Q=@
-> +    NQ=@echo
-> +endif
+> Which leads to me trying to figure out how the client is able to
+> know what the correct "MAC level NAT address" needs to be to
+> when it converts the 802.11 header to the 802.3 header.  Doesn't
+> the upstream AP have to have already sent you 4-address frames
+> for this to work?  Or will it respond with a 4-address frame if
+> it is sent a 4-address frame from the station?
 
-And this is unrelated too.
+No idea. Nothing of this is specified in 802.11 or anywhere else, so
+it's all implementation dependent hacks.
 
-> +# Determine what target and host libraries and executables
-> +# need to be built as that will determine what libraries will
-> +# need to be found on the host or in the target environment.
+johannes
 
-That's unclear.  Also, most user don't cross-compile.  It's better not
-to attract too much attention to the aspect important to you unless
-there is some trick here that everybody touching this Makefile needs to
-know.
+--=-UBPGXzQLPKPfoyBwJp+1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> -reglib.o: keys-ssl.c
-> +HOST_BUILD	:= $(patsubst %,host/%,$(BUILD))
-> +TARGET_BUILD	:= $(patsubst %,target/%,$(BUILD))
+-----BEGIN PGP SIGNATURE-----
 
-The word "target" is normally limited to the compilers and similar tools
-to denote what kind of executables or object files will be supported by
-the program.  It doesn't really apply here.  If you look at the Linux
-build system, it has HOSTCC that produces tools for compiling and CC
-that produces the actual kernel.
+iQIcBAABAgAGBQJKSOUmAAoJEODzc/N7+QmaiaQP/2kF7hvEmlkZXSWIfd6GifSI
+kHTeJAYinEagxCDb5Yk+WOT2QuvWQtaF4oKhrM5ovTJLPPeAptNAipA9w+WEUMec
+zmOlVylqTjZHfXXUiWQKKtgq1GTYNOMpMLTPnsklFcSEjRWuxcsCIWIcEvprt4GN
+hDBkXBnpKN3RWXFXJW2yL82++ZyY15Mw0ddG53E7zxqh95cPD1RMm4ij5fJ0+845
+1yX4HVs4elzm2PdskuqpqM3GTHzYQuRb8nOZw0X3vpz76PGwmbvuMUHxUs9OU8KK
+GfhIs2Zf6a2Q7NTCy+Ui+uukRix/6Yen00aYw2CfZI7YzWIlI9Ed/0pYX4Xk3gJY
+rCigLxAx9CFns+I9qCqYtNCZoaKjJzS6jbyC9irfTOI3k+tO1UTXrpV3xtbSNixL
+DFfMET6Pe3SbDGxeI340lp+LxLuMPIG7GXNE3zIcoKHIuy5SDFj6faYZDMxEQh7g
+ffqtYRJQQQxdOlNQ2gaf2cz1sRe6TaladbJKLCPc+ixWL9v8sLM497DvfPOBMsPr
+FnM0CvdmEo3D2HYR37c2J9Fk2VfyGYPEMnLLSBwii7jAV2BeWOoP0NSC4OUpZJwt
+YTmZ4toDDxU+2KtsH/yYnKl/70qlt2CUUWlfMqAB5N2aRILGfM2/cpy66XiCQZ+f
+wkEpT6DoZ5aRS7lCrjRb
+=gnFw
+-----END PGP SIGNATURE-----
 
-> -NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
-> -NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
-> +TARGET_NL1FOUND := $(shell PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
-> +			pkg-config --atleast-version=1 libnl-1 && echo Y)
-> +TARGET_NL2FOUND := $(shell PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
-> +			pkg-config --atleast-version=2 libnl-2.0 && echo Y)
+--=-UBPGXzQLPKPfoyBwJp+1--
 
-Again, you are adding "TARGET" for no reason.
- 
-> -$(error Cannot find development files for any supported version of libnl)
-> +ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
-> +ifeq ($(TARGET_NLLIBNAME),)
-> +$(error Cannot find development files for any supported version of target libnl)
-
-The same thing here.  Most users don't really care about this
-distinction.  It's the "host" compilation that is unusual.  If a library
-was missing to build an interim tool for compilation, that might be
-worth noting.
-
-> +# When not cross-compiling, treat target and host the same
-> +# by transferring target-values to the HOST_* names and then
-> +# only building the host targets.
-
-Again, you are attracting too much attention to your work.  There are
-other aspects most users will care about.  They will look to see which
-libraries are needed, where the executables will be installed by
-default, what the default compiler options are.
-
-I've seen code where many developers commented about the changes they
-did.  It was impossible to understand what the code does, but the
-comments were telling why the code was changed.
-
-Skipping lots of stuff.
-
-> +	$(NQ) '    CLEAN'
->  	$(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
->  	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
-> +	$(Q)rm -rf host/ target/
-
-Again, this is an unrelated change.
-
--- 
-Regards,
-Pavel Roskin
