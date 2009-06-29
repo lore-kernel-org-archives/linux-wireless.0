@@ -1,123 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:20196 "EHLO mga01.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:7413 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218AbZFYK2h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 06:28:37 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 3/4] iwmc3200wifi: remove B0 hardware support
-Date: Thu, 25 Jun 2009 18:28:32 +0800
-Message-Id: <1245925713-14908-4-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1245925713-14908-3-git-send-email-yi.zhu@intel.com>
-References: <1245925713-14908-1-git-send-email-yi.zhu@intel.com>
- <1245925713-14908-2-git-send-email-yi.zhu@intel.com>
- <1245925713-14908-3-git-send-email-yi.zhu@intel.com>
+	id S1751721AbZF2WRi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 18:17:38 -0400
+Subject: Re: [PATCH CRDA] Introduce separate HOST and TARGET compilation
+ steps.
+From: Pavel Roskin <proski@gnu.org>
+To: Jon Loeliger <jdl@bigfootnetworks.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1246310952.15012.22.camel@jdl-desktop>
+References: <1246310952.15012.22.camel@jdl-desktop>
+Content-Type: text/plain
+Date: Mon, 29 Jun 2009 18:17:39 -0400
+Message-Id: <1246313859.15956.29.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch removes B0 hardware support. Nobody is using it anyway.
+On Mon, 2009-06-29 at 16:29 -0500, Jon Loeliger wrote:
+> The regdbdump tool is really a host executable that is used
+> during the build process.  It could also be installed and
+> used on the target, but two separate compilations are needed
+> to achieve that goal.
+> 
+> Currently, regdbdump is only built for the target, and thus
+> cross-compilation of the tool is really feasible without
+> this patch (or one like it).
+> 
+> Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+> ---
+> 
+> This patch for the CRDA repository was offered on 12-June-2009
+> as an RFC, but received no comments at that time.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/eeprom.c |    4 ----
- drivers/net/wireless/iwmc3200wifi/fw.c     |    6 ------
- drivers/net/wireless/iwmc3200wifi/iwm.h    |    5 -----
- drivers/net/wireless/iwmc3200wifi/main.c   |    7 -------
- drivers/net/wireless/iwmc3200wifi/rx.c     |    7 -------
- 5 files changed, 0 insertions(+), 29 deletions(-)
+I think you'll get more attention if you make your changes simple and
+separate.  Otherwise, it's hard to review.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/eeprom.c b/drivers/net/wireless/iwmc3200wifi/eeprom.c
-index 0f34b84..365910f 100644
---- a/drivers/net/wireless/iwmc3200wifi/eeprom.c
-+++ b/drivers/net/wireless/iwmc3200wifi/eeprom.c
-@@ -156,10 +156,6 @@ int iwm_eeprom_init(struct iwm_priv *iwm)
- 		return -ENOMEM;
+> @@ -1,3 +1,5 @@
+> +-include .config
+
+This shouldn't be needed.  Variables can be set on the make command
+line.
  
- 	for (i = IWM_EEPROM_FIRST; i < IWM_EEPROM_LAST; i++) {
--#ifdef CONFIG_IWM_B0_HW_SUPPORT
--		if (iwm->conf.hw_b0 && (i >= IWM_EEPROM_INDIRECT_OFFSET))
--			break;
--#endif
- 		ret = iwm_eeprom_read(iwm, i);
- 		if (ret < 0) {
- 			IWM_ERR(iwm, "Couldn't read eeprom entry #%d: %s\n",
-diff --git a/drivers/net/wireless/iwmc3200wifi/fw.c b/drivers/net/wireless/iwmc3200wifi/fw.c
-index c58f614..0f32cab 100644
---- a/drivers/net/wireless/iwmc3200wifi/fw.c
-+++ b/drivers/net/wireless/iwmc3200wifi/fw.c
-@@ -319,12 +319,6 @@ int iwm_load_fw(struct iwm_priv *iwm)
- 	init_calib_map = iwm->conf.calib_map & IWM_CALIB_MAP_INIT_MSK;
- 	periodic_calib_map = IWM_CALIB_MAP_PER_LMAC(iwm->conf.calib_map);
+> +MKDIR ?= mkdir -p
+> +INSTALL ?= install
+
+That's unrelated to the purpose of your patch.
+
+> +ifeq ($(V),1)
+> +    Q=
+> +    NQ=@true
+> +else
+> +    Q=@
+> +    NQ=@echo
+> +endif
+
+And this is unrelated too.
+
+> +# Determine what target and host libraries and executables
+> +# need to be built as that will determine what libraries will
+> +# need to be found on the host or in the target environment.
+
+That's unclear.  Also, most user don't cross-compile.  It's better not
+to attract too much attention to the aspect important to you unless
+there is some trick here that everybody touching this Makefile needs to
+know.
+
+> -reglib.o: keys-ssl.c
+> +HOST_BUILD	:= $(patsubst %,host/%,$(BUILD))
+> +TARGET_BUILD	:= $(patsubst %,target/%,$(BUILD))
+
+The word "target" is normally limited to the compilers and similar tools
+to denote what kind of executables or object files will be supported by
+the program.  It doesn't really apply here.  If you look at the Linux
+build system, it has HOSTCC that produces tools for compiling and CC
+that produces the actual kernel.
+
+> -NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+> -NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
+> +TARGET_NL1FOUND := $(shell PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
+> +			pkg-config --atleast-version=1 libnl-1 && echo Y)
+> +TARGET_NL2FOUND := $(shell PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
+> +			pkg-config --atleast-version=2 libnl-2.0 && echo Y)
+
+Again, you are adding "TARGET" for no reason.
  
--#ifdef CONFIG_IWM_B0_HW_SUPPORT
--	if (iwm->conf.hw_b0) {
--		clear_bit(PHY_CALIBRATE_RX_IQ_CMD, &init_calib_map);
--		clear_bit(PHY_CALIBRATE_RX_IQ_CMD, &periodic_calib_map);
--	}
--#endif
- 	/* Read RX IQ calibration result from EEPROM */
- 	if (test_bit(PHY_CALIBRATE_RX_IQ_CMD, &init_calib_map)) {
- 		iwm_store_rxiq_calib_result(iwm);
-diff --git a/drivers/net/wireless/iwmc3200wifi/iwm.h b/drivers/net/wireless/iwmc3200wifi/iwm.h
-index 1bad78f..79d9d89 100644
---- a/drivers/net/wireless/iwmc3200wifi/iwm.h
-+++ b/drivers/net/wireless/iwmc3200wifi/iwm.h
-@@ -52,8 +52,6 @@
- #define IWM_COPYRIGHT "Copyright(c) 2009 Intel Corporation"
- #define IWM_AUTHOR "<ilw@linux.intel.com>"
- 
--#define CONFIG_IWM_B0_HW_SUPPORT	1
--
- #define IWM_SRC_LMAC	UMAC_HDI_IN_SOURCE_FHRX
- #define IWM_SRC_UDMA	UMAC_HDI_IN_SOURCE_UDMA
- #define IWM_SRC_UMAC	UMAC_HDI_IN_SOURCE_FW
-@@ -86,9 +84,6 @@ struct iwm_conf {
- 	u8 ibss_channel;
- 
- 	u8 mac_addr[ETH_ALEN];
--#ifdef CONFIG_IWM_B0_HW_SUPPORT
--	bool hw_b0;
--#endif
- };
- 
- enum {
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index 4fedb45..484f110 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -515,13 +515,6 @@ static int iwm_channels_init(struct iwm_priv *iwm)
- {
- 	int ret;
- 
--#ifdef CONFIG_IWM_B0_HW_SUPPORT
--	if (iwm->conf.hw_b0) {
--		IWM_INFO(iwm, "Workaround EEPROM channels for B0 hardware\n");
--		return 0;
--	}
--#endif
--
- 	ret = iwm_send_umac_channel_list(iwm);
- 	if (ret) {
- 		IWM_ERR(iwm, "Send channel list failed\n");
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index 5d2239f..3909477 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -924,13 +924,6 @@ static int iwm_ntf_eeprom_proxy(struct iwm_priv *iwm, u8 *buf,
- 	if ((hdr_offset + hdr_len) > IWM_EEPROM_LEN)
- 		return -EINVAL;
- 
--#ifdef CONFIG_IWM_B0_HW_SUPPORT
--	if (hdr_offset == IWM_EEPROM_SKU_CAP_OFF) {
--		if (eeprom_proxy->buf[0] == 0xff)
--			iwm->conf.hw_b0 = 1;
--	}
--#endif
--
- 	switch (hdr_type) {
- 	case IWM_UMAC_CMD_EEPROM_TYPE_READ:
- 		memcpy(iwm->eeprom + hdr_offset, eeprom_proxy->buf, hdr_len);
+> -$(error Cannot find development files for any supported version of libnl)
+> +ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
+> +ifeq ($(TARGET_NLLIBNAME),)
+> +$(error Cannot find development files for any supported version of target libnl)
+
+The same thing here.  Most users don't really care about this
+distinction.  It's the "host" compilation that is unusual.  If a library
+was missing to build an interim tool for compilation, that might be
+worth noting.
+
+> +# When not cross-compiling, treat target and host the same
+> +# by transferring target-values to the HOST_* names and then
+> +# only building the host targets.
+
+Again, you are attracting too much attention to your work.  There are
+other aspects most users will care about.  They will look to see which
+libraries are needed, where the executables will be installed by
+default, what the default compiler options are.
+
+I've seen code where many developers commented about the changes they
+did.  It was impossible to understand what the code does, but the
+comments were telling why the code was changed.
+
+Skipping lots of stuff.
+
+> +	$(NQ) '    CLEAN'
+>  	$(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
+>  	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
+> +	$(Q)rm -rf host/ target/
+
+Again, this is an unrelated change.
+
 -- 
-1.6.0.4
-
+Regards,
+Pavel Roskin
