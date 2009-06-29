@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40745 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751658AbZFBU25 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2009 16:28:57 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] mac80211: add missing RCU lock/unlock on ieee80211_rx_bss_info()
-Date: Tue,  2 Jun 2009 16:28:57 -0400
-Message-Id: <1243974537-12774-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga09.intel.com ([134.134.136.24]:10157 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750860AbZF2SI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 14:08:26 -0400
+Subject: Re: iwl3945 in 2.6.31-rc0: ad-hoc mode broken?
+From: reinette chatre <reinette.chatre@intel.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	kernel list <linux-kernel@vger.kernel.org>
+In-Reply-To: <20090619222431.GA2398@elf.ucw.cz>
+References: <20090619222431.GA2398@elf.ucw.cz>
+Content-Type: text/plain
+Date: Mon, 29 Jun 2009 11:08:28 -0700
+Message-Id: <1246298908.17896.391.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/ibss.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Hi Pavel,
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 0b30277..446cada 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -365,7 +365,9 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		       sdata->dev->name, mgmt->bssid);
- #endif
- 		ieee80211_sta_join_ibss(sdata, bss);
-+		rcu_read_lock();
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, supp_rates);
-+		rcu_read_unlock();
- 	}
- 
-  put_bss:
--- 
-1.6.0.6
+On Fri, 2009-06-19 at 15:24 -0700, Pavel Machek wrote:
+> I tried using ad-hoc mode (against t-mobile G1) on -rc0, and was
+> unsuccessful -- never got dhcp. I had to reboot back to
+> 2.6.30... Should I try it few more times or is something broken?
+
+I have tried ad-hoc mode in 2.6.31-rc1
+(52989765629e7d182b4f146050ebba0abf2cb0b7) and did not have issues. I
+tested ad-hoc between 3945 (iwl3945) and 5100 (iwlagn), testing that
+both are able to create the IBSS network and both are able to join
+another IBSS network.
+
+Do you get any errors? Is it just the dhcp that fails (does association
+succeed?) mac80211 does have extra debugging for ad-hoc that can be
+enabled with CONFIG_MAC80211_IBSS_DEBUG=y. Could you please try that?
+
+> 
+> (Also wifi LED stopped working on x60, but that's older issue).
+
+Is there a bug report for this?
+
+Reinette
+
 
