@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61328 "EHLO mga11.intel.com"
+Received: from main.gmane.org ([80.91.229.2]:49995 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755290AbZFVQzq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2009 12:55:46 -0400
-Subject: Re: iwl3945 not working after recent commits
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, Darren Blaber <dmbtech@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890906192221p5cc67d28gb14b214bbf252ad@mail.gmail.com>
-References: <4A3C2036.6060506@gmail.com>
-	 <43e72e890906191642kbcca090we1b03db19bf0e2c8@mail.gmail.com>
-	 <4A3C4593.6050707@gmail.com>
-	 <43e72e890906191915g2c9736f2i4633c8ed3766fe3b@mail.gmail.com>
-	 <4A3C4745.7000706@gmail.com>
-	 <43e72e890906191924m2f83815fp860c0a277e44d2e1@mail.gmail.com>
-	 <87ws77o76m.fsf@litku.valot.fi>
-	 <43e72e890906192221p5cc67d28gb14b214bbf252ad@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 22 Jun 2009 10:03:02 -0700
-Message-Id: <1245690182.24303.488.camel@rc-desk>
+	id S1751307AbZF2NUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 09:20:50 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MLGmx-0002AB-Rx
+	for linux-wireless@vger.kernel.org; Mon, 29 Jun 2009 13:20:52 +0000
+Received: from d5153017D.access.telenet.be ([81.83.1.125])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2009 13:20:51 +0000
+Received: from Gert.Boddaert by d5153017D.access.telenet.be with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2009 13:20:51 +0000
+To: linux-wireless@vger.kernel.org
+From: Gert Boddaert <Gert.Boddaert@Boditec.be>
+Subject: Re: rt73usb (rt2x00) crash bug on (big-endian) ARM
+Date: Mon, 29 Jun 2009 13:20:39 +0000 (UTC)
+Message-ID: <loom.20090629T131526-620@post.gmane.org>
+References: <loom.20090625T114232-539@post.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-06-19 at 22:21 -0700, Luis R. Rodriguez wrote:
-> On Fri, Jun 19, 2009 at 9:33 PM, Kalle Valo<kalle.valo@iki.fi> wrote:
-> > "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
-> >
-> >>> I'm using 2.6.30 with the KMS radeon patches, don't know if that is
-> >>> interfering. I'll try wireless-testing directly.
-> >>
-> >> Yeah this is odd, 2.6.30 shouldn't have an issue with backport unless
-> >> I'm missing something. Let us know how it goes with wireless-testing.
-> >
-> > I'm using latest wireles-testing and I have iwl3945 on my X60s. iwl3945
-> > is working fine for me.
-> 
-> Yeah the user tried a vanilla 2.6.30 and it seems to be working fine
-> now, it seems related to kms somehow.
 
-Darren also submitted a kernel.org (#13585) bug which was closed by
-himself with reason "Turns out it was a bad development kernel from
-ubuntu.".
+We found the culprit of the 'crash' for problem 1: 
+our watchdog implementation.
+The high load on the device, stops the watchdog refresh... hence crash and reset.
 
-Reinette
+We disabled the watchdog to do further testing... next.
+
+However, when the load on the RX side gets to high, after a while (a few seconds
+of sustained RX load), 
+the connection is not dropped but we are unable to get
+any more packets through. This state does not resolve itself.
+
+
 
 
