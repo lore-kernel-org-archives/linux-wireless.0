@@ -1,87 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43964 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752767AbZFCFBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2009 01:01:34 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2009 22:01:37 -0700
-Date: Wed, 3 Jun 2009 10:30:19 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH] ath9k: Remove modparam 'debug'
-Message-ID: <20090603050019.GE17632@vasanth-laptop>
-References: <1243951136-4033-1-git-send-email-vasanth@atheros.com> <1243951136-4033-2-git-send-email-vasanth@atheros.com>
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:60259 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754387AbZF2J2E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 05:28:04 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-wireless@vger.kernel.org
+Subject: [2.6.31-rc1] iwlagn (4965): regression when hardware rf switch is used
+Date: Mon, 29 Jun 2009 11:28:04 +0200
+Cc: Netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1243951136-4033-2-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200906291128.05639.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 02, 2009 at 07:28:56PM +0530, Vasanth Thiagarajan wrote:
+(Reported earlier in 'no wireless due to RFKILL problem' thread, but
+Johannes suggested opening a new thread as it is a separate issue.)
 
-John,
+I've tried .31-rc1 on my HP 2510p notebook and noticed a problem when
+using the hardware rf kill switch.
 
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/Kconfig |    4 ++--
->  drivers/net/wireless/ath/ath9k/debug.c |    5 +----
->  2 files changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-> index 0ed1ac3..a5ab53f 100644
-> --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> @@ -17,8 +17,8 @@ config ATH9K_DEBUG
->         depends on ATH9K
->         ---help---
->           Say Y, if you need ath9k to display debug messages.
-> -         Pass the debug mask as a module parameter:
-> +         Pass the debug mask through debugfs interface:
-> 
-> -         modprobe ath9k debug=0x00002000
-> +         echo <debug mask> > /<debugfsroot>/ath9k/phyX/debug
-> 
->           Look in ath9k/core.h for possible debug masks
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> index 6d20725..a4c0c7a 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -18,9 +18,6 @@
-> 
->  #include "ath9k.h"
-> 
-> -static unsigned int ath9k_debug = DBG_DEFAULT;
-> -module_param_named(debug, ath9k_debug, uint, 0);
-> -
->  static struct dentry *ath9k_debugfs_root;
-> 
->  void DPRINTF(struct ath_softc *sc, int dbg_mask, const char *fmt, ...)
-> @@ -489,7 +486,7 @@ static const struct file_operations fops_wiphy = {
-> 
->  int ath9k_init_debug(struct ath_softc *sc)
->  {
-> -       sc->debug.debug_mask = ath9k_debug;
-> +       sc->debug.debug_mask = DBG_DEFAULT;
-> 
->         if (!ath9k_debugfs_root)
->                 return -ENOENT;
-> --
-> 1.5.5.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If disable wireless using the hardware switch and the enable it again
+almost immediately after on 2.6.30, I get:
+[disable]
+iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
+Kill switch must be turned off for wireless networking to work.
+usb 3-1: USB disconnect, address 2
+[enable]
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+usb 3-1: new full speed USB device using uhci_hcd and address 3
+usb 3-1: configuration #1 chosen from 1 choice
+wlan0: no probe response from AP 00:14:c1:38:e5:15 - disassociating
+iwlagn 0000:10:00.0: index 0 not used in uCode key table.
+wlan0: authenticate with AP 00:14:c1:38:e5:15
+wlan0: authenticate with AP 00:14:c1:38:e5:15
+wlan0: authenticated
+wlan0: associate with AP 00:14:c1:38:e5:15
+wlan0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
+wlan0: associated
+
+And without any other action networking is up again.
 
 
-Please ignore this patch as we will miss debug information during
-device attach time if we remove the option to pass debug mask as 
-modparam. thanks.
+But with 2.6.31 I get this:
+[disable]
+wlan0: deauthenticating by local choice (reason=3)
+iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
+mac80211-phy0: failed to remove key (0, 00:14:c1:38:e5:15) from hardware (-5)
+iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
+mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-5)
+usb 3-1: USB disconnect, address 2
+[enable]
+usb 3-1: new full speed USB device using uhci_hcd and address 3
+usb 3-1: configuration #1 chosen from 1 choice
 
+A lot uglier with those errors. And after that I have to run ifdown/ifup
+before networking is up again (ifup only does not work as it will complain
+"interface already configured"):
 
-Vasanth
+[ifdown wlan0]
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[ifup wlan 0]
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: authenticate with AP 00:14:c1:38:e5:15
+wlan0: authenticated
+wlan0: associate with AP 00:14:c1:38:e5:15
+wlan0: RX AssocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+
+BTW, would it make sense to bring back the first two lines shown with .30
+(or at least the first one):
+   iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
+   Kill switch must be turned off for wireless networking to work.
+IMHO it's good to register the reason for the disconnect.
+
+>From lspci:
+10:00.0 Network controller [0280]: Intel Corporation PRO/Wireless
+        4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
+
+Cheers,
+FJP
