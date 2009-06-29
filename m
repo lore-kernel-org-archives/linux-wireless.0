@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lanfw001a.cxnet.dk ([87.72.215.196]:49575 "EHLO
-	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756870AbZFWP3v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 11:29:51 -0400
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: [PATCH 07/10] decnet: Use rcu_barrier() on module unload.
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, "Patrick McHardy" <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Date: Tue, 23 Jun 2009 17:04:29 +0200
-Message-ID: <20090623150429.22490.15113.stgit@localhost>
-In-Reply-To: <20090623150330.22490.87327.stgit@localhost>
-References: <20090623150330.22490.87327.stgit@localhost>
+Received: from mail.atheros.com ([12.36.123.2]:18111 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753039AbZF2Shu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2009 14:37:50 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2009 11:37:54 -0700
+Date: Mon, 29 Jun 2009 11:37:52 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ken Harris <kjh@hokulea.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: ar9170.fw
+Message-ID: <20090629183751.GE18359@mosca>
+References: <c45b69560906291122w77499abavf7671b648caa6a39@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <c45b69560906291122w77499abavf7671b648caa6a39@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The decnet module unloading as been disabled with a '#if 0' statement,
-because it have had issues.  Perhaps using rcu_barrier() will fix
-these issues?
+On Mon, Jun 29, 2009 at 11:22:52AM -0700, Ken Harris wrote:
+> Luis:
+> 
+> I see the source code to your fabulous ar9170.fw in git.
 
-Any maintainers with input?
+Its not really "mine" -- its the communities.
 
-Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
----
+> Can you
+> supply the compiled "ar9170.fw" file?
 
- net/decnet/af_decnet.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+No, we have made no official release yet with it because we don't want to support it
+yet but you are free to build it yourself. Works for me.
 
-diff --git a/net/decnet/af_decnet.c b/net/decnet/af_decnet.c
-index d351b8d..bff12da 100644
---- a/net/decnet/af_decnet.c
-+++ b/net/decnet/af_decnet.c
-@@ -2393,6 +2393,10 @@ module_init(decnet_init);
-  * Prevent DECnet module unloading until its fixed properly.
-  * Requires an audit of the code to check for memory leaks and
-  * initialisation problems etc.
-+ *
-+ * hawk@comx.dk 2009-06-19:
-+ *  I have added a rcu_barrier() which should plug some of your
-+ *  module unload issues.  Maintainers please try it out...
-  */
- #if 0
- static void __exit decnet_exit(void)
-@@ -2413,6 +2417,8 @@ static void __exit decnet_exit(void)
- 	proc_net_remove(&init_net, "decnet");
- 
- 	proto_unregister(&dn_proto);
-+
-+	rcu_barrier_bh(); /* Wait for completion of call_rcu_bh()'s */
- }
- module_exit(decnet_exit);
- #endif
-
+  Luis
