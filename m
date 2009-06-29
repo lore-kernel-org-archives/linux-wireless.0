@@ -1,60 +1,386 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752475AbZFWL2M (ORCPT
+Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:26979 "EHLO
+	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753059AbZF2V3J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 07:28:12 -0400
-Subject: Re: [PATCH 1/2 RFC] cfg80211: connect/disconnect API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <20090622170409.GB30147@sortiz.org>
-References: <20090622170409.GB30147@sortiz.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VWN3zrFqW3jihtLuO67Y"
-Date: Tue, 23 Jun 2009 13:28:12 +0200
-Message-Id: <1245756492.4184.45.camel@johannes.local>
+	Mon, 29 Jun 2009 17:29:09 -0400
+Subject: [PATCH CRDA] Introduce separate HOST and TARGET compilation steps.
+From: Jon Loeliger <jdl@bigfootnetworks.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 29 Jun 2009 16:29:12 -0500
+Message-Id: <1246310952.15012.22.camel@jdl-desktop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The regdbdump tool is really a host executable that is used
+during the build process.  It could also be installed and
+used on the target, but two separate compilations are needed
+to achieve that goal.
 
---=-VWN3zrFqW3jihtLuO67Y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Currently, regdbdump is only built for the target, and thus
+cross-compilation of the tool is really feasible without
+this patch (or one like it).
 
-Also, something seems to be wrong with the IEs:
+Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+---
 
-hostapd says:
-STA 02:00:00:00:01:00: No WPA/RSN IE in association request
+This patch for the CRDA repository was offered on 12-June-2009
+as an RFC, but received no comments at that time.
 
-and the client gets:
-[  469.426983] wlan1: RX AssocResp from 00:11:24:91:07:4d (capab=3D0x411 st=
-atus=3D40 aid=3D0)
-[  469.428119] wlan1: AP denied association (code=3D40)
+ Makefile |  281 +++++++++++++++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 223 insertions(+), 58 deletions(-)
 
-johannes
+diff --git a/Makefile b/Makefile
+index b93b735..9f9ae01 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,3 +1,5 @@
++-include .config
++
+ # Modify as you see fit, note this is built into crda,
+ # so if you change it here you will have to change crda.c
+ REG_BIN?=/usr/lib/crda/regulatory.bin
+@@ -22,101 +24,259 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
+ # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
+ PUBKEY_DIR?=pubkeys
+ 
+-CFLAGS += -Wall -g
+ 
+-all: $(REG_BIN) crda intersect verify
++MKDIR ?= mkdir -p
++INSTALL ?= install
++
++
++ifeq ($(V),1)
++    Q=
++    NQ=@true
++else
++    Q=@
++    NQ=@echo
++endif
++
++#
++# Determine what target and host libraries and executables
++# need to be built as that will determine what libraries will
++# need to be found on the host or in the target environment.
++#
+ 
+-ifeq ($(USE_OPENSSL),1)
+-CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
+-LDLIBS += `pkg-config --libs openssl`
++BUILD		:= crda intersect regdbdump
+ 
+-reglib.o: keys-ssl.c
++HOST_BUILD	:= $(patsubst %,host/%,$(BUILD))
++TARGET_BUILD	:= $(patsubst %,target/%,$(BUILD))
+ 
++ifeq ($(CROSS_COMPILE),)
++    # Host only
++    # Initially treat host and target the same using target.
++    TARGET_PKG_CONFIG_PATH := $(PKG_CONFIG_PATH)
++    TARGET_USE_OPENSSL := $(USE_OPENSSL)
++    BUILD_ALL := $(TARGET_BUILD)
++    INSTALL_EXECS := target/crda target/regdbdump
+ else
+-CFLAGS += -DUSE_GCRYPT
+-LDLIBS += -lgcrypt
++    # Cross compile
++    BUILD_ALL := $(TARGET_BUILD)
++    ifeq ($(BUILD_FOR_HOST_TOO),1)
++	BUILD_ALL += $(HOST_BUILD)
++    endif
++    INSTALL_EXECS := target/crda target/regdbdump
++endif
++
++INSTALL_MAN	:= crda.8.gz regdbdump.8.gz 
++
+ 
+-reglib.o: keys-gcrypt.c
+ 
++TARGET_CFLAGS += -Wall -g
++
++ifeq ($(TARGET_USE_OPENSSL),1)
++    TARGET_CFLAGS_KEYS	+= -DUSE_OPENSSL \
++			`PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
++			pkg-config --cflags openssl`
++    TARGET_LDLIBS_KEYS	+= `PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
++			pkg-config --libs openssl`
++    TARGET_KEYS_FILE	:= keys-ssl.c
++else
++    TARGET_CFLAGS_KEYS	+= -DUSE_GCRYPT
++    TARGET_LDLIBS_KEYS	+= -lgcrypt
++    TARGET_KEYS_FILE	:= keys-gcrypt.c
+ endif
+-MKDIR ?= mkdir -p
+-INSTALL ?= install
+ 
+-NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+-NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
++TARGET_NL1FOUND := $(shell PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
++			pkg-config --atleast-version=1 libnl-1 && echo Y)
++TARGET_NL2FOUND := $(shell PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
++			pkg-config --atleast-version=2 libnl-2.0 && echo Y)
+ 
+-ifeq ($(NL1FOUND),Y)
+-NLLIBNAME = libnl-1
++ifeq ($(TARGET_NL1FOUND),Y)
++    TARGET_NLLIBNAME	:= libnl-1
+ endif
+ 
+-ifeq ($(NL2FOUND),Y)
+-CFLAGS += -DCONFIG_LIBNL20
+-NLLIBS += -lnl-genl
+-NLLIBNAME = libnl-2.0
++ifeq ($(TARGET_NL2FOUND),Y)
++    TARGET_CFLAGS_NL	+= -DCONFIG_LIBNL20
++    TARGET_LDLIBS_NL	+= -lnl-genl
++    TARGET_NLLIBNAME	:= libnl-2.0
+ endif
+ 
+-ifeq ($(NLLIBNAME),)
+-$(error Cannot find development files for any supported version of libnl)
++ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
++ifeq ($(TARGET_NLLIBNAME),)
++$(error Cannot find development files for any supported version of target libnl)
++endif
+ endif
+ 
+-NLLIBS += `pkg-config --libs $(NLLIBNAME)`
+-CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
++TARGET_LDLIBS_NL += `PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
++			pkg-config --libs $(TARGET_NLLIBNAME)`
++TARGET_CFLAGS_NL += `PKG_CONFIG_PATH=$(TARGET_PKG_CONFIG_PATH) \
++			pkg-config --cflags $(TARGET_NLLIBNAME)`
++
++TARGET_CFLAGS += $(TARGET_CFLAGS_NL) $(TARGET_CFLAGS_KEYS)
++TARGET_LDLIBS += $(TARGET_LDLIBS_NL) $(TARGET_LDLIBS_KEYS)
++
++
++#
++# When not cross-compiling, treat target and host the same
++# by transferring target-values to the HOST_* names and then
++# only building the host targets.
++#
++# However when cross-compiling, build-up the real host-values
++# in HOST_*, leaving the generic names to be for the target.
++#
++ifeq ($(CROSS_COMPILE),)
++
++# Not cross compiling, the host is the target.
++HOST_CC		:= $(CC)
++HOST_CFLAGS	:= $(TARGET_CFLAGS)
++HOST_CPPFLAGS	:= $(TARGET_CPPFLAGS)
++HOST_LDFLAGS	:= $(TARGET_LDFLAGS)
++HOST_LDLIBS	:= $(TARGET_LDLIBS)
++HOST_USE_OPENSSL := $(TARGET_USE_OPENSSL)
++HOST_LDLIBS	:= $(TARGET_LDLIBS)
++HOST_KEYS_FILE	:= $(TARGET_KEYS_FILE)
++BUILD_ALL	:= $(subst target/,host/,$(BUILD_ALL))
++INSTALL_EXECS	:= $(subst target/,host/,$(INSTALL_EXECS))
+ 
+-ifeq ($(V),1)
+-Q=
+-NQ=@true
+ else
+-Q=@
+-NQ=@echo
++
++# Cross compiling, so trump up HOST definitions now.
++
++HOST_CFLAGS += -Wall -g
++
++ifeq ($(HOST_USE_OPENSSL),1)
++    HOST_CFLAGS_KEYS	+= -DUSE_OPENSSL -DFOO \
++			`PKG_CONFIG_PATH=$(HOST_PKG_CONFIG_PATH) \
++			pkg-config --cflags openssl`
++    HOST_LDLIBS_KEYS	+= `PKG_CONFIG_PATH=$(HOST_PKG_CONFIG_PATH) \
++			pkg-config --libs openssl`
++    HOST_KEYS_FILE	:= keys-ssl.c
++else
++    HOST_CFLAGS_KEYS	+= -DUSE_GCRYPT
++    HOST_LDLIBS_KEYS	+= -lgcrypt
++    HOST_KEYS_FILE	:= keys-gcrypt.c
+ endif
+ 
+-$(REG_BIN):
+-	$(NQ) '  EXIST ' $(REG_BIN)
+-	$(NQ)
+-	$(NQ) ERROR: The file: $(REG_BIN) is missing. You need this in place in order
+-	$(NQ) to build CRDA. You can get it from:
+-	$(NQ)
+-	$(NQ) $(REG_GIT)
+-	$(NQ)
+-	$(NQ) "Once cloned (no need to build) cp regulatory.bin to $(REG_BIN)"
+-	$(NQ)
+-	$(Q) exit 1
+ 
+-keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
+-	$(NQ) '  GEN ' $@
+-	$(NQ) '  Trusted pubkeys:' $(wildcard $(PUBKEY_DIR)/*.pem)
+-	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
++ifeq ($(findstring host/crda,$(BUILD_ALL)),host/crda)
++HOST_NL1FOUND := $(shell PKG_CONFIG_PATH=$(HOST_PKG_CONFIG_PATH) \
++			pkg-config --atleast-version=1 libnl-1 && echo Y)
++HOST_NL2FOUND := $(shell PKG_CONFIG_PATH=$(HOST_PKG_CONFIG_PATH) \
++			pkg-config --atleast-version=2 libnl-2.0 && echo Y)
++
++ifeq ($(HOST_NL1FOUND),Y)
++    HOST_NLLIBNAME	:= libnl-1
++endif
++
++ifeq ($(HOST_NL2FOUND),Y)
++    HOST_CFLAGS_NL	+= -DCONFIG_LIBNL20
++    HOST_LDLIBS_NL	+= -lnl-genl
++    HOST_NLLIBNAME	:= libnl-2.0
++endif
++
++ifeq ($(HOST_NLLIBNAME),)
++$(error Cannot find development files for any supported version of host libnl)
++endif
+ 
+-%.o: %.c regdb.h
++HOST_LDLIBS_NL	+= `PKG_CONFIG_PATH=$(HOST_PKG_CONFIG_PATH) \
++		pkg-config --libs $(HOST_NLLIBNAME)`
++HOST_CFLAGS_NL	+= `PKG_CONFIG_PATH=$(HOST_PKG_CONFIG_PATH) \
++		pkg-config --cflags $(HOST_NLLIBNAME)`
++endif
++
++endif
++
++HOST_CFLAGS += $(HOST_CFLAGS_KEYS) $(HOST_CFLAGS_NL)
++HOST_LDLIBS += $(HOST_LDLIBS_KEYS) $(HOST_LDLIBS_NL)
++
++
++CRDA_OBJS	:= reglib.o crda.o
++REGDBDUMP_OBJS	:= reglib.o regdbdump.o print-regdom.o
++INTERSECT_OBJS	:= reglib.o intersect.o print-regdom.o
++
++
++
++all: host target $(REG_BIN) $(BUILD_ALL) verify
++
++host target:
++	$(MKDIR) $@
++	@echo Building $(BUILD_ALL)
++
++
++target/crda: $(patsubst %,target/%,$(CRDA_OBJS))
++	$(NQ) '  LD  ' $@
++	$(Q)$(CC) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) -o $@ $^ $(TARGET_LDLIBS) $(NLLIBS)
++
++target/regdbdump: $(patsubst %,target/%,$(REGDBDUMP_OBJS))
++	$(NQ) '  LD  ' $@
++	$(Q)$(CC) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) -o $@ $^ $(TARGET_LDLIBS)
++
++target/intersect: $(patsubst %,target/%,$(INTERSECT_OBJS))
++	$(NQ) '  LD  ' $@
++	$(Q)$(CC) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) -o $@ $^ $(TARGET_LDLIBS)
++
++target/reglib.o: $(TARGET_KEYS_FILE)
++
++target/%.o: %.c regdb.h
+ 	$(NQ) '  CC  ' $@
+-	$(Q)$(CC) -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
++	$(Q)$(CC) -c $(TARGET_CPPFLAGS) $(TARGET_CFLAGS) -o $@ $<
++
+ 
+-crda: reglib.o crda.o
++host/crda: $(patsubst %,host/%,$(CRDA_OBJS))
+ 	$(NQ) '  LD  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS) $(NLLIBS)
++	$(Q)$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ $^ $(HOST_LDLIBS) $(HOST_LIBS_NL)
+ 
+-regdbdump: reglib.o regdbdump.o print-regdom.o
++host/regdbdump: $(patsubst %,host/%,$(REGDBDUMP_OBJS))
+ 	$(NQ) '  LD  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
++	$(Q)$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ $^ $(HOST_LDLIBS)
+ 
+-intersect: reglib.o intersect.o print-regdom.o
++host/intersect: $(patsubst %,host/%,$(INTERSECT_OBJS))
+ 	$(NQ) '  LD  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
++	$(Q)$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ $^ $(HOST_LDLIBS)
++
++host/reglib.o: $(HOST_KEYS_FILE)
++
++host/%.o: %.c regdb.h
++	$(NQ) '  HOST_CC  ' $@
++	$(Q)$(HOST_CC) -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) -o $@ $<
++
+ 
+-verify: $(REG_BIN) regdbdump
++keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
++	$(NQ) '  GEN ' $@
++	$(NQ) '  Trusted pubkeys:' $(wildcard $(PUBKEY_DIR)/*.pem)
++	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
++
++verify: $(REG_BIN) host/regdbdump
+ 	$(NQ) '  CHK  $(REG_BIN)'
+-	$(Q)./regdbdump $(REG_BIN) >/dev/null
++	$(Q)./host/regdbdump $(REG_BIN) >/dev/null
++
++
++$(REG_BIN):
++	$(NQ) '  EXIST ' $(REG_BIN)
++	$(NQ)
++	$(NQ) ERROR: The file: $(REG_BIN) is missing. You need this in place in order
++	$(NQ) to build CRDA. You can get it from:
++	$(NQ)
++	$(NQ) $(REG_GIT)
++	$(NQ)
++	$(NQ) "Once cloned (no need to build) cp regulatory.bin to $(REG_BIN)"
++	$(NQ)
++	$(Q) exit 1
+ 
+ %.gz: %
+ 	@$(NQ) ' GZIP' $<
+ 	$(Q)gzip < $< > $@
+ 
+-install: crda crda.8.gz regdbdump.8.gz
+-	$(NQ) '  INSTALL  crda'
++
++install: install_execs install_udev install_man
++
++install_execs: $(INSTALL_EXECS)
+ 	$(Q)$(MKDIR) $(DESTDIR)/$(SBINDIR)
+-	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)/$(SBINDIR) crda
+-	$(NQ) '  INSTALL  regdbdump'
+-	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)/$(SBINDIR) regdbdump
++	$(Q)for exec in $(INSTALL_EXECS) ; do \
++		echo "  INSTALL  $$exec" ; \
++		$(INSTALL) -m 755 -t $(DESTDIR)/$(SBINDIR) $$exec ; \
++		done
++
++.PHONY: install_udev
++install_udev:
++ifndef NO_INSTALL_UDEV
+ 	$(NQ) '  INSTALL  $(UDEV_LEVEL)regulatory.rules'
+ 	$(Q)$(MKDIR) $(DESTDIR)/$(UDEV_RULE_DIR)/
+ 	@# This removes the old rule you may have, we were not
+@@ -127,6 +287,9 @@ install: crda crda.8.gz regdbdump.8.gz
+ 	$(Q)$(INSTALL) -m 644 -t \
+ 		$(DESTDIR)/$(UDEV_RULE_DIR)/ \
+ 		udev/$(UDEV_LEVEL)regulatory.rules
++endif
++
++install_man: $(INSTALL_MAN)
+ 	$(NQ) '  INSTALL  crda.8.gz'
+ 	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man8/
+ 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ crda.8.gz
+@@ -134,5 +297,7 @@ install: crda crda.8.gz regdbdump.8.gz
+ 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
+ 
+ clean:
++	$(NQ) '    CLEAN'
+ 	$(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
+ 	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
++	$(Q)rm -rf host/ target/
+-- 
+1.6.3.GIT
 
---=-VWN3zrFqW3jihtLuO67Y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKQLxIAAoJEODzc/N7+QmaXQ0QANFnp3UcfLz9YuTf8KTb2bDc
-HcCJ5zeiw3Bp/XpdBs/PD9SIp654p9+Nwu1a3/h3Bsd/fsZxsdbMqfN1K3ra1tkG
-C4XrcTgQgPNXBdJ1AdOGBLHLNhV8VsaBPteY3dIyWaFp/YUpRBpwMsg6l6l51mPK
-lvQoc0f8uEc+n/Dv7AlTKSDvJ6mtS+EjTKuNNhavs/DghymqdSLEVkVl68PBxcQC
-5JPuTWJN0Y4gPF+J9LWBiao3YO12alSJM6ZjVG51tRBc8eSzPBfXULAo2FSItvtL
-WE/oxZeAChh78r04hn+AXbFCs8hv4s4iRU5UJsiv356+teUqbjuqmACxF81r2AnJ
-ODCXbZFxkxBcwu4HoFvUy2494DVlv9IhoPZibhSj+qyHSzgK2T2JQOCtFYrY8G1X
-QyWoWBa8wyGhrcT6/oRi0UcUbaXFzAEQd+9P1enyb4s5Mv5L4Bz7iHWK71hIVJYd
-hAnbbIkW7t3CN5JNbl6wIvCxhhhds1OOkxXo3vkraTTMfocH2JULDP0R5vGTeoLY
-TDFcBsS04UpFsHQLft/M1dhiMXXyO1aXDB0M9f0prv2idlLuUcSAFncgOklHL6Z/
-CjsrMczy5xiHMCGrROy8m9C4ZMbQTRaYulZA8JXmFpQtaHuVKXvRZyGLhP/sttLB
-IcAM02sUTPkZSDUzpamB
-=MUDo
------END PGP SIGNATURE-----
-
---=-VWN3zrFqW3jihtLuO67Y--
 
