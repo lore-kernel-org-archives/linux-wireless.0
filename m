@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50926 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752797AbZFEWGg (ORCPT
+Received: from L01SLCSMTP01.calltower.com ([69.4.184.248]:2976 "EHLO
+	L01SLCSMTP01.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754170AbZF3VTR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 18:06:36 -0400
-Subject: Re: [ANN] Atheros 802.11n USB firmware source code released
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 30 Jun 2009 17:19:17 -0400
+Subject: [PATCH 3/5] Have the 'clean' target announce its presence.
+From: Jon Loeliger <jdl@bigfootnetworks.com>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, otus-devel@lists.madwifi-project.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-References: <43e72e890906051204q22278e4cw6beeae27da50e988@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-f3vsak4YmTXKurATDDCA"
-Date: Sat, 06 Jun 2009 00:06:31 +0200
-Message-Id: <1244239591.7876.30.camel@johannes.local>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 30 Jun 2009 16:19:21 -0500
+Message-Id: <1246396761.13176.263.camel@jdl-desktop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Just like the other build and install targets, have the
+clean target announce "CLEAN" too.
 
---=-f3vsak4YmTXKurATDDCA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+---
+ Makefile |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On Fri, 2009-06-05 at 12:04 -0700, Luis R. Rodriguez wrote:
-> I'm pleased to announce we have released the source code to our
-> Atheros 802.11n USB Otus/ar9170 device under the GPL. You can grab the
-> source, compile and use it with the upstream ar9170 device driver.
-> Patches are welcomed. The git tree available for this is at:
->=20
-> http://git.sipsolutions.net/ar9170-fw.git
->=20
-> For more information please visit the home page for this project is on
-> our Linux wireless wiki:
->=20
-> http://wireless.kernel.org/en/users/Drivers/ar9170.fw
->=20
-> The ar9170 device driver home page is at:
->=20
-> http://wireless.kernel.org/en/users/Drivers/ar9170
->=20
-> I'd like to thank Johannes Berg and Christian Lamparter for their
-> incredible contributions to the project both firmware and ar9170
-> driver so far without which this would not have been possible.
+diff --git a/Makefile b/Makefile
+index 8dbdf14..776b259 100644
+--- a/Makefile
++++ b/Makefile
+@@ -149,5 +149,6 @@ install_man: $(INSTALL_MAN)
+ 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
+ 
+ clean:
++	$(NQ) '    CLEAN'
+ 	$(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
+ 	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
+-- 
+1.6.3.GIT
 
-So, plan: I would like to add a command that tells us
-   - it's open source firmware
-   - what additional capabilities the firmware has
-This has to be a command like the debug commands that we can send from
-the firmware unilaterally. Easy to do.
 
-What I would then like to add is at least proper tx status reporting. I
-would also like to get rid of the key limitation, if possible.
-
-johannes
-
---=-f3vsak4YmTXKurATDDCA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKKZbjAAoJEODzc/N7+QmagesP+waJHvVERwX6PtDAQjGNTY/C
-eRcPI5pj8Sv4Sk9GdeWPHufl4+m5edgA+0k6DURA6uhwSkDpATy8USSzjNlcB584
-HbTTxixEnjcWfGIw1iqdeUpJXBO0TT4EXZkHrqlLeGE8c/RHc+nlhopOcxMgCsOC
-2gWxWZLsjbTkgljICKg42an9JcNWqmrQprGwy2n4EhGIKJKS9TiqtVUI2Vj8XQtm
-pC+PBAI3EEBsd1xHYyVYfuArqyRs5bYYFO7qrttik5vHsMzKdGOcP1DGsnRzRZvz
-70+gnIms2N8rbElXWT+U5afGv1zFlq0RWPI66fb7QGR3jz+AoyKRAw+MRevGkXcf
-BX2YjczFk6TMpH9GoS8k5ssfxvR5aIp7SudEpwKL+tHlD6FkG0hryMDNGjaB8cyb
-ecIIsSmQC+nuST+98qAiydpdIFODOQCsQErl4wlfExaVAynGBRkxuS/Tdn7XnDlZ
-9/MdeUoUtqFEgXc79R66GGhw0Dt/N7F4z03ahghhvcYGN2CmiBsnJLLzERGOHQUl
-k2ohhITyOcMoljDc/B5a/pM/KQsqVINPAajcm3vuF1Z9ahxYGeImGmnWiauIrShE
-dvhfAgw6kp4DItMfnkPNbmTPXx2Dz73UHVrTqEtuYv/8yUr6UKSoPLIm/sVRG0u8
-WQF3D4jHuFqDFolPujdS
-=gT6u
------END PGP SIGNATURE-----
-
---=-f3vsak4YmTXKurATDDCA--
 
