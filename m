@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37838 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754922AbZFQSxW (ORCPT
+Received: from jenny.ondioline.org ([66.220.1.122]:54941 "EHLO
+	jenny.ondioline.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbZF3Fg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2009 14:53:22 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: wait for beacon frame along with CAB
-Date: Wed, 17 Jun 2009 20:53:20 +0200
-Message-Id: <1245264801-26959-1-git-send-email-juhosg@openwrt.org>
+	Tue, 30 Jun 2009 01:36:59 -0400
+Received: from jenny.ondioline.org (localhost [127.0.0.1])
+	by jenny.ondioline.org (Postfix) with ESMTP id 1FE142BFB6
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 17:30:25 +1200 (NZST)
+Received: from bulky.wgtn.ondioline.org (121-98-84-12.bitstream.orcon.net.nz [121.98.84.12])
+	by jenny.ondioline.org (Postfix) with ESMTPSA id 604802BFB5
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 17:30:24 +1200 (NZST)
+From: Paul Collins <paul@burly.ondioline.org>
+To: linux-wireless@vger.kernel.org
+Subject: iwlagn: possible regressions from 2.6.29 in 2.6.30
+Date: Tue, 30 Jun 2009 17:30:20 +1200
+Message-ID: <874oty9tlf.fsf@bulky.wgtn.ondioline.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/recv.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Two things I liked about iwlagn in 2.6.29 no longer happen with 2.6.30:
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f99f3a7..cece1c4 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -539,11 +539,14 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- 	if (ath_beacon_dtim_pending_cab(skb)) {
- 		/*
- 		 * Remain awake waiting for buffered broadcast/multicast
--		 * frames.
-+		 * frames. If the last broadcast/multicast frame is not
-+		 * received properly, the next beacon frame will work as
-+		 * a backup trigger for returning into NETWORK SLEEP state,
-+		 * so we are waiting for it as well.
- 		 */
- 		DPRINTF(sc, ATH_DBG_PS, "Received DTIM beacon indicating "
- 			"buffered broadcast/multicast frame(s)\n");
--		sc->sc_flags |= SC_OP_WAIT_FOR_CAB;
-+		sc->sc_flags |= SC_OP_WAIT_FOR_CAB | SC_OP_WAIT_FOR_BEACON;
- 		return;
- 	}
- 
+1. reassociation following resume from suspend-to-ram
+2. transmission of packets > 250 bytes following resume from suspend-to-ram
+
+I can script around the first problem just by doing "iwconfig wlan0 ap
+auto" on resume, but the second problem requires me to ifdown/ifup wlan0
+before I can usefully use my network again, so fixing the first problem
+doesn't get me very far.
+
+When I say "packets > 250 bytes" I mean 250-byte packets as claimed by
+"ping -s 222 mygateway":
+
+        PING cornelius.lan (10.2.4.1) 222(250) bytes of data.
+
+The above will work, but "ping -s 223 cornelius" yields no replies.
+
+I am using a Wireless WiFi Link 5300 [8086:4236] in a ThinkPad X200.
+
+In both cases I was using Debian kernels, although they don't seem to
+have included any changes to iwlagn.
+
 -- 
-1.5.3.2
+Paul Collins
+Wellington, New Zealand
 
+Dag vijandelijk luchtschip de huismeester is dood
