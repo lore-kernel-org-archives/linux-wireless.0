@@ -1,649 +1,536 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1653 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761206AbZFKCDu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43201 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbZF3IIV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2009 22:03:50 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org, pierre@ossman.eu
-Cc: kalle.valo@iki.fi, san@google.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH/RFC 1/7] wl12xx: separate bus i/o code into io.c
-Date: Wed, 10 Jun 2009 22:02:54 -0400
-Message-Id: <1244685780-28930-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
-References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	Tue, 30 Jun 2009 04:08:21 -0400
+Subject: [PATCH] cfg80211: introduce nl80211 testmode command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 30 Jun 2009 10:08:17 +0200
+Message-Id: <1246349297.16643.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to eventually support wl12xx spi and sdio interfaces, move
-the register and memory transfer functions to a common file.  Also
-rename wl12xx_spi_mem_{read,write} to indicate its common usage.
-We still use spi_read internally until SDIO interface is introduced
-so nothing functional should change here.
+This introduces a new NL80211_CMD_TESTMODE for testing
+and calibration use with nl80211. There's no multiplexing
+like like iwpriv had, and the command is not available by
+default, it needs to be explicitly enabled in Kconfig and
+shouldn't be enabled in most kernels.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+The command requires a wiphy index or interface index to
+identify the device to operate on, and the new TESTDATA
+attribute. There also is API for sending replies to the
+command, and testmode multicast messages (on a testmode
+multicast group).
+
+I've also updated mac80211 to be able to pass through the
+command to the driver, since it itself doesn't implement
+the testmode command.
+
+Additionally, to give people an idea of how to use the
+command, I've added a little code to hwsim that makes use
+of the new command to set the powersave mode, this is
+currently done via debugfs and should remain there, and
+the testmode command only serves as an example of how to
+use this best -- with nested netlink attributes in the
+TESTDATA attribute. A hwsim testmode tool can be found at
+http://git.sipsolutions.net/hwsim.git/. This tool is BSD
+licensed so people can easily use it as a basis for their
+own internal fabrication and validation tools.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/wl12xx/Makefile |    2 +-
- drivers/net/wireless/wl12xx/acx.c    |    2 +-
- drivers/net/wireless/wl12xx/boot.c   |    3 +-
- drivers/net/wireless/wl12xx/cmd.c    |   14 +++---
- drivers/net/wireless/wl12xx/event.c  |    6 +-
- drivers/net/wireless/wl12xx/io.c     |   86 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/io.h     |   54 +++++++++++++++++++++
- drivers/net/wireless/wl12xx/main.c   |    3 +-
- drivers/net/wireless/wl12xx/ps.c     |    3 +-
- drivers/net/wireless/wl12xx/rx.c     |   10 ++--
- drivers/net/wireless/wl12xx/spi.c    |   63 -------------------------
- drivers/net/wireless/wl12xx/spi.h    |   27 -----------
- drivers/net/wireless/wl12xx/tx.c     |   63 +++++++++++++------------
- drivers/net/wireless/wl12xx/wl1251.c |    9 ++--
- 14 files changed, 201 insertions(+), 144 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/io.c
- create mode 100644 drivers/net/wireless/wl12xx/io.h
+I haven't implemented dumping because right now I'm not sure
+how to, nor whether people will use it when they can allocate
+larger skbs for more data which in test environments should
+be acceptable.
 
-diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
-index d43de27..c1281fc 100644
---- a/drivers/net/wireless/wl12xx/Makefile
-+++ b/drivers/net/wireless/wl12xx/Makefile
-@@ -1,4 +1,4 @@
- wl12xx-objs		= main.o spi.o event.o tx.o rx.o \
- 			  ps.o cmd.o acx.o boot.o init.o wl1251.o \
--			  debugfs.o
-+			  debugfs.o io.o
- obj-$(CONFIG_WL12XX)	+= wl12xx.o
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 1cfd458..9e48de2 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -7,7 +7,7 @@
- #include "wl12xx.h"
- #include "wl12xx_80211.h"
- #include "reg.h"
--#include "spi.h"
-+#include "cmd.h"
- #include "ps.h"
- 
- int wl12xx_acx_frame_rates(struct wl12xx *wl, u8 ctrl_rate, u8 ctrl_mod,
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 48ac08c..1878dc5 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -25,7 +25,8 @@
- 
- #include "reg.h"
- #include "boot.h"
--#include "spi.h"
-+#include "io.h"
-+#include "wl12xx.h"
- #include "event.h"
- 
- static void wl12xx_boot_enable_interrupts(struct wl12xx *wl)
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index f73ab60..56bf6a6 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -7,7 +7,7 @@
- #include "wl12xx.h"
- #include "wl12xx_80211.h"
- #include "reg.h"
--#include "spi.h"
-+#include "io.h"
- #include "ps.h"
- 
- int wl12xx_cmd_send(struct wl12xx *wl, u16 type, void *buf, size_t buf_len)
-@@ -26,7 +26,7 @@ int wl12xx_cmd_send(struct wl12xx *wl, u16 type, void *buf, size_t buf_len)
- 
- 	wl12xx_ps_elp_wakeup(wl);
- 
--	wl12xx_spi_mem_write(wl, wl->cmd_box_addr, &cmd, cmd_len);
-+	wl12xx_mem_write(wl, wl->cmd_box_addr, &cmd, cmd_len);
- 
- 	wl12xx_reg_write32(wl, ACX_REG_INTERRUPT_TRIG, INTR_TRIG_CMD);
- 
-@@ -77,7 +77,7 @@ int wl12xx_cmd_test(struct wl12xx *wl, void *buf, size_t buf_len, u8 answer)
- 
- 		wl12xx_ps_elp_wakeup(wl);
- 
--		wl12xx_spi_mem_read(wl, wl->cmd_box_addr, buf, buf_len);
-+		wl12xx_mem_read(wl, wl->cmd_box_addr, buf, buf_len);
- 
- 		wl12xx_ps_elp_sleep(wl);
- 
-@@ -112,8 +112,8 @@ int wl12xx_cmd_interrogate(struct wl12xx *wl, u16 ie_id, u16 ie_len,
- 	wl12xx_ps_elp_wakeup(wl);
- 
- 	/* the interrogate command got in, we can read the answer */
--	wl12xx_spi_mem_read(wl, wl->cmd_box_addr, answer,
--			    CMDMBOX_HEADER_LEN + ie_len);
-+	wl12xx_mem_read(wl, wl->cmd_box_addr, answer,
-+			CMDMBOX_HEADER_LEN + ie_len);
- 
- 	wl12xx_ps_elp_sleep(wl);
- 
-@@ -313,8 +313,8 @@ int wl12xx_cmd_read_memory(struct wl12xx *wl, u32 addr, u32 len, void *answer)
- 	}
- 
- 	/* the read command got in, we can now read the answer */
--	wl12xx_spi_mem_read(wl, wl->cmd_box_addr, &cmd,
--			    CMDMBOX_HEADER_LEN + sizeof(mem_cmd));
-+	wl12xx_mem_read(wl, wl->cmd_box_addr, &cmd,
-+			CMDMBOX_HEADER_LEN + sizeof(mem_cmd));
- 
- 	if (cmd.status != CMD_STATUS_SUCCESS)
- 		wl12xx_error("error in read command result: %d", cmd.status);
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index 99529ca..0a86a1a 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -24,7 +24,7 @@
- 
- #include "wl12xx.h"
- #include "reg.h"
--#include "spi.h"
-+#include "io.h"
- #include "event.h"
- #include "ps.h"
- 
-@@ -112,8 +112,8 @@ int wl12xx_event_handle(struct wl12xx *wl, u8 mbox_num)
- 		return -EINVAL;
- 
- 	/* first we read the mbox descriptor */
--	wl12xx_spi_mem_read(wl, wl->mbox_ptr[mbox_num], &mbox,
--			    sizeof(struct event_mailbox));
-+	wl12xx_mem_read(wl, wl->mbox_ptr[mbox_num], &mbox,
-+			sizeof(struct event_mailbox));
- 
- 	/* process the descriptor */
- 	ret = wl12xx_event_process(wl, &mbox);
-diff --git a/drivers/net/wireless/wl12xx/io.c b/drivers/net/wireless/wl12xx/io.c
-new file mode 100644
-index 0000000..15af799
---- /dev/null
-+++ b/drivers/net/wireless/wl12xx/io.c
-@@ -0,0 +1,86 @@
-+/*
-+ * This file is part of wl12xx
+ drivers/net/wireless/mac80211_hwsim.c |   68 +++++++++++++++++
+ include/linux/nl80211.h               |   11 ++
+ include/net/cfg80211.h                |   83 ++++++++++++++++++++
+ include/net/mac80211.h                |    5 +
+ net/mac80211/cfg.c                    |   13 +++
+ net/wireless/Kconfig                  |   15 +++
+ net/wireless/core.h                   |    4 +
+ net/wireless/nl80211.c                |  136 ++++++++++++++++++++++++++++++++++
+ 8 files changed, 335 insertions(+)
+
+--- wireless-testing.orig/include/linux/nl80211.h	2009-06-30 09:26:47.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2009-06-30 09:34:55.000000000 +0200
+@@ -242,6 +242,10 @@
+  * @NL80211_CMD_LEAVE_IBSS: Leave the IBSS -- no special arguments, the IBSS is
+  *	determined by the network interface.
+  *
++ * @NL80211_CMD_TESTMODE: testmode command, takes a wiphy (or ifindex) attribute
++ *	to identify the device, and the TESTDATA blob attribute to pass through
++ *	to the driver.
 + *
-+ * Copyright (C) 2008 Nokia Corporation
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -310,6 +314,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_JOIN_IBSS,
+ 	NL80211_CMD_LEAVE_IBSS,
+ 
++	NL80211_CMD_TESTMODE,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -511,6 +517,9 @@ enum nl80211_commands {
+  *	authorized by user space. Otherwise, port is marked authorized by
+  *	default in station mode.
+  *
++ * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
++ *	We recommend using nested, driver-specific attributes within this.
 + *
-+ * Contact: Kalle Valo <kalle.valo@nokia.com>
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -619,6 +628,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_CONTROL_PORT,
+ 
++	NL80211_ATTR_TESTDATA,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- wireless-testing.orig/include/net/cfg80211.h	2009-06-30 09:27:02.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-06-30 09:59:29.000000000 +0200
+@@ -857,6 +857,8 @@ enum tx_power_setting {
+  *
+  * @rfkill_poll: polls the hw rfkill line, use cfg80211 reporting
+  *	functions to adjust rfkill hw state
 + *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
++ * @testmode_cmd: run a test mode command
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy);
+@@ -955,6 +957,10 @@ struct cfg80211_ops {
+ 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
+ 
+ 	void	(*rfkill_poll)(struct wiphy *wiphy);
++
++#ifdef CONFIG_NL80211_TESTMODE
++	int	(*testmode_cmd)(struct wiphy *wiphy, void *data, int len);
++#endif
+ };
+ 
+ /*
+@@ -1705,4 +1711,81 @@ void wiphy_rfkill_start_polling(struct w
+  */
+ void wiphy_rfkill_stop_polling(struct wiphy *wiphy);
+ 
++#ifdef CONFIG_NL80211_TESTMODE
++/**
++ * cfg80211_testmode_alloc_reply_skb - allocate testmode reply
++ * @wiphy: the wiphy
++ * @approxlen: an upper bound of the length of the data that will
++ *	be put into the skb
 + *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
++ * This function allocates and pre-fills an skb for a reply to
++ * the testmode command. Since it is intended for a reply, calling
++ * it outside of the @testmode_cmd operation is invalid.
 + *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
++ * The returned skb (or %NULL if any errors happen) is pre-filled
++ * with the wiphy index and set up in a way that any data that is
++ * put into the skb (with skb_put(), nla_put() or similar) will end
++ * up being within the %NL80211_ATTR_TESTDATA attribute, so all that
++ * needs to be done with the skb is adding data for the corresponding
++ * userspace tool which can then read that data out of the testdata
++ * attribute. You must not modify the skb in any other way.
 + *
++ * When done, call cfg80211_testmode_reply() with the skb and return
++ * its error code as the result of the @testmode_cmd operation.
 + */
++struct sk_buff *cfg80211_testmode_alloc_reply_skb(struct wiphy *wiphy,
++						  int approxlen);
 +
-+#include "wl12xx.h"
-+#include "reg.h"
-+#include "io.h"
++/**
++ * cfg80211_testmode_reply - send the reply skb
++ * @skb: The skb, must have been allocated with
++ *	cfg80211_testmode_alloc_reply_skb()
++ *
++ * Returns an error code or 0 on success, since calling this
++ * function will usually be the last thing before returning
++ * from the @testmode_cmd you should return the error code.
++ * Note that this function consumes the skb regardless of the
++ * return value.
++ */
++int cfg80211_testmode_reply(struct sk_buff *skb);
 +
-+static int wl12xx_translate_reg_addr(struct wl12xx *wl, int addr)
++/**
++ * cfg80211_testmode_alloc_event_skb - allocate testmode event
++ * @wiphy: the wiphy
++ * @approxlen: an upper bound of the length of the data that will
++ *	be put into the skb
++ * @gfp: allocation flags
++ *
++ * This function allocates and pre-fills an skb for an event on the
++ * testmode multicast group.
++ *
++ * The returned skb (or %NULL if any errors happen) is set up in the
++ * same way as with cfg80211_testmode_alloc_reply_skb() but prepared
++ * for an event. As there, you should simply add data to it that will
++ * then end up in the %NL80211_ATTR_TESTDATA attribute. Again, you must
++ * not modify the skb in any other way.
++ *
++ * When done filling the skb, call cfg80211_testmode_event() with the
++ * skb to send the event.
++ */
++struct sk_buff *cfg80211_testmode_alloc_event_skb(struct wiphy *wiphy,
++						  int approxlen, gfp_t gfp);
++
++/**
++ * cfg80211_testmode_event - send the event
++ * @skb: The skb, must have been allocated with
++ *	cfg80211_testmode_alloc_event_skb()
++ * @gfp: allocation flags
++ *
++ * This function sends the given @skb, which must have been allocated
++ * by cfg80211_testmode_alloc_event_skb(), as an event. It always
++ * consumes it.
++ */
++void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp);
++
++#define CFG80211_TESTMODE_CMD(cmd)	.testmode_cmd = (cmd),
++#else
++#define CFG80211_TESTMODE_CMD(cmd)
++#endif
++
+ #endif /* __NET_CFG80211_H */
+--- wireless-testing.orig/net/wireless/Kconfig	2009-06-30 09:26:53.000000000 +0200
++++ wireless-testing/net/wireless/Kconfig	2009-06-30 09:56:34.000000000 +0200
+@@ -2,6 +2,21 @@ config CFG80211
+ 	tristate "Improved wireless configuration API"
+ 	depends on RFKILL || !RFKILL
+ 
++config NL80211_TESTMODE
++	bool "nl80211 testmode command"
++	depends on CFG80211
++	help
++	  The nl80211 testmode command helps implementing things like
++	  factory calibration or validation tools for wireless chips.
++
++	  Select this option ONLY for kernels that are specifically
++	  built for such purposes.
++
++	  Debugging tools that are supposed to end up in the hands of
++	  users should better be implemented with debugfs.
++
++	  Say N.
++
+ config CFG80211_REG_DEBUG
+ 	bool "cfg80211 regulatory debugging"
+ 	depends on CFG80211
+--- wireless-testing.orig/net/wireless/core.h	2009-06-30 09:26:47.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-06-30 09:27:12.000000000 +0200
+@@ -58,6 +58,10 @@ struct cfg80211_registered_device {
+ 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
+ 	unsigned long suspend_at;
+ 
++#ifdef CONFIG_NL80211_TESTMODE
++	struct genl_info *testmode_info;
++#endif
++
+ #ifdef CONFIG_CFG80211_DEBUGFS
+ 	/* Debugfs entries */
+ 	struct wiphy_debugfsdentries {
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-06-30 09:26:58.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-06-30 09:27:11.000000000 +0200
+@@ -3415,6 +3415,128 @@ unlock_rtnl:
+ 	return err;
+ }
+ 
++#ifdef CONFIG_NL80211_TESTMODE
++static struct genl_multicast_group nl80211_testmode_mcgrp = {
++	.name = "testmode",
++};
++
++static int nl80211_testmode_do(struct sk_buff *skb, struct genl_info *info)
 +{
-+	/* If the address is lower than REGISTERS_BASE, it means that this is
-+	 * a chip-specific register address, so look it up in the registers
-+	 * table */
-+	if (addr < REGISTERS_BASE) {
-+		/* Make sure we don't go over the table */
-+		if (addr >= ACX_REG_TABLE_LEN) {
-+			wl12xx_error("address out of range (%d)", addr);
-+			return -EINVAL;
-+		}
-+		addr = wl->chip.acx_reg_table[addr];
++	struct cfg80211_registered_device *rdev;
++	int err;
++
++	if (!info->attrs[NL80211_ATTR_TESTDATA])
++		return -EINVAL;
++
++	rtnl_lock();
++
++	rdev = cfg80211_get_dev_from_info(info);
++	if (IS_ERR(rdev)) {
++		err = PTR_ERR(rdev);
++		goto unlock_rtnl;
 +	}
 +
-+	return addr - wl->physical_reg_addr + wl->virtual_reg_addr;
++	err = -EOPNOTSUPP;
++	if (rdev->ops->testmode_cmd) {
++		rdev->testmode_info = info;
++		err = rdev->ops->testmode_cmd(&rdev->wiphy,
++				nla_data(info->attrs[NL80211_ATTR_TESTDATA]),
++				nla_len(info->attrs[NL80211_ATTR_TESTDATA]));
++		rdev->testmode_info = NULL;
++	}
++
++	cfg80211_put_dev(rdev);
++
++ unlock_rtnl:
++	rtnl_unlock();
++	return err;
 +}
 +
-+static int wl12xx_translate_mem_addr(struct wl12xx *wl, int addr)
++static struct sk_buff *
++__cfg80211_testmode_alloc_skb(struct cfg80211_registered_device *rdev,
++			      int approxlen, u32 pid, u32 seq, gfp_t gfp)
 +{
-+	return addr - wl->physical_mem_addr + wl->virtual_mem_addr;
++	struct sk_buff *skb;
++	void *hdr;
++	struct nlattr *data;
++
++	skb = nlmsg_new(approxlen + 100, gfp);
++	if (!skb)
++		return NULL;
++
++	hdr = nl80211hdr_put(skb, pid, seq, 0, NL80211_CMD_TESTMODE);
++	if (!hdr) {
++		kfree_skb(skb);
++		return NULL;
++	}
++
++	NLA_PUT_U32(skb, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	data = nla_nest_start(skb, NL80211_ATTR_TESTDATA);
++
++	((void **)skb->cb)[0] = rdev;
++	((void **)skb->cb)[1] = hdr;
++	((void **)skb->cb)[2] = data;
++
++	return skb;
++
++ nla_put_failure:
++	kfree_skb(skb);
++	return NULL;
 +}
 +
-+void wl12xx_mem_read(struct wl12xx *wl, int addr, void *buf, size_t len)
++struct sk_buff *cfg80211_testmode_alloc_reply_skb(struct wiphy *wiphy,
++						  int approxlen)
 +{
-+	int physical;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
 +
-+	physical = wl12xx_translate_mem_addr(wl, addr);
++	if (WARN_ON(!rdev->testmode_info))
++		return NULL;
 +
-+	wl12xx_spi_read(wl, physical, buf, len);
++	return __cfg80211_testmode_alloc_skb(rdev, approxlen,
++				rdev->testmode_info->snd_pid,
++				rdev->testmode_info->snd_seq,
++				GFP_KERNEL);
 +}
++EXPORT_SYMBOL(cfg80211_testmode_alloc_reply_skb);
 +
-+void wl12xx_mem_write(struct wl12xx *wl, int addr, void *buf, size_t len)
++int cfg80211_testmode_reply(struct sk_buff *skb)
 +{
-+	int physical;
++	struct cfg80211_registered_device *rdev = ((void **)skb->cb)[0];
++	void *hdr = ((void **)skb->cb)[1];
++	struct nlattr *data = ((void **)skb->cb)[2];
 +
-+	physical = wl12xx_translate_mem_addr(wl, addr);
++	if (WARN_ON(!rdev->testmode_info)) {
++		kfree_skb(skb);
++		return -EINVAL;
++	}
 +
-+	wl12xx_spi_write(wl, physical, buf, len);
++	nla_nest_end(skb, data);
++	genlmsg_end(skb, hdr);
++	return genlmsg_reply(skb, rdev->testmode_info);
 +}
++EXPORT_SYMBOL(cfg80211_testmode_reply);
 +
-+u32 wl12xx_mem_read32(struct wl12xx *wl, int addr)
++struct sk_buff *cfg80211_testmode_alloc_event_skb(struct wiphy *wiphy,
++						  int approxlen, gfp_t gfp)
 +{
-+	return wl12xx_read32(wl, wl12xx_translate_mem_addr(wl, addr));
-+}
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
 +
-+void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val)
++	return __cfg80211_testmode_alloc_skb(rdev, approxlen, 0, 0, gfp);
++}
++EXPORT_SYMBOL(cfg80211_testmode_alloc_event_skb);
++
++void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
 +{
-+	wl12xx_write32(wl, wl12xx_translate_mem_addr(wl, addr), val);
++	void *hdr = ((void **)skb->cb)[1];
++	struct nlattr *data = ((void **)skb->cb)[2];
++
++	nla_nest_end(skb, data);
++	genlmsg_end(skb, hdr);
++	genlmsg_multicast(skb, 0, nl80211_testmode_mcgrp.id, gfp);
 +}
-+
-+u32 wl12xx_reg_read32(struct wl12xx *wl, int addr)
-+{
-+	return wl12xx_read32(wl, wl12xx_translate_reg_addr(wl, addr));
-+}
-+
-+void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val)
-+{
-+	wl12xx_write32(wl, wl12xx_translate_reg_addr(wl, addr), val);
-+}
-diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
-new file mode 100644
-index 0000000..5f96871
---- /dev/null
-+++ b/drivers/net/wireless/wl12xx/io.h
-@@ -0,0 +1,54 @@
-+/*
-+ * This file is part of wl12xx
-+ *
-+ * Copyright (C) 2008 Nokia Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ */
-+#ifndef __WL12XX_IO_H__
-+#define __WL12XX_IO_H__
-+
-+#include "wl12xx.h"
-+#include "spi.h"
-+
-+/* Raw target IO, address is not translated */
-+void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf, size_t len);
-+void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf, size_t len);
-+
-+static inline u32 wl12xx_read32(struct wl12xx *wl, int addr)
-+{
-+	u32 response;
-+
-+	wl12xx_spi_read(wl, addr, &response, sizeof(u32));
-+
-+	return response;
-+}
-+
-+static inline void wl12xx_write32(struct wl12xx *wl, int addr, u32 val)
-+{
-+	wl12xx_spi_write(wl, addr, &val, sizeof(u32));
-+}
-+
-+/* Memory target IO, address is translated to partition 0 */
-+void wl12xx_mem_read(struct wl12xx *wl, int addr, void *buf, size_t len);
-+void wl12xx_mem_write(struct wl12xx *wl, int addr, void *buf, size_t len);
-+u32 wl12xx_mem_read32(struct wl12xx *wl, int addr);
-+void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val);
-+/* Registers IO */
-+u32 wl12xx_reg_read32(struct wl12xx *wl, int addr);
-+void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
-+
++EXPORT_SYMBOL(cfg80211_testmode_event);
 +#endif
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 603d611..9ecfb9e 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -35,6 +35,7 @@
- #include "wl12xx_80211.h"
- #include "reg.h"
- #include "wl1251.h"
-+#include "io.h"
- #include "spi.h"
- #include "event.h"
- #include "tx.h"
-@@ -885,7 +886,7 @@ static int wl12xx_hw_scan(struct wl12xx *wl, u8 *ssid, size_t len,
- 	if (ret < 0)
- 		wl12xx_error("SCAN failed");
- 
--	wl12xx_spi_mem_read(wl, wl->cmd_box_addr, params, sizeof(*params));
-+	wl12xx_mem_read(wl, wl->cmd_box_addr, params, sizeof(*params));
- 
- 	cmd_answer = (struct wl12xx_command *) params;
- 	if (cmd_answer->status != CMD_STATUS_SUCCESS) {
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index 83a1011..f2de45b 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -23,7 +23,8 @@
- 
- #include "reg.h"
- #include "ps.h"
--#include "spi.h"
-+#include "cmd.h"
-+#include "io.h"
- 
- #define WL12XX_WAKEUP_TIMEOUT 2000
- 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 981ea25..f3a2ede 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -27,8 +27,10 @@
- 
- #include "wl12xx.h"
- #include "reg.h"
--#include "spi.h"
-+#include "io.h"
- #include "rx.h"
-+#include "cmd.h"
-+#include "acx.h"
- 
- static void wl12xx_rx_header(struct wl12xx *wl,
- 			     struct wl12xx_rx_descriptor *desc)
-@@ -39,8 +41,8 @@ static void wl12xx_rx_header(struct wl12xx *wl,
- 	if (wl->rx_current_buffer)
- 		rx_packet_ring_addr += wl->data_path->rx_packet_ring_chunk_size;
- 
--	wl12xx_spi_mem_read(wl, rx_packet_ring_addr, desc,
--			    sizeof(struct wl12xx_rx_descriptor));
-+	wl12xx_mem_read(wl, rx_packet_ring_addr, desc,
-+			sizeof(struct wl12xx_rx_descriptor));
- }
- 
- static void wl12xx_rx_status(struct wl12xx *wl,
-@@ -151,7 +153,7 @@ static void wl12xx_rx_body(struct wl12xx *wl,
- 	}
- 
- 	rx_buffer = skb_put(skb, length);
--	wl12xx_spi_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
-+	wl12xx_mem_read(wl, rx_packet_ring_addr, rx_buffer, length);
- 
- 	/* The actual lenght doesn't include the target's alignment */
- 	skb->len = desc->length  - PLCP_HEADER_LENGTH;
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index abdf171..aabc487 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -31,29 +31,6 @@
- #include "spi.h"
- #include "ps.h"
- 
--static int wl12xx_translate_reg_addr(struct wl12xx *wl, int addr)
--{
--	/* If the address is lower than REGISTERS_BASE, it means that this is
--	 * a chip-specific register address, so look it up in the registers
--	 * table */
--	if (addr < REGISTERS_BASE) {
--		/* Make sure we don't go over the table */
--		if (addr >= ACX_REG_TABLE_LEN) {
--			wl12xx_error("address out of range (%d)", addr);
--			return -EINVAL;
--		}
--		addr = wl->chip.acx_reg_table[addr];
--	}
--
--	return addr - wl->physical_reg_addr + wl->virtual_reg_addr;
--}
--
--static int wl12xx_translate_mem_addr(struct wl12xx *wl, int addr)
--{
--	return addr - wl->physical_mem_addr + wl->virtual_mem_addr;
--}
--
--
- void wl12xx_spi_reset(struct wl12xx *wl)
- {
- 	u8 *cmd;
-@@ -316,43 +293,3 @@ void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf,
- 	wl12xx_dump(DEBUG_SPI, "spi_write cmd -> ", &cmd, sizeof(cmd));
- 	wl12xx_dump(DEBUG_SPI, "spi_write buf -> ", buf, len);
- }
--
--void wl12xx_spi_mem_read(struct wl12xx *wl, int addr, void *buf,
--			 size_t len)
--{
--	int physical;
--
--	physical = wl12xx_translate_mem_addr(wl, addr);
--
--	wl12xx_spi_read(wl, physical, buf, len);
--}
--
--void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf,
--			  size_t len)
--{
--	int physical;
--
--	physical = wl12xx_translate_mem_addr(wl, addr);
--
--	wl12xx_spi_write(wl, physical, buf, len);
--}
--
--u32 wl12xx_mem_read32(struct wl12xx *wl, int addr)
--{
--	return wl12xx_read32(wl, wl12xx_translate_mem_addr(wl, addr));
--}
--
--void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val)
--{
--	wl12xx_write32(wl, wl12xx_translate_mem_addr(wl, addr), val);
--}
--
--u32 wl12xx_reg_read32(struct wl12xx *wl, int addr)
--{
--	return wl12xx_read32(wl, wl12xx_translate_reg_addr(wl, addr));
--}
--
--void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val)
--{
--	wl12xx_write32(wl, wl12xx_translate_reg_addr(wl, addr), val);
--}
-diff --git a/drivers/net/wireless/wl12xx/spi.h b/drivers/net/wireless/wl12xx/spi.h
-index fd3227e..7c51475 100644
---- a/drivers/net/wireless/wl12xx/spi.h
-+++ b/drivers/net/wireless/wl12xx/spi.h
-@@ -71,19 +71,6 @@
- #define HW_ACCESS_WSPI_INIT_CMD_MASK  0
- 
- 
--/* Raw target IO, address is not translated */
--void wl12xx_spi_read(struct wl12xx *wl, int addr, void *buf, size_t len);
--void wl12xx_spi_write(struct wl12xx *wl, int addr, void *buf, size_t len);
--
--/* Memory target IO, address is tranlated to partition 0 */
--void wl12xx_spi_mem_read(struct wl12xx *wl, int addr, void *buf, size_t len);
--void wl12xx_spi_mem_write(struct wl12xx *wl, int addr, void *buf, size_t len);
--u32 wl12xx_mem_read32(struct wl12xx *wl, int addr);
--void wl12xx_mem_write32(struct wl12xx *wl, int addr, u32 val);
--
--/* Registers IO */
--u32 wl12xx_reg_read32(struct wl12xx *wl, int addr);
--void wl12xx_reg_write32(struct wl12xx *wl, int addr, u32 val);
- 
- /* INIT and RESET words */
- void wl12xx_spi_reset(struct wl12xx *wl);
-@@ -92,18 +79,4 @@ void wl12xx_set_partition(struct wl12xx *wl,
- 			  u32 part_start, u32 part_size,
- 			  u32 reg_start,  u32 reg_size);
- 
--static inline u32 wl12xx_read32(struct wl12xx *wl, int addr)
--{
--	u32 response;
--
--	wl12xx_spi_read(wl, addr, &response, sizeof(u32));
--
--	return response;
--}
--
--static inline void wl12xx_write32(struct wl12xx *wl, int addr, u32 val)
--{
--	wl12xx_spi_write(wl, addr, &val, sizeof(u32));
--}
--
- #endif /* __WL12XX_SPI_H__ */
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 62145e2..2079aba 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -30,6 +30,7 @@
- #include "spi.h"
- #include "tx.h"
- #include "ps.h"
-+#include "io.h"
- 
- static bool wl12xx_tx_double_buffer_busy(struct wl12xx *wl, u32 data_out_count)
- {
-@@ -235,7 +236,7 @@ static int wl12xx_tx_send_packet(struct wl12xx *wl, struct sk_buff *skb,
- 	else
- 		addr = wl->data_path->tx_packet_ring_addr;
- 
--	wl12xx_spi_mem_write(wl, addr, skb->data, len);
-+	wl12xx_mem_write(wl, addr, skb->data, len);
- 
- 	wl12xx_debug(DEBUG_TX, "tx id %u skb 0x%p payload %u rate 0x%x",
- 		     tx_hdr->id, skb, tx_hdr->length, tx_hdr->rate);
-@@ -449,8 +450,8 @@ void wl12xx_tx_complete(struct wl12xx *wl)
- 		return;
- 
- 	/* First we read the result */
--	wl12xx_spi_mem_read(wl, wl->data_path->tx_complete_addr,
--			    result, sizeof(result));
-+	wl12xx_mem_read(wl, wl->data_path->tx_complete_addr,
-+			result, sizeof(result));
- 
- 	result_index = wl->next_tx_complete;
- 
-@@ -480,41 +481,41 @@ void wl12xx_tx_complete(struct wl12xx *wl)
- 		 */
- 		if (result_index > wl->next_tx_complete) {
- 			/* Only 1 write is needed */
--			wl12xx_spi_mem_write(wl,
--					     wl->data_path->tx_complete_addr +
--					     (wl->next_tx_complete *
--					      sizeof(struct tx_result)),
--					     &result[wl->next_tx_complete],
--					     num_complete *
--					     sizeof(struct tx_result));
-+			wl12xx_mem_write(wl,
-+					 wl->data_path->tx_complete_addr +
-+					 (wl->next_tx_complete *
-+					  sizeof(struct tx_result)),
-+					 &result[wl->next_tx_complete],
-+					 num_complete *
-+					 sizeof(struct tx_result));
- 
- 
- 		} else if (result_index < wl->next_tx_complete) {
- 			/* 2 writes are needed */
--			wl12xx_spi_mem_write(wl,
--					     wl->data_path->tx_complete_addr +
--					     (wl->next_tx_complete *
--					      sizeof(struct tx_result)),
--					     &result[wl->next_tx_complete],
--					     (FW_TX_CMPLT_BLOCK_SIZE -
--					      wl->next_tx_complete) *
--					     sizeof(struct tx_result));
--
--			wl12xx_spi_mem_write(wl,
--					     wl->data_path->tx_complete_addr,
--					     result,
--					     (num_complete -
--					      FW_TX_CMPLT_BLOCK_SIZE +
--					      wl->next_tx_complete) *
--					     sizeof(struct tx_result));
-+			wl12xx_mem_write(wl,
-+					 wl->data_path->tx_complete_addr +
-+					 (wl->next_tx_complete *
-+					  sizeof(struct tx_result)),
-+					 &result[wl->next_tx_complete],
-+					 (FW_TX_CMPLT_BLOCK_SIZE -
-+					  wl->next_tx_complete) *
-+					 sizeof(struct tx_result));
 +
-+			wl12xx_mem_write(wl,
-+					 wl->data_path->tx_complete_addr,
-+					 result,
-+					 (num_complete -
-+					  FW_TX_CMPLT_BLOCK_SIZE +
-+					  wl->next_tx_complete) *
-+					 sizeof(struct tx_result));
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -3628,6 +3750,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++#ifdef CONFIG_NL80211_TESTMODE
++	{
++		.cmd = NL80211_CMD_TESTMODE,
++		.doit = nl80211_testmode_do,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
++#endif
+ };
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+ 	.name = "mlme",
+@@ -4106,6 +4236,12 @@ int nl80211_init(void)
+ 	if (err)
+ 		goto err_out;
  
- 		} else {
- 			/* We have to write the whole array */
--			wl12xx_spi_mem_write(wl,
--					     wl->data_path->tx_complete_addr,
--					     result,
--					     FW_TX_CMPLT_BLOCK_SIZE *
--					     sizeof(struct tx_result));
-+			wl12xx_mem_write(wl,
-+					 wl->data_path->tx_complete_addr,
-+					 result,
-+					 FW_TX_CMPLT_BLOCK_SIZE *
-+					 sizeof(struct tx_result));
- 		}
++#ifdef CONFIG_NL80211_TESTMODE
++	err = genl_register_mc_group(&nl80211_fam, &nl80211_testmode_mcgrp);
++	if (err)
++		goto err_out;
++#endif
++
+ 	return 0;
+  err_out:
+ 	genl_unregister_family(&nl80211_fam);
+--- wireless-testing.orig/include/net/mac80211.h	2009-06-30 09:26:47.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-06-30 09:27:08.000000000 +0200
+@@ -1419,6 +1419,8 @@ enum ieee80211_ampdu_mlme_action {
+  * @rfkill_poll: Poll rfkill hardware state. If you need this, you also
+  *	need to set wiphy->rfkill_poll to %true before registration,
+  *	and need to call wiphy_rfkill_set_hw_state() in the callback.
++ *
++ * @testmode_cmd: Implement a cfg80211 test mode command.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1469,6 +1471,9 @@ struct ieee80211_ops {
+ 			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
  
- 	}
-diff --git a/drivers/net/wireless/wl12xx/wl1251.c b/drivers/net/wireless/wl12xx/wl1251.c
-index ce1561a..543a5b8 100644
---- a/drivers/net/wireless/wl12xx/wl1251.c
-+++ b/drivers/net/wireless/wl12xx/wl1251.c
-@@ -34,6 +34,7 @@
- #include "rx.h"
- #include "ps.h"
- #include "init.h"
-+#include "io.h"
+ 	void (*rfkill_poll)(struct ieee80211_hw *hw);
++#ifdef CONFIG_NL80211_TESTMODE
++	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
++#endif
+ };
  
- static struct wl12xx_partition_set wl1251_part_table[PART_TABLE_LEN] = {
- 	[PART_DOWN] = {
-@@ -130,7 +131,7 @@ static int wl1251_upload_firmware(struct wl12xx *wl)
- 		p = wl->fw + FW_HDR_SIZE + chunk_num * CHUNK_SIZE;
- 		wl12xx_debug(DEBUG_BOOT, "uploading fw chunk 0x%p to 0x%x",
- 			     p, addr);
--		wl12xx_spi_mem_write(wl, addr, p, CHUNK_SIZE);
-+		wl12xx_mem_write(wl, addr, p, CHUNK_SIZE);
+ /**
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-06-30 09:26:47.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-06-30 09:59:44.000000000 +0200
+@@ -1376,6 +1376,18 @@ static void ieee80211_rfkill_poll(struct
+ 	drv_rfkill_poll(local);
+ }
  
- 		chunk_num++;
- 	}
-@@ -140,7 +141,7 @@ static int wl1251_upload_firmware(struct wl12xx *wl)
- 	p = wl->fw + FW_HDR_SIZE + chunk_num * CHUNK_SIZE;
- 	wl12xx_debug(DEBUG_BOOT, "uploading fw last chunk (%zu B) 0x%p to 0x%x",
- 		     fw_data_len % CHUNK_SIZE, p, addr);
--	wl12xx_spi_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
-+	wl12xx_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
- 
++#ifdef CONFIG_NL80211_TESTMODE
++int ieee80211_testmode_cmd(struct wiphy *wiphy, void *data, int len)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	if (!local->ops->testmode_cmd)
++		return -EOPNOTSUPP;
++
++	return local->ops->testmode_cmd(&local->hw, data, len);
++}
++#endif
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1418,4 +1430,5 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.set_tx_power = ieee80211_set_tx_power,
+ 	.get_tx_power = ieee80211_get_tx_power,
+ 	.rfkill_poll = ieee80211_rfkill_poll,
++	CFG80211_TESTMODE_CMD(ieee80211_testmode_cmd)
+ };
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-06-30 09:26:47.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-06-30 09:59:33.000000000 +0200
+@@ -700,6 +700,73 @@ static int mac80211_hwsim_conf_tx(
  	return 0;
  }
-@@ -412,8 +413,8 @@ static void wl1251_irq_work(struct work_struct *work)
- 	wl12xx_debug(DEBUG_IRQ, "intr: 0x%x", intr);
  
- 	if (wl->data_path) {
--		wl12xx_spi_mem_read(wl, wl->data_path->rx_control_addr,
--				    &wl->rx_counter, sizeof(u32));
-+		wl12xx_mem_read(wl, wl->data_path->rx_control_addr,
-+				&wl->rx_counter, sizeof(u32));
++#ifdef CONFIG_NL80211_TESTMODE
++/*
++ * This section contains example code for using netlink
++ * attributes with the testmode command in nl80211.
++ */
++
++/* These enums need to be kept in sync with userspace */
++enum hwsim_testmode_attr {
++	__HWSIM_TM_ATTR_INVALID	= 0,
++	HWSIM_TM_ATTR_CMD	= 1,
++	HWSIM_TM_ATTR_PS	= 2,
++
++	/* keep last */
++	__HWSIM_TM_ATTR_AFTER_LAST,
++	HWSIM_TM_ATTR_MAX	= __HWSIM_TM_ATTR_AFTER_LAST - 1
++};
++
++enum hwsim_testmode_cmd {
++	HWSIM_TM_CMD_SET_PS		= 0,
++	HWSIM_TM_CMD_GET_PS		= 1,
++};
++
++static const struct nla_policy hwsim_testmode_policy[HWSIM_TM_ATTR_MAX + 1] = {
++	[HWSIM_TM_ATTR_CMD] = { .type = NLA_U32 },
++	[HWSIM_TM_ATTR_PS] = { .type = NLA_U32 },
++};
++
++static int hwsim_fops_ps_write(void *dat, u64 val);
++
++int mac80211_hwsim_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
++{
++	struct mac80211_hwsim_data *hwsim = hw->priv;
++	struct nlattr *tb[HWSIM_TM_ATTR_MAX + 1];
++	struct sk_buff *skb;
++	int err, ps;
++
++	err = nla_parse(tb, HWSIM_TM_ATTR_MAX, data, len,
++			hwsim_testmode_policy);
++	if (err)
++		return err;
++
++	if (!tb[HWSIM_TM_ATTR_CMD])
++		return -EINVAL;
++
++	switch (nla_get_u32(tb[HWSIM_TM_ATTR_CMD])) {
++	case HWSIM_TM_CMD_SET_PS:
++		if (!tb[HWSIM_TM_ATTR_PS])
++			return -EINVAL;
++		ps = nla_get_u32(tb[HWSIM_TM_ATTR_PS]);
++		return hwsim_fops_ps_write(hwsim, ps);
++	case HWSIM_TM_CMD_GET_PS:
++		skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy,
++						nla_total_size(sizeof(u32)));
++		if (!skb)
++			return -ENOMEM;
++		NLA_PUT_U32(skb, HWSIM_TM_ATTR_PS, hwsim->ps);
++		return cfg80211_testmode_reply(skb);
++	default:
++		return -EOPNOTSUPP;
++	}
++
++ nla_put_failure:
++	kfree_skb(skb);
++	return -ENOBUFS;
++}
++#endif
++
+ static const struct ieee80211_ops mac80211_hwsim_ops =
+ {
+ 	.tx = mac80211_hwsim_tx,
+@@ -713,6 +780,7 @@ static const struct ieee80211_ops mac802
+ 	.sta_notify = mac80211_hwsim_sta_notify,
+ 	.set_tim = mac80211_hwsim_set_tim,
+ 	.conf_tx = mac80211_hwsim_conf_tx,
++	CFG80211_TESTMODE_CMD(mac80211_hwsim_testmode_cmd)
+ };
  
- 		/* We handle a frmware bug here */
- 		switch ((wl->rx_counter - wl->rx_handled) & 0xf) {
--- 
-1.6.0.6
+ 
 
 
