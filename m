@@ -1,46 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail124.emailantidote.com ([80.169.59.124]:55913 "EHLO
-	SC-MTA-05.mxsweep.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752695AbZFYOuB convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41456 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692AbZF3Lxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 10:50:01 -0400
-Message-ID: <4A438C0F.7090907@draigBrady.com>
-Date: Thu, 25 Jun 2009 15:39:11 +0100
-From: =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigBrady.com>
-MIME-Version: 1.0
-To: Marcel Holtmann <holtmann@linux.intel.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jukka.rissanen@nokia.com
-Subject: Re: Announcing ConnMan.net
-References: <1245775609.15367.129.camel@violet>
-In-Reply-To: <1245775609.15367.129.camel@violet>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 30 Jun 2009 07:53:47 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1MLbuH-0003Pq-3C
+	for linux-wireless@vger.kernel.org; Tue, 30 Jun 2009 13:53:49 +0200
+Message-Id: <20090630115245.675553951@sipsolutions.net>
+Date: Tue, 30 Jun 2009 13:52:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/8 v3] connect API, wext conversion
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel Holtmann wrote:
-> Intel and Nokia are pleased to jointly launch the ConnMan project, an
-> open source project to accelerate and expand development of Internet
-> connection management for Linux Devices. ConnMan will be utilized as a
-> technology within Moblin and Maemo. Connman.net is now the place to
-> bring developers together who are interested in furthering the
-> development of Internet connection management within Linux. Review the
-> source code for more information. ConnMan is licensed under GPLv2, and
-> provides a daemon for managing Internet connections within Linux
-> devices. ConnMan is a fully modular system that can be extended, through
-> plugins, to support all kinds of wired or wireless technologies.
-> Configuration methods, like DHCP and domain name resolving, are
-> implemented using plug-ins as well. The plug-in approach allows for easy
-> adaption and modification for various use cases. Nokia and Intel will
-> jointly maintain the ConnMan project. We'd like to invite all developers
-> to join the connman.net effort and community.
-> 
-> Marcel Holtmann, Intel Open Source Technology Center
-> Jukka Rissanen, Nokia Devices, Maemo Software
+Now with association request IEs where necessary,
+and with a mac80211 patch to disable 11n again
+depending on the configuration.
 
-I was wondering how this related to networkmanager.
-Dan Williams just posted some comparisons:
-http://blogs.gnome.org/dcbw/2009/06/25/networkmanager-and-connman/
+johannes
 
-cheers,
-Pádraig.
