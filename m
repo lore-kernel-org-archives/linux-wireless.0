@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21387 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973AbZFXN1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 09:27:08 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2009 06:27:11 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 4/7] ath9k: remove unnecessary STATION mode check.
-Date: Wed, 24 Jun 2009 18:56:39 +0530
-Message-ID: <1245850002-26351-5-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1245850002-26351-4-git-send-email-senthilkumar@atheros.com>
-References: <1245850002-26351-1-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-2-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-3-git-send-email-senthilkumar@atheros.com>
- <1245850002-26351-4-git-send-email-senthilkumar@atheros.com>
+Received: from rv-out-0506.google.com ([209.85.198.232]:62966 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754198AbZF3Fap (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 01:30:45 -0400
+Message-ID: <4A49A349.8030702@gmail.com>
+Date: Mon, 29 Jun 2009 22:31:53 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: need help figuring out what makes my wireless"iwconfig" not respond
+References: <4A499531.4040001@gmail.com> <4A49980E.2010405@lwfinger.net>
+In-Reply-To: <4A49980E.2010405@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unncessary STATION mode check in ath9k_bss_assoc_info() as
-it is called only for STATION mode.
+Larry Finger wrote:
+> Justin P. Mattock wrote:
+>    
+>> from 2.6.31-rc1 to present there was a couple of commits for
+>> wireless. prior to that the wireless on my machine(imac)
+>> was o.k.,
+>> Now the wireless does work(streams music,t.v. etc..)
+>> but when I look at iwconfig there's nothing no info.
+>> (I use wicd as my connection manager, and in the bottom corner
+>> of the screen the transmit power is down to almost nothing,
+>> causing wicd to constantly reconnect)
+>>
+>> out of a random guess what commit might have caused this, so I can at least
+>> fix this over here(that is until the manufacturer comes out with a new
+>> version). I can go in and individually revert all of the wireless, but
+>> before that
+>> I want a quick lead.
+>>
+>> any ideas?
+>>
+>>      
+>
+> If you have a git tree, use the "git bisect" commands to find the bad
+> commit.
+>
+>    
+alright. I'll give that a try.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   21 +++++++++------------
- 1 files changed, 9 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 66d2190..a977f80 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -921,24 +921,21 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *bss_conf)
- {
--	struct ath_vif *avp = (void *)vif->drv_priv;
- 
- 	if (bss_conf->assoc) {
- 		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info ASSOC %d, bssid: %pM\n",
- 			bss_conf->aid, sc->curbssid);
- 
- 		/* New association, store aid */
--		if (avp->av_opmode == NL80211_IFTYPE_STATION) {
--			sc->curaid = bss_conf->aid;
--			ath9k_hw_write_associd(sc);
-+		sc->curaid = bss_conf->aid;
-+		ath9k_hw_write_associd(sc);
- 
--			/*
--			 * Request a re-configuration of Beacon related timers
--			 * on the receipt of the first Beacon frame (i.e.,
--			 * after time sync with the AP).
--			 */
--			sc->sc_flags |= SC_OP_BEACON_SYNC;
--		}
-+		/*
-+		 * Request a re-configuration of Beacon related timers
-+		 * on the receipt of the first Beacon frame (i.e.,
-+		 * after time sync with the AP).
-+		 */
-+		sc->sc_flags |= SC_OP_BEACON_SYNC;
- 
- 		/* Configure the beacon */
- 		ath_beacon_config(sc, vif);
--- 
-1.6.0.4
-
+Justin P. Mattock
