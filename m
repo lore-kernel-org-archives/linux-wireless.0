@@ -1,67 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1452 "EHLO
-	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755656AbZFYFNu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569AbZF3KyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2009 01:13:50 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 11/19] drivers/net/wireless: Use PCI_VDEVICE
-Date: Wed, 24 Jun 2009 22:13:27 -0700
-Message-Id: <10b896c1a1e1f65a4a342ee5aa3452ab8cb43dfb.1245906152.git.joe@perches.com>
-In-Reply-To: <cover.1245906151.git.joe@perches.com>
-References: <cover.1245906151.git.joe@perches.com>
+	Tue, 30 Jun 2009 06:54:00 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1MLayQ-0002Uv-9z
+	for linux-wireless@vger.kernel.org; Tue, 30 Jun 2009 12:54:03 +0200
+Message-Id: <20090630105100.222024675@sipsolutions.net>
+References: <20090630104952.857270082@sipsolutions.net>
+Date: Tue, 30 Jun 2009 12:49:57 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/7] cfg80211: implement IWAP for WDS
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ipw2x00/ipw2200.c        |   10 +++++-----
- drivers/net/wireless/prism54/islpci_hotplug.c |    4 +---
- 2 files changed, 6 insertions(+), 8 deletions(-)
+This implements siocsiwap/giwap for WDS mode.
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 44c29b3..d726b3c 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11436,11 +11436,11 @@ static struct pci_device_id card_ids[] = {
- 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2754, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2761, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2762, 0, 0, 0},
--	{PCI_VENDOR_ID_INTEL, 0x104f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{PCI_VENDOR_ID_INTEL, 0x4220, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* BG */
--	{PCI_VENDOR_ID_INTEL, 0x4221, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* BG */
--	{PCI_VENDOR_ID_INTEL, 0x4223, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* ABG */
--	{PCI_VENDOR_ID_INTEL, 0x4224, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* ABG */
-+	{PCI_VDEVICE(INTEL, 0x104f), 0},
-+	{PCI_VDEVICE(INTEL, 0x4220), 0},	/* BG */
-+	{PCI_VDEVICE(INTEL, 0x4221), 0},	/* BG */
-+	{PCI_VDEVICE(INTEL, 0x4223), 0},	/* ABG */
-+	{PCI_VDEVICE(INTEL, 0x4224), 0},	/* ABG */
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h     |   10 +++++++++
+ net/mac80211/cfg.c         |   11 ++++++++++
+ net/mac80211/wext.c        |   26 +++----------------------
+ net/wireless/wext-compat.c |   46 +++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 71 insertions(+), 22 deletions(-)
+
+--- wireless-testing.orig/include/net/cfg80211.h	2009-06-30 12:43:43.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-06-30 12:43:47.000000000 +0200
+@@ -1018,6 +1018,9 @@ struct cfg80211_ops {
+ 				enum tx_power_setting type, int dbm);
+ 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
  
- 	/* required last entry */
- 	{0,}
-diff --git a/drivers/net/wireless/prism54/islpci_hotplug.c b/drivers/net/wireless/prism54/islpci_hotplug.c
-index 3087672..83d3662 100644
---- a/drivers/net/wireless/prism54/islpci_hotplug.c
-+++ b/drivers/net/wireless/prism54/islpci_hotplug.c
-@@ -49,9 +49,7 @@ static const struct pci_device_id prism54_id_tbl[] = {
++	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
++				u8 *addr);
++
+ 	void	(*rfkill_poll)(struct wiphy *wiphy);
  
- 	/* 3COM 3CRWE154G72 Wireless LAN adapter */
- 	{
--	 0x10b7, 0x6001,
--	 PCI_ANY_ID, PCI_ANY_ID,
--	 0, 0, 0
-+	 PCI_VDEVICE(3COM, 0x6001), 0
- 	},
+ #ifdef CONFIG_NL80211_TESTMODE
+@@ -1631,6 +1634,13 @@ int cfg80211_wext_giwpower(struct net_de
+ 			   struct iw_request_info *info,
+ 			   struct iw_param *wrq, char *extra);
  
- 	/* Intersil PRISM Indigo Wireless LAN adapter */
++int cfg80211_wds_wext_siwap(struct net_device *dev,
++			    struct iw_request_info *info,
++			    struct sockaddr *addr, char *extra);
++int cfg80211_wds_wext_giwap(struct net_device *dev,
++			    struct iw_request_info *info,
++			    struct sockaddr *addr, char *extra);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+--- wireless-testing.orig/net/mac80211/wext.c	2009-06-30 12:43:43.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-06-30 12:43:47.000000000 +0200
+@@ -140,23 +140,8 @@ static int ieee80211_ioctl_siwap(struct 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		return cfg80211_mgd_wext_siwap(dev, info, ap_addr, extra);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
+-		/*
+-		 * If it is necessary to update the WDS peer address
+-		 * while the interface is running, then we need to do
+-		 * more work here, namely if it is running we need to
+-		 * add a new and remove the old STA entry, this is
+-		 * normally handled by _open() and _stop().
+-		 */
+-		if (netif_running(dev))
+-			return -EBUSY;
+-
+-		memcpy(&sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
+-		       ETH_ALEN);
+-
+-		return 0;
+-	}
+-
++	if (sdata->vif.type == NL80211_IFTYPE_WDS)
++		return cfg80211_wds_wext_siwap(dev, info, ap_addr, extra);
+ 	return -EOPNOTSUPP;
+ }
+ 
+@@ -173,11 +158,8 @@ static int ieee80211_ioctl_giwap(struct 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		return cfg80211_mgd_wext_giwap(dev, info, ap_addr, extra);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
+-		ap_addr->sa_family = ARPHRD_ETHER;
+-		memcpy(&ap_addr->sa_data, sdata->u.wds.remote_addr, ETH_ALEN);
+-		return 0;
+-	}
++	if (sdata->vif.type == NL80211_IFTYPE_WDS)
++		return cfg80211_wds_wext_giwap(dev, info, ap_addr, extra);
+ 
+ 	return -EOPNOTSUPP;
+ }
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-30 12:43:43.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-06-30 12:43:47.000000000 +0200
+@@ -1048,3 +1048,49 @@ int cfg80211_wext_giwpower(struct net_de
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwpower);
++
++int cfg80211_wds_wext_siwap(struct net_device *dev,
++			    struct iw_request_info *info,
++			    struct sockaddr *addr, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	int err;
++
++	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WDS))
++		return -EINVAL;
++
++	if (addr->sa_family != ARPHRD_ETHER)
++		return -EINVAL;
++
++	if (netif_running(dev))
++		return -EBUSY;
++
++	if (!rdev->ops->set_wds_peer)
++		return -EOPNOTSUPP;
++
++	err = rdev->ops->set_wds_peer(wdev->wiphy, dev, (u8 *) &addr->sa_data);
++	if (err)
++		return err;
++
++	memcpy(&wdev->wext.bssid, (u8 *) &addr->sa_data, ETH_ALEN);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(cfg80211_wds_wext_siwap);
++
++int cfg80211_wds_wext_giwap(struct net_device *dev,
++			    struct iw_request_info *info,
++			    struct sockaddr *addr, char *extra)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WDS))
++		return -EINVAL;
++
++	addr->sa_family = ARPHRD_ETHER;
++	memcpy(&addr->sa_data, wdev->wext.bssid, ETH_ALEN);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(cfg80211_wds_wext_giwap);
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-06-30 12:43:43.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-06-30 12:43:47.000000000 +0200
+@@ -1369,6 +1369,16 @@ static int ieee80211_get_tx_power(struct
+ 	return 0;
+ }
+ 
++static int ieee80211_set_wds_peer(struct wiphy *wiphy, struct net_device *dev,
++				  u8 *addr)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	memcpy(&sdata->u.wds.remote_addr, addr, ETH_ALEN);
++
++	return 0;
++}
++
+ static void ieee80211_rfkill_poll(struct wiphy *wiphy)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -1454,6 +1464,7 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.set_wiphy_params = ieee80211_set_wiphy_params,
+ 	.set_tx_power = ieee80211_set_tx_power,
+ 	.get_tx_power = ieee80211_get_tx_power,
++	.set_wds_peer = ieee80211_set_wds_peer,
+ 	.rfkill_poll = ieee80211_rfkill_poll,
+ 	CFG80211_TESTMODE_CMD(ieee80211_testmode_cmd)
+ 	.set_power_mgmt = ieee80211_set_power_mgmt,
+
 -- 
-1.6.3.1.10.g659a0.dirty
 
