@@ -1,92 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:34254 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbZFECbE (ORCPT
+Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:35743 "EHLO
+	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754834AbZF3VTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2009 22:31:04 -0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	slapin@ossfans.org, davem@davemloft.net,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [PULL REQUEST] IEEE 802.15.4 stack: generic parts v2
-Date: Fri,  5 Jun 2009 06:29:45 +0400
-Message-Id: <1244168990-28355-1-git-send-email-dbaryshkov@gmail.com>
+	Tue, 30 Jun 2009 17:19:36 -0400
+Subject: [PATCH 5/5] Unbury Makefile-meta config definitions.
+From: Jon Loeliger <jdl@bigfootnetworks.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 30 Jun 2009 16:19:40 -0500
+Message-Id: <1246396780.13176.265.camel@jdl-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Rather than having them buried in the middle of the Makefile,
+relocate the "quiet/not-quiet" options, MKDIR and INSTALL definitions
+to the top of the file.
 
-This is a second version of pull/merge request for our IEEE 802.15.4 stack.
-Major changes from previous post:
- * Several macroses replaced with inline functions to ensure type correctness.
- * Reformat source to (mostly) fit into 80 columns
- * Drop constants 'reservation' declarations from headers
- * Split policy from nl802154.h to separate source file.
- * Add documentation for our netlink protocol.
+Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+---
+ Makefile |   23 ++++++++++++-----------
+ 1 files changed, 12 insertions(+), 11 deletions(-)
 
-The following changes since commit 9fa7eb283c5cdc2b0f4a8cfe6387ed82e5e9a3d3:
-  Linus Torvalds (1):
-        Linux 2.6.30-rc8
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/lumag/lowpan.git for-next
-
-Dmitry Eremin-Solenikov (5):
-      Add constants for the ieee 802.15.4 stack
-      net: add IEEE 802.15.4 socket family implementation
-      net: add NL802154 interface for configuration of 802.15.4 devices
-      ieee802154: add documentation about our stack
-      ieee802154: add simple HardMAC driver sample
-
- Documentation/networking/ieee802154.txt |   76 +++++
- MAINTAINERS                             |   12 +
- drivers/Makefile                        |    1 +
- drivers/ieee802154/Kconfig              |   22 ++
- drivers/ieee802154/Makefile             |    3 +
- drivers/ieee802154/fakehard.c           |  270 ++++++++++++++++
- drivers/net/Kconfig                     |    2 +
- include/linux/if_arp.h                  |    2 +
- include/linux/if_ether.h                |    1 +
- include/linux/nl802154.h                |  119 +++++++
- include/linux/socket.h                  |    4 +-
- include/net/ieee802154/af_ieee802154.h  |   60 ++++
- include/net/ieee802154/mac_def.h        |  160 ++++++++++
- include/net/ieee802154/netdevice.h      |  115 +++++++
- include/net/ieee802154/nl802154.h       |   41 +++
- net/Kconfig                             |    1 +
- net/Makefile                            |    1 +
- net/core/dev.c                          |    6 +-
- net/core/sock.c                         |    3 +
- net/ieee802154/Kconfig                  |   12 +
- net/ieee802154/Makefile                 |    5 +
- net/ieee802154/af802154.h               |   36 +++
- net/ieee802154/af_ieee802154.c          |  372 ++++++++++++++++++++++
- net/ieee802154/dgram.c                  |  394 +++++++++++++++++++++++
- net/ieee802154/netlink.c                |  523 +++++++++++++++++++++++++++++++
- net/ieee802154/nl_policy.c              |   65 ++++
- net/ieee802154/raw.c                    |  254 +++++++++++++++
- 27 files changed, 2557 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/networking/ieee802154.txt
- create mode 100644 drivers/ieee802154/Kconfig
- create mode 100644 drivers/ieee802154/Makefile
- create mode 100644 drivers/ieee802154/fakehard.c
- create mode 100644 include/linux/nl802154.h
- create mode 100644 include/net/ieee802154/af_ieee802154.h
- create mode 100644 include/net/ieee802154/mac_def.h
- create mode 100644 include/net/ieee802154/netdevice.h
- create mode 100644 include/net/ieee802154/nl802154.h
- create mode 100644 net/ieee802154/Kconfig
- create mode 100644 net/ieee802154/Makefile
- create mode 100644 net/ieee802154/af802154.h
- create mode 100644 net/ieee802154/af_ieee802154.c
- create mode 100644 net/ieee802154/dgram.c
- create mode 100644 net/ieee802154/netlink.c
- create mode 100644 net/ieee802154/nl_policy.c
- create mode 100644 net/ieee802154/raw.c
-
+diff --git a/Makefile b/Makefile
+index b755b67..9f9ae01 100644
+--- a/Makefile
++++ b/Makefile
+@@ -25,6 +25,18 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
+ PUBKEY_DIR?=pubkeys
+ 
+ 
++MKDIR ?= mkdir -p
++INSTALL ?= install
++
++
++ifeq ($(V),1)
++    Q=
++    NQ=@true
++else
++    Q=@
++    NQ=@echo
++endif
++
+ #
+ # Determine what target and host libraries and executables
+ # need to be built as that will determine what libraries will
+@@ -236,17 +248,6 @@ verify: $(REG_BIN) host/regdbdump
+ 	$(Q)./host/regdbdump $(REG_BIN) >/dev/null
+ 
+ 
+-MKDIR ?= mkdir -p
+-INSTALL ?= install
+-
+-ifeq ($(V),1)
+-Q=
+-NQ=@true
+-else
+-Q=@
+-NQ=@echo
+-endif
+-
+ $(REG_BIN):
+ 	$(NQ) '  EXIST ' $(REG_BIN)
+ 	$(NQ)
 -- 
-With best wishes
-Dmitry
+1.6.3.GIT
+
+
 
