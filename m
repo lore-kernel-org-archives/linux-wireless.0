@@ -1,124 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41954 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756689AbZFII4d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 04:56:33 -0400
-Subject: Re: [PATCH] cfg80211: fix for duplicate response for driver reg
- request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1244512477-6804-1-git-send-email-lrodriguez@atheros.com>
-References: <1244512477-6804-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GiCuqB4EjMSL2DMKNzOR"
-Date: Tue, 09 Jun 2009 10:56:01 +0200
-Message-Id: <1244537761.4672.1.camel@johannes.local>
+Received: from mga02.intel.com ([134.134.136.20]:49924 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751781AbZF3RoQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 13:44:16 -0400
+Subject: Re: [2.6.31-rc1] iwlagn (4965): regression when hardware rf switch
+ is used
+From: reinette chatre <reinette.chatre@intel.com>
+To: Frans Pop <elendil@planet.nl>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <200906291128.05639.elendil@planet.nl>
+References: <200906291128.05639.elendil@planet.nl>
+Content-Type: text/plain
+Date: Tue, 30 Jun 2009 10:44:18 -0700
+Message-Id: <1246383858.17896.527.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Frans,
 
---=-GiCuqB4EjMSL2DMKNzOR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2009-06-29 at 02:28 -0700, Frans Pop wrote:
 
-On Mon, 2009-06-08 at 18:54 -0700, Luis R. Rodriguez wrote:
-> As Pavel puts userspace can be stupid and should not
-> cause kernel crashes. In this case Pavel was able to
-> find a crash here but unable to reproduce. Either way
-> lets deal with this.
+> But with 2.6.31 I get this:
+> [disable]
+> wlan0: deauthenticating by local choice (reason=3)
+> iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
+> mac80211-phy0: failed to remove key (0, 00:14:c1:38:e5:15) from hardware (-5)
+> iwlagn 0000:10:00.0: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5
+> mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-5)
 
-Yes. Userspace is allowed to be as stupid as it wants, and may _never_
-cause a kernel bug.
+Here the driver is trying to remove the keys from the device but with
+rfkill enabled it is not able to do so.
 
-johannes
+> usb 3-1: USB disconnect, address 2
+> [enable]
+> usb 3-1: new full speed USB device using uhci_hcd and address 3
+> usb 3-1: configuration #1 chosen from 1 choice
+> 
+> A lot uglier with those errors. And after that I have to run ifdown/ifup
+> before networking is up again (ifup only does not work as it will complain
+> "interface already configured"):
 
-> This should fix:
->=20
-> ------------[ cut here ]------------
-> kernel BUG at /home/proski/src/linux-2.6/net/wireless/reg.c:2132!
-> Oops: Exception in kernel mode, sig: 5 [#1]
-> PowerMac
-> Modules linked in: ath5k ath [last unloaded: scsi_wait_scan]
-> NIP: c02f3eac LR: c02f3d08 CTR: 00000000
-> REGS: ef107aa0 TRAP: 0700   Not tainted  (2.6.30-rc8-wl)
-> MSR: 00029032 <EE,ME,CE,IR,DR>  CR: 88002442  XER: 20000000
-> TASK =3D ef84acb0[834] 'crda' THREAD: ef106000
-> GPR00: ef953840 ef107b50 ef84acb0 ef1380bc 00000006 c035a5c8 ef107b90 c03=
-5a5c8
-> GPR08: 00080005 efb68980 c0445628 ef130004 28002422 10019ce0 10012d3c 000=
-00001
-> GPR16: 1070b2ac 00000005 48023558 1070b380 4802304c 00000000 ef107ddc c03=
-5a5c8
-> GPR24: ef107b78 c0443350 ef8bcb00 00000005 ef138080 c04a6a70 c04a0000 ef8=
-bcb00
-> NIP [c02f3eac] set_regdom+0x4c4/0x4ec
-> LR [c02f3d08] set_regdom+0x320/0x4ec
-> Call Trace:
-> [ef107b50] [c02f3d08] set_regdom+0x320/0x4ec (unreliable)
-> [ef107b70] [c02f9d10] nl80211_set_reg+0x140/0x2d0
-> [ef107bc0] [c02aa2b8] genl_rcv_msg+0x204/0x228
-> [ef107c10] [c02a97cc] netlink_rcv_skb+0xe8/0x10c
-> [ef107c30] [c02aa094] genl_rcv+0x3c/0x5c
-> [ef107c40] [c02a9050] netlink_unicast+0x308/0x36c
-> [ef107c80] [c02a92bc] netlink_sendmsg+0x208/0x2f0
-> [ef107cd0] [c0282048] sock_sendmsg+0xac/0xe4
-> [ef107db0] [c02822b4] sys_sendmsg+0x234/0x2d8
-> [ef107f00] [c0283a88] sys_socketcall+0x108/0x258
-> [ef107f40] [c0012790] ret_from_syscall+0x0/0x38
-> --- Exception: c01 at 0xfa6b3b4
->    LR =3D 0xfb4b5d4
-> Instruction dump:
-> 80690000 4bffc1e9 2c030000 4182003c 88a30039 88830038 3c60c03c 38632a18
-> 4802c20d 4bfffed0 7f83e378 8403003c <0f000000> 7fe4fb78 4bffe6d1 7c7b1b79
-> ---[ end trace c8eebdfbe3eb31de ]---
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/wireless/reg.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index ea4c299..5e14371 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -2129,7 +2129,12 @@ static int __set_regdom(const struct ieee80211_reg=
-domain *rd)
->  		 * driver wanted to the wiphy to deal with conflicts
->  		 */
-> =20
-> -		BUG_ON(request_wiphy->regd);
-> +		/*
-> +		 * Userspace could have sent two replies with only
-> +		 * one kernel request.
-> +		 */
-> +		if (request_wiphy->regd)
-> +			return -EALREADY;
-> =20
->  		r =3D reg_copy_regd(&request_wiphy->regd, rd);
->  		if (r)
+yes, as Johannes mentioned this is a new required step to get networking
+back up after rfkill state changes.
 
---=-GiCuqB4EjMSL2DMKNzOR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
+> BTW, would it make sense to bring back the first two lines shown with .30
+> (or at least the first one):
+>    iwlagn 0000:10:00.0: Radio Frequency Kill Switch is On:
+>    Kill switch must be turned off for wireless networking to work.
+> IMHO it's good to register the reason for the disconnect.
 
-iQIcBAABAgAGBQJKLiOeAAoJEODzc/N7+QmarU4P/jbycw1xMWMmBeBrUEBckzqI
-GPSji4O+f0iL1IGTz62l9pHMQZON23h7A9CDHx6Hcyc22NSYWk2GV7GsaRMXF1k9
-4x+b9+PCAxgxr05YTbtm95MIpX11Fg+ZG17bxXu0c8vU7GGRebGFyeKG0YUO6Cvh
-emLdqigv672VmYD9WDIYQkOcBA5djdtYnaMlaayAaz58pEz3vbPUXnLNfBhVyQy0
-8GUH6es7jIH20vyG1gHwf9ujC+1ZSHpU5I1qES1FtatZwOqr/sJANCSPJfNKWKda
-GoafJKT0RzI1jSUna7/oPpH8841PPh1goKQywyUyRhBb55QFu3vkXSRZz1JmxQhu
-dLiyuVkHG7Vp/WAKoRnjin65imfipqbGcDDSRoonmj6OuqIj7pwAt9pD/CcprlQY
-pJqXBMXeo1ViNmf8PerlcA/dkaPry4yQycvRnxVnUW0FjqEysPeUhzdGYRR7M29c
-6vUD99mRP5kfRt2keJHT3ZaTAjpWsu/18gGX3lSoIBGHHWj4lW25dRLyC2Yoprvw
-x6gOXZ4md4T0nF4nyhslfG7apQjn+6RMipOVCrSkujevMZtYVxPqVu6S+Zz/Kbmj
-TWPqbnZVREp7XTqUbIJ2vk0VzUIWohsgT0oWft/CM1vO3l4lstQlcNBVy0oxOb8c
-QHf5HwB7T4acKWWk598Q
-=I7IV
------END PGP SIGNATURE-----
+It would be nice to get this from the upper layers, but the device can
+do it also as it is getting the interrupt. 
 
---=-GiCuqB4EjMSL2DMKNzOR--
+Could you please try the patch below? It will not send command to device
+when rfkill is enabled and it will also print messages indicating that
+rfkill state changed.
+
+
+>From 9935d8bab97448f9ab5418602849172dcb0ba00a Mon Sep 17 00:00:00 2001
+From: Reinette Chatre <reinette.chatre@intel.com>
+Date: Tue, 30 Jun 2009 10:14:25 -0700
+Subject: [PATCH] iwlagn: do not send key clear commands when rfkill enabled
+
+Do all key clearing except sending sommands to device when rfkill
+enabled. When rfkill enabled the interface is brought down and will
+be brought back up correctly after rfkill is enabled again.
+
+Same change is not needed for iwl3945 as it ignores return code when
+sending key clearing command to device.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-sta.c |   12 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-tx.c  |    2 +-
+ 3 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ad50022..32aebd7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -960,7 +960,7 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
+ 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
+ 			hw_rf_kill = 1;
+ 
+-		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
++		IWL_WARN(priv, "RF_KILL bit toggled to %s.\n",
+ 				hw_rf_kill ? "disable radio" : "enable radio");
+ 
+ 		priv->isr_stats.rfkill++;
+@@ -1133,7 +1133,7 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
+ 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
+ 			hw_rf_kill = 1;
+ 
+-		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
++		IWL_WARN(priv, "RF_KILL bit toggled to %s.\n",
+ 				hw_rf_kill ? "disable radio" : "enable radio");
+ 
+ 		priv->isr_stats.rfkill++;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2addf73..ffd5c61 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -566,6 +566,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
++	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
++		      keyconf->keyidx);
+ 
+ 	if (!test_and_clear_bit(keyconf->keyidx, &priv->ucode_key_table))
+ 		IWL_ERR(priv, "index %d not used in uCode key table.\n",
+@@ -573,6 +575,11 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 
+ 	priv->default_wep_key--;
+ 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
++	if (iwl_is_rfkill(priv)) {
++		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
+ 	ret = iwl_send_static_wepkey_cmd(priv, 1);
+ 	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
+ 		      keyconf->keyidx, ret);
+@@ -853,6 +860,11 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
++	if (iwl_is_rfkill(priv)) {
++		IWL_DEBUG_WEP(priv, "Not sending REPLY_ADD_STA command because RFKILL enabled. \n");
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
+ 	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 753fca3..acff7a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -939,7 +939,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	       !(cmd->meta.flags & CMD_SIZE_HUGE));
+ 
+ 	if (iwl_is_rfkill(priv)) {
+-		IWL_DEBUG_INFO(priv, "Not sending command - RF KILL");
++		IWL_DEBUG_INFO(priv, "Not sending command - RF KILL\n");
+ 		return -EIO;
+ 	}
+ 
+-- 
+1.5.6.3
+
+
 
