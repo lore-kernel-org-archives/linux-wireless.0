@@ -1,100 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slackware.com ([64.57.102.34]:41853 "EHLO bob.slackware.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751863AbZFOD2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2009 23:28:49 -0400
-Date: Sun, 14 Jun 2009 20:28:46 -0700 (PDT)
-From: Robby Workman <rworkman@slackware.com>
-To: reinette chatre <reinette.chatre@intel.com>
-cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [Ilw] iwlagn crash on 2.6.29.4
-In-Reply-To: <1244825750.20900.468.camel@rc-desk>
-Message-ID: <alpine.LNX.1.10.0906142015390.21143@bob.slackware.com>
-References: <alpine.LNX.1.10.0906112246330.23960@bob.slackware.com> <1244825750.20900.468.camel@rc-desk>
+Received: from mrs.ro ([207.192.75.59]:60551 "EHLO li37-59.members.linode.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751195AbZF3LKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 07:10:35 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by li37-59.members.linode.com (Postfix) with ESMTP id 4440C345889
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 13:53:57 +0300 (EEST)
+Received: from li37-59.members.linode.com ([127.0.0.1])
+	by localhost (mrs.ro [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id EW09XLFk+T1y for <linux-wireless@vger.kernel.org>;
+	Tue, 30 Jun 2009 13:53:56 +0300 (EEST)
+Received: from [192.168.0.130] (unknown [86.35.141.223])
+	by li37-59.members.linode.com (Postfix) with ESMTP id 8FD93345886
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 13:53:56 +0300 (EEST)
+Message-ID: <4A49EEC3.3060108@mrs.ro>
+Date: Tue, 30 Jun 2009 13:53:55 +0300
+From: Valentin Manea <linux-wireless@mrs.ro>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 and broadcast frames
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 12 Jun 2009, reinette chatre wrote:
+Hi,
 
-> On Thu, 2009-06-11 at 22:51 -0700, Robby Workman wrote:
->> On 2.6.29.4, I just got a crash in iwlagn under heavy network
->> throughput.  I was transferring a dvd iso from one box in my
->> lan to another, and the following occurred:
->>
->>    http://slackware.com/~rworkman/OOPS
->>
->> It didn't bring the entire system to a halt (thankfully);
->> removing and reloading the iwlagn module made everything
->> just fine. :-)
->>
->> If any more information is needed, let me know.  I'm more than
->> willing to test patches and such...
->
-> Which hardware are you using?
+    I've been working on a small project that basically sends broadcast 
+UDP frames from an Wireless AP to multiple clients. While I can send UDP 
+frames just fine from the AP to the client the only a few broadcast 
+frames reach my client. What is really puzzling is that on the client 
+machine using tcpdump I can see all the broadcast frames arriving, my 
+application sees only a small fraction of them.
 
-3:00.0 Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network Connection
- 	Subsystem: Intel Corporation Device 1211
- 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
- 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
- 	Latency: 0, Cache Line Size: 64 bytes
- 	Interrupt: pin A routed to IRQ 30
- 	Region 0: Memory at f4300000 (64-bit, non-prefetchable) [size=8K]
- 	Capabilities: [c8] Power Management version 3
- 		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
- 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
- 	Capabilities: [d0] MSI: Mask- 64bit+ Count=1/1 Enable+
- 		Address: 00000000fee0300c  Data: 41e1
- 	Capabilities: [e0] Express (v1) Endpoint, MSI 00
- 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
- 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
- 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
- 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
- 			MaxPayload 128 bytes, MaxReadReq 128 bytes
- 		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
- 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <32us
- 			ClockPM+ Surprise- LLActRep- BwNot-
- 		LnkCtl:	ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
- 			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
- 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
- 	Capabilities: [100] Advanced Error Reporting
- 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
- 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
- 		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
- 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
- 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
- 		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
- 	Capabilities: [140] Device Serial Number 78-31-d5-ff-ff-fa-22-00
- 	Kernel driver in use: iwlagn
- 	Kernel modules: iwlagn
+* I have suspected some bug in the application, but the same app using 
+the same computers works fine when using wired ethernet.
+* I have used both 2.6.30 and the latest wireless-testing kernels, the 
+results are the same
+* I have used the latest hostapd in AP mode
+* I did the same tests in ad-hoc mode, the results are the same
+* I used both atheros and intel wireless cards, the problem is not 
+related to the wireless drivers.
+
+Any ideea what I'm doing wrong?
 
 
-> We released new ucode for 4965, 5100, 5300, and 5350 that address this
-> issue. The new 4965 ucode should work fine with your driver. If you are
-> using later hardware then you need a more recent driver to be able to
-> use its new ucode.
->
-> You can download the new ucode from:
-> http://intellinuxwireless.org/?n=Downloads
-
-
-Best I can tell, I'll need 2.6.30 for the new 5100 firmware, as 2.6.29.4
-doesn't seem to care that the newer firmware is present:
-
-   root@liberty:~# ls /lib/firmware/iwlwifi-5000-*
-   /lib/firmware/iwlwifi-5000-1.ucode  /lib/firmware/iwlwifi-5000-2.ucode
-
-   ... and from dmesg:
-   iwlagn 0000:03:00.0: firmware: requesting iwlwifi-5000-1.ucode
-   iwlagn loaded firmware version 5.4.1.16
-
-I guess I'll have to wait a bit, as 2.6.30 is off the table for now.
-No big deal - at least it's fixed, even if not for me yet.
-
-Thanks!
-
--RW
+Thanks,
+Valentin
 
