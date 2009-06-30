@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:47826 "EHLO e7.ny.us.ibm.com"
+Received: from mail.atheros.com ([12.36.123.2]:25838 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751240AbZFXOFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2009 10:05:09 -0400
-Date: Wed, 24 Jun 2009 07:05:05 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Jesper Dangaard Brouer <hawk@comx.dk>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dougthompson@xmission.com,
-	bluesmoke-devel@lists.sourceforge.net,
-	Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, tytso@mit.edu, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Subject: Re: [PATCH 09/10] cfq-iosched: Uses its own open-coded rcu_barrier.
-Message-ID: <20090624140505.GA6779@linux.vnet.ibm.com>
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <20090623150330.22490.87327.stgit@localhost> <20090623150439.22490.14657.stgit@localhost> <20090624064236.GE31415@kernel.dk>
+	id S1751869AbZF3N1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 09:27:21 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 06:27:25 -0700
+Date: Tue, 30 Jun 2009 18:55:48 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 8/8 v3] mac80211: re-add HT disabling
+Message-ID: <20090630132547.GB24667@vasanth-laptop>
+References: <20090630115245.675553951@sipsolutions.net> <20090630115303.111250594@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090624064236.GE31415@kernel.dk>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090630115303.111250594@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 24, 2009 at 08:42:37AM +0200, Jens Axboe wrote:
-> On Tue, Jun 23 2009, Jesper Dangaard Brouer wrote:
-> > This module cfq-iosched, has discovered the value of waiting for
-> > call_rcu() completion, but its has its own open-coded implementation
-> > of rcu_barrier(), which I don't think is 'strong' enough.
-> > 
-> > This patch only leaves a comment for the maintainers to consider.
+On Tue, Jun 30, 2009 at 05:22:53PM +0530, Johannes Berg wrote:
+> The IEEE80211_STA_TKIP_WEP_USED flag is used internally to
+> disable HT when WEP or TKIP are used. Now that cfg80211 is
+> giving us the required information, we can set the flag
+> appropriately again.
 > 
-> We need a stronger primitive and rcu_barrier(), since we also need to
-> wait for the rcu calls to even be scheduled. So I don't think the below
-> can be improved, it's already fine.
-
-It is indeed important to first prevent new call_rcu() instances from
-being invoked, and only then invoke rcu_barrier().
-
-							Thanx, Paul
-
-> > Signed-off-by: Jesper Dangaard Brouer <hawk@comx.dk>
-> > ---
-> > 
-> >  block/cfq-iosched.c |    6 ++++++
-> >  1 files changed, 6 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-> > index 833ec18..c15555b 100644
-> > --- a/block/cfq-iosched.c
-> > +++ b/block/cfq-iosched.c
-> > @@ -2657,6 +2657,12 @@ static void __exit cfq_exit(void)
-> >  	/*
-> >  	 * this also protects us from entering cfq_slab_kill() with
-> >  	 * pending RCU callbacks
-> > +	 *
-> > +	 * hawk@comx.dk 2009-06-18: Maintainer please consider using
-> > +	 *  rcu_barrier() instead of this open-coded wait for
-> > +	 *  completion implementation.  I think it provides a better
-> > +	 *  guarantee that all CPUs are finished, although
-> > +	 *  elv_ioc_count_read() do consider all CPUs.
-> >  	 */
-> >  	if (elv_ioc_count_read(ioc_count))
-> >  		wait_for_completion(&all_gone);
-> > 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  net/mac80211/cfg.c |   15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
 > 
-> -- 
-> Jens Axboe
+> --- wireless-testing.orig/net/mac80211/cfg.c    2009-06-30 13:25:43.000000000 +0200
+> +++ wireless-testing/net/mac80211/cfg.c 2009-06-30 13:25:45.000000000 +0200
+> @@ -1228,7 +1228,7 @@ static int ieee80211_assoc(struct wiphy
+>                            struct cfg80211_assoc_request *req)
+>  {
+>         struct ieee80211_sub_if_data *sdata;
+> -       int ret;
+> +       int ret, i;
 > 
+>         sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> 
+> @@ -1236,6 +1236,19 @@ static int ieee80211_assoc(struct wiphy
+>             !(sdata->u.mgd.flags & IEEE80211_STA_AUTHENTICATED))
+>                 return -ENOLINK; /* not authenticated */
+> 
+> +       sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
+> +
+> +       if (req->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP40 ||
+> +           req->crypto.cipher_group == WLAN_CIPHER_SUITE_TKIP ||
+> +           req->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP104)
+> +               sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
+
+No, we have to disable HT only when WEP/TKIP is used as pairwise,
+not used as group cipher.
+
+Vasanth
