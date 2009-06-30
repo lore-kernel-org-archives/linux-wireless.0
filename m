@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:42313 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751451AbZFWICH (ORCPT
+Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:50596 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751882AbZF3S1A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2009 04:02:07 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Proposal enquiry for Wireless Roaming feature enhancement
-Date: Tue, 23 Jun 2009 10:01:29 +0200
-Cc: Kalle Valo <kalle.valo@iki.fi>, Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Balaji Ravindran <b@w1an.in>,
-	Mircea Gherzan <mgherzan@gmail.com>
-References: <4A38672F.9090904@w1an.in> <1245681796.4338.24.camel@dhcp-100-3-98.bos.redhat.com> <87k534nwy3.fsf@litku.valot.fi>
-In-Reply-To: <87k534nwy3.fsf@litku.valot.fi>
+	Tue, 30 Jun 2009 14:27:00 -0400
+Date: Tue, 30 Jun 2009 08:25:34 -1000
+From: Joel Roth <joelz@pobox.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Message-ID: <20090630182534.GA5758@sprite>
+Reply-To: Joel Roth <joelz@pobox.com>
+References: <20090630170916.GB5137@sprite>
+ <43e72e890906301052l5a0b8984od8437fefa38e0dff@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200906231001.29728.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <43e72e890906301052l5a0b8984od8437fefa38e0dff@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Can you tell anything about the configuration parameters
-> available? For example, can the driver configure an rssi
-> threshold for enabling background scanning[1]?
+On Tue, Jun 30, 2009 at 10:52:09AM -0700, Luis R. Rodriguez wrote:
+> On Tue, Jun 30, 2009 at 10:09 AM, Joel Roth<joelz@pobox.com> wrote:
+> 
+> sudo ip link set dev wlan0 up
 
-Orinoco and WLAGS Hermes1 and Hermes2 has some "sensitivy" 
-setting, from 1..3:
+Hi Luis,
 
-$ iwconfig eth1 sens 3
+I've tried this, with no obvious change.
 
-What exactly this does is a bit opaque and handled by the 
-firmware.
+I've not used the 'ip' command before in my networking
+explorations, always relying on ifconfig to bring up
+devices.
 
+Ifconfig reports that wlan0 is UP. Is there any other
+kind of UP that I need to understand?
 
+Another question: From the point of view of setting up
+wireless, if the wlan0 device is UP, should
+'iwlist scan' return a list of access points? 
 
+Or are there any other conditions to be met?
 
-Madwifi does roaming OK, here we have many iwpriv settings that 
-can be used to fine-tune this:
+Thanks.
 
-$ iwpriv eth1 bgscan 0
-$ pre-up iwpriv eth1 rssi11g 26
-$ pre-up iwpriv eth1 rssi11b 26
+> 
+> > $ iwlist wlan0 scan
+> >
+> > wlan0     No scan results
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-But this isn't exactly the driver, but their own 802.11 
-implementation.
+-- 
+Joel Roth
