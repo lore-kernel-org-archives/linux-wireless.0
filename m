@@ -1,80 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f213.google.com ([209.85.218.213]:63265 "EHLO
-	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645AbZFGP1a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 11:27:30 -0400
-Received: by bwz9 with SMTP id 9so2534245bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2009 08:27:30 -0700 (PDT)
-Message-ID: <4A2BDCB7.7060104@tuffmail.co.uk>
-Date: Sun, 07 Jun 2009 16:28:55 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from mga01.intel.com ([192.55.52.88]:35368 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752847AbZF3Pd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 11:33:26 -0400
+Date: Tue, 30 Jun 2009 17:35:26 +0200
+From: Samuel Ortiz <samuel.ortiz@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: set conn.state properly in the connect() case
+Message-ID: <20090630153522.GA28206@sortiz.org>
+References: <20090630115245.675553951@sipsolutions.net> <20090630115301.625487032@sipsolutions.net>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-References: <1243885494.3015.29.camel@localhost.localdomain> <4A24559D.7010201@tuffmail.co.uk> <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <1243930703.3192.59.camel@localhost.localdomain> <20090603040315.GA10464@khazad-dum.debian.net> <1244008652.4145.7.camel@localhost.localdomain> <20090603213340.GB22809@khazad-dum.debian.net> <1244088806.4145.24.camel@localhost.localdomain> <9b2b86520906070538s7def28f0nb269914e03207228@mail.gmail.com> <20090607125715.GC3340@khazad-dum.debian.net>
-In-Reply-To: <20090607125715.GC3340@khazad-dum.debian.net>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20090630115301.625487032@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> On Sun, 07 Jun 2009, Alan Jenkins wrote:
->   
->>  1) remove rfkill_set_global_sw_state()
->>  2) rfkill devices with NVS can e.g. call rfkill_has_nvs() before
->> registration, setting a flag.
->>  3) the "has NVS" flag is reported by /dev/rfkill, (at least in ADD
->> events, tho it may as well be set in all events)
->>  4) rfkill-input preserves existing behaviour - *if enabled* - by
->> initializing the global state from individual devices which have NVS.
->> (As before, each _type_ of rfkill device has its own global state).
->>  5) rfkill devices with NVS will have their current state preserved,
->> so long as the global state has not yet been set (by userspace or by
->> rfkill-input).  Of course userspace can change the state in response
->> to the device being added.
->>     
->
-> I can agree to that, it will avoid the regression I have been
-> complaining about, and seems to address the major complaints against
-> what we have now...
->   
 
-Yeah, I hope it avoids the objections about NVS in /dev/rfkill. We avoid 
-the separate NVS operation. And it exports the NVS state through the 
-specific device it comes from, rather than exporting it as a global state.
+We need to set the conn.state to ASSOCIATING for the ->connect() path. By
+default, it is set to 0, i.e. SCANNING, which causes sme_scan_done() to
+eventually call conn_do_work(), which then would call assoc() and auth()
+blindly. That's why we also bug on those hooks not being defined there.
 
-So userspace gets more specific information; at the same time the 
-interface is simpler because the information comes in a single message, 
-and it's less prescriptive because it doesn't push the idea of global 
-state(s) quite so much.
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+---
+ net/wireless/sme.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-> I think it should probably be enhanced (it doesn't have to be enhanced
-> _now_, however) to let the core call back into NVS-providing drivers to
-> checkpoint NVS state.  But that's not something I feel strongly about.
->   
+Index: iwm-2.6/net/wireless/sme.c
+===================================================================
+--- iwm-2.6.orig/net/wireless/sme.c	2009-06-30 16:39:58.000000000 +0200
++++ iwm-2.6/net/wireless/sme.c	2009-06-30 17:17:14.000000000 +0200
+@@ -103,6 +103,7 @@ static int cfg80211_conn_do_work(struct 
+ 		u.auth_req.ie = NULL;
+ 		u.auth_req.ie_len = 0;
+ 		wdev->conn.state = CFG80211_CONN_AUTHENTICATING;
++		BUG_ON(!drv->ops->auth);
+ 		return drv->ops->auth(wdev->wiphy, wdev->netdev, &u.auth_req);
+ 	case CFG80211_CONN_ASSOCIATE_NEXT:
+ 		u.assoc_req.chan = wdev->conn.params.channel;
+@@ -115,6 +116,7 @@ static int cfg80211_conn_do_work(struct 
+ 		memcpy(&u.assoc_req.crypto, &wdev->conn.params.crypto,
+ 			sizeof(u.assoc_req.crypto));
+ 		wdev->conn.state = CFG80211_CONN_ASSOCIATING;
++		BUG_ON(!drv->ops->assoc);
+ 		return drv->ops->assoc(wdev->wiphy, wdev->netdev,
+ 					&u.assoc_req);
+ 	default:
+@@ -455,6 +457,7 @@ int cfg80211_connect(struct cfg80211_reg
+ 		return err;
+ 	} else {
+ 		wdev->sme_state = CFG80211_SME_CONNECTING;
++		wdev->conn.state = CFG80211_CONN_ASSOCIATING;
+ 		err = rdev->ops->connect(&rdev->wiphy, dev, connect);
+ 		if (err) {
+ 			wdev->sme_state = CFG80211_SME_IDLE;
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
 
-Ok. I think that feature would be subject to further debate / 
-clarification. So I will ignore it and code up the basics outlined above 
-:-).
-
-> Otherwise, the driver will checkpoint to NVS whatever is the state of
-> its rfkill device, which could have been changed outside of the global
-> scope.  While that's exacly what we do right now, it is arguably not the
-> best way to go about it (i.e. it is broken).
->
->   
->> Comments?
->>     
->
-> Let's do it :-)
->   
-
-Cool :-). I'll see what I can do.
-
-Alan
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
