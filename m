@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35508 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731AbZFEFlt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2009 01:41:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 06/15] ath9k: rename ath_rc_get_nextlowervalid_txrate()
-Date: Fri,  5 Jun 2009 01:41:33 -0400
-Message-Id: <1244180502-4323-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
-References: <1244180502-4323-1-git-send-email-lrodriguez@atheros.com>
+Received: from mrs.ro ([207.192.75.59]:50396 "EHLO li37-59.members.linode.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751379AbZF3Psb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 11:48:31 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by li37-59.members.linode.com (Postfix) with ESMTP id 5B89A794B
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 18:48:34 +0300 (EEST)
+Received: from li37-59.members.linode.com ([127.0.0.1])
+	by localhost (mrs.ro [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id HJMED8Mfk6pn for <linux-wireless@vger.kernel.org>;
+	Tue, 30 Jun 2009 18:48:27 +0300 (EEST)
+Received: from [192.168.0.130] (unknown [86.35.141.223])
+	by li37-59.members.linode.com (Postfix) with ESMTP id AD2C9794A
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 18:48:26 +0300 (EEST)
+Message-ID: <4A4A33C8.5080601@mrs.ro>
+Date: Tue, 30 Jun 2009 18:48:24 +0300
+From: Valentin Manea <linux-wireless@mrs.ro>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and broadcast frames
+References: <4A49EEC3.3060108@mrs.ro>
+In-Reply-To: <4A49EEC3.3060108@mrs.ro>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What this does is get us our next lower rate so call it that,
-ath_rc_get_lower_rix().
+Hello Again,
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+    I have been studying the network statistics for this problem and 
+they don't really make sense to me, if I bombard the wireless device 
+with broadcast packets *RX packets* in ifconfig increases very fast but 
+*RX bytes* does not. However when I'm doing the same thing over the 
+wired device both of them increase very fast.
+    This doesn't really make sense to me, I don't understand where those 
+packets are going exactly.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 6ccd565..eaa22e4 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -501,9 +501,9 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
- }
- 
- static inline int
--ath_rc_get_nextlowervalid_txrate(const struct ath_rate_table *rate_table,
--				 struct ath_rate_priv *ath_rc_priv,
--				 u8 cur_valid_txrate, u8 *next_idx)
-+ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
-+		     struct ath_rate_priv *ath_rc_priv,
-+		     u8 cur_valid_txrate, u8 *next_idx)
- {
- 	int8_t i;
- 
-@@ -860,8 +860,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		/* Get the next tried/allowed rate. No RTS for the next series
- 		 * after the probe rate
- 		 */
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--						 rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -878,8 +877,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--						 rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
-@@ -1176,8 +1174,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	if (ath_rc_priv->state[tx_rate].per >= 55 && tx_rate > 0 &&
- 	    rate_table->info[tx_rate].ratekbps <=
- 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--				 (u8)tx_rate, &ath_rc_priv->rate_max_phy);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
-+				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
- 
- 		/* Don't probe for a little while. */
- 		ath_rc_priv->probe_time = now_msec;
--- 
-1.6.0.6
+Thanks,
+Valentin
 
+On 06/30/2009 01:53 PM, Valentin Manea wrote:
+> Hi,
+>
+>    I've been working on a small project that basically sends broadcast 
+> UDP frames from an Wireless AP to multiple clients. While I can send 
+> UDP frames just fine from the AP to the client the only a few 
+> broadcast frames reach my client. What is really puzzling is that on 
+> the client machine using tcpdump I can see all the broadcast frames 
+> arriving, my application sees only a small fraction of them.
+>
+> * I have suspected some bug in the application, but the same app using 
+> the same computers works fine when using wired ethernet.
+> * I have used both 2.6.30 and the latest wireless-testing kernels, the 
+> results are the same
+> * I have used the latest hostapd in AP mode
+> * I did the same tests in ad-hoc mode, the results are the same
+> * I used both atheros and intel wireless cards, the problem is not 
+> related to the wireless drivers.
+>
+> Any ideea what I'm doing wrong?
+>
+>
+> Thanks,
+> Valentin
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
