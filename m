@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48360 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444AbZFGPac (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:65379 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbZF3Rw2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2009 11:30:32 -0400
-Date: Sun, 7 Jun 2009 11:18:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: matthieu castet <castet.matthieu@free.fr>,
-	Georgy Berdyshev <codingmaster@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: mac80211 : fix unaligned rx skb
-Message-ID: <20090607151842.GB2736@tuxdriver.com>
-References: <4A282B92.70609@free.fr> <4A28B3D0.4070201@free.fr> <4A2B8760.10001@free.fr> <200906071126.22323.mb@bu3sch.de>
+	Tue, 30 Jun 2009 13:52:28 -0400
+Received: by gxk26 with SMTP id 26so469819gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 10:52:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200906071126.22323.mb@bu3sch.de>
+In-Reply-To: <20090630170916.GB5137@sprite>
+References: <20090630170916.GB5137@sprite>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Jun 2009 10:52:09 -0700
+Message-ID: <43e72e890906301052l5a0b8984od8437fefa38e0dff@mail.gmail.com>
+Subject: Re: ath5k and Atheros AR242x - No scan results
+To: Joel Roth <joelz@pobox.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 07, 2009 at 11:26:22AM +0200, Michael Buesch wrote:
-> On Sunday 07 June 2009 11:24:48 matthieu castet wrote:
-> > matthieu castet wrote:
+On Tue, Jun 30, 2009 at 10:09 AM, Joel Roth<joelz@pobox.com> wrote:
 
-> > > Where are in ieee80211_deliver_skb that is called after 
-> > > ieee80211_data_to_8023. So it is not 802.11.
-> > > 
-> > Do you want more explanation ?
-> 
-> No reply always means "ok" on this list ;)
+sudo ip link set dev wlan0 up
 
-Probably true...however, I was hoping to see an ACK from Johannes...
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> $ iwlist wlan0 scan
+>
+> wlan0     No scan results
