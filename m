@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-1920.google.com ([74.125.78.150]:5425 "EHLO
-	ey-out-1920.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373AbZF2OWr (ORCPT
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:35409 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbZF3QVN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2009 10:22:47 -0400
-Message-ID: <4A48CE37.3000104@tuffmail.co.uk>
-Date: Mon, 29 Jun 2009 15:22:47 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Tue, 30 Jun 2009 12:21:13 -0400
+Received: by gxk26 with SMTP id 26so368278gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2009 09:21:16 -0700 (PDT)
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Corentin Chary <corentincj@iksaif.net>,
-	linux acpi <linux-acpi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] eeepc-laptop: fix hot-unplug on resume
-References: <4A48A196.3060409@tuffmail.co.uk> <200906291616.57440.rjw@sisk.pl>
-In-Reply-To: <200906291616.57440.rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4A49EEC3.3060108@mrs.ro>
+References: <4A49EEC3.3060108@mrs.ro>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Jun 2009 09:20:56 -0700
+Message-ID: <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com>
+Subject: Re: mac80211 and broadcast frames
+To: Valentin Manea <linux-wireless@mrs.ro>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Monday 29 June 2009, Alan Jenkins wrote:
->   
->> The patch below fixes a regression introduced by the rfkill rewrite. 
->> Please consider it for inclusion in 2.6.31 via the ACPI tree.
->>     
+On Tue, Jun 30, 2009 at 3:53 AM, Valentin Manea<linux-wireless@mrs.ro> wrote:
+> Hi,
 >
-> Is there a Bugzilla # for this regression?
->
-> Rafael
->   
+>   I've been working on a small project that basically sends broadcast UDP
+> frames from an Wireless AP to multiple clients. While I can send UDP frames
+> just fine from the AP to the client the only a few broadcast frames reach my
+> client. What is really puzzling is that on the client machine using tcpdump
+> I can see all the broadcast frames arriving, my application sees only a
+> small fraction of them.
 
-No.
+Keep in mind when you use tcpdump it will modify the RX filters of the
+device you use but if you say you see them on tcpdump and at the same
+time do not see them on the application that seems fishy and non
+driver related.
 
-I found it in testing, a few days after I'd submitted the change myself :-/.
-
-Thanks
-Alan
+  Luis
