@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:38211 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751804AbZFJCoh (ORCPT
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:6632 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754054AbZF3VJj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2009 22:44:37 -0400
-Date: Tue, 9 Jun 2009 23:44:37 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: create useful userspace interface
-Message-ID: <20090610024437.GF593@khazad-dum.debian.net>
-References: <1243928308.3192.38.camel@localhost.localdomain> <1243929706.20064.7.camel@johannes.local> <4A24E3E4.1050505@tuffmail.co.uk> <1243932109.3192.73.camel@localhost.localdomain> <20090603041030.GB10464@khazad-dum.debian.net> <1244034216.22679.22.camel@localhost.localdomain> <20090603214040.GD22809@khazad-dum.debian.net> <1244089486.4145.33.camel@localhost.localdomain> <20090607135456.GE3340@khazad-dum.debian.net> <1244388961.23850.93.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1244388961.23850.93.camel@localhost.localdomain>
+	Tue, 30 Jun 2009 17:09:39 -0400
+Subject: Re: [PATCH] Add prism 2/3 usb adaptor firmware for use with
+ staging/wlan-ng driver.
+From: Karl Relton <karllinuxtest.relton@ntlworld.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+References: <1246388712.4949.52.camel@localhost>
+	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 30 Jun 2009 22:09:39 +0100
+Message-Id: <1246396179.4949.76.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 07 Jun 2009, Marcel Holtmann wrote:
-> > You can remove the EPO functionality and add a "switch all radios off"
-> > and "switch all radios on" accell commands.  But that's all you can do
-> > if you depend on userspace.  It will -not- be EPO.
-> > 
-> > You can have EPO in the kernel, and have userspace command the kernel to
-> > enter and exit EPO state.
+On Tue, 2009-06-30 at 12:17 -0700, Luis R. Rodriguez wrote:
+> On Tue, Jun 30, 2009 at 12:05 PM, Karl
+> Relton<karllinuxtest.relton@ntlworld.com> wrote:
+> > Signed-Off-By: Karl Relton
+> > Signed-Off-By: Mark S. Mathews
 > 
-> I fully disagree with you here and your concept of EPO and how it is
-> suppose to work is fully flawed. EPO is a policy and if you define it as
+> The commit log is empty. Where is this driver? Is it in staging at
+> least? If so does this get users of the driver a usable firmware? What
+> is the future of the driver BTW?
+> 
 
-Just rename it to something else.
+Oops - put text in wrong part of patch documentation. I can move this up
+to the 'commit log' part.
 
-Whether the current code can achieve what EPO is suposed to be is beside
-the point.  Just rename that functionality to something else, as the
-direction you want to go is clearly NOT one suitable for something named
-"EPO".
+The driver is under 'staging' - maintained by Greg Koah-Hartman
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+The firmware blob in 'srec' format for prism 2/3 usb adaptors.
+The driver will read the srec file using a standard request_firmware()
+call, and will convert it into the appropriate binary format and upload to
+the adaptor. Note the processing is left to the driver (rather than
+pre-compiling) because the driver needs to insert runtime data obtained from
+the adaptor into the blob. The appropriate insertion locations are conveyed
+by the srec format.
+
+Karl
+
