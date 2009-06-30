@@ -1,141 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61339 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090AbZFHUVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2009 16:21:22 -0400
-Subject: Re: [PATCH v2 14/15] mac80211: add helper for management / no-ack
- frame rate decision
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"j@w1.fi" <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-In-Reply-To: <1244246629-28179-15-git-send-email-lrodriguez@atheros.com>
-References: <1244246629-28179-1-git-send-email-lrodriguez@atheros.com>
-	 <1244246629-28179-15-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Mon, 08 Jun 2009 13:28:22 -0700
-Message-Id: <1244492902.20900.196.camel@rc-desk>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33327 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753749AbZF3KyJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 06:54:09 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1MLayZ-0002Vg-Bv
+	for linux-wireless@vger.kernel.org; Tue, 30 Jun 2009 12:54:12 +0200
+Message-Id: <20090630105100.780504799@sipsolutions.net>
+References: <20090630104952.857270082@sipsolutions.net>
+Date: Tue, 30 Jun 2009 12:49:59 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/7] cfg80211: implement get_wireless_stats
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+By dropping the noise reporting, we can implement
+wireless stats in cfg80211. We also make the
+handler return NULL if we have no information,
+which is possible thanks to the recent wext change.
 
-On Fri, 2009-06-05 at 17:03 -0700, Luis R. Rodriguez wrote:
-> All current rate control algorithms agree to send management and no-ack
-> frames at the lowest rate. They also agree to do this when sta
-> and the private rate control data is NULL. We add a hlper to mac80211
-> for this and simplify the rate control algorithm code.
-> 
-> Developers wishing to make enhancements to rate control algorithms
-> are for broadcast/multicast can opt to not use this in their
-> gate_rate() mac80211 callback.
-> 
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: ipw3945-devel@lists.sourceforge.net
-> Cc: Gabor Juhos <juhosg@openwrt.org>
-> Cc: Felix Fietkau <nbd@openwrt.org>
-> Cc: Derek Smithies <derek@indranet.co.nz>
-> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
->  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   21 ++-----------------
->  drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   12 +----------
->  include/net/mac80211.h                     |   23 ++++++++++++++++++++++
->  net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
->  net/mac80211/rc80211_minstrel.c            |   22 +--------------------
->  net/mac80211/rc80211_pid_algo.c            |   11 +---------
->  7 files changed, 59 insertions(+), 73 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-> index d8d2152..9199ce9 100644
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-> index bd2f709..8bd496f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-> @@ -673,7 +673,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
->  	s8 scale_action = 0;
->  	unsigned long flags;
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> -	__le16 fc;
->  	u16 rate_mask = 0;
->  	s8 max_rate_idx = -1;
->  	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
-> @@ -681,24 +680,10 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
->  
->  	IWL_DEBUG_RATE(priv, "enter\n");
->  
-> -	if (sta)
-> -		rate_mask = sta->supp_rates[sband->band];
-> -
-> -	/* Send management frames and NO_ACK data using lowest rate. */
-> -	fc = hdr->frame_control;
-> -	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
-> -	    !sta || !priv_sta) {
-> -		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
-> -		if (!rate_mask)
-> -			info->control.rates[0].idx =
-> -					rate_lowest_index(sband, NULL);
-> -		else
-> -			info->control.rates[0].idx =
-> -					rate_lowest_index(sband, sta);
-> -		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-> -			info->control.rates[0].count = 1;
-> +	if (rate_control_send_low(sta, priv_sta, txrc))
->  		return;
-> -	}
-> +
-> +	rate_mask = sta->supp_rates[sband->band];
->  
->  	/* get user max rate if set */
->  	max_rate_idx = txrc->max_rate_idx;
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-> index ff20e50..7a3e4dd 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-> @@ -2485,18 +2485,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
->  		mask_bit = sta->supp_rates[sband->band];
->  
->  	/* Send management frames and NO_ACK data using lowest rate. */
-> -	if (!ieee80211_is_data(hdr->frame_control) ||
-> -	    info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
-> -		if (!mask_bit)
-> -			info->control.rates[0].idx =
-> -					rate_lowest_index(sband, NULL);
-> -		else
-> -			info->control.rates[0].idx =
-> -					rate_lowest_index(sband, sta);
-> -		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
-> -			info->control.rates[0].count = 1;
-> +	if (rate_control_send_low(sta, priv_r, txrc))
->  		return;
-> -	}
->  
->  	rate_idx  = lq_sta->last_txrate_idx;
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h     |    1 
+ net/mac80211/wext.c        |   69 ---------------------------------------------
+ net/wireless/wext-compat.c |   59 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 61 insertions(+), 68 deletions(-)
 
+--- wireless-testing.orig/net/mac80211/wext.c	2009-06-30 12:43:51.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-06-30 12:43:53.000000000 +0200
+@@ -165,73 +165,6 @@ static int ieee80211_ioctl_giwap(struct 
+ }
+ 
+ 
+-/* Get wireless statistics.  Called by /proc/net/wireless and by SIOCGIWSTATS */
+-static struct iw_statistics *ieee80211_get_wireless_stats(struct net_device *dev)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct iw_statistics *wstats = &local->wstats;
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	struct sta_info *sta = NULL;
+-
+-	rcu_read_lock();
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+-		sta = sta_info_get(local, sdata->u.mgd.bssid);
+-
+-	if (!sta) {
+-		wstats->discard.fragment = 0;
+-		wstats->discard.misc = 0;
+-		wstats->qual.qual = 0;
+-		wstats->qual.level = 0;
+-		wstats->qual.noise = 0;
+-		wstats->qual.updated = IW_QUAL_ALL_INVALID;
+-	} else {
+-		wstats->qual.updated = 0;
+-		/*
+-		 * mirror what cfg80211 does for iwrange/scan results,
+-		 * otherwise userspace gets confused.
+-		 */
+-		if (local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
+-				       IEEE80211_HW_SIGNAL_DBM)) {
+-			wstats->qual.updated |= IW_QUAL_LEVEL_UPDATED;
+-			wstats->qual.updated |= IW_QUAL_QUAL_UPDATED;
+-		} else {
+-			wstats->qual.updated |= IW_QUAL_LEVEL_INVALID;
+-			wstats->qual.updated |= IW_QUAL_QUAL_INVALID;
+-		}
+-
+-		if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC) {
+-			wstats->qual.level = sta->last_signal;
+-			wstats->qual.qual = sta->last_signal;
+-		} else if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
+-			int sig = sta->last_signal;
+-
+-			wstats->qual.updated |= IW_QUAL_DBM;
+-			wstats->qual.level = sig;
+-			if (sig < -110)
+-				sig = -110;
+-			else if (sig > -40)
+-				sig = -40;
+-			wstats->qual.qual = sig + 110;
+-		}
+-
+-		if (local->hw.flags & IEEE80211_HW_NOISE_DBM) {
+-			/*
+-			 * This assumes that if driver reports noise, it also
+-			 * reports signal in dBm.
+-			 */
+-			wstats->qual.noise = sta->last_noise;
+-			wstats->qual.updated |= IW_QUAL_NOISE_UPDATED;
+-		} else {
+-			wstats->qual.updated |= IW_QUAL_NOISE_INVALID;
+-		}
+-	}
+-
+-	rcu_read_unlock();
+-
+-	return wstats;
+-}
+-
+ /* Structures to export the Wireless Handlers */
+ 
+ static const iw_handler ieee80211_handler[] =
+@@ -298,5 +231,5 @@ const struct iw_handler_def ieee80211_iw
+ {
+ 	.num_standard	= ARRAY_SIZE(ieee80211_handler),
+ 	.standard	= (iw_handler *) ieee80211_handler,
+-	.get_wireless_stats = ieee80211_get_wireless_stats,
++	.get_wireless_stats = cfg80211_wireless_stats,
+ };
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-06-30 12:43:51.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-06-30 12:43:53.000000000 +0200
+@@ -1157,3 +1157,62 @@ int cfg80211_wext_giwrate(struct net_dev
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwrate);
++
++/* Get wireless statistics.  Called by /proc/net/wireless and by SIOCGIWSTATS */
++struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	/* we are under RTNL - globally locked - so can use static structs */
++	static struct iw_statistics wstats;
++	static struct station_info sinfo;
++	u8 *addr;
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION)
++		return NULL;
++
++	if (!rdev->ops->get_station)
++		return NULL;
++
++	addr = wdev->wext.connect.bssid;
++	if (!addr)
++		return NULL;
++
++	if (rdev->ops->get_station(&rdev->wiphy, dev, addr, &sinfo))
++		return NULL;
++
++	memset(&wstats, 0, sizeof(wstats));
++
++	switch (rdev->wiphy.signal_type) {
++	case CFG80211_SIGNAL_TYPE_MBM:
++		if (sinfo.filled & STATION_INFO_SIGNAL) {
++			int sig = sinfo.signal;
++			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
++			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
++			wstats.qual.updated |= IW_QUAL_DBM;
++			wstats.qual.level = sig;
++			if (sig < -110)
++				sig = -110;
++			else if (sig > -40)
++				sig = -40;
++			wstats.qual.qual = sig + 110;
++			break;
++		}
++	case CFG80211_SIGNAL_TYPE_UNSPEC:
++		if (sinfo.filled & STATION_INFO_SIGNAL) {
++			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
++			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
++			wstats.qual.level = sinfo.signal;
++			wstats.qual.qual = sinfo.signal;
++			break;
++		}
++	default:
++		wstats.qual.updated |= IW_QUAL_LEVEL_INVALID;
++		wstats.qual.updated |= IW_QUAL_QUAL_INVALID;
++	}
++
++	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
++
++	return &wstats;
++}
++EXPORT_SYMBOL_GPL(cfg80211_wireless_stats);
+--- wireless-testing.orig/include/net/cfg80211.h	2009-06-30 12:43:51.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-06-30 12:43:53.000000000 +0200
+@@ -1658,6 +1658,7 @@ int cfg80211_wext_siwtxpower(struct net_
+ int cfg80211_wext_giwtxpower(struct net_device *dev,
+ 			     struct iw_request_info *info,
+ 			     union iwreq_data *data, char *keybuf);
++struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev);
+ 
+ int cfg80211_wext_siwpower(struct net_device *dev,
+ 			   struct iw_request_info *info,
 
-The iwlwifi way of computing rates is not captured in the new helper. We
-used to do it in the way you change it to, but run into the
-"rs_get_rate" WARN very often (see
-http://www.kerneloops.org/searchweek.php?search=rs_get_rate and
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1822 ). We
-submitted patch "iwlwifi: fix rs_get_rate WARN_ON()" to address that.
-
-Changing this back will make that warning reappear.
-
-
-Reinette
-
+-- 
 
