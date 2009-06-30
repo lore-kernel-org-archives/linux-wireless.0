@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:9006 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754117AbZG2L01 (ORCPT
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:64326 "EHLO
+	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757722AbZF3WBq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 07:26:27 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id BB4EB148008
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 13:26:27 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id DjXQNL1zGKUy for <linux-wireless@vger.kernel.org>;
-	Wed, 29 Jul 2009 13:26:27 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95F9F0B.dip0.t-ipconnect.de [217.95.159.11])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 668C8148006
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 13:26:26 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 424CA1E004F
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 13:26:00 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+	Tue, 30 Jun 2009 18:01:46 -0400
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Reply-To: tfjellstrom@shaw.ca
 To: linux-wireless@vger.kernel.org
-Subject: Re: BUG: ifdown doesn't notify cfg80211
-Date: Wed, 29 Jul 2009 13:25:51 +0200
-References: <200907291310.50121.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200907291310.50121.hs4233@mail.mn-solutions.de>
+Subject: Re: Announcing ConnMan.net
+Date: Tue, 30 Jun 2009 16:01:47 -0600
+References: <1245775609.15367.129.camel@violet> <4A438C0F.7090907@draigBrady.com>
+In-Reply-To: <4A438C0F.7090907@draigBrady.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
+Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <200907291325.51598.hs4233@mail.mn-solutions.de>
+Message-Id: <200906301601.48158.tfjellstrom@shaw.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 29 July 2009 13:10:50 Holger Schurig wrote:
-> # iw dev eth1 connect -w MNHS key 0:11111
-> eth1 (phy #0): connected to 00:13:19:80:da:30
-> # ifconfig eth1 down
-> # iw dev eth1 connect -w MNHS key 0:11111
-> # ifconfig eth1 down
+On Thu June 25 2009, Pádraig Brady wrote:
+> Marcel Holtmann wrote:
+> > Intel and Nokia are pleased to jointly launch the ConnMan project, an
+> > open source project to accelerate and expand development of Internet
+> > connection management for Linux Devices. ConnMan will be utilized as a
+> > technology within Moblin and Maemo. Connman.net is now the place to
+> > bring developers together who are interested in furthering the
+> > development of Internet connection management within Linux. Review the
+> > source code for more information. ConnMan is licensed under GPLv2, and
+> > provides a daemon for managing Internet connections within Linux
+> > devices. ConnMan is a fully modular system that can be extended, through
+> > plugins, to support all kinds of wired or wireless technologies.
+> > Configuration methods, like DHCP and domain name resolving, are
+> > implemented using plug-ins as well. The plug-in approach allows for easy
+> > adaption and modification for various use cases. Nokia and Intel will
+> > jointly maintain the ConnMan project. We'd like to invite all developers
+> > to join the connman.net effort and community.
+> >
+> > Marcel Holtmann, Intel Open Source Technology Center
+> > Jukka Rissanen, Nokia Devices, Maemo Software
+>
+> I was wondering how this related to networkmanager.
+> Dan Williams just posted some comparisons:
+> http://blogs.gnome.org/dcbw/2009/06/25/networkmanager-and-connman/
 
-Oops, a copy'n'paste error. I didn't send those two lines twice 
-at this point. The correct sequence I did:
+It will probably work better more often on more systems. At least that's what 
+I'm hoping. NWM refuses to work on my laptop at all (and its a thinkpad, with 
+a normal wifi card).
 
-# iw dev eth1 connect -w MNHS key 0:11111
-eth1 (phy #0): connected to 00:13:19:80:da:30
-# ifconfig eth1 down
-# ifconfig eth1 up
-# iw dev eth1 connect -w MNHS key 0:11111
-command failed: Operation already in progress (-114)
+> cheers,
+> Pádraig.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
 -- 
-http://www.holgerschurig.de
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
