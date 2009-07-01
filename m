@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([204.127.217.102]:59157 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258AbZGERtp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753500AbZGATyC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 13:49:45 -0400
-Message-ID: <4A50E7C5.4040309@lwfinger.net>
-Date: Sun, 05 Jul 2009 12:49:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-References: <200907040053.05654.chunkeey@web.de> <4A4FB3F2.5050405@lwfinger.net> <4A4FC61A.30004@lwfinger.net> <200907051559.32958.chunkeey@web.de>
-In-Reply-To: <200907051559.32958.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 1 Jul 2009 15:54:02 -0400
+Subject: Re: Insist on cfg80211 for new drivers?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dave <kilroyd@googlemail.com>,
+	Karl Relton <karllinuxtest.relton@ntlworld.com>,
+	dwmw2@infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20090701193657.GD3473@tuxdriver.com>
+References: <1246388712.4949.52.camel@localhost>
+	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+	 <1246396179.4949.76.camel@localhost>
+	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+	 <1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
+	 <43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
+	 <1246473300.30522.10.camel@localhost.localdomain>
+	 <20090701193657.GD3473@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RrhZg9HeGiX7FtHCoQfV"
+Date: Wed, 01 Jul 2009 21:53:39 +0200
+Message-Id: <1246478019.8154.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian,
 
-I changed the section in p54_tx_qos_accounting_free() to be the following:
+--=-RrhZg9HeGiX7FtHCoQfV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-@@ -223,7 +235,10 @@ static void p54_tx_qos_accounting_free(s
-                struct p54_hdr *hdr = (void *) skb->data;
-                struct p54_tx_data *data = (void *) hdr->data;
+On Wed, 2009-07-01 at 15:36 -0400, John W. Linville wrote:
+> On Wed, Jul 01, 2009 at 02:35:00PM -0400, Dan Williams wrote:
+>=20
+> > That's really all I
+> > care about, I don't want another WEXT-based driver accepted; I want all
+> > the new ones using cfg80211.
+>=20
+> Now there is a discussion we should have had in Berlin...is it time
+> to insist on cfg80211-based configuration for all new drivers?
 
--               priv->tx_stats[data->hw_queue].len--;
-+               if (priv->tx_stats[data->hw_queue].len)
-+                       priv->tx_stats[data->hw_queue].len--;
-+               else
-+                       dump_stack();
-        }
-        p54_wake_queues(priv);
- }
+Can't imagine there would have been much discussion on that with the
+crowd that was there -- I think we should. In fact, on the notes was
+"publish a wext deprecation statement" or something like that.
 
-In a 1 hour period running a 'make ARCH=i386 -j6' with the kernel
-sources on an NFS mounted volume, I got the following sequence of
-"failures":
+Just like we insist that nobody adds an entirely new wireless stack, we
+should insist that nobody add a new way of interpreting wext commands.
 
-a. dump_stack() with call from p54_find_and_unlock_skb()
-b. dump_stack() with call from p54_find_and_unlock_skb()
-c. disassociation error
-d. dump_stack() with call from p54_find_and_unlock_skb()
-e. dump_stack() with call from p54_find_and_unlock_skb()
-f. dump_stack() with call from p54_find_and_unlock_skb()
-g. disassociation error
-h. disassociation error
-i. disassociation error
-j. disassociation error
-k. dump_stack() with call from p54_find_and_unlock_skb()
-l. disassociation error
-m. disassociation error
+johannes
 
-When the dump_stack() occurs, the interface keeps going as long as the
-queue len never goes negative. With the disassociation error, the
-device must be powered cycled by unplugging and replugging it. The
-driver does not need to be reloaded.
+--=-RrhZg9HeGiX7FtHCoQfV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-If I run the kernel make with -j1 rather than -j6, the builds have
-always completed. Neither of the errors show up.
+-----BEGIN PGP SIGNATURE-----
 
-A "paper over the problem" workaround for the queue len < 0 would be
+iQIcBAABAgAGBQJKS76+AAoJEODzc/N7+QmacOwP/14AtPL6M309evNKLeAFlp/d
+pCxv/0a+KdADriI0G6E7pRetThTSkKhMIFG+bBp7By06cbEDORHDe64X+nO0B80B
+6pvNZuFAQTc4j0zd6JaGOhf+mwkk/TAguWxovavHo081Me3e7U02S1jWsRUwsdUl
+P5XTzEvHh0vNUyAVtWQmFxyb1JD2m5s9z646FoePrdMSdhs5oIAVKeQxFU+fkYnw
+PkGAVYgTsxufrguGf42vuwCa3Kw0PVSikrGftMbojkN3AjD6o2d+GdrAufZw8SRA
+WwNkj9kLCnoviYqeYU8nY5eSWc4civTIjOQMT6SJVArGiWaz+JMvtscNXUP2DYJQ
+OIg8/jxwne8VT1pf+XLnpumgPDIehap1ROTaW+BStSBOY1u3T8bq3m9H36yqVTv+
+sonXN4sLbM5opky05FvT3dvP20mznsEsj2tZk3YbrzxztScXPcg/3uuYMfwLo5nB
+Pisc4eh5JcQIxDDf3rPQM8kZ9yNdf8YKYsETMiGUai/xmNNs55kTBElArkRawayF
+q7n3EJXFxIApkvjBuQKjBGOgdZfY1hCAuyZNx/Mb8daVvCvFI+vjb0KveiGPPPtN
+poHjt0kTsx20YyglgQKcHZK04arzRcF06ok/VU5rdW7pCeNo7gGJvgYWWIWB1s7Q
+mpPb5ZGGE5lytHjU+63P
+=Rs4y
+-----END PGP SIGNATURE-----
 
--               priv->tx_stats[data->hw_queue].len--;
-+               if (priv->tx_stats[data->hw_queue].len)
-+                       priv->tx_stats[data->hw_queue].len--;
+--=-RrhZg9HeGiX7FtHCoQfV--
 
-but it doesn't properly fix the problem.
-
-How sure are you of the locking? It seems that the more threads that
-I'm using, the more likely that it is to happen. Similarly, the
-disassociation errors could be overloading the firmware by adding too
-many entries. Of course, it could result from a firmware error when
-the device is driven hard.
-
-I've only given it one trial, but p54usb only survived for 24 minutes
-running my other torture test with repeating tcpperf in one terminal
-and a flood ping in  a second. This one got the disassociation error
-and also a "failure to remove key" (error code -95) and two "failed to
-uodate LEDs" (error code -12).
