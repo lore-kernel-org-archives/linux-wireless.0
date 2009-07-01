@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:12884 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964869AbZGQQac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:30:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/14] iwlwifi: update 1000 series API version to match firmware
-Date: Fri, 17 Jul 2009 09:30:22 -0700
-Message-Id: <1247848227-24031-10-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
-References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:42444 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbZGATtu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 15:49:50 -0400
+Received: by yxe26 with SMTP id 26so1615214yxe.33
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 12:49:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090701193657.GD3473@tuxdriver.com>
+References: <1246388712.4949.52.camel@localhost> <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+	<1246396179.4949.76.camel@localhost> <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+	<1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
+	<43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
+	<1246473300.30522.10.camel@localhost.localdomain> <20090701193657.GD3473@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 1 Jul 2009 12:49:33 -0700
+Message-ID: <43e72e890907011249j95103a2t1b6b60ad7a1da9d3@mail.gmail.com>
+Subject: Re: Insist on cfg80211 for new drivers?
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, Dave <kilroyd@googlemail.com>,
+	Karl Relton <karllinuxtest.relton@ntlworld.com>,
+	dwmw2@infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@intel.com>
+On Wed, Jul 1, 2009 at 12:36 PM, John W. Linville<linville@tuxdriver.com> wrote:
+> On Wed, Jul 01, 2009 at 02:35:00PM -0400, Dan Williams wrote:
+>
+>> That's really all I
+>> care about, I don't want another WEXT-based driver accepted; I want all
+>> the new ones using cfg80211.
+>
+> Now there is a discussion we should have had in Berlin...is it time
+> to insist on cfg80211-based configuration for all new drivers?
 
-firmware file now contains build number so API needs to be updated.
+Otherwise they get sent to staging? :)
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 7da52f1..a899be9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -46,7 +46,7 @@
- #include "iwl-5000-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL1000_UCODE_API_MAX 2
-+#define IWL1000_UCODE_API_MAX 3
- 
- /* Lowest firmware API version supported */
- #define IWL1000_UCODE_API_MIN 1
--- 
-1.5.6.3
-
+  Luis
