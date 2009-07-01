@@ -1,43 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from thunk.org ([69.25.196.29]:42602 "EHLO thunker.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753973AbZGFCcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 22:32:15 -0400
-Date: Sun, 5 Jul 2009 22:31:13 -0400
-From: Theodore Tso <tytso@mit.edu>
-To: Jesper Dangaard Brouer <hawk@comx.dk>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
-	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
-	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
-	linux-ext4@vger.kernel.org, adilger@sun.com,
-	netfilter-devel@vger.kernel.org
-Subject: Re: [PATCH 01/10] ext4: Use rcu_barrier() on module unload.
-Message-ID: <20090706023113.GE6706@mit.edu>
-References: <20090623150330.22490.87327.stgit@localhost> <20090623150358.22490.24818.stgit@localhost>
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:61902 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751964AbZGAP6g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 11:58:36 -0400
+From: Frans Pop <elendil@planet.nl>
+To: reinette chatre <reinette.chatre@intel.com>
+Subject: Re: [2.6.31-rc1] iwlagn (4965): regression when hardware rf switch is used
+Date: Wed, 1 Jul 2009 17:58:35 +0200
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <200906291128.05639.elendil@planet.nl> <1246383858.17896.527.camel@rc-desk>
+In-Reply-To: <1246383858.17896.527.camel@rc-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090623150358.22490.24818.stgit@localhost>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200907011758.36621.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2009 at 05:03:59PM +0200, Jesper Dangaard Brouer wrote:
-> The ext4 module uses rcu_call() thus it should use rcu_barrier()on
-> module unload.
-> 
-> The kmem cache ext4_pspace_cachep is sometimes free'ed using
-> call_rcu() callbacks.  Thus, we must wait for completion of call_rcu()
-> before doing kmem_cache_destroy().
-> 
-> I have difficult determining if no new call_rcu() callbacks can be envoked.
-> Would the maintainer please verify this?
+On Tuesday 30 June 2009, reinette chatre wrote:
+> Subject: [PATCH] iwlagn: do not send key clear commands when rfkill
+> enabled
+>
+> Do all key clearing except sending sommands to device when rfkill
+> enabled. When rfkill enabled the interface is brought down and will
+> be brought back up correctly after rfkill is enabled again.
+>
+> Same change is not needed for iwl3945 as it ignores return code when
+> sending key clearing command to device.
 
-Yes, that's correct.  Thanks; I've included this in the ext4 patch
-queue.
+With this patch things look a lot cleaner:
 
-						- Ted
+[enable hardware rf kill switch]
+iwlagn 0000:10:00.0: RF_KILL bit toggled to disable radio.
+wlan0: deauthenticating by local choice (reason=3)
+usb 3-1: USB disconnect, address 2
+[disable hardware rf kill switch]
+iwlagn 0000:10:00.0: RF_KILL bit toggled to enable radio.
+usb 3-1: new full speed USB device using uhci_hcd and address 3
+usb 3-1: configuration #1 chosen from 1 choice
+[ifdown wlan0]
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[ifup wlan0]
+Registered led device: iwl-phy0::radio
+Registered led device: iwl-phy0::assoc
+Registered led device: iwl-phy0::RX
+Registered led device: iwl-phy0::TX
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: authenticate with AP 00:14:c1:38:e5:15
+wlan0: authenticated
+wlan0: associate with AP 00:14:c1:38:e5:15
+wlan0: RX AssocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=1)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+wlan0: no IPv6 routers present
+
+
+One thing I do not quite get is why both ifdown and ifup result in leds 
+getting registered. It does not happen when I do a "normal" ifdown (when 
+the wireless interface is up and rfkill is not enabled).
+
+I could understand the leds being registered immediately after I disable 
+the rf kill switch, but don't understand why it gets postponed until I do 
+ifdown. That makes it seem as if the change in RF_KILL only gets 
+processed halfway through with the registering of leds left dangling.
+
+
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Reported-by: Frans Pop <elendil@planet.nl>
+Tested-by: Frans Pop <elendil@planet.nl>
+
+
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -960,7 +960,7 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv
+> *priv) CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
+>  			hw_rf_kill = 1;
+>
+> -		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
+> +		IWL_WARN(priv, "RF_KILL bit toggled to %s.\n",
+>  				hw_rf_kill ? "disable radio" : "enable radio");
+>
+>  		priv->isr_stats.rfkill++;
+> @@ -1133,7 +1133,7 @@ static void iwl_irq_tasklet(struct iwl_priv
+> *priv) CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
+>  			hw_rf_kill = 1;
+>
+> -		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
+> +		IWL_WARN(priv, "RF_KILL bit toggled to %s.\n",
+>  				hw_rf_kill ? "disable radio" : "enable radio");
+
+If these two messages get promoted to regular user messages, maybe they 
+could be made a bit less technical? I doubt "RF_KILL bit toggled" is 
+going to mean all that much to most users.
+
+Thanks,
+FJP
