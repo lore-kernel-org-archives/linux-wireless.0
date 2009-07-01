@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:36673 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753741AbZGKUVg (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:34948 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754559AbZGAWIQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jul 2009 16:21:36 -0400
-From: Andreas Schwab <schwab@linux-m68k.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: cancel/restart all timers across suspend/resume
-References: <1242391067.5799.53.camel@johannes.local>
-	<1242553242.10005.76.camel@johannes.local> <m2hbxjky1q.fsf@igel.home>
-	<1247334562.30647.111.camel@johannes.local>
-Date: Sat, 11 Jul 2009 22:21:30 +0200
-In-Reply-To: <1247334562.30647.111.camel@johannes.local> (Johannes Berg's
-	message of "Sat, 11 Jul 2009 19:49:22 +0200")
-Message-ID: <m2ab3bkm2d.fsf@igel.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 1 Jul 2009 18:08:16 -0400
+Subject: Re: Insist on cfg80211 for new drivers?
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Greg KH <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, Dave <kilroyd@googlemail.com>,
+	Karl Relton <karllinuxtest.relton@ntlworld.com>,
+	dwmw2@infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890907011456q7e3d9f5al1057f940a7655cda@mail.gmail.com>
+References: <1246388712.4949.52.camel@localhost>
+	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+	 <1246396179.4949.76.camel@localhost>
+	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+	 <1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
+	 <43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
+	 <1246473300.30522.10.camel@localhost.localdomain>
+	 <20090701193657.GD3473@tuxdriver.com>
+	 <1246485123.12994.168.camel@localhost.localdomain>
+	 <43e72e890907011456q7e3d9f5al1057f940a7655cda@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 01 Jul 2009 15:08:24 -0700
+Message-Id: <1246486104.12994.169.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hi Luis,
 
-> On Sat, 2009-07-11 at 18:02 +0200, Andreas Schwab wrote:
->> 
->> Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org> writes:
->> 
->> > We forgot to cancel all timers in mac80211 when suspending.
->> > In particular we forgot to deal with some things that can
->> > cause hardware reconfiguration -- while it is down.
->> 
->> This is breaking suspend on my iBook.
->
-> Yeah, bug 13337,
+> >> > That's really all I
+> >> > care about, I don't want another WEXT-based driver accepted; I want all
+> >> > the new ones using cfg80211.
+> >>
+> >> Now there is a discussion we should have had in Berlin...is it time
+> >> to insist on cfg80211-based configuration for all new drivers?
+> >
+> > there is really nothing much to discuss on this topic. The plan is to
+> > deprecate WEXT, that simple. So if the driver has no cfg80211 support,
+> > then it will not be included. Period.
+> >
+> > Send such drivers off to staging and let them have their 6 month.  Then
+> > we either remove them again or they got ported to cfg80211.
+> 
+> 6 months only in staging ? Is this a rule now for staging?
 
-Thanks, I missed that one.
+that is what Greg mentioned to me. If there is no activity for 6 month
+and the driver is not getting anywhere, he going to drop it.
 
-> but the fix at
-> http://mid.gmane.org/8763dznnki.fsf@scholz.fias.uni-frankfurt.de works.
+Regards
 
-With that patch suspend works here too, but resume hangs halfway
-through.
+Marcel
 
-Andreas.
 
--- 
-Andreas Schwab, schwab@linux-m68k.org
-GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
