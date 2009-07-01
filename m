@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13981 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752323AbZGWXht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 19:37:49 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 16:37:50 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rossi.f@inwind.it>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@web.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] mac80211: fix MLME issuing of probe requests while scanning
-Date: Thu, 23 Jul 2009 16:37:47 -0700
-Message-ID: <1248392267-32086-1-git-send-email-lrodriguez@atheros.com>
+Received: from mrs.ro ([207.192.75.59]:49186 "EHLO li37-59.members.linode.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752574AbZGAGmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 02:42:51 -0400
+Message-ID: <4A4B056B.9000602@mrs.ro>
+Date: Wed, 01 Jul 2009 09:42:51 +0300
+From: Valentin Manea <linux-wireless@mrs.ro>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and broadcast frames
+References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com>
+In-Reply-To: <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were issuing probe requests to the associated AP on the wrong
-band by having our beacon timer loss trigger while we are scanning.
-When we would scan the timer could hit and force us to send a
-probe request to the AP but with a chance we'd be on the wrong band.
 
-This leads to finding no usable bitrate but we should not get so
-far on the xmit path. We should not be trying to send these probe
-request frames so prevent ieee80211_mgd_probe_ap() from sending
-these.
 
-As it turns out all callers of ieee80211_mgd_probe_ap() need this
-check so we just move the scan check there. This means we can remove
-the recenlty added check during ieee80211_sta_monitor_work().
+On 06/30/2009 07:20 PM, Luis R. Rodriguez wrote:
+> On Tue, Jun 30, 2009 at 3:53 AM, Valentin Manea<linux-wireless@mrs.ro>  wrote:
+>> Hi,
+>>
+>>    I've been working on a small project that basically sends broadcast UDP
+>> frames from an Wireless AP to multiple clients. While I can send UDP frames
+>> just fine from the AP to the client the only a few broadcast frames reach my
+>> client. What is really puzzling is that on the client machine using tcpdump
+>> I can see all the broadcast frames arriving, my application sees only a
+>> small fraction of them.
+>
+> Keep in mind when you use tcpdump it will modify the RX filters of the
+> device you use but if you say you see them on tcpdump and at the same
+> time do not see them on the application that seems fishy and non
+> driver related.
+>
+>    Luis
 
-Additionally we now fix a race condition added by the patch
-"mac80211: do not monitor the connection while scanning" which
-had the same check in ieee80211_sta_conn_mon_timer(). The race
-happens because the timer routine *does* a valid check for
-scanning but after it queues work into the mac80211 workqueue
-the work callback can kick off with scanning enabled and cause
-the same issue we were trying to avoid.
+tcpdump doesn't affect the results at all, with or without it running 
+it's the same.
 
-The more appropriate solution would be to disable the respective
-timers during scan and re-enable them after scan but requires more
-complex code and testing.
+I have tried tracing the packets, I thought that maybe there is a 
+problem in the 80211 stack and for some reason they would be dropped but 
+as far as I can tell every packet is routed to the ip stack with the 
+correct protocol and pkt_type.
 
-Cc: Christian Lamparter <chunkeey@web.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Fabio Rossi <rossi.f@inwind.it>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+One more strange thing, if I'm looking at netstat -s everything seems to 
+be normal, InBcastPkts is fine, also the number of incomming UDP packets.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 523c0d9..db0b4b2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1166,6 +1166,9 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	if (!netif_running(sdata->dev))
- 		return;
- 
-+	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
-+		return;
-+
- 	mutex_lock(&ifmgd->mtx);
- 
- 	if (!ifmgd->associated)
-@@ -2213,9 +2216,6 @@ static void ieee80211_sta_monitor_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data,
- 			     u.mgd.monitor_work);
- 
--	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
--		return;
--
- 	ieee80211_mgd_probe_ap(sdata, false);
- }
- 
--- 
-1.6.3.3
+Any ideas where I could look? it just gets stranger and stranger.
 
+
+Thanks,
+Valentin
