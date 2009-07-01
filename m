@@ -1,49 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3100 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753464AbZGDRA5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755342AbZGATfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jul 2009 13:00:57 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>, stable@kernel.org
-Subject: [PATCH 5/5] ath5k: write PCU registers on initial reset
-Date: Sat,  4 Jul 2009 12:59:55 -0400
-Message-Id: <1246726795-3934-6-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1246726795-3934-1-git-send-email-me@bobcopeland.com>
-References: <1246726795-3934-1-git-send-email-me@bobcopeland.com>
+	Wed, 1 Jul 2009 15:35:38 -0400
+Message-Id: <20090701193419.085720059@sipsolutions.net>
+References: <20090701192641.072258140@sipsolutions.net>
+Date: Wed, 01 Jul 2009 21:26:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 04/20 v4] cfg80211: move break statement to correct place
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit d7dc100374df0c21afd8a198336ecd7999697159, "Ath5k: unify resets"
-introduced a regression into 2.6.28 where the PCU registers are never
-initialized, due to ath5k_reset() always passing true for change_channel.
-We subsequently program a lot of these registers but several may start
-in an unknown state.
+Move a break statement to the correct place _after_ the
+#endif, otherwise w/o WIRELESS_EXT things break badly.
+Also, while touching this code, do a cleanup and assign
+dev->ieee80211_ptr to a new variable.
 
-Cc: stable@kernel.org
-Reported-by: Forrest Zhang <forrest@hifulltech.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/wireless/core.c |   31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3f55e90..80ae38d 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2687,7 +2687,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
- 		sc->curchan = chan;
- 		sc->curband = &sc->sbands[chan->band];
- 	}
--	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
-+	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan == NULL);
- 	if (ret) {
- 		ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
- 		goto err;
+--- wireless-testing.orig/net/wireless/core.c	2009-07-01 08:55:08.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-07-01 08:59:44.000000000 +0200
+@@ -526,52 +526,53 @@ static int cfg80211_netdev_notifier_call
+ 					 void *ndev)
+ {
+ 	struct net_device *dev = ndev;
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev;
+ 
+-	if (!dev->ieee80211_ptr)
++	if (!wdev)
+ 		return NOTIFY_DONE;
+ 
+-	rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
++	rdev = wiphy_to_dev(wdev->wiphy);
+ 
+-	WARN_ON(dev->ieee80211_ptr->iftype == NL80211_IFTYPE_UNSPECIFIED);
++	WARN_ON(wdev->iftype == NL80211_IFTYPE_UNSPECIFIED);
+ 
+ 	switch (state) {
+ 	case NETDEV_REGISTER:
+ 		mutex_lock(&rdev->devlist_mtx);
+-		list_add(&dev->ieee80211_ptr->list, &rdev->netdev_list);
++		list_add(&wdev->list, &rdev->netdev_list);
+ 		if (sysfs_create_link(&dev->dev.kobj, &rdev->wiphy.dev.kobj,
+ 				      "phy80211")) {
+ 			printk(KERN_ERR "wireless: failed to add phy80211 "
+ 				"symlink to netdev!\n");
+ 		}
+-		dev->ieee80211_ptr->netdev = dev;
++		wdev->netdev = dev;
+ #ifdef CONFIG_WIRELESS_EXT
+-		dev->ieee80211_ptr->wext.default_key = -1;
+-		dev->ieee80211_ptr->wext.default_mgmt_key = -1;
++		wdev->wext.default_key = -1;
++		wdev->wext.default_mgmt_key = -1;
+ #endif
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+-		if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_ADHOC)
++		if (wdev->iftype != NL80211_IFTYPE_ADHOC)
+ 			break;
+-		if (!dev->ieee80211_ptr->ssid_len)
++		if (!wdev->ssid_len)
+ 			break;
+ 		cfg80211_leave_ibss(rdev, dev, true);
+ 		break;
+ 	case NETDEV_UP:
+ #ifdef CONFIG_WIRELESS_EXT
+-		if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_ADHOC)
++		if (wdev->iftype != NL80211_IFTYPE_ADHOC)
+ 			break;
+-		if (!dev->ieee80211_ptr->wext.ibss.ssid_len)
++		if (!wdev->wext.ibss.ssid_len)
+ 			break;
+-		cfg80211_join_ibss(rdev, dev, &dev->ieee80211_ptr->wext.ibss);
+-		break;
++		cfg80211_join_ibss(rdev, dev, &wdev->wext.ibss);
+ #endif
++		break;
+ 	case NETDEV_UNREGISTER:
+ 		mutex_lock(&rdev->devlist_mtx);
+-		if (!list_empty(&dev->ieee80211_ptr->list)) {
++		if (!list_empty(&wdev->list)) {
+ 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
+-			list_del_init(&dev->ieee80211_ptr->list);
++			list_del_init(&wdev->list);
+ 		}
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		break;
+
 -- 
-1.6.2.5
-
 
