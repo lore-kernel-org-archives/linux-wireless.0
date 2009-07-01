@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4634 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754949AbZGIVVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 17:21:23 -0400
-Subject: iwlwifi 4965 uCode available
-From: reinette chatre <reinette.chatre@intel.com>
-To: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain
-Date: Thu, 09 Jul 2009 14:21:22 -0700
-Message-Id: <1247174482.17896.1304.camel@rc-desk>
-Mime-Version: 1.0
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:36984 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760155AbZGADjc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 23:39:32 -0400
+Date: Tue, 30 Jun 2009 22:39:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, ccmcphe@verizon.net
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] ssb: Add support for 4318E
+Message-ID: <4a4ada7f.oItwGXurq7WMW+HE%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
-available for download from
-http://intellinuxwireless.org/?n=Downloads
+From: Clyde McPherson <ccmcphe@verizon.net>
 
-Changes:
+Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
+4318E can do 802.11A/B/G, only B and G mode are supported in b43.
 
--- More graceful handling of Rx hangs (NMI)
--- More reliable scanning
--- Wait 10 seconds after association before power down
--- Reset receiver via retune after missing beacons
--- Disable TGK measurement when receiving packet
--- More reliable Tx of ACK/BA/CTS
+Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-
-Reinette
-
-
-
-
-
+Index: wireless-testing/drivers/ssb/pcmcia.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pcmcia.c
++++ wireless-testing/drivers/ssb/pcmcia.c
+@@ -678,7 +678,8 @@ int ssb_pcmcia_get_invariants(struct ssb
+ 			sprom->board_rev = tuple.TupleData[1];
+ 			break;
+ 		case SSB_PCMCIA_CIS_PA:
+-			GOTO_ERROR_ON(tuple.TupleDataLen != 9,
++			GOTO_ERROR_ON((tuple.TupleDataLen != 9) &&
++				      (tuple.TupleDataLen != 10),
+ 				      "pa tpl size");
+ 			sprom->pa0b0 = tuple.TupleData[1] |
+ 				 ((u16)tuple.TupleData[2] << 8);
+@@ -718,7 +719,8 @@ int ssb_pcmcia_get_invariants(struct ssb
+ 			sprom->antenna_gain.ghz5.a3 = tuple.TupleData[1];
+ 			break;
+ 		case SSB_PCMCIA_CIS_BFLAGS:
+-			GOTO_ERROR_ON(tuple.TupleDataLen != 3,
++			GOTO_ERROR_ON((tuple.TupleDataLen != 3) &&
++				      (tuple.TupleDataLen != 5),
+ 				      "bfl tpl size");
+ 			sprom->boardflags_lo = tuple.TupleData[1] |
+ 					 ((u16)tuple.TupleData[2] << 8);
