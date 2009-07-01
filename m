@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:46765 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754457AbZGEWrD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 18:47:03 -0400
-Received: by fxm18 with SMTP id 18so3543968fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Jul 2009 15:47:05 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Christian Lamparter <chunkeey@web.de>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-Date: Mon, 6 Jul 2009 02:46:58 +0400
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200907040053.05654.chunkeey@web.de> <200907051600.55958.chunkeey@web.de> <200907052316.30207.jcmvbkbc@gmail.com>
-In-Reply-To: <200907052316.30207.jcmvbkbc@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907060246.59188.jcmvbkbc@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:40312 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755298AbZGARWg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 13:22:36 -0400
+Subject: Re: [PATCH] Add prism 2/3 usb adaptor firmware for use with
+ staging/wlan-ng driver.
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Karl Relton <karllinuxtest.relton@ntlworld.com>,
+	dwmw2@infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890907011014v300bcf64u3c7b259173d93588@mail.gmail.com>
+References: <1246388712.4949.52.camel@localhost>
+	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+	 <1246396179.4949.76.camel@localhost>
+	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+	 <1246464991.4331.18.camel@localhost>
+	 <43e72e890907011014v300bcf64u3c7b259173d93588@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 01 Jul 2009 13:22:37 -0400
+Message-Id: <1246468957.15757.20.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > hmm, looks like someone tries to skb_push on a NULL skb. hmmmm,
-> > can you please enable ksym, it's a bit hard to see the obvious bug here.
+On Wed, 2009-07-01 at 10:14 -0700, Luis R. Rodriguez wrote:
 
-> [ 1612.708465] skb_over_panic: text:bf000544 len:88 put:88 head:c78f4000 data:c78f4020 tail:0xc78f4078 end:0xc78f4020 dev:<NULL>
+> Can you elaborate on this a little. Does the driver currently take the
+> srec file, append/prepend some data onto it and then run it on the
+> target CPU?
 
-I see here valid skb with size 0x20, where we try to put 88 more bytes.
-That's because p54spi_probe calls __dev_alloc_skb before p54spi_request_firmware.
+Some data in the srec file is replaced by the data read from the card
+(so called plug data area, or PDA).  "Plugging" refers to that process.
 
-It's working with the following change:
+> > , so pre-compilation would have meant
+> > inventing both a compiler tool and an intermediate format for the driver
+> > to read and process.
+> 
+> The srec->binary conversion just needs to be done once, and not sure
+> what the "extra" stuff is that you mention is required, but if its
+> always the same can't that just be put into a final binary file?
 
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index ab5b9b8..ff73a64 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -651,11 +651,6 @@ static int __devinit p54spi_probe(struct spi_device *spi)
- 	priv->common.stop = p54spi_op_stop;
- 	priv->common.tx = p54spi_op_tx;
- 
--	skb = __dev_alloc_skb(priv->common.rx_mtu, GFP_KERNEL);
--	if (!skb)
--		goto err_free_common;
--	skb_queue_tail(&priv->rx_pool, skb);
--
- 	ret = p54spi_request_firmware(hw);
- 	if (ret < 0)
- 		goto err_free_common;
-@@ -664,6 +659,11 @@ static int __devinit p54spi_probe(struct spi_device *spi)
- 	if (ret)
- 		goto err_free_common;
- 
-+	skb = __dev_alloc_skb(priv->common.rx_mtu, GFP_KERNEL);
-+	if (!skb)
-+		goto err_free_common;
-+	skb_queue_tail(&priv->rx_pool, skb);
-+
- 	ret = p54_register_common(hw, &priv->spi->dev);
- 	if (ret)
- 		goto err_free_common;
+We can use the same format as Spectrum firmware used in spectrum_cs, and
+reuse its parser/plugger.  Spectrum and Prism chipsets are related and
+use the same idea of plugging, but Prism firmware is distributed as srec
+files, whereas Spectrum firmware is cut from binary drivers as a binary.
 
-
-Still cannot stress-test it: it hangs in IBSS mode (I suspect rate control)
-and it cannot initialize mesh: firmware doesn't respond after beacon submission.
-
-Does mesh work now with USB/PCI?
-
-Thanks.
--- Max
+-- 
+Regards,
+Pavel Roskin
