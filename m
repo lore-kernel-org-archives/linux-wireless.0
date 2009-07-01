@@ -1,42 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-1920.google.com ([74.125.78.145]:19614 "EHLO
-	ey-out-1920.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750695AbZGIXNK convert rfc822-to-8bit (ORCPT
+Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:44114 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752852AbZGAH1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 19:13:10 -0400
-Received: by ey-out-1920.google.com with SMTP id 3so115249eyh.36
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 16:13:08 -0700 (PDT)
+	Wed, 1 Jul 2009 03:27:37 -0400
+Date: Tue, 30 Jun 2009 21:24:34 -1000
+From: Joel Roth <joelz@pobox.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Message-ID: <20090701072434.GB7647@sprite>
+Reply-To: Joel Roth <joelz@pobox.com>
+References: <20090630170916.GB5137@sprite>
+ <40f31dec0906301416m39e6943ewef8d9c5bc5591880@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1247174482.17896.1304.camel@rc-desk>
-References: <1247174482.17896.1304.camel@rc-desk>
-Date: Fri, 10 Jul 2009 01:13:08 +0200
-Message-ID: <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
-Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <40f31dec0906301416m39e6943ewef8d9c5bc5591880@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/9 reinette chatre <reinette.chatre@intel.com>:
-> Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
-> available for download from
-> http://intellinuxwireless.org/?n=Downloads
->
-> Changes:
->
-> -- More graceful handling of Rx hangs (NMI)
-> -- More reliable scanning
-> -- Wait 10 seconds after association before power down
-> -- Reset receiver via retune after missing beacons
-> -- Disable TGK measurement when receiving packet
-> -- More reliable Tx of ACK/BA/CTS
+On Wed, Jul 01, 2009 at 12:16:47AM +0300, Nick Kossifidis wrote:
+> 2009/6/30 Joel Roth <joelz@pobox.com>:
+> > Hello all,
+> >
+> > I'd appreciate some help troubleshooting my wireless connection.
+> >
+> > I have a Toshiba Satellite L305 series laptop running Debian
+> > sid with a recent, stock Debian kernel version 2.6.29-2-486.
+> >
+> > $ lspci | grep Atheros
+> >
+> > 05:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 01)
+> >
+> > I am seeking to connect to a D-Link 614+ wireless router.
+> > For initial testing, the AP is unencrypted, unsecured.
+> >
+> > My wife's G3 i-Book with AfterTheMac USB wireless adapter
+> > connected just fine, on the first try.
+> >
+> > I believe I have the modules I should have:
+> >
+> > $ lsmod | grep 80211
+> > mac80211 † † † † † † †139680 †1 ath5k
+> > cfg80211 † † † † † † † 21576 †2 ath5k,mac80211
+> >
+> > My wireless network interface is present:
+> >
+> > $ iwconfig wlan0
+> >
+> > wlan0 † † IEEE 802.11 †ESSID:""
+> > † † † † †Mode:Managed †Frequency:2.412 GHz †Access Point: Not-Associated
+> > † † † † †Tx-Power=0 dBm
+> > † † † † †Retry min limit:7 † RTS thr:off † Fragment thr=2352 B
+> > † † † † †Link Quality:0 †Signal level:0 †Noise level:0
+> > † † † † †Rx invalid nwid:0 †Rx invalid crypt:0 †Rx invalid frag:0
+> > † † † † †Tx excessive retries:0 †Invalid misc:0 † Missed beacon:0
+> >
+> > $ ifconfig wlan0
+> >
+> > wlan0 † † Link encap:Ethernet †HWaddr 00:21:63:82:82:40
+> > † † † † †UP BROADCAST MULTICAST †MTU:1500 †Metric:1
+> > † † † † †RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+> > † † † † †TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+> > † † † † †collisions:0 txqueuelen:1000
+> > † † † † †RX bytes:0 (0.0 B) †TX bytes:0 (0.0 B)
+> >
+> >
+> > However, I don't find the D-Link 614+:
+> >
+> > $ iwlist wlan0 scan
+> >
+> > wlan0 † † No scan results
+> >
+> > And of course, dhclient fails to find a server.
+> >
+> > Am I missing something? What could I try next?
+> > I'd appreciate any pointers.
+> >
+> > Thanks.
+> >
+> > --
+> > Joel Roth
+> 
+> Hello ;-)
+> 
+> Can you please sent the dmesg output when ath5k loads ?
+> Also do you see any messages on dmesg while scaning ?
 
-Nice work, AFAICU this should fix a few annoying issues, right?
+Hi :-)
 
-Can you reveal some plans of upgrading 5100/5300/5350 uCode? Any
-estimate would be nice to known. This month? This year?
+On loading the ath5k driver, dmesg reports:
+
+[83838.020161] ath5k 0000:05:00.0: PCI INT A disabled
+[83852.364249] cfg80211: Using static regulatory domain info
+[83852.364253] cfg80211: Regulatory domain: US
+[83852.364255]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[83852.364258]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+[83852.364261]  (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[83852.364264]  (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[83852.364266]  (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[83852.364269]  (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[83852.364271]  (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+[83852.364274] cfg80211: Calling CRDA for country: US
+[83852.427844] ath5k 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[83852.427858] ath5k 0000:05:00.0: setting latency timer to 64
+[83852.427916] ath5k 0000:05:00.0: registered as 'phy0'
+[83852.620221] wmaster0 (ath5k): not using net_device_ops yet
+[83852.620896] phy0: Selected rate control algorithm 'minstrel'
+[83852.620913] wlan0 (ath5k): not using net_device_ops yet
+[83852.621565] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+ 
+On attempting to scan:
+
+[84202.916169] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+
+Thanks!
 
 -- 
-Rafa≈Ç Mi≈Çecki
+Joel Roth
