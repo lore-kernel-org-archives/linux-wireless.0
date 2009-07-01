@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:38755 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbZGEAlx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jul 2009 20:41:53 -0400
-Received: by gxk26 with SMTP id 26so4967766gxk.13
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jul 2009 17:41:57 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:53143 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753006AbZGAKPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 06:15:14 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 03:15:18 -0700
+Date: Wed, 1 Jul 2009 15:43:36 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 8/8 v3.1] mac80211: re-add HT disabling
+Message-ID: <20090701101336.GD24667@vasanth-laptop>
+References: <20090630115245.675553951@sipsolutions.net> <20090630115303.111250594@sipsolutions.net> <20090630132547.GB24667@vasanth-laptop> <1246369077.16643.10.camel@johannes.local> <20090630135207.GC24667@vasanth-laptop> <1246370452.16643.11.camel@johannes.local> <1246433956.16643.35.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <4A4FA224.40006@openwrt.org>
-References: <1246726795-3934-1-git-send-email-me@bobcopeland.com>
-	 <1246726795-3934-6-git-send-email-me@bobcopeland.com>
-	 <4A4FA224.40006@openwrt.org>
-Date: Sat, 4 Jul 2009 20:41:56 -0400
-Message-ID: <b6c5339f0907041741w2fe6c6aaifda6f005e7313c66@mail.gmail.com>
-Subject: Re: [PATCH 5/5] ath5k: write PCU registers on initial reset
-From: Bob Copeland <me@bobcopeland.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1246433956.16643.35.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>       }
->> -     ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
->> +     ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan == NULL);
->
-> Shouldn't this be chan != NULL? I'd assume that chan is NULL the first
-> time and change_channel thus should be false to initialize all the
-> registers.
+On Wed, Jul 01, 2009 at 01:09:16PM +0530, Johannes Berg wrote:
+> The IEEE80211_STA_TKIP_WEP_USED flag is used internally to
+> disable HT when WEP or TKIP are used. Now that cfg80211 is
+> giving us the required information, we can set the flag
+> appropriately again.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  net/mac80211/cfg.c |   10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> --- wireless-testing.orig/net/mac80211/cfg.c    2009-07-01 09:01:25.000000000 +0200
+> +++ wireless-testing/net/mac80211/cfg.c 2009-07-01 09:09:01.000000000 +0200
+> @@ -1228,7 +1228,7 @@ static int ieee80211_assoc(struct wiphy
+>                            struct cfg80211_assoc_request *req)
+>  {
+>         struct ieee80211_sub_if_data *sdata;
+> -       int ret;
+> +       int ret, i;
+> 
+>         sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> 
+> @@ -1236,6 +1236,14 @@ static int ieee80211_assoc(struct wiphy
+>             !(sdata->u.mgd.flags & IEEE80211_STA_AUTHENTICATED))
+>                 return -ENOLINK; /* not authenticated */
+> 
+> +       sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
+> +
+> +       for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
+> +               if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
+> +                   req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
+> +                   req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104)
+> +                       sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
+> +
 
-Yup, it should... I could swear I tested it, must've gotten lucky.
+for..loop does not seem to be necessary here as it is very unlikely that
+an assoc req will have more than one cipher suite.
 
-Thanks for the catch.
+I'm not sure if this patch series will get into 2.6.31-rc, if it
+does not, we may need a variant of this patch to fix
+http://bugzilla.kernel.org/show_bug.cgi?id=13630, I'll work on it.
+Thanks!.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Vasanth
+
