@@ -1,53 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([207.115.11.53]:34555 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339AbZGITbe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35980 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbZGATfn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 15:31:34 -0400
-Message-ID: <4A5645A3.9000906@lwfinger.net>
-Date: Thu, 09 Jul 2009 14:31:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: p54usb - problems with "no probe,response from AP ..."
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 1 Jul 2009 15:35:43 -0400
+Message-Id: <20090701193419.265924815@sipsolutions.net>
+References: <20090701192641.072258140@sipsolutions.net>
+Date: Wed, 01 Jul 2009 21:26:46 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/20 v4] nl80211: clean up function definitions
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian,
+I don't like the 'extern' keyword much when it's not
+necessary, it makes lines rather long.
 
-I have not gotten very far with the problem in the subject; however, I
-have a few things to report:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/nl80211.h |   58 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 29 insertions(+), 29 deletions(-)
 
-I got a dump of the TX queues when the disassociation event came
-through. All were normal.
+--- wireless-testing.orig/net/wireless/nl80211.h	2009-07-01 08:55:07.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.h	2009-07-01 08:59:44.000000000 +0200
+@@ -3,41 +3,41 @@
+ 
+ #include "core.h"
+ 
+-extern int nl80211_init(void);
+-extern void nl80211_exit(void);
+-extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
+-extern void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+-				    struct net_device *netdev);
+-extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+-				   struct net_device *netdev);
+-extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+-				      struct net_device *netdev);
+-extern void nl80211_send_reg_change_event(struct regulatory_request *request);
+-extern void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
+-				 struct net_device *netdev,
+-				 const u8 *buf, size_t len);
+-extern void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
+-				  struct net_device *netdev,
+-				  const u8 *buf, size_t len);
+-extern void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
++int nl80211_init(void);
++void nl80211_exit(void);
++void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
++void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
++			     struct net_device *netdev);
++void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
++			    struct net_device *netdev);
++void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
++			       struct net_device *netdev);
++void nl80211_send_reg_change_event(struct regulatory_request *request);
++void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
++			  struct net_device *netdev,
++			  const u8 *buf, size_t len);
++void nl80211_send_rx_assoc(struct cfg80211_registered_device *rdev,
++			   struct net_device *netdev,
++			   const u8 *buf, size_t len);
++void nl80211_send_deauth(struct cfg80211_registered_device *rdev,
++			 struct net_device *netdev,
++			 const u8 *buf, size_t len);
++void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
++			   struct net_device *netdev,
++			   const u8 *buf, size_t len);
++void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
++			       struct net_device *netdev,
++			       const u8 *addr);
++void nl80211_send_assoc_timeout(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev,
+-				const u8 *buf, size_t len);
+-extern void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
+-				  struct net_device *netdev,
+-				  const u8 *buf, size_t len);
+-extern void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
+-				      struct net_device *netdev,
+-				      const u8 *addr);
+-extern void nl80211_send_assoc_timeout(struct cfg80211_registered_device *rdev,
+-				       struct net_device *netdev,
+-				       const u8 *addr);
+-extern void
++				const u8 *addr);
++void
+ nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
+ 			    struct net_device *netdev, const u8 *addr,
+ 			    enum nl80211_key_type key_type,
+ 			    int key_id, const u8 *tsc);
+ 
+-extern void
++void
+ nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ 			       struct ieee80211_channel *channel_before,
+ 			       struct ieee80211_channel *channel_after);
 
-I tested with 2.6.31-rc2 from Linus's tree. It does _NOT_ have the
-problem, thus it is something that was introduced in the process of
-splitting p54common.{ch} into the component parts.
+-- 
 
-In comparing the code, I see that the variable 'cached_beacon' was
-eliminated and the code that handles beacons was changed. When I made
-the following change, the "no probe response" message went away - the
-interface just hangs:
-
-Index: wireless-testing/drivers/net/wireless/p54/txrx.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/txrx.c
-+++ wireless-testing/drivers/net/wireless/p54/txrx.c
-@@ -386,7 +386,8 @@ static void p54_rx_frame_sent(struct p54
-                        priv->beacon_req_id = cpu_to_le32(0);
-
-                dev_kfree_skb_any(entry);
--               return ;
-+               p54_wake_queues(priv);
-+               return;
-        }
-
-        /*
-
-
-Any thoughts?
-
-Larry
