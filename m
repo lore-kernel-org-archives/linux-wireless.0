@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f192.google.com ([209.85.222.192]:63368 "EHLO
-	mail-pz0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376AbZGVQVT (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:63613 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753125AbZGADg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 12:21:19 -0400
-Received: by pzk30 with SMTP id 30so5676pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 09:21:19 -0700 (PDT)
+	Tue, 30 Jun 2009 23:36:57 -0400
+Date: Tue, 30 Jun 2009 22:37:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, ccmcphe@verizon.net
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Message-ID: <4a4ad9e4.vPnta8trzUXc4YPz%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <200907192126.13207.chunkeey@web.de>
-References: <alpine.DEB.2.00.0907171607280.12306@bicker>
-	 <200907192126.13207.chunkeey@web.de>
-Date: Wed, 22 Jul 2009 15:40:56 +0100
-Message-ID: <a63d67fe0907220740o5b16dc0ne04bc9265d3570bc@mail.gmail.com>
-Subject: Re: [PATCH v2] p54spi: fix potential null deref in p54spi.c
-From: Dan Carpenter <error27@gmail.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org, Max Filippov <jcmvbkbc@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Great.
+From: Clyde McPherson <ccmcphe@verizon.net>
 
-Acked-by: Dan Carpenter <error27@gmail.com>
+Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
+4318E can do 802.11A/B/G, only B and G mode are supported in b43.
 
-regards,
-dan carpenter
+Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On 7/19/09, Christian Lamparter <chunkeey@web.de> wrote:
-> From: Dan Carpenter <error27@gmail.com>
->
-> Fix a potential NULL dereference bug during
-> error handling in p54spi_probe.
->
-> This bug was discovered by smatch:
-> (http://repo.or.cz/w/smatch.git).
->
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> On Sunday 19 July 2009 13:53:57 Dan Carpenter wrote:
->
->> We can't use dev_err() becuase "priv" is NULL.
-> yep, but that's my fault and not Micheal's.
->
->> Found by smatch (http://repo.or.cz/w/smatch.git).
->> regards,
->> dan carpenter
-> what about this alternative?
-> it retains the dev_err by simply moving to the spi_device *spi
-> which comes from spi-subsystem and is initialized?
->
-> Regards,
-> 	Chr
-> ---
-> diff --git a/drivers/net/wireless/p54/p54spi.c
-> b/drivers/net/wireless/p54/p54spi.c
-> index d5f181a..eef5329 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -600,7 +600,7 @@ static int __devinit p54spi_probe(struct spi_device
-> *spi)
->
->  	hw = p54_init_common(sizeof(*priv));
->  	if (!hw) {
-> -		dev_err(&priv->spi->dev, "could not alloc ieee80211_hw");
-> +		dev_err(&spi->dev, "could not alloc ieee80211_hw");
->  		return -ENOMEM;
->  	}
->
->
->
->
+Index: wireless-testing/drivers/ssb/pcmcia.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pcmcia.c
++++ wireless-testing/drivers/ssb/pcmcia.c
+@@ -678,7 +678,8 @@ int ssb_pcmcia_get_invariants(struct ssb
+ 			sprom->board_rev = tuple.TupleData[1];
+ 			break;
+ 		case SSB_PCMCIA_CIS_PA:
+-			GOTO_ERROR_ON(tuple.TupleDataLen != 9,
++			GOTO_ERROR_ON((tuple.TupleDataLen != 9) &&
++				      (tuple.TupleDataLen != 10),
+ 				      "pa tpl size");
+ 			sprom->pa0b0 = tuple.TupleData[1] |
+ 				 ((u16)tuple.TupleData[2] << 8);
+@@ -718,7 +719,8 @@ int ssb_pcmcia_get_invariants(struct ssb
+ 			sprom->antenna_gain.ghz5.a3 = tuple.TupleData[1];
+ 			break;
+ 		case SSB_PCMCIA_CIS_BFLAGS:
+-			GOTO_ERROR_ON(tuple.TupleDataLen != 3,
++			GOTO_ERROR_ON((tuple.TupleDataLen != 3) &&
++				      (tuple.TupleDataLen != 5),
+ 				      "bfl tpl size");
+ 			sprom->boardflags_lo = tuple.TupleData[1] |
+ 					 ((u16)tuple.TupleData[2] << 8);
