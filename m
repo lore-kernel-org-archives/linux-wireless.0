@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:21901 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251AbZGVTXs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36013 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756104AbZGATg2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 15:23:48 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1317635rvb.5
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 12:23:47 -0700 (PDT)
-Subject: [PATCH] compat-wireless-old: Fix problem with TX on amd64
-From: Gao Lei <lei.alvin.gao@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+	Wed, 1 Jul 2009 15:36:28 -0400
+Message-Id: <20090701193421.957624423@sipsolutions.net>
+References: <20090701192641.072258140@sipsolutions.net>
+Date: Wed, 01 Jul 2009 21:27:01 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 23 Jul 2009 03:23:25 +0800
-Message-Id: <1248290605.4717.76.camel@mountain.triplerocks.net>
+Subject: [PATCH 20/20 v4] mac80211: re-add HT disabling
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On amd64, the `ieee80211_tx_info' struct takes 56 bytes, thus cannot fit
-into skb's control buffer.
+The IEEE80211_STA_TKIP_WEP_USED flag is used internally to
+disable HT when WEP or TKIP are used. Now that cfg80211 is
+giving us the required information, we can set the flag
+appropriately again.
 
-The very first result is that nothing can be really sent out, because
-skb's next member `len' also gets cleared when doing:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-	info = IEEE80211_SKB_CB(skb);
-	memset(info, 0, sizeof(*info));
-
-A quick fix may be removing the TX control's sta pointer, since IMHO
-it's rarely used for now (the only place that I found was a function
-assigning values to it).
-
-It has been working well for me so far, but please let me know if
-there're better solutions. Thanks!
-
-Best regards,
-Gao Lei
-
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e3adf99..b9a5ae7 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -331,7 +331,6 @@ struct ieee80211_tx_info {
- 		struct {
- 			struct ieee80211_vif *vif;
- 			struct ieee80211_key_conf *hw_key;
--			struct ieee80211_sta *sta;
- 			unsigned long jiffies;
- 			int ifindex;
- 			u16 aid;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7d1b32c..ee0ed32 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -540,9 +540,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-07-01 20:29:45.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-07-01 20:29:47.000000000 +0200
+@@ -1228,7 +1228,7 @@ static int ieee80211_assoc(struct wiphy 
+ 			   struct cfg80211_assoc_request *req)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+-	int ret;
++	int ret, i;
  
- 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
--	if (tx->sta)
--		info->control.sta = &tx->sta->sta;
--
- 	if (!info->control.retry_limit) {
- 		if (!is_multicast_ether_addr(hdr->addr1)) {
- 			int len = min_t(int, tx->skb->len + FCS_LEN,
-@@ -620,9 +617,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
- 			info->control.rts_cts_rate_idx = 0;
- 	}
+@@ -1236,6 +1236,14 @@ static int ieee80211_assoc(struct wiphy 
+ 	    !(sdata->u.mgd.flags & IEEE80211_STA_AUTHENTICATED))
+ 		return -ENOLINK; /* not authenticated */
  
--	if (tx->sta)
--		info->control.sta = &tx->sta->sta;
--
- 	return TX_CONTINUE;
- }
++	sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
++
++	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
++		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
++		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
++		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104)
++			sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
++
+ 	sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_BSSID_SEL;
+ 	sdata->u.mgd.flags |= IEEE80211_STA_BSSID_SET;
  
+
+-- 
 
