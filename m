@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:42638 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbZGAV44 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754320AbZGASen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 17:56:56 -0400
-Received: by gxk26 with SMTP id 26so1913954gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 14:56:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1246485123.12994.168.camel@localhost.localdomain>
-References: <1246388712.4949.52.camel@localhost> <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
-	<1246396179.4949.76.camel@localhost> <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
-	<1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
-	<43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
-	<1246473300.30522.10.camel@localhost.localdomain> <20090701193657.GD3473@tuxdriver.com>
-	<1246485123.12994.168.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 1 Jul 2009 14:56:39 -0700
-Message-ID: <43e72e890907011456q7e3d9f5al1057f940a7655cda@mail.gmail.com>
-Subject: Re: Insist on cfg80211 for new drivers?
-To: Marcel Holtmann <marcel@holtmann.org>, Greg KH <greg@kroah.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>, Dave <kilroyd@googlemail.com>,
-	Karl Relton <karllinuxtest.relton@ntlworld.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 1 Jul 2009 14:34:43 -0400
+Subject: Re: Compiling wpa_supplicant?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jon Loeliger <jdl@bigfootnetworks.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1246467053.11632.13.camel@jdl-desktop>
+References: <1246467053.11632.13.camel@jdl-desktop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LfSEdL/zsnm3GEjdVSSV"
+Date: Wed, 01 Jul 2009 20:34:31 +0200
+Message-Id: <1246473271.8154.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 1, 2009 at 2:52 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
-> Hi John,
->
->> > That's really all I
->> > care about, I don't want another WEXT-based driver accepted; I want all
->> > the new ones using cfg80211.
->>
->> Now there is a discussion we should have had in Berlin...is it time
->> to insist on cfg80211-based configuration for all new drivers?
->
-> there is really nothing much to discuss on this topic. The plan is to
-> deprecate WEXT, that simple. So if the driver has no cfg80211 support,
-> then it will not be included. Period.
->
-> Send such drivers off to staging and let them have their 6 month.  Then
-> we either remove them again or they got ported to cfg80211.
 
-6 months only in staging ? Is this a rule now for staging?
+--=-LfSEdL/zsnm3GEjdVSSV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2009-07-01 at 11:50 -0500, Jon Loeliger wrote:
+
+> Is there a version of hostapd/wpa_suppliant that is more
+> up-to-date WRT libnl-2.0?  Or should I just use the wext
+> driver for now?
+
+I would suggest you compile against a released version of libnl, namely
+1.1 :) Otherwise, you can rip the compat code out off iw and stick it
+into wpa_supplicant/hostapd.
+
+johannes
+
+--=-LfSEdL/zsnm3GEjdVSSV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKS6wyAAoJEODzc/N7+QmaOWUQAMixYPtadcHFXYt/TscBA+OB
+Mx5RIyBn+2F7E55gFh/aQ51iww173Lc2dmsKAQmmF8tc48q962uSkTF3ajILfgpY
+pH+QmhsXlPviVO5/hlAdwm/w+00wMhN/2vxx6oOV27r7KK37woGsotqCQn1v3aRs
+G4kwuNfD619NXvgazZ+VRmceF4F/WtAffPcTCZ9Q+6dtV4JL66sMxY0xASkagso1
+DvjAX9Uaox1OMFC0KWsPmkPfTzXsseZwBdMZmxCy+AgiNnW0Zg8SAr3328q+OoWk
+q1VBlw8ATxwf3VFm/967+YtAREZ7dqjmub7MnijCKVtEkoE7KpwMyld1atj6FKm4
+wL/nWMEqzelqUq/6vV75EN9VC4rn6gyWQ1AUT3cyG01gkpwvWedjwVCtX0CATtYJ
+MTP4cfdL9FACenoSKoNzoCuwbT8o+P6LTpvkRwp4LyIV+Sxl6wvZae7j60i16vsI
+kznAGFqB4hI2VrD13mAG5Ff7aA8mkjL85mp4Ynp3JsFjIUWqb3zh0ZhuuY8+HaTR
+zRBQlDe/TigI99e3BmDR8E6ixQGjWhuRlyG9ptvGYQ9vUXj3oE7dyn/rrprJ3ddL
+wfUuv+UoRumRuWfAhGCJHPJz/oYf8pGB5pgcwU0xLYo1hjF79ITC08QYp+Lui/ZU
+G24Z++64TnULHBglrC3i
+=RWnF
+-----END PGP SIGNATURE-----
+
+--=-LfSEdL/zsnm3GEjdVSSV--
+
