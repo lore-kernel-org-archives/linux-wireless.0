@@ -1,46 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:8948 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752230AbZGaTJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 15:09:46 -0400
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-From: Pavel Roskin <proski@gnu.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-In-Reply-To: <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
-References: <20090731181020.GE7963@makis>
-	 <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
-	 <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 15:09:45 -0400
-Message-Id: <1249067385.20276.16.camel@mj>
-Mime-Version: 1.0
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:56158 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754899AbZGAK7B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 06:59:01 -0400
+Received: by bwz25 with SMTP id 25so428005bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 03:59:03 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Some thoughts about background scanning
+Date: Wed, 1 Jul 2009 12:59:02 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200907011003.49857.helmut.schaa@gmail.com> <1246441038.4131.12.camel@johannes.local>
+In-Reply-To: <1246441038.4131.12.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907011259.02946.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-31 at 21:25 +0300, Nick Kossifidis wrote:
+Am Mittwoch, 1. Juli 2009 schrieb Johannes Berg:
+> > My current approach is quite easy but works well: Extend the scan state
+> > machine with a new state (OPERATION) which restores the channel and the
+> > correct filter flags and notifies the AP that we're back. 
+> 
+> Makes sense. You can optimise scanning for the _current_ channel by a
+> combination of OPERATION and scanning, leaving the filter flags at the
+> scan version, and sending the probe requests. In fact, if you scan that
+> channel first, you can avoid IEEE80211_PROBE_DELAY since the NAV should
+> be known on that channel.
+> 
+> Tangentially related, we can also move into SCAN_SEND_PROBE _before_
+> IEEE80211_PROBE_DELAY has passed, if we receive a frame (which means NAV
+> update).
 
-> a) We don't need a timer for this, there is no need for accuracy
->     even with round_jiffies i think this is a waste of resources.
->     Also we don't need to run calibration if we are idle (no interrupts).
+Correct, that would be another minor optimzation.
 
-It doesn't sound right to me.
+> > The state
+> > machine moves there after every scanned channel. The result is that
+> > the complete scan can take quite some time, something a round 15 seconds.
+> 
+> That doesn't sound too bad. How long are you staying on the operational
+> channel though?
 
-Can it be that the device gets so miscalibrated during the silence that
-it won't be able to receive signal once it's there?  Say, the device is
-set to channel 1 but it actually listens to channel 3, and there are
-some weak beacons on channel 1.
+I used the beacon interval of the currently associated AP (100ms here).
+Hence, we can be sure that we receive at least one beacon from that AP
+and would notice if the AP is gone in the meantime. Of course that can
+be optimized by the approach I described in the last mail by proceeding
+with the scan once we receive a beacon without TIM bit set.
 
-And then there is an issue of the frequency straying outside the
-permitted spectrum.  Perhaps the transmission will trigger interrupts
-and thus recalibration, but in case of scanning, the first probe
-requests could be on wrong frequencies.
+> > Scanning multiple channels before switching back would allow us to
+> > reduce the amount of time the scan takes. So, what I'd like to have is
+> > integration with pm_qos in order to determine how much channels may be
+> > scanned at once before we have to switch back. Shouldn't be that
+> > difficult ;) 
+> 
+> You might be able to use local->hw.conf.max_sleep_period from
+> ieee80211_recalc_ps? Or probably better move the calculation into a 
+> helper function since it needs to work across all managed interfaces, if
+> there are multiple.
 
-I would probably leave the timer and allow the interrupts make the
-delays shorter.
+Yep. Already thought about that one. It only needs minor adjustments (for
+example it is only available if powersave is done within mac80211).
 
--- 
-Regards,
-Pavel Roskin
+[...]
+
+> > Advantages:
+> > 
+> > We could split the actual scan algorithm out of the scan state machine,
+> > for example if pm_qos allows us to stay away for 150ms we could reorder
+> > the channels to scan one active channel followed by one passive channel
+> > before switching back to the operating channel. Should allow us to use
+> > all sorts of insane optimizations.
+> 
+> :)
+> It might be better to have even more states, e.g. make the list look
+> like this:
+>  - SWITCH_TO 2412 MHz
+>  - NAV_WAIT max 33ms
+>  - SEND_PROBES
+>  - WAIT_PROBES
+>  - SWITCH_TO (operation channel)
+>  - OPERATION
+> ...
+> 
+> That way we can short-circuit the NAV_WAIT on receiving a frame, for
+> example. We don't receive all frames, of course, so it would be useful
+> to have some driver assistance for that at some point too.
+
+Yeah, cool idea. Have to think about which states make sense and which
+don't.
+
+> > In some cases we might shorten the pre-computed values. For example if
+> > we switch back to the operating channel and receive a beacon without
+> > TIM being set for our association and our TX queue is empty we might
+> > immediately proceed with the scan without having to stay on the channel
+> > for the full amount of time. Not sure if we can do this properly without
+> > recomputing the whole table (depends on the actual algorithm used).
+> 
+> I think short-circuiting states should be possible from the outside for
+> the NAV wait too.
+
+Agreed.
+
+> > Does that kind of approach sound useful? Is it overkill?
+> 
+> Seems useful to me :)
+
+Great, thanks. I'll look into it some more.
+
+Helmut
+
