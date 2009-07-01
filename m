@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:18243 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751506AbZGaTpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 15:45:16 -0400
-Subject: Re: [PATCH] iwlwifi: don't export symbols not needed in other
- modules
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248982009.23496.5.camel@johannes.local>
-References: <1248947897.8925.13.camel@johannes.local>
-	 <1248978482.1216.1087.camel@rc-desk>
-	 <1248979011.23496.4.camel@johannes.local>
-	 <1248979665.1216.1094.camel@rc-desk>
-	 <1248982009.23496.5.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 12:45:15 -0700
-Message-Id: <1249069515.30019.228.camel@rc-desk>
-Mime-Version: 1.0
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:35080 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758231AbZGADge (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2009 23:36:34 -0400
+Date: Tue, 30 Jun 2009 22:36:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, ccmcphe@verizon.net
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Message-ID: <4a4ad9ca.vjHlJqRZ71Q1f7CP%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 12:26 -0700, Johannes Berg wrote:
-> On Thu, 2009-07-30 at 11:47 -0700, reinette chatre wrote:
-> 
-> > No. If this is what you want then I think you also need to remove
-> > iwl_rx_ant_restriction.
-> 
-> Hm, I missed that, I actually have removed as part of my powersave
-> patch.
+From: Clyde McPherson <ccmcphe@verizon.net>
 
-now I see. 
+Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
+4318E can do 802.11A/B/G, only B and G mode are supported in b43.
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Reinette
+diff --git a/drivers/net/wireless/b43/pcmcia.c 
+b/drivers/net/wireless/b43/pcmcia.c
+index 3cfc303..6c3a749 100644
+--- a/drivers/net/wireless/b43/pcmcia.c
++++ b/drivers/net/wireless/b43/pcmcia.c
+@@ -35,6 +35,7 @@
+ 
+ static /*const */ struct pcmcia_device_id b43_pcmcia_tbl[] = {
+ 	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x448),
++	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x476),
+ 	PCMCIA_DEVICE_NULL,
+ };
 
