@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:37746 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbZGZTPV convert rfc822-to-8bit (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:46898 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752456AbZGAQQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2009 15:15:21 -0400
-MIME-Version: 1.0
-In-Reply-To: <c6b1100b0907210439jf67d886s3125dafa5f4d3928@mail.gmail.com>
-References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
-	 <c6b1100b0907140404h4fdbe419p8443da43350f3520@mail.gmail.com>
-	 <c6b1100b0907210439jf67d886s3125dafa5f4d3928@mail.gmail.com>
-Date: Sun, 26 Jul 2009 20:15:19 +0100
-Message-ID: <c6b1100b0907261215l71ada148y8a15f6595d939192@mail.gmail.com>
-Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
-From: Chris Clayton <chris2553@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 1 Jul 2009 12:16:32 -0400
+Subject: Re: [PATCH] Add prism 2/3 usb adaptor firmware for use with
+ staging/wlan-ng driver.
+From: Karl Relton <karllinuxtest.relton@ntlworld.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+References: <1246388712.4949.52.camel@localhost>
+	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+	 <1246396179.4949.76.camel@localhost>
+	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 01 Jul 2009 17:16:31 +0100
+Message-Id: <1246464991.4331.18.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/21 Chris Clayton <chris2553@googlemail.com>:
-> 2009/7/14 Chris Clayton <chris2553@googlemail.com>:
-> <snip>
->
->> I've updated to 2.6.31-rc3 this morning and done some more testing.
->> I'm now convinced that the rt61pci driver is somehow involved in
->> locking up the laptop. With the (Belkin) rt61 card inserted, the
->> machine will lock up even if I am doing nothing (no web browsing,
->> email or anything else at all) except running this script in a console
->> window:
->>
->> i=0
->> while true; do
->>        let i++
->>        echo -n "$i "
->>        sleep 1
->> done
->>
->> In the tests I have done so far, the counter has never gone beyond 240
->> before the machine locked. With the (no-name) ath5k card inserted I
->> can use the laptop for normal web browsing, email, etc with no
->> problems - the counter in the script above gets to over 2000.
->>
->
-> The freeze still happens with 2.6.31-rc3-git5, but I've been doing
-> some more fact-finding.
->
-> Running the script shown above and with the rt61-based card inserted,
-> I can freeze the laptop even if I am doing nothing else on the laptop.
-> When the freeze occurs, the laptop is effectively dead, no response to
-> mouse movement or keyboard input and no response to pings from
-> another machine on my network. However, if I eject the card, the
-> laptop comes to life again. The key presses from when the laptop was
-> frozen appear on screen and pings from another machine are responded
-> to. The script continues to run and display the counter. I then
-> reinsert the card and everything appears OK until the laptop freezes
-> again a minute or two later. During a test run this morning the
-> machine froze at (from the output of the script) 80, 235, 369, 538 and
-> 672. Each time, ejecting the card brought the machine back to life.
->
-> Trying the same test with the ath5k-based card inserted resulted in
-> the script getting to 2300 without the laptop freezing, at which point
-> I stopped the script.
->
+On Tue, 2009-06-30 at 14:58 -0700, Luis R. Rodriguez wrote:
+> On Tue, Jun 30, 2009 at 2:09 PM, Karl
+> Relton<karllinuxtest.relton@ntlworld.com> wrote:
+> > On Tue, 2009-06-30 at 12:17 -0700, Luis R. Rodriguez wrote:
+> >> On Tue, Jun 30, 2009 at 12:05 PM, Karl
+> >> Relton<karllinuxtest.relton@ntlworld.com> wrote:
+> >> > Signed-Off-By: Karl Relton
+> >> > Signed-Off-By: Mark S. Mathews
+> >>
+> >> The commit log is empty. Where is this driver? Is it in staging at
+> >> least? If so does this get users of the driver a usable firmware? What
+> >> is the future of the driver BTW?
+> >>
+> >
+> > Oops - put text in wrong part of patch documentation. I can move this up
+> > to the 'commit log' part.
+> >
+> > The driver is under 'staging' - maintained by Greg Koah-Hartman
+> >
+> > The firmware blob in 'srec' format for prism 2/3 usb adaptors.
+> > The driver will read the srec file using a standard request_firmware()
+> > call, and will convert it into the appropriate binary format and upload to
+> > the adaptor. Note the processing is left to the driver (rather than
+> > pre-compiling) because the driver needs to insert runtime data obtained from
+> > the adaptor into the blob. The appropriate insertion locations are conveyed
+> > by the srec format.
+> 
+> Why all the srec->binary conversion? Doesn't this waste space on
+> people's firmware directories?
+> 
+Yes, technically it does. The srec file is ~185KB, a binary image would
+be ~64KB.
 
-One more data point. I wondered whether the freeze would "time out" if
-I just left the laptop frozen, but my testing shows that it probably
-does not (or if it does it takes more than 27 minutes to do so.
+The reason it was left is that the driver has to do some runtime
+plugging of data into the image, so pre-compilation would have meant
+inventing both a compiler tool and an intermediate format for the driver
+to read and process. Putting all the srec processing in the driver was
+more expedient (just meant porting existing userspace code into driver
+space).
 
-I've also tried to bisect again, but, as last time, once I got to the
-batch of network-related changes that went into -rc1, I get a series
-of kernels that build but either won't boot or have inoperable
-wireless networking.
+Karl
 
-Finally, since I haven't had a single reply to the regression report I
-posted almost two weeks ago, I now give up. I'll switch to using the
-card supported by the ath5k driver.
-
-<snip>
-
-Chris
--- 
-No, Sir; there is nothing which has yet been contrived by man, by
-which so much happiness is produced as by a good tavern or inn -
-Doctor Samuel Johnson
