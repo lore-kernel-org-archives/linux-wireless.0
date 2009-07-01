@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52571 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:35972 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752893AbZGCIAT (ORCPT
+	with ESMTP id S1753774AbZGATff (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 04:00:19 -0400
-Subject: Re: mac80211: Force beacon update?
+	Wed, 1 Jul 2009 15:35:35 -0400
+Message-Id: <20090701193418.831843658@sipsolutions.net>
+References: <20090701192641.072258140@sipsolutions.net>
+Date: Wed, 01 Jul 2009 21:26:44 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4A4DB01E.2030408@informatik.uni-kl.de>
-References: <4A4DB01E.2030408@informatik.uni-kl.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Tz0BgjzMJwh+zriBeWqG"
-Date: Fri, 03 Jul 2009 10:00:16 +0200
-Message-Id: <1246608016.16770.51.camel@johannes.local>
+Subject: [PATCH 03/20 v4] wext: default to y
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The way I initially thought we could do wireless extensions
+is by making all the compat code in cfg80211 be independent
+of CONFIG_WIRELESS_EXT, but this is turning out to not be
+feasible. Therefore, fix the Kconfig help text and make the
+option default to yes, so people won't get a nasty surprise
+when mac80211 will get rid of its 'select WIRELESS_EXT' any
+time now.
 
---=-Tz0BgjzMJwh+zriBeWqG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/Kconfig |   12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-On Fri, 2009-07-03 at 09:15 +0200, Reiner Herrmann wrote:
+--- wireless-testing.orig/net/wireless/Kconfig	2009-07-01 08:55:08.000000000 +0200
++++ wireless-testing/net/wireless/Kconfig	2009-07-01 08:59:43.000000000 +0200
+@@ -35,19 +35,13 @@ config WIRELESS_OLD_REGULATORY
+ 
+ config WIRELESS_EXT
+ 	bool "Wireless extensions"
+-	default n
++	default y
+ 	---help---
+ 	  This option enables the legacy wireless extensions
+ 	  (wireless network interface configuration via ioctls.)
+ 
+-	  Wireless extensions will be replaced by cfg80211 and
+-	  will be required only by legacy drivers that implement
+-	  wireless extension handlers. This option does not
+-	  affect the wireless-extension backward compatibility
+-	  code in cfg80211.
+-
+-	  Say N (if you can) unless you know you need wireless
+-	  extensions for external modules.
++	  Say Y unless you've upgraded all your userspace to use
++	  nl80211 instead of wireless extensions.
+ 
+ config WIRELESS_EXT_SYSFS
+ 	bool "Wireless extensions sysfs files"
 
-> I want to attach a custom IE to beacons,
-
-Umm, afaik you can configure that in hostapd, if not then you need to
-hack hostapd.
-
-johannes
-
---=-Tz0BgjzMJwh+zriBeWqG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKTbqMAAoJEODzc/N7+Qmah88QANBBBs33t0pqTARLRT1wqSi6
-zMULsKK8GEYZtD2hyj1IVVcNP3b3r9vTYx/by2MAZq2vsFx+5m4PGs9wTm4P6J49
-G92yvkwuMK15xeTBOiQHOw9J0d1xqJtsCHc8N/488oDOqQvmLsApkswOyaZIL103
-iEqG3DJMlEn5u6CHR/pyORN0TNDaWczbDh3v0oYcflvrHfYzYFUIsj+tfQ0+haOP
-g/Jhv8kBrx8Kgw9Ksu6lLkgNGEJohkxLiqiizviMyLc3IE6gJ5pGMr4wxEnY7mj3
-gBbEkWWnTRmJlqIcEHbzHq5y5ywx7SnbftkzKlDHxHtgzdq4oGV0iu6ykmx97TFA
-8fGa27qKmEb6naJMt8it+nZ4XvG1RHi6VuU+PvekSyih7FPhz/yFol++nC/GO5dE
-VwIkKgtkqMxY7leZD+xyxRnnXOt0BaKXQl62t/AeZ9jZywuqp0B0MdtC04QBb5et
-pJZ4rKjfyEKM3cAJn5ShVQVma+NXZ58iu1+gdjaxczfdtnqNj8iInOhFEqstUlDE
-et+aE9dcWEXT01U5jV7dltqCitG3QmP1/voYXkFyDlTZYjtva3OkwqeoVYiAE6hZ
-Iy30dp5H/JBPs83HmwRy7sEvsY3aXfWZlZIT8hymJExS9IIXNDzoPOEHhM0/99N6
-q1G15KFpNyGCzf7Md3Cp
-=QDdI
------END PGP SIGNATURE-----
-
---=-Tz0BgjzMJwh+zriBeWqG--
+-- 
 
