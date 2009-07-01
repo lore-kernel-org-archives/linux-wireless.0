@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4292 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757863AbZGQVWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 17:22:24 -0400
-Message-ID: <4A60E5EC.1080700@canonical.com>
-Date: Fri, 17 Jul 2009 14:58:20 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Setting rfkill from user space
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:35986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755827AbZGATfu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 15:35:50 -0400
+Message-Id: <20090701193419.826590018@sipsolutions.net>
+References: <20090701192641.072258140@sipsolutions.net>
+Date: Wed, 01 Jul 2009 21:26:49 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/20 v4] mac80211: tell SME about real auth state
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+When the auth algorithm is rejected, but we don't have
+another one to try, we will eventually retry but that
+isn't useful -- we'll then do it again and again until
+we eventually give up. Instead, we should let the SME
+know and go into disabled state. The same applies for
+situations where the AP rejects with any other status
+code.
 
-Because the rfkill sysfs info moved around, I've been working on a
-program for the Debian acpi-support package that can be used to perform
-2 operations; 1) discover if there are any wireless devices powered on,
-and 2) toggle the states of all wireless devices (at the same time).
+Additionally, when trying the next auth algorithm, we
+should reset the auth_tries so that just a single lost
+frame doesn't lead to us giving up on the third auth
+algorithm.
 
-git://kernel.ubuntu.com/rtg/rfkill
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-I'm a bit confused about what idx is in the event structure. Other then
-ascending (though not monotonically), idx appears to have no real value
-to user space. I see in the rfkill driver where its being assigned, and
-it appears to be an rfkill instance number that describes a relationship
-to a device. For example:
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-07-01 09:01:15.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-07-01 09:01:19.000000000 +0200
+@@ -1511,9 +1511,15 @@ static void ieee80211_rx_mgmt_auth(struc
+ 				    !ieee80211_sta_wep_configured(sdata))
+ 					continue;
+ 				ifmgd->auth_alg = algs[pos];
+-				break;
++				ifmgd->auth_tries = 0;
++				return;
+ 			}
+ 		}
++		/* nothing else to try -- give up */
++		cfg80211_send_rx_auth(sdata->dev, (u8 *) mgmt, len,
++				      GFP_KERNEL);
++		ifmgd->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_recalc_idle(sdata->local);
+ 		return;
+ 	}
+ 
 
-Here is the output before toggling and right after a boot:
-
-rtg@xps1330:~$ ./rfkill
-bluetooth 0 UNBLOCKED soft:0 hard:0
-wlan 1 UNBLOCKED soft:0 hard:0
-bluetooth 2 UNBLOCKED soft:0 hard:0
-wlan 3 UNBLOCKED soft:0 hard:0
-UNBLOCKED
-
-After toggling to BLOCKED:
-
-rtg@xps1330:~$ sudo ./rfkill 1
-[sudo] password for rtg:
-rtg@xps1330:~$ ./rfkill
-wlan 1 SOFT_BLOCKED soft:1 hard:0
-bluetooth 2 SOFT_BLOCKED soft:1 hard:0
-wlan 3 HARD_BLOCKED soft:1 hard:1
-BLOCKED
-
-After toggling to UNBLOCKED:
-
-rtg@xps1330:~$ sudo ./rfkill 0
-rtg@xps1330:~$ ./rfkill
-wlan 1 HARD_BLOCKED soft:0 hard:1
-bluetooth 2 HARD_BLOCKED soft:0 hard:1
-wlan 3 UNBLOCKED soft:0 hard:0
-bluetooth 4 UNBLOCKED soft:0 hard:0
-UNBLOCKED
-
-This laptop only has one wlan and one bluetooth device. Why the extra
-index values?
-
-rtg
 -- 
-Tim Gardner tim.gardner@canonical.com
+
