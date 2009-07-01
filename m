@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.anarazel.de ([217.115.131.40]:41256 "EHLO smtp.anarazel.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753461AbZGGBdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 21:33:42 -0400
-From: Andres Freund <andres@anarazel.de>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.31-rc2: Reported regressions from 2.6.30
-Date: Tue, 7 Jul 2009 03:25:51 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <35kKlbXMqWN.A.RXD.D0oUKB@chimera>
-In-Reply-To: <35kKlbXMqWN.A.RXD.D0oUKB@chimera>
+Received: from fmailhost03.isp.att.net ([204.127.217.103]:58725 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896AbZGAP2c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 11:28:32 -0400
+Message-ID: <4A4B80AB.6090307@lwfinger.net>
+Date: Wed, 01 Jul 2009 10:28:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200907070325.51439.andres@anarazel.de>
+To: John W Linville <linville@tuxdriver.com>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] ssb: Add support for 4318E
+References: <4a4ada7f.oItwGXurq7WMW+HE%Larry.Finger@lwfinger.net> <200907011517.34061.mb@bu3sch.de>
+In-Reply-To: <200907011517.34061.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafael,
+Michael Buesch wrote:
+> On Wednesday 01 July 2009 05:39:43 Larry Finger wrote:
+>> From: Clyde McPherson <ccmcphe@verizon.net>
+>>
+>> Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
+>> 4318E can do 802.11A/B/G, only B and G mode are supported in b43.
+>>
+>> Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> ack
+> 
 
-On Tuesday 07 July 2009 01:42:09 Rafael J. Wysocki wrote:
-> If you know of any other unresolved regressions from 2.6.30, please let me
-> know either and I'll add them to the list.  Also, please let me know if any
-> of the entries below are invalid.
-There is also http://lkml.org/lkml/2009/6/30/398 : Soft-Lockup/Race in 
-networking in 2.6.31-rc1+195 (possibly caused by netem)
+Cc: Stable <stable@vger.kernel.org>
 
+John,
 
-Andres
+I forgot the above line in both the b43 and ssb patches.
+
+Larry
+
