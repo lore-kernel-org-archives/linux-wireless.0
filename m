@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:33409 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940AbZGFOAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 10:00:14 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-Date: Mon, 6 Jul 2009 16:00:13 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200907040053.05654.chunkeey@web.de> <73aaf0dd0907060611w5a288828h4c4728f52fe4e16c@mail.gmail.com>
-In-Reply-To: <73aaf0dd0907060611w5a288828h4c4728f52fe4e16c@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:39976 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753541AbZGANRk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 09:17:40 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] b43: Add support for 4318E
+Date: Wed, 1 Jul 2009 15:17:41 +0200
+Cc: John W Linville <linville@tuxdriver.com>, ccmcphe@verizon.net,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4a4ada70.t85pybsO8xH4owyV%Larry.Finger@lwfinger.net>
+In-Reply-To: <4a4ada70.t85pybsO8xH4owyV%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200907061600.14196.chunkeey@web.de>
+Message-Id: <200907011517.41572.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 July 2009 15:11:11 Max Filippov wrote:
-> > This patch tries to address a long standing issue:
-> > how to survive serve memory starvation situations,
-> > without losing the device due to missing transfer-buffers.
+On Wednesday 01 July 2009 05:39:28 Larry Finger wrote:
+> From: Clyde McPherson <ccmcphe@verizon.net>
 > 
-> Christian, how does placement of skb allocation point make a
-> difference?
-not all drivers are equal... usb is the critical one.
-just take a look at the these lines in p54u_rx_cb
+> Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
+> 4318E can do 802.11A/B/G, only B and G mode are supported in b43.
+> 
+> Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-	skb = dev_alloc_skb(priv->common.rx_mtu + 32);
-	if (unlikely(!skb)) {
-		/* TODO check rx queue length and refill *somewhere* */
-		return;
-	}
+ack
 
-so every time we failed to alloc the replacement skb, we have to
-abandon one rx urb, until nothing is left and the user has
-to replug/reload. pci is a bit more forgiving, but it can bite as well.
-(Note: this scenario is _unlikely_ to happen ever since Larry scaled
- down the rx_mtu from 3240 to about 2400 or so - which makes
- dev_alloc_skb a 0-order allocation on the most common architectures)
+> ---
+> 
+> diff --git a/drivers/net/wireless/b43/pcmcia.c 
+> b/drivers/net/wireless/b43/pcmcia.c
+> index 3cfc303..6c3a749 100644
+> --- a/drivers/net/wireless/b43/pcmcia.c
+> +++ b/drivers/net/wireless/b43/pcmcia.c
+> @@ -35,6 +35,7 @@
+>  
+>  static /*const */ struct pcmcia_device_id b43_pcmcia_tbl[] = {
+>  	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x448),
+> +	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x476),
+>  	PCMCIA_DEVICE_NULL,
+>  };
+> 
+> 
+> 
 
-> Anyway skb that carry data frame will be handed to the mac
-> and replaced with new one. That is, this patch does not eliminate
-> possibility of control frame loss due to insufficient memory.
-control frames loss?
-can you please point me exactly where?
-Since this is a bug that needs to be fixed.
 
-as control frames' skb should be (and hopefully are) always reused.
-(see @ txrx.c line 590 - p54_rx_control -> return skb; )
 
-> Maybe we'd better have separate reusable skb for control frames which
-> is never handed out from the driver?
-well as a matter of fact this is already true for p54pci & p54usb
-(based on the assumption we are really recycling all control frames...
- and not somehow forgot a case and got a leak there?!)
-
-Regards,
-	Chr
+-- 
+Greetings, Michael.
