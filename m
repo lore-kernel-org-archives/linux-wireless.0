@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12829 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752809AbZGaSwS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:52:18 -0400
-Subject: Re: [PATCH 000/002] Fix frequent reconnects caused by new
- conection monitor
-From: reinette chatre <reinette.chatre@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linville <linville@tuxdriver.com>,
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:63162 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbZGAVSG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 17:18:06 -0400
+Date: Wed, 01 Jul 2009 16:18:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1249056817.20593.1.camel@maxim-laptop>
-References: <1249056817.20593.1.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 11:52:18 -0700
-Message-Id: <1249066338.30019.214.camel@rc-desk>
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] net: remove skb->do_not_encrypt from skbuff.c
+Message-ID: <4a4bd294.Hac6+C1W4gkNIlOX%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-31 at 09:13 -0700, Maxim Levitsky wrote:
-> Hi, here is the updated version of these two patches that fix the
-> $SUBJECT issue.
-> 
-> I attach these (in case mailer mangles them), and reply with patches.
-> 
-> Tested both with low quality signal, and beacon loss.
-> Lack of TX is found, every 30 seconds now, and quite reliable.
-> Lack of beacons, triggers probe like it did every 2 seconds.
+Commit 38ba8fb67d6be3258a ("net: remove unused skb->do_not_encrypt")
+removed the variable from struct skbuff, but the usage in net/core/skbuff.c
+crept back in, probably in the merge between mainline and wireless-testing.
 
-Thanks!
+Signed-off-by: Larry.Finger <Larry.Finger@lwfinger.net>
+---
 
-I've been running with this for two hours now with no disconnects. This
-is where before the patches I would get disconnected after a few
-minutes. I did get two "No probe response from AP xx:xx:xx:xx:xx:xx
-after 500ms, try 1" messages in my log.
+John,
 
-Reinette
+This fixes the build problem I reported earlier.
 
+Larry
+---
 
+Index: wireless-testing/net/core/skbuff.c
+===================================================================
+--- wireless-testing.orig/net/core/skbuff.c
++++ wireless-testing/net/core/skbuff.c
+@@ -559,9 +559,6 @@ static void __copy_skb_header(struct sk_
+ #endif
+ #endif
+ 	new->vlan_tci		= old->vlan_tci;
+-#if defined(CONFIG_MAC80211) || defined(CONFIG_MAC80211_MODULE)
+-	new->do_not_encrypt	= old->do_not_encrypt;
+-#endif
+ 
+ 	skb_copy_secmark(new, old);
+ }
