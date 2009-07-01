@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:39004 "EHLO mx2.redhat.com"
+Received: from will39.synserver.de ([212.40.172.10]:39705 "EHLO willies.info"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754942AbZGMRxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 13:53:30 -0400
-Subject: Re: nl80211 and wext interoperability
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1247163342.22527.2.camel@johannes.local>
-References: <1247139797.2144.27.camel@johannes.local>
-	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
-	 <1247163342.22527.2.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 13:53:38 -0400
-Message-Id: <1247507618.4369.11.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1751618AbZGANmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2009 09:42:54 -0400
+Received: from nat-extern.rrze.uni-erlangen.de ([192.44.85.23] helo=jan.bude)
+	by willies.info with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <jan@willies.info>)
+	id 1MLzU0-0001ST-5I
+	for linux-wireless@vger.kernel.org; Wed, 01 Jul 2009 15:04:16 +0200
+Message-ID: <4A4B5EC8.8060804@willies.info>
+Date: Wed, 01 Jul 2009 15:04:08 +0200
+From: Jan Willies <jan@willies.info>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: 4965AGN loses connection on Custom wireless event
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-09 at 20:15 +0200, Johannes Berg wrote:
-> On Thu, 2009-07-09 at 10:53 -0700, Luis R. Rodriguez wrote:
-> > On Thu, Jul 9, 2009 at 4:43 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> > > Hi!
-> > >
-> > > With the recent work I've done in cfg80211 for nl80211 and wext, we've
-> > > mostly removed wext code everywhere. The only thing missing right now is
-> > > the key support, and I think then we can declare cfg80211's wext compat
-> > > layer pretty much done in terms of what mac80211 had -- orinoco will
-> > > need the sensitivity (or AP density) thing but I'm not sure how we
-> > > should do that since it's a value that is hardware dependent -- we'll
-> > > need to have very good discovery code for the allowed values (unlike
-> > > wext where you can set 0..3 and don't know what that means). Anyway,
-> > > that wasn't the point of this email.
-> > >
-> > > Currently, if you use wpa_supplicant -Dwext and -Dnl80211 mixed,
-> > > -Dnl80211 gets confused because -Dwext will set a 32-byte random SSID to
-> > > "disconnect".
-> > 
-> > When do we disconnect like this? Upon initialization of wpa_supplicant
-> > -Dwext -Dnl80211 ?
-> 
-> When you shut down wpa_supplicant -Dwext it does that.
+Hello list,
 
-Mainly because there's no way to tell WEXT drivers to "stop whatever
-you're doing and just be idle"...
+I have a strange problem with an EAP-Network here. I can associate just 
+fine, but approx 1 min after the _initial_ connection completed the 
+network hangs. Though all the tools say I'm still connected (nm-applet, 
+iwconfig) I can't ping anything. I have to re-new the connection with 
+nm-applet and after that it works again (and longer!).
 
-The supplicant clears out the keys on TERM anyway, and in some cases
-(iwlagn) the driver will keep trying to reassociate internally, and if
-the keys aren't there, the AP will keep rejecting it, which just means
-you're spamming the air and the AP continuously, and then when you
-re-start the supplicant, you get a constant stream of WEXT disconnect
-events because the AP keeps rejecting you, and the supplicant freaks
-out.
+1. boot notebook and associate with wifi
+2. wait 1 min -> hang
+3. re-establish connection with nm-applet
+4. after that it never hangs again (mostly)
 
-So, forcing a random SSID/BSSID combo is the best way (with WEXT) to
-tell the driver to just stop trying to associate to anything.
+You can find the log here: http://jan.willies.info/wpa_supplicant.log
 
-Dan
+Dan Williams says the interesting line is 1242720593.722277: "the driver 
+sends an association event *after* it's completed association, which the 
+supplicant interprets as a restart of the authentication process".
 
+This is a Thinkpad X300 with Fedora 11 (iwlagn-1.3.27kds and 
+wpa_supplicant-0.6.8)
+
+
+regards,
+
+   - jan
 
