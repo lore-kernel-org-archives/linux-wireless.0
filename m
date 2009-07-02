@@ -1,127 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:47318 "EHLO mga14.intel.com"
+Received: from mx2.redhat.com ([66.187.237.31]:43169 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964882AbZGQQae (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:30:34 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/14] iwlwifi: change iwl_enable/disable_interrupts to "inline"
-Date: Fri, 17 Jul 2009 09:30:27 -0700
-Message-Id: <1247848227-24031-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247848227-24031-14-git-send-email-reinette.chatre@intel.com>
-References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-10-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-11-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-12-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-13-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-14-git-send-email-reinette.chatre@intel.com>
+	id S1752551AbZGBM3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2009 08:29:17 -0400
+Subject: Re: [PATCH hostap/wpa_supplicant] Allow wpa_supplicant to use
+ libnl-2.0
+From: Dan Williams <dcbw@redhat.com>
+To: Jon Loeliger <jdl@bigfootnetworks.com>
+Cc: jouni.malinen@atheros.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1246481949.11632.36.camel@jdl-desktop>
+References: <1246481949.11632.36.camel@jdl-desktop>
+Content-Type: text/plain
+Date: Thu, 02 Jul 2009 08:29:15 -0400
+Message-Id: <1246537755.16543.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Wed, 2009-07-01 at 15:59 -0500, Jon Loeliger wrote:
+> Introduce CONFIG_LIBNL20 .config parameter and propogate
+> that as a CFLAG in the Makefile.
+> 
+> Add forward-compatibility code to allow the existing code
+> to also use libnl-2.0.
+> 
+> Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
 
-iwl_enable_interrupts is being called inside the interrupt,
-change from function call to inline
+You might actually want to post this to the hostap/wpa_supplicant
+mailing list instead.  While developers involved in both projects are
+subscribed to both lists, linux-wireless isn't the right place for
+patches against hostap and wpa_supplicant.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c    |   25 -------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h    |    2 --
- drivers/net/wireless/iwlwifi/iwl-helpers.h |   21 +++++++++++++++++++++
- 3 files changed, 21 insertions(+), 27 deletions(-)
+http://lists.shmoo.com/mailman/listinfo/hostap
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6989cbc..ea68939 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1546,31 +1546,6 @@ void iwl_uninit_drv(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_uninit_drv);
- 
--
--void iwl_disable_interrupts(struct iwl_priv *priv)
--{
--	clear_bit(STATUS_INT_ENABLED, &priv->status);
--
--	/* disable interrupts from uCode/NIC to host */
--	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
--
--	/* acknowledge/clear/reset any interrupts still pending
--	 * from uCode or flow handler (Rx/Tx DMA) */
--	iwl_write32(priv, CSR_INT, 0xffffffff);
--	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
--	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
--}
--EXPORT_SYMBOL(iwl_disable_interrupts);
--
--void iwl_enable_interrupts(struct iwl_priv *priv)
--{
--	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
--	set_bit(STATUS_INT_ENABLED, &priv->status);
--	iwl_write32(priv, CSR_INT_MASK, priv->inta_mask);
--}
--EXPORT_SYMBOL(iwl_enable_interrupts);
--
--
- #define ICT_COUNT (PAGE_SIZE/sizeof(u32))
- 
- /* Free dram table */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 018030b..d339336 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -458,8 +458,6 @@ int iwl_send_card_state(struct iwl_priv *priv, u32 flags,
- /*****************************************************
-  * PCI						     *
-  *****************************************************/
--void iwl_disable_interrupts(struct iwl_priv *priv);
--void iwl_enable_interrupts(struct iwl_priv *priv);
- irqreturn_t iwl_isr_legacy(int irq, void *data);
- int iwl_reset_ict(struct iwl_priv *priv);
- void iwl_disable_ict(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-index a1328c3..bd0b12e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-@@ -145,4 +145,25 @@ static inline void iwl_stop_queue(struct iwl_priv *priv, u8 queue)
- #define ieee80211_stop_queue DO_NOT_USE_ieee80211_stop_queue
- #define ieee80211_wake_queue DO_NOT_USE_ieee80211_wake_queue
- 
-+static inline void iwl_disable_interrupts(struct iwl_priv *priv)
-+{
-+	clear_bit(STATUS_INT_ENABLED, &priv->status);
-+
-+	/* disable interrupts from uCode/NIC to host */
-+	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
-+
-+	/* acknowledge/clear/reset any interrupts still pending
-+	 * from uCode or flow handler (Rx/Tx DMA) */
-+	iwl_write32(priv, CSR_INT, 0xffffffff);
-+	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
-+	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
-+}
-+
-+static inline void iwl_enable_interrupts(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
-+	set_bit(STATUS_INT_ENABLED, &priv->status);
-+	iwl_write32(priv, CSR_INT_MASK, priv->inta_mask);
-+}
-+
- #endif				/* __iwl_helpers_h__ */
--- 
-1.5.6.3
+Dan
+
+> ---
+> 
+> This patch applies to:
+>     git://w1.fi/srv/git/hostap-06.git
+>     fa4e296f542af01da135d997358d6d45a32dd59e
+> 
+> Also, I suspect that this define:
+> 
+>     +#define nl_handle nl_sock
+> 
+> may need to be added to the hostapd side as well, but
+> I'm not using that and haven't investigated or tested that.
+> 
+> jdl
+> 
+> 
+>  src/drivers/driver_nl80211.c |   17 +++++++++++++++++
+>  wpa_supplicant/Makefile      |    4 ++++
+>  2 files changed, 21 insertions(+), 0 deletions(-)
+> 
+> diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+> index a7b351a..66288f6 100644
+> --- a/src/drivers/driver_nl80211.c
+> +++ b/src/drivers/driver_nl80211.c
+> @@ -47,6 +47,15 @@
+>  #endif
+>  
+> 
+> +#ifdef CONFIG_LIBNL20
+> +/* libnl 2.0 compatibility code */
+> +
+> +#define nl_handle nl_sock
+> +#define nl_handle_alloc_cb nl_socket_alloc_cb
+> +#define nl_handle_destroy nl_socket_free
+> +#endif /* CONFIG_LIBNL20 */
+> +
+> +
+>  struct wpa_driver_nl80211_data {
+>  	void *ctx;
+>  	int wext_event_sock;
+> @@ -1441,12 +1450,20 @@ static void * wpa_driver_nl80211_init(void *ctx, const char *ifname)
+>  		goto err3;
+>  	}
+>  
+> +#ifdef CONFIG_LIBNL20
+> +	if (genl_ctrl_alloc_cache(drv->nl_handle, &drv->nl_cache) < 0) {
+> +	    wpa_printf(MSG_ERROR, "nl80211: Failed to allocate generic "
+> +			   "netlink cache");
+> +		goto err3;
+> +	}
+> +#else
+>  	drv->nl_cache = genl_ctrl_alloc_cache(drv->nl_handle);
+>  	if (drv->nl_cache == NULL) {
+>  		wpa_printf(MSG_ERROR, "nl80211: Failed to allocate generic "
+>  			   "netlink cache");
+>  		goto err3;
+>  	}
+> +#endif
+>  
+>  	drv->nl80211 = genl_ctrl_search_by_name(drv->nl_cache, "nl80211");
+>  	if (drv->nl80211 == NULL) {
+> diff --git a/wpa_supplicant/Makefile b/wpa_supplicant/Makefile
+> index 45d6ada..fa43a0c 100644
+> --- a/wpa_supplicant/Makefile
+> +++ b/wpa_supplicant/Makefile
+> @@ -135,6 +135,10 @@ ifdef CONFIG_DRIVER_NL80211
+>  CFLAGS += -DCONFIG_DRIVER_NL80211
+>  OBJS_d += ../src/drivers/driver_nl80211.o
+>  LIBS += -lnl
+> +ifdef CONFIG_LIBNL20
+> +LIBS += -lnl-genl
+> +CFLAGS += -DCONFIG_LIBNL20
+> +endif
+>  ifdef CONFIG_CLIENT_MLME
+>  OBJS_d += ../src/drivers/radiotap.o
+>  endif
 
