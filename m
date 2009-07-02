@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:41610 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbZGXHzx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40115 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136AbZGBQ0S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 03:55:53 -0400
-From: Alexander Beregalov <a.beregalov@gmail.com>
-To: linux-next@vger.kernel.org, chunkeey@web.de,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: [PATCH] ar9170: fix build error when !CONFIG_AR9170_LEDS
-Date: Fri, 24 Jul 2009 11:55:44 +0400
-Message-Id: <1248422144-6150-1-git-send-email-a.beregalov@gmail.com>
+	Thu, 2 Jul 2009 12:26:18 -0400
+Subject: [PATCH] cfg80211: refuse authenticating to same BSSID twice
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 02 Jul 2009 18:26:18 +0200
+Message-Id: <1246551978.16770.47.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix this build error when CONFIG_AR9170_LEDS is not set
-drivers/net/wireless/ath/ar9170/main.c:1296: error: 'struct ar9170' has
-no member named 'led_work'
+It is possible that there are different BSS structs with
+the same BSSID, but we cannot authenticate with multiple
+of them them because we need the BSSID to be unique for
+deauthenticating/disassociating.
 
-Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ar9170/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ net/wireless/mlme.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index c7287a8..85a1452 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -1293,7 +1293,9 @@ static void ar9170_op_stop(struct ieee80211_hw *hw)
- 	flush_workqueue(ar->hw->workqueue);
+--- wireless-testing.orig/net/wireless/mlme.c	2009-07-02 18:18:51.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2009-07-02 18:24:03.000000000 +0200
+@@ -278,6 +278,21 @@ int cfg80211_mlme_auth(struct cfg80211_r
+ 	struct cfg80211_internal_bss *bss;
+ 	int i, err, slot = -1, nfree = 0;
  
- 	cancel_delayed_work_sync(&ar->tx_janitor);
-+#ifdef CONFIG_AR9170_LEDS
- 	cancel_delayed_work_sync(&ar->led_work);
-+#endif
- 	cancel_work_sync(&ar->filter_config_work);
- 	cancel_work_sync(&ar->beacon_work);
- 	mutex_lock(&ar->mutex);
--- 
-1.6.3.3
++	if (wdev->current_bss &&
++	    memcmp(bssid, wdev->current_bss->pub.bssid, ETH_ALEN) == 0)
++		return -EALREADY;
++
++	for (i = 0; i < MAX_AUTH_BSSES; i++) {
++		if (wdev->authtry_bsses[i] &&
++		    memcmp(bssid, wdev->authtry_bsses[i]->pub.bssid,
++		    				ETH_ALEN) == 0)
++			return -EALREADY;
++		if (wdev->auth_bsses[i] &&
++		    memcmp(bssid, wdev->auth_bsses[i]->pub.bssid,
++		    				ETH_ALEN) == 0)
++			return -EALREADY;
++	}
++
+ 	memset(&req, 0, sizeof(req));
+ 
+ 	req.ie = ie;
+@@ -291,13 +306,6 @@ int cfg80211_mlme_auth(struct cfg80211_r
+ 	bss = bss_from_pub(req.bss);
+ 
+ 	for (i = 0; i < MAX_AUTH_BSSES; i++) {
+-		if (bss == wdev->auth_bsses[i]) {
+-			err = -EALREADY;
+-			goto out;
+-		}
+-	}
+-
+-	for (i = 0; i < MAX_AUTH_BSSES; i++) {
+ 		if (!wdev->auth_bsses[i] && !wdev->authtry_bsses[i]) {
+ 			slot = i;
+ 			nfree++;
+
 
