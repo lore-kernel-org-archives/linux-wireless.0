@@ -1,57 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:59452 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803AbZGaUiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 16:38:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: Re: [PATCH] remove wrong probe_resp_plcp write
-Date: Fri, 31 Jul 2009 22:38:14 +0200
-Cc: gregor kowski <gregor.kowski@gmail.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com>
-In-Reply-To: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907312238.15705.mb@bu3sch.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbZGBPSj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2009 11:18:39 -0400
+Subject: [PATCH] cfg80211: assimilate and export ieee80211_bss_get_ie
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 02 Jul 2009 17:18:40 +0200
+Message-Id: <1246547920.16770.41.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 31 July 2009 22:35:49 gregor kowski wrote:
-> The tkip hw support uncovered a bug in b43_write_probe_resp_template : it is
-> writing at the wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This
-> patch comments these writes.
-> 
-> Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+This function from mac80211 seems generally useful, and
+I will need it in cfg80211 soon.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |    9 +++++++++
+ net/mac80211/mlme.c    |   25 +++----------------------
+ net/wireless/util.c    |   21 +++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 22 deletions(-)
 
-> 
-> Index: linux-2.6/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/net/wireless/b43/main.c	2009-07-31
-> 20:32:21.000000000 +0000
-> +++ linux-2.6/drivers/net/wireless/b43/main.c	2009-07-31
-> 20:32:28.000000000 +0000
-> @@ -1505,10 +1505,13 @@
->  	/* Looks like PLCP headers plus packet timings are stored for
->  	 * all possible basic rates
->  	 */
-> +	/* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
-> +#if 0
->  	b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
->  	b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
->  	b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
->  	b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
-> +#endif
-> 
->  	size = min((size_t) size, 0x200 - sizeof(struct b43_plcp_hdr6));
->  	b43_write_template_common(dev, probe_resp_data,
-> 
-> 
+--- wireless-testing.orig/include/net/cfg80211.h	2009-07-02 17:13:46.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-07-02 17:13:49.000000000 +0200
+@@ -605,6 +605,15 @@ struct cfg80211_bss {
+ };
+ 
+ /**
++ * ieee80211_bss_get_ie - find IE with given ID
++ * @bss: the bss to search
++ * @ie: the IE ID
++ * Returns %NULL if not found.
++ */
++const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 ie);
++
++
++/**
+  * struct cfg80211_crypto_settings - Crypto settings
+  * @wpa_versions: indicates which, if any, WPA versions are enabled
+  *	(from enum nl80211_wpa_versions)
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-07-02 17:13:46.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-07-02 17:16:57.000000000 +0200
+@@ -46,26 +46,6 @@ static int ecw2cw(int ecw)
+ 	return (1 << ecw) - 1;
+ }
+ 
+-static u8 *ieee80211_bss_get_ie(struct ieee80211_bss *bss, u8 ie)
+-{
+-	u8 *end, *pos;
+-
+-	pos = bss->cbss.information_elements;
+-	if (pos == NULL)
+-		return NULL;
+-	end = pos + bss->cbss.len_information_elements;
+-
+-	while (pos + 1 < end) {
+-		if (pos + 2 + pos[1] > end)
+-			break;
+-		if (pos[0] == ie)
+-			return pos;
+-		pos += 2 + pos[1];
+-	}
+-
+-	return NULL;
+-}
+-
+ static int ieee80211_compatible_rates(struct ieee80211_bss *bss,
+ 				      struct ieee80211_supported_band *sband,
+ 				      u32 *rates)
+@@ -181,7 +161,8 @@ static void ieee80211_send_assoc(struct 
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	u8 *pos, *ies, *ht_ie;
++	u8 *pos;
++	const u8 *ies, *ht_ie;
+ 	int i, len, count, rates_len, supp_rates_len;
+ 	u16 capab;
+ 	struct ieee80211_bss *bss;
+@@ -345,7 +326,7 @@ static void ieee80211_send_assoc(struct 
+ 	 */
+ 	if (wmm && (ifmgd->flags & IEEE80211_STA_WMM_ENABLED) &&
+ 	    sband->ht_cap.ht_supported &&
+-	    (ht_ie = ieee80211_bss_get_ie(bss, WLAN_EID_HT_INFORMATION)) &&
++	    (ht_ie = ieee80211_bss_get_ie(&bss->cbss, WLAN_EID_HT_INFORMATION)) &&
+ 	    ht_ie[1] >= sizeof(struct ieee80211_ht_info) &&
+ 	    (!(ifmgd->flags & IEEE80211_STA_DISABLE_11N))) {
+ 		struct ieee80211_ht_info *ht_info =
+--- wireless-testing.orig/net/wireless/util.c	2009-07-02 17:13:46.000000000 +0200
++++ wireless-testing/net/wireless/util.c	2009-07-02 17:13:49.000000000 +0200
+@@ -502,3 +502,24 @@ unsigned int cfg80211_classify8021d(stru
+ 	return dscp >> 5;
+ }
+ EXPORT_SYMBOL(cfg80211_classify8021d);
++
++const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 ie)
++{
++	u8 *end, *pos;
++
++	pos = bss->information_elements;
++	if (pos == NULL)
++		return NULL;
++	end = pos + bss->len_information_elements;
++
++	while (pos + 1 < end) {
++		if (pos + 2 + pos[1] > end)
++			break;
++		if (pos[0] == ie)
++			return pos;
++		pos += 2 + pos[1];
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL(ieee80211_bss_get_ie);
 
 
-
--- 
-Greetings, Michael.
