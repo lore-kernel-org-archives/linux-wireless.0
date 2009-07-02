@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f184.google.com ([209.85.210.184]:49101 "EHLO
-	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754217AbZGSNiL (ORCPT
+Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:19882 "EHLO
+	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750864AbZGBPJF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 09:38:11 -0400
-Received: by yxe14 with SMTP id 14so2929486yxe.33
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2009 06:38:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A612514.4050708@redfish-solutions.com>
-References: <4A612514.4050708@redfish-solutions.com>
-Date: Sun, 19 Jul 2009 09:38:11 -0400
-Message-ID: <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com>
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Jul 2009 11:09:05 -0400
+Subject: Re: [PATCH hostap/wpa_supplicant] Allow wpa_supplicant to use
+ libnl-2.0
+From: Jon Loeliger <jdl@bigfootnetworks.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: jouni.malinen@atheros.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1246537755.16543.1.camel@localhost.localdomain>
+References: <1246481949.11632.36.camel@jdl-desktop>
+	 <1246537755.16543.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 02 Jul 2009 10:09:08 -0500
+Message-Id: <1246547348.15196.8.camel@jdl-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 17, 2009 at 9:27 PM, Philip A.
-Prindeville<philipp_subx@redfish-solutions.com> wrote:
-> + modprobe ath5k
-> ath5k phy0: Atheros AR5413 chip found (MAC: 0xa4, PHY: 0x61)
->
-> + iw dev wlan0 interface add ap0 type managed
-> + ip link set ap0 up
-> + iw dev ap0 connect xxxx
-> command failed: Operation not supported (-95)
+On Thu, 2009-07-02 at 08:29 -0400, Dan Williams wrote:
+> On Wed, 2009-07-01 at 15:59 -0500, Jon Loeliger wrote:
+> > Introduce CONFIG_LIBNL20 .config parameter and propogate
+> > that as a CFLAG in the Makefile.
+> > 
+> > Add forward-compatibility code to allow the existing code
+> > to also use libnl-2.0.
+> > 
+> > Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+> 
+> You might actually want to post this to the hostap/wpa_supplicant
+> mailing list instead.  While developers involved in both projects are
+> subscribed to both lists, linux-wireless isn't the right place for
+> patches against hostap and wpa_supplicant.
+> 
+> http://lists.shmoo.com/mailman/listinfo/hostap
+> 
+> Dan
 
-Why are you adding another interface?  Should be able to use "iw dev wlan0..."
+Argh.  Done.  Thanks.
 
-> pbx ~ # iw phy phy0 info
-> command failed: No buffer space available (-105)
+jdl
 
-Means the netlink buffer was exceeded.  In the past this was because there
-were too many channels -- are you sure you're loading the compat-wireless
-ath5k instead of the .29 one (and not using all_channels modparam)?
 
--- 
-Bob Copeland %% www.bobcopeland.com
