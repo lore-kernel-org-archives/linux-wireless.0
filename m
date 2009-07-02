@@ -1,116 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52634 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754200AbZGOAW4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38150 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbZGBNAx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:22:56 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: disable radio when all devices are marked idle
-Date: Tue, 14 Jul 2009 20:22:53 -0400
-Message-Id: <1247617373-20507-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 2 Jul 2009 09:00:53 -0400
+Date: Thu, 2 Jul 2009 08:47:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Build error in 2.6.31-rc1-wl
+Message-ID: <20090702124737.GA2839@tuxdriver.com>
+References: <4A4BCA87.8020805@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4A4BCA87.8020805@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This uses the new configuration changes indicated up by
-mac80211 when all interfaces are marked idle. We need to do
-a little more work as we have our own set of virtual
-wiphys within ath9k.
+On Wed, Jul 01, 2009 at 03:43:51PM -0500, Larry Finger wrote:
+> When building the above kernel based on a fress pull of
+> wireless-testing, I get the following build error:
+> 
+>   CC      net/core/skbuff.o
+> net/core/skbuff.c: In function ‘__copy_skb_header’:
+> net/core/skbuff.c:563: error: ‘struct sk_buff’ has no member named
+> ‘do_not_encrypt’
+> net/core/skbuff.c:563: error: ‘const struct sk_buff’ has no member
+> named ‘do_not_encrypt’
+> make[2]: *** [net/core/skbuff.o] Error 1
+> 
+> The code that errors is
+> 
+>         new->vlan_tci           = old->vlan_tci;
+> #if defined(CONFIG_MAC80211) || defined(CONFIG_MAC80211_MODULE)
+>         new->do_not_encrypt     = old->do_not_encrypt;
+> #endif
+> 
+>         skb_copy_secmark(new, old);
+> }
 
-Only when all virtual wiphys are inactive do we allow an idle
-state change for a wiphy to trigger disabling the radio.
+Some patch damage when moving to 2.6.31-rc1.  Johannes sent me a
+fix-up yesterday, so I have folded it back into the damaged patch
+and pushed it out.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |    1 +
- drivers/net/wireless/ath/ath9k/main.c    |   24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/virtual.c |   17 +++++++++++++++++
- 3 files changed, 42 insertions(+), 0 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 2723385..efa185a 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -709,6 +709,7 @@ void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
- 				  struct ath_wiphy *selected);
- bool ath9k_wiphy_scanning(struct ath_softc *sc);
- void ath9k_wiphy_work(struct work_struct *work);
-+bool ath9k_all_wiphys_idle(struct ath_softc *sc);
- 
- void ath9k_iowrite32(struct ath_hw *ah, u32 reg_offset, u32 val);
- unsigned int ath9k_ioread32(struct ath_hw *ah, u32 reg_offset);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 84c0fed..2528571 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2281,9 +2281,28 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ath_softc *sc = aphy->sc;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	struct ath_hw *ah = sc->sc_ah;
-+	bool all_wiphys_idle = false, disable_radio = false;
- 
- 	mutex_lock(&sc->mutex);
- 
-+	/* Leave this as the first check */
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+
-+		spin_lock_bh(&sc->wiphy_lock);
-+		all_wiphys_idle =  ath9k_all_wiphys_idle(sc);
-+		spin_unlock_bh(&sc->wiphy_lock);
-+
-+		if (conf->flags & IEEE80211_CONF_IDLE){
-+			if (all_wiphys_idle)
-+				disable_radio = true;
-+		}
-+		else if (all_wiphys_idle) {
-+			ath_radio_enable(sc);
-+			DPRINTF(sc, ATH_DBG_CONFIG,
-+				"not-idle: enabling radio\n");
-+		}
-+	}
-+
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		if (conf->flags & IEEE80211_CONF_PS) {
- 			if (!(ah->caps.hw_caps &
-@@ -2351,6 +2370,11 @@ skip_chan_change:
- 	if (changed & IEEE80211_CONF_CHANGE_POWER)
- 		sc->config.txpowlimit = 2 * conf->power_level;
- 
-+	if (disable_radio) {
-+		DPRINTF(sc, ATH_DBG_CONFIG, "idle: disabling radio\n");
-+		ath_radio_disable(sc);
-+	}
-+
- 	mutex_unlock(&sc->mutex);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
-index 1ff429b..e1d419e 100644
---- a/drivers/net/wireless/ath/ath9k/virtual.c
-+++ b/drivers/net/wireless/ath/ath9k/virtual.c
-@@ -660,3 +660,20 @@ void ath9k_wiphy_set_scheduler(struct ath_softc *sc, unsigned int msec_int)
- 		queue_delayed_work(sc->hw->workqueue, &sc->wiphy_work,
- 				   sc->wiphy_scheduler_int);
- }
-+
-+/* caller must hold wiphy_lock */
-+bool ath9k_all_wiphys_idle(struct ath_softc *sc)
-+{
-+	unsigned int i;
-+	if (sc->pri_wiphy->state != ATH_WIPHY_INACTIVE) {
-+		return false;
-+	}
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		struct ath_wiphy *aphy = sc->sec_wiphy[i];
-+		if (!aphy)
-+			continue;
-+		if (aphy->state != ATH_WIPHY_INACTIVE)
-+			return false;
-+	}
-+	return true;
-+}
+John
 -- 
-1.6.0.6
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
