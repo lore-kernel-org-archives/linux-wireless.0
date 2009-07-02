@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9738 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752351AbZGTMWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 08:22:18 -0400
-Subject: Re: any controller working in AP mode ?
-From: Pavel Roskin <proski@gnu.org>
-To: Ram kumar <ramkumar.research@gmail.com>
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <6306c640907200503h19dcfdd1o8fc69cd94ebdc44f@mail.gmail.com>
-References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
-	 <445f43ac0907151344q6d80ddeckc0c586b34d8ca7c5@mail.gmail.com>
-	 <6306c640907152338k4a5fb474h481d5adba97507b1@mail.gmail.com>
-	 <1247843954.25608.62.camel@mj>
-	 <6306c640907200503h19dcfdd1o8fc69cd94ebdc44f@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 20 Jul 2009 08:22:16 -0400
-Message-Id: <1248092536.13859.20.camel@mj>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.230]:62077 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753548AbZGBVxU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2009 17:53:20 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.org
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	kalle.valo@nokia.com, vidhya.govindan@nokia.com, nbd@openwrt.org
+Subject: [PATCH] mac80211: minstrel: avoid accessing negative indices in rix_to_ndx()
+Date: Fri,  3 Jul 2009 00:52:29 +0300
+Message-Id: <1246571549-29014-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-20 at 17:33 +0530, Ram kumar wrote:
-> hi,
-> 
-> > 5 minute search finds that Zonet ZEW2502 is what you need.  There is
-> > only one driver for that device on the Zonet site, and it's clearly for
-> > Marvell.
-> >
-> Thanks for the reply.
-> but when i visited the zonet website the ZEW2502 is under discontinued
-> products.But they have come up with higher versions of wireless usb
-> adapters like.
-> 
-> 1.ZEW2542
-> http://www.zonetusa.com/products-140.aspx
-> 
-> ZEW2542 it uses Ralink RT2770+RT2720.
-> When i study the user manual of ZEW2542 it says it can support
-> software AP mode.The device uses Ralink wireless configuration tool
-> instead of the native windows wireless configuration tool to configure
-> the device.
-> 
-> but linux wireless website doesn't specify any info about RT2770.It
-> would he helpful if you can tell me whether the ZEW2542 can be
-> configured with hostapd ?
+If rix is not found in mi->r[], i will become -1 after the loop.  This value
+is eventually used to access arrays, so we were accessing arrays with a
+negative index, which is obviously not what we want to do.  This patch fixes
+this potential problem.
 
-I think it's in staging now.  See drivers/staging/rt2870/rt2870.h:
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ net/mac80211/rc80211_minstrel.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-       {USB_DEVICE(0x148F,0x2770)}, /* Ralink */               \
-
-I don't know the status of that driver and whether it will be converted
-to a regular driver any time soon, but since it's a modern device,
-chances are high.
-
-> 2.ZEW2507
-> http://www.zonetusa.com/products-54.aspx
-> 
-> ZEW2507 uses Chipset  	Ralink RT2571 + RT2528
-> 
-> I am assuming this device can be easily configured in linux using
-> hostapd.please correct me if i am wrong.
-
-Yes, this should work.  But I'm not sure it would work in AP mode with
-clients using power saving.  There was a recent discussion about it.
-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index b218b98..e2dd248 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+ 	for (i = rix; i >= 0; i--)
+ 		if (mi->r[i].rix == rix)
+ 			break;
+-	WARN_ON(mi->r[i].rix != rix);
++	WARN_ON(i < 0 || mi->r[i].rix != rix);
+ 	return i;
+ }
+ 
+@@ -181,6 +181,9 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			break;
+ 
+ 		ndx = rix_to_ndx(mi, ar[i].idx);
++		if (ndx < 0)
++			continue;
++
+ 		mi->r[ndx].attempts += ar[i].count;
+ 
+ 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
 -- 
-Regards,
-Pavel Roskin
+1.6.0.4
+
