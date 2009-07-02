@@ -1,85 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:44211 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbZGWTNh (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57613 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751740AbZGBLnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 15:13:37 -0400
-Date: Thu, 23 Jul 2009 21:13:30 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Subject: Re: Generic events for wake up from S1-S4
-Message-ID: <20090723191330.GQ28158@elf.ucw.cz>
-References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com> <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com> <20090718103756.GA11381@elf.ucw.cz> <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com> <20090718235609.GC25343@khazad-dum.debian.net> <20090723145757.GB28158@elf.ucw.cz> <20090723185720.GB19369@khazad-dum.debian.net>
+	Thu, 2 Jul 2009 07:43:25 -0400
+Date: Thu, 2 Jul 2009 14:43:16 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>
+Subject: Re: [PATCH 8/8 v3.1] mac80211: re-add HT disabling
+Message-ID: <20090702114316.GA12652@jm.kir.nu>
+References: <20090630115303.111250594@sipsolutions.net> <20090630132547.GB24667@vasanth-laptop> <1246369077.16643.10.camel@johannes.local> <20090630135207.GC24667@vasanth-laptop> <1246370452.16643.11.camel@johannes.local> <1246433956.16643.35.camel@johannes.local> <20090701101336.GD24667@vasanth-laptop> <1246444959.4131.15.camel@johannes.local> <20090702095134.GA11235@jm.kir.nu> <1246528397.16770.31.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090723185720.GB19369@khazad-dum.debian.net>
+In-Reply-To: <1246528397.16770.31.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 2009-07-23 15:57:20, Henrique de Moraes Holschuh wrote:
-> On Thu, 23 Jul 2009, Pavel Machek wrote:
-> > On Sat 2009-07-18 20:56:10, Henrique de Moraes Holschuh wrote:
-> > > On Sat, 18 Jul 2009, Luis R. Rodriguez wrote:
-> > > > Hm yeah, but I doubt someone will do that, generally we'd get one wake
-> > > > up event. Can't we just report the first one and ignore the rest?
-> > > 
-> > > Well, I'd say keeping it simple is best, here.  What if you ignore the more
-> > > interesting wakeup events by chance (and it is really up to userspace to
-> > > know what it considers interesting...)?  IMHO, just issue as many
-> > > notifications as needed, let userspace filter it if it wants.
-> > > 
-> > > But if you guys are talking about something really generic, shouldn't it
-> > > also provide the important "why" along with the "who"?
-> > > 
-> > > Even for the most common cases, the "why" is useful: userspace may well want
-> > > to run special routines when it wakes up because of WoL and WoW (instead of
-> > > a key press, lid open or mouse movement...).
-> > 
-> > What special routines?
-> 
-> Starting a remote maintenance shell is a common usage scenario on corporate
-> environments.
+On Thu, Jul 02, 2009 at 11:53:17AM +0200, Johannes Berg wrote:
 
-But... You want to start maintenance shell not on wakeup from WoL, but
-on receiving the magic packet. If you hit the keyboard before to wake
-up the machine, and the magic packet still comes, you still want the
-remote maintenance shell.
+> So we have to support multiple for connect() to allow the card/driver to
+> choose, but a single one for associate()?
 
-> Besides, it is a generic wakeup notification we're talking about, isn't it?
-> I have some that have nothing to do with WoW or WoL:
-> 
-> 1. Thermal alarm
-> 2. Battery alarm
-> 3. Hotunplug request (bay/dock): umount stuff, cleanly undock, then go back
-> to sleep (optional)
+Sounds reasonable.. Many drivers might not be able to handle multiple
+options for connect(), though, so even with that, it may be reasonable
+to just pass in a single option. Anyway, it would be nice if the
+multiple options case could be supported.
 
-Well, battery&thermal alarms would certainly be useful. (And yes, I
-believe it is a bug in ACPI that we don't printk on battery critical).
-
-> > Note that the "why" is unreliable by design. Network driver will
-> > ignore WoL during run-time, right?
-> 
-> "Why" is unrealible?  I don't follow your reasoning.  It should be as
-> reliable as "who"...
-
-See above. The wakeup events race with each other.
-
-> If the WoW/WoL device doesn't know why it woke up the system, it uses the
-> generic reason for network devices (I don't even know if a network device
-> has more than one reason for wakeup).  If a different device wakes the
-> system, it might know why and provide that reason.  And if it doesn't know
-> it woke up the system, it sends no notification at all.
-
-See above.
-
-									Pavel
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Jouni Malinen                                            PGP id EFC895FA
