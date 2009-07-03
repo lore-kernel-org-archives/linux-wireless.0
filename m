@@ -1,103 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60486 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754668AbZG0XwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 19:52:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:52:17 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath: simplify kconfig dependency and add documentation
-Date: Mon, 27 Jul 2009 16:52:07 -0700
-Message-ID: <1248738730-4003-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
-References: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
+Received: from smtp.nokia.com ([192.100.105.134]:30170 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbZGCFRL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jul 2009 01:17:11 -0400
+Message-ID: <4A4D9404.9030103@nokia.com>
+Date: Fri, 03 Jul 2009 08:15:48 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: ext Felix Fietkau <nbd@openwrt.org>
+CC: "linville@tuxdriver.org" <linville@tuxdriver.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>,
+	"Govindan Vidhya (Nokia-D/Tampere)" <vidhya.govindan@nokia.com>
+Subject: Re: [PATCH] mac80211: minstrel: avoid accessing negative indices
+ in rix_to_ndx()
+References: <1246571549-29014-1-git-send-email-luciano.coelho@nokia.com> <4A4D4DC6.30502@openwrt.org>
+In-Reply-To: <4A4D4DC6.30502@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make atheros wireless drivers visible when you select
-"Atheros wirless drivers". Adds links to ath.ko page,
-and Atheros drivers page on the wiki.
+ext Felix Fietkau wrote:
+> Luciano Coelho wrote:
+>   
+>> If rix is not found in mi->r[], i will become -1 after the loop.  This value
+>> is eventually used to access arrays, so we were accessing arrays with a
+>> negative index, which is obviously not what we want to do.  This patch fixes
+>> this potential problem.
+>>
+>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+>> ---
+>>  net/mac80211/rc80211_minstrel.c |    5 ++++-
+>>  1 files changed, 4 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+>> index b218b98..e2dd248 100644
+>> --- a/net/mac80211/rc80211_minstrel.c
+>> +++ b/net/mac80211/rc80211_minstrel.c
+>> @@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+>>  	for (i = rix; i >= 0; i--)
+>>  		if (mi->r[i].rix == rix)
+>>  			break;
+>> -	WARN_ON(mi->r[i].rix != rix);
+>> +	WARN_ON(i < 0 || mi->r[i].rix != rix);
+>>     
+> I believe this line could be changed to WARN_ON(i < 0), because
+> (mi->r[i].rix != rix) will never be true unless i < 0.
+> Probably not that important though.
+>   
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/Kconfig        |   18 ++++++++++++++++--
- drivers/net/wireless/ath/ar9170/Kconfig |    1 -
- drivers/net/wireless/ath/ath5k/Kconfig  |    1 -
- drivers/net/wireless/ath/ath9k/Kconfig  |    1 -
- 4 files changed, 16 insertions(+), 5 deletions(-)
+That's true.  I'll change the code and send v2.  It's not that 
+important, but it is code that will never be reached, so it should be 
+removed.
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index 6bed009..f27f3a7 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -2,9 +2,23 @@ config ATH_COMMON
- 	tristate "Atheros Wireless Cards"
- 	depends on WLAN_80211
- 	depends on CFG80211
--	depends on ATH5K || ATH9K || AR9170_USB
-+	---help---
-+	  This will enable the support for the Atheros wireless drivers.
-+	  ath5k, ath9k and ar9170 drivers share some common code, this option
-+	  enables the common ath.ko module which currently shares just common
-+	  regulatory EEPROM helpers but will likely be extended later to share
-+	  more between modules.
- 
-+	  For more information and documentation on this module you can visit:
-+
-+	  http://wireless.kernel.org/en/users/Drivers/ath
-+
-+	  For information on all Atheros wireless drivers visit:
-+
-+	  http://wireless.kernel.org/en/users/Drivers/Atheros
-+
-+if ATH_COMMON
- source "drivers/net/wireless/ath/ath5k/Kconfig"
- source "drivers/net/wireless/ath/ath9k/Kconfig"
- source "drivers/net/wireless/ath/ar9170/Kconfig"
--
-+endif
-diff --git a/drivers/net/wireless/ath/ar9170/Kconfig b/drivers/net/wireless/ath/ar9170/Kconfig
-index b99e326..de4281f 100644
---- a/drivers/net/wireless/ath/ar9170/Kconfig
-+++ b/drivers/net/wireless/ath/ar9170/Kconfig
-@@ -2,7 +2,6 @@ config AR9170_USB
- 	tristate "Atheros AR9170 802.11n USB support"
- 	depends on USB && MAC80211 && WLAN_80211 && EXPERIMENTAL
- 	select FW_LOADER
--	select ATH_COMMON
- 	help
- 	  This is a driver for the Atheros "otus" 802.11n USB devices.
- 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index daf0c83..9b07eef 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,7 +1,6 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
--	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 0f4a6d8..2cb72f8 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -1,7 +1,6 @@
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on PCI && MAC80211 && WLAN_80211
--	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
+> Acked-by: Felix Fietkau <nbd@openwrt.org>
+>   
+
+Thanks!
+
 -- 
-1.6.0.4
+Cheers,
+Luca.
 
