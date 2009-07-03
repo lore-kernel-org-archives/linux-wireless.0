@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:19512 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752536AbZGIRNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 13:13:48 -0400
-Subject: Re: nl80211 and wext interoperability
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1247139797.2144.27.camel@johannes.local>
-References: <1247139797.2144.27.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 09 Jul 2009 13:13:45 -0400
-Message-Id: <1247159625.28654.30.camel@mj>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.230]:28216 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751358AbZGCFZc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jul 2009 01:25:32 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.org
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	kalle.valo@nokia.com, vidhya.govindan@nokia.com, nbd@openwrt.org
+Subject: [PATCH v2] mac80211: minstrel: avoid accessing negative indices in rix_to_ndx()
+Date: Fri,  3 Jul 2009 08:25:08 +0300
+Message-Id: <1246598708-5594-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-09 at 13:43 +0200, Johannes Berg wrote:
+If rix is not found in mi->r[], i will become -1 after the loop.  This value
+is eventually used to access arrays, so we were accessing arrays with a
+negative index, which is obviously not what we want to do.  This patch fixes
+this potential problem.
 
-> Currently, if you use wpa_supplicant -Dwext and -Dnl80211 mixed,
-> -Dnl80211 gets confused because -Dwext will set a 32-byte random SSID to
-> "disconnect". When then the interface is brought UP again, the cfg80211
-> code assumes that you set configuration while it was DOWN, and tries to
-> recover that configuration. This means it will start scanning for the
-> network, which means -Dnl80211 gets -EBUSY for the scan and it all gets
-> very delayed. This also happens if you set an SSID with iwconfig before
-> using -Dnl80211.
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Acked-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-I'm seeing delay is I start wpa_supplicant with -Dwext on the current
-wireless-testing.  I don't use -Dnl80211 on that system at all, as it
-has stock Fedora 11 wpa_supplicant without nl80211 support.
-
-I think using random data is a problem by itself.  Are we exposing
-random pieces of kernel memory in probe requests?  That's bad.
-
-> Do we just ignore that issue? It's only added timeout and people using
-> purely nl80211 will never have a problem.
-> 
-> I'm all for ignoring wext issues, but I can also see people complain
-> about things like this. Not sure what mac80211 did, did it just ignore
-> settings while interfaces were down? I never really made sense of that
-> code.
-
-If your description is correct, I think the fix should be easy.
-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index b218b98..37771ab 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+ 	for (i = rix; i >= 0; i--)
+ 		if (mi->r[i].rix == rix)
+ 			break;
+-	WARN_ON(mi->r[i].rix != rix);
++	WARN_ON(i < 0);
+ 	return i;
+ }
+ 
+@@ -181,6 +181,9 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			break;
+ 
+ 		ndx = rix_to_ndx(mi, ar[i].idx);
++		if (ndx < 0)
++			continue;
++
+ 		mi->r[ndx].attempts += ar[i].count;
+ 
+ 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
 -- 
-Regards,
-Pavel Roskin
+1.6.0.4
+
