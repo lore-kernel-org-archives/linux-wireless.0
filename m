@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:47876 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755725AbZGMTww convert rfc822-to-8bit (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([193.131.176.58]:49536 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752828AbZGCLmx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 15:52:52 -0400
-Received: by fxm18 with SMTP id 18so2414209fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 12:52:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1247511400.17896.1625.camel@rc-desk>
-References: <1247174482.17896.1304.camel@rc-desk>
-	 <200907121445.42289.helmut.schaa@gmail.com>
-	 <1247499979.17896.1556.camel@rc-desk>
-	 <bcd1ba70907131143m2940444ch372ae0bc01417bc4@mail.gmail.com>
-	 <1247511400.17896.1625.camel@rc-desk>
-Date: Mon, 13 Jul 2009 12:52:51 -0700
-Message-ID: <bcd1ba70907131252x3d9e21bbx80241aba1edff5ba@mail.gmail.com>
-Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
-From: John Ranson <ranson@analager.net>
+	Fri, 3 Jul 2009 07:42:53 -0400
+Subject: Re: Memory leak in iwlwifi or false positive?
+From: Catalin Marinas <catalin.marinas@arm.com>
 To: reinette chatre <reinette.chatre@intel.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1246573533.17896.867.camel@rc-desk>
+References: <1246570323.24044.16.camel@pc1117.cambridge.arm.com>
+	 <1246573533.17896.867.camel@rc-desk>
+Content-Type: text/plain
+Date: Fri, 03 Jul 2009 12:42:52 +0100
+Message-Id: <1246621372.24965.30.camel@pc1117.cambridge.arm.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette,
+Hi Reinette,
 
-On Mon, Jul 13, 2009 at 11:56 AM, reinette
-chatre<reinette.chatre@intel.com> wrote:
-> John,
->
-> On Mon, 2009-07-13 at 11:43 -0700, John Ranson wrote:
->> I am also seeing frequent loss of association and firmware restarts
->> with the new firmware.  On occasion, I can't recover even when I
->> reload the driver. Admittedly, I am using an old driver right now
->> (2.6.29, I think).
->
-> The better restart work was added in 2.6.31 I think, so it is only in
-> the recent driver that you will have a smooth recovery after a failure.
-> You may thus be seeing the same problem as Helmut, with him running the
-> recent restart code.
+On Thu, 2009-07-02 at 15:25 -0700, reinette chatre wrote:
+> On Thu, 2009-07-02 at 14:32 -0700, Catalin Marinas wrote:
+> > I'm trying to get kmemleak more robust and with the latest patches (not
+> 
+> I just compiled my 2.6.31 kernel with kmemleak but did not yet look into
+> how it works ... I do see a lot of messages though. 
 
-Can I also get this with the latest compat wireless release and
-2.6.30.1? I don't usually switch to a new kernel until it's been
-stable for a while.
+There are some patches in the latest mainline git tree to make it less
+verbose and some pending patches in my kmemleak branch (on
+git://linux-arm.org/linux-2.6.git).
 
->
->>
->> I'm going to upgrade to 2.6.30.1 with the latest compat-wireless. I'll
->> file a bug if things continue as they are.
->
-> Even if the restart code gets you up and running smoothly after a
-> failure, please do submit a bug report so that we can look into this.
+Basically, it basically tracks all the allocated memory blocks. It scans
+starting with the data sections and stacks for pointers to (anywhere
+inside of) allocated memory blocks. The blocks found are scanned as well
+until it finishes scanning. If a memory block wasn't referred via any
+pointer during a scan, it is reported as a suspected leak (you can look
+at Documentation/kmemleak.txt).
 
-I'll be sure to file a bug.
+> > This happens shortly after booting. Note that if an object is freed,
+> > kmemleak no longer tracks it and therefore no reporting. But in this
+> > case it looks like the iwlwifi code really allocated ~4800 blocks. Is it
+> > normal for this code to keep so many blocks allocated? If yes, it is
+> > probably kmemleak missing some root object in the references tree.
+> 
+> Yes - this sounds about right. You tested with 5100 hardware which by
+> default initializes 20 TX queues. For each of these queues it maintains
+> a 256 buffer array of commands with 356 bytes used for each command.
+> 
+> The 20 * 256 gives me 5120 ... would that explain the ~4800?
 
-John
+OK, thanks. It could be a bug in kmemleak but I'll do some more testing
+tonight and let you know.
+
+It may be that I missed tracing some kmalloc calls.
+
+Thanks.
+
+-- 
+Catalin
+
