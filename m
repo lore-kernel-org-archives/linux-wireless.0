@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53143 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753006AbZGAKPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 06:15:14 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 03:15:18 -0700
-Date: Wed, 1 Jul 2009 15:43:36 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 8/8 v3.1] mac80211: re-add HT disabling
-Message-ID: <20090701101336.GD24667@vasanth-laptop>
-References: <20090630115245.675553951@sipsolutions.net> <20090630115303.111250594@sipsolutions.net> <20090630132547.GB24667@vasanth-laptop> <1246369077.16643.10.camel@johannes.local> <20090630135207.GC24667@vasanth-laptop> <1246370452.16643.11.camel@johannes.local> <1246433956.16643.35.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1246433956.16643.35.camel@johannes.local>
+Received: from xc.sipsolutions.net ([83.246.72.84]:51964 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756113AbZGCI3K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jul 2009 04:29:10 -0400
+Subject: Re: [PATCH v2] mac80211: minstrel: avoid accessing negative
+ indices in rix_to_ndx()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linville@tuxdriver.org, linux-wireless@vger.kernel.org,
+	kalle.valo@nokia.com, vidhya.govindan@nokia.com, nbd@openwrt.org
+In-Reply-To: <1246598708-5594-1-git-send-email-luciano.coelho@nokia.com>
+References: <1246598708-5594-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IlQs2WUmhwqlToFUHeeA"
+Date: Fri, 03 Jul 2009 10:29:02 +0200
+Message-Id: <1246609742.16770.54.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 01, 2009 at 01:09:16PM +0530, Johannes Berg wrote:
-> The IEEE80211_STA_TKIP_WEP_USED flag is used internally to
-> disable HT when WEP or TKIP are used. Now that cfg80211 is
-> giving us the required information, we can set the flag
-> appropriately again.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/cfg.c |   10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-> --- wireless-testing.orig/net/mac80211/cfg.c    2009-07-01 09:01:25.000000000 +0200
-> +++ wireless-testing/net/mac80211/cfg.c 2009-07-01 09:09:01.000000000 +0200
-> @@ -1228,7 +1228,7 @@ static int ieee80211_assoc(struct wiphy
->                            struct cfg80211_assoc_request *req)
->  {
->         struct ieee80211_sub_if_data *sdata;
-> -       int ret;
-> +       int ret, i;
-> 
->         sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> 
-> @@ -1236,6 +1236,14 @@ static int ieee80211_assoc(struct wiphy
->             !(sdata->u.mgd.flags & IEEE80211_STA_AUTHENTICATED))
->                 return -ENOLINK; /* not authenticated */
-> 
-> +       sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
-> +
-> +       for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
-> +               if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
-> +                   req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
-> +                   req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104)
-> +                       sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
-> +
 
-for..loop does not seem to be necessary here as it is very unlikely that
-an assoc req will have more than one cipher suite.
+--=-IlQs2WUmhwqlToFUHeeA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm not sure if this patch series will get into 2.6.31-rc, if it
-does not, we may need a variant of this patch to fix
-http://bugzilla.kernel.org/show_bug.cgi?id=13630, I'll work on it.
-Thanks!.
+On Fri, 2009-07-03 at 08:25 +0300, Luciano Coelho wrote:
+> If rix is not found in mi->r[], i will become -1 after the loop.  This va=
+lue
+> is eventually used to access arrays, so we were accessing arrays with a
+> negative index, which is obviously not what we want to do.  This patch fi=
+xes
+> this potential problem.
 
-Vasanth
+This seems odd -- are you or are you not saying that this can happen in
+normal operation?
+
+> @@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+>  	for (i =3D rix; i >=3D 0; i--)
+>  		if (mi->r[i].rix =3D=3D rix)
+>  			break;
+> -	WARN_ON(mi->r[i].rix !=3D rix);
+> +	WARN_ON(i < 0);
+>  	return i;
+
+If it can, this warning seems wrong.
+
+johannes
+
+--=-IlQs2WUmhwqlToFUHeeA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKTcFLAAoJEODzc/N7+QmaM+cQALFSUOfJxEHMKunlq186kRz+
+VaEesvp+mCrLUyW90u6wac+mZ38q3q05DhL2+Gdc1M1XkFnbxUIERIR0lzBdjiGm
+oSvUwDBY8lKKQU6b8F/omiHetnVkmUkAYi8kIF17FNpfqZJXl4joZbGwf2YkrXUv
+88bc6h+kkQuH/I31HZuyzbFwVKGHN+cUVjgYAE/gbn80qG00vpmxqSGcQXWH/oPm
+l/czaEqGQYMwJ0EJTfYwXgCJtpfhVKcoPFuYqu4msQAaTCQzHE+BVxHAlrF366MA
+5hM6UX0RCIN9NzvC4xNHnlp9d86L3U6TqqBQGqWRxKmcBAQK7sSyxN5zjJi2c/76
+tu5Qq028uJaV6PaLxNpk7UQUahRu6eFyAhJekK222XPCNzhZ1h4ZJ8XEDBxCvn+d
+amfKFWFQOMvSDu5zYwy+mentdssnt3FQiEltM2IIa6k8AxiYAm9030bGWktWOeN7
+47J+MvTT+/00xVgSSU+60/vvJixy7vMwgwi3PmL6BVHBoenL/1q6QUOaezofBDL1
+Tp7308N45IhA+wBBTelAZdVj0QCCIWgyVC32/FaTVEdNKXO46N9Z2/0M7gu6ztL9
+ih+AmYo+MmZUbR/swBynzeDfpVvXrmmjK7CoELLyfpvYlmMfm3opD6qR+KNODoir
+ROtBeqFykL6wVhr7KLzo
+=+yHl
+-----END PGP SIGNATURE-----
+
+--=-IlQs2WUmhwqlToFUHeeA--
 
