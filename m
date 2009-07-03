@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f196.google.com ([209.85.221.196]:35088 "EHLO
-	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbZG3WbZ (ORCPT
+Received: from ipmail04.adl2.internode.on.net ([203.16.214.57]:9363 "EHLO
+	ipmail04.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750935AbZGCH0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 18:31:25 -0400
-Received: by qyk34 with SMTP id 34so1194893qyk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 15:31:25 -0700 (PDT)
+	Fri, 3 Jul 2009 03:26:53 -0400
+Message-ID: <4A4DB343.7060800@call-direct.com.au>
+Date: Fri, 03 Jul 2009 17:29:07 +1000
+From: Iwo Mergler <iwo@call-direct.com.au>
 MIME-Version: 1.0
-In-Reply-To: <4A72113F.8000604@gmx.de>
-References: <4A72113F.8000604@gmx.de>
-Date: Thu, 30 Jul 2009 18:05:12 -0400
-Message-ID: <b6c5339f0907301505yde9e457k4ddc87b1c9120a84@mail.gmail.com>
-Subject: Re: ath5k: monitor mode needs channel change
-From: Bob Copeland <me@bobcopeland.com>
-To: Joerg Albert <jal2@gmx.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211: Force beacon update?
+References: <4A4DB01E.2030408@informatik.uni-kl.de>
+In-Reply-To: <4A4DB01E.2030408@informatik.uni-kl.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2009 at 5:31 PM, Joerg Albert<jal2@gmx.de> wrote:
-> I currently need an extra trigger by changing the channel after
-> "ifconfig up" to see any output in monitor mode from ath5k, e.g.
+Reiner Herrmann wrote:
+> Hi,
+> 
+> I want to attach a custom IE to beacons, but some drivers (like b43)
+> are fetching their beacons via ieee80211_beacon_get() only once and
+> retransmit this beacon every time.
+> Some other drivers (like mac80211_hwsim, ath9k) are calling it
+> before every beacon transmission.
+> 
+> Is there a general way to make all drivers generate new beacons instead
+> of caching them or would I have to adapt them?
+> If adapting drivers is the only way, do you have any suggestions on
+> how to do that?
 
-Does this (accidentally) fix it by chance?
+Hi Reiner
 
-http://patchwork.kernel.org/patch/38165/
+the drivers that call ieee80211_beacon_get() only once, have
+hardware that transmits beacons automatically. That is, the
+beacon template from ieee80211_beacon_get() is stored in the
+hardware and the hardware then automatically sends that while
+updating a few fields as needed.
 
-It reloads the filters at ifup time.
+In other words, the driver doesn't know anything about the
+beacons after the initial setup, and thus can't call ieee80211_beacon_get().
+No caching is involved. :-)
 
--- 
-Bob Copeland %% www.bobcopeland.com
+So to do what you want, you need to disable the automatic
+beaconing and use packet injection and send your beacons
+as raw frames.
+
+
+Best regards,
+
+Iwo
+
