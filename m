@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:46440 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbZGFT3E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 15:29:04 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] p54: Fix regression in 2.6.31-rcX since commit a1091aa - sleeping function called from invalid context
-Date: Mon, 6 Jul 2009 21:19:25 +0200
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <4a524b55.wIWqgs5uHs2CpdJy%Larry.Finger@lwfinger.net> <20090706.121429.36217952.davem@davemloft.net>
-In-Reply-To: <20090706.121429.36217952.davem@davemloft.net>
+Received: from bu3sch.de ([62.75.166.246]:39820 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751145AbZGCKKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jul 2009 06:10:32 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: minstrel: avoid accessing negative indices in rix_to_ndx()
+Date: Fri, 3 Jul 2009 12:10:29 +0200
+Cc: Luciano Coelho <luciano.coelho@nokia.com>, linville@tuxdriver.org,
+	linux-wireless@vger.kernel.org, kalle.valo@nokia.com,
+	vidhya.govindan@nokia.com, nbd@openwrt.org
+References: <1246598708-5594-1-git-send-email-luciano.coelho@nokia.com> <1246609742.16770.54.camel@johannes.local>
+In-Reply-To: <1246609742.16770.54.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907062119.25642.chunkeey@web.de>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200907031210.29648.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 July 2009 21:14:29 David Miller wrote:
-> From: Larry Finger <Larry.Finger@lwfinger.net>
-> Date: Mon, 06 Jul 2009 14:07:01 -0500
+On Friday 03 July 2009 10:29:02 Johannes Berg wrote:
+> On Fri, 2009-07-03 at 08:25 +0300, Luciano Coelho wrote:
+> > If rix is not found in mi->r[], i will become -1 after the loop.  This value
+> > is eventually used to access arrays, so we were accessing arrays with a
+> > negative index, which is obviously not what we want to do.  This patch fixes
+> > this potential problem.
 > 
-> > Beginning with commit a1091aae19b1d9c85d91c86915a611387f67a26b entitled
-> > "p54: Use SKB list handling helpers instead of by-hand code.", the following
-> > appears in my logs whenever I try to use my p54usb wireless device:
-> > 
-> > BUG: sleeping function called from invalid context at arch/x86/mm/fault.c:1085
+> This seems odd -- are you or are you not saying that this can happen in
+> normal operation?
 > 
-> Thanks for tracking this down Larry.  I'll have a closer look.
+> > @@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+> >  	for (i = rix; i >= 0; i--)
+> >  		if (mi->r[i].rix == rix)
+> >  			break;
+> > -	WARN_ON(mi->r[i].rix != rix);
+> > +	WARN_ON(i < 0);
+> >  	return i;
 > 
-> If I can't figure it out quickly I'll just simply revert.
-hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-[2.6.31] p54: band-aid to restore driver functionality
-http://patchwork.ozlabs.org/patch/28918/
+> If it can, this warning seems wrong.
 
-in case someone missed it.
+Well, the old WARN_ON seems wrong anyway, because it accesses the array
+out of bounds. In case the loop did not find the entry, the warn on will look like this:
 
-Regards,
-	Chr
+WARN_ON(mi->r[-1].rix != rix);
+
+So I do think it's correct to replace the WARN_ON with WARN_ON(i < 0), if this can't
+happen in normal operation. If it can happen in normal op, the warning should be removed
+and the callers of rix_to_ndx() need to be checked.
+
+-- 
+Greetings, Michael.
