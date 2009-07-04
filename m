@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailguard.fgan.de ([128.7.3.5]:43999 "EHLO mailguard.fgan.de"
+Received: from nbd.name ([88.198.39.176]:45612 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760012AbZGIPft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 11:35:49 -0400
-Message-ID: <4A560E4B.6080209@fgan.de>
-Date: Thu, 09 Jul 2009 17:35:39 +0200
-From: Alexander Wenzel <wenzel@fgan.de>
+	id S1753055AbZGDSkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jul 2009 14:40:52 -0400
+Message-ID: <4A4FA224.40006@openwrt.org>
+Date: Sat, 04 Jul 2009 20:40:36 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Max Filippov <jcmvbkbc@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Problem with p54 driver and ibss mode
-References: <4A55DB91.2070305@fgan.de> <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com>
-In-Reply-To: <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, stable@kernel.org
+Subject: Re: [PATCH 5/5] ath5k: write PCU registers on initial reset
+References: <1246726795-3934-1-git-send-email-me@bobcopeland.com> <1246726795-3934-6-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1246726795-3934-6-git-send-email-me@bobcopeland.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
->> I'm trying to get the latest p54 wireless drivers (ad-hoc mode)
->> to work on a Nokia N810... So far, without any success.
->> [ 3905.535125] WARNING: at /home/wen/work/NokiaN810/compat-wireless-2009-07-09/net/mac80211/sta_info.c:339 sta_info_insert+0x7c/0x15c [mac80211]()
-> As far as I can see, this is check that incoming STA and your STA have
-> different MAC addresses. If you don't set up MAC manually on both
-> devices and make it unique, chances high that they are equal.
+Bob Copeland wrote:
+> Commit d7dc100374df0c21afd8a198336ecd7999697159, "Ath5k: unify resets"
+> introduced a regression into 2.6.28 where the PCU registers are never
+> initialized, due to ath5k_reset() always passing true for change_channel.
+> We subsequently program a lot of these registers but several may start
+> in an unknown state.
+> 
+> Cc: stable@kernel.org
+> Reported-by: Forrest Zhang <forrest@hifulltech.com>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 3f55e90..80ae38d 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -2687,7 +2687,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+>  		sc->curchan = chan;
+>  		sc->curband = &sc->sbands[chan->band];
+>  	}
+> -	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+> +	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan == NULL);
+Shouldn't this be chan != NULL? I'd assume that chan is NULL the first
+time and change_channel thus should be false to initialize all the
+registers.
 
-You saved my day :D Finally it works...! Thanks for the hint.
-
-[  214.478668] wlan0: Selected IBSS BSSID 56:97:1a:24:11:6c based on configured SSID
-
-# iw dev wlan0 station dump
-Station 00:02:ee:c0:ff:ee (on wlan0)
-	inactive time:	429 ms
-	rx bytes:	8964
-	tx bytes:	408
-	signal:  	55 dBm
-	tx bitrate:	1.0 MBit/s
-
-I just checked the other N810 devices and every device has
-the same mac address. And here we go... [p54spi_eeprom.h:39]
-0x00, 0x02, 0xee, 0xc0, 0xff, 0xee,
-
-The original kernel with default os shows the correct address.
-When booting a different os with the with the original or custom
-kernel it shows the 'coffee' address.
-So is there a way to let the kernel receive and set the
-correct mac address of the wlan device?
-I guess my problem is this line:
-[ 3685.320800] cx3110x spi2.0: loading default eeprom...
-
-Anyway, i'm happy that it's working now.
-
-Regards,
-AleX
--- 
-**********************************************
-Dipl.-Inform. (FH) Alexander Wenzel
-Forschungsgesellschaft fuer
-Angewandte Naturwissenschaften e. V. (FGAN)
-Neuenahrer Str. 20, 53343 Wachtberg, Germany
-Tel.  : 0049 (0)228 9435-263
-Fax   : 0049 (0)228 9435-685
-E-Mail: wenzel@fgan.de
-Web   : http://www.fgan.de/
-**********************************************
-Sitz der Gesellschaft: Bonn
-Registergericht: Amtsgericht Bonn VR 2530
-Vorstand: Prof. Dr. Maurus Tacke (komm. Vors.)
-          Prof. Dr. Joachim Ender (Stellv.)
+- Felix
