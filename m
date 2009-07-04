@@ -1,31 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:38889 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932585AbZGPQPU (ORCPT
+Received: from blu0-omc2-s32.blu0.hotmail.com ([65.55.111.107]:3636 "EHLO
+	blu0-omc2-s32.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751790AbZGDCo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 12:15:20 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so83950qwh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:15:19 -0700 (PDT)
+	Fri, 3 Jul 2009 22:44:29 -0400
+Message-ID: <BLU0-SMTP33F4230D49592F7AC596A9C22D0@phx.gbl>
+Date: Fri, 03 Jul 2009 21:44:27 -0500
+From: Brett Ussher <breusshe@hotmail.com>
 MIME-Version: 1.0
-In-Reply-To: <wfljmpm4xl.fsf@calligramme.charmers>
-References: <wfljmpm4xl.fsf@calligramme.charmers>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 09:14:59 -0700
-Message-ID: <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com>
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: 'skb_queue_is_last' and 'skb_queue_next' errors during make (2.6.31-rc1)
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 1:02 AM, Jon
-Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
->
-> A machine I want to set up as an AP has only PCI express slots free...
+I keep getting an error when I try to make the 2.6.31-rc1 compat-wireless:
 
-I'd recommend ath9k.
+=====================================================================
 
-http://wireless.kernel.org/en/users/Drivers/ath9k
+compat-wireless-2.6.31-rc1 $ make
+./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+make -C /lib/modules/2.6.28-13-generic/build 
+M=/home/brett/Desktop/compat-wireless-2.6.31-rc1 modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.28-13-generic'
+LD 
+/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom/built-in.o
+CC [M] 
+/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom/eeprom_93cx6.o
+In file included from <command-line>:0:
+/home/brett/Desktop/compat-wireless-2.6.31-rc1/include/net/compat.h:123: 
+error: redefinition of ‘skb_queue_is_last’
+include/linux/skbuff.h:477: error: previous definition of 
+‘skb_queue_is_last’ was here
+/home/brett/Desktop/compat-wireless-2.6.31-rc1/include/net/compat.h:137: 
+error: redefinition of ‘skb_queue_next’
+include/linux/skbuff.h:491: error: previous definition of 
+‘skb_queue_next’ was here
+make[3]: *** 
+[/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom/eeprom_93cx6.o] 
+Error 1
+make[2]: *** 
+[/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom] Error 2
+make[1]: *** [_module_/home/brett/Desktop/compat-wireless-2.6.31-rc1] 
+Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.28-13-generic'
+make: *** [modules] Error 2
 
-  Luis
+=====================================================================
+
+I'm using Ubuntu 9.04 with kernel 2.6.28-13-generic. Is there a way to 
+stop this error?
+
+-- 
+Brett D. Ussher
+
